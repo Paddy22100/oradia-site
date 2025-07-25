@@ -1,0 +1,11 @@
+﻿@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+
+/* Le CSS complet du fichier DeepSite ici */
+body {
+  font-family: 'Poppins', sans-serif;
+  background-color: #0a192f;
+  color: #f5e7a1;
+  overflow-x: hidden;
+}
+
+/* ... copie tout le reste du style ici ... */
