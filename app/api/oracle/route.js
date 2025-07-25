@@ -1,4 +1,6 @@
-﻿export async function GET(request) {
+﻿export const runtime = "nodejs";
+
+export async function GET(request) {
   const familles = {
     "Émotions": ["Joie", "Tristesse", "Colère", "Peur", "Sérénité"],
     "Besoins": ["Sécurité", "Amour", "Reconnaissance", "Liberté", "Clarté"],
