@@ -848,104 +848,353 @@
 
   <!-- Tirage de la Traversée Script -->
   <!-- Tirage de la Traversée Script (NOUVELLE VERSION 5 CARTES EN CROIX) -->
-<script>
-  (function() {
-    const pick = arr => arr[Math.floor(Math.random()*arr.length)];
-    const polIcon = p => p==="yang" ? "🔺" : p==="yin" ? "⚫" : "";
+<p id="cardsInstruction" class="text-light-gold max-w-3xl mx-auto text-center mb-4 hidden">
+        Retournez les 5 cartes (Nord: Vision, Sud: Ancrage, Est: Élan, Ouest: Mémoire, Centre: Cosmos)
+      </p>
 
-    const Traversee = {
-      labels: {
-        nord:   "Nord — La Vision (Révélations)",
-        sud:    "Sud — L’Ancrage (Transmutation)",
-        est:    "Est — L’Élan (Actions)",
-        ouest:  "Ouest — La Mémoire (Émotions/Besoins)",
-        centre: "Centre — Mémoires Cosmos"
-      },
-
-      init: function() {
-        document.getElementById('traversee-start').addEventListener('click', () => {
-          document.getElementById('traversee-intro').classList.add('hidden');
-          document.getElementById('traversee-form').classList.remove('hidden');
-        });
-
-        document.getElementById('traversee-form').addEventListener('submit', (e) => {
-          e.preventDefault();
-          this.generateBoard5();
-        });
-      },
-
-      generateBoard5: function() {
-        const board = document.getElementById('traversee-board');
-        board.innerHTML = `
-          <h3 class="cormorant text-2xl text-gold mb-6 text-center">
-            Retournez les 5 cartes : Nord • Sud • Est • Ouest • Centre
-          </h3>
-          <div class="traversee-board-5">
-            ${this.cardSlot('nord')}
-            ${this.cardSlot('sud')}
-            ${this.cardSlot('est')}
-            ${this.cardSlot('ouest')}
-            ${this.cardSlot('centre')}
-          </div>
-        `;
-        document.getElementById('traversee-form').classList.add('hidden');
-        board.classList.remove('hidden');
-
-        board.querySelectorAll('.traversee-card-back').forEach(back => {
-          back.addEventListener('click', (ev) => this.flip(ev.currentTarget.closest('.traversee-card')));
-        });
-      },
-
-      cardSlot: function(slot){
-        return `
-          <div class="traversee-card ${slot}">
-            <div class="traversee-card-inner">
-              <div class="traversee-card-back bg-gradient-to-br from-gold/10 to-night-blue border border-gold/30 rounded-xl p-6 h-64 flex items-center justify-center cursor-pointer">
-                <div class="text-center">
-                  <div class="text-sm opacity-80 mb-1">${this.labels[slot]}</div>
-                  <div class="text-4xl">🃏</div>
-                </div>
+      <!-- Plateau (caché au départ) -->
+      <section class="board-traversee hidden" id="board" aria-live="polite">
+        <!-- NORD - RÉVÉLATIONS -->
+        <article class="card-traversee pos-nord" data-family="revelations" aria-label="Carte Nord - Révélations">
+          <div class="card-traversee-inner">
+            <div class="face-traversee back-traversee" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Nord - Révélations">
+              <div class="logo-circle" aria-hidden="true"></div>
+            </div>
+            <div class="face-traversee front-traversee">
+              <div class="topbar">
+                <span class="chip-traversee"><i class="fas fa-eye mr-1"></i> NORD</span>
+                <span class="polarity-traversee" data-polarity></span>
               </div>
-              <div class="traversee-card-front hidden bg-gradient-to-br from-gold/5 to-night-blue border border-gold/30 rounded-xl p-6 h-64">
+              <div class="art-traversee"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
+              <div class="bottom-traversee"></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- SUD - TRANSMUTATION -->
+        <article class="card-traversee pos-sud" data-family="transmutation" aria-label="Carte Sud - Transmutation">
+          <div class="card-traversee-inner">
+            <div class="face-traversee back-traversee" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Sud - Transmutation">
+              <div class="logo-circle" aria-hidden="true"></div>
+            </div>
+            <div class="face-traversee front-traversee">
+              <div class="topbar">
+                <span class="chip-traversee"><i class="fas fa-feather-alt mr-1"></i> SUD</span>
+                <span class="polarity-traversee" data-polarity></span>
+              </div>
+              <div class="art-traversee"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
+              <div class="bottom-traversee"><span data-icon></span></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- EST - ACTIONS -->
+        <article class="card-traversee pos-est" data-family="actions" aria-label="Carte Est - Actions">
+          <div class="card-traversee-inner">
+            <div class="face-traversee back-traversee" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Est - Actions">
+              <div class="logo-circle" aria-hidden="true"></div>
+            </div>
+            <div class="face-traversee front-traversee">
+              <div class="topbar">
+                <span class="chip-traversee"><i class="fas fa-walking mr-1"></i> EST</span>
+                <span class="polarity-traversee" data-polarity></span>
+              </div>
+              <div class="art-traversee"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
+              <div class="bottom-traversee"><span data-icon></span></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- OUEST - ÉMOTIONS -->
+        <article class="card-traversee pos-ouest" data-family="emotions" aria-label="Carte Ouest - Émotions">
+          <div class="card-traversee-inner">
+            <div class="face-traversee back-traversee" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Ouest - Émotions">
+              <div class="logo-circle" aria-hidden="true"></div>
+            </div>
+            <div class="face-traversee front-traversee">
+              <div class="topbar">
+                <span class="chip-traversee"><i class="fas fa-heart mr-1"></i> OUEST</span>
+                <span class="polarity-traversee" data-polarity></span>
+              </div>
+              <div class="art-traversee"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
+              <div class="bottom-traversee"><span data-icon></span></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- CENTRE - MÉMOIRE COSMOS -->
+        <article class="card-traversee pos-centre" data-family="cosmos" aria-label="Carte Centre - Mémoire Cosmos">
+          <div class="card-traversee-inner">
+            <div class="face-traversee back-traversee" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Centre - Mémoire Cosmos">
+              <div class="logo-circle" aria-hidden="true"></div>
+            </div>
+            <div class="face-traversee front-traversee">
+              <div class="topbar">
+                <span class="chip-traversee"><i class="fas fa-star-and-crescent mr-1"></i> CENTRE</span>
+                <span class="polarity-traversee" data-polarity style="visibility:hidden"></span>
+              </div>
+              <div class="art-traversee"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
+              <div class="bottom-traversee"><span data-icon></span></div>
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <div class="text-center mt-4">
+        <button id="showResults" class="btn-gold hidden" disabled>Afficher le résultat du tirage</button>
+      </div>
+
+      <section id="results" class="hidden mt-6">
+        <h2 class="cormorant text-3xl text-gold mb-3">Résultats du tirage</h2>
+        <div class="mb-2"><b>Intention :</b> <span id="out-intention">—</span></div>
+        <div class="result-lines" id="lines"></div>
+        <div class="mt-3" id="synthese"></div>
+      </section>
+
+      <div class="flex gap-3 justify-center mt-6">
+        <button id="reset" class="btn-outline-gold hidden">Nouveau tirage</button>
+        <button id="fullReading" class="btn-outline-gold hidden">Tirage Complet</button>
+      </div>
+    </div>
+  </section>
+
+
+     <script id="traversee-5cards-clean">
+(() => {
+  // ---------- Données propres à la TRAVERSÉE (séparées du Pèlerin) ----------
+  const DATA_TRAVERSEE = {
+    emotions: [
+      {name:"JOIE", quote:"Une onde traverse mon cœur. Elle dit oui à la vie.", polarity:"yang"},
+      {name:"TRISTESSE", quote:"Je laisse couler ce qui n'a plus à rester. L'eau me guérit.", polarity:"yin"},
+      {name:"INJUSTICE", quote:"Je sens l'appel d'un monde plus juste, d'un équilibre à retrouver.", polarity:"yin"},
+      {name:"ÉMERVEILLEMENT", quote:"La beauté m'inspire et l'invisible se révèle.", polarity:"yang"},
+      {name:"HONTE", quote:"Je me regarde avec tendresse. Aucun poids ne m'appartient vraiment.", polarity:"yin"},
+      {name:"CULPABILITÉ", quote:"Je reconnais mes limites humaines. Je me pardonne, profondément.", polarity:"yin"},
+      {name:"SOLITUDE", quote:"Dans le silence, je me découvre présence.", polarity:"yin"},
+      {name:"DÉGOÛT", quote:"Je perçois ce qui ne me nourrit plus. J'opère l'écart juste.", polarity:"yin"},
+      {name:"SÉRÉNITÉ", quote:"Je goûte la paix dans l'instant.", polarity:"yang"},
+      {name:"AMOUR", quote:"J'aime parce que c'est ma nature.", polarity:"yang"},
+      {name:"COLÈRE", quote:"Mon feu sacré défend ma juste frontière.", polarity:"yang"},
+      {name:"PEUR", quote:"J'écoute l'ombre qui murmure vers plus de conscience.", polarity:"yin"}
+    ],
+    transmutation: [
+      {name:"ACCEPTATION", quote:"La pierre immobile se laisse sculpter par la rivière.", polarity:"yin"},
+      {name:"TRANSFORMATION", quote:"Le feu consume et révèle la braise d'or.", polarity:"yang"},
+      {name:"LÂCHER-PRISE", quote:"La feuille tombe et nourrit la terre.", polarity:"yin"},
+      {name:"RECADRAGE", quote:"Le miroir change d'angle et tout se déplace.", polarity:"yang"},
+      {name:"PARDON", quote:"Les chaînes brisées rouillent au sol.", polarity:"yin"},
+      {name:"ALIGNEMENT", quote:"Les astres s'ordonnent sur un axe commun.", polarity:"yang"},
+      {name:"DÉTACHEMENT", quote:"L'oiseau s'élève sans s'accrocher aux branches.", polarity:"yin"},
+      {name:"PURIFICATION", quote:"L'eau claire traverse la roche.", polarity:"yang"},
+      {name:"ANCRAGE", quote:"Les racines plongent dans le sol fertile.", polarity:"yin"},
+      {name:"OUVERTURE", quote:"La porte s'entrouvre, la lumière jaillit.", polarity:"yang"},
+      {name:"FLUIDITÉ", quote:"La rivière contourne l'obstacle sans effort.", polarity:"yin"},
+      {name:"CLARIFICATION", quote:"La brume se lève, les contours se révèlent.", polarity:"yang"}
+    ],
+    revelations: [
+      {name:"CLÉ", quote:"L'objet caché ouvre la chambre secrète.", polarity:"yang"},
+      {name:"PORTE", quote:"L'ouverture se dessine dans le mur.", polarity:"yin"},
+      {name:"MESSAGE", quote:"Le souffle apporte un signe audible.", polarity:"yang"},
+      {name:"SYNCHRONICITÉ", quote:"Les fils invisibles se répondent.", polarity:"yin"},
+      {name:"SIGNE", quote:"Un éclat discret scintille sur le chemin.", polarity:"yin"},
+      {name:"VISION", quote:"L'œil perce au-delà des voiles.", polarity:"yang"},
+      {name:"PRÉSAGE", quote:"Un souffle d'avenir traverse le présent.", polarity:"yin"},
+      {name:"ÉVEIL", quote:"L'esprit se souvient de lui-même.", polarity:"yang"},
+      {name:"LUMIÈRE", quote:"Un rayon fend l'ombre.", polarity:"yang"},
+      {name:"DÉVOILEMENT", quote:"Le rideau s'écarte, la scène surgit.", polarity:"yin"},
+      {name:"VÉRITÉ", quote:"Le voile tombe, l'essence apparaît.", polarity:"yang"},
+      {name:"ILLUSION", quote:"L'image trompe et captive.", polarity:"yin"}
+    ],
+    actions: [
+      {name:"AGIR", quote:"La graine pousse en sortant de terre.", polarity:"yang"},
+      {name:"ÉCOUTER", quote:"L'oreille se penche sur le murmure.", polarity:"yin"},
+      {name:"DIRE", quote:"La parole tranche comme un souffle clair.", polarity:"yang"},
+      {name:"RECEVOIR", quote:"Le cœur ouvert accueille le don.", polarity:"yin"},
+      {name:"CRÉER", quote:"Le geste façonne ce qui n'était pas.", polarity:"yang"},
+      {name:"ACCUEILLIR", quote:"La porte s'ouvre à l'inattendu.", polarity:"yin"},
+      {name:"PARTAGER", quote:"La coupe passe de main en main.", polarity:"yang"},
+      {name:"PROTÉGER", quote:"L'abri se dresse autour du fragile.", polarity:"yin"},
+      {name:"ALLER VERS", quote:"Le pas cherche la rencontre.", polarity:"yang"},
+      {name:"SE RETIRER", quote:"Le sage quitte la foule.", polarity:"yin"},
+      {name:"CHOISIR", quote:"Le carrefour appelle la décision.", polarity:"yang"},
+      {name:"PATIENTER", quote:"Le fruit mûrit lentement.", polarity:"yin"}
+    ],
+    cosmos: [
+      {name:"ÉTOILE", quote:"La voûte céleste inscrit la mémoire des mondes."},
+      {name:"TERRE", quote:"Le sol garde les pas de ceux qui ont marché avant."},
+      {name:"OCÉAN", quote:"Les vagues effacent et recommencent sans fin."},
+      {name:"GÉNÉALOGIE", quote:"Tes racines prolongent des vies invisibles."},
+      {name:"FUTUR", quote:"La graine porte déjà l'ombre de la forêt."},
+      {name:"PASSÉ", quote:"Les échos d'hier résonnent dans le présent."},
+      {name:"PRÉSENT", quote:"Tout converge en un seul instant immobile."},
+      {name:"MÉMOIRE CELLULAIRE", quote:"Chaque cellule conserve la trace du vivant."},
+      {name:"MÉMOIRE COLLECTIVE", quote:"Le groupe rêve à travers l'individu."},
+      {name:"LE TORE", quote:"Le tore relie l'ombre et la lumière."}
+    ]
+  };
+
+  const dirLabel = {
+    nord: "Nord — Vision (Révélations)",
+    sud: "Sud — Ancrage (Transmutation)",
+    est: "Est — Élan (Actions)",
+    ouest: "Ouest — Mémoire (Émotions)",
+    centre: "Centre — Mémoires Cosmos"
+  };
+  const polIcon = p => p==="yang" ? "🔺" : p==="yin" ? "⚫" : "";
+  const safePick = arr => {
+    if (window.crypto?.getRandomValues) { const b=new Uint32Array(1); crypto.getRandomValues(b); return arr[b[0]%arr.length]; }
+    return arr[Math.floor(Math.random()*arr.length)];
+  };
+
+  // ---------- helpers DOM ----------
+  const $ = sel => document.querySelector(sel);
+  const el = id => document.getElementById(id);
+
+  // ---------- construction du plateau 5 cartes ----------
+  function buildBoard() {
+    const host = el('traversee-board');
+    if (!host) return;
+
+    host.innerHTML = `
+      <h3 class="cormorant text-2xl text-gold mb-6 text-center">
+        Retournez les 5 cartes : Nord • Sud • Est • Ouest • Centre
+      </h3>
+      <div class="traversee-board-5">
+        ${slot('nord','revelations','fa-eye')}
+        ${slot('sud','transmutation','fa-feather-alt')}
+        ${slot('est','actions','fa-walking')}
+        ${slot('ouest','emotions','fa-heart')}
+        ${slot('centre','cosmos','fa-star-and-crescent')}
+      </div>
+    `;
+    el('traversee-form')?.classList.add('hidden');
+    host.classList.remove('hidden');
+
+    // listeners flip
+    host.querySelectorAll('.traversee-card-back').forEach(back=>{
+      back.addEventListener('click', ev => flipCard(ev.currentTarget.closest('.traversee-card')));
+      back.addEventListener('keypress', e=>{
+        if(e.key==='Enter'||e.key===' '){ e.preventDefault(); flipCard(e.currentTarget.closest('.traversee-card')); }
+      });
+    });
+
+    // état du tirage pour cette session
+    host._state = { flipped:0, drawn:{} };
+  }
+
+  function slot(slot, family, icon){
+    const chip = slot.toUpperCase();
+    return `
+      <article class="traversee-card ${slot}" data-slot="${slot}" data-family="${family}" aria-label="Carte ${dirLabel[slot]}">
+        <div class="traversee-card-inner">
+          <div class="traversee-card-back bg-gradient-to-br from-gold/10 to-night-blue border border-gold/30 rounded-xl p-6 h-64 flex items-center justify-center cursor-pointer" role="button" tabindex="0" aria-pressed="false">
+            <div class="text-center">
+              <div class="text-sm opacity-80 mb-1">${dirLabel[slot]}</div>
+              <div class="logo-circle" aria-hidden="true"></div>
+            </div>
+          </div>
+          <div class="traversee-card-front hidden bg-gradient-to-br from-gold/5 to-night-blue border border-gold/30 rounded-xl p-6 h-64">
+            <div class="flex items-center justify-between mb-2">
+              <span class="chip">${chip}</span>
+              <span class="polarity" data-pol></span>
+            </div>
+            <div class="art">
+              <div>
                 <h4 class="text-gold text-xl mb-2" data-name>—</h4>
                 <p class="text-light-gold" data-quote>—</p>
-                <div class="mt-2 text-gold text-lg" data-pol></div>
               </div>
             </div>
           </div>
-        `;
-      },
+        </div>
+      </article>
+    `;
+  }
 
-      flip: function(card){
-        const slot = [...card.classList].find(c => ["nord","sud","est","ouest","centre"].includes(c));
-        const F = window.DATA || {revelations:[], actions:[], emotions:[], besoins:[], cosmos:[], transmutation:[]};
-        let pool = [];
+  function flipCard(card){
+    if(!card || card.classList.contains('flipped')) return;
 
-        if(slot==="nord") pool = F.revelations;
-        else if(slot==="sud") pool = F.transmutation;
-        else if(slot==="est") pool = F.actions;
-        else if(slot==="ouest") pool = [...F.emotions, ...F.besoins];
-        else if(slot==="centre") pool = F.cosmos;
+    // on exige que l'intention de la Traversée soit remplie (dans le formulaire de la section Traversée)
+    const tForm = el('traversee-form');
+    const intentionField = tForm?.querySelector('textarea, input[type="text"]');
+    if(intentionField && !intentionField.value.trim()){
+      intentionField.focus();
+      intentionField.setCustomValidity("Veuillez saisir votre intention pour ce tirage.");
+      intentionField.reportValidity();
+      return;
+    }
 
-        const data = pool.length ? pick(pool) : {name:"—", quote:"—"};
-        card.querySelector('[data-name]').textContent  = data.name;
-        card.querySelector('[data-quote]').textContent = data.quote;
-        card.querySelector('[data-pol]').textContent   = data.polarity ? polIcon(data.polarity) : "";
+    const slot = card.dataset.slot;       // nord/sud/est/ouest/centre
+    const fam  = card.dataset.family;     // revelations/transmutation/actions/emotions/cosmos
+    const data = safePick(DATA_TRAVERSEE[fam]||[]);
 
-        card.classList.add('flipped');
-        card.querySelector('.traversee-card-back').classList.add('hidden');
-        card.querySelector('.traversee-card-front').classList.remove('hidden');
-      }
+    // remplir la face avant
+    card.querySelector('[data-name]').textContent  = data?.name || "—";
+    card.querySelector('[data-quote]').textContent = data?.quote || "—";
+    const polEl = card.querySelector('[data-pol]');
+    if(slot === 'centre'){ polEl.style.visibility='hidden'; polEl.textContent=''; }
+    else { polEl.style.visibility='visible'; polEl.textContent = data?.polarity ? polIcon(data.polarity) : ''; }
+
+    // flip visuel
+    card.classList.add('flipped');
+    card.querySelector('.traversee-card-back')?.classList.add('hidden');
+    card.querySelector('.traversee-card-front')?.classList.remove('hidden');
+
+    // état
+    const host = el('traversee-board');
+    host._state.drawn[slot] = data;
+    host._state.flipped++;
+
+    if(host._state.flipped === 5){
+      showResults(host._state.drawn, intentionField?.value?.trim() || "");
+    }
+  }
+
+  function showResults(drawn, intention){
+    const out = el('traversee-results');
+    if(!out) return;
+
+    const L = (titre, obj, showPol=true) => {
+      const polTxt = showPol && obj?.polarity ? (obj.polarity==='yang'?' (énergie masculine)':' (énergie féminine)') : '';
+      return `<p><b>${titre} :</b> ${obj?.name||'—'}${polTxt}<br><i>« ${obj?.quote||'—'} »</i></p>`;
     };
 
-    document.addEventListener('DOMContentLoaded', () => Traversee.init());
-  })();
+    out.innerHTML = `
+      <h3 class="cormorant text-2xl text-gold mb-3">Résultats de la Traversée</h3>
+      ${intention ? `<div class="mb-2"><b>Intention :</b> ${intention}</div>` : ``}
+      <div class="result-lines">
+        ${L("Nord — Révélations (Vision)", drawn.nord)}
+        ${L("Sud — Transmutation (Ancrage)", drawn.sud)}
+        ${L("Est — Actions (Élan)", drawn.est)}
+        ${L("Ouest — Émotions (Mémoire)", drawn.ouest)}
+        ${L("Centre — Mémoires Cosmos", drawn.centre, false)}
+      </div>
+      <div class="mt-3">
+        <b>Synthèse :</b>
+        <p>La Vision (Nord) éclaire l’horizon ; l’Ancrage (Sud) montre ce qui doit se transformer ; l’Élan (Est) indique le mouvement ; la Mémoire (Ouest) révèle la leçon ; le Cosmos (Centre) relie le tout.</p>
+      </div>
+    `;
+    out.classList.remove('hidden');
+    out.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  // ---------- branchement UI de la section #traversee ----------
+  document.addEventListener('DOMContentLoaded', () => {
+    const startBtn = el('traversee-start');
+    const form     = el('traversee-form');
+
+    startBtn?.addEventListener('click', () => {
+      el('traversee-intro')?.classList.add('hidden');
+      form?.classList.remove('hidden');
+    });
+
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      buildBoard();
+    });
+  });
+})();
 </script>
 
-      // Initialize
-      document.addEventListener('DOMContentLoaded', () => Traversee.init());
-    })();
-  </script>
 
   <!-- SCRIPT -->
   <script>
