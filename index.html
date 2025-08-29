@@ -1359,16 +1359,20 @@
 
     // Nouveau tirage
     resetBtn.addEventListener('click', ()=>{
-      drawn = {emotions:null, besoins:null, revelations:null, actions:null, cosmos:null};
+      // Réinitialiser l'état
+      drawn = {emotions:null, besoins:null, actions:null, cosmos:null};
       flippedCount = 0;
+      
+      // Masquer les éléments de résultats
       showBtn.disabled = true;
       showBtn.classList.add('hidden');
       results.classList.add('hidden');
       document.getElementById('fullReading').classList.add('hidden');
       document.getElementById('reset').classList.add('hidden');
-      linesOut.innerHTML = ""; synthOut.innerHTML = "";
-      intentionIn.value = "";
-
+      linesOut.innerHTML = "";
+      synthOut.innerHTML = "";
+      
+      // Réinitialiser les cartes
       document.querySelectorAll('.card').forEach(card=>{
         card.classList.remove('flipped');
         const back = card.querySelector('.back');
@@ -1377,11 +1381,22 @@
         card.querySelector('[data-name]').textContent = "—";
         card.querySelector('[data-quote]').textContent = "—";
         const pol = card.querySelector('[data-polarity]');
-        if(card.dataset.family === "cosmos"){ pol.style.visibility = "hidden"; }
-        else { pol.style.visibility = "visible"; pol.textContent = ""; }
-        card.querySelector('[data-icon]').textContent = "";
+        if(card.dataset.family === "cosmos"){ 
+          pol.style.visibility = "hidden"; 
+        } else { 
+          pol.style.visibility = "visible"; 
+          pol.textContent = ""; 
+        }
       });
 
+      // Réafficher le formulaire d'intention
+      board.classList.add('hidden');
+      document.getElementById('cardsInstruction').classList.add('hidden');
+      startButton.classList.remove('hidden');
+      intentionIn.value = "";
+      intentionIn.focus();
+      
+      // Scroll vers le haut de la section
       window.scrollTo({top: document.getElementById('oracle').offsetTop - 60, behavior:'smooth'});
     });
 
