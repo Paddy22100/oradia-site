@@ -5,8 +5,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Oradia - Oracle Vibratoire</title>
-  <script src="https://cdn.tailwindcss.com "></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css ">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
   <script>
     tailwind.config = {
@@ -29,7 +29,7 @@
   </script>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400 ;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
 
     :root{ --dore:#d4af37; --text:#e9e7df; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
 
@@ -113,10 +113,27 @@
   .traversee-board-5 .est,.traversee-board-5 .centre{ grid-area:auto; }
 }
 
+/* --- Immersif Traversée --- */
+.hide-immersive { display:none !important; }
+
+#exitTraverseeBtn{
+  position:fixed; top:18px; left:18px; z-index:1000;
+  background:linear-gradient(135deg,#d4af37,#b8860b);
+  color:#051428; font-weight:600; border-radius:999px; 
+  padding:10px 16px; border:1px solid rgba(212,175,55,.6);
+  box-shadow:0 10px 20px rgba(212,175,55,.25);
+}
+#exitTraverseeBtn.hidden{ display:none; }
+
   </style>
 </head>
 
 <body class="relative">
+
+<button id="exitTraverseeBtn" class="hidden" aria-label="Quitter le tirage de la Traversée">
+  Quitter le tirage de la Traversée
+</button>
+
   <!-- Scroll to top button -->
   <button id="scrollTop" class="scroll-top bg-night-blue text-gold p-3 rounded-full border border-gold shadow-lg" aria-label="Remonter en haut">
     <i class="fas fa-arrow-up"></i>
@@ -132,7 +149,7 @@
 
       <nav class="hidden md:flex space-x-6 text-lg">
         <a href="#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
-        <a href="#oracle" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-cards mr-2"></i>Oracle</a>
+        <a href="#oracle" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-layer-group mr-2"></i>Oracle</a>
         <a href="#offres" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Offres</a>
         <a href="#jeu" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Jeu</a>
         <a href="#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
@@ -602,8 +619,8 @@
     </div>
   </section>
 
-  <!-- Tirage de la Traversée -->
-  <section id="traversee" class="py-20 px-6 bg-night-blue">
+  <!-- Tirage de la Traversée (caché par défaut) -->
+  <section id="traversee" class="py-20 px-6 bg-night-blue hidden">
     <div class="container mx-auto max-w-6xl">
       <div class="text-center mb-12">
         <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Tirage de la Traversée</h2>
@@ -846,122 +863,9 @@
     </div>
   </div>
 
-  <!-- Tirage de la Traversée Script -->
-  <!-- Tirage de la Traversée Script (NOUVELLE VERSION 5 CARTES EN CROIX) -->
-<p id="cardsInstruction" class="text-light-gold max-w-3xl mx-auto text-center mb-4 hidden">
-        Retournez les 5 cartes (Nord: Vision, Sud: Ancrage, Est: Élan, Ouest: Mémoire, Centre: Cosmos)
-      </p>
-
-      <!-- Plateau (caché au départ) -->
-      <section class="board-traversee hidden" id="board" aria-live="polite">
-        <!-- NORD - RÉVÉLATIONS -->
-        <article class="card-traversee pos-nord" data-family="revelations" aria-label="Carte Nord - Révélations">
-          <div class="card-traversee-inner">
-            <div class="face-traversee back-traversee" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Nord - Révélations">
-              <div class="logo-circle" aria-hidden="true"></div>
-            </div>
-            <div class="face-traversee front-traversee">
-              <div class="topbar">
-                <span class="chip-traversee"><i class="fas fa-eye mr-1"></i> NORD</span>
-                <span class="polarity-traversee" data-polarity></span>
-              </div>
-              <div class="art-traversee"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
-              <div class="bottom-traversee"></div>
-            </div>
-          </div>
-        </article>
-
-        <!-- SUD - TRANSMUTATION -->
-        <article class="card-traversee pos-sud" data-family="transmutation" aria-label="Carte Sud - Transmutation">
-          <div class="card-traversee-inner">
-            <div class="face-traversee back-traversee" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Sud - Transmutation">
-              <div class="logo-circle" aria-hidden="true"></div>
-            </div>
-            <div class="face-traversee front-traversee">
-              <div class="topbar">
-                <span class="chip-traversee"><i class="fas fa-feather-alt mr-1"></i> SUD</span>
-                <span class="polarity-traversee" data-polarity></span>
-              </div>
-              <div class="art-traversee"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
-              <div class="bottom-traversee"><span data-icon></span></div>
-            </div>
-          </div>
-        </article>
-
-        <!-- EST - ACTIONS -->
-        <article class="card-traversee pos-est" data-family="actions" aria-label="Carte Est - Actions">
-          <div class="card-traversee-inner">
-            <div class="face-traversee back-traversee" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Est - Actions">
-              <div class="logo-circle" aria-hidden="true"></div>
-            </div>
-            <div class="face-traversee front-traversee">
-              <div class="topbar">
-                <span class="chip-traversee"><i class="fas fa-walking mr-1"></i> EST</span>
-                <span class="polarity-traversee" data-polarity></span>
-              </div>
-              <div class="art-traversee"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
-              <div class="bottom-traversee"><span data-icon></span></div>
-            </div>
-          </div>
-        </article>
-
-        <!-- OUEST - ÉMOTIONS -->
-        <article class="card-traversee pos-ouest" data-family="emotions" aria-label="Carte Ouest - Émotions">
-          <div class="card-traversee-inner">
-            <div class="face-traversee back-traversee" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Ouest - Émotions">
-              <div class="logo-circle" aria-hidden="true"></div>
-            </div>
-            <div class="face-traversee front-traversee">
-              <div class="topbar">
-                <span class="chip-traversee"><i class="fas fa-heart mr-1"></i> OUEST</span>
-                <span class="polarity-traversee" data-polarity></span>
-              </div>
-              <div class="art-traversee"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
-              <div class="bottom-traversee"><span data-icon></span></div>
-            </div>
-          </div>
-        </article>
-
-        <!-- CENTRE - MÉMOIRE COSMOS -->
-        <article class="card-traversee pos-centre" data-family="cosmos" aria-label="Carte Centre - Mémoire Cosmos">
-          <div class="card-traversee-inner">
-            <div class="face-traversee back-traversee" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Centre - Mémoire Cosmos">
-              <div class="logo-circle" aria-hidden="true"></div>
-            </div>
-            <div class="face-traversee front-traversee">
-              <div class="topbar">
-                <span class="chip-traversee"><i class="fas fa-star-and-crescent mr-1"></i> CENTRE</span>
-                <span class="polarity-traversee" data-polarity style="visibility:hidden"></span>
-              </div>
-              <div class="art-traversee"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
-              <div class="bottom-traversee"><span data-icon></span></div>
-            </div>
-          </div>
-        </article>
-      </section>
-
-      <div class="text-center mt-4">
-        <button id="showResults" class="btn-gold hidden" disabled>Afficher le résultat du tirage</button>
-      </div>
-
-      <section id="results" class="hidden mt-6">
-        <h2 class="cormorant text-3xl text-gold mb-3">Résultats du tirage</h2>
-        <div class="mb-2"><b>Intention :</b> <span id="out-intention">—</span></div>
-        <div class="result-lines" id="lines"></div>
-        <div class="mt-3" id="synthese"></div>
-      </section>
-
-      <div class="flex gap-3 justify-center mt-6">
-        <button id="reset" class="btn-outline-gold hidden">Nouveau tirage</button>
-        <button id="fullReading" class="btn-outline-gold hidden">Tirage Complet</button>
-      </div>
-    </div>
-  </section>
-
-
-     <script id="traversee-5cards-clean">
+  <script id="traversee-5cards-clean">
 (() => {
-  // ---------- Données propres à la TRAVERSÉE (séparées du Pèlerin) ----------
+  // ---------- Données propres à la TRAVERSÉE ----------
   const DATA_TRAVERSEE = {
     emotions: [
       {name:"JOIE", quote:"Une onde traverse mon cœur. Elle dit oui à la vie.", polarity:"yang"},
@@ -1047,8 +951,34 @@
   };
 
   // ---------- helpers DOM ----------
-  const $ = sel => document.querySelector(sel);
-  const el = id => document.getElementById(id);
+  const $  = sel => document.querySelector(sel);
+  const $$ = sel => [...document.querySelectorAll(sel)];
+  const el = id  => document.getElementById(id);
+
+  // ---------- MODE IMMERSIF ----------
+  function enterImmersive(){
+    // masquer header, footer et toutes les sections sauf #traversee
+    $$('body > header, body > footer, body > section:not(#traversee)').forEach(n=>n.classList.add('hide-immersive'));
+    el('exitTraverseeBtn')?.classList.remove('hidden');
+    // scroll sur la section
+    el('traversee')?.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  function exitImmersive(){
+    $$('body > header, body > footer, body > section').forEach(n=>n.classList.remove('hide-immersive'));
+    el('exitTraverseeBtn')?.classList.add('hidden');
+
+    // Réinitialise visuellement la section Traversée
+    const boardHost = el('traversee-board');
+    const results   = el('traversee-results');
+    const intro     = el('traversee-intro');
+    const form      = el('traversee-form');
+
+    if(boardHost){ boardHost.innerHTML=''; boardHost.classList.add('hidden'); }
+    if(results){ results.innerHTML=''; results.classList.add('hidden'); }
+    if(form){ form.reset?.(); form.classList.add('hidden'); }
+    if(intro){ intro.classList.remove('hidden'); }
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
 
   // ---------- construction du plateau 5 cartes ----------
   function buildBoard() {
@@ -1060,11 +990,11 @@
         Retournez les 5 cartes : Nord • Sud • Est • Ouest • Centre
       </h3>
       <div class="traversee-board-5">
-        ${slot('nord','revelations','fa-eye')}
-        ${slot('sud','transmutation','fa-feather-alt')}
-        ${slot('est','actions','fa-walking')}
-        ${slot('ouest','emotions','fa-heart')}
-        ${slot('centre','cosmos','fa-star-and-crescent')}
+        ${slot('nord','revelations')}
+        ${slot('sud','transmutation')}
+        ${slot('est','actions')}
+        ${slot('ouest','emotions')}
+        ${slot('centre','cosmos')}
       </div>
     `;
     el('traversee-form')?.classList.add('hidden');
@@ -1080,9 +1010,12 @@
 
     // état du tirage pour cette session
     host._state = { flipped:0, drawn:{} };
+
+    // => on passe en mode immersif maintenant que le plateau est prêt
+    enterImmersive();
   }
 
-  function slot(slot, family, icon){
+  function slot(slot, family){
     const chip = slot.toUpperCase();
     return `
       <article class="traversee-card ${slot}" data-slot="${slot}" data-family="${family}" aria-label="Carte ${dirLabel[slot]}">
@@ -1121,6 +1054,8 @@
       intentionField.setCustomValidity("Veuillez saisir votre intention pour ce tirage.");
       intentionField.reportValidity();
       return;
+    } else if (intentionField) {
+      intentionField.setCustomValidity("");
     }
 
     const slot = card.dataset.slot;       // nord/sud/est/ouest/centre
@@ -1181,19 +1116,27 @@
   document.addEventListener('DOMContentLoaded', () => {
     const startBtn = el('traversee-start');
     const form     = el('traversee-form');
+    const exitBtn  = el('exitTraverseeBtn');
 
+    // Étape 1 : afficher le formulaire
     startBtn?.addEventListener('click', () => {
       el('traversee-intro')?.classList.add('hidden');
       form?.classList.remove('hidden');
+      el('traversee')?.scrollIntoView({behavior:'smooth'});
     });
 
+    // Étape 2 : soumission = construire le plateau + entrer en immersif
     form?.addEventListener('submit', (e) => {
       e.preventDefault();
-      buildBoard();
+      buildBoard(); // enterImmersive() est appelé à la fin de buildBoard()
     });
+
+    // Bouton "Quitter le tirage"
+    exitBtn?.addEventListener('click', exitImmersive);
   });
 })();
 </script>
+
 
 
   <!-- SCRIPT -->
@@ -1533,15 +1476,17 @@ confirmation.querySelector('#newReadingBtn').addEventListener('click', () => {
   // ré-afficher toutes les sections
   document.querySelectorAll('section').forEach(s => s.classList.remove('hide-sections'));
 
-  // afficher directement le formulaire final (sans étape intermédiaire)
+  // afficher la section Traversée et montrer le formulaire
+  const travSection = document.getElementById('traversee');
   const intro = document.getElementById('traversee-intro');
   const form  = document.getElementById('traversee-form');
+  
+  if (travSection) travSection.classList.remove('hidden');
   if (intro) intro.classList.add('hidden');
-  if (form)  form.classList.remove('hidden');
+  if (form) form.classList.remove('hidden');
 
   // scroll + focus
-  const trav = document.getElementById('traversee');
-  trav?.scrollIntoView({ behavior: 'smooth' });
+  travSection?.scrollIntoView({ behavior: 'smooth' });
   form?.querySelector('input, textarea, select')?.focus();
 });
 }); 
