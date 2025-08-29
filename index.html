@@ -1,20 +1,1358 @@
+
 <!DOCTYPE html>
-<html>
-  <head>
-    <title>My app</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta charset="utf-8">
-    <script src="https://cdn.tailwindcss.com"></script>
-  </head>
-  <body class="flex justify-center items-center h-screen overflow-hidden bg-white font-sans text-center px-6">
-    <div class="w-full">
-      <span class="text-xs rounded-full mb-2 inline-block px-2 py-1 border border-amber-500/15 bg-amber-500/15 text-amber-500">🔥 New version dropped!</span>
-      <h1 class="text-4xl lg:text-6xl font-bold font-sans">
-        <span class="text-2xl lg:text-4xl text-gray-400 block font-medium">I'm ready to work,</span>
-        Ask me anything.
-      </h1>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Oradia - Oracle Vibratoire</title>
+  <script src="https://cdn.tailwindcss.com "></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css ">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#0a192f',
+            'gold': '#d4af37',
+            'light-gold': '#f5e7a1',
+            'dark-blue': '#051428',
+            'celtic-blue': '#1a365d'
+          },
+          fontFamily: {
+            'cormorant': ['Cormorant Garamond', 'serif'],
+            'poppins': ['Poppins', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400 ;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+
+    :root{ --dore:#d4af37; --text:#e9e7df; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
+
+    body{ margin:0; font-family:'Poppins',sans-serif; background:#0a192f; color:#f5e7a1; overflow-x:hidden; }
+    .header-bg{ background:rgba(5,20,40,.98); }
+    .hero-bg{ background: radial-gradient(circle at center, rgba(26,54,93,.7) 0%, rgba(5,20,40,.9) 70%); background-size:cover; }
+
+    .gold-gradient{
+      background: linear-gradient(90deg, #d4af37, #f5e7a1, #d4af37);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      background-size:300% 300%; animation:gradient-shift 4s ease infinite;
+    }
+    @keyframes gradient-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    .floating{ animation:floating 3s ease-in-out infinite }
+    @keyframes floating{0%{transform:translateY(0)}50%{transform:translateY(-15px)}100%{transform:translateY(0)}}
+    .animate-spin-slow{ animation: spin 12s linear infinite }
+    @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+    @keyframes orbit{0%{transform:rotate(0deg) translateX(100px) rotate(0deg)}100%{transform:rotate(360deg) translateX(100px) rotate(-360deg)}}
+    .pulse{ animation:pulse 2s infinite }
+    @keyframes pulse{
+      0% { box-shadow:0 0 0 0 rgba(212,175,55,.4); transform:translate(-50%,-50%) scale(1) }
+      50%{ box-shadow:0 0 0 10px rgba(212,175,55,.2); transform:translate(-50%,-50%) scale(1.05) }
+      100%{ box-shadow:0 0 0 0 rgba(212,175,55,0); transform:translate(-50%,-50%) scale(1) }
+    }
+
+    /* Plateau du tirage (5 cartes) */
+    .board{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; place-items:center; }
+    @media(max-width:860px){ .board{ grid-template-columns:1fr } }
+    .pos-1{grid-area:1/1} .pos-2{grid-area:1/2} .pos-3{grid-area:1/5} .pos-4{grid-area:1/3} .pos-5{grid-area:1/4}
+
+    .card{ width:min(280px,86vw); height:400px; perspective:1000px; transition:.3s transform }
+    .card:hover{ transform:translateY(-5px) }
+    .card-inner{ position:relative; width:100%; height:100%; transform-style:preserve-3d; transition: transform 800ms cubic-bezier(.2,.65,.2,1), box-shadow .3s; border-radius:var(--radius); box-shadow:var(--shadow) }
+    .card.flipped .card-inner{ transform:rotateY(180deg) }
+    .face{ position:absolute; inset:0; backface-visibility:hidden; border-radius:var(--radius); overflow:hidden; border:1px solid rgba(212,175,55,.45) }
+    .back{ display:grid; place-items:center; background: radial-gradient(800px 500px at 50% 40%, rgba(212,175,55,.10), transparent 60%), linear-gradient(135deg, #0b1d3a, #08152c); cursor:pointer }
+    .logo-circle{ width:140px;height:140px;border-radius:50%; border:6px solid var(--dore); display:grid;place-items:center; position:relative }
+    .logo-circle::after{ content:"ORADIA"; color:var(--dore); font-weight:700; letter-spacing:1px }
+    .front{ transform:rotateY(180deg); background: radial-gradient(900px 600px at 30% -10%, rgba(212,175,55,.15), transparent 60%), linear-gradient(165deg, #0c1f40, #0b1d3a 45%, #0a1833 100%); display:flex; flex-direction:column }
+    .front .topbar{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 14px; border-bottom:1px solid rgba(212,175,55,.25) }
+    .chip{ font-size:.78rem; padding:6px 10px; border-radius:999px; border:1px solid rgba(212,175,55,.45); color:#d4af37; background:rgba(18,20,32,.45) }
+    .polarity{ font-size:1.2rem; line-height:1; color:#d4af37 }
+    .art{ flex:1; margin:14px; border-radius:14px; border:1px solid rgba(212,175,55,.25); display:grid; place-items:center; text-align:center; padding:16px }
+    .art h3{ margin:0 0 8px; color:#d4af37; font-size:1.25rem }
+    .bottom{ padding:10px 14px 12px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid rgba(212,175,55,.2); font-size:.88rem }
+
+    .btn-gold{ background:linear-gradient(135deg,#d4af37,#b8860b); color:#051428; font-weight:600; border-radius:8px; padding:12px 24px; transition:.3s; display:inline-block; text-align:center }
+    .btn-gold:hover{ transform:translateY(-3px); box-shadow:0 10px 20px rgba(212,175,55,.3) }
+    .btn-outline-gold{ background:transparent; color:#d4af37; border:2px solid #d4af37; border-radius:8px; padding:10px 20px; transition:.3s; display:inline-block }
+    .btn-outline-gold:hover{ background:rgba(212,175,55,.1); transform:translateY(-3px) }
+
+    .scroll-top{ position:fixed; bottom:30px; right:30px; z-index:99; opacity:0; transition:opacity .3s }
+    .scroll-top.show{ opacity:1 }
+
+    .result-lines{ padding:12px; border-radius:12px; background:rgba(11,29,58,.6); border:1px solid rgba(212,175,55,.2) }
+    .hide-sections { display: none !important; }
+/* --- Traversée : plateau en croix 5 cartes --- */
+.traversee-board-5{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0,1fr));
+  grid-template-rows:repeat(3, auto);
+  gap:16px;
+  place-items:center;
+}
+.traversee-board-5 .nord   { grid-area: 1 / 2; }
+.traversee-board-5 .sud    { grid-area: 3 / 2; }
+.traversee-board-5 .ouest  { grid-area: 2 / 1; }
+.traversee-board-5 .est    { grid-area: 2 / 3; }
+.traversee-board-5 .centre { grid-area: 2 / 2; }
+
+.traversee-card .traversee-card-back,
+.traversee-card .traversee-card-front{
+  min-height: 16rem;
+}
+
+@media(max-width:860px){
+  .traversee-board-5{
+    grid-template-columns:1fr; grid-template-rows:auto;
+  }
+  .traversee-board-5 .nord,.traversee-board-5 .sud,.traversee-board-5 .ouest,
+  .traversee-board-5 .est,.traversee-board-5 .centre{ grid-area:auto; }
+}
+
+  </style>
+</head>
+
+<body class="relative">
+  <!-- Scroll to top button -->
+  <button id="scrollTop" class="scroll-top bg-night-blue text-gold p-3 rounded-full border border-gold shadow-lg" aria-label="Remonter en haut">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+
+  <!-- Header -->
+  <header class="header-bg w-full py-4 px-8">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center">
+        <img src="https://i.ibb.co/4wG0t61y/logo.png " alt="Oradia Logo" class="w-16 h-16 mr-6 transform hover:scale-110 transition-transform duration-300" />
+        <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+      </div>
+
+      <nav class="hidden md:flex space-x-6 text-lg">
+        <a href="#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
+        <a href="#oracle" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-cards mr-2"></i>Oracle</a>
+        <a href="#offres" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Offres</a>
+        <a href="#jeu" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Jeu</a>
+        <a href="#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
+        <a href="#apropos" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+      </nav>
+
+      <button id="loginBtn" class="btn-outline-gold hidden md:inline-block">Connexion</button>
     </div>
-      <img src="https://enzostvs-deepsite.hf.space/arrow.svg" class="absolute bottom-8 left-0 w-[100px] transform rotate-[30deg]" />
-    <script></script>
-  <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=Paddy22/site-oradia" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+  </header>
+
+  <!-- Hero -->
+  <section id="accueil" class="hero-bg min-h-screen flex items-center pt-20 pb-32 px-6">
+    <div class="container mx-auto max-w-6xl">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="text-center lg:text-left">
+          <h1 class="cormorant text-5xl md:text-6xl lg:text-7xl font-bold mb-6">
+            <span class="block gold-gradient">Découvrez Votre</span>
+            <span class="block mt-2">Chemin Vibratoire</span>
+          </h1>
+          <p class="text-xl text-light-gold mb-8 max-w-2xl">
+            L'oracle Oradia croise les sagesses ancestrales (Yi Jing, ennéagramme, astrologie, etc.) et les outils modernes pour vous guider comme une boussole.
+          </p>
+                <p class="text-light-gold max-w-3xl mx-auto">
+                    Il utilise l'IA comme un outils puissant afin de croiser les informations et vous fournir une guidance incroyablement pertinente.
+                         </p>
+                         <p class="text-light-gold max-w-3xl mx-auto">
+                         </p>
+                         <p class="text-xl text-light-gold mb-8 max-w-2xl">
+                                            </p>
+          <div class="flex flex-wrap justify-center lg:justify-start gap-4">
+            <a href="#oracle" class="btn-gold">Tirer les cartes</a>
+            <a href="#offres" class="btn-outline-gold">Découvrir les offres</a>
+          </div>
+        </div>
+
+        <!-- Visuel -->
+        <div class="flex justify-center">
+          <div class="relative w-80 h-80 lg:w-96 lg:h-96">
+            <div class="absolute inset-0 rounded-full border border-gold/20 animate-[spin_60s_linear_infinite]">
+              <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gold/50 shadow-lg animate-[orbit_12s_linear_infinite] origin-[50%_200px]"></div>
+              <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-light-gold/70 shadow-lg animate-[orbit_8s_linear_infinite] origin-[50%_180px]"></div>
+              <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gold/30 shadow-lg animate-[orbit_20s_linear_infinite] origin-[50%_220px]"></div>
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-br from-night-blue to-dark-blue rounded-full shadow-2xl flex items-center justify-center floating">
+              <div class="bg-gradient-to-br from-gold to-light-gold w-64 h-64 rounded-full flex items-center justify-center pulse">
+                <div class="bg-night-blue w-56 h-56 rounded-full flex items-center justify-center relative">
+                  <div class="absolute w-1 h-16 bg-gold rounded-full origin-bottom" style="transform: rotate(45deg);"></div>
+                  <div class="absolute w-1 h-16 bg-light-gold rounded-full origin-bottom" style="transform: rotate(-45deg);"></div>
+                  <img src="https://i.ibb.co/cKHs3GY5/logo2.png " alt="Oradia Compass"
+                       class="w-full h-full object-center object-contain rounded-full border-2 border-gold animate-spin-slow">
+                  <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span class="cormorant text-2xl text-gold">Oradia</span>
+                    <p class="text-light-gold mt-2">Oracle Vibratoire</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="absolute -top-6 -left-6 w-32 h-32 rounded-full border-4 border-gold opacity-30"></div>
+            <div class="absolute -bottom-6 -right-6 w-32 h-32 rounded-full border-4 border-gold opacity-30"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Oracle -->
+  <section id="oracle" class="py-20 px-6">
+    <div class="container mx-auto max-w-6xl">
+      <div class="text-center mb-10">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Tirage du Pèlerin</h2>
+        <p class="text-light-gold max-w-3xl mx-auto">Guidance vibratoire croisant plusieurs systèmes.</p>
+      </div>
+
+      <!-- Intention -->
+      <div class="bg-[rgba(18,20,32,.6)] border border-[rgba(212,175,55,.25)] rounded-2xl p-5 mb-6">
+        <div class="flex flex-wrap items-center gap-3">
+          <label for="intention" class="text-gold font-semibold">Votre intention :</label>
+          <input id="intention" type="text" class="flex-1 min-w-[260px] bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] rounded-lg p-3 text-light-gold"
+                 placeholder="Ex. : Comment orienter ma journée avec justesse ?" required />
+        </div>
+        <p class="text-sm opacity-80 mt-2">Formulez une question ouverte et terminez par « ? »</p>
+        <div class="mt-3 text-center">
+          <button id="startReading" class="btn-gold">Commencer le tirage</button>
+        </div>
+      </div>
+
+      <!-- Instruction -->
+      <p id="cardsInstruction" class="text-light-gold max-w-3xl mx-auto text-center mb-4 hidden">
+        Retournez les 4 cartes (Émotions, Besoins, Actions, Mémoire Cosmos)
+      </p>
+
+      <!-- Plateau (caché au départ) -->
+      <section class="board hidden" id="board" aria-live="polite">
+        <!-- ÉMOTIONS -->
+        <article class="card pos-1" data-family="emotions" aria-label="Carte Émotions">
+          <div class="card-inner">
+            <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Émotions">
+              <div class="logo-circle" aria-hidden="true"></div>
+            </div>
+            <div class="face front">
+              <div class="topbar">
+                <span class="chip"><i class="fas fa-heart mr-1"></i> ÉMOTIONS</span>
+                <span class="polarity" data-polarity></span>
+              </div>
+              <div class="art"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
+              <div class="bottom"></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- BESOINS -->
+        <article class="card pos-2" data-family="besoins" aria-label="Carte Besoins">
+          <div class="card-inner">
+            <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Besoins">
+              <div class="logo-circle" aria-hidden="true"></div>
+            </div>
+            <div class="face front">
+              <div class="topbar">
+                <span class="chip"><i class="fas fa-hands-helping mr-1"></i> BESOINS</span>
+                <span class="polarity" data-polarity></span>
+              </div>
+              <div class="art"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
+              <div class="bottom"><span data-icon></span></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- MÉMOIRE COSMOS -->
+        <article class="card pos-3" data-family="cosmos" aria-label="Carte Mémoire Cosmos">
+          <div class="card-inner">
+            <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Mémoire Cosmos">
+              <div class="logo-circle" aria-hidden="true"></div>
+            </div>
+            <div class="face front">
+              <div class="topbar">
+                <span class="chip"><i class="fas fa-star-and-crescent mr-1"></i> Mémoire Cosmos</span>
+                <span class="polarity" data-polarity style="visibility:hidden"></span>
+              </div>
+              <div class="art"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
+              <div class="bottom"><span data-icon></span></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- ACTIONS -->
+        <article class="card pos-4" data-family="actions" aria-label="Carte Actions">
+          <div class="card-inner">
+            <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Actions">
+              <div class="logo-circle" aria-hidden="true"></div>
+            </div>
+            <div class="face front">
+              <div class="topbar">
+                <span class="chip"><i class="fas fa-walking mr-1"></i> ACTIONS</span>
+                <span class="polarity" data-polarity></span>
+              </div>
+              <div class="art"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
+              <div class="bottom"><span data-icon></span></div>
+            </div>
+          </div>
+        </article>
+
+      </section>
+
+      <div class="text-center mt-4">
+        <button id="showResults" class="btn-gold hidden" disabled>Afficher le résultat du tirage</button>
+      </div>
+
+      <section id="results" class="hidden mt-6">
+        <h2 class="cormorant text-3xl text-gold mb-3">Résultats du tirage</h2>
+        <div class="mb-2"><b>Intention :</b> <span id="out-intention">—</span></div>
+        <div class="result-lines" id="lines"></div>
+        <div class="mt-3" id="synthese"></div>
+      </section>
+
+      <div class="flex gap-3 justify-center mt-6">
+        <button id="reset" class="btn-outline-gold hidden">Nouveau tirage</button>
+        <button id="fullReading" class="btn-outline-gold hidden">Tirage Complet</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Offres -->
+  <section id="offres" class="py-20 px-6 bg-dark-blue">
+    <div class="container mx-auto max-w-6xl">
+      <div class="text-center mb-12">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Nos Offres & Tarifs</h2>
+        <p class="text-light-gold max-w-3xl mx-auto">Choisissez l'offre qui résonne avec votre cheminement.</p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Gratuit -->
+        <div class="rounded-2xl p-8 relative overflow-hidden flex flex-col h-full" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+          <!-- Animation des flux temporels -->
+          <div class="absolute inset-0 z-0 opacity-50 pointer-events-none">
+            <!-- Ligne du temps centrale -->
+            <div class="absolute top-0 bottom-0 left-1/2 w-1 bg-gradient-to-b from-gold/30 via-gold/50 to-gold/30 -translate-x-1/2"></div>
+            <!-- Cercles temporels -->
+            <div class="absolute top-1/3 left-1/2 w-16 h-16 rounded-full border-2 border-gold/30 animate-[pulse_4s_ease-in-out_infinite] -translate-x-1/2 -translate-y-1/2"></div>
+            <div class="absolute top-1/2 left-1/2 w-20 h-20 rounded-full border-2 border-gold/50 animate-[pulse_3s_ease-in-out_infinite] -translate-x-1/2 -translate-y-1/2"></div>
+            <div class="absolute top-2/3 left-1/2 w-16 h-16 rounded-full border-2 border-gold/30 animate-[pulse_5s_ease-in-out_infinite] -translate-x-1/2 -translate-y-1/2"></div>
+            <!-- Connexions entre les temps -->
+            <div class="absolute top-1/3 left-1/2 w-1 h-1/6 bg-gradient-to-b from-gold/20 to-transparent -translate-x-1/2"></div>
+            <div class="absolute top-1/2 left-1/2 w-1 h-1/6 bg-gradient-to-t from-gold/20 to-transparent -translate-x-1/2"></div>
+          </div>
+
+          <div class="relative z-10 text-center mb-6">
+            <h3 class="cormorant text-2xl text-gold mb-2">Tirage du pèlerin</h3>
+            <div class="text-4xl font-bold text-light-gold">Gratuit</div>
+          </div>
+
+          <h4 class="cormorant text-xl text-gold mb-2 text-center">Passé / Présent / Futur</h4>
+          <ul class="space-y-3 mb-8 relative z-10">
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>3 cartes + 1 carte Mémoires Cosmos</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Interprétation synthétique</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Analyse croisée basique par l'IA</span></li>
+            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Cartes mutantes</span></li>
+            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Espace membre</span></li>
+            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Analyse approfondie</span></li>
+          </ul>
+
+          <a href="#oracle" class="btn-outline-gold w-full text-center relative z-10 mt-auto">Commencer le tirage</a>
+        </div>
+
+        <!-- Tirage complet -->
+        <div class="rounded-2xl p-8 relative overflow-hidden border-2 border-gold flex flex-col h-full" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9))">
+          <div class="absolute top-0 right-0 bg-gold text-night-blue px-4 py-1 rounded-bl-lg rounded-tr-2xl font-bold z-10">Populaire</div>
+
+          <!-- Boussole mystique animation -->
+          <div class="absolute inset-0 z-0 opacity-60 pointer-events-none">
+            <div class="absolute top-1/2 left-1/2 w-64 h-64 -translate-x-1/2 -translate-y-1/2">
+              <!-- Cercle extérieur -->
+              <div class="absolute inset-0 rounded-full border border-gold/30 animate-[spin_30s_linear_infinite]"></div>
+              <!-- Aiguilles -->
+              <div class="absolute top-1/2 left-1/2 w-1 h-16 bg-gold -translate-x-1/2 -translate-y-1/2 origin-bottom animate-[pulse_3s_ease-in-out_infinite]" style="transform: rotate(45deg);"></div>
+              <div class="absolute top-1/2 left-1/2 w-1 h-16 bg-light-gold -translate-x-1/2 -translate-y-1/2 origin-bottom animate-[pulse_3s_ease-in-out_infinite]" style="transform: rotate(-45deg);"></div>
+              <!-- Points cardinaux -->
+              <div class="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-gold">N</div>
+              <div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-gold">S</div>
+              <div class="absolute top-1/2 left-2 -translate-y-1/2 text-xs text-gold">O</div>
+              <div class="absolute top-1/2 right-2 -translate-y-1/2 text-xs text-gold">E</div>
+              <!-- Particules en orbite -->
+              <div class="absolute top-0 left-1/2 w-2 h-2 rounded-full bg-gold/50 -translate-x-1/2 -translate-y-1/2 animate-[orbit_8s_linear_infinite] origin-[50%_128px]"></div>
+              <div class="absolute top-0 left-1/2 w-3 h-3 rounded-full bg-light-gold/40 -translate-x-1/2 -translate-y-1/2 animate-[orbit_12s_linear_infinite] origin-[50%_150px]"></div>
+            </div>
+          </div>
+
+          <div class="relative z-10 text-center mb-6">
+            <h3 class="cormorant text-2xl text-gold mb-2">Tirages de la traversée</h3>
+            <div class="text-4xl font-bold text-light-gold">5€</div>
+            <h4 class="cormorant text-xl text-gold">Accès à 5 tirages complets</h4>
+          </div>
+
+          <ul class="space-y-3 mb-8 relative z-10">
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>4 cartes vibratoires</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 carte Mémoires Cosmos</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes mutantes incluses</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Analyse croisée par l'IA complète et détaillée</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question d'introspection</span></li>
+            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Espace membre</span></li>
+            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">1 tirage complet quotidien par mail</span></li>
+          </ul>
+
+          <a href="#" id="orderBtn" class="btn-gold w-full text-center block relative z-10 mt-auto">Commander</a>
+        </div>
+
+        <!-- Abonnement -->
+        <div class="rounded-2xl p-8 relative overflow-hidden flex flex-col h-full" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+          <!-- Animation champ magnétique (tore) -->
+          <div class="absolute inset-0 z-0 opacity-50 pointer-events-none">
+            <div class="absolute top-1/2 left-1/2 w-64 h-64 -translate-x-1/2 -translate-y-1/2">
+              <!-- Anneaux -->
+              <div class="absolute inset-0 rounded-full border-2 border-gold/30 animate-[spin_30s_linear_infinite]"></div>
+              <div class="absolute inset-0 rounded-full border-2 border-gold/20 animate-[spin_25s_linear_infinite_reverse] rotate-45"></div>
+              <!-- Lignes de champ -->
+              <div class="absolute top-1/2 left-1/2 w-1 h-32 bg-gradient-to-b from-gold/30 to-transparent -translate-x-1/2 -translate-y-1/2 origin-bottom animate-[pulse_4s_ease-in-out_infinite]"></div>
+              <div class="absolute top-1/2 left-1/2 w-1 h-32 bg-gradient-to-t from-gold/30 to-transparent -translate-x-1/2 -translate-y-1/2 origin-top animate-[pulse_5s_ease-in-out_infinite]"></div>
+              <!-- Particules -->
+              <div class="absolute top-0 left-1/2 w-2 h-2 rounded-full bg-gold/40 -translate-x-1/2 -translate-y-1/2 animate-[orbit_8s_linear_infinite] origin-[50%_150px]"></div>
+              <div class="absolute top-0 left-1/2 w-3 h-3 rounded-full bg-light-gold/30 -translate-x-1/2 -translate-y-1/2 animate-[orbit_12s_linear_infinite] origin-[50%_140px]"></div>
+            </div>
+          </div>
+
+          <div class="relative z-10 text-center mb-6">
+            <h3 class="cormorant text-2xl text-gold mb-2">Tirage du Tore</h3>
+            <div class="text-4xl font-bold text-light-gold">8€ <span class="text-lg">/mois</span></div>
+          </div>
+
+          <ul class="space-y-3 mb-8 relative z-10">
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 tirage complet quotidien par mail avec votre intention</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes mutantes incluses</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question du jour</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Espace membre (profils ennéagramme, astro, numérologie...)</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Accès à l'archive des 10 derniers tirages</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Participation à l’amélioration de l’oracle (expérience anonyme)</span></li>
+          </ul>
+
+          <a href="#" id="subscribeBtn" class="btn-gold w-full text-center block relative z-10 mt-auto">S'abonner</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+ 
+  <!-- Oracle de cartes -->
+  <section id="Oracle" class="py-20 px-6 bg-dark-blue">
+    <div class="container mx-auto max-w-6xl">
+      <div class="text-center mb-12">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Oracle de Cartes Oradia</h2>
+        <p class="text-light-gold max-w-3xl mx-auto">Découvrez notre oracle en version physique</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <div class="rounded-2xl p-8 mb-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+            <h3 class="cormorant text-2xl text-gold mb-4">Version Physique en Développement</h3>
+            <p class="text-light-gold mb-4">
+              Une version physique de 64 cartes de l'oracle Oradia est en cours de développement. Vous y retrouverez les 3 types de tirage (tirage du Pèlerin, tirage de La traversée, tirage du Tore) ainsi qu'un livret d'accompagnement illustré. Un partenariat avec une illustratrice est en cours afin de vous proposer une expérience au graphisme unique.
+            </p>
+            <p class="text-light-gold mb-6">
+              Cette version sera idéale pour des ateliers, cercles de partage ou usage personnel. 
+            </p>
+            <h4 class="cormorant text-xl text-gold mb-3">Vous avez hâte n'est-ce pas?</h4>
+            <p class="text-light-gold mb-4">
+              Vous pouvez contribuer à votre hauteur au financement, vous recevoir le jeu en avant-première lorsqu’il sera disponible.
+            </p>
+            <div class="text-center">
+              <a href="..." target="_blank" class="btn-gold inline-block">Faire un don</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-center">
+          <div class="rounded-2xl p-4" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+            <img src="https://i.ibb.co/FTDGc0k/Capture-d-cran-2025-08-09-090137.png " alt="Aperçu du jeu" />
+            <p class="text-light-gold text-center mt-4 italic">Aperçu du jeu de cartes en développement</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+ <!-- À propos -->
+  <section id="apropos" class="py-20 px-6">
+    <div class="container mx-auto max-w-6xl">
+      <div class="text-center mb-12">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">À Propos d'Oradia</h2>
+        <p class="text-light-gold max-w-3xl mx-auto">Découvrez l'essence et la mission de l'oracle Oradia</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <div class="rounded-2xl p-8 mb-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+            <h3 class="cormorant text-2xl text-gold mb-4">Oradia - La boussole du pèlerin</h3>
+            <section class="text-light-gold leading-relaxed">
+              <p>Oradia n’est pas un oracle de prédiction.
+                
+                 <h4 class="cormorant text-xl text-gold mb-3">C’est une boussole pour le voyage intérieur.</h4></p>
+              <p>Ses cartes forment un univers vivant :<br>
+                les Émotions qui traversent,<br>
+                les Besoins qui appellent,<br>
+                les Transmutations qui transforment,<br>
+                les Archétypes qui guident,<br>
+                les Révélations qui éclairent,<br>
+                et les Actions qui incarnent.
+              </p>
+              <p>Chaque tirage est une traversée.<br>
+                Le présent dialogue avec le passé,<br>
+                ouvre l’avenir et révèle ton axe profond.
+              </p>
+              <p>Oradia est l’invitation à marcher en conscience,<br>
+                là où chaque pas devient créateur,<br>
+                et chaque signe, une étoile sur ton chemin.
+              </p>
+            </section>
+          </div>
+
+          <div class="rounded-2xl p-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+            <h3 class="cormorant text-2xl text-gold mb-4">Une Approche Éthique</h3>
+            <p class="text-light-gold mb-4">
+              Oradia s'engage dans une démarche écologique et respectueuse du Vivant. Hébergeur éthique, IA raisonnée, outils open-source, souveraineté du développement…
+            </p>
+            <p class="text-light-gold">
+              Pour tout achat sur le site, 1% est reversé à une association œuvrant en faveur du vivant.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex justify-center">
+          <div class="relative">
+            <div class="bg-gradient-to-br from-gold/10 to-night-blue border border-gold/30 rounded-2xl w-full h-96"></div>
+            <div class="absolute -bottom-6 -right-6 w-64 h-64 bg-gradient-to-tr from-gold/5 to-transparent border border-gold/20 rounded-2xl">
+              <img src="https://i.ibb.co/TB75673d/logo.png " alt="logo" class="w-full h-full object-contain p-4">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Partenariats / OTRE / Edolg'Or -->
+  <section id="edolgor" class="py-20 px-6 bg-dark-blue">
+    <div class="container mx-auto max-w-6xl">
+      <div class="text-center mb-12">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Nos partenariats</h2>
+        <p class="text-light-gold max-w-3xl mx-auto">
+          Découvrez notre engagement pour un modèle de société innovant et des projets fidèles à nos convictions
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="flex justify-center">
+          <div class="relative">
+            <div class="bg-gradient-to-br from-gold/10 to-night-blue border border-gold/30 rounded-2xl w-full h-96"></div>
+            <div class="absolute -top-6 -left-6 w-64 h-64 bg-gradient-to-tr from-gold/5 to-transparent border border-gold/20 rounded-2xl">
+              <img src="https://i.ibb.co/354MSMtd/Logo-SCIC.png " alt="Logo-SCIC" class="w-full h-full object-contain p-3">
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <!-- Le Projet OTRE -->
+          <div class="rounded-2xl p-8 mb-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+            <h3 class="cormorant text-2xl text-gold mb-4">Le Projet OTRE</h3>
+            <p class="text-light-gold">
+              En route vers un nouveau modèle de société innovant appelé OTRE (Organisation Torique et Régénérative des Êtres), issu de 12 années de recherche empirique.
+              Ce modèle propose une transition sociétale vivante, ludique, inclusive et régénérative, fondée sur l'équilibre des forces,
+              l'intelligence collective et la souveraineté individuelle. Basé sur la géométrie du tore (présente dans la nature, la pomme,
+              le champ magnétique terrestre…), il propose une constellation de solutions pour répondre aux problématiques actuelles.
+            </p>
+          </div>
+
+          <!-- Edolg'Or -->
+          <div class="rounded-2xl p-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+            <h3 class="cormorant text-2xl text-gold mb-4">Edolg'Or, notre Contribution</h3>
+            <p class="text-light-gold">
+              Edolg'Or est une association qui vise à favoriser la création, le développement et l’entretien des liens sociaux et culturels
+              par des activités ludiques, artistiques et d’arts vivants à travers un jeu sérieux grandeur nature.
+              Objectif : découvrir la civilisation d'Edolg'OR et l'emplacement de sa cité d'or vivant, au rythme du modèle OTRE.
+              Lors de votre achat pour un tirage complet ou un abonnement, vous pouvez reverser 1€ à l'association.
+            </p>
+            <p class="text-light-gold">
+              Les activités proposées créent des espaces d'expression et de reconnexion essentiels.
+            </p>
+            <a href="https://fr.tipeee.com/mjr-wellor " target="_blank" class="btn-outline-gold mt-6 inline-block">Découvrir Edolg'Or</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- CGV -->
+  <section id="cgv" class="py-20 px-6 bg-night-blue">
+    <div class="container mx-auto max-w-6xl">
+      <h2 class="cormorant text-4xl md:text-5xl font-bold mb-8 gold-gradient">Conditions générales de vente (CGV)</h2>
+      <div class="rounded-2xl p-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+        <p><strong>Editeur du site :</strong> Oradia, micro-entreprise immatriculée sous le n° [SIRET], dont le siège est situé [adresse]. Contact : [adresse e-mail / tél].</p>
+        <p><strong>Objet :</strong> Le site oradia.fr propose des prestations d'oracle/tarot en ligne : un tirage complet vendu à l'unité et un abonnement mensuel donnant droit à un tirage quotidien.</p>
+        <p><strong>Prix et paiement :</strong> 5 € donnant accès à 5 tirages complets et 8 €/mois pour l'abonnement quotidien. Les paiements sont sécurisés et gérés par Stripe. La validation de la commande implique l'acceptation des présentes CGV.</p>
+        <p><strong>Commande et accès :</strong> Une fois le paiement validé, le tirage est réalisé dans les 48 h et un e-mail récapitulatif est envoyé. L'abonnement est résiliable à tout moment.</p>
+        <p><strong>Droit de rétractation :</strong> Conformément à l'article L221-28 du Code de la consommation, aucun droit de rétractation n'est possible pour les services pleinement exécutés avant la fin du délai de 14 jours. Toutefois, une garantie "satisfait ou remboursé 7 jours" est accordée sur l'abonnement.</p>
+        <p><strong>Protection des données :</strong> Les données collectées (e-mail, date de naissance, etc.) sont stockées chez Brevo et ne sont pas cédées. Vous disposez d'un droit d'accès, de rectification et de suppression sur simple demande.</p>
+        <p><strong>Cookies :</strong> Le site utilise des cookies techniques et ceux de Stripe/Brevo pour le bon fonctionnement. Un bandeau de consentement est affiché.</p>
+        <p><strong>Droit applicable :</strong> Les présentes conditions sont soumises au droit français.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tirage de la Traversée -->
+  <section id="traversee" class="py-20 px-6 bg-night-blue">
+    <div class="container mx-auto max-w-6xl">
+      <div class="text-center mb-12">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Tirage de la Traversée</h2>
+        <p class="text-light-gold max-w-3xl mx-auto">Guidance vibratoire approfondie pour votre cheminement</p>
+      </div>
+
+      <div class="rounded-2xl p-8 mb-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+        <div id="traversee-intro">
+          <h3 class="cormorant text-2xl text-gold mb-4">Préparation du tirage</h3>
+          <p class="text-light-gold mb-6">Ce tirage approfondi nécessite quelques informations pour personnaliser votre expérience.</p>
+          <button id="traversee-start" class="btn-gold">Commencer</button>
+        </div>
+
+        <form id="traversee-form" class="hidden">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label class="block text-light-gold mb-2">Prénom</label>
+              <input type="text" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+            </div>
+            <div>
+              <label class="block text-light-gold mb-2">Date de naissance</label>
+              <input type="date" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+            </div>
+            <div>
+              <label class="block text-light-gold mb-2">Ville de naissance</label>
+              <input type="text" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+            </div>
+            <div>
+              <label class="block text-light-gold mb-2">Heure de naissance</label>
+              <input type="time" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+            </div>
+          </div>
+          <div class="mb-6">
+            <label class="block text-light-gold mb-2">Votre intention pour ce tirage</label>
+            <textarea class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg min-h-[120px]" required></textarea>
+          </div>
+          <button type="submit" class="btn-gold w-full">Lancer le tirage</button>
+        </form>
+
+        <div id="traversee-board" class="hidden">
+          <!-- Board will be generated by JS -->
+        </div>
+
+        <div id="traversee-results" class="hidden">
+          <!-- Results will be generated by JS -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
+    <div class="container mx-auto max-w-6xl">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <div class="flex items-center mb-4">
+            <img src="https://i.ibb.co/4wG0t61y/logo.png " alt="Oradia Logo" class="w-16 h-16 mr-4" />
+            <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+          </div>
+          <p class="text-light-gold text-sm">Oracle vibratoire pour accompagner votre cheminement personnel et révéler votre essence.</p>
+        </div>
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Navigation</h4>
+          <ul class="space-y-2">
+            <li><a href="#accueil" class="text-light-gold hover:text-gold transition">Accueil</a></li>
+            <li><a href="#oracle" class="text-light-gold hover:text-gold transition">Oracle</a></li>
+            <li><a href="#offres" class="text-light-gold hover:text-gold transition">Offres</a></li>
+            <li><a href="#apropos" class="text-light-gold hover:text-gold transition">À Propos</a></li>
+            <li><a href="#edolgor" class="text-light-gold hover:text-gold transition">Edolg'Or</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
+          <ul class="space-y-2">
+            <li><a href="#cgv" class="text-light-gold hover:text-gold transition">CGV</a></li>
+            <li><a href="#" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
+            <li><a href="#" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Contact</h4>
+          <ul class="space-y-2">
+            <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><span class="text-light-gold">contact@oradia.fr</span></li>
+            <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><span class="text-light-gold">@oradia_oracle</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="pt-8 border-t border-gold/10 text-center">
+        <p class="text-light-gold text-sm">&copy; 2025 Oradia. Tous droits réservés. |
+          <button id="footerLogin" class="text-gold hover:text-light-gold">Accès Dashboard</button>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Modale Commande -->
+  <div id="orderModal" class="fixed inset-0 bg-night-blue/90 z-50 flex items-center justify-center hidden">
+    <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
+      <button id="closeOrder" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
+      <div class="text-center mb-8">
+        <h3 class="cormorant text-3xl text-gold mb-2">Commande Tirage Complet</h3>
+        <p class="text-light-gold">Finalisez votre commande (5€)</p>
+      </div>
+      <form id="orderForm">
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Email</label>
+          <input type="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Nom complet</label>
+          <input type="text" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Date de naissance</label>
+          <input type="date" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-light-gold mb-2">Moyen de paiement</label>
+          <select class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+            <option value="">Sélectionnez...</option>
+            <option value="card">Carte bancaire</option>
+            <option value="paypal">PayPal</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-gold w-full">Payer 5€</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modale Abonnement -->
+  <div id="subscriptionModal" class="fixed inset-0 bg-night-blue/90 z-50 flex items-center justify-center hidden" style="backdrop-filter: blur(5px);">
+    <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
+      <button id="closeSubscription" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
+      <div class="text-center mb-8">
+        <h3 class="cormorant text-3xl text-gold mb-2">Espace Membre Oradia</h3>
+        <p class="text-light-gold">Connectez-vous ou créez votre compte</p>
+      </div>
+
+      <!-- Login membre -->
+      <form id="memberLoginForm" class="mb-6">
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Email</label>
+          <input type="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-light-gold mb-2">Mot de passe</label>
+          <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <button type="submit" class="btn-gold w-full mb-4">Se connecter</button>
+        <p class="text-light-gold text-center text-sm">Pas encore de compte ?
+          <a href="#" id="showRegister" class="text-gold hover:underline">S'inscrire</a>
+        </p>
+      </form>
+
+      <!-- Register membre -->
+      <form id="memberRegisterForm" class="hidden">
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Email</label>
+          <input type="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Mot de passe</label>
+          <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-light-gold mb-2">Confirmez le mot de passe</label>
+          <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-6 flex items-start">
+          <input type="checkbox" id="terms" class="mt-1 mr-3" required>
+          <label for="terms" class="text-light-gold text-sm">
+            J'accepte les <a href="#cgv" class="text-gold hover:underline">conditions générales</a>
+          </label>
+        </div>
+        <button type="submit" class="btn-gold w-full">Créer le compte & s'abonner</button>
+        <p class="text-light-gold text-center text-sm mt-4">Déjà un compte ?
+          <a href="#" id="showLogin" class="text-gold hover:underline">Se connecter</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modale Login Dashboard -->
+  <div id="loginModal" class="fixed inset-0 bg-night-blue/90 z-50 flex items-center justify-center hidden">
+    <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
+      <button id="closeLogin" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
+      <div class="text-center mb-8">
+        <h3 class="cormorant text-3xl text-gold mb-2">Connexion Dashboard</h3>
+        <p class="text-light-gold">Accédez à votre espace d'analyse SEO</p>
+      </div>
+      <form id="loginFormDashboard">
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Email</label>
+          <input type="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-light-gold mb-2">Mot de passe</label>
+          <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <button type="submit" class="btn-gold w-full">Se connecter</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="fixed inset-0 bg-night-blue z-50 overflow-auto hidden">
+    <div class="min-h-screen">
+      <header class="bg-night-blue border-b border-gold/20 py-4 px-6 flex justify-between items-center">
+        <div class="flex items-center">
+          <div class="rounded-xl w-10 h-10 border-2 border-dashed" ></div>
+          <span class="cormorant text-2xl font-bold ml-3 gold-gradient">ORADIA DASHBOARD</span>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button id="logoutBtn" class="btn-outline-gold">Déconnexion</button>
+          <div class="rounded-xl w-10 h-10 border-2 border-dashed"></div>
+        </div>
+      </header>
+
+      <div class="p-6">
+        <h2 class="cormorant text-3xl text-gold mb-6">Tableau de Bord Analytique</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div class="p-4 rounded-2xl" style="background:rgba(5,20,40,.7); border:1px solid rgba(212,175,55,.2)">
+            <h3 class="text-light-gold text-sm">Visiteurs</h3>
+            <p class="text-2xl font-bold text-gold">1,248</p>
+          </div>
+          <div class="p-4 rounded-2xl" style="background:rgba(5,20,40,.7); border:1px solid rgba(212,175,55,.2)">
+            <h3 class="text-light-gold text-sm">Taux de rebond</h3>
+            <p class="text-2xl font-bold text-gold">32.6%</p>
+          </div>
+          <div class="p-4 rounded-2xl" style="background:rgba(5,20,40,.7); border:1px solid rgba(212,175,55,.2)">
+            <h3 class="text-light-gold text-sm">Conversions</h3>
+            <p class="text-2xl font-bold text-gold">48</p>
+          </div>
+          <div class="p-4 rounded-2xl" style="background:rgba(5,20,40,.7); border:1px solid rgba(212,175,55,.2)">
+            <h3 class="text-light-gold text-sm">Revenus</h3>
+            <p class="text-2xl font-bold text-gold">€245</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Tirage de la Traversée Script -->
+  <!-- Tirage de la Traversée Script (NOUVELLE VERSION 5 CARTES EN CROIX) -->
+<script>
+  (function() {
+    const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+    const polIcon = p => p==="yang" ? "🔺" : p==="yin" ? "⚫" : "";
+
+    const Traversee = {
+      labels: {
+        nord:   "Nord — La Vision (Révélations)",
+        sud:    "Sud — L’Ancrage (Transmutation)",
+        est:    "Est — L’Élan (Actions)",
+        ouest:  "Ouest — La Mémoire (Émotions/Besoins)",
+        centre: "Centre — Mémoires Cosmos"
+      },
+
+      init: function() {
+        document.getElementById('traversee-start').addEventListener('click', () => {
+          document.getElementById('traversee-intro').classList.add('hidden');
+          document.getElementById('traversee-form').classList.remove('hidden');
+        });
+
+        document.getElementById('traversee-form').addEventListener('submit', (e) => {
+          e.preventDefault();
+          this.generateBoard5();
+        });
+      },
+
+      generateBoard5: function() {
+        const board = document.getElementById('traversee-board');
+        board.innerHTML = `
+          <h3 class="cormorant text-2xl text-gold mb-6 text-center">
+            Retournez les 5 cartes : Nord • Sud • Est • Ouest • Centre
+          </h3>
+          <div class="traversee-board-5">
+            ${this.cardSlot('nord')}
+            ${this.cardSlot('sud')}
+            ${this.cardSlot('est')}
+            ${this.cardSlot('ouest')}
+            ${this.cardSlot('centre')}
+          </div>
+        `;
+        document.getElementById('traversee-form').classList.add('hidden');
+        board.classList.remove('hidden');
+
+        board.querySelectorAll('.traversee-card-back').forEach(back => {
+          back.addEventListener('click', (ev) => this.flip(ev.currentTarget.closest('.traversee-card')));
+        });
+      },
+
+      cardSlot: function(slot){
+        return `
+          <div class="traversee-card ${slot}">
+            <div class="traversee-card-inner">
+              <div class="traversee-card-back bg-gradient-to-br from-gold/10 to-night-blue border border-gold/30 rounded-xl p-6 h-64 flex items-center justify-center cursor-pointer">
+                <div class="text-center">
+                  <div class="text-sm opacity-80 mb-1">${this.labels[slot]}</div>
+                  <div class="text-4xl">🃏</div>
+                </div>
+              </div>
+              <div class="traversee-card-front hidden bg-gradient-to-br from-gold/5 to-night-blue border border-gold/30 rounded-xl p-6 h-64">
+                <h4 class="text-gold text-xl mb-2" data-name>—</h4>
+                <p class="text-light-gold" data-quote>—</p>
+                <div class="mt-2 text-gold text-lg" data-pol></div>
+              </div>
+            </div>
+          </div>
+        `;
+      },
+
+      flip: function(card){
+        const slot = [...card.classList].find(c => ["nord","sud","est","ouest","centre"].includes(c));
+        const F = window.DATA || {revelations:[], actions:[], emotions:[], besoins:[], cosmos:[], transmutation:[]};
+        let pool = [];
+
+        if(slot==="nord") pool = F.revelations;
+        else if(slot==="sud") pool = F.transmutation;
+        else if(slot==="est") pool = F.actions;
+        else if(slot==="ouest") pool = [...F.emotions, ...F.besoins];
+        else if(slot==="centre") pool = F.cosmos;
+
+        const data = pool.length ? pick(pool) : {name:"—", quote:"—"};
+        card.querySelector('[data-name]').textContent  = data.name;
+        card.querySelector('[data-quote]').textContent = data.quote;
+        card.querySelector('[data-pol]').textContent   = data.polarity ? polIcon(data.polarity) : "";
+
+        card.classList.add('flipped');
+        card.querySelector('.traversee-card-back').classList.add('hidden');
+        card.querySelector('.traversee-card-front').classList.remove('hidden');
+      }
+    };
+
+    document.addEventListener('DOMContentLoaded', () => Traversee.init());
+  })();
+</script>
+
+      // Initialize
+      document.addEventListener('DOMContentLoaded', () => Traversee.init());
+    })();
+  </script>
+
+  <!-- SCRIPT -->
+  <script>
+    // --------- Données cartes ----------
+    const DATA = {
+      emotions: [
+        {name:"JOIE", quote:"Une onde traverse mon cœur. Elle dit oui à la vie.", polarity:"yang"},
+        {name:"TRISTESSE", quote:"Je laisse couler ce qui n’a plus à rester. L’eau me guérit.", polarity:"yin"},
+        {name:"INJUSTICE", quote:"Je sens l’appel d’un monde plus juste, d’un équilibre à retrouver.", polarity:"yin"},
+        {name:"ÉMERVEILLEMENT", quote:"La beauté m’inspire et l’invisible se révèle.", polarity:"yang"},
+        {name:"HONTE", quote:"Je me regarde avec tendresse. Aucun poids ne m’appartient vraiment.", polarity:"yin"},
+        {name:"CULPABILITÉ", quote:"Je reconnais mes limites humaines. Je me pardonne, profondément.", polarity:"yin"},
+        {name:"SOLITUDE", quote:"Dans le silence, je me découvre présence.", polarity:"yin"},
+        {name:"DÉGOÛT", quote:"Je perçois ce qui ne me nourrit plus. J’opère l’écart juste.", polarity:"yin"},
+        {name:"SÉRÉNITÉ", quote:"Je goûte la paix dans l’instant.", polarity:"yang"},
+        {name:"AMOUR", quote:"J’aime parce que c’est ma nature.", polarity:"yang"},
+        {name:"COLÈRE", quote:"Mon feu sacré défend ma juste frontière.", polarity:"yang"},
+        {name:"PEUR", quote:"J’écoute l’ombre qui murmure vers plus de conscience.", polarity:"yin"}
+      ],
+      besoins: [
+        {name:"RECONNAISSANCE", quote:"Quand mes dons sont vus, je m’ouvre.", polarity:"yang"},
+        {name:"SÉCURITÉ", quote:"La stabilité me soutient.", polarity:"yin"},
+        {name:"LIBERTÉ", quote:"Je respire l’espace, rien ne m’enferme.", polarity:"yang"},
+        {name:"SOUTIEN", quote:"Je m’appuie sans honte sur l’autre.", polarity:"yin"},
+        {name:"REPOS", quote:"Ralentir régénère mon être.", polarity:"yin"},
+        {name:"CLAIRETÉ", quote:"La lumière éclaire mon esprit.", polarity:"yang"},
+        {name:"APPARTENANCE", quote:"Je fais partie d’un cercle plus vaste.", polarity:"yin"},
+        {name:"AUTONOMIE", quote:"Je marche de mes propres forces.", polarity:"yang"},
+        {name:"STIMULATION", quote:"Le mouvement m’invite à explorer.", polarity:"yang"},
+        {name:"HARMONIE", quote:"Chaque chose à sa place.", polarity:"yin"},
+        {name:"SENS", quote:"Chaque pas a une raison d’être.", polarity:"yin"},
+        {name:"AMOUR REÇU", quote:"J’accueille la tendresse offerte.", polarity:"yin"}
+      ],
+      revelations: [
+        {name:"CLÉ", quote:"Une porte s’ouvre : accès à une vérité.", polarity:"yang"},
+        {name:"PORTE", quote:"Un passage se présente, j’ose franchir.", polarity:"yin"},
+        {name:"MESSAGE", quote:"Un signe clair m’est donné.", polarity:"yang"},
+        {name:"SYNCHRONICITÉ", quote:"Tout se répond, rien n’est hasard.", polarity:"yin"},
+        {name:"SIGNE", quote:"Un indice discret éclaire ma route.", polarity:"yin"},
+        {name:"VISION", quote:"Je vois au-delà, les voiles se lèvent.", polarity:"yang"},
+        {name:"PRÉSAGE", quote:"Un souffle d’avenir approche.", polarity:"yin"},
+        {name:"ÉVEIL", quote:"Je me souviens de qui je suis.", polarity:"yang"},
+        {name:"LUMIÈRE", quote:"Un rayon traverse l’ombre.", polarity:"yang"},
+        {name:"VÉRITÉ", quote:"L’essence se distingue clairement.", polarity:"yang"},
+        {name:"DÉVOILEMENT", quote:"Le caché devient visible.", polarity:"yin"},
+        {name:"ÉTINCELLE", quote:"Une flamme naît, nouvelle voie.", polarity:"yang"}
+      ],
+      actions: [
+        {name:"AGIR", quote:"Je passe du rêve à l’acte.", polarity:"yang"},
+        {name:"DIRE", quote:"Je prononce les mots justes.", polarity:"yang"},
+        {name:"CRÉER", quote:"Je façonne le monde, offrande.", polarity:"yang"},
+        {name:"PARTAGER", quote:"J’offre ce qui m’anime.", polarity:"yang"},
+        {name:"ALLER VERS", quote:"Je m’avance, curieux.", polarity:"yang"},
+        {name:"CHOISIR", quote:"Je décide avec clarté.", polarity:"yang"}
+      ],
+      cosmos: [
+        {name:"ORIGINE", quote:"Tout naît du même centre."},
+        {name:"LIGNÉE", quote:"Je marche avec mes ancêtres."},
+        {name:"CYCLE", quote:"Rien ne se perd, tout se transforme."},
+        {name:"LOI", quote:"Des règles invisibles vibrent partout."},
+        {name:"TRAME", quote:"Un tissu relie chaque instant."},
+        {name:"KARMA", quote:"Je récolte ce que je sème."},
+        {name:"VOILE", quote:"Je pressens sans tout voir."},
+        {name:"PORTAIL", quote:"Un seuil s’ouvre vers ailleurs."},
+        {name:"ÉCHO", quote:"Un souvenir me traverse."},
+        {name:"COSMOGÉNÈSE", quote:"Le monde s’éveille à nouveau."},
+        {name:"AKASHA", quote:"Tout est écrit et possible."},
+        {name:"INTRICATION", quote:"Tout est lié à tout."}
+      ]
+    };
+
+    const familyLabels = {
+      emotions: "ÉMOTIONS",
+      besoins: "BESOINS",
+      revelations: "RÉVÉLATIONS",
+      actions: "ACTIONS",
+      cosmos: "Carte Mémoires Cosmos"
+    };
+    const polarityIcon = p => p === "yang" ? "🔺" : "⚫";
+    const polarityLabel = p => p === "yang" ? "énergie masculine" : "énergie féminine";
+    const yiInsight = {
+      emotions: "Carte Émotion (base) : climat émotionnel présent.",
+      besoins: "Carte Besoin (relation) : ajustement au monde/soutien.",
+      revelations: "Carte Action (vision) : clarté et direction.",
+      actions: "Carte Mémoires Cosmos (passage) : décision et incarnation."
+    };
+    const rng = n => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % n; };
+    const pick = arr => arr[rng(arr.length)];
+
+    // --------- État tirage ----------
+    let drawn = { emotions:null, besoins:null, actions:null, cosmos:null };
+    let flippedCount = 0;
+
+    // --------- DOM ----------
+    const board = document.getElementById("board");
+    const showBtn = document.getElementById("showResults");
+    const resetBtn = document.getElementById("reset");
+    const linesOut = document.getElementById("lines");
+    const synthOut = document.getElementById("synthese");
+    const intentionIn = document.getElementById("intention");
+    const outIntention = document.getElementById("out-intention");
+    const results = document.getElementById("results");
+
+    function renderFront(cardEl, data, family){
+      cardEl.querySelector('[data-name]').textContent = data.name;
+      cardEl.querySelector('[data-quote]').textContent = data.quote;
+      const pol = cardEl.querySelector('[data-polarity]');
+      if(family === "cosmos"){
+        pol.style.visibility = "hidden";
+      } else {
+        pol.style.visibility = "visible";
+        pol.textContent = polarityIcon(data.polarity);
+      }
+    }
+
+    function flipCard(cardEl){
+      if(cardEl.classList.contains('flipped')) return;
+      if(!intentionIn.value.trim()){
+        intentionIn.focus();
+        intentionIn.setCustomValidity("Veuillez saisir une intention pour votre tirage");
+        intentionIn.reportValidity();
+        return;
+      }
+      const family = cardEl.dataset.family;
+      const data = pick(DATA[family]);
+      drawn[family] = data;
+
+      renderFront(cardEl, data, family);
+      cardEl.classList.add('flipped');
+      flippedCount++;
+
+      const back = cardEl.querySelector('.back');
+      back.setAttribute('aria-pressed','true');
+      back.style.pointerEvents = 'none';
+
+      if(flippedCount === 4){
+        showBtn.classList.remove('hidden');
+        showBtn.disabled = false;
+      }
+    }
+
+    // --------- Interactions ----------
+    // Validation intention live
+    const startButton = document.getElementById('startReading');
+    intentionIn.addEventListener('input', () => {
+      const ok = intentionIn.value.trim().endsWith('?') && intentionIn.value.trim().length > 1;
+      startButton.disabled = !ok;
+    });
+
+    // Lancer le tirage (affiche le plateau uniquement à ce moment)
+    startButton.addEventListener('click', ()=>{
+      if(!intentionIn.value.trim().endsWith('?')){
+        intentionIn.setCustomValidity("Veuillez formuler une question ouverte se terminant par « ? »");
+        intentionIn.reportValidity();
+        return;
+      }
+      board.classList.remove('hidden');
+      document.getElementById('cardsInstruction').classList.remove('hidden');
+      startButton.classList.add('hidden');
+      const firstBack = board.querySelector('.card .back'); if(firstBack) firstBack.focus();
+    });
+
+    // Click/Enter pour retourner les cartes
+    document.querySelectorAll('.card .back').forEach(back=>{
+      back.addEventListener('click', ()=> flipCard(back.closest('.card')));
+      back.addEventListener('keypress', (e)=> {
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flipCard(back.closest('.card')); }
+      });
+    });
+
+    // Affichage des résultats
+    showBtn.addEventListener('click', ()=>{
+      const E = drawn.emotions, B = drawn.besoins, A = drawn.actions, C = drawn.cosmos;
+      if(!(E && B && A && C)) return;
+
+      outIntention.textContent = intentionIn.value.trim();
+
+      const line = (label, obj, showPol=true)=>{
+        const pol = "";
+        return `<p><b>${label} :</b> ${obj.name}${pol}<br><i>« ${obj.quote} »</i></p>`;
+      };
+
+      linesOut.innerHTML = `
+        <p style="margin:0 0 8px"><b>VOTRE Tirage :</b></p>
+        ${line("Famille ÉMOTIONS", E)}
+        ${line("Famille BESOINS", B)}
+        ${line("Famille ACTIONS", A)}
+        <p><b>Carte Mémoires Cosmos :</b> ${C.name}<br><i>« ${C.quote} »</i></p>
+      `;
+
+      const seg = (fam, obj)=>{
+        const polWord = obj.polarity ? polarityLabel(obj.polarity) : null;
+        const yi = yiInsight[fam] || "";
+        const mood = obj.polarity === 'yang' ? "élan, clarté, affirmation"
+                    : obj.polarity === 'yin' ? "réception, écoute, intériorisation"
+                    : "mémoire et perspective";
+        const t1 = fam==="emotions" ? "Ce climat intérieur te propose un point d’appui sincère."
+                : fam==="besoins" ? "Ce besoin précise la juste manière de te relier."
+                : fam==="revelations" ? "Cette révélation ouvre un angle de vue directif."
+                : fam==="actions" ? "Le mouvement proposé invite à matérialiser l’intuition."
+                : "";
+        const polTxt = polWord ? ` Ici, l’${polWord} souffle vers ${mood}.` : ``;
+        return `<p><b>${familyLabels[fam]} :</b> ${obj.name}. ${yi} ${polTxt} <br><i>« ${obj.quote} »</i>. ${t1}</p>`;
+      };
+
+      synthOut.innerHTML = `
+        <div class="mt-3"><b>Synthèse du tirage :</b></div>
+        ${seg("emotions", E)}
+        ${seg("besoins", B)}
+        ${seg("actions", A)}
+        <p style="margin-top:12px"><b>Lecture d’ensemble :</b> La carte Émotion pose le ton, la carte Besoin ajuste le lien, la carte Action éclaire la vision, la carte Énergie Cosmos invite au pas concret. Laisse le message infuser puis choisis un geste simple et juste.</p>
+      `;
+
+      results.classList.remove('hidden');
+      document.getElementById('fullReading').classList.remove('hidden');
+      document.getElementById('reset').classList.remove('hidden');
+      results.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+
+    // Nouveau tirage
+    resetBtn.addEventListener('click', ()=>{
+      drawn = {emotions:null, besoins:null, revelations:null, actions:null, cosmos:null};
+      flippedCount = 0;
+      showBtn.disabled = true;
+      showBtn.classList.add('hidden');
+      results.classList.add('hidden');
+      document.getElementById('fullReading').classList.add('hidden');
+      document.getElementById('reset').classList.add('hidden');
+      linesOut.innerHTML = ""; synthOut.innerHTML = "";
+      intentionIn.value = "";
+
+      document.querySelectorAll('.card').forEach(card=>{
+        card.classList.remove('flipped');
+        const back = card.querySelector('.back');
+        back.style.pointerEvents = 'auto';
+        back.setAttribute('aria-pressed','false');
+        card.querySelector('[data-name]').textContent = "—";
+        card.querySelector('[data-quote]').textContent = "—";
+        const pol = card.querySelector('[data-polarity]');
+        if(card.dataset.family === "cosmos"){ pol.style.visibility = "hidden"; }
+        else { pol.style.visibility = "visible"; pol.textContent = ""; }
+        card.querySelector('[data-icon]').textContent = "";
+      });
+
+      window.scrollTo({top: document.getElementById('oracle').offsetTop - 60, behavior:'smooth'});
+    });
+
+    // Tirage complet -> aller aux offres
+    document.getElementById('fullReading').addEventListener('click', ()=>{
+      document.querySelector('#offres').scrollIntoView({behavior:'smooth'});
+    });
+
+    // --------- Scroll top ----------
+    const scrollTopBtn = document.getElementById('scrollTop');
+    window.addEventListener('scroll', () => { if (window.pageYOffset > 300) scrollTopBtn.classList.add('show'); else scrollTopBtn.classList.remove('show'); });
+    scrollTopBtn.addEventListener('click', () => window.scrollTo({ top:0, behavior:'smooth' }));
+
+    // --------- Smooth anchors ----------
+    document.querySelectorAll('a[href^="#"]').forEach(a=>{
+      a.addEventListener('click', e=>{
+        const target = document.querySelector(a.getAttribute('href'));
+        if(target){
+          e.preventDefault();
+          window.scrollTo({ top: target.offsetTop - 80, behavior:'smooth' });
+        }
+      });
+    });
+
+    // --------- Modale Commande ----------
+    const orderBtn = document.getElementById('orderBtn');
+    const orderModal = document.getElementById('orderModal');
+    const closeOrder = document.getElementById('closeOrder');
+    const orderForm = document.getElementById('orderForm');
+
+    orderBtn.addEventListener('click', e => { e.preventDefault(); orderModal.classList.remove('hidden'); document.body.style.overflow='hidden'; });
+    closeOrder.addEventListener('click', () => { orderModal.classList.add('hidden'); document.body.style.overflow=''; });
+    orderForm.addEventListener('submit', e => {
+      e.preventDefault();
+      orderModal.classList.add('hidden');
+      document.body.style.overflow='';
+      
+      // Message de confirmation de paiement
+      const confirmation = document.createElement('section');
+      confirmation.id = 'confirmation';
+      confirmation.className = 'py-20 px-6';
+      confirmation.innerHTML = `
+        <div class="container mx-auto max-w-6xl">
+          <div class="text-center mb-12">
+            <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Merci pour votre achat !</h2>
+            <p class="text-light-gold max-w-3xl mx-auto">Votre paiement a été validé avec succès.</p>
+          </div>
+          
+          <div class="rounded-2xl p-8 mx-auto max-w-2xl relative" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+            <a href="#offres" class="absolute top-4 left-4 text-gold hover:text-light-gold">
+              <i class="fas fa-arrow-left mr-2"></i> Retour aux offres
+            </a>
+            <div class="text-center">
+              <i class="fas fa-check-circle text-6xl text-gold mb-6"></i>
+              <p class="text-light-gold mb-8">Vous avez maintenant accès à 5 tirages complets de l'oracle Oradia.</p>
+              <button id="newReadingBtn" class="btn-gold"> Accéder au tirage de la Traversée</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Cacher toutes les sections pendant le message de confirmation de paiement
+      document.querySelectorAll('section').forEach(section => {
+        if(section.id !== 'confirmation') {
+          section.classList.add('hide-sections');
+        }
+      });
+      
+      // Insert after the offres section
+      const offresSection = document.getElementById('offres');
+      offresSection.parentNode.insertBefore(confirmation, offresSection.nextSibling);
+      
+      // Scroll to confirmation
+      setTimeout(() => {
+        confirmation.scrollIntoView({behavior: 'smooth'});
+      }, 100);
+      
+      // Add click handlers
+      confirmation.querySelector('a[href="#offres"]').addEventListener('click', (e) => {
+        e.preventDefault();
+        confirmation.remove();
+        document.querySelectorAll('section').forEach(section => {
+          section.classList.remove('hide-sections');
+        });
+        document.getElementById('offres').scrollIntoView({behavior: 'smooth'});
+      });
+
+      // Accès direct au formulaire final « Traversée »
+confirmation.querySelector('#newReadingBtn').addEventListener('click', () => {
+  // retirer l’écran “Merci”
+  confirmation.remove();
+  // ré-afficher toutes les sections
+  document.querySelectorAll('section').forEach(s => s.classList.remove('hide-sections'));
+
+  // afficher directement le formulaire final (sans étape intermédiaire)
+  const intro = document.getElementById('traversee-intro');
+  const form  = document.getElementById('traversee-form');
+  if (intro) intro.classList.add('hidden');
+  if (form)  form.classList.remove('hidden');
+
+  // scroll + focus
+  const trav = document.getElementById('traversee');
+  trav?.scrollIntoView({ behavior: 'smooth' });
+  form?.querySelector('input, textarea, select')?.focus();
+});
+}); 
+
+    // --------- Modale Abonnement / Membre ----------
+    const subscribeBtn = document.getElementById('subscribeBtn');
+    const subscriptionModal = document.getElementById('subscriptionModal');
+    const closeSubscription = document.getElementById('closeSubscription');
+    const memberLoginForm = document.getElementById('memberLoginForm');
+    const memberRegisterForm = document.getElementById('memberRegisterForm');
+    const showRegister = document.getElementById('showRegister');
+    const showLogin = document.getElementById('showLogin');
+
+    subscribeBtn.addEventListener('click', e => {
+      e.preventDefault();
+      subscriptionModal.classList.remove('hidden');
+      memberLoginForm.classList.remove('hidden');
+      memberRegisterForm.classList.add('hidden');
+      document.body.style.overflow='hidden';
+    });
+    closeSubscription.addEventListener('click', ()=>{ subscriptionModal.classList.add('hidden'); document.body.style.overflow=''; });
+    showRegister.addEventListener('click', e=>{ e.preventDefault(); memberLoginForm.classList.add('hidden'); memberRegisterForm.classList.remove('hidden'); });
+    showLogin.addEventListener('click', e=>{ e.preventDefault(); memberRegisterForm.classList.add('hidden'); memberLoginForm.classList.remove('hidden'); });
+
+    memberLoginForm.addEventListener('submit', e=>{
+      e.preventDefault();
+      alert('Connexion réussie ! Redirection vers votre espace membre...');
+      subscriptionModal.classList.add('hidden'); document.body.style.overflow='';
+    });
+    memberRegisterForm.addEventListener('submit', e=>{
+      e.preventDefault();
+      alert('Compte créé ! Abonnement activé.');
+      subscriptionModal.classList.add('hidden'); document.body.style.overflow='';
+    });
+
+    // --------- Modale Login Dashboard ----------
+    const loginBtn = document.getElementById('loginBtn');
+    const footerLogin = document.getElementById('footerLogin');
+    const loginModal = document.getElementById('loginModal');
+    const closeLogin = document.getElementById('closeLogin');
+    const loginFormDashboard = document.getElementById('loginFormDashboard');
+    const dashboard = document.getElementById('dashboard');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    const openLogin = ()=>{ loginModal.classList.remove('hidden'); document.body.style.overflow='hidden'; };
+    const closeLoginFn = ()=>{ loginModal.classList.add('hidden'); document.body.style.overflow=''; };
+    if(loginBtn) loginBtn.addEventListener('click', openLogin);
+    footerLogin.addEventListener('click', openLogin);
+    closeLogin.addEventListener('click', closeLoginFn);
+
+    loginFormDashboard.addEventListener('submit', e=>{
+      e.preventDefault(); // démo
+      closeLoginFn();
+      dashboard.classList.remove('hidden');
+      document.body.style.overflow='hidden';
+    });
+    logoutBtn.addEventListener('click', ()=>{
+      dashboard.classList.add('hidden');
+      document.body.style.overflow='';
+    });
+  </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=Paddy22/site-oradia" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
 </html>
