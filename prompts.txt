@@ -1,0 +1,37 @@
+doit être caché jusqu'à ce que l'utilisateur clic sur le bouton "Accéder au tirage de la Traversée"
+doit être caché jusqu'à ce que l'utilisateur clic sur le bouton "Accéder au tirage de la Traversée"
+La page ne doit contenir que ce cadre du tirage de la traversée, le header et le bas de page à cette étape où l'utilisateur doit remplir le formulaire du tirage de la traversée
+doit être caché jusqu'à ce que l'utilisateur clic sur le bouton "Accéder au tirage de la Traversée"
+La page ne doit contenir que ce cadre du tirage de la traversée, le header et le bas de page à cette étape où l'utilisateur doit remplir le formulaire du tirage de la traversée
+doit êctre invisible tant que l'utilisateur n'a pas payé pour accéder au tirage de la traversée
+doit être caché jusqu'à ce que l'utilisateur clic sur le bouton "Accéder au tirage de la Traversée"
+La page ne doit contenir que ce cadre du tirage de la traversée, le header et le bas de page à cette étape où l'utilisateur doit remplir le formulaire du tirage de la traversée
+doit êctre invisible tant que l'utilisateur n'a pas payé pour accéder au tirage de la traversée
+Centrer le logo Oradia sur les cartes
+les cartes doivent afficher le logo ajusté oradia suivant avant d'être retournées : <img src="https://i.ibb.co/TB75673d/logo.png" alt="logo" border="0">
+le logo <img src="https://i.ibb.co/TB75673d/logo.png" alt="logo" border="0"> n'est pas présent sur les cartes 
+doit être caché jusqu'à ce que l'utilisateur clic sur le bouton "Accéder au tirage de la Traversée"
+La page ne doit contenir que ce cadre du tirage de la traversée, le header et le bas de page à cette étape où l'utilisateur doit remplir le formulaire du tirage de la traversée
+doit êctre invisible tant que l'utilisateur n'a pas payé pour accéder au tirage de la traversée
+Centrer le logo Oradia sur les cartes
+les cartes doivent afficher le logo ajusté oradia suivant avant d'être retournées : <img src="https://i.ibb.co/TB75673d/logo.png" alt="logo" border="0">
+le logo <img src="https://i.ibb.co/TB75673d/logo.png" alt="logo" border="0"> n'est pas présent sur les cartes 
+doit être caché jusqu'à ce que l'utilisateur clic sur le bouton "Accéder au tirage de la Traversée"
+La page ne doit contenir que ce cadre du tirage de la traversée, le header et le bas de page à cette étape où l'utilisateur doit remplir le formulaire du tirage de la traversée
+doit êctre invisible tant que l'utilisateur n'a pas payé pour accéder au tirage de la traversée
+Centrer le logo Oradia sur les cartes
+les cartes doivent afficher le logo ajusté oradia suivant avant d'être retournées : <img src="https://i.ibb.co/TB75673d/logo.png" alt="logo" border="0">
+le logo <img src="https://i.ibb.co/TB75673d/logo.png" alt="logo" border="0"> n'est pas présent sur les cartes 
+le bouton nouveau tirage ne fonctionne pas, il doit réinitialiser le tirage
+doit être caché jusqu'à ce que l'utilisateur clic sur le bouton "Accéder au tirage de la Traversée"
+La page ne doit contenir que ce cadre du tirage de la traversée, le header et le bas de page à cette étape où l'utilisateur doit remplir le formulaire du tirage de la traversée
+doit êctre invisible tant que l'utilisateur n'a pas payé pour accéder au tirage de la traversée
+Centrer le logo Oradia sur les cartes
+les cartes doivent afficher le logo ajusté oradia suivant avant d'être retournées : <img src="https://i.ibb.co/TB75673d/logo.png" alt="logo" border="0">
+le logo <img src="https://i.ibb.co/TB75673d/logo.png" alt="logo" border="0"> n'est pas présent sur les cartes 
+le bouton nouveau tirage ne fonctionne pas, il doit réinitialiser le tirage
+ajouter une animation en fond, comme quelqu'un qui avance dans un tunnel avec une lumière au bout
+ajouter une animation derrière les cartes. Celle-ci représente une personne de dos qui marche avec une lumière au loin, comme si la personne traverse un pont
+Vérifie qu'il n'y ait pas de beug et que le site soit bien responsive
+doit-être invisible tant que l'utilisateur n'a pas procédé et validé le paiement pour la commande du tirage de la traversée
+la flèche de retour vers le haut ne fonctionne pas sur la version mobile
