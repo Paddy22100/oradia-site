@@ -5,6 +5,19 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
   <title>Oradia - Oracle Vibratoire</title>
+<link rel="canonical" href="https://oradia.fr/">
+
+<meta property="og:type" content="website">
+<meta property="og:title" content="Oradia - Oracle Vibratoire">
+<meta property="og:description" content="Oradia est un oracle vibratoire qui croise sagesses ancestrales et IA pour guider votre chemin intérieur. Tirages gratuits et tirages complets.">
+<meta property="og:url" content="https://oradia.fr/">
+<meta property="og:image" content="https://i.ibb.co/4wG0t61y/logo.png">
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Oradia - Oracle Vibratoire">
+<meta name="twitter:description" content="Guidance vibratoire croisant sagesses ancestrales et IA.">
+<meta name="twitter:image" content="https://i.ibb.co/4wG0t61y/logo.png">
+
 <meta name="description" content="Oradia est un oracle vibratoire qui croise sagesses ancestrales et IA pour guider votre chemin intérieur. Tirages gratuits et tirages complets.">
 <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -12,9 +25,13 @@
 <meta name="theme-color" content="#0a192f">
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<link rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
+      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
+      crossorigin="anonymous" referrerpolicy="no-referrer">
 
   <script>
+
     tailwind.config = {
       theme: {
         extend: {
@@ -233,8 +250,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     </div>
 
     <!-- Bouton burger (mobile) -->
-    <button id="mobileMenuBtn" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold"
-            aria-label="Ouvrir le menu">
+   <button id="mobileMenuBtn" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold"
+        aria-label="Ouvrir le menu" aria-controls="mobileMenu" aria-expanded="false">
       <i class="fas fa-bars text-lg"></i>
     </button>
 
@@ -301,10 +318,9 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
                 <div class="bg-night-blue w-56 h-56 rounded-full flex items-center justify-center relative">
                   <div class="absolute w-1 h-16 bg-gold rounded-full origin-bottom" style="transform: rotate(45deg);"></div>
                   <div class="absolute w-1 h-16 bg-light-gold rounded-full origin-bottom" style="transform: rotate(-45deg);"></div>
-           <img src="https://i.ibb.co/cKHs3GY5/logo2.png" alt="Oradia Compass"
-     width="512" height="512" loading="lazy"
+  <img src="https://i.ibb.co/cKHs3GY5/logo2.png" alt="Oradia Compass"
+     width="512" height="512" loading="eager" fetchpriority="high" decoding="async"
      class="w-full h-full object-center object-contain rounded-full border-2 border-gold animate-spin-slow">
-
                   <div class="absolute inset-0 flex flex-col items-center justify-center">
                     <span class="cormorant text-2xl text-gold">Oradia</span>
                     <p class="text-light-gold mt-2">Oracle Vibratoire</p>
@@ -333,9 +349,10 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       <div class="bg-[rgba(18,20,32,.6)] border border-[rgba(212,175,55,.25)] rounded-2xl p-5 mb-6">
         <div class="flex flex-wrap items-center gap-3">
           <label for="intention" class="text-gold font-semibold">Votre intention :</label>
-    <input id="intention" type="text" aria-describedby="intentionHelp"
-       class="flex-1 w-full min-w-0 bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] rounded-lg p-3 text-light-gold"
-       placeholder="Ex. : Comment orienter ma journée avec justesse ?" required />
+  <input id="intention" type="text"
+  autocomplete="off" autocapitalize="sentences" inputmode="text" spellcheck="true"
+  class="flex-1 w-full min-w-0 bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] rounded-lg p-3 text-light-gold"
+  placeholder="Ex. : Comment orienter ma journée avec justesse ?" required />
         </div>
        <p id="intentionHelp" class="text-sm opacity-80 mt-2">Formulez une question ouverte et terminez par « ? »</p>
         <div class="mt-3 text-center">
@@ -587,7 +604,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
               Vous pouvez contribuer à votre hauteur au financement, vous recevoir le jeu en avant-première lorsqu’il sera disponible.
             </p>
             <div class="text-center">
-              <a href="..." target="_blank" class="btn-gold inline-block">Faire un don</a>
+            <a href="..." target="_blank" rel="noopener noreferrer" class="btn-gold inline-block">Faire un don</a>
             </div>
           </div>
         </div>
@@ -703,7 +720,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             <p class="text-light-gold">
               Les activités proposées créent des espaces d'expression et de reconnexion essentiels.
             </p>
-            <a href="https://fr.tipeee.com/mjr-wellor " target="_blank" class="btn-outline-gold mt-6 inline-block">Découvrir Edolg'Or</a>
+            <a href="https://fr.tipeee.com/mjr-wellor" target="_blank" rel="noopener noreferrer" class="btn-outline-gold mt-6 inline-block">Découvrir Edolg'Or</a>
           </div>
         </div>
       </div>
@@ -794,24 +811,39 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
             <div>
               <label class="block text-light-gold mb-2">Prénom</label>
-              <input type="text" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+              <input type="text"
+  autocomplete="given-name" inputmode="text"
+  class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+
             </div>
             <div>
               <label class="block text-light-gold mb-2">Date de naissance</label>
-              <input type="date" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+              <input type="date"
+  autocomplete="bday"
+  class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+
             </div>
             <div>
               <label class="block text-light-gold mb-2">Ville de naissance</label>
-              <input type="text" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+              <input type="text"
+  autocomplete="off" inputmode="text"
+  class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+
             </div>
             <div>
               <label class="block text-light-gold mb-2">Heure de naissance</label>
-              <input type="time" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+            <input type="time"
+  autocomplete="off" inputmode="numeric"
+  class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+
             </div>
           </div>
           <div class="mb-6">
             <label class="block text-light-gold mb-2">Votre intention pour ce tirage</label>
-            <textarea class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg min-h-[120px]" required></textarea>
+            <textarea
+  autocomplete="off" spellcheck="true"
+  class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg min-h-[120px]" required></textarea>
+
           </div>
           <button type="submit" class="btn-gold w-full">Lancer le tirage</button>
         </form>
@@ -883,37 +915,35 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       <form id="orderForm">
         <div class="mb-4">
           <label class="block text-light-gold mb-2">Email</label>
-          <input type="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+          <input type="email"
+  autocomplete="email" inputmode="email"
+  autocapitalize="off" autocorrect="off" spellcheck="false"
+  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
         </div>
         <div class="mb-4">
           <label class="block text-light-gold mb-2">Nom complet</label>
-          <input type="text" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+          <input type="text"
+  autocomplete="name" inputmode="text"
+  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
         </div>
         <div class="mb-4">
           <label class="block text-light-gold mb-2">Date de naissance</label>
-          <input type="date" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-        </div>
-        <div class="mb-6">
-          <label class="block text-light-gold mb-2">Moyen de paiement</label>
-          <select class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-            <option value="">Sélectionnez...</option>
-            <option value="card">Carte bancaire</option>
-            <option value="paypal">PayPal</option>
-          </select>
+          <input type="date"
+  autocomplete="bday"
+  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+    <div class="mb-6">
+  <label class="block text-light-gold mb-2">Moyen de paiement</label>
+  <select
+    class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg"
+    required>
+    <option value="">Sélectionnez...</option>
+    <option value="card">Carte bancaire</option>
+    <option value="paypal">PayPal</option>
+  </select>
+</div>
         </div>
         <button type="submit" class="btn-gold w-full">Payer 5€</button>
       </form>
-<script>
-  (function(){
-    const sanitize = s => s.replace(/[<>]/g,'').trim();
-    const form = document.getElementById('orderForm');
-    if(!form) return;
-    form.addEventListener('submit',()=>{
-      form.querySelectorAll('input[type="email"], input[type="text"]').forEach(i=> i.value = sanitize(i.value));
-    });
-  })();
-</script>
-
     </div>
   </div>
 
@@ -930,11 +960,17 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       <form id="memberLoginForm" class="mb-6">
         <div class="mb-4">
           <label class="block text-light-gold mb-2">Email</label>
-          <input type="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        <input type="email"
+  autocomplete="email" inputmode="email"
+  autocapitalize="off" autocorrect="off" spellcheck="false"
+  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
         </div>
         <div class="mb-6">
           <label class="block text-light-gold mb-2">Mot de passe</label>
-          <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+          <input type="password"
+  autocomplete="current-password" inputmode="text"
+  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+
         </div>
         <button type="submit" class="btn-gold w-full mb-4">Se connecter</button>
         <p class="text-light-gold text-center text-sm">Pas encore de compte ?
@@ -942,15 +978,23 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         </p>
       </form>
 
+
       <!-- Register membre -->
       <form id="memberRegisterForm" class="hidden">
         <div class="mb-4">
           <label class="block text-light-gold mb-2">Email</label>
-          <input type="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+          <input type="email"
+  autocomplete="email" inputmode="email"
+  autocapitalize="off" autocorrect="off" spellcheck="false"
+  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+
         </div>
         <div class="mb-4">
           <label class="block text-light-gold mb-2">Mot de passe</label>
-          <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+          <input type="password"
+  autocomplete="current-password" inputmode="text"
+  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+
         </div>
         <div class="mb-6">
           <label class="block text-light-gold mb-2">Confirmez le mot de passe</label>
@@ -981,11 +1025,18 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       <form id="loginFormDashboard">
         <div class="mb-4">
           <label class="block text-light-gold mb-2">Email</label>
-          <input type="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+          <input type="email"
+  autocomplete="email" inputmode="email"
+  autocapitalize="off" autocorrect="off" spellcheck="false"
+  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+
         </div>
         <div class="mb-6">
           <label class="block text-light-gold mb-2">Mot de passe</label>
-          <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+          <input type="password"
+  autocomplete="current-password" inputmode="text"
+  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+
         </div>
         <button type="submit" class="btn-gold w-full">Se connecter</button>
       </form>
@@ -1032,6 +1083,15 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
   <script id="traversee-5cards-clean">
 (() => {
+
+// Anti-XSS : échappe tout texte injecté en HTML
+const esc = (s) => String(s).replace(/[&<>"']/g, m =>
+  m === '&' ? '&amp;' :
+  m === '<' ? '&lt;'  :
+  m === '>' ? '&gt;'  :
+  m === '"' ? '&quot;': '&#39;'
+);
+
   // ---------- Données propres à la TRAVERSÉE ----------
   const DATA_TRAVERSEE = {
     emotions: [
@@ -1175,10 +1235,9 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   host.querySelectorAll('.traversee-card-back').forEach(back => {
     const card = back.closest('.traversee-card');
     const onFlip = () => flipCard(card);
-    back.addEventListener('click', onFlip);
-    back.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFlip(); }
-    });
+ back.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFlip(); }
+});
   });
 
   // 4) afficher la section + passer en mode immersif
@@ -1271,7 +1330,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
     out.innerHTML = `
       <h3 class="cormorant text-2xl text-gold mb-3">Résultats de la Traversée</h3>
-      ${intention ? `<div class="mb-2"><b>Intention :</b> ${intention}</div>` : ``}
+          ${intention ? `<div class="mb-2"><b>Intention :</b> ${esc(intention)}</div>` : ``}
       <div class="result-lines">
         ${L("Nord — Révélations (Vision)", drawn.nord)}
         ${L("Sud — Transmutation (Ancrage)", drawn.sud)}
@@ -1625,9 +1684,9 @@ function buildSynthesis(E,B,A,C,intentText){
     // Click/Enter pour retourner les cartes
     document.querySelectorAll('.card .back').forEach(back=>{
       back.addEventListener('click', ()=> flipCard(back.closest('.card')));
-      back.addEventListener('keypress', (e)=> {
-        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flipCard(back.closest('.card')); }
-      });
+back.addEventListener('keydown', (e)=> {
+  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flipCard(back.closest('.card')); }
+});
     });
 
    // Affichage des résultats — VERSION enrichie
@@ -1710,8 +1769,8 @@ showBtn.addEventListener('click', ()=>{
     });
 
     // --------- Scroll top ----------
-    const scrollTopBtn = document.getElementById('scrollTop');
-    scrollTopBtn.addEventListener('click', () => {
+ const scrollTopBtnClick = document.getElementById('scrollTop');
+scrollTopBtnClick.addEventListener('click', () => {
       window.scrollTo({
         top: 0,
         behavior: 'smooth'
@@ -1734,7 +1793,7 @@ document.addEventListener('click', (e)=>{
     if(card){
       // La flipCard de la Traversée est définie dans le script "traversee-5cards-clean"
       // On la déclenche en simulant la touche Enter (fallback)
-      back.dispatchEvent(new KeyboardEvent('keypress', {key:'Enter'}));
+     back.dispatchEvent(new KeyboardEvent('keydown', {key:'Enter'}));
     }
   }
 }, {capture:true});
@@ -1928,7 +1987,8 @@ const mobileMenu = document.getElementById('mobileMenu');
 const loginBtnMobile = document.getElementById('loginBtnMobile');
 
 mobileBtn?.addEventListener('click', ()=>{
-  mobileMenu.classList.toggle('hidden');
+  const isHidden = mobileMenu.classList.toggle('hidden');
+  mobileBtn.setAttribute('aria-expanded', String(!isHidden));
 });
 loginBtnMobile?.addEventListener('click', ()=>{
   // réutilise la modale de login existante
@@ -1936,6 +1996,45 @@ loginBtnMobile?.addEventListener('click', ()=>{
   document.body.style.overflow='hidden';
   mobileMenu.classList.add('hidden');
 });
+// Échap = fermer modales (auto-suffisant, ne dépend d'aucune const externe)
+document.addEventListener('keydown', (e) => {
+  if (e.key !== 'Escape') return;
+  const orderModal = document.getElementById('orderModal');
+  const subscriptionModal = document.getElementById('subscriptionModal');
+  const loginModal = document.getElementById('loginModal');
+  [orderModal, subscriptionModal, loginModal].forEach(m => {
+    if (m && !m.classList.contains('hidden')) {
+      m.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+  });
+});
+
   </script>
-<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=Paddy22/site-oradia" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=Paddy22/site-oradia" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p>
+<script id="sanitize-forms">
+document.addEventListener('DOMContentLoaded', () => {
+  const sanitize = s => s.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim();
+
+  const attach = (form) => {
+    if (!form) return;
+  form.addEventListener('submit', () => {
+}, { capture: true });
+      // On ne touche qu'aux emails / textes / textarea (pas aux mots de passe, dates, etc.)
+      form.querySelectorAll('input[type="email"], input[type="text"], textarea')
+        .forEach(i => i.value = sanitize(i.value));
+    });
+  };
+
+  // ✅ Liste des formulaires à couvrir (ajout de orderForm ici)
+  [
+    'memberLoginForm',
+    'memberRegisterForm',
+    'loginFormDashboard',
+    'traversee-form',
+    'orderForm'
+  ].forEach(id => attach(document.getElementById(id)));
+});
+</script>
+</body>
 </html>
