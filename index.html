@@ -36,7 +36,6 @@
 <link rel="preload" as="image" href="https://i.ibb.co/cKHs3GY5/logo2.png" fetchpriority="high">
 <meta name="theme-color" content="#0a192f">
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-<meta property="og:site_name" content="Oradia">
 <meta property="og:locale:alternate" content="en_US">
 
 <meta name="referrer" content="no-referrer-when-downgrade">
@@ -2465,6 +2464,129 @@ document.addEventListener('DOMContentLoaded', () => {
   if (initial && document.getElementById(initial)) setActive(initial);
   else if (sections[0]) setActive(sections[0].id);
 });
+</script>
+<script id="ui-wiring-fixes">
+(() => {
+  const $  = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => [...r.querySelectorAll(s)];
+
+  // ---- NAV MOBILE
+  const mobileBtn  = $('#mobileMenuBtn');
+  const mobileMenu = $('#mobileMenu');
+  if (mobileBtn && mobileMenu) {
+    const toggle = () => {
+      const open = mobileMenu.classList.toggle('hidden') === false;
+      mobileBtn.setAttribute('aria-expanded', String(open));
+    };
+    mobileBtn.addEventListener('click', toggle);
+    // fermer quand on clique un lien
+    $$('#mobileMenu a').forEach(a => a.addEventListener('click', () => {
+      if (!mobileMenu.classList.contains('hidden')) toggle();
+    }));
+    // fermer à ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) toggle();
+    });
+  }
+
+  // ---- MODALES GÉNÉRIQUES (utilise tes helpers openModal/closeModal si présents)
+  const hookModal = (openSel, modalSel, closeSel) => {
+    const openEl = $(openSel), modal = $(modalSel), closeEl = $(closeSel);
+    if (!modal) return;
+    openEl?.addEventListener('click', (e) => { e.preventDefault?.(); openModal?.(modal); });
+    closeEl?.addEventListener('click', () => closeModal?.(modal));
+    // clic hors contenu pour fermer
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal?.(modal);
+    });
+    // ESC pour fermer
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal?.(modal);
+    });
+  };
+
+  // Commande & Abonnement & Login dashboard
+  hookModal('#orderBtn', '#orderModal', '#closeOrder');
+  hookModal('#subscribeBtn', '#subscriptionModal', '#closeSubscription');
+  hookModal('#loginBtn', '#loginModal', '#closeLoginModal');
+  hookModal('#footerLogin', '#loginModal', '#closeLoginModal');
+  hookModal('#loginBtnMobile', '#loginModal', '#closeLoginModal');
+
+  // ---- ABONNEMENT : TOGGLE LOGIN / REGISTER
+  const subscriptionModal = $('#subscriptionModal');
+  const memberLoginForm    = $('#memberLoginForm');
+  const memberRegisterForm = $('#memberRegisterForm');
+  const showRegisterLink   = $('#showRegister');
+  const showLoginLink      = $('#showLogin');
+
+  function showLogin() {
+    if (!memberLoginForm || !memberRegisterForm) return;
+    memberRegisterForm.classList.add('hidden');
+    memberRegisterForm.setAttribute('aria-hidden','true');
+    memberRegisterForm.setAttribute('inert','');
+
+    memberLoginForm.classList.remove('hidden');
+    memberLoginForm.setAttribute('aria-hidden','false');
+    memberLoginForm.removeAttribute('inert');
+
+    (memberLoginForm.querySelector('input,button,select,textarea') || memberLoginForm).focus();
+  }
+  function showRegister() {
+    if (!memberLoginForm || !memberRegisterForm) return;
+    memberLoginForm.classList.add('hidden');
+    memberLoginForm.setAttribute('aria-hidden','true');
+    memberLoginForm.setAttribute('inert','');
+
+    memberRegisterForm.classList.remove('hidden');
+    memberRegisterForm.setAttribute('aria-hidden','false');
+    memberRegisterForm.removeAttribute('inert');
+
+    (memberRegisterForm.querySelector('input,button,select,textarea') || memberRegisterForm).focus();
+  }
+  showRegisterLink?.addEventListener('click', (e)=>{ e.preventDefault(); showRegister(); });
+  showLoginLink?.addEventListener('click', (e)=>{ e.preventDefault(); showLogin(); });
+
+  // ---- DASHBOARD : OUVERTURE VIA MODALE LOGIN
+  const loginModal = $('#loginModal');
+  const loginFormDashboard = $('#loginFormDashboard');
+  const dashboard = $('#dashboard');
+  const logoutBtn = $('#logoutBtn');
+
+  loginFormDashboard?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    // ici tu brancheras ton vrai backend plus tard
+    closeModal?.(loginModal);
+    dashboard?.classList.remove('hidden');
+    // focus accessibilité
+    (dashboard?.querySelector('button, a, [tabindex], input, select, textarea') || dashboard)?.focus();
+    // petite protection scroll
+    document.body.style.overflow = 'hidden';
+  });
+
+  logoutBtn?.addEventListener('click', () => {
+    dashboard?.classList.add('hidden');
+    document.body.style.overflow = '';
+  });
+
+  // fermer dashboard à ESC
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && dashboard && !dashboard.classList.contains('hidden')) {
+      dashboard.classList.add('hidden');
+      document.body.style.overflow = '';
+    }
+  });
+
+  // ---- ACCESSIBILITÉ : rôle/états cohérents si un bouton ouvre un menu/modale
+  // (déjà bien géré chez toi ; on assure un état initial propre)
+  if (mobileBtn && mobileMenu) mobileBtn.setAttribute('aria-expanded','false');
+
+  // ---- FIN : si la ligne coupée existait, on s’assure que l’intention était bien de revenir au login
+  // (sécurise le cas où ton ancien code se termine par "showLogin?.addEventListener...")
+  if (subscriptionModal && memberLoginForm && memberRegisterForm) {
+    // état par défaut : login visible
+    showLogin();
+  }
+})();
 </script>
 
 </body>
