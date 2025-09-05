@@ -112,6 +112,20 @@ const pickOne = (arr) => arr[randInt(arr.length)];
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 
+/* Badges de forme Oradia */
+.chip--triangle::before { content: "▲ "; }
+.chip--cercle::before   { content: "◯ "; }
+
+/* Carte Passerelle (petite signature visuelle) */
+.chip--passerelle{
+  border-style: dashed;
+  opacity: .95;
+}
+
+/* Optionnel: teinter selon la forme (si tu veux) */
+.polarity.is-triangle { filter: saturate(1.1); }
+.polarity.is-cercle   { opacity: .95; }
+
     nav a[aria-current="page"]{
     text-decoration: underline;
     text-underline-offset: 4px;
@@ -720,7 +734,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
         <div class="flex justify-center">
           <div class="rounded-2xl p-4" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
-        <img src="https://i.ibb.co/FTDGc0k/Capture-d-cran-2025-08-09-090137.png" alt="Aperçu du jeu" width="1024" height="576" loading="lazy" decoding="async" />
+        <img src="https://i.ibb.co/FTDGc0k/Capture-d-cran-2025-08-09-090137.png" alt="Aperçu du jeu" width="1024" height="576" loading="lazy" decoding="async" fetchpriority="low"/>
             <p class="text-light-gold text-center mt-4 italic">Aperçu du jeu de cartes en développement</p>
           </div>
         </div>
@@ -777,7 +791,11 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <div class="relative">
             <div class="bg-gradient-to-br from-gold/10 to-night-blue border border-gold/30 rounded-2xl w-full h-96"></div>
             <div class="absolute -bottom-6 -right-6 w-64 h-64 bg-gradient-to-tr from-gold/5 to-transparent border border-gold/20 rounded-2xl">
-              <img src="https://i.ibb.co/TB75673d/logo.png" alt="logo Oradia" width="512" height="512" loading="lazy" decoding="async" class="w-full h-full object-contain p-4">
+             <img src="https://i.ibb.co/TB75673d/logo.png"
+     alt="logo Oradia" width="512" height="512"
+     loading="lazy" decoding="async" fetchpriority="low"
+     class="w-full h-full object-contain p-4">
+
             </div>
           </div>
         </div>
@@ -800,7 +818,10 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <div class="relative">
             <div class="bg-gradient-to-br from-gold/10 to-night-blue border border-gold/30 rounded-2xl w-full h-96"></div>
             <div class="absolute -top-6 -left-6 w-64 h-64 bg-gradient-to-tr from-gold/5 to-transparent border border-gold/20 rounded-2xl">
-              <img src="https://i.ibb.co/354MSMtd/Logo-SCIC.png" alt="Logo SCIC" width="512" height="512" loading="lazy" decoding="async" class="w-full h-full object-contain p-3">
+<img src="https://i.ibb.co/354MSMtd/Logo-SCIC.png"
+     alt="Logo SCIC" width="512" height="512"
+     loading="lazy" decoding="async" fetchpriority="low"
+     class="w-full h-full object-contain p-3">
             </div>
           </div>
         </div>
@@ -963,7 +984,11 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
         <div>
           <div class="flex items-center mb-4">
-           <img src="https://i.ibb.co/4wG0t61y/logo.png" alt="Oradia Logo" width="256" height="256" loading="lazy" decoding="async" class="w-16 h-16 mr-4" />
+    <img src="https://i.ibb.co/4wG0t61y/logo.png"
+     alt="Oradia Logo" width="256" height="256"
+     loading="lazy" decoding="async" fetchpriority="low"
+     class="w-16 h-16 mr-4" />
+
             <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
           </div>
           <p class="text-light-gold text-sm">Oracle vibratoire pour accompagner votre cheminement personnel et révéler votre essence.</p>
@@ -1282,6 +1307,22 @@ const esc = (s) => String(s).replace(/[&<>"']/g, m =>
     `;
   }
 
+// --- UI Oradia : Triangle/Cercle + Passerelles ---
+const polUI = (p) => p === 'yang'
+  ? { icon:'▲', label:"Triangle — énergie masculine : élan, action, verticalité", shape:'triangle' }
+  : { icon:'◯', label:"Cercle — énergie féminine : réceptivité, accueil, intégration", shape:'cercle' };
+
+// Choix « Carte Passerelle » (tu peux ajuster la liste à ta guise)
+const PASSERELLES = new Set([
+  // Révélations
+  'CLÉ','PORTE','MESSAGE','SYNCHRONICITÉ','VISION','DÉVOILEMENT','PORTAIL',
+  // Transmutation
+  'TRANSFORMATION','OUVERTURE','RECADRAGE','DÉTACHEMENT','CLARIFICATION','PURIFICATION',
+  // Actions
+  'ALLER VERS','CHOISIR','CRÉER'
+]);
+
+
   // BuildBoard
   function buildBoard() {
   const host = el('traversee-board');
@@ -1380,9 +1421,35 @@ function exitImmersive(){
     // Remplir la face avant
     card.querySelector('[data-name]').textContent  = data?.name || "—";
     card.querySelector('[data-quote]').textContent = data?.quote || "—";
-    const polEl = card.querySelector('[data-pol]');
-    if(slot === 'centre'){ polEl.style.visibility='hidden'; polEl.textContent=''; }
-    else { polEl.style.visibility='visible'; polEl.textContent = data?.polarity ? polIcon(data.polarity) : ''; }
+const polEl = card.querySelector('[data-pol]');
+if (slot === 'centre') {
+  polEl.style.visibility = 'hidden';
+  polEl.textContent = '';
+  polEl.removeAttribute('title');
+  polEl.removeAttribute('aria-label');
+  polEl.classList.remove('is-triangle','is-cercle');
+} else {
+  const ui = polUI(data?.polarity);
+  polEl.style.visibility = 'visible';
+  polEl.textContent = ui.icon;
+  polEl.title = ui.label;
+  polEl.setAttribute('aria-label', ui.label);
+  polEl.classList.toggle('is-triangle', ui.shape === 'triangle');
+  polEl.classList.toggle('is-cercle', ui.shape === 'cercle');
+}
+
+// Marquer les cartes passerelles (badge visuel)
+if (PASSERELLES.has(data?.name)) {
+  const topbar = card.querySelector('.traversee-card-front .flex.items-center');
+  if (topbar && !card.querySelector('[data-bridge]')) {
+    const tag = document.createElement('span');
+    tag.className = 'chip chip--passerelle';
+    tag.textContent = 'Carte Passerelle';
+    tag.setAttribute('data-bridge','');
+    topbar.appendChild(tag);
+    card.setAttribute('data-passerelle','true');
+  }
+}
 
     // Flip visuel des cartes
     card.classList.add('flipped');
@@ -1406,9 +1473,11 @@ function exitImmersive(){
   setBusy(out, true);
 
   const L = (titre, obj, showPol=true) => {
-    const polTxt = showPol && obj?.polarity
-      ? (obj.polarity==='yang' ? ' (énergie masculine)' : ' (énergie féminine)')
-      : '';
+   const polTxt = showPol && obj?.polarity
+  ? (obj.polarity === 'yang' ? ' (Triangle)' : ' (Cercle)')
+  : '';
+
+
     return `<p><b>${titre} :</b> ${obj?.name||'—'}${polTxt}<br><i>« ${obj?.quote||'—'} »</i></p>`;
   };
 
@@ -1586,8 +1655,10 @@ function closeModal(el){
       ]
     };
 
-    const polarityIcon = p => p === "yang" ? "🔺" : "⚫";
-    const polarityLabel = p => p === "yang" ? "énergie masculine" : "énergie féminine";
+   const polUI = (p) => p === 'yang'
+  ? { icon:'▲', label:"Triangle — énergie masculine : élan, action, verticalité" }
+  : { icon:'◯', label:"Cercle — énergie féminine : réceptivité, accueil, intégration" };
+
     const rng = n => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % n; };
     const pick = arr => arr[rng(arr.length)];
 
@@ -1767,13 +1838,23 @@ function buildSynthesis(E,B,A,C,intentText){
     function renderFront(cardEl, data, family){
       cardEl.querySelector('[data-name]').textContent = data.name;
       cardEl.querySelector('[data-quote]').textContent = data.quote;
-      const pol = cardEl.querySelector('[data-polarity]');
-      if(family === "cosmos"){
-        pol.style.visibility = "hidden";
-      } else {
-        pol.style.visibility = "visible";
-        pol.textContent = polarityIcon(data.polarity);
-      }
+    const pol = cardEl.querySelector('[data-polarity]');
+if (family === "cosmos") {
+  pol.style.visibility = "hidden";
+  pol.textContent = "";
+  pol.removeAttribute('title');
+  pol.removeAttribute('aria-label');
+  pol.classList.remove('is-triangle','is-cercle');
+} else {
+  const ui = polUI(data.polarity);
+  pol.style.visibility = "visible";
+  pol.textContent = ui.icon;
+  pol.title = ui.label;
+  pol.setAttribute('aria-label', ui.label);
+  pol.classList.toggle('is-triangle', data.polarity === 'yang');
+  pol.classList.toggle('is-cercle',   data.polarity === 'yin');
+}
+
     }
 
     function flipCard(cardEl){
@@ -1791,6 +1872,20 @@ function buildSynthesis(E,B,A,C,intentText){
       renderFront(cardEl, data, family);
       cardEl.classList.add('flipped');
       flippedCount++;
+
+// Badge “Carte Passerelle” (mêmes critères que Traversée)
+const PASSERELLES = new Set(['CLÉ','PORTE','MESSAGE','SYNCHRONICITÉ','VISION','DÉVOILEMENT','TRANSFORMATION','OUVERTURE','RECADRAGE','DÉTACHEMENT','ALLER VERS','CHOISIR','CRÉER']);
+if (PASSERELLES.has(data.name)) {
+  const topbar = cardEl.querySelector('.front .topbar');
+  if (topbar && !cardEl.querySelector('[data-bridge]')) {
+    const tag = document.createElement('span');
+    tag.className = 'chip chip--passerelle';
+    tag.textContent = 'Carte Passerelle';
+    tag.setAttribute('data-bridge','');
+    topbar.appendChild(tag);
+    cardEl.setAttribute('data-passerelle','true');
+  }
+}
 
       const back = cardEl.querySelector('.back');
       back.setAttribute('aria-pressed','true');
@@ -1842,10 +1937,13 @@ showBtn.addEventListener('click', ()=>{
   setBusy(linesOut, true);
   setBusy(synthOut, true);
 
-  const line = (label, obj, showPol=true)=>{
-    const pol = (showPol && obj.polarity) ? ` <span class="opacity-80">(${obj.polarity==='yang'?'énergie masculine':'énergie féminine'})</span>` : "";
-    return `<p><b>${label} :</b> ${obj.name}${pol}<br><i>« ${obj.quote} »</i></p>`;
-  };
+const line = (label, obj, showPol=true)=>{
+  const polTxt = (showPol && obj?.polarity)
+    ? ` <span class="opacity-80">(${obj.polarity==='yang' ? 'Triangle' : 'Cercle'})</span>`
+    : '';
+  return `<p><b>${label} :</b> ${obj.name}${polTxt}<br><i>« ${obj.quote} »</i></p>`;
+};
+
 
   linesOut.innerHTML = `
     <p style="margin:0 0 8px"><b>Votre tirage :</b></p>
@@ -2167,6 +2265,7 @@ loginFormDash?.addEventListener('submit', (e) => {
 </script>
 
 <!-- Section Menu mobile + Échap -->
+
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   const mobileBtn  = document.getElementById('mobileMenuBtn');
@@ -2374,3 +2473,9 @@ document.addEventListener('DOMContentLoaded', () => {
 </body>
 </html>
 
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('img[loading="lazy"]:not([fetchpriority])')
+    .forEach(img => img.setAttribute('fetchpriority','low'));
+});
+</script>
