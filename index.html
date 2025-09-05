@@ -356,7 +356,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
 <img src="https://i.ibb.co/4wG0t61y/logo.png" alt="Oradia Logo"
      width="256" height="256" loading="eager" decoding="async"
-     class="w-16 h-16 mr-6 ..." />
+     class="w-16 h-16 mr-6" />
 
       <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
     </div>
@@ -1873,6 +1873,7 @@ if (family === "cosmos") {
       flippedCount++;
 
 // Badge “Carte Passerelle” (mêmes critères que Traversée)
+
 const PASSERELLES = new Set(['CLÉ','PORTE','MESSAGE','SYNCHRONICITÉ','VISION','DÉVOILEMENT','TRANSFORMATION','OUVERTURE','RECADRAGE','DÉTACHEMENT','ALLER VERS','CHOISIR','CRÉER']);
 if (PASSERELLES.has(data.name)) {
   const topbar = cardEl.querySelector('.front .topbar');
@@ -1906,6 +1907,7 @@ if (PASSERELLES.has(data.name)) {
     });
 
     // Lancer le tirage (affiche le plateau uniquement à ce moment)
+
     startButton.addEventListener('click', ()=>{
       if(!intentionIn.value.trim().endsWith('?')){
         intentionIn.setCustomValidity("Veuillez formuler une question ouverte se terminant par « ? »");
@@ -1919,6 +1921,7 @@ if (PASSERELLES.has(data.name)) {
     });
 
     // Click/Enter pour retourner les cartes
+
     document.querySelectorAll('.card .back').forEach(back=>{
       back.addEventListener('click', ()=> flipCard(back.closest('.card')));
 back.addEventListener('keydown', (e)=> {
@@ -1927,6 +1930,7 @@ back.addEventListener('keydown', (e)=> {
     });
 
    // Affichage des résultats — VERSION enrichie
+
 showBtn.addEventListener('click', ()=>{
   const E = drawn.emotions, B = drawn.besoins, A = drawn.actions, C = drawn.cosmos;
   if(!(E && B && A && C)) return;
@@ -2172,17 +2176,43 @@ confirmation.querySelector('#newReadingBtn').addEventListener('click', () => {
 });
 }); 
 
-    // --------- Modale Abonnement / Membre ----------
-    const subscribeBtn = document.getElementById('subscribeBtn');
-    const subscriptionModal = document.getElementById('subscriptionModal');
-    const closeSubscription = document.getElementById('closeSubscription');
-    const memberLoginForm = document.getElementById('memberLoginForm');
-    const memberRegisterForm = document.getElementById('memberRegisterForm');
-    const showRegister = document.getElementById('showRegister');
-    const showLogin = document.getElementById('showLogin');
+  // --- Toggle Login/Register (abonnement) ---
+const showRegister = document.getElementById('showRegister');
+const showLogin    = document.getElementById('showLogin');
+const memberLoginForm    = document.getElementById('memberLoginForm');
+const memberRegisterForm = document.getElementById('memberRegisterForm');
 
-subscribeBtn.addEventListener('click', e => {
+showRegister?.addEventListener('click', (e) => {
   e.preventDefault();
+  memberLoginForm.classList.add('hidden');
+  memberRegisterForm.classList.remove('hidden');
+
+  memberLoginForm.setAttribute('aria-hidden','true');
+  memberLoginForm.setAttribute('inert','');
+  memberRegisterForm.setAttribute('aria-hidden','false');
+  memberRegisterForm.removeAttribute('inert');
+
+  (memberRegisterForm.querySelector('input,select,textarea,button')||memberRegisterForm).focus();
+});
+
+showLogin?.addEventListener('click', (e) => {
+  e.preventDefault();
+  memberRegisterForm.classList.add('hidden');
+  memberLoginForm.classList.remove('hidden');
+
+  memberRegisterForm.setAttribute('aria-hidden','true');
+  memberRegisterForm.setAttribute('inert','');
+  memberLoginForm.setAttribute('aria-hidden','false');
+  memberLoginForm.removeAttribute('inert');
+
+  (memberLoginForm.querySelector('input,select,textarea,button')||memberLoginForm).focus();
+});
+
+// --- fin du script Pèlerin ---
+})(); // FIN IIFE oradia-pelerin
+</script>
+
+
 
   // état par défaut : LOGIN visible
   memberLoginForm.classList.remove('hidden');
@@ -2263,23 +2293,32 @@ loginFormDash?.addEventListener('submit', (e) => {
       document.body.style.overflow='';
 </script>
 
-<!-- Section Menu mobile + Échap -->
-
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  const mobileBtn  = document.getElementById('mobileMenuBtn');
-  const mobileMenu = document.getElementById('mobileMenu');
+  // --- Menu mobile ---
+  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+  const mobileMenu    = document.getElementById('mobileMenu');
 
-  mobileBtn?.addEventListener('click', ()=>{
-    const isHidden = mobileMenu.classList.toggle('hidden');
-    mobileBtn.setAttribute('aria-expanded', String(!isHidden));
+  mobileMenuBtn?.addEventListener('click', () => {
+    const expanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
+    mobileMenuBtn.setAttribute('aria-expanded', String(!expanded));
+    mobileMenu.classList.toggle('hidden', expanded);
   });
 
-  document.getElementById('loginBtnMobile')?.addEventListener('click', ()=>{
-    mobileMenu.classList.add('hidden');
-    openModal(document.getElementById('loginModal'));
-    setTimeout(()=>document.querySelector('#loginModal input')?.focus(), 50);
+  // --- Connexion (header/footer + mobile) ---
+  const loginBtn        = document.getElementById('loginBtn');
+  const loginBtnMobile  = document.getElementById('loginBtnMobile');
+  const footerLogin     = document.getElementById('footerLogin');
+  const loginModal      = document.getElementById('loginModal');
+
+  [loginBtn, loginBtnMobile, footerLogin].forEach(btn=>{
+    btn?.addEventListener('click', (e)=>{
+      e.preventDefault?.();
+      openModal(loginModal);
+    });
   });
+
+  document.getElementById('closeLoginModal')?.addEventListener('click', ()=> closeModal(loginModal));
+
 
   // Échap = fermer les modales ouvertes proprement
   document.addEventListener('keydown', (e) => {
