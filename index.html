@@ -1681,6 +1681,19 @@ function closeModal(el){
   const mobileBtn  = $('mobileMenuBtn');
   const mobileMenu = $('mobileMenu');
   mobileBtn?.addEventListener('click', ()=>{
+
+// Fermeture auto quand on clique un item du menu mobile (délégation)
+mobileMenu?.addEventListener('click', (e) => {
+  const t = e.target?.closest('a, button');
+  if (!t) return;
+
+  // On déclenche le même toggle que le burger → évite de casser les animations
+  if (mobileBtn?.getAttribute('aria-expanded') === 'true') {
+    // micro-délai pour laisser l’ancre démarrer son scroll si besoin
+    setTimeout(() => mobileBtn.click(), 0);
+  }
+});
+
     const expanded = mobileBtn.getAttribute('aria-expanded') === 'true';
     mobileBtn.setAttribute('aria-expanded', String(!expanded));
     mobileMenu?.classList.toggle('hidden', expanded);
@@ -2424,7 +2437,7 @@ document.addEventListener('DOMContentLoaded', () => {
     memberRegisterForm.classList.remove('hidden');
     memberRegisterForm.setAttribute('aria-hidden','false');
     memberRegisterForm.removeAttribute('inert');
-
+a
     (memberRegisterForm.querySelector('input,button,select,textarea') || memberRegisterForm).focus();
   }
   showRegisterLink?.addEventListener('click', (e)=>{ e.preventDefault(); showRegister(); });
@@ -2461,7 +2474,7 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   // ---- ACCESSIBILITÉ : rôle/états cohérents si un bouton ouvre un menu/modale
-  // (déjà bien géré chez toi ; on assure un état initial propre)
+
   if (mobileBtn && mobileMenu) mobileBtn.setAttribute('aria-expanded','false');
 
   // ---- FIN : si la ligne coupée existait, on s’assure que l’intention était bien de revenir au login
