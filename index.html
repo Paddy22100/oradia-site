@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -6,54 +5,117 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
   <title>Oradia - Oracle Vibratoire</title>
 <link rel="canonical" href="https://oradia.fr/">
+<link rel="alternate" hreflang="fr" href="https://oradia.fr/">
+<link rel="alternate" hreflang="x-default" href="https://oradia.fr/">
+<link rel="preconnect" href="https://i.ibb.co" crossorigin>
+<link rel="preconnect" href="https://enzostvs-deepsite.hf.space" crossorigin>
+<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="dns-prefetch" href="//i.ibb.co">
+<link rel="dns-prefetch" href="//enzostvs-deepsite.hf.space">
 
+<!-- Open Graph -->
+
+
+<meta property="og:locale" content="fr_FR">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Oradia - Oracle Vibratoire">
 <meta property="og:description" content="Oradia est un oracle vibratoire qui croise sagesses ancestrales et IA pour guider votre chemin intérieur. Tirages gratuits et tirages complets.">
 <meta property="og:url" content="https://oradia.fr/">
-<meta property="og:image" content="https://i.ibb.co/4wG0t61y/logo.png">
+<meta property="og:image" content="https://i.ibb.co/4wG0t61y/og-1200x630.jpg">
+<meta property="og:site_name" content="Oradia">
 
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Oradia - Oracle Vibratoire">
 <meta name="twitter:description" content="Guidance vibratoire croisant sagesses ancestrales et IA.">
-<meta name="twitter:image" content="https://i.ibb.co/4wG0t61y/logo.png">
+<meta name="twitter:image" content="https://i.ibb.co/4wG0t61y/og-1200x630.jpg">
 
 <meta name="description" content="Oradia est un oracle vibratoire qui croise sagesses ancestrales et IA pour guider votre chemin intérieur. Tirages gratuits et tirages complets.">
-<link rel="preconnect" href="https://fonts.googleapis.com" crossorigin>
+<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="icon" href="https://i.ibb.co/4wG0t61y/logo.png">
+<link rel="preload" as="image" href="https://i.ibb.co/cKHs3GY5/logo2.png" fetchpriority="high">
 <meta name="theme-color" content="#0a192f">
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-  <script src="https://cdn.tailwindcss.com"></script>
+<meta property="og:site_name" content="Oradia">
+<meta property="og:locale:alternate" content="en_US">
+
+<meta name="referrer" content="no-referrer-when-downgrade">
+<meta name="color-scheme" content="dark light">
+<meta name="format-detection" content="telephone=no">
+
+<script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
       integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
       crossorigin="anonymous" referrerpolicy="no-referrer">
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"Organization",
+  "name":"Oradia",
+  "url":"https://oradia.fr/",
+  "logo":"https://i.ibb.co/4wG0t61y/logo.png",
+  "sameAs":["https://www.instagram.com/oradia_oracle"]
+}
+</script>
 
-  <script>
+<!-- WebSite JSON-LD ✅ uniquement du JSON -->
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"WebSite",
+  "name":"Oradia - Oracle Vibratoire",
+  "url":"https://oradia.fr/",
+  "potentialAction":{
+    "@type":"SearchAction",
+    "target":"https://oradia.fr/?q={query}",
+    "query-input":"required name=query"
+  }
+}
+</script>
 
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            'night-blue': '#0a192f',
-            'gold': '#d4af37',
-            'light-gold': '#f5e7a1',
-            'dark-blue': '#051428',
-            'celtic-blue': '#1a365d'
-          },
-          fontFamily: {
-            'cormorant': ['Cormorant Garamond', 'serif'],
-            'poppins': ['Poppins', 'sans-serif']
-          }
+<!-- Vos utilitaires JS à part -->
+<script>
+function setBusy(el, busy){
+  if(!el) return;
+  el.setAttribute('aria-busy', busy ? 'true' : 'false');
+}
+function randInt(max){ // 0..max-1
+  const arr = new Uint32Array(1);
+  crypto.getRandomValues(arr);
+  return Math.floor((arr[0] / 2**32) * max);
+}
+
+const pickOne = (arr) => arr[randInt(arr.length)];
+
+</script>
+
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          'night-blue': '#0a192f',
+          'gold': '#d4af37',
+          'light-gold': '#f5e7a1',
+          'dark-blue': '#051428',
+          'celtic-blue': '#1a365d'
+        },
+        fontFamily: {
+          'cormorant': ['Cormorant Garamond', 'serif'],
+          'poppins': ['Poppins', 'sans-serif']
         }
       }
     }
-  </script>
-
+  }
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 
+    nav a[aria-current="page"]{
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    }
 
     :root{ --dore:#d4af37; --text:#e9e7df; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
 
@@ -97,7 +159,7 @@
     grid-area: auto !important; /* empile proprement en 1 colonne */
   }
 }
-    .pos-1{grid-area:1/1} .pos-2{grid-area:1/2} .pos-3{grid-area:1/5} .pos-4{grid-area:1/3} .pos-5{grid-area:1/4}
+    .pos-1{grid-area:1/1} .pos-2{grid-area:1/2} .pos-3{grid-area:1/3} .pos-4{grid-area:1/4} .pos-5{grid-area:1/5}
 
     .card{ width:min(280px,90vw); height:400px; perspective:1000px; transition:.3s transform }
     @media(max-width:400px){ .card{ height:360px } }
@@ -121,11 +183,12 @@
     .btn-outline-gold{ background:transparent; color:#d4af37; border:2px solid #d4af37; border-radius:8px; padding:10px 20px; transition:.3s; display:inline-block }
     .btn-outline-gold:hover{ background:rgba(212,175,55,.1); transform:translateY(-3px) }
 
-    .scroll-top{ position:fixed; bottom:30px; right:30px; z-index:99; opacity:0; transition:opacity .3s }
-    .scroll-top.show{ opacity:1 }
+   .scroll-top{ position:fixed; bottom:30px; right:30px; z-index:1002; opacity:0; transition:opacity .3s }
+   .scroll-top.show{ opacity:1 }
 
     .result-lines{ padding:12px; border-radius:12px; background:rgba(11,29,58,.6); border:1px solid rgba(212,175,55,.2) }
     .hide-sections { display: none !important; }
+
 /* --- Traversée : plateau en croix 5 cartes --- */
 .traversee-board-5{
   display:grid;
@@ -164,8 +227,8 @@
   box-shadow:0 10px 20px rgba(212,175,55,.25);
 }
 #exitTraverseeBtn.hidden{ display:none; }
-/* === MOBILE & TABLET POLISH === */
 
+/* === MOBILE & TABLET POLISH === */
 /* Images fluides partout */
 img { max-width: 100%; height: auto; }
 
@@ -177,6 +240,15 @@ img { max-width: 100%; height: auto; }
     aspect-ratio: 7 / 10;   /* ratio carte */
   }
   .card-inner{ height: 100%; }
+}
+
+/* PÈLERIN : éviter les débordements des citations */
+.card .front .quote,
+.card .front [data-quote]{
+  overflow-wrap: anywhere; /* casse même les longs mots / URLs */
+  word-break: break-word;  /* fallback vieux navigateurs */
+  hyphens: auto;           /* ajoute des césures si possible */
+  line-height: 1.35;
 }
 
 /* Cartes de la Traversée : assure une bonne hauteur et wrap du texte */
@@ -223,11 +295,37 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 @media (prefers-reduced-motion: reduce){
   *{ animation: none !important; transition: none !important; }
 }
+/* Focus visible clavier */
+:focus-visible { outline: 3px solid var(--dore); outline-offset: 2px; }
+.traversee-card-back:focus-visible,
+.card .back:focus-visible,
+.btn-gold:focus-visible,
+.btn-outline-gold:focus-visible { box-shadow: 0 0 0 4px rgba(212,175,55,.35); }
 
+/* Désactive les effets hover sur écrans tactiles */
+@media (hover: none) {
+  .card:hover { transform: none; }
+  .btn-gold:hover, .btn-outline-gold:hover { transform: none; box-shadow: none; }
+}
+
+/* Contraste : doré plus lisible pour le texte long */
+:root{ --gold-aa: #e6c766; }
+.text-gold { color: var(--gold-aa) !important; } /* conserve #d4af37 pour bordures/déco */
+
+/* Bouton disabled accessible */
+[aria-disabled="true"], button:disabled {
+  opacity: .6; cursor: not-allowed;
+}
+
+/* Hauteur viewport fiable mobile (iOS/Android) */
+.min-h-100dvh { min-height: 100dvh; }
   </style>
 </head>
 
 <body class="relative">
+<a href="#accueil" class="sr-only focus:not-sr-only focus:fixed top-2 left-2 bg-night-blue text-gold p-2 rounded z-[1001]">
+  Aller au contenu
+</a>
 
 <button id="exitTraverseeBtn" class="hidden" aria-label="Quitter le tirage de la Traversée">
   Quitter le tirage de la Traversée
@@ -242,9 +340,10 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 <header class="header-bg w-full py-3 px-4 md:py-4 md:px-8">
   <div class="flex items-center justify-between">
     <div class="flex items-center">
+
 <img src="https://i.ibb.co/4wG0t61y/logo.png" alt="Oradia Logo"
-     width="256" height="256" loading="lazy"
-     class="w-16 h-16 mr-6 transform hover:scale-110 transition-transform duration-300"/>
+     width="256" height="256" loading="eager" decoding="async"
+     class="w-16 h-16 mr-6 ..." />
 
       <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
     </div>
@@ -281,7 +380,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 </header>
 
   <!-- Hero -->
-  <section id="accueil" class="hero-bg min-h-screen flex items-center pt-20 pb-32 px-6">
+  <section id="accueil" class="hero-bg min-h-100dvh flex items-center pt-20 pb-32 px-6">
     <div class="container mx-auto max-w-6xl">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div class="text-center lg:text-left">
@@ -293,7 +392,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             L'oracle Oradia croise les sagesses ancestrales (Yi Jing, ennéagramme, astrologie, etc.) et les outils modernes pour vous guider comme une boussole.
           </p>
                 <p class="text-light-gold max-w-3xl mx-auto">
-                    Il utilise l'IA comme un outils puissant afin de croiser les informations et vous fournir une guidance incroyablement pertinente.
+                    Il utilise l'IA comme un outil puissant afin de croiser les informations et vous fournir une guidance incroyablement pertinente.
                          </p>
                          <p class="text-light-gold max-w-3xl mx-auto">
                          </p>
@@ -337,7 +436,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     </div>
   </section>
 
-  <!-- Oracle -->
+  <!-- Tirage du Pèlerin -->
   <section id="oracle" class="py-12 md:py-20 px-4 md:px-6">
     <div class="container mx-auto max-w-6xl">
       <div class="text-center mb-10">
@@ -345,22 +444,31 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         <p class="text-light-gold max-w-3xl mx-auto">Guidance vibratoire croisant plusieurs systèmes.</p>
       </div>
 
-      <!-- Intention -->
+      <!-- Recueil de l'intention pour le tirage-->
       <div class="bg-[rgba(18,20,32,.6)] border border-[rgba(212,175,55,.25)] rounded-2xl p-5 mb-6">
-        <div class="flex flex-wrap items-center gap-3">
-          <label for="intention" class="text-gold font-semibold">Votre intention :</label>
-  <input id="intention" type="text"
-  autocomplete="off" autocapitalize="sentences" inputmode="text" spellcheck="true"
-  class="flex-1 w-full min-w-0 bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] rounded-lg p-3 text-light-gold"
-  placeholder="Ex. : Comment orienter ma journée avec justesse ?" required />
-        </div>
-       <p id="intentionHelp" class="text-sm opacity-80 mt-2">Formulez une question ouverte et terminez par « ? »</p>
-        <div class="mt-3 text-center">
-          <button id="startReading" class="btn-gold">Commencer le tirage</button>
-        </div>
-      </div>
+  <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+    <label for="intention" class="text-gold font-semibold mb-1 sm:mb-0 sm:min-w-40">
+      Votre intention :
+    </label>
 
-      <!-- Instruction -->
+    <input id="intention" type="text"
+      autocomplete="off" autocapitalize="sentences" inputmode="text" spellcheck="true"
+      aria-describedby="intentionHelp"
+      class="w-full sm:flex-1 min-w-0 bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] rounded-lg p-3 text-light-gold"
+      placeholder="Ex. : Comment orienter ma journée avec justesse ?" required />
+  </div>
+
+  <p id="intentionHelp" class="text-sm opacity-80 mt-2">
+    Formulez une question ouverte et terminez par « ? »
+  </p>
+
+  <div class="mt-3 text-center">
+    <button id="startReading" class="btn-gold">Commencer le tirage</button>
+  </div>
+</div>
+
+
+      <!-- Instructions du tirage -->
       <p id="cardsInstruction" class="text-light-gold max-w-3xl mx-auto text-center mb-4 hidden">
         Retournez les 4 cartes (Émotions, Besoins, Actions, Mémoire Cosmos)
       </p>
@@ -393,7 +501,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             </div>
             <div class="face front">
               <div class="topbar">
-                <span class="chip"><i class="fas fa-hands-helping mr-1"></i> BESOINS</span>
+                <span class="chip"><i class="fas fa-hands-holding-heart mr-1"></i>BESOINS</span>
                 <span class="polarity" data-polarity></span>
               </div>
               <div class="art"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
@@ -439,10 +547,11 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       </section>
 
       <div class="text-center mt-4">
-        <button id="showResults" class="btn-gold hidden" disabled>Afficher le résultat du tirage</button>
+  <button id="showResults" class="btn-gold hidden" disabled aria-disabled="true">Afficher le résultat du tirage</button>
       </div>
 
-      <section id="results" class="hidden mt-6" aria-live="polite" aria-atomic="true">
+<section id="results" class="hidden mt-6" aria-live="polite" aria-atomic="true" aria-busy="false">
+
         <h2 class="cormorant text-3xl text-gold mb-3">Résultats du tirage</h2>
         <div class="mb-2"><b>Intention :</b> <span id="out-intention">—</span></div>
         <div class="result-lines" id="lines"></div>
@@ -476,8 +585,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             <div class="absolute top-1/2 left-1/2 w-20 h-20 rounded-full border-2 border-gold/50 animate-[pulse_3s_ease-in-out_infinite] -translate-x-1/2 -translate-y-1/2"></div>
             <div class="absolute top-2/3 left-1/2 w-16 h-16 rounded-full border-2 border-gold/30 animate-[pulse_5s_ease-in-out_infinite] -translate-x-1/2 -translate-y-1/2"></div>
             <!-- Connexions entre les temps -->
-            <div class="absolute top-1/3 left-1/2 w-1 h-1/6 bg-gradient-to-b from-gold/20 to-transparent -translate-x-1/2"></div>
-            <div class="absolute top-1/2 left-1/2 w-1 h-1/6 bg-gradient-to-t from-gold/20 to-transparent -translate-x-1/2"></div>
+            <div class="absolute top-1/3 left-1/2 w-1 h-[16.666%] bg-gradient-to-b from-gold/20 to-transparent -translate-x-1/2"></div>
+            <div class="absolute top-1/2 left-1/2 w-1 h-[16.666%] bg-gradient-to-t from-gold/20 to-transparent -translate-x-1/2"></div>
           </div>
 
           <div class="relative z-10 text-center mb-6">
@@ -601,7 +710,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             </p>
             <h4 class="cormorant text-xl text-gold mb-3">Vous avez hâte n'est-ce pas?</h4>
             <p class="text-light-gold mb-4">
-              Vous pouvez contribuer à votre hauteur au financement, vous recevoir le jeu en avant-première lorsqu’il sera disponible.
+              Vous pouvez contribuer à votre hauteur au financement, vous receverez le jeu en avant-première lorsqu’il sera disponible.
             </p>
             <div class="text-center">
             <a href="..." target="_blank" rel="noopener noreferrer" class="btn-gold inline-block">Faire un don</a>
@@ -611,7 +720,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
         <div class="flex justify-center">
           <div class="rounded-2xl p-4" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
-          <img src="https://i.ibb.co/FTDGc0k/Capture-d-cran-2025-08-09-090137.png" alt="Aperçu du jeu" width="1024" height="576" loading="lazy" />
+        <img src="https://i.ibb.co/FTDGc0k/Capture-d-cran-2025-08-09-090137.png" alt="Aperçu du jeu" width="1024" height="576" loading="lazy" decoding="async" />
             <p class="text-light-gold text-center mt-4 italic">Aperçu du jeu de cartes en développement</p>
           </div>
         </div>
@@ -668,7 +777,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <div class="relative">
             <div class="bg-gradient-to-br from-gold/10 to-night-blue border border-gold/30 rounded-2xl w-full h-96"></div>
             <div class="absolute -bottom-6 -right-6 w-64 h-64 bg-gradient-to-tr from-gold/5 to-transparent border border-gold/20 rounded-2xl">
-              <img src="https://i.ibb.co/TB75673d/logo.png" alt="logo Oradia" width="512" height="512" loading="lazy" class="w-full h-full object-contain p-4">
+              <img src="https://i.ibb.co/TB75673d/logo.png" alt="logo Oradia" width="512" height="512" loading="lazy" decoding="async" class="w-full h-full object-contain p-4">
             </div>
           </div>
         </div>
@@ -691,7 +800,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <div class="relative">
             <div class="bg-gradient-to-br from-gold/10 to-night-blue border border-gold/30 rounded-2xl w-full h-96"></div>
             <div class="absolute -top-6 -left-6 w-64 h-64 bg-gradient-to-tr from-gold/5 to-transparent border border-gold/20 rounded-2xl">
-              <img src="https://i.ibb.co/354MSMtd/Logo-SCIC.png" alt="Logo SCIC" width="512" height="512" loading="lazy" class="w-full h-full object-contain p-3">
+              <img src="https://i.ibb.co/354MSMtd/Logo-SCIC.png" alt="Logo SCIC" width="512" height="512" loading="lazy" decoding="async" class="w-full h-full object-contain p-3">
             </div>
           </div>
         </div>
@@ -808,53 +917,42 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         </div>
 
         <form id="traversee-form" class="hidden">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
-              <label class="block text-light-gold mb-2">Prénom</label>
-              <input type="text"
-  autocomplete="given-name" inputmode="text"
-  class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+    <div>
+      <label for="trav-prenom" class="block text-light-gold mb-2">Prénom</label>
+      <input id="trav-prenom" name="prenom" type="text" autocomplete="given-name" inputmode="text"
+             class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+    </div>
+    <div>
+      <label for="trav-dob" class="block text-light-gold mb-2">Date de naissance</label>
+      <input id="trav-dob" name="date_naissance" type="date" autocomplete="bday"
+             class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+    </div>
+    <div>
+      <label for="trav-ville" class="block text-light-gold mb-2">Ville de naissance</label>
+      <input id="trav-ville" name="ville_naissance" type="text" inputmode="text" autocomplete="off"
+             class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+    </div>
+    <div>
+      <label for="trav-heure" class="block text-light-gold mb-2">Heure de naissance</label>
+      <input id="trav-heure" name="heure_naissance" type="time" inputmode="numeric" autocomplete="off"
+             class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+    </div>
+  </div>
+  <div class="mb-6">
+    <label for="trav-intention" class="block text-light-gold mb-2">Votre intention pour ce tirage</label>
+    <textarea id="trav-intention" name="intention" autocomplete="off" spellcheck="true"
+              class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg min-h-[120px]" required></textarea>
+  </div>
+  <button type="submit" class="btn-gold w-full">Lancer le tirage</button>
+</form>
 
-            </div>
-            <div>
-              <label class="block text-light-gold mb-2">Date de naissance</label>
-              <input type="date"
-  autocomplete="bday"
-  class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
 
-            </div>
-            <div>
-              <label class="block text-light-gold mb-2">Ville de naissance</label>
-              <input type="text"
-  autocomplete="off" inputmode="text"
-  class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        <div id="traversee-board" class="hidden"><!-- Board will be generated by JS --></div>
+<section id="traversee-results" class="hidden mt-6" aria-live="polite" aria-atomic="true" aria-busy="false">
+  <!-- Results will be generated by JS -->
+</section>
 
-            </div>
-            <div>
-              <label class="block text-light-gold mb-2">Heure de naissance</label>
-            <input type="time"
-  autocomplete="off" inputmode="numeric"
-  class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-
-            </div>
-          </div>
-          <div class="mb-6">
-            <label class="block text-light-gold mb-2">Votre intention pour ce tirage</label>
-            <textarea
-  autocomplete="off" spellcheck="true"
-  class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg min-h-[120px]" required></textarea>
-
-          </div>
-          <button type="submit" class="btn-gold w-full">Lancer le tirage</button>
-        </form>
-
-        <div id="traversee-board" class="hidden">
-          <!-- Board will be generated by JS -->
-        </div>
-
-    <div id="traversee-results" class="hidden" aria-live="polite" aria-atomic="true">
-          <!-- Results will be generated by JS -->
-        </div>
       </div>
     </div>
   </section>
@@ -865,7 +963,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
         <div>
           <div class="flex items-center mb-4">
-           <img src="https://i.ibb.co/4wG0t61y/logo.png" alt="Oradia Logo" width="256" height="256" loading="lazy" class="w-16 h-16 mr-4" />
+           <img src="https://i.ibb.co/4wG0t61y/logo.png" alt="Oradia Logo" width="256" height="256" loading="lazy" decoding="async" class="w-16 h-16 mr-4" />
             <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
           </div>
           <p class="text-light-gold text-sm">Oracle vibratoire pour accompagner votre cheminement personnel et révéler votre essence.</p>
@@ -891,7 +989,9 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         <div>
           <h4 class="cormorant text-xl text-gold mb-4">Contact</h4>
           <ul class="space-y-2">
-            <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><span class="text-light-gold">contact@oradia.fr</span></li>
+          <li class="flex items-start">
+  <i class="fas fa-envelope text-gold mt-1 mr-3"></i>
+  <a class="text-light-gold hover:text-gold transition" href="mailto:contact@oradia.fr">contact@oradia.fr</a></li>
             <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><span class="text-light-gold">@oradia_oracle</span></li>
           </ul>
         </div>
@@ -905,144 +1005,121 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   </footer>
 
   <!-- Modale Commande -->
-  <div id="orderModal" class="fixed inset-0 bg-night-blue/90 z-[100] flex items-center justify-center hidden">
-    <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
-      <button id="closeOrder" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
-      <div class="text-center mb-8">
-        <h3 class="cormorant text-3xl text-gold mb-2">Commande Tirage Complet</h3>
-        <p class="text-light-gold">Finalisez votre commande (5€)</p>
+<div id="orderModal" class="fixed inset-0 bg-night-blue/90 z-[100] flex items-center justify-center hidden"
+     role="dialog" aria-modal="true" aria-labelledby="orderTitle" aria-describedby="orderDesc">
+  <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
+    <button id="closeOrder" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer" type="button"><i class="fas fa-times"></i></button>
+    <div class="text-center mb-8">
+      <h3 id="orderTitle" class="cormorant text-3xl text-gold mb-2">Commande Tirage Complet</h3>
+      <p id="orderDesc" class="text-light-gold">Finalisez votre commande (5€)</p>
       </div>
       <form id="orderForm">
-        <div class="mb-4">
-          <label class="block text-light-gold mb-2">Email</label>
-          <input type="email"
-  autocomplete="email" inputmode="email"
-  autocapitalize="off" autocorrect="off" spellcheck="false"
-  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-        </div>
-        <div class="mb-4">
-          <label class="block text-light-gold mb-2">Nom complet</label>
-          <input type="text"
-  autocomplete="name" inputmode="text"
-  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-        </div>
-        <div class="mb-4">
-          <label class="block text-light-gold mb-2">Date de naissance</label>
-          <input type="date"
-  autocomplete="bday"
-  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-    <div class="mb-6">
-  <label class="block text-light-gold mb-2">Moyen de paiement</label>
-  <select
-    class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg"
-    required>
-    <option value="">Sélectionnez...</option>
-    <option value="card">Carte bancaire</option>
-    <option value="paypal">PayPal</option>
-  </select>
-</div>
-        </div>
-        <button type="submit" class="btn-gold w-full">Payer 5€</button>
-      </form>
+  <div class="mb-4">
+    <label class="block text-light-gold mb-2">Email</label>
+    <input type="email" autocomplete="email" inputmode="email"
+           autocapitalize="off" autocorrect="off" spellcheck="false"
+           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+  </div>
+
+  <div class="mb-4">
+    <label class="block text-light-gold mb-2">Nom complet</label>
+    <input type="text" autocomplete="name" inputmode="text"
+           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+  </div>
+
+  <div class="mb-4">
+    <label class="block text-light-gold mb-2">Date de naissance</label>
+    <input type="date" autocomplete="bday"
+           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+  </div>
+
+  <div class="mb-6">
+    <label class="block text-light-gold mb-2">Moyen de paiement</label>
+    <select class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+      <option value="">Sélectionnez...</option>
+      <option value="card">Carte bancaire</option>
+      <option value="paypal">PayPal</option>
+    </select>
+  </div>
+
+  <button type="submit" class="btn-gold w-full">Payer 5€</button>
+</form>
+
     </div>
   </div>
 
   <!-- Modale Abonnement -->
-  <div id="subscriptionModal" class="fixed inset-0 bg-night-blue/90 z-50 flex items-center justify-center hidden" style="backdrop-filter: blur(5px);">
+
+<div id="subscriptionModal"
+     class="fixed inset-0 bg-night-blue/90 z-50 flex items-center justify-center hidden"
+     style="backdrop-filter: blur(5px);"
+     role="dialog" aria-modal="true"
+     aria-labelledby="subscriptionTitle" aria-describedby="subscriptionDesc">
+
     <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
-      <button id="closeSubscription" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
-      <div class="text-center mb-8">
-        <h3 class="cormorant text-3xl text-gold mb-2">Espace Membre Oradia</h3>
-        <p class="text-light-gold">Connectez-vous ou créez votre compte</p>
-      </div>
+  <!-- APRÈS -->
+<button id="closeSubscription" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer" type="button"><i class="fas fa-times"></i></button>
+<div class="text-center mb-8">
+  <h3 id="subscriptionTitle" class="cormorant text-3xl text-gold mb-2">Espace Membre Oradia</h3>
+  <p id="subscriptionDesc" class="text-light-gold">Connectez-vous ou créez votre compte</p>
+</div>
+
 
       <!-- Login membre -->
-      <form id="memberLoginForm" class="mb-6">
-        <div class="mb-4">
-          <label class="block text-light-gold mb-2">Email</label>
-        <input type="email"
-  autocomplete="email" inputmode="email"
-  autocapitalize="off" autocorrect="off" spellcheck="false"
-  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-        </div>
-        <div class="mb-6">
-          <label class="block text-light-gold mb-2">Mot de passe</label>
-          <input type="password"
-  autocomplete="current-password" inputmode="text"
-  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+      <form id="memberLoginForm" class="mb-6" aria-hidden="false">
+  <div class="mb-4">
+    <label for="mem-login-email" class="block text-light-gold mb-2">Email</label>
+    <input id="mem-login-email" name="email" type="email"
+           autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false"
+           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+  </div>
+  <div class="mb-6">
+    <label for="mem-login-pass" class="block text-light-gold mb-2">Mot de passe</label>
+    <input id="mem-login-pass" name="password" type="password"
+           autocomplete="current-password"
+           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+  </div>
+  <button type="submit" class="btn-gold w-full mb-4">Se connecter</button>
+  <p class="text-light-gold text-center text-sm">Pas encore de compte ?
+    <a href="#" id="showRegister" class="text-gold hover:underline">S'inscrire</a>
+  </p>
+</form>
 
-        </div>
-        <button type="submit" class="btn-gold w-full mb-4">Se connecter</button>
-        <p class="text-light-gold text-center text-sm">Pas encore de compte ?
-          <a href="#" id="showRegister" class="text-gold hover:underline">S'inscrire</a>
-        </p>
-      </form>
 
 
       <!-- Register membre -->
-      <form id="memberRegisterForm" class="hidden">
-        <div class="mb-4">
-          <label class="block text-light-gold mb-2">Email</label>
-          <input type="email"
-  autocomplete="email" inputmode="email"
-  autocapitalize="off" autocorrect="off" spellcheck="false"
-  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-
-        </div>
-        <div class="mb-4">
-          <label class="block text-light-gold mb-2">Mot de passe</label>
-          <input type="password"
-  autocomplete="current-password" inputmode="text"
-  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-
-        </div>
-        <div class="mb-6">
-          <label class="block text-light-gold mb-2">Confirmez le mot de passe</label>
-          <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-        </div>
-        <div class="mb-6 flex items-start">
-          <input type="checkbox" id="terms" class="mt-1 mr-3" required>
-          <label for="terms" class="text-light-gold text-sm">
-            J'accepte les <a href="#cgv" class="text-gold hover:underline">conditions générales</a>
-          </label>
-        </div>
-        <button type="submit" class="btn-gold w-full">Créer le compte & s'abonner</button>
-        <p class="text-light-gold text-center text-sm mt-4">Déjà un compte ?
-          <a href="#" id="showLogin" class="text-gold hover:underline">Se connecter</a>
-        </p>
-      </form>
-    </div>
+      <form id="memberRegisterForm" class="hidden" aria-hidden="true">
+  <div class="mb-4">
+    <label for="mem-reg-email" class="block text-light-gold mb-2">Email</label>
+    <input id="mem-reg-email" name="email" type="email"
+           autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false"
+           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
   </div>
-
-  <!-- Modale Login Dashboard -->
-  <div id="loginModal" class="fixed inset-0 bg-night-blue/90 z-50 flex items-center justify-center hidden">
-    <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
-      <button id="closeLogin" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
-      <div class="text-center mb-8">
-        <h3 class="cormorant text-3xl text-gold mb-2">Connexion Dashboard</h3>
-        <p class="text-light-gold">Accédez à votre espace d'analyse SEO</p>
-      </div>
-      <form id="loginFormDashboard">
-        <div class="mb-4">
-          <label class="block text-light-gold mb-2">Email</label>
-          <input type="email"
-  autocomplete="email" inputmode="email"
-  autocapitalize="off" autocorrect="off" spellcheck="false"
-  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-
-        </div>
-        <div class="mb-6">
-          <label class="block text-light-gold mb-2">Mot de passe</label>
-          <input type="password"
-  autocomplete="current-password" inputmode="text"
-  class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-
-        </div>
-        <button type="submit" class="btn-gold w-full">Se connecter</button>
-      </form>
-    </div>
+  <div class="mb-4">
+    <label for="mem-reg-pass" class="block text-light-gold mb-2">Mot de passe</label>
+    <input id="mem-reg-pass" name="password" type="password"
+           autocomplete="new-password"
+           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
   </div>
+  <div class="mb-6">
+    <label for="mem-reg-pass2" class="block text-light-gold mb-2">Confirmez le mot de passe</label>
+    <input id="mem-reg-pass2" name="password_confirm" type="password"
+           autocomplete="new-password"
+           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+  </div>
+  <div class="mb-6 flex items-start">
+    <input type="checkbox" id="terms" class="mt-1 mr-3" required>
+    <label for="terms" class="text-light-gold text-sm">
+      J'accepte les <a href="#cgv" class="text-gold hover:underline">conditions générales</a>
+    </label>
+  </div>
+  <button type="submit" class="btn-gold w-full">Créer le compte & s'abonner</button>
+  <p class="text-light-gold text-center text-sm mt-4">Déjà un compte ?
+    <a href="#" id="showLogin" class="text-gold hover:underline">Se connecter</a>
+  </p>
+</form>
 
+  
   <!-- Dashboard -->
   <div id="dashboard" class="fixed inset-0 bg-night-blue z-50 overflow-auto hidden">
     <div class="min-h-screen">
@@ -1233,12 +1310,14 @@ const esc = (s) => String(s).replace(/[&<>"']/g, m =>
 
   // 3) interactions (click + clavier)
   host.querySelectorAll('.traversee-card-back').forEach(back => {
-    const card = back.closest('.traversee-card');
-    const onFlip = () => flipCard(card);
- back.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFlip(); }
-});
+  const card = back.closest('.traversee-card');
+  const onFlip = () => flipCard(card);
+  back.addEventListener('click', onFlip);
+  back.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFlip(); }
   });
+});
+
 
   // 4) afficher la section + passer en mode immersif
   const trav = el('traversee');
@@ -1252,29 +1331,30 @@ const esc = (s) => String(s).replace(/[&<>"']/g, m =>
   const el = id  => document.getElementById(id);
 
   // ---------- MODE IMMERSIF ----------
-  function enterImmersive(){
-    // masquer header, footer et toutes les sections sauf #traversee
-    $$('body > header, body > footer, body > section:not(#traversee)').forEach(n=>n.classList.add('hide-immersive'));
-    el('exitTraverseeBtn')?.classList.remove('hidden');
-    // scroll sur la section
-    el('traversee')?.scrollIntoView({behavior:'smooth', block:'start'});
-  }
-  function exitImmersive(){
-    $$('body > header, body > footer, body > section').forEach(n=>n.classList.remove('hide-immersive'));
-    el('exitTraverseeBtn')?.classList.add('hidden');
+ function enterImmersive(){
+  const others = [...document.querySelectorAll('body > header, body > footer, body > section:not(#traversee)')];
+  others.forEach(n => { n.classList.add('hide-immersive'); n.setAttribute('inert',''); n.setAttribute('aria-hidden','true'); });
+  el('exitTraverseeBtn')?.classList.remove('hidden');
+  el('traversee')?.scrollIntoView({behavior:'smooth', block:'start'});
+}
+function exitImmersive(){
+  const all = [...document.querySelectorAll('body > header, body > footer, body > section')];
+  all.forEach(n => { n.classList.remove('hide-immersive'); n.removeAttribute('inert'); n.removeAttribute('aria-hidden'); });
+  el('exitTraverseeBtn')?.classList.add('hidden');
 
-    // Réinitialise visuellement la section Traversée
-    const boardHost = el('traversee-board');
-    const results   = el('traversee-results');
-    const intro     = el('traversee-intro');
-    const form      = el('traversee-form');
+  // Réinitialisation visuelle existante :
+  const boardHost = el('traversee-board');
+  const results   = el('traversee-results');
+  const intro     = el('traversee-intro');
+  const form      = el('traversee-form');
 
-    if(boardHost){ boardHost.innerHTML=''; boardHost.classList.add('hidden'); }
-    if(results){ results.innerHTML=''; results.classList.add('hidden'); }
-    if(form){ form.reset?.(); form.classList.add('hidden'); }
-    if(intro){ intro.classList.remove('hidden'); }
-    window.scrollTo({top:0, behavior:'smooth'});
-  }
+  if(boardHost){ boardHost.innerHTML=''; boardHost.classList.add('hidden'); }
+  if(results){ results.innerHTML=''; results.classList.add('hidden'); }
+  if(form){ form.reset?.(); form.classList.add('hidden'); }
+  if(intro){ intro.classList.remove('hidden'); }
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
 
  
 
@@ -1297,19 +1377,19 @@ const esc = (s) => String(s).replace(/[&<>"']/g, m =>
     const fam  = card.dataset.family;     // revelations/transmutation/actions/emotions/cosmos
     const data = safePick(DATA_TRAVERSEE[fam]||[]);
 
-    // remplir la face avant
+    // Remplir la face avant
     card.querySelector('[data-name]').textContent  = data?.name || "—";
     card.querySelector('[data-quote]').textContent = data?.quote || "—";
     const polEl = card.querySelector('[data-pol]');
     if(slot === 'centre'){ polEl.style.visibility='hidden'; polEl.textContent=''; }
     else { polEl.style.visibility='visible'; polEl.textContent = data?.polarity ? polIcon(data.polarity) : ''; }
 
-    // flip visuel
+    // Flip visuel des cartes
     card.classList.add('flipped');
     card.querySelector('.traversee-card-back')?.classList.add('hidden');
     card.querySelector('.traversee-card-front')?.classList.remove('hidden');
 
-    // état
+    // État
     const host = el('traversee-board');
     host._state.drawn[slot] = data;
     host._state.flipped++;
@@ -1320,32 +1400,40 @@ const esc = (s) => String(s).replace(/[&<>"']/g, m =>
   }
 
   function showResults(drawn, intention){
-    const out = el('traversee-results');
-    if(!out) return;
+  const out = el('traversee-results');
+  if(!out) return;
 
-    const L = (titre, obj, showPol=true) => {
-      const polTxt = showPol && obj?.polarity ? (obj.polarity==='yang'?' (énergie masculine)':' (énergie féminine)') : '';
-      return `<p><b>${titre} :</b> ${obj?.name||'—'}${polTxt}<br><i>« ${obj?.quote||'—'} »</i></p>`;
-    };
+  setBusy(out, true);
 
-    out.innerHTML = `
-      <h3 class="cormorant text-2xl text-gold mb-3">Résultats de la Traversée</h3>
-          ${intention ? `<div class="mb-2"><b>Intention :</b> ${esc(intention)}</div>` : ``}
-      <div class="result-lines">
-        ${L("Nord — Révélations (Vision)", drawn.nord)}
-        ${L("Sud — Transmutation (Ancrage)", drawn.sud)}
-        ${L("Est — Actions (Élan)", drawn.est)}
-        ${L("Ouest — Émotions (Mémoire)", drawn.ouest)}
-        ${L("Centre — Mémoires Cosmos", drawn.centre, false)}
-      </div>
-      <div class="mt-3">
-        <b>Synthèse :</b>
-        <p>La Vision (Nord) éclaire l’horizon ; l’Ancrage (Sud) montre ce qui doit se transformer ; l’Élan (Est) indique le mouvement ; la Mémoire (Ouest) révèle la leçon ; le Cosmos (Centre) relie le tout.</p>
-      </div>
-    `;
+  const L = (titre, obj, showPol=true) => {
+    const polTxt = showPol && obj?.polarity
+      ? (obj.polarity==='yang' ? ' (énergie masculine)' : ' (énergie féminine)')
+      : '';
+    return `<p><b>${titre} :</b> ${obj?.name||'—'}${polTxt}<br><i>« ${obj?.quote||'—'} »</i></p>`;
+  };
+
+  out.innerHTML = `
+    <h3 class="cormorant text-2xl text-gold mb-3">Résultats de la Traversée</h3>
+    ${intention ? `<div class="mb-2"><b>Intention :</b> ${esc(intention)}</div>` : ``}
+    <div class="result-lines">
+      ${L("Nord — Révélations (Vision)", drawn.nord)}
+      ${L("Sud — Transmutation (Ancrage)", drawn.sud)}
+      ${L("Est — Actions (Élan)", drawn.est)}
+      ${L("Ouest — Émotions (Mémoire)", drawn.ouest)}
+      ${L("Centre — Mémoires Cosmos", drawn.centre, false)}
+    </div>
+    <div class="mt-3">
+      <b>Synthèse :</b>
+      <p>La Vision (Nord) éclaire l’horizon ; l’Ancrage (Sud) montre ce qui doit se transformer ; l’Élan (Est) indique le mouvement ; la Mémoire (Ouest) révèle la leçon ; le Cosmos (Centre) relie le tout.</p>
+    </div>
+  `;
+
+  requestAnimationFrame(()=> {
+    setBusy(out, false);
     out.classList.remove('hidden');
     out.scrollIntoView({behavior:'smooth', block:'start'});
-  }
+  });
+}
 
   // ---------- branchement UI de la section #traversee ----------
   document.addEventListener('DOMContentLoaded', () => {
@@ -1372,10 +1460,64 @@ const esc = (s) => String(s).replace(/[&<>"']/g, m =>
 })();
 </script>
 
+<!-- Modale Login Dashboard -->
+<div id="loginModal" class="fixed inset-0 bg-night-blue/90 z-50 flex items-center justify-center hidden"
+     role="dialog" aria-modal="true" aria-labelledby="loginTitle" aria-describedby="loginDesc">
+  <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
+    <button id="closeLoginModal" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer" type="button">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <div class="text-center mb-8">
+      <h3 id="loginTitle" class="cormorant text-3xl text-gold mb-2">Connexion Dashboard</h3>
+      <p id="loginDesc" class="text-light-gold">Accédez à votre espace d'analyse SEO</p>
+    </div>
+
+    <form id="loginFormDashboard">
+      <div class="mb-4">
+        <label class="block text-light-gold mb-2">Email</label>
+        <input type="email" autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false"
+               class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+      </div>
+      <button type="submit" class="btn-gold w-full">Se connecter</button>
+    </form>
+  </div>
+</div>
+
+
+
+<script id="a11y-modals">
+function trapFocus(modal){
+  const FOCUS = 'a[href],button,textarea,input,select,[tabindex]:not([tabindex="-1"])';
+  const nodes = [...modal.querySelectorAll(FOCUS)].filter(el=>!el.disabled && el.tabIndex !== -1);
+  if (!nodes.length) return;
+  const first = nodes[0], last = nodes[nodes.length-1];
+  function onKey(e){
+    if (e.key !== 'Tab') return;
+    if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
+  }
+  modal.addEventListener('keydown', onKey);
+  modal.__releaseTrap = () => modal.removeEventListener('keydown', onKey);
+}
+function openModal(el){
+  el.classList.remove('hidden'); document.body.style.overflow='hidden';
+  trapFocus(el);
+  (el.querySelector('input,button,[tabindex]')||el).focus();
+}
+function closeModal(el){
+  el.classList.add('hidden'); document.body.style.overflow='';
+  el.__releaseTrap?.();
+}
+</script>
 
 
   <!-- SCRIPT -->
-  <script>
+
+<script id="oradia-pelerin">
+(function(){
+  'use strict';
+
     // --------- Données cartes ----------
     const DATA = {
       emotions: [
@@ -1657,6 +1799,7 @@ function buildSynthesis(E,B,A,C,intentText){
       if(flippedCount === 4){
         showBtn.classList.remove('hidden');
         showBtn.disabled = false;
+        showBtn.removeAttribute('aria-disabled');
       }
     }
 
@@ -1696,12 +1839,14 @@ showBtn.addEventListener('click', ()=>{
 
   outIntention.textContent = intentionIn.value.trim();
 
+  setBusy(linesOut, true);
+  setBusy(synthOut, true);
+
   const line = (label, obj, showPol=true)=>{
     const pol = (showPol && obj.polarity) ? ` <span class="opacity-80">(${obj.polarity==='yang'?'énergie masculine':'énergie féminine'})</span>` : "";
     return `<p><b>${label} :</b> ${obj.name}${pol}<br><i>« ${obj.quote} »</i></p>`;
   };
 
-  // Résumé carte par carte
   linesOut.innerHTML = `
     <p style="margin:0 0 8px"><b>Votre tirage :</b></p>
     ${line("Famille ÉMOTIONS", E)}
@@ -1710,15 +1855,18 @@ showBtn.addEventListener('click', ()=>{
     ${line("Carte Mémoires Cosmos", C, false)}
   `;
 
-  // Nouvelle synthèse variabilisée
   synthOut.innerHTML = buildSynthesis(E,B,A,C,intentionIn.value.trim());
+
+  requestAnimationFrame(()=>{
+    setBusy(linesOut, false);
+    setBusy(synthOut, false);
+  });
 
   results.classList.remove('hidden');
   document.getElementById('fullReading').classList.remove('hidden');
   document.getElementById('reset').classList.remove('hidden');
   results.scrollIntoView({behavior:'smooth', block:'start'});
 });
-
 
     // Nouveau tirage
     resetBtn.addEventListener('click', ()=>{
@@ -1729,6 +1877,7 @@ showBtn.addEventListener('click', ()=>{
       // Masquer les éléments de résultats
       showBtn.disabled = true;
       showBtn.classList.add('hidden');
+      showBtn.setAttribute('aria-disabled','true');
       results.classList.add('hidden');
       document.getElementById('fullReading').classList.add('hidden');
       document.getElementById('reset').classList.add('hidden');
@@ -1846,8 +1995,9 @@ document.getElementById('subscribeBtn')?.addEventListener('click', ()=>{
     const closeOrder = document.getElementById('closeOrder');
     const orderForm = document.getElementById('orderForm');
 
-    orderBtn.addEventListener('click', e => { e.preventDefault(); orderModal.classList.remove('hidden'); document.body.style.overflow='hidden'; });
-    closeOrder.addEventListener('click', () => { orderModal.classList.add('hidden'); document.body.style.overflow=''; });
+    orderBtn.addEventListener('click', e => { e.preventDefault(); openModal(orderModal); });
+closeOrder.addEventListener('click', () => closeModal(orderModal));
+
     orderForm.addEventListener('submit', e => {
       e.preventDefault();
       orderModal.classList.add('hidden');
@@ -1934,16 +2084,40 @@ confirmation.querySelector('#newReadingBtn').addEventListener('click', () => {
     const showRegister = document.getElementById('showRegister');
     const showLogin = document.getElementById('showLogin');
 
-    subscribeBtn.addEventListener('click', e => {
-      e.preventDefault();
-      subscriptionModal.classList.remove('hidden');
-      memberLoginForm.classList.remove('hidden');
-      memberRegisterForm.classList.add('hidden');
-      document.body.style.overflow='hidden';
-    });
-    closeSubscription.addEventListener('click', ()=>{ subscriptionModal.classList.add('hidden'); document.body.style.overflow=''; });
-    showRegister.addEventListener('click', e=>{ e.preventDefault(); memberLoginForm.classList.add('hidden'); memberRegisterForm.classList.remove('hidden'); });
-    showLogin.addEventListener('click', e=>{ e.preventDefault(); memberRegisterForm.classList.add('hidden'); memberLoginForm.classList.remove('hidden'); });
+subscribeBtn.addEventListener('click', e => {
+  e.preventDefault();
+
+  // état par défaut : LOGIN visible
+  memberLoginForm.classList.remove('hidden');
+  memberRegisterForm.classList.add('hidden');
+  memberLoginForm.setAttribute('aria-hidden','false');
+  memberLoginForm.removeAttribute('inert');
+  memberRegisterForm.setAttribute('aria-hidden','true');
+  memberRegisterForm.setAttribute('inert','');
+
+  openModal(subscriptionModal);
+
+  // focus premier champ du login
+  (memberLoginForm.querySelector('input, select, textarea, button') || memberLoginForm).focus();
+});
+
+showLogin?.addEventListener('click', (e) => {
+  e.preventDefault();
+
+  // toggle visibilité
+  memberRegisterForm.classList.add('hidden');
+  memberLoginForm.classList.remove('hidden');
+
+  // a11y : état pour lecteurs d’écran + navigation
+  memberRegisterForm.setAttribute('aria-hidden', 'true');
+  memberRegisterForm.setAttribute('inert', '');
+  memberLoginForm.setAttribute('aria-hidden', 'false');
+  memberLoginForm.removeAttribute('inert');
+
+  // focus premier champ
+  (memberLoginForm.querySelector('input, select, textarea, button') || memberLoginForm).focus();
+});
+
 
     memberLoginForm.addEventListener('submit', e=>{
       e.preventDefault();
@@ -1956,85 +2130,247 @@ confirmation.querySelector('#newReadingBtn').addEventListener('click', () => {
       subscriptionModal.classList.add('hidden'); document.body.style.overflow='';
     });
 
-    // --------- Modale Login Dashboard ----------
-    const loginBtn = document.getElementById('loginBtn');
-    const footerLogin = document.getElementById('footerLogin');
-    const loginModal = document.getElementById('loginModal');
-    const closeLogin = document.getElementById('closeLogin');
-    const loginFormDashboard = document.getElementById('loginFormDashboard');
-    const dashboard = document.getElementById('dashboard');
-    const logoutBtn = document.getElementById('logoutBtn');
+   // ---- Modale Login Dashboard ----
+const loginBtn       = document.getElementById('loginBtn');
+const footerLogin    = document.getElementById('footerLogin');
+const loginModal     = document.getElementById('loginModal');
+const closeLoginBtn  = document.getElementById('closeLoginModal');
+const loginFormDash  = document.getElementById('loginFormDashboard');
+const dashboard      = document.getElementById('dashboard');
 
-    const openLogin = ()=>{ loginModal.classList.remove('hidden'); document.body.style.overflow='hidden'; };
-    const closeLoginFn = ()=>{ loginModal.classList.add('hidden'); document.body.style.overflow=''; };
-    if(loginBtn) loginBtn.addEventListener('click', openLogin);
-    footerLogin.addEventListener('click', openLogin);
-    closeLogin.addEventListener('click', closeLoginFn);
+const openLogin  = () => openModal(loginModal);
+const closeLogin = () => closeModal(loginModal);
+const logoutBtn = document.getElementById('logoutBtn');
+logoutBtn?.addEventListener('click', ()=>{
+  dashboard.classList.add('hidden');
+  document.body.style.overflow='';
+});
 
-    loginFormDashboard.addEventListener('submit', e=>{
-      e.preventDefault(); // démo
-      closeLoginFn();
-      dashboard.classList.remove('hidden');
-      document.body.style.overflow='hidden';
-    });
-    logoutBtn.addEventListener('click', ()=>{
+loginBtn?.addEventListener('click', openLogin);
+footerLogin?.addEventListener('click', openLogin);
+document.getElementById('loginBtnMobile')?.addEventListener('click', () => {
+  document.getElementById('mobileMenu')?.classList.add('hidden');
+  openModal(loginModal);
+  setTimeout(()=>document.querySelector('#loginModal input')?.focus(), 50);
+});
+
+closeLoginBtn?.addEventListener('click', closeLogin);
+
+loginFormDash?.addEventListener('submit', (e) => {
+  e.preventDefault(); // démo
+  closeLogin();
+  dashboard?.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
+});
       dashboard.classList.add('hidden');
       document.body.style.overflow='';
-    });
-// --- Menu mobile ---
-const mobileBtn = document.getElementById('mobileMenuBtn');
-const mobileMenu = document.getElementById('mobileMenu');
-const loginBtnMobile = document.getElementById('loginBtnMobile');
+</script>
 
-mobileBtn?.addEventListener('click', ()=>{
-  const isHidden = mobileMenu.classList.toggle('hidden');
-  mobileBtn.setAttribute('aria-expanded', String(!isHidden));
-});
-loginBtnMobile?.addEventListener('click', ()=>{
-  // réutilise la modale de login existante
-  document.getElementById('loginModal')?.classList.remove('hidden');
-  document.body.style.overflow='hidden';
-  mobileMenu.classList.add('hidden');
-});
-// Échap = fermer modales (auto-suffisant, ne dépend d'aucune const externe)
-document.addEventListener('keydown', (e) => {
-  if (e.key !== 'Escape') return;
-  const orderModal = document.getElementById('orderModal');
-  const subscriptionModal = document.getElementById('subscriptionModal');
-  const loginModal = document.getElementById('loginModal');
-  [orderModal, subscriptionModal, loginModal].forEach(m => {
-    if (m && !m.classList.contains('hidden')) {
-      m.classList.add('hidden');
-      document.body.style.overflow = '';
-    }
+<!-- Section Menu mobile + Échap -->
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const mobileBtn  = document.getElementById('mobileMenuBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+
+  mobileBtn?.addEventListener('click', ()=>{
+    const isHidden = mobileMenu.classList.toggle('hidden');
+    mobileBtn.setAttribute('aria-expanded', String(!isHidden));
+  });
+
+  document.getElementById('loginBtnMobile')?.addEventListener('click', ()=>{
+    mobileMenu.classList.add('hidden');
+    openModal(document.getElementById('loginModal'));
+    setTimeout(()=>document.querySelector('#loginModal input')?.focus(), 50);
+  });
+
+  // Échap = fermer les modales ouvertes proprement
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    ['orderModal','subscriptionModal','loginModal'].forEach(id => {
+      const m = document.getElementById(id);
+      if (m && !m.classList.contains('hidden')) closeModal(m);
+    });
   });
 });
+</script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">
+  Made with
+  <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo"
+  width="16" height="16" decoding="async"
+       style="width: 16px; height: 16px; vertical-align: middle; display:inline-block; margin-right:3px; filter:brightness(0) invert(1);">
+  <a href="https://enzostvs-deepsite.hf.space"
+     style="color: #fff; text-decoration: underline;"
+     target="_blank" rel="noopener noreferrer">DeepSite</a>
+  —
+  🧬
+  <a href="https://enzostvs-deepsite.hf.space?remix=Paddy22/site-oradia"
+     style="color: #fff; text-decoration: underline;"
+     target="_blank" rel="noopener noreferrer">Remix</a>
+</p>
 
-  </script>
-<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=Paddy22/site-oradia" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p>
 <script id="sanitize-forms">
 document.addEventListener('DOMContentLoaded', () => {
-  const sanitize = s => s.replace(/[<>]/g, '').replace(/\s+/g, ' ').trim();
+  const sanitize = s => (s || '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim();
 
   const attach = (form) => {
     if (!form) return;
-  form.addEventListener('submit', () => {
-}, { capture: true });
-      // On ne touche qu'aux emails / textes / textarea (pas aux mots de passe, dates, etc.)
+    form.addEventListener('submit', () => {
+      // Nettoie seulement email/texte/textarea
       form.querySelectorAll('input[type="email"], input[type="text"], textarea')
-        .forEach(i => i.value = sanitize(i.value));
+        .forEach(i => { i.value = sanitize(i.value); });
+    }, { capture: true });
+  };
+
+  ['memberLoginForm','memberRegisterForm','loginFormDashboard','traversee-form','orderForm']
+    .forEach(id => attach(document.getElementById(id)));
+});
+
+document.addEventListener('DOMContentLoaded', () => {
+  const i = document.getElementById('intention');
+  if(!i) return;
+  const long = "Ex. : Comment orienter ma journée avec justesse ?";
+  const short = "Ex. : Comment orienter ma journée ?";
+  const mq = window.matchMedia('(max-width: 400px)');
+  const apply = () => i.placeholder = mq.matches ? short : long;
+  apply(); mq.addEventListener?.('change', apply);
+});
+</script>
+  ...
+  </footer>
+
+  <script id="scroll-spy">
+<script id="scroll-spy">
+document.addEventListener('DOMContentLoaded', () => {
+  // 1) Tous les liens internes présents dans des <nav>
+  const links = Array.from(document.querySelectorAll('nav a[href^="#"]'));
+
+  // 2) Sections cibles existantes
+  const sectionById = {};
+  const sections = links
+    .map(a => a.getAttribute('href').slice(1))
+    .filter(Boolean)
+    .map(id => document.getElementById(id))
+    .filter(Boolean)
+    .filter((sec) => (sectionById[sec.id] ? false : (sectionById[sec.id]=true))); // unique
+
+  // Applique aria-current
+  const setActive = (id) => {
+    links.forEach(a => {
+      const isActive = a.getAttribute('href') === `#${id}`;
+      if (isActive) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
     });
   };
 
-  // ✅ Liste des formulaires à couvrir (ajout de orderForm ici)
-  [
-    'memberLoginForm',
-    'memberRegisterForm',
-    'loginFormDashboard',
-    'traversee-form',
-    'orderForm'
-  ].forEach(id => attach(document.getElementById(id)));
+  // 3) Observe la section “centrée” à l’écran
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      // ignore les sections cachées (display:none)
+      if (entry.isIntersecting && entry.target.offsetParent !== null) {
+        setActive(entry.target.id);
+      }
+    });
+  }, {
+    rootMargin: '-40% 0px -60% 0px',
+    threshold: 0.01
+  });
+
+  sections.forEach(sec => io.observe(sec));
+
+  // 4) Activation immédiate au clic + scroll smooth
+  links.forEach(a => {
+    a.addEventListener('click', (e) => {
+      const id = a.getAttribute('href').slice(1);
+      const target = document.getElementById(id);
+      if (!target) return;
+      e.preventDefault();
+      setActive(id);
+      target.scrollIntoView({ behavior:'smooth', block:'start' });
+
+      // (facultatif) si le menu mobile est ouvert, on le referme
+      const mobileMenu = document.getElementById('mobileMenu');
+      if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.add('hidden');
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        mobileBtn?.setAttribute('aria-expanded', 'false');
+      }
+      history.replaceState(null, '', `#${id}`);
+    });
+  });
+
+  // 5) État initial (hash ou première section visible)
+  const initialId = location.hash?.slice(1);
+  if (initialId && document.getElementById(initialId)) {
+    setActive(initialId);
+  } else if (sections[0]) {
+    setActive(sections[0].id);
+  }
 });
 </script>
+
+  </script>
+<script id="scroll-spy" defer>
+document.addEventListener('DOMContentLoaded', () => {
+  const links = Array.from(document.querySelectorAll('nav a[href^="#"]'));
+  if (!links.length) return;
+
+  // Sections uniques réellement présentes
+  const seen = new Set();
+  const sections = links
+    .map(a => a.getAttribute('href').slice(1))
+    .filter(Boolean)
+    .map(id => document.getElementById(id))
+    .filter(Boolean)
+    .filter(sec => (seen.has(sec.id) ? false : seen.add(sec.id)));
+
+  const setActive = (id) => {
+    links.forEach(a => {
+      const active = a.getAttribute('href') === `#${id}`;
+      if (active) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
+    });
+  };
+
+  // Observer “section au centre”
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && entry.target.offsetParent !== null) {
+        setActive(entry.target.id);
+      }
+    });
+  }, { rootMargin: '-45% 0px -55% 0px', threshold: 0.01 });
+
+  sections.forEach(sec => io.observe(sec));
+
+  // Activation immédiate au clic + scroll doux
+  links.forEach(a => {
+    a.addEventListener('click', (e) => {
+      const id = a.getAttribute('href').slice(1);
+      const target = document.getElementById(id);
+      if (!target) return;
+      e.preventDefault();
+      setActive(id);
+      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // refermer le menu mobile s’il est ouvert
+      const mobileMenu = document.getElementById('mobileMenu');
+      if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.add('hidden');
+        document.getElementById('mobileMenuBtn')?.setAttribute('aria-expanded','false');
+      }
+      history.replaceState(null, '', `#${id}`);
+    });
+  });
+
+  // État initial
+  const initial = location.hash?.slice(1);
+  if (initial && document.getElementById(initial)) setActive(initial);
+  else if (sections[0]) setActive(sections[0].id);
+});
+</script>
+
 </body>
 </html>
+
+</body>
+</html>
+
