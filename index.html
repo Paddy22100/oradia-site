@@ -369,7 +369,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
     <!-- Nav desktop -->
     <nav class="hidden md:flex space-x-6 text-lg">
-      <a href="#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
+      <a href="#accueil" aria-current="page" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
       <a href="#oracle" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-layer-group mr-2"></i>Oracle</a>
       <a href="#offres" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Offres</a>
       <a href="#oracle-cartes" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Jeu</a>
@@ -1184,16 +1184,28 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
   <script id="traversee-5cards-clean">
 (() => {
+  // ---------- util ----------
+  const esc = (s) => String(s).replace(/[&<>"']/g, m =>
+    m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : m === '"' ? '&quot;' : '&#39;'
+  );
+  const $  = sel => document.querySelector(sel);
+  const el = id  => document.getElementById(id);
+  const safePick = (arr) => {
+    if (window.crypto?.getRandomValues) { const b=new Uint32Array(1); crypto.getRandomValues(b); return arr[b[0]%arr.length]; }
+    return arr[Math.floor(Math.random()*arr.length)];
+  };
+  // Pol UI (Traversée uniquement)
+  const polUI_TRAV = (p) => p === 'yang'
+    ? { icon:'▲', label:"Triangle — énergie masculine : élan, action, verticalité", shape:'triangle' }
+    : { icon:'◯', label:"Cercle — énergie féminine : réceptivité, accueil, intégration", shape:'cercle' };
+  const tossPolarity = () => { const b=new Uint32Array(1); crypto.getRandomValues(b); return (b[0] & 1) ? 'yang' : 'yin'; };
+  const coinIcon  = (p) => p==='yang'?'▲':'◯';
+  const coinLabel = (p) => p==='yang'
+    ? "Pièce : Triangle — énergie masculine : élan, action, verticalité"
+    : "Pièce : Cercle — énergie féminine : réceptivité, accueil, intégration";
+  const isBridge = (cardPol, coinPol) => !!cardPol && !!coinPol && cardPol !== coinPol;
 
-// Anti-XSS : échappe tout texte injecté en HTML
-const esc = (s) => String(s).replace(/[&<>"']/g, m =>
-  m === '&' ? '&amp;' :
-  m === '<' ? '&lt;'  :
-  m === '>' ? '&gt;'  :
-  m === '"' ? '&quot;': '&#39;'
-);
-
-  // ---------- Données propres à la TRAVERSÉE ----------
+  // ---------- Données TRAVERSÉE ----------
   const DATA_TRAVERSEE = {
     emotions: [
       {name:"JOIE", quote:"Une onde traverse mon cœur. Elle dit oui à la vie.", polarity:"yang"},
@@ -1272,11 +1284,7 @@ const esc = (s) => String(s).replace(/[&<>"']/g, m =>
     ouest: "Ouest — Mémoire (Émotions)",
     centre: "Centre — Mémoires Cosmos"
   };
-  const polIcon = p => p==="yang" ? "🔺" : p==="yin" ? "⚫" : "";
-  const safePick = arr => {
-    if (window.crypto?.getRandomValues) { const b=new Uint32Array(1); crypto.getRandomValues(b); return arr[b[0]%arr.length]; }
-    return arr[Math.floor(Math.random()*arr.length)];
-  };
+
   function slot(slotName, family){
     const chip = slotName.toUpperCase();
     return `
@@ -1306,102 +1314,64 @@ const esc = (s) => String(s).replace(/[&<>"']/g, m =>
     `;
   }
 
-// --- UI Oradia : Triangle/Cercle + Passerelles ---
-const polUI = (p) => p === 'yang'
-  ? { icon:'▲', label:"Triangle — énergie masculine : élan, action, verticalité", shape:'triangle' }
-  : { icon:'◯', label:"Cercle — énergie féminine : réceptivité, accueil, intégration", shape:'cercle' };
-
-// Choix « Carte Passerelle » (tu peux ajuster la liste à ta guise)
-const PASSERELLES = new Set([
-  // Révélations
-  'CLÉ','PORTE','MESSAGE','SYNCHRONICITÉ','VISION','DÉVOILEMENT','PORTAIL',
-  // Transmutation
-  'TRANSFORMATION','OUVERTURE','RECADRAGE','DÉTACHEMENT','CLARIFICATION','PURIFICATION',
-  // Actions
-  'ALLER VERS','CHOISIR','CRÉER'
-]);
-
-
-  // BuildBoard
+  // ---------- Plateau ----------
   function buildBoard() {
-  const host = el('traversee-board');
-  if (!host) return;
+    const host = el('traversee-board');
+    if (!host) return;
 
-  // 1) construire le plateau
-  host.innerHTML = `
-    <h3 class="cormorant text-2xl text-gold mb-6 text-center">
-      Retournez les 5 cartes : Nord • Sud • Est • Ouest • Centre
-    </h3>
-    <div class="traversee-board-5">
-      ${slot('nord','revelations')}
-      ${slot('sud','transmutation')}
-      ${slot('est','actions')}
-      ${slot('ouest','emotions')}
-      ${slot('centre','cosmos')}
-    </div>
-  `;
-  host.classList.remove('hidden');
+    host.innerHTML = `
+      <h3 class="cormorant text-2xl text-gold mb-6 text-center">
+        Retournez les 5 cartes : Nord • Sud • Est • Ouest • Centre
+      </h3>
+      <div class="traversee-board-5">
+        ${slot('nord','revelations')}
+        ${slot('sud','transmutation')}
+        ${slot('est','actions')}
+        ${slot('ouest','emotions')}
+        ${slot('centre','cosmos')}
+      </div>
+    `;
+    host.classList.remove('hidden');
 
-  // 2) état
-  host._state = {
-    flipped: 0,
-    drawn: { nord:null, sud:null, est:null, ouest:null, centre:null }
-  };
+    host._state = { flipped: 0, drawn: { nord:null, sud:null, est:null, ouest:null, centre:null } };
 
-  // 3) interactions (click + clavier)
-  host.querySelectorAll('.traversee-card-back').forEach(back => {
-  const card = back.closest('.traversee-card');
-  const onFlip = () => flipCard(card);
-  back.addEventListener('click', onFlip);
-  back.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFlip(); }
-  });
-});
+    host.querySelectorAll('.traversee-card-back').forEach(back => {
+      const card = back.closest('.traversee-card');
+      const onFlip = () => flipCard(card);
+      back.addEventListener('click', onFlip);
+      back.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFlip(); }});
+    });
 
+    el('traversee')?.classList.remove('hidden');
+    enterImmersive();
+  }
 
-  // 4) afficher la section + passer en mode immersif
-  const trav = el('traversee');
-  trav?.classList.remove('hidden');
-  enterImmersive();
-}
+  // ---------- Mode immersif ----------
+  function enterImmersive(){
+    const others = [...document.querySelectorAll('body > header, body > footer, body > section:not(#traversee)')];
+    others.forEach(n => { n.classList.add('hide-immersive'); n.setAttribute('inert',''); n.setAttribute('aria-hidden','true'); });
+    el('exitTraverseeBtn')?.classList.remove('hidden');
+    el('traversee')?.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  function exitImmersive(){
+    const all = [...document.querySelectorAll('body > header, body > footer, body > section')];
+    all.forEach(n => { n.classList.remove('hide-immersive'); n.removeAttribute('inert'); n.removeAttribute('aria-hidden'); });
+    el('exitTraverseeBtn')?.classList.add('hidden');
+    const boardHost = el('traversee-board');
+    const results   = el('traversee-results');
+    const intro     = el('traversee-intro');
+    const form      = el('traversee-form');
+    if(boardHost){ boardHost.innerHTML=''; boardHost.classList.add('hidden'); }
+    if(results){ results.innerHTML=''; results.classList.add('hidden'); }
+    if(form){ form.reset?.(); form.classList.add('hidden'); }
+    if(intro){ intro.classList.remove('hidden'); }
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
 
-  // ---------- helpers DOM ----------
-  const $  = sel => document.querySelector(sel);
-  const $$ = sel => [...document.querySelectorAll(sel)];
-  const el = id  => document.getElementById(id);
-
-  // ---------- MODE IMMERSIF ----------
- function enterImmersive(){
-  const others = [...document.querySelectorAll('body > header, body > footer, body > section:not(#traversee)')];
-  others.forEach(n => { n.classList.add('hide-immersive'); n.setAttribute('inert',''); n.setAttribute('aria-hidden','true'); });
-  el('exitTraverseeBtn')?.classList.remove('hidden');
-  el('traversee')?.scrollIntoView({behavior:'smooth', block:'start'});
-}
-function exitImmersive(){
-  const all = [...document.querySelectorAll('body > header, body > footer, body > section')];
-  all.forEach(n => { n.classList.remove('hide-immersive'); n.removeAttribute('inert'); n.removeAttribute('aria-hidden'); });
-  el('exitTraverseeBtn')?.classList.add('hidden');
-
-  // Réinitialisation visuelle existante :
-  const boardHost = el('traversee-board');
-  const results   = el('traversee-results');
-  const intro     = el('traversee-intro');
-  const form      = el('traversee-form');
-
-  if(boardHost){ boardHost.innerHTML=''; boardHost.classList.add('hidden'); }
-  if(results){ results.innerHTML=''; results.classList.add('hidden'); }
-  if(form){ form.reset?.(); form.classList.add('hidden'); }
-  if(intro){ intro.classList.remove('hidden'); }
-  window.scrollTo({top:0, behavior:'smooth'});
-}
-
-
- 
-
+  // ---------- Flip ----------
   function flipCard(card){
     if(!card || card.classList.contains('flipped')) return;
 
-    // on exige que l'intention de la Traversée soit remplie (dans le formulaire de la section Traversée)
     const tForm = el('traversee-form');
     const intentionField = tForm?.querySelector('textarea, input[type="text"]');
     if(intentionField && !intentionField.value.trim()){
@@ -1409,55 +1379,73 @@ function exitImmersive(){
       intentionField.setCustomValidity("Veuillez saisir votre intention pour ce tirage.");
       intentionField.reportValidity();
       return;
-    } else if (intentionField) {
-      intentionField.setCustomValidity("");
-    }
+    } else if (intentionField) { intentionField.setCustomValidity(""); }
 
     const slot = card.dataset.slot;       // nord/sud/est/ouest/centre
     const fam  = card.dataset.family;     // revelations/transmutation/actions/emotions/cosmos
-    const data = safePick(DATA_TRAVERSEE[fam]||[]);
+    const base = safePick(DATA_TRAVERSEE[fam]||[]);
 
-    // Remplir la face avant
-    card.querySelector('[data-name]').textContent  = data?.name || "—";
-    card.querySelector('[data-quote]').textContent = data?.quote || "—";
-const polEl = card.querySelector('[data-pol]');
-if (slot === 'centre') {
-  polEl.style.visibility = 'hidden';
-  polEl.textContent = '';
-  polEl.removeAttribute('title');
-  polEl.removeAttribute('aria-label');
-  polEl.classList.remove('is-triangle','is-cercle');
-} else {
-  const ui = polUI(data?.polarity);
-  polEl.style.visibility = 'visible';
-  polEl.textContent = ui.icon;
-  polEl.title = ui.label;
-  polEl.setAttribute('aria-label', ui.label);
-  polEl.classList.toggle('is-triangle', ui.shape === 'triangle');
-  polEl.classList.toggle('is-cercle', ui.shape === 'cercle');
-}
+    // Pièce : sur les 4 directions uniquement
+    const coin  = (slot === 'centre') ? null : tossPolarity();
+    const brOn  = isBridge(base?.polarity, coin);
+    const brTxt = brOn ? (base?.bridge || "Passerelle activée") : null;
 
-// Marquer les cartes passerelles (badge visuel)
-if (PASSERELLES.has(data?.name)) {
-  const topbar = card.querySelector('.traversee-card-front .flex.items-center');
-  if (topbar && !card.querySelector('[data-bridge]')) {
-    const tag = document.createElement('span');
-    tag.className = 'chip chip--passerelle';
-    tag.textContent = 'Carte Passerelle';
-    tag.setAttribute('data-bridge','');
-    topbar.appendChild(tag);
-    card.setAttribute('data-passerelle','true');
-  }
-}
+    // Face avant : titre + base
+    card.querySelector('[data-name]').textContent  = base?.name || "—";
+    card.querySelector('[data-quote]').textContent = base?.quote || "—";
 
-    // Flip visuel des cartes
+    // Polarité de la carte (pas au Centre)
+    const polEl = card.querySelector('[data-pol]');
+    if (slot === 'centre') {
+      polEl.style.visibility = 'hidden'; polEl.textContent = '';
+      polEl.removeAttribute('title'); polEl.removeAttribute('aria-label');
+      polEl.classList.remove('is-triangle','is-cercle');
+    } else {
+      const ui = polUI_TRAV(base?.polarity);
+      polEl.style.visibility = 'visible';
+      polEl.textContent = ui.icon;
+      polEl.title = ui.label;
+      polEl.setAttribute('aria-label', ui.label);
+      polEl.classList.toggle('is-triangle', ui.shape === 'triangle');
+      polEl.classList.toggle('is-cercle',   ui.shape === 'cercle');
+    }
+
+    // Chips topbar : pièce + passerelle
+    const topbar = card.querySelector('.traversee-card-front .flex.items-center');
+    topbar?.querySelector('[data-coin]')?.remove();
+    topbar?.querySelector('[data-bridge-badge]')?.remove();
+    card.querySelector('[data-bridge-quote]')?.remove();
+
+    if(coin){
+      const coinEl = document.createElement('span');
+      coinEl.className = 'chip'; coinEl.setAttribute('data-coin','');
+      coinEl.title = coinLabel(coin);
+      coinEl.textContent = "Pièce " + coinIcon(coin);
+      topbar.appendChild(coinEl);
+    }
+    if(brOn){
+      const tag = document.createElement('span');
+      tag.className = 'chip chip--passerelle';
+      tag.textContent = 'Carte Passerelle';
+      tag.setAttribute('data-bridge-badge','');
+      topbar.appendChild(tag);
+
+      const q = document.createElement('div');
+      q.setAttribute('data-bridge-quote','');
+      q.className = 'mt-2 text-gold/90';
+      q.innerHTML = `<em>Passerelle :</em> ${esc(brTxt)}`;
+      card.querySelector('.traversee-card-front .art > div').appendChild(q);
+
+      card.setAttribute('data-passerelle','true');
+    }
+
+    // Flip + état
     card.classList.add('flipped');
     card.querySelector('.traversee-card-back')?.classList.add('hidden');
     card.querySelector('.traversee-card-front')?.classList.remove('hidden');
 
-    // État
     const host = el('traversee-board');
-    host._state.drawn[slot] = data;
+    host._state.drawn[slot] = { ...base, coin, bridge: brTxt };
     host._state.flipped++;
 
     if(host._state.flipped === 5){
@@ -1465,68 +1453,66 @@ if (PASSERELLES.has(data?.name)) {
     }
   }
 
+  // ---------- Résultats ----------
+  function setBusy(elm, busy){ elm?.setAttribute('aria-busy', busy ? 'true' : 'false'); }
   function showResults(drawn, intention){
-  const out = el('traversee-results');
-  if(!out) return;
+    const out = el('traversee-results');
+    if(!out) return;
+    setBusy(out, true);
 
-  setBusy(out, true);
+    const L = (titre, obj, showPol=true) => {
+      if(!obj) return '';
+      const polTxt  = showPol && obj.polarity ? ` (${obj.polarity==='yang'?'Triangle':'Cercle'})` : '';
+      const coinTxt = obj.coin ? ` • Pièce: ${obj.coin==='yang'?'Triangle':'Cercle'}` : '';
+      const bridge  = obj.bridge ? `<br><em>Passerelle :</em> ${esc(obj.bridge)}` : '';
+      return `<p><b>${titre} :</b> ${obj.name}${polTxt}${coinTxt}<br><i>« ${obj.quote||'—'} »</i>${bridge}</p>`;
+    };
 
-  const L = (titre, obj, showPol=true) => {
-   const polTxt = showPol && obj?.polarity
-  ? (obj.polarity === 'yang' ? ' (Triangle)' : ' (Cercle)')
-  : '';
+    out.innerHTML = `
+      <h3 class="cormorant text-2xl text-gold mb-3">Résultats de la Traversée</h3>
+      ${intention ? `<div class="mb-2"><b>Intention :</b> ${esc(intention)}</div>` : ``}
+      <div class="result-lines">
+        ${L("Nord — Révélations (Vision)", drawn.nord)}
+        ${L("Sud — Transmutation (Ancrage)", drawn.sud)}
+        ${L("Est — Actions (Élan)", drawn.est)}
+        ${L("Ouest — Émotions (Mémoire)", drawn.ouest)}
+        ${L("Centre — Mémoires Cosmos", drawn.centre, false)}
+      </div>
+      <div class="mt-3">
+        <b>Synthèse :</b>
+        <p>La Vision (Nord) éclaire l’horizon ; l’Ancrage (Sud) montre ce qui doit se transformer ; l’Élan (Est) indique le mouvement ; la Mémoire (Ouest) révèle la leçon ; le Cosmos (Centre) relie le tout.</p>
+      </div>
+    `;
 
+    requestAnimationFrame(()=> {
+      setBusy(out, false);
+      out.classList.remove('hidden');
+      out.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+  }
 
-    return `<p><b>${titre} :</b> ${obj?.name||'—'}${polTxt}<br><i>« ${obj?.quote||'—'} »</i></p>`;
-  };
-
-  out.innerHTML = `
-    <h3 class="cormorant text-2xl text-gold mb-3">Résultats de la Traversée</h3>
-    ${intention ? `<div class="mb-2"><b>Intention :</b> ${esc(intention)}</div>` : ``}
-    <div class="result-lines">
-      ${L("Nord — Révélations (Vision)", drawn.nord)}
-      ${L("Sud — Transmutation (Ancrage)", drawn.sud)}
-      ${L("Est — Actions (Élan)", drawn.est)}
-      ${L("Ouest — Émotions (Mémoire)", drawn.ouest)}
-      ${L("Centre — Mémoires Cosmos", drawn.centre, false)}
-    </div>
-    <div class="mt-3">
-      <b>Synthèse :</b>
-      <p>La Vision (Nord) éclaire l’horizon ; l’Ancrage (Sud) montre ce qui doit se transformer ; l’Élan (Est) indique le mouvement ; la Mémoire (Ouest) révèle la leçon ; le Cosmos (Centre) relie le tout.</p>
-    </div>
-  `;
-
-  requestAnimationFrame(()=> {
-    setBusy(out, false);
-    out.classList.remove('hidden');
-    out.scrollIntoView({behavior:'smooth', block:'start'});
-  });
-}
-
-  // ---------- branchement UI de la section #traversee ----------
+  // ---------- Wiring section #traversee ----------
   document.addEventListener('DOMContentLoaded', () => {
     const startBtn = el('traversee-start');
     const form     = el('traversee-form');
     const exitBtn  = el('exitTraverseeBtn');
 
-    // Étape 1 : afficher le formulaire
     startBtn?.addEventListener('click', () => {
       el('traversee-intro')?.classList.add('hidden');
       form?.classList.remove('hidden');
       el('traversee')?.scrollIntoView({behavior:'smooth'});
     });
 
-    // Étape 2 : soumission = construire le plateau + entrer en immersif
     form?.addEventListener('submit', (e) => {
       e.preventDefault();
-      buildBoard(); // enterImmersive() est appelé à la fin de buildBoard()
+      buildBoard();
     });
 
-    // Bouton "Quitter le tirage"
     exitBtn?.addEventListener('click', exitImmersive);
   });
 })();
 </script>
+
 
 <!-- Modale Login Dashboard -->
 <div id="loginModal" class="fixed inset-0 bg-night-blue/90 z-50 flex items-center justify-center hidden"
@@ -1580,237 +1566,350 @@ function closeModal(el){
 </script>
 <script id="wiring-fixes">
 (function(){
-  // ---------- Modale Abonnement ----------
-  const subscriptionModal = document.getElementById('subscriptionModal');
-  const subscribeBtn      = document.getElementById('subscribeBtn');
-  const closeSubscription = document.getElementById('closeSubscription');
+  const $ = (id) => document.getElementById(id);
 
-  subscribeBtn?.addEventListener('click', (e)=>{
+  // ---------- Modale Commande ----------
+  const orderModal = $('orderModal');
+  $('orderBtn')?.addEventListener('click', (e)=>{ e.preventDefault(); openModal(orderModal); });
+  $('closeOrder')?.addEventListener('click', ()=> closeModal(orderModal));
+
+  // ---------- Modale Abonnement (Espace membre) ----------
+  const subscriptionModal   = $('subscriptionModal');
+  const memberLoginForm     = $('memberLoginForm');
+  const memberRegisterForm  = $('memberRegisterForm');
+  const showRegister        = $('showRegister');
+  const showLogin           = $('showLogin');
+
+  const setLoginView = () => {
+    if(!memberLoginForm || !memberRegisterForm) return;
+    memberLoginForm.classList.remove('hidden');
+    memberLoginForm.setAttribute('aria-hidden','false');
+    memberLoginForm.removeAttribute('inert');
+    memberRegisterForm.classList.add('hidden');
+    memberRegisterForm.setAttribute('aria-hidden','true');
+    memberRegisterForm.setAttribute('inert','');
+  };
+  const setRegisterView = () => {
+    if(!memberLoginForm || !memberRegisterForm) return;
+    memberRegisterForm.classList.remove('hidden');
+    memberRegisterForm.setAttribute('aria-hidden','false');
+    memberRegisterForm.removeAttribute('inert');
+    memberLoginForm.classList.add('hidden');
+    memberLoginForm.setAttribute('aria-hidden','true');
+    memberLoginForm.setAttribute('inert','');
+  };
+
+  $('subscribeBtn')?.addEventListener('click', (e)=>{
     e.preventDefault();
+    setLoginView();
     openModal(subscriptionModal);
+    (memberLoginForm?.querySelector('input,button,select,textarea') || subscriptionModal).focus();
   });
-  closeSubscription?.addEventListener('click', ()=> closeModal(subscriptionModal));
+  $('closeSubscription')?.addEventListener('click', ()=> closeModal(subscriptionModal));
+  showRegister?.addEventListener('click', (e)=>{ e.preventDefault(); setRegisterView(); (memberRegisterForm?.querySelector('input,button,select,textarea')||subscriptionModal).focus(); });
+  showLogin?.addEventListener('click', (e)=>{ e.preventDefault(); setLoginView(); (memberLoginForm?.querySelector('input,button,select,textarea')||subscriptionModal).focus(); });
+
+  memberLoginForm?.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    alert('Connexion réussie ! Redirection vers votre espace membre...');
+    closeModal(subscriptionModal);
+  });
+  memberRegisterForm?.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    alert('Compte créé ! Abonnement activé.');
+    closeModal(subscriptionModal);
+  });
 
   // ---------- Modale Login Dashboard ----------
-  const loginModal       = document.getElementById('loginModal');
-  const closeLoginModal  = document.getElementById('closeLoginModal');
-  const openLoginButtons = [
-    document.getElementById('loginBtn'),
-    document.getElementById('footerLogin'),
-    document.getElementById('loginBtnMobile')
-  ].filter(Boolean);
+  const loginModal      = $('loginModal');
+  const closeLoginModal = $('closeLoginModal');
+  const openLoginButtons = ['loginBtn','footerLogin','loginBtnMobile'].map($).filter(Boolean);
 
   openLoginButtons.forEach(btn=>{
     btn.addEventListener('click', (e)=>{
       e.preventDefault();
       openModal(loginModal);
+      setTimeout(()=> loginModal?.querySelector('input,button')?.focus(), 50);
     });
   });
   closeLoginModal?.addEventListener('click', ()=> closeModal(loginModal));
 
+  const loginFormDash = $('loginFormDashboard');
+  const dashboard     = $('dashboard');
+  $('logoutBtn')?.addEventListener('click', ()=>{
+    dashboard?.classList.add('hidden');
+    document.body.style.overflow='';
+  });
+  loginFormDash?.addEventListener('submit', (e)=>{
+    e.preventDefault();            // démo
+    closeModal(loginModal);
+    dashboard?.classList.remove('hidden');
+    document.body.style.overflow='hidden';
+  });
+
   // ---------- Menu mobile ----------
-  const mobileBtn  = document.getElementById('mobileMenuBtn');
-  const mobileMenu = document.getElementById('mobileMenu');
+  const mobileBtn  = $('mobileMenuBtn');
+  const mobileMenu = $('mobileMenu');
   mobileBtn?.addEventListener('click', ()=>{
     const expanded = mobileBtn.getAttribute('aria-expanded') === 'true';
     mobileBtn.setAttribute('aria-expanded', String(!expanded));
-    mobileMenu.classList.toggle('hidden', expanded);
+    mobileMenu?.classList.toggle('hidden', expanded);
   });
 
-  // ---------- ESC pour fermer les modales ouvertes ----------
+  // ---------- ESC pour fermer modales / dashboard ----------
   document.addEventListener('keydown', (e)=>{
     if(e.key !== 'Escape') return;
-    [document.getElementById('orderModal'), subscriptionModal, loginModal]
-      .forEach(m => { if(m && !m.classList.contains('hidden')) closeModal(m); });
+    [orderModal, subscriptionModal, loginModal].forEach(m=>{
+      if(m && !m.classList.contains('hidden')) closeModal(m);
+    });
+    if(dashboard && !dashboard.classList.contains('hidden')){
+      dashboard.classList.add('hidden');
+      document.body.style.overflow='';
+    }
   });
 
   // ---------- Bouton "Commencer le tirage" : état initial + ARIA ----------
-  const intentionIn  = document.getElementById('intention');
-  const startButton  = document.getElementById('startReading');
-  if(startButton){
-    // état initial : disabled jusqu'à "?"
-    startButton.disabled = true;
-    startButton.setAttribute('aria-disabled','true');
-
+  const intentionIn = $('intention');
+  const startButton = $('startReading');
+  if(startButton && intentionIn){
     const onInput = () => {
       const ok = intentionIn.value.trim().endsWith('?') && intentionIn.value.trim().length > 1;
       startButton.disabled = !ok;
       startButton.setAttribute('aria-disabled', String(!ok));
     };
-    intentionIn?.addEventListener('input', onInput, {passive:true});
+    intentionIn.addEventListener('input', onInput, {passive:true});
     onInput();
+  }
+
+  // ---------- "Tirage Complet" -> aller aux offres ----------
+  $('fullReading')?.addEventListener('click', ()=>{
+    $('offres')?.scrollIntoView({behavior:'smooth'});
+  });
+
+  // ---------- Scroll-to-top (apparition) ----------
+  const scrollTopBtn = $('scrollTop');
+  window.addEventListener('scroll', ()=>{
+    if(!scrollTopBtn) return;
+    scrollTopBtn.classList.toggle('show', window.scrollY > 400);
+  }, {passive:true});
+  scrollTopBtn?.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
+})();
+</script>
+
+<script id="checkout-unlock">
+(function(){
+  'use strict';
+
+  var alreadyUnlocked = false;
+
+  function unlockTraversee() {
+    if (alreadyUnlocked) return;
+    alreadyUnlocked = true;
+
+    // Affiche la section
+    var trav = document.getElementById('traversee');
+    if (trav) trav.classList.remove('hidden');
+
+    // Affiche l'intro, masque le formulaire
+    var intro = document.getElementById('traversee-intro');
+    var form  = document.getElementById('traversee-form');
+    if (intro) intro.classList.remove('hidden');
+    if (form)  form.classList.add('hidden');
+
+    // Mode immersif light
+    document.querySelectorAll('body > header, body > footer, body > section:not(#traversee)')
+      .forEach(function(n){
+        n.classList.add('hide-immersive');
+        n.setAttribute('inert','');
+        n.setAttribute('aria-hidden','true');
+      });
+    var exitBtn = document.getElementById('exitTraverseeBtn');
+    if (exitBtn) exitBtn.classList.remove('hidden');
+
+    // Toast
+    var toast = document.createElement('div');
+    toast.setAttribute('role','status');
+    toast.setAttribute('aria-live','polite');
+    toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 bg-dark-blue border border-gold/40 text-light-gold px-4 py-3 rounded-xl shadow z-[1000]';
+    toast.innerHTML = '<b>Merci ✨</b> Paiement confirmé. Votre tirage de la Traversée est débloqué.';
+    document.body.appendChild(toast);
+    setTimeout(function(){ toast.remove(); }, 6000);
+
+    // Nettoyage URL + scroll
+    try { history.replaceState({}, '', location.pathname + '#traversee'); } catch(_) {}
+    trav?.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  function looksLikeCheckoutReturn() {
+    var sp   = new URLSearchParams(location.search);
+    var hash = (location.hash || '').toLowerCase();
+    return (
+      sp.has('session_id') ||
+      sp.get('success') === '1' ||
+      sp.get('stripe_success') === 'true' ||
+      sp.get('paid') === 'traversee' ||
+      sp.get('paypal') === 'success' ||
+      hash.includes('merci') || hash.includes('success') || hash.includes('traversee')
+    );
+  }
+
+  // Démo locale : redirige vers ?paid=traversee#traversee
+  var orderForm = document.getElementById('orderForm');
+  if (orderForm) {
+    orderForm.addEventListener('submit', function(e){
+      // retire e.preventDefault() quand Stripe est branché côté serveur
+      e.preventDefault();
+      window.location.href = location.pathname + '?paid=traversee#traversee';
+    });
+  }
+
+  // Au chargement, si retour de paiement détecté -> on débloque
+  if (looksLikeCheckoutReturn()) {
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', unlockTraversee, {once:true});
+    } else {
+      unlockTraversee();
+    }
   }
 })();
 </script>
 
 
-  <!-- SCRIPT -->
 
+  <!-- SCRIPT -->
 <script id="oradia-pelerin">
 (function(){
-  'use strict';
+'use strict';
 
-    // --------- Données cartes ----------
-    const DATA = {
-      emotions: [
-        {name:"JOIE", quote:"Une onde traverse mon cœur. Elle dit oui à la vie.", polarity:"yang"},
-        {name:"TRISTESSE", quote:"Je laisse couler ce qui n’a plus à rester. L’eau me guérit.", polarity:"yin"},
-        {name:"INJUSTICE", quote:"Je sens l’appel d’un monde plus juste, d’un équilibre à retrouver.", polarity:"yin"},
-        {name:"ÉMERVEILLEMENT", quote:"La beauté m’inspire et l’invisible se révèle.", polarity:"yang"},
-        {name:"HONTE", quote:"Je me regarde avec tendresse. Aucun poids ne m’appartient vraiment.", polarity:"yin"},
-        {name:"CULPABILITÉ", quote:"Je reconnais mes limites humaines. Je me pardonne, profondément.", polarity:"yin"},
-        {name:"SOLITUDE", quote:"Dans le silence, je me découvre présence.", polarity:"yin"},
-        {name:"DÉGOÛT", quote:"Je perçois ce qui ne me nourrit plus. J’opère l’écart juste.", polarity:"yin"},
-        {name:"SÉRÉNITÉ", quote:"Je goûte la paix dans l’instant.", polarity:"yang"},
-        {name:"AMOUR", quote:"J’aime parce que c’est ma nature.", polarity:"yang"},
-        {name:"COLÈRE", quote:"Mon feu sacré défend ma juste frontière.", polarity:"yang"},
-        {name:"PEUR", quote:"J’écoute l’ombre qui murmure vers plus de conscience.", polarity:"yin"}
-      ],
-      besoins: [
-        {name:"RECONNAISSANCE", quote:"Quand mes dons sont vus, je m’ouvre.", polarity:"yang"},
-        {name:"SÉCURITÉ", quote:"La stabilité me soutient.", polarity:"yin"},
-        {name:"LIBERTÉ", quote:"Je respire l’espace, rien ne m’enferme.", polarity:"yang"},
-        {name:"SOUTIEN", quote:"Je m’appuie sans honte sur l’autre.", polarity:"yin"},
-        {name:"REPOS", quote:"Ralentir régénère mon être.", polarity:"yin"},
-        {name:"CLAIRETÉ", quote:"La lumière éclaire mon esprit.", polarity:"yang"},
-        {name:"APPARTENANCE", quote:"Je fais partie d’un cercle plus vaste.", polarity:"yin"},
-        {name:"AUTONOMIE", quote:"Je marche de mes propres forces.", polarity:"yang"},
-        {name:"STIMULATION", quote:"Le mouvement m’invite à explorer.", polarity:"yang"},
-        {name:"HARMONIE", quote:"Chaque chose à sa place.", polarity:"yin"},
-        {name:"SENS", quote:"Chaque pas a une raison d’être.", polarity:"yin"},
-        {name:"AMOUR REÇU", quote:"J’accueille la tendresse offerte.", polarity:"yin"}
-      ],
-      revelations: [
-        {name:"CLÉ", quote:"Une porte s’ouvre : accès à une vérité.", polarity:"yang"},
-        {name:"PORTE", quote:"Un passage se présente, j’ose franchir.", polarity:"yin"},
-        {name:"MESSAGE", quote:"Un signe clair m’est donné.", polarity:"yang"},
-        {name:"SYNCHRONICITÉ", quote:"Tout se répond, rien n’est hasard.", polarity:"yin"},
-        {name:"SIGNE", quote:"Un indice discret éclaire ma route.", polarity:"yin"},
-        {name:"VISION", quote:"Je vois au-delà, les voiles se lèvent.", polarity:"yang"},
-        {name:"PRÉSAGE", quote:"Un souffle d’avenir approche.", polarity:"yin"},
-        {name:"ÉVEIL", quote:"Je me souviens de qui je suis.", polarity:"yang"},
-        {name:"LUMIÈRE", quote:"Un rayon traverse l’ombre.", polarity:"yang"},
-        {name:"VÉRITÉ", quote:"L’essence se distingue clairement.", polarity:"yang"},
-        {name:"DÉVOILEMENT", quote:"Le caché devient visible.", polarity:"yin"},
-        {name:"ÉTINCELLE", quote:"Une flamme naît, nouvelle voie.", polarity:"yang"}
-      ],
-      actions: [
-        {name:"AGIR", quote:"Je passe du rêve à l’acte.", polarity:"yang"},
-        {name:"DIRE", quote:"Je prononce les mots justes.", polarity:"yang"},
-        {name:"CRÉER", quote:"Je façonne le monde, offrande.", polarity:"yang"},
-        {name:"PARTAGER", quote:"J’offre ce qui m’anime.", polarity:"yang"},
-        {name:"ALLER VERS", quote:"Je m’avance, curieux.", polarity:"yang"},
-        {name:"CHOISIR", quote:"Je décide avec clarté.", polarity:"yang"}
-      ],
-      cosmos: [
-        {name:"ORIGINE", quote:"Tout naît du même centre."},
-        {name:"LIGNÉE", quote:"Je marche avec mes ancêtres."},
-        {name:"CYCLE", quote:"Rien ne se perd, tout se transforme."},
-        {name:"LOI", quote:"Des règles invisibles vibrent partout."},
-        {name:"TRAME", quote:"Un tissu relie chaque instant."},
-        {name:"KARMA", quote:"Je récolte ce que je sème."},
-        {name:"VOILE", quote:"Je pressens sans tout voir."},
-        {name:"PORTAIL", quote:"Un seuil s’ouvre vers ailleurs."},
-        {name:"ÉCHO", quote:"Un souvenir me traverse."},
-        {name:"COSMOGÉNÈSE", quote:"Le monde s’éveille à nouveau."},
-        {name:"AKASHA", quote:"Tout est écrit et possible."},
-        {name:"INTRICATION", quote:"Tout est lié à tout."}
-      ]
-    };
+// ====== Données PÈLERIN (AUCUNE pièce / passerelle ici) ======
+const DATA = {
+  emotions: [
+    {name:"JOIE", quote:"Une onde traverse mon cœur. Elle dit oui à la vie.", polarity:"yang"},
+    {name:"TRISTESSE", quote:"Je laisse couler ce qui n’a plus à rester. L’eau me guérit.", polarity:"yin"},
+    {name:"INJUSTICE", quote:"Je sens l’appel d’un monde plus juste, d’un équilibre à retrouver.", polarity:"yin"},
+    {name:"ÉMERVEILLEMENT", quote:"La beauté m’inspire et l’invisible se révèle.", polarity:"yang"},
+    {name:"HONTE", quote:"Je me regarde avec tendresse. Aucun poids ne m’appartient vraiment.", polarity:"yin"},
+    {name:"CULPABILITÉ", quote:"Je reconnais mes limites humaines. Je me pardonne, profondément.", polarity:"yin"},
+    {name:"SOLITUDE", quote:"Dans le silence, je me découvre présence.", polarity:"yin"},
+    {name:"DÉGOÛT", quote:"Je perçois ce qui ne me nourrit plus. J’opère l’écart juste.", polarity:"yin"},
+    {name:"SÉRÉNITÉ", quote:"Je goûte la paix dans l’instant.", polarity:"yang"},
+    {name:"AMOUR", quote:"J’aime parce que c’est ma nature.", polarity:"yang"},
+    {name:"COLÈRE", quote:"Mon feu sacré défend ma juste frontière.", polarity:"yang"},
+    {name:"PEUR", quote:"J’écoute l’ombre qui murmure vers plus de conscience.", polarity:"yin"}
+  ],
+  besoins: [
+    {name:"RECONNAISSANCE", quote:"Quand mes dons sont vus, je m’ouvre.", polarity:"yang"},
+    {name:"SÉCURITÉ", quote:"La stabilité me soutient.", polarity:"yin"},
+    {name:"LIBERTÉ", quote:"Je respire l’espace, rien ne m’enferme.", polarity:"yang"},
+    {name:"SOUTIEN", quote:"Je m’appuie sans honte sur l’autre.", polarity:"yin"},
+    {name:"REPOS", quote:"Ralentir régénère mon être.", polarity:"yin"},
+    {name:"CLAIRETÉ", quote:"La lumière éclaire mon esprit.", polarity:"yang"},
+    {name:"APPARTENANCE", quote:"Je fais partie d’un cercle plus vaste.", polarity:"yin"},
+    {name:"AUTONOMIE", quote:"Je marche de mes propres forces.", polarity:"yang"},
+    {name:"STIMULATION", quote:"Le mouvement m’invite à explorer.", polarity:"yang"},
+    {name:"HARMONIE", quote:"Chaque chose à sa place.", polarity:"yin"},
+    {name:"SENS", quote:"Chaque pas a une raison d’être.", polarity:"yin"},
+    {name:"AMOUR REÇU", quote:"J’accueille la tendresse offerte.", polarity:"yin"}
+  ],
+  actions: [
+    {name:"AGIR", quote:"Je passe du rêve à l’acte.", polarity:"yang"},
+    {name:"DIRE", quote:"Je prononce les mots justes.", polarity:"yang"},
+    {name:"CRÉER", quote:"Je façonne le monde, offrande.", polarity:"yang"},
+    {name:"PARTAGER", quote:"J’offre ce qui m’anime.", polarity:"yang"},
+    {name:"ALLER VERS", quote:"Je m’avance, curieux.", polarity:"yang"},
+    {name:"CHOISIR", quote:"Je décide avec clarté.", polarity:"yang"}
+  ],
+  cosmos: [
+    {name:"ORIGINE", quote:"Tout naît du même centre."},
+    {name:"LIGNÉE", quote:"Je marche avec mes ancêtres."},
+    {name:"CYCLE", quote:"Rien ne se perd, tout se transforme."},
+    {name:"LOI", quote:"Des règles invisibles vibrent partout."},
+    {name:"TRAME", quote:"Un tissu relie chaque instant."},
+    {name:"KARMA", quote:"Je récolte ce que je sème."},
+    {name:"VOILE", quote:"Je pressens sans tout voir."},
+    {name:"PORTAIL", quote:"Un seuil s’ouvre vers ailleurs."},
+    {name:"ÉCHO", quote:"Un souvenir me traverse."},
+    {name:"COSMOGÉNÈSE", quote:"Le monde s’éveille à nouveau."},
+    {name:"AKASHA", quote:"Tout est écrit et possible."},
+    {name:"INTRICATION", quote:"Tout est lié à tout."}
+  ]
+};
 
-   const polUI = (p) => p === 'yang'
+// UI de polarité (Pèlerin)
+const polUI_PEL = (p) => p === 'yang'
   ? { icon:'▲', label:"Triangle — énergie masculine : élan, action, verticalité" }
   : { icon:'◯', label:"Cercle — énergie féminine : réceptivité, accueil, intégration" };
 
-    const rng = n => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % n; };
-    const pick = arr => arr[rng(arr.length)];
+// RNG
+const rng = n => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % n; };
+const pick = arr => arr[rng(arr.length)];
 
-// ===== AJOUT : Variabilisation de la synthèse PÈLERIN =====
-
-// 1) Outils de langue
+// ===== Synthèse (identique à ta version enrichie) =====
 const rand = pick;
 const cap = s => s.charAt(0).toUpperCase() + s.slice(1);
-const tokens = (t) => (t||"")
-  .toLowerCase()
-  .replace(/[’'"]/g," ")
-  .replace(/[^a-zàâäçéèêëîïôöùûüÿœ\s-]/gi," ")
-  .split(/\s+/)
-  .filter(x=>x && x.length>2);
-
-// 2) Synonymes pour varier le style
+const tokens = (t) => (t||"").toLowerCase().replace(/[’'"]/g," ").replace(/[^a-zàâäçéèêëîïôöùûüÿœ\s-]/gi," ").split(/\s+/).filter(x=>x && x.length>2);
 const SYN = {
-  ouvre: ["ouvre", "défriche", "éclaire", "déplie", "met en relief"],
-  indique: ["indique", "invite à", "oriente vers", "suggère", "met le cap sur"],
-  appelle: ["appelle", "réclame", "sollicite", "demande", "requiert"],
-  pas: ["pas", "mouvement", "élan", "impulsion", "geste"],
-  carte: ["carte", "arcane", "signal", "vecteur", "pilier"],
-  ensemble: ["lecture d’ensemble", "trame globale", "horizon commun", "axe du jour", "cohérence du tirage"]
+  ouvre: ["ouvre","défriche","éclaire","déplie","met en relief"],
+  indique: ["indique","invite à","oriente vers","suggère","met le cap sur"],
+  appelle: ["appelle","réclame","sollicite","demande","requiert"],
+  pas: ["pas","mouvement","élan","impulsion","geste"],
+  carte: ["carte","arcane","signal","vecteur","pilier"],
+  ensemble: ["lecture d’ensemble","trame globale","horizon commun","axe du jour","cohérence du tirage"]
 };
-
-// 3) Interprétations spécifiques par carte (mini-bases sémantiques)
 const MEANINGS = {
   emotions: {
-    "JOIE": "capitalise sur ce qui te donne de l’oxygène intérieur.",
-    "TRISTESSE": "offre un bain d’intégration : accepte le tempo bas, il recolle les pièces.",
-    "INJUSTICE": "pousse à redresser une balance : pose clairement tes limites.",
-    "ÉMERVEILLEMENT": "ravive la curiosité : regarder autrement déverrouille la suite.",
-    "HONTE": "invite à déposer un fardeau qui ne t’appartient pas.",
-    "CULPABILITÉ": "demande de reconnaître l’intention juste, pas la perfection.",
-    "SOLITUDE": "crée un espace fécond : le recul est fécondation, pas retrait.",
-    "DÉGOÛT": "signale une pollution : nettoie l’environnement ou la situation.",
-    "SÉRÉNITÉ": "stabilise la base : calme clair = décisions nettes.",
-    "AMOUR": "replace le lien au centre : nourris la relation la plus vivante.",
-    "COLÈRE": "donne un feu directeur : canalise, ne refoule pas.",
-    "PEUR": "préviens par avance : sécurise un point précis avant d’avancer."
+    "JOIE":"capitalise sur ce qui te donne de l’oxygène intérieur.",
+    "TRISTESSE":"offre un bain d’intégration : accepte le tempo bas, il recolle les pièces.",
+    "INJUSTICE":"pousse à redresser une balance : pose clairement tes limites.",
+    "ÉMERVEILLEMENT":"ravive la curiosité : regarder autrement déverrouille la suite.",
+    "HONTE":"invite à déposer un fardeau qui ne t’appartient pas.",
+    "CULPABILITÉ":"demande de reconnaître l’intention juste, pas la perfection.",
+    "SOLITUDE":"crée un espace fécond : le recul est fécondation, pas retrait.",
+    "DÉGOÛT":"signale une pollution : nettoie l’environnement ou la situation.",
+    "SÉRÉNITÉ":"stabilise la base : calme clair = décisions nettes.",
+    "AMOUR":"replace le lien au centre : nourris la relation la plus vivante.",
+    "COLÈRE":"donne un feu directeur : canalise, ne refoule pas.",
+    "PEUR":"préviens par avance : sécurise un point précis avant d’avancer."
   },
   besoins: {
-    "RECONNAISSANCE": "cherche des témoins compétents de tes talents.",
-    "SÉCURITÉ": "solidifie une base matérielle avant d’élargir.",
-    "LIBERTÉ": "élague les contraintes inutiles pour respirer.",
-    "SOUTIEN": "structure une aide concrète (personne, outil, temps).",
-    "REPOS": "programme des pauses réelles : elles améliorent ton rendement.",
-    "CLAIRETÉ": "met à plat critères et priorités sur 1 page.",
-    "APPARTENANCE": "rattache ton action à un cercle qui te ressemble.",
-    "AUTONOMIE": "réaffirme ton périmètre de décision.",
-    "STIMULATION": "mets un défi mesuré pour relancer la dynamique.",
-    "HARMONIE": "réduit les frictions : simplifie un processus.",
-    "SENS": "relie l’action à ton ‘pourquoi’ explicite.",
-    "AMOUR REÇU": "autorise-toi à demander et… à recevoir."
+    "RECONNAISSANCE":"cherche des témoins compétents de tes talents.",
+    "SÉCURITÉ":"solidifie une base matérielle avant d’élargir.",
+    "LIBERTÉ":"élague les contraintes inutiles pour respirer.",
+    "SOUTIEN":"structure une aide concrète (personne, outil, temps).",
+    "REPOS":"programme des pauses réelles : elles améliorent ton rendement.",
+    "CLAIRETÉ":"met à plat critères et priorités sur 1 page.",
+    "APPARTENANCE":"rattache ton action à un cercle qui te ressemble.",
+    "AUTONOMIE":"réaffirme ton périmètre de décision.",
+    "STIMULATION":"mets un défi mesuré pour relancer la dynamique.",
+    "HARMONIE":"réduit les frictions : simplifie un processus.",
+    "SENS":"relie l’action à ton ‘pourquoi’ explicite.",
+    "AMOUR REÇU":"autorise-toi à demander et… à recevoir."
   },
   actions: {
-    "AGIR": "pose un acte visible avant la fin de journée.",
-    "DIRE": "formule le message exact, sans détour, avec douceur ferme.",
-    "CRÉER": "prototype une version 0.1 au lieu d’attendre la 1.0.",
-    "PARTAGER": "mets ton travail dans une boucle de feedback courte.",
-    "ALLER VERS": "prends rendez-vous avec ce/ceux qui t’attirent.",
-    "CHOISIR": "tranche entre deux voies ‘suffisantes’ pour libérer l’énergie."
+    "AGIR":"pose un acte visible avant la fin de journée.",
+    "DIRE":"formule le message exact, sans détour, avec douceur ferme.",
+    "CRÉER":"prototype une version 0.1 au lieu d’attendre la 1.0.",
+    "PARTAGER":"mets ton travail dans une boucle de feedback courte.",
+    "ALLER VERS":"prends rendez-vous avec ce/ceux qui t’attirent.",
+    "CHOISIR":"tranche entre deux voies ‘suffisantes’ pour libérer l’énergie."
   },
   cosmos: {
-    "ORIGINE": "revenir à la source t’évite l’égarement périphérique.",
-    "LIGNÉE": "honorer l’héritage débloque l’élan futur.",
-    "CYCLE": "tout revient : planifie en boucles plutôt qu’en lignes droites.",
-    "LOI": "respecter la contrainte crée la vraie liberté de mouvement.",
-    "TRAME": "tout est connecté : aligne les pièces au même axe.",
-    "KARMA": "cultive l’intention ; elle imprime la suite.",
-    "VOILE": "accepte une zone floue : l’information arrive en marchant.",
-    "PORTAIL": "une opportunité exige un pas concret pour s’ouvrir.",
-    "ÉCHO": "ce que tu vis résonne ailleurs : observe les motifs.",
-    "COSMOGÉNÈSE": "pense ‘naissance’ : initie petit, grandira ensuite.",
-    "AKASHA": "garde trace ; l’archive devient levier.",
-    "INTRICATION": "prends en compte les dépendances avant d’agir."
+    "ORIGINE":"revenir à la source t’évite l’égarement périphérique.",
+    "LIGNÉE":"honorer l’héritage débloque l’élan futur.",
+    "CYCLE":"tout revient : planifie en boucles plutôt qu’en lignes droites.",
+    "LOI":"respecter la contrainte crée la vraie liberté de mouvement.",
+    "TRAME":"tout est connecté : aligne les pièces au même axe.",
+    "KARMA":"cultive l’intention ; elle imprime la suite.",
+    "VOILE":"accepte une zone floue : l’information arrive en marchant.",
+    "PORTAIL":"une opportunité exige un pas concret pour s’ouvrir.",
+    "ÉCHO":"ce que tu vis résonne ailleurs : observe les motifs.",
+    "COSMOGÉNÈSE":"pense ‘naissance’ : initie petit, grandira ensuite.",
+    "AKASHA":"garde trace ; l’archive devient levier.",
+    "INTRICATION":"prends en compte les dépendances avant d’agir."
   }
 };
-
-// 4) Petits tags selon polarité
-const polMood = (p) => p === "yang"
-  ? "tonus, clarté, décision"
-  : p === "yin"
-    ? "écoute, accueil, intériorisation"
-    : "mémoire, continuité";
-
-// 5) Générateur de phrases modulaires
+const polMood = (p) => p==="yang" ? "tonus, clarté, décision" : p==="yin" ? "écoute, accueil, intériorisation" : "mémoire, continuité";
 function sentence(parts){ return parts.filter(Boolean).join(" "); }
-
 function lineEmotion(E, intentTags){
   const base = `${SYN.carte[rand(SYN.carte)]} ÉMOTIONS (${E.name})`;
   const pol  = E.polarity ? ` • ${polMood(E.polarity)}` : "";
@@ -1818,7 +1917,6 @@ function lineEmotion(E, intentTags){
   const intent = intentTags.length ? ` En lien avec “${intentTags[0]}”, ` : " ";
   return sentence([`${base}${pol} :`, intent+link]);
 }
-
 function lineBesoin(B, intentTags){
   const base = `${SYN.carte[rand(SYN.carte)]} BESOINS (${B.name})`;
   const pol  = B.polarity ? ` • ${polMood(B.polarity)}` : "";
@@ -1826,7 +1924,6 @@ function lineBesoin(B, intentTags){
   const intent = intentTags[1] ? ` Pour “${intentTags[1]}”, ` : " ";
   return sentence([`${base}${pol} :`, intent+link]);
 }
-
 function lineAction(A, intentTags){
   const base = `${SYN.carte[rand(SYN.carte)]} ACTIONS (${A.name})`;
   const pol  = A.polarity ? ` • ${polMood(A.polarity)}` : "";
@@ -1834,44 +1931,34 @@ function lineAction(A, intentTags){
   const intent = intentTags[2] ? ` Concrètement sur “${intentTags[2]}”, ` : " ";
   return sentence([`${base}${pol} :`, intent+link]);
 }
-
 function lineCosmos(C, E, B, A){
   const head = `MÉMOIRES COSMOS (${C.name})`;
   const core = MEANINGS.cosmos[C.name] || "donne la profondeur du décor.";
   const bridge = rand(SYN.indique);
   return `${head} : ${cap(core)} Elle ${bridge} l’articulation ${E.name} → ${B.name} → ${A.name}.`;
 }
-
-// 6) Synthèse finale plus riche
 function buildSynthesis(E,B,A,C,intentText){
-  const intentTags = tokens(intentText).slice(0,3); // 3 mots clés max
+  const intentTags = tokens(intentText).slice(0,3);
   const intro = cap(`${rand(["Aujourd’hui","Pour cette question","Dans ce cadre"])} ${rand(["l’ensemble","la trame","le tirage"]) } ${rand(["se compose","se tisse","se dessine"])} autour de quatre foyers.`);
-  const s1 = lineEmotion(E,intentTags);
-  const s2 = lineBesoin(B,intentTags);
-  const s3 = lineAction(A,intentTags);
-  const s4 = lineCosmos(C,E,B,A);
+  const s1 = lineEmotion(E,intentTags), s2 = lineBesoin(B,intentTags), s3 = lineAction(A,intentTags), s4 = lineCosmos(C,E,B,A);
   const wrap = `${cap(rand(SYN.ensemble))} : ${rand([
     "part de l’émotion sincère, s’ajuste au besoin réel, se décide en un geste sobre.",
     "honore l’affect, clarifie le cadre, et met le corps en mouvement.",
     "évite le flou : une petite décision vaut mieux qu’une grande hésitation.",
     "reste modeste et concret : un pas bien posé en appelle d’autres."
   ])}`;
-
-  // Mantra & question pour augmenter la profondeur perçue
   const mantra = `🕊️ Mantra : « ${rand([
     "Je choisis la clarté plutôt que la perfection.",
     "Je fais un petit pas juste, ici et maintenant.",
     "J’aligne mon geste sur mon axe intérieur.",
     "Je laisse le sens guider mon action."
   ])} »`;
-
   const question = `❓ Question : ${rand([
     "Quel micro-acte précis prouve mon engagement aujourd’hui ?",
     "Quelle friction puis-je apaiser en 10 minutes ?",
     "Quel soutien simple puis-je solliciter sans me justifier ?",
     "Quelle chose puis-je dire clairement, sans détour inutile ?"
   ])}`;
-
   return `
     <div class="mt-3"><b>Synthèse du tirage :</b></div>
     <p>${intro}</p>
@@ -1884,514 +1971,179 @@ function buildSynthesis(E,B,A,C,intentText){
   `;
 }
 
-    // --------- État tirage ----------
-    let drawn = { emotions:null, besoins:null, actions:null, cosmos:null };
-    let flippedCount = 0;
+// ===== État / DOM =====
+let drawn = { emotions:null, besoins:null, actions:null, cosmos:null };
+let flippedCount = 0;
 
-    // --------- DOM ----------
-    const board = document.getElementById("board");
-    const showBtn = document.getElementById("showResults");
-    const resetBtn = document.getElementById("reset");
-    const linesOut = document.getElementById("lines");
-    const synthOut = document.getElementById("synthese");
-    const intentionIn = document.getElementById("intention");
-    const outIntention = document.getElementById("out-intention");
-    const results = document.getElementById("results");
+const board      = document.getElementById("board");
+const showBtn    = document.getElementById("showResults");
+const resetBtn   = document.getElementById("reset");
+const linesOut   = document.getElementById("lines");
+const synthOut   = document.getElementById("synthese");
+const intentionIn= document.getElementById("intention");
+const outIntent  = document.getElementById("out-intention");
+const results    = document.getElementById("results");
 
-    function renderFront(cardEl, data, family){
-      cardEl.querySelector('[data-name]').textContent = data.name;
-      cardEl.querySelector('[data-quote]').textContent = data.quote;
-    const pol = cardEl.querySelector('[data-polarity]');
-if (family === "cosmos") {
-  pol.style.visibility = "hidden";
-  pol.textContent = "";
-  pol.removeAttribute('title');
-  pol.removeAttribute('aria-label');
-  pol.classList.remove('is-triangle','is-cercle');
-} else {
-  const ui = polUI(data.polarity);
-  pol.style.visibility = "visible";
-  pol.textContent = ui.icon;
-  pol.title = ui.label;
-  pol.setAttribute('aria-label', ui.label);
-  pol.classList.toggle('is-triangle', data.polarity === 'yang');
-  pol.classList.toggle('is-cercle',   data.polarity === 'yin');
+// ===== Rendu face avant =====
+function renderFront(cardEl, picked, family){
+  // Titre + base
+  cardEl.querySelector('[data-name]').textContent  = picked.name;
+  cardEl.querySelector('[data-quote]').textContent = picked.quote || picked.base;
+
+  // Polarité carte (PÈLERIN : jamais de pièce/passerelle)
+  const pol = cardEl.querySelector('[data-polarity]');
+  if (family === "cosmos") {
+    pol.style.visibility = "hidden";
+    pol.textContent = "";
+    pol.removeAttribute('title'); pol.removeAttribute('aria-label');
+    pol.classList.remove('is-triangle','is-cercle');
+  } else {
+    const ui = polUI_PEL(picked.polarity);
+    pol.style.visibility = "visible";
+    pol.textContent = ui.icon;
+    pol.title = ui.label;
+    pol.setAttribute('aria-label', ui.label);
+    pol.classList.toggle('is-triangle', picked.polarity === 'yang');
+    pol.classList.toggle('is-cercle',   picked.polarity === 'yin');
+  }
+
+  // Nettoyage (au cas où)
+  const topbar = cardEl.querySelector('.front .topbar');
+  topbar?.querySelector('[data-coin]')?.remove();
+  topbar?.querySelector('[data-bridge-badge]')?.remove();
+  cardEl.querySelector('[data-bridge-quote]')?.remove();
 }
 
-    }
+// ===== Flip carte (PÈLERIN) =====
+const pickOne = (arr) => arr[rng(arr.length)];
+function flipCard(cardEl){
+  if(cardEl.classList.contains('flipped')) return;
+  if(!intentionIn.value.trim().endsWith('?')){
+    intentionIn.setCustomValidity("Veuillez formuler une question ouverte se terminant par « ? »");
+    intentionIn.reportValidity();
+    return;
+  }
+  const family = cardEl.dataset.family;
+  const base   = pickOne(DATA[family]);
+  drawn[family] = base;
 
-    function flipCard(cardEl){
-      if(cardEl.classList.contains('flipped')) return;
-      if(!intentionIn.value.trim()){
-        intentionIn.focus();
-        intentionIn.setCustomValidity("Veuillez saisir une intention pour votre tirage");
-        intentionIn.reportValidity();
-        return;
-      }
-      const family = cardEl.dataset.family;
-      const data = pick(DATA[family]);
-      drawn[family] = data;
+  renderFront(cardEl, base, family);
 
-      renderFront(cardEl, data, family);
-      cardEl.classList.add('flipped');
-      flippedCount++;
+  cardEl.classList.add('flipped');
+  const back = cardEl.querySelector('.back');
+  back.setAttribute('aria-pressed','true');
+  back.style.pointerEvents = 'none';
 
-// Badge “Carte Passerelle” (mêmes critères que Traversée)
-
-const PASSERELLES = new Set(['CLÉ','PORTE','MESSAGE','SYNCHRONICITÉ','VISION','DÉVOILEMENT','TRANSFORMATION','OUVERTURE','RECADRAGE','DÉTACHEMENT','ALLER VERS','CHOISIR','CRÉER']);
-if (PASSERELLES.has(data.name)) {
-  const topbar = cardEl.querySelector('.front .topbar');
-  if (topbar && !cardEl.querySelector('[data-bridge]')) {
-    const tag = document.createElement('span');
-    tag.className = 'chip chip--passerelle';
-    tag.textContent = 'Carte Passerelle';
-    tag.setAttribute('data-bridge','');
-    topbar.appendChild(tag);
-    cardEl.setAttribute('data-passerelle','true');
+  flippedCount++;
+  if(flippedCount === 4){
+    showBtn.classList.remove('hidden');
+    showBtn.disabled = false;
+    showBtn.removeAttribute('aria-disabled');
   }
 }
 
-      const back = cardEl.querySelector('.back');
-      back.setAttribute('aria-pressed','true');
-      back.style.pointerEvents = 'none';
-
-      if(flippedCount === 4){
-        showBtn.classList.remove('hidden');
-        showBtn.disabled = false;
-        showBtn.removeAttribute('aria-disabled');
-      }
-    }
-
-    // --------- Interactions ----------
-    // Validation intention live
-    const startButton = document.getElementById('startReading');
-    intentionIn.addEventListener('input', () => {
-      const ok = intentionIn.value.trim().endsWith('?') && intentionIn.value.trim().length > 1;
-      startButton.disabled = !ok;
-    });
-
-    // Lancer le tirage (affiche le plateau uniquement à ce moment)
-
-    startButton.addEventListener('click', ()=>{
-      if(!intentionIn.value.trim().endsWith('?')){
-        intentionIn.setCustomValidity("Veuillez formuler une question ouverte se terminant par « ? »");
-        intentionIn.reportValidity();
-        return;
-      }
-      board.classList.remove('hidden');
-      document.getElementById('cardsInstruction').classList.remove('hidden');
-      startButton.classList.add('hidden');
-      const firstBack = board.querySelector('.card .back'); if(firstBack) firstBack.focus();
-    });
-
-    // Click/Enter pour retourner les cartes
-
-    document.querySelectorAll('.card .back').forEach(back=>{
-      back.addEventListener('click', ()=> flipCard(back.closest('.card')));
-back.addEventListener('keydown', (e)=> {
-  if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flipCard(back.closest('.card')); }
+// ===== Interactions =====
+const startButton = document.getElementById('startReading');
+startButton.addEventListener('click', ()=>{
+  if(!intentionIn.value.trim().endsWith('?')){
+    intentionIn.setCustomValidity("Veuillez formuler une question ouverte se terminant par « ? »");
+    intentionIn.reportValidity();
+    return;
+  }
+  board.classList.remove('hidden');
+  document.getElementById('cardsInstruction').classList.remove('hidden');
+  startButton.classList.add('hidden');
+  const firstBack = board.querySelector('.card .back'); if(firstBack) firstBack.focus();
 });
-    });
+document.querySelectorAll('.card .back').forEach(back=>{
+  back.addEventListener('click', ()=> flipCard(back.closest('.card')));
+  back.addEventListener('keydown', (e)=> { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flipCard(back.closest('.card')); }});
+});
 
-   // Affichage des résultats — VERSION enrichie
+// ===== Résultats (PÈLERIN) =====
+function setBusy(elm, busy){ elm?.setAttribute('aria-busy', busy ? 'true' : 'false'); }
 
 showBtn.addEventListener('click', ()=>{
   const E = drawn.emotions, B = drawn.besoins, A = drawn.actions, C = drawn.cosmos;
   if(!(E && B && A && C)) return;
 
-  outIntention.textContent = intentionIn.value.trim();
+  outIntent.textContent = intentionIn.value.trim();
+  setBusy(linesOut, true); setBusy(synthOut, true);
 
-  setBusy(linesOut, true);
-  setBusy(synthOut, true);
-
-const line = (label, obj, showPol=true)=>{
-  const polTxt = (showPol && obj?.polarity)
-    ? ` <span class="opacity-80">(${obj.polarity==='yang' ? 'Triangle' : 'Cercle'})</span>`
-    : '';
-  return `<p><b>${label} :</b> ${obj.name}${polTxt}<br><i>« ${obj.quote} »</i></p>`;
-};
-
+  const line = (label, obj, showPol=true)=>{
+    if(!obj) return '';
+    const polTxt  = (showPol && obj?.polarity)
+      ? ` <span class="opacity-80">(${obj.polarity==='yang' ? 'Triangle' : 'Cercle'})</span>` : '';
+    const baseTxt = obj.quote || obj.base || '—';
+    return `<p><b>${label} :</b> ${obj.name}${polTxt}<br><i>« ${baseTxt} »</i></p>`;
+  };
 
   linesOut.innerHTML = `
     <p style="margin:0 0 8px"><b>Votre tirage :</b></p>
     ${line("Famille ÉMOTIONS", E)}
     ${line("Famille BESOINS", B)}
     ${line("Famille ACTIONS", A)}
-    ${line("Carte Mémoires Cosmos", C, false)}
+    ${line("MÉMOIRES COSMOS", C, false)}
   `;
 
-  synthOut.innerHTML = buildSynthesis(E,B,A,C,intentionIn.value.trim());
+  synthOut.innerHTML = buildSynthesis(E,B,A,C, intentionIn.value.trim());
 
-  requestAnimationFrame(()=>{
-    setBusy(linesOut, false);
-    setBusy(synthOut, false);
-  });
-
+  setBusy(linesOut, false); setBusy(synthOut, false);
   results.classList.remove('hidden');
-  document.getElementById('fullReading').classList.remove('hidden');
-  document.getElementById('reset').classList.remove('hidden');
   results.scrollIntoView({behavior:'smooth', block:'start'});
+
+  // Affiche actions post-tirage
+  resetBtn.classList.remove('hidden');
+  document.getElementById('fullReading')?.classList.remove('hidden');
 });
 
-    // Nouveau tirage
-    resetBtn.addEventListener('click', ()=>{
-      // Réinitialiser l'état
-      drawn = {emotions:null, besoins:null, actions:null, cosmos:null};
-      flippedCount = 0;
-      
-      // Masquer les éléments de résultats
-      showBtn.disabled = true;
-      showBtn.classList.add('hidden');
-      showBtn.setAttribute('aria-disabled','true');
-      results.classList.add('hidden');
-      document.getElementById('fullReading').classList.add('hidden');
-      document.getElementById('reset').classList.add('hidden');
-      linesOut.innerHTML = "";
-      synthOut.innerHTML = "";
-      
-      // Réinitialiser les cartes
-      document.querySelectorAll('.card').forEach(card=>{
-        card.classList.remove('flipped');
-        const back = card.querySelector('.back');
-        back.style.pointerEvents = 'auto';
-        back.setAttribute('aria-pressed','false');
-        card.querySelector('[data-name]').textContent = "—";
-        card.querySelector('[data-quote]').textContent = "—";
-        const pol = card.querySelector('[data-polarity]');
-        if(card.dataset.family === "cosmos"){ 
-          pol.style.visibility = "hidden"; 
-        } else { 
-          pol.style.visibility = "visible"; 
-          pol.textContent = ""; 
-        }
-      });
+// ===== Reset (nouveau tirage PÈLERIN) =====
+resetBtn.addEventListener('click', ()=>{
+  drawn = { emotions:null, besoins:null, actions:null, cosmos:null };
+  flippedCount = 0;
 
-      // Réafficher le formulaire d'intention
-      board.classList.add('hidden');
-      document.getElementById('cardsInstruction').classList.add('hidden');
-      startButton.classList.remove('hidden');
-      intentionIn.value = "";
-      intentionIn.focus();
-      
-      // Scroll vers le haut de la section
-      window.scrollTo({top: document.getElementById('oracle').offsetTop - 60, behavior:'smooth'});
-    });
+  // Réinitialise les cartes
+  board.querySelectorAll('.card').forEach(card=>{
+    card.classList.remove('flipped');
+    card.querySelector('.back')?.classList.remove('hidden');
+    card.querySelector('.back')?.setAttribute('aria-pressed','false');
+    card.querySelector('.front [data-name]').textContent = '—';
+    card.querySelector('.front [data-quote]').textContent = '—';
+    const pol = card.querySelector('[data-polarity]');
+    if (pol) {
+      pol.textContent = '';
+      pol.style.visibility = (card.dataset.family === 'cosmos') ? 'hidden' : 'visible';
+      pol.classList.remove('is-triangle','is-cercle');
+      pol.removeAttribute('title'); pol.removeAttribute('aria-label');
+    }
+  });
 
-    // Tirage complet -> aller aux offres
-    document.getElementById('fullReading').addEventListener('click', ()=>{
-      document.querySelector('#offres').scrollIntoView({behavior:'smooth'});
-    });
+  // UI
+  results.classList.add('hidden');
+  linesOut.innerHTML = '';
+  synthOut.innerHTML = '';
+  resetBtn.classList.add('hidden');
+  showBtn.classList.add('hidden');
+  showBtn.disabled = true;
+  showBtn.setAttribute('aria-disabled','true');
+  document.getElementById('cardsInstruction')?.classList.remove('hidden');
 
-    // --------- Scroll top ----------
- const scrollTopBtnClick = document.getElementById('scrollTop');
-scrollTopBtnClick.addEventListener('click', () => {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    });
-// --- 2.1. Support tactile pour retourner les cartes (Pèlerin) ---
+  // Laisse l'intention telle quelle (utile pour enchaîner), sinon :
+  // intentionIn.value = '';
+});
+
+// ===== Wire “flip” sur chaque dos de carte =====
 document.querySelectorAll('.card .back').forEach(back=>{
-  back.addEventListener('touchstart', (e)=>{ 
-    e.preventDefault(); 
-    flipCard(back.closest('.card')); 
-  }, {passive:false});
+  const handler = ()=> flipCard(back.closest('.card'));
+  back.addEventListener('click', handler);
+  back.addEventListener('keydown', (e)=> {
+    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); handler(); }
+  });
 });
-
-// --- 2.2. Support tactile Traversée (si les cartes existent déjà dans le DOM) ---
-document.addEventListener('click', (e)=>{
-  const back = e.target.closest?.('.traversee-card-back');
-  if(back){
-    e.preventDefault();
-    const card = back.closest('.traversee-card');
-    if(card){
-      // La flipCard de la Traversée est définie dans le script "traversee-5cards-clean"
-      // On la déclenche en simulant la touche Enter (fallback)
-     back.dispatchEvent(new KeyboardEvent('keydown', {key:'Enter'}));
-    }
-  }
-}, {capture:true});
-
-// Scroll-to-top performant (unique)
-(()=>{
-  const scrollTopBtn = document.getElementById('scrollTop');
-  let ticking=false;
-  function onScroll(){
-    if(!ticking){
-      requestAnimationFrame(()=>{
-        (pageYOffset>300) ? scrollTopBtn.classList.add('show') : scrollTopBtn.classList.remove('show');
-        ticking=false;
-      });
-      ticking=true;
-    }
-  }
-  window.addEventListener('scroll', onScroll, {passive:true});
 })();
-
-
-// --- 2.4. Focus automatique dans les modales (accessibilité) ---
-const focusFirst = (rootSel) => {
-  const root = document.querySelector(rootSel);
-  if(!root) return;
-  const first = root.querySelector('input, select, textarea, button, a[href]');
-  first?.focus();
-};
-
-// Quand on ouvre la modale commande
-document.getElementById('orderBtn')?.addEventListener('click', ()=>{
-  setTimeout(()=>focusFirst('#orderModal'), 50);
-});
-
-// Quand on ouvre la modale abonnement (login par défaut)
-document.getElementById('subscribeBtn')?.addEventListener('click', ()=>{
-  setTimeout(()=>focusFirst('#subscriptionModal'), 50);
-});
-
-// Quand on ouvre la modale login dashboard (header + footer)
-[document.getElementById('loginBtn'), document.getElementById('footerLogin')].forEach(btn=>{
-  btn?.addEventListener('click', ()=>{
-    setTimeout(()=>focusFirst('#loginModal'), 50);
-  });
-});
-
-    // --------- Modale Commande ----------
-    const orderBtn = document.getElementById('orderBtn');
-    const orderModal = document.getElementById('orderModal');
-    const closeOrder = document.getElementById('closeOrder');
-    const orderForm = document.getElementById('orderForm');
-
-    orderBtn.addEventListener('click', e => { e.preventDefault(); openModal(orderModal); });
-closeOrder.addEventListener('click', () => closeModal(orderModal));
-
-    orderForm.addEventListener('submit', e => {
-      e.preventDefault();
-      orderModal.classList.add('hidden');
-      document.body.style.overflow='';
-      
-      // Message de confirmation de paiement
-      const confirmation = document.createElement('section');
-      confirmation.id = 'confirmation';
-      confirmation.className = 'py-20 px-6';
-      confirmation.innerHTML = `
-        <div class="container mx-auto max-w-6xl">
-          <div class="text-center mb-12">
-            <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Merci pour votre achat !</h2>
-            <p class="text-light-gold max-w-3xl mx-auto">Votre paiement a été validé avec succès.</p>
-          </div>
-          
-          <div class="rounded-2xl p-8 mx-auto max-w-2xl relative" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
-            <a href="#offres" class="absolute top-4 left-4 text-gold hover:text-light-gold">
-              <i class="fas fa-arrow-left mr-2"></i> Retour aux offres
-            </a>
-            <div class="text-center">
-              <i class="fas fa-check-circle text-6xl text-gold mb-6"></i>
-              <p class="text-light-gold mb-8">Vous avez maintenant accès à 5 tirages complets de l'oracle Oradia.</p>
-              <button id="newReadingBtn" class="btn-gold"> Accéder au tirage de la Traversée</button>
-            </div>
-          </div>
-        </div>
-      `;
-      
-      // Cacher toutes les sections pendant le message de confirmation de paiement
-      document.querySelectorAll('section').forEach(section => {
-        if(section.id !== 'confirmation') {
-          section.classList.add('hide-sections');
-        }
-      });
-      
-      // Insert after the offres section
-      const offresSection = document.getElementById('offres');
-      offresSection.parentNode.insertBefore(confirmation, offresSection.nextSibling);
-      
-      // Scroll to confirmation
-      setTimeout(() => {
-        confirmation.scrollIntoView({behavior: 'smooth'});
-      }, 100);
-      
-      // Add click handlers
-      confirmation.querySelector('a[href="#offres"]').addEventListener('click', (e) => {
-        e.preventDefault();
-        confirmation.remove();
-        document.querySelectorAll('section').forEach(section => {
-          section.classList.remove('hide-sections');
-        });
-        document.getElementById('offres').scrollIntoView({behavior: 'smooth'});
-      });
-
-      // Accès direct au formulaire final « Traversée »
-confirmation.querySelector('#newReadingBtn').addEventListener('click', () => {
-  // retirer l’écran “Merci”
-  confirmation.remove();
-  // ré-afficher toutes les sections
-  document.querySelectorAll('section').forEach(s => s.classList.remove('hide-sections'));
-
-  // afficher la section Traversée et montrer le formulaire
-  const travSection = document.getElementById('traversee');
-  const intro = document.getElementById('traversee-intro');
-  const form  = document.getElementById('traversee-form');
-  
-  if (travSection) travSection.classList.remove('hidden');
-  if (intro) intro.classList.add('hidden');
-  if (form) form.classList.remove('hidden');
-
-  // scroll + focus
-  travSection?.scrollIntoView({ behavior: 'smooth' });
-  form?.querySelector('input, textarea, select')?.focus();
-});
-}); 
-
-  // --- Toggle Login/Register (abonnement) ---
-const showRegister = document.getElementById('showRegister');
-const showLogin    = document.getElementById('showLogin');
-const memberLoginForm    = document.getElementById('memberLoginForm');
-const memberRegisterForm = document.getElementById('memberRegisterForm');
-
-showRegister?.addEventListener('click', (e) => {
-  e.preventDefault();
-  memberLoginForm.classList.add('hidden');
-  memberRegisterForm.classList.remove('hidden');
-
-  memberLoginForm.setAttribute('aria-hidden','true');
-  memberLoginForm.setAttribute('inert','');
-  memberRegisterForm.setAttribute('aria-hidden','false');
-  memberRegisterForm.removeAttribute('inert');
-
-  (memberRegisterForm.querySelector('input,select,textarea,button')||memberRegisterForm).focus();
-});
-
-showLogin?.addEventListener('click', (e) => {
-  e.preventDefault();
-  memberRegisterForm.classList.add('hidden');
-  memberLoginForm.classList.remove('hidden');
-
-  memberRegisterForm.setAttribute('aria-hidden','true');
-  memberRegisterForm.setAttribute('inert','');
-  memberLoginForm.setAttribute('aria-hidden','false');
-  memberLoginForm.removeAttribute('inert');
-
-  (memberLoginForm.querySelector('input,select,textarea,button')||memberLoginForm).focus();
-});
-
-// --- fin du script Pèlerin ---
-})(); // FIN IIFE oradia-pelerin
 </script>
 
-
-
-  // état par défaut : LOGIN visible
-  memberLoginForm.classList.remove('hidden');
-  memberRegisterForm.classList.add('hidden');
-  memberLoginForm.setAttribute('aria-hidden','false');
-  memberLoginForm.removeAttribute('inert');
-  memberRegisterForm.setAttribute('aria-hidden','true');
-  memberRegisterForm.setAttribute('inert','');
-
-  openModal(subscriptionModal);
-
-  // focus premier champ du login
-  (memberLoginForm.querySelector('input, select, textarea, button') || memberLoginForm).focus();
-});
-
-showLogin?.addEventListener('click', (e) => {
-  e.preventDefault();
-
-  // toggle visibilité
-  memberRegisterForm.classList.add('hidden');
-  memberLoginForm.classList.remove('hidden');
-
-  // a11y : état pour lecteurs d’écran + navigation
-  memberRegisterForm.setAttribute('aria-hidden', 'true');
-  memberRegisterForm.setAttribute('inert', '');
-  memberLoginForm.setAttribute('aria-hidden', 'false');
-  memberLoginForm.removeAttribute('inert');
-
-  // focus premier champ
-  (memberLoginForm.querySelector('input, select, textarea, button') || memberLoginForm).focus();
-});
-
-
-    memberLoginForm.addEventListener('submit', e=>{
-      e.preventDefault();
-      alert('Connexion réussie ! Redirection vers votre espace membre...');
-      subscriptionModal.classList.add('hidden'); document.body.style.overflow='';
-    });
-    memberRegisterForm.addEventListener('submit', e=>{
-      e.preventDefault();
-      alert('Compte créé ! Abonnement activé.');
-      subscriptionModal.classList.add('hidden'); document.body.style.overflow='';
-    });
-
-   // ---- Modale Login Dashboard ----
-const loginBtn       = document.getElementById('loginBtn');
-const footerLogin    = document.getElementById('footerLogin');
-const loginModal     = document.getElementById('loginModal');
-const closeLoginBtn  = document.getElementById('closeLoginModal');
-const loginFormDash  = document.getElementById('loginFormDashboard');
-const dashboard      = document.getElementById('dashboard');
-
-const openLogin  = () => openModal(loginModal);
-const closeLogin = () => closeModal(loginModal);
-const logoutBtn = document.getElementById('logoutBtn');
-logoutBtn?.addEventListener('click', ()=>{
-  dashboard.classList.add('hidden');
-  document.body.style.overflow='';
-});
-
-loginBtn?.addEventListener('click', openLogin);
-footerLogin?.addEventListener('click', openLogin);
-document.getElementById('loginBtnMobile')?.addEventListener('click', () => {
-  document.getElementById('mobileMenu')?.classList.add('hidden');
-  openModal(loginModal);
-  setTimeout(()=>document.querySelector('#loginModal input')?.focus(), 50);
-});
-
-closeLoginBtn?.addEventListener('click', closeLogin);
-
-loginFormDash?.addEventListener('submit', (e) => {
-  e.preventDefault(); // démo
-  closeLogin();
-  dashboard?.classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
-});
-      dashboard.classList.add('hidden');
-      document.body.style.overflow='';
-</script>
-
-<script>
-  // --- Menu mobile ---
-  const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-  const mobileMenu    = document.getElementById('mobileMenu');
-
-  mobileMenuBtn?.addEventListener('click', () => {
-    const expanded = mobileMenuBtn.getAttribute('aria-expanded') === 'true';
-    mobileMenuBtn.setAttribute('aria-expanded', String(!expanded));
-    mobileMenu.classList.toggle('hidden', expanded);
-  });
-
-  // --- Connexion (header/footer + mobile) ---
-  const loginBtn        = document.getElementById('loginBtn');
-  const loginBtnMobile  = document.getElementById('loginBtnMobile');
-  const footerLogin     = document.getElementById('footerLogin');
-  const loginModal      = document.getElementById('loginModal');
-
-  [loginBtn, loginBtnMobile, footerLogin].forEach(btn=>{
-    btn?.addEventListener('click', (e)=>{
-      e.preventDefault?.();
-      openModal(loginModal);
-    });
-  });
-
-  document.getElementById('closeLoginModal')?.addEventListener('click', ()=> closeModal(loginModal));
-
-
-  // Échap = fermer les modales ouvertes proprement
-  document.addEventListener('keydown', (e) => {
-    if (e.key !== 'Escape') return;
-    ['orderModal','subscriptionModal','loginModal'].forEach(id => {
-      const m = document.getElementById(id);
-      if (m && !m.classList.contains('hidden')) closeModal(m);
-    });
-  });
+   });
 });
 </script>
 <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">
