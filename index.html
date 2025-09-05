@@ -1745,21 +1745,34 @@ mobileMenu?.addEventListener('click', (e) => {
 
   var alreadyUnlocked = false;
 
-  function unlockTraversee() {
-    if (alreadyUnlocked) return;
-    alreadyUnlocked = true;
+  // Sommes-nous dans un builder / iframe (DeepSite preview, etc.) ?
+  function inSandbox(){
+    try { return window.top !== window.self; } catch(e){ return true; }
+  }
 
-    // Affiche la section
-    var trav = document.getElementById('traversee');
-    if (trav) trav.classList.remove('hidden');
+  function detectReturn(){
+    var sp   = new URLSearchParams(location.search);
+    var hash = (location.hash || '').toLowerCase();
+    return (
+      sp.get('paid') === 'traversee' ||
+      hash.includes('merci') ||
+      sp.has('session_id') ||
+      sp.get('success') === '1' ||
+      sp.get('stripe_success') === 'true' ||
+      sp.get('paypal') === 'success'
+    );
+  }
 
-    // Affiche l'intro, masque le formulaire
+  function ensureSectionVisible(){
+    var trav  = document.getElementById('traversee');
     var intro = document.getElementById('traversee-intro');
     var form  = document.getElementById('traversee-form');
+    if (trav)  trav.classList.remove('hidden');
     if (intro) intro.classList.remove('hidden');
     if (form)  form.classList.add('hidden');
+  }
 
-    // Mode immersif light
+  function enterImmersiveLight(){
     document.querySelectorAll('body > header, body > footer, body > section:not(#traversee)')
       .forEach(function(n){
         n.classList.add('hide-immersive');
@@ -1768,51 +1781,105 @@ mobileMenu?.addEventListener('click', (e) => {
       });
     var exitBtn = document.getElementById('exitTraverseeBtn');
     if (exitBtn) exitBtn.classList.remove('hidden');
-
-    // Toast
-    var toast = document.createElement('div');
-    toast.setAttribute('role','status');
-    toast.setAttribute('aria-live','polite');
-    toast.className = 'fixed top-4 left-1/2 -translate-x-1/2 bg-dark-blue border border-gold/40 text-light-gold px-4 py-3 rounded-xl shadow z-[1000]';
-    toast.innerHTML = '<b>Merci ✨</b> Paiement confirmé. Votre tirage de la Traversée est débloqué.';
-    document.body.appendChild(toast);
-    setTimeout(function(){ toast.remove(); }, 6000);
-
-    // Nettoyage URL + scroll
-    try { history.replaceState({}, '', location.pathname + '#traversee'); } catch(_) {}
-    trav?.scrollIntoView({behavior:'smooth', block:'start'});
+    document.getElementById('traversee')?.scrollIntoView({behavior:'smooth', block:'start'});
   }
 
-  function looksLikeCheckoutReturn() {
-    var sp   = new URLSearchParams(location.search);
-    var hash = (location.hash || '').toLowerCase();
-    return (
-      sp.has('session_id') ||
-      sp.get('success') === '1' ||
-      sp.get('stripe_success') === 'true' ||
-      sp.get('paid') === 'traversee' ||
-      sp.get('paypal') === 'success' ||
-      hash.includes('merci') || hash.includes('success') || hash.includes('traversee')
-    );
+  // ✅ Ferme le modal de commande s'il est ouvert (et reset le form)
+  function closeOrderModalIfOpen(){
+    var m = document.getElementById('orderModal');
+    if (!m || m.classList.contains('hidden')) return;
+    try {
+      if (typeof closeModal === 'function') closeModal(m);
+      else { m.classList.add('hidden'); document.body.style.overflow=''; }
+    } catch(_) {}
+    try { m.querySelector('form')?.reset?.(); } catch(_) {}
   }
 
-  // Démo locale : redirige vers ?paid=traversee#traversee
+  // Overlay MERCI
+  function buildThankYou(){
+    // ferme d'abord le modal de commande
+    closeOrderModalIfOpen();
+
+    var root = document.createElement('div');
+    root.id = 'thankyouOverlay';
+    root.className = 'fixed inset-0 z-[1100] flex items-center justify-center bg-night-blue/95';
+    root.setAttribute('role','dialog');
+    root.setAttribute('aria-modal','true');
+    root.innerHTML =
+      '<div class="bg-dark-blue border border-gold/40 rounded-2xl p-8 max-w-md w-[92vw] text-center">'+
+        '<h3 class="cormorant text-3xl text-gold mb-2">Merci ✨</h3>'+
+        '<p class="text-light-gold mb-6">Paiement confirmé. Votre tirage de la Traversée est débloqué.</p>'+
+        '<button id="thxGo" class="btn-gold w-full">Accéder au tirage</button>'+
+      '</div>';
+    document.body.appendChild(root);
+
+    var go = document.getElementById('thxGo');
+    setTimeout(function(){ go?.focus(); }, 30);
+
+    function closeAndEnter(){
+      root.remove();
+      // sécurité : si pour une raison X le modal est resté, on le ferme ici aussi
+      closeOrderModalIfOpen();
+      enterImmersiveLight();
+      // Nettoie l'URL
+      try {
+        var url = new URL(location.href);
+        url.searchParams.delete('paid');
+        url.hash = 'traversee';
+        history.replaceState({}, '', url.toString());
+      } catch(_){}
+    }
+
+    go?.addEventListener('click', closeAndEnter);
+    root.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ closeAndEnter(); } });
+  }
+
+  function unlock(){
+    if (alreadyUnlocked) return;
+    alreadyUnlocked = true;
+    closeOrderModalIfOpen();     // ✅ ferme avant tout
+    ensureSectionVisible();
+    buildThankYou();
+  }
+
+  // --- DEMO SANS STRIPE ---
   var orderForm = document.getElementById('orderForm');
   if (orderForm) {
     orderForm.addEventListener('submit', function(e){
-      // retire e.preventDefault() quand Stripe est branché côté serveur
       e.preventDefault();
-      window.location.href = location.pathname + '?paid=traversee#traversee';
+      try { localStorage.setItem('oradia_paid_traversee','1'); } catch(_){}
+      closeOrderModalIfOpen();   // ✅ ferme au submit aussi
+      if (inSandbox()){
+        unlock();                // pas de redirection en sandbox
+      } else {
+        try {
+          var url = new URL(location.href);
+          url.searchParams.set('paid','traversee');
+          url.hash = 'merci';
+          window.location.href = url.toString();
+        } catch(_){
+          window.location.href = location.pathname + '?paid=traversee#merci';
+        }
+      }
     });
   }
 
-  // Au chargement, si retour de paiement détecté -> on débloque
-  if (looksLikeCheckoutReturn()) {
+  // Au chargement : retour de paiement
+  if (detectReturn()) {
     if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', unlockTraversee, {once:true});
+      document.addEventListener('DOMContentLoaded', unlock, {once:true});
     } else {
-      unlockTraversee();
+      unlock();
     }
+  } else {
+    // Déjà payé + on arrive sur #traversee
+    try {
+      if (localStorage.getItem('oradia_paid_traversee') === '1' &&
+          (location.hash || '').toLowerCase().includes('traversee')) {
+        ensureSectionVisible();
+        enterImmersiveLight();
+      }
+    } catch(_){}
   }
 })();
 </script>
@@ -2437,7 +2504,7 @@ document.addEventListener('DOMContentLoaded', () => {
     memberRegisterForm.classList.remove('hidden');
     memberRegisterForm.setAttribute('aria-hidden','false');
     memberRegisterForm.removeAttribute('inert');
-a
+
     (memberRegisterForm.querySelector('input,button,select,textarea') || memberRegisterForm).focus();
   }
   showRegisterLink?.addEventListener('click', (e)=>{ e.preventDefault(); showRegister(); });
@@ -2474,7 +2541,7 @@ a
   });
 
   // ---- ACCESSIBILITÉ : rôle/états cohérents si un bouton ouvre un menu/modale
-
+  // (déjà bien géré chez toi ; on assure un état initial propre)
   if (mobileBtn && mobileMenu) mobileBtn.setAttribute('aria-expanded','false');
 
   // ---- FIN : si la ligne coupée existait, on s’assure que l’intention était bien de revenir au login
