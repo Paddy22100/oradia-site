@@ -42,6 +42,11 @@
 <meta name="color-scheme" content="dark light">
 <meta name="format-detection" content="telephone=no">
 
+<meta property="og:image:width"  content="1200">
+<meta property="og:image:height" content="630">
+<link rel="preload" as="image" href="https://i.ibb.co/4wG0t61y/og-1200x630.jpg" imagesrcset="..." imagesizes="(max-width: 768px) 100vw, 1200px">
+
+
 <script src="https://cdn.tailwindcss.com"></script>
 <link rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
@@ -2061,19 +2066,18 @@ document.querySelectorAll('.card .back').forEach(back=>{
 });
 
 // ===== Résultats (PÈLERIN) =====
-function setBusy(elm, busy){ elm?.setAttribute('aria-busy', busy ? 'true' : 'false'); }
-
 showBtn.addEventListener('click', ()=>{
-  const E = drawn.emotions, B = drawn.besoins, A = drawn.actions, C = drawn.cosmos;
+  const { emotions: E, besoins: B, actions: A, cosmos: C } = drawn;
   if(!(E && B && A && C)) return;
 
   outIntent.textContent = intentionIn.value.trim();
-  setBusy(linesOut, true); setBusy(synthOut, true);
+  setBusy(linesOut, true); 
+  setBusy(synthOut, true);
 
-  const line = (label, obj, showPol=true)=>{
+  const line = (label, obj, showPol = true) => {
     if(!obj) return '';
     const polTxt  = (showPol && obj?.polarity)
-      ? ` <span class="opacity-80">(${obj.polarity==='yang' ? 'Triangle' : 'Cercle'})</span>` : '';
+      ? ` <span class="opacity-80">(${obj.polarity === 'yang' ? 'Triangle' : 'Cercle'})</span>` : '';
     const baseTxt = obj.quote || obj.base || '—';
     return `<p><b>${label} :</b> ${obj.name}${polTxt}<br><i>« ${baseTxt} »</i></p>`;
   };
@@ -2086,66 +2090,149 @@ showBtn.addEventListener('click', ()=>{
     ${line("MÉMOIRES COSMOS", C, false)}
   `;
 
-  synthOut.innerHTML = buildSynthesis(E,B,A,C, intentionIn.value.trim());
+  synthOut.innerHTML = buildSynthesis(E, B, A, C, intentionIn.value.trim());
 
-  setBusy(linesOut, false); setBusy(synthOut, false);
+  setBusy(linesOut, false);
+  setBusy(synthOut, false);
+
   results.classList.remove('hidden');
-  results.scrollIntoView({behavior:'smooth', block:'start'});
+  results.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  // Affiche actions post-tirage
+  // Empêche double rendu
+  showBtn.disabled = true;
+  showBtn.setAttribute('aria-disabled', 'true');
+
+  // Post-tirage
   resetBtn.classList.remove('hidden');
   document.getElementById('fullReading')?.classList.remove('hidden');
 });
 
 // ===== Reset (nouveau tirage PÈLERIN) =====
-resetBtn.addEventListener('click', ()=>{
+function resetTirage(){
+  // État interne
   drawn = { emotions:null, besoins:null, actions:null, cosmos:null };
   flippedCount = 0;
 
+  // Efface l’affichage résultats
+  results.classList.add('hidden');
+  linesOut.innerHTML = '';
+  synthOut.innerHTML = '';
+  outIntent.textContent = '—';
+
   // Réinitialise les cartes
-  board.querySelectorAll('.card').forEach(card=>{
+  board?.querySelectorAll('.card').forEach(card=>{
     card.classList.remove('flipped');
-    card.querySelector('.back')?.classList.remove('hidden');
-    card.querySelector('.back')?.setAttribute('aria-pressed','false');
-    card.querySelector('.front [data-name]').textContent = '—';
-    card.querySelector('.front [data-quote]').textContent = '—';
-    const pol = card.querySelector('[data-polarity]');
-    if (pol) {
+
+    const nameEl  = card.querySelector('.front [data-name]');
+    const quoteEl = card.querySelector('.front [data-quote]');
+    if (nameEl)  nameEl.textContent  = '—';
+    if (quoteEl) quoteEl.textContent = '—';
+
+    // Polarité : visible mais vide, sauf pour "cosmos" (masquée)
+    const pol = card.querySelector('.front [data-polarity]');
+    if (pol){
+      const isCosmos = card.dataset.family === 'cosmos';
+      pol.style.visibility = isCosmos ? 'hidden' : 'visible';
       pol.textContent = '';
-      pol.style.visibility = (card.dataset.family === 'cosmos') ? 'hidden' : 'visible';
       pol.classList.remove('is-triangle','is-cercle');
-      pol.removeAttribute('title'); pol.removeAttribute('aria-label');
+      pol.removeAttribute('title');
+      pol.removeAttribute('aria-label');
+    }
+
+    // Réactive la face arrière
+    const back = card.querySelector('.back');
+    if (back){
+      back.style.pointerEvents = '';
+      back.setAttribute('aria-pressed','false');
     }
   });
 
   // UI
-  results.classList.add('hidden');
-  linesOut.innerHTML = '';
-  synthOut.innerHTML = '';
-  resetBtn.classList.add('hidden');
+  document.getElementById('cardsInstruction')?.classList.remove('hidden');
   showBtn.classList.add('hidden');
   showBtn.disabled = true;
   showBtn.setAttribute('aria-disabled','true');
-  document.getElementById('cardsInstruction')?.classList.remove('hidden');
+  resetBtn.classList.add('hidden');
+  document.getElementById('fullReading')?.classList.add('hidden');
 
-  // Laisse l'intention telle quelle (utile pour enchaîner), sinon :
-  // intentionIn.value = '';
+  // Nettoie une éventuelle erreur sur l’intention
+  intentionIn.setCustomValidity('');
+
+  // Focus UX : première carte
+  board?.querySelector('.card .back')?.focus();
+}
+
+resetBtn?.addEventListener('click', resetTirage);
+  results.classList.remove('hidden');
+  results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // état des boutons
+  showBtn.classList.add('hidden');
+  showBtn.disabled = true;
+  showBtn.setAttribute('aria-disabled', 'true');
+
+  resetBtn.classList.remove('hidden');
+  document.getElementById('fullReading')?.classList.remove('hidden');
 });
 
-// ===== Wire “flip” sur chaque dos de carte =====
-document.querySelectorAll('.card .back').forEach(back=>{
-  const handler = ()=> flipCard(back.closest('.card'));
-  back.addEventListener('click', handler);
-  back.addEventListener('keydown', (e)=> {
-    if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); handler(); }
+// ===== Reset =====
+function resetAll(){
+  drawn = { emotions:null, besoins:null, actions:null, cosmos:null };
+  flippedCount = 0;
+
+  // Masquer résultats + vider
+  results.classList.add('hidden');
+  linesOut.innerHTML = '';
+  synthOut.innerHTML = '';
+  outIntent.textContent = '—';
+
+  // Boutons / instructions
+  showBtn.classList.add('hidden');
+  showBtn.disabled = true;
+  showBtn.setAttribute('aria-disabled','true');
+  resetBtn.classList.add('hidden');
+  document.getElementById('fullReading')?.classList.add('hidden');
+  document.getElementById('cardsInstruction')?.classList.add('hidden');
+
+  // Réafficher "Commencer le tirage"
+  const startBtn = document.getElementById('startReading');
+  startBtn.classList.remove('hidden');
+
+  // Réinitialiser les cartes
+  board.querySelectorAll('.card').forEach(card=>{
+    card.classList.remove('flipped');
+
+    // back cliquable à nouveau
+    const back = card.querySelector('.back');
+    back.classList.remove('hidden');
+    back.setAttribute('aria-pressed','false');
+    back.style.pointerEvents = '';
+
+    // nettoyer la face avant
+    card.querySelector('[data-name]').textContent  = '—';
+    card.querySelector('[data-quote]').textContent = '—';
+    const pol = card.querySelector('[data-polarity]');
+    if (pol){
+      pol.style.visibility = '';
+      pol.textContent = '';
+      pol.removeAttribute('title');
+      pol.removeAttribute('aria-label');
+      pol.classList.remove('is-triangle','is-cercle');
+    }
+    card.querySelector('[data-bridge-quote]')?.remove();
+    card.querySelector('[data-coin]')?.remove();
+    card.querySelector('[data-bridge-badge]')?.remove();
   });
-});
+
+  // intention conservée : si tu préfères la vider, dé-commente la ligne suivante
+  // intentionIn.value = '';
+}
+resetBtn.addEventListener('click', resetAll);
+
+// (fin du module PÈLERIN)
 })();
 </script>
 
-   });
-});
-</script>
 <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">
   Made with
   <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo"
@@ -2455,4 +2542,72 @@ document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('img[loading="lazy"]:not([fetchpriority])')
     .forEach(img => img.setAttribute('fetchpriority','low'));
 });
+  results.classList.remove('hidden');
+  results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // état des boutons
+  showBtn.classList.add('hidden');
+  showBtn.disabled = true;
+  showBtn.setAttribute('aria-disabled', 'true');
+
+  resetBtn.classList.remove('hidden');
+  document.getElementById('fullReading')?.classList.remove('hidden');
+});
+
+// ===== Reset =====
+function resetAll(){
+  drawn = { emotions:null, besoins:null, actions:null, cosmos:null };
+  flippedCount = 0;
+
+  // Masquer résultats + vider
+  results.classList.add('hidden');
+  linesOut.innerHTML = '';
+  synthOut.innerHTML = '';
+  outIntent.textContent = '—';
+
+  // Boutons / instructions
+  showBtn.classList.add('hidden');
+  showBtn.disabled = true;
+  showBtn.setAttribute('aria-disabled','true');
+  resetBtn.classList.add('hidden');
+  document.getElementById('fullReading')?.classList.add('hidden');
+  document.getElementById('cardsInstruction')?.classList.add('hidden');
+
+  // Réafficher "Commencer le tirage"
+  const startBtn = document.getElementById('startReading');
+  startBtn.classList.remove('hidden');
+
+  // Réinitialiser les cartes
+  board.querySelectorAll('.card').forEach(card=>{
+    card.classList.remove('flipped');
+
+    // back cliquable à nouveau
+    const back = card.querySelector('.back');
+    back.classList.remove('hidden');
+    back.setAttribute('aria-pressed','false');
+    back.style.pointerEvents = '';
+
+    // nettoyer la face avant
+    card.querySelector('[data-name]').textContent  = '—';
+    card.querySelector('[data-quote]').textContent = '—';
+    const pol = card.querySelector('[data-polarity]');
+    if (pol){
+      pol.style.visibility = '';
+      pol.textContent = '';
+      pol.removeAttribute('title');
+      pol.removeAttribute('aria-label');
+      pol.classList.remove('is-triangle','is-cercle');
+    }
+    card.querySelector('[data-bridge-quote]')?.remove();
+    card.querySelector('[data-coin]')?.remove();
+    card.querySelector('[data-bridge-badge]')?.remove();
+  });
+
+  // intention conservée : si tu préfères la vider, dé-commente la ligne suivante
+  // intentionIn.value = '';
+}
+resetBtn.addEventListener('click', resetAll);
+})();
+</script>
+
 </script>
