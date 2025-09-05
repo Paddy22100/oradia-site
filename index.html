@@ -22,8 +22,6 @@
 <meta property="og:description" content="Oradia est un oracle vibratoire qui croise sagesses ancestrales et IA pour guider votre chemin intérieur. Tirages gratuits et tirages complets.">
 <meta property="og:url" content="https://oradia.fr/">
 <meta property="og:image" content="https://i.ibb.co/4wG0t61y/og-1200x630.jpg">
-<meta property="og:image:alt" content="Logo Oradia doré sur fond bleu nuit">
-<meta name="twitter:image:alt" content="Logo Oradia doré sur fond bleu nuit">
 <meta property="og:site_name" content="Oradia">
 
 <meta name="twitter:card" content="summary_large_image">
@@ -38,6 +36,7 @@
 <link rel="preload" as="image" href="https://i.ibb.co/cKHs3GY5/logo2.png" fetchpriority="high">
 <meta name="theme-color" content="#0a192f">
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+<meta property="og:locale:alternate" content="en_US">
 
 <meta name="referrer" content="no-referrer-when-downgrade">
 <meta name="color-scheme" content="dark light">
@@ -45,8 +44,11 @@
 
 <meta property="og:image:width"  content="1200">
 <meta property="og:image:height" content="630">
-<link rel="preload" as="image" href="https://i.ibb.co/4wG0t61y/og-1200x630.jpg" fetchpriority="high">
-<meta name="robots" content="index,follow">
+<link rel="preload" as="image"
+      href="https://i.ibb.co/4wG0t61y/og-1200x630.jpg"
+      imagesrcset="https://i.ibb.co/4wG0t61y/og-1200x630.jpg 1200w, https://i.ibb.co/XYZ/og-800x420.jpg 800w"
+      imagesizes="(max-width: 768px) 100vw, 1200px">
+
 
 
 <script>
@@ -100,35 +102,6 @@
   }
 }
 </script>
-<script type="application/ld+json">
-{
-  "@context":"https://schema.org",
-  "@type":"Product",
-  "name":"Tirages de la traversée",
-  "description":"Accès à 5 tirages complets Oradia.",
-  "brand":{"@type":"Brand","name":"Oradia"},
-  "url":"https://oradia.fr/#offres",
-  "offers":{
-    "@type":"Offer",
-    "price":"5.00",
-    "priceCurrency":"EUR",
-    "availability":"https://schema.org/InStock",
-    "url":"https://oradia.fr/#offres"
-  }
-}
-</script>
-
-<script type="application/ld+json">
-{
-  "@context":"https://schema.org",
-  "@type":"Offer",
-  "name":"Abonnement Tirage du Tore",
-  "category":"Subscription",
-  "price":"8.00",
-  "priceCurrency":"EUR",
-  "url":"https://oradia.fr/#offres"
-}
-</script>
 
 <!-- Vos utilitaires JS à part -->
 <script>
@@ -146,6 +119,25 @@ const pickOne = (arr) => arr[randInt(arr.length)];
 
 </script>
 
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        colors: {
+          'night-blue': '#0a192f',
+          'gold': '#d4af37',
+          'light-gold': '#f5e7a1',
+          'dark-blue': '#051428',
+          'celtic-blue': '#1a365d'
+        },
+        fontFamily: {
+          'cormorant': ['Cormorant Garamond', 'serif'],
+          'poppins': ['Poppins', 'sans-serif']
+        }
+      }
+    }
+  }
+</script>
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
 <style>
 
@@ -158,8 +150,6 @@ const pickOne = (arr) => arr[randInt(arr.length)];
   border-style: dashed;
   opacity: .95;
 }
-.cormorant { font-family: 'Cormorant Garamond', serif; }
-.poppins   { font-family: 'Poppins', sans-serif; }
 
 /* Optionnel: teinter selon la forme (si tu veux) */
 .polarity.is-triangle { filter: saturate(1.1); }
@@ -700,8 +690,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">1 tirage complet quotidien par mail</span></li>
           </ul>
 
-          <button id="orderBtn" type="button" aria-label="Commander 5 Tirages" class="btn-gold w-full text-center block relative z-10 mt-auto">Commander</button>
-
+          <a href="#" id="orderBtn" role="button" aria-label="Commander 5 Tirages" class="btn-gold w-full text-center block relative z-10 mt-auto">Commander</a>
         </div>
 
         <!-- Abonnement -->
@@ -736,8 +725,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Participation à l’amélioration de l’oracle (expérience anonyme)</span></li>
           </ul>
 
-          <button id="subscribeBtn" type="button" aria-label="S'abonner au Tirage du Tore" class="btn-gold w-full text-center block relative z-10 mt-auto">S'abonner</button>
-
+          <a href="#" id="subscribeBtn" role="button" aria-label="S'abonner au Tirage du Tore" class="btn-gold w-full text-center block relative z-10 mt-auto">S'abonner</a>
 
         </div>
       </div>
@@ -1485,8 +1473,6 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     card.classList.add('flipped');
     card.querySelector('.traversee-card-back')?.classList.add('hidden');
     card.querySelector('.traversee-card-front')?.classList.remove('hidden');
-    card.querySelector('.traversee-card-back')?.setAttribute('aria-hidden','true');
-    card.querySelector('.traversee-card-front')?.removeAttribute('aria-hidden');
 
     const host = el('traversee-board');
     host._state.drawn[slot] = { ...base, coin, bridge: brTxt };
@@ -1823,245 +1809,371 @@ function closeModal(el){
   <!-- SCRIPT -->
 
 <script id="oradia-pelerin">
-(()=>{
+(function(){
 'use strict';
-console.log('oradia-pelerin: start');
 
-// --- mini util ---
-const $=s=>document.querySelector(s);
-const $$=s=>[...document.querySelectorAll(s)];
-const esc=s=>String(s).replace(/[&<>"']/g,m=>m==='&'?'&amp;':m==='<'?'&lt;':m==='>'?'&gt;':m==='"'?'&quot;':'&#39;');
-const rng=n=>{try{const b=new Uint32Array(1);crypto.getRandomValues(b);return b[0]%n;}catch{ return Math.floor(Math.random()*n);}};
-const pick=a=>a[rng(a.length)];
-const polIcon=p=>p==='yang'?'▲':'◯';
-const polLabel=p=>p==='yang'
-  ? 'Triangle — énergie masculine : élan, action, verticalité'
-  : 'Cercle — énergie féminine : réceptivité, accueil, intégration';
-
-// --- données compactes (name|quote|pol) ---
-const P = (S)=>S.split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{const[a,b,c]=l.split('|');return {name:a,quote:b,polarity:c||null};});
-
-const DATA={
-  emotions:P(`
-JOIE|Une onde traverse mon cœur. Elle dit oui à la vie.|yang
-TRISTESSE|Je laisse couler ce qui n’a plus à rester. L’eau me guérit.|yin
-INJUSTICE|Je sens l’appel d’un monde plus juste, d’un équilibre à retrouver.|yin
-ÉMERVEILLEMENT|La beauté m’inspire et l’invisible se révèle.|yang
-HONTE|Je me regarde avec tendresse. Aucun poids ne m’appartient vraiment.|yin
-CULPABILITÉ|Je reconnais mes limites humaines. Je me pardonne, profondément.|yin
-SOLITUDE|Dans le silence, je me découvre présence.|yin
-DÉGOÛT|Je perçois ce qui ne me nourrit plus. J’opère l’écart juste.|yin
-SÉRÉNITÉ|Je goûte la paix dans l’instant.|yang
-AMOUR|J’aime parce que c’est ma nature.|yang
-COLÈRE|Mon feu sacré défend ma juste frontière.|yang
-PEUR|J’écoute l’ombre qui murmure vers plus de conscience.|yin
-`),
-  besoins:P(`
-RECONNAISSANCE|Quand mes dons sont vus, je m’ouvre.|yang
-SÉCURITÉ|La stabilité me soutient.|yin
-LIBERTÉ|Je respire l’espace, rien ne m’enferme.|yang
-SOUTIEN|Je m’appuie sans honte sur l’autre.|yin
-REPOS|Ralentir régénère mon être.|yin
-CLAIRETÉ|La lumière éclaire mon esprit.|yang
-APPARTENANCE|Je fais partie d’un cercle plus vaste.|yin
-AUTONOMIE|Je marche de mes propres forces.|yang
-STIMULATION|Le mouvement m’invite à explorer.|yang
-HARMONIE|Chaque chose à sa place.|yin
-SENS|Chaque pas a une raison d’être.|yin
-AMOUR REÇU|J’accueille la tendresse offerte.|yin
-`),
-  actions:P(`
-AGIR|Je passe du rêve à l’acte.|yang
-DIRE|Je prononce les mots justes.|yang
-CRÉER|Je façonne le monde, offrande.|yang
-PARTAGER|J’offre ce qui m’anime.|yang
-ALLER VERS|Je m’avance, curieux.|yang
-CHOISIR|Je décide avec clarté.|yang
-PATIENTER|Le fruit mûrit lentement.|yin
-ÉCOUTER|L’oreille se penche sur le murmure.|yin
-`),
-  cosmos:P(`
-ORIGINE|Tout naît du même centre.
-LIGNÉE|Je marche avec mes ancêtres.
-CYCLE|Rien ne se perd, tout se transforme.
-LOI|Des règles invisibles vibrent partout.
-TRAME|Un tissu relie chaque instant.
-KARMA|Je récolte ce que je sème.
-VOILE|Je pressens sans tout voir.
-PORTAIL|Un seuil s’ouvre vers ailleurs.
-ÉCHO|Un souvenir me traverse.
-COSMOGÉNÈSE|Le monde s’éveille à nouveau.
-AKASHA|Tout est écrit et possible.
-INTRICATION|Tout est lié à tout.
-`)
+// ====== Données PÈLERIN ======
+const DATA = {
+  emotions: [
+    {name:"JOIE", quote:"Une onde traverse mon cœur. Elle dit oui à la vie.", polarity:"yang"},
+    {name:"TRISTESSE", quote:"Je laisse couler ce qui n’a plus à rester. L’eau me guérit.", polarity:"yin"},
+    {name:"INJUSTICE", quote:"Je sens l’appel d’un monde plus juste, d’un équilibre à retrouver.", polarity:"yin"},
+    {name:"ÉMERVEILLEMENT", quote:"La beauté m’inspire et l’invisible se révèle.", polarity:"yang"},
+    {name:"HONTE", quote:"Je me regarde avec tendresse. Aucun poids ne m’appartient vraiment.", polarity:"yin"},
+    {name:"CULPABILITÉ", quote:"Je reconnais mes limites humaines. Je me pardonne, profondément.", polarity:"yin"},
+    {name:"SOLITUDE", quote:"Dans le silence, je me découvre présence.", polarity:"yin"},
+    {name:"DÉGOÛT", quote:"Je perçois ce qui ne me nourrit plus. J’opère l’écart juste.", polarity:"yin"},
+    {name:"SÉRÉNITÉ", quote:"Je goûte la paix dans l’instant.", polarity:"yang"},
+    {name:"AMOUR", quote:"J’aime parce que c’est ma nature.", polarity:"yang"},
+    {name:"COLÈRE", quote:"Mon feu sacré défend ma juste frontière.", polarity:"yang"},
+    {name:"PEUR", quote:"J’écoute l’ombre qui murmure vers plus de conscience.", polarity:"yin"}
+  ],
+  besoins: [
+    {name:"RECONNAISSANCE", quote:"Quand mes dons sont vus, je m’ouvre.", polarity:"yang"},
+    {name:"SÉCURITÉ", quote:"La stabilité me soutient.", polarity:"yin"},
+    {name:"LIBERTÉ", quote:"Je respire l’espace, rien ne m’enferme.", polarity:"yang"},
+    {name:"SOUTIEN", quote:"Je m’appuie sans honte sur l’autre.", polarity:"yin"},
+    {name:"REPOS", quote:"Ralentir régénère mon être.", polarity:"yin"},
+    {name:"CLAIRETÉ", quote:"La lumière éclaire mon esprit.", polarity:"yang"},
+    {name:"APPARTENANCE", quote:"Je fais partie d’un cercle plus vaste.", polarity:"yin"},
+    {name:"AUTONOMIE", quote:"Je marche de mes propres forces.", polarity:"yang"},
+    {name:"STIMULATION", quote:"Le mouvement m’invite à explorer.", polarity:"yang"},
+    {name:"HARMONIE", quote:"Chaque chose à sa place.", polarity:"yin"},
+    {name:"SENS", quote:"Chaque pas a une raison d’être.", polarity:"yin"},
+    {name:"AMOUR REÇU", quote:"J’accueille la tendresse offerte.", polarity:"yin"}
+  ],
+  actions: [
+    {name:"AGIR", quote:"Je passe du rêve à l’acte.", polarity:"yang"},
+    {name:"DIRE", quote:"Je prononce les mots justes.", polarity:"yang"},
+    {name:"CRÉER", quote:"Je façonne le monde, offrande.", polarity:"yang"},
+    {name:"PARTAGER", quote:"J’offre ce qui m’anime.", polarity:"yang"},
+    {name:"ALLER VERS", quote:"Je m’avance, curieux.", polarity:"yang"},
+    {name:"CHOISIR", quote:"Je décide avec clarté.", polarity:"yang"}
+  ],
+  cosmos: [
+    {name:"ORIGINE", quote:"Tout naît du même centre."},
+    {name:"LIGNÉE", quote:"Je marche avec mes ancêtres."},
+    {name:"CYCLE", quote:"Rien ne se perd, tout se transforme."},
+    {name:"LOI", quote:"Des règles invisibles vibrent partout."},
+    {name:"TRAME", quote:"Un tissu relie chaque instant."},
+    {name:"KARMA", quote:"Je récolte ce que je sème."},
+    {name:"VOILE", quote:"Je pressens sans tout voir."},
+    {name:"PORTAIL", quote:"Un seuil s’ouvre vers ailleurs."},
+    {name:"ÉCHO", quote:"Un souvenir me traverse."},
+    {name:"COSMOGÉNÈSE", quote:"Le monde s’éveille à nouveau."},
+    {name:"AKASHA", quote:"Tout est écrit et possible."},
+    {name:"INTRICATION", quote:"Tout est lié à tout."}
+  ]
 };
 
-// --- éléments UI ---
-const board       = $('#board');
-const startButton = $('#startReading');
-const cardsMsg    = $('#cardsInstruction');
-const showBtn     = $('#showResults');
-const resetBtn    = $('#reset');
-const linesOut    = $('#lines');
-const synthOut    = $('#synthese');
-const resultsBox  = $('#results');
-const outIntent   = $('#out-intention');
-const intentionIn = $('#intention');
+// UI polarité
+const polUI_PEL = (p) => p === 'yang'
+  ? { icon:'▲', label:"Triangle — énergie masculine : élan, action, verticalité" }
+  : { icon:'◯', label:"Cercle — énergie féminine : réceptivité, accueil, intégration" };
 
-let drawn = {emotions:null, besoins:null, actions:null, cosmos:null};
-let flipped = 0;
+// RNG
+const rng = n => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % n; };
+const pick = arr => arr[rng(arr.length)];
 
-// --- helpers rendu ---
+// ===== Synthèse =====
+const rand = pick;
+const cap  = s => s.charAt(0).toUpperCase() + s.slice(1);
+const tokens = (t) => (t||"").toLowerCase().replace(/[’'"]/g," ").replace(/[^a-zàâäçéèêëîïôöùûüÿœ\s-]/gi," ").split(/\s+/).filter(x=>x && x.length>2);
+const SYN = {
+  ouvre: ["ouvre","défriche","éclaire","déplie","met en relief"],
+  indique: ["indique","invite à","oriente vers","suggère","met le cap sur"],
+  appelle: ["appelle","réclame","sollicite","demande","requiert"],
+  pas: ["pas","mouvement","élan","impulsion","geste"],
+  carte: ["carte","arcane","signal","vecteur","pilier"],
+  ensemble: ["lecture d’ensemble","trame globale","horizon commun","axe du jour","cohérence du tirage"]
+};
+const MEANINGS = {
+  emotions: {
+    "JOIE":"capitalise sur ce qui te donne de l’oxygène intérieur.",
+    "TRISTESSE":"offre un bain d’intégration : accepte le tempo bas, il recolle les pièces.",
+    "INJUSTICE":"pousse à redresser une balance : pose clairement tes limites.",
+    "ÉMERVEILLEMENT":"ravive la curiosité : regarder autrement déverrouille la suite.",
+    "HONTE":"invite à déposer un fardeau qui ne t’appartient pas.",
+    "CULPABILITÉ":"demande de reconnaître l’intention juste, pas la perfection.",
+    "SOLITUDE":"crée un espace fécond : le recul est fécondation, pas retrait.",
+    "DÉGOÛT":"signale une pollution : nettoie l’environnement ou la situation.",
+    "SÉRÉNITÉ":"stabilise la base : calme clair = décisions nettes.",
+    "AMOUR":"replace le lien au centre : nourris la relation la plus vivante.",
+    "COLÈRE":"donne un feu directeur : canalise, ne refoule pas.",
+    "PEUR":"préviens par avance : sécurise un point précis avant d’avancer."
+  },
+  besoins: {
+    "RECONNAISSANCE":"cherche des témoins compétents de tes talents.",
+    "SÉCURITÉ":"solidifie une base matérielle avant d’élargir.",
+    "LIBERTÉ":"élague les contraintes inutiles pour respirer.",
+    "SOUTIEN":"structure une aide concrète (personne, outil, temps).",
+    "REPOS":"programme des pauses réelles : elles améliorent ton rendement.",
+    "CLAIRETÉ":"met à plat critères et priorités sur 1 page.",
+    "APPARTENANCE":"rattache ton action à un cercle qui te ressemble.",
+    "AUTONOMIE":"réaffirme ton périmètre de décision.",
+    "STIMULATION":"mets un défi mesuré pour relancer la dynamique.",
+    "HARMONIE":"réduit les frictions : simplifie un processus.",
+    "SENS":"relie l’action à ton ‘pourquoi’ explicite.",
+    "AMOUR REÇU":"autorise-toi à demander et… à recevoir."
+  },
+  actions: {
+    "AGIR":"pose un acte visible avant la fin de journée.",
+    "DIRE":"formule le message exact, sans détour, avec douceur ferme.",
+    "CRÉER":"prototype une version 0.1 au lieu d’attendre la 1.0.",
+    "PARTAGER":"mets ton travail dans une boucle de feedback courte.",
+    "ALLER VERS":"prends rendez-vous avec ce/ceux qui t’attirent.",
+    "CHOISIR":"tranche entre deux voies ‘suffisantes’ pour libérer l’énergie."
+  },
+  cosmos: {
+    "ORIGINE":"revenir à la source t’évite l’égarement périphérique.",
+    "LIGNÉE":"honorer l’héritage débloque l’élan futur.",
+    "CYCLE":"tout revient : planifie en boucles plutôt qu’en lignes droites.",
+    "LOI":"respecter la contrainte crée la vraie liberté de mouvement.",
+    "TRAME":"tout est connecté : aligne les pièces au même axe.",
+    "KARMA":"cultive l’intention ; elle imprime la suite.",
+    "VOILE":"accepte une zone floue : l’information arrive en marchant.",
+    "PORTAIL":"une opportunité exige un pas concret pour s’ouvrir.",
+    "ÉCHO":"ce que tu vis résonne ailleurs : observe les motifs.",
+    "COSMOGÉNÈSE":"pense ‘naissance’ : initie petit, grandira ensuite.",
+    "AKASHA":"garde trace ; l’archive devient levier.",
+    "INTRICATION":"prends en compte les dépendances avant d’agir."
+  }
+};
+const polMood = (p) => p==="yang" ? "tonus, clarté, décision" : p==="yin" ? "écoute, accueil, intériorisation" : "mémoire, continuité";
+function sentence(parts){ return parts.filter(Boolean).join(" "); }
+function tokens3(t){ return tokens(t).slice(0,3); }
+
+function lineEmotion(E, intentTags){
+  const base = `${SYN.carte[rand(SYN.carte)]} ÉMOTIONS (${E.name})`;
+  const pol  = E.polarity ? ` • ${polMood(E.polarity)}` : "";
+  const link = MEANINGS.emotions[E.name] || "te donne un indicateur intérieur net.";
+  const intent = intentTags.length ? ` En lien avec “${intentTags[0]}”, ` : " ";
+  return sentence([`${base}${pol} :`, intent+link]);
+}
+function lineBesoin(B, intentTags){
+  const base = `${SYN.carte[rand(SYN.carte)]} BESOINS (${B.name})`;
+  const pol  = B.polarity ? ` • ${polMood(B.polarity)}` : "";
+  const link = MEANINGS.besoins[B.name] || "cadre l’ajustement relationnel.";
+  const intent = intentTags[1] ? ` Pour “${intentTags[1]}”, ` : " ";
+  return sentence([`${base}${pol} :`, intent+link]);
+}
+function lineAction(A, intentTags){
+  const base = `${SYN.carte[rand(SYN.carte)]} ACTIONS (${A.name})`;
+  const pol  = A.polarity ? ` • ${polMood(A.polarity)}` : "";
+  const link = MEANINGS.actions[A.name] || "matérialise l’intuition en mouvement.";
+  const intent = intentTags[2] ? ` Concrètement sur “${intentTags[2]}”, ` : " ";
+  return sentence([`${base}${pol} :`, intent+link]);
+}
+function lineCosmos(C, E, B, A){
+  const head = `MÉMOIRES COSMOS (${C.name})`;
+  const core = MEANINGS.cosmos[C.name] || "donne la profondeur du décor.";
+  const bridge = rand(SYN.indique);
+  return `${head} : ${cap(core)} Elle ${bridge} l’articulation ${E.name} → ${B.name} → ${A.name}.`;
+}
+
+function buildSynthesis(E,B,A,C,intentText){
+  const intentTags = tokens3(intentText);
+  const intro = cap(`${rand(["Aujourd’hui","Pour cette question","Dans ce cadre"])} ${rand(["l’ensemble","la trame","le tirage"]) } ${rand(["se compose","se tisse","se dessine"])} autour de quatre foyers.`);
+  const s1 = lineEmotion(E,intentTags), s2 = lineBesoin(B,intentTags), s3 = lineAction(A,intentTags), s4 = lineCosmos(C,E,B,A);
+  const wrap = `${cap(rand(SYN.ensemble))} : ${rand([
+    "part de l’émotion sincère, s’ajuste au besoin réel, se décide en un geste sobre.",
+    "honore l’affect, clarifie le cadre, et met le corps en mouvement.",
+    "évite le flou : une petite décision vaut mieux qu’une grande hésitation.",
+    "reste modeste et concret : un pas bien posé en appelle d’autres."
+  ])}`;
+  const mantra = `🕊️ Mantra : « ${rand([
+    "Je choisis la clarté plutôt que la perfection.",
+    "Je fais un petit pas juste, ici et maintenant.",
+    "J’aligne mon geste sur mon axe intérieur.",
+    "Je laisse le sens guider mon action."
+  ])} »`;
+  const question = `❓ Question : ${rand([
+    "Quel micro-acte précis prouve mon engagement aujourd’hui ?",
+    "Quelle friction puis-je apaiser en 10 minutes ?",
+    "Quel soutien simple puis-je solliciter sans me justifier ?",
+    "Quelle chose puis-je dire clairement, sans détour inutile ?"
+  ])}`;
+  return `
+    <div class="mt-3"><b>Synthèse du tirage :</b></div>
+    <p>${intro}</p>
+    <p>${s1}</p>
+    <p>${s2}</p>
+    <p>${s3}</p>
+    <p>${s4}</p>
+    <p style="margin-top:12px"><b>${cap(rand(SYN.ensemble))}</b> — ${wrap}</p>
+    <p style="margin-top:8px"><i>${mantra}</i><br>${question}</p>
+  `;
+}
+
+// ===== État / DOM =====
+let drawn = { emotions:null, besoins:null, actions:null, cosmos:null };
+let flippedCount = 0;
+
+const board       = document.getElementById("board");
+const showBtn     = document.getElementById("showResults");
+const resetBtn    = document.getElementById("reset");
+const linesOut    = document.getElementById("lines");
+const synthOut    = document.getElementById("synthese");
+const intentionIn = document.getElementById("intention");
+const outIntent   = document.getElementById("out-intention");
+const results     = document.getElementById("results");
+
+// ===== Rendu face avant =====
 function renderFront(cardEl, picked, family){
   cardEl.querySelector('[data-name]').textContent  = picked.name;
-  cardEl.querySelector('[data-quote]').textContent = picked.quote || '—';
-  const polEl = cardEl.querySelector('[data-polarity]');
-  if(family==='cosmos'){
-    polEl.style.visibility='hidden';
-    polEl.textContent='';
-    polEl.removeAttribute('title');
-    polEl.removeAttribute('aria-label');
-    polEl.classList.remove('is-triangle','is-cercle');
-  }else{
-    polEl.style.visibility='visible';
-    polEl.textContent=polIcon(picked.polarity);
-    polEl.title=polLabel(picked.polarity);
-    polEl.setAttribute('aria-label',polLabel(picked.polarity));
-    polEl.classList.toggle('is-triangle', picked.polarity==='yang');
-    polEl.classList.toggle('is-cercle',   picked.polarity==='yin');
+  cardEl.querySelector('[data-quote]').textContent = picked.quote || picked.base;
+
+  const pol = cardEl.querySelector('[data-polarity]');
+  if (family === "cosmos") {
+    pol.style.visibility = "hidden";
+    pol.textContent = "";
+    pol.removeAttribute('title'); pol.removeAttribute('aria-label');
+    pol.classList.remove('is-triangle','is-cercle');
+  } else {
+    const ui = polUI_PEL(picked.polarity);
+    pol.style.visibility = "visible";
+    pol.textContent = ui.icon;
+    pol.title = ui.label;
+    pol.setAttribute('aria-label', ui.label);
+    pol.classList.toggle('is-triangle', picked.polarity === 'yang');
+    pol.classList.toggle('is-cercle',   picked.polarity === 'yin');
   }
+
+  const topbar = cardEl.querySelector('.front .topbar');
+  topbar?.querySelector('[data-coin]')?.remove();
+  topbar?.querySelector('[data-bridge-badge]')?.remove();
+  cardEl.querySelector('[data-bridge-quote]')?.remove();
 }
 
-function flipCard(backEl){
-  const cardEl = backEl.closest('.card');
-  if(!cardEl || cardEl.classList.contains('flipped')) return;
-
-  const q = (intentionIn.value||'').trim();
-  if(!q || !q.endsWith('?')){
-    intentionIn.setCustomValidity('Veuillez formuler une question ouverte qui se termine par « ? ».');
+// ===== Flip carte (PÈLERIN) =====
+const pickOne = (arr) => arr[rng(arr.length)];
+function flipCard(cardEl){
+  if(cardEl.classList.contains('flipped')) return;
+  const q = (intentionIn.value||"").trim();
+  if(!q.endsWith('?')){
+    intentionIn.setCustomValidity("Veuillez formuler une question ouverte se terminant par « ? »");
     intentionIn.reportValidity();
     return;
-  } else { intentionIn.setCustomValidity(''); }
+  }
+  const family = cardEl.dataset.family;
+  const base   = pickOne(DATA[family]);
+  drawn[family] = base;
 
-  const fam = cardEl.dataset.family;
-  const picked = pick(DATA[fam]);
-  drawn[fam]=picked;
+  renderFront(cardEl, base, family);
 
-  renderFront(cardEl, picked, fam);
   cardEl.classList.add('flipped');
-  backEl.setAttribute('aria-pressed','true');
-  backEl.style.pointerEvents='none';
-  cardEl.querySelector('.back')?.setAttribute('aria-hidden','true');
-  cardEl.querySelector('.front')?.removeAttribute('aria-hidden');
+  const back = cardEl.querySelector('.back');
+  back.setAttribute('aria-pressed','true');
+  back.style.pointerEvents = 'none';
 
-  flipped++;
-  if(flipped===4){
+  flippedCount++;
+  if(flippedCount === 4){
     showBtn.classList.remove('hidden');
-    showBtn.disabled=false;
-    showBtn.setAttribute('aria-disabled','false');
+    showBtn.disabled = false;
+    showBtn.removeAttribute('aria-disabled');
   }
 }
 
-function line(label,obj,showPol=true){
-  if(!obj) return '';
-  const pol = (showPol && obj.polarity) ? ` ${polIcon(obj.polarity)}` : '';
-  return `<p><b>${label} :</b> ${esc(obj.name)}${pol}<br><i>« ${esc(obj.quote||'—')} »</i></p>`;
-}
-
-function buildSynthesis(E,B,A,C,question){
-  const mood = (p)=>p==='yang'?'tonus & décision':p==='yin'?'écoute & intégration':'mémoire';
-  const s = [
-    `👉 <b>Lecture d’ensemble</b> : l’émotion met le ton (<u>${esc(E.name)}</u>, ${mood(E.polarity)}), le besoin cadre l’ajustement (<u>${esc(B.name)}</u>), l’action met en mouvement (<u>${esc(A.name)}</u>).`,
-    `🜂 <b>Cosmos</b> : <u>${esc(C.name)}</u> rappelle le décor profond : ${esc(C.quote)}.`,
-    `🧭 <b>Conseil</b> : pose un micro-acte concret aujourd’hui en lien avec ta question.`
-  ].join('<br>');
-  const mantra = `🕊️ Mantra : « ${pick([
-    'Je choisis la clarté plutôt que la perfection.',
-    'Je fais un petit pas juste, ici et maintenant.',
-    'J’aligne mon geste sur mon axe intérieur.',
-    'Je laisse le sens guider mon action.'
-  ])} »`;
-  const q = `❓ Piste : ${pick([
-    'Quel micro-acte prouve mon engagement aujourd’hui ?',
-    'Quelle friction puis-je apaiser en 10 minutes ?',
-    'Quel soutien simple puis-je solliciter ?',
-    'Quel message puis-je formuler clairement, sans détour ?'
-  ])}`;
-  return `<div class="mt-3"><b>Synthèse du tirage</b></div><p>${s}</p><p style="margin-top:8px"><i>${mantra}</i><br>${q}</p>`;
-}
-
-// --- wiring ---
-startButton?.addEventListener('click', ()=>{
-  const q=(intentionIn.value||'').trim();
-  if(!q || !q.endsWith('?')){
-    intentionIn.setCustomValidity('Formule ta question et termine par « ? ».');
+// ===== Interactions =====
+const startButton = document.getElementById('startReading');
+startButton.addEventListener('click', ()=>{
+  const q = (intentionIn.value||"").trim();
+  if(!q.endsWith('?')){
+    intentionIn.setCustomValidity("Veuillez formuler une question ouverte se terminant par « ? »");
     intentionIn.reportValidity();
     return;
   }
-  intentionIn.setCustomValidity('');
-  cardsMsg?.classList.remove('hidden');
-  board?.classList.remove('hidden');
+  document.getElementById('cardsInstruction')?.classList.remove('hidden');
+  board.classList.remove('hidden');
   startButton.classList.add('hidden');
-  board.querySelector('.card .back')?.focus();
+  const firstBack = board.querySelector('.card .back');
+  if(firstBack) firstBack.focus();
 });
 
-$$('.card .back').forEach(back=>{
-  back.addEventListener('click', ()=>flipCard(back));
-  back.addEventListener('keydown', (e)=>{ if(e.key==='Enter'||e.key===' '){ e.preventDefault(); flipCard(back);} });
+document.querySelectorAll('.card .back').forEach(back=>{
+  back.addEventListener('click', ()=> flipCard(back.closest('.card')));
+  back.addEventListener('keydown', (e)=> { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flipCard(back.closest('.card')); }});
 });
 
-showBtn?.addEventListener('click', ()=>{
-  const {emotions:E, besoins:B, actions:A, cosmos:C} = drawn;
-  if(!(E&&B&&A&&C)) return;
-  const q=(intentionIn.value||'').trim();
-  outIntent.textContent = q || '—';
+// ===== Résultats (PÈLERIN) =====
+const polIcon = (p) => p==='yang'?'▲':'◯';
 
-  linesOut.innerHTML = [
-    line('Émotions',E),
-    line('Besoins',B),
-    line('Actions',A),
-    line('Mémoire Cosmos',C,false)
-  ].join('');
+showBtn.addEventListener('click', ()=>{
+  const { emotions: E, besoins: B, actions: A, cosmos: C } = drawn;
+  if(!(E && B && A && C)) return;
 
-  synthOut.innerHTML = buildSynthesis(E,B,A,C,q);
-  resultsBox?.classList.remove('hidden');
-  resultsBox?.scrollIntoView({behavior:'smooth', block:'start'});
-  $('#fullReading')?.classList.remove('hidden');
+  const intent = (intentionIn.value||"").trim();
+  outIntent.textContent = intent || '—';
+
+  // setBusy est défini globalement plus haut dans ta page
+  setBusy(linesOut, true);
+  setBusy(synthOut, true);
+
+  linesOut.innerHTML = `
+    <p><b>ÉMOTIONS :</b> ${E.name} (${polIcon(E.polarity)})<br><i>« ${E.quote} »</i></p>
+    <p><b>BESOINS :</b> ${B.name} (${polIcon(B.polarity)})<br><i>« ${B.quote} »</i></p>
+    <p><b>ACTIONS :</b> ${A.name} (${polIcon(A.polarity)})<br><i>« ${A.quote} »</i></p>
+    <p><b>MÉMOIRES COSMOS :</b> ${C.name}<br><i>« ${C.quote} »</i></p>
+  `.trim();
+
+  synthOut.innerHTML = buildSynthesis(E,B,A,C,intent);
+
+  results.classList.remove('hidden');
+  results.scrollIntoView({behavior:'smooth', block:'start'});
+
+  setBusy(linesOut, false);
+  setBusy(synthOut, false);
+
+  // Affiche actions bas
+  document.getElementById('fullReading')?.classList.remove('hidden');
   resetBtn?.classList.remove('hidden');
 });
 
-resetBtn?.addEventListener('click', ()=>{
-  drawn = {emotions:null, besoins:null, actions:null, cosmos:null};
-  flipped=0;
-  resultsBox?.classList.add('hidden');
-  showBtn?.classList.add('hidden');
-  showBtn.disabled=true;
-  showBtn.setAttribute('aria-disabled','true');
-  linesOut.innerHTML=''; synthOut.innerHTML='';
-  outIntent.textContent='—';
-  cardsMsg?.classList.add('hidden');
-  startButton?.classList.remove('hidden');
+// ===== Reset =====
+resetBtn.addEventListener('click', ()=>{
+  // État
+  drawn = { emotions:null, besoins:null, actions:null, cosmos:null };
+  flippedCount = 0;
 
-  $$('.card').forEach(c=>{
-    c.classList.remove('flipped');
-    c.querySelector('.back')?.removeAttribute('aria-hidden');
-    c.querySelector('.front')?.setAttribute('aria-hidden','true');
-    const b=c.querySelector('.back'); if(b){ b.style.pointerEvents=''; b.setAttribute('aria-pressed','false'); }
-    c.querySelector('[data-name]').textContent='—';
-    c.querySelector('[data-quote]').textContent='—';
-    const pol=c.querySelector('[data-polarity]');
-    if(pol){ pol.textContent=''; pol.style.visibility=''; pol.removeAttribute('title'); pol.removeAttribute('aria-label'); pol.classList.remove('is-triangle','is-cercle'); }
+  // UI cartes
+  document.querySelectorAll('.card').forEach(card=>{
+    card.classList.remove('flipped');
+    const back  = card.querySelector('.back');
+    const front = card.querySelector('.front');
+    if(back){ back.style.pointerEvents=''; back.setAttribute('aria-pressed','false'); }
+    front?.querySelector('[data-name]') && (front.querySelector('[data-name]').textContent = '—');
+    front?.querySelector('[data-quote]') && (front.querySelector('[data-quote]').textContent = '—');
+    const pol = front?.querySelector('[data-polarity]');
+    if(pol){
+      pol.textContent = '';
+      pol.style.visibility = 'hidden';
+      pol.removeAttribute('title'); pol.removeAttribute('aria-label');
+      pol.classList.remove('is-triangle','is-cercle');
+    }
   });
-  window.scrollTo({top: board?.offsetTop||0, behavior:'smooth'});
+
+  // UI résultats
+  linesOut.innerHTML = '';
+  synthOut.innerHTML = '';
+  results.classList.add('hidden');
+  outIntent.textContent = '—';
+
+  // Form & boutons
+  startButton.classList.remove('hidden');
+  showBtn.classList.add('hidden');
+  showBtn.disabled = true;
+  showBtn.setAttribute('aria-disabled','true');
+  board.classList.add('hidden');
+  document.getElementById('cardsInstruction')?.classList.add('hidden');
+
+  // Intention
+  intentionIn.value = '';
+  intentionIn.setCustomValidity('');
+  intentionIn.focus();
 });
 
-console.log('oradia-pelerin: end');
-window.__oradiaPelerinOK = true; // sentinelle anti-troncature
 })();
 </script>
-
-
-
 
 <p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">
   Made with
@@ -2105,8 +2217,11 @@ document.addEventListener('DOMContentLoaded', () => {
   apply(); mq.addEventListener?.('change', apply);
 });
 </script>
+  ...
+  </footer>
 
-
+  <script id="scroll-spy">
+<script id="scroll-spy">
 document.addEventListener('DOMContentLoaded', () => {
   // 1) Tous les liens internes présents dans des <nav>
   const links = Array.from(document.querySelectorAll('nav a[href^="#"]'));
@@ -2356,65 +2471,6 @@ document.addEventListener('DOMContentLoaded', () => {
     showLogin();
   }
 })();
-</script>
-<!-- Scroll spy (unique et propre) -->
-<script id="scroll-spy">
-document.addEventListener('DOMContentLoaded', () => {
-  const links = Array.from(document.querySelectorAll('nav a[href^="#"]'));
-  if (!links.length) return;
-
-  // Sections uniques réellement présentes
-  const seen = new Set();
-  const sections = links
-    .map(a => a.getAttribute('href').slice(1))
-    .filter(Boolean)
-    .map(id => document.getElementById(id))
-    .filter(Boolean)
-    .filter(sec => (seen.has(sec.id) ? false : seen.add(sec.id)));
-
-  const setActive = (id) => {
-    links.forEach(a => {
-      const active = a.getAttribute('href') === `#${id}`;
-      if (active) a.setAttribute('aria-current','page');
-      else a.removeAttribute('aria-current');
-    });
-  };
-
-  // Observe la section "au centre" de l'écran
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting && entry.target.offsetParent !== null) {
-        setActive(entry.target.id);
-      }
-    });
-  }, { rootMargin: '-45% 0px -55% 0px', threshold: 0.01 });
-
-  sections.forEach(sec => io.observe(sec));
-
-  // Activation immédiate au clic + scroll doux
-  links.forEach(a => {
-    a.addEventListener('click', (e) => {
-      const id = a.getAttribute('href').slice(1);
-      const target = document.getElementById(id);
-      if (!target) return;
-      e.preventDefault();
-      setActive(id);
-      target.scrollIntoView({ behavior:'smooth', block:'start' });
-      // refermer le menu mobile s’il est ouvert
-      const mobileMenu = document.getElementById('mobileMenu');
-      if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
-        mobileMenu.classList.add('hidden');
-        document.getElementById('mobileMenuBtn')?.setAttribute('aria-expanded','false');
-      }
-      try { history.replaceState(null, '', `#${id}`); } catch {}
-    });
-  });
-
-  // État initial
-  const initialId = location.hash?.slice(1);
-  if (initialId && document.getElementById(initialId)) setActive(initialId);
-  else if (sections[0]) setActive(sections[0].id);
-});
 </script>
 
 </body>
