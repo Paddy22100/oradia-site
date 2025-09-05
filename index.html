@@ -2105,11 +2105,8 @@ document.addEventListener('DOMContentLoaded', () => {
   apply(); mq.addEventListener?.('change', apply);
 });
 </script>
-  ...
-  </footer>
 
-  <script id="scroll-spy">
-<script id="scroll-spy">
+
 document.addEventListener('DOMContentLoaded', () => {
   // 1) Tous les liens internes présents dans des <nav>
   const links = Array.from(document.querySelectorAll('nav a[href^="#"]'));
@@ -2359,6 +2356,65 @@ document.addEventListener('DOMContentLoaded', () => {
     showLogin();
   }
 })();
+</script>
+<!-- Scroll spy (unique et propre) -->
+<script id="scroll-spy">
+document.addEventListener('DOMContentLoaded', () => {
+  const links = Array.from(document.querySelectorAll('nav a[href^="#"]'));
+  if (!links.length) return;
+
+  // Sections uniques réellement présentes
+  const seen = new Set();
+  const sections = links
+    .map(a => a.getAttribute('href').slice(1))
+    .filter(Boolean)
+    .map(id => document.getElementById(id))
+    .filter(Boolean)
+    .filter(sec => (seen.has(sec.id) ? false : seen.add(sec.id)));
+
+  const setActive = (id) => {
+    links.forEach(a => {
+      const active = a.getAttribute('href') === `#${id}`;
+      if (active) a.setAttribute('aria-current','page');
+      else a.removeAttribute('aria-current');
+    });
+  };
+
+  // Observe la section "au centre" de l'écran
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && entry.target.offsetParent !== null) {
+        setActive(entry.target.id);
+      }
+    });
+  }, { rootMargin: '-45% 0px -55% 0px', threshold: 0.01 });
+
+  sections.forEach(sec => io.observe(sec));
+
+  // Activation immédiate au clic + scroll doux
+  links.forEach(a => {
+    a.addEventListener('click', (e) => {
+      const id = a.getAttribute('href').slice(1);
+      const target = document.getElementById(id);
+      if (!target) return;
+      e.preventDefault();
+      setActive(id);
+      target.scrollIntoView({ behavior:'smooth', block:'start' });
+      // refermer le menu mobile s’il est ouvert
+      const mobileMenu = document.getElementById('mobileMenu');
+      if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.add('hidden');
+        document.getElementById('mobileMenuBtn')?.setAttribute('aria-expanded','false');
+      }
+      try { history.replaceState(null, '', `#${id}`); } catch {}
+    });
+  });
+
+  // État initial
+  const initialId = location.hash?.slice(1);
+  if (initialId && document.getElementById(initialId)) setActive(initialId);
+  else if (sections[0]) setActive(sections[0].id);
+});
 </script>
 
 </body>
