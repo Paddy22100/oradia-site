@@ -476,7 +476,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   </p>
 
   <div class="mt-3 text-center">
-    <button id="startReading" class="btn-gold">Commencer le tirage</button>
+    <button id="startReading" class="btn-gold" disabled aria-disabled="true">Commencer le tirage</button>
   </div>
 </div>
 
@@ -1577,6 +1577,70 @@ function closeModal(el){
   el.classList.add('hidden'); document.body.style.overflow='';
   el.__releaseTrap?.();
 }
+</script>
+<script id="wiring-fixes">
+(function(){
+  // ---------- Modale Abonnement ----------
+  const subscriptionModal = document.getElementById('subscriptionModal');
+  const subscribeBtn      = document.getElementById('subscribeBtn');
+  const closeSubscription = document.getElementById('closeSubscription');
+
+  subscribeBtn?.addEventListener('click', (e)=>{
+    e.preventDefault();
+    openModal(subscriptionModal);
+  });
+  closeSubscription?.addEventListener('click', ()=> closeModal(subscriptionModal));
+
+  // ---------- Modale Login Dashboard ----------
+  const loginModal       = document.getElementById('loginModal');
+  const closeLoginModal  = document.getElementById('closeLoginModal');
+  const openLoginButtons = [
+    document.getElementById('loginBtn'),
+    document.getElementById('footerLogin'),
+    document.getElementById('loginBtnMobile')
+  ].filter(Boolean);
+
+  openLoginButtons.forEach(btn=>{
+    btn.addEventListener('click', (e)=>{
+      e.preventDefault();
+      openModal(loginModal);
+    });
+  });
+  closeLoginModal?.addEventListener('click', ()=> closeModal(loginModal));
+
+  // ---------- Menu mobile ----------
+  const mobileBtn  = document.getElementById('mobileMenuBtn');
+  const mobileMenu = document.getElementById('mobileMenu');
+  mobileBtn?.addEventListener('click', ()=>{
+    const expanded = mobileBtn.getAttribute('aria-expanded') === 'true';
+    mobileBtn.setAttribute('aria-expanded', String(!expanded));
+    mobileMenu.classList.toggle('hidden', expanded);
+  });
+
+  // ---------- ESC pour fermer les modales ouvertes ----------
+  document.addEventListener('keydown', (e)=>{
+    if(e.key !== 'Escape') return;
+    [document.getElementById('orderModal'), subscriptionModal, loginModal]
+      .forEach(m => { if(m && !m.classList.contains('hidden')) closeModal(m); });
+  });
+
+  // ---------- Bouton "Commencer le tirage" : état initial + ARIA ----------
+  const intentionIn  = document.getElementById('intention');
+  const startButton  = document.getElementById('startReading');
+  if(startButton){
+    // état initial : disabled jusqu'à "?"
+    startButton.disabled = true;
+    startButton.setAttribute('aria-disabled','true');
+
+    const onInput = () => {
+      const ok = intentionIn.value.trim().endsWith('?') && intentionIn.value.trim().length > 1;
+      startButton.disabled = !ok;
+      startButton.setAttribute('aria-disabled', String(!ok));
+    };
+    intentionIn?.addEventListener('input', onInput, {passive:true});
+    onInput();
+  }
+})();
 </script>
 
 
