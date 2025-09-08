@@ -2515,83 +2515,12 @@ document.addEventListener('DOMContentLoaded', () => {
   ...
   </footer>
 
+<!-- === SCROLL-SPY (version unique) === -->
 <script id="scroll-spy">
-document.addEventListener('DOMContentLoaded', () => {
-  // 1) Tous les liens internes présents dans des <nav>
-
-  const links = Array.from(document.querySelectorAll('nav a[href^="#"]'));
-
-  // 2) Sections cibles existantes
-  const sectionById = {};
-  const sections = links
-    .map(a => a.getAttribute('href').slice(1))
-    .filter(Boolean)
-    .map(id => document.getElementById(id))
-    .filter(Boolean)
-    .filter((sec) => (sectionById[sec.id] ? false : (sectionById[sec.id]=true))); // unique
-
-  // Applique aria-current
-  const setActive = (id) => {
-    links.forEach(a => {
-      const isActive = a.getAttribute('href') === `#${id}`;
-      if (isActive) a.setAttribute('aria-current', 'page');
-      else a.removeAttribute('aria-current');
-    });
-  };
-
-  // 3) Observe la section “centrée” à l’écran
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      // ignore les sections cachées (display:none)
-      if (entry.isIntersecting && entry.target.offsetParent !== null) {
-        setActive(entry.target.id);
-      }
-    });
-  }, {
-    rootMargin: '-40% 0px -60% 0px',
-    threshold: 0.01
-  });
-
-  sections.forEach(sec => io.observe(sec));
-
-  // 4) Activation immédiate au clic + scroll smooth
-  links.forEach(a => {
-    a.addEventListener('click', (e) => {
-      const id = a.getAttribute('href').slice(1);
-      const target = document.getElementById(id);
-      if (!target) return;
-      e.preventDefault();
-      setActive(id);
-      target.scrollIntoView({ behavior:'smooth', block:'start' });
-
-      // (facultatif) si le menu mobile est ouvert, on le referme
-      const mobileMenu = document.getElementById('mobileMenu');
-      if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
-        mobileMenu.classList.add('hidden');
-        const mobileBtn = document.getElementById('mobileMenuBtn');
-        mobileBtn?.setAttribute('aria-expanded', 'false');
-      }
-      history.replaceState(null, '', `#${id}`);
-    });
-  });
-
-  // 5) État initial (hash ou première section visible)
-  const initialId = location.hash?.slice(1);
-  if (initialId && document.getElementById(initialId)) {
-    setActive(initialId);
-  } else if (sections[0]) {
-    setActive(sections[0].id);
-  }
-});
-</script>
-
-  </script>
-<script id="scroll-spy" defer>
 document.addEventListener('DOMContentLoaded', () => {
   const links = Array.from(document.querySelectorAll('nav a[href^="#"]'));
   if (!links.length) return;
 
-  // Sections uniques réellement présentes
   const seen = new Set();
   const sections = links
     .map(a => a.getAttribute('href').slice(1))
@@ -2608,7 +2537,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
-  // Observer “section au centre”
   const io = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting && entry.target.offsetParent !== null) {
@@ -2619,7 +2547,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   sections.forEach(sec => io.observe(sec));
 
-  // Activation immédiate au clic + scroll doux
   links.forEach(a => {
     a.addEventListener('click', (e) => {
       const id = a.getAttribute('href').slice(1);
@@ -2628,7 +2555,7 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       setActive(id);
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // refermer le menu mobile s’il est ouvert
+
       const mobileMenu = document.getElementById('mobileMenu');
       if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
         mobileMenu.classList.add('hidden');
@@ -2638,161 +2565,24 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // État initial
   const initial = location.hash?.slice(1);
   if (initial && document.getElementById(initial)) setActive(initial);
   else if (sections[0]) setActive(sections[0].id);
 });
 </script>
-<script id="ui-wiring-fixes">
-(() => {
-  const $  = (s, r=document) => r.querySelector(s);
-  const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 
-  
-  // ---- MODALES GÉNÉRIQUES (utilise tes helpers openModal/closeModal si présents)
-  const hookModal = (openSel, modalSel, closeSel) => {
-    const openEl = $(openSel), modal = $(modalSel), closeEl = $(closeSel);
-    if (!modal) return;
-    openEl?.addEventListener('click', (e) => { e.preventDefault?.(); openModal?.(modal); });
-    closeEl?.addEventListener('click', () => closeModal?.(modal));
-    // clic hors contenu pour fermer
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal?.(modal);
-    });
-    // ESC pour fermer
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal?.(modal);
-    });
-  };
-
-  // Commande & Abonnement & Login dashboard
-  hookModal('#orderBtn', '#orderModal', '#closeOrder');
-  hookModal('#subscribeBtn', '#subscriptionModal', '#closeSubscription');
-  hookModal('#loginBtn', '#loginModal', '#closeLoginModal');
-  hookModal('#footerLogin', '#loginModal', '#closeLoginModal');
-  hookModal('#loginBtnMobile', '#loginModal', '#closeLoginModal');
-
-  // ---- ABONNEMENT : TOGGLE LOGIN / REGISTER
-  const subscriptionModal = $('#subscriptionModal');
-  const memberLoginForm    = $('#memberLoginForm');
-  const memberRegisterForm = $('#memberRegisterForm');
-  const showRegisterLink   = $('#showRegister');
-  const showLoginLink      = $('#showLogin');
-
-  function showLogin() {
-    if (!memberLoginForm || !memberRegisterForm) return;
-    memberRegisterForm.classList.add('hidden');
-    memberRegisterForm.setAttribute('aria-hidden','true');
-    memberRegisterForm.setAttribute('inert','');
-
-    memberLoginForm.classList.remove('hidden');
-    memberLoginForm.setAttribute('aria-hidden','false');
-    memberLoginForm.removeAttribute('inert');
-
-    (memberLoginForm.querySelector('input,button,select,textarea') || memberLoginForm).focus();
-  }
-  function showRegister() {
-    if (!memberLoginForm || !memberRegisterForm) return;
-    memberLoginForm.classList.add('hidden');
-    memberLoginForm.setAttribute('aria-hidden','true');
-    memberLoginForm.setAttribute('inert','');
-
-    memberRegisterForm.classList.remove('hidden');
-    memberRegisterForm.setAttribute('aria-hidden','false');
-    memberRegisterForm.removeAttribute('inert');
-
-    (memberRegisterForm.querySelector('input,button,select,textarea') || memberRegisterForm).focus();
-  }
-  showRegisterLink?.addEventListener('click', (e)=>{ e.preventDefault(); showRegister(); });
-  showLoginLink?.addEventListener('click', (e)=>{ e.preventDefault(); showLogin(); });
-
-  // ---- DASHBOARD : OUVERTURE VIA MODALE LOGIN
-  const loginModal = $('#loginModal');
-  const loginFormDashboard = $('#loginFormDashboard');
-  const dashboard = $('#dashboard');
-  const logoutBtn = $('#logoutBtn');
-
-  loginFormDashboard?.addEventListener('submit', (e) => {
-    e.preventDefault();
-    // ici tu brancheras ton vrai backend plus tard
-    closeModal?.(loginModal);
-    dashboard?.classList.remove('hidden');
-    // focus accessibilité
-    (dashboard?.querySelector('button, a, [tabindex], input, select, textarea') || dashboard)?.focus();
-    // petite protection scroll
-    document.body.style.overflow = 'hidden';
-  });
-
-  logoutBtn?.addEventListener('click', () => {
-    dashboard?.classList.add('hidden');
-    document.body.style.overflow = '';
-  });
-
-  // fermer dashboard à ESC
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && dashboard && !dashboard.classList.contains('hidden')) {
-      dashboard.classList.add('hidden');
-      document.body.style.overflow = '';
-    }
-  });
-
-  // ---- ACCESSIBILITÉ : rôle/états cohérents si un bouton ouvre un menu/modale
-  // (déjà bien géré chez toi ; on assure un état initial propre)
-  if (mobileBtn && mobileMenu) mobileBtn.setAttribute('aria-expanded','false');
-
-  // ---- FIN : si la ligne coupée existait, on s’assure que l’intention était bien de revenir au login
-  // (sécurise le cas où ton ancien code se termine par "showLogin?.addEventListener...")
-  if (subscriptionModal && memberLoginForm && memberRegisterForm) {
-    // état par défaut : login visible
-    showLogin();
-  }
-})();
-</script>
-
-<!-- === SCRIPTS FINAUX === -->
-<script>
-const API = "https://oradia-mailer-xxxx.vercel.app"; // TODO: mets l’URL de prod
-
-async function sendCode(email){
-  const r = await fetch(API + "/api/send-access-code", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ email })
-  });
-  const out = await r.json();
-  if (!r.ok) throw new Error(out.error || "Erreur d’envoi");
-  localStorage.setItem("oradia_token", out.token);
-}
-
-async function verifyCode(code){
-  const token = localStorage.getItem("oradia_token");
-  if (!token) throw new Error("Token absent, redemande un code.");
-  const r = await fetch(API + "/api/verify-code", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ token, code })
-  });
-  const out = await r.json();
-  if (!r.ok || !out.ok) throw new Error(out.error || "Code invalide ou expiré");
-  localStorage.setItem("oradia_access", "granted");
-}
-</script>
-
-<!-- === NAV MOBILE — UNE SEULE VERSION === -->
+<!-- === NAV MOBILE — version unique === -->
 <script id="nav-mobile-one">
 document.addEventListener('DOMContentLoaded', function () {
   const btn  = document.getElementById('mobileMenuBtn');
   const menu = document.getElementById('mobileMenu');
   if (!btn || !menu) return;
 
-  // Toggle
   btn.addEventListener('click', function () {
-    const hiddenNow = menu.classList.toggle('hidden'); // true => caché après toggle
+    const hiddenNow = menu.classList.toggle('hidden');
     btn.setAttribute('aria-expanded', String(!hiddenNow));
   });
 
-  // Fermer en cliquant un lien/bouton du menu
   menu.addEventListener('click', (e) => {
     const t = e.target && e.target.closest('a,button');
     if (!t) return;
@@ -2802,7 +2592,6 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // Fermer à ESC
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape' && !menu.classList.contains('hidden')) {
       menu.classList.add('hidden');
@@ -2810,78 +2599,19 @@ document.addEventListener('DOMContentLoaded', function () {
     }
   });
 
-  // État initial propre
   btn.setAttribute('aria-controls', 'mobileMenu');
   btn.setAttribute('aria-expanded', 'false');
 });
 </script>
 
+<!-- (facultatif) Email des résultats — correctement encapsulé -->
 <script>
-// ===== Envoi par email =====
 document.getElementById('emailResults')?.addEventListener('click', () => {
   const email = prompt("Entrez votre adresse email pour recevoir votre tirage:");
-  if (email) {
-    alert(`Votre tirage sera envoyé à ${email}. Merci !`);
-    // Ici vous pourriez ajouter un appel API pour envoyer réellement l'email
-  }
+  if (!email) return;
+  // TODO: brancher ton appel fetch ici si nécessaire
+  alert("Merci ! Nous vous enverrons le tirage.");
 });
-
-// ===== Reset =====
-function resetAll(){
-  drawn = { emotions:null, besoins:null, actions:null, cosmos:null };
-  flippedCount = 0;
-
-  // Masquer résultats + vider
-  results.classList.add('hidden');
-  linesOut.innerHTML = '';
-  synthOut.innerHTML = '';
-  outIntent.textContent = '—';
-
-  // Boutons / instructions
-  showBtn.classList.add('hidden');
-  showBtn.disabled = true;
-  showBtn.setAttribute('aria-disabled','true');
-  resetBtn.classList.add('hidden');
-  document.getElementById('fullReading')?.classList.add('hidden');
-  document.getElementById('emailResults')?.classList.add('hidden');
-  document.getElementById('emailResults')?.classList.add('hidden');
-  document.getElementById('cardsInstruction')?.classList.add('hidden');
-
-  // Réafficher "Commencer le tirage"
-  const startBtn = document.getElementById('startReading');
-  startBtn.classList.remove('hidden');
-
-  // Réinitialiser les cartes
-  board.querySelectorAll('.card').forEach(card=>{
-    card.classList.remove('flipped');
-
-    // back cliquable à nouveau
-    const back = card.querySelector('.back');
-    back.classList.remove('hidden');
-    back.setAttribute('aria-pressed','false');
-    back.style.pointerEvents = '';
-
-    // nettoyer la face avant
-    card.querySelector('[data-name]').textContent  = '—';
-    card.querySelector('[data-quote]').textContent = '—';
-    const pol = card.querySelector('[data-polarity]');
-    if (pol){
-      pol.style.visibility = '';
-      pol.textContent = '';
-      pol.removeAttribute('title');
-      pol.removeAttribute('aria-label');
-      pol.classList.remove('is-triangle','is-cercle');
-    }
-    card.querySelector('[data-bridge-quote]')?.remove();
-    card.querySelector('[data-coin]')?.remove();
-    card.querySelector('[data-bridge-badge]')?.remove();
-  });
-
-  // intention conservée : si tu préfères la vider, dé-commente la ligne suivante
- intentionIn.value = '';
-}
-resetBtn.addEventListener('click', resetAll);
-})();
 </script>
 
 </body>
