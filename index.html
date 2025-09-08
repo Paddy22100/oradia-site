@@ -1687,10 +1687,6 @@ function closeModal(el){
     document.body.style.overflow='hidden';
   });
 
-  // ---------- Menu mobile ----------
-  const mobileBtn  = $('mobileMenuBtn');
-  const mobileMenu = $('mobileMenu');
-  mobileBtn?.addEventListener('click', ()=>{
 
 // Fermeture auto quand on clique un item du menu mobile (délégation)
 mobileMenu?.addEventListener('click', (e) => {
@@ -2820,7 +2816,7 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-
+<script>
 // ===== Envoi par email =====
 document.getElementById('emailResults')?.addEventListener('click', () => {
   const email = prompt("Entrez votre adresse email pour recevoir votre tirage:");
