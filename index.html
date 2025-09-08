@@ -2784,6 +2784,31 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 </script>
+<script>
+const API = "https://oradia-mailer-xxxx.vercel.app"; // mets l’URL Production
+
+async function sendCode(email){
+  const r = await fetch(API + "/api/send-access-code", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email })
+  });
+  const out = await r.json();
+  if (!r.ok) throw new Error(out.error || "Erreur d’envoi");
+  localStorage.setItem("oradia_token", out.token);
+}
+
+async function verifyCode(code){
+  const token = localStorage.getItem("oradia_token");
+  if (!token) throw new Error("Token absent, redemande un code.");
+  const r = await fetch(API + "/api/verify-code", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ token, code })
+  });
+  const out = await r.json();
+  if (!r.ok || !out.ok) throw new Error(out.error || "Code invalide ou expiré");
+  localStorage.setItem("oradia_access", "granted");
+}
+</script>
 
 </body>
 
