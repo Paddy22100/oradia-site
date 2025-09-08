@@ -2653,25 +2653,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const $  = (s, r=document) => r.querySelector(s);
   const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 
-  // ---- NAV MOBILE
-  const mobileBtn  = $('#mobileMenuBtn');
-  const mobileMenu = $('#mobileMenu');
-  if (mobileBtn && mobileMenu) {
-    const toggle = () => {
-      const open = mobileMenu.classList.toggle('hidden') === false;
-      mobileBtn.setAttribute('aria-expanded', String(open));
-    };
-    mobileBtn.addEventListener('click', toggle);
-    // fermer quand on clique un lien
-    $$('#mobileMenu a').forEach(a => a.addEventListener('click', () => {
-      if (!mobileMenu.classList.contains('hidden')) toggle();
-    }));
-    // fermer à ESC
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) toggle();
-    });
-  }
-
+  
   // ---- MODALES GÉNÉRIQUES (utilise tes helpers openModal/closeModal si présents)
   const hookModal = (openSel, modalSel, closeSel) => {
     const openEl = $(openSel), modal = $(modalSel), closeEl = $(closeSel);
@@ -2772,12 +2754,14 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 </script>
 
+<!-- === SCRIPTS FINAUX === -->
 <script>
-const API = "https://oradia-mailer-xxxx.vercel.app"; // mets l’URL Production
+const API = "https://oradia-mailer-xxxx.vercel.app"; // TODO: mets l’URL de prod
 
 async function sendCode(email){
   const r = await fetch(API + "/api/send-access-code", {
-    method: "POST", headers: { "Content-Type": "application/json" },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ email })
   });
   const out = await r.json();
@@ -2789,7 +2773,8 @@ async function verifyCode(code){
   const token = localStorage.getItem("oradia_token");
   if (!token) throw new Error("Token absent, redemande un code.");
   const r = await fetch(API + "/api/verify-code", {
-    method: "POST", headers: { "Content-Type": "application/json" },
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify({ token, code })
   });
   const out = await r.json();
@@ -2797,23 +2782,33 @@ async function verifyCode(code){
   localStorage.setItem("oradia_access", "granted");
 }
 </script>
-<script>
+
+<!-- === NAV MOBILE — UNE SEULE VERSION === -->
+<script id="nav-mobile-one">
 document.addEventListener('DOMContentLoaded', function () {
   const btn  = document.getElementById('mobileMenuBtn');
   const menu = document.getElementById('mobileMenu');
   if (!btn || !menu) return;
 
-  // Toggle open/close
+  // Toggle
   btn.addEventListener('click', function () {
-    const wasHidden = menu.classList.toggle('hidden'); // toggle renvoie l'état après toggle
-    btn.setAttribute('aria-expanded', String(!wasHidden));
+    const hiddenNow = menu.classList.toggle('hidden'); // true => caché après toggle
+    btn.setAttribute('aria-expanded', String(!hiddenNow));
   });
 
-  // Fermer le menu quand on clique un lien interne
+  // Fermer en cliquant un lien/bouton du menu
   menu.addEventListener('click', (e) => {
     const t = e.target && e.target.closest('a,button');
     if (!t) return;
     if (!menu.classList.contains('hidden')) {
+      menu.classList.add('hidden');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  // Fermer à ESC
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && !menu.classList.contains('hidden')) {
       menu.classList.add('hidden');
       btn.setAttribute('aria-expanded', 'false');
     }
@@ -2825,26 +2820,6 @@ document.addEventListener('DOMContentLoaded', function () {
 });
 </script>
 
-</body>
-
-</html>
-
-
-
-<script>
-
-});
-  results.classList.remove('hidden');
-  results.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-  // état des boutons
-  showBtn.classList.add('hidden');
-  showBtn.disabled = true;
-  showBtn.setAttribute('aria-disabled', 'true');
-
-  resetBtn.classList.remove('hidden');
-  document.getElementById('fullReading')?.classList.remove('hidden');
-});
 
 // ===== Envoi par email =====
 document.getElementById('emailResults')?.addEventListener('click', () => {
@@ -2913,4 +2888,5 @@ resetBtn.addEventListener('click', resetAll);
 })();
 </script>
 
-</script>
+</body>
+</html>
