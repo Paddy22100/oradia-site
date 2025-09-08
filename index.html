@@ -1076,9 +1076,12 @@ h2.cormorant {
       <form id="orderForm">
   <div class="mb-4">
     <label class="block text-light-gold mb-2">Email</label>
-    <input type="email" autocomplete="email" inputmode="email"
-           autocapitalize="off" autocorrect="off" spellcheck="false"
-           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+<input id="orderEmail" name="email" type="email"
+       autocomplete="email" inputmode="email"
+       autocapitalize="off" autocorrect="off" spellcheck="false"
+       class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+
+
   </div>
 
   <div class="mb-4">
@@ -1745,11 +1748,31 @@ mobileMenu?.addEventListener('click', (e) => {
 })();
 </script>
 
+// Génère un code d'accès lisible (8 caractères)
+function makeCode(len = 8){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // sans 0/O/1/I
+  let out = '';
+  for(let i=0;i<len;i++){
+    out += chars[Math.floor(Math.random()*chars.length)];
+  }
+  return out;
+}
+
 <script id="checkout-unlock">
 (function(){
   'use strict';
+// === Accès Trav ersée : génération de code + variables ===
+function makeCode(len = 6){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let out = '';
+  for(let i=0;i<len;i++) out += chars[Math.floor(Math.random()*chars.length)];
+  return out;
+}
+let orderEmail = '';
+let traverseeCode = '';
 
   var alreadyUnlocked = false;
+
 
   // Sommes-nous dans un builder / iframe (DeepSite preview, etc.) ?
   function inSandbox(){
@@ -1801,94 +1824,145 @@ mobileMenu?.addEventListener('click', (e) => {
     try { m.querySelector('form')?.reset?.(); } catch(_) {}
   }
 
-  // Overlay MERCI
-  function buildThankYou(){
-    // ferme d'abord le modal de commande
+  <!-- checkout-unlock (patch complet) -->
+<script>
+// -- shims sûrs (si ces fonctions n'existent pas déjà) --
+window.closeOrderModalIfOpen = window.closeOrderModalIfOpen || function(){};
+window.enterImmersiveLight  = window.enterImmersiveLight  || (window.enterImmersive || function(){});
+window.ensureSectionVisible = window.ensureSectionVisible || function(){
+  document.getElementById('traversee')?.classList.remove('hidden');
+};
+
+// -- helpers existants attendus --
+let alreadyUnlocked = false;
+let orderEmail = '';
+let traverseeCode = '';
+function makeCode(len = 6){
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let out = '';
+  for(let i=0;i<len;i++) out += chars[Math.floor(Math.random()*chars.length)];
+  return out;
+}
+function inSandbox(){ try { return window !== window.parent; } catch(_) { return false; } }
+function detectReturn(){
+  try{
+    const u = new URL(location.href);
+    return (u.searchParams.get('paid') === 'traversee') || (u.hash || '').includes('merci');
+  }catch(_){ return (location.search + location.hash).includes('merci'); }
+}
+
+// ---------- Overlay MERCI ----------
+function buildThankYou(){
+  const root = document.createElement('div');
+  root.id = 'merciOverlay';
+  Object.assign(root.style, {
+    position:'fixed', inset:'0', display:'grid', placeItems:'center',
+    background:'rgba(0,0,0,.6)', zIndex:'10000', padding:'16px'
+  });
+  root.setAttribute('role','dialog');
+  root.setAttribute('aria-modal','true');
+  root.tabIndex = -1;
+
+  root.innerHTML =
+    '<div class="bg-dark-blue border border-gold/40 rounded-2xl p-8 max-w-md w-[92vw] text-center">'+
+      '<h3 class="cormorant text-3xl text-gold mb-2">Merci ✨</h3>'+
+      '<p class="text-light-gold mb-6">Paiement confirmé. Vous recevrez sous peu un e-mail contenant votre <b>code d’accès</b> pour débloquer vos <b>5 tirages de la Traversée</b>. Conservez-le précieusement.</p>'+
+      '<button id="thxGo" class="btn-gold w-full">Accéder au tirage</button>'+
+    '</div>';
+
+  document.body.appendChild(root);
+
+  const go = document.getElementById('thxGo');
+  setTimeout(()=>{ go?.focus(); }, 30);
+
+  const closeAndEnter = () => {
+    root.remove();
     closeOrderModalIfOpen();
-
-    var root = document.createElement('div');
-    root.id = 'thankyouOverlay';
-    root.className = 'fixed inset-0 z-[1100] flex items-center justify-center bg-night-blue/95';
-    root.setAttribute('role','dialog');
-    root.setAttribute('aria-modal','true');
-    root.innerHTML =
-      '<div class="bg-dark-blue border border-gold/40 rounded-2xl p-8 max-w-md w-[92vw] text-center">'+
-        '<h3 class="cormorant text-3xl text-gold mb-2">Merci ✨</h3>'+
-        '<p class="text-light-gold mb-6">Paiement confirmé. Votre tirage de la Traversée est débloqué.</p>'+
-        '<button id="thxGo" class="btn-gold w-full">Accéder au tirage</button>'+
-      '</div>';
-    document.body.appendChild(root);
-
-    var go = document.getElementById('thxGo');
-    setTimeout(function(){ go?.focus(); }, 30);
-
-    function closeAndEnter(){
-      root.remove();
-      // sécurité : si pour une raison X le modal est resté, on le ferme ici aussi
-      closeOrderModalIfOpen();
-      enterImmersiveLight();
-      // Nettoie l'URL
-      try {
-        var url = new URL(location.href);
-        url.searchParams.delete('paid');
-        url.hash = 'traversee';
-        history.replaceState({}, '', url.toString());
-      } catch(_){}
-    }
-
-    go?.addEventListener('click', closeAndEnter);
-    root.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ closeAndEnter(); } });
-  }
-
-  function unlock(){
-    if (alreadyUnlocked) return;
-    alreadyUnlocked = true;
-    closeOrderModalIfOpen();     // ✅ ferme avant tout
     ensureSectionVisible();
-    buildThankYou();
-  }
-
-  // --- DEMO SANS STRIPE ---
-  var orderForm = document.getElementById('orderForm');
-  if (orderForm) {
-    orderForm.addEventListener('submit', function(e){
-      e.preventDefault();
-      try { localStorage.setItem('oradia_paid_traversee','1'); } catch(_){}
-      closeOrderModalIfOpen();   // ✅ ferme au submit aussi
-      if (inSandbox()){
-        unlock();                // pas de redirection en sandbox
-      } else {
-        try {
-          var url = new URL(location.href);
-          url.searchParams.set('paid','traversee');
-          url.hash = 'merci';
-          window.location.href = url.toString();
-        } catch(_){
-          window.location.href = location.pathname + '?paid=traversee#merci';
-        }
-      }
-    });
-  }
-
-  // Au chargement : retour de paiement
-  if (detectReturn()) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', unlock, {once:true});
-    } else {
-      unlock();
-    }
-  } else {
-    // Déjà payé + on arrive sur #traversee
+    enterImmersiveLight();
     try {
-      if (localStorage.getItem('oradia_paid_traversee') === '1' &&
-          (location.hash || '').toLowerCase().includes('traversee')) {
-        ensureSectionVisible();
-        enterImmersiveLight();
+      const url = new URL(location.href);
+      url.searchParams.delete('paid');
+      url.hash = 'traversee';
+      history.replaceState({}, '', url.toString());
+    } catch(_) {}
+  };
+
+  // fermer sur clic fond + ESC + bouton
+  root.addEventListener('click', (e) => { if (e.target === root) closeAndEnter(); });
+  root.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeAndEnter(); });
+  go?.addEventListener('click', closeAndEnter);
+}
+
+// ---------- Déblocage ----------
+function unlock(){
+  if (alreadyUnlocked) return;
+  alreadyUnlocked = true;
+  closeOrderModalIfOpen();
+  ensureSectionVisible();
+  buildThankYou();
+}
+
+// ---------- DEMO SANS STRIPE ----------
+const orderForm = document.getElementById('orderForm');
+if (orderForm) {
+  orderForm.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    // 1) Récupère & vérifie l'email
+    const emailInput = document.getElementById('orderEmail');
+    const email = emailInput?.value?.trim();
+    if(!email){
+      alert("Merci de renseigner votre e-mail.");
+      emailInput?.focus();
+      return;
+    }
+    orderEmail = email;
+
+    // 2) Génère et stocke un code d’accès
+    traverseeCode = makeCode();
+    try {
+      localStorage.setItem('oradia_paid_traversee','1');
+      localStorage.setItem('oradia_traversee_email', orderEmail);
+      localStorage.setItem('oradia_traversee_code',  traverseeCode);
+    } catch(_) {}
+
+    // 3) Suite (sandbox vs redirection)
+    closeOrderModalIfOpen();
+    if (inSandbox()){
+      unlock(); // pas de redirection en sandbox
+    } else {
+      try {
+        const url = new URL(location.href);
+        url.searchParams.set('paid','traversee');
+        url.hash = 'merci';
+        window.location.href = url.toString();
+      } catch(_){
+        window.location.href = location.pathname + '?paid=traversee#merci';
       }
-    } catch(_){}
+    }
+  }); // <<< ne pas supprimer cette fermeture
+}
+
+// ---------- Au chargement : retour de paiement ----------
+if (detectReturn()) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', unlock, {once:true});
+  } else {
+    unlock();
   }
-})();
+} else {
+  // Déjà payé + arrivée directe sur #traversee
+  try {
+    if (localStorage.getItem('oradia_paid_traversee') === '1' &&
+        (location.hash || '').toLowerCase().includes('traversee')) {
+      ensureSectionVisible();
+      enterImmersiveLight();
+    }
+  } catch(_){}
+}
 </script>
+
 
 
 
@@ -2030,26 +2104,29 @@ function sentence(parts){ return parts.filter(Boolean).join(" "); }
 function tokens3(t){ return tokens(t).slice(0,3); }
 
 function lineEmotion(E, intentTags){
-  const base = `${SYN.carte[rand(SYN.carte)]} ÉMOTIONS (${E.name})`;
+  const base = `${rand(SYN.carte)} ÉMOTIONS (${E.name})`;
   const pol  = E.polarity ? ` • ${polMood(E.polarity)}` : "";
   const link = MEANINGS.emotions[E.name] || "te donne un indicateur intérieur net.";
   const intent = intentTags.length ? ` En lien avec “${intentTags[0]}”, ` : " ";
   return sentence([`${base}${pol} :`, intent+link]);
 }
+
 function lineBesoin(B, intentTags){
-  const base = `${SYN.carte[rand(SYN.carte)]} BESOINS (${B.name})`;
+  const base = `${rand(SYN.carte)} BESOINS (${B.name})`;
   const pol  = B.polarity ? ` • ${polMood(B.polarity)}` : "";
   const link = MEANINGS.besoins[B.name] || "cadre l’ajustement relationnel.";
   const intent = intentTags[1] ? ` Pour “${intentTags[1]}”, ` : " ";
   return sentence([`${base}${pol} :`, intent+link]);
 }
+
 function lineAction(A, intentTags){
-  const base = `${SYN.carte[rand(SYN.carte)]} ACTIONS (${A.name})`;
+  const base = `${rand(SYN.carte)} ACTIONS (${A.name})`;
   const pol  = A.polarity ? ` • ${polMood(A.polarity)}` : "";
   const link = MEANINGS.actions[A.name] || "matérialise l’intuition en mouvement.";
   const intent = intentTags[2] ? ` Concrètement sur “${intentTags[2]}”, ` : " ";
   return sentence([`${base}${pol} :`, intent+link]);
 }
+
 function lineCosmos(C, E, B, A){
   const head = `MÉMOIRES COSMOS (${C.name})`;
   const core = MEANINGS.cosmos[C.name] || "donne la profondeur du décor.";
@@ -2057,7 +2134,14 @@ function lineCosmos(C, E, B, A){
   return `${head} : ${cap(core)} Elle ${bridge} l’articulation ${E.name} → ${B.name} → ${A.name}.`;
 }
 
+
 function buildSynthesis(E,B,A,C,intentText){
+
+// évite toute fuite de "undefined" dans la synthèse
+const safe = v => (v === undefined || v === null) ? '—' : v;
+E = E || {}; B = B || {}; A = A || {}; C = C || {};
+E.name = safe(E.name); B.name = safe(B.name); A.name = safe(A.name); C.name = safe(C.name);
+E.quote = safe(E.quote); B.quote = safe(B.quote); A.quote = safe(A.quote); C.quote = safe(C.quote);
   const intentTags = tokens3(intentText);
   const intro = cap(`${rand(["Aujourd’hui","Pour cette question","Dans ce cadre"])} ${rand(["l’ensemble","la trame","le tirage"]) } ${rand(["se compose","se tisse","se dessine"])} autour de quatre foyers.`);
   const s1 = lineEmotion(E,intentTags), s2 = lineBesoin(B,intentTags), s3 = lineAction(A,intentTags), s4 = lineCosmos(C,E,B,A);
@@ -2106,8 +2190,9 @@ const results     = document.getElementById("results");
 
 // ===== Rendu face avant =====
 function renderFront(cardEl, picked, family){
-  cardEl.querySelector('[data-name]').textContent  = picked.name;
-  cardEl.querySelector('[data-quote]').textContent = picked.quote || picked.base;
+cardEl.querySelector('[data-name]').textContent  = (picked?.name ?? '—');
+cardEl.querySelector('[data-quote]').textContent = (picked?.quote ?? picked?.base ?? '—');
+
 
   const pol = cardEl.querySelector('[data-polarity]');
   if (family === "cosmos") {
@@ -2182,37 +2267,39 @@ document.querySelectorAll('.card .back').forEach(back=>{
 });
 
 // ===== Résultats (PÈLERIN) =====
-const polIcon = (p) => p==='yang'?'▲':'◯';
+const polIcon = p => p === 'yang' ? '▲' : '◯';
 
-showBtn.addEventListener('click', ()=>{
+showBtn.addEventListener('click', () => {
   const { emotions: E, besoins: B, actions: A, cosmos: C } = drawn;
-  if(!(E && B && A && C)) return;
+  if (!(E && B && A && C)) return;
 
-  const intent = (intentionIn.value||"").trim();
+  const intent = (intentionIn.value || "").trim();
   outIntent.textContent = intent || '—';
 
-  // setBusy est défini globalement plus haut dans ta page
-  setBusy(linesOut, true);
-  setBusy(synthOut, true);
+  // Optionnel si setBusy existe globalement
+  setBusy?.(linesOut, true);
+  setBusy?.(synthOut, true);
 
   linesOut.innerHTML = `
-    <p><b>ÉMOTIONS :</b> ${E.name} (${polIcon(E.polarity)})<br><i>« ${E.quote} »</i></p>
-    <p><b>BESOINS :</b> ${B.name} (${polIcon(B.polarity)})<br><i>« ${B.quote} »</i></p>
-    <p><b>ACTIONS :</b> ${A.name} (${polIcon(A.polarity)})<br><i>« ${A.quote} »</i></p>
-    <p><b>MÉMOIRES COSMOS :</b> ${C.name}<br><i>« ${C.quote} »</i></p>
+    <p><b>ÉMOTIONS :</b> ${E.name} (${polIcon(E.polarity)})<br><i>« ${E.quote ?? '—'} »</i></p>
+    <p><b>BESOINS :</b> ${B.name} (${polIcon(B.polarity)})<br><i>« ${B.quote ?? '—'} »</i></p>
+    <p><b>ACTIONS :</b> ${A.name} (${polIcon(A.polarity)})<br><i>« ${A.quote ?? '—'} »</i></p>
+    <p><b>MÉMOIRES COSMOS :</b> ${C.name}<br><i>« ${C.quote ?? '—'} »</i></p>
   `.trim();
 
-  synthOut.innerHTML = buildSynthesis(E,B,A,C,intent);
+  // Ta synthèse
+  synthOut.innerHTML = buildSynthesis(E, B, A, C, intent);
 
+  // Affiche la section résultats
   results.classList.remove('hidden');
-  results.scrollIntoView({behavior:'smooth', block:'start'});
+  results.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  setBusy(linesOut, false);
-  setBusy(synthOut, false);
-
-  // Affiche actions bas
+  // Etat des boutons
+  showBtn.classList.add('hidden');
+  showBtn.disabled = true;
+  showBtn.setAttribute('aria-disabled', 'true');
+  resetBtn.classList.remove('hidden');
   document.getElementById('fullReading')?.classList.remove('hidden');
-  resetBtn?.classList.remove('hidden');
 });
 
 // ===== Reset =====
@@ -2560,15 +2647,14 @@ document.addEventListener('DOMContentLoaded', () => {
 </script>
 
 </body>
+
 </html>
 
 </body>
 </html>
 
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('img[loading="lazy"]:not([fetchpriority])')
-    .forEach(img => img.setAttribute('fetchpriority','low'));
+
 });
   results.classList.remove('hidden');
   results.scrollIntoView({ behavior: 'smooth', block: 'start' });
