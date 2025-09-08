@@ -2519,10 +2519,10 @@ document.addEventListener('DOMContentLoaded', () => {
   ...
   </footer>
 
-  <script id="scroll-spy">
 <script id="scroll-spy">
 document.addEventListener('DOMContentLoaded', () => {
   // 1) Tous les liens internes présents dans des <nav>
+
   const links = Array.from(document.querySelectorAll('nav a[href^="#"]'));
 
   // 2) Sections cibles existantes
@@ -2771,19 +2771,7 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })();
 </script>
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const btn = document.getElementById("mobileMenuBtn");
-    const menu = document.getElementById("mobileMenu");
 
-    if (btn && menu) {
-      btn.addEventListener("click", function () {
-        const isOpen = menu.classList.toggle("hidden");
-        btn.setAttribute("aria-expanded", !isOpen);
-      });
-    }
-  });
-</script>
 <script>
 const API = "https://oradia-mailer-xxxx.vercel.app"; // mets l’URL Production
 
@@ -2809,13 +2797,39 @@ async function verifyCode(code){
   localStorage.setItem("oradia_access", "granted");
 }
 </script>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  const btn  = document.getElementById('mobileMenuBtn');
+  const menu = document.getElementById('mobileMenu');
+  if (!btn || !menu) return;
+
+  // Toggle open/close
+  btn.addEventListener('click', function () {
+    const wasHidden = menu.classList.toggle('hidden'); // toggle renvoie l'état après toggle
+    btn.setAttribute('aria-expanded', String(!wasHidden));
+  });
+
+  // Fermer le menu quand on clique un lien interne
+  menu.addEventListener('click', (e) => {
+    const t = e.target && e.target.closest('a,button');
+    if (!t) return;
+    if (!menu.classList.contains('hidden')) {
+      menu.classList.add('hidden');
+      btn.setAttribute('aria-expanded', 'false');
+    }
+  });
+
+  // État initial propre
+  btn.setAttribute('aria-controls', 'mobileMenu');
+  btn.setAttribute('aria-expanded', 'false');
+});
+</script>
 
 </body>
 
 </html>
 
-</body>
-</html>
+
 
 <script>
 
