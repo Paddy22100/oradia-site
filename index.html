@@ -610,6 +610,7 @@ h2.cormorant {
       <div class="flex gap-3 justify-center mt-6">
         <button id="reset" class="btn-outline-gold hidden">Nouveau tirage</button>
         <button id="fullReading" class="btn-outline-gold hidden">Tirage Complet</button>
+        <button id="emailResults" class="btn-gold hidden">Recevoir par mail</button>
       </div>
     </div>
   </section>
@@ -1857,7 +1858,7 @@ function buildThankYou(){
   root.id = 'merciOverlay';
   Object.assign(root.style, {
     position:'fixed', inset:'0', display:'grid', placeItems:'center',
-    background:'rgba(0,0,0,.6)', zIndex:'10000', padding:'16px'
+    background:'rgba(0,0,0,6)', zIndex:'10000', padding:'16px'
   });
   root.setAttribute('role','dialog');
   root.setAttribute('aria-modal','true');
@@ -1875,24 +1876,11 @@ function buildThankYou(){
   const go = document.getElementById('thxGo');
   setTimeout(()=>{ go?.focus(); }, 30);
 
-  const closeAndEnter = () => {
-    root.remove();
-    closeOrderModalIfOpen();
-    ensureSectionVisible();
-    enterImmersiveLight();
-    try {
-      const url = new URL(location.href);
-      url.searchParams.delete('paid');
-      url.hash = 'traversee';
-      history.replaceState({}, '', url.toString());
-    } catch(_) {}
-  };
-
-  // fermer sur clic fond + ESC + bouton
-  root.addEventListener('click', (e) => { if (e.target === root) closeAndEnter(); });
-  root.addEventListener('keydown', (e)=>{ if(e.key === 'Escape') closeAndEnter(); });
-  go?.addEventListener('click', closeAndEnter);
-}
+  // 👉 ouvrir le formulaire email + code, pas d’immersif direct
+  go?.addEventListener('click', (e)=>{
+    e.preventDefault();
+    openUnlockForm();
+  });
 
 // ---------- Déblocage ----------
 function unlock(){
@@ -1961,6 +1949,143 @@ if (detectReturn()) {
     }
   } catch(_){}
 }
+// === Utilitaires UI légers ===
+function el(html){ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstChild; }
+function closeModal(id){ const m=document.getElementById(id); if(m){ m.remove(); document.body.classList.remove('overflow-hidden'); } }
+function showError(msg){ const box = document.getElementById('unlockError'); if(box){ box.textContent = msg; box.classList.remove('hidden'); } }
+function hideError(){ const box = document.getElementById('unlockError'); if(box){ box.classList.add('hidden'); } }
+
+// === Ouvre le formulaire de déverrouillage ===
+function openUnlockForm(){
+  // Empêche doublons
+  if(document.getElementById('unlockModal')) return;
+
+  document.body.classList.add('overflow-hidden');
+  const modal = el(`
+  <div id="unlockModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60">
+    <div class="bg-dark-blue border border-gold/40 rounded-2xl p-6 w-[92vw] max-w-md shadow-xl relative">
+      <button class="absolute right-3 top-3 text-gold/70 hover:text-gold" aria-label="Fermer" onclick="closeModal('unlockModal')">✕</button>
+      <h3 class="cormorant text-2xl text-gold mb-2 text-center">Déverrouiller la Traversée</h3>
+      <p class="text-light-gold text-sm mb-4 text-center">
+        Saisis l’e-mail utilisé au paiement et le <b>code d’accès</b> reçu par e-mail.
+      </p>
+      <div id="unlockError" class="hidden text-red-300 text-sm mb-3"></div>
+      <form id="unlockForm" class="space-y-3">
+        <div>
+          <label class="block text-light-gold text-sm mb-1">E-mail</label>
+          <input id="unlockEmail" type="email" required
+                 class="w-full rounded-xl bg-[#0e1320] border border-gold/30 text-light-gold px-3 py-2 outline-none focus:border-gold"
+                 placeholder="prenom.nom@email.fr">
+        </div>
+        <div>
+          <label class="block text-light-gold text-sm mb-1">Code d’accès</label>
+          <input id="unlockCode" type="text" required
+                 class="w-full uppercase tracking-widest rounded-xl bg-[#0e1320] border border-gold/30 text-light-gold px-3 py-2 outline-none focus:border-gold"
+                 placeholder="6 lettres/chiffres">
+        </div>
+        <button id="unlockSubmit" type="submit" class="btn-gold w-full">Déverrouiller</button>
+      </form>
+      <p id="unlockHint" class="text-[12px] text-light-gold/70 mt-3 text-center">
+        Tu n’as pas reçu le code ? Vérifie tes spams ou patiente une minute.
+      </p>
+    </div>
+  </div>`);
+
+  document.body.appendChild(modal);
+
+  // Soumission
+  document.getElementById('unlockForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    hideError();
+
+    const email = document.getElementById('unlockEmail').value.trim();
+    const code  = document.getElementById('unlockCode').value.trim().toUpperCase();
+    const btn   = document.getElementById('unlockSubmit');
+    btn.disabled = true; btn.textContent = "Vérification…";
+
+    try {
+      // --- Variante PROD (via API sécurisée) ---
+      const res = await fetch('/api/unlock-traversee', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ email, code })
+      });
+
+      if(!res.ok){
+        const t = await res.text();
+        throw new Error(t || 'Vérification indisponible');
+      }
+
+      const { ok, remaining } = await res.json();
+      if(!ok) throw new Error('E-mail ou code invalide.');
+
+      // Enregistre localement le compteur restant pour UX (optionnel)
+      const key = `traversee:${email}`;
+      const left = Number.isFinite(remaining) ? remaining : 5; // fallback
+      localStorage.setItem(key, JSON.stringify({ remaining: left }));
+
+      closeModal('unlockModal');
+
+      // Démarre le tirage de la Traversée
+      if (typeof startTraversee === 'function') {
+        startTraversee({ email, remaining: left });
+      } else {
+        console.warn('startTraversee() est introuvable. Appelle ici ton lanceur de tirage.');
+      }
+
+    } catch(err){
+      console.error(err);
+      showError(err.message || 'Impossible de vérifier le code. Réessaie.');
+    } finally {
+      btn.disabled = false; btn.textContent = "Déverrouiller";
+    }
+  });
+}
+
+// pages/api/unlock-traversee.ts
+import type { NextApiRequest, NextApiResponse } from 'next';
+import crypto from 'crypto';
+
+// Place ce secret dans tes variables d'env Vercel : TRAVERSEE_SECRET="une-longue-phrase-aleatoire"
+const SECRET = process.env.TRAVERSEE_SECRET || '';
+
+function makeCode(email: string): string {
+  const norm = email.trim().toLowerCase();
+  const h = crypto.createHmac('sha256', SECRET).update(norm).digest('base64url'); // stable, URL-safe
+  // 6 caractères alphanum en majuscules (lisibles)
+  return h.slice(0, 6).toUpperCase();
+}
+
+// Optionnel : définir 5 tirages par achat
+const DEFAULT_REMAINING = 5;
+
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+  if (!SECRET) return res.status(500).send('Server not configured');
+
+  try {
+    const { email, code } = req.body || {};
+    if (!email || !code) return res.status(400).send('Missing email or code');
+
+    const expected = makeCode(email);
+    const ok = expected === String(code).trim().toUpperCase();
+
+    // Ici tu pourrais brancher une vraie persistance (Zapier Tables, BDD) pour gérer le compteur.
+    // Pour l’instant on renvoie simplement ok + remaining par défaut.
+    return res.status(200).json({ ok, remaining: ok ? DEFAULT_REMAINING : 0 });
+  } catch (e:any) {
+    return res.status(500).send(e?.message || 'Unexpected error');
+  }
+}
+function decrementLocalCount(email){
+  const key = `traversee:${email}`;
+  const data = JSON.parse(localStorage.getItem(key) || '{}');
+  if(typeof data.remaining === 'number' && data.remaining > 0){
+    data.remaining -= 1;
+    localStorage.setItem(key, JSON.stringify(data));
+  }
+}
+
 </script>
 
 
@@ -2300,6 +2425,7 @@ showBtn.addEventListener('click', () => {
   showBtn.setAttribute('aria-disabled', 'true');
   resetBtn.classList.remove('hidden');
   document.getElementById('fullReading')?.classList.remove('hidden');
+  document.getElementById('emailResults')?.classList.remove('hidden');
 });
 
 // ===== Reset =====
@@ -2645,6 +2771,19 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })();
 </script>
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const btn = document.getElementById("mobileMenuBtn");
+    const menu = document.getElementById("mobileMenu");
+
+    if (btn && menu) {
+      btn.addEventListener("click", function () {
+        const isOpen = menu.classList.toggle("hidden");
+        btn.setAttribute("aria-expanded", !isOpen);
+      });
+    }
+  });
+</script>
 
 </body>
 
@@ -2668,6 +2807,15 @@ document.addEventListener('DOMContentLoaded', () => {
   document.getElementById('fullReading')?.classList.remove('hidden');
 });
 
+// ===== Envoi par email =====
+document.getElementById('emailResults')?.addEventListener('click', () => {
+  const email = prompt("Entrez votre adresse email pour recevoir votre tirage:");
+  if (email) {
+    alert(`Votre tirage sera envoyé à ${email}. Merci !`);
+    // Ici vous pourriez ajouter un appel API pour envoyer réellement l'email
+  }
+});
+
 // ===== Reset =====
 function resetAll(){
   drawn = { emotions:null, besoins:null, actions:null, cosmos:null };
@@ -2685,6 +2833,8 @@ function resetAll(){
   showBtn.setAttribute('aria-disabled','true');
   resetBtn.classList.add('hidden');
   document.getElementById('fullReading')?.classList.add('hidden');
+  document.getElementById('emailResults')?.classList.add('hidden');
+  document.getElementById('emailResults')?.classList.add('hidden');
   document.getElementById('cardsInstruction')?.classList.add('hidden');
 
   // Réafficher "Commencer le tirage"
