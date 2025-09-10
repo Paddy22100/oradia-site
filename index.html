@@ -479,6 +479,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     </div>
   </section>
 
+
   <!-- Tirage du Pèlerin -->
   <section id="oracle" class="py-12 md:py-20 px-4 md:px-6">
     <div class="container mx-auto max-w-6xl">
@@ -605,10 +606,32 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         <button id="reset" class="btn-outline-gold hidden">Nouveau tirage</button>
         <button id="fullReading" class="btn-outline-gold hidden">Tirage Complet</button>
       </div>
+
+      <!-- Formulaire d'envoi par email -->
+      <form id="emailResultsForm" class="hidden mt-8 max-w-md mx-auto bg-[rgba(5,20,40,.7)] border border-gold/30 rounded-xl p-6">
+        <h3 class="cormorant text-xl text-gold mb-4 text-center">Recevoir les résultats par email</h3>
+        <div class="mb-4">
+          <label for="userEmail" class="block text-light-gold mb-2">Votre email</label>
+          <input type="email" id="userEmail" name="email" required
+                 class="w-full bg-night-blue border border-gold/30 p-3 rounded-lg text-light-gold"
+                 placeholder="votre@email.com">
+        </div>
+        <button type="submit" class="btn-gold w-full">Envoyer les résultats</button>
+      </form>
+        <h3 class="cormorant text-xl text-gold mb-4 text-center">Recevoir les résultats par email</h3>
+        <div class="mb-4">
+          <label for="userEmail" class="block text-light-gold mb-2">Votre email</label>
+          <input type="email" id="userEmail" name="email" required
+                 class="w-full bg-night-blue border border-gold/30 p-3 rounded-lg text-light-gold"
+                 placeholder="votre@email.com">
+        </div>
+        <button type="submit" class="btn-gold w-full">Envoyer les résultats</button>
+      </form>
     </div>
   </section>
 
   <!-- Offres -->
+
   <section id="offres" class="py-20 px-6 bg-dark-blue">
     <div class="container mx-auto max-w-6xl">
       <div class="text-center mb-12">
@@ -1889,6 +1912,46 @@ mobileMenu?.addEventListener('click', (e) => {
   <!-- SCRIPT -->
 
 <script id="oradia-pelerin">
+// Gestion du formulaire email
+document.addEventListener('DOMContentLoaded', () => {
+  const emailForm = document.getElementById('emailResultsForm');
+  if (emailForm) {
+    emailForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const email = document.getElementById('userEmail').value.trim();
+      if (!email) return;
+
+      const results = {
+        intention: document.getElementById('out-intention').textContent,
+        emotions: document.querySelector('[data-family="emotions"] [data-name]')?.textContent,
+        besoins: document.querySelector('[data-family="besoins"] [data-name]')?.textContent,
+        actions: document.querySelector('[data-family="actions"] [data-name]')?.textContent,
+        cosmos: document.querySelector('[data-family="cosmos"] [data-name]')?.textContent,
+        synthesis: document.getElementById('synthese')?.innerHTML
+      };
+
+      try {
+        // Ici vous devrez implémenter l'appel à votre backend
+        // pour envoyer l'email avec les résultats
+        const response = await fetch('/api/send-results', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, results })
+        });
+
+        if (response.ok) {
+          alert('Les résultats ont été envoyés à votre adresse email !');
+          emailForm.reset();
+        } else {
+          throw new Error('Erreur lors de l\'envoi');
+        }
+      } catch (error) {
+        console.error(error);
+        alert('Une erreur est survenue. Veuillez réessayer plus tard.');
+      }
+    });
+  }
+});
 (function(){
 'use strict';
 
@@ -2237,6 +2300,7 @@ resetBtn.addEventListener('click', ()=>{
   synthOut.innerHTML = '';
   results.classList.add('hidden');
   outIntent.textContent = '—';
+  document.getElementById('emailResultsForm')?.classList.add('hidden');
 
   // Form & boutons
   startButton.classList.remove('hidden');
@@ -2552,13 +2616,6 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 })();
 </script>
-
-</body>
-</html>
-
-</body>
-</html>
-
 <script>
 document.addEventListener('DOMContentLoaded', () => {
   document.querySelectorAll('img[loading="lazy"]:not([fetchpriority])')
@@ -2631,5 +2688,8 @@ function resetAll(){
 resetBtn.addEventListener('click', resetAll);
 })();
 </script>
+</body>
+</html>
 
-</script>
+
+
