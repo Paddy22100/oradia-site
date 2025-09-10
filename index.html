@@ -1088,61 +1088,73 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   <!-- Modale Commande -->
 <div id="orderModal" class="fixed inset-0 bg-night-blue/90 z-[100] flex items-center justify-center hidden"
      role="dialog" aria-modal="true" aria-labelledby="orderTitle" aria-describedby="orderDesc">
-  <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
+  <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-2xl w-[92vw] md:w-auto mx-4 relative">
     <button id="closeOrder" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer" type="button"><i class="fas fa-times"></i></button>
     <div class="text-center mb-8">
       <h3 id="orderTitle" class="cormorant text-3xl text-gold mb-2">Commande Tirage de la Traversée</h3>
       <p id="orderDesc" class="text-light-gold">Finalisez votre commande (5€)</p>
       </div>
-      <form id="orderForm">
-  <div class="mb-4">
+      <form id="orderForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+  <!-- Email -->
+  <div class="md:col-span-1">
     <label class="block text-light-gold mb-2">Email</label>
     <input type="email" autocomplete="email" inputmode="email"
            autocapitalize="off" autocorrect="off" spellcheck="false"
            class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
   </div>
 
-  <div class="mb-4">
+  <!-- Nom complet -->
+  <div class="md:col-span-1">
     <label class="block text-light-gold mb-2">Nom complet</label>
     <input type="text" autocomplete="name" inputmode="text"
            class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
   </div>
 
-  <div class="mb-4">
+  <!-- Date de naissance -->
+  <div class="md:col-span-1">
     <label class="block text-light-gold mb-2">Date de naissance</label>
     <input type="date" autocomplete="bday"
            class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
   </div>
 
-  <div class="mb-6">
+  <!-- Moyen de paiement -->
+  <div class="md:col-span-1">
     <label class="block text-light-gold mb-2">Moyen de paiement</label>
     <select class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
       <option value="">Sélectionnez...</option>
       <option value="card">Carte bancaire</option>
       <option value="paypal">PayPal</option>
     </select>
-    <!-- Champ Code d'accès (ajouté après le select Moyen de paiement) -->
-<div class="mt-8 pt-6 border-t border-[rgba(212,175,55,.25)]">
-  <p class="text-light-gold mb-2 text-sm">
-    Vous avez déjà reçu votre code d’accès par e-mail ?
-  </p>
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-    <input id="unlockEmail" type="email" placeholder="Votre email"
-           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg md:col-span-1">
-    <input id="unlockCode" type="text" placeholder="Code reçu"
-           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg md:col-span-1">
-    <button id="unlockBtn" type="button"
-            class="btn-outline-gold md:col-span-1 whitespace-nowrap">
-      Valider le code
+  </div>
+
+  <!-- Code d’accès (plein largeur) -->
+  <div class="md:col-span-2 mt-2 pt-4 border-t border-[rgba(212,175,55,.25)]">
+    <p class="text-light-gold mb-2 text-sm">
+      Vous avez déjà reçu votre code d’accès par e-mail ?
+    </p>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+      <input id="unlockEmail" type="email" placeholder="Votre email"
+             class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg md:col-span-1">
+      <input id="unlockCode" type="text" placeholder="Code reçu"
+             class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg md:col-span-1">
+      <button id="unlockBtn" type="button"
+              class="btn-outline-gold md:col-span-1 whitespace-nowrap">
+        Valider le code
+      </button>
+    </div>
+    <p id="unlockMsg" class="mt-2 text-[13px]"></p>
+  </div>
+
+  <!-- Bouton Payer (plein largeur) -->
+  <div class="md:col-span-2 mt-2">
+    <button type="submit" class="btn-gold w-full md:w-auto md:min-w-[240px]">
+      Payer 5€
     </button>
   </div>
-  <p id="unlockMsg" class="mt-2 text-[13px]"></p>
-</div>
 
-  </div>
-
-  <button type="submit" class="btn-gold w-full">Payer 5€</button>
 </form>
+
 
     </div>
   </div>
