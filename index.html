@@ -607,17 +607,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         <button id="fullReading" class="btn-outline-gold hidden">Tirage Complet</button>
       </div>
 
-      <!-- Formulaire d'envoi par email -->
+      <!-- Formulaire d'envoi par email (caché initialement) -->
       <form id="emailResultsForm" class="hidden mt-8 max-w-md mx-auto bg-[rgba(5,20,40,.7)] border border-gold/30 rounded-xl p-6">
-        <h3 class="cormorant text-xl text-gold mb-4 text-center">Recevoir les résultats par email</h3>
-        <div class="mb-4">
-          <label for="userEmail" class="block text-light-gold mb-2">Votre email</label>
-          <input type="email" id="userEmail" name="email" required
-                 class="w-full bg-night-blue border border-gold/30 p-3 rounded-lg text-light-gold"
-                 placeholder="votre@email.com">
-        </div>
-        <button type="submit" class="btn-gold w-full">Envoyer les résultats</button>
-      </form>
         <h3 class="cormorant text-xl text-gold mb-4 text-center">Recevoir les résultats par email</h3>
         <div class="mb-4">
           <label for="userEmail" class="block text-light-gold mb-2">Votre email</label>
@@ -2267,9 +2258,10 @@ showBtn.addEventListener('click', ()=>{
   setBusy(linesOut, false);
   setBusy(synthOut, false);
 
-  // Affiche actions bas
+  // Affiche actions bas et formulaire email
   document.getElementById('fullReading')?.classList.remove('hidden');
   resetBtn?.classList.remove('hidden');
+  document.getElementById('emailResultsForm')?.classList.remove('hidden');
 });
 
 // ===== Reset =====
@@ -2309,6 +2301,7 @@ resetBtn.addEventListener('click', ()=>{
   showBtn.setAttribute('aria-disabled','true');
   board.classList.add('hidden');
   document.getElementById('cardsInstruction')?.classList.add('hidden');
+  document.getElementById('emailResultsForm')?.classList.add('hidden');
 
   // Intention
   intentionIn.value = '';

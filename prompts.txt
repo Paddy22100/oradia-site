@@ -38,3 +38,4 @@ la flèche de retour vers le haut ne fonctionne pas sur la version mobile
 ajouter un formulaire pour que le client reçoive le résultat de son tirage par mail
 ajoute entre le résultat du tirage et les boutons nouveau tirage et tirage complet un formulaire pour que l'utilisateur rentre son e-mail afin que le résultat du tirage lui soit envoyé
 l'option d'envoi du tirage par mail ne doit s'afficher qu'une fois le résultat du tirage affiché
+l'option d'envoi du tirage par mail ne doit s'afficher qu'une fois le résultat du tirage affiché
