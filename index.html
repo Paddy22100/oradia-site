@@ -1687,6 +1687,10 @@ function closeModal(el){
     document.body.style.overflow='hidden';
   });
 
+  // ---------- Menu mobile ----------
+  const mobileBtn  = $('mobileMenuBtn');
+  const mobileMenu = $('mobileMenu');
+  mobileBtn?.addEventListener('click', ()=>{
 
 // Fermeture auto quand on clique un item du menu mobile (délégation)
 mobileMenu?.addEventListener('click', (e) => {
@@ -2085,7 +2089,241 @@ function decrementLocalCount(email){
 </script>
 
 
+// ---------- Overlay MERCI ----------
+function buildThankYou(){
+  const root = document.createElement('div');
+  root.id = 'merciOverlay';
+  Object.assign(root.style, {
+    position:'fixed', inset:'0', display:'grid', placeItems:'center',
+    background:'rgba(0,0,0,6)', zIndex:'10000', padding:'16px'
+  });
+  root.setAttribute('role','dialog');
+  root.setAttribute('aria-modal','true');
+  root.tabIndex = -1;
 
+  root.innerHTML =
+    '<div class="bg-dark-blue border border-gold/40 rounded-2xl p-8 max-w-md w-[92vw] text-center">'+
+      '<h3 class="cormorant text-3xl text-gold mb-2">Merci ✨</h3>'+
+      '<p class="text-light-gold mb-6">Paiement confirmé. Vous recevrez sous peu un e-mail contenant votre <b>code d’accès</b> pour débloquer vos <b>5 tirages de la Traversée</b>. Conservez-le précieusement.</p>'+
+      '<button id="thxGo" class="btn-gold w-full">Accéder au tirage</button>'+
+    '</div>';
+
+  document.body.appendChild(root);
+
+  const go = document.getElementById('thxGo');
+  setTimeout(()=>{ go?.focus(); }, 30);
+
+  // 👉 ouvrir le formulaire email + code, pas d’immersif direct
+  go?.addEventListener('click', (e)=>{
+    e.preventDefault();
+    openUnlockForm();
+  });
+
+// ---------- Déblocage ----------
+function unlock(){
+  if (alreadyUnlocked) return;
+  alreadyUnlocked = true;
+  closeOrderModalIfOpen();
+  ensureSectionVisible();
+  buildThankYou();
+}
+
+// ---------- DEMO SANS STRIPE ----------
+const orderForm = document.getElementById('orderForm');
+if (orderForm) {
+  orderForm.addEventListener('submit', function(e){
+    e.preventDefault();
+
+    // 1) Récupère & vérifie l'email
+    const emailInput = document.getElementById('orderEmail');
+    const email = emailInput?.value?.trim();
+    if(!email){
+      alert("Merci de renseigner votre e-mail.");
+      emailInput?.focus();
+      return;
+    }
+    orderEmail = email;
+
+    // 2) Génère et stocke un code d’accès
+    traverseeCode = makeCode();
+    try {
+      localStorage.setItem('oradia_paid_traversee','1');
+      localStorage.setItem('oradia_traversee_email', orderEmail);
+      localStorage.setItem('oradia_traversee_code',  traverseeCode);
+    } catch(_) {}
+
+    // 3) Suite (sandbox vs redirection)
+    closeOrderModalIfOpen();
+    if (inSandbox()){
+      unlock(); // pas de redirection en sandbox
+    } else {
+      try {
+        const url = new URL(location.href);
+        url.searchParams.set('paid','traversee');
+        url.hash = 'merci';
+        window.location.href = url.toString();
+      } catch(_){
+        window.location.href = location.pathname + '?paid=traversee#merci';
+      }
+    }
+  }); // <<< ne pas supprimer cette fermeture
+}
+
+// ---------- Au chargement : retour de paiement ----------
+if (detectReturn()) {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', unlock, {once:true});
+  } else {
+    unlock();
+  }
+} else {
+  // Déjà payé + arrivée directe sur #traversee
+  try {
+    if (localStorage.getItem('oradia_paid_traversee') === '1' &&
+        (location.hash || '').toLowerCase().includes('traversee')) {
+      ensureSectionVisible();
+      enterImmersiveLight();
+    }
+  } catch(_){}
+}
+// === Utilitaires UI légers ===
+function el(html){ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstChild; }
+function closeModal(id){ const m=document.getElementById(id); if(m){ m.remove(); document.body.classList.remove('overflow-hidden'); } }
+function showError(msg){ const box = document.getElementById('unlockError'); if(box){ box.textContent = msg; box.classList.remove('hidden'); } }
+function hideError(){ const box = document.getElementById('unlockError'); if(box){ box.classList.add('hidden'); } }
+
+// === Ouvre le formulaire de déverrouillage ===
+function openUnlockForm(){
+  // Empêche doublons
+  if(document.getElementById('unlockModal')) return;
+
+  document.body.classList.add('overflow-hidden');
+  const modal = el(`
+  <div id="unlockModal" class="fixed inset-0 z-[9999] flex items-center justify-center bg-black/60">
+    <div class="bg-dark-blue border border-gold/40 rounded-2xl p-6 w-[92vw] max-w-md shadow-xl relative">
+      <button class="absolute right-3 top-3 text-gold/70 hover:text-gold" aria-label="Fermer" onclick="closeModal('unlockModal')">✕</button>
+      <h3 class="cormorant text-2xl text-gold mb-2 text-center">Déverrouiller la Traversée</h3>
+      <p class="text-light-gold text-sm mb-4 text-center">
+        Saisis l’e-mail utilisé au paiement et le <b>code d’accès</b> reçu par e-mail.
+      </p>
+      <div id="unlockError" class="hidden text-red-300 text-sm mb-3"></div>
+      <form id="unlockForm" class="space-y-3">
+        <div>
+          <label class="block text-light-gold text-sm mb-1">E-mail</label>
+          <input id="unlockEmail" type="email" required
+                 class="w-full rounded-xl bg-[#0e1320] border border-gold/30 text-light-gold px-3 py-2 outline-none focus:border-gold"
+                 placeholder="prenom.nom@email.fr">
+        </div>
+        <div>
+          <label class="block text-light-gold text-sm mb-1">Code d’accès</label>
+          <input id="unlockCode" type="text" required
+                 class="w-full uppercase tracking-widest rounded-xl bg-[#0e1320] border border-gold/30 text-light-gold px-3 py-2 outline-none focus:border-gold"
+                 placeholder="6 lettres/chiffres">
+        </div>
+        <button id="unlockSubmit" type="submit" class="btn-gold w-full">Déverrouiller</button>
+      </form>
+      <p id="unlockHint" class="text-[12px] text-light-gold/70 mt-3 text-center">
+        Tu n’as pas reçu le code ? Vérifie tes spams ou patiente une minute.
+      </p>
+    </div>
+  </div>`);
+
+  document.body.appendChild(modal);
+
+  // Soumission
+  document.getElementById('unlockForm').addEventListener('submit', async (e)=>{
+    e.preventDefault();
+    hideError();
+
+    const email = document.getElementById('unlockEmail').value.trim();
+    const code  = document.getElementById('unlockCode').value.trim().toUpperCase();
+    const btn   = document.getElementById('unlockSubmit');
+    btn.disabled = true; btn.textContent = "Vérification…";
+
+    try {
+      // --- Variante PROD (via API sécurisée) ---
+      const res = await fetch('/api/unlock-traversee', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({ email, code })
+      });
+
+      if(!res.ok){
+        const t = await res.text();
+        throw new Error(t || 'Vérification indisponible');
+      }
+
+      const { ok, remaining } = await res.json();
+      if(!ok) throw new Error('E-mail ou code invalide.');
+
+      // Enregistre localement le compteur restant pour UX (optionnel)
+      const key = `traversee:${email}`;
+      const left = Number.isFinite(remaining) ? remaining : 5; // fallback
+      localStorage.setItem(key, JSON.stringify({ remaining: left }));
+
+      closeModal('unlockModal');
+
+      // Démarre le tirage de la Traversée
+      if (typeof startTraversee === 'function') {
+        startTraversee({ email, remaining: left });
+      } else {
+        console.warn('startTraversee() est introuvable. Appelle ici ton lanceur de tirage.');
+      }
+
+    } catch(err){
+      console.error(err);
+      showError(err.message || 'Impossible de vérifier le code. Réessaie.');
+    } finally {
+      btn.disabled = false; btn.textContent = "Déverrouiller";
+    }
+  });
+}
+
+// pages/api/unlock-traversee.ts
+import type { NextApiRequest, NextApiResponse } from 'next';
+import crypto from 'crypto';
+
+// Place ce secret dans tes variables d'env Vercel : TRAVERSEE_SECRET="une-longue-phrase-aleatoire"
+const SECRET = process.env.TRAVERSEE_SECRET || '';
+
+function makeCode(email: string): string {
+  const norm = email.trim().toLowerCase();
+  const h = crypto.createHmac('sha256', SECRET).update(norm).digest('base64url'); // stable, URL-safe
+  // 6 caractères alphanum en majuscules (lisibles)
+  return h.slice(0, 6).toUpperCase();
+}
+
+// Optionnel : définir 5 tirages par achat
+const DEFAULT_REMAINING = 5;
+
+export default function handler(req: NextApiRequest, res: NextApiResponse) {
+  if (req.method !== 'POST') return res.status(405).send('Method Not Allowed');
+  if (!SECRET) return res.status(500).send('Server not configured');
+
+  try {
+    const { email, code } = req.body || {};
+    if (!email || !code) return res.status(400).send('Missing email or code');
+
+    const expected = makeCode(email);
+    const ok = expected === String(code).trim().toUpperCase();
+
+    // Ici tu pourrais brancher une vraie persistance (Zapier Tables, BDD) pour gérer le compteur.
+    // Pour l’instant on renvoie simplement ok + remaining par défaut.
+    return res.status(200).json({ ok, remaining: ok ? DEFAULT_REMAINING : 0 });
+  } catch (e:any) {
+    return res.status(500).send(e?.message || 'Unexpected error');
+  }
+}
+function decrementLocalCount(email){
+  const key = `traversee:${email}`;
+  const data = JSON.parse(localStorage.getItem(key) || '{}');
+  if(typeof data.remaining === 'number' && data.remaining > 0){
+    data.remaining -= 1;
+    localStorage.setItem(key, JSON.stringify(data));
+  }
+}
+
+</script>
 
   <!-- SCRIPT -->
 
@@ -2515,12 +2753,83 @@ document.addEventListener('DOMContentLoaded', () => {
   ...
   </footer>
 
-<!-- === SCROLL-SPY (version unique) === -->
+  <script id="scroll-spy">
 <script id="scroll-spy">
+document.addEventListener('DOMContentLoaded', () => {
+  // 1) Tous les liens internes présents dans des <nav>
+  const links = Array.from(document.querySelectorAll('nav a[href^="#"]'));
+
+  // 2) Sections cibles existantes
+  const sectionById = {};
+  const sections = links
+    .map(a => a.getAttribute('href').slice(1))
+    .filter(Boolean)
+    .map(id => document.getElementById(id))
+    .filter(Boolean)
+    .filter((sec) => (sectionById[sec.id] ? false : (sectionById[sec.id]=true))); // unique
+
+  // Applique aria-current
+  const setActive = (id) => {
+    links.forEach(a => {
+      const isActive = a.getAttribute('href') === `#${id}`;
+      if (isActive) a.setAttribute('aria-current', 'page');
+      else a.removeAttribute('aria-current');
+    });
+  };
+
+  // 3) Observe la section “centrée” à l’écran
+  const io = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      // ignore les sections cachées (display:none)
+      if (entry.isIntersecting && entry.target.offsetParent !== null) {
+        setActive(entry.target.id);
+      }
+    });
+  }, {
+    rootMargin: '-40% 0px -60% 0px',
+    threshold: 0.01
+  });
+
+  sections.forEach(sec => io.observe(sec));
+
+  // 4) Activation immédiate au clic + scroll smooth
+  links.forEach(a => {
+    a.addEventListener('click', (e) => {
+      const id = a.getAttribute('href').slice(1);
+      const target = document.getElementById(id);
+      if (!target) return;
+      e.preventDefault();
+      setActive(id);
+      target.scrollIntoView({ behavior:'smooth', block:'start' });
+
+      // (facultatif) si le menu mobile est ouvert, on le referme
+      const mobileMenu = document.getElementById('mobileMenu');
+      if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
+        mobileMenu.classList.add('hidden');
+        const mobileBtn = document.getElementById('mobileMenuBtn');
+        mobileBtn?.setAttribute('aria-expanded', 'false');
+      }
+      history.replaceState(null, '', `#${id}`);
+    });
+  });
+
+  // 5) État initial (hash ou première section visible)
+  const initialId = location.hash?.slice(1);
+  if (initialId && document.getElementById(initialId)) {
+    setActive(initialId);
+  } else if (sections[0]) {
+    setActive(sections[0].id);
+  }
+});
+</script>
+
+  </script>
+<script id="scroll-spy" defer>
 document.addEventListener('DOMContentLoaded', () => {
   const links = Array.from(document.querySelectorAll('nav a[href^="#"]'));
   if (!links.length) return;
 
+  // Sections uniques réellement présentes
   const seen = new Set();
   const sections = links
     .map(a => a.getAttribute('href').slice(1))
@@ -2537,6 +2846,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   };
 
+  // Observer “section au centre”
   const io = new IntersectionObserver((entries) => {
     entries.forEach(entry => {
       if (entry.isIntersecting && entry.target.offsetParent !== null) {
@@ -2547,6 +2857,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   sections.forEach(sec => io.observe(sec));
 
+  // Activation immédiate au clic + scroll doux
   links.forEach(a => {
     a.addEventListener('click', (e) => {
       const id = a.getAttribute('href').slice(1);
@@ -2555,7 +2866,7 @@ document.addEventListener('DOMContentLoaded', () => {
       e.preventDefault();
       setActive(id);
       target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
+      // refermer le menu mobile s’il est ouvert
       const mobileMenu = document.getElementById('mobileMenu');
       if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
         mobileMenu.classList.add('hidden');
@@ -2565,54 +2876,236 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // État initial
   const initial = location.hash?.slice(1);
   if (initial && document.getElementById(initial)) setActive(initial);
   else if (sections[0]) setActive(sections[0].id);
 });
 </script>
+<script id="ui-wiring-fixes">
+(() => {
+  const $  = (s, r=document) => r.querySelector(s);
+  const $$ = (s, r=document) => [...r.querySelectorAll(s)];
 
-<!-- === NAV MOBILE — version unique === -->
-<script id="nav-mobile-one">
-document.addEventListener('DOMContentLoaded', function () {
-  const btn  = document.getElementById('mobileMenuBtn');
-  const menu = document.getElementById('mobileMenu');
-  if (!btn || !menu) return;
+  // ---- NAV MOBILE
+  const mobileBtn  = $('#mobileMenuBtn');
+  const mobileMenu = $('#mobileMenu');
+  if (mobileBtn && mobileMenu) {
+    const toggle = () => {
+      const open = mobileMenu.classList.toggle('hidden') === false;
+      mobileBtn.setAttribute('aria-expanded', String(open));
+    };
+    mobileBtn.addEventListener('click', toggle);
+    // fermer quand on clique un lien
+    $$('#mobileMenu a').forEach(a => a.addEventListener('click', () => {
+      if (!mobileMenu.classList.contains('hidden')) toggle();
+    }));
+    // fermer à ESC
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) toggle();
+    });
+  }
 
-  btn.addEventListener('click', function () {
-    const hiddenNow = menu.classList.toggle('hidden');
-    btn.setAttribute('aria-expanded', String(!hiddenNow));
+  // ---- MODALES GÉNÉRIQUES (utilise tes helpers openModal/closeModal si présents)
+  const hookModal = (openSel, modalSel, closeSel) => {
+    const openEl = $(openSel), modal = $(modalSel), closeEl = $(closeSel);
+    if (!modal) return;
+    openEl?.addEventListener('click', (e) => { e.preventDefault?.(); openModal?.(modal); });
+    closeEl?.addEventListener('click', () => closeModal?.(modal));
+    // clic hors contenu pour fermer
+    modal.addEventListener('click', (e) => {
+      if (e.target === modal) closeModal?.(modal);
+    });
+    // ESC pour fermer
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal?.(modal);
+    });
+  };
+
+  // Commande & Abonnement & Login dashboard
+  hookModal('#orderBtn', '#orderModal', '#closeOrder');
+  hookModal('#subscribeBtn', '#subscriptionModal', '#closeSubscription');
+  hookModal('#loginBtn', '#loginModal', '#closeLoginModal');
+  hookModal('#footerLogin', '#loginModal', '#closeLoginModal');
+  hookModal('#loginBtnMobile', '#loginModal', '#closeLoginModal');
+
+  // ---- ABONNEMENT : TOGGLE LOGIN / REGISTER
+  const subscriptionModal = $('#subscriptionModal');
+  const memberLoginForm    = $('#memberLoginForm');
+  const memberRegisterForm = $('#memberRegisterForm');
+  const showRegisterLink   = $('#showRegister');
+  const showLoginLink      = $('#showLogin');
+
+  function showLogin() {
+    if (!memberLoginForm || !memberRegisterForm) return;
+    memberRegisterForm.classList.add('hidden');
+    memberRegisterForm.setAttribute('aria-hidden','true');
+    memberRegisterForm.setAttribute('inert','');
+
+    memberLoginForm.classList.remove('hidden');
+    memberLoginForm.setAttribute('aria-hidden','false');
+    memberLoginForm.removeAttribute('inert');
+
+    (memberLoginForm.querySelector('input,button,select,textarea') || memberLoginForm).focus();
+  }
+  function showRegister() {
+    if (!memberLoginForm || !memberRegisterForm) return;
+    memberLoginForm.classList.add('hidden');
+    memberLoginForm.setAttribute('aria-hidden','true');
+    memberLoginForm.setAttribute('inert','');
+
+    memberRegisterForm.classList.remove('hidden');
+    memberRegisterForm.setAttribute('aria-hidden','false');
+    memberRegisterForm.removeAttribute('inert');
+
+    (memberRegisterForm.querySelector('input,button,select,textarea') || memberRegisterForm).focus();
+  }
+  showRegisterLink?.addEventListener('click', (e)=>{ e.preventDefault(); showRegister(); });
+  showLoginLink?.addEventListener('click', (e)=>{ e.preventDefault(); showLogin(); });
+
+  // ---- DASHBOARD : OUVERTURE VIA MODALE LOGIN
+  const loginModal = $('#loginModal');
+  const loginFormDashboard = $('#loginFormDashboard');
+  const dashboard = $('#dashboard');
+  const logoutBtn = $('#logoutBtn');
+
+  loginFormDashboard?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    // ici tu brancheras ton vrai backend plus tard
+    closeModal?.(loginModal);
+    dashboard?.classList.remove('hidden');
+    // focus accessibilité
+    (dashboard?.querySelector('button, a, [tabindex], input, select, textarea') || dashboard)?.focus();
+    // petite protection scroll
+    document.body.style.overflow = 'hidden';
   });
 
-  menu.addEventListener('click', (e) => {
-    const t = e.target && e.target.closest('a,button');
-    if (!t) return;
-    if (!menu.classList.contains('hidden')) {
-      menu.classList.add('hidden');
-      btn.setAttribute('aria-expanded', 'false');
-    }
+  logoutBtn?.addEventListener('click', () => {
+    dashboard?.classList.add('hidden');
+    document.body.style.overflow = '';
   });
 
+  // fermer dashboard à ESC
   document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && !menu.classList.contains('hidden')) {
-      menu.classList.add('hidden');
-      btn.setAttribute('aria-expanded', 'false');
+    if (e.key === 'Escape' && dashboard && !dashboard.classList.contains('hidden')) {
+      dashboard.classList.add('hidden');
+      document.body.style.overflow = '';
     }
   });
 
-  btn.setAttribute('aria-controls', 'mobileMenu');
-  btn.setAttribute('aria-expanded', 'false');
-});
-</script>
+  // ---- ACCESSIBILITÉ : rôle/états cohérents si un bouton ouvre un menu/modale
+  // (déjà bien géré chez toi ; on assure un état initial propre)
+  if (mobileBtn && mobileMenu) mobileBtn.setAttribute('aria-expanded','false');
 
-<!-- (facultatif) Email des résultats — correctement encapsulé -->
+  // ---- FIN : si la ligne coupée existait, on s’assure que l’intention était bien de revenir au login
+  // (sécurise le cas où ton ancien code se termine par "showLogin?.addEventListener...")
+  if (subscriptionModal && memberLoginForm && memberRegisterForm) {
+    // état par défaut : login visible
+    showLogin();
+  }
+})();
+</script>
 <script>
-document.getElementById('emailResults')?.addEventListener('click', () => {
-  const email = prompt("Entrez votre adresse email pour recevoir votre tirage:");
-  if (!email) return;
-  // TODO: brancher ton appel fetch ici si nécessaire
-  alert("Merci ! Nous vous enverrons le tirage.");
-});
+  document.addEventListener("DOMContentLoaded", function () {
+    const btn = document.getElementById("mobileMenuBtn");
+    const menu = document.getElementById("mobileMenu");
+
+    if (btn && menu) {
+      btn.addEventListener("click", function () {
+        const isOpen = menu.classList.toggle("hidden");
+        btn.setAttribute("aria-expanded", !isOpen);
+      });
+    }
+  });
 </script>
 
 </body>
+
 </html>
+
+</body>
+</html>
+
+<script>
+
+});
+  results.classList.remove('hidden');
+  results.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+  // état des boutons
+  showBtn.classList.add('hidden');
+  showBtn.disabled = true;
+  showBtn.setAttribute('aria-disabled', 'true');
+
+  resetBtn.classList.remove('hidden');
+  document.getElementById('fullReading')?.classList.remove('hidden');
+});
+
+// ===== Envoi par email =====
+document.getElementById('emailResults')?.addEventListener('click', () => {
+  const email = prompt("Entrez votre adresse email pour recevoir votre tirage:");
+  if (email) {
+    alert(`Votre tirage sera envoyé à ${email}. Merci !`);
+    // Ici vous pourriez ajouter un appel API pour envoyer réellement l'email
+  }
+});
+
+// ===== Reset =====
+function resetAll(){
+  drawn = { emotions:null, besoins:null, actions:null, cosmos:null };
+  flippedCount = 0;
+
+  // Masquer résultats + vider
+  results.classList.add('hidden');
+  linesOut.innerHTML = '';
+  synthOut.innerHTML = '';
+  outIntent.textContent = '—';
+
+  // Boutons / instructions
+  showBtn.classList.add('hidden');
+  showBtn.disabled = true;
+  showBtn.setAttribute('aria-disabled','true');
+  resetBtn.classList.add('hidden');
+  document.getElementById('fullReading')?.classList.add('hidden');
+  document.getElementById('emailResults')?.classList.add('hidden');
+  document.getElementById('emailResults')?.classList.add('hidden');
+  document.getElementById('cardsInstruction')?.classList.add('hidden');
+
+  // Réafficher "Commencer le tirage"
+  const startBtn = document.getElementById('startReading');
+  startBtn.classList.remove('hidden');
+
+  // Réinitialiser les cartes
+  board.querySelectorAll('.card').forEach(card=>{
+    card.classList.remove('flipped');
+
+    // back cliquable à nouveau
+    const back = card.querySelector('.back');
+    back.classList.remove('hidden');
+    back.setAttribute('aria-pressed','false');
+    back.style.pointerEvents = '';
+
+    // nettoyer la face avant
+    card.querySelector('[data-name]').textContent  = '—';
+    card.querySelector('[data-quote]').textContent = '—';
+    const pol = card.querySelector('[data-polarity]');
+    if (pol){
+      pol.style.visibility = '';
+      pol.textContent = '';
+      pol.removeAttribute('title');
+      pol.removeAttribute('aria-label');
+      pol.classList.remove('is-triangle','is-cercle');
+    }
+    card.querySelector('[data-bridge-quote]')?.remove();
+    card.querySelector('[data-coin]')?.remove();
+    card.querySelector('[data-bridge-badge]')?.remove();
+  });
+
+  // intention conservée : si tu préfères la vider, dé-commente la ligne suivante
+ intentionIn.value = '';
+}
+resetBtn.addEventListener('click', resetAll);
+})();
+</script>
+
+</script>
