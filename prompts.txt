@@ -44,3 +44,4 @@ je voulais un champ à part pour le code
 je veux rajouter un champ dans le formulaire Commande Tirage Complet pour que l'utilisateur puisse rentrer le code reçu par mail suite au paiement
 je veux un champ distinct des autres dans le formulaire Commande Tirage Complet pour que l'utilisateur puisse entrer le code reçu par mail et valide pour accéder à ses 5 tirages
 enlève le trait dans la barre de navigation qui indique la page active
+</STY
