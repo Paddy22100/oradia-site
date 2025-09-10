@@ -1121,6 +1121,24 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       <option value="card">Carte bancaire</option>
       <option value="paypal">PayPal</option>
     </select>
+    <!-- Champ Code d'accès (ajouté après le select Moyen de paiement) -->
+<div class="mt-8 pt-6 border-t border-[rgba(212,175,55,.25)]">
+  <p class="text-light-gold mb-2 text-sm">
+    Vous avez déjà reçu votre code d’accès par e-mail ?
+  </p>
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+    <input id="unlockEmail" type="email" placeholder="Votre email"
+           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg md:col-span-1">
+    <input id="unlockCode" type="text" placeholder="Code reçu"
+           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg md:col-span-1">
+    <button id="unlockBtn" type="button"
+            class="btn-outline-gold md:col-span-1 whitespace-nowrap">
+      Valider le code
+    </button>
+  </div>
+  <p id="unlockMsg" class="mt-2 text-[13px]"></p>
+</div>
+
   </div>
 
   <button type="submit" class="btn-gold w-full">Payer 5€</button>
@@ -1909,6 +1927,21 @@ mobileMenu?.addEventListener('click', (e) => {
     } catch(_){}
   }
 })();
+// Préremplir les champs email et code si présents dans l'URL
+(function(){
+  var sp = new URLSearchParams(location.search);
+  var e = sp.get('email'); 
+  var c = sp.get('code');
+  if(e) {
+    var emailInput = document.getElementById('unlockEmail');
+    if(emailInput) emailInput.value = e;
+  }
+  if(c) {
+    var codeInput = document.getElementById('unlockCode');
+    if(codeInput) codeInput.value = c;
+  }
+})();
+
 </script>
 
 
