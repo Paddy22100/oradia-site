@@ -361,6 +361,10 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
 /* Hauteur viewport fiable mobile (iOS/Android) */
 .min-h-100dvh { min-height: 100dvh; }
+
+/* Quand on arrive sur #oracle, décale de 80px sous le header */
+#oracle { scroll-margin-top: 80px; }
+
   </style>
 </head>
 
@@ -483,7 +487,9 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   <section id="oracle" class="py-12 md:py-20 px-4 md:px-6">
     <div class="container mx-auto max-w-6xl">
       <div class="text-center mb-10">
-        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Tirage du Pèlerin</h2>
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient leading-[1.2] pt-1">
+  Tirage du Pèlerin
+</h2>
         <p class="text-light-gold max-w-3xl mx-auto">Guidance vibratoire croisant plusieurs systèmes.</p>
       </div>
 
@@ -603,7 +609,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
       <div class="flex gap-3 justify-center mt-6">
         <button id="reset" class="btn-outline-gold hidden">Nouveau tirage</button>
-        <button id="fullReading" class="btn-outline-gold hidden">Tirage Complet</button>
+        <button id="fullReading" class="btn-outline-gold hidden">Tirage plus complet</button>
       </div>
 
       <!-- Formulaire d'envoi par email (caché initialement) -->
@@ -971,6 +977,14 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             0%, 100% { transform: translateX(-50%) rotate(-12deg); }
             50% { transform: translateX(-50%) rotate(12deg); }
           }
+
+          /* Anti-clipping des gros titres dorés */
+.gold-gradient{
+  line-height: 1.2;           /* évite la coupe des ascendantes */
+  padding-top: 2px;           /* décale très légèrement vers le bas */
+  -webkit-text-fill-color: transparent; /* explicite pour WebKit/Blink */
+}
+
         </style>
         <div class="relative z-10">
         <div id="traversee-intro">
@@ -1077,7 +1091,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
     <button id="closeOrder" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer" type="button"><i class="fas fa-times"></i></button>
     <div class="text-center mb-8">
-      <h3 id="orderTitle" class="cormorant text-3xl text-gold mb-2">Commande Tirage Complet</h3>
+      <h3 id="orderTitle" class="cormorant text-3xl text-gold mb-2">Commande Tirage de la Traversée</h3>
       <p id="orderDesc" class="text-light-gold">Finalisez votre commande (5€)</p>
       </div>
       <form id="orderForm">
