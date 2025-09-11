@@ -154,10 +154,6 @@ const pickOne = (arr) => arr[randInt(arr.length)];
 .polarity.is-triangle { filter: saturate(1.1); }
 .polarity.is-cercle   { opacity: .95; }
 
-    nav a[aria-current="page"]{
-    text-decoration: underline;
-    text-underline-offset: 4px;
-    }
 
     :root{ --dore:#d4af37; --text:#e9e7df; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
 
@@ -482,7 +478,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   <section id="oracle" class="py-12 md:py-20 px-4 md:px-6">
     <div class="container mx-auto max-w-6xl">
       <div class="text-center mb-10">
-        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Tirage du Pèlerin</h2>
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient" style="padding-bottom: 0.2em">Tirage du Pèlerin</h2>
         <p class="text-light-gold max-w-3xl mx-auto">Guidance vibratoire croisant plusieurs systèmes.</p>
       </div>
 
@@ -552,25 +548,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           </div>
         </article>
 
-        <!-- MÉMOIRE COSMOS -->
-        <article class="card pos-3" data-family="cosmos" aria-label="Carte Mémoire Cosmos">
-          <div class="card-inner">
-            <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Mémoire Cosmos">
-              <div class="logo-circle" aria-hidden="true"></div>
-            </div>
-            <div class="face front">
-              <div class="topbar">
-                <span class="chip"><i class="fas fa-star mr-1"></i> Mémoire Cosmos</span>
-                <span class="polarity" data-polarity style="visibility:hidden"></span>
-              </div>
-              <div class="art"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
-              <div class="bottom"><span data-icon></span></div>
-            </div>
-          </div>
-        </article>
-
         <!-- ACTIONS -->
-        <article class="card pos-4" data-family="actions" aria-label="Carte Actions">
+        <article class="card pos-3" data-family="actions" aria-label="Carte Actions">
           <div class="card-inner">
             <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Actions">
               <div class="logo-circle" aria-hidden="true"></div>
@@ -582,6 +561,23 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
               </div>
               <div class="art"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
               <div class="bottom"><span data-icon></span></div>
+            </div>
+          </div>
+        </article>
+
+        <!-- MÉMOIRE COSMOS (carte spéciale) -->
+        <article class="card pos-4" data-family="cosmos" aria-label="Carte Mémoire Cosmos - carte spéciale du tirage">
+          <div class="card-inner">
+            <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Mémoire Cosmos">
+              <div class="logo-circle" style="border-color: #f5e7a1; box-shadow: 0 0 15px rgba(245, 231, 161, 0.5)" aria-hidden="true"></div>
+            </div>
+            <div class="face front" style="background: radial-gradient(900px 600px at 30% -10%, rgba(245, 231, 161, 0.2), transparent 60%), linear-gradient(165deg, #0c1f40, #0b1d3a 45%, #0a1833 100%); border: 1px solid rgba(245, 231, 161, 0.6)">
+              <div class="topbar" style="border-bottom: 1px solid rgba(245, 231, 161, 0.4)">
+                <span class="chip" style="background: rgba(245, 231, 161, 0.1); color: #f5e7a1"><i class="fas fa-star mr-1"></i> MÉMOIRE COSMOS</span>
+                <span class="polarity" data-polarity style="visibility:hidden"></span>
+              </div>
+              <div class="art" style="border: 1px solid rgba(245, 231, 161, 0.4)"><div><h3 data-name style="color: #f5e7a1">—</h3><div class="quote" data-quote>—</div></div></div>
+              <div class="bottom" style="border-top: 1px solid rgba(245, 231, 161, 0.3)"><span data-icon></span></div>
             </div>
           </div>
         </article>
@@ -898,8 +894,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     </div>
   </section>
 
-  <!-- CGV -->
-  <section id="cgv" class="py-20 px-6 bg-night-blue">
+  <!-- CGV (masquée par défaut) -->
+  <section id="cgv" class="py-20 px-6 bg-night-blue hidden">
     <div class="container mx-auto max-w-6xl">
       <h2 class="cormorant text-4xl md:text-5xl font-bold mb-8 gold-gradient">Conditions générales de vente (CGV)</h2>
       <div class="rounded-2xl p-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
@@ -914,6 +910,21 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       </div>
     </div>
   </section>
+
+  <script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const cgvLink = document.querySelector('footer a[href="#cgv"]');
+    const cgvSection = document.getElementById('cgv');
+    
+    if (cgvLink && cgvSection) {
+      cgvLink.addEventListener('click', (e) => {
+        e.preventDefault();
+        cgvSection.classList.remove('hidden');
+        cgvSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      });
+    }
+  });
+  </script>
 
   <!-- Tirage de la Traversée - caché jusqu'à paiement -->
   <section id="traversee" class="py-20 px-6 bg-night-blue hidden">
@@ -2245,7 +2256,7 @@ showBtn.addEventListener('click', ()=>{
     <p><b>ÉMOTIONS :</b> ${E.name} (${polIcon(E.polarity)})<br><i>« ${E.quote} »</i></p>
     <p><b>BESOINS :</b> ${B.name} (${polIcon(B.polarity)})<br><i>« ${B.quote} »</i></p>
     <p><b>ACTIONS :</b> ${A.name} (${polIcon(A.polarity)})<br><i>« ${A.quote} »</i></p>
-    <p><b>MÉMOIRES COSMOS :</b> ${C.name}<br><i>« ${C.quote} »</i></p>
+    <p><b class="text-gold">MÉMOIRES COSMOS :</b> <span class="text-light-gold">${C.name}</span><br><i class="text-gold">« ${C.quote} »</i></p>
   `.trim();
 
   synthOut.innerHTML = buildSynthesis(E,B,A,C,intent);
