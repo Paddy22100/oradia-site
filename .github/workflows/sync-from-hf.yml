@@ -1,0 +1,69 @@
+name: Sync from Hugging Face Space
+
+on:
+  repository_dispatch:
+    types: [hf-space-updated]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-from-hf
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      GIT_LFS_SKIP_SMUDGE: "1"
+
+    steps:
+      - name: Checkout current repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install git-lfs & rsync
+        run: |
+          set -eux
+          sudo apt-get update
+          sudo apt-get install -y git-lfs rsync
+          git lfs install --skip-smudge
+
+      - name: Pull Space from Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE_ID: ${{ secrets.HF_SPACE_ID }}          # ex: Paddy22/site-oradia
+          HF_SPACE_BRANCH: ${{ secrets.HF_SPACE_BRANCH }}  # ex: main
+          CLONE_DIR: ${{ runner.temp }}/hfspace
+        run: |
+          set -eux
+          rm -rf "$CLONE_DIR"
+          git clone --depth 1 --branch "${HF_SPACE_BRANCH:-main}" \
+            "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_ID}" "$CLONE_DIR"
+
+          # On copie depuis la Space SANS toucher à nos assets locaux
+          rsync -a --delete \
+            --exclude '.git' \
+            --exclude '.gitattributes' \
+            --exclude '.gitignore' \
+            --exclude '.github' \
+            --exclude 'assets/' \
+            "$CLONE_DIR"/ .
+
+      - name: Commit & push if changes
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -eux
+          if ! git diff --quiet; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+            git add -A
+            git commit -m "chore(sync): pull from HF Space ${{ secrets.HF_SPACE_ID }}"
+            git pull --rebase origin "${BRANCH:-main}" || git pull --rebase origin main
+            git push
+          else
+            echo "No changes to commit."
+          fi
