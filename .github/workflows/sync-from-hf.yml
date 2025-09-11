@@ -16,6 +16,7 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     env:
+      # Ne télécharge/traite aucun objet LFS pendant ce job
       GIT_LFS_SKIP_SMUDGE: "1"
 
     steps:
@@ -29,7 +30,16 @@ jobs:
           set -eux
           sudo apt-get update
           sudo apt-get install -y git-lfs rsync
+          # coupe les filtres LFS globaux et remet un install sans smudge
+          git lfs uninstall || true
           git lfs install --skip-smudge
+
+      - name: Check required secrets
+        run: |
+          set -eu
+          : "${HF_TOKEN:?Missing HF_TOKEN}"
+          : "${HF_SPACE_ID:?Missing HF_SPACE_ID}"
+          : "${HF_SPACE_BRANCH:=main}"
 
       - name: Pull Space from Hugging Face
         env:
@@ -43,16 +53,19 @@ jobs:
           git clone --depth 1 --branch "${HF_SPACE_BRANCH:-main}" \
             "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_ID}" "$CLONE_DIR"
 
-          # On copie depuis la Space SANS toucher à nos assets locaux
+          # Copie le code depuis la Space MAIS:
+          #  - ne pas écraser nos images locales
+          #  - ne pas écraser notre .gitattributes
+          #  - ne pas copier le dossier .github
           rsync -a --delete \
-            --exclude '.git' \
-            --exclude '.gitattributes' \
-            --exclude '.gitignore' \
-            --exclude '.github' \
-            --exclude 'assets/' \
+            --exclude='.git' \
+            --exclude='.gitattributes' \
+            --exclude='.gitignore' \
+            --exclude='.github' \
+            --exclude='/assets*/' \
             "$CLONE_DIR"/ .
 
-      - name: Commit & push if changes
+      - name: Commit & push if changes (LFS hard-off)
         env:
           BRANCH: ${{ github.ref_name }}
         run: |
@@ -60,9 +73,275 @@ jobs:
           if ! git diff --quiet; then
             git config user.name  "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-            git add -A
-            git commit -m "chore(sync): pull from HF Space ${{ secrets.HF_SPACE_ID }}"
+
+            # Neutralise totalement LFS pour cet add/commit
+            git -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.required=false add -A
+            git -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.required=false commit -m "chore(sync): pull from HF Space ${{ secrets.HF_SPACE_ID }}"
+
             git pull --rebase origin "${BRANCH:-main}" || git pull --rebase origin main
+            # ceinture et bretelles si un fichier resterait marqué LFS
+            git config lfs.allowincompletepush true
+            git push
+          else
+            echo "No changes to commit."
+          fi
+name: Sync from Hugging Face Space
+
+on:
+  repository_dispatch:
+    types: [hf-space-updated]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-from-hf
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      # Ne télécharge/traite aucun objet LFS pendant ce job
+      GIT_LFS_SKIP_SMUDGE: "1"
+
+    steps:
+      - name: Checkout current repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install git-lfs & rsync
+        run: |
+          set -eux
+          sudo apt-get update
+          sudo apt-get install -y git-lfs rsync
+          # coupe les filtres LFS globaux et remet un install sans smudge
+          git lfs uninstall || true
+          git lfs install --skip-smudge
+
+      - name: Check required secrets
+        run: |
+          set -eu
+          : "${HF_TOKEN:?Missing HF_TOKEN}"
+          : "${HF_SPACE_ID:?Missing HF_SPACE_ID}"
+          : "${HF_SPACE_BRANCH:=main}"
+
+      - name: Pull Space from Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE_ID: ${{ secrets.HF_SPACE_ID }}          # ex: Paddy22/site-oradia
+          HF_SPACE_BRANCH: ${{ secrets.HF_SPACE_BRANCH }}  # ex: main
+          CLONE_DIR: ${{ runner.temp }}/hfspace
+        run: |
+          set -eux
+          rm -rf "$CLONE_DIR"
+          git clone --depth 1 --branch "${HF_SPACE_BRANCH:-main}" \
+            "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_ID}" "$CLONE_DIR"
+
+          # Copie le code depuis la Space MAIS:
+          #  - ne pas écraser nos images locales
+          #  - ne pas écraser notre .gitattributes
+          #  - ne pas copier le dossier .github
+          rsync -a --delete \
+            --exclude='.git' \
+            --exclude='.gitattributes' \
+            --exclude='.gitignore' \
+            --exclude='.github' \
+            --exclude='/assets*/' \
+            "$CLONE_DIR"/ .
+
+      - name: Commit & push if changes (LFS hard-off)
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -eux
+          if ! git diff --quiet; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+            # Neutralise totalement LFS pour cet add/commit
+            git -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.required=false add -A
+            git -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.required=false commit -m "chore(sync): pull from HF Space ${{ secrets.HF_SPACE_ID }}"
+
+            git pull --rebase origin "${BRANCH:-main}" || git pull --rebase origin main
+            # ceinture et bretelles si un fichier resterait marqué LFS
+            git config lfs.allowincompletepush true
+            git push
+          else
+            echo "No changes to commit."
+          fi
+name: Sync from Hugging Face Space
+
+on:
+  repository_dispatch:
+    types: [hf-space-updated]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-from-hf
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      # Ne télécharge/traite aucun objet LFS pendant ce job
+      GIT_LFS_SKIP_SMUDGE: "1"
+
+    steps:
+      - name: Checkout current repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install git-lfs & rsync
+        run: |
+          set -eux
+          sudo apt-get update
+          sudo apt-get install -y git-lfs rsync
+          # coupe les filtres LFS globaux et remet un install sans smudge
+          git lfs uninstall || true
+          git lfs install --skip-smudge
+
+      - name: Check required secrets
+        run: |
+          set -eu
+          : "${HF_TOKEN:?Missing HF_TOKEN}"
+          : "${HF_SPACE_ID:?Missing HF_SPACE_ID}"
+          : "${HF_SPACE_BRANCH:=main}"
+
+      - name: Pull Space from Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE_ID: ${{ secrets.HF_SPACE_ID }}          # ex: Paddy22/site-oradia
+          HF_SPACE_BRANCH: ${{ secrets.HF_SPACE_BRANCH }}  # ex: main
+          CLONE_DIR: ${{ runner.temp }}/hfspace
+        run: |
+          set -eux
+          rm -rf "$CLONE_DIR"
+          git clone --depth 1 --branch "${HF_SPACE_BRANCH:-main}" \
+            "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_ID}" "$CLONE_DIR"
+
+          # Copie le code depuis la Space MAIS:
+          #  - ne pas écraser nos images locales
+          #  - ne pas écraser notre .gitattributes
+          #  - ne pas copier le dossier .github
+          rsync -a --delete \
+            --exclude='.git' \
+            --exclude='.gitattributes' \
+            --exclude='.gitignore' \
+            --exclude='.github' \
+            --exclude='/assets*/' \
+            "$CLONE_DIR"/ .
+
+      - name: Commit & push if changes (LFS hard-off)
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -eux
+          if ! git diff --quiet; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+            # Neutralise totalement LFS pour cet add/commit
+            git -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.required=false add -A
+            git -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.required=false commit -m "chore(sync): pull from HF Space ${{ secrets.HF_SPACE_ID }}"
+
+            git pull --rebase origin "${BRANCH:-main}" || git pull --rebase origin main
+            # ceinture et bretelles si un fichier resterait marqué LFS
+            git config lfs.allowincompletepush true
+            git push
+          else
+            echo "No changes to commit."
+          fi
+name: Sync from Hugging Face Space
+
+on:
+  repository_dispatch:
+    types: [hf-space-updated]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-from-hf
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      # Ne télécharge/traite aucun objet LFS pendant ce job
+      GIT_LFS_SKIP_SMUDGE: "1"
+
+    steps:
+      - name: Checkout current repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install git-lfs & rsync
+        run: |
+          set -eux
+          sudo apt-get update
+          sudo apt-get install -y git-lfs rsync
+          # coupe les filtres LFS globaux et remet un install sans smudge
+          git lfs uninstall || true
+          git lfs install --skip-smudge
+
+      - name: Check required secrets
+        run: |
+          set -eu
+          : "${HF_TOKEN:?Missing HF_TOKEN}"
+          : "${HF_SPACE_ID:?Missing HF_SPACE_ID}"
+          : "${HF_SPACE_BRANCH:=main}"
+
+      - name: Pull Space from Hugging Face
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE_ID: ${{ secrets.HF_SPACE_ID }}          # ex: Paddy22/site-oradia
+          HF_SPACE_BRANCH: ${{ secrets.HF_SPACE_BRANCH }}  # ex: main
+          CLONE_DIR: ${{ runner.temp }}/hfspace
+        run: |
+          set -eux
+          rm -rf "$CLONE_DIR"
+          git clone --depth 1 --branch "${HF_SPACE_BRANCH:-main}" \
+            "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_ID}" "$CLONE_DIR"
+
+          # Copie le code depuis la Space MAIS:
+          #  - ne pas écraser nos images locales
+          #  - ne pas écraser notre .gitattributes
+          #  - ne pas copier le dossier .github
+          rsync -a --delete \
+            --exclude='.git' \
+            --exclude='.gitattributes' \
+            --exclude='.gitignore' \
+            --exclude='.github' \
+            --exclude='/assets*/' \
+            "$CLONE_DIR"/ .
+
+      - name: Commit & push if changes (LFS hard-off)
+        env:
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          set -eux
+          if ! git diff --quiet; then
+            git config user.name  "github-actions[bot]"
+            git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+            # Neutralise totalement LFS pour cet add/commit
+            git -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.required=false add -A
+            git -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.required=false commit -m "chore(sync): pull from HF Space ${{ secrets.HF_SPACE_ID }}"
+
+            git pull --rebase origin "${BRANCH:-main}" || git pull --rebase origin main
+            # ceinture et bretelles si un fichier resterait marqué LFS
+            git config lfs.allowincompletepush true
             git push
           else
             echo "No changes to commit."
