@@ -4,62 +4,51 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
   <title>Oradia - Oracle Vibratoire</title>
-
 <link rel="canonical" href="https://oradia.fr/">
 <link rel="alternate" hreflang="fr" href="https://oradia.fr/">
 <link rel="alternate" hreflang="x-default" href="https://oradia.fr/">
-<link rel="preconnect" href="https://oradia-static.vercel.app" crossorigin>
-
-<!-- Garde cdnjs seulement si tu l'utilises vraiment -->
+<link rel="preconnect" href="https://i.ibb.co" crossorigin>
+<link rel="preconnect" href="https://enzostvs-deepsite.hf.space" crossorigin>
 <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+<link rel="dns-prefetch" href="//i.ibb.co">
+<link rel="dns-prefetch" href="//enzostvs-deepsite.hf.space">
 
-<!-- Favicon (1 seul) -->
-<link rel="icon" href="https://oradia-static.vercel.app/assets/logofinal.png" type="image/png">
+<!-- Open Graph -->
 
-<!-- Preload (1 seul) -->
-<link rel="preload" as="image" href="https://oradia-static.vercel.app/assets/logo2.png" fetchpriority="high">
 
-<!-- Open Graph / Twitter (1 seul bloc, URLs absolues) -->
 <meta property="og:locale" content="fr_FR">
 <meta property="og:type" content="website">
 <meta property="og:title" content="Oradia - Oracle Vibratoire">
 <meta property="og:description" content="Oradia est un oracle vibratoire qui croise sagesses ancestrales et IA pour guider votre chemin intérieur. Tirages gratuits et tirages complets.">
 <meta property="og:url" content="https://oradia.fr/">
-<meta property="og:image" content="https://oradia-static.vercel.app/assets/og-1200x630.jpg">
-<meta property="og:image:width"  content="1200">
-<meta property="og:image:height" content="630">
+<meta property="og:image" content="https://i.ibb.co/4wG0t61y/og-1200x630.jpg">
 <meta property="og:site_name" content="Oradia">
+
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Oradia - Oracle Vibratoire">
 <meta name="twitter:description" content="Guidance vibratoire croisant sagesses ancestrales et IA.">
-<meta name="twitter:image" content="https://oradia-static.vercel.app/assets/og-1200x630.jpg">
+<meta name="twitter:image" content="https://i.ibb.co/4wG0t61y/og-1200x630.jpg">
+
 <meta name="description" content="Oradia est un oracle vibratoire qui croise sagesses ancestrales et IA pour guider votre chemin intérieur. Tirages gratuits et tirages complets.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-
+<link rel="icon" href="https://i.ibb.co/4wG0t61y/logo.png">
+<link rel="preload" as="image" href="https://i.ibb.co/cKHs3GY5/logo2.png" fetchpriority="high">
 <meta name="theme-color" content="#0a192f">
 <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
 <meta property="og:locale:alternate" content="en_US">
+
 <meta name="referrer" content="no-referrer-when-downgrade">
 <meta name="color-scheme" content="dark light">
 <meta name="format-detection" content="telephone=no">
+
+<meta property="og:image:width"  content="1200">
 <meta property="og:image:height" content="630">
 <link rel="preload" as="image"
-      href="https://oradia-static.vercel.app/assets/og-1200x630.jpg"
-      imagesrcset="https://oradia-static.vercel.app/assets/og-1200x630.jpg 1200w, https://oradia-static.vercel.app/assets/og-1200x630.jpg 800w"
+      href="https://i.ibb.co/4wG0t61y/og-1200x630.jpg"
+      imagesrcset="https://i.ibb.co/4wG0t61y/og-1200x630.jpg 1200w, https://i.ibb.co/XYZ/og-800x420.jpg 800w"
       imagesizes="(max-width: 768px) 100vw, 1200px">
 
-
-<!-- Organization JSON-LD (1 seul bloc) -->
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "Organization",
-  "name": "Oradia",
-  "url": "https://oradia.fr/",
-  "logo": "https://oradia-static.vercel.app/assets/logofinal.png"
-}
-</script>
 
 
 <script>
@@ -88,7 +77,31 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
       integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
       crossorigin="anonymous" referrerpolicy="no-referrer">
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"Organization",
+  "name":"Oradia",
+  "url":"https://oradia.fr/",
+  "logo":"https://i.ibb.co/4wG0t61y/logo.png",
+  "sameAs":["https://www.instagram.com/oradia_oracle"]
+}
+</script>
 
+<!-- WebSite JSON-LD ✅ uniquement du JSON -->
+<script type="application/ld+json">
+{
+  "@context":"https://schema.org",
+  "@type":"WebSite",
+  "name":"Oradia - Oracle Vibratoire",
+  "url":"https://oradia.fr/",
+  "potentialAction":{
+    "@type":"SearchAction",
+    "target":"https://oradia.fr/?q={query}",
+    "query-input":"required name=query"
+  }
+}
+</script>
 
 <!-- Vos utilitaires JS à part -->
 <script>
@@ -143,7 +156,8 @@ const pickOne = (arr) => arr[randInt(arr.length)];
 .polarity.is-cercle   { opacity: .95; }
 
     nav a[aria-current="page"]{
-    /* Style de la page active sans soulignement */
+    text-decoration: underline;
+    text-underline-offset: 4px;
     }
 
     :root{ --dore:#d4af37; --text:#e9e7df; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
@@ -348,10 +362,6 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
 /* Hauteur viewport fiable mobile (iOS/Android) */
 .min-h-100dvh { min-height: 100dvh; }
-
-/* Quand on arrive sur #oracle, décale de 80px sous le header */
-#oracle { scroll-margin-top: 80px; }
-
   </style>
 </head>
 
@@ -374,7 +384,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   <div class="flex items-center justify-between">
     <div class="flex items-center">
 
-<img src="https://oradia-static.vercel.app/assets/logo.png" alt="Oradia Logo"
+<img src="https://i.ibb.co/4wG0t61y/logo.png" alt="Oradia Logo"
      width="256" height="256" loading="eager" decoding="async"
      class="w-16 h-16 mr-6" />
 
@@ -438,11 +448,6 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         </div>
 
         <!-- Visuel -->
-<img src="https://oradia-static.vercel.app/assets/logo.png"
-     alt="Oradia Compass" width="512" height="512"
-     loading="eager" fetchpriority="high" decoding="async"
-     class="w-full h-full object-center object-contain rounded-full border-2 border-gold animate-spin-slow">
-
         <div class="flex justify-center">
           <div class="relative w-80 h-80 lg:w-96 lg:h-96">
             <div class="absolute inset-0 rounded-full border border-gold/20 animate-[spin_60s_linear_infinite]">
@@ -455,7 +460,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
                 <div class="bg-night-blue w-56 h-56 rounded-full flex items-center justify-center relative">
                   <div class="absolute w-1 h-16 bg-gold rounded-full origin-bottom" style="transform: rotate(45deg);"></div>
                   <div class="absolute w-1 h-16 bg-light-gold rounded-full origin-bottom" style="transform: rotate(-45deg);"></div>
-  <img src="https://oradia-static.vercel.app/assets/logo.png" alt="Oradia Compass"
+  <img src="https://i.ibb.co/cKHs3GY5/logo2.png" alt="Oradia Compass"
      width="512" height="512" loading="eager" fetchpriority="high" decoding="async"
      class="w-full h-full object-center object-contain rounded-full border-2 border-gold animate-spin-slow">
                   <div class="absolute inset-0 flex flex-col items-center justify-center">
@@ -479,9 +484,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   <section id="oracle" class="py-12 md:py-20 px-4 md:px-6">
     <div class="container mx-auto max-w-6xl">
       <div class="text-center mb-10">
-        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient leading-[1.2] pt-1">
-  Tirage du Pèlerin
-</h2>
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Tirage du Pèlerin</h2>
         <p class="text-light-gold max-w-3xl mx-auto">Guidance vibratoire croisant plusieurs systèmes.</p>
       </div>
 
@@ -653,7 +656,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>3 cartes + 1 carte Mémoires Cosmos</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Interprétation synthétique</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Analyse croisée basique par l'IA</span></li>
-            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Cartes passerelles</span></li>
+            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Cartes mutantes</span></li>
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Espace membre</span></li>
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Analyse approfondie</span></li>
           </ul>
@@ -693,7 +696,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <ul class="space-y-3 mb-8 relative z-10">
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>4 cartes vibratoires</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 carte Mémoires Cosmos</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes passerelles</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes mutantes incluses</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Analyse croisée par l'IA complète et détaillée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question d'introspection</span></li>
@@ -728,7 +731,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
           <ul class="space-y-3 mb-8 relative z-10">
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 tirage complet quotidien par mail avec votre intention</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes passerelles</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes mutantes incluses</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question du jour</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Espace membre (profils ennéagramme, astro, numérologie...)</span></li>
@@ -774,7 +777,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
         <div class="flex justify-center">
           <div class="rounded-2xl p-4" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
-      <img src="https://oradia-static.vercel.app/assets/apercu.png" alt="Aperçu du jeu" width="1024" height="576" loading="lazy" decoding="async" fetchpriority="low"/>
+        <img src="https://i.ibb.co/FTDGc0k/Capture-d-cran-2025-08-09-090137.png" alt="Aperçu du jeu" width="1024" height="576" loading="lazy" decoding="async" fetchpriority="low"/>
             <p class="text-light-gold text-center mt-4 italic">Aperçu du jeu de cartes en développement</p>
           </div>
         </div>
@@ -831,7 +834,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <div class="relative">
             <div class="bg-gradient-to-br from-gold/10 to-night-blue border border-gold/30 rounded-2xl w-full h-96"></div>
             <div class="absolute -bottom-6 -right-6 w-64 h-64 bg-gradient-to-tr from-gold/5 to-transparent border border-gold/20 rounded-2xl">
-             <img src="https://oradia-static.vercel.app/assets/logo.png" "alt="logo Oradia" width="512" height="512"
+             <img src="https://i.ibb.co/TB75673d/logo.png"
+     alt="logo Oradia" width="512" height="512"
      loading="lazy" decoding="async" fetchpriority="low"
      class="w-full h-full object-contain p-4">
 
@@ -857,7 +861,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <div class="relative">
             <div class="bg-gradient-to-br from-gold/10 to-night-blue border border-gold/30 rounded-2xl w-full h-96"></div>
             <div class="absolute -top-6 -left-6 w-64 h-64 bg-gradient-to-tr from-gold/5 to-transparent border border-gold/20 rounded-2xl">
-<img src="https://oradia-static.vercel.app/assets/logo.png" alt="Logo SCIC" width="512" height="512"
+<img src="https://i.ibb.co/354MSMtd/Logo-SCIC.png"
+     alt="Logo SCIC" width="512" height="512"
      loading="lazy" decoding="async" fetchpriority="low"
      class="w-full h-full object-contain p-3">
             </div>
@@ -882,7 +887,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             <p class="text-light-gold">
               Edolg'Or est une association qui vise à favoriser la création, le développement et l’entretien des liens sociaux et culturels
               par des activités ludiques, artistiques et d’arts vivants à travers un jeu sérieux grandeur nature.
-              Objectif : découvrir la civilisation d'Edolg'OR et l'emplacement de sa cité d'or vivant au rythme du modèle OTRE.
+              Objectif : découvrir la civilisation d'Edolg'OR et l'emplacement de sa cité d'or vivant, au rythme du modèle OTRE.
               Lors de votre achat pour un tirage complet ou un abonnement, vous pouvez reverser 1€ à l'association.
             </p>
             <p class="text-light-gold">
@@ -967,14 +972,6 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             0%, 100% { transform: translateX(-50%) rotate(-12deg); }
             50% { transform: translateX(-50%) rotate(12deg); }
           }
-
-          /* Anti-clipping des gros titres dorés */
-.gold-gradient{
-  line-height: 1.25;           /* évite la coupe des ascendantes */
-  padding-top: 2px;           /* décale très légèrement vers le bas */
-  -webkit-text-fill-color: transparent; /* explicite pour WebKit/Blink */
-}
-
         </style>
         <div class="relative z-10">
         <div id="traversee-intro">
@@ -1030,7 +1027,10 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
         <div>
           <div class="flex items-center mb-4">
-    <img src="https://oradia-static.vercel.app/assets/logo.png" alt="Oradia Logo" width="256" height="256" loading="lazy" decoding="async" fetchpriority="low" class="w-16 h-16 mr-4" />
+    <img src="https://i.ibb.co/4wG0t61y/logo.png"
+     alt="Oradia Logo" width="256" height="256"
+     loading="lazy" decoding="async" fetchpriority="low"
+     class="w-16 h-16 mr-4" />
 
             <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
           </div>
@@ -1075,38 +1075,33 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   <!-- Modale Commande -->
 <div id="orderModal" class="fixed inset-0 bg-night-blue/90 z-[100] flex items-center justify-center hidden"
      role="dialog" aria-modal="true" aria-labelledby="orderTitle" aria-describedby="orderDesc">
-  <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-2xl w-[92vw] md:w-auto mx-4 relative">
+  <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
     <button id="closeOrder" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer" type="button"><i class="fas fa-times"></i></button>
     <div class="text-center mb-8">
-      <h3 id="orderTitle" class="cormorant text-3xl text-gold mb-2">Commande Tirage de la Traversée</h3>
+      <h3 id="orderTitle" class="cormorant text-3xl text-gold mb-2">Commande Tirage Complet</h3>
       <p id="orderDesc" class="text-light-gold">Finalisez votre commande (5€)</p>
       </div>
-      <form id="orderForm" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-  <!-- Email -->
-  <div class="md:col-span-1">
+      <form id="orderForm">
+  <div class="mb-4">
     <label class="block text-light-gold mb-2">Email</label>
     <input type="email" autocomplete="email" inputmode="email"
            autocapitalize="off" autocorrect="off" spellcheck="false"
            class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
   </div>
 
-  <!-- Nom complet -->
-  <div class="md:col-span-1">
+  <div class="mb-4">
     <label class="block text-light-gold mb-2">Nom complet</label>
     <input type="text" autocomplete="name" inputmode="text"
            class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
   </div>
 
-  <!-- Date de naissance -->
-  <div class="md:col-span-1">
+  <div class="mb-4">
     <label class="block text-light-gold mb-2">Date de naissance</label>
     <input type="date" autocomplete="bday"
            class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
   </div>
 
-  <!-- Moyen de paiement -->
-  <div class="md:col-span-1">
+  <div class="mb-6">
     <label class="block text-light-gold mb-2">Moyen de paiement</label>
     <select class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
       <option value="">Sélectionnez...</option>
@@ -1115,33 +1110,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     </select>
   </div>
 
-  <!-- Code d’accès (plein largeur) -->
-  <div class="md:col-span-2 mt-2 pt-4 border-t border-[rgba(212,175,55,.25)]">
-    <p class="text-light-gold mb-2 text-sm">
-      Vous avez déjà reçu votre code d’accès par e-mail ?
-    </p>
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
-      <input id="unlockEmail" type="email" placeholder="Votre email"
-             class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg md:col-span-1">
-      <input id="unlockCode" type="text" placeholder="Code reçu"
-             class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg md:col-span-1">
-      <button id="unlockBtn" type="button"
-              class="btn-outline-gold md:col-span-1 whitespace-nowrap">
-        Valider le code
-      </button>
-    </div>
-    <p id="unlockMsg" class="mt-2 text-[13px]"></p>
-  </div>
-
-  <!-- Bouton Payer (plein largeur) -->
-  <div class="md:col-span-2 mt-2 flex justify-center">
-    <button type="submit" class="btn-gold w-full md:w-auto md:min-w-[240px]">
-      Payer
-    </button>
-  </div>
-
+  <button type="submit" class="btn-gold w-full">Payer 5€</button>
 </form>
-
 
     </div>
   </div>
@@ -1926,21 +1896,6 @@ mobileMenu?.addEventListener('click', (e) => {
     } catch(_){}
   }
 })();
-// Préremplir les champs email et code si présents dans l'URL
-(function(){
-  var sp = new URLSearchParams(location.search);
-  var e = sp.get('email'); 
-  var c = sp.get('code');
-  if(e) {
-    var emailInput = document.getElementById('unlockEmail');
-    if(emailInput) emailInput.value = e;
-  }
-  if(c) {
-    var codeInput = document.getElementById('unlockCode');
-    if(codeInput) codeInput.value = c;
-  }
-})();
-
 </script>
 
 
