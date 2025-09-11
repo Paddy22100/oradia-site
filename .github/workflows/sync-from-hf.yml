@@ -3,7 +3,10 @@ name: Sync from Hugging Face Space
 on:
   repository_dispatch:
     types: [hf-space-updated]
+  schedule:
+    - cron: "*/5 * * * *"
   workflow_dispatch: {}
+
 
 permissions:
   contents: write
