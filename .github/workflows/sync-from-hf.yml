@@ -16,7 +16,11 @@ jobs:
   sync:
     runs-on: ubuntu-latest
     env:
-      # Ne télécharge/traite aucun objet LFS pendant ce job
+      # Secrets mappés pour tout le job
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_SPACE_ID: ${{ secrets.HF_SPACE_ID }}
+      HF_SPACE_BRANCH: ${{ secrets.HF_SPACE_BRANCH }}
+      # Pas de téléchargement / traitement LFS
       GIT_LFS_SKIP_SMUDGE: "1"
 
     steps:
@@ -34,10 +38,6 @@ jobs:
           git lfs install --skip-smudge
 
       - name: Check required secrets
-        env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_SPACE_ID: ${{ secrets.HF_SPACE_ID }}
-          HF_SPACE_BRANCH: ${{ secrets.HF_SPACE_BRANCH }}
         run: |
           set -eu
           : "${HF_TOKEN:?Missing HF_TOKEN}"
@@ -46,9 +46,6 @@ jobs:
 
       - name: Pull Space from Hugging Face
         env:
-          HF_TOKEN: ${{ secrets.HF_TOKEN }}
-          HF_SPACE_ID: ${{ secrets.HF_SPACE_ID }}          # ex: Paddy22/site-oradia
-          HF_SPACE_BRANCH: ${{ secrets.HF_SPACE_BRANCH }}  # ex: main
           CLONE_DIR: ${{ runner.temp }}/hfspace
         run: |
           set -eux
@@ -56,7 +53,7 @@ jobs:
           git clone --depth 1 --branch "${HF_SPACE_BRANCH:-main}" \
             "https://user:${HF_TOKEN}@huggingface.co/spaces/${HF_SPACE_ID}" "$CLONE_DIR"
 
-          # Copie le code depuis la Space MAIS on ne touche pas à nos assets ni à notre config Git
+          # Copie depuis la Space sans toucher à nos assets ni à notre config Git
           rsync -a --delete \
             --exclude='.git' \
             --exclude='.gitattributes' \
@@ -74,9 +71,9 @@ jobs:
             git config user.name  "github-actions[bot]"
             git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-            # Neutralise totalement LFS pour cet add/commit
+            # Neutralise totalement LFS pour l'indexation et le commit
             git -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.required=false add -A
-            git -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.required=false commit -m "chore(sync): pull from HF Space ${{ secrets.HF_SPACE_ID }}"
+            git -c filter.lfs.clean= -c filter.lfs.smudge= -c filter.lfs.process= -c filter.lfs.required=false commit -m "chore(sync): pull from HF Space ${HF_SPACE_ID}"
 
             git pull --rebase origin "${BRANCH:-main}" || git pull --rebase origin main
             git config lfs.allowincompletepush true
