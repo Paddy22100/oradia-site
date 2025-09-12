@@ -2,11 +2,8 @@ name: Sync from Hugging Face Space
 
 on:
   repository_dispatch:
-    types: [hf-space-updated]
-  schedule:
-    - cron: "*/5 * * * *"
-  workflow_dispatch: {}
-
+    types: [hf-space-updated]   # Tu peux déclencher ça depuis HF/Vercel
+  workflow_dispatch: {}         # Lancer manuellement si besoin
 
 permissions:
   contents: write
@@ -18,11 +15,17 @@ concurrency:
 jobs:
   sync:
     runs-on: ubuntu-latest
+
     env:
-      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      # Renseigne ces secrets dans GitHub → Settings → Secrets and variables → Actions
+      # HF_SPACE_ID: ex. "TonOrg/TonEspace" (format exact de la page HF)
+      # HF_SPACE_BRANCH: ex. "main"
+      # HF_TOKEN: (optionnel si Space public)
       HF_SPACE_ID: ${{ secrets.HF_SPACE_ID }}
-      HF_SPACE_BRANCH: ${{ secrets.HF_SPACE_BRANCH || 'main' }}
-      GIT_LFS_SKIP_SMUDGE: "1"   # ok pour le pull, n'affecte pas le clean
+      HF_SPACE_BRANCH: ${{ secrets.HF_SPACE_BRANCH }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      CLONE_DIR: ${{ runner.temp }}/hfspace
+
     steps:
       - name: Checkout current repo
         uses: actions/checkout@v4
@@ -31,64 +34,67 @@ jobs:
 
       - name: Install git-lfs & rsync
         run: |
-          set -eux
+          set -euxo pipefail
           sudo apt-get update
           sudo apt-get install -y git-lfs rsync
-          git lfs install --system
-          git lfs version
+          git lfs install
 
-      - name: Configure git user (CI)
+      - name: Clone HF Space
         run: |
-          git config user.name  "oradia-sync-bot"
-          git config user.email "actions@users.noreply.github.com"
-
-      - name: Clone HF Space to temp
-        env:
-          CLONE_DIR: ${{ runner.temp }}/hfspace
-        run: |
-          set -eux
+          set -euxo pipefail
           rm -rf "$CLONE_DIR"
-          git clone --depth 1 --branch "${HF_SPACE_BRANCH:-main}" \
+
+          # Auth header si token fourni (utile si Space privé)
+          EXTRA=""
+          if [ -n "${HF_TOKEN:-}" ]; then
+            EXTRA='-c http.extraHeader=Authorization: Bearer '"$HF_TOKEN"
+          fi
+
+          git $EXTRA clone --branch "${HF_SPACE_BRANCH:-main}" \
             "https://huggingface.co/spaces/${HF_SPACE_ID}" "$CLONE_DIR"
 
-      - name: Sync files from HF Space -> repo (overwrite)
-        env:
-          CLONE_DIR: ${{ runner.temp }}/hfspace
+      # --- BONUS : matérialiser les fichiers LFS (vraies binaires) ---
+      - name: Materialize LFS files from HF clone
+        working-directory: ${{ env.CLONE_DIR }}
         run: |
-          set -eux
+          set -euxo pipefail
+          git lfs install
+          git lfs fetch --all || true
+          git lfs checkout || true
+
+      - name: Mirror files from HF → repo (rsync, delete)
+        run: |
+          set -euxo pipefail
           rsync -av --delete \
-            --exclude ".git/" \
-            --exclude ".github/workflows/" \
-            "$CLONE_DIR"/ ./
+            --exclude '.git/' \
+            "$CLONE_DIR/" .
 
-      # 🔑 Assure le tracking LFS des images AVANT d'ajouter/committer
-      - name: Ensure LFS tracking for images
+      - name: Commit & push changes (HF wins)
         run: |
-          set -eux
-          git lfs track "*.png" "*.jpg" "*.jpeg" "*.webp" "*.gif"
-          git add .gitattributes
+          set -euxo pipefail
+          BRANCH="${GITHUB_REF_NAME:-main}"
 
-      - name: Commit changes
-        run: |
-          set -eux
-          if ! git diff --cached --quiet || ! git diff --quiet; then
-            git add -A
-            git commit -m "chore(sync): overwrite from HF Space"
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Rien à faire ? On sort proprement.
+          if git diff --quiet; then
+            echo "No changes after sync. Exiting."
+            exit 0
           fi
 
-      # 🚀 Pousse d’abord les blobs LFS, puis la ref git
-      - name: Push LFS objects
-        run: |
-          set -eux
-          git lfs ls-files || true
-          git lfs push --all origin HEAD
+          # On neutralise les filtres LFS côté GitHub pour committer des binaires "plats"
+          git -c filter.lfs.clean= \
+              -c filter.lfs.smudge= \
+              -c filter.lfs.process= \
+              -c filter.lfs.required=false add -A
 
-      - name: Push refs
-        run: |
-          set -eux
-          git push
+          git -c filter.lfs.clean= \
+              -c filter.lfs.smudge= \
+              -c filter.lfs.process= \
+              -c filter.lfs.required=false commit \
+              -m "chore(sync): mirror HF Space → GitHub $(date -u +%F-%H%M%SZ)"
 
-
-          else
-            echo "No changes to commit."
-          fi
+          # On pousse en miroir (HF = vérité). --force-with-lease = prudent.
+          git fetch origin "$BRANCH" || true
+          git push --force-with-lease origin "HEAD:$BRANCH"
