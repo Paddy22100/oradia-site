@@ -20,9 +20,9 @@ jobs:
     runs-on: ubuntu-latest
     env:
       HF_TOKEN: ${{ secrets.HF_TOKEN }}
-      HF_SPACE_ID: ${{ secrets.HF_SPACE_ID }}     # ex: username/my-space
+      HF_SPACE_ID: ${{ secrets.HF_SPACE_ID }}
       HF_SPACE_BRANCH: ${{ secrets.HF_SPACE_BRANCH || 'main' }}
-      GIT_LFS_SKIP_SMUDGE: "1"
+      GIT_LFS_SKIP_SMUDGE: "1"   # ok pour le pull, n'affecte pas le clean
     steps:
       - name: Checkout current repo
         uses: actions/checkout@v4
@@ -31,9 +31,11 @@ jobs:
 
       - name: Install git-lfs & rsync
         run: |
+          set -eux
           sudo apt-get update
           sudo apt-get install -y git-lfs rsync
-          git lfs install
+          git lfs install --system
+          git lfs version
 
       - name: Configure git user (CI)
         run: |
@@ -49,25 +51,43 @@ jobs:
           git clone --depth 1 --branch "${HF_SPACE_BRANCH:-main}" \
             "https://huggingface.co/spaces/${HF_SPACE_ID}" "$CLONE_DIR"
 
-      - name: Sync files from HF Space -> repo (one-way, overwrite)
+      - name: Sync files from HF Space -> repo (overwrite)
         env:
           CLONE_DIR: ${{ runner.temp }}/hfspace
         run: |
           set -eux
-          # On écrase le contenu du repo par celui du Space.
-          # On protège le dossier workflow pour éviter l’auto-suppression.
           rsync -av --delete \
             --exclude ".git/" \
             --exclude ".github/workflows/" \
             "$CLONE_DIR"/ ./
 
-      - name: Commit if changes
+      # 🔑 Assure le tracking LFS des images AVANT d'ajouter/committer
+      - name: Ensure LFS tracking for images
         run: |
           set -eux
-          if ! git diff --quiet; then
+          git lfs track "*.png" "*.jpg" "*.jpeg" "*.webp" "*.gif"
+          git add .gitattributes
+
+      - name: Commit changes
+        run: |
+          set -eux
+          if ! git diff --cached --quiet || ! git diff --quiet; then
             git add -A
             git commit -m "chore(sync): overwrite from HF Space"
-            git push
+          fi
+
+      # 🚀 Pousse d’abord les blobs LFS, puis la ref git
+      - name: Push LFS objects
+        run: |
+          set -eux
+          git lfs ls-files || true
+          git lfs push --all origin HEAD
+
+      - name: Push refs
+        run: |
+          set -eux
+          git push
+
           else
             echo "No changes to commit."
           fi
