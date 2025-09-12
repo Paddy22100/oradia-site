@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Repo GitHub
+      # 1) Récup du repo GitHub
       - name: Checkout current repo
         uses: actions/checkout@v4
         with:
@@ -40,7 +40,7 @@ jobs:
           sudo apt-get install -y git-lfs rsync jq
           git lfs install
 
-      # 3) Résolution des variables
+      # 3) Résolution des variables (branche/space)
       - name: Resolve config (branch & Space)
         id: cfg
         run: |
@@ -65,29 +65,39 @@ jobs:
           SPACE_BRANCH="${SPACE_BRANCH_INPUT:-${SPACE_BRANCH_SECRET:-main}}"
           echo "space_branch=$SPACE_BRANCH" >> "$GITHUB_OUTPUT"
 
-      # 4) Auth propre + clone du Space
+      # 4) Auth HF via GIT_ASKPASS (anti-prompt) + clone
       - name: Configure HF auth & clone Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
           set -euxo pipefail
           CLONE_DIR="$RUNNER_TEMP/hfspace"
           rm -rf "$CLONE_DIR"
 
-          # 👉 Force l'en-tête Authorization pour tout le domaine huggingface.co
-          if [ -n "${{ secrets.HF_TOKEN }}" ]; then
-            git config --global http.https://huggingface.co/.extraheader "Authorization: Bearer ${{ secrets.HF_TOKEN }}"
+          # Script ASKPASS : renvoie __token__ puis le token
+          if [ -n "${HF_TOKEN:-}" ]; then
+            cat > "$RUNNER_TEMP/hf_askpass.sh" <<'SH'
+#!/usr/bin/env bash
+case "$1" in
+  *Username*) echo "__token__" ;;
+  *Password*) echo "$HF_TOKEN" ;;
+  *) echo "" ;;
+esac
+SH
+            chmod +x "$RUNNER_TEMP/hf_askpass.sh"
+            export GIT_ASKPASS="$RUNNER_TEMP/hf_askpass.sh"
+            export HF_TOKEN   # rendu visible pour le script, pas dans les logs
           fi
 
-          # Clone (privé ou public)
+          # Clone (marche pour Space public ou privé ; privé => token utilisé)
           git clone --branch "${{ steps.cfg.outputs.space_branch }}" \
             "https://huggingface.co/spaces/${{ steps.cfg.outputs.space_id }}" \
             "$CLONE_DIR"
 
-          # Nettoyage de l'en-tête après clone (hygiène)
-          if [ -n "${{ secrets.HF_TOKEN }}" ]; then
-            git config --global --unset-all http.https://huggingface.co/.extraheader || true
-          fi
+          # Hygiène
+          unset GIT_ASKPASS || true
 
-      # 5) BONUS : matérialiser LFS (vraies binaires)
+      # 5) BONUS : matérialiser les fichiers LFS (vraies binaires depuis HF)
       - name: Materialize LFS files from HF clone
         working-directory: ${{ runner.temp }}/hfspace
         run: |
@@ -96,14 +106,17 @@ jobs:
           git lfs fetch --all || true
           git lfs checkout || true
 
-      # 6) Miroir HF -> repo
+      # 6) Miroir HF → GitHub (respect .gitignore, suppression des fichiers retirés)
       - name: Mirror files (HF → GitHub working tree)
         run: |
           set -euxo pipefail
           CLONE_DIR="$RUNNER_TEMP/hfspace"
-          rsync -a --delete --exclude '.git/' --filter=':- .gitignore' "$CLONE_DIR/" .
+          rsync -a --delete \
+            --exclude '.git/' \
+            --filter=':- .gitignore' \
+            "$CLONE_DIR/" .
 
-      # 7) Commit & push (HF gagne)
+      # 7) Commit & push (HF gagne, pas de rebase ni conflits)
       - name: Commit & push (HF wins)
         run: |
           set -euxo pipefail
@@ -117,7 +130,7 @@ jobs:
             exit 0
           fi
 
-          # Neutraliser LFS pour éviter les pointeurs sur images web, etc.
+          # Neutraliser LFS côté commit (pas de pointeurs pour images web, etc.)
           git -c filter.lfs.clean= \
               -c filter.lfs.smudge= \
               -c filter.lfs.process= \
