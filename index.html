@@ -1,159 +1,35 @@
+
 <!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
   <title>Oradia - Oracle Vibratoire</title>
-<link rel="canonical" href="https://oradia.fr/">
-<link rel="alternate" hreflang="fr" href="https://oradia.fr/">
-<link rel="alternate" hreflang="x-default" href="https://oradia.fr/">
-<link rel="preconnect" href="https://i.ibb.co" crossorigin>
-<link rel="preconnect" href="https://enzostvs-deepsite.hf.space" crossorigin>
-<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-<link rel="dns-prefetch" href="//i.ibb.co">
-<link rel="dns-prefetch" href="//enzostvs-deepsite.hf.space">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-<!-- Open Graph -->
-
-
-<meta property="og:locale" content="fr_FR">
-<meta property="og:type" content="website">
-<meta property="og:title" content="Oradia - Oracle Vibratoire">
-<meta property="og:description" content="Oradia est un oracle vibratoire qui croise sagesses ancestrales et IA pour guider votre chemin intérieur. Tirages gratuits et tirages complets.">
-<meta property="og:url" content="https://oradia.fr/">
-<meta property="og:image" content="https://i.ibb.co/4wG0t61y/og-1200x630.jpg">
-<meta property="og:site_name" content="Oradia">
-
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Oradia - Oracle Vibratoire">
-<meta name="twitter:description" content="Guidance vibratoire croisant sagesses ancestrales et IA.">
-<meta name="twitter:image" content="https://i.ibb.co/4wG0t61y/og-1200x630.jpg">
-
-<meta name="description" content="Oradia est un oracle vibratoire qui croise sagesses ancestrales et IA pour guider votre chemin intérieur. Tirages gratuits et tirages complets.">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="icon" href="https://i.ibb.co/Q3vbXP4S/Logo-final.png">
-<link rel="preload" as="image" href="https://i.ibb.co/HfVZ03nt/logo2.png" fetchpriority="high">
-<meta name="theme-color" content="#0a192f">
-<meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
-<meta property="og:locale:alternate" content="en_US">
-
-<meta name="referrer" content="no-referrer-when-downgrade">
-<meta name="color-scheme" content="dark light">
-<meta name="format-detection" content="telephone=no">
-
-<meta property="og:image:width"  content="1200">
-<meta property="og:image:height" content="630">
-<link rel="preload" as="image"
-      href="https://i.ibb.co/4wG0t61y/og-1200x630.jpg"
-      imagesrcset="https://i.ibb.co/4wG0t61y/og-1200x630.jpg 1200w, https://i.ibb.co/XYZ/og-800x420.jpg 800w"
-      imagesizes="(max-width: 768px) 100vw, 1200px">
-
-
-<script>
-  window.tailwind = {};
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          'night-blue': '#0a192f',
-          'gold': '#d4af37',
-          'light-gold': '#f5e7a1',
-          'dark-blue': '#051428',
-          'celtic-blue': '#1a365d'
-        },
-        fontFamily: {
-          'cormorant': ['Cormorant Garamond', 'serif'],
-          'poppins': ['Poppins', 'sans-serif']
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#0a192f',
+            'gold': '#d4af37',
+            'light-gold': '#f5e7a1',
+            'dark-blue': '#051428',
+            'celtic-blue': '#1a365d'
+          },
+          fontFamily: {
+            'cormorant': ['Cormorant Garamond', 'serif'],
+            'poppins': ['Poppins', 'sans-serif']
+          }
         }
       }
     }
-  };
-</script>
-<script src="https://cdn.tailwindcss.com"></script>
+  </script>
 
-<link rel="stylesheet"
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css"
-      integrity="sha512-DTOQO9RWCH3ppGqcWaEA1BIZOC6xxalwEsw9c2QQeAIftl+Vegovlnee1c9QX4TctnWMn13TZye+giMm8e2LwA=="
-      crossorigin="anonymous" referrerpolicy="no-referrer">
-<script type="application/ld+json">
-{
-  "@context":"https://schema.org",
-  "@type":"Organization",
-  "name":"Oradia",
-  "url":"https://oradia.fr/",
-  "logo":"https://i.ibb.co/Q3vbXP4S/Logo-final.png",
-  "sameAs":["https://www.instagram.com/oradia_oracle"]
-}
-</script>
-
-<!-- WebSite JSON-LD ✅ uniquement du JSON -->
-<script type="application/ld+json">
-{
-  "@context":"https://schema.org",
-  "@type":"WebSite",
-  "name":"Oradia - Oracle Vibratoire",
-  "url":"https://oradia.fr/",
-  "potentialAction":{
-    "@type":"SearchAction",
-    "target":"https://oradia.fr/?q={query}",
-    "query-input":"required name=query"
-  }
-}
-</script>
-
-<!-- Vos utilitaires JS à part -->
-<script>
-function setBusy(el, busy){
-  if(!el) return;
-  el.setAttribute('aria-busy', busy ? 'true' : 'false');
-}
-function randInt(max){ // 0..max-1
-  const arr = new Uint32Array(1);
-  crypto.getRandomValues(arr);
-  return Math.floor((arr[0] / 2**32) * max);
-}
-
-const pickOne = (arr) => arr[randInt(arr.length)];
-
-</script>
-
-<script>
-  tailwind.config = {
-    theme: {
-      extend: {
-        colors: {
-          'night-blue': '#0a192f',
-          'gold': '#d4af37',
-          'light-gold': '#f5e7a1',
-          'dark-blue': '#051428',
-          'celtic-blue': '#1a365d'
-        },
-        fontFamily: {
-          'cormorant': ['Cormorant Garamond', 'serif'],
-          'poppins': ['Poppins', 'sans-serif']
-        }
-      }
-    }
-  }
-</script>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap" rel="stylesheet">
-<style>
-
-/* Badges de forme Oradia */
-.chip--triangle::before { content: "▲ "; }
-.chip--cercle::before   { content: "◯ "; }
-
-/* Carte Passerelle (petite signature visuelle) */
-.chip--passerelle{
-  border-style: dashed;
-  opacity: .95;
-}
-
-/* Optionnel: teinter selon la forme (si tu veux) */
-.polarity.is-triangle { filter: saturate(1.1); }
-.polarity.is-cercle   { opacity: .95; }
-
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
 
     :root{ --dore:#d4af37; --text:#e9e7df; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
 
@@ -197,7 +73,7 @@ const pickOne = (arr) => arr[randInt(arr.length)];
     grid-area: auto !important; /* empile proprement en 1 colonne */
   }
 }
-    .pos-1{grid-area:1/1} .pos-2{grid-area:1/2} .pos-3{grid-area:1/3} .pos-4{grid-area:1/4} .pos-5{grid-area:1/5}
+    .pos-1{grid-area:1/1} .pos-2{grid-area:1/2} .pos-3{grid-area:1/5} .pos-4{grid-area:1/3} .pos-5{grid-area:1/4}
 
     .card{ width:min(280px,90vw); height:400px; perspective:1000px; transition:.3s transform }
     @media(max-width:400px){ .card{ height:360px } }
@@ -221,12 +97,11 @@ const pickOne = (arr) => arr[randInt(arr.length)];
     .btn-outline-gold{ background:transparent; color:#d4af37; border:2px solid #d4af37; border-radius:8px; padding:10px 20px; transition:.3s; display:inline-block }
     .btn-outline-gold:hover{ background:rgba(212,175,55,.1); transform:translateY(-3px) }
 
-   .scroll-top{ position:fixed; bottom:30px; right:30px; z-index:1002; opacity:0; transition:opacity .3s }
-   .scroll-top.show{ opacity:1 }
+    .scroll-top{ position:fixed; bottom:30px; right:30px; z-index:99; opacity:0; transition:opacity .3s }
+    .scroll-top.show{ opacity:1 }
 
     .result-lines{ padding:12px; border-radius:12px; background:rgba(11,29,58,.6); border:1px solid rgba(212,175,55,.2) }
     .hide-sections { display: none !important; }
-
 /* --- Traversée : plateau en croix 5 cartes --- */
 .traversee-board-5{
   display:grid;
@@ -265,8 +140,8 @@ const pickOne = (arr) => arr[randInt(arr.length)];
   box-shadow:0 10px 20px rgba(212,175,55,.25);
 }
 #exitTraverseeBtn.hidden{ display:none; }
-
 /* === MOBILE & TABLET POLISH === */
+
 /* Images fluides partout */
 img { max-width: 100%; height: auto; }
 
@@ -278,15 +153,6 @@ img { max-width: 100%; height: auto; }
     aspect-ratio: 7 / 10;   /* ratio carte */
   }
   .card-inner{ height: 100%; }
-}
-
-/* PÈLERIN : éviter les débordements des citations */
-.card .front .quote,
-.card .front [data-quote]{
-  overflow-wrap: anywhere; /* casse même les longs mots / URLs */
-  word-break: break-word;  /* fallback vieux navigateurs */
-  hyphens: auto;           /* ajoute des césures si possible */
-  line-height: 1.35;
 }
 
 /* Cartes de la Traversée : assure une bonne hauteur et wrap du texte */
@@ -333,37 +199,11 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 @media (prefers-reduced-motion: reduce){
   *{ animation: none !important; transition: none !important; }
 }
-/* Focus visible clavier */
-:focus-visible { outline: 3px solid var(--dore); outline-offset: 2px; }
-.traversee-card-back:focus-visible,
-.card .back:focus-visible,
-.btn-gold:focus-visible,
-.btn-outline-gold:focus-visible { box-shadow: 0 0 0 4px rgba(212,175,55,.35); }
 
-/* Désactive les effets hover sur écrans tactiles */
-@media (hover: none) {
-  .card:hover { transform: none; }
-  .btn-gold:hover, .btn-outline-gold:hover { transform: none; box-shadow: none; }
-}
-
-/* Contraste : doré plus lisible pour le texte long */
-:root{ --gold-aa: #e6c766; }
-.text-gold { color: var(--gold-aa) !important; } /* conserve #d4af37 pour bordures/déco */
-
-/* Bouton disabled accessible */
-[aria-disabled="true"], button:disabled {
-  opacity: .6; cursor: not-allowed;
-}
-
-/* Hauteur viewport fiable mobile (iOS/Android) */
-.min-h-100dvh { min-height: 100dvh; }
   </style>
 </head>
 
 <body class="relative">
-<a href="#accueil" class="sr-only focus:not-sr-only focus:fixed top-2 left-2 bg-night-blue text-gold p-2 rounded z-[1001]">
-  Aller au contenu
-</a>
 
 <button id="exitTraverseeBtn" class="hidden" aria-label="Quitter le tirage de la Traversée">
   Quitter le tirage de la Traversée
@@ -378,25 +218,23 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 <header class="header-bg w-full py-3 px-4 md:py-4 md:px-8">
   <div class="flex items-center justify-between">
     <div class="flex items-center">
-<img src="https://i.ibb.co/Q3vbXP4S/Logo-final.png" alt="Oradia Logo"
-     width="256" height="256" loading="eager" decoding="async"
-     class="w-16 h-16 mr-6" />
-
+      <img src="https://i.ibb.co/4wG0t61y/logo.png" alt="Oradia Logo"
+           class="w-16 h-16 mr-6 transform hover:scale-110 transition-transform duration-300"/>
       <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
     </div>
 
     <!-- Bouton burger (mobile) -->
-   <button id="mobileMenuBtn" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold"
-        aria-label="Ouvrir le menu" aria-controls="mobileMenu" aria-expanded="false">
+    <button id="mobileMenuBtn" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold"
+            aria-label="Ouvrir le menu">
       <i class="fas fa-bars text-lg"></i>
     </button>
 
     <!-- Nav desktop -->
     <nav class="hidden md:flex space-x-6 text-lg">
-      <a href="#accueil" aria-current="page" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
+      <a href="#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
       <a href="#oracle" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-layer-group mr-2"></i>Oracle</a>
       <a href="#offres" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Offres</a>
-      <a href="#oracle-cartes" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Jeu</a>
+      <a href="#Oracle" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Jeu</a>
       <a href="#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
       <a href="#apropos" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
     </nav>
@@ -409,7 +247,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     <a href="#accueil" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10"><i class="fas fa-home mr-2"></i>Accueil</a>
     <a href="#oracle" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10"><i class="fas fa-layer-group mr-2"></i>Oracle</a>
     <a href="#offres" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10"><i class="fas fa-tags mr-2"></i>Offres</a>
-    <a href="#oracle-cartes" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10"><i class="fas fa-dice mr-2"></i>Jeu</a>
+    <a href="#Oracle" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10"><i class="fas fa-dice mr-2"></i>Jeu</a>
     <a href="#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
     <a href="#apropos" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
     <button id="loginBtnMobile" class="w-full btn-outline-gold">Connexion</button>
@@ -417,7 +255,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 </header>
 
   <!-- Hero -->
-  <section id="accueil" class="hero-bg min-h-100dvh flex items-center pt-20 pb-32 px-6">
+  <section id="accueil" class="hero-bg min-h-screen flex items-center pt-20 pb-32 px-6">
     <div class="container mx-auto max-w-6xl">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
         <div class="text-center lg:text-left">
@@ -429,7 +267,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             L'oracle Oradia croise les sagesses ancestrales (Yi Jing, ennéagramme, astrologie, etc.) et les outils modernes pour vous guider comme une boussole.
           </p>
                 <p class="text-light-gold max-w-3xl mx-auto">
-                    Il utilise l'IA comme un outil puissant afin de croiser les informations et vous fournir une guidance incroyablement pertinente.
+                    Il utilise l'IA comme un outils puissant afin de croiser les informations et vous fournir une guidance incroyablement pertinente.
                          </p>
                          <p class="text-light-gold max-w-3xl mx-auto">
                          </p>
@@ -454,9 +292,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
                 <div class="bg-night-blue w-56 h-56 rounded-full flex items-center justify-center relative">
                   <div class="absolute w-1 h-16 bg-gold rounded-full origin-bottom" style="transform: rotate(45deg);"></div>
                   <div class="absolute w-1 h-16 bg-light-gold rounded-full origin-bottom" style="transform: rotate(-45deg);"></div>
-  <img src="https://i.ibb.co/HfVZ03nt/logo2.png" alt="Oradia Compass"
-     width="512" height="512" loading="eager" fetchpriority="high" decoding="async"
-     class="w-full h-full object-center object-contain rounded-full border-2 border-gold animate-spin-slow">
+                  <img src="https://i.ibb.co/cKHs3GY5/logo2.png" alt="Oradia Compass"
+                       class="w-full h-full object-center object-contain rounded-full border-2 border-gold animate-spin-slow">
                   <div class="absolute inset-0 flex flex-col items-center justify-center">
                     <span class="cormorant text-2xl text-gold">Oradia</span>
                     <p class="text-light-gold mt-2">Oracle Vibratoire</p>
@@ -473,47 +310,34 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     </div>
   </section>
 
-
-  <!-- Tirage du Pèlerin -->
+  <!-- Oracle -->
   <section id="oracle" class="py-12 md:py-20 px-4 md:px-6">
     <div class="container mx-auto max-w-6xl">
       <div class="text-center mb-10">
-        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient" style="padding-bottom: 0.2em">Tirage du Pèlerin</h2>
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-2">Tirage du Pèlerin</h2>
         <p class="text-light-gold max-w-3xl mx-auto">Guidance vibratoire croisant plusieurs systèmes.</p>
       </div>
 
-      <!-- Recueil de l'intention pour le tirage-->
+      <!-- Intention -->
       <div class="bg-[rgba(18,20,32,.6)] border border-[rgba(212,175,55,.25)] rounded-2xl p-5 mb-6">
-  <div class="flex flex-col sm:flex-row sm:items-center gap-3">
-    <label for="intention" class="text-gold font-semibold mb-1 sm:mb-0 sm:min-w-40">
-      Votre intention :
-    </label>
+        <div class="flex flex-wrap items-center gap-3">
+          <label for="intention" class="text-gold font-semibold">Votre intention :</label>
+          <input id="intention" type="text" class="flex-1 w-full min-w-0 bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] rounded-lg p-3 text-light-gold"
+                 placeholder="Ex. : Comment orienter ma journée avec justesse ?" required />
+        </div>
+        <p class="text-sm opacity-80 mt-2">Formulez une question ouverte et terminez par « ? »</p>
+        <div class="mt-3 text-center">
+          <button id="startReading" class="btn-gold">Commencer le tirage</button>
+        </div>
+      </div>
 
-    <input id="intention" type="text"
-      autocomplete="off" autocapitalize="sentences" inputmode="text" spellcheck="true"
-      aria-describedby="intentionHelp"
-      class="w-full sm:flex-1 min-w-0 bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] rounded-lg p-3 text-light-gold"
-      placeholder="Ex. : Comment orienter ma journée avec justesse ?" required />
-  </div>
-
-  <p id="intentionHelp" class="text-sm opacity-80 mt-2">
-    Formulez une question ouverte et terminez par « ? »
-  </p>
-
-  <div class="mt-3 text-center">
-    <button id="startReading" class="btn-gold" disabled aria-disabled="true">Commencer le tirage</button>
-  </div>
-</div>
-
-
-      <!-- Instructions du tirage -->
+      <!-- Instruction -->
       <p id="cardsInstruction" class="text-light-gold max-w-3xl mx-auto text-center mb-4 hidden">
         Retournez les 4 cartes (Émotions, Besoins, Actions, Mémoire Cosmos)
       </p>
 
       <!-- Plateau (caché au départ) -->
-      <section class="board hidden" id="board" aria-live="polite" aria-labelledby="boardTitle">
-  <h3 id="boardTitle" class="sr-only">Plateau du tirage du Pèlerin</h3>
+      <section class="board hidden" id="board" aria-live="polite">
         <!-- ÉMOTIONS -->
         <article class="card pos-1" data-family="emotions" aria-label="Carte Émotions">
           <div class="card-inner">
@@ -539,7 +363,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             </div>
             <div class="face front">
               <div class="topbar">
-                <span class="chip"><i class="fas fa-hands-holding-heart mr-1"></i>BESOINS</span>
+                <span class="chip"><i class="fas fa-hands-helping mr-1"></i> BESOINS</span>
                 <span class="polarity" data-polarity></span>
               </div>
               <div class="art"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
@@ -548,8 +372,32 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           </div>
         </article>
 
+        <!-- MÉMOIRE COSMOS -->
+        <article class="card pos-3" data-family="cosmos" aria-label="Carte Mémoire Cosmos">
+          <div class="card-inner" style="box-shadow: 0 0 20px rgba(212, 175, 55, 0.5);">
+            <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Mémoire Cosmos">
+              <div class="logo-circle" style="border-color: #f5e7a1; border-width: 8px; box-shadow: 0 0 15px rgba(245, 231, 161, 0.7);" aria-hidden="true"></div>
+            </div>
+            <div class="face front" style="background: radial-gradient(900px 600px at 30% -10%, rgba(245, 231, 161, 0.25), transparent 60%), linear-gradient(165deg, #0c1f40, #0b1d3a 45%, #0a1833 100%);">
+              <div class="topbar" style="border-bottom-color: rgba(245, 231, 161, 0.5);">
+                <span class="chip" style="background: rgba(245, 231, 161, 0.15); border-color: rgba(245, 231, 161, 0.7); color: #f5e7a1;">
+                  <i class="fas fa-star-and-crescent mr-1"></i> Mémoire Cosmos
+                </span>
+                <span class="polarity" data-polarity style="visibility:hidden"></span>
+              </div>
+              <div class="art" style="border-color: rgba(245, 231, 161, 0.5);">
+                <div>
+                  <h3 data-name style="color: #f5e7a1; text-shadow: 0 0 10px rgba(245, 231, 161, 0.5);">—</h3>
+                  <div class="quote" data-quote>—</div>
+                </div>
+              </div>
+              <div class="bottom" style="border-top-color: rgba(245, 231, 161, 0.3);"></div>
+            </div>
+          </div>
+        </article>
+
         <!-- ACTIONS -->
-        <article class="card pos-3" data-family="actions" aria-label="Carte Actions">
+        <article class="card pos-4" data-family="actions" aria-label="Carte Actions">
           <div class="card-inner">
             <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Actions">
               <div class="logo-circle" aria-hidden="true"></div>
@@ -565,62 +413,45 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           </div>
         </article>
 
-        <!-- MÉMOIRE COSMOS (carte spéciale) -->
-        <article class="card pos-4" data-family="cosmos" aria-label="Carte Mémoire Cosmos - carte spéciale du tirage">
-          <div class="card-inner">
-            <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Mémoire Cosmos">
-              <div class="logo-circle" style="border-color: #f5e7a1; box-shadow: 0 0 15px rgba(245, 231, 161, 0.5)" aria-hidden="true"></div>
-            </div>
-            <div class="face front" style="background: radial-gradient(900px 600px at 30% -10%, rgba(245, 231, 161, 0.2), transparent 60%), linear-gradient(165deg, #0c1f40, #0b1d3a 45%, #0a1833 100%); border: 1px solid rgba(245, 231, 161, 0.6)">
-              <div class="topbar" style="border-bottom: 1px solid rgba(245, 231, 161, 0.4)">
-                <span class="chip" style="background: rgba(245, 231, 161, 0.1); color: #f5e7a1"><i class="fas fa-star mr-1"></i> MÉMOIRE COSMOS</span>
-                <span class="polarity" data-polarity style="visibility:hidden"></span>
-              </div>
-              <div class="art" style="border: 1px solid rgba(245, 231, 161, 0.4)"><div><h3 data-name style="color: #f5e7a1">—</h3><div class="quote" data-quote>—</div></div></div>
-              <div class="bottom" style="border-top: 1px solid rgba(245, 231, 161, 0.3)"><span data-icon></span></div>
-            </div>
-          </div>
-        </article>
-
       </section>
 
       <div class="text-center mt-4">
-  <button id="showResults" class="btn-gold hidden" disabled aria-disabled="true">Afficher le résultat du tirage</button>
+        <button id="showResults" class="btn-gold hidden" disabled>Afficher le résultat du tirage</button>
       </div>
 
-<section id="results" class="hidden mt-6" aria-live="polite" aria-atomic="true" aria-busy="false">
-
+      <section id="results" class="hidden mt-6">
         <h2 class="cormorant text-3xl text-gold mb-3">Résultats du tirage</h2>
         <div class="mb-2"><b>Intention :</b> <span id="out-intention">—</span></div>
         <div class="result-lines" id="lines"></div>
         <div class="mt-3" id="synthese"></div>
       </section>
 
-      <div class="flex gap-3 justify-center mt-6">
-        <button id="reset" class="btn-outline-gold hidden">Nouveau tirage</button>
-        <button id="fullReading" class="btn-outline-gold hidden">Tirage plus complet</button>
-      </div>
-
-      <!-- Formulaire d'envoi par email (caché initialement) -->
-      <form id="emailResultsForm" class="hidden mt-8 max-w-md mx-auto bg-[rgba(5,20,40,.7)] border border-gold/30 rounded-xl p-6">
-        <h3 class="cormorant text-xl text-gold mb-4 text-center">Recevoir les résultats par email</h3>
-        <div class="mb-4">
-          <label for="userEmail" class="block text-light-gold mb-2">Votre email</label>
-          <input type="email" id="userEmail" name="email" required
-                 class="w-full bg-night-blue border border-gold/30 p-3 rounded-lg text-light-gold"
-                 placeholder="votre@email.com">
+      <div class="max-w-md mx-auto mt-8 space-y-6">
+        <div class="flex gap-3 justify-center">
+          <button id="reset" class="btn-outline-gold hidden flex-1 sm:flex-none">Nouveau tirage</button>
+          <button id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none">Tirage Complet</button>
         </div>
-        <button type="submit" class="btn-gold w-full">Envoyer les résultats</button>
-      </form>
+        
+        <div id="emailForm" class="hidden">
+          <div class="bg-[rgba(18,20,32,.6)] border border-[rgba(212,175,55,.25)] rounded-2xl p-5">
+            <h3 class="cormorant text-xl text-gold mb-3 text-center">Recevoir le résultat par email</h3>
+            <div class="flex flex-col sm:flex-row gap-3">
+              <input type="email" id="userEmail" placeholder="Votre adresse email" 
+                     class="flex-1 bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg text-light-gold" required>
+              <button id="sendEmailBtn" class="btn-gold whitespace-nowrap px-4">Envoyer</button>
+            </div>
+          </div>
+        </div>
+      </div>
+      
     </div>
   </section>
 
   <!-- Offres -->
-
   <section id="offres" class="py-20 px-6 bg-dark-blue">
     <div class="container mx-auto max-w-6xl">
       <div class="text-center mb-12">
-        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Nos Offres & Tarifs</h2>
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Entrez dans l'univers Oradia</h2>
         <p class="text-light-gold max-w-3xl mx-auto">Choisissez l'offre qui résonne avec votre cheminement.</p>
       </div>
 
@@ -636,8 +467,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             <div class="absolute top-1/2 left-1/2 w-20 h-20 rounded-full border-2 border-gold/50 animate-[pulse_3s_ease-in-out_infinite] -translate-x-1/2 -translate-y-1/2"></div>
             <div class="absolute top-2/3 left-1/2 w-16 h-16 rounded-full border-2 border-gold/30 animate-[pulse_5s_ease-in-out_infinite] -translate-x-1/2 -translate-y-1/2"></div>
             <!-- Connexions entre les temps -->
-            <div class="absolute top-1/3 left-1/2 w-1 h-[16.666%] bg-gradient-to-b from-gold/20 to-transparent -translate-x-1/2"></div>
-            <div class="absolute top-1/2 left-1/2 w-1 h-[16.666%] bg-gradient-to-t from-gold/20 to-transparent -translate-x-1/2"></div>
+            <div class="absolute top-1/3 left-1/2 w-1 h-1/6 bg-gradient-to-b from-gold/20 to-transparent -translate-x-1/2"></div>
+            <div class="absolute top-1/2 left-1/2 w-1 h-1/6 bg-gradient-to-t from-gold/20 to-transparent -translate-x-1/2"></div>
           </div>
 
           <div class="relative z-10 text-center mb-6">
@@ -650,12 +481,12 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>3 cartes + 1 carte Mémoires Cosmos</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Interprétation synthétique</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Analyse croisée basique par l'IA</span></li>
-            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Cartes pasrelles</span></li>
+            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Cartes mutantes</span></li>
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Espace membre</span></li>
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Analyse approfondie</span></li>
           </ul>
 
-          <a href="#oracle" class="btn-outline-gold w-full text-center relative z-10 mt-auto">Commencer le tirage</a>
+          <a href="#oracle" class="btn-outline-gold w-full text-center relative z-10 mt-auto" onclick="document.getElementById('oracle').classList.remove('hidden');">Commencer le tirage</a>
         </div>
 
         <!-- Tirage complet -->
@@ -690,7 +521,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <ul class="space-y-3 mb-8 relative z-10">
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>4 cartes vibratoires</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 carte Mémoires Cosmos</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes passerelles</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes mutantes incluses</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Analyse croisée par l'IA complète et détaillée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question d'introspection</span></li>
@@ -698,7 +529,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">1 tirage complet quotidien par mail</span></li>
           </ul>
 
-          <a href="#" id="orderBtn" role="button" aria-label="Commander 5 Tirages" class="btn-gold w-full text-center block relative z-10 mt-auto">Commander</a>
+          <a href="#" id="orderBtn" class="btn-gold w-full text-center block relative z-10 mt-auto">Commander</a>
         </div>
 
         <!-- Abonnement -->
@@ -725,7 +556,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
           <ul class="space-y-3 mb-8 relative z-10">
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 tirage complet quotidien par mail avec votre intention</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes passerelles</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes mutantes incluses</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question du jour</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Espace membre (profils ennéagramme, astro, numérologie...)</span></li>
@@ -733,8 +564,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Participation à l’amélioration de l’oracle (expérience anonyme)</span></li>
           </ul>
 
-          <a href="#" id="subscribeBtn" role="button" aria-label="S'abonner au Tirage du Tore" class="btn-gold w-full text-center block relative z-10 mt-auto">S'abonner</a>
-
+          <a href="#" id="subscribeBtn" class="btn-gold w-full text-center block relative z-10 mt-auto">S'abonner</a>
         </div>
       </div>
     </div>
@@ -742,7 +572,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
  
   <!-- Oracle de cartes -->
-  <section id="oracle-cartes" class="py-20 px-6 bg-dark-blue">
+  <section id="Oracle" class="py-20 px-6 bg-dark-blue">
     <div class="container mx-auto max-w-6xl">
       <div class="text-center mb-12">
         <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Oracle de Cartes Oradia</h2>
@@ -761,17 +591,17 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             </p>
             <h4 class="cormorant text-xl text-gold mb-3">Vous avez hâte n'est-ce pas?</h4>
             <p class="text-light-gold mb-4">
-              Vous pouvez contribuer à votre hauteur au financement, vous receverez le jeu en avant-première lorsqu’il sera disponible.
+              Vous pouvez contribuer à votre hauteur au financement, vous recevoir le jeu en avant-première lorsqu’il sera disponible.
             </p>
             <div class="text-center">
-            <a href="..." target="_blank" rel="noopener noreferrer" class="btn-gold inline-block">Faire un don</a>
+              <a href="..." target="_blank" class="btn-gold inline-block">Faire un don</a>
             </div>
           </div>
         </div>
 
         <div class="flex justify-center">
           <div class="rounded-2xl p-4" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
-        <img src="https://i.ibb.co/FTDGc0k/Capture-d-cran-2025-08-09-090137.png" alt="Aperçu du jeu" width="1024" height="576" loading="lazy" decoding="async" fetchpriority="low"/>
+            <img src="https://i.ibb.co/FTDGc0k/Capture-d-cran-2025-08-09-090137.png" alt="Aperçu du jeu" />
             <p class="text-light-gold text-center mt-4 italic">Aperçu du jeu de cartes en développement</p>
           </div>
         </div>
@@ -792,8 +622,9 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <div class="rounded-2xl p-8 mb-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
             <h3 class="cormorant text-2xl text-gold mb-4">Oradia - La boussole du pèlerin</h3>
             <section class="text-light-gold leading-relaxed">
-             <p>Oradia n’est pas un oracle de prédiction.</p>
-<h4 class="cormorant text-xl text-gold mb-3">C’est une boussole pour le voyage intérieur.</h4>
+              <p>Oradia n’est pas un oracle de prédiction.
+                
+                 <h4 class="cormorant text-xl text-gold mb-3">C’est une boussole pour le voyage intérieur.</h4></p>
               <p>Ses cartes forment un univers vivant :<br>
                 les Émotions qui traversent,<br>
                 les Besoins qui appellent,<br>
@@ -828,11 +659,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <div class="relative">
             <div class="bg-gradient-to-br from-gold/10 to-night-blue border border-gold/30 rounded-2xl w-full h-96"></div>
             <div class="absolute -bottom-6 -right-6 w-64 h-64 bg-gradient-to-tr from-gold/5 to-transparent border border-gold/20 rounded-2xl">
-             <img src="https://i.ibb.co/Q3vbXP4S/Logo-final.png"
-     alt="logo Oradia" width="512" height="512"
-     loading="lazy" decoding="async" fetchpriority="low"
-     class="w-full h-full object-contain p-4">
-
+              <img src="https://i.ibb.co/TB75673d/logo.png" alt="logo" class="w-full h-full object-contain p-4">
             </div>
           </div>
         </div>
@@ -855,10 +682,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <div class="relative">
             <div class="bg-gradient-to-br from-gold/10 to-night-blue border border-gold/30 rounded-2xl w-full h-96"></div>
             <div class="absolute -top-6 -left-6 w-64 h-64 bg-gradient-to-tr from-gold/5 to-transparent border border-gold/20 rounded-2xl">
-<img src="https://i.ibb.co/354MSMtd/Logo-SCIC.png"
-     alt="Logo SCIC" width="512" height="512"
-     loading="lazy" decoding="async" fetchpriority="low"
-     class="w-full h-full object-contain p-3">
+              <img src="https://i.ibb.co/354MSMtd/Logo-SCIC.png" alt="Logo-SCIC" class="w-full h-full object-contain p-3">
             </div>
           </div>
         </div>
@@ -881,21 +705,21 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             <p class="text-light-gold">
               Edolg'Or est une association qui vise à favoriser la création, le développement et l’entretien des liens sociaux et culturels
               par des activités ludiques, artistiques et d’arts vivants à travers un jeu sérieux grandeur nature.
-              Objectif : découvrir la civilisation d'Edolg'OR et l'emplacement de sa cité d'or vivant au rythme du modèle OTRE.
+              Objectif : découvrir la civilisation d'Edolg'OR et l'emplacement de sa cité d'or vivant, au rythme du modèle OTRE.
               Lors de votre achat pour un tirage complet ou un abonnement, vous pouvez reverser 1€ à l'association.
             </p>
             <p class="text-light-gold">
               Les activités proposées créent des espaces d'expression et de reconnexion essentiels.
             </p>
-            <a href="https://fr.tipeee.com/mjr-wellor" target="_blank" rel="noopener noreferrer" class="btn-outline-gold mt-6 inline-block">Découvrir Edolg'Or</a>
+            <a href="https://fr.tipeee.com/mjr-wellor " target="_blank" class="btn-outline-gold mt-6 inline-block">Découvrir Edolg'Or</a>
           </div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- CGV (masquée par défaut) -->
-  <section id="cgv" class="py-20 px-6 bg-night-blue hidden">
+  <!-- CGV -->
+  <section id="cgv" class="py-20 px-6 bg-night-blue">
     <div class="container mx-auto max-w-6xl">
       <h2 class="cormorant text-4xl md:text-5xl font-bold mb-8 gold-gradient">Conditions générales de vente (CGV)</h2>
       <div class="rounded-2xl p-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
@@ -911,26 +735,11 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     </div>
   </section>
 
-  <script>
-  document.addEventListener('DOMContentLoaded', () => {
-    const cgvLink = document.querySelector('footer a[href="#cgv"]');
-    const cgvSection = document.getElementById('cgv');
-    
-    if (cgvLink && cgvSection) {
-      cgvLink.addEventListener('click', (e) => {
-        e.preventDefault();
-        cgvSection.classList.remove('hidden');
-        cgvSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      });
-    }
-  });
-  </script>
-
   <!-- Tirage de la Traversée - caché jusqu'à paiement -->
   <section id="traversee" class="py-20 px-6 bg-night-blue hidden">
     <div class="container mx-auto max-w-6xl">
       <div class="text-center mb-12">
-        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Tirage de la Traversée</h2>
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-1">Tirage de la Traversée</h2>
         <p class="text-light-gold max-w-3xl mx-auto">Guidance vibratoire approfondie pour votre cheminement</p>
       </div>
 
@@ -990,42 +799,38 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         </div>
 
         <form id="traversee-form" class="hidden">
-  <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-    <div>
-      <label for="trav-prenom" class="block text-light-gold mb-2">Prénom</label>
-      <input id="trav-prenom" name="prenom" type="text" autocomplete="given-name" inputmode="text"
-             class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-    </div>
-    <div>
-      <label for="trav-dob" class="block text-light-gold mb-2">Date de naissance</label>
-      <input id="trav-dob" name="date_naissance" type="date" autocomplete="bday"
-             class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-    </div>
-    <div>
-      <label for="trav-ville" class="block text-light-gold mb-2">Ville de naissance</label>
-      <input id="trav-ville" name="ville_naissance" type="text" inputmode="text" autocomplete="off"
-             class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-    </div>
-    <div>
-      <label for="trav-heure" class="block text-light-gold mb-2">Heure de naissance</label>
-      <input id="trav-heure" name="heure_naissance" type="time" inputmode="numeric" autocomplete="off"
-             class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-    </div>
-  </div>
-  <div class="mb-6">
-    <label for="trav-intention" class="block text-light-gold mb-2">Votre intention pour ce tirage</label>
-    <textarea id="trav-intention" name="intention" autocomplete="off" spellcheck="true"
-              class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg min-h-[120px]" required></textarea>
-  </div>
-  <button type="submit" class="btn-gold w-full">Lancer le tirage</button>
-</form>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label class="block text-light-gold mb-2">Prénom</label>
+              <input type="text" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+            </div>
+            <div>
+              <label class="block text-light-gold mb-2">Date de naissance</label>
+              <input type="date" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+            </div>
+            <div>
+              <label class="block text-light-gold mb-2">Ville de naissance</label>
+              <input type="text" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+            </div>
+            <div>
+              <label class="block text-light-gold mb-2">Heure de naissance</label>
+              <input type="time" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+            </div>
+          </div>
+          <div class="mb-6">
+            <label class="block text-light-gold mb-2">Votre intention pour ce tirage</label>
+            <textarea class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg min-h-[120px]" required></textarea>
+          </div>
+          <button type="submit" class="btn-gold w-full">Lancer le tirage</button>
+        </form>
 
+        <div id="traversee-board" class="hidden">
+          <!-- Board will be generated by JS -->
+        </div>
 
-        <div id="traversee-board" class="hidden"><!-- Board will be generated by JS --></div>
-<section id="traversee-results" class="hidden mt-6" aria-live="polite" aria-atomic="true" aria-busy="false">
-  <!-- Results will be generated by JS -->
-</section>
-
+        <div id="traversee-results" class="hidden">
+          <!-- Results will be generated by JS -->
+        </div>
       </div>
     </div>
   </section>
@@ -1036,11 +841,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
         <div>
           <div class="flex items-center mb-4">
-    <img src="https://i.ibb.co/Q3vbXP4S/Logo-final.png"
-     alt="Oradia Logo" width="256" height="256"
-     loading="lazy" decoding="async" fetchpriority="low"
-     class="w-16 h-16 mr-4" />
-
+            <img src="https://i.ibb.co/4wG0t61y/logo.png" alt="Oradia Logo" class="w-16 h-16 mr-4" />
             <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
           </div>
           <p class="text-light-gold text-sm">Oracle vibratoire pour accompagner votre cheminement personnel et révéler votre essence.</p>
@@ -1066,9 +867,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         <div>
           <h4 class="cormorant text-xl text-gold mb-4">Contact</h4>
           <ul class="space-y-2">
-          <li class="flex items-start">
-  <i class="fas fa-envelope text-gold mt-1 mr-3"></i>
-  <a class="text-light-gold hover:text-gold transition" href="mailto:contact@oradia.fr">contact@oradia.fr</a></li>
+            <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><span class="text-light-gold">contact@oradia.fr</span></li>
             <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><span class="text-light-gold">@oradia_oracle</span></li>
           </ul>
         </div>
@@ -1082,121 +881,114 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   </footer>
 
   <!-- Modale Commande -->
-<div id="orderModal" class="fixed inset-0 bg-night-blue/90 z-[100] flex items-center justify-center hidden"
-     role="dialog" aria-modal="true" aria-labelledby="orderTitle" aria-describedby="orderDesc">
-  <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
-    <button id="closeOrder" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer" type="button"><i class="fas fa-times"></i></button>
-    <div class="text-center mb-8">
-      <h3 id="orderTitle" class="cormorant text-3xl text-gold mb-2">Commande Tirage Complet</h3>
-      <p id="orderDesc" class="text-light-gold">Finalisez votre commande (5€)</p>
+  <div id="orderModal" class="fixed inset-0 bg-night-blue/90 z-[100] flex items-center justify-center hidden">
+    <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
+      <button id="closeOrder" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
+      <div class="text-center mb-8">
+        <h3 class="cormorant text-3xl text-gold mb-2">Commande Tirage Complet</h3>
+        <p class="text-light-gold">Finalisez votre commande (5€)</p>
       </div>
       <form id="orderForm">
-  <div class="mb-4">
-    <label class="block text-light-gold mb-2">Email</label>
-    <input type="email" autocomplete="email" inputmode="email"
-           autocapitalize="off" autocorrect="off" spellcheck="false"
-           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-  </div>
-
-  <div class="mb-4">
-    <label class="block text-light-gold mb-2">Nom complet</label>
-    <input type="text" autocomplete="name" inputmode="text"
-           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-  </div>
-
-  <div class="mb-4">
-    <label class="block text-light-gold mb-2">Date de naissance</label>
-    <input type="date" autocomplete="bday"
-           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-  </div>
-
-  <div class="mb-6">
-    <label class="block text-light-gold mb-2">Moyen de paiement</label>
-    <select class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-      <option value="">Sélectionnez...</option>
-      <option value="card">Carte bancaire</option>
-      <option value="paypal">PayPal</option>
-    </select>
-  </div>
-
-  <button type="submit" class="btn-gold w-full">Payer 5€</button>
-</form>
-
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Email</label>
+          <input type="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Nom complet</label>
+          <input type="text" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Date de naissance</label>
+          <input type="date" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-light-gold mb-2">Moyen de paiement</label>
+          <select class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+            <option value="">Sélectionnez...</option>
+            <option value="card">Carte bancaire</option>
+            <option value="paypal">PayPal</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-gold w-full">Payer 5€</button>
+      </form>
     </div>
   </div>
 
   <!-- Modale Abonnement -->
-
-<div id="subscriptionModal"
-     class="fixed inset-0 bg-night-blue/90 z-50 flex items-center justify-center hidden"
-     style="backdrop-filter: blur(5px);"
-     role="dialog" aria-modal="true"
-     aria-labelledby="subscriptionTitle" aria-describedby="subscriptionDesc">
-
+  <div id="subscriptionModal" class="fixed inset-0 bg-night-blue/90 z-50 flex items-center justify-center hidden" style="backdrop-filter: blur(5px);">
     <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
-  <!-- APRÈS -->
-<button id="closeSubscription" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer" type="button"><i class="fas fa-times"></i></button>
-<div class="text-center mb-8">
-  <h3 id="subscriptionTitle" class="cormorant text-3xl text-gold mb-2">Espace Membre Oradia</h3>
-  <p id="subscriptionDesc" class="text-light-gold">Connectez-vous ou créez votre compte</p>
-</div>
-
+      <button id="closeSubscription" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
+      <div class="text-center mb-8">
+        <h3 class="cormorant text-3xl text-gold mb-2">Espace Membre Oradia</h3>
+        <p class="text-light-gold">Connectez-vous ou créez votre compte</p>
+      </div>
 
       <!-- Login membre -->
-      <form id="memberLoginForm" class="mb-6" aria-hidden="false">
-  <div class="mb-4">
-    <label for="mem-login-email" class="block text-light-gold mb-2">Email</label>
-    <input id="mem-login-email" name="email" type="email"
-           autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false"
-           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-  </div>
-  <div class="mb-6">
-    <label for="mem-login-pass" class="block text-light-gold mb-2">Mot de passe</label>
-    <input id="mem-login-pass" name="password" type="password"
-           autocomplete="current-password"
-           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-  </div>
-  <button type="submit" class="btn-gold w-full mb-4">Se connecter</button>
-  <p class="text-light-gold text-center text-sm">Pas encore de compte ?
-    <a href="#" id="showRegister" class="text-gold hover:underline">S'inscrire</a>
-  </p>
-</form>
-
-
+      <form id="memberLoginForm" class="mb-6">
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Email</label>
+          <input type="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-light-gold mb-2">Mot de passe</label>
+          <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <button type="submit" class="btn-gold w-full mb-4">Se connecter</button>
+        <p class="text-light-gold text-center text-sm">Pas encore de compte ?
+          <a href="#" id="showRegister" class="text-gold hover:underline">S'inscrire</a>
+        </p>
+      </form>
 
       <!-- Register membre -->
-      <form id="memberRegisterForm" class="hidden" aria-hidden="true">
-  <div class="mb-4">
-    <label for="mem-reg-email" class="block text-light-gold mb-2">Email</label>
-    <input id="mem-reg-email" name="email" type="email"
-           autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false"
-           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+      <form id="memberRegisterForm" class="hidden">
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Email</label>
+          <input type="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Mot de passe</label>
+          <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-light-gold mb-2">Confirmez le mot de passe</label>
+          <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-6 flex items-start">
+          <input type="checkbox" id="terms" class="mt-1 mr-3" required>
+          <label for="terms" class="text-light-gold text-sm">
+            J'accepte les <a href="#cgv" class="text-gold hover:underline">conditions générales</a>
+          </label>
+        </div>
+        <button type="submit" class="btn-gold w-full">Créer le compte & s'abonner</button>
+        <p class="text-light-gold text-center text-sm mt-4">Déjà un compte ?
+          <a href="#" id="showLogin" class="text-gold hover:underline">Se connecter</a>
+        </p>
+      </form>
+    </div>
   </div>
-  <div class="mb-4">
-    <label for="mem-reg-pass" class="block text-light-gold mb-2">Mot de passe</label>
-    <input id="mem-reg-pass" name="password" type="password"
-           autocomplete="new-password"
-           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-  </div>
-  <div class="mb-6">
-    <label for="mem-reg-pass2" class="block text-light-gold mb-2">Confirmez le mot de passe</label>
-    <input id="mem-reg-pass2" name="password_confirm" type="password"
-           autocomplete="new-password"
-           class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-  </div>
-  <div class="mb-6 flex items-start">
-    <input type="checkbox" id="terms" class="mt-1 mr-3" required>
-    <label for="terms" class="text-light-gold text-sm">
-      J'accepte les <a href="#cgv" class="text-gold hover:underline">conditions générales</a>
-    </label>
-  </div>
-  <button type="submit" class="btn-gold w-full">Créer le compte & s'abonner</button>
-  <p class="text-light-gold text-center text-sm mt-4">Déjà un compte ?
-    <a href="#" id="showLogin" class="text-gold hover:underline">Se connecter</a>
-  </p>
-</form>
 
-  
+  <!-- Modale Login Dashboard -->
+  <div id="loginModal" class="fixed inset-0 bg-night-blue/90 z-50 flex items-center justify-center hidden">
+    <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
+      <button id="closeLogin" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
+      <div class="text-center mb-8">
+        <h3 class="cormorant text-3xl text-gold mb-2">Connexion Dashboard</h3>
+        <p class="text-light-gold">Accédez à votre espace d'analyse SEO</p>
+      </div>
+      <form id="loginFormDashboard">
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Email</label>
+          <input type="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-light-gold mb-2">Mot de passe</label>
+          <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <button type="submit" class="btn-gold w-full">Se connecter</button>
+      </form>
+    </div>
+  </div>
+
   <!-- Dashboard -->
   <div id="dashboard" class="fixed inset-0 bg-night-blue z-50 overflow-auto hidden">
     <div class="min-h-screen">
@@ -1237,28 +1029,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
   <script id="traversee-5cards-clean">
 (() => {
-  // ---------- util ----------
-  const esc = (s) => String(s).replace(/[&<>"']/g, m =>
-    m === '&' ? '&amp;' : m === '<' ? '&lt;' : m === '>' ? '&gt;' : m === '"' ? '&quot;' : '&#39;'
-  );
-  const $  = sel => document.querySelector(sel);
-  const el = id  => document.getElementById(id);
-  const safePick = (arr) => {
-    if (window.crypto?.getRandomValues) { const b=new Uint32Array(1); crypto.getRandomValues(b); return arr[b[0]%arr.length]; }
-    return arr[Math.floor(Math.random()*arr.length)];
-  };
-  // Pol UI (Traversée uniquement)
-  const polUI_TRAV = (p) => p === 'yang'
-    ? { icon:'▲', label:"Triangle — énergie masculine : élan, action, verticalité", shape:'triangle' }
-    : { icon:'◯', label:"Cercle — énergie féminine : réceptivité, accueil, intégration", shape:'cercle' };
-  const tossPolarity = () => { const b=new Uint32Array(1); crypto.getRandomValues(b); return (b[0] & 1) ? 'yang' : 'yin'; };
-  const coinIcon  = (p) => p==='yang'?'▲':'◯';
-  const coinLabel = (p) => p==='yang'
-    ? "Pièce : Triangle — énergie masculine : élan, action, verticalité"
-    : "Pièce : Cercle — énergie féminine : réceptivité, accueil, intégration";
-  const isBridge = (cardPol, coinPol) => !!cardPol && !!coinPol && cardPol !== coinPol;
-
-  // ---------- Données TRAVERSÉE ----------
+  // ---------- Données propres à la TRAVERSÉE ----------
   const DATA_TRAVERSEE = {
     emotions: [
       {name:"JOIE", quote:"Une onde traverse mon cœur. Elle dit oui à la vie.", polarity:"yang"},
@@ -1337,7 +1108,11 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     ouest: "Ouest — Mémoire (Émotions)",
     centre: "Centre — Mémoires Cosmos"
   };
-
+  const polIcon = p => p==="yang" ? "🔺" : p==="yin" ? "⚫" : "";
+  const safePick = arr => {
+    if (window.crypto?.getRandomValues) { const b=new Uint32Array(1); crypto.getRandomValues(b); return arr[b[0]%arr.length]; }
+    return arr[Math.floor(Math.random()*arr.length)];
+  };
   function slot(slotName, family){
     const chip = slotName.toUpperCase();
     return `
@@ -1367,53 +1142,71 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     `;
   }
 
-  // ---------- Plateau ----------
+  // BuildBoard
   function buildBoard() {
-    const host = el('traversee-board');
-    if (!host) return;
+  const host = el('traversee-board');
+  if (!host) return;
 
-    host.innerHTML = `
-      <h3 class="cormorant text-2xl text-gold mb-6 text-center">
-        Retournez les 5 cartes : Nord • Sud • Est • Ouest • Centre
-      </h3>
-      <div class="traversee-board-5">
-        ${slot('nord','revelations')}
-        ${slot('sud','transmutation')}
-        ${slot('est','actions')}
-        ${slot('ouest','emotions')}
-        ${slot('centre','cosmos')}
-      </div>
-    `;
-    host.classList.remove('hidden');
+  // 1) construire le plateau
+  host.innerHTML = `
+    <h3 class="cormorant text-2xl text-gold mb-6 text-center">
+      Retournez les 5 cartes : Nord • Sud • Est • Ouest • Centre
+    </h3>
+    <div class="traversee-board-5">
+      ${slot('nord','revelations')}
+      ${slot('sud','transmutation')}
+      ${slot('est','actions')}
+      ${slot('ouest','emotions')}
+      ${slot('centre','cosmos')}
+    </div>
+  `;
+  host.classList.remove('hidden');
 
-    host._state = { flipped: 0, drawn: { nord:null, sud:null, est:null, ouest:null, centre:null } };
+  // 2) état
+  host._state = {
+    flipped: 0,
+    drawn: { nord:null, sud:null, est:null, ouest:null, centre:null }
+  };
 
-    host.querySelectorAll('.traversee-card-back').forEach(back => {
-      const card = back.closest('.traversee-card');
-      const onFlip = () => flipCard(card);
-      back.addEventListener('click', onFlip);
-      back.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFlip(); }});
+  // 3) interactions (click + clavier)
+  host.querySelectorAll('.traversee-card-back').forEach(back => {
+    const card = back.closest('.traversee-card');
+    const onFlip = () => flipCard(card);
+    back.addEventListener('click', onFlip);
+    back.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFlip(); }
     });
+  });
 
-    el('traversee')?.classList.remove('hidden');
-    enterImmersive();
-  }
+  // 4) afficher la section + passer en mode immersif
+  const trav = el('traversee');
+  trav?.classList.remove('hidden');
+  enterImmersive();
+}
 
-  // ---------- Mode immersif ----------
+  // ---------- helpers DOM ----------
+  const $  = sel => document.querySelector(sel);
+  const $$ = sel => [...document.querySelectorAll(sel)];
+  const el = id  => document.getElementById(id);
+
+  // ---------- MODE IMMERSIF ----------
   function enterImmersive(){
-    const others = [...document.querySelectorAll('body > header, body > footer, body > section:not(#traversee)')];
-    others.forEach(n => { n.classList.add('hide-immersive'); n.setAttribute('inert',''); n.setAttribute('aria-hidden','true'); });
+    // masquer header, footer et toutes les sections sauf #traversee
+    $$('body > header, body > footer, body > section:not(#traversee)').forEach(n=>n.classList.add('hide-immersive'));
     el('exitTraverseeBtn')?.classList.remove('hidden');
+    // scroll sur la section
     el('traversee')?.scrollIntoView({behavior:'smooth', block:'start'});
   }
   function exitImmersive(){
-    const all = [...document.querySelectorAll('body > header, body > footer, body > section')];
-    all.forEach(n => { n.classList.remove('hide-immersive'); n.removeAttribute('inert'); n.removeAttribute('aria-hidden'); });
+    $$('body > header, body > footer, body > section').forEach(n=>n.classList.remove('hide-immersive'));
     el('exitTraverseeBtn')?.classList.add('hidden');
+
+    // Réinitialise visuellement la section Traversée
     const boardHost = el('traversee-board');
     const results   = el('traversee-results');
     const intro     = el('traversee-intro');
     const form      = el('traversee-form');
+
     if(boardHost){ boardHost.innerHTML=''; boardHost.classList.add('hidden'); }
     if(results){ results.innerHTML=''; results.classList.add('hidden'); }
     if(form){ form.reset?.(); form.classList.add('hidden'); }
@@ -1421,10 +1214,12 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     window.scrollTo({top:0, behavior:'smooth'});
   }
 
-  // ---------- Flip ----------
+ 
+
   function flipCard(card){
     if(!card || card.classList.contains('flipped')) return;
 
+    // on exige que l'intention de la Traversée soit remplie (dans le formulaire de la section Traversée)
     const tForm = el('traversee-form');
     const intentionField = tForm?.querySelector('textarea, input[type="text"]');
     if(intentionField && !intentionField.value.trim()){
@@ -1432,73 +1227,29 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       intentionField.setCustomValidity("Veuillez saisir votre intention pour ce tirage.");
       intentionField.reportValidity();
       return;
-    } else if (intentionField) { intentionField.setCustomValidity(""); }
+    } else if (intentionField) {
+      intentionField.setCustomValidity("");
+    }
 
     const slot = card.dataset.slot;       // nord/sud/est/ouest/centre
     const fam  = card.dataset.family;     // revelations/transmutation/actions/emotions/cosmos
-    const base = safePick(DATA_TRAVERSEE[fam]||[]);
+    const data = safePick(DATA_TRAVERSEE[fam]||[]);
 
-    // Pièce : sur les 4 directions uniquement
-    const coin  = (slot === 'centre') ? null : tossPolarity();
-    const brOn  = isBridge(base?.polarity, coin);
-    const brTxt = brOn ? (base?.bridge || "Passerelle activée") : null;
-
-    // Face avant : titre + base
-    card.querySelector('[data-name]').textContent  = base?.name || "—";
-    card.querySelector('[data-quote]').textContent = base?.quote || "—";
-
-    // Polarité de la carte (pas au Centre)
+    // remplir la face avant
+    card.querySelector('[data-name]').textContent  = data?.name || "—";
+    card.querySelector('[data-quote]').textContent = data?.quote || "—";
     const polEl = card.querySelector('[data-pol]');
-    if (slot === 'centre') {
-      polEl.style.visibility = 'hidden'; polEl.textContent = '';
-      polEl.removeAttribute('title'); polEl.removeAttribute('aria-label');
-      polEl.classList.remove('is-triangle','is-cercle');
-    } else {
-      const ui = polUI_TRAV(base?.polarity);
-      polEl.style.visibility = 'visible';
-      polEl.textContent = ui.icon;
-      polEl.title = ui.label;
-      polEl.setAttribute('aria-label', ui.label);
-      polEl.classList.toggle('is-triangle', ui.shape === 'triangle');
-      polEl.classList.toggle('is-cercle',   ui.shape === 'cercle');
-    }
+    if(slot === 'centre'){ polEl.style.visibility='hidden'; polEl.textContent=''; }
+    else { polEl.style.visibility='visible'; polEl.textContent = data?.polarity ? polIcon(data.polarity) : ''; }
 
-    // Chips topbar : pièce + passerelle
-    const topbar = card.querySelector('.traversee-card-front .flex.items-center');
-    topbar?.querySelector('[data-coin]')?.remove();
-    topbar?.querySelector('[data-bridge-badge]')?.remove();
-    card.querySelector('[data-bridge-quote]')?.remove();
-
-    if(coin){
-      const coinEl = document.createElement('span');
-      coinEl.className = 'chip'; coinEl.setAttribute('data-coin','');
-      coinEl.title = coinLabel(coin);
-      coinEl.textContent = "Pièce " + coinIcon(coin);
-      topbar.appendChild(coinEl);
-    }
-    if(brOn){
-      const tag = document.createElement('span');
-      tag.className = 'chip chip--passerelle';
-      tag.textContent = 'Carte Passerelle';
-      tag.setAttribute('data-bridge-badge','');
-      topbar.appendChild(tag);
-
-      const q = document.createElement('div');
-      q.setAttribute('data-bridge-quote','');
-      q.className = 'mt-2 text-gold/90';
-      q.innerHTML = `<em>Passerelle :</em> ${esc(brTxt)}`;
-      card.querySelector('.traversee-card-front .art > div').appendChild(q);
-
-      card.setAttribute('data-passerelle','true');
-    }
-
-    // Flip + état
+    // flip visuel
     card.classList.add('flipped');
     card.querySelector('.traversee-card-back')?.classList.add('hidden');
     card.querySelector('.traversee-card-front')?.classList.remove('hidden');
 
+    // état
     const host = el('traversee-board');
-    host._state.drawn[slot] = { ...base, coin, bridge: brTxt };
+    host._state.drawn[slot] = data;
     host._state.flipped++;
 
     if(host._state.flipped === 5){
@@ -1506,24 +1257,18 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     }
   }
 
-  // ---------- Résultats ----------
-  function setBusy(elm, busy){ elm?.setAttribute('aria-busy', busy ? 'true' : 'false'); }
   function showResults(drawn, intention){
     const out = el('traversee-results');
     if(!out) return;
-    setBusy(out, true);
 
     const L = (titre, obj, showPol=true) => {
-      if(!obj) return '';
-      const polTxt  = showPol && obj.polarity ? ` (${obj.polarity==='yang'?'Triangle':'Cercle'})` : '';
-      const coinTxt = obj.coin ? ` • Pièce: ${obj.coin==='yang'?'Triangle':'Cercle'}` : '';
-      const bridge  = obj.bridge ? `<br><em>Passerelle :</em> ${esc(obj.bridge)}` : '';
-      return `<p><b>${titre} :</b> ${obj.name}${polTxt}${coinTxt}<br><i>« ${obj.quote||'—'} »</i>${bridge}</p>`;
+      const polTxt = showPol && obj?.polarity ? (obj.polarity==='yang'?' (énergie masculine)':' (énergie féminine)') : '';
+      return `<p><b>${titre} :</b> ${obj?.name||'—'}${polTxt}<br><i>« ${obj?.quote||'—'} »</i></p>`;
     };
 
     out.innerHTML = `
       <h3 class="cormorant text-2xl text-gold mb-3">Résultats de la Traversée</h3>
-      ${intention ? `<div class="mb-2"><b>Intention :</b> ${esc(intention)}</div>` : ``}
+      ${intention ? `<div class="mb-2"><b>Intention :</b> ${intention}</div>` : ``}
       <div class="result-lines">
         ${L("Nord — Révélations (Vision)", drawn.nord)}
         ${L("Sud — Transmutation (Ancrage)", drawn.sud)}
@@ -1536,1159 +1281,537 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         <p>La Vision (Nord) éclaire l’horizon ; l’Ancrage (Sud) montre ce qui doit se transformer ; l’Élan (Est) indique le mouvement ; la Mémoire (Ouest) révèle la leçon ; le Cosmos (Centre) relie le tout.</p>
       </div>
     `;
-
-    requestAnimationFrame(()=> {
-      setBusy(out, false);
-      out.classList.remove('hidden');
-      out.scrollIntoView({behavior:'smooth', block:'start'});
-    });
+    out.classList.remove('hidden');
+    out.scrollIntoView({behavior:'smooth', block:'start'});
   }
 
-  // ---------- Wiring section #traversee ----------
+  // ---------- branchement UI de la section #traversee ----------
   document.addEventListener('DOMContentLoaded', () => {
     const startBtn = el('traversee-start');
     const form     = el('traversee-form');
     const exitBtn  = el('exitTraverseeBtn');
 
+    // Étape 1 : afficher le formulaire
     startBtn?.addEventListener('click', () => {
       el('traversee-intro')?.classList.add('hidden');
       form?.classList.remove('hidden');
       el('traversee')?.scrollIntoView({behavior:'smooth'});
     });
 
+    // Étape 2 : soumission = construire le plateau + entrer en immersif
     form?.addEventListener('submit', (e) => {
       e.preventDefault();
-      buildBoard();
+      buildBoard(); // enterImmersive() est appelé à la fin de buildBoard()
     });
 
+    // Bouton "Quitter le tirage"
     exitBtn?.addEventListener('click', exitImmersive);
   });
 })();
 </script>
 
 
-<!-- Modale Login Dashboard -->
-<div id="loginModal" class="fixed inset-0 bg-night-blue/90 z-50 flex items-center justify-center hidden"
-     role="dialog" aria-modal="true" aria-labelledby="loginTitle" aria-describedby="loginDesc">
-  <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
-    <button id="closeLoginModal" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer" type="button">
-      <i class="fas fa-times"></i>
-    </button>
-
-    <div class="text-center mb-8">
-      <h3 id="loginTitle" class="cormorant text-3xl text-gold mb-2">Connexion Dashboard</h3>
-      <p id="loginDesc" class="text-light-gold">Accédez à votre espace d'analyse SEO</p>
-    </div>
-
-    <form id="loginFormDashboard">
-      <div class="mb-4">
-        <label class="block text-light-gold mb-2">Email</label>
-        <input type="email" autocomplete="email" inputmode="email" autocapitalize="off" autocorrect="off" spellcheck="false"
-               class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-      </div>
-      <button type="submit" class="btn-gold w-full">Se connecter</button>
-    </form>
-  </div>
-</div>
-
-
-
-<script id="a11y-modals">
-function trapFocus(modal){
-  const FOCUS = 'a[href],button,textarea,input,select,[tabindex]:not([tabindex="-1"])';
-  const nodes = [...modal.querySelectorAll(FOCUS)].filter(el=>!el.disabled && el.tabIndex !== -1);
-  if (!nodes.length) return;
-  const first = nodes[0], last = nodes[nodes.length-1];
-  function onKey(e){
-    if (e.key !== 'Tab') return;
-    if (e.shiftKey && document.activeElement === first){ e.preventDefault(); last.focus(); }
-    else if (!e.shiftKey && document.activeElement === last){ e.preventDefault(); first.focus(); }
-  }
-  modal.addEventListener('keydown', onKey);
-  modal.__releaseTrap = () => modal.removeEventListener('keydown', onKey);
-}
-function openModal(el){
-  el.classList.remove('hidden'); document.body.style.overflow='hidden';
-  trapFocus(el);
-  (el.querySelector('input,button,[tabindex]')||el).focus();
-}
-function closeModal(el){
-  el.classList.add('hidden'); document.body.style.overflow='';
-  el.__releaseTrap?.();
-}
-</script>
-<script id="wiring-fixes">
-(function(){
-  const $ = (id) => document.getElementById(id);
-
-  // ---------- Modale Commande ----------
-  const orderModal = $('orderModal');
-  $('orderBtn')?.addEventListener('click', (e)=>{ e.preventDefault(); openModal(orderModal); });
-  $('closeOrder')?.addEventListener('click', ()=> closeModal(orderModal));
-
-  // ---------- Modale Abonnement (Espace membre) ----------
-  const subscriptionModal   = $('subscriptionModal');
-  const memberLoginForm     = $('memberLoginForm');
-  const memberRegisterForm  = $('memberRegisterForm');
-  const showRegister        = $('showRegister');
-  const showLogin           = $('showLogin');
-
-  const setLoginView = () => {
-    if(!memberLoginForm || !memberRegisterForm) return;
-    memberLoginForm.classList.remove('hidden');
-    memberLoginForm.setAttribute('aria-hidden','false');
-    memberLoginForm.removeAttribute('inert');
-    memberRegisterForm.classList.add('hidden');
-    memberRegisterForm.setAttribute('aria-hidden','true');
-    memberRegisterForm.setAttribute('inert','');
-  };
-  const setRegisterView = () => {
-    if(!memberLoginForm || !memberRegisterForm) return;
-    memberRegisterForm.classList.remove('hidden');
-    memberRegisterForm.setAttribute('aria-hidden','false');
-    memberRegisterForm.removeAttribute('inert');
-    memberLoginForm.classList.add('hidden');
-    memberLoginForm.setAttribute('aria-hidden','true');
-    memberLoginForm.setAttribute('inert','');
-  };
-
-  $('subscribeBtn')?.addEventListener('click', (e)=>{
-    e.preventDefault();
-    setLoginView();
-    openModal(subscriptionModal);
-    (memberLoginForm?.querySelector('input,button,select,textarea') || subscriptionModal).focus();
-  });
-  $('closeSubscription')?.addEventListener('click', ()=> closeModal(subscriptionModal));
-  showRegister?.addEventListener('click', (e)=>{ e.preventDefault(); setRegisterView(); (memberRegisterForm?.querySelector('input,button,select,textarea')||subscriptionModal).focus(); });
-  showLogin?.addEventListener('click', (e)=>{ e.preventDefault(); setLoginView(); (memberLoginForm?.querySelector('input,button,select,textarea')||subscriptionModal).focus(); });
-
-  memberLoginForm?.addEventListener('submit', (e)=>{
-    e.preventDefault();
-    alert('Connexion réussie ! Redirection vers votre espace membre...');
-    closeModal(subscriptionModal);
-  });
-  memberRegisterForm?.addEventListener('submit', (e)=>{
-    e.preventDefault();
-    alert('Compte créé ! Abonnement activé.');
-    closeModal(subscriptionModal);
-  });
-
-  // ---------- Modale Login Dashboard ----------
-  const loginModal      = $('loginModal');
-  const closeLoginModal = $('closeLoginModal');
-  const openLoginButtons = ['loginBtn','footerLogin','loginBtnMobile'].map($).filter(Boolean);
-
-  openLoginButtons.forEach(btn=>{
-    btn.addEventListener('click', (e)=>{
-      e.preventDefault();
-      openModal(loginModal);
-      setTimeout(()=> loginModal?.querySelector('input,button')?.focus(), 50);
-    });
-  });
-  closeLoginModal?.addEventListener('click', ()=> closeModal(loginModal));
-
-  const loginFormDash = $('loginFormDashboard');
-  const dashboard     = $('dashboard');
-  $('logoutBtn')?.addEventListener('click', ()=>{
-    dashboard?.classList.add('hidden');
-    document.body.style.overflow='';
-  });
-  loginFormDash?.addEventListener('submit', (e)=>{
-    e.preventDefault();            // démo
-    closeModal(loginModal);
-    dashboard?.classList.remove('hidden');
-    document.body.style.overflow='hidden';
-  });
-
-  // ---------- Menu mobile ----------
-  const mobileBtn  = $('mobileMenuBtn');
-  const mobileMenu = $('mobileMenu');
-  mobileBtn?.addEventListener('click', ()=>{
-
-// Fermeture auto quand on clique un item du menu mobile (délégation)
-mobileMenu?.addEventListener('click', (e) => {
-  const t = e.target?.closest('a, button');
-  if (!t) return;
-
-  // On déclenche le même toggle que le burger → évite de casser les animations
-  if (mobileBtn?.getAttribute('aria-expanded') === 'true') {
-    // micro-délai pour laisser l’ancre démarrer son scroll si besoin
-    setTimeout(() => mobileBtn.click(), 0);
-  }
-});
-
-    const expanded = mobileBtn.getAttribute('aria-expanded') === 'true';
-    mobileBtn.setAttribute('aria-expanded', String(!expanded));
-    mobileMenu?.classList.toggle('hidden', expanded);
-  });
-
-  // ---------- ESC pour fermer modales / dashboard ----------
-  document.addEventListener('keydown', (e)=>{
-    if(e.key !== 'Escape') return;
-    [orderModal, subscriptionModal, loginModal].forEach(m=>{
-      if(m && !m.classList.contains('hidden')) closeModal(m);
-    });
-    if(dashboard && !dashboard.classList.contains('hidden')){
-      dashboard.classList.add('hidden');
-      document.body.style.overflow='';
-    }
-  });
-
-  // ---------- Bouton "Commencer le tirage" : état initial + ARIA ----------
-  const intentionIn = $('intention');
-  const startButton = $('startReading');
-  if(startButton && intentionIn){
-    const onInput = () => {
-      const ok = intentionIn.value.trim().endsWith('?') && intentionIn.value.trim().length > 1;
-      startButton.disabled = !ok;
-      startButton.setAttribute('aria-disabled', String(!ok));
-    };
-    intentionIn.addEventListener('input', onInput, {passive:true});
-    onInput();
-  }
-
-  // ---------- "Tirage Complet" -> aller aux offres ----------
-  $('fullReading')?.addEventListener('click', ()=>{
-    $('offres')?.scrollIntoView({behavior:'smooth'});
-  });
-
-  // ---------- Scroll-to-top (apparition) ----------
-  const scrollTopBtn = $('scrollTop');
-  window.addEventListener('scroll', ()=>{
-    if(!scrollTopBtn) return;
-    scrollTopBtn.classList.toggle('show', window.scrollY > 400);
-  }, {passive:true});
-  scrollTopBtn?.addEventListener('click', ()=> window.scrollTo({top:0, behavior:'smooth'}));
-})();
-</script>
-
-<script id="checkout-unlock">
-(function(){
-  'use strict';
-
-  var alreadyUnlocked = false;
-
-  // Sommes-nous dans un builder / iframe (DeepSite preview, etc.) ?
-  function inSandbox(){
-    try { return window.top !== window.self; } catch(e){ return true; }
-  }
-
-  function detectReturn(){
-    var sp   = new URLSearchParams(location.search);
-    var hash = (location.hash || '').toLowerCase();
-    return (
-      sp.get('paid') === 'traversee' ||
-      hash.includes('merci') ||
-      sp.has('session_id') ||
-      sp.get('success') === '1' ||
-      sp.get('stripe_success') === 'true' ||
-      sp.get('paypal') === 'success'
-    );
-  }
-
-  function ensureSectionVisible(){
-    var trav  = document.getElementById('traversee');
-    var intro = document.getElementById('traversee-intro');
-    var form  = document.getElementById('traversee-form');
-    if (trav)  trav.classList.remove('hidden');
-    if (intro) intro.classList.remove('hidden');
-    if (form)  form.classList.add('hidden');
-  }
-
-  function enterImmersiveLight(){
-    document.querySelectorAll('body > header, body > footer, body > section:not(#traversee)')
-      .forEach(function(n){
-        n.classList.add('hide-immersive');
-        n.setAttribute('inert','');
-        n.setAttribute('aria-hidden','true');
-      });
-    var exitBtn = document.getElementById('exitTraverseeBtn');
-    if (exitBtn) exitBtn.classList.remove('hidden');
-    document.getElementById('traversee')?.scrollIntoView({behavior:'smooth', block:'start'});
-  }
-
-  // ✅ Ferme le modal de commande s'il est ouvert (et reset le form)
-  function closeOrderModalIfOpen(){
-    var m = document.getElementById('orderModal');
-    if (!m || m.classList.contains('hidden')) return;
-    try {
-      if (typeof closeModal === 'function') closeModal(m);
-      else { m.classList.add('hidden'); document.body.style.overflow=''; }
-    } catch(_) {}
-    try { m.querySelector('form')?.reset?.(); } catch(_) {}
-  }
-
-  // Overlay MERCI
-  function buildThankYou(){
-    // ferme d'abord le modal de commande
-    closeOrderModalIfOpen();
-
-    var root = document.createElement('div');
-    root.id = 'thankyouOverlay';
-    root.className = 'fixed inset-0 z-[1100] flex items-center justify-center bg-night-blue/95';
-    root.setAttribute('role','dialog');
-    root.setAttribute('aria-modal','true');
-    root.innerHTML =
-      '<div class="bg-dark-blue border border-gold/40 rounded-2xl p-8 max-w-md w-[92vw] text-center">'+
-        '<h3 class="cormorant text-3xl text-gold mb-2">Merci ✨</h3>'+
-        '<p class="text-light-gold mb-6">Paiement confirmé. Votre tirage de la Traversée est débloqué.</p>'+
-        '<button id="thxGo" class="btn-gold w-full">Accéder au tirage</button>'+
-      '</div>';
-    document.body.appendChild(root);
-
-    var go = document.getElementById('thxGo');
-    setTimeout(function(){ go?.focus(); }, 30);
-
-    function closeAndEnter(){
-      root.remove();
-      // sécurité : si pour une raison X le modal est resté, on le ferme ici aussi
-      closeOrderModalIfOpen();
-      enterImmersiveLight();
-      // Nettoie l'URL
-      try {
-        var url = new URL(location.href);
-        url.searchParams.delete('paid');
-        url.hash = 'traversee';
-        history.replaceState({}, '', url.toString());
-      } catch(_){}
-    }
-
-    go?.addEventListener('click', closeAndEnter);
-    root.addEventListener('keydown', function(e){ if(e.key === 'Escape'){ closeAndEnter(); } });
-  }
-
-  function unlock(){
-    if (alreadyUnlocked) return;
-    alreadyUnlocked = true;
-    closeOrderModalIfOpen();     // ✅ ferme avant tout
-    ensureSectionVisible();
-    buildThankYou();
-  }
-
-  // --- DEMO SANS STRIPE ---
-  var orderForm = document.getElementById('orderForm');
-  if (orderForm) {
-    orderForm.addEventListener('submit', function(e){
-      e.preventDefault();
-      try { localStorage.setItem('oradia_paid_traversee','1'); } catch(_){}
-      closeOrderModalIfOpen();   // ✅ ferme au submit aussi
-      if (inSandbox()){
-        unlock();                // pas de redirection en sandbox
-      } else {
-        try {
-          var url = new URL(location.href);
-          url.searchParams.set('paid','traversee');
-          url.hash = 'merci';
-          window.location.href = url.toString();
-        } catch(_){
-          window.location.href = location.pathname + '?paid=traversee#merci';
-        }
-      }
-    });
-  }
-
-  // Au chargement : retour de paiement
-  if (detectReturn()) {
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', unlock, {once:true});
-    } else {
-      unlock();
-    }
-  } else {
-    // Déjà payé + on arrive sur #traversee
-    try {
-      if (localStorage.getItem('oradia_paid_traversee') === '1' &&
-          (location.hash || '').toLowerCase().includes('traversee')) {
-        ensureSectionVisible();
-        enterImmersiveLight();
-      }
-    } catch(_){}
-  }
-})();
-</script>
-
-
 
   <!-- SCRIPT -->
+  <script>
+    // --------- Données cartes ----------
+    const DATA = {
+      emotions: [
+        {name:"JOIE", quote:"Une onde traverse mon cœur. Elle dit oui à la vie.", polarity:"yang"},
+        {name:"TRISTESSE", quote:"Je laisse couler ce qui n’a plus à rester. L’eau me guérit.", polarity:"yin"},
+        {name:"INJUSTICE", quote:"Je sens l’appel d’un monde plus juste, d’un équilibre à retrouver.", polarity:"yin"},
+        {name:"ÉMERVEILLEMENT", quote:"La beauté m’inspire et l’invisible se révèle.", polarity:"yang"},
+        {name:"HONTE", quote:"Je me regarde avec tendresse. Aucun poids ne m’appartient vraiment.", polarity:"yin"},
+        {name:"CULPABILITÉ", quote:"Je reconnais mes limites humaines. Je me pardonne, profondément.", polarity:"yin"},
+        {name:"SOLITUDE", quote:"Dans le silence, je me découvre présence.", polarity:"yin"},
+        {name:"DÉGOÛT", quote:"Je perçois ce qui ne me nourrit plus. J’opère l’écart juste.", polarity:"yin"},
+        {name:"SÉRÉNITÉ", quote:"Je goûte la paix dans l’instant.", polarity:"yang"},
+        {name:"AMOUR", quote:"J’aime parce que c’est ma nature.", polarity:"yang"},
+        {name:"COLÈRE", quote:"Mon feu sacré défend ma juste frontière.", polarity:"yang"},
+        {name:"PEUR", quote:"J’écoute l’ombre qui murmure vers plus de conscience.", polarity:"yin"}
+      ],
+      besoins: [
+        {name:"RECONNAISSANCE", quote:"Quand mes dons sont vus, je m’ouvre.", polarity:"yang"},
+        {name:"SÉCURITÉ", quote:"La stabilité me soutient.", polarity:"yin"},
+        {name:"LIBERTÉ", quote:"Je respire l’espace, rien ne m’enferme.", polarity:"yang"},
+        {name:"SOUTIEN", quote:"Je m’appuie sans honte sur l’autre.", polarity:"yin"},
+        {name:"REPOS", quote:"Ralentir régénère mon être.", polarity:"yin"},
+        {name:"CLAIRETÉ", quote:"La lumière éclaire mon esprit.", polarity:"yang"},
+        {name:"APPARTENANCE", quote:"Je fais partie d’un cercle plus vaste.", polarity:"yin"},
+        {name:"AUTONOMIE", quote:"Je marche de mes propres forces.", polarity:"yang"},
+        {name:"STIMULATION", quote:"Le mouvement m’invite à explorer.", polarity:"yang"},
+        {name:"HARMONIE", quote:"Chaque chose à sa place.", polarity:"yin"},
+        {name:"SENS", quote:"Chaque pas a une raison d’être.", polarity:"yin"},
+        {name:"AMOUR REÇU", quote:"J’accueille la tendresse offerte.", polarity:"yin"}
+      ],
+      revelations: [
+        {name:"CLÉ", quote:"Une porte s’ouvre : accès à une vérité.", polarity:"yang"},
+        {name:"PORTE", quote:"Un passage se présente, j’ose franchir.", polarity:"yin"},
+        {name:"MESSAGE", quote:"Un signe clair m’est donné.", polarity:"yang"},
+        {name:"SYNCHRONICITÉ", quote:"Tout se répond, rien n’est hasard.", polarity:"yin"},
+        {name:"SIGNE", quote:"Un indice discret éclaire ma route.", polarity:"yin"},
+        {name:"VISION", quote:"Je vois au-delà, les voiles se lèvent.", polarity:"yang"},
+        {name:"PRÉSAGE", quote:"Un souffle d’avenir approche.", polarity:"yin"},
+        {name:"ÉVEIL", quote:"Je me souviens de qui je suis.", polarity:"yang"},
+        {name:"LUMIÈRE", quote:"Un rayon traverse l’ombre.", polarity:"yang"},
+        {name:"VÉRITÉ", quote:"L’essence se distingue clairement.", polarity:"yang"},
+        {name:"DÉVOILEMENT", quote:"Le caché devient visible.", polarity:"yin"},
+        {name:"ÉTINCELLE", quote:"Une flamme naît, nouvelle voie.", polarity:"yang"}
+      ],
+      actions: [
+        {name:"AGIR", quote:"Je passe du rêve à l’acte.", polarity:"yang"},
+        {name:"DIRE", quote:"Je prononce les mots justes.", polarity:"yang"},
+        {name:"CRÉER", quote:"Je façonne le monde, offrande.", polarity:"yang"},
+        {name:"PARTAGER", quote:"J’offre ce qui m’anime.", polarity:"yang"},
+        {name:"ALLER VERS", quote:"Je m’avance, curieux.", polarity:"yang"},
+        {name:"CHOISIR", quote:"Je décide avec clarté.", polarity:"yang"}
+      ],
+      cosmos: [
+        {name:"ORIGINE", quote:"Tout naît du même centre."},
+        {name:"LIGNÉE", quote:"Je marche avec mes ancêtres."},
+        {name:"CYCLE", quote:"Rien ne se perd, tout se transforme."},
+        {name:"LOI", quote:"Des règles invisibles vibrent partout."},
+        {name:"TRAME", quote:"Un tissu relie chaque instant."},
+        {name:"KARMA", quote:"Je récolte ce que je sème."},
+        {name:"VOILE", quote:"Je pressens sans tout voir."},
+        {name:"PORTAIL", quote:"Un seuil s’ouvre vers ailleurs."},
+        {name:"ÉCHO", quote:"Un souvenir me traverse."},
+        {name:"COSMOGÉNÈSE", quote:"Le monde s’éveille à nouveau."},
+        {name:"AKASHA", quote:"Tout est écrit et possible."},
+        {name:"INTRICATION", quote:"Tout est lié à tout."}
+      ]
+    };
 
-<script id="oradia-pelerin">
-// Gestion du formulaire email
-document.addEventListener('DOMContentLoaded', () => {
-  const emailForm = document.getElementById('emailResultsForm');
-  if (emailForm) {
-    emailForm.addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const email = document.getElementById('userEmail').value.trim();
-      if (!email) return;
+    const familyLabels = {
+      emotions: "ÉMOTIONS",
+      besoins: "BESOINS",
+      revelations: "RÉVÉLATIONS",
+      actions: "ACTIONS",
+      cosmos: "Carte Mémoires Cosmos"
+    };
+    const polarityIcon = p => p === "yang" ? "🔺" : "⚫";
+    const polarityLabel = p => p === "yang" ? "énergie masculine" : "énergie féminine";
+    const yiInsight = {
+      emotions: "Carte Émotion (base) : climat émotionnel présent.",
+      besoins: "Carte Besoin (relation) : ajustement au monde/soutien.",
+      revelations: "Carte Action (vision) : clarté et direction.",
+      actions: "Carte Mémoires Cosmos (passage) : décision et incarnation."
+    };
+    const rng = n => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % n; };
+    const pick = arr => arr[rng(arr.length)];
 
-      const results = {
-        intention: document.getElementById('out-intention').textContent,
-        emotions: document.querySelector('[data-family="emotions"] [data-name]')?.textContent,
-        besoins: document.querySelector('[data-family="besoins"] [data-name]')?.textContent,
-        actions: document.querySelector('[data-family="actions"] [data-name]')?.textContent,
-        cosmos: document.querySelector('[data-family="cosmos"] [data-name]')?.textContent,
-        synthesis: document.getElementById('synthese')?.innerHTML
+    // --------- État tirage ----------
+    let drawn = { emotions:null, besoins:null, actions:null, cosmos:null };
+    let flippedCount = 0;
+
+    // --------- DOM ----------
+    const board = document.getElementById("board");
+    const showBtn = document.getElementById("showResults");
+    const resetBtn = document.getElementById("reset");
+    const linesOut = document.getElementById("lines");
+    const synthOut = document.getElementById("synthese");
+    const intentionIn = document.getElementById("intention");
+    const outIntention = document.getElementById("out-intention");
+    const results = document.getElementById("results");
+
+    function renderFront(cardEl, data, family){
+      cardEl.querySelector('[data-name]').textContent = data.name;
+      cardEl.querySelector('[data-quote]').textContent = data.quote;
+      const pol = cardEl.querySelector('[data-polarity]');
+      if(family === "cosmos"){
+        pol.style.visibility = "hidden";
+      } else {
+        pol.style.visibility = "visible";
+        pol.textContent = polarityIcon(data.polarity);
+      }
+    }
+
+    function flipCard(cardEl){
+      if(cardEl.classList.contains('flipped')) return;
+      if(!intentionIn.value.trim()){
+        intentionIn.focus();
+        intentionIn.setCustomValidity("Veuillez saisir une intention pour votre tirage");
+        intentionIn.reportValidity();
+        return;
+      }
+      const family = cardEl.dataset.family;
+      const data = pick(DATA[family]);
+      drawn[family] = data;
+
+      renderFront(cardEl, data, family);
+      cardEl.classList.add('flipped');
+      flippedCount++;
+
+      const back = cardEl.querySelector('.back');
+      back.setAttribute('aria-pressed','true');
+      back.style.pointerEvents = 'none';
+
+      if(flippedCount === 4){
+        showBtn.classList.remove('hidden');
+        showBtn.disabled = false;
+      }
+    }
+
+
+    // --------- Interactions ----------
+    // Validation intention live
+    const startButton = document.getElementById('startReading');
+    intentionIn.addEventListener('input', () => {
+      const ok = intentionIn.value.trim().endsWith('?') && intentionIn.value.trim().length > 1;
+      startButton.disabled = !ok;
+    });
+
+    // Lancer le tirage (affiche le plateau uniquement à ce moment)
+    startButton.addEventListener('click', ()=>{
+      if(!intentionIn.value.trim().endsWith('?')){
+        intentionIn.setCustomValidity("Veuillez formuler une question ouverte se terminant par « ? »");
+        intentionIn.reportValidity();
+        return;
+      }
+      board.classList.remove('hidden');
+      document.getElementById('cardsInstruction').classList.remove('hidden');
+      startButton.classList.add('hidden');
+      const firstBack = board.querySelector('.card .back'); if(firstBack) firstBack.focus();
+    });
+
+    // Click/Enter pour retourner les cartes
+    document.querySelectorAll('.card .back').forEach(back=>{
+      back.addEventListener('click', ()=> flipCard(back.closest('.card')));
+      back.addEventListener('keypress', (e)=> {
+        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flipCard(back.closest('.card')); }
+      });
+    });
+
+    // Affichage des résultats
+    showBtn.addEventListener('click', ()=>{
+      const E = drawn.emotions, B = drawn.besoins, A = drawn.actions, C = drawn.cosmos;
+      if(!(E && B && A && C)) return;
+
+      outIntention.textContent = intentionIn.value.trim();
+
+      const line = (label, obj, showPol=true)=>{
+        const pol = "";
+        return `<p><b>${label} :</b> ${obj.name}${pol}<br><i>« ${obj.quote} »</i></p>`;
       };
 
-      try {
-        // Ici vous devrez implémenter l'appel à votre backend
-        // pour envoyer l'email avec les résultats
-        const response = await fetch('/api/send-results', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email, results })
-        });
+      linesOut.innerHTML = `
+        <p style="margin:0 0 8px"><b>VOTRE Tirage :</b></p>
+        ${line("Famille ÉMOTIONS", E)}
+        ${line("Famille BESOINS", B)}
+        ${line("Famille ACTIONS", A)}
+        <div class="p-4 rounded-xl mb-4" style="background: rgba(245, 231, 161, 0.1); border: 1px solid rgba(245, 231, 161, 0.3);">
+          <p class="text-gold font-bold mb-2"><i class="fas fa-star mr-2"></i> Mémoires Cosmos (spéciale)</p>
+          <p><b>${C.name}</b><br><i>« ${C.quote} »</i></p>
+          <p class="mt-2 text-sm">Cette carte révèle les connexions cosmiques et les mémoires profondes qui influencent votre chemin.</p>
+        </div>
+      `;
 
-        if (response.ok) {
-          alert('Les résultats ont été envoyés à votre adresse email !');
-          emailForm.reset();
-        } else {
-          throw new Error('Erreur lors de l\'envoi');
+      const seg = (fam, obj)=>{
+        const polWord = obj.polarity ? polarityLabel(obj.polarity) : null;
+        const yi = yiInsight[fam] || "";
+        const mood = obj.polarity === 'yang' ? "élan, clarté, affirmation"
+                    : obj.polarity === 'yin' ? "réception, écoute, intériorisation"
+                    : "mémoire et perspective";
+        const t1 = fam==="emotions" ? "Ce climat intérieur te propose un point d’appui sincère."
+                : fam==="besoins" ? "Ce besoin précise la juste manière de te relier."
+                : fam==="revelations" ? "Cette révélation ouvre un angle de vue directif."
+                : fam==="actions" ? "Le mouvement proposé invite à matérialiser l’intuition."
+                : "";
+        const polTxt = polWord ? ` Ici, l’${polWord} souffle vers ${mood}.` : ``;
+        return `<p><b>${familyLabels[fam]} :</b> ${obj.name}. ${yi} ${polTxt} <br><i>« ${obj.quote} »</i>. ${t1}</p>`;
+      };
+
+      synthOut.innerHTML = `
+        <div class="mt-3"><b>Synthèse du tirage :</b></div>
+        ${seg("emotions", E)}
+        ${seg("besoins", B)}
+        ${seg("actions", A)}
+        <div class="p-4 rounded-xl mt-4" style="background: rgba(245, 231, 161, 0.1); border: 1px solid rgba(245, 231, 161, 0.3);">
+          <p class="text-gold font-bold mb-2"><i class="fas fa-star mr-2"></i> Lecture d'ensemble</p>
+          <p>La carte Émotion pose le ton, la carte Besoin ajuste le lien, la carte Action éclaire la vision.</p>
+          <p class="mt-2"><b>La carte Mémoires Cosmos</b> est centrale - elle révèle les connexions invisibles et les influences cosmiques sur votre situation. Prenez un moment pour méditer sur son message.</p>
+        </div>
+      `;
+
+      results.classList.remove('hidden');
+      document.getElementById('fullReading').classList.remove('hidden');
+      document.getElementById('reset').classList.remove('hidden');
+      document.getElementById('emailForm').classList.remove('hidden');
+      results.scrollIntoView({behavior:'smooth', block:'start'});
+    });
+
+    // Nouveau tirage
+    resetBtn.addEventListener('click', ()=>{
+      // Réinitialiser l'état
+      drawn = {emotions:null, besoins:null, actions:null, cosmos:null};
+      flippedCount = 0;
+      
+      // Masquer les éléments de résultats
+      showBtn.disabled = true;
+      showBtn.classList.add('hidden');
+      results.classList.add('hidden');
+      document.getElementById('fullReading').classList.add('hidden');
+      document.getElementById('reset').classList.add('hidden');
+      document.getElementById('emailForm').classList.add('hidden');
+      linesOut.innerHTML = "";
+      synthOut.innerHTML = "";
+      
+      // Réinitialiser les cartes
+      document.querySelectorAll('.card').forEach(card=>{
+        card.classList.remove('flipped');
+        const back = card.querySelector('.back');
+        back.style.pointerEvents = 'auto';
+        back.setAttribute('aria-pressed','false');
+        card.querySelector('[data-name]').textContent = "—";
+        card.querySelector('[data-quote]').textContent = "—";
+        const pol = card.querySelector('[data-polarity]');
+        if(card.dataset.family === "cosmos"){ 
+          pol.style.visibility = "hidden"; 
+        } else { 
+          pol.style.visibility = "visible"; 
+          pol.textContent = ""; 
         }
-      } catch (error) {
-        console.error(error);
-        alert('Une erreur est survenue. Veuillez réessayer plus tard.');
-      }
+      });
+
+      // Réafficher le formulaire d'intention
+      board.classList.add('hidden');
+      document.getElementById('cardsInstruction').classList.add('hidden');
+      startButton.classList.remove('hidden');
+      intentionIn.value = "";
+      intentionIn.focus();
+      
+      // Scroll vers le haut de la section
+      window.scrollTo({top: document.getElementById('oracle').offsetTop - 60, behavior:'smooth'});
     });
-  }
-});
-(function(){
-'use strict';
 
-// ====== Données PÈLERIN ======
-const DATA = {
-  emotions: [
-    {name:"JOIE", quote:"Une onde traverse mon cœur. Elle dit oui à la vie.", polarity:"yang"},
-    {name:"TRISTESSE", quote:"Je laisse couler ce qui n’a plus à rester. L’eau me guérit.", polarity:"yin"},
-    {name:"INJUSTICE", quote:"Je sens l’appel d’un monde plus juste, d’un équilibre à retrouver.", polarity:"yin"},
-    {name:"ÉMERVEILLEMENT", quote:"La beauté m’inspire et l’invisible se révèle.", polarity:"yang"},
-    {name:"HONTE", quote:"Je me regarde avec tendresse. Aucun poids ne m’appartient vraiment.", polarity:"yin"},
-    {name:"CULPABILITÉ", quote:"Je reconnais mes limites humaines. Je me pardonne, profondément.", polarity:"yin"},
-    {name:"SOLITUDE", quote:"Dans le silence, je me découvre présence.", polarity:"yin"},
-    {name:"DÉGOÛT", quote:"Je perçois ce qui ne me nourrit plus. J’opère l’écart juste.", polarity:"yin"},
-    {name:"SÉRÉNITÉ", quote:"Je goûte la paix dans l’instant.", polarity:"yang"},
-    {name:"AMOUR", quote:"J’aime parce que c’est ma nature.", polarity:"yang"},
-    {name:"COLÈRE", quote:"Mon feu sacré défend ma juste frontière.", polarity:"yang"},
-    {name:"PEUR", quote:"J’écoute l’ombre qui murmure vers plus de conscience.", polarity:"yin"}
-  ],
-  besoins: [
-    {name:"RECONNAISSANCE", quote:"Quand mes dons sont vus, je m’ouvre.", polarity:"yang"},
-    {name:"SÉCURITÉ", quote:"La stabilité me soutient.", polarity:"yin"},
-    {name:"LIBERTÉ", quote:"Je respire l’espace, rien ne m’enferme.", polarity:"yang"},
-    {name:"SOUTIEN", quote:"Je m’appuie sans honte sur l’autre.", polarity:"yin"},
-    {name:"REPOS", quote:"Ralentir régénère mon être.", polarity:"yin"},
-    {name:"CLAIRETÉ", quote:"La lumière éclaire mon esprit.", polarity:"yang"},
-    {name:"APPARTENANCE", quote:"Je fais partie d’un cercle plus vaste.", polarity:"yin"},
-    {name:"AUTONOMIE", quote:"Je marche de mes propres forces.", polarity:"yang"},
-    {name:"STIMULATION", quote:"Le mouvement m’invite à explorer.", polarity:"yang"},
-    {name:"HARMONIE", quote:"Chaque chose à sa place.", polarity:"yin"},
-    {name:"SENS", quote:"Chaque pas a une raison d’être.", polarity:"yin"},
-    {name:"AMOUR REÇU", quote:"J’accueille la tendresse offerte.", polarity:"yin"}
-  ],
-  actions: [
-    {name:"AGIR", quote:"Je passe du rêve à l’acte.", polarity:"yang"},
-    {name:"DIRE", quote:"Je prononce les mots justes.", polarity:"yang"},
-    {name:"CRÉER", quote:"Je façonne le monde, offrande.", polarity:"yang"},
-    {name:"PARTAGER", quote:"J’offre ce qui m’anime.", polarity:"yang"},
-    {name:"ALLER VERS", quote:"Je m’avance, curieux.", polarity:"yang"},
-    {name:"CHOISIR", quote:"Je décide avec clarté.", polarity:"yang"}
-  ],
-  cosmos: [
-    {name:"ORIGINE", quote:"Tout naît du même centre."},
-    {name:"LIGNÉE", quote:"Je marche avec mes ancêtres."},
-    {name:"CYCLE", quote:"Rien ne se perd, tout se transforme."},
-    {name:"LOI", quote:"Des règles invisibles vibrent partout."},
-    {name:"TRAME", quote:"Un tissu relie chaque instant."},
-    {name:"KARMA", quote:"Je récolte ce que je sème."},
-    {name:"VOILE", quote:"Je pressens sans tout voir."},
-    {name:"PORTAIL", quote:"Un seuil s’ouvre vers ailleurs."},
-    {name:"ÉCHO", quote:"Un souvenir me traverse."},
-    {name:"COSMOGÉNÈSE", quote:"Le monde s’éveille à nouveau."},
-    {name:"AKASHA", quote:"Tout est écrit et possible."},
-    {name:"INTRICATION", quote:"Tout est lié à tout."}
-  ]
-};
+    // Tirage complet -> aller aux offres
+    document.getElementById('fullReading').addEventListener('click', ()=>{
+      document.querySelector('#offres').scrollIntoView({behavior:'smooth'});
+    });
 
-// UI polarité
-const polUI_PEL = (p) => p === 'yang'
-  ? { icon:'▲', label:"Triangle — énergie masculine : élan, action, verticalité" }
-  : { icon:'◯', label:"Cercle — énergie féminine : réceptivité, accueil, intégration" };
-
-// RNG
-const rng = n => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % n; };
-const pick = arr => arr[rng(arr.length)];
-
-// ===== Synthèse =====
-const rand = pick;
-const cap  = s => s.charAt(0).toUpperCase() + s.slice(1);
-const tokens = (t) => (t||"").toLowerCase().replace(/[’'"]/g," ").replace(/[^a-zàâäçéèêëîïôöùûüÿœ\s-]/gi," ").split(/\s+/).filter(x=>x && x.length>2);
-const SYN = {
-  ouvre: ["ouvre","défriche","éclaire","déplie","met en relief"],
-  indique: ["indique","invite à","oriente vers","suggère","met le cap sur"],
-  appelle: ["appelle","réclame","sollicite","demande","requiert"],
-  pas: ["pas","mouvement","élan","impulsion","geste"],
-  carte: ["carte","arcane","signal","vecteur","pilier"],
-  ensemble: ["lecture d’ensemble","trame globale","horizon commun","axe du jour","cohérence du tirage"]
-};
-const MEANINGS = {
-  emotions: {
-    "JOIE":"capitalise sur ce qui te donne de l’oxygène intérieur.",
-    "TRISTESSE":"offre un bain d’intégration : accepte le tempo bas, il recolle les pièces.",
-    "INJUSTICE":"pousse à redresser une balance : pose clairement tes limites.",
-    "ÉMERVEILLEMENT":"ravive la curiosité : regarder autrement déverrouille la suite.",
-    "HONTE":"invite à déposer un fardeau qui ne t’appartient pas.",
-    "CULPABILITÉ":"demande de reconnaître l’intention juste, pas la perfection.",
-    "SOLITUDE":"crée un espace fécond : le recul est fécondation, pas retrait.",
-    "DÉGOÛT":"signale une pollution : nettoie l’environnement ou la situation.",
-    "SÉRÉNITÉ":"stabilise la base : calme clair = décisions nettes.",
-    "AMOUR":"replace le lien au centre : nourris la relation la plus vivante.",
-    "COLÈRE":"donne un feu directeur : canalise, ne refoule pas.",
-    "PEUR":"préviens par avance : sécurise un point précis avant d’avancer."
-  },
-  besoins: {
-    "RECONNAISSANCE":"cherche des témoins compétents de tes talents.",
-    "SÉCURITÉ":"solidifie une base matérielle avant d’élargir.",
-    "LIBERTÉ":"élague les contraintes inutiles pour respirer.",
-    "SOUTIEN":"structure une aide concrète (personne, outil, temps).",
-    "REPOS":"programme des pauses réelles : elles améliorent ton rendement.",
-    "CLAIRETÉ":"met à plat critères et priorités sur 1 page.",
-    "APPARTENANCE":"rattache ton action à un cercle qui te ressemble.",
-    "AUTONOMIE":"réaffirme ton périmètre de décision.",
-    "STIMULATION":"mets un défi mesuré pour relancer la dynamique.",
-    "HARMONIE":"réduit les frictions : simplifie un processus.",
-    "SENS":"relie l’action à ton ‘pourquoi’ explicite.",
-    "AMOUR REÇU":"autorise-toi à demander et… à recevoir."
-  },
-  actions: {
-    "AGIR":"pose un acte visible avant la fin de journée.",
-    "DIRE":"formule le message exact, sans détour, avec douceur ferme.",
-    "CRÉER":"prototype une version 0.1 au lieu d’attendre la 1.0.",
-    "PARTAGER":"mets ton travail dans une boucle de feedback courte.",
-    "ALLER VERS":"prends rendez-vous avec ce/ceux qui t’attirent.",
-    "CHOISIR":"tranche entre deux voies ‘suffisantes’ pour libérer l’énergie."
-  },
-  cosmos: {
-    "ORIGINE":"revenir à la source t’évite l’égarement périphérique.",
-    "LIGNÉE":"honorer l’héritage débloque l’élan futur.",
-    "CYCLE":"tout revient : planifie en boucles plutôt qu’en lignes droites.",
-    "LOI":"respecter la contrainte crée la vraie liberté de mouvement.",
-    "TRAME":"tout est connecté : aligne les pièces au même axe.",
-    "KARMA":"cultive l’intention ; elle imprime la suite.",
-    "VOILE":"accepte une zone floue : l’information arrive en marchant.",
-    "PORTAIL":"une opportunité exige un pas concret pour s’ouvrir.",
-    "ÉCHO":"ce que tu vis résonne ailleurs : observe les motifs.",
-    "COSMOGÉNÈSE":"pense ‘naissance’ : initie petit, grandira ensuite.",
-    "AKASHA":"garde trace ; l’archive devient levier.",
-    "INTRICATION":"prends en compte les dépendances avant d’agir."
-  }
-};
-const polMood = (p) => p==="yang" ? "tonus, clarté, décision" : p==="yin" ? "écoute, accueil, intériorisation" : "mémoire, continuité";
-function sentence(parts){ return parts.filter(Boolean).join(" "); }
-function tokens3(t){ return tokens(t).slice(0,3); }
-
-function lineEmotion(E, intentTags){
-  const base = `${SYN.carte[rand(SYN.carte)]} ÉMOTIONS (${E.name})`;
-  const pol  = E.polarity ? ` • ${polMood(E.polarity)}` : "";
-  const link = MEANINGS.emotions[E.name] || "te donne un indicateur intérieur net.";
-  const intent = intentTags.length ? ` En lien avec “${intentTags[0]}”, ` : " ";
-  return sentence([`${base}${pol} :`, intent+link]);
-}
-function lineBesoin(B, intentTags){
-  const base = `${SYN.carte[rand(SYN.carte)]} BESOINS (${B.name})`;
-  const pol  = B.polarity ? ` • ${polMood(B.polarity)}` : "";
-  const link = MEANINGS.besoins[B.name] || "cadre l’ajustement relationnel.";
-  const intent = intentTags[1] ? ` Pour “${intentTags[1]}”, ` : " ";
-  return sentence([`${base}${pol} :`, intent+link]);
-}
-function lineAction(A, intentTags){
-  const base = `${SYN.carte[rand(SYN.carte)]} ACTIONS (${A.name})`;
-  const pol  = A.polarity ? ` • ${polMood(A.polarity)}` : "";
-  const link = MEANINGS.actions[A.name] || "matérialise l’intuition en mouvement.";
-  const intent = intentTags[2] ? ` Concrètement sur “${intentTags[2]}”, ` : " ";
-  return sentence([`${base}${pol} :`, intent+link]);
-}
-function lineCosmos(C, E, B, A){
-  const head = `MÉMOIRES COSMOS (${C.name})`;
-  const core = MEANINGS.cosmos[C.name] || "donne la profondeur du décor.";
-  const bridge = rand(SYN.indique);
-  return `${head} : ${cap(core)} Elle ${bridge} l’articulation ${E.name} → ${B.name} → ${A.name}.`;
-}
-
-function buildSynthesis(E,B,A,C,intentText){
-  const intentTags = tokens3(intentText);
-  const intro = cap(`${rand(["Aujourd’hui","Pour cette question","Dans ce cadre"])} ${rand(["l’ensemble","la trame","le tirage"]) } ${rand(["se compose","se tisse","se dessine"])} autour de quatre foyers.`);
-  const s1 = lineEmotion(E,intentTags), s2 = lineBesoin(B,intentTags), s3 = lineAction(A,intentTags), s4 = lineCosmos(C,E,B,A);
-  const wrap = `${cap(rand(SYN.ensemble))} : ${rand([
-    "part de l’émotion sincère, s’ajuste au besoin réel, se décide en un geste sobre.",
-    "honore l’affect, clarifie le cadre, et met le corps en mouvement.",
-    "évite le flou : une petite décision vaut mieux qu’une grande hésitation.",
-    "reste modeste et concret : un pas bien posé en appelle d’autres."
-  ])}`;
-  const mantra = `🕊️ Mantra : « ${rand([
-    "Je choisis la clarté plutôt que la perfection.",
-    "Je fais un petit pas juste, ici et maintenant.",
-    "J’aligne mon geste sur mon axe intérieur.",
-    "Je laisse le sens guider mon action."
-  ])} »`;
-  const question = `❓ Question : ${rand([
-    "Quel micro-acte précis prouve mon engagement aujourd’hui ?",
-    "Quelle friction puis-je apaiser en 10 minutes ?",
-    "Quel soutien simple puis-je solliciter sans me justifier ?",
-    "Quelle chose puis-je dire clairement, sans détour inutile ?"
-  ])}`;
-  return `
-    <div class="mt-3"><b>Synthèse du tirage :</b></div>
-    <p>${intro}</p>
-    <p>${s1}</p>
-    <p>${s2}</p>
-    <p>${s3}</p>
-    <p>${s4}</p>
-    <p style="margin-top:12px"><b>${cap(rand(SYN.ensemble))}</b> — ${wrap}</p>
-    <p style="margin-top:8px"><i>${mantra}</i><br>${question}</p>
-  `;
-}
-
-// ===== État / DOM =====
-let drawn = { emotions:null, besoins:null, actions:null, cosmos:null };
-let flippedCount = 0;
-
-const board       = document.getElementById("board");
-const showBtn     = document.getElementById("showResults");
-const resetBtn    = document.getElementById("reset");
-const linesOut    = document.getElementById("lines");
-const synthOut    = document.getElementById("synthese");
-const intentionIn = document.getElementById("intention");
-const outIntent   = document.getElementById("out-intention");
-const results     = document.getElementById("results");
-
-// ===== Rendu face avant =====
-function renderFront(cardEl, picked, family){
-  cardEl.querySelector('[data-name]').textContent  = picked.name;
-  cardEl.querySelector('[data-quote]').textContent = picked.quote || picked.base;
-
-  const pol = cardEl.querySelector('[data-polarity]');
-  if (family === "cosmos") {
-    pol.style.visibility = "hidden";
-    pol.textContent = "";
-    pol.removeAttribute('title'); pol.removeAttribute('aria-label');
-    pol.classList.remove('is-triangle','is-cercle');
-  } else {
-    const ui = polUI_PEL(picked.polarity);
-    pol.style.visibility = "visible";
-    pol.textContent = ui.icon;
-    pol.title = ui.label;
-    pol.setAttribute('aria-label', ui.label);
-    pol.classList.toggle('is-triangle', picked.polarity === 'yang');
-    pol.classList.toggle('is-cercle',   picked.polarity === 'yin');
-  }
-
-  const topbar = cardEl.querySelector('.front .topbar');
-  topbar?.querySelector('[data-coin]')?.remove();
-  topbar?.querySelector('[data-bridge-badge]')?.remove();
-  cardEl.querySelector('[data-bridge-quote]')?.remove();
-}
-
-// ===== Flip carte (PÈLERIN) =====
-const pickOne = (arr) => arr[rng(arr.length)];
-function flipCard(cardEl){
-  if(cardEl.classList.contains('flipped')) return;
-  const q = (intentionIn.value||"").trim();
-  if(!q.endsWith('?')){
-    intentionIn.setCustomValidity("Veuillez formuler une question ouverte se terminant par « ? »");
-    intentionIn.reportValidity();
-    return;
-  }
-  const family = cardEl.dataset.family;
-  const base   = pickOne(DATA[family]);
-  drawn[family] = base;
-
-  renderFront(cardEl, base, family);
-
-  cardEl.classList.add('flipped');
-  const back = cardEl.querySelector('.back');
-  back.setAttribute('aria-pressed','true');
-  back.style.pointerEvents = 'none';
-
-  flippedCount++;
-  if(flippedCount === 4){
-    showBtn.classList.remove('hidden');
-    showBtn.disabled = false;
-    showBtn.removeAttribute('aria-disabled');
-  }
-}
-
-// ===== Interactions =====
-const startButton = document.getElementById('startReading');
-startButton.addEventListener('click', ()=>{
-  const q = (intentionIn.value||"").trim();
-  if(!q.endsWith('?')){
-    intentionIn.setCustomValidity("Veuillez formuler une question ouverte se terminant par « ? »");
-    intentionIn.reportValidity();
-    return;
-  }
-  document.getElementById('cardsInstruction')?.classList.remove('hidden');
-  board.classList.remove('hidden');
-  startButton.classList.add('hidden');
-  const firstBack = board.querySelector('.card .back');
-  if(firstBack) firstBack.focus();
-});
-
+    // --------- Scroll top ----------
+    const scrollTopBtn = document.getElementById('scrollTop');
+    scrollTopBtn.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+// --- 2.1. Support tactile pour retourner les cartes (Pèlerin) ---
 document.querySelectorAll('.card .back').forEach(back=>{
-  back.addEventListener('click', ()=> flipCard(back.closest('.card')));
-  back.addEventListener('keydown', (e)=> { if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flipCard(back.closest('.card')); }});
+  back.addEventListener('touchstart', (e)=>{ 
+    e.preventDefault(); 
+    flipCard(back.closest('.card')); 
+  }, {passive:false});
 });
 
-// ===== Résultats (PÈLERIN) =====
-const polIcon = (p) => p==='yang'?'▲':'◯';
-
-showBtn.addEventListener('click', ()=>{
-  const { emotions: E, besoins: B, actions: A, cosmos: C } = drawn;
-  if(!(E && B && A && C)) return;
-
-  const intent = (intentionIn.value||"").trim();
-  outIntent.textContent = intent || '—';
-
-  // setBusy est défini globalement plus haut dans ta page
-  setBusy(linesOut, true);
-  setBusy(synthOut, true);
-
-  linesOut.innerHTML = `
-    <p><b>ÉMOTIONS :</b> ${E.name} (${polIcon(E.polarity)})<br><i>« ${E.quote} »</i></p>
-    <p><b>BESOINS :</b> ${B.name} (${polIcon(B.polarity)})<br><i>« ${B.quote} »</i></p>
-    <p><b>ACTIONS :</b> ${A.name} (${polIcon(A.polarity)})<br><i>« ${A.quote} »</i></p>
-    <p><b class="text-gold">MÉMOIRES COSMOS :</b> <span class="text-light-gold">${C.name}</span><br><i class="text-gold">« ${C.quote} »</i></p>
-  `.trim();
-
-  synthOut.innerHTML = buildSynthesis(E,B,A,C,intent);
-
-  results.classList.remove('hidden');
-  results.scrollIntoView({behavior:'smooth', block:'start'});
-
-  setBusy(linesOut, false);
-  setBusy(synthOut, false);
-
-  // Affiche actions bas et formulaire email
-  document.getElementById('fullReading')?.classList.remove('hidden');
-  resetBtn?.classList.remove('hidden');
-  document.getElementById('emailResultsForm')?.classList.remove('hidden');
-});
-
-// ===== Reset =====
-resetBtn.addEventListener('click', ()=>{
-  // État
-  drawn = { emotions:null, besoins:null, actions:null, cosmos:null };
-  flippedCount = 0;
-
-  // UI cartes
-  document.querySelectorAll('.card').forEach(card=>{
-    card.classList.remove('flipped');
-    const back  = card.querySelector('.back');
-    const front = card.querySelector('.front');
-    if(back){ back.style.pointerEvents=''; back.setAttribute('aria-pressed','false'); }
-    front?.querySelector('[data-name]') && (front.querySelector('[data-name]').textContent = '—');
-    front?.querySelector('[data-quote]') && (front.querySelector('[data-quote]').textContent = '—');
-    const pol = front?.querySelector('[data-polarity]');
-    if(pol){
-      pol.textContent = '';
-      pol.style.visibility = 'hidden';
-      pol.removeAttribute('title'); pol.removeAttribute('aria-label');
-      pol.classList.remove('is-triangle','is-cercle');
-    }
-  });
-
-  // UI résultats
-  linesOut.innerHTML = '';
-  synthOut.innerHTML = '';
-  results.classList.add('hidden');
-  outIntent.textContent = '—';
-  document.getElementById('emailResultsForm')?.classList.add('hidden');
-
-  // Form & boutons
-  startButton.classList.remove('hidden');
-  showBtn.classList.add('hidden');
-  showBtn.disabled = true;
-  showBtn.setAttribute('aria-disabled','true');
-  board.classList.add('hidden');
-  document.getElementById('cardsInstruction')?.classList.add('hidden');
-  document.getElementById('emailResultsForm')?.classList.add('hidden');
-
-  // Intention
-  intentionIn.value = '';
-  intentionIn.setCustomValidity('');
-  intentionIn.focus();
-});
-
-})();
-</script>
-
-<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">
-  Made with
-  <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo"
-  width="16" height="16" decoding="async"
-       style="width: 16px; height: 16px; vertical-align: middle; display:inline-block; margin-right:3px; filter:brightness(0) invert(1);">
-  <a href="https://enzostvs-deepsite.hf.space"
-     style="color: #fff; text-decoration: underline;"
-     target="_blank" rel="noopener noreferrer">DeepSite</a>
-  —
-  🧬
-  <a href="https://enzostvs-deepsite.hf.space?remix=Paddy22/site-oradia"
-     style="color: #fff; text-decoration: underline;"
-     target="_blank" rel="noopener noreferrer">Remix</a>
-</p>
-
-<script id="sanitize-forms">
-document.addEventListener('DOMContentLoaded', () => {
-  const sanitize = s => (s || '').replace(/[<>]/g, '').replace(/\s+/g, ' ').trim();
-
-  const attach = (form) => {
-    if (!form) return;
-    form.addEventListener('submit', () => {
-      // Nettoie seulement email/texte/textarea
-      form.querySelectorAll('input[type="email"], input[type="text"], textarea')
-        .forEach(i => { i.value = sanitize(i.value); });
-    }, { capture: true });
-  };
-
-  ['memberLoginForm','memberRegisterForm','loginFormDashboard','traversee-form','orderForm']
-    .forEach(id => attach(document.getElementById(id)));
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-  const i = document.getElementById('intention');
-  if(!i) return;
-  const long = "Ex. : Comment orienter ma journée avec justesse ?";
-  const short = "Ex. : Comment orienter ma journée ?";
-  const mq = window.matchMedia('(max-width: 400px)');
-  const apply = () => i.placeholder = mq.matches ? short : long;
-  apply(); mq.addEventListener?.('change', apply);
-});
-</script>
-  ...
-  </footer>
-
-  <script id="scroll-spy">
-<script id="scroll-spy">
-document.addEventListener('DOMContentLoaded', () => {
-  // 1) Tous les liens internes présents dans des <nav>
-  const links = Array.from(document.querySelectorAll('nav a[href^="#"]'));
-
-  // 2) Sections cibles existantes
-  const sectionById = {};
-  const sections = links
-    .map(a => a.getAttribute('href').slice(1))
-    .filter(Boolean)
-    .map(id => document.getElementById(id))
-    .filter(Boolean)
-    .filter((sec) => (sectionById[sec.id] ? false : (sectionById[sec.id]=true))); // unique
-
-  // Applique aria-current
-  const setActive = (id) => {
-    links.forEach(a => {
-      const isActive = a.getAttribute('href') === `#${id}`;
-      if (isActive) a.setAttribute('aria-current', 'page');
-      else a.removeAttribute('aria-current');
-    });
-  };
-
-  // 3) Observe la section “centrée” à l’écran
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      // ignore les sections cachées (display:none)
-      if (entry.isIntersecting && entry.target.offsetParent !== null) {
-        setActive(entry.target.id);
-      }
-    });
-  }, {
-    rootMargin: '-40% 0px -60% 0px',
-    threshold: 0.01
-  });
-
-  sections.forEach(sec => io.observe(sec));
-
-  // 4) Activation immédiate au clic + scroll smooth
-  links.forEach(a => {
-    a.addEventListener('click', (e) => {
-      const id = a.getAttribute('href').slice(1);
-      const target = document.getElementById(id);
-      if (!target) return;
-      e.preventDefault();
-      setActive(id);
-      target.scrollIntoView({ behavior:'smooth', block:'start' });
-
-      // (facultatif) si le menu mobile est ouvert, on le referme
-      const mobileMenu = document.getElementById('mobileMenu');
-      if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
-        mobileMenu.classList.add('hidden');
-        const mobileBtn = document.getElementById('mobileMenuBtn');
-        mobileBtn?.setAttribute('aria-expanded', 'false');
-      }
-      history.replaceState(null, '', `#${id}`);
-    });
-  });
-
-  // 5) État initial (hash ou première section visible)
-  const initialId = location.hash?.slice(1);
-  if (initialId && document.getElementById(initialId)) {
-    setActive(initialId);
-  } else if (sections[0]) {
-    setActive(sections[0].id);
-  }
-});
-</script>
-
-  </script>
-<script id="scroll-spy" defer>
-document.addEventListener('DOMContentLoaded', () => {
-  const links = Array.from(document.querySelectorAll('nav a[href^="#"]'));
-  if (!links.length) return;
-
-  // Sections uniques réellement présentes
-  const seen = new Set();
-  const sections = links
-    .map(a => a.getAttribute('href').slice(1))
-    .filter(Boolean)
-    .map(id => document.getElementById(id))
-    .filter(Boolean)
-    .filter(sec => (seen.has(sec.id) ? false : seen.add(sec.id)));
-
-  const setActive = (id) => {
-    links.forEach(a => {
-      const active = a.getAttribute('href') === `#${id}`;
-      if (active) a.setAttribute('aria-current', 'page');
-      else a.removeAttribute('aria-current');
-    });
-  };
-
-  // Observer “section au centre”
-  const io = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting && entry.target.offsetParent !== null) {
-        setActive(entry.target.id);
-      }
-    });
-  }, { rootMargin: '-45% 0px -55% 0px', threshold: 0.01 });
-
-  sections.forEach(sec => io.observe(sec));
-
-  // Activation immédiate au clic + scroll doux
-  links.forEach(a => {
-    a.addEventListener('click', (e) => {
-      const id = a.getAttribute('href').slice(1);
-      const target = document.getElementById(id);
-      if (!target) return;
-      e.preventDefault();
-      setActive(id);
-      target.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // refermer le menu mobile s’il est ouvert
-      const mobileMenu = document.getElementById('mobileMenu');
-      if (mobileMenu && !mobileMenu.classList.contains('hidden')) {
-        mobileMenu.classList.add('hidden');
-        document.getElementById('mobileMenuBtn')?.setAttribute('aria-expanded','false');
-      }
-      history.replaceState(null, '', `#${id}`);
-    });
-  });
-
-  // État initial
-  const initial = location.hash?.slice(1);
-  if (initial && document.getElementById(initial)) setActive(initial);
-  else if (sections[0]) setActive(sections[0].id);
-});
-</script>
-<script id="ui-wiring-fixes">
-(() => {
-  const $  = (s, r=document) => r.querySelector(s);
-  const $$ = (s, r=document) => [...r.querySelectorAll(s)];
-
-  // ---- NAV MOBILE
-  const mobileBtn  = $('#mobileMenuBtn');
-  const mobileMenu = $('#mobileMenu');
-  if (mobileBtn && mobileMenu) {
-    const toggle = () => {
-      const open = mobileMenu.classList.toggle('hidden') === false;
-      mobileBtn.setAttribute('aria-expanded', String(open));
-    };
-    mobileBtn.addEventListener('click', toggle);
-    // fermer quand on clique un lien
-    $$('#mobileMenu a').forEach(a => a.addEventListener('click', () => {
-      if (!mobileMenu.classList.contains('hidden')) toggle();
-    }));
-    // fermer à ESC
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !mobileMenu.classList.contains('hidden')) toggle();
-    });
-  }
-
-  // ---- MODALES GÉNÉRIQUES (utilise tes helpers openModal/closeModal si présents)
-  const hookModal = (openSel, modalSel, closeSel) => {
-    const openEl = $(openSel), modal = $(modalSel), closeEl = $(closeSel);
-    if (!modal) return;
-    openEl?.addEventListener('click', (e) => { e.preventDefault?.(); openModal?.(modal); });
-    closeEl?.addEventListener('click', () => closeModal?.(modal));
-    // clic hors contenu pour fermer
-    modal.addEventListener('click', (e) => {
-      if (e.target === modal) closeModal?.(modal);
-    });
-    // ESC pour fermer
-    document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeModal?.(modal);
-    });
-  };
-
-  // Commande & Abonnement & Login dashboard
-  hookModal('#orderBtn', '#orderModal', '#closeOrder');
-  hookModal('#subscribeBtn', '#subscriptionModal', '#closeSubscription');
-  hookModal('#loginBtn', '#loginModal', '#closeLoginModal');
-  hookModal('#footerLogin', '#loginModal', '#closeLoginModal');
-  hookModal('#loginBtnMobile', '#loginModal', '#closeLoginModal');
-
-  // ---- ABONNEMENT : TOGGLE LOGIN / REGISTER
-  const subscriptionModal = $('#subscriptionModal');
-  const memberLoginForm    = $('#memberLoginForm');
-  const memberRegisterForm = $('#memberRegisterForm');
-  const showRegisterLink   = $('#showRegister');
-  const showLoginLink      = $('#showLogin');
-
-  function showLogin() {
-    if (!memberLoginForm || !memberRegisterForm) return;
-    memberRegisterForm.classList.add('hidden');
-    memberRegisterForm.setAttribute('aria-hidden','true');
-    memberRegisterForm.setAttribute('inert','');
-
-    memberLoginForm.classList.remove('hidden');
-    memberLoginForm.setAttribute('aria-hidden','false');
-    memberLoginForm.removeAttribute('inert');
-
-    (memberLoginForm.querySelector('input,button,select,textarea') || memberLoginForm).focus();
-  }
-  function showRegister() {
-    if (!memberLoginForm || !memberRegisterForm) return;
-    memberLoginForm.classList.add('hidden');
-    memberLoginForm.setAttribute('aria-hidden','true');
-    memberLoginForm.setAttribute('inert','');
-
-    memberRegisterForm.classList.remove('hidden');
-    memberRegisterForm.setAttribute('aria-hidden','false');
-    memberRegisterForm.removeAttribute('inert');
-
-    (memberRegisterForm.querySelector('input,button,select,textarea') || memberRegisterForm).focus();
-  }
-  showRegisterLink?.addEventListener('click', (e)=>{ e.preventDefault(); showRegister(); });
-  showLoginLink?.addEventListener('click', (e)=>{ e.preventDefault(); showLogin(); });
-
-  // ---- DASHBOARD : OUVERTURE VIA MODALE LOGIN
-  const loginModal = $('#loginModal');
-  const loginFormDashboard = $('#loginFormDashboard');
-  const dashboard = $('#dashboard');
-  const logoutBtn = $('#logoutBtn');
-
-  loginFormDashboard?.addEventListener('submit', (e) => {
+// --- 2.2. Support tactile Traversée (si les cartes existent déjà dans le DOM) ---
+document.addEventListener('click', (e)=>{
+  const back = e.target.closest?.('.traversee-card-back');
+  if(back){
     e.preventDefault();
-    // ici tu brancheras ton vrai backend plus tard
-    closeModal?.(loginModal);
-    dashboard?.classList.remove('hidden');
-    // focus accessibilité
-    (dashboard?.querySelector('button, a, [tabindex], input, select, textarea') || dashboard)?.focus();
-    // petite protection scroll
-    document.body.style.overflow = 'hidden';
-  });
-
-  logoutBtn?.addEventListener('click', () => {
-    dashboard?.classList.add('hidden');
-    document.body.style.overflow = '';
-  });
-
-  // fermer dashboard à ESC
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape' && dashboard && !dashboard.classList.contains('hidden')) {
-      dashboard.classList.add('hidden');
-      document.body.style.overflow = '';
+    const card = back.closest('.traversee-card');
+    if(card){
+      // La flipCard de la Traversée est définie dans le script "traversee-5cards-clean"
+      // On la déclenche en simulant la touche Enter (fallback)
+      back.dispatchEvent(new KeyboardEvent('keypress', {key:'Enter'}));
     }
-  });
-
-  // ---- ACCESSIBILITÉ : rôle/états cohérents si un bouton ouvre un menu/modale
-  // (déjà bien géré chez toi ; on assure un état initial propre)
-  if (mobileBtn && mobileMenu) mobileBtn.setAttribute('aria-expanded','false');
-
-  // ---- FIN : si la ligne coupée existait, on s’assure que l’intention était bien de revenir au login
-  // (sécurise le cas où ton ancien code se termine par "showLogin?.addEventListener...")
-  if (subscriptionModal && memberLoginForm && memberRegisterForm) {
-    // état par défaut : login visible
-    showLogin();
   }
-})();
-</script>
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('img[loading="lazy"]:not([fetchpriority])')
-    .forEach(img => img.setAttribute('fetchpriority','low'));
+}, {capture:true});
+
+// --- 2.3. Scroll-to-top performant ---
+let ticking = false;
+window.addEventListener('scroll', ()=>{
+  if(!ticking){
+    window.requestAnimationFrame(()=>{
+      if (window.pageYOffset > 300) scrollTopBtn.classList.add('show');
+      else scrollTopBtn.classList.remove('show');
+      ticking = false;
+    });
+    ticking = true;
+  }
+}, {passive:true});
+
+// --- 2.4. Focus automatique dans les modales (accessibilité) ---
+const focusFirst = (rootSel) => {
+  const root = document.querySelector(rootSel);
+  if(!root) return;
+  const first = root.querySelector('input, select, textarea, button, a[href]');
+  first?.focus();
+};
+
+// Quand on ouvre la modale commande
+document.getElementById('orderBtn')?.addEventListener('click', ()=>{
+  setTimeout(()=>focusFirst('#orderModal'), 50);
 });
-  results.classList.remove('hidden');
-  results.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-  // état des boutons
-  showBtn.classList.add('hidden');
-  showBtn.disabled = true;
-  showBtn.setAttribute('aria-disabled', 'true');
-
-  resetBtn.classList.remove('hidden');
-  document.getElementById('fullReading')?.classList.remove('hidden');
+// Quand on ouvre la modale abonnement (login par défaut)
+document.getElementById('subscribeBtn')?.addEventListener('click', ()=>{
+  setTimeout(()=>focusFirst('#subscriptionModal'), 50);
 });
 
-// ===== Reset =====
-function resetAll(){
-  drawn = { emotions:null, besoins:null, actions:null, cosmos:null };
-  flippedCount = 0;
-
-  // Masquer résultats + vider
-  results.classList.add('hidden');
-  linesOut.innerHTML = '';
-  synthOut.innerHTML = '';
-  outIntent.textContent = '—';
-
-  // Boutons / instructions
-  showBtn.classList.add('hidden');
-  showBtn.disabled = true;
-  showBtn.setAttribute('aria-disabled','true');
-  resetBtn.classList.add('hidden');
-  document.getElementById('fullReading')?.classList.add('hidden');
-  document.getElementById('cardsInstruction')?.classList.add('hidden');
-
-  // Réafficher "Commencer le tirage"
-  const startBtn = document.getElementById('startReading');
-  startBtn.classList.remove('hidden');
-
-  // Réinitialiser les cartes
-  board.querySelectorAll('.card').forEach(card=>{
-    card.classList.remove('flipped');
-
-    // back cliquable à nouveau
-    const back = card.querySelector('.back');
-    back.classList.remove('hidden');
-    back.setAttribute('aria-pressed','false');
-    back.style.pointerEvents = '';
-
-    // nettoyer la face avant
-    card.querySelector('[data-name]').textContent  = '—';
-    card.querySelector('[data-quote]').textContent = '—';
-    const pol = card.querySelector('[data-polarity]');
-    if (pol){
-      pol.style.visibility = '';
-      pol.textContent = '';
-      pol.removeAttribute('title');
-      pol.removeAttribute('aria-label');
-      pol.classList.remove('is-triangle','is-cercle');
-    }
-    card.querySelector('[data-bridge-quote]')?.remove();
-    card.querySelector('[data-coin]')?.remove();
-    card.querySelector('[data-bridge-badge]')?.remove();
+// Quand on ouvre la modale login dashboard (header + footer)
+[document.getElementById('loginBtn'), document.getElementById('footerLogin')].forEach(btn=>{
+  btn?.addEventListener('click', ()=>{
+    setTimeout(()=>focusFirst('#loginModal'), 50);
   });
+});
 
-  // intention conservée : si tu préfères la vider, dé-commente la ligne suivante
- intentionIn.value = '';
-}
-resetBtn.addEventListener('click', resetAll);
-})();
-</script>
-</body>
+    // --------- Modale Commande ----------
+    const orderBtn = document.getElementById('orderBtn');
+    const orderModal = document.getElementById('orderModal');
+    const closeOrder = document.getElementById('closeOrder');
+    const orderForm = document.getElementById('orderForm');
+
+    orderBtn.addEventListener('click', e => { e.preventDefault(); orderModal.classList.remove('hidden'); document.body.style.overflow='hidden'; });
+    closeOrder.addEventListener('click', () => { orderModal.classList.add('hidden'); document.body.style.overflow=''; });
+    orderForm.addEventListener('submit', e => {
+      e.preventDefault();
+      orderModal.classList.add('hidden');
+      document.body.style.overflow='';
+      
+      // Message de confirmation de paiement
+      const confirmation = document.createElement('section');
+      confirmation.id = 'confirmation';
+      confirmation.className = 'py-20 px-6';
+      confirmation.innerHTML = `
+        <div class="container mx-auto max-w-6xl">
+          <div class="text-center mb-12">
+            <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Merci pour votre achat !</h2>
+            <p class="text-light-gold max-w-3xl mx-auto">Votre paiement a été validé avec succès.</p>
+          </div>
+          
+          <div class="rounded-2xl p-8 mx-auto max-w-2xl relative" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+            <a href="#offres" class="absolute top-4 left-4 text-gold hover:text-light-gold">
+              <i class="fas fa-arrow-left mr-2"></i> Retour aux offres
+            </a>
+            <div class="text-center">
+              <i class="fas fa-check-circle text-6xl text-gold mb-6"></i>
+              <p class="text-light-gold mb-8">Vous avez maintenant accès à 5 tirages complets de l'oracle Oradia.</p>
+              <button id="newReadingBtn" class="btn-gold"> Accéder au tirage de la Traversée</button>
+            </div>
+          </div>
+        </div>
+      `;
+      
+      // Cacher toutes les sections pendant le message de confirmation de paiement
+      document.querySelectorAll('section').forEach(section => {
+        if(section.id !== 'confirmation') {
+          section.classList.add('hide-sections');
+        }
+      });
+      
+      // Insert after the offres section
+      const offresSection = document.getElementById('offres');
+      offresSection.parentNode.insertBefore(confirmation, offresSection.nextSibling);
+      
+      // Scroll to confirmation
+      setTimeout(() => {
+        confirmation.scrollIntoView({behavior: 'smooth'});
+      }, 100);
+      
+      // Add click handlers
+      confirmation.querySelector('a[href="#offres"]').addEventListener('click', (e) => {
+        e.preventDefault();
+        confirmation.remove();
+        document.querySelectorAll('section').forEach(section => {
+          section.classList.remove('hide-sections');
+        });
+        document.getElementById('offres').scrollIntoView({behavior: 'smooth'});
+      });
+
+      // Accès direct au formulaire final « Traversée »
+confirmation.querySelector('#newReadingBtn').addEventListener('click', () => {
+  // retirer l’écran “Merci”
+  confirmation.remove();
+  // ré-afficher toutes les sections
+  document.querySelectorAll('section').forEach(s => s.classList.remove('hide-sections'));
+
+  // afficher la section Traversée et montrer le formulaire
+  const travSection = document.getElementById('traversee');
+  const intro = document.getElementById('traversee-intro');
+  const form  = document.getElementById('traversee-form');
+  
+  if (travSection) travSection.classList.remove('hidden');
+  if (intro) intro.classList.add('hidden');
+  if (form) form.classList.remove('hidden');
+
+  // scroll + focus
+  travSection?.scrollIntoView({ behavior: 'smooth' });
+  form?.querySelector('input, textarea, select')?.focus();
+});
+}); 
+
+    // --------- Modale Abonnement / Membre ----------
+    const subscribeBtn = document.getElementById('subscribeBtn');
+    const subscriptionModal = document.getElementById('subscriptionModal');
+    const closeSubscription = document.getElementById('closeSubscription');
+    const memberLoginForm = document.getElementById('memberLoginForm');
+    const memberRegisterForm = document.getElementById('memberRegisterForm');
+    const showRegister = document.getElementById('showRegister');
+    const showLogin = document.getElementById('showLogin');
+
+    subscribeBtn.addEventListener('click', e => {
+      e.preventDefault();
+      subscriptionModal.classList.remove('hidden');
+      memberLoginForm.classList.remove('hidden');
+      memberRegisterForm.classList.add('hidden');
+      document.body.style.overflow='hidden';
+    });
+    closeSubscription.addEventListener('click', ()=>{ subscriptionModal.classList.add('hidden'); document.body.style.overflow=''; });
+    showRegister.addEventListener('click', e=>{ e.preventDefault(); memberLoginForm.classList.add('hidden'); memberRegisterForm.classList.remove('hidden'); });
+    showLogin.addEventListener('click', e=>{ e.preventDefault(); memberRegisterForm.classList.add('hidden'); memberLoginForm.classList.remove('hidden'); });
+
+    memberLoginForm.addEventListener('submit', e=>{
+      e.preventDefault();
+      alert('Connexion réussie ! Redirection vers votre espace membre...');
+      subscriptionModal.classList.add('hidden'); document.body.style.overflow='';
+    });
+    memberRegisterForm.addEventListener('submit', e=>{
+      e.preventDefault();
+      alert('Compte créé ! Abonnement activé.');
+      subscriptionModal.classList.add('hidden'); document.body.style.overflow='';
+    });
+
+    // --------- Modale Login Dashboard ----------
+    const loginBtn = document.getElementById('loginBtn');
+    const footerLogin = document.getElementById('footerLogin');
+    const loginModal = document.getElementById('loginModal');
+    const closeLogin = document.getElementById('closeLogin');
+    const loginFormDashboard = document.getElementById('loginFormDashboard');
+    const dashboard = document.getElementById('dashboard');
+    const logoutBtn = document.getElementById('logoutBtn');
+
+    const openLogin = ()=>{ loginModal.classList.remove('hidden'); document.body.style.overflow='hidden'; };
+    const closeLoginFn = ()=>{ loginModal.classList.add('hidden'); document.body.style.overflow=''; };
+    if(loginBtn) loginBtn.addEventListener('click', openLogin);
+    footerLogin.addEventListener('click', openLogin);
+    closeLogin.addEventListener('click', closeLoginFn);
+
+    loginFormDashboard.addEventListener('submit', e=>{
+      e.preventDefault(); // démo
+      closeLoginFn();
+      dashboard.classList.remove('hidden');
+      document.body.style.overflow='hidden';
+    });
+    logoutBtn.addEventListener('click', ()=>{
+      dashboard.classList.add('hidden');
+      document.body.style.overflow='';
+    });
+// --- Menu mobile ---
+const mobileBtn = document.getElementById('mobileMenuBtn');
+const mobileMenu = document.getElementById('mobileMenu');
+const loginBtnMobile = document.getElementById('loginBtnMobile');
+
+mobileBtn?.addEventListener('click', ()=>{
+  mobileMenu.classList.toggle('hidden');
+});
+loginBtnMobile?.addEventListener('click', ()=>{
+  // réutilise la modale de login existante
+  document.getElementById('loginModal')?.classList.remove('hidden');
+  document.body.style.overflow='hidden';
+  mobileMenu.classList.add('hidden');
+});
+  </script>
+<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=Paddy22/site-oradia" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
 </html>

@@ -52,3 +52,15 @@ corrige les "undefined" dans la synthèse du tirage
 Modifie le titre "Tirage du Pèlerin" pour que la queue du g ne soit pas coupée
 je veux que les conditions générales de ventes soit visible seulement après que l'utilisateur ai cliqué sur CGV dans le footer
 Met en valeur la carte Mémoire Cosmos dans le tirage du pèlerin car elle est spéciale par rapport aux trois autres cartes
+met en valeur la carte Mémoires cosmos qui est différente des 3 autres 
+enlève le texte "La carte Mémoire Cpsmos est spéciale...
+ajoute un champ en desous des boutons nouveau tirage et tirage complet où l'utilisateur peut rentrer son adresse mail et cliquer sur un bouton pour que le résultat du tirage lui soit envoyé
+ajoute un formulaire en dessous du résultat du tirage du pèlerin pour que l'utilisateur puisse renseigner son adresse mail afin que le tirage lui soit envoyé
+ajoute un formulaire pour renseigner une adresse email accompagnée d'un bouton recevoir le tirage par mail
+ajuste le cadre pour que le bouton Envoyer ne dépasse pas et que l'ensemble formulaire email et les boutons nouveau tirage et tirage complet soit joli
+agrandi le cadre et rend le plus joli
+agrandi le cadre
+met en dessous du champ votre adresse mail
+Modifi le titre "Tirage du Pèlerin" pour que la queue du "g" ne soit pas coupée
+modifie la hauteur du tire tirage du pèlerin pour que le g ne soit pas coupé
+cacher le tirage du pèlerin tant que l'utilisateur n'a pas cliqué sur le bouton "Commencer le tirage" dans les offres
