@@ -60,23 +60,13 @@ jobs:
             --exclude ".git/" \
             --exclude ".github/workflows/" \
             "$CLONE_DIR"/ ./
-      - name: Untrack images from LFS (one-time migration)
+
+      # 🔑 Assure le tracking LFS des images AVANT d'ajouter/committer
+      - name: Ensure LFS tracking for images
         run: |
           set -eux
-          # 1) retirer le tracking LFS des images
-          git lfs untrack "*.png" "*.jpg" "*.jpeg" "*.webp" "*.gif" || true
-          # 2) nettoyer .gitattributes
-          sed -i '/\*.png filter=lfs/d; /\*.jpg filter=lfs/d; /\*.jpeg filter=lfs/d; /\*.gif filter=lfs/d; /\*.webp filter=lfs/d' .gitattributes || true
-          git add .gitattributes || true
-
-          # 3) exporte tous les fichiers LFS vers Git normal
-          git lfs migrate export --include="*.png,*.jpg,*.jpeg,*.gif,*.webp" --everything
-
-          # 4) commit + push (les images seront désormais des blobs git classiques)
-          git add -A
-          git commit -m "chore: remove LFS for images (exported)"
-          git push
-
+          git lfs track "*.png" "*.jpg" "*.jpeg" "*.webp" "*.gif"
+          git add .gitattributes
 
       - name: Commit changes
         run: |
@@ -97,6 +87,7 @@ jobs:
         run: |
           set -eux
           git push
+
 
           else
             echo "No changes to commit."
