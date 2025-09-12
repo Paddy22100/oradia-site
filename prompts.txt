@@ -64,3 +64,22 @@ met en dessous du champ votre adresse mail
 Modifi le titre "Tirage du Pèlerin" pour que la queue du "g" ne soit pas coupée
 modifie la hauteur du tire tirage du pèlerin pour que le g ne soit pas coupé
 cacher le tirage du pèlerin tant que l'utilisateur n'a pas cliqué sur le bouton "Commencer le tirage" dans les offres
+je veux que l'utilisateur ne puisse accéder au tirage du pèlerin que l'orsqu'il clic sur le bouton commencer le tirage dans les offres
+invisible tant que l'utilisateur ne clic pas sur le bouton "Commencer le tirage"
+supprimer
+supprimer ce bouton
+supprimer ces deux bouton, ce bloc
+supprime le bouton Tirer les cartes
+supprime le bouton Découvrir les offres
+ouvrir le tirage du pèlerin en mode immerssif comme pour le tirage de la traversée
+répare le bouton Commencer le tirage pour que les cartes s'affichent
+élargi ce cadre pour que le bouton Envoyer ne dépasse pas
+le bouton Quitter le tirage doit permettre de revenir à l'accueil
+le bouton quitter le tirage ne fonctionne pas
+Le tirage du pèlerin ne doit être visible qu'en mode immerssif, si l'on revient à l'accueil après le tirage, il ne dois pas être affiché
+le mode immerssif du tirage du pèlerin doit démarrer dès le clic sur le bouton Commencer le tirage
+le mode immerssif du tirage du pèlerin dois démarrer dès que le formulaire d'intention apparait
+remplacer "Guidance vibratoire croisant plusieurs systèmes." par "Une question simple, un pas sur le chemin."
+le bouton quitter le tirage ne fonctionne pas
+le bouton Quitter le tirage dans le mode immerssif du tirage du pèlerin doit ramener à l'accueil et fermer le mode immerssif
+le bouton Quitter le tirage doit disparaître une fois que la page d'accueil est réapparue

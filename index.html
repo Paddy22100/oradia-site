@@ -273,10 +273,6 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
                          </p>
                          <p class="text-xl text-light-gold mb-8 max-w-2xl">
                                             </p>
-          <div class="flex flex-wrap justify-center lg:justify-start gap-4">
-            <a href="#oracle" class="btn-gold">Tirer les cartes</a>
-            <a href="#offres" class="btn-outline-gold">Découvrir les offres</a>
-          </div>
         </div>
 
         <!-- Visuel -->
@@ -311,11 +307,11 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   </section>
 
   <!-- Oracle -->
-  <section id="oracle" class="py-12 md:py-20 px-4 md:px-6">
+  <section id="oracle" class="py-12 md:py-20 px-4 md:px-6 hidden">
     <div class="container mx-auto max-w-6xl">
       <div class="text-center mb-10">
         <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-2">Tirage du Pèlerin</h2>
-        <p class="text-light-gold max-w-3xl mx-auto">Guidance vibratoire croisant plusieurs systèmes.</p>
+        <p class="text-light-gold max-w-3xl mx-auto">Une question simple, un pas sur le chemin.</p>
       </div>
 
       <!-- Intention -->
@@ -429,16 +425,16 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       <div class="max-w-md mx-auto mt-8 space-y-6">
         <div class="flex gap-3 justify-center">
           <button id="reset" class="btn-outline-gold hidden flex-1 sm:flex-none">Nouveau tirage</button>
-          <button id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none">Tirage Complet</button>
+          <button id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none">Tirage plus complet</button>
         </div>
         
-        <div id="emailForm" class="hidden">
-          <div class="bg-[rgba(18,20,32,.6)] border border-[rgba(212,175,55,.25)] rounded-2xl p-5">
-            <h3 class="cormorant text-xl text-gold mb-3 text-center">Recevoir le résultat par email</h3>
-            <div class="flex flex-col sm:flex-row gap-3">
+        <div id="emailForm" class="hidden w-full max-w-2xl mx-auto">
+          <div class="bg-[rgba(18,20,32,.6)] border border-[rgba(212,175,55,.25)] rounded-2xl p-6">
+            <h3 class="cormorant text-xl text-gold mb-4 text-center">Recevoir le résultat par email</h3>
+            <div class="flex flex-col sm:flex-row gap-4 w-full">
               <input type="email" id="userEmail" placeholder="Votre adresse email" 
-                     class="flex-1 bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg text-light-gold" required>
-              <button id="sendEmailBtn" class="btn-gold whitespace-nowrap px-4">Envoyer</button>
+                     class="flex-1 min-w-0 bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg text-light-gold" required>
+              <button id="sendEmailBtn" class="btn-gold whitespace-nowrap px-6 py-3 sm:w-auto w-full">Envoyer</button>
             </div>
           </div>
         </div>
@@ -481,12 +477,12 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>3 cartes + 1 carte Mémoires Cosmos</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Interprétation synthétique</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Analyse croisée basique par l'IA</span></li>
-            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Cartes mutantes</span></li>
+            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Cartes passerelles</span></li>
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Espace membre</span></li>
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Analyse approfondie</span></li>
           </ul>
 
-          <a href="#oracle" class="btn-outline-gold w-full text-center relative z-10 mt-auto" onclick="document.getElementById('oracle').classList.remove('hidden');">Commencer le tirage</a>
+          <a href="#oracle" class="btn-outline-gold w-full text-center relative z-10 mt-auto" onclick="document.getElementById('oracle').classList.remove('hidden'); document.getElementById('oracle').scrollIntoView({behavior: 'smooth'}); return false;">Commencer le tirage</a>
         </div>
 
         <!-- Tirage complet -->
@@ -521,7 +517,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <ul class="space-y-3 mb-8 relative z-10">
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>4 cartes vibratoires</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 carte Mémoires Cosmos</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes mutantes incluses</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes passerelles</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Analyse croisée par l'IA complète et détaillée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question d'introspection</span></li>
@@ -556,7 +552,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
           <ul class="space-y-3 mb-8 relative z-10">
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 tirage complet quotidien par mail avec votre intention</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes mutantes incluses</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes passerelles</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question du jour</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Espace membre (profils ennéagramme, astro, numérologie...)</span></li>
@@ -1305,7 +1301,11 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     });
 
     // Bouton "Quitter le tirage"
-    exitBtn?.addEventListener('click', exitImmersive);
+    exitBtn?.addEventListener('click', () => {
+      exitImmersive();
+      // Retour à l'accueil
+      document.getElementById('accueil').scrollIntoView({behavior: 'smooth'});
+    });
   });
 })();
 </script>
@@ -1461,18 +1461,92 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       startButton.disabled = !ok;
     });
 
-    // Lancer le tirage (affiche le plateau uniquement à ce moment)
+    // Lancer le tirage en mode immersif
+    // Lancer le tirage en mode immersif dès que le formulaire apparaît
+    intentionIn.addEventListener('focus', () => {
+      // Masquer header, footer et autres sections
+      document.querySelectorAll('body > header, body > footer, body > section:not(#oracle)').forEach(n=>n.classList.add('hide-immersive'));
+      
+      // Afficher le bouton de sortie
+      if (!document.getElementById('exitPelerinBtn')) {
+        const exitBtn = document.createElement('button');
+        exitBtn.id = 'exitPelerinBtn';
+        exitBtn.className = 'fixed top-4 left-4 z-[100] bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold py-2 px-4 rounded-full shadow-lg';
+        exitBtn.innerHTML = '<i class="fas fa-arrow-left mr-2"></i> Quitter le tirage';
+        exitBtn.addEventListener('click', exitPelerinImmersive);
+        document.body.appendChild(exitBtn);
+      }
+      
+      // Entrer en mode immersif immédiatement
+      enterPelerinImmersive();
+    });
+
     startButton.addEventListener('click', ()=>{
       if(!intentionIn.value.trim().endsWith('?')){
         intentionIn.setCustomValidity("Veuillez formuler une question ouverte se terminant par « ? »");
         intentionIn.reportValidity();
         return;
       }
+      
+      // Afficher le plateau et les instructions
       board.classList.remove('hidden');
       document.getElementById('cardsInstruction').classList.remove('hidden');
       startButton.classList.add('hidden');
-      const firstBack = board.querySelector('.card .back'); if(firstBack) firstBack.focus();
+      
+      // Réinitialiser les cartes au cas où
+      document.querySelectorAll('.card').forEach(card => {
+        card.classList.remove('flipped');
+        const back = card.querySelector('.back');
+        back.style.pointerEvents = 'auto';
+        back.setAttribute('aria-pressed','false');
+      });
     });
+
+    function enterPelerinImmersive() {
+      // Masquer header, footer et autres sections
+      document.querySelectorAll('body > header, body > footer, body > section:not(#oracle)').forEach(n=>n.classList.add('hide-immersive'));
+      
+      // Afficher le bouton de sortie s'il n'existe pas déjà
+      if(!document.getElementById('exitPelerinBtn')) {
+        const exitBtn = document.createElement('button');
+        exitBtn.id = 'exitPelerinBtn';
+        exitBtn.className = 'fixed top-4 left-4 z-[100] bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold py-2 px-4 rounded-full shadow-lg';
+        exitBtn.innerHTML = '<i class="fas fa-arrow-left mr-2"></i> Quitter le tirage';
+        exitBtn.addEventListener('click', exitPelerinImmersive);
+        document.body.appendChild(exitBtn);
+      }
+      
+      // Scroll vers le tirage
+      document.getElementById('oracle').scrollIntoView({behavior:'smooth', block:'start'});
+    }
+
+    function exitPelerinImmersive() {
+      // Réafficher tout
+      document.querySelectorAll('body > header, body > footer, body > section').forEach(n=>n.classList.remove('hide-immersive'));
+      
+      // Supprimer le bouton de sortie après un léger délai
+      setTimeout(() => {
+        const exitBtn = document.getElementById('exitPelerinBtn');
+        if(exitBtn) exitBtn.remove();
+      }, 500);
+      
+      // Réinitialiser le tirage
+      if(document.getElementById('reset')) {
+        document.getElementById('reset').click();
+      } else {
+        // Si le bouton reset n'existe pas, réinitialiser manuellement
+        document.getElementById('oracle').classList.add('hidden');
+        document.getElementById('board').classList.add('hidden');
+        document.getElementById('results').classList.add('hidden');
+        document.getElementById('cardsInstruction').classList.add('hidden');
+        document.getElementById('startReading').classList.remove('hidden');
+        document.getElementById('intention').value = '';
+      }
+      
+      // Scroll vers l'accueil et fermer le mode immersif
+      document.getElementById('accueil').scrollIntoView({behavior:'smooth'});
+      document.querySelectorAll('body > header, body > footer, body > section').forEach(n=>n.classList.remove('hide-immersive'));
+    }
 
     // Click/Enter pour retourner les cartes
     document.querySelectorAll('.card .back').forEach(back=>{
@@ -1580,8 +1654,11 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       intentionIn.value = "";
       intentionIn.focus();
       
-      // Scroll vers le haut de la section
-      window.scrollTo({top: document.getElementById('oracle').offsetTop - 60, behavior:'smooth'});
+      // Cacher la section oracle
+      document.getElementById('oracle').classList.add('hidden');
+      
+      // Scroll vers l'accueil
+      document.getElementById('accueil').scrollIntoView({behavior:'smooth'});
     });
 
     // Tirage complet -> aller aux offres
@@ -1813,5 +1890,5 @@ loginBtnMobile?.addEventListener('click', ()=>{
   mobileMenu.classList.add('hidden');
 });
   </script>
-<p style="border-radius: 8px; text-align: center; font-size: 12px; color: #fff; margin-top: 16px;position: fixed; left: 8px; bottom: 8px; z-index: 10; background: rgba(0, 0, 0, 0.8); padding: 4px 8px;">Made with <img src="https://enzostvs-deepsite.hf.space/logo.svg" alt="DeepSite Logo" style="width: 16px; height: 16px; vertical-align: middle;display:inline-block;margin-right:3px;filter:brightness(0) invert(1);"><a href="https://enzostvs-deepsite.hf.space" style="color: #fff;text-decoration: underline;" target="_blank" >DeepSite</a> - 🧬 <a href="https://enzostvs-deepsite.hf.space?remix=Paddy22/site-oradia" style="color: #fff;text-decoration: underline;" target="_blank" >Remix</a></p></body>
+</body>
 </html>
