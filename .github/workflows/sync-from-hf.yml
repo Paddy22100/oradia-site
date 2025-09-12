@@ -25,12 +25,14 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # 1) Repo GitHub
       - name: Checkout current repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           lfs: false
 
+      # 2) Outils
       - name: Install git-lfs, rsync, jq
         run: |
           set -euxo pipefail
@@ -38,18 +40,17 @@ jobs:
           sudo apt-get install -y git-lfs rsync jq
           git lfs install
 
+      # 3) Résolution des variables
       - name: Resolve config (branch & Space)
         id: cfg
         run: |
           set -euxo pipefail
-          # Branche cible
           BRANCH="${GITHUB_REF_NAME:-}"
           if [ -z "$BRANCH" ]; then
             BRANCH="$(git symbolic-ref --short HEAD 2>/dev/null || echo main)"
           fi
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
-          # Space ID (input > secret)
           SPACE_ID_INPUT="${{ github.event.inputs.hf_space_id }}"
           SPACE_ID_SECRET="${{ secrets.HF_SPACE_ID }}"
           SPACE_ID="${SPACE_ID_INPUT:-$SPACE_ID_SECRET}"
@@ -59,31 +60,34 @@ jobs:
           fi
           echo "space_id=$SPACE_ID" >> "$GITHUB_OUTPUT"
 
-          # Space branch (input > secret > main)
           SPACE_BRANCH_INPUT="${{ github.event.inputs.hf_space_branch }}"
           SPACE_BRANCH_SECRET="${{ secrets.HF_SPACE_BRANCH }}"
           SPACE_BRANCH="${SPACE_BRANCH_INPUT:-${SPACE_BRANCH_SECRET:-main}}"
           echo "space_branch=$SPACE_BRANCH" >> "$GITHUB_OUTPUT"
 
-      - name: Clone HF Space
+      # 4) Auth propre + clone du Space
+      - name: Configure HF auth & clone Space
         run: |
           set -euxo pipefail
           CLONE_DIR="$RUNNER_TEMP/hfspace"
           rm -rf "$CLONE_DIR"
 
+          # 👉 Force l'en-tête Authorization pour tout le domaine huggingface.co
           if [ -n "${{ secrets.HF_TOKEN }}" ]; then
-            # ✅ La valeur contenant un espace DOIT être entre guillemets
-            git -c http.extraHeader="Authorization: Bearer ${{ secrets.HF_TOKEN }}" \
-              clone --branch "${{ steps.cfg.outputs.space_branch }}" \
-              "https://huggingface.co/spaces/${{ steps.cfg.outputs.space_id }}" \
-              "$CLONE_DIR"
-          else
-            git clone --branch "${{ steps.cfg.outputs.space_branch }}" \
-              "https://huggingface.co/spaces/${{ steps.cfg.outputs.space_id }}" \
-              "$CLONE_DIR"
+            git config --global http.https://huggingface.co/.extraheader "Authorization: Bearer ${{ secrets.HF_TOKEN }}"
           fi
 
-      # BONUS : matérialiser les fichiers LFS (vraies binaires)
+          # Clone (privé ou public)
+          git clone --branch "${{ steps.cfg.outputs.space_branch }}" \
+            "https://huggingface.co/spaces/${{ steps.cfg.outputs.space_id }}" \
+            "$CLONE_DIR"
+
+          # Nettoyage de l'en-tête après clone (hygiène)
+          if [ -n "${{ secrets.HF_TOKEN }}" ]; then
+            git config --global --unset-all http.https://huggingface.co/.extraheader || true
+          fi
+
+      # 5) BONUS : matérialiser LFS (vraies binaires)
       - name: Materialize LFS files from HF clone
         working-directory: ${{ runner.temp }}/hfspace
         run: |
@@ -92,12 +96,14 @@ jobs:
           git lfs fetch --all || true
           git lfs checkout || true
 
+      # 6) Miroir HF -> repo
       - name: Mirror files (HF → GitHub working tree)
         run: |
           set -euxo pipefail
           CLONE_DIR="$RUNNER_TEMP/hfspace"
           rsync -a --delete --exclude '.git/' --filter=':- .gitignore' "$CLONE_DIR/" .
 
+      # 7) Commit & push (HF gagne)
       - name: Commit & push (HF wins)
         run: |
           set -euxo pipefail
@@ -111,7 +117,7 @@ jobs:
             exit 0
           fi
 
-          # Neutraliser LFS pour ne pas convertir en pointeurs
+          # Neutraliser LFS pour éviter les pointeurs sur images web, etc.
           git -c filter.lfs.clean= \
               -c filter.lfs.smudge= \
               -c filter.lfs.process= \
