@@ -34,6 +34,8 @@
     :root{ --dore:#d4af37; --text:#e9e7df; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
 
     body{ margin:0; font-family:'Poppins',sans-serif; background:#0a192f; color:#f5e7a1; overflow-x:hidden; }
+    
+    .hidden { display: none !important; }
     .header-bg{ background:rgba(5,20,40,.98); }
     .hero-bg{ background: radial-gradient(circle at center, rgba(26,54,93,.7) 0%, rgba(5,20,40,.9) 70%); background-size:cover; }
 
@@ -425,7 +427,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       <div class="max-w-md mx-auto mt-8 space-y-6">
         <div class="flex gap-3 justify-center">
           <button id="reset" class="btn-outline-gold hidden flex-1 sm:flex-none">Nouveau tirage</button>
-          <button id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none">Tirage Complet</button>
+          <button id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none">Envie d'un tirage plus complet?</button>
         </div>
         
         <div id="emailForm" class="hidden w-full max-w-2xl mx-auto">
@@ -477,7 +479,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>3 cartes + 1 carte Mémoires Cosmos</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Interprétation synthétique</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Analyse croisée basique par l'IA</span></li>
-            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Cartes mutantes</span></li>
+            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Cartes passeelle</span></li>
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Espace membre</span></li>
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Analyse approfondie</span></li>
           </ul>
@@ -517,7 +519,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <ul class="space-y-3 mb-8 relative z-10">
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>4 cartes vibratoires</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 carte Mémoires Cosmos</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes mutantes incluses</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes passerelles</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Analyse croisée par l'IA complète et détaillée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question d'introspection</span></li>
@@ -552,7 +554,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
           <ul class="space-y-3 mb-8 relative z-10">
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 tirage complet quotidien par mail avec votre intention</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes mutantes incluses</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes passerelles</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question du jour</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Espace membre (profils ennéagramme, astro, numérologie...)</span></li>
@@ -701,7 +703,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             <p class="text-light-gold">
               Edolg'Or est une association qui vise à favoriser la création, le développement et l’entretien des liens sociaux et culturels
               par des activités ludiques, artistiques et d’arts vivants à travers un jeu sérieux grandeur nature.
-              Objectif : découvrir la civilisation d'Edolg'OR et l'emplacement de sa cité d'or vivant, au rythme du modèle OTRE.
+              Objectif : découvrir la civilisation d'Edolg'OR et l'emplacement de sa cité d'or vivant au rythme du modèle OTRE.
               Lors de votre achat pour un tirage complet ou un abonnement, vous pouvez reverser 1€ à l'association.
             </p>
             <p class="text-light-gold">
@@ -714,11 +716,14 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     </div>
   </section>
 
-  <!-- CGV -->
-  <section id="cgv" class="py-20 px-6 bg-night-blue">
-    <div class="container mx-auto max-w-6xl">
-      <h2 class="cormorant text-4xl md:text-5xl font-bold mb-8 gold-gradient">Conditions générales de vente (CGV)</h2>
-      <div class="rounded-2xl p-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+  <!-- Modale CGV -->
+  <div id="cgvModal" class="fixed inset-0 bg-night-blue/90 z-[100] flex items-center justify-center hidden">
+    <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-2xl w-full mx-4 relative max-h-[90vh] overflow-y-auto">
+      <button id="closeCgv" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
+      <div class="text-center mb-6">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Conditions générales de vente</h2>
+      </div>
+      <div class="rounded-2xl p-6" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
         <p><strong>Editeur du site :</strong> Oradia, micro-entreprise immatriculée sous le n° [SIRET], dont le siège est situé [adresse]. Contact : [adresse e-mail / tél].</p>
         <p><strong>Objet :</strong> Le site oradia.fr propose des prestations d'oracle/tarot en ligne : un tirage complet vendu à l'unité et un abonnement mensuel donnant droit à un tirage quotidien.</p>
         <p><strong>Prix et paiement :</strong> 5 € donnant accès à 5 tirages complets et 8 €/mois pour l'abonnement quotidien. Les paiements sont sécurisés et gérés par Stripe. La validation de la commande implique l'acceptation des présentes CGV.</p>
@@ -729,7 +734,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         <p><strong>Droit applicable :</strong> Les présentes conditions sont soumises au droit français.</p>
       </div>
     </div>
-  </section>
+  </div>
 
   <!-- Tirage de la Traversée - caché jusqu'à paiement -->
   <section id="traversee" class="py-20 px-6 bg-night-blue hidden">
@@ -855,7 +860,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         <div>
           <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
           <ul class="space-y-2">
-            <li><a href="#cgv" class="text-light-gold hover:text-gold transition">CGV</a></li>
+            <li><a href="#" id="showCgv" class="text-light-gold hover:text-gold transition">CGV</a></li>
             <li><a href="#" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
             <li><a href="#" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
           </ul>
@@ -1848,6 +1853,24 @@ confirmation.querySelector('#newReadingBtn').addEventListener('click', () => {
       e.preventDefault();
       alert('Compte créé ! Abonnement activé.');
       subscriptionModal.classList.add('hidden'); document.body.style.overflow='';
+    });
+
+    // --------- Gestion CGV ----------
+    const showCgvBtns = ['showCgv', 'showCgv2', 'showCgv3', 'showCgv4'].map(id => document.getElementById(id));
+    const cgvModal = document.getElementById('cgvModal');
+    const closeCgv = document.getElementById('closeCgv');
+
+    showCgvBtns.forEach(btn => {
+      btn?.addEventListener('click', (e) => {
+        e.preventDefault();
+        cgvModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      });
+    });
+
+    closeCgv?.addEventListener('click', () => {
+      cgvModal.classList.add('hidden');
+      document.body.style.overflow = '';
     });
 
     // --------- Modale Login Dashboard ----------
