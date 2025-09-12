@@ -1,3 +1,20 @@
+name: Sync from Hugging Face Space
+
+on:
+  repository_dispatch:
+    types: [hf-space-updated]
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch: {}
+
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-from-hf
+  cancel-in-progress: true
+
 jobs:
   sync:
     runs-on: ubuntu-latest
