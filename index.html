@@ -1700,47 +1700,39 @@ function closeModal(el){
     document.body.style.overflow='hidden';
   });
 
-  <!-- remplace le bloc // ---------- Menu mobile ---------- par : -->
-<script>
-(function(){
-  const $ = (id) => document.getElementById(id);
+  // ---------- Menu mobile ----------
   const mobileBtn  = $('mobileMenuBtn');
   const mobileMenu = $('mobileMenu');
+  mobileBtn?.addEventListener('click', ()=>{
 
-  if (!mobileBtn || !mobileMenu) return;
+// Fermeture auto quand on clique un item du menu mobile (délégation)
+mobileMenu?.addEventListener('click', (e) => {
+  const t = e.target?.closest('a, button');
+  if (!t) return;
 
-  // état initial accessible
-  mobileBtn.setAttribute('aria-expanded','false');
-  mobileMenu.classList.add('hidden');
+  // On déclenche le même toggle que le burger → évite de casser les animations
+  if (mobileBtn?.getAttribute('aria-expanded') === 'true') {
+    // micro-délai pour laisser l’ancre démarrer son scroll si besoin
+    setTimeout(() => mobileBtn.click(), 0);
+  }
+});
 
-  // toggle à chaque tap
-  mobileBtn.addEventListener('click', () => {
     const expanded = mobileBtn.getAttribute('aria-expanded') === 'true';
     mobileBtn.setAttribute('aria-expanded', String(!expanded));
-    mobileMenu.classList.toggle('hidden', expanded);
+    mobileMenu?.classList.toggle('hidden', expanded);
   });
 
-  // fermer le menu quand on choisit un lien
-  mobileMenu.addEventListener('click', (e) => {
-    const link = e.target.closest('a, button');
-    if (!link) return;
-    if (mobileBtn.getAttribute('aria-expanded') === 'true') {
-      // petit délai pour laisser l’ancre scroller
-      setTimeout(() => mobileBtn.click(), 0);
+  // ---------- ESC pour fermer modales / dashboard ----------
+  document.addEventListener('keydown', (e)=>{
+    if(e.key !== 'Escape') return;
+    [orderModal, subscriptionModal, loginModal].forEach(m=>{
+      if(m && !m.classList.contains('hidden')) closeModal(m);
+    });
+    if(dashboard && !dashboard.classList.contains('hidden')){
+      dashboard.classList.add('hidden');
+      document.body.style.overflow='';
     }
   });
-
-  // optionnel : fermer si on tape en dehors (mobile)
-  document.addEventListener('click', (e) => {
-    if (!mobileMenu.classList.contains('hidden') &&
-        !e.target.closest('#mobileMenu, #mobileMenuBtn')) {
-      mobileBtn.setAttribute('aria-expanded','false');
-      mobileMenu.classList.add('hidden');
-    }
-  });
-})();
-</script>
-
 
   // ---------- Bouton "Commencer le tirage" : état initial + ARIA ----------
   const intentionIn = $('intention');
