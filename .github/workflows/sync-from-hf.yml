@@ -2,8 +2,8 @@ name: Sync from Hugging Face Space
 
 on:
   repository_dispatch:
-    types: [hf-space-updated]   # déclencheur externe (HF/Vercel)
-  workflow_dispatch:            # lancement manuel
+    types: [hf-space-updated]
+  workflow_dispatch:
     inputs:
       hf_space_id:
         description: "HF Space ID (org/space)"
@@ -40,12 +40,12 @@ jobs:
           sudo apt-get install -y git-lfs rsync jq
           git lfs install
 
-      # 3) Résolution des variables (branche + Space)
+      # 3) Résolution des variables (branche/space)
       - name: Resolve config (branch & Space)
         id: cfg
         run: |
           set -euxo pipefail
-          # Branche cible: ref courante ou branche par défaut du repo
+          # Branche cible
           BRANCH="${GITHUB_REF_NAME:-}"
           if [ -z "$BRANCH" ]; then
             BRANCH="$(jq -r '.repository.default_branch // "main"' "$GITHUB_EVENT_PATH")"
@@ -68,37 +68,29 @@ jobs:
           SPACE_BRANCH="${SPACE_BRANCH_INPUT:-${SPACE_BRANCH_SECRET:-main}}"
           echo "space_branch=$SPACE_BRANCH" >> "$GITHUB_OUTPUT"
 
-      # 4) Auth HF via GIT_ASKPASS (évite les prompts) + clone du Space
-      - name: Configure HF auth & clone Space
+      # 4) Clone HF (token dans l'URL pour éviter tout prompt)
+      - name: Clone HF Space (token-in-URL, masked)
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
-          set -euxo pipefail
+          set -euo pipefail
           CLONE_DIR="$RUNNER_TEMP/hfspace"
           rm -rf "$CLONE_DIR"
 
-          # Script ASKPASS: fournit __token__ / $HF_TOKEN à Git
           if [ -n "${HF_TOKEN:-}" ]; then
-            cat > "$RUNNER_TEMP/hf_askpass.sh" <<'SH'
-#!/usr/bin/env bash
-case "$1" in
-  *Username*) echo "__token__" ;;
-  *Password*) echo "$HF_TOKEN" ;;
-  *) echo "" ;;
-esac
-SH
-            chmod +x "$RUNNER_TEMP/hf_askpass.sh"
-            export GIT_ASKPASS="$RUNNER_TEMP/hf_askpass.sh"
-            export HF_TOKEN
+            # On coupe l’echo des commandes pour ne pas afficher l’URL
+            set +x
+            URL="https://__token__:${HF_TOKEN}@huggingface.co/spaces/${{ steps.cfg.outputs.space_id }}"
+            git clone --branch "${{ steps.cfg.outputs.space_branch }}" "$URL" "$CLONE_DIR"
+            set -x
+          else
+            # Space public : pas besoin de token
+            git clone --branch "${{ steps.cfg.outputs.space_branch }}" \
+              "https://huggingface.co/spaces/${{ steps.cfg.outputs.space_id }}" \
+              "$CLONE_DIR"
           fi
 
-          git clone --branch "${{ steps.cfg.outputs.space_branch }}" \
-            "https://huggingface.co/spaces/${{ steps.cfg.outputs.space_id }}" \
-            "$CLONE_DIR"
-
-          unset GIT_ASKPASS || true
-
-      # 5) BONUS: matérialiser les fichiers LFS (vraies binaires depuis HF)
+      # 5) BONUS — matérialiser les fichiers LFS (vraies binaires)
       - name: Materialize LFS files from HF clone
         working-directory: ${{ runner.temp }}/hfspace
         run: |
@@ -107,7 +99,7 @@ SH
           git lfs fetch --all || true
           git lfs checkout || true
 
-      # 6) Miroir HF → GitHub (respect .gitignore, supprime les fichiers retirés)
+      # 6) Miroir HF → GitHub (respecte .gitignore, supprime ce qui a été retiré côté HF)
       - name: Mirror files (HF → GitHub working tree)
         run: |
           set -euxo pipefail
@@ -131,7 +123,7 @@ SH
             exit 0
           fi
 
-          # Neutraliser LFS côté commit (évite les pointeurs)
+          # Neutraliser LFS côté commit (évite les pointeurs pour images web)
           git -c filter.lfs.clean= \
               -c filter.lfs.smudge= \
               -c filter.lfs.process= \
