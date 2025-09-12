@@ -2,8 +2,16 @@ name: Sync from Hugging Face Space
 
 on:
   repository_dispatch:
-    types: [hf-space-updated]   # Tu peux déclencher ça depuis HF/Vercel
-  workflow_dispatch: {}         # Lancer manuellement si besoin
+    types: [hf-space-updated]      # Déclencheur depuis HF/Vercel si tu l'utilises
+  workflow_dispatch:               # Lancer manuellement au besoin
+    inputs:
+      hf_space_id:
+        description: "HF Space ID (org/space)"
+        required: false
+      hf_space_branch:
+        description: "Branche du Space"
+        required: false
+        default: "main"
 
 permissions:
   contents: write
@@ -16,74 +24,100 @@ jobs:
   sync:
     runs-on: ubuntu-latest
 
-    env:
-      # Renseigne ces secrets dans GitHub → Settings → Secrets and variables → Actions
-      # HF_SPACE_ID: ex. "TonOrg/TonEspace" (format exact de la page HF)
-      # HF_SPACE_BRANCH: ex. "main"
-      # HF_TOKEN: (optionnel si Space public)
-      HF_SPACE_ID: ${{ secrets.HF_SPACE_ID }}
-      HF_SPACE_BRANCH: ${{ secrets.HF_SPACE_BRANCH }}
-      HF_TOKEN: ${{ secrets.HF_TOKEN }}
-      CLONE_DIR: ${{ runner.temp }}/hfspace
-
     steps:
+      # 1) Récup du repo GitHub (sans LFS)
       - name: Checkout current repo
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          lfs: false
 
-      - name: Install git-lfs & rsync
+      # 2) Outils nécessaires
+      - name: Install git-lfs, rsync, jq
         run: |
           set -euxo pipefail
           sudo apt-get update
-          sudo apt-get install -y git-lfs rsync
+          sudo apt-get install -y git-lfs rsync jq
           git lfs install
 
+      # 3) Résolution des variables (branche & Space) + validations
+      - name: Resolve config (branch & Space)
+        id: cfg
+        run: |
+          set -euxo pipefail
+          # Branche cible : ref_name ou branche par défaut du repo
+          BRANCH="${GITHUB_REF_NAME:-}"
+          if [ -z "$BRANCH" ]; then
+            BRANCH="$(jq -r '.repository.default_branch' "$GITHUB_EVENT_PATH")"
+          fi
+          echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
+
+          # Space ID (priorité à l'input, sinon secret)
+          SPACE_ID="${{ github.event.inputs.hf_space_id }}"
+          if [ -z "$SPACE_ID" ]; then SPACE_ID="${{ secrets.HF_SPACE_ID }}"; fi
+          if [ -z "$SPACE_ID" ]; then
+            echo "::error::HF_SPACE_ID manquant (input ou secret)."
+            exit 1
+          fi
+          echo "space_id=$SPACE_ID" >> "$GITHUB_OUTPUT"
+
+          # Space branch (input > secret > main)
+          SPACE_BRANCH="${{ github.event.inputs.hf_space_branch }}"
+          if [ -z "$SPACE_BRANCH" ]; then SPACE_BRANCH="${{ secrets.HF_SPACE_BRANCH || 'main' }}"; fi
+          echo "space_branch=$SPACE_BRANCH" >> "$GITHUB_OUTPUT"
+
+      # 4) Clone du Space HF (token si privé)
       - name: Clone HF Space
         run: |
           set -euxo pipefail
+          CLONE_DIR="$RUNNER_TEMP/hfspace"
           rm -rf "$CLONE_DIR"
 
-          # Auth header si token fourni (utile si Space privé)
           EXTRA=""
-          if [ -n "${HF_TOKEN:-}" ]; then
-            EXTRA='-c http.extraHeader=Authorization: Bearer '"$HF_TOKEN"
+          if [ -n "${{ secrets.HF_TOKEN }}" ]; then
+            EXTRA="-c http.extraHeader=Authorization: Bearer ${{ secrets.HF_TOKEN }}"
           fi
 
-          git $EXTRA clone --branch "${HF_SPACE_BRANCH:-main}" \
-            "https://huggingface.co/spaces/${HF_SPACE_ID}" "$CLONE_DIR"
+          git $EXTRA clone \
+            --branch "${{ steps.cfg.outputs.space_branch }}" \
+            "https://huggingface.co/spaces/${{ steps.cfg.outputs.space_id }}" \
+            "$CLONE_DIR"
 
-      # --- BONUS : matérialiser les fichiers LFS (vraies binaires) ---
+      # 5) BONUS — matérialiser les fichiers LFS (on récupère les vraies binaires)
       - name: Materialize LFS files from HF clone
-        working-directory: ${{ env.CLONE_DIR }}
+        working-directory: ${{ runner.temp }}/hfspace
         run: |
           set -euxo pipefail
           git lfs install
           git lfs fetch --all || true
           git lfs checkout || true
 
-      - name: Mirror files from HF → repo (rsync, delete)
+      # 6) Miroir HF -> repo (respecte .gitignore, supprime les fichiers retirés côté HF)
+      - name: Mirror files (HF → GitHub working tree)
         run: |
           set -euxo pipefail
-          rsync -av --delete \
+          CLONE_DIR="$RUNNER_TEMP/hfspace"
+          rsync -a --delete \
             --exclude '.git/' \
+            --filter=':- .gitignore' \
             "$CLONE_DIR/" .
 
-      - name: Commit & push changes (HF wins)
+      # 7) Commit & push "HF gagne" (sans rebase, sans conflits)
+      - name: Commit & push (HF wins)
         run: |
           set -euxo pipefail
-          BRANCH="${GITHUB_REF_NAME:-main}"
+          BRANCH="${{ steps.cfg.outputs.branch }}"
 
           git config user.name  "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
 
-          # Rien à faire ? On sort proprement.
+          # Rien à committer ?
           if git diff --quiet; then
             echo "No changes after sync. Exiting."
             exit 0
           fi
 
-          # On neutralise les filtres LFS côté GitHub pour committer des binaires "plats"
+          # On neutralise LFS côté commit pour éviter les pointeurs
           git -c filter.lfs.clean= \
               -c filter.lfs.smudge= \
               -c filter.lfs.process= \
@@ -95,6 +129,11 @@ jobs:
               -c filter.lfs.required=false commit \
               -m "chore(sync): mirror HF Space → GitHub $(date -u +%F-%H%M%SZ)"
 
-          # On pousse en miroir (HF = vérité). --force-with-lease = prudent.
+          # On pousse en miroir (HF = source de vérité)
           git fetch origin "$BRANCH" || true
-          git push --force-with-lease origin "HEAD:$BRANCH"
+          if ! git ls-remote --exit-code --heads origin "$BRANCH" >/dev/null 2>&1; then
+            # Si la branche n'existe pas encore sur le remote
+            git push --set-upstream origin "HEAD:$BRANCH"
+          else
+            git push --force-with-lease origin "HEAD:$BRANCH"
+          fi
