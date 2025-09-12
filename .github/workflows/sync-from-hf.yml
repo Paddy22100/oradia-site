@@ -2,8 +2,8 @@ name: Sync from Hugging Face Space
 
 on:
   repository_dispatch:
-    types: [hf-space-updated]
-  workflow_dispatch:
+    types: [hf-space-updated]   # déclencheur externe (HF/Vercel)
+  workflow_dispatch:            # lancement manuel
     inputs:
       hf_space_id:
         description: "HF Space ID (org/space)"
@@ -25,7 +25,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1) Récup du repo GitHub
+      # 1) Repo GitHub
       - name: Checkout current repo
         uses: actions/checkout@v4
         with:
@@ -40,32 +40,35 @@ jobs:
           sudo apt-get install -y git-lfs rsync jq
           git lfs install
 
-      # 3) Résolution des variables (branche/space)
+      # 3) Résolution des variables (branche + Space)
       - name: Resolve config (branch & Space)
         id: cfg
         run: |
           set -euxo pipefail
+          # Branche cible: ref courante ou branche par défaut du repo
           BRANCH="${GITHUB_REF_NAME:-}"
           if [ -z "$BRANCH" ]; then
-            BRANCH="$(git symbolic-ref --short HEAD 2>/dev/null || echo main)"
+            BRANCH="$(jq -r '.repository.default_branch // "main"' "$GITHUB_EVENT_PATH")"
           fi
           echo "branch=$BRANCH" >> "$GITHUB_OUTPUT"
 
+          # Space ID (input > secret)
           SPACE_ID_INPUT="${{ github.event.inputs.hf_space_id }}"
           SPACE_ID_SECRET="${{ secrets.HF_SPACE_ID }}"
           SPACE_ID="${SPACE_ID_INPUT:-$SPACE_ID_SECRET}"
           if [ -z "$SPACE_ID" ]; then
-            echo "::error::HF_SPACE_ID manquant (input ou secret Actions)."
+            echo "::error::HF_SPACE_ID manquant (input ou secret)."
             exit 1
           fi
           echo "space_id=$SPACE_ID" >> "$GITHUB_OUTPUT"
 
+          # Space branch (input > secret > main)
           SPACE_BRANCH_INPUT="${{ github.event.inputs.hf_space_branch }}"
           SPACE_BRANCH_SECRET="${{ secrets.HF_SPACE_BRANCH }}"
           SPACE_BRANCH="${SPACE_BRANCH_INPUT:-${SPACE_BRANCH_SECRET:-main}}"
           echo "space_branch=$SPACE_BRANCH" >> "$GITHUB_OUTPUT"
 
-      # 4) Auth HF via GIT_ASKPASS (anti-prompt) + clone
+      # 4) Auth HF via GIT_ASKPASS (évite les prompts) + clone du Space
       - name: Configure HF auth & clone Space
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
@@ -74,7 +77,7 @@ jobs:
           CLONE_DIR="$RUNNER_TEMP/hfspace"
           rm -rf "$CLONE_DIR"
 
-          # Script ASKPASS : renvoie __token__ puis le token
+          # Script ASKPASS: fournit __token__ / $HF_TOKEN à Git
           if [ -n "${HF_TOKEN:-}" ]; then
             cat > "$RUNNER_TEMP/hf_askpass.sh" <<'SH'
 #!/usr/bin/env bash
@@ -86,18 +89,16 @@ esac
 SH
             chmod +x "$RUNNER_TEMP/hf_askpass.sh"
             export GIT_ASKPASS="$RUNNER_TEMP/hf_askpass.sh"
-            export HF_TOKEN   # rendu visible pour le script, pas dans les logs
+            export HF_TOKEN
           fi
 
-          # Clone (marche pour Space public ou privé ; privé => token utilisé)
           git clone --branch "${{ steps.cfg.outputs.space_branch }}" \
             "https://huggingface.co/spaces/${{ steps.cfg.outputs.space_id }}" \
             "$CLONE_DIR"
 
-          # Hygiène
           unset GIT_ASKPASS || true
 
-      # 5) BONUS : matérialiser les fichiers LFS (vraies binaires depuis HF)
+      # 5) BONUS: matérialiser les fichiers LFS (vraies binaires depuis HF)
       - name: Materialize LFS files from HF clone
         working-directory: ${{ runner.temp }}/hfspace
         run: |
@@ -106,7 +107,7 @@ SH
           git lfs fetch --all || true
           git lfs checkout || true
 
-      # 6) Miroir HF → GitHub (respect .gitignore, suppression des fichiers retirés)
+      # 6) Miroir HF → GitHub (respect .gitignore, supprime les fichiers retirés)
       - name: Mirror files (HF → GitHub working tree)
         run: |
           set -euxo pipefail
@@ -130,7 +131,7 @@ SH
             exit 0
           fi
 
-          # Neutraliser LFS côté commit (pas de pointeurs pour images web, etc.)
+          # Neutraliser LFS côté commit (évite les pointeurs)
           git -c filter.lfs.clean= \
               -c filter.lfs.smudge= \
               -c filter.lfs.process= \
