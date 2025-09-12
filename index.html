@@ -28,6 +28,44 @@
     }
   </script>
 
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Gestion de la modale CGV
+      const showCGV = document.getElementById('showCGV');
+      const cgvModal = document.getElementById('cgvModal');
+      const closeCGV = document.getElementById('closeCGV');
+
+      if (showCGV && cgvModal && closeCGV) {
+        showCGV.addEventListener('click', (e) => {
+          e.preventDefault();
+          cgvModal.classList.remove('hidden');
+          document.body.style.overflow = 'hidden';
+        });
+
+        closeCGV.addEventListener('click', () => {
+          cgvModal.classList.add('hidden');
+          document.body.style.overflow = '';
+        });
+
+        // Fermer la modale avec la touche ESC
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'Escape' && !cgvModal.classList.contains('hidden')) {
+            cgvModal.classList.add('hidden');
+            document.body.style.overflow = '';
+          }
+        });
+
+        // Fermer en cliquant en dehors de la modale
+        cgvModal.addEventListener('click', (e) => {
+          if (e.target === cgvModal) {
+            cgvModal.classList.add('hidden');
+            document.body.style.overflow = '';
+          }
+        });
+      }
+    });
+  </script>
+
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
 
@@ -218,7 +256,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 <header class="header-bg w-full py-3 px-4 md:py-4 md:px-8">
   <div class="flex items-center justify-between">
     <div class="flex items-center">
-      <img src="https://i.ibb.co/4wG0t61y/logo.png" alt="Oradia Logo"
+      <img src="https://i.ibb.co/Q3vbXP4S/logo.png" alt="Oradia Logo"
            class="w-16 h-16 mr-6 transform hover:scale-110 transition-transform duration-300"/>
       <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
     </div>
@@ -288,7 +326,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
                 <div class="bg-night-blue w-56 h-56 rounded-full flex items-center justify-center relative">
                   <div class="absolute w-1 h-16 bg-gold rounded-full origin-bottom" style="transform: rotate(45deg);"></div>
                   <div class="absolute w-1 h-16 bg-light-gold rounded-full origin-bottom" style="transform: rotate(-45deg);"></div>
-                  <img src="https://i.ibb.co/cKHs3GY5/logo2.png" alt="Oradia Compass"
+                  <img src="https://i.ibb.co/HfVZ03nt/logo2.png" alt="Oradia Compass"
                        class="w-full h-full object-center object-contain rounded-full border-2 border-gold animate-spin-slow">
                   <div class="absolute inset-0 flex flex-col items-center justify-center">
                     <span class="cormorant text-2xl text-gold">Oradia</span>
@@ -425,7 +463,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       <div class="max-w-md mx-auto mt-8 space-y-6">
         <div class="flex gap-3 justify-center">
           <button id="reset" class="btn-outline-gold hidden flex-1 sm:flex-none">Nouveau tirage</button>
-          <button id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none">Enie du tirage plus complet?</button>
+          <button id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none">Envie d'un tirage plus complet?</button>
         </div>
         
         <div id="emailForm" class="hidden w-full max-w-2xl mx-auto">
@@ -655,7 +693,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <div class="relative">
             <div class="bg-gradient-to-br from-gold/10 to-night-blue border border-gold/30 rounded-2xl w-full h-96"></div>
             <div class="absolute -bottom-6 -right-6 w-64 h-64 bg-gradient-to-tr from-gold/5 to-transparent border border-gold/20 rounded-2xl">
-              <img src="https://i.ibb.co/TB75673d/logo.png" alt="logo" class="w-full h-full object-contain p-4">
+              <img src="https://i.ibb.co/Q3vbXP4S/logo.png" alt="logo" class="w-full h-full object-contain p-4">
             </div>
           </div>
         </div>
@@ -714,22 +752,6 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     </div>
   </section>
 
-  <!-- CGV -->
-  <section id="cgv" class="py-20 px-6 bg-night-blue">
-    <div class="container mx-auto max-w-6xl">
-      <h2 class="cormorant text-4xl md:text-5xl font-bold mb-8 gold-gradient">Conditions générales de vente (CGV)</h2>
-      <div class="rounded-2xl p-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
-        <p><strong>Editeur du site :</strong> Oradia, micro-entreprise immatriculée sous le n° [SIRET], dont le siège est situé [adresse]. Contact : [adresse e-mail / tél].</p>
-        <p><strong>Objet :</strong> Le site oradia.fr propose des prestations d'oracle/tarot en ligne : un tirage complet vendu à l'unité et un abonnement mensuel donnant droit à un tirage quotidien.</p>
-        <p><strong>Prix et paiement :</strong> 5 € donnant accès à 5 tirages complets et 8 €/mois pour l'abonnement quotidien. Les paiements sont sécurisés et gérés par Stripe. La validation de la commande implique l'acceptation des présentes CGV.</p>
-        <p><strong>Commande et accès :</strong> Une fois le paiement validé, le tirage est réalisé dans les 48 h et un e-mail récapitulatif est envoyé. L'abonnement est résiliable à tout moment.</p>
-        <p><strong>Droit de rétractation :</strong> Conformément à l'article L221-28 du Code de la consommation, aucun droit de rétractation n'est possible pour les services pleinement exécutés avant la fin du délai de 14 jours. Toutefois, une garantie "satisfait ou remboursé 7 jours" est accordée sur l'abonnement.</p>
-        <p><strong>Protection des données :</strong> Les données collectées (e-mail, date de naissance, etc.) sont stockées chez Brevo et ne sont pas cédées. Vous disposez d'un droit d'accès, de rectification et de suppression sur simple demande.</p>
-        <p><strong>Cookies :</strong> Le site utilise des cookies techniques et ceux de Stripe/Brevo pour le bon fonctionnement. Un bandeau de consentement est affiché.</p>
-        <p><strong>Droit applicable :</strong> Les présentes conditions sont soumises au droit français.</p>
-      </div>
-    </div>
-  </section>
 
   <!-- Tirage de la Traversée - caché jusqu'à paiement -->
   <section id="traversee" class="py-20 px-6 bg-night-blue hidden">
@@ -837,7 +859,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
         <div>
           <div class="flex items-center mb-4">
-            <img src="https://i.ibb.co/4wG0t61y/logo.png" alt="Oradia Logo" class="w-16 h-16 mr-4" />
+            <img src="https://i.ibb.co/Q3vbXP4S/logo.png" alt="Oradia Logo" class="w-16 h-16 mr-4" />
             <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
           </div>
           <p class="text-light-gold text-sm">Oracle vibratoire pour accompagner votre cheminement personnel et révéler votre essence.</p>
@@ -855,7 +877,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         <div>
           <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
           <ul class="space-y-2">
-            <li><a href="#cgv" class="text-light-gold hover:text-gold transition">CGV</a></li>
+            <li><a href="#" id="showCGV" class="text-light-gold hover:text-gold transition">CGV</a></li>
             <li><a href="#" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
             <li><a href="#" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
           </ul>
@@ -960,6 +982,26 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <a href="#" id="showLogin" class="text-gold hover:underline">Se connecter</a>
         </p>
       </form>
+    </div>
+  </div>
+
+  <!-- Modale CGV -->
+  <div id="cgvModal" class="fixed inset-0 bg-night-blue/90 z-[100] flex items-center justify-center hidden">
+    <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-4xl w-full mx-4 relative max-h-[90vh] overflow-y-auto">
+      <button id="closeCGV" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
+      <div class="text-center mb-8">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Conditions générales de vente (CGV)</h2>
+      </div>
+      <div class="rounded-2xl p-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+        <p><strong>Editeur du site :</strong> Oradia, micro-entreprise immatriculée sous le n° [SIRET], dont le siège est situé [adresse]. Contact : [adresse e-mail / tél].</p>
+        <p><strong>Objet :</strong> Le site oradia.fr propose des prestations d'oracle/tarot en ligne : un tirage complet vendu à l'unité et un abonnement mensuel donnant droit à un tirage quotidien.</p>
+        <p><strong>Prix et paiement :</strong> 5 € donnant accès à 5 tirages complets et 8 €/mois pour l'abonnement quotidien. Les paiements sont sécurisés et gérés par Stripe. La validation de la commande implique l'acceptation des présentes CGV.</p>
+        <p><strong>Commande et accès :</strong> Una fois le paiement validé, le tirage est réalisé dans les 48 h et un e-mail récapitulatif est envoyé. L'abonnement est résiliable à tout moment.</p>
+        <p><strong>Droit de rétractation :</strong> Conformément à l'article L221-28 du Code de la consommation, aucun droit de rétractation n'est possible pour les services pleinement exécutés avant la fin du délai de 14 jours. Toutefois, une garantie "satisfait ou remboursé 7 jours" est accordée sur l'abonnement.</p>
+        <p><strong>Protection des données :</strong> Les données collectées (e-mail, date de naissance, etc.) sont stockées chez Brevo et ne sont pas cédées. Vous disposez d'un droit d'accès, de rectification et de suppression sur simple demande.</p>
+        <p><strong>Cookies :</strong> Le site utilise des cookies techniques et ceux de Stripe/Brevo pour le bon fonctionnement. Un bandeau de consentement est affiché.</p>
+        <p><strong>Droit applicable :</strong> Les présentes conditions sont soumises au droit français.</p>
+      </div>
     </div>
   </div>
 
@@ -1900,4 +1942,3 @@ loginBtnMobile?.addEventListener('click', ()=>{
   </script>
 </body>
 </html>
-
