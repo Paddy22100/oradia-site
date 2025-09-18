@@ -83,3 +83,63 @@ remplacer "Guidance vibratoire croisant plusieurs systèmes." par "Une question 
 le bouton quitter le tirage ne fonctionne pas
 le bouton Quitter le tirage dans le mode immerssif du tirage du pèlerin doit ramener à l'accueil et fermer le mode immerssif
 le bouton Quitter le tirage doit disparaître une fois que la page d'accueil est réapparue
+insère ces présentations des trois tirages de façon harmonieuse avec le reste du site:
+🌿 Tirage du Pèlerin
+
+Une question simple, un pas sur le chemin.
+Le tirage du Pèlerin éclaire passé, présent et futur : ce qui t’accompagne encore, ce qui se joue maintenant, et ce qui se dessine devant toi. C’est un tirage d’initiation, une première porte pour goûter la vibration d’Oradia.
+
+🧭 Tirage de la Traversée
+
+Un carrefour, une décision, un choix à poser.
+Le tirage de la Traversée se déploie comme une boussole intérieure : Nord, Sud, Est, Ouest. Quatre directions pour éclairer ton orientation dans la vie, retrouver ton cap, discerner la voie juste. C’est un tirage pour les passages importants, les croisées de chemins, les grandes traversées.
+
+🌌 Guidage du Tore
+
+L’expérience complète.
+Le Guidage du Tore recueille toutes les dimensions de ton être : émotions, besoins, archétypes, révélations, actions. Il s’appuie aussi sur tes clés personnelles de connaissance de soi (Human Design, Ennéagramme, astrologie, synchronicités…). C’est une cartographie vibratoire profonde, qui t’offre un miroir puissant et précis pour avancer avec clarté.
+Un tirage qui ne donne pas seulement des réponses, mais qui ouvre des chemins.
+ajoute plus de détails via ces informations:🌿 Tirage du Pèlerin
+
+Une question simple, un pas sur le chemin.
+Le tirage du Pèlerin éclaire passé, présent et futur : ce qui t’accompagne encore, ce qui se joue maintenant, et ce qui se dessine devant toi. C’est un tirage d’initiation, une première porte pour goûter la vibration d’Oradia.
+
+🧭 Tirage de la Traversée
+
+Un carrefour, une décision, un choix à poser.
+Le tirage de la Traversée se déploie comme une boussole intérieure : Nord, Sud, Est, Ouest. Quatre directions pour éclairer ton orientation dans la vie, retrouver ton cap, discerner la voie juste. C’est un tirage pour les passages importants, les croisées de chemins, les grandes traversées.
+
+🌌 Guidage du Tore
+
+L’expérience complète.
+Le Guidage du Tore recueille toutes les dimensions de ton être : émotions, besoins, archétypes, révélations, actions. Il s’appuie aussi sur tes clés personnelles de connaissance de soi (Human Design, Ennéagramme, astrologie, synchronicités…). C’est une cartographie vibratoire profonde, qui t’offre un miroir puissant et précis pour avancer avec clarté.
+Un tirage qui ne donne pas seulement des réponses, mais qui ouvre des chemins.
+
+remplace les images actuelles hébergée sur ImgBB  par celle-ci
+je veux que les conditions générales de ventes ne soient affichées que lorsque l'utilisateur clic sur CGV dans le footer
+je veux que les conditions générales de ventes ne soient affichées que lorsque l'utilisateur clic sur CGV dans le footer
+je veux que ça fasse parti du même cadre des offres, pas que ça s'ouvre quand on clic sur Commencer le tirage
+supprime les images uploadées via deepsite v2 aujourd'hui
+le bouton nouveau tirage ne marche pas
+ce bouton nouveau tirage ne marche pas, il devrait réinitialiser le tirage du pèlerin
+Je veux que les conditions générales de ventes ne soient visible que si l'utilisateur clic sur CGV dans le footer
+je veux que les CGV s'affiche dans un message avec une croix pour quitter
+Je veux que les conditions générales de vente apparaissent dans une fenêtre fermable par une croix seulement quand l'utilisateur clic sur CGV dans le footer
+remet la barre de navigation en fonction
+Je veux que les conditions générales de vente s'affichent seulement quand l'utilisateur clic sur CGV dans le footer et que cela s'affiche dans une fenêtre fermable par une croix
+les CGV ne s'affichent pas quand je clic sur CGV dans le Footer
+aJOUTE ces informations de façon à ce que ça soit simple, beau, cohérent avec le site dans les offres pour décrire les trois tirages:
+
+Je veux que ça soit dans le même cadre que celui juste en dessous qui décrit l'offre du tirage du pèlerin fait la même chose pour les deux autres tirages
+Fusionne les cadres en les regroupant par type de tirage
+met ce texte dans le cadre du tirage du pèlerin juste en dessous
+Fusionne le contenu de block avec le bloc du dessous "Tirage du pèlerin"
+Je ne veux que 3 block, 1 pour chaque type de tirage
+Copie ce texte dans le block Tirage du pèlerin juste en dessous
+justifie et centre le texte
+Réorganise et ajuste les textes pour que ça soit très joli
+Réorganise et ajuste les textes pour que ça soit très joli
+Réorganise et ajuste les textes pour que ça soit très joli
+rajoute un mantra et une question d'introspection dans la synthèse du tirage du pèlerin
+ajoute le nom de la famille des cartes. Quand elle se retournent, enlève le logo oradia. Met en valeur la carte centrale énergie cosmos 
+met en valeur la carte centrale énergie cosmos aussi avant qu'elle soit retournée
