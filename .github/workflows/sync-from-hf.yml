@@ -1,0 +1,68 @@
+name: Sync from Hugging Face Space
+
+on:
+  repository_dispatch:
+    types: [hf-space-updated]
+  workflow_dispatch: {}
+
+permissions:
+  contents: write
+
+concurrency:
+  group: sync-from-hf
+  cancel-in-progress: true
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    env:
+      HF_SPACE: "Paddy22/site-oradia"     # ← adapte si besoin
+      HF_BRANCH: "main"                   # ← adapte si besoin
+    steps:
+      - name: Checkout current repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install git-lfs & rsync
+        run: |
+          set -eux
+          sudo apt-get update
+          sudo apt-get install -y git-lfs rsync
+          git lfs install
+
+      - name: Clone HF Space (public)
+        run: |
+          set -eux
+          rm -rf /tmp/hf-space
+          git clone --depth 1 --branch "$HF_BRANCH" "https://huggingface.co/spaces/$HF_SPACE" /tmp/hf-space
+
+      - name: Materialize LFS
+        working-directory: /tmp/hf-space
+        run: |
+          set -eux
+          git lfs fetch --all || true
+          git lfs checkout || true
+
+      - name: Mirror HF → GitHub (protège .github/ et api/)
+        run: |
+          set -eux
+          rsync -a --delete \
+            --exclude '.git/' \
+            --exclude '.github/' \
+            --exclude 'api/' \
+            --filter=':- .gitignore' \
+            /tmp/hf-space/ ./
+
+      - name: Commit & push
+        run: |
+          set -eux
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if git status --porcelain | grep .; then
+            git add -A
+            git commit -m "chore(sync): mirror HF → GitHub $(date -u +'%Y-%m-%dT%H:%M:%SZ')"
+            git push
+          else
+            echo "No changes."
+          fi
