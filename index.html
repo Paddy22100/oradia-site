@@ -1995,8 +1995,22 @@ confirmation.querySelector('#newReadingBtn').addEventListener('click', () => {
     });
     memberRegisterForm.addEventListener('submit', e=>{
       e.preventDefault();
-      alert('Compte créé ! Abonnement activé.');
       subscriptionModal.classList.add('hidden'); document.body.style.overflow='';
+      
+      // Ouvrir la modale de paiement pour l'abonnement
+      const orderModal = document.getElementById('orderModal');
+      orderModal.classList.remove('hidden');
+      document.body.style.overflow='hidden';
+      
+      // Modifier le titre pour l'abonnement
+      const modalTitle = orderModal.querySelector('h3');
+      const modalText = orderModal.querySelector('p');
+      if (modalTitle) modalTitle.textContent = 'Abonnement Tirage du Tore';
+      if (modalText) modalText.textContent = 'Finalisez votre abonnement (8€/mois)';
+      
+      // Modifier le bouton de paiement
+      const payButton = orderModal.querySelector('button[type="submit"]');
+      if (payButton) payButton.textContent = 'Payer 8€/mois';
     });
 
     // --------- Modale Login Dashboard ----------

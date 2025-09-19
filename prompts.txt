@@ -155,3 +155,8 @@ le tirage de la traversée ne doit pas apparaître sur la page d'accueil lorsque
 Le tirage de la traversée ne doit plus apparaître sur la page d'accueil après un clic sur le bouton "quitter le tirage de la Traversée"
 modifier en juste Créez votre compte
 ajouter "Déjà un compte ? Se connecter"
+ouvrir une boite de dialogue pour procéder au paiement de l'abonnement après que l'utilisateur clic sur Créer le compte & s'abonner
+ne pas redemander le mail ni date de naissance
+enlever "Vous avez maintenant accès à 5 tirages complets de l'oracle Oradia.
+
+Un e-mail comportant votre code d'accès vous a été envoyé" et remplacer par "Votre espace membre à été créé avec succès, vous pouvez à présent disposer de tout les types de tirages Oradia"
