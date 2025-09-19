@@ -143,3 +143,13 @@ Réorganise et ajuste les textes pour que ça soit très joli
 rajoute un mantra et une question d'introspection dans la synthèse du tirage du pèlerin
 ajoute le nom de la famille des cartes. Quand elle se retournent, enlève le logo oradia. Met en valeur la carte centrale énergie cosmos 
 met en valeur la carte centrale énergie cosmos aussi avant qu'elle soit retournée
+doit ouvrir une boite de dialogue pour se connecter à un espace membre et non au dshboard
+Doit ouvrir une boite de dialogue pour se connecter à l'espace membre de l'utilisateur, pas au dashboard réservé au créateur du site
+modifier le texte pour "espace membre" connectez-vous à votre espace
+doit renvoyer sur les offres
+clic=retour aux offres des tirages
+quand je clic sur "Envie d'un tirage plus complet?" je veux que cela ramène aux offres des trois tirages
+Quand le tirage du pèlerin est quitté, il ne doit plus apparaitre sur la page d'accueil
+quand on quitte le tirage de la traversée il ne doit plus apparaitre sur a page d'accueil
+le tirage de la traversée ne doit pas apparaître sur la page d'accueil lorsque l'utilisateur clic sur quitter le tirage 
+Le tirage de la traversée ne doit plus apparaître sur la page d'accueil après un clic sur le bouton "quitter le tirage de la Traversée"

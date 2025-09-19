@@ -309,7 +309,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       <a href="#apropos" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
     </nav>
 
-    <button id="loginBtn" class="btn-outline-gold hidden md:inline-block">Connexion</button>
+    <button id="loginBtn" class="btn-outline-gold hidden md:inline-block hovered-element" onclick="document.getElementById('subscriptionModal').classList.remove('hidden'); document.body.style.overflow='hidden';">Espace Membre</button>
   </div>
 
   <!-- Menu mobile déroulant -->
@@ -1067,8 +1067,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
       <button id="closeLogin" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
       <div class="text-center mb-8">
-        <h3 class="cormorant text-3xl text-gold mb-2">Connexion Dashboard</h3>
-        <p class="text-light-gold">Accédez à votre espace d'analyse SEO</p>
+        <h3 class="cormorant text-3xl text-gold mb-2">Espace Membre</h3>
+        <p class="text-light-gold">Connectez-vous à votre espace</p>
       </div>
       <form id="loginFormDashboard">
         <div class="mb-4">
@@ -1659,12 +1659,14 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         if(exitBtn) exitBtn.remove();
       }, 500);
       
+      // Masquer complètement la section oracle
+      document.getElementById('oracle').classList.add('hidden');
+      
       // Réinitialiser le tirage
       if(document.getElementById('reset')) {
         document.getElementById('reset').click();
       } else {
         // Si le bouton reset n'existe pas, réinitialiser manuellement
-        document.getElementById('oracle').classList.add('hidden');
         document.getElementById('board').classList.add('hidden');
         document.getElementById('results').classList.add('hidden');
         document.getElementById('cardsInstruction').classList.add('hidden');
@@ -1904,7 +1906,7 @@ document.getElementById('subscribeBtn')?.addEventListener('click', ()=>{
           </div>
           
           <div class="rounded-2xl p-8 mx-auto max-w-2xl relative" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
-            <a href="#offres" class="absolute top-4 left-4 text-gold hover:text-light-gold">
+            <a href="#offres" class="absolute top-4 left-4 text-gold hover:text-light-gold" onclick="document.querySelectorAll('section').forEach(section => section.classList.remove('hide-sections')); document.getElementById('offres').scrollIntoView({behavior: 'smooth'}); return false;">
               <i class="fas fa-arrow-left mr-2"></i> Retour aux offres
             </a>
             <div class="text-center">
