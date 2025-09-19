@@ -1946,25 +1946,15 @@ document.getElementById('subscribeBtn')?.addEventListener('click', ()=>{
         document.getElementById('offres').scrollIntoView({behavior: 'smooth'});
       });
 
-      // Accès direct au formulaire final « Traversée »
-confirmation.querySelector('#newReadingBtn').addEventListener('click', () => {
-  // retirer l’écran “Merci”
+      // Accès à tous les tirages (abonnement)
+confirmation.querySelector('#accessAllReadingsBtn').addEventListener('click', () => {
+  // retirer l’écran de confirmation
   confirmation.remove();
   // ré-afficher toutes les sections
   document.querySelectorAll('section').forEach(s => s.classList.remove('hide-sections'));
-
-  // afficher la section Traversée et montrer le formulaire
-  const travSection = document.getElementById('traversee');
-  const intro = document.getElementById('traversee-intro');
-  const form  = document.getElementById('traversee-form');
   
-  if (travSection) travSection.classList.remove('hidden');
-  if (intro) intro.classList.add('hidden');
-  if (form) form.classList.remove('hidden');
-
-  // scroll + focus
-  travSection?.scrollIntoView({ behavior: 'smooth' });
-  form?.querySelector('input, textarea, select')?.focus();
+  // Redirection vers les offres
+  document.getElementById('offres').scrollIntoView({ behavior: 'smooth' });
 });
 }); 
 

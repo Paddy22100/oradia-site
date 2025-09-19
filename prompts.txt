@@ -160,3 +160,4 @@ ne pas redemander le mail ni date de naissance
 enlever "Vous avez maintenant accès à 5 tirages complets de l'oracle Oradia.
 
 Un e-mail comportant votre code d'accès vous a été envoyé" et remplacer par "Votre espace membre à été créé avec succès, vous pouvez à présent disposer de tout les types de tirages Oradia"
+le message de remerciement pour l'abonnement validé doit être copié de celui de la traversé mais distinct avec un bouton Accéder aux tirages et non Accéder au tirage de la Traversée
