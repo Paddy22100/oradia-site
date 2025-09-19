@@ -309,7 +309,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       <a href="#apropos" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
     </nav>
 
-    <button id="loginBtn" class="btn-outline-gold hidden md:inline-block hovered-element" onclick="document.getElementById('subscriptionModal').classList.remove('hidden'); document.body.style.overflow='hidden';">Espace Membre</button>
+    <button id="loginBtn" class="btn-outline-gold hidden md:inline-block">Connexion</button>
   </div>
 
   <!-- Menu mobile déroulant -->
@@ -995,7 +995,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       <button id="closeSubscription" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
       <div class="text-center mb-8">
         <h3 class="cormorant text-3xl text-gold mb-2">Espace Membre Oradia</h3>
-        <p class="text-light-gold">Créez votre compte</p>
+        <p class="text-light-gold">Connectez-vous ou créez votre compte</p>
       </div>
 
       <!-- Login membre -->
@@ -1067,8 +1067,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
       <button id="closeLogin" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
       <div class="text-center mb-8">
-        <h3 class="cormorant text-3xl text-gold mb-2">Espace Membre</h3>
-        <p class="text-light-gold">Connectez-vous à votre espace</p>
+        <h3 class="cormorant text-3xl text-gold mb-2">Connexion Dashboard</h3>
+        <p class="text-light-gold">Accédez à votre espace d'analyse SEO</p>
       </div>
       <form id="loginFormDashboard">
         <div class="mb-4">
@@ -1659,14 +1659,12 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         if(exitBtn) exitBtn.remove();
       }, 500);
       
-      // Masquer complètement la section oracle
-      document.getElementById('oracle').classList.add('hidden');
-      
       // Réinitialiser le tirage
       if(document.getElementById('reset')) {
         document.getElementById('reset').click();
       } else {
         // Si le bouton reset n'existe pas, réinitialiser manuellement
+        document.getElementById('oracle').classList.add('hidden');
         document.getElementById('board').classList.add('hidden');
         document.getElementById('results').classList.add('hidden');
         document.getElementById('cardsInstruction').classList.add('hidden');
@@ -1906,7 +1904,7 @@ document.getElementById('subscribeBtn')?.addEventListener('click', ()=>{
           </div>
           
           <div class="rounded-2xl p-8 mx-auto max-w-2xl relative" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
-            <a href="#offres" class="absolute top-4 left-4 text-gold hover:text-light-gold" onclick="document.querySelectorAll('section').forEach(section => section.classList.remove('hide-sections')); document.getElementById('offres').scrollIntoView({behavior: 'smooth'}); return false;">
+            <a href="#offres" class="absolute top-4 left-4 text-gold hover:text-light-gold">
               <i class="fas fa-arrow-left mr-2"></i> Retour aux offres
             </a>
             <div class="text-center">
@@ -1946,15 +1944,25 @@ document.getElementById('subscribeBtn')?.addEventListener('click', ()=>{
         document.getElementById('offres').scrollIntoView({behavior: 'smooth'});
       });
 
-      // Accès à tous les tirages (abonnement)
-confirmation.querySelector('#accessAllReadingsBtn').addEventListener('click', () => {
-  // retirer l’écran de confirmation
+      // Accès direct au formulaire final « Traversée »
+confirmation.querySelector('#newReadingBtn').addEventListener('click', () => {
+  // retirer l’écran “Merci”
   confirmation.remove();
   // ré-afficher toutes les sections
   document.querySelectorAll('section').forEach(s => s.classList.remove('hide-sections'));
+
+  // afficher la section Traversée et montrer le formulaire
+  const travSection = document.getElementById('traversee');
+  const intro = document.getElementById('traversee-intro');
+  const form  = document.getElementById('traversee-form');
   
-  // Redirection vers les offres
-  document.getElementById('offres').scrollIntoView({ behavior: 'smooth' });
+  if (travSection) travSection.classList.remove('hidden');
+  if (intro) intro.classList.add('hidden');
+  if (form) form.classList.remove('hidden');
+
+  // scroll + focus
+  travSection?.scrollIntoView({ behavior: 'smooth' });
+  form?.querySelector('input, textarea, select')?.focus();
 });
 }); 
 
@@ -1985,22 +1993,8 @@ confirmation.querySelector('#accessAllReadingsBtn').addEventListener('click', ()
     });
     memberRegisterForm.addEventListener('submit', e=>{
       e.preventDefault();
+      alert('Compte créé ! Abonnement activé.');
       subscriptionModal.classList.add('hidden'); document.body.style.overflow='';
-      
-      // Ouvrir la modale de paiement pour l'abonnement
-      const orderModal = document.getElementById('orderModal');
-      orderModal.classList.remove('hidden');
-      document.body.style.overflow='hidden';
-      
-      // Modifier le titre pour l'abonnement
-      const modalTitle = orderModal.querySelector('h3');
-      const modalText = orderModal.querySelector('p');
-      if (modalTitle) modalTitle.textContent = 'Abonnement Tirage du Tore';
-      if (modalText) modalText.textContent = 'Finalisez votre abonnement (8€/mois)';
-      
-      // Modifier le bouton de paiement
-      const payButton = orderModal.querySelector('button[type="submit"]');
-      if (payButton) payButton.textContent = 'Payer 8€/mois';
     });
 
     // --------- Modale Login Dashboard ----------
