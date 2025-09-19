@@ -153,3 +153,5 @@ Quand le tirage du pèlerin est quitté, il ne doit plus apparaitre sur la page 
 quand on quitte le tirage de la traversée il ne doit plus apparaitre sur a page d'accueil
 le tirage de la traversée ne doit pas apparaître sur la page d'accueil lorsque l'utilisateur clic sur quitter le tirage 
 Le tirage de la traversée ne doit plus apparaître sur la page d'accueil après un clic sur le bouton "quitter le tirage de la Traversée"
+modifier en juste Créez votre compte
+ajouter "Déjà un compte ? Se connecter"
