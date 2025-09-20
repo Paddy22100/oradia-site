@@ -1014,6 +1014,76 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         </p>
       </form>
 
+<!-- Modale Abonnement (nouvelle) -->
+<div id="subscribeFormModal" class="fixed inset-0 bg-night-blue/90 z-[100] flex items-center justify-center hidden" style="backdrop-filter: blur(5px);">
+  <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-lg w-full mx-4 relative">
+    <button id="closeSubscribeForm" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <div class="text-center mb-6">
+      <h3 class="cormorant text-3xl text-gold mb-2">S’abonner à Oradia</h3>
+      <p class="text-light-gold">Activez votre abonnement (8€ / mois)</p>
+    </div>
+
+    <form id="subscribeForm">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-light-gold mb-2">Nom</label>
+          <input type="text" name="nom" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div>
+          <label class="block text-light-gold mb-2">Prénom</label>
+          <input type="text" name="prenom" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-light-gold mb-2">Adresse e-mail</label>
+        <input type="email" name="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-light-gold mb-2">Coordonnées bancaires</label>
+        <input type="text" inputmode="numeric" name="cb" placeholder="Numéro de carte (démo)"
+               class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        <div class="mt-2 grid grid-cols-3 gap-3">
+          <input type="text" inputmode="numeric" name="exp" placeholder="MM/AA"
+                 class="form-input bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+          <input type="text" inputmode="numeric" name="cvc" placeholder="CVC"
+                 class="form-input bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+          <input type="text" name="zip" placeholder="CP"
+                 class="form-input bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg">
+        </div>
+        <p class="text-xs text-light-gold/80 mt-1">Paiements sécurisés (démo).</p>
+      </div>
+
+      <div class="mb-6 rounded-xl p-4" style="background:rgba(5,20,40,.6); border:1px solid rgba(212,175,55,.25)">
+        <p class="text-gold font-semibold mb-2">Votre abonnement inclut :</p>
+        <ul class="space-y-2 text-light-gold text-sm list-disc list-inside">
+          <li>1 tirage complet quotidien par mail avec votre intention</li>
+          <li>Cartes passerelles</li>
+          <li>Synthèse vibratoire personnalisée</li>
+          <li>Mantra et question du jour</li>
+          <li>Espace membre (profils ennéagramme, astro, numérologie.)</li>
+          <li>Accès à l’archive des 10 derniers tirages</li>
+          <li>Participation à l’amélioration de l’oracle (expérience anonyme)</li>
+        </ul>
+      </div>
+
+      <div class="mb-4 flex items-start">
+        <input type="checkbox" id="termsSub" class="mt-1 mr-3" required>
+        <label for="termsSub" class="text-light-gold text-sm">
+          J’accepte les <a href="#cgv" class="text-gold hover:underline">conditions générales</a>.
+        </label>
+      </div>
+
+      <button type="submit" class="btn-gold w-full">S’abonner – 8€ / mois</button>
+    </form>
+  </div>
+</div>
+
+
       <!-- Register membre -->
       <form id="memberRegisterForm" class="hidden">
         <div class="mb-4">
@@ -1867,15 +1937,11 @@ document.getElementById('orderBtn')?.addEventListener('click', ()=>{
   setTimeout(()=>focusFirst('#orderModal'), 50);
 });
 
-// Quand on ouvre la modale abonnement (login par défaut)
-document.getElementById('subscribeBtn')?.addEventListener('click', ()=>{
-  setTimeout(()=>focusFirst('#subscriptionModal'), 50);
-});
 
-// Quand on ouvre la modale login dashboard (header + footer)
+// Quand on ouvre la modale Connexion (header)
 [document.getElementById('loginBtn'), document.getElementById('footerLogin')].forEach(btn=>{
   btn?.addEventListener('click', ()=>{
-    setTimeout(()=>focusFirst('#loginModal'), 50);
+    setTimeout(()=>focusFirst('#subscriptionModal'), 50);
   });
 });
 
@@ -1975,13 +2041,60 @@ confirmation.querySelector('#newReadingBtn').addEventListener('click', () => {
     const showRegister = document.getElementById('showRegister');
     const showLogin = document.getElementById('showLogin');
 
-    subscribeBtn.addEventListener('click', e => {
-      e.preventDefault();
-      subscriptionModal.classList.remove('hidden');
-      memberLoginForm.classList.remove('hidden');
-      memberRegisterForm.classList.add('hidden');
-      document.body.style.overflow='hidden';
-    });
+
+const subscribeFormModal = document.getElementById('subscribeFormModal');
+const closeSubscribeForm = document.getElementById('closeSubscribeForm');
+const subscribeForm      = document.getElementById('subscribeForm');
+
+closeSubscribeForm?.addEventListener('click', ()=>{
+  subscribeFormModal.classList.add('hidden');
+  document.body.style.overflow='';
+});
+
+subscribeForm?.addEventListener('submit', (e)=>{
+  e.preventDefault();
+  // Ici tu brancheras Stripe plus tard ; pour l’instant on affiche la confirmation
+  subscribeFormModal.classList.add('hidden');
+  document.body.style.overflow='';
+
+  // Affiche un message de confirmation + bouton Connexion (réutilise ton pattern de confirmation commande)
+  const confirmation = document.createElement('section');
+  confirmation.id = 'confirmation';
+  confirmation.className = 'py-20 px-6';
+  confirmation.innerHTML = `
+    <div class="container mx-auto max-w-6xl">
+      <div class="text-center mb-12">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Merci pour votre abonnement !</h2>
+        <p class="text-light-gold max-w-3xl mx-auto">Votre abonnement est activé. Un e-mail de bienvenue vous a été envoyé.</p>
+      </div>
+      <div class="rounded-2xl p-8 mx-auto max-w-2xl relative" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+        <a href="#offres" class="absolute top-4 left-4 text-gold hover:text-light-gold">
+          <i class="fas fa-arrow-left mr-2"></i> Retour aux offres
+        </a>
+        <div class="text-center">
+          <i class="fas fa-check-circle text-6xl text-gold mb-6"></i>
+          <p class="text-light-gold mb-8">Accédez maintenant à votre espace membre.</p>
+          <button id="goLoginFromSub" class="btn-gold">Se connecter</button>
+        </div>
+      </div>
+    </div>`;
+  const offresSection = document.getElementById('offres');
+  offresSection.parentNode.insertBefore(confirmation, offresSection.nextSibling);
+  setTimeout(()=> confirmation.scrollIntoView({behavior:'smooth'}), 100);
+
+  // Clique "Se connecter" => ouvre la modale Membre (login)
+  confirmation.querySelector('#goLoginFromSub')?.addEventListener('click', ()=>{
+    confirmation.remove();
+    // Réaffiche les sections au cas où
+    document.querySelectorAll('section').forEach(s => s.classList.remove('hide-sections'));
+    // Ouvre la modale Membre (onglet Connexion)
+    subscriptionModal.classList.remove('hidden');
+    memberLoginForm.classList.remove('hidden');
+    memberRegisterForm.classList.add('hidden');
+    document.body.style.overflow='hidden';
+    setTimeout(()=>focusFirst('#subscriptionModal'), 50);
+  });
+});
     closeSubscription.addEventListener('click', ()=>{ subscriptionModal.classList.add('hidden'); document.body.style.overflow=''; });
     showRegister.addEventListener('click', e=>{ e.preventDefault(); memberLoginForm.classList.add('hidden'); memberRegisterForm.classList.remove('hidden'); });
     showLogin.addEventListener('click', e=>{ e.preventDefault(); memberRegisterForm.classList.add('hidden'); memberLoginForm.classList.remove('hidden'); });
@@ -2006,7 +2119,15 @@ confirmation.querySelector('#newReadingBtn').addEventListener('click', () => {
     const dashboard = document.getElementById('dashboard');
     const logoutBtn = document.getElementById('logoutBtn');
 
-    const openLogin = ()=>{ loginModal.classList.remove('hidden'); document.body.style.overflow='hidden'; };
+    const openLogin = ()=>{
+  
+// Ouvre la modale Membre 
+  subscriptionModal.classList.remove('hidden');
+  memberLoginForm.classList.remove('hidden');
+  memberRegisterForm.classList.add('hidden');
+  document.body.style.overflow='hidden';
+};
+
     const closeLoginFn = ()=>{ loginModal.classList.add('hidden'); document.body.style.overflow=''; };
     if(loginBtn) loginBtn.addEventListener('click', openLogin);
     footerLogin.addEventListener('click', openLogin);
@@ -2031,8 +2152,9 @@ mobileBtn?.addEventListener('click', ()=>{
   mobileMenu.classList.toggle('hidden');
 });
 loginBtnMobile?.addEventListener('click', ()=>{
-  // réutilise la modale de login existante
-  document.getElementById('loginModal')?.classList.remove('hidden');
+ 
+ // réutilise la modale de login existante
+  document.getElementById('subscriptionModal')?.classList.remove('hidden');
   document.body.style.overflow='hidden';
   mobileMenu.classList.add('hidden');
 });

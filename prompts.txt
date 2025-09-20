@@ -143,21 +143,10 @@ Réorganise et ajuste les textes pour que ça soit très joli
 rajoute un mantra et une question d'introspection dans la synthèse du tirage du pèlerin
 ajoute le nom de la famille des cartes. Quand elle se retournent, enlève le logo oradia. Met en valeur la carte centrale énergie cosmos 
 met en valeur la carte centrale énergie cosmos aussi avant qu'elle soit retournée
-doit ouvrir une boite de dialogue pour se connecter à un espace membre et non au dshboard
-Doit ouvrir une boite de dialogue pour se connecter à l'espace membre de l'utilisateur, pas au dashboard réservé au créateur du site
-modifier le texte pour "espace membre" connectez-vous à votre espace
-doit renvoyer sur les offres
-clic=retour aux offres des tirages
-quand je clic sur "Envie d'un tirage plus complet?" je veux que cela ramène aux offres des trois tirages
-Quand le tirage du pèlerin est quitté, il ne doit plus apparaitre sur la page d'accueil
-quand on quitte le tirage de la traversée il ne doit plus apparaitre sur a page d'accueil
-le tirage de la traversée ne doit pas apparaître sur la page d'accueil lorsque l'utilisateur clic sur quitter le tirage 
-Le tirage de la traversée ne doit plus apparaître sur la page d'accueil après un clic sur le bouton "quitter le tirage de la Traversée"
-modifier en juste Créez votre compte
-ajouter "Déjà un compte ? Se connecter"
-ouvrir une boite de dialogue pour procéder au paiement de l'abonnement après que l'utilisateur clic sur Créer le compte & s'abonner
-ne pas redemander le mail ni date de naissance
-enlever "Vous avez maintenant accès à 5 tirages complets de l'oracle Oradia.
-
-Un e-mail comportant votre code d'accès vous a été envoyé" et remplacer par "Votre espace membre à été créé avec succès, vous pouvez à présent disposer de tout les types de tirages Oradia"
-le message de remerciement pour l'abonnement validé doit être copié de celui de la traversé mais distinct avec un bouton Accéder aux tirages et non Accéder au tirage de la Traversée
+Ce boutton doit ouvrir la modale qui s'ouvre actuellement avec le bouton s'abonner
+ouvre le même formulaire que le boutton s'abonner
+Ne doit pas ouvrir le formulaire de connexion au dashboard
+supprime toutes les fenêtres qu'ouvre ce boutton
+Supprime les fenêtres ouvertes par ce boutton connexion
+Ce boutton ne doit pas ouvrir de fenêtre pour se connecter au dashboard mais une fenêtre pour se connecter aucompte membre ou permettre de le créer
+Ce boutton ne doit pas ouvrir la fenêtre Connexion Dashboard
