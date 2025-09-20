@@ -2132,7 +2132,10 @@ subscribeForm?.addEventListener('submit', (e)=>{
 
     const closeLoginFn = ()=>{ loginModal.classList.add('hidden'); document.body.style.overflow=''; };
     if(loginBtn) loginBtn.addEventListener('click', openLogin);
-    footerLogin.addEventListener('click', openLogin);
+    footerLogin.addEventListener('click', ()=>{
+      loginModal.classList.remove('hidden');
+      document.body.style.overflow='hidden';
+    });
     closeLogin.addEventListener('click', closeLoginFn);
 
     loginFormDashboard.addEventListener('submit', e=>{

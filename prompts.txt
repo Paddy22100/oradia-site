@@ -151,3 +151,5 @@ Supprime les fenêtres ouvertes par ce boutton connexion
 Ce boutton ne doit pas ouvrir de fenêtre pour se connecter au dashboard mais une fenêtre pour se connecter aucompte membre ou permettre de le créer
 Ce boutton ne doit pas ouvrir la fenêtre Connexion Dashboard
 Ne doit pas être affiché sur l'écran d'accueil quand on quitte le mode immerssif du tirage du pèlerin
+Ce boutton doit permettre la connexion au dashboard et pas à l'espace membre
+Doit ouvrir la fenêtre de connexion au Dashboard
