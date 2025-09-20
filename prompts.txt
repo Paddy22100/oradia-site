@@ -153,3 +153,6 @@ Ce boutton ne doit pas ouvrir la fenêtre Connexion Dashboard
 Ne doit pas être affiché sur l'écran d'accueil quand on quitte le mode immerssif du tirage du pèlerin
 Ce boutton doit permettre la connexion au dashboard et pas à l'espace membre
 Doit ouvrir la fenêtre de connexion au Dashboard
+Remplace "Commande Tirage Complet" par "Commande Tirage de la Traversée"
+modifie le titre pour "Commande Tirage de la Traversée"
+Modifie le titre et remplace le texte "Commande Tirage Complet" par le titre "Commande tirage de la Traversée"

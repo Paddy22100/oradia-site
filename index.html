@@ -960,28 +960,24 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
       <button id="closeOrder" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
       <div class="text-center mb-8">
-        <h3 class="cormorant text-3xl text-gold mb-2">Commande Tirage Complet</h3>
-        <p class="text-light-gold">Finalisez votre commande (5€)</p>
+        <h3 class="cormorant text-3xl text-gold mb-2">Commande Tirage de la Traversée</h3>
+        <p class="text-light-gold">Finalisez votre commande pour obtenir l'accès à 5 tirages</p>
       </div>
       <form id="orderForm">
-        <div class="mb-4">
+ 	  <div class="mb-4">
+          <label class="block text-light-gold mb-2">Nom et prénom</label>
+          <input type="text" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+          </div>
+          <div class="mb-4">
           <label class="block text-light-gold mb-2">Email</label>
           <input type="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-        </div>
-        <div class="mb-4">
-          <label class="block text-light-gold mb-2">Nom complet</label>
-          <input type="text" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-        </div>
-        <div class="mb-4">
-          <label class="block text-light-gold mb-2">Date de naissance</label>
-          <input type="date" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-        </div>
-        <div class="mb-6">
+          </div>
+          <div class="mb-6">
           <label class="block text-light-gold mb-2">Moyen de paiement</label>
           <select class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
             <option value="">Sélectionnez...</option>
             <option value="card">Carte bancaire</option>
-            <option value="paypal">PayPal</option>
+            <option value="Gune">PayPal</option>
           </select>
         </div>
         <button type="submit" class="btn-gold w-full">Payer 5€</button>
