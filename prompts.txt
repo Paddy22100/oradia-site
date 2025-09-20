@@ -165,3 +165,8 @@ ajuste la dimension du cadre pour ne pas avoir besoin de sroller pour voir tout 
 lancer le tirage
 Je veux que l'analyse du tirage s'ouvre dans une nouvelle fenêtre avec juste l'analyse qui doit-être détaillée et en lien avec l'intention, les cartes du tirage en miniature sur la gauche, une question d'introspection et un mantra
 Je veux que le résultat du tirage du Pèlerin s'affiche sans le plateau des cartes retournées
+Ce formulaire d'intention doit disparaître après le clic sur le bouton Commencer le tirage dans le tirage du Pèlerin
+le formulaire où l'utilisateur renseigne son intention doit disparaître quand on clic sur le bouton Commencer le tirage et que les cartes apparaissent
+Ce block doit disparaître quand le plateau de carte s'affiche
+Le cadre où l'utilisateur renseigne son intention dans le tirage du pèlerin doit disparaître quand les 4 cartes s'affichent
+quand les 4 cartes du tirage du pèlerin s'affichent, enlever la boite de dialogue de l'intention

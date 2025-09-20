@@ -348,7 +348,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       </div>
 
       <!-- Intention -->
-      <div class="bg-[rgba(18,20,32,.6)] border border-[rgba(212,175,55,.25)] rounded-2xl p-5 mb-6">
+      <!-- Intention -->
+        <div id="intentionBox" class="bg-[rgba(18,20,32,.6)] border border-[rgba(212,175,55,.25)] rounded-2xl p-5 mb-6">
         <div class="flex flex-wrap items-center gap-3">
           <label for="intention" class="text-gold font-semibold">Votre intention :</label>
           <input id="intention" type="text" class="flex-1 w-full min-w-0 bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] rounded-lg p-3 text-light-gold"
@@ -1803,12 +1804,17 @@ $$('.card .back').forEach(back=>{
       intentionIn.reportValidity();
       return;
     }
-    show(board); el('cardsInstruction')?.classList.remove('hidden'); hide(startButton);
-    $$('.card').forEach(card=>{
-      card.classList.remove('flipped');
-      const back = $('.back', card);
-      if(back){ back.style.pointerEvents='auto'; back.setAttribute('aria-pressed','false'); }
-    });
+ show(board);
+el('cardsInstruction')?.classList.remove('hidden');
+hide(startButton);
+el('intentionBox')?.classList.add('hidden'); // 👈 masque le formulaire
+
+$$('.card').forEach(card=>{
+  card.classList.remove('flipped');
+  const back = $('.back', card);
+  if(back){ back.style.pointerEvents='auto'; back.setAttribute('aria-pressed','false'); }
+});
+
   });
 
   // flip cartes (fonction renderFront/polarité déjà dans votre fichier de données)
@@ -1863,10 +1869,16 @@ $$('.card .back').forEach(back=>{
       const pol = card.querySelector('[data-polarity]');
       if(pol){ if(card.dataset.family==='cosmos'){ pol.style.visibility='hidden'; } else { pol.style.visibility='visible'; pol.textContent=''; } }
     });
-    hide(board); el('cardsInstruction')?.classList.add('hidden'); show(startButton);
-    intentionIn.value=''; intentionIn.focus();
-    exitPelerinImmersive();
-    el('accueil')?.scrollIntoView({behavior:'smooth'});
+hide(board);
+el('cardsInstruction')?.classList.add('hidden');
+show(startButton);
+el('intentionBox')?.classList.remove('hidden'); // 👈 réaffiche le formulaire
+
+intentionIn.value='';
+intentionIn.focus();
+exitPelerinImmersive();
+el('accueil')?.scrollIntoView({behavior:'smooth'});
+
   });
 
   // support tactile flip
