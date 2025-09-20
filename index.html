@@ -1860,7 +1860,7 @@ $$('.card').forEach(card=>{
     hide(results); el('fullReading')?.classList.add('hidden');
     resetBtn.classList.add('hidden'); el('emailForm')?.classList.add('hidden');
     linesOut && (linesOut.innerHTML=''); synthOut && (synthOut.innerHTML='');
-    $$('.card').forEach(card=>{
+    $('.card').forEach(card=>{
       card.classList.remove('flipped');
       const back = $('.back', card);
       if(back){ back.style.pointerEvents='auto'; back.setAttribute('aria-pressed','false'); }
@@ -1876,8 +1876,9 @@ el('intentionBox')?.classList.remove('hidden'); // 👈 réaffiche le formulaire
 
 intentionIn.value='';
 intentionIn.focus();
-exitPelerinImmersive();
-el('accueil')?.scrollIntoView({behavior:'smooth'});
+// NE PAS QUITTER LE MODE IMMERSIF - reste en mode immersif
+// exitPelerinImmersive();
+// el('accueil')?.scrollIntoView({behavior:'smooth'});
 
   });
 
