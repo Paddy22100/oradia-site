@@ -1720,8 +1720,11 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     }
 
     function exitPelerinImmersive() {
-      // Réafficher tout
-      document.querySelectorAll('body > header, body > footer, body > section').forEach(n=>n.classList.remove('hide-immersive'));
+      // Réafficher tout sauf la section oracle
+      document.querySelectorAll('body > header, body > footer, body > section:not(#oracle)').forEach(n=>n.classList.remove('hide-immersive'));
+      
+      // Masquer la section oracle
+      document.getElementById('oracle').classList.add('hidden');
       
       // Supprimer le bouton de sortie après un léger délai
       setTimeout(() => {
@@ -1734,7 +1737,6 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         document.getElementById('reset').click();
       } else {
         // Si le bouton reset n'existe pas, réinitialiser manuellement
-        document.getElementById('oracle').classList.add('hidden');
         document.getElementById('board').classList.add('hidden');
         document.getElementById('results').classList.add('hidden');
         document.getElementById('cardsInstruction').classList.add('hidden');
