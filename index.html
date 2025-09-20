@@ -1842,6 +1842,9 @@ $$('.card .back').forEach(back=>{
     el('fullReading')?.classList.remove('hidden');
     resetBtn?.classList.remove('hidden');
     el('emailForm')?.classList.remove('hidden');
+    // Cacher le plateau des cartes
+    hide(board);
+    el('cardsInstruction')?.classList.add('hidden');
     results.scrollIntoView({behavior:'smooth', block:'start'});
   });
 
@@ -2130,6 +2133,23 @@ if (flippedCount === 4) {
     }
   });
 })();
+</script>
+<script>
+// Neutralise tous les liens # qui ne doivent pas scroller
+document.querySelectorAll('a[href="#"]').forEach(a=>{
+  a.addEventListener('click', e => e.preventDefault());
+});
+
+// Smooth-scroll SEULEMENT si l’ancre existe (sinon on bloque)
+document.querySelectorAll('a[href^="#"]:not([href="#"])').forEach(a=>{
+  a.addEventListener('click', e => {
+    const id = a.getAttribute('href').slice(1);
+    const target = document.getElementById(id);
+    if (!target) { e.preventDefault(); return; }
+    e.preventDefault();
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
 </script>
 
 </body>

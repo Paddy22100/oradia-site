@@ -163,3 +163,5 @@ Je veux que le clic sur le bouton "S'abonner" ouvre un formulaire d'inscription 
 ajuste pour ne pas avoir besoin de scroller
 ajuste la dimension du cadre pour ne pas avoir besoin de sroller pour voir tout les champs
 lancer le tirage
+Je veux que l'analyse du tirage s'ouvre dans une nouvelle fenêtre avec juste l'analyse qui doit-être détaillée et en lien avec l'intention, les cartes du tirage en miniature sur la gauche, une question d'introspection et un mantra
+Je veux que le résultat du tirage du Pèlerin s'affiche sans le plateau des cartes retournées
