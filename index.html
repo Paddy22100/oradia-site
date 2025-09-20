@@ -28,44 +28,7 @@
     }
   </script>
 
-  <script>
-    document.addEventListener('DOMContentLoaded', function() {
-      // Gestion de la modale CGV
-      const showCGV = document.getElementById('showCGV');
-      const cgvModal = document.getElementById('cgvModal');
-      const closeCGV = document.getElementById('closeCGV');
-
-      if (showCGV && cgvModal && closeCGV) {
-        showCGV.addEventListener('click', (e) => {
-          e.preventDefault();
-          cgvModal.classList.remove('hidden');
-          document.body.style.overflow = 'hidden';
-        });
-
-        closeCGV.addEventListener('click', () => {
-          cgvModal.classList.add('hidden');
-          document.body.style.overflow = '';
-        });
-
-        // Fermer la modale avec la touche ESC
-        document.addEventListener('keydown', (e) => {
-          if (e.key === 'Escape' && !cgvModal.classList.contains('hidden')) {
-            cgvModal.classList.add('hidden');
-            document.body.style.overflow = '';
-          }
-        });
-
-        // Fermer en cliquant en dehors de la modale
-        cgvModal.addEventListener('click', (e) => {
-          if (e.target === cgvModal) {
-            cgvModal.classList.add('hidden');
-            document.body.style.overflow = '';
-          }
-        });
-      }
-    });
-  </script>
-
+  
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
 
@@ -955,6 +918,37 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     </div>
   </footer>
 
+   <!-- Modal d'analyse -->
+<div id="analyzeModal"
+     class="fixed inset-0 z-[1000] hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="relative w-full max-w-sm mx-4 rounded-2xl border border-gold/40
+              bg-gradient-to-br from-night-blue to-dark-blue p-8 text-center">
+
+    <!-- Animation -->
+    <div class="mx-auto mb-6 relative w-24 h-24">
+      <div class="absolute inset-0 rounded-full border-4 border-gold/30"></div>
+      <div class="absolute inset-0 rounded-full border-4 border-gold
+                  border-t-transparent animate-[spin_1.1s_linear_infinite]"></div>
+      <img src="https://i.ibb.co/Q3vbXP4S/logo.png" alt="Oradia" class="w-10 h-10 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+    </div>
+
+    <h3 class="cormorant text-2xl text-gold mb-2">Analyse en cours…</h3>
+    <p class="text-light-gold/90">Merci de patienter pendant la lecture du tirage.</p>
+
+    <div class="mt-6 h-2 w-full rounded-full bg-gold/10 overflow-hidden">
+      <div class="h-full w-1/3 animate-[loader_1.6s_ease-in-out_infinite] bg-gold"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes loader {
+  0%   { transform: translateX(-100%); }
+  50%  { transform: translateX(50%);   }
+  100% { transform: translateX(200%);  }
+}
+</style>
+
   <!-- Modale Commande -->
   <div id="orderModal" class="fixed inset-0 bg-night-blue/90 z-[100] flex items-center justify-center hidden">
     <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
@@ -1109,26 +1103,6 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <a href="#" id="showLogin" class="text-gold hover:underline">Se connecter</a>
         </p>
       </form>
-    </div>
-  </div>
-
-  <!-- Modale CGV -->
-  <div id="cgvModal" class="fixed inset-0 bg-night-blue/90 z-[100] flex items-center justify-center hidden">
-    <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-4xl w-full mx-4 relative max-h-[90vh] overflow-y-auto">
-      <button id="closeCGV" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
-      <div class="text-center mb-8">
-        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Conditions générales de vente (CGV)</h2>
-      </div>
-      <div class="rounded-2xl p-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
-        <p><strong>Editeur du site :</strong> Oradia, micro-entreprise immatriculée sous le n° [SIRET], dont le siège est situé [adresse]. Contact : [adresse e-mail / tél].</p>
-        <p><strong>Objet :</strong> Le site oradia.fr propose des prestations d'oracle/tarot en ligne : un tirage complet vendu à l'unité et un abonnement mensuel donnant droit à un tirage quotidien.</p>
-        <p><strong>Prix et paiement :</strong> 5 € donnant accès à 5 tirages complets et 8 €/mois pour l'abonnement quotidien. Les paiements sont sécurisés et gérés par Stripe. La validation de la commande implique l'acceptation des présentes CGV.</p>
-        <p><strong>Commande et accès :</strong> Una fois le paiement validé, le tirage est réalisé dans les 48 h et un e-mail récapitulatif est envoyé. L'abonnement est résiliable à tout moment.</p>
-        <p><strong>Droit de rétractation :</strong> Conformément à l'article L221-28 du Code de la consommation, aucun droit de rétractation n'est possible pour les services pleinement exécutés avant la fin du délai de 14 jours. Toutefois, une garantie "satisfait ou remboursé 7 jours" est accordée sur l'abonnement.</p>
-        <p><strong>Protection des données :</strong> Les données collectées (e-mail, date de naissance, etc.) sont stockées chez Brevo et ne sont pas cédées. Vous disposez d'un droit d'accès, de rectification et de suppression sur simple demande.</p>
-        <p><strong>Cookies :</strong> Le site utilise des cookies techniques et ceux de Stripe/Brevo pour le bon fonctionnement. Un bandeau de consentement est affiché.</p>
-        <p><strong>Droit applicable :</strong> Les présentes conditions sont soumises au droit français.</p>
-      </div>
     </div>
   </div>
 
@@ -1352,7 +1326,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
   // ---------- helpers DOM ----------
   const $  = sel => document.querySelector(sel);
-  const $$ = sel => [...document.querySelectorAll(sel)];
+  const $$ = sel => Array.from(document.querySelectorAll(sel)); // ✅
   const el = id  => document.getElementById(id);
 
   // ---------- MODE IMMERSIF ----------
@@ -1599,705 +1573,563 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     const rng = n => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % n; };
     const pick = arr => arr[rng(arr.length)];
 
-    // --------- État tirage ----------
-    let drawn = { emotions:null, besoins:null, actions:null, cosmos:null };
-    let flippedCount = 0;
 
-    // --------- DOM ----------
-    const board = document.getElementById("board");
-    const showBtn = document.getElementById("showResults");
-    const resetBtn = document.getElementById("reset");
-    const linesOut = document.getElementById("lines");
-    const synthOut = document.getElementById("synthese");
-    const intentionIn = document.getElementById("intention");
-    const outIntention = document.getElementById("out-intention");
-    const results = document.getElementById("results");
+/* ---------- Helpers sûrs ---------- */
+const $  = (sel,root=document)=>root.querySelector(sel);
+const $$ = (sel,root=document)=>Array.from(root.querySelectorAll(sel));
+const el = (id)=>document.getElementById(id);
 
-    function renderFront(cardEl, data, family){
-      cardEl.querySelector('[data-name]').textContent = data.name;
-      cardEl.querySelector('[data-quote]').textContent = data.quote;
-      const pol = cardEl.querySelector('[data-polarity]');
-      if(family === "cosmos"){
-        pol.style.visibility = "hidden";
-      } else {
-        pol.style.visibility = "visible";
-        pol.textContent = polarityIcon(data.polarity);
-      }
-    }
+/* Petites utilités */
+function show(n){ n && n.classList.remove('hidden'); }
+function hide(n){ n && n.classList.add('hidden'); }
 
-    function flipCard(cardEl){
-      if(cardEl.classList.contains('flipped')) return;
-      if(!intentionIn.value.trim()){
-        intentionIn.focus();
-        intentionIn.setCustomValidity("Veuillez saisir une intention pour votre tirage");
-        intentionIn.reportValidity();
-        return;
-      }
-      const family = cardEl.dataset.family;
-      const data = pick(DATA[family]);
-      drawn[family] = data;
-
-      renderFront(cardEl, data, family);
-      cardEl.classList.add('flipped');
-      flippedCount++;
-
-      const back = cardEl.querySelector('.back');
-      back.setAttribute('aria-pressed','true');
-      back.style.pointerEvents = 'none';
-
-      if(flippedCount === 4){
-        showBtn.classList.remove('hidden');
-        showBtn.disabled = false;
-      }
-    }
-
-
-    // --------- Interactions ----------
-    // Validation intention live
-    const startButton = document.getElementById('startReading');
-    intentionIn.addEventListener('input', () => {
-      const ok = intentionIn.value.trim().endsWith('?') && intentionIn.value.trim().length > 1;
-      startButton.disabled = !ok;
-    });
-
-    // Lancer le tirage en mode immersif
-    // Lancer le tirage en mode immersif dès que le formulaire apparaît
-    intentionIn.addEventListener('focus', () => {
-      // Masquer header, footer et autres sections
-      document.querySelectorAll('body > header, body > footer, body > section:not(#oracle)').forEach(n=>n.classList.add('hide-immersive'));
-      
-      // Afficher le bouton de sortie
-      if (!document.getElementById('exitPelerinBtn')) {
-        const exitBtn = document.createElement('button');
-        exitBtn.id = 'exitPelerinBtn';
-        exitBtn.className = 'fixed top-4 left-4 z-[100] bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold py-2 px-4 rounded-full shadow-lg';
-        exitBtn.innerHTML = '<i class="fas fa-arrow-left mr-2"></i> Quitter le tirage';
-        exitBtn.addEventListener('click', exitPelerinImmersive);
-        document.body.appendChild(exitBtn);
-      }
-      
-      // Entrer en mode immersif immédiatement
-      enterPelerinImmersive();
-    });
-
-    startButton.addEventListener('click', ()=>{
-      if(!intentionIn.value.trim().endsWith('?')){
-        intentionIn.setCustomValidity("Veuillez formuler une question ouverte se terminant par « ? »");
-        intentionIn.reportValidity();
-        return;
-      }
-      
-      // Afficher le plateau et les instructions
-      board.classList.remove('hidden');
-      document.getElementById('cardsInstruction').classList.remove('hidden');
-      startButton.classList.add('hidden');
-      
-      // Réinitialiser les cartes au cas où
-      document.querySelectorAll('.card').forEach(card => {
-        card.classList.remove('flipped');
-        const back = card.querySelector('.back');
-        back.style.pointerEvents = 'auto';
-        back.setAttribute('aria-pressed','false');
-      });
-    });
-
-    function enterPelerinImmersive() {
-      // Masquer header, footer et autres sections
-      document.querySelectorAll('body > header, body > footer, body > section:not(#oracle)').forEach(n=>n.classList.add('hide-immersive'));
-      
-      // Afficher le bouton de sortie s'il n'existe pas déjà
-      if(!document.getElementById('exitPelerinBtn')) {
-        const exitBtn = document.createElement('button');
-        exitBtn.id = 'exitPelerinBtn';
-        exitBtn.className = 'fixed top-4 left-4 z-[100] bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold py-2 px-4 rounded-full shadow-lg';
-        exitBtn.innerHTML = '<i class="fas fa-arrow-left mr-2"></i> Quitter le tirage';
-        exitBtn.addEventListener('click', exitPelerinImmersive);
-        document.body.appendChild(exitBtn);
-      }
-      
-      // Scroll vers le tirage
-      document.getElementById('oracle').scrollIntoView({behavior:'smooth', block:'start'});
-    }
-
-    function exitPelerinImmersive() {
-      // Réafficher tout sauf la section oracle
-      document.querySelectorAll('body > header, body > footer, body > section:not(#oracle)').forEach(n=>n.classList.remove('hide-immersive'));
-      
-      // Masquer la section oracle
-      document.getElementById('oracle').classList.add('hidden');
-      
-      // Supprimer le bouton de sortie après un léger délai
-      setTimeout(() => {
-        const exitBtn = document.getElementById('exitPelerinBtn');
-        if(exitBtn) exitBtn.remove();
-      }, 500);
-      
-      // Réinitialiser le tirage
-      if(document.getElementById('reset')) {
-        document.getElementById('reset').click();
-      } else {
-        // Si le bouton reset n'existe pas, réinitialiser manuellement
-        document.getElementById('board').classList.add('hidden');
-        document.getElementById('results').classList.add('hidden');
-        document.getElementById('cardsInstruction').classList.add('hidden');
-        document.getElementById('startReading').classList.remove('hidden');
-        document.getElementById('intention').value = '';
-      }
-      
-      // Scroll vers l'accueil et fermer le mode immersif
-      document.getElementById('accueil').scrollIntoView({behavior:'smooth'});
-      document.querySelectorAll('body > header, body > footer, body > section').forEach(n=>n.classList.remove('hide-immersive'));
-    }
-
-    // Click/Enter pour retourner les cartes
-    document.querySelectorAll('.card .back').forEach(back=>{
-      back.addEventListener('click', ()=> flipCard(back.closest('.card')));
-      back.addEventListener('keypress', (e)=> {
-        if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); flipCard(back.closest('.card')); }
-      });
-    });
-
-    // Affichage des résultats
-    showBtn.addEventListener('click', ()=>{
-      const E = drawn.emotions, B = drawn.besoins, A = drawn.actions, C = drawn.cosmos;
-      if(!(E && B && A && C)) return;
-
-      outIntention.textContent = intentionIn.value.trim();
-
-      const line = (label, obj, showPol=true)=>{
-        const pol = "";
-        return `<p><b>${label} :</b> ${obj.name}${pol}<br><i>« ${obj.quote} »</i></p>`;
-      };
-
-      linesOut.innerHTML = `
-        <p style="margin:0 0 8px"><b>VOTRE Tirage :</b></p>
-        ${line("Famille ÉMOTIONS", E)}
-        ${line("Famille BESOINS", B)}
-        ${line("Famille ACTIONS", A)}
-        <div class="p-4 rounded-xl mb-4" style="background: rgba(245, 231, 161, 0.1); border: 1px solid rgba(245, 231, 161, 0.3);">
-          <p class="text-gold font-bold mb-2"><i class="fas fa-star mr-2"></i> Mémoires Cosmos (spéciale)</p>
-          <p><b>${C.name}</b><br><i>« ${C.quote} »</i></p>
-          <p class="mt-2 text-sm">Cette carte révèle les connexions cosmiques et les mémoires profondes qui influencent votre chemin.</p>
-        </div>
-      `;
-
-      const seg = (fam, obj)=>{
-        const polWord = obj.polarity ? polarityLabel(obj.polarity) : null;
-        const yi = yiInsight[fam] || "";
-        const mood = obj.polarity === 'yang' ? "élan, clarté, affirmation"
-                    : obj.polarity === 'yin' ? "réception, écoute, intériorisation"
-                    : "mémoire et perspective";
-        const t1 = fam==="emotions" ? "Ce climat intérieur te propose un point d’appui sincère."
-                : fam==="besoins" ? "Ce besoin précise la juste manière de te relier."
-                : fam==="revelations" ? "Cette révélation ouvre un angle de vue directif."
-                : fam==="actions" ? "Le mouvement proposé invite à matérialiser l’intuition."
-                : "";
-        const polTxt = polWord ? ` Ici, l’${polWord} souffle vers ${mood}.` : ``;
-        return `<p><b>${familyLabels[fam]} :</b> ${obj.name}. ${yi} ${polTxt} <br><i>« ${obj.quote} »</i>. ${t1}</p>`;
-      };
-
-      synthOut.innerHTML = `
-        <div class="mt-3"><b>Synthèse du tirage :</b></div>
-        ${seg("emotions", E)}
-        ${seg("besoins", B)}
-        ${seg("actions", A)}
-        <div class="p-4 rounded-xl mt-4" style="background: rgba(245, 231, 161, 0.1); border: 1px solid rgba(245, 231, 161, 0.3);">
-          <p class="text-gold font-bold mb-2"><i class="fas fa-star mr-2"></i> Lecture d'ensemble</p>
-          <p>La carte Émotion pose le ton, la carte Besoin ajuste le lien, la carte Action éclaire la vision.</p>
-          <p class="mt-2"><b>La carte Mémoires Cosmos</b> est centrale - elle révèle les connexions invisibles et les influences cosmiques sur votre situation. Prenez un moment pour méditer sur son message.</p>
-        </div>
-        <div class="p-4 rounded-xl mt-4" style="background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3);">
-          <p class="text-gold font-bold mb-2"><i class="fas fa-quote-left mr-2"></i> Mantra du jour</p>
-          <p class="text-light-gold italic">"Je m'accueille dans l'instant présent, ouvert à la guidance qui m'est offerte."</p>
-        </div>
-        <div class="p-4 rounded-xl mt-4" style="background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.3);">
-          <p class="text-gold font-bold mb-2"><i class="fas fa-question-circle mr-2"></i> Question d'introspection</p>
-          <p class="text-light-gold">Comment cette guidance résonne-t-elle avec mon intention initiale et quelle action concrète puis-je poser aujourd'hui pour honorer cette résonance ?</p>
-        </div>
-      `;
-
-      results.classList.remove('hidden');
-      document.getElementById('fullReading').classList.remove('hidden');
-      document.getElementById('reset').classList.remove('hidden');
-      document.getElementById('emailForm').classList.remove('hidden');
-      results.scrollIntoView({behavior:'smooth', block:'start'});
-    });
-
-    // Nouveau tirage
-    resetBtn.addEventListener('click', ()=>{
-      // Réinitialiser l'état
-      drawn = {emotions:null, besoins:null, actions:null, cosmos:null};
-      flippedCount = 0;
-      
-      // Masquer les éléments de résultats
-      showBtn.disabled = true;
-      showBtn.classList.add('hidden');
-      results.classList.add('hidden');
-      document.getElementById('fullReading').classList.add('hidden');
-      document.getElementById('reset').classList.add('hidden');
-      document.getElementById('emailForm').classList.add('hidden');
-      linesOut.innerHTML = "";
-      synthOut.innerHTML = "";
-      
-      // Réinitialiser les cartes
-      document.querySelectorAll('.card').forEach(card=>{
-        card.classList.remove('flipped');
-        const back = card.querySelector('.back');
-        back.style.pointerEvents = 'auto';
-        back.setAttribute('aria-pressed','false');
-        card.querySelector('[data-name]').textContent = "—";
-        card.querySelector('[data-quote]').textContent = "—";
-        const pol = card.querySelector('[data-polarity]');
-        if(card.dataset.family === "cosmos"){ 
-          pol.style.visibility = "hidden"; 
-        } else { 
-          pol.style.visibility = "visible"; 
-          pol.textContent = ""; 
-        }
-      });
-
-      // Réafficher le formulaire d'intention
-      board.classList.add('hidden');
-      document.getElementById('cardsInstruction').classList.add('hidden');
-      startButton.classList.remove('hidden');
-      intentionIn.value = "";
-      intentionIn.focus();
-      
-      // Sortir du mode immersif
-      exitPelerinImmersive();
-      
-      // Scroll vers l'accueil
-      document.getElementById('accueil').scrollIntoView({behavior:'smooth'});
-      
-      // Réinitialiser l'animation du marcheur si elle existe
-      const walker = document.querySelector('.absolute.bottom-[15%].left-1/2');
-      if(walker) {
-        walker.style.animation = 'none';
-        walker.offsetHeight; // Trigger reflow
-        walker.style.animation = 'walking_8s_linear_infinite';
-      }
-    });
-
-    // Tirage complet -> aller aux offres
-    document.getElementById('fullReading').addEventListener('click', ()=>{
-      document.querySelector('#offres').scrollIntoView({behavior:'smooth'});
-    });
-
-    // --------- Scroll top ----------
-    const scrollTopBtn = document.getElementById('scrollTop');
-    scrollTopBtn.addEventListener('click', () => {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-    });
-// --- 2.1. Support tactile pour retourner les cartes (Pèlerin) ---
-document.querySelectorAll('.card .back').forEach(back=>{
-  back.addEventListener('touchstart', (e)=>{ 
-    e.preventDefault(); 
-    flipCard(back.closest('.card')); 
-  }, {passive:false});
-});
-
-// --- 2.2. Support tactile Traversée (si les cartes existent déjà dans le DOM) ---
-document.addEventListener('click', (e)=>{
-  const back = e.target.closest?.('.traversee-card-back');
-  if(back){
-    e.preventDefault();
-    const card = back.closest('.traversee-card');
-    if(card){
-      // La flipCard de la Traversée est définie dans le script "traversee-5cards-clean"
-      // On la déclenche en simulant la touche Enter (fallback)
-      back.dispatchEvent(new KeyboardEvent('keypress', {key:'Enter'}));
-    }
-  }
-}, {capture:true});
-
-// --- 2.3. Scroll-to-top performant ---
-let ticking = false;
-window.addEventListener('scroll', ()=>{
-  if(!ticking){
+/* Scroll top button (si présent) */
+function initScrollTop(){
+  const btn = el('scrollTop');
+  if(!btn) return;
+  btn.addEventListener('click', ()=>window.scrollTo({top:0,behavior:'smooth'}));
+  let ticking=false;
+  window.addEventListener('scroll', ()=>{
+    if(ticking) return;
     window.requestAnimationFrame(()=>{
-      if (window.pageYOffset > 300) scrollTopBtn.classList.add('show');
-      else scrollTopBtn.classList.remove('show');
-      ticking = false;
+      (window.pageYOffset>300)? btn.classList.add('show') : btn.classList.remove('show');
+      ticking=false;
     });
-    ticking = true;
-  }
-}, {passive:true});
+    ticking=true;
+  }, {passive:true});
+}
 
-// --- 2.4. Focus automatique dans les modales (accessibilité) ---
-const focusFirst = (rootSel) => {
-  const root = document.querySelector(rootSel);
-  if(!root) return;
-  const first = root.querySelector('input, select, textarea, button, a[href]');
-  first?.focus();
-};
+/* ---------- Modale CGV ---------- */
+function initCGV(){
+  const showCGV = el('showCGV');
+  const cgvModal = el('cgvModal');
+  const closeCGV = el('closeCGV');
+  if(!cgvModal) return;
 
-// Quand on ouvre la modale commande
-document.getElementById('orderBtn')?.addEventListener('click', ()=>{
-  setTimeout(()=>focusFirst('#orderModal'), 50);
-});
+  showCGV?.addEventListener('click', (e)=>{ e.preventDefault(); show(cgvModal); document.body.style.overflow='hidden'; });
+  closeCGV?.addEventListener('click', ()=>{ hide(cgvModal); document.body.style.overflow=''; });
+  cgvModal.addEventListener('click', (e)=>{ if(e.target===cgvModal){ hide(cgvModal); document.body.style.overflow=''; }});
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && !cgvModal.classList.contains('hidden')){ hide(cgvModal); document.body.style.overflow=''; }});
+}
 
+/* ---------- Modale Commande (tirage Traversée) ---------- */
+function initOrderModal(){
+  const orderBtn   = el('orderBtn');
+  const orderModal = el('orderModal');
+  const closeOrder = el('closeOrder');
+  const orderForm  = el('orderForm');
+  if(!orderModal) return;
 
-// Quand on ouvre la modale Connexion (header)
-[document.getElementById('loginBtn'), document.getElementById('footerLogin')].forEach(btn=>{
-  btn?.addEventListener('click', ()=>{
-    setTimeout(()=>focusFirst('#subscriptionModal'), 50);
-  });
-});
+  orderBtn?.addEventListener('click', (e)=>{ e.preventDefault(); show(orderModal); document.body.style.overflow='hidden'; });
+  closeOrder?.addEventListener('click', ()=>{ hide(orderModal); document.body.style.overflow=''; });
 
-    // --------- Modale Commande ----------
-    const orderBtn = document.getElementById('orderBtn');
-    const orderModal = document.getElementById('orderModal');
-    const closeOrder = document.getElementById('closeOrder');
-    const orderForm = document.getElementById('orderForm');
+  orderForm?.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    hide(orderModal); document.body.style.overflow='';
 
-    orderBtn.addEventListener('click', e => { e.preventDefault(); orderModal.classList.remove('hidden'); document.body.style.overflow='hidden'; });
-    closeOrder.addEventListener('click', () => { orderModal.classList.add('hidden'); document.body.style.overflow=''; });
-    orderForm.addEventListener('submit', e => {
-      e.preventDefault();
-      orderModal.classList.add('hidden');
-      document.body.style.overflow='';
-      
-      // Message de confirmation de paiement
-      const confirmation = document.createElement('section');
-      confirmation.id = 'confirmation';
-      confirmation.className = 'py-20 px-6';
-      confirmation.innerHTML = `
-        <div class="container mx-auto max-w-6xl">
-          <div class="text-center mb-12">
-            <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Merci pour votre achat !</h2>
-            <p class="text-light-gold max-w-3xl mx-auto">Votre paiement a été validé avec succès.</p>
-          </div>
-          
-          <div class="rounded-2xl p-8 mx-auto max-w-2xl relative" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
-            <a href="#offres" class="absolute top-4 left-4 text-gold hover:text-light-gold">
-              <i class="fas fa-arrow-left mr-2"></i> Retour aux offres
-            </a>
-            <div class="text-center">
-              <i class="fas fa-check-circle text-6xl text-gold mb-6"></i>
-              <p class="text-light-gold mb-8">Vous avez maintenant accès à 5 tirages complets de l'oracle Oradia.</p>
-    <div class="text-center">
-               <p class="text-light-gold mb-8">Un e-mail comportant votre code d'accès vous a été envoyé</p>
-              <button id="newReadingBtn" class="btn-gold"> Accéder au tirage de la Traversée</button>
-            </div>
+    // Écran "Merci + Accès Traversée"
+    const confirmation = document.createElement('section');
+    confirmation.id = 'confirmation';
+    confirmation.className = 'py-20 px-6';
+    confirmation.innerHTML = `
+      <div class="container mx-auto max-w-6xl">
+        <div class="text-center mb-12">
+          <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Merci pour votre achat !</h2>
+          <p class="text-light-gold max-w-3xl mx-auto">Votre paiement a été validé avec succès.</p>
+        </div>
+        <div class="rounded-2xl p-8 mx-auto max-w-2xl relative" style="background:linear-gradient(145deg, rgba(26,54,93,0.8), rgba(5,20,40,0.9)); border:1px solid rgba(212,175,55,0.3)">
+          <a href="#offres" class="absolute top-4 left-4 text-gold hover:text-light-gold">
+            <i class="fas fa-arrow-left mr-2"></i> Retour aux offres
+          </a>
+          <div class="text-center">
+            <i class="fas fa-check-circle text-6xl text-gold mb-6"></i>
+            <p class="text-light-gold mb-2">Vous avez maintenant accès à 5 tirages complets de l'oracle Oradia.</p>
+            <p class="text-light-gold mb-8">Un e-mail comportant votre code d'accès vous a été envoyé.</p>
+            <button id="newReadingBtn" class="btn-gold">Accéder au tirage de la Traversée</button>
           </div>
         </div>
-      `;
-      
-      // Cacher toutes les sections pendant le message de confirmation de paiement
-      document.querySelectorAll('section').forEach(section => {
-        if(section.id !== 'confirmation') {
-          section.classList.add('hide-sections');
-        }
-      });
-      
-      // Insert after the offres section
-      const offresSection = document.getElementById('offres');
-      offresSection.parentNode.insertBefore(confirmation, offresSection.nextSibling);
-      
-      // Scroll to confirmation
-      setTimeout(() => {
-        confirmation.scrollIntoView({behavior: 'smooth'});
-      }, 100);
-      
-      // Add click handlers
-      confirmation.querySelector('a[href="#offres"]').addEventListener('click', (e) => {
-        e.preventDefault();
-        confirmation.remove();
-        document.querySelectorAll('section').forEach(section => {
-          section.classList.remove('hide-sections');
-        });
-        document.getElementById('offres').scrollIntoView({behavior: 'smooth'});
-      });
+      </div>`;
+    // Masquer temporairement les sections
+    $$('section').forEach(s=>{ if(s.id!=='confirmation') s.classList.add('hide-sections'); });
+    const offres = el('offres');
+    offres?.parentNode?.insertBefore(confirmation, offres.nextSibling);
+    setTimeout(()=>confirmation.scrollIntoView({behavior:'smooth'}),100);
 
-      // Accès direct au formulaire final « Traversée »
-confirmation.querySelector('#newReadingBtn').addEventListener('click', () => {
-  // retirer l’écran “Merci”
-  confirmation.remove();
-  // ré-afficher toutes les sections
-  document.querySelectorAll('section').forEach(s => s.classList.remove('hide-sections'));
+    // Boutons
+    confirmation.querySelector('a[href="#offres"]').addEventListener('click', (e)=>{
+      e.preventDefault();
+      confirmation.remove();
+      $$('section').forEach(s=>s.classList.remove('hide-sections'));
+      el('offres')?.scrollIntoView({behavior:'smooth'});
+    });
 
-  // afficher la section Traversée et montrer le formulaire
-  const travSection = document.getElementById('traversee');
-  const intro = document.getElementById('traversee-intro');
-  const form  = document.getElementById('traversee-form');
-  
-  if (travSection) travSection.classList.remove('hidden');
-  if (intro) intro.classList.add('hidden');
-  if (form) form.classList.remove('hidden');
+    confirmation.querySelector('#newReadingBtn').addEventListener('click', ()=>{
+      confirmation.remove();
+      $$('section').forEach(s=>s.classList.remove('hide-sections'));
+      // Ouvrir directement le formulaire Traversée
+      const trav = el('traversee');
+      const intro = el('traversee-intro');
+      const form  = el('traversee-form');
+      trav && trav.classList.remove('hidden');
+      intro && intro.classList.add('hidden');
+      form && form.classList.remove('hidden');
+      trav?.scrollIntoView({behavior:'smooth'});
+      form?.querySelector('input, textarea, select')?.focus();
+    });
+  });
+}
 
-  // scroll + focus
-  travSection?.scrollIntoView({ behavior: 'smooth' });
-  form?.querySelector('input, textarea, select')?.focus();
-});
-}); 
+/* ---------- Modale Abonnement / Espace membre ---------- */
+function initSubscription(){
+  const subscribeBtn = el('subscribeBtn');
+  const subscriptionModal = el('subscriptionModal');
+  const closeSubscription = el('closeSubscription');
+  const memberLoginForm = el('memberLoginForm');
+  const memberRegisterForm = el('memberRegisterForm');
+  const showRegister = el('showRegister');
+  const showLogin = el('showLogin');
 
-    // --------- Modale Abonnement / Membre ----------
-    const subscribeBtn = document.getElementById('subscribeBtn');
-    const subscriptionModal = document.getElementById('subscriptionModal');
-    const closeSubscription = document.getElementById('closeSubscription');
-    const memberLoginForm = document.getElementById('memberLoginForm');
-    const memberRegisterForm = document.getElementById('memberRegisterForm');
-    const showRegister = document.getElementById('showRegister');
-    const showLogin = document.getElementById('showLogin');
+  if(!subscriptionModal) return;
 
+  const open = ()=>{ show(subscriptionModal); document.body.style.overflow='hidden'; };
+  const close= ()=>{ hide(subscriptionModal); document.body.style.overflow=''; };
 
-const subscribeFormModal = document.getElementById('subscribeFormModal');
-const closeSubscribeForm = document.getElementById('closeSubscribeForm');
-const subscribeForm      = document.getElementById('subscribeForm');
+  subscribeBtn?.addEventListener('click', (e)=>{ e.preventDefault(); open(); });
+  closeSubscription?.addEventListener('click', close);
 
-closeSubscribeForm?.addEventListener('click', ()=>{
-  subscribeFormModal.classList.add('hidden');
-  document.body.style.overflow='';
-});
+  showRegister?.addEventListener('click', (e)=>{ e.preventDefault(); hide(memberLoginForm); show(memberRegisterForm); });
+  showLogin?.addEventListener('click', (e)=>{ e.preventDefault(); hide(memberRegisterForm); show(memberLoginForm); });
 
-subscribeForm?.addEventListener('submit', (e)=>{
-  e.preventDefault();
-  // Ici tu brancheras Stripe plus tard ; pour l’instant on affiche la confirmation
-  subscribeFormModal.classList.add('hidden');
-  document.body.style.overflow='';
+  // “S’abonner” → petite modale de paiement simplifié (si présente)
+  const subscribeFormModal = el('subscribeFormModal');
+  const closeSubscribeForm  = el('closeSubscribeForm');
+  const subscribeForm       = el('subscribeForm');
 
-  // Affiche un message de confirmation + bouton Connexion (réutilise ton pattern de confirmation commande)
-  const confirmation = document.createElement('section');
-  confirmation.id = 'confirmation';
-  confirmation.className = 'py-20 px-6';
-  confirmation.innerHTML = `
-    <div class="container mx-auto max-w-6xl">
-      <div class="text-center mb-12">
-        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Merci pour votre abonnement !</h2>
-        <p class="text-light-gold max-w-3xl mx-auto">Votre abonnement est activé. Un e-mail de bienvenue vous a été envoyé.</p>
-      </div>
-      <div class="rounded-2xl p-8 mx-auto max-w-2xl relative" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
-        <a href="#offres" class="absolute top-4 left-4 text-gold hover:text-light-gold">
-          <i class="fas fa-arrow-left mr-2"></i> Retour aux offres
-        </a>
-        <div class="text-center">
-          <i class="fas fa-check-circle text-6xl text-gold mb-6"></i>
-          <p class="text-light-gold mb-8">Accédez maintenant à votre espace membre.</p>
-          <button id="goLoginFromSub" class="btn-gold">Se connecter</button>
+  closeSubscribeForm?.addEventListener('click', ()=>{ hide(subscribeFormModal); document.body.style.overflow=''; });
+  subscribeForm?.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    hide(subscribeFormModal); document.body.style.overflow='';
+    // Affiche un “Merci + Se connecter”
+    const confirmation = document.createElement('section');
+    confirmation.id = 'confirmation';
+    confirmation.className = 'py-20 px-6';
+    confirmation.innerHTML = `
+      <div class="container mx-auto max-w-6xl">
+        <div class="text-center mb-12">
+          <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Merci pour votre abonnement !</h2>
+          <p class="text-light-gold max-w-3xl mx-auto">Votre abonnement est activé. Un e-mail de bienvenue vous a été envoyé.</p>
         </div>
-      </div>
-    </div>`;
-  const offresSection = document.getElementById('offres');
-  offresSection.parentNode.insertBefore(confirmation, offresSection.nextSibling);
-  setTimeout(()=> confirmation.scrollIntoView({behavior:'smooth'}), 100);
-
-  // Clique "Se connecter" => ouvre la modale Membre (login)
-  confirmation.querySelector('#goLoginFromSub')?.addEventListener('click', ()=>{
-    confirmation.remove();
-    // Réaffiche les sections au cas où
-    document.querySelectorAll('section').forEach(s => s.classList.remove('hide-sections'));
-    // Ouvre la modale Membre (onglet Connexion)
-    subscriptionModal.classList.remove('hidden');
-    memberLoginForm.classList.remove('hidden');
-    memberRegisterForm.classList.add('hidden');
-    document.body.style.overflow='hidden';
-    setTimeout(()=>focusFirst('#subscriptionModal'), 50);
+        <div class="rounded-2xl p-8 mx-auto max-w-2xl relative" style="background:linear-gradient(145deg, rgba(26,54,93,0.8), rgba(5,20,40,0.9)); border:1px solid rgba(212,175,55,0.3)">
+          <a href="#offres" class="absolute top-4 left-4 text-gold hover:text-light-gold">
+            <i class="fas fa-arrow-left mr-2"></i> Retour aux offres
+          </a>
+          <div class="text-center">
+            <i class="fas fa-check-circle text-6xl text-gold mb-6"></i>
+            <p class="text-light-gold mb-8">Accédez maintenant à votre espace membre.</p>
+            <button id="goLoginFromSub" class="btn-gold">Se connecter</button>
+          </div>
+        </div>
+      </div>`;
+    const offres = el('offres');
+    offres?.parentNode?.insertBefore(confirmation, offres.nextSibling);
+    setTimeout(()=>confirmation.scrollIntoView({behavior:'smooth'}),100);
+    confirmation.querySelector('#goLoginFromSub').addEventListener('click', ()=>{
+      confirmation.remove();
+      open(); // ouvre la modale de connexion
+    });
   });
-});
-    closeSubscription.addEventListener('click', ()=>{ subscriptionModal.classList.add('hidden'); document.body.style.overflow=''; });
-    showRegister.addEventListener('click', e=>{ e.preventDefault(); memberLoginForm.classList.add('hidden'); memberRegisterForm.classList.remove('hidden'); });
-    showLogin.addEventListener('click', e=>{ e.preventDefault(); memberRegisterForm.classList.add('hidden'); memberLoginForm.classList.remove('hidden'); });
 
-    memberLoginForm.addEventListener('submit', e=>{
-      e.preventDefault();
-      alert('Connexion réussie ! Redirection vers votre espace membre...');
-      subscriptionModal.classList.add('hidden'); document.body.style.overflow='';
-    });
-    memberRegisterForm.addEventListener('submit', e=>{
-      e.preventDefault();
-      alert('Compte créé ! Abonnement activé.');
-      subscriptionModal.classList.add('hidden'); document.body.style.overflow='';
-    });
-
-    // --------- Modale Login Dashboard ----------
-    const loginBtn = document.getElementById('loginBtn');
-    const footerLogin = document.getElementById('footerLogin');
-    const loginModal = document.getElementById('loginModal');
-    const closeLogin = document.getElementById('closeLogin');
-    const loginFormDashboard = document.getElementById('loginFormDashboard');
-    const dashboard = document.getElementById('dashboard');
-    const logoutBtn = document.getElementById('logoutBtn');
-
-    const openLogin = ()=>{
-  
-// Ouvre la modale Membre 
-  subscriptionModal.classList.remove('hidden');
-  memberLoginForm.classList.remove('hidden');
-  memberRegisterForm.classList.add('hidden');
-  document.body.style.overflow='hidden';
-};
-
-    const closeLoginFn = ()=>{ loginModal.classList.add('hidden'); document.body.style.overflow=''; };
-    if(loginBtn) loginBtn.addEventListener('click', openLogin);
-    footerLogin.addEventListener('click', ()=>{
-      loginModal.classList.remove('hidden');
-      document.body.style.overflow='hidden';
-    });
-    closeLogin.addEventListener('click', closeLoginFn);
-
-    loginFormDashboard.addEventListener('submit', e=>{
-      e.preventDefault(); // démo
-      closeLoginFn();
-      dashboard.classList.remove('hidden');
-      document.body.style.overflow='hidden';
-    });
-    logoutBtn.addEventListener('click', ()=>{
-      dashboard.classList.add('hidden');
-      document.body.style.overflow='';
-    });
-// --- Menu mobile ---
-const mobileBtn = document.getElementById('mobileMenuBtn');
-const mobileMenu = document.getElementById('mobileMenu');
-const loginBtnMobile = document.getElementById('loginBtnMobile');
-
-mobileBtn?.addEventListener('click', ()=>{
-  mobileMenu.classList.toggle('hidden');
-});
-loginBtnMobile?.addEventListener('click', ()=>{
- 
- // réutilise la modale de login existante
-  document.getElementById('subscriptionModal')?.classList.remove('hidden');
-  document.body.style.overflow='hidden';
-  mobileMenu.classList.add('hidden');
-});
-  </script>
-<script>
-/** ====== CONFIG ====== **/
-const API_BASE = "https://api.oradia.fr/api"; // tes endpoints vivent ici
-
-/** POST JSON helper (UTF-8 par défaut) */
-async function postJSON(url, data){
-  const r = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json; charset=utf-8" },
-    body: JSON.stringify(data)
+  // Menus qui ouvrent l’espace membre
+  [el('loginBtn'), el('footerLogin'), el('loginBtnMobile')].forEach(btn=>{
+    btn?.addEventListener('click', (e)=>{ e.preventDefault?.(); open(); });
   });
-  if(!r.ok){
-    const txt = await r.text().catch(()=> "");
-    throw new Error(`HTTP ${r.status} – ${txt || "Erreur serveur"}`);
-  }
-  return r.json();
 }
 
-/** Petits utilitaires d’UI */
-function $(sel){ return document.querySelector(sel); }
-function show(el){ el && el.classList.remove("hidden"); }
-function hide(el){ el && el.classList.add("hidden"); }
+/* ---------- Immersif Pèlerin ---------- */
+function initPelerin(){
+  const board         = el('board');
+  const startButton   = el('startReading');
+  const intentionIn   = el('intention');
+  const showBtn       = el('showResults');
+  const resetBtn      = el('reset');
+  const linesOut      = el('lines');
+  const synthOut      = el('synthese');
+  const results       = el('results');
 
-/** Normalisation symboles au cas où un browser exotique altère l’emoji */
-function normalizeSymbol(s){
-  if(!s) return "—";
-  const n = (s+"").normalize("NFKD");
-  if(n.includes("⚫") || /\u26AB/.test(n)) return "⚫";
-  if(n.includes("🔺") || /\u25B2/.test(n) || /\u1F53A/.test(n)) return "🔺";
-  return "—";
-}
+  if(!board || !startButton || !intentionIn) return;
 
-/** Rendu du texte d’analyse dans #apiOutput */
-function renderOutput(texte){
-  const out = $("#apiOutput");
-  if(!out) return;
-  out.textContent = texte || "—";
-}
-
-/** ====== DEMO Traversée ======
- * Utilise une intention et des cartes d’exemple.
- * Tu brancheras plus tard tes vraies valeurs de formulaire/cartes ici.
- */
-async function demoTraversee(){
-  // On lit l’intention déjà présente en haut de page si dispo
-  const intentEl = $("#intention");
-  const intention = (intentEl && intentEl.value.trim()) || "Intention de test";
-  // Exemple de boussole + pièces
-  const payload = {
-    intention,
-    boussole:{
-      nord:{   carte:"Joie",    polarite:"⚫" },
-      sud:{    carte:"Colère",  polarite:"🔺" },
-      est:{    carte:"Amour",   polarite:"⚫" },
-      ouest:{  carte:"Honte",   polarite:"🔺" }
-    },
-    memoireCosmos:"La Porte",
-    mutations:{
-      emotionsPiece:   "🔺",
-      besoinsPiece:    "⚫",
-      revelationsPiece:"🔺",
-      actionsPiece:    "⚫"
+  function enterPelerinImmersive(){
+    $$('body > header, body > footer, body > section:not(#oracle)').forEach(n=>n.classList.add('hide-immersive'));
+    // bouton sortir
+    if(!el('exitPelerinBtn')){
+      const exitBtn = document.createElement('button');
+      exitBtn.id = 'exitPelerinBtn';
+      exitBtn.className = 'fixed top-4 left-4 z-[100] bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold py-2 px-4 rounded-full shadow-lg';
+      exitBtn.innerHTML = '<i class="fas fa-arrow-left mr-2"></i> Quitter le tirage';
+      exitBtn.addEventListener('click', exitPelerinImmersive);
+      document.body.appendChild(exitBtn);
     }
-  };
-  // Normalisation défensive
-  payload.boussole.nord.polarite   = normalizeSymbol(payload.boussole.nord.polarite);
-  payload.boussole.sud.polarite    = normalizeSymbol(payload.boussole.sud.polarite);
-  payload.boussole.est.polarite    = normalizeSymbol(payload.boussole.est.polarite);
-  payload.boussole.ouest.polarite  = normalizeSymbol(payload.boussole.ouest.polarite);
-  payload.mutations.emotionsPiece    = normalizeSymbol(payload.mutations.emotionsPiece);
-  payload.mutations.besoinsPiece     = normalizeSymbol(payload.mutations.besoinsPiece);
-  payload.mutations.revelationsPiece = normalizeSymbol(payload.mutations.revelationsPiece);
-  payload.mutations.actionsPiece     = normalizeSymbol(payload.mutations.actionsPiece);
-
-  renderOutput("Analyse en cours…");
-  const json = await postJSON(`${API_BASE}/analyse-traversee`, payload);
-  if(json?.ok){
-    renderOutput(json.texte || "—");
-    // Affiche la section “traversee” si elle est masquée
-    show(document.getElementById("traversee"));
-  }else{
-    renderOutput("Erreur: " + (json?.error || "—"));
+    el('oracle')?.scrollIntoView({behavior:'smooth', block:'start'});
   }
-}
-
-/** ====== DEMO Tore ====== */
-async function demoTore(){
-  const intention = "Test Tore via le site";
-  const payload = {
-    intention,
-    familles:{
-      emotions:{      carte:"Tristesse",   polarite:"⚫", piece:"🔺" },
-      besoins:{       carte:"Liberté",     polarite:"🔺", piece:"⚫" },
-      transmutation:{ carte:"Acceptation", polarite:"⚫", piece:"⚫" },
-      archetypes:{    carte:"Merlin",      polarite:"⚫", piece:"🔺" },
-      revelations:{   carte:"Clé",         polarite:"🔺", piece:"⚫" },
-      actions:{       carte:"Agir",        polarite:"🔺", piece:"🔺" }
-    },
-    memoireCosmos:"Synchronicité"
-  };
-  // Normalisation défensive
-  const f = payload.familles;
-  for(const k of Object.keys(f)){
-    f[k].polarite = normalizeSymbol(f[k].polarite);
-    f[k].piece    = normalizeSymbol(f[k].piece);
+  function exitPelerinImmersive(){
+    $$('body > header, body > footer, body > section').forEach(n=>n.classList.remove('hide-immersive'));
+    el('exitPelerinBtn')?.remove();
   }
-  renderOutput("Analyse en cours…");
-  const json = await postJSON(`${API_BASE}/analyse-tore`, payload);
-  if(json?.ok){
-    renderOutput(json.texte || "—");
-    show(document.getElementById("traversee")); 
-// on réutilise la même zone d’affichage
-  }else{
-    renderOutput("Erreur: " + (json?.error || "—"));
-  }
-}
+  window.exitPelerinImmersive = exitPelerinImmersive; // utilisé ailleurs
 
-/** ====== Écouteurs des boutons DEV ====== */
-document.addEventListener("DOMContentLoaded", ()=>{
-  const btnTr = document.getElementById("btnTestTraversee");
-  const btnTo = document.getElementById("btnTestTore");
-  if(btnTr) btnTr.addEventListener("click", ()=> demoTraversee().catch(e=> renderOutput("Erreur: "+e.message)));
-  if(btnTo) btnTo.addEventListener("click", ()=> demoTore().catch(e=> renderOutput("Erreur: "+e.message)));
+  // validation live
+  intentionIn.addEventListener('input', ()=>{
+    const ok = intentionIn.value.trim().endsWith('?') && intentionIn.value.trim().length>1;
+    startButton.disabled = !ok;
+  });
 
-  // Bonus : remonter en haut
-  const scrollTopBtn = document.getElementById("scrollTop");
-  if(scrollTopBtn){
-    window.addEventListener("scroll", ()=>{
-      if(window.scrollY > 300) scrollTopBtn.classList.add("show");
-      else scrollTopBtn.classList.remove("show");
-    });
-    scrollTopBtn.addEventListener("click", ()=> window.scrollTo({top:0, behavior:"smooth"}));
-  }
+  // focus → passe en immersif
+  intentionIn.addEventListener('focus', enterPelerinImmersive);
+
+  // lancer le tirage (on garde vos visuels & animations)
+  startButton.addEventListener('click', ()=>{
+    // activer le clic sur chaque dos de carte
+$$('.card .back').forEach(back=>{
+  const card = back.closest('.card');
+  const onFlip = () => window.flipCard(card);
+  back.addEventListener('click', onFlip);
+  back.addEventListener('keypress', (e)=>{
+    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); onFlip(); }
+  });
 });
+
+    if(!intentionIn.value.trim().endsWith('?')){
+      intentionIn.setCustomValidity("Veuillez formuler une question ouverte se terminant par « ? »");
+      intentionIn.reportValidity();
+      return;
+    }
+    show(board); el('cardsInstruction')?.classList.remove('hidden'); hide(startButton);
+    $$('.card').forEach(card=>{
+      card.classList.remove('flipped');
+      const back = $('.back', card);
+      if(back){ back.style.pointerEvents='auto'; back.setAttribute('aria-pressed','false'); }
+    });
+  });
+
+  // flip cartes (fonction renderFront/polarité déjà dans votre fichier de données)
+  window.flipCard = function(cardEl){
+    if(cardEl?.classList.contains('flipped')) return;
+    if(!intentionIn.value.trim()){
+      intentionIn.focus();
+      intentionIn.setCustomValidity("Veuillez saisir une intention pour votre tirage");
+      intentionIn.reportValidity();
+      return;
+    }
+    // ICI: on suppose que pick(DATA[family]) & polarityIcon existent déjà
+    const family = cardEl.dataset.family;
+    const data = (window.pick && window.DATA)? pick(DATA[family]) : null;
+    if(!data) return; // sécurité
+    cardEl.querySelector('[data-name]').textContent  = data.name || '—';
+    cardEl.querySelector('[data-quote]').textContent = data.quote || '—';
+    const pol = cardEl.querySelector('[data-polarity]');
+    if(family==='cosmos'){ pol.style.visibility='hidden'; }
+    else { pol.style.visibility='visible'; pol.textContent = (window.polarityIcon? polarityIcon(data.polarity) : (data.polarity||'')); }
+    cardEl.classList.add('flipped');
+    const back = cardEl.querySelector('.back'); back?.setAttribute('aria-pressed','true'); if(back) back.style.pointerEvents='none';
+    // Afficher bouton résultat si toutes retournées — votre logique locale peut s’appliquer ici
+    showBtn?.classList.remove('hidden'); if(showBtn) showBtn.disabled=false;
+  };
+
+  // bouton résultats (on garde votre gabarit)
+  showBtn?.addEventListener('click', ()=>{
+    el('out-intention').textContent = intentionIn.value.trim();
+    show(results);
+    el('fullReading')?.classList.remove('hidden');
+    resetBtn?.classList.remove('hidden');
+    el('emailForm')?.classList.remove('hidden');
+    results.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+
+  // reset
+  resetBtn?.addEventListener('click', ()=>{
+    hide(showBtn); showBtn && (showBtn.disabled=true);
+    hide(results); el('fullReading')?.classList.add('hidden');
+    resetBtn.classList.add('hidden'); el('emailForm')?.classList.add('hidden');
+    linesOut && (linesOut.innerHTML=''); synthOut && (synthOut.innerHTML='');
+    $$('.card').forEach(card=>{
+      card.classList.remove('flipped');
+      const back = $('.back', card);
+      if(back){ back.style.pointerEvents='auto'; back.setAttribute('aria-pressed','false'); }
+      card.querySelector('[data-name]').textContent='—';
+      card.querySelector('[data-quote]').textContent='—';
+      const pol = card.querySelector('[data-polarity]');
+      if(pol){ if(card.dataset.family==='cosmos'){ pol.style.visibility='hidden'; } else { pol.style.visibility='visible'; pol.textContent=''; } }
+    });
+    hide(board); el('cardsInstruction')?.classList.add('hidden'); show(startButton);
+    intentionIn.value=''; intentionIn.focus();
+    exitPelerinImmersive();
+    el('accueil')?.scrollIntoView({behavior:'smooth'});
+  });
+
+  // support tactile flip
+  $$('.card .back').forEach(back=>{
+    back.addEventListener('touchstart', (e)=>{ e.preventDefault(); window.flipCard(back.closest('.card')); }, {passive:false});
+  });
+}
+
+/* ---------- Mobile menu ---------- */
+function initMobileMenu(){
+  const mobileBtn = el('mobileMenuBtn');
+  const mobileMenu = el('mobileMenu');
+  const loginBtnMobile = el('loginBtnMobile');
+  mobileBtn?.addEventListener('click', ()=> mobileMenu?.classList.toggle('hidden'));
+  loginBtnMobile?.addEventListener('click', ()=>{
+    el('subscriptionModal')?.classList.remove('hidden'); document.body.style.overflow='hidden';
+    mobileMenu?.classList.add('hidden');
+  });
+}
+
+/* ---------- Boot ---------- */
+document.addEventListener('DOMContentLoaded', ()=>{
+  initScrollTop();
+  initCGV();          /* CGV propres */                /* Réf: scripts CGV multiples nettoyés */
+  initOrderModal();   /* Paiement Traversée + Merci */ /* Réf: confirmation + accès direct Traversée */
+  initSubscription(); /* Espace membre */              /* Réf: doublons supprimés */
+  initPelerin();      /* Tirage Pèlerin immersif */
+  initTraversee();    /* Tirage Traversée immersif */
+  initMobileMenu();   /* Menu mobile */
+});
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // cibler toutes les cartes du Pèlerin
+  document.querySelectorAll("#board .card").forEach(card => {
+    const back = card.querySelector(".back");
+
+    back.addEventListener("click", () => {
+      // ajoute la classe flipped sur la carte
+      card.classList.add("flipped");
+    });
+
+    // accessibilité : activation aussi avec la touche Entrée/Espace
+    back.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        card.classList.add("flipped");
+      }
+    });
+  });
+});
+</script>
+<script>
+(() => {
+  // --- DEBUG VISUEL DANS LA CONSOLE ---
+  const LOG = (...a) => console.log('[Pèlerin]', ...a);
+
+  // --- Données minimalistes (tu pourras les remplacer par tes vraies listes) ---
+  const DATA = {
+    emotions: [
+      { name:'JOIE',      quote:'« Une onde dit oui à la vie. »',       pol:'yang' },
+      { name:'TRISTESSE', quote:'« Je laisse couler pour me délester. »', pol:'yin'  },
+      { name:'COLÈRE',    quote:'« Mon feu met des limites justes. »',   pol:'yang' },
+      { name:'PEUR',      quote:'« Je regarde l’inconnu avec douceur. »', pol:'yin'  },
+    ],
+    besoins: [
+      { name:'CLARTÉ',    quote:'« Dire vrai, voir net. »',              pol:'yang' },
+      { name:'SÉCURITÉ',  quote:'« Être en paix dans mon nid. »',        pol:'yin'  },
+      { name:'LIBERTÉ',   quote:'« Respirer grand, agir juste. »',       pol:'yang' },
+      { name:'REPOS',     quote:'« J’écoute mon rythme. »',              pol:'yin'  },
+    ],
+    actions: [
+      { name:'AGIR',      quote:'« Un pas concret vaut mille pensées. »', pol:'yang' },
+      { name:'PARTAGER',  quote:'« Offrir relie, et ça circule. »',       pol:'yang' },
+      { name:'CRÉER',     quote:'« Laisser mes mains parler. »',          pol:'yang' },
+      { name:'CHOISIR',   quote:'« Trancher, c’est se rassembler. »',     pol:'yang' },
+    ],
+    cosmos: [
+      { name:'PORTE',     quote:'« Une ouverture se présente. »' },
+      { name:'CLÉ',       quote:'« Un déclic réunit les pièces. »' },
+      { name:'MESSAGE',   quote:'« Un signe clair te répond. »' },
+    ],
+  };
+
+  const $  = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+
+  // Récupère les éléments du Pèlerin (ils existent bien dans ton HTML)
+  const intentionIn = $('#intention');
+  const startBtn    = $('#startReading');
+  const board       = $('#board');
+  const cardsInstr  = $('#cardsInstruction');
+  const cards       = $$('#board .card');
+
+  if (!intentionIn || !startBtn || !board || cards.length === 0) {
+    console.error('[Pèlerin] Sélecteurs introuvables. Vérifie que #oracle n’est pas supprimé et que #board contient .card');
+    return;
+  }
+
+  let flippedCount = 0;
+
+  // Affiche le plateau et reset proprement
+  startBtn.addEventListener('click', () => {
+    if (!intentionIn.value.trim()) {
+      intentionIn.focus();
+      intentionIn.setCustomValidity('Veuillez saisir une intention pour votre tirage.');
+      intentionIn.reportValidity();
+      return;
+    }
+    intentionIn.setCustomValidity('');
+
+    board.classList.remove('hidden');
+    cardsInstr.classList.remove('hidden');
+
+    flippedCount = 0;
+    cards.forEach(card => {
+      card.classList.remove('flipped');
+      // Remet des tirets AVANT tout clic
+      card.querySelector('[data-name]')?.replaceChildren(document.createTextNode('—'));
+      card.querySelector('[data-quote]')?.replaceChildren(document.createTextNode('—'));
+      const pol = card.querySelector('[data-polarity]');
+      if (pol) pol.textContent = '';
+      const back = card.querySelector('.back');
+      if (back) {
+        back.style.pointerEvents = 'auto';
+        back.setAttribute('aria-pressed', 'false');
+      }
+    });
+
+    LOG('Plateau affiché. Intention =', intentionIn.value.trim());
+  });
+
+  // Injections + flip au clic
+  cards.forEach(card => {
+    const back = card.querySelector('.back');
+    if (!back) return;
+
+    const runFlip = () => {
+      try {
+        if (card.classList.contains('flipped')) return;
+
+        if (!intentionIn.value.trim()) {
+          intentionIn.focus();
+          intentionIn.setCustomValidity('Veuillez saisir une intention pour votre tirage.');
+          intentionIn.reportValidity();
+          return;
+        }
+        intentionIn.setCustomValidity('');
+
+        const family = (card.dataset.family || '').toLowerCase(); // emotions|besoins|actions|cosmos
+        const pool = DATA[family];
+        if (!pool || !pool.length) {
+          console.warn('[Pèlerin] Pas de DATA pour la famille:', family);
+          return;
+        }
+
+        const data = pick(pool);
+        LOG('Flip carte', family, '→', data);
+
+        // Injection SÛRE : remplace le contenu des placeholders
+        const nameEl  = card.querySelector('[data-name]');
+        const quoteEl = card.querySelector('[data-quote]');
+        if (nameEl)  nameEl.replaceChildren(document.createTextNode(data.name));
+        if (quoteEl) quoteEl.replaceChildren(document.createTextNode(data.quote));
+
+        // Polarité (sauf cosmos)
+        const polEl = card.querySelector('[data-polarity]');
+        if (polEl) {
+          if (family === 'cosmos') {
+            polEl.textContent = '';
+          } else {
+            // Convention Oradia : triangle = Yang, rond = Yin
+            const isYang = (data.pol || '').toLowerCase() === 'yang';
+            polEl.textContent = isYang ? '▲' : '●';
+            polEl.title = isYang ? 'Yang' : 'Yin';
+            polEl.setAttribute('aria-label', isYang ? 'Yang' : 'Yin');
+          }
+        }
+
+        // Flip visuel
+        card.classList.add('flipped');
+        flippedCount++;
+
+        // Quand les 4 cartes sont retournées, on révèle le bouton "Afficher le résultat"
+if (flippedCount === 4) {
+  const showBtn = document.getElementById('showResults');
+  if (showBtn) {
+    showBtn.classList.remove('hidden');
+    showBtn.disabled = false;
+  }
+}
+
+        // Bloque la face back après le flip
+        back.setAttribute('aria-pressed', 'true');
+        back.style.pointerEvents = 'none';
+
+      } catch (e) {
+        console.error('[Pèlerin] Erreur flip/injection:', e);
+      }
+    };
+
+    back.addEventListener('click', runFlip);
+    back.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); runFlip(); }
+    });
+  });
+
+  LOG('Init Pèlerin OK. Cartes détectées =', cards.length);
+})();
+</script>
+<script>
+// Bouton "Afficher le résultat du tirage" + modal d'analyse
+(function(){
+  const showBtn   = document.getElementById('showResults');
+  const modal     = document.getElementById('analyzeModal');
+  const resultsEl = document.getElementById('results');
+  const linesEl   = document.getElementById('lines');
+  const outInt    = document.getElementById('out-intention');
+  const intention = document.getElementById('intention');
+
+  if(!showBtn) return;
+
+  showBtn.addEventListener('click', async () => {
+    // 1) Ouvre le modal et bloque le scroll
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+
+    try {
+      // 2) (ici tu pourras appeler ton API; on simule un petit délai)
+      await new Promise(r => setTimeout(r, 5000));
+
+      // 3) Récupère ce qui est déjà affiché sur les cartes retournées (robuste si "drawn" est dans une IIFE)
+      const get = fam => {
+        const card = document.querySelector(`#board .card[data-family="${fam}"]`);
+        if(!card) return {name:'—', quote:''};
+        const name  = card.querySelector('[data-name]')?.textContent?.trim() || '—';
+        const quote = card.querySelector('[data-quote]')?.textContent?.trim() || '';
+        return {name, quote};
+      };
+      const em  = get('emotions');
+      const be  = get('besoins');
+      const ac  = get('actions');
+      const co  = get('cosmos');
+
+      // 4) Remplit la section Résultats
+      outInt.textContent = (intention?.value?.trim() || '—');
+      linesEl.innerHTML = `
+        <p><b>Émotions :</b> ${em.name} — ${em.quote}</p>
+        <p><b>Besoins :</b> ${be.name} — ${be.quote}</p>
+        <p><b>Actions :</b> ${ac.name} — ${ac.quote}</p>
+        <p><b>Mémoire Cosmos :</b> ${co.name} — ${co.quote}</p>
+      `;
+      resultsEl.classList.remove('hidden');
+
+    } finally {
+      // 5) Ferme le modal et réactive le scroll
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = '';
+      // (optionnel) cacher le bouton après usage
+      showBtn.classList.add('hidden');
+    }
+  });
+})();
 </script>
 
 </body>
