@@ -965,7 +965,11 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       </div>
       <form id="orderForm">
  	  <div class="mb-4">
-          <label class="block text-light-gold mb-2">Nom et prénom</label>
+          <label class="block text-light-gold mb-2">Nom</label>
+          <input type="text" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+          </div>
+  	  <div class="mb-4">
+          <label class="block text-light-gold mb-2">Prénom</label>
           <input type="text" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
           </div>
           <div class="mb-4">
@@ -2270,7 +2274,8 @@ async function demoTore(){
   const json = await postJSON(`${API_BASE}/analyse-tore`, payload);
   if(json?.ok){
     renderOutput(json.texte || "—");
-    show(document.getElementById("traversee")); // on réutilise la même zone d’affichage
+    show(document.getElementById("traversee")); 
+// on réutilise la même zone d’affichage
   }else{
     renderOutput("Erreur: " + (json?.error || "—"));
   }

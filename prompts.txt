@@ -156,3 +156,7 @@ Doit ouvrir la fenêtre de connexion au Dashboard
 Remplace "Commande Tirage Complet" par "Commande Tirage de la Traversée"
 modifie le titre pour "Commande Tirage de la Traversée"
 Modifie le titre et remplace le texte "Commande Tirage Complet" par le titre "Commande tirage de la Traversée"
+je veux que le tirage de la traversée s'ouvre en mode immerssif
+je veux que le mode immersif du tirage de la traversée démarre dès le clic sur ce bouton "Accéder au tirage de la Traversée"
+Je veux que le tirage de la traversée s'ouvre en mode immersif dès le clic sur le bouton "Accéder au tirage de la Traversée"
+Je veux que le clic sur le bouton "S'abonner" ouvre un formulaire d'inscription pour créer un espace membre ou se connecter
