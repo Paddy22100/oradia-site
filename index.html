@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="fr">
 <head>
@@ -74,7 +73,7 @@
     grid-area: auto !important; /* empile proprement en 1 colonne */
   }
 }
-    .pos-1{grid-area:1/1} .pos-2{grid-area:1/2} .pos-3{grid-area:1/5} .pos-4{grid-area:1/3} .pos-5{grid-area:1/4}
+    .pos-1{grid-area:1/1} .pos-2{grid-area:1/2} .pos-3{grid-area:1/3} .pos-4{grid-area:1/4} .pos-5{grid-area:1/5}
 
     .card{ width:min(280px,90vw); height:400px; perspective:1000px; transition:.3s transform }
     @media(max-width:400px){ .card{ height:360px } }
@@ -232,6 +231,89 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 @media (prefers-reduced-motion: reduce){
   *{ animation: none !important; transition: none !important; }
 }
+/* ------- Pèlerin : éventail multi-choix + dock (fix) ------- */
+#board{ padding-top: 28px; padding-bottom: 8px; }           /* pousse la section */
+.fan-wrap{
+  position:relative;
+  width:min(1200px, 96vw);
+  margin: 24px auto 0;                                       /* descend l’éventail */
+  height: 460px;                                             /* réserve l'espace */
+  pointer-events:none;
+}
+.fan-wrap .card{
+  position:absolute; top:50%; left:50%;
+  transform-origin:50% 85%;
+  width:240px; height:360px;
+  pointer-events:auto; background:transparent;
+  will-change:transform, box-shadow, opacity;
+  transition: transform 420ms cubic-bezier(.2,.7,.2,1), box-shadow 220ms ease, opacity .25s ease;
+}
+/* >>> rayon POSITIF = éventail plus BAS dans la page */
+.fan-wrap .card[data-angle]{ transform: translate(-50%,-50%) rotate(var(--angle)) translateY(var(--radius, 160px)); }
+
+.fan-wrap .card:not(.flipped):hover{
+  transform: translate(-50%,-50%) rotate(calc(var(--angle)*1.02)) translateY(calc(var(--radius, 160px) - 12px));
+  box-shadow:0 14px 26px rgba(0,0,0,.35);
+}
+
+/* flip + zoom */
+.fan-wrap .card.flipped{ z-index: 900; }
+.fan-wrap .card.flipped .card-inner{ transform: rotateY(180deg); transition: transform 680ms cubic-bezier(.2,.65,.2,1); }
+.fan-wrap .card.zooming{
+  transition: transform 420ms cubic-bezier(.2,.8,.2,1), box-shadow 300ms ease;
+  transform: translate(-50%,-58%) rotate(0deg) scale(1.08);
+  box-shadow:0 22px 36px rgba(0,0,0,.4);
+}
+.fan-wrap .card.docking{ transition: transform 520ms cubic-bezier(.22,.9,.12,1); box-shadow:none; }
+
+/* Dock (slots) */
+.choice-tray{ position:relative; width:min(1200px, 96vw); margin:6px auto 0; padding:14px 10px 22px; border-top:1px solid rgba(212,175,55,.28); }
+.choice-tray .slots{ display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; }
+.choice-tray .slot{
+  position:relative; height:210px; border:1px dashed rgba(245,231,161,.35); border-radius:14px;
+  display:flex; align-items:center; justify-content:center; color:#f5e7a1; font-size:.95rem;
+  background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00));
+}
+.choice-tray .slot.filled{ border-style:solid; border-color:rgba(245,231,161,.55); background:rgba(245,231,161,.06); }
+
+/* Mini-carte une fois ancrée en bas */
+.card.mini{
+  position:relative !important;
+  left:auto !important; top:auto !important;
+  width: 170px; height: 250px;
+  transform: none !important;
+  margin: 0 auto;
+}
+.card.mini .card-inner{ box-shadow: var(--shadow); }
+.card.mini .face{ border-width:1px; }
+
+/* Pastille d'étape */
+.step-chip{ display:inline-flex; align-items:center; gap:.5rem; padding:.35rem .6rem; border:1px solid rgba(245,231,161,.45);
+  border-radius:999px; color:#f5e7a1; font-size:.9rem; background:rgba(10,25,47,.35); }
+
+/* Mobile */
+@media (max-width:640px){
+  .fan-wrap{ height: 360px; }
+  .fan-wrap .card{ width:200px; height:300px; }
+  .fan-wrap .card[data-angle]{ --radius: 120px; }           /* bas aussi sur mobile */
+  .choice-tray .slot{ height:180px; }
+  .card.mini{ width:150px; height:220px; }
+}
+/* --- Carte miniature affichée dans les slots --- */
+.slot .mini-card{
+  position: relative;
+  width: 180px;               /* adapte si tu veux plus grand */
+  height: 270px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 12px 24px rgba(0,0,0,.35);
+}
+.slot .mini-card .card-inner{
+  transform: none !important;     /* PAS de flip 3D dans le slot */
+  transition: none !important;
+}
+.slot .mini-card .back{ display:none !important; }  /* on ne montre que la face avant */
+.slot .mini-card .front{ height:100%; }
 
   </style>
 </head>
@@ -367,87 +449,29 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       </p>
 
       <!-- Plateau (caché au départ) -->
-      <section class="board hidden" id="board" aria-live="polite">
-        <!-- ÉMOTIONS -->
-        <article class="card pos-1" data-family="emotions" aria-label="Carte Émotions">
-          <div class="card-inner">
-            <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Émotions">
-              <div class="logo-circle" aria-hidden="true"></div>
-            </div>
-            <div class="face front">
-              <div class="topbar">
-                <span class="chip"><i class="fas fa-heart mr-1"></i> ÉMOTIONS</span>
-                <span class="polarity" data-polarity></span>
-              </div>
-              <div class="art"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
-              <div class="bottom"></div>
-            </div>
-          </div>
-        </article>
+<section id="board" class="hidden" aria-live="polite">
+  <div class="flex items-center justify-between max-w-5xl mx-auto mb-2">
+    <span class="step-chip" id="stepInfo">Étape 1/4 • Choisis ta carte ÉMOTIONS</span>
+    <button id="resetPilgrim" class="text-light-gold underline opacity-80 hover:opacity-100">Réinitialiser</button>
+  </div>
 
-        <!-- BESOINS -->
-        <article class="card pos-2" data-family="besoins" aria-label="Carte Besoins">
-          <div class="card-inner">
-            <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Besoins">
-              <div class="logo-circle" aria-hidden="true"></div>
-            </div>
-            <div class="face front">
-              <div class="topbar">
-                <span class="chip"><i class="fas fa-hands-helping mr-1"></i> BESOINS</span>
-                <span class="polarity" data-polarity></span>
-              </div>
-              <div class="art"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
-              <div class="bottom"><span data-icon></span></div>
-            </div>
-          </div>
-        </article>
+  <div class="fan-wrap" id="fanBoard"></div>
 
-        <!-- MÉMOIRE COSMOS -->
-        <article class="card pos-3" data-family="cosmos" aria-label="Carte Mémoire Cosmos">
-          <div class="card-inner" style="box-shadow: 0 0 25px rgba(245, 231, 161, 0.6);">
-            <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Mémoire Cosmos">
-              <div class="logo-circle" style="border-color: #f5e7a1; border-width: 8px; box-shadow: 0 0 20px rgba(245, 231, 161, 0.8); background: radial-gradient(circle, rgba(245, 231, 161, 0.2) 0%, transparent 70%);" aria-hidden="true"></div>
-            </div>
-            <div class="face front" style="background: radial-gradient(900px 600px at 30% -10%, rgba(245, 231, 161, 0.3), transparent 60%), linear-gradient(165deg, #0c1f40, #0b1d3a 45%, #0a1833 100%);">
-              <div class="topbar" style="border-bottom-color: rgba(245, 231, 161, 0.6);">
-                <span class="chip" style="background: rgba(245, 231, 161, 0.2); border-color: rgba(245, 231, 161, 0.8); color: #f5e7a1; text-shadow: 0 0 5px rgba(245, 231, 161, 0.5);">
-                  <i class="fas fa-star-and-crescent mr-1"></i> Mémoire Cosmos
-                </span>
-                <span class="polarity" data-polarity style="visibility:hidden"></span>
-              </div>
-              <div class="art" style="border-color: rgba(245, 231, 161, 0.6);">
-                <div>
-                  <h3 data-name style="color: #f5e7a1; text-shadow: 0 0 10px rgba(245, 231, 161, 0.7);">—</h3>
-                  <div class="quote" data-quote>—</div>
-                </div>
-              </div>
-              <div class="bottom" style="border-top-color: rgba(245, 231, 161, 0.4);"></div>
-            </div>
-          </div>
-        </article>
+  <div class="choice-tray" id="tray">
+    <div class="slots">
+      <div class="slot" id="slot-0" aria-label="Carte ÉMOTIONS">ÉMOTIONS</div>
+      <div class="slot" id="slot-1" aria-label="Carte BESOINS">BESOINS</div>
+      <div class="slot" id="slot-2" aria-label="Carte MÉMOIRE COSMOS">MÉMOIRE COSMOS</div>
+      <div class="slot" id="slot-3" aria-label="Carte ACTIONS">ACTIONS</div>
+    </div>
+  </div>
 
-        <!-- ACTIONS -->
-        <article class="card pos-4" data-family="actions" aria-label="Carte Actions">
-          <div class="card-inner">
-            <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte Actions">
-              <div class="logo-circle" aria-hidden="true"></div>
-            </div>
-            <div class="face front">
-              <div class="topbar">
-                <span class="chip"><i class="fas fa-walking mr-1"></i> ACTIONS</span>
-                <span class="polarity" data-polarity></span>
-              </div>
-              <div class="art"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
-              <div class="bottom"><span data-icon></span></div>
-            </div>
-          </div>
-        </article>
-
-      </section>
-
-      <div class="text-center mt-4">
-        <button id="showResults" class="btn-gold hidden" disabled>Afficher le résultat du tirage</button>
-      </div>
+  <div class="text-center mt-4">
+    <button id="showResults" class="hidden px-6 py-3 border border-gold text-light-gold rounded-lg hover:bg-gold hover:text-dark-blue transition disabled:opacity-40" disabled>
+      Afficher l’analyse
+    </button>
+  </div>
+</section>
 
       <section id="results" class="hidden mt-6">
         <h2 class="cormorant text-3xl text-gold mb-3">Résultats du tirage</h2>
@@ -2163,6 +2187,377 @@ document.querySelectorAll('a[href^="#"]:not([href="#"])').forEach(a=>{
     target.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 });
+</script>
+<script>
+(function(){
+  // ---- Paramètres des familles et ordre des étapes ----
+  const STEPS = [
+    { key:'emotions', label:'ÉMOTIONS',    count:18 },
+    { key:'besoins',  label:'BESOINS',     count:18 },
+    { key:'cosmos',   label:'MÉMOIRE COSMOS', count:10 }, // ⚠️ 10
+    { key:'actions',  label:'ACTIONS',     count:18 },
+  ];
+
+  const fan = document.getElementById('fanBoard');
+  const tray = document.getElementById('tray');
+  const stepInfo = document.getElementById('stepInfo');
+  const resetBtn = document.getElementById('resetPilgrim');
+  const showBtn  = document.getElementById('showResults');
+  const boardSec = document.getElementById('board');
+
+  if(!fan || !tray) return;
+
+  // ----- État -----
+  let stepIndex = 0;
+  const picks = [null,null,null,null]; // stocke ce que tu veux (id/titre/etc.)
+
+  // ----- Helpers -----
+  const el = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel));
+
+  function updateStepChip(){
+    const s = STEPS[stepIndex];
+    stepInfo.textContent = `Étape ${stepIndex+1}/4 • Choisis ta carte ${s.label}`;
+  }
+
+  function clearFan(){
+    fan.innerHTML = '';
+  }
+
+  // Place un éventail de N cartes dos
+  function renderFan(){
+    clearFan();
+    const {count} = STEPS[stepIndex];
+    const span   = Math.min(46, 16 + count); // ouverture de l'arc
+    const start  = -span/2;
+    const radius = -150;
+
+    for(let i=0;i<count;i++){
+      const a = start + (i * (span/Math.max(count-1,1)));
+      const art = document.createElement('article');
+      art.className = 'card';
+      art.dataset.angle = a.toFixed(2);
+      art.style.setProperty('--angle', a+'deg');
+      art.style.setProperty('--radius', radius+'px');
+
+      // structure minimale (dos + face) – garde ta structure si tu as déjà .card-inner/.back/.front
+      art.innerHTML = `
+        <div class="card-inner">
+          <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte">
+            <div class="logo-circle" aria-hidden="true"></div>
+          </div>
+          <div class="face front">
+            <div class="topbar">
+              <span class="chip">${STEPS[stepIndex].label}</span>
+              <span class="polarity" data-polarity></span>
+            </div>
+            <div class="art"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
+            <div class="bottom"></div>
+          </div>
+        </div>
+      `;
+      // apparition progressive
+      art.style.opacity = '0';
+      art.style.transform = `translate(-50%,-50%) rotate(${a}deg) translateY(${radius}px) scale(.98)`;
+      fan.appendChild(art);
+      setTimeout(()=>{ art.style.opacity='1'; art.style.transform = `translate(-50%,-50%) rotate(${a}deg) translateY(${radius}px)`; }, i*40);
+
+      // events
+      const back = art.querySelector('.back');
+      back.addEventListener('click', ()=> onPick(art, i));
+    }
+  }
+
+  // Obtient la position (centre) d'un slot, en coordonnées du conteneur fan/tray parent
+  function slotCenter(index){
+    const slot = document.getElementById(`slot-${index}`);
+    const slotBox = slot.getBoundingClientRect();
+    const wrapBox = boardSec.getBoundingClientRect(); // section parent pour référentiel stable
+    const cx = slotBox.left + slotBox.width/2 - wrapBox.left;
+    const cy = slotBox.top  + slotBox.height/2 - wrapBox.top;
+    return {cx, cy};
+  }
+
+  // Animation : flip -> zoom -> dock
+  function onPick(card, i){
+    if(card.classList.contains('flipped')) return;
+
+    const back = card.querySelector('.back');
+    back.setAttribute('aria-pressed','true');
+    back.style.pointerEvents='none';
+
+    // >>> Ici, si tu veux, injecte vraiment la "vraie carte" choisie aléatoirement dans la famille
+    // (titre, citation, polarité…). Exemple :
+    // injectCardFront(card, STEPS[stepIndex].key, i);
+
+    // 1) flip
+    card.classList.add('flipped');
+
+    // 2) zoom focus au centre
+    setTimeout(()=>{ card.classList.add('zooming'); }, 120);
+
+        // 3) dock -> on CLONE la carte retournée et on l'insère dans le slot
+    const targetIndex = stepIndex;                   // 0..3, correspond bien à slot-0..slot-3
+    const slot = document.getElementById(`slot-${targetIndex}`);
+
+    // calcule d’abord l’animation de la grande carte (vers le slot)
+    const {cx, cy} = slotCenter(targetIndex);
+    const secBox  = boardSec.getBoundingClientRect();
+    const box     = card.getBoundingClientRect();
+    const centerX = box.left + box.width/2 - secBox.left;
+    const centerY = box.top  + box.height/2 - secBox.top;
+    const dx = cx - centerX;
+    const dy = cy - centerY;
+
+    // remplis la face avant (évite le vide)
+    fillFront(card, STEPS[stepIndex].key);
+
+    setTimeout(()=>{
+      card.classList.remove('zooming');
+      card.classList.add('docking');
+      // animation de déplacement de la grande carte vers le slot
+      card.style.transform =
+        `translate(-50%,-50%) rotate(0deg) translate(${dx}px, ${dy}px) scale(.66)`;
+    }, 650);
+
+    // quand l’anim est finie : on clone la face avant et on la place DANS le slot
+    setTimeout(()=>{
+      // vide le texte du slot (ÉMOTIONS/BESOINS…)
+      slot.textContent = '';
+      slot.classList.add('filled');
+
+      // clone de la carte, nettoyé pour n’afficher que la face avant
+      const mini = card.cloneNode(true);
+      mini.classList.remove('docking','flipped'); // état neutre
+      mini.classList.add('mini-card');
+      // on s’assure d’avoir uniquement la face .front
+      mini.querySelector('.back')?.remove();
+      mini.querySelector('.card-inner')?.setAttribute('style','transform:none');
+
+      // remet un transform propre pour le slot
+      mini.style.cssText = '';
+      slot.appendChild(mini);
+
+      // on supprime la grande carte de l’éventail
+      card.remove();
+
+      // mémorisation du pick
+      picks[targetIndex] = { family: STEPS[stepIndex].key };
+    }, 1400);
+
+
+    // 4) après dock, passer à l’étape suivante
+    setTimeout(()=>{
+      stepIndex++;
+      if(stepIndex < STEPS.length){
+        updateStepChip();
+        renderFan(); // réaffiche un éventail complet pour la famille suivante
+      }else{
+        stepInfo.textContent = 'Sélection terminée • Prêt pour l’analyse';
+        showBtn.classList.remove('hidden');
+        showBtn.disabled = false;
+      }
+    }, 980);
+  }
+
+  // Réinitialiser le tirage (slots vides + 1ère famille)
+  function resetAll(){
+    stepIndex = 0;
+    picks.fill(null);
+    $$('.slot').forEach(s=> s.classList.remove('filled'));
+    showBtn.classList.add('hidden'); showBtn.disabled = true;
+    updateStepChip(); renderFan();
+    boardSec.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  // Lancement depuis ton bouton existant
+  const startBtn = document.getElementById('startReading');
+  const intentionBox = document.getElementById('intentionBox');
+  startBtn?.addEventListener('click', ()=>{
+    intentionBox?.classList.add('hidden');
+    boardSec?.classList.remove('hidden');
+    resetAll();
+  });
+
+  resetBtn?.addEventListener('click', resetAll);
+
+})();
+</script>
+<script>
+(function(){
+const STEPS = [
+  { key:'emotions', label:'ÉMOTIONS',    count:18 }, // -> slot-0
+  { key:'besoins',  label:'BESOINS',     count:18 }, // -> slot-1
+  { key:'cosmos',   label:'ACTIONS',	 count:10 }, // -> slot-2
+  { key:'actions',  label:'MÉMIRE COSOS',count:18 },  // -> slot-3
+];
+
+
+  // Données minimales pour remplir la face (évite l'impression de "vide")
+  const DATA = {
+    emotions: ["JOIE","TRISTESSE","INJUSTICE","ÉMERVEILLEMENT","HONTE","CULPABILITÉ","SOLITUDE","DÉGOÛT","SÉRÉNITÉ","AMOUR","COLÈRE","PEUR"],
+    besoins:  ["RECONNAISSANCE","SÉCURITÉ","LIBERTÉ","SOUTIEN","REPOS","CLARTÉ","APPARTENANCE","AUTONOMIE","STIMULATION","HARMONIE","SENS","AMOUR REÇU"],
+    cosmos:   Array.from({length:10}, (_,i)=>`Mémoire Cosmos ${i+1}`), // ⟵ à remplacer par ta vraie liste
+    actions:  ["AGIR","DIRE","CRÉER","PARTAGER","ALLER VERS","CHOISIR"]
+  };
+
+  const fan      = document.getElementById('fanBoard');
+  const tray     = document.getElementById('tray');
+  const boardSec = document.getElementById('board');
+  const stepInfo = document.getElementById('stepInfo');
+  const showBtn  = document.getElementById('showResults');
+  const startBtn = document.getElementById('startReading');
+  const intentionBox = document.getElementById('intentionBox');
+  const resetBtn = document.getElementById('resetPilgrim');
+
+  if(!fan || !boardSec) return;
+
+  let stepIndex = 0;
+  const picks = [null,null,null,null];
+
+  function updateStepChip(){
+    const s = STEPS[stepIndex];
+    stepInfo.textContent = `Étape ${stepIndex+1}/4 • Choisis ta carte ${s.label}`;
+  }
+
+  function clearFan(){ fan.innerHTML = ''; }
+
+  // Utilitaire : remplit la face avant d'une carte (nom + "famille")
+  function fillFront(card, familyKey){
+    const pool = DATA[familyKey] || [];
+    const name = pool[Math.floor(Math.random()*pool.length)] || familyKey;
+    card.querySelector('[data-name]').textContent  = name;
+    card.querySelector('[data-quote]').textContent = "—";
+    // polarité visuelle (option) : triangle/rond -> à brancher si besoin
+  }
+
+  function renderFan(){
+    clearFan();
+    const { count } = STEPS[stepIndex];
+
+    const span   = Math.min(50, 18 + count); // ouverture de l'arc
+    const start  = -span/2;
+    const radius = -70;                      // plus bas dans la page (lié au CSS)
+
+    for(let i=0; i<count; i++){
+      const a = start + (i * (span/Math.max(count-1,1)));
+      const art = document.createElement('article');
+      art.className = 'card';
+      art.dataset.angle = a.toFixed(2);
+      art.style.setProperty('--angle', a+'deg');
+      art.style.setProperty('--radius', radius+'px');
+
+      art.innerHTML = `
+        <div class="card-inner">
+          <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte">
+            <div class="logo-circle" aria-hidden="true"></div>
+          </div>
+          <div class="face front">
+            <div class="topbar">
+              <span class="chip">${STEPS[stepIndex].label}</span>
+              <span class="polarity" data-polarity></span>
+            </div>
+            <div class="art"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
+            <div class="bottom"></div>
+          </div>
+        </div>
+      `;
+
+      // apparition douce
+      art.style.opacity = '0';
+      art.style.transform = `translate(-50%,-50%) rotate(${a}deg) translateY(${radius}px) scale(.985)`;
+      fan.appendChild(art);
+      setTimeout(()=>{
+        art.style.transition = 'transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 280ms ease, opacity 280ms ease';
+        art.style.opacity = '1';
+        art.style.transform = `translate(-50%,-50%) rotate(${a}deg) translateY(${radius}px)`;
+      }, i*36);
+
+      const back = art.querySelector('.back');
+      back.addEventListener('click', ()=> onPick(art, i));
+    }
+  }
+
+  // Récupère le centre d'un slot
+  function slotCenter(index){
+    const slot = document.getElementById(`slot-${index}`);
+    const slotBox = slot.getBoundingClientRect();
+    const secBox  = boardSec.getBoundingClientRect();
+    return {
+      cx: slotBox.left + slotBox.width/2 - secBox.left,
+      cy: slotBox.top  + slotBox.height/2 - secBox.top
+    };
+  }
+
+  // Flip → Zoom → Dock (delta centre-à-centre)
+  function onPick(card, i){
+    if(card.classList.contains('flipped')) return;
+
+    const back = card.querySelector('.back');
+    back.setAttribute('aria-pressed','true');
+    back.style.pointerEvents='none';
+
+    // Remplit la face avant pour éviter "cartes vides"
+    fillFront(card, STEPS[stepIndex].key);
+
+    // 1) flip
+    card.classList.add('flipped');
+
+    // 2) zoom au centre
+    setTimeout(()=>{ card.classList.add('zooming'); }, 220);
+
+    // 3) dock
+    const targetIndex = stepIndex;
+    const {cx, cy} = slotCenter(targetIndex);
+    const secBox  = boardSec.getBoundingClientRect();
+    const box     = card.getBoundingClientRect();
+    const centerX = box.left + box.width/2 - secBox.left;
+    const centerY = box.top  + box.height/2 - secBox.top;
+    const dx = cx - centerX;  // delta en X
+    const dy = cy - centerY;  // delta en Y
+
+    setTimeout(()=>{
+      card.classList.remove('zooming');
+      card.classList.add('docking');
+      // translation relative, échelle ajustée pour tenir dans 260px
+      card.style.transform =
+        `translate(-50%,-50%) rotate(0deg) translate(${dx}px, ${dy}px) scale(.66)`;
+      const slot = document.getElementById(`slot-${targetIndex}`);
+      slot.classList.add('filled');
+      picks[targetIndex] = { family: STEPS[stepIndex].key, index:i };
+    }, 650);
+
+    // 4) étape suivante
+    setTimeout(()=>{
+      stepIndex++;
+      if(stepIndex < STEPS.length){
+        updateStepChip();
+        renderFan();
+      }else{
+        stepInfo.textContent = 'Sélection terminée • Prêt pour l’analyse';
+        showBtn.classList.remove('hidden');
+        showBtn.disabled = false;
+      }
+    }, 1400);
+  }
+
+  function resetAll(){
+    stepIndex = 0;
+    picks.fill(null);
+    document.querySelectorAll('.slot').forEach(s=> s.classList.remove('filled'));
+    showBtn.classList.add('hidden'); showBtn.disabled = true;
+    updateStepChip();
+    renderFan();
+    boardSec.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  startBtn?.addEventListener('click', ()=>{
+    intentionBox?.classList.add('hidden');
+    boardSec?.classList.remove('hidden');
+    resetAll();
+  });
+  resetBtn?.addEventListener('click', resetAll);
+})();
 </script>
 
 </body>

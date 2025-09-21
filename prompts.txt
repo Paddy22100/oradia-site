@@ -171,3 +171,6 @@ Ce block doit disparaître quand le plateau de carte s'affiche
 Le cadre où l'utilisateur renseigne son intention dans le tirage du pèlerin doit disparaître quand les 4 cartes s'affichent
 quand les 4 cartes du tirage du pèlerin s'affichent, enlever la boite de dialogue de l'intention
 le résultat du tirage du pèlerin doit rester en mode immersif
+enlever le nom des familles
+met la carte mémoires cosmos à droite et met la en valeur
+afficher les vraies cartes avec leur contenue une fois retournées dans le slot en bas de l'écran pour le tirage du pèlerin
