@@ -211,3 +211,4 @@ L'utilisateur ne doit pouvoir cliquer que sur une seule carte de chaque famille
 rend plus joli les animations du tirage du pèlerin et le visuel pour que cela soit plus fluide et que le titre ne disparaisse pas, que tout soit sur l'écran et qu'il n'y ait pas besoin de scroller vers le bas pour voir toutes les informations
 L'utilisateur ne doit pouvoir cliquer que sur une seule carte de chaque famille
 met en valeur la famille Mémoires cosmos, l'éventail des cartes mémoires cosmos et la carte tirée, et le slot mémoire cosmos
+supprime ce bouton
