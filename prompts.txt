@@ -178,3 +178,5 @@ plutôt que ces block de famille je voudrais voir les cartes tirées
 enlève ce bouton Réinitialiser
 enlève le boutonréinitialiser sur le tirage du pèlerin
 Supprimer ce bouton
+améliore les visuels dans le tirage du pèlerin pour que ça soit plus joli est que cela soit ergonomique pour l'utilisateur
+5000

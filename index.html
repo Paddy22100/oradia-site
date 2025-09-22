@@ -314,7 +314,44 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 }
 .slot .mini-card .back{ display:none !important; }  /* on ne montre que la face avant */
 .slot .mini-card .front{ height:100%; }
-
+const style = document.createElement('style');
+style.textContent = `
+    .card.zooming {
+        transform: translate(-50%, -50%) rotate(0deg) scale(1.3) !important;
+        z-index: 1000;
+        transition: transform 0.7s ease, opacity 0.5s ease;
+    }
+    
+    .slot .mini {
+        width: 150px;
+        height: 210px;
+        position: relative !important;
+        left: auto !important;
+        top: auto !important;
+        transform: scale(0.8);
+        margin: 0 auto;
+        transition: all 0.5s ease;
+    }
+    
+    .slot .mini .card-inner {
+        height: 100%;
+        box-shadow: 0 8px 16px rgba(0, 0, 0, 0.3);
+    }
+    
+    .slot.filled {
+        overflow: visible;
+        border: none;
+        background: transparent;
+    }
+    
+    @media (max-width: 640px) {
+        .slot .mini {
+            width: 120px;
+            height: 170px;
+        }
+    }
+`;
+document.head.appendChild(style);
   </style>
 </head>
 
@@ -2187,201 +2224,7 @@ document.querySelectorAll('a[href^="#"]:not([href="#"])').forEach(a=>{
   });
 });
 </script>
-<script>
-(function(){
-  // ---- Paramètres des familles et ordre des étapes ----
-  const STEPS = [
-    { key:'emotions', label:'ÉMOTIONS',    count:18 },
-    { key:'besoins',  label:'BESOINS',     count:18 },
-    { key:'cosmos',   label:'MÉMOIRE COSMOS', count:10 }, // ⚠️ 10
-    { key:'actions',  label:'ACTIONS',     count:18 },
-  ];
 
-  const fan = document.getElementById('fanBoard');
-  const tray = document.getElementById('tray');
-  const stepInfo = document.getElementById('stepInfo');
-  const resetBtn = document.getElementById('resetPilgrim');
-  const showBtn  = document.getElementById('showResults');
-  const boardSec = document.getElementById('board');
-
-  if(!fan || !tray) return;
-
-  // ----- État -----
-  let stepIndex = 0;
-  const picks = [null,null,null,null]; // stocke ce que tu veux (id/titre/etc.)
-
-  // ----- Helpers -----
-  const el = sel => document.querySelector(sel);
-  const $$ = sel => Array.from(document.querySelectorAll(sel));
-
-  function updateStepChip(){
-    const s = STEPS[stepIndex];
-    stepInfo.textContent = `Étape ${stepIndex+1}/4 • Choisis ta carte ${s.label}`;
-  }
-
-  function clearFan(){
-    fan.innerHTML = '';
-  }
-
-  // Place un éventail de N cartes dos
-  function renderFan(){
-    clearFan();
-    const {count} = STEPS[stepIndex];
-    const span   = Math.min(46, 16 + count); // ouverture de l'arc
-    const start  = -span/2;
-    const radius = -150;
-
-    for(let i=0;i<count;i++){
-      const a = start + (i * (span/Math.max(count-1,1)));
-      const art = document.createElement('article');
-      art.className = 'card';
-      art.dataset.angle = a.toFixed(2);
-      art.style.setProperty('--angle', a+'deg');
-      art.style.setProperty('--radius', radius+'px');
-
-      // structure minimale (dos + face) – garde ta structure si tu as déjà .card-inner/.back/.front
-      art.innerHTML = `
-        <div class="card-inner">
-          <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte">
-            <div class="logo-circle" aria-hidden="true"></div>
-          </div>
-          <div class="face front">
-            <div class="topbar">
-              <span class="chip">${STEPS[stepIndex].label}</span>
-              <span class="polarity" data-polarity></span>
-            </div>
-            <div class="art"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
-            <div class="bottom"></div>
-          </div>
-        </div>
-      `;
-      // apparition progressive
-      art.style.opacity = '0';
-      art.style.transform = `translate(-50%,-50%) rotate(${a}deg) translateY(${radius}px) scale(.98)`;
-      fan.appendChild(art);
-      setTimeout(()=>{ art.style.opacity='1'; art.style.transform = `translate(-50%,-50%) rotate(${a}deg) translateY(${radius}px)`; }, i*40);
-
-      // events
-      const back = art.querySelector('.back');
-      back.addEventListener('click', ()=> onPick(art, i));
-    }
-  }
-
-  // Obtient la position (centre) d'un slot, en coordonnées du conteneur fan/tray parent
-  function slotCenter(index){
-    const slot = document.getElementById(`slot-${index}`);
-    const slotBox = slot.getBoundingClientRect();
-    const wrapBox = boardSec.getBoundingClientRect(); // section parent pour référentiel stable
-    const cx = slotBox.left + slotBox.width/2 - wrapBox.left;
-    const cy = slotBox.top  + slotBox.height/2 - wrapBox.top;
-    return {cx, cy};
-  }
-
-  // Animation : flip -> zoom -> dock
-  function onPick(card, i){
-    if(card.classList.contains('flipped')) return;
-
-    const back = card.querySelector('.back');
-    back.setAttribute('aria-pressed','true');
-    back.style.pointerEvents='none';
-
-    // >>> Ici, si tu veux, injecte vraiment la "vraie carte" choisie aléatoirement dans la famille
-    // (titre, citation, polarité…). Exemple :
-    // injectCardFront(card, STEPS[stepIndex].key, i);
-
-    // 1) flip
-    card.classList.add('flipped');
-
-    // 2) zoom focus au centre
-    setTimeout(()=>{ card.classList.add('zooming'); }, 120);
-
-        // 3) dock -> on CLONE la carte retournée et on l'insère dans le slot
-    const targetIndex = stepIndex;                   // 0..3, correspond bien à slot-0..slot-3
-    const slot = document.getElementById(`slot-${targetIndex}`);
-
-    // calcule d’abord l’animation de la grande carte (vers le slot)
-    const {cx, cy} = slotCenter(targetIndex);
-    const secBox  = boardSec.getBoundingClientRect();
-    const box     = card.getBoundingClientRect();
-    const centerX = box.left + box.width/2 - secBox.left;
-    const centerY = box.top  + box.height/2 - secBox.top;
-    const dx = cx - centerX;
-    const dy = cy - centerY;
-
-    // remplis la face avant (évite le vide)
-    fillFront(card, STEPS[stepIndex].key);
-
-    setTimeout(()=>{
-      card.classList.remove('zooming');
-      card.classList.add('docking');
-      // animation de déplacement de la grande carte vers le slot
-      card.style.transform =
-        `translate(-50%,-50%) rotate(0deg) translate(${dx}px, ${dy}px) scale(.66)`;
-    }, 650);
-
-    // quand l’anim est finie : on clone la face avant et on la place DANS le slot
-    setTimeout(()=>{
-      // vide le texte du slot (ÉMOTIONS/BESOINS…)
-      slot.textContent = '';
-      slot.classList.add('filled');
-
-      // clone de la carte, nettoyé pour n’afficher que la face avant
-      const mini = card.cloneNode(true);
-      mini.classList.remove('docking','flipped'); // état neutre
-      mini.classList.add('mini-card');
-      // on s’assure d’avoir uniquement la face .front
-      mini.querySelector('.back')?.remove();
-      mini.querySelector('.card-inner')?.setAttribute('style','transform:none');
-
-      // remet un transform propre pour le slot
-      mini.style.cssText = '';
-      slot.appendChild(mini);
-
-      // on supprime la grande carte de l’éventail
-      card.remove();
-
-      // mémorisation du pick
-      picks[targetIndex] = { family: STEPS[stepIndex].key };
-    }, 1400);
-
-
-    // 4) après dock, passer à l’étape suivante
-    setTimeout(()=>{
-      stepIndex++;
-      if(stepIndex < STEPS.length){
-        updateStepChip();
-        renderFan(); // réaffiche un éventail complet pour la famille suivante
-      }else{
-        stepInfo.textContent = 'Sélection terminée • Prêt pour l’analyse';
-        showBtn.classList.remove('hidden');
-        showBtn.disabled = false;
-      }
-    }, 980);
-  }
-
-  // Réinitialiser le tirage (slots vides + 1ère famille)
-  function resetAll(){
-    stepIndex = 0;
-    picks.fill(null);
-    $$('.slot').forEach(s=> s.classList.remove('filled'));
-    showBtn.classList.add('hidden'); showBtn.disabled = true;
-    updateStepChip(); renderFan();
-    boardSec.scrollIntoView({behavior:'smooth', block:'start'});
-  }
-
-  // Lancement depuis ton bouton existant
-  const startBtn = document.getElementById('startReading');
-  const intentionBox = document.getElementById('intentionBox');
-  startBtn?.addEventListener('click', ()=>{
-    intentionBox?.classList.add('hidden');
-    boardSec?.classList.remove('hidden');
-    resetAll();
-  });
-
-  resetBtn?.addEventListener('click', resetAll);
-
-})();
-</script>
 <script>
 (function(){
 const STEPS = [
@@ -2489,56 +2332,57 @@ const STEPS = [
   }
 
   // Flip → Zoom → Dock (delta centre-à-centre)
-  function onPick(card, i){
-    if(card.classList.contains('flipped')) return;
+  function onPick(card, i) {
+    if (card.classList.contains('flipped')) return;
 
     const back = card.querySelector('.back');
-    back.setAttribute('aria-pressed','true');
-    back.style.pointerEvents='none';
+    back.setAttribute('aria-pressed', 'true');
+    back.style.pointerEvents = 'none';
 
-    // Remplit la face avant pour éviter "cartes vides"
+    // Remplir la face avant
     fillFront(card, STEPS[stepIndex].key);
 
-    // 1) flip
+    // 1. Flip immédiat
     card.classList.add('flipped');
-
-    // 2) zoom au centre
-    setTimeout(()=>{ card.classList.add('zooming'); }, 220);
-
-    // 3) dock
-    const targetIndex = stepIndex;
-    const {cx, cy} = slotCenter(targetIndex);
-    const secBox  = boardSec.getBoundingClientRect();
-    const box     = card.getBoundingClientRect();
-    const centerX = box.left + box.width/2 - secBox.left;
-    const centerY = box.top  + box.height/2 - secBox.top;
-    const dx = cx - centerX;  // delta en X
-    const dy = cy - centerY;  // delta en Y
-
-    setTimeout(()=>{
-      card.classList.remove('zooming');
-      card.classList.add('docking');
-      // translation relative, échelle ajustée pour tenir dans 260px
-      card.style.transform =
-        `translate(-50%,-50%) rotate(0deg) translate(${dx}px, ${dy}px) scale(.66)`;
-      const slot = document.getElementById(`slot-${targetIndex}`);
-      slot.classList.add('filled');
-      picks[targetIndex] = { family: STEPS[stepIndex].key, index:i };
-    }, 650);
-
-    // 4) étape suivante
-    setTimeout(()=>{
-      stepIndex++;
-      if(stepIndex < STEPS.length){
-        updateStepChip();
-        renderFan();
-      }else{
-        stepInfo.textContent = 'Sélection terminée • Prêt pour l’analyse';
-        showBtn.classList.remove('hidden');
-        showBtn.disabled = false;
-      }
-    }, 1400);
-  }
+    
+    // 2. Zoom et redressement après un court délai
+    setTimeout(() => {
+        card.classList.add('zooming');
+        
+        // 3. Après 5 secondes, descendre vers le slot
+        setTimeout(() => {
+            const targetIndex = stepIndex;
+            const slot = document.getElementById(`slot-${targetIndex}`);
+            
+            // Créer une copie miniature pour le slot
+            const clone = card.cloneNode(true);
+            clone.classList.add('mini');
+            clone.style.transform = 'scale(0.5)';
+            clone.style.transition = 'all 0.5s ease';
+            
+            // Ajouter la copie au slot
+            slot.appendChild(clone);
+            slot.classList.add('filled');
+            
+            // Masquer la carte originale
+            card.style.opacity = '0';
+            card.style.pointerEvents = 'none';
+            
+            // Passer à l'étape suivante
+            picks[targetIndex] = { family: STEPS[stepIndex].key, index: i };
+            stepIndex++;
+            
+            if (stepIndex < STEPS.length) {
+                updateStepChip();
+                renderFan();
+            } else {
+                stepInfo.textContent = 'Sélection terminée • Prêt pour l\'analyse';
+                showBtn.classList.remove('hidden');
+                showBtn.disabled = false;
+            }
+        }, 1000); // 1 secondes
+    }, 300); // Petit délai avant le zoom
+}
 
   function resetAll(){
     stepIndex = 0;
