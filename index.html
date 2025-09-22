@@ -2273,7 +2273,7 @@ const STEPS = [
 
   function renderFan(){
     clearFan();
-    const { count } = STEPS[stepIndex];
+    const { count, key } = STEPS[stepIndex];
 
     const span   = Math.min(50, 18 + count); // ouverture de l'arc
     const start  = -span/2;
@@ -2284,8 +2284,14 @@ const STEPS = [
       const art = document.createElement('article');
       art.className = 'card';
       art.dataset.angle = a.toFixed(2);
+      art.dataset.family = key;
       art.style.setProperty('--angle', a+'deg');
       art.style.setProperty('--radius', radius+'px');
+
+      // Style spécial pour les cartes cosmos
+      if (key === 'cosmos') {
+        art.style.zIndex = '5';
+      }
 
       art.innerHTML = `
         <div class="card-inner">
@@ -2302,6 +2308,12 @@ const STEPS = [
           </div>
         </div>
       `;
+
+      // Style spécial pour le dos des cartes cosmos
+      if (key === 'cosmos') {
+        const backFace = art.querySelector('.back');
+        backFace.style.background = 'radial-gradient(800px 500px at 50% 40%, rgba(245, 231, 161, 0.15), transparent 60%), linear-gradient(135deg, #0b1d3a, #08152c)';
+      }
 
       // apparition douce
       art.style.opacity = '0';
@@ -2349,6 +2361,13 @@ const STEPS = [
       }
     });
 
+    // Effets spéciaux pour la carte cosmos
+    const isCosmos = currentFamily === 'cosmos';
+    if (isCosmos) {
+      card.style.boxShadow = '0 0 30px rgba(245, 231, 161, 0.8)';
+      card.style.zIndex = '1000';
+    }
+
     // 1. Détacher la carte du paquet - monter et se redresser
     card.style.transition = 'transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1.2), box-shadow 300ms ease';
     card.style.transform = 'translate(-50%, -50%) rotate(0deg) translateY(-30px)';
@@ -2361,6 +2380,13 @@ const STEPS = [
         
         // Flip pour montrer la face
         card.classList.add('flipped');
+        
+        // Effets spéciaux pour la face avant cosmos
+        if (isCosmos) {
+          const frontFace = card.querySelector('.front');
+          frontFace.style.background = 'radial-gradient(900px 600px at 30% -10%, rgba(245, 231, 161, 0.25), transparent 60%), linear-gradient(165deg, #0c1f40, #0b1d3a 45%, #0a1833 100%)';
+          frontFace.style.border = '2px solid rgba(245, 231, 161, 0.6)';
+        }
         
         // 3. Zoom sur la carte pendant 2 secondes
         card.style.transition = 'transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1.2)';
@@ -2393,6 +2419,11 @@ const STEPS = [
                 card.style.transform = 'scale(0.3)';
                 card.classList.add('mini');
                 slot.classList.add('filled');
+                
+                // Effets spéciaux pour la carte cosmos dans le slot
+                if (isCosmos) {
+                  card.style.boxShadow = '0 0 20px rgba(245, 231, 161, 0.6)';
+                }
                 
                 // Passer à l'étape suivante
                 picks[targetIndex] = { family: STEPS[stepIndex].key, index: i };
