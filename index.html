@@ -357,10 +357,6 @@ document.head.appendChild(style);
 
 <body class="relative">
 
-<button id="exitTraverseeBtn" class="hidden" aria-label="Quitter le tirage de la Traversée">
-  Quitter le tirage de la Traversée
-</button>
-
   <!-- Scroll to top button -->
   <button id="scrollTop" class="scroll-top bg-night-blue text-gold p-3 rounded-full border border-gold shadow-lg" aria-label="Remonter en haut">
     <i class="fas fa-arrow-up"></i>
@@ -581,7 +577,10 @@ document.head.appendChild(style);
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Analyse approfondie</span></li>
           </ul>
 
-          <a href="#oracle" class="btn-outline-gold w-full text-center relative z-10 mt-auto" onclick="document.getElementById('oracle').classList.remove('hidden'); document.getElementById('oracle').scrollIntoView({behavior: 'smooth'}); return false;">Commencer le tirage</a>
+          <button id="startPilgrimFromOffer" class="btn-outline-gold w-full text-center relative z-10 mt-auto">
+  Commencer le tirage
+</button>
+
         </div>
 
         <!-- Tirage complet -->
@@ -1390,14 +1389,31 @@ document.head.appendChild(style);
   // ---------- MODE IMMERSIF ----------
   function enterImmersive(){
     // masquer header, footer et toutes les sections sauf #traversee
-    $$('body > header, body > footer, body > section:not(#traversee)').forEach(n=>n.classList.add('hide-immersive'));
-    el('exitTraverseeBtn')?.classList.remove('hidden');
+   $$('body > header, body > footer, body > section:not(#traversee)').forEach(n=>n.classList.add('hide-immersive'));
+
+// Menu immersif traversée (réutilise les mêmes helpers si dispos)
+if(!document.getElementById('immersiveMenuBtn')){
+  const btn = document.createElement('button');
+  btn.id = 'immersiveMenuBtn';
+  btn.className = 'fixed top-4 left-4 z-[100] bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold py-2 px-4 rounded-full shadow-lg';
+  btn.innerHTML = '<i class="fas fa-bars mr-2"></i> Menu';
+  btn.addEventListener('click', toggleImmersiveMenu);
+  document.body.appendChild(btn);
+}
+if(!document.getElementById('immersiveMenuPanel')){
+  // si les fonctions n’existent pas dans ce scope, recolle les 2 fonctions ensureImmersiveMenu / toggleImmersiveMenu
+  ensureImmersiveMenu?.();
+}
+
     // scroll sur la section
     el('traversee')?.scrollIntoView({behavior:'smooth', block:'start'});
   }
   function exitImmersive(){
     $$('body > header, body > footer, body > section').forEach(n=>n.classList.remove('hide-immersive'));
-    el('exitTraverseeBtn')?.classList.add('hidden');
+document.getElementById('immersiveMenuBtn')?.remove();
+const p = document.getElementById('immersiveMenuPanel');
+if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
+
 
     // Réinitialise visuellement la section Traversée
     const boardHost = el('traversee-board');
@@ -1818,21 +1834,65 @@ function initPelerin(){
 
   function enterPelerinImmersive(){
     $$('body > header, body > footer, body > section:not(#oracle)').forEach(n=>n.classList.add('hide-immersive'));
-    // bouton sortir
-    if(!el('exitPelerinBtn')){
-      const exitBtn = document.createElement('button');
-      exitBtn.id = 'exitPelerinBtn';
-      exitBtn.className = 'fixed top-4 left-4 z-[100] bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold py-2 px-4 rounded-full shadow-lg';
-      exitBtn.innerHTML = '<i class="fas fa-arrow-left mr-2"></i> Quitter le tirage';
-      exitBtn.addEventListener('click', exitPelerinImmersive);
-      document.body.appendChild(exitBtn);
-    }
+ // bouton MENU immersif
+if(!el('immersiveMenuBtn')){
+  const btn = document.createElement('button');
+  btn.id = 'immersiveMenuBtn';
+  btn.className = 'fixed top-4 left-4 z-[100] bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold py-2 px-4 rounded-full shadow-lg';
+  btn.innerHTML = '<i class="fas fa-bars mr-2"></i> Menu';
+  btn.addEventListener('click', toggleImmersiveMenu);
+  document.body.appendChild(btn);
+}
+ensureImmersiveMenu(); // crée le panneau si besoin
+
     el('oracle')?.scrollIntoView({behavior:'smooth', block:'start'});
   }
   function exitPelerinImmersive(){
-    $$('body > header, body > footer, body > section').forEach(n=>n.classList.remove('hide-immersive'));
-    el('exitPelerinBtn')?.remove();
+ $$('body > header, body > footer, body > section').forEach(n=>n.classList.remove('hide-immersive'));
+el('immersiveMenuBtn')?.remove();
+const p = el('immersiveMenuPanel');
+if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
+
   }
+function ensureImmersiveMenu(){
+  if(el('immersiveMenuPanel')) return;
+  const panel = document.createElement('aside');
+  panel.id = 'immersiveMenuPanel';
+  panel.setAttribute('aria-hidden','true');
+  panel.className = 'fixed top-0 right-0 h-full w-[320px] max-w-[85vw] bg-[rgba(5,20,40,0.98)] text-gold z-[200] translate-x-full transition-transform duration-300 border-l border-gold/30 shadow-2xl';
+  panel.innerHTML = `
+    <div class="p-5 border-b border-gold/20 flex items-center justify-between">
+      <div class="font-semibold tracking-wide">Menu</div>
+      <button id="immersiveMenuClose" class="px-3 py-1 border border-gold/40 rounded-lg hover:bg-gold hover:text-night-blue">Fermer</button>
+    </div>
+    <nav class="p-5 space-y-3">
+      <a href="#accueil" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">Accueil</a>
+      <a href="#offres" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">Offres</a>
+      <a href="#Jeu" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">Jeu</a>
+      <a href="#edolgor" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">Partenariat</a>
+      <a href="#apropos" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">À propos</a>
+      <hr class="border-gold/20 my-4">
+      <button id="leaveImmersion" class="w-full text-left hover:text-light-gold">Quitter l’immersion</button>
+    </nav>
+  `;
+  document.body.appendChild(panel);
+  panel.querySelector('#immersiveMenuClose')?.addEventListener('click', toggleImmersiveMenu);
+  panel.querySelector('#leaveImmersion')?.addEventListener('click', ()=>{ toggleImmersiveMenu(true); exitPelerinImmersive(); });
+}
+
+function toggleImmersiveMenu(forceClose){
+  const p = el('immersiveMenuPanel'); if(!p) return;
+  const isHidden = p.getAttribute('aria-hidden') === 'true';
+  const shouldOpen = forceClose ? false : isHidden;
+  if(shouldOpen){
+    p.setAttribute('aria-hidden','false');
+    p.style.transform = 'translateX(0)';
+  }else{
+    p.setAttribute('aria-hidden','true');
+    p.style.transform = 'translateX(100%)';
+  }
+}
+
   window.exitPelerinImmersive = exitPelerinImmersive; // utilisé ailleurs
 
   // validation live
@@ -2458,6 +2518,24 @@ const STEPS = [
   });
   resetBtn?.addEventListener('click', resetAll);
 })();
+</script>
+<script>
+// Démarrer le Pèlerin en mode immersif depuis l’offre
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('startPilgrimFromOffer');
+  if (!btn) return;
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const oracle = document.getElementById('oracle');
+    if (oracle) {
+      // Affiche la section et scroll
+      oracle.classList.remove('hidden');
+      oracle.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      // Focus intention -> déclenche enterPelerinImmersive() (déjà câblé dans initPelerin)
+      document.getElementById('intention')?.focus();
+    }
+  });
+});
 </script>
 
 </body>
