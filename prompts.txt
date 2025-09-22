@@ -192,3 +192,6 @@ modifie les animations du tirage du pèlerin pour:
     Ensuite, on effectue le flip pour montrer la face.
 
     Après 1s, la carte se déplace doucement vers le slot correspondant en bas, en réduisant sa taille pour devenir une miniature.
+je veux que ce bouton apparaisse plus haut dans la page une fois les 4 cartes retournées
+Je veux que lorsque le tirage est terminé, que les 4 cartes sont affichées en miniatures en bas dans leur slot, ce texte se transforme en bouton " Tirage terminé: Afficher l'analyse" et remplace le bouton Afficher l'analyse en bas de la page 
+change la couleur quand "Sélection terminée Prêt pour l'analyse"
