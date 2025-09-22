@@ -2352,72 +2352,47 @@ const STEPS = [
         // Flip pour montrer la face
         card.classList.add('flipped');
         
-        // 3. Zoom et maintien en place pendant 2s
-        card.style.transition = 'transform 700ms cubic-bezier(0.2, 0.8, 0.2, 1.2)';
-        card.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(1.3)';
-        
-        // 4. Après 2s, déplacer vers le slot correspondant
+        // 3. Après 2s, déplacer vers le slot correspondant
         setTimeout(() => {
             const targetIndex = stepIndex;
             const slot = document.getElementById(`slot-${targetIndex}`);
             
-            // Créer une copie miniature pour le slot
-            const clone = card.cloneNode(true);
-            clone.classList.add('mini');
-            
-            // Calculer la position de destination
+            // Calculer la position de destination dans le slot
             const slotRect = slot.getBoundingClientRect();
-            const cardRect = card.getBoundingClientRect();
             const boardRect = boardSec.getBoundingClientRect();
             
             const targetX = slotRect.left + slotRect.width/2 - boardRect.left;
             const targetY = slotRect.top + slotRect.height/2 - boardRect.top;
             
-            // Positionner la copie à l'emplacement de la carte originale
-            clone.style.position = 'absolute';
-            clone.style.left = (cardRect.left - boardRect.left) + 'px';
-            clone.style.top = (cardRect.top - boardRect.top) + 'px';
-            clone.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(1.3)';
-            clone.style.transition = 'all 800ms cubic-bezier(0.2, 0.8, 0.2, 1)';
-            clone.style.zIndex = '1000';
+            // Animer la carte originale vers le slot
+            card.style.transition = 'all 800ms cubic-bezier(0.2, 0.8, 0.2, 1)';
+            card.style.left = targetX + 'px';
+            card.style.top = targetY + 'px';
+            card.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(0.3)';
             
-            // Ajouter la copie au plateau
-            boardSec.appendChild(clone);
-            
-            // Animer vers le slot
+            // Une fois l'animation terminée, ajouter au slot
             setTimeout(() => {
-                clone.style.left = targetX + 'px';
-                clone.style.top = targetY + 'px';
-                clone.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(0.5)';
+                slot.appendChild(card);
+                card.style.position = 'relative';
+                card.style.left = 'auto';
+                card.style.top = 'auto';
+                card.style.transform = 'scale(0.3)';
+                card.classList.add('mini');
+                slot.classList.add('filled');
                 
-                // Une fois l'animation terminée, ajouter au slot
-                setTimeout(() => {
-                    slot.appendChild(clone);
-                    clone.style.position = 'relative';
-                    clone.style.left = 'auto';
-                    clone.style.top = 'auto';
-                    clone.style.transform = 'scale(0.8)';
-                    clone.style.zIndex = 'auto';
-                    slot.classList.add('filled');
-                    
-                    // Masquer la carte originale
-                    card.style.opacity = '0';
-                    card.style.pointerEvents = 'none';
-                    
-                    // Passer à l'étape suivante
-                    picks[targetIndex] = { family: STEPS[stepIndex].key, index: i };
-                    stepIndex++;
-                    
-                    if (stepIndex < STEPS.length) {
-                        updateStepChip();
-                        renderFan();
-                    } else {
-                        stepInfo.textContent = 'Sélection terminée';
-                        showBtn.classList.remove('hidden');
-                        showBtn.disabled = false;
-                    }
-                }, 800);
-            }, 50);
+                // Passer à l'étape suivante
+                picks[targetIndex] = { family: STEPS[stepIndex].key, index: i };
+                stepIndex++;
+                
+                if (stepIndex < STEPS.length) {
+                    updateStepChip();
+                    renderFan();
+                } else {
+                    stepInfo.textContent = 'Sélection terminée';
+                    showBtn.classList.remove('hidden');
+                    showBtn.disabled = false;
+                }
+            }, 800);
         }, 2000); // 2 secondes après le flip
     }, 600); // Après l'animation de détachement
 }
