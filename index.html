@@ -2190,7 +2190,7 @@ if (flippedCount === 4) {
         <p><b>Émotions :</b> ${em.name} — ${em.quote}</p>
         <p><b>Besoins :</b> ${be.name} — ${be.quote}</p>
         <p><b>Actions :</b> ${ac.name} — ${ac.quote}</p>
-        <p><b>Mémoire Cosmos :</b> ${co.name} — ${co.quote}</p>
+        <p><b>Mémoires Cosmos :</b> ${co.name} — ${co.quote}</p>
       `;
       resultsEl.classList.remove('hidden');
 
@@ -2228,8 +2228,8 @@ document.querySelectorAll('a[href^="#"]:not([href="#"])').forEach(a=>{
 const STEPS = [
   { key:'emotions', label:'ÉMOTIONS',    count:18 }, // -> slot-0
   { key:'besoins',  label:'BESOINS',     count:18 }, // -> slot-1
-  { key:'cosmos',   label:'ACTIONS',	 count:10 }, // -> slot-2
-  { key:'actions',  label:'MÉMOIRE COSMOS',count:18 },  // -> slot-3
+  { key:'actions',   label:'ACTIONS',	 count:18 }, // -> slot-2
+  { key:'cosmos',  label:'MÉMOIRE COSMOS',count:10 },  // -> slot-3
 ];
 
 
@@ -2237,7 +2237,7 @@ const STEPS = [
   const DATA = {
     emotions: ["JOIE","TRISTESSE","INJUSTICE","ÉMERVEILLEMENT","HONTE","CULPABILITÉ","SOLITUDE","DÉGOÛT","SÉRÉNITÉ","AMOUR","COLÈRE","PEUR"],
     besoins:  ["RECONNAISSANCE","SÉCURITÉ","LIBERTÉ","SOUTIEN","REPOS","CLARTÉ","APPARTENANCE","AUTONOMIE","STIMULATION","HARMONIE","SENS","AMOUR REÇU"],
-    cosmos:   Array.from({length:10}, (_,i)=>`Mémoire Cosmos ${i+1}`), // ⟵ à remplacer par ta vraie liste
+    cosmos:   Array.from({length:10}, (_,i)=>`Mémoires Cosmos ${i+1}`), // ⟵ à remplacer par ta vraie liste
     actions:  ["AGIR","DIRE","CRÉER","PARTAGER","ALLER VERS","CHOISIR"]
   };
 
