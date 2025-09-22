@@ -205,3 +205,4 @@ lorsque la carte se retourne, elle doit être zoomée et restée visible pendant
 la carte doit devenir une miniature quand elle va dans le slot correspondant
 quand la carte se retourne, il doit y avoir un zoom dessus 
 modifier les animations pour que lorsque la carte se retourne un zoom soit fait dessus et qu'il dure 2s avant de passer à l'animation suivante
+Modifie l'affichage des slots pour que cela soit plus joli
