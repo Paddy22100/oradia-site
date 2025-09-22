@@ -485,19 +485,9 @@ document.head.appendChild(style);
 
       <!-- Plateau (caché au départ) -->
 <section id="board" class="hidden" aria-live="polite">
-<div class="max-w-5xl mx-auto mb-2">
-  <div class="flex items-center justify-between">
+  <div class="flex items-center justify-between max-w-5xl mx-auto mb-2">
     <span class="step-chip hover:bg-gold/20 transition-colors cursor-pointer hovered-element" id="stepInfo">Étape 1/4 • Choisis ta carte ÉMOTIONS</span>
   </div>
-<div class="mt-3 text-left relative z-[60]">
-  <button id="showResults"
-          class="hidden inline-flex items-center gap-2 px-6 py-3 border border-gold text-light-gold rounded-lg hover:bg-gold hover:text-dark-blue transition disabled:opacity-40"
-          disabled>
-    Afficher l’analyse
-  </button>
-</div>
-
-</div>
 
   <div class="fan-wrap" id="fanBoard"></div>
 
@@ -510,6 +500,11 @@ document.head.appendChild(style);
     </div>
   </div>
 
+  <div class="text-center mt-4">
+    <button id="showResults" class="hidden px-6 py-3 border border-gold text-light-gold rounded-lg hover:bg-gold hover:text-dark-blue transition disabled:opacity-40" disabled>
+      Afficher l’analyse
+    </button>
+  </div>
 </section>
 
       <section id="results" class="hidden mt-6">
@@ -1966,7 +1961,7 @@ function initMobileMenu(){
 /* ---------- Boot ---------- */
 document.addEventListener('DOMContentLoaded', ()=>{
   initScrollTop();
-  initCGU();          /* CGU propres */                /* Réf: scripts CGU multiples nettoyés */
+  initCGV();          /* CGV propres */                /* Réf: scripts CGV multiples nettoyés */
   initOrderModal();   /* Paiement Traversée + Merci */ /* Réf: confirmation + accès direct Traversée */
   initSubscription(); /* Espace membre */              /* Réf: doublons supprimés */
   initPelerin();      /* Tirage Pèlerin immersif */
@@ -2337,20 +2332,22 @@ const STEPS = [
   // Flip → Zoom → Dock (delta centre-à-centre)
   function onPick(card, i) {
     if (card.classList.contains('flipped')) return;
-    
-    // Désactiver toutes les cartes de la même famille
+
+    // Empêcher de cliquer sur plusieurs cartes de la même famille
     const currentFamily = STEPS[stepIndex].key;
-    const allCards = fan.querySelectorAll('.card');
-    allCards.forEach(otherCard => {
-      if (!otherCard.classList.contains('flipped')) {
-        const back = otherCard.querySelector('.back');
-        back.style.pointerEvents = 'none';
-      }
-    });
+    const alreadyPicked = picks.some(pick => pick && pick.family === currentFamily);
+    if (alreadyPicked) return;
 
     const back = card.querySelector('.back');
     back.setAttribute('aria-pressed', 'true');
     back.style.pointerEvents = 'none';
+
+    // Désactiver toutes les cartes de cette famille
+    document.querySelectorAll('#fanBoard .card').forEach(otherCard => {
+      if (!otherCard.classList.contains('flipped')) {
+        otherCard.querySelector('.back').style.pointerEvents = 'none';
+      }
+    });
 
     // 1. Détacher la carte du paquet - monter et se redresser
     card.style.transition = 'transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1.2), box-shadow 300ms ease';
@@ -2406,11 +2403,11 @@ const STEPS = [
                     renderFan();
                 } else {
                     stepInfo.textContent = 'Sélection terminée';
-document.getElementById('showResults').classList.remove('hidden');
-document.getElementById('showResults').disabled = false;
+                    showBtn.classList.remove('hidden');
+                    showBtn.disabled = false;
                 }
             }, 800);
-        }, 1500); //1.5 secondes après le zoom
+        }, 2000); // 2 secondes après le zoom
     }, 600); // Après l'animation de détachement
 }
 
