@@ -175,3 +175,6 @@ enlever le nom des familles
 met la carte mémoires cosmos à droite et met la en valeur
 afficher les vraies cartes avec leur contenue une fois retournées dans le slot en bas de l'écran pour le tirage du pèlerin
 plutôt que ces block de famille je voudrais voir les cartes tirées
+enlève ce bouton Réinitialiser
+enlève le boutonréinitialiser sur le tirage du pèlerin
+Supprimer ce bouton
