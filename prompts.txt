@@ -180,3 +180,15 @@ enlève le boutonréinitialiser sur le tirage du pèlerin
 Supprimer ce bouton
 améliore les visuels dans le tirage du pèlerin pour que ça soit plus joli est que cela soit ergonomique pour l'utilisateur
 5000
+modifie les animation du tirage du pèlerin pour:
+    Au clic sur une carte, elle doit se détacher du paquet (éventuellement monter un peu) et se redresser (rotation à 0deg) tout en restant à la même position.
+
+    Ensuite, on effectue le flip pour montrer la face.
+
+    Après 1s, la carte se déplace vers le slot correspondant en bas, en réduisant sa taille pour devenir une miniature.
+modifie les animations du tirage du pèlerin pour:
+    Au clic sur une carte, elle doit se détacher du paquet (éventuellement monter un peu) et se redresser (rotation à 0deg) tout en restant à la même position.
+
+    Ensuite, on effectue le flip pour montrer la face.
+
+    Après 1s, la carte se déplace doucement vers le slot correspondant en bas, en réduisant sa taille pour devenir une miniature.

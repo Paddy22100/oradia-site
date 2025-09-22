@@ -2231,7 +2231,7 @@ const STEPS = [
   { key:'emotions', label:'ÉMOTIONS',    count:18 }, // -> slot-0
   { key:'besoins',  label:'BESOINS',     count:18 }, // -> slot-1
   { key:'cosmos',   label:'ACTIONS',	 count:10 }, // -> slot-2
-  { key:'actions',  label:'MÉMIRE COSOS',count:18 },  // -> slot-3
+  { key:'actions',  label:'MÉMOIRE COSMOS',count:18 },  // -> slot-3
 ];
 
 
@@ -2339,17 +2339,20 @@ const STEPS = [
     back.setAttribute('aria-pressed', 'true');
     back.style.pointerEvents = 'none';
 
-    // Remplir la face avant
-    fillFront(card, STEPS[stepIndex].key);
-
-    // 1. Flip immédiat
-    card.classList.add('flipped');
+    // 1. Détacher la carte du paquet - monter et se redresser
+    card.style.transition = 'transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1.2), box-shadow 300ms ease';
+    card.style.transform = 'translate(-50%, -50%) rotate(0deg) translateY(-30px)';
+    card.style.zIndex = '1000';
     
-    // 2. Zoom et redressement après un court délai
+    // 2. Après l'animation de détachement, flip pour montrer la face
     setTimeout(() => {
-        card.classList.add('zooming');
+        // Remplir la face avant
+        fillFront(card, STEPS[stepIndex].key);
         
-        // 3. Après 5 secondes, descendre vers le slot
+        // Flip pour montrer la face
+        card.classList.add('flipped');
+        
+        // 3. Après 1s, déplacer vers le slot correspondant
         setTimeout(() => {
             const targetIndex = stepIndex;
             const slot = document.getElementById(`slot-${targetIndex}`);
@@ -2357,31 +2360,60 @@ const STEPS = [
             // Créer une copie miniature pour le slot
             const clone = card.cloneNode(true);
             clone.classList.add('mini');
-            clone.style.transform = 'scale(0.5)';
-            clone.style.transition = 'all 0.5s ease';
             
-            // Ajouter la copie au slot
-            slot.appendChild(clone);
-            slot.classList.add('filled');
+            // Calculer la position de destination
+            const slotRect = slot.getBoundingClientRect();
+            const cardRect = card.getBoundingClientRect();
+            const boardRect = boardSec.getBoundingClientRect();
             
-            // Masquer la carte originale
-            card.style.opacity = '0';
-            card.style.pointerEvents = 'none';
+            const targetX = slotRect.left + slotRect.width/2 - boardRect.left;
+            const targetY = slotRect.top + slotRect.height/2 - boardRect.top;
             
-            // Passer à l'étape suivante
-            picks[targetIndex] = { family: STEPS[stepIndex].key, index: i };
-            stepIndex++;
+            // Positionner la copie à l'emplacement de la carte originale
+            clone.style.position = 'absolute';
+            clone.style.left = (cardRect.left - boardRect.left) + 'px';
+            clone.style.top = (cardRect.top - boardRect.top) + 'px';
+            clone.style.transform = 'translate(-50%, -50%) rotate(0deg)';
+            clone.style.transition = 'all 800ms cubic-bezier(0.2, 0.8, 0.2, 1)';
             
-            if (stepIndex < STEPS.length) {
-                updateStepChip();
-                renderFan();
-            } else {
-                stepInfo.textContent = 'Sélection terminée • Prêt pour l\'analyse';
-                showBtn.classList.remove('hidden');
-                showBtn.disabled = false;
-            }
-        }, 1000); // 1 secondes
-    }, 300); // Petit délai avant le zoom
+            // Ajouter la copie au plateau
+            boardSec.appendChild(clone);
+            
+            // Animer vers le slot
+            setTimeout(() => {
+                clone.style.left = targetX + 'px';
+                clone.style.top = targetY + 'px';
+                clone.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(0.5)';
+                
+                // Une fois l'animation terminée, ajouter au slot
+                setTimeout(() => {
+                    slot.appendChild(clone);
+                    clone.style.position = 'relative';
+                    clone.style.left = 'auto';
+                    clone.style.top = 'auto';
+                    clone.style.transform = 'scale(0.8)';
+                    slot.classList.add('filled');
+                    
+                    // Masquer la carte originale
+                    card.style.opacity = '0';
+                    card.style.pointerEvents = 'none';
+                    
+                    // Passer à l'étape suivante
+                    picks[targetIndex] = { family: STEPS[stepIndex].key, index: i };
+                    stepIndex++;
+                    
+                    if (stepIndex < STEPS.length) {
+                        updateStepChip();
+                        renderFan();
+                    } else {
+                        stepInfo.textContent = 'Sélection terminée • Prêt pour l\'analyse';
+                        showBtn.classList.remove('hidden');
+                        showBtn.disabled = false;
+                    }
+                }, 800);
+            }, 50);
+        }, 1000); // 1 seconde après le flip
+    }, 600); // Après l'animation de détachement
 }
 
   function resetAll(){
