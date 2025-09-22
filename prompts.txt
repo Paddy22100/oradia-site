@@ -203,3 +203,5 @@ ce bouton doit être au dessus des slots, à gauche de l'éventail, sous le text
 quand la carte se retourne, elle reste visible 2s au même endroit et va se positionner en miniature sur le slot correspondant. elle ne doit pas apparaître plus bas dans la page
 lorsque la carte se retourne, elle doit être zoomée et restée visible pendant 2s. Puis elle va se positionner au format miniature sur le slot correspondant. Elle ne doit pas apparaître en bas de page
 la carte doit devenir une miniature quand elle va dans le slot correspondant
+quand la carte se retourne, il doit y avoir un zoom dessus 
+modifier les animations pour que lorsque la carte se retourne un zoom soit fait dessus et qu'il dure 2s avant de passer à l'animation suivante
