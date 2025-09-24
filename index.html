@@ -359,7 +359,29 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   *{ animation: none !important; transition: none !important; }
 }
 /* ------- Pèlerin : éventail multi-choix + dock (fix) ------- */
-#board{ padding-top: 28px; padding-bottom: 8px; }           /* pousse la section */
+#board{ position:relative; padding-top: 28px; padding-bottom: 8px; }           /* pousse la section */
+
+/* CTA "Afficher l’analyse" au-dessus de l’éventail */
+#board .cta-analyse{
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  padding: 16px 36px;
+  font-size: 1.25rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg,#d4af37,#f5e7a1);
+  color: #051428;
+  border: 1px solid rgba(212,175,55,.6);
+  box-shadow: 0 16px 40px rgba(212,175,55,.25), 0 0 0 2px rgba(5,20,40,.6) inset;
+  pointer-events: auto;
+}
+#board .cta-analyse:hover{
+  transform: translate(-50%, -50%) scale(1.03);
+  box-shadow: 0 22px 44px rgba(212,175,55,.35), 0 0 0 2px rgba(5,20,40,.6) inset;
+}
+
 .fan-wrap{
   position:relative;
   width:min(1200px, 96vw);
@@ -2449,15 +2471,6 @@ document.addEventListener("DOMContentLoaded", () => {
         card.classList.add('flipped');
         flippedCount++;
 
-        // Quand les 4 cartes sont retournées, on révèle le bouton "Afficher le résultat"
-if (flippedCount === 4) {
-  const showBtn = document.getElementById('showResults');
-  if (showBtn) {
-    showBtn.classList.remove('hidden');
-    showBtn.disabled = false;
-  }
-}
-
         // Bloque la face back après le flip
         back.setAttribute('aria-pressed', 'true');
         back.style.pointerEvents = 'none';
@@ -2781,10 +2794,19 @@ const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : 
                     updateStepChip();
                     renderFan();
                 } else {
-                    stepInfo.textContent = 'Sélection terminée';
-                    showBtn.classList.remove('hidden');
-                    showBtn.disabled = false;
-                }
+    stepInfo.textContent = 'Sélection terminée';
+    const board = document.getElementById('board');
+    const fan   = document.getElementById('fanBoard');
+
+    showBtn.classList.remove('hidden');
+    showBtn.disabled = false;
+    showBtn.classList.add('cta-analyse');      // applique le style overlay
+
+    // place le bouton AVANT l’éventail pour qu’il flotte dessus
+    if (board && fan && showBtn.parentElement !== board) {
+      board.insertBefore(showBtn, fan);
+    }
+}
             }, 800);
         }, 2000); // 2 secondes après le zoom
     }, 600); // Après l'animation de détachement
