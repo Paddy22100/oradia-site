@@ -219,3 +219,5 @@ Le bouton Commencer le tirage du tirage du pèlerin doit être inactif tant que 
 rend le tirage du pèlerin entièrement responsive
 change la couleur du menu donut du mode imersif pour qu'il soit plus discret
 inverse les couleurs du menu donut du mode imerssif
+ce bouton nouveau tirage ne fonctionne pas, il doit relancer le tirage du pèlerin en le remettant à zéro et toujours dans un mode immersif
+Je veux que le bouton nouveau tirage affiché au niveau des résultats du tirage du pèlerin ramène au même endroit que le bouton Commencer le tirage de l'accueil dans les offres. le clic sur le bouton nouveau tirage doit réinitialiser le tirage (intention, cartes)
