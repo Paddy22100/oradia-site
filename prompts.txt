@@ -217,3 +217,5 @@ améliore le visuel de l'éventail de cartes
 Le tirage ne doit pas pouvoir commencer tant que l'intention n'est pas renseigné
 Le bouton Commencer le tirage du tirage du pèlerin doit être inactif tant que l'intention n'est renseignée et uniquement ce bouton
 rend le tirage du pèlerin entièrement responsive
+change la couleur du menu donut du mode imersif pour qu'il soit plus discret
+inverse les couleurs du menu donut du mode imerssif

@@ -588,7 +588,7 @@ document.head.appendChild(style);
                  placeholder="Ex. : Comment orienter ma journée avec justesse ?" required />
         </div>
               <div class="mt-3 text-center">
-          <button id="startReading" class="btn-gold">Commencer le tirage</button>
+          <button id="startReading" class="btn-gold" disabled>Commencer le tirage</button>
         </div>
       </div>
 
@@ -2018,9 +2018,10 @@ function toggleImmersiveMenu(forceClose){
 
   // validation live - only disable the start button
   intentionIn.addEventListener('input', ()=>{
-    const ok = intentionIn.value.trim().endsWith('?') && intentionIn.value.trim().length>1;
-    startButton.disabled = !ok;
-  });
+  const ok = intentionIn.value.trim().length > 0;   // non vide = ok
+  startButton.disabled = !ok;                        // ne touche qu’à #startReading
+});
+
 
   // focus → passe en immersif
   intentionIn.addEventListener('focus', enterPelerinImmersive);
@@ -2037,11 +2038,13 @@ $$('.card .back').forEach(back=>{
   });
 });
 
-    if(!intentionIn.value.trim().endsWith('?')){
-      intentionIn.setCustomValidity("Veuillez formuler une question ouverte se terminant par « ? »");
-      intentionIn.reportValidity();
-      return;
-    }
+   if(!intentionIn.value.trim()){
+    intentionIn.setCustomValidity("Veuillez saisir votre intention avant de commencer");
+    intentionIn.reportValidity();
+    return;
+  } else {
+    intentionIn.setCustomValidity("");
+  }
  show(board);
 el('cardsInstruction')?.classList.remove('hidden');
 hide(startButton);
