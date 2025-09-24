@@ -129,6 +129,11 @@
 
     .btn-gold{ background:linear-gradient(135deg,#d4af37,#b8860b); color:#051428; font-weight:600; border-radius:8px; padding:12px 24px; transition:.3s; display:inline-block; text-align:center }
     .btn-gold:hover{ transform:translateY(-3px); box-shadow:0 10px 20px rgba(212,175,55,.3) }
+   
+    /* Apparence du bouton désactivé (intention vide) */
+    .btn-gold:disabled{  background: transparent;  color: #d4af37;  border: 2px solid #d4af37;  box-shadow: none;  opacity: 1;  cursor: not-allowed;  pointer-events: none;}
+
+/* L’état actif reste celui déjà défini par .btn-gold */
     .btn-outline-gold{ background:transparent; color:#d4af37; border:2px solid #d4af37; border-radius:8px; padding:10px 20px; transition:.3s; display:inline-block }
     .btn-outline-gold:hover{ background:rgba(212,175,55,.1); transform:translateY(-3px) }
 
@@ -137,6 +142,7 @@
 
     .result-lines{ padding:12px; border-radius:12px; background:rgba(11,29,58,.6); border:1px solid rgba(212,175,55,.2) }
     .hide-sections { display: none !important; }
+
 /* --- Traversée : plateau en croix 5 cartes --- */
 .traversee-board-5{
   display:grid;
@@ -2018,7 +2024,7 @@ function toggleImmersiveMenu(forceClose){
 
   // validation live - only disable the start button
   intentionIn.addEventListener('input', ()=>{
-  const ok = intentionIn.value.trim().length > 0;   // non vide = ok
+  const ok = intentionIn.value.trim().length > 0;
   startButton.disabled = !ok;                        // ne touche qu’à #startReading
 });
 
@@ -2038,13 +2044,13 @@ $$('.card .back').forEach(back=>{
   });
 });
 
-   if(!intentionIn.value.trim()){
-    intentionIn.setCustomValidity("Veuillez saisir votre intention avant de commencer");
-    intentionIn.reportValidity();
-    return;
-  } else {
-    intentionIn.setCustomValidity("");
-  }
+if(!intentionIn.value.trim()){
+  intentionIn.setCustomValidity("Veuillez saisir votre intention avant de commencer");
+  intentionIn.reportValidity();
+  return;
+} else {
+  intentionIn.setCustomValidity("");
+}
  show(board);
 el('cardsInstruction')?.classList.remove('hidden');
 hide(startButton);
