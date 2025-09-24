@@ -397,20 +397,23 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 .choice-tray{ position:relative; width:min(1200px, 96vw); margin:6px auto 0; padding:14px 10px 22px; border-top:1px solid rgba(212,175,55,.28); }
 .choice-tray .slots{ display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; }
 .choice-tray .slot{
-  position:relative; height:210px; border:1px dashed rgba(245,231,161,.35); border-radius:14px;
+  position:relative; min-height:290px; border:1px dashed rgba(245,231,161,35); border-radius:14px;
   display:flex; align-items:center; justify-content:center; color:#f5e7a1; font-size:.95rem;
-  background:linear-gradient(180deg, rgba(255,255,255,.02), rgba(255,255,255,.00));
+  background:linear-gradient(180deg, rgba(255,255,255,02), rgba(255,255,255,00));
+  padding:8px 0;
 }
+
 .choice-tray .slot.filled{ border-style:solid; border-color:rgba(245,231,161,.55); background:rgba(245,231,161,.06); }
 
 /* Mini-carte une fois ancrée en bas */
 .card.mini{
   position:relative !important;
   left:auto !important; top:auto !important;
-  width: 170px; height: 250px;
+  width: 180px; height: 270px;
   transform: none !important;
   margin: 0 auto;
 }
+
 .card.mini .card-inner{ box-shadow: var(--shadow); }
 .card.mini .face{ border-width:1px; }
 
@@ -423,8 +426,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   .fan-wrap{ height: 360px; }
   .fan-wrap .card{ width:200px; height:300px; }
   .fan-wrap .card[data-angle]{ --radius: 120px; }           /* bas aussi sur mobile */
-  .choice-tray .slot{ height:180px; }
-  .card.mini{ width:150px; height:220px; }
+  .choice-tray .slot{ min-height:240px; }
+  .card.mini{ width:160px; height:240px; }
 }
 /* --- Carte miniature affichée dans les slots --- */
 .slot .mini-card{
@@ -450,15 +453,16 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
 /* Mini-carte dans un slot */
 .slot .mini{
-  width: 150px;
-  height: 210px;
+  width: 180px;
+  height: 270px;
   position: relative !important;
   left: auto !important;
   top: auto !important;
-  transform: scale(0.8);
+  transform: none;
   margin: 0 auto;
   transition: all 0.5s ease;
 }
+
 .slot .mini .card-inner{
   height: 100%;
   box-shadow: 0 8px 16px rgba(0,0,0,.3);
@@ -470,7 +474,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 }
 
 @media (max-width: 640px){
-  .slot .mini{ width: 120px; height: 170px; }
+  .slot .mini{ width: 160px; height: 240px; }
 }
 
   </style>
@@ -2669,6 +2673,7 @@ const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : 
             
             // Une fois l'animation terminée, ajouter au slot
             setTimeout(() => {
+                slot.textContent = ''; // enlève le libellé statique du slot pour éviter le doublon
                 slot.appendChild(card);
                 card.style.position = 'relative';
                 card.style.left = 'auto';
