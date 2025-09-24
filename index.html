@@ -2021,10 +2021,33 @@ function toggleImmersiveMenu(forceClose){
 }
 
   window.exitPelerinImmersive = exitPelerinImmersive; // utilisé ailleurs
+function isOpenQuestion(txt){
+  const s = (txt || '').trim();
+  if (!s.endsWith('?')) return false;
+
+  const lower = s.toLowerCase();
+
+  // formulations fermées (oui/non) → refuser
+  const closedStarters = [
+    'est-ce que', 'peux-tu', 'puis-je', 'as-tu', 'avez-vous',
+    'es-tu', 'êtes-vous', 'dois-je', 'peut-on', 'sera-t-il', 'serait-il'
+  ];
+  if (closedStarters.some(p => lower.startsWith(p))) return false;
+
+  // formulations ouvertes → accepter
+  const openStarters = [
+    'comment', 'pourquoi', 'quel ', 'quelle ', 'quels ', 'quelles ',
+    'quoi', 'de quelle manière', 'dans quelle mesure', 'à quoi', 'vers quoi'
+  ];
+  if (openStarters.some(p => lower.startsWith(p))) return true;
+
+  // filet de sécurité : assez de mots + « ? »
+  return s.split(/\s+/).length >= 3;
+}
 
   // validation live - only disable the start button
   intentionIn.addEventListener('input', ()=>{
-  const ok = intentionIn.value.trim().length > 0;
+  const ok = isOpenQuestion(intentionIn.value);
   startButton.disabled = !ok;                        // ne touche qu’à #startReading
 });
 
@@ -2044,13 +2067,14 @@ $$('.card .back').forEach(back=>{
   });
 });
 
-if(!intentionIn.value.trim()){
-  intentionIn.setCustomValidity("Veuillez saisir votre intention avant de commencer");
+if(!isOpenQuestion(intentionIn.value)){
+  intentionIn.setCustomValidity("Formule une question ouverte (ex. « Comment… ? », « Pourquoi… ? ») et termine par « ? »");
   intentionIn.reportValidity();
   return;
 } else {
   intentionIn.setCustomValidity("");
 }
+
  show(board);
 el('cardsInstruction')?.classList.remove('hidden');
 hide(startButton);
