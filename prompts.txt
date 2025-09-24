@@ -216,3 +216,4 @@ Supprime le bouton Quitter le tirage
 améliore le visuel de l'éventail de cartes
 Le tirage ne doit pas pouvoir commencer tant que l'intention n'est pas renseigné
 Le bouton Commencer le tirage du tirage du pèlerin doit être inactif tant que l'intention n'est renseignée et uniquement ce bouton
+rend le tirage du pèlerin entièrement responsive

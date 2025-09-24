@@ -92,6 +92,41 @@
     .art h3{ margin:0 0 8px; color:#d4af37; font-size:1.25rem }
     .bottom{ padding:10px 14px 12px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid rgba(212,175,55,.2); font-size:.88rem }
 
+    /* Responsive améliorations pour mobile */
+    @media (max-width: 640px) {
+        .card { height: 320px; }
+        .logo-circle { width: 100px; height: 100px; }
+        .logo-circle::after { font-size: 0.9rem; }
+        .front .topbar { padding: 8px 10px; }
+        .chip { font-size: 0.7rem; padding: 4px 8px; }
+        .polarity { font-size: 1rem; }
+        .art { margin: 8px; padding: 12px; }
+        .art h3 { font-size: 1.1rem; }
+        .bottom { padding: 8px 10px; font-size: 0.8rem; }
+    }
+    
+    @media (max-width: 480px) {
+        .card { height: 280px; width: 85vw; }
+        .logo-circle { width: 80px; height: 80px; border-width: 4px; }
+        .logo-circle::after { font-size: 0.8rem; }
+        .front .topbar { padding: 6px 8px; }
+        .chip { font-size: 0.65rem; padding: 3px 6px; }
+        .polarity { font-size: 0.9rem; }
+        .art { margin: 6px; padding: 8px; }
+        .art h3 { font-size: 1rem; margin-bottom: 4px; }
+        .bottom { padding: 6px 8px; font-size: 0.75rem; }
+    }
+    
+    @media (max-width: 360px) {
+        .card { height: 250px; }
+        .logo-circle { width: 70px; height: 70px; }
+        .logo-circle::after { font-size: 0.7rem; }
+        .chip { font-size: 0.6rem; padding: 2px 4px; }
+        .polarity { font-size: 0.8rem; }
+        .art { margin: 4px; padding: 6px; }
+        .art h3 { font-size: 0.9rem; }
+    }
+
     .btn-gold{ background:linear-gradient(135deg,#d4af37,#b8860b); color:#051428; font-weight:600; border-radius:8px; padding:12px 24px; transition:.3s; display:inline-block; text-align:center }
     .btn-gold:hover{ transform:translateY(-3px); box-shadow:0 10px 20px rgba(212,175,55,.3) }
     .btn-outline-gold{ background:transparent; color:#d4af37; border:2px solid #d4af37; border-radius:8px; padding:10px 20px; transition:.3s; display:inline-block }
@@ -185,6 +220,90 @@ img { max-width: 100%; height: auto; }
     aspect-ratio: 7 / 10;   /* ratio carte */
   }
   .card-inner{ height: 100%; }
+}
+
+/* Responsive améliorations pour le tirage du Pèlerin */
+@media (max-width: 1024px) {
+  #oracle .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .result-lines {
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  #oracle .container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  .result-lines {
+    font-size: 0.9rem;
+    padding: 8px;
+  }
+  
+  #emailForm .bg-\[rgba\(18\,20\,32\,\.6\)\] {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  #oracle {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  
+  .result-lines {
+    font-size: 0.85rem;
+    padding: 6px;
+  }
+  
+  #emailForm .bg-\[rgba\(18\,20\,32\,\.6\)\] {
+    padding: 0.75rem;
+  }
+  
+  #emailForm input,
+  #emailForm button {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  #oracle {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+  
+  .result-lines {
+    font-size: 0.8rem;
+    padding: 4px;
+  }
+  
+  #emailForm .bg-\[rgba\(18\,20\,32\,\.6\)\] {
+    padding: 0.5rem;
+  }
+  
+  #emailForm input,
+  #emailForm button {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .result-lines {
+    font-size: 0.75rem;
+  }
+  
+  #emailForm input,
+  #emailForm button {
+    padding: 0.4rem;
+    font-size: 0.85rem;
+  }
 }
 
 /* Cartes de la Traversée : assure une bonne hauteur et wrap du texte */
