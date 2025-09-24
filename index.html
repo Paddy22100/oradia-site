@@ -434,6 +434,20 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   border-radius: 18px;
   border: 1px solid rgba(212, 175, 55, 0.2);
   margin-top: 30px;
+  position: relative;
+}
+
+.choice-tray .slots::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  bottom: -10px;
+  left: -10px;
+  border-radius: 28px;
+  border: 1px solid rgba(245, 231, 161, 0.1);
+  pointer-events: none;
+  z-index: -1;
 }
 
 @media (max-width: 768px) {
@@ -462,6 +476,24 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   border: 2px solid rgba(212, 175, 55, 0.6);
   background: rgba(212, 175, 55, 0.08);
   box-shadow: 0 4px 20px rgba(212, 175, 55, 0.15);
+}
+
+/* Style spécial pour le slot Mémoire Cosmos */
+.choice-tray .slot[aria-label="Carte MÉMOIRE COSMOS"] {
+  border: 2px dashed rgba(245, 231, 161, 0.6);
+  background: rgba(245, 231, 161, 0.05);
+}
+
+.choice-tray .slot[aria-label="Carte MÉMOIRE COSMOS"].filled {
+  border: 2px solid rgba(245, 231, 161, 0.8);
+  background: rgba(245, 231, 161, 0.1);
+  box-shadow: 0 0 25px rgba(245, 231, 161, 0.25);
+}
+
+.choice-tray .slot[aria-label="Carte MÉMOIRE COSMOS"]::before {
+  color: #f5e7a1;
+  background: rgba(10, 25, 47, 0.9);
+  border: 1px solid rgba(245, 231, 161, 0.5);
 }
 
 .choice-tray .slot::before {
