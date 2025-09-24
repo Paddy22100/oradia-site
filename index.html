@@ -1356,14 +1356,12 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     return arr[Math.floor(Math.random()*arr.length)];
   };
 
-  // === Source unique pour les familles de la Traversée ===
-const DATA_TRAVERSEE = {
-  revelations:   (window.DATA?.revelations   || []),
-  transmutation: (window.DATA?.transmutation || []),
-  actions:       (window.DATA?.actions       || []),
-  emotions:      (window.DATA?.emotions      || []),
-  cosmos:        (window.DATA?.cosmos        || [])
-};
+
+// === Source unique pour les familles de la Traversée ===
+const DATA_TRAVERSEE = new Proxy({}, {
+  get: (_, key) => Array.isArray(window.DATA?.[key]) ? window.DATA[key] : []
+});
+
 
   function slot(slotName, family){
     const chip = slotName.toUpperCase();
