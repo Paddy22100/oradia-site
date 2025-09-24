@@ -395,27 +395,94 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
 /* Dock (slots) */
 .choice-tray{ position:relative; width:min(1200px, 96vw); margin:6px auto 0; padding:14px 10px 22px; border-top:1px solid rgba(212,175,55,.28); }
-.choice-tray .slots{ display:grid; grid-template-columns:repeat(4, 1fr); gap:14px; }
-.choice-tray .slot{
-  position:relative; min-height:290px; border:1px dashed rgba(245,231,161,35); border-radius:14px;
-  display:flex; align-items:center; justify-content:center; color:#f5e7a1; font-size:.95rem;
-  background:linear-gradient(180deg, rgba(255,255,255,02), rgba(255,255,255,00));
-  padding:8px 0;
+.choice-tray .slots {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  padding: 20px;
+  background: rgba(5, 20, 40, 0.3);
+  border-radius: 18px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  margin-top: 30px;
 }
 
-.choice-tray .slot.filled{ border-style:solid; border-color:rgba(245,231,161,.55); background:rgba(245,231,161,.06); }
+@media (max-width: 768px) {
+  .choice-tray .slots {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+}
+.choice-tray .slot {
+  position: relative;
+  min-height: 290px;
+  border: 2px dashed rgba(212, 175, 55, 0.4);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f5e7a1;
+  font-size: 1rem;
+  background: rgba(10, 25, 47, 0.3);
+  padding: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.choice-tray .slot.filled {
+  border: 2px solid rgba(212, 175, 55, 0.6);
+  background: rgba(212, 175, 55, 0.08);
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.15);
+}
+
+.choice-tray .slot::before {
+  content: attr(aria-label);
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0a192f;
+  padding: 0 12px;
+  font-size: 0.85rem;
+  color: #d4af37;
+  white-space: nowrap;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 12px;
+}
+
+.choice-tray .slot:hover {
+  border-color: rgba(212, 175, 55, 0.6);
+  background: rgba(212, 175, 55, 0.05);
+}
 
 /* Mini-carte une fois ancrée en bas */
-.card.mini{
-  position:relative !important;
-  left:auto !important; top:auto !important;
-  width: 180px; height: 270px;
+.card.mini {
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  width: 180px;
+  height: 270px;
   transform: none !important;
   margin: 0 auto;
+  transition: all 0.5s ease;
+  z-index: 10;
 }
 
-.card.mini .card-inner{ box-shadow: var(--shadow); }
-.card.mini .face{ border-width:1px; }
+.card.mini .card-inner {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+}
+
+.card.mini .front {
+  background: linear-gradient(145deg, rgba(26, 54, 93, 0.9), rgba(5, 20, 40, 0.95));
+  border: 1px solid rgba(212, 175, 55, 0.4);
+}
+
+/* Style spécial pour la carte Mémoires Cosmos */
+.card.mini[data-family="cosmos"] .front {
+  background: linear-gradient(145deg, rgba(245, 231, 161, 0.1), rgba(26, 54, 93, 0.9));
+  border: 1px solid rgba(245, 231, 161, 0.5);
+  box-shadow: 0 0 15px rgba(245, 231, 161, 0.3);
+}
 
 /* Pastille d'étape */
 .step-chip{ display:inline-flex; align-items:center; gap:.5rem; padding:.35rem .6rem; border:1px solid rgba(245,231,161,.45);
