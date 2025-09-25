@@ -2334,35 +2334,18 @@ $$('.card').forEach(card=>{
     document.getElementById('accueil')?.scrollIntoView({behavior: 'smooth'});
     
     // Réinitialiser l'état du tirage
-    hide(showBtn); 
-    if (showBtn) {
-      showBtn.disabled = false; // Réactiver le bouton pour les prochains tirages
-      showBtn.classList.remove('cta-analyse');
-    }
-    hide(results); 
-    el('fullReading')?.classList.add('hidden');
-    resetBtn.classList.add('hidden'); 
-    el('emailForm')?.classList.add('hidden');
-    linesOut && (linesOut.innerHTML=''); 
-    synthOut && (synthOut.innerHTML='');
+    hide(showBtn); showBtn && (showBtn.disabled=true);
+    hide(results); el('fullReading')?.classList.add('hidden');
+    resetBtn.classList.add('hidden'); el('emailForm')?.classList.add('hidden');
+    linesOut && (linesOut.innerHTML=''); synthOut && (synthOut.innerHTML='');
     $('.card').forEach(card=>{
       card.classList.remove('flipped');
       const back = $('.back', card);
-      if(back){ 
-        back.style.pointerEvents='auto'; 
-        back.setAttribute('aria-pressed','false'); 
-      }
+      if(back){ back.style.pointerEvents='auto'; back.setAttribute('aria-pressed','false'); }
       card.querySelector('[data-name]').textContent='—';
       card.querySelector('[data-quote]').textContent='—';
       const pol = card.querySelector('[data-polarity]');
-      if(pol){ 
-        if(card.dataset.family==='cosmos'){ 
-          pol.style.visibility='hidden'; 
-        } else { 
-          pol.style.visibility='visible'; 
-          pol.textContent=''; 
-        } 
-      }
+      if(pol){ if(card.dataset.family==='cosmos'){ pol.style.visibility='hidden'; } else { pol.style.visibility='visible'; pol.textContent=''; } }
     });
     hide(board);
     el('cardsInstruction')?.classList.add('hidden');
@@ -2553,10 +2536,82 @@ document.addEventListener("DOMContentLoaded", () => {
   const modal     = document.getElementById('analyzeModal');
   const resultsEl = document.getElementById('results');
   const linesEl   = document.getElementById('lines');
+  const synthEl  = document.getElementById('synthese');
   const outInt    = document.getElementById('out-intention');
   const intention = document.getElementById('intention');
 
   if(!showBtn) return;
+// --- Générateur d'analyse poétique, variée et statique (client) ---
+function generateAnalysis({ em, be, ac, co, intention }) {
+  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
+  const clean = s => (s || '—').replace(/\s+/g, ' ').trim();
+
+  const emo = clean(em?.name);
+  const need = clean(be?.name);
+  const act = clean(ac?.name);
+  const cos = clean(co?.name);
+  const intent = clean(intention);
+
+  // Fragments poétiques (courts, non ésotériques)
+  const openings = [
+    `Sous la lampe du présent, ${emo.toLowerCase()} révèle un relief à apprivoiser.`,
+    `Une brise discrète soulève ${emo.toLowerCase()} et pointe ce qui demande douceur et justesse.`,
+    `Comme une trace sur le sable, ${emo.toLowerCase()} raconte ce qui s’est joué et ce qui cherche passage.`
+  ];
+
+  const bridges = [
+    `Ce mouvement appelle ${need.toLowerCase()}, sans forcer, sans fuir.`,
+    `La clé semble être ${need.toLowerCase()}, tenue avec simplicité.`,
+    `L’équilibre se trouve quand ${need.toLowerCase()} devient une évidence tranquille.`
+  ];
+
+  const actions = [
+    `Un pas concret : ${act.toLowerCase()} en gardant le souffle ample.`,
+    `Geste minimal : ${act.toLowerCase()} là où c’est vivant, pas là où c’est bruyant.`,
+    `Choisis de ${act.toLowerCase()} sans te disperser : un geste, un lieu, une personne.`
+  ];
+
+  const cosmoses = [
+    `Mémoire en filigrane : ${cos.toLowerCase()} — non pour s’y enfermer, mais pour reconnaître l’empreinte.`,
+    `En arrière-plan, ${cos.toLowerCase()} rappelle le motif récurrent à transformer.`,
+    `${cos} indique l’angle mort à illuminer sans jugement.`
+  ];
+
+  // Question ouverte (toujours différente)
+  const questions = [
+    `Quelle petite action aujourd’hui honore ${need.toLowerCase()} sans trahir ${emo.toLowerCase()} ?`,
+    `Comment ${act.toLowerCase()} peut-il devenir un engagement respirable, dès maintenant ?`,
+    `Où poses-tu le premier pas pour que ${need.toLowerCase()} s’installe vraiment ?`
+  ];
+
+  // Mantras courts (affirmations)
+  const mantras = [
+    `Je marche simple, je marche juste.`,
+    `Un pas, clair, suffit.`,
+    `Je choisis le vivant plutôt que l’habitude.`,
+    `Je laisse le trop s’éloigner, je garde l’essentiel.`,
+    `J’ouvre l’espace, j’accueille le mouvement.`
+  ];
+
+  const introIntent = intent && intent !== '—'
+    ? `<p class="opacity-80 italic mb-2">Intention : “${intent}”</p>`
+    : '';
+
+  const html = `
+    ${introIntent}
+    <div class="space-y-3 leading-relaxed">
+      <p>${pick(openings)}</p>
+      <p>${pick(bridges)}</p>
+      <p>${pick(actions)}</p>
+      <p class="opacity-90">${pick(cosmoses)}</p>
+    </div>
+    <div class="mt-4 pt-4 border-t border-gold/20 space-y-2">
+      <p class="italic">❓ ${pick(questions)}</p>
+      <p class="font-semibold text-gold">🕊️ Mantra — ${pick(mantras)}</p>
+    </div>
+  `;
+  return { html };
+}
 
   showBtn.addEventListener('click', async () => {
     // 1) Ouvre le modal et bloque le scroll
@@ -2566,7 +2621,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     try {
       // 2) (ici tu pourras appeler ton API; on simule un petit délai)
-      await new Promise(r => setTimeout(r, 5000));
+      await new Promise(r => setTimeout(r, 3000));
 
       // 3) Récupère ce qui est déjà affiché sur les cartes retournées (robuste si "drawn" est dans une IIFE)
       const get = fam => {
@@ -2590,6 +2645,8 @@ document.addEventListener("DOMContentLoaded", () => {
         <p><b>Mémoires Cosmos :</b> ${co.name} — ${co.quote}</p>
       `;
       resultsEl.classList.remove('hidden');
+const analysis = generateAnalysis({ em, be, ac, co, intention: outInt.textContent });
+synthEl.innerHTML = analysis.html;
 
     } finally {
       // 5) Ferme le modal et réactive le scroll
