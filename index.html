@@ -2541,56 +2541,74 @@ document.addEventListener("DOMContentLoaded", () => {
   const intention = document.getElementById('intention');
 
   if(!showBtn) return;
-// --- Générateur d'analyse poétique, variée et statique (client) ---
+  
 function generateAnalysis({ em, be, ac, co, intention }) {
   const pick = arr => arr[Math.floor(Math.random() * arr.length)];
   const clean = s => (s || '—').replace(/\s+/g, ' ').trim();
 
-  const emo = clean(em?.name);
+  const emo  = clean(em?.name);
   const need = clean(be?.name);
-  const act = clean(ac?.name);
-  const cos = clean(co?.name);
+  const act  = clean(ac?.name);
+  const cos  = clean(co?.name);
+  const eq   = clean(em?.quote);
+  const bq   = clean(be?.quote);
+  const aq   = clean(ac?.quote);
+  const cq   = clean(co?.quote);
   const intent = clean(intention);
 
-  // Fragments poétiques (courts, non ésotériques)
+  // Fragments courts, sobres et variés
   const openings = [
-    `Sous la lampe du présent, ${emo.toLowerCase()} révèle un relief à apprivoiser.`,
-    `Une brise discrète soulève ${emo.toLowerCase()} et pointe ce qui demande douceur et justesse.`,
-    `Comme une trace sur le sable, ${emo.toLowerCase()} raconte ce qui s’est joué et ce qui cherche passage.`
+    `Sous la lampe du présent, ${emo.toLowerCase()} trace un relief à apprivoiser.`,
+    `Un souffle soulève ${emo.toLowerCase()} et montre ce qui appelle douceur.`,
+    `${emo} n'est pas un verdict : c'est une météo. ${eq !== '—' ? '« '+eq+' »' : ''}`.trim(),
+    `Au ras du sol, ${emo.toLowerCase()} indique l'endroit sensible où porter l'attention.`,
+    `Ce qui remue (${emo.toLowerCase()}) sert de boussole si tu l'écoutes sans t'y noyer.`,
+    `Entre tension et calme, ${emo.toLowerCase()} fait apparaître la marche possible.`
   ];
 
   const bridges = [
-    `Ce mouvement appelle ${need.toLowerCase()}, sans forcer, sans fuir.`,
-    `La clé semble être ${need.toLowerCase()}, tenue avec simplicité.`,
-    `L’équilibre se trouve quand ${need.toLowerCase()} devient une évidence tranquille.`
+    `La clé : ${need.toLowerCase()}, tenue avec simplicité.`,
+    `Quand ${need.toLowerCase()} devient non négociable, le cœur s'apaise.`,
+    `Revenir à ${need.toLowerCase()} — sans urgence — ouvre la voie.`,
+    `${bq !== '—' ? 'Mémo besoin : « '+bq+' ». ' : ''}Garde ${need.toLowerCase()} en fil conducteur.`,
+    `L'équilibre se rétablit en nourrissant ${need.toLowerCase()}.`,
+    `Ralentir assez pour laisser ${need.toLowerCase()} prendre place.`
   ];
 
   const actions = [
-    `Un pas concret : ${act.toLowerCase()} en gardant le souffle ample.`,
-    `Geste minimal : ${act.toLowerCase()} là où c’est vivant, pas là où c’est bruyant.`,
-    `Choisis de ${act.toLowerCase()} sans te disperser : un geste, un lieu, une personne.`
+    `Un geste net : ${act.toLowerCase()}, puis laisser respirer.`,
+    `Choisir de ${act.toLowerCase()} là où c'est vivant, pas là où c'est bruyant.`,
+    `Micro-pas : ${act.toLowerCase()} envers une personne, un lieu, un détail.`,
+    `${aq !== '—' ? 'Rappel action : « '+aq+' ». ' : ''}Transformer la clarté en mouvement : ${act.toLowerCase()}.`,
+    `Aujourd'hui, ${act.toLowerCase()} sans forcer — juste assez pour déplacer l'aiguille.`,
+    `Couper la dispersion : ${act.toLowerCase()}, puis stop.`
   ];
 
   const cosmoses = [
-    `Mémoire en filigrane : ${cos.toLowerCase()} — non pour s’y enfermer, mais pour reconnaître l’empreinte.`,
-    `En arrière-plan, ${cos.toLowerCase()} rappelle le motif récurrent à transformer.`,
-    `${cos} indique l’angle mort à illuminer sans jugement.`
+    `En arrière-plan, ${cos.toLowerCase()} sert de mémoire à transformer.`,
+    `Mémoire en filigrane : ${cos.toLowerCase()} — non pour s'y enfermer, mais pour reconnaître l'empreinte.`,
+    `${cos} éclaire l'angle mort à illuminer sans jugement.${cq !== '—' ? ' « '+cq+' »' : ''}`,
+    `Le contexte large s'appelle ${cos.toLowerCase()} : cela relie le pas au paysage.`,
+    `Derrière l'instant, ${cos.toLowerCase()} rappelle le motif qui revient pour être pacifié.`
   ];
 
-  // Question ouverte (toujours différente)
   const questions = [
-    `Quelle petite action aujourd’hui honore ${need.toLowerCase()} sans trahir ${emo.toLowerCase()} ?`,
-    `Comment ${act.toLowerCase()} peut-il devenir un engagement respirable, dès maintenant ?`,
-    `Où poses-tu le premier pas pour que ${need.toLowerCase()} s’installe vraiment ?`
+    `Quelle petite action honore ${need.toLowerCase()} sans trahir ${emo.toLowerCase()} ?`,
+    `Où poses-tu un premier pas pour que ${need.toLowerCase()} s'installe vraiment ?`,
+    `Comment ${act.toLowerCase()} peut devenir un engagement respirable, dès maintenant ?`,
+    `Quelle conversation, si elle avait lieu, servirait ${need.toLowerCase()} dès aujourd'hui ?`,
+    `Et si tu faisais moins : que resterait-il qui respecte ${need.toLowerCase()} ?`,
+    `Qu'est-ce qui mérite un non clair pour protéger ${need.toLowerCase()} ?`
   ];
 
-  // Mantras courts (affirmations)
   const mantras = [
     `Je marche simple, je marche juste.`,
-    `Un pas, clair, suffit.`,
-    `Je choisis le vivant plutôt que l’habitude.`,
-    `Je laisse le trop s’éloigner, je garde l’essentiel.`,
-    `J’ouvre l’espace, j’accueille le mouvement.`
+    `Un pas clair suffit.`,
+    `Je choisis le vivant plutôt que l'habitude.`,
+    `Je laisse le trop s'éloigner, je garde l'essentiel.`,
+    `J'ouvre l'espace, j'accueille le mouvement.`,
+    `Je nourris ${need.toLowerCase()} par de petits actes`,
+    `Mon corps sait ; je ${act.toLowerCase()} sans me brusquer.`
   ];
 
   const introIntent = intent && intent !== '—'
@@ -2613,6 +2631,7 @@ function generateAnalysis({ em, be, ac, co, intention }) {
   return { html };
 }
 
+
   showBtn.addEventListener('click', async () => {
     // 1) Ouvre le modal et bloque le scroll
     modal.classList.remove('hidden');
@@ -2623,14 +2642,20 @@ function generateAnalysis({ em, be, ac, co, intention }) {
       // 2) (ici tu pourras appeler ton API; on simule un petit délai)
       await new Promise(r => setTimeout(r, 3000));
 
-      // 3) Récupère ce qui est déjà affiché sur les cartes retournées (robuste si "drawn" est dans une IIFE)
+      // 3) Récupère ce qui est déjà affiché sur les cartes RETOURNÉES (on cible d'abord les slots)
       const get = fam => {
-        const card = document.querySelector(`#board .card[data-family="${fam}"]`);
-        if(!card) return {name:'—', quote:''};
+        const slotByFam = { emotions: 'slot-0', besoins: 'slot-1', actions: 'slot-2', cosmos: 'slot-3' };
+        let card =
+          document.querySelector(`#${slotByFam[fam]} .card[data-family="${fam}"]`) ||
+          document.querySelector(`#board .card.mini[data-family="${fam}"]`) ||
+          document.querySelector(`#board .card[data-family="${fam}"].flipped`) ||
+          document.querySelector(`#board .card[data-family="${fam}"]`);
+        if (!card) return { name:'—', quote:'' };
         const name  = card.querySelector('[data-name]')?.textContent?.trim() || '—';
         const quote = card.querySelector('[data-quote]')?.textContent?.trim() || '';
-        return {name, quote};
+        return { name, quote };
       };
+
       const em  = get('emotions');
       const be  = get('besoins');
       const ac  = get('actions');
@@ -2965,3 +2990,4 @@ document.addEventListener('DOMContentLoaded', () => {
 
 </body>
 </html>
+test
