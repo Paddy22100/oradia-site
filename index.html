@@ -2327,9 +2327,13 @@ $$('.card').forEach(card=>{
     el('cardsInstruction')?.classList.add('hidden');
     results.scrollIntoView({behavior:'smooth', block:'start'});
   });
-
   // reset
   resetBtn?.addEventListener('click', ()=>{
+    // Rediriger vers l'accueil
+    window.location.href = '#accueil';
+    document.getElementById('accueil')?.scrollIntoView({behavior: 'smooth'});
+    
+    // Réinitialiser l'état du tirage
     hide(showBtn); showBtn && (showBtn.disabled=true);
     hide(results); el('fullReading')?.classList.add('hidden');
     resetBtn.classList.add('hidden'); el('emailForm')?.classList.add('hidden');
@@ -2343,20 +2347,16 @@ $$('.card').forEach(card=>{
       const pol = card.querySelector('[data-polarity]');
       if(pol){ if(card.dataset.family==='cosmos'){ pol.style.visibility='hidden'; } else { pol.style.visibility='visible'; pol.textContent=''; } }
     });
-hide(board);
-el('cardsInstruction')?.classList.add('hidden');
-show(startButton);
-el('intentionBox')?.classList.remove('hidden'); // 👈 réaffiche le formulaire
-
-intentionIn.value='';
-intentionIn.focus();
-// NE PAS QUITTER LE MODE IMMERSIF - reste en mode immersif
-// exitPelerinImmersive();
-// el('accueil')?.scrollIntoView({behavior:'smooth'});
-
+    hide(board);
+    el('cardsInstruction')?.classList.add('hidden');
+    show(startButton);
+    el('intentionBox')?.classList.remove('hidden');
+    intentionIn.value='';
+    
+    // Quitter le mode immersif
+    exitPelerinImmersive();
   });
-
-  // support tactile flip
+// support tactile flip
   $$('.card .back').forEach(back=>{
     back.addEventListener('touchstart', (e)=>{ e.preventDefault(); window.flipCard(back.closest('.card')); }, {passive:false});
   });
