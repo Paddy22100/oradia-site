@@ -2334,18 +2334,35 @@ $$('.card').forEach(card=>{
     document.getElementById('accueil')?.scrollIntoView({behavior: 'smooth'});
     
     // Réinitialiser l'état du tirage
-    hide(showBtn); showBtn && (showBtn.disabled=true);
-    hide(results); el('fullReading')?.classList.add('hidden');
-    resetBtn.classList.add('hidden'); el('emailForm')?.classList.add('hidden');
-    linesOut && (linesOut.innerHTML=''); synthOut && (synthOut.innerHTML='');
+    hide(showBtn); 
+    if (showBtn) {
+      showBtn.disabled = false; // Réactiver le bouton pour les prochains tirages
+      showBtn.classList.remove('cta-analyse');
+    }
+    hide(results); 
+    el('fullReading')?.classList.add('hidden');
+    resetBtn.classList.add('hidden'); 
+    el('emailForm')?.classList.add('hidden');
+    linesOut && (linesOut.innerHTML=''); 
+    synthOut && (synthOut.innerHTML='');
     $('.card').forEach(card=>{
       card.classList.remove('flipped');
       const back = $('.back', card);
-      if(back){ back.style.pointerEvents='auto'; back.setAttribute('aria-pressed','false'); }
+      if(back){ 
+        back.style.pointerEvents='auto'; 
+        back.setAttribute('aria-pressed','false'); 
+      }
       card.querySelector('[data-name]').textContent='—';
       card.querySelector('[data-quote]').textContent='—';
       const pol = card.querySelector('[data-polarity]');
-      if(pol){ if(card.dataset.family==='cosmos'){ pol.style.visibility='hidden'; } else { pol.style.visibility='visible'; pol.textContent=''; } }
+      if(pol){ 
+        if(card.dataset.family==='cosmos'){ 
+          pol.style.visibility='hidden'; 
+        } else { 
+          pol.style.visibility='visible'; 
+          pol.textContent=''; 
+        } 
+      }
     });
     hide(board);
     el('cardsInstruction')?.classList.add('hidden');
