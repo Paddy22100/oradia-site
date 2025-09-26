@@ -54,8 +54,51 @@
       50%{ box-shadow:0 0 0 10px rgba(212,175,55,.2); transform:translate(-50%,-50%) scale(1.05) }
       100%{ box-shadow:0 0 0 0 rgba(212,175,55,0); transform:translate(-50%,-50%) scale(1) }
     }
+
+    /* Animations pour l'intention */
+    @keyframes intentionGlow {
+      0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+      50% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0.1); }
+      100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+    }
     
-    @keyframes zoom {
+    @keyframes inputPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
+    
+    @keyframes textGlow {
+      0% { text-shadow: 0 0 5px rgba(212, 175, 55, 0.3); }
+      50% { text-shadow: 0 0 20px rgba(212, 175, 55, 0.6); }
+      100% { text-shadow: 0 0 5px rgba(212, 175, 55, 0.3); }
+    }
+    
+    @keyframes ripple {
+      0% { transform: scale(0); opacity: 1; }
+      100% { transform: scale(4); opacity: 0; }
+    }
+    
+    .intention-animate {
+      animation: intentionGlow 3s ease-in-out infinite;
+    }
+    
+    .input-focus {
+      animation: inputPulse 0.5s ease-out;
+    }
+    
+    .text-glow {
+      animation: textGlow 2s ease-in-out infinite;
+    }
+    
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(212, 175, 55, 0.3);
+      transform: scale(0);
+      pointer-events: none;
+    }
+@keyframes zoom {
       0% { transform: scale(0.8); opacity: 0.5; }
       50% { transform: scale(1.2); opacity: 0.8; }
       100% { transform: scale(0.8); opacity: 0.5; }
@@ -601,13 +644,92 @@ header {
 }
 .slot .mini-card .back{ display:none !important; }  /* on ne montre que la face avant */
 .slot .mini-card .front{ height:100%; }
-/* Zoom de la carte tenue en main */
-.card.zooming{
-  transform: translate(-50%, -50%) rotate(0deg) scale(1.3) !important;
-  z-index: 1000;
-  transition: transform 0.7s ease, opacity 0.5s ease;
-}
+    /* Zoom de la carte tenue en main */
+    .card.zooming{
+      transform: translate(-50%, -50%) rotate(0deg) scale(1.3) !important;
+      z-index: 1000;
+      transition: transform 0.7s ease, opacity 0.5s ease;
+    }
 
+    /* Styles pour les nouvelles animations d'intention */
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: rgba(212, 175, 55, 0.6);
+      border-radius: 50%;
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
+      50% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+    }
+    
+    .energy-line {
+      position: absolute;
+      width: 1px;
+      height: 100%;
+      background: linear-gradient(to bottom, transparent, rgba(212, 175, 55, 0.3), transparent);
+      animation: energyFlow 4s linear infinite;
+    }
+    
+    @keyframes energyFlow {
+      0% { transform: translateY(-100%); opacity: 0; }
+      50% { opacity: 1; }
+      100% { transform: translateY(100%); opacity: 0; }
+    }
+    
+    .wave-effect {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+      animation: wave 3s linear infinite;
+    }
+    
+    @keyframes wave {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    
+    .button-particles::before,
+    .button-particles::after {
+      content: '';
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      animation: sparkle 2s ease-in-out infinite;
+    }
+    
+    .button-particles::before {
+      top: 20%;
+      left: 20%;
+      animation-delay: 0s;
+    }
+    
+    .button-particles::after {
+      bottom: 20%;
+      right: 20%;
+      animation-delay: 1s;
+    }
+    
+    @keyframes sparkle {
+      0%, 100% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1); opacity: 1; }
+    }
+    
+    /* Animation pour le bouton activé */
+    .btn-gold:not(:disabled) {
+      animation: buttonPulse 2s ease-in-out infinite;
+    }
+    
+    @keyframes buttonPulse {
+      0%, 100% { box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3); }
+      50% { box-shadow: 0 15px 30px rgba(212, 175, 55, 0.5); }
+    }
 /* Mini-carte dans un slot */
 .slot .mini{
   width: 200px;
@@ -765,62 +887,88 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-2">Tirage du Pèlerin</h2>
         <p class="text-light-gold max-w-3xl mx-auto">Une question simple, un pas sur le chemin.</p>
       </div>
-      <!-- Intention -->
-      <div id="intentionBox" class="relative bg-gradient-to-br from-night-blue/90 to-dark-blue/95 border border-gold/40 rounded-2xl p-8 mb-8 shadow-2xl overflow-hidden">
-        <!-- Effet de lumière subtile -->
-        <div class="absolute inset-0 opacity-10 pointer-events-none">
-          <div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_50%,rgba(212,175,55,0.15),transparent_60%)]"></div>
+  <!-- Intention -->
+  <div id="intentionBox" class="relative bg-gradient-to-br from-night-blue/90 to-dark-blue/95 border border-gold/40 rounded-2xl p-8 mb-8 shadow-2xl overflow-hidden intention-animate">
+    <!-- Effet de lumière subtile -->
+    <div class="absolute inset-0 opacity-10 pointer-events-none">
+      <div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_50%,rgba(212,175,55,0.15),transparent_60%)]"></div>
+    </div>
+    
+    <!-- Bordure dorée subtile -->
+    <div class="absolute inset-0 rounded-2xl border border-gold/20 pointer-events-none"></div>
+    
+    <!-- Particules flottantes -->
+    <div class="absolute inset-0 overflow-hidden pointer-events-none">
+      <div class="particle" style="top:20%; left:10%; animation-delay:0s"></div>
+      <div class="particle" style="top:60%; left:80%; animation-delay:1s"></div>
+      <div class="particle" style="top:40%; left:30%; animation-delay:2s"></div>
+      <div class="particle" style="top:80%; left:60%; animation-delay:3s"></div>
+    </div>
+    
+    <div class="relative z-10">
+      <!-- En-tête élégant -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-gold/10 to-gold/5 rounded-full border border-gold/30 mb-4 floating">
+          <i class="fas fa-compass text-3xl text-gold"></i>
         </div>
+        <h3 class="cormorant text-3xl text-gold mb-4 text-glow">Préparez votre intention</h3>
+        <div class="max-w-2xl mx-auto">
+          <p class="text-light-gold/90 leading-relaxed text-lg mb-4">
+            Prenez un moment pour vous concentrer et vous relier profondément à votre intention.
+          </p>
+          <p class="text-gold/80 italic text-base">
+            Une intention claire ouvre la voie à une guidance plus juste et plus précise.
+          </p>
+        </div>
+      </div>
+
+      <!-- Formulaire d'intention épuré -->
+      <div class="bg-gradient-to-br from-night-blue/50 to-dark-blue/60 border border-gold/25 rounded-xl p-6 mb-6 backdrop-blur-sm relative overflow-hidden">
+        <!-- Lignes d'énergie -->
+        <div class="absolute inset-0 energy-line" style="top:0; left:0; animation-delay:0s"></div>
+        <div class="absolute inset-0 energy-line" style="top:0; right:0; animation-delay:1s"></div>
+        <div class="absolute inset-0 energy-line" style="bottom:0; left:0; animation-delay:2s"></div>
+        <div class="absolute inset-0 energy-line" style="bottom:0; right:0; animation-delay:3s"></div>
         
-        <!-- Bordure dorée subtile -->
-        <div class="absolute inset-0 rounded-2xl border border-gold/20 pointer-events-none"></div>
-        
-        <div class="relative z-10">
-          <!-- En-tête élégant -->
-          <div class="text-center mb-8">
-            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-gold/10 to-gold/5 rounded-full border border-gold/30 mb-4">
-              <i class="fas fa-compass text-3xl text-gold"></i>
-            </div>
-            <h3 class="cormorant text-3xl text-gold mb-4">Préparez votre intention</h3>
-            <div class="max-w-2xl mx-auto">
-              <p class="text-light-gold/90 leading-relaxed text-lg mb-4">
-                Prenez un moment pour vous concentrer et vous relier profondément à votre intention.
-              </p>
-              <p class="text-gold/80 italic text-base">
-                Une intention claire ouvre la voie à une guidance plus juste et plus précise.
-              </p>
+        <div class="flex flex-col md:flex-row md:items-start gap-6 relative z-10">
+          <div class="md:w-1/4">
+            <label for="intention" class="text-gold font-semibold text-lg flex items-center">
+              <i class="fas fa-bullseye mr-3 text-xl floating" style="animation-delay:0.5s"></i>Votre question
+            </label>
+            <div class="mt-2 text-xs text-gold/60">
+              Prenez un moment pour vous concentrer
             </div>
           </div>
-
-          <!-- Formulaire d'intention épuré -->
-          <div class="bg-gradient-to-br from-night-blue/50 to-dark-blue/60 border border-gold/25 rounded-xl p-6 mb-6 backdrop-blur-sm">
-            <div class="flex flex-col md:flex-row md:items-start gap-6">
-              <div class="md:w-1/4">
-                <label for="intention" class="text-gold font-semibold text-lg flex items-center">
-                  <i class="fas fa-bullseye mr-3 text-xl"></i>Votre question
-                </label>
-                <div class="mt-2 text-xs text-gold/60">
-                  Prenez un moment pour vous concentrer
-                </div>
-              </div>
-<div class="md:w-3/4">
-                <input id="intention" type="text" 
-                       class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-xl p-4 text-light-gold placeholder-gold/40
-                              focus:border-gold focus:ring-2 focus:ring-gold/30 focus:outline-none transition-all duration-300 text-lg"
-                       placeholder="Exemple : Comment orienter ma journée avec justesse ?" 
-                       required />
-              </div>
+          <div class="md:w-3/4 relative">
+            <input id="intention" type="text" 
+                   class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-xl p-4 text-light-gold placeholder-gold/40
+                          focus:border-gold focus:ring-2 focus:ring-gold/30 focus:outline-none transition-all duration-300 text-lg relative z-10"
+                   placeholder="Exemple : Comment orienter ma journée avec justesse ?" 
+                   required />
+            <!-- Effet de vague sur le placeholder -->
+            <div class="absolute inset-0 rounded-xl overflow-hidden pointer-events-none z-0">
+              <div class="wave-effect" style="animation-delay:0s"></div>
+              <div class="wave-effect" style="animation-delay:1s"></div>
+              <div class="wave-effect" style="animation-delay:2s"></div>
             </div>
-          </div>
-
-          <!-- Bouton de démarrage élégant -->
-          <div class="text-center">
-            <button id="startReading" class="btn-gold px-10 py-5 text-xl font-semibold transform hover:scale-105 transition-all duration-300 shadow-xl rounded-xl" disabled>
-              <i class="fas fa-play-circle mr-3"></i>Commencer le tirage
-            </button>
           </div>
         </div>
       </div>
+
+      <!-- Bouton de démarrage élégant -->
+      <div class="text-center relative">
+        <button id="startReading" class="btn-gold px-10 py-5 text-xl font-semibold transform hover:scale-105 transition-all duration-300 shadow-xl rounded-xl relative overflow-hidden" disabled>
+          <i class="fas fa-play-circle mr-3"></i>Commencer le tirage
+          <!-- Effet de particules sur le bouton -->
+          <div class="absolute inset-0 button-particles"></div>
+        </button>
+        <!-- Indicateur de validation -->
+        <div id="validationIndicator" class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-gold text-sm opacity-0 transition-opacity duration-300">
+          <i class="fas fa-check-circle mr-2"></i>Intention valide
+        </div>
+      </div>
+    </div>
+  </div>
 <!-- Plateau (caché au départ) -->
 <section id="board" class="hidden" aria-live="polite">
   <div class="flex items-center justify-between max-w-5xl mx-auto mb-2">
