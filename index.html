@@ -559,16 +559,24 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       
       /* Correction pour le menu mobile */
       #mobileMenu {
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: rgba(5, 20, 40, 0.98);
-        backdrop-filter: blur(10px);
-        z-index: 50;
-        border-top: 1px solid rgba(212, 175, 55, 0.3);
-      }
-      
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(5, 20, 40, 0.98);
+  backdrop-filter: blur(10px);
+  z-index: 1000;          /* était 50 -> passe à 1000 */
+  border-top: 1px solid rgba(212, 175, 55, 0.3);
+}
+header {
+  position: relative;
+  z-index: 1001;
+  overflow: visible; /* DS V3 : évite que le dropdown soit coupé */
+}
+#mobileMenuBtn {
+  z-index: 1002;          /* était 101 -> passe à 1002 */
+}
+
       #mobileMenu.hidden {
         display: none;
       }
@@ -576,17 +584,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       #mobileMenu:not(.hidden) {
         display: block;
       }
-      
-      /* Fix pour le menu mobile - empêcher le débordement */
-      header {
-        position: relative;
-        z-index: 100;
       }
-      
-      #mobileMenuBtn {
-        z-index: 101;
-      }
-    }
+
 /* --- Carte miniature affichée dans les slots --- */
 .slot .mini-card{
   position: relative;
@@ -653,6 +652,15 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 @media (max-width: 640px){
   .slot .mini{ width: 170px; height: 255px; }
 }
+/* DS V3 — mobile menu : sécurité overflow/stacking */
+header { position: relative; overflow: visible; }        /* garantit que le dropdown n'est pas coupé */
+#mobileMenu {
+  position: absolute; top: 100%; left: 0; right: 0;
+  background: rgba(5,20,40,.98); backdrop-filter: blur(10px);
+  z-index: 1200;                                          /* au-dessus du contenu */
+  border-top: 1px solid rgba(212,175,55,.3);
+}
+#mobileMenuBtn { position: relative; z-index: 1300; }     /* au-dessus du menu lui-même */
 
   </style>
 </head>
@@ -672,8 +680,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
     </div>
     <!-- Bouton burger (mobile) -->
-    <button id="mobileMenuBtn" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold"
-            aria-label="Ouvrir le menu">
+    <button id="mobileMenuBtn" type="button" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold" aria-label="Ouvrir le menu">
+           
       <i class="fas fa-bars text-lg"></i>
     </button>
 <!-- Nav desktop -->
@@ -2387,56 +2395,58 @@ $$('.card').forEach(card=>{
   });
 }
 /* ---------- Mobile menu ---------- */
+
 function initMobileMenu(){
-  const mobileBtn = el('mobileMenuBtn');
-  const mobileMenu = el('mobileMenu');
-  const loginBtnMobile = el('loginBtnMobile');
-  
-  // Fonction pour fermer le menu quand on clique à l'extérieur
-  const closeMenu = (e) => {
-    if (mobileMenu && !mobileMenu.classList.contains('hidden') && 
-        mobileBtn && !mobileBtn.contains(e.target) && 
-        mobileMenu && !mobileMenu.contains(e.target)) {
-      mobileMenu.classList.add('hidden');
-    }
-  };
-  
-  mobileBtn?.addEventListener('click', (e)=>{
+  const btn  = document.getElementById('mobileMenuBtn');
+  const menu = document.getElementById('mobileMenu');
+  const loginBtnMobile = document.getElementById('loginBtnMobile');
+  if(!btn || !menu) return;
+  if (btn.dataset.bound === '1') return; // déjà lié
+  btn.dataset.bound = '1';
+
+  btn.addEventListener('click', (e)=>{
     e.stopPropagation();
-    mobileMenu?.classList.toggle('hidden');
+    menu.classList.toggle('hidden');
+    btn.setAttribute('aria-expanded', menu.classList.contains('hidden') ? 'false' : 'true');
   });
-  
+
   loginBtnMobile?.addEventListener('click', ()=>{
-    el('subscriptionModal')?.classList.remove('hidden'); 
-    document.body.style.overflow='hidden';
-    mobileMenu?.classList.add('hidden');
-  });
-  
-  // Fermer le menu quand on clique sur un lien
-  mobileMenu?.querySelectorAll('a').forEach(link => {
-    link.addEventListener('click', () => {
-      mobileMenu?.classList.add('hidden');
-    });
-  });
-  
-  // Fermer le menu quand on clique à l'extérieur
-  document.addEventListener('click', closeMenu);
-  
-  // Empêcher la propagation des clics dans le menu
-  mobileMenu?.addEventListener('click', (e) => {
-    e.stopPropagation();
+    document.getElementById('subscriptionModal')?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    menu.classList.add('hidden');
+    btn.setAttribute('aria-expanded','false');
   });
 }
-/* ---------- Boot ---------- */
-document.addEventListener('DOMContentLoaded', ()=>{
-  initScrollTop();
-  initCGV();          /* CGU propres */                /* Réf: scripts CGU multiples nettoyés */
-  initOrderModal();   /* Paiement Traversée + Merci */ /* Réf: confirmation + accès direct Traversée */
-  initSubscription(); /* Espace membre */              /* Réf: doublons supprimés */
-  initPelerin();      /* Tirage Pèlerin immersif */
-  initTraversee();    /* Tirage Traversée immersif */
-  initMobileMenu();   /* Menu mobile */
-});
+
+/* ---------- Boot compatible SPA ---------- */
+(function start(){
+  const run = () => {
+    initScrollTop();
+    initCGV();
+    initOrderModal();
+    initSubscription();
+    initPelerin();
+    initTraversee();
+    tryInitMobileMenu(); // réessaie si éléments pas encore dans le DOM
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run, { once: true });
+  } else {
+    run(); // DS V3/SPA : DOM déjà prêt -> on démarre tout de suite
+  }
+})();
+
+function tryInitMobileMenu(max = 20){
+  const btn  = document.getElementById('mobileMenuBtn');
+  const menu = document.getElementById('mobileMenu');
+  if (btn && menu) {
+    initMobileMenu();             // fera rien si déjà bound (voir patch #2)
+  } else if (max > 0) {
+    setTimeout(() => tryInitMobileMenu(max - 1), 150);
+  }
+}
+
 </script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -3038,6 +3048,33 @@ document.addEventListener('DOMContentLoaded', () => {
       document.getElementById('intention')?.focus();
     }
   });
+});
+</script>
+<script>
+/* DS V3 — Délégation globale pour le menu mobile */
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('mobileMenu');
+  if (!menu) return;
+
+  const btn = e.target.closest('#mobileMenuBtn');
+  if (btn) {
+    e.preventDefault();
+    e.stopPropagation();
+    menu.classList.toggle('hidden');
+    btn.setAttribute('aria-expanded', menu.classList.contains('hidden') ? 'false' : 'true');
+    return;
+  }
+
+  if (e.target.closest('#mobileMenu a')) {                // clic sur un lien du menu
+    menu.classList.add('hidden');
+    document.getElementById('mobileMenuBtn')?.setAttribute('aria-expanded','false');
+    return;
+  }
+
+  if (!menu.classList.contains('hidden') && !e.target.closest('#mobileMenu')) {
+    menu.classList.add('hidden');                         // clic à l’extérieur
+    document.getElementById('mobileMenuBtn')?.setAttribute('aria-expanded','false');
+  }
 });
 </script>
 
