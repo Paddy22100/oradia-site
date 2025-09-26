@@ -426,7 +426,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 }
 @media (max-width: 480px){
   #board .cta-analyse{
-    top: 42%;               /* un poil plus haut pour ne pas masquer les slots */
+    top: 38%;               /* un poil plus haut pour ne pas masquer les slots */
     padding: 12px 28px;     /* surface de clic OK mais visuel moins massif */
     font-size: 1.05rem;     /* lisible sans “shouter” */
     box-shadow: 0 12px 28px rgba(212,175,55,.25), 0 0 0 2px rgba(5,20,40,.6) inset;
@@ -467,7 +467,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 .fan-wrap .card.docking{ transition: transform 520ms cubic-bezier(.22,.9,.12,1); box-shadow:none; }
 
 /* Dock (slots) */
-.choice-tray{ position:relative; width:min(1200px, 96vw); margin:6px auto 0; padding:14px 10px 22px; border-top:1px solid rgba(212,175,55,.28); }
+.choice-tray{ position:relative; width:min(1200px, 96vw); margin:22px auto 0; padding:14px 10px 22px; border-top:1px solid rgba(212,175,55,.28); }
 .choice-tray .slots {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
@@ -594,9 +594,9 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   border-radius:999px; color:#f5e7a1; font-size:.9rem; background:rgba(10,25,47,.35); }
 /* Mobile */
     @media (max-width:640px){
-      .fan-wrap{ height: 360px; }
-      .fan-wrap .card{ width:200px; height:300px; }
-      .fan-wrap .card[data-angle]{ --radius: 120px; }           /* bas aussi sur mobile */
+      .fan-wrap{ height: 380px; }
+      .fan-wrap .card{ width:190px; height:280px; }
+      .fan-wrap .card[data-angle]{ --radius: 140px; }           /* bas aussi sur mobile */
       .choice-tray .slot{ min-height:280px; }
       .card.mini{ width:170px; height:255px; }
       
@@ -1020,7 +1020,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   </div>
 
   <div class="text-center mt-4">
-    <button id="showResults" class="hidden px-6 py-3 border border-gold text-light-gold rounded-lg hover:bg-gold hover:text-dark-blue transition disabled:opacity-40" disabled>
+<button id="showResults" class="cta-analyse hidden px-6 py-3 border border-gold text-light-gold rounded-lg hover:bg-gold hover:text-dark-blue transition disabled:opacity-40" disabled>
       Afficher l’analyse
     </button>
   </div>
