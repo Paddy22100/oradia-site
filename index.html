@@ -766,51 +766,57 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         <p class="text-light-gold max-w-3xl mx-auto">Une question simple, un pas sur le chemin.</p>
       </div>
       <!-- Intention -->
-      <div id="intentionBox" class="relative bg-gradient-to-br from-night-blue/80 to-dark-blue/90 border-2 border-gold/30 rounded-2xl p-8 mb-8 shadow-2xl overflow-hidden">
-        <!-- Animation de fond subtile -->
-        <div class="absolute inset-0 opacity-20 pointer-events-none">
-          <div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_50%,rgba(212,175,55,0.1),transparent_50%)]"></div>
-          <div class="absolute bottom-0 right-0 w-64 h-64 bg-[radial-gradient(circle_at_70%_100%,rgba(245,231,161,0.05),transparent_70%)]"></div>
+      <div id="intentionBox" class="relative bg-gradient-to-br from-night-blue/90 to-dark-blue/95 border border-gold/40 rounded-2xl p-8 mb-8 shadow-2xl overflow-hidden">
+        <!-- Effet de lumière subtile -->
+        <div class="absolute inset-0 opacity-10 pointer-events-none">
+          <div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_50%,rgba(212,175,55,0.15),transparent_60%)]"></div>
         </div>
         
-        <!-- Bordure animée -->
-        <div class="absolute inset-0 rounded-2xl border-2 border-transparent bg-gradient-to-r from-gold/0 via-gold/20 to-gold/0 animate-pulse opacity-30 pointer-events-none"></div>
+        <!-- Bordure dorée subtile -->
+        <div class="absolute inset-0 rounded-2xl border border-gold/20 pointer-events-none"></div>
         
         <div class="relative z-10">
-          <!-- Icône et titre -->
-          <div class="text-center mb-6">
-            <div class="inline-flex items-center justify-center w-16 h-16 bg-gold/10 rounded-full border border-gold/30 mb-4">
-              <i class="fas fa-seedling text-2xl text-gold"></i>
+          <!-- En-tête élégant -->
+          <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-gold/10 to-gold/5 rounded-full border border-gold/30 mb-4">
+              <i class="fas fa-compass text-3xl text-gold"></i>
             </div>
-            <h3 class="cormorant text-2xl text-gold mb-3">Préparer votre intention</h3>
-            <p class="text-light-gold/90 leading-relaxed max-w-2xl mx-auto">
-              Avant de débuter, prenez un moment pour vous concentrer et vous relier profondément à votre intention. 
-              <span class="block mt-2 text-gold/80 italic">Une intention claire ouvre la voie à une guidance plus juste.</span>
-            </p>
-          </div>
-
-          <!-- Formulaire d'intention -->
-          <div class="bg-[rgba(5,20,40,0.4)] border border-gold/20 rounded-xl p-6 mb-4">
-            <div class="flex flex-col md:flex-row md:items-center gap-4">
-              <label for="intention" class="text-gold font-semibold min-w-[120px] flex items-center">
-                <i class="fas fa-bullseye mr-2"></i>Votre intention :
-              </label>
-              <input id="intention" type="text" 
-                     class="flex-1 w-full bg-[rgba(5,20,40,0.8)] border border-gold/25 rounded-xl p-4 text-light-gold placeholder-gold/50
-                            focus:border-gold focus:ring-2 focus:ring-gold/20 focus:outline-none transition-all duration-300"
-                     placeholder="Ex. : Comment orienter ma journée avec justesse ?" 
-                     required />
-            </div>
-            <div class="mt-3 text-xs text-gold/60 flex items-center">
-              <i class="fas fa-info-circle mr-2"></i>
-              Formulez une question ouverte (Comment... ? Pourquoi... ?) terminée par un point d'interrogation
+            <h3 class="cormorant text-3xl text-gold mb-4">Préparez votre intention</h3>
+            <div class="max-w-2xl mx-auto">
+              <p class="text-light-gold/90 leading-relaxed text-lg mb-4">
+                Prenez un moment pour vous concentrer et vous relier profondément à votre intention.
+              </p>
+              <p class="text-gold/80 italic text-base">
+                Une intention claire ouvre la voie à une guidance plus juste et plus précise.
+              </p>
             </div>
           </div>
 
-          <!-- Bouton de démarrage -->
+          <!-- Formulaire d'intention épuré -->
+          <div class="bg-gradient-to-br from-night-blue/50 to-dark-blue/60 border border-gold/25 rounded-xl p-6 mb-6 backdrop-blur-sm">
+            <div class="flex flex-col md:flex-row md:items-start gap-6">
+              <div class="md:w-1/4">
+                <label for="intention" class="text-gold font-semibold text-lg flex items-center">
+                  <i class="fas fa-bullseye mr-3 text-xl"></i>Votre intention
+                </label>
+                <div class="mt-2 text-xs text-gold/60">
+                  Question ouverte terminée par « ? »
+                </div>
+              </div>
+              <div class="md:w-3/4">
+                <input id="intention" type="text" 
+                       class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-xl p-4 text-light-gold placeholder-gold/40
+                              focus:border-gold focus:ring-2 focus:ring-gold/30 focus:outline-none transition-all duration-300 text-lg"
+                       placeholder="Exemple : Comment orienter ma journée avec justesse ?" 
+                       required />
+              </div>
+            </div>
+          </div>
+
+          <!-- Bouton de démarrage élégant -->
           <div class="text-center">
-            <button id="startReading" class="btn-gold px-8 py-4 text-lg font-semibold transform hover:scale-105 transition-transform duration-300 shadow-lg" disabled>
-              <i class="fas fa-play mr-2"></i>Commencer le tirage
+            <button id="startReading" class="btn-gold px-10 py-5 text-xl font-semibold transform hover:scale-105 transition-all duration-300 shadow-xl rounded-xl" disabled>
+              <i class="fas fa-play-circle mr-3"></i>Commencer le tirage
             </button>
           </div>
         </div>
