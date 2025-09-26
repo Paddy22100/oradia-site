@@ -783,6 +783,39 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   border-top: 1px solid rgba(212,175,55,.3);
 }
 #mobileMenuBtn { position: relative; z-index: 1300; }     /* au-dessus du menu lui-même */
+/* ====== MOBILE FIX PÈLERIN (ne change pas le desktop) ====== */
+@media (max-width: 480px){
+  /* Titre & intro alignés à gauche */
+  #oracle .text-center{ text-align: left; }
+  #oracle h2{ font-size: 1.75rem; line-height: 1.2; }   /* plus petit sur téléphone */
+  #oracle p{ font-size: .95rem; }
+
+  /* Éventail + dock : plus petit et calé à gauche dans le conteneur */
+  #board, 
+  #board .fan-wrap,
+  #board .choice-tray { width: 92vw; }                   /* rétrécit le bloc tirage */
+  
+  #board .fan-wrap{
+    margin: 12px 0 0 0;                                  /* au lieu de "auto" -> colle à gauche */
+    --radius: 110px;                                     /* éventail un peu plus bas/compact */
+  }
+
+  /* cartes de l’éventail en version mobile */
+  #board .card{
+    width: 190px; 
+    height: 280px; 
+    transform-origin: 50% 82%;
+  }
+
+  /* dock en bas un peu plus compact aussi */
+  #board .choice-tray{ padding: 12px 8px 18px; }
+}
+
+/* très petits écrans : encore un cran de réduction */
+@media (max-width: 360px){
+  #board .card{ width: 170px; height: 250px; }
+  #board .fan-wrap{ --radius: 100px; }
+}
 
   </style>
 </head>
