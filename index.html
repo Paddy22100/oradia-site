@@ -549,15 +549,34 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 /* Pastille d'étape */
 .step-chip{ display:inline-flex; align-items:center; gap:.5rem; padding:.35rem .6rem; border:1px solid rgba(245,231,161,.45);
   border-radius:999px; color:#f5e7a1; font-size:.9rem; background:rgba(10,25,47,.35); }
-
-/* Mobile */
-@media (max-width:640px){
-  .fan-wrap{ height: 360px; }
-  .fan-wrap .card{ width:200px; height:300px; }
-  .fan-wrap .card[data-angle]{ --radius: 120px; }           /* bas aussi sur mobile */
-  .choice-tray .slot{ min-height:280px; }
-  .card.mini{ width:170px; height:255px; }
-}
+    /* Mobile */
+    @media (max-width:640px){
+      .fan-wrap{ height: 360px; }
+      .fan-wrap .card{ width:200px; height:300px; }
+      .fan-wrap .card[data-angle]{ --radius: 120px; }           /* bas aussi sur mobile */
+      .choice-tray .slot{ min-height:280px; }
+      .card.mini{ width:170px; height:255px; }
+      
+      /* Correction pour le menu mobile */
+      #mobileMenu {
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: rgba(5, 20, 40, 0.98);
+        backdrop-filter: blur(10px);
+        z-index: 50;
+        border-top: 1px solid rgba(212, 175, 55, 0.3);
+      }
+      
+      #mobileMenu.hidden {
+        display: none;
+      }
+      
+      #mobileMenu:not(.hidden) {
+        display: block;
+      }
+    }
 /* --- Carte miniature affichée dans les slots --- */
 .slot .mini-card{
   position: relative;
@@ -643,14 +662,12 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
            class="w-16 h-16 mr-6 transform hover:scale-110 transition-transform duration-300"/>
       <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
     </div>
-
     <!-- Bouton burger (mobile) -->
     <button id="mobileMenuBtn" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold"
             aria-label="Ouvrir le menu">
-      <i class="fas fa-bars text-lg"></i>
+      <i class="fas fa-bars text-lg hovered-element"></i>
     </button>
-
-    <!-- Nav desktop -->
+<!-- Nav desktop -->
     <nav class="hidden md:flex space-x-6 text-lg">
       <a href="#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
       <a href="#offres" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Offres</a>
