@@ -765,10 +765,12 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-2">Tirage du Pèlerin</h2>
         <p class="text-light-gold max-w-3xl mx-auto">Une question simple, un pas sur le chemin.</p>
       </div>
-
       <!-- Intention -->
       <!-- Intention -->
         <div id="intentionBox" class="bg-[rgba(18,20,32,.6)] border border-[rgba(212,175,55,.25)] rounded-2xl p-5 mb-6">
+        <div class="text-center mb-4">
+          <p class="text-light-gold italic">Avant de débuter, prenez un moment pour vous concentrer et vous relier profondément à votre intention.</p>
+        </div>
         <div class="flex flex-wrap items-center gap-3">
           <label for="intention" class="text-gold font-semibold">Votre intention :</label>
           <input id="intention" type="text" class="flex-1 w-full min-w-0 bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] rounded-lg p-3 text-light-gold"
@@ -778,8 +780,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
           <button id="startReading" class="btn-gold" disabled>Commencer le tirage</button>
         </div>
       </div>
-
-      <!-- Plateau (caché au départ) -->
+<!-- Plateau (caché au départ) -->
 <section id="board" class="hidden" aria-live="polite">
   <div class="flex items-center justify-between max-w-5xl mx-auto mb-2">
     <span class="step-chip hover:bg-gold/20 transition-colors cursor-pointer hovered-element" id="stepInfo">Étape 1/4 • Choisis ta carte ÉMOTIONS</span>
