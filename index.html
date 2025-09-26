@@ -549,7 +549,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 /* Pastille d'étape */
 .step-chip{ display:inline-flex; align-items:center; gap:.5rem; padding:.35rem .6rem; border:1px solid rgba(245,231,161,.45);
   border-radius:999px; color:#f5e7a1; font-size:.9rem; background:rgba(10,25,47,.35); }
-    /* Mobile */
+/* Mobile */
     @media (max-width:640px){
       .fan-wrap{ height: 360px; }
       .fan-wrap .card{ width:200px; height:300px; }
@@ -575,6 +575,16 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       
       #mobileMenu:not(.hidden) {
         display: block;
+      }
+      
+      /* Fix pour le menu mobile - empêcher le débordement */
+      header {
+        position: relative;
+        z-index: 100;
+      }
+      
+      #mobileMenuBtn {
+        z-index: 101;
       }
     }
 /* --- Carte miniature affichée dans les slots --- */
@@ -653,7 +663,6 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   <button id="scrollTop" class="scroll-top bg-night-blue text-gold p-3 rounded-full border border-gold shadow-lg" aria-label="Remonter en haut">
     <i class="fas fa-arrow-up"></i>
   </button>
-
   <!-- Header -->
 <header class="header-bg w-full py-3 px-4 md:py-4 md:px-8">
   <div class="flex items-center justify-between">
@@ -665,7 +674,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     <!-- Bouton burger (mobile) -->
     <button id="mobileMenuBtn" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold"
             aria-label="Ouvrir le menu">
-      <i class="fas fa-bars text-lg hovered-element"></i>
+      <i class="fas fa-bars text-lg"></i>
     </button>
 <!-- Nav desktop -->
     <nav class="hidden md:flex space-x-6 text-lg">
@@ -681,16 +690,15 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 
   <!-- Menu mobile déroulant -->
   <nav id="mobileMenu" class="md:hidden hidden mt-3 space-y-2">
-    <a href="#accueil" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10"><i class="fas fa-home mr-2"></i>Accueil</a>
-    <a href="#offres" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10"><i class="fas fa-tags mr-2"></i>Offres</a>
-    <a href="#Jeu" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10"><i class="fas fa-dice mr-2"></i>Jeu</a>
-    <a href="#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
-    <a href="#apropos" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+    <a href="#accueil" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-home mr-2"></i>Accueil</a>
+    <a href="#offres" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-tags mr-2"></i>Offres</a>
+    <a href="#Jeu" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Jeu</a>
+    <a href="#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
+    <a href="#apropos" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
     <button id="loginBtnMobile" class="w-full btn-outline-gold">Connexion</button>
   </nav>
 </header>
-
-  <!-- Hero -->
+<!-- Hero -->
   <section id="accueil" class="hero-bg min-h-screen flex items-center pt-20 pb-32 px-6">
     <div class="container mx-auto max-w-6xl">
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
@@ -2378,19 +2386,47 @@ $$('.card').forEach(card=>{
     back.addEventListener('touchstart', (e)=>{ e.preventDefault(); window.flipCard(back.closest('.card')); }, {passive:false});
   });
 }
-
 /* ---------- Mobile menu ---------- */
 function initMobileMenu(){
   const mobileBtn = el('mobileMenuBtn');
   const mobileMenu = el('mobileMenu');
   const loginBtnMobile = el('loginBtnMobile');
-  mobileBtn?.addEventListener('click', ()=> mobileMenu?.classList.toggle('hidden'));
+  
+  // Fonction pour fermer le menu quand on clique à l'extérieur
+  const closeMenu = (e) => {
+    if (mobileMenu && !mobileMenu.classList.contains('hidden') && 
+        mobileBtn && !mobileBtn.contains(e.target) && 
+        mobileMenu && !mobileMenu.contains(e.target)) {
+      mobileMenu.classList.add('hidden');
+    }
+  };
+  
+  mobileBtn?.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    mobileMenu?.classList.toggle('hidden');
+  });
+  
   loginBtnMobile?.addEventListener('click', ()=>{
-    el('subscriptionModal')?.classList.remove('hidden'); document.body.style.overflow='hidden';
+    el('subscriptionModal')?.classList.remove('hidden'); 
+    document.body.style.overflow='hidden';
     mobileMenu?.classList.add('hidden');
   });
+  
+  // Fermer le menu quand on clique sur un lien
+  mobileMenu?.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      mobileMenu?.classList.add('hidden');
+    });
+  });
+  
+  // Fermer le menu quand on clique à l'extérieur
+  document.addEventListener('click', closeMenu);
+  
+  // Empêcher la propagation des clics dans le menu
+  mobileMenu?.addEventListener('click', (e) => {
+    e.stopPropagation();
+  });
 }
-
 /* ---------- Boot ---------- */
 document.addEventListener('DOMContentLoaded', ()=>{
   initScrollTop();
