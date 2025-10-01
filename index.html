@@ -661,12 +661,34 @@ header {
       animation: float 6s ease-in-out infinite;
     }
     
+    .cosmic-sparkle {
+      animation: cosmic-float 8s ease-in-out infinite;
+      box-shadow: 0 0 10px 2px rgba(245, 231, 161, 0.5);
+    }
+    
+    .cosmic-flow {
+      width: 2px;
+      background: linear-gradient(to bottom, transparent, rgba(245, 231, 161, 0.4), transparent);
+      animation: cosmic-flow 6s linear infinite;
+    }
     @keyframes float {
       0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
       50% { transform: translateY(-20px) scale(1.2); opacity: 1; }
     }
     
-    .energy-line {
+    @keyframes cosmic-float {
+      0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.8; }
+      25% { transform: translate(10px, -15px) scale(1.3); opacity: 1; }
+      50% { transform: translate(5px, -25px) scale(1.1); opacity: 0.9; }
+      75% { transform: translate(-5px, -15px) scale(1.4); opacity: 1; }
+    }
+    
+    @keyframes cosmic-flow {
+      0% { transform: translateY(-100%) scaleY(0); opacity: 0; }
+      50% { transform: translateY(0%) scaleY(1); opacity: 0.6; }
+      100% { transform: translateY(100%) scaleY(0); opacity: 0; }
+    }
+.energy-line {
       position: absolute;
       width: 1px;
       height: 100%;
@@ -928,84 +950,124 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-2">Tirage du Pèlerin</h2>
         <p class="text-light-gold max-w-3xl mx-auto">Une question simple, un pas sur le chemin.</p>
       </div>
-  <!-- Intention -->
-  <div id="intentionBox" class="relative bg-gradient-to-br from-night-blue/90 to-dark-blue/95 border border-gold/40 rounded-2xl p-8 mb-8 shadow-2xl overflow-hidden intention-animate">
-    <!-- Effet de lumière subtile -->
-    <div class="absolute inset-0 opacity-10 pointer-events-none">
-      <div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_50%,rgba(212,175,55,0.15),transparent_60%)]"></div>
+  <!-- Intention - Version améliorée -->
+  <div id="intentionBox" class="relative bg-gradient-to-br from-night-blue/95 to-dark-blue/98 border border-gold/50 rounded-2xl p-8 mb-8 shadow-2xl overflow-hidden intention-animate">
+    <!-- Effet de lumière dorée intense -->
+    <div class="absolute inset-0 opacity-15 pointer-events-none">
+      <div class="absolute top-0 left-0 w-full h-full bg-[radial-gradient(circle_at_30%_50%,rgba(212,175,55,0.25),transparent_70%)]"></div>
     </div>
     
-    <!-- Bordure dorée subtile -->
-    <div class="absolute inset-0 rounded-2xl border border-gold/20 pointer-events-none"></div>
+    <!-- Bordure dorée animée -->
+    <div class="absolute inset-0 rounded-2xl border-2 border-gold/30 pointer-events-none animate-pulse"></div>
     
-    <!-- Particules flottantes -->
+    <!-- Effet de particules cosmiques -->
     <div class="absolute inset-0 overflow-hidden pointer-events-none">
-      <div class="particle" style="top:20%; left:10%; animation-delay:0s"></div>
-      <div class="particle" style="top:60%; left:80%; animation-delay:1s"></div>
-      <div class="particle" style="top:40%; left:30%; animation-delay:2s"></div>
-      <div class="particle" style="top:80%; left:60%; animation-delay:3s"></div>
+      <div class="particle cosmic-sparkle" style="top:15%; left:15%; animation-delay:0s; width:6px; height:6px; background:rgba(245,231,161,0.8);"></div>
+      <div class="particle cosmic-sparkle" style="top:75%; left:85%; animation-delay:1.5s; width:4px; height:4px; background:rgba(212,175,55,0.7);"></div>
+      <div class="particle cosmic-sparkle" style="top:35%; left:25%; animation-delay:2.5s; width:5px; height:5px; background:rgba(245,231,161,0.6);"></div>
+      <div class="particle cosmic-sparkle" style="top:85%; left:65%; animation-delay:3.5s; width:3px; height:3px; background:rgba(212,175,55,0.8);"></div>
     </div>
     
     <div class="relative z-10">
-      <!-- En-tête élégant -->
+      <!-- En-tête majestueux -->
       <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-gold/10 to-gold/5 rounded-full border border-gold/30 mb-4 floating">
-          <i class="fas fa-compass text-3xl text-gold"></i>
+        <div class="inline-flex items-center justify-center w-24 h-24 bg-gradient-to-br from-gold/20 to-gold/10 rounded-full border-2 border-gold/40 mb-6 floating">
+          <i class="fas fa-compass text-4xl text-gold animate-spin-slow" style="animation-duration:8s"></i>
         </div>
-        <h3 class="cormorant text-3xl text-gold mb-4 text-glow">Préparez votre intention</h3>
+        <h3 class="cormorant text-4xl text-gold mb-4 text-glow">Formulez votre intention</h3>
         <div class="max-w-2xl mx-auto">
-          <p class="text-light-gold/90 leading-relaxed text-lg mb-4">
-            Prenez un moment pour vous concentrer et vous relier profondément à votre intention.
+          <p class="text-light-gold/95 leading-relaxed text-xl mb-4">
+            Connectez-vous à votre essence et laissez émerger votre question la plus authentique
           </p>
-          <p class="text-gold/80 italic text-base">
-            Une intention claire ouvre la voie à une guidance plus juste et plus précise.
+          <p class="text-gold/90 italic text-lg font-light">
+            L'intention est la clé qui ouvre les portes de la sagesse intérieure
           </p>
         </div>
       </div>
 
-      <!-- Formulaire d'intention épuré -->
-      <div class="bg-gradient-to-br from-night-blue/50 to-dark-blue/60 border border-gold/25 rounded-xl p-6 mb-6 backdrop-blur-sm relative overflow-hidden">
-        <!-- Lignes d'énergie -->
-        <div class="absolute inset-0 energy-line" style="top:0; left:0; animation-delay:0s"></div>
-        <div class="absolute inset-0 energy-line" style="top:0; right:0; animation-delay:1s"></div>
-        <div class="absolute inset-0 energy-line" style="bottom:0; left:0; animation-delay:2s"></div>
-        <div class="absolute inset-0 energy-line" style="bottom:0; right:0; animation-delay:3s"></div>
+      <!-- Formulaire d'intention transformé -->
+      <div class="bg-gradient-to-br from-night-blue/60 to-dark-blue/70 border-2 border-gold/40 rounded-2xl p-8 mb-8 backdrop-blur-lg relative overflow-hidden shadow-xl">
+        <!-- Effet de lumière intérieure -->
+        <div class="absolute inset-0 bg-gradient-to-r from-transparent via-gold/5 to-transparent pointer-events-none"></div>
         
-        <div class="flex flex-col md:flex-row md:items-start gap-6 relative z-10">
-          <div class="md:w-1/4">
-            <label for="intention" class="text-gold font-semibold text-lg flex items-center">
-              <i class="fas fa-bullseye mr-3 text-xl floating" style="animation-delay:0.5s"></i>Votre question
-            </label>
-            <div class="mt-2 text-xs text-gold/60">
-              Prenez un moment pour vous concentrer
+        <!-- Lignes d'énergie cosmique -->
+        <div class="absolute inset-0 energy-line cosmic-flow" style="top:0; left:20%; animation-delay:0s"></div>
+        <div class="absolute inset-0 energy-line cosmic-flow" style="top:0; right:20%; animation-delay:1.2s"></div>
+        <div class="absolute inset-0 energy-line cosmic-flow" style="bottom:0; left:30%; animation-delay:2.4s"></div>
+        <div class="absolute inset-0 energy-line cosmic-flow" style="bottom:0; right:30%; animation-delay:3.6s"></div>
+        
+        <div class="flex flex-col lg:flex-row lg:items-start gap-8 relative z-10">
+          <div class="lg:w-1/3">
+            <div class="bg-gradient-to-br from-gold/10 to-transparent border border-gold/30 rounded-xl p-6">
+              <label for="intention" class="text-gold font-bold text-xl flex items-center mb-3">
+                <i class="fas fa-bullseye mr-4 text-2xl floating" style="animation-delay:0.5s"></i>Votre quête
+              </label>
+              <div class="text-gold/80 text-sm leading-relaxed">
+                <p class="mb-2">• Formulez une question ouverte</p>
+                <p class="mb-2">• Terminez par un point d'interrogation</p>
+                <p>• Exprimez votre besoin profond</p>
+              </div>
             </div>
           </div>
-          <div class="md:w-3/4 relative">
-            <input id="intention" type="text" 
-                   class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-xl p-4 text-light-gold placeholder-gold/40
-                          focus:border-gold focus:ring-2 focus:ring-gold/30 focus:outline-none transition-all duration-300 text-lg relative z-10"
-                   placeholder="Exemple : Comment orienter ma journée avec justesse ?" 
-                   required />
-            <!-- Effet de vague sur le placeholder -->
-            <div class="absolute inset-0 rounded-xl overflow-hidden pointer-events-none z-0">
-              <div class="wave-effect" style="animation-delay:0s"></div>
-              <div class="wave-effect" style="animation-delay:1s"></div>
-              <div class="wave-effect" style="animation-delay:2s"></div>
+          
+          <div class="lg:w-2/3 relative">
+            <div class="relative">
+              <textarea id="intention" 
+                       class="w-full bg-[rgba(5,20,40,0.8)] border-2 border-gold/40 rounded-2xl p-6 text-light-gold placeholder-gold/50
+                              focus:border-gold focus:ring-4 focus:ring-gold/20 focus:outline-none transition-all duration-500 text-lg
+                              min-h-[120px] resize-none backdrop-blur-sm"
+                       placeholder="Exemple : Comment puis-je aligner mes actions avec mes valeurs profondes aujourd'hui ?" 
+                       required></textarea>
+              
+              <!-- Compteur de caractères -->
+              <div class="absolute bottom-3 right-4 text-gold/60 text-sm">
+                <span id="charCount">0</span>/200
+              </div>
+              
+              <!-- Indicateur de validation en temps réel -->
+              <div id="questionIndicator" class="absolute top-3 right-4">
+                <i class="fas fa-question-circle text-gold/40 text-xl transition-all duration-300"></i>
+              </div>
+            </div>
+            
+            <!-- Suggestions de questions -->
+            <div id="questionSuggestions" class="mt-4 space-y-2 hidden">
+              <p class="text-gold/70 text-sm mb-2">Suggestions :</p>
+              <div class="flex flex-wrap gap-2">
+                <button class="suggestion-btn text-xs bg-gold/10 border border-gold/30 text-gold/80 px-3 py-1 rounded-full hover:bg-gold/20 transition-colors">
+                  Comment trouver l'équilibre aujourd'hui ?
+                </button>
+                <button class="suggestion-btn text-xs bg-gold/10 border border-gold/30 text-gold/80 px-3 py-1 rounded-full hover:bg-gold/20 transition-colors">
+                  Quelle direction prendre pour mon projet ?
+                </button>
+                <button class="suggestion-btn text-xs bg-gold/10 border border-gold/30 text-gold/80 px-3 py-1 rounded-full hover:bg-gold/20 transition-colors">
+                  Comment apaiser mes tensions intérieures ?
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
 
-      <!-- Bouton de démarrage élégant -->
+      <!-- Bouton de démarrage magistral -->
       <div class="text-center relative">
-        <button id="startReading" class="btn-gold px-10 py-5 text-xl font-semibold transform hover:scale-105 transition-all duration-300 shadow-xl rounded-xl relative overflow-hidden" disabled>
-          <i class="fas fa-play-circle mr-3"></i>Commencer le tirage
-          <!-- Effet de particules sur le bouton -->
-          <div class="absolute inset-0 button-particles"></div>
+        <button id="startReading" class="btn-gold px-12 py-6 text-2xl font-bold transform hover:scale-110 transition-all duration-500 shadow-2xl rounded-2xl relative overflow-hidden group" disabled>
+          <div class="absolute inset-0 bg-gradient-to-r from-gold via-light-gold to-gold bg-size-200 bg-pos-0 group-hover:bg-pos-100 transition-all duration-500"></div>
+          <span class="relative z-10 flex items-center justify-center">
+            <i class="fas fa-play-circle mr-4 text-2xl"></i>Commencer le voyage
+          </span>
+          
+          <!-- Effet de particules dorées -->
+          <div class="absolute inset-0 overflow-hidden pointer-events-none">
+            <div class="absolute top-1/4 left-1/4 w-2 h-2 bg-white rounded-full animate-ping"></div>
+            <div class="absolute top-3/4 right-1/4 w-1 h-1 bg-white rounded-full animate-ping" style="animation-delay:0.5s"></div>
+          </div>
         </button>
-        <!-- Indicateur de validation -->
-        <div id="validationIndicator" class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 text-gold text-sm opacity-0 transition-opacity duration-300">
-          <i class="fas fa-check-circle mr-2"></i>Intention valide
+        
+        <!-- Indicateur de validation élaboré -->
+        <div id="validationIndicator" class="absolute -bottom-10 left-1/2 transform -translate-x-1/2 flex items-center gap-2 text-gold text-sm opacity-0 transition-all duration-500">
+          <div class="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
+          <span>Intention valide - Prêt pour le tirage</span>
         </div>
       </div>
     </div>
@@ -2517,12 +2579,16 @@ function isOpenQuestion(txt){
   const ok = isOpenQuestion(intentionIn.value);
   startButton.disabled = !ok;                        // ne touche qu’à #startReading
 });
-
-
-  // focus → passe en immersif
-  intentionIn.addEventListener('focus', enterPelerinImmersive);
-
-  // lancer le tirage (on garde vos visuels & animations)
+  // Focus → passe en immersif avec effet visuel
+  intentionIn.addEventListener('focus', () => {
+    enterPelerinImmersive();
+    intentionIn.parentElement.classList.add('ring-4', 'ring-gold/20');
+  });
+  
+  intentionIn.addEventListener('blur', () => {
+    intentionIn.parentElement.classList.remove('ring-4', 'ring-gold/20');
+  });
+// lancer le tirage (on garde vos visuels & animations)
   startButton.addEventListener('click', ()=>{
     // activer le clic sur chaque dos de carte
 $$('.card .back').forEach(back=>{
