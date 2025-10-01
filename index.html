@@ -816,6 +816,14 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   #board .card{ width: 170px; height: 250px; }
   #board .fan-wrap{ --radius: 100px; }
 }
+  /* === Ajout styles synthèse === */
+  #synthese p { margin: 0.35rem 0; }
+  #synthese ol { margin: 0.35rem 0 0.2rem; padding-left: 1rem; }
+  #synthese .italic { opacity: 0.9; }
+  #synthese .text-gold { color: #d4af37; }
+  #synthese ul { margin: 0.35rem 0 0.2rem; padding-left: 1rem; }
+  #synthese details { border-left: 2px solid rgba(212,175,55,0.25); padding-left: .75rem; }
+  #synthese summary { font-weight: 600; }
 
   </style>
 </head>
@@ -2827,95 +2835,95 @@ document.addEventListener("DOMContentLoaded", () => {
   const intention = document.getElementById('intention');
 
   if(!showBtn) return;
-  
-function generateAnalysis({ em, be, ac, co, intention }) {
-  const pick = arr => arr[Math.floor(Math.random() * arr.length)];
-  const clean = s => (s || '—').replace(/\s+/g, ' ').trim();
 
-  const emo  = clean(em?.name);
-  const need = clean(be?.name);
-  const act  = clean(ac?.name);
-  const cos  = clean(co?.name);
-  const eq   = clean(em?.quote);
-  const bq   = clean(be?.quote);
-  const aq   = clean(ac?.quote);
-  const cq   = clean(co?.quote);
+  // Analyse tirage du Pèlerin
+
+function generateAnalysis({ em, be, ac, co, intention }) {
+  const clean = s => (s || '').toString().replace(/\s+/g, ' ').trim();
+  const low = s => clean(s).toLowerCase();
+  const safe = (v, alt='—') => (clean(v) ? clean(v) : alt);
+
+  // Cartes
+  const emo = safe(em?.name);
+  const need = safe(be?.name);
+  const act = safe(ac?.name);
+  const cos = safe(co?.name);
+
+  const quotes = {
+    emo: clean(em?.quote),
+    need: clean(be?.quote),
+    act: clean(ac?.quote),
+    cos: clean(co?.quote),
+  };
+
   const intent = clean(intention);
 
-  // Fragments courts, sobres et variés
-  const openings = [
-    `Sous la lampe du présent, ${emo.toLowerCase()} trace un relief à apprivoiser.`,
-    `Un souffle soulève ${emo.toLowerCase()} et montre ce qui appelle douceur.`,
-    `${emo} n'est pas un verdict : c'est une météo. ${eq !== '—' ? '« '+eq+' »' : ''}`.trim(),
-    `Au ras du sol, ${emo.toLowerCase()} indique l'endroit sensible où porter l'attention.`,
-    `Ce qui remue (${emo.toLowerCase()}) sert de boussole si tu l'écoutes sans t'y noyer.`,
-    `Entre tension et calme, ${emo.toLowerCase()} fait apparaître la marche possible.`
+  // Petits réservoirs de variations
+  const imagesEmotion = [
+    `un miroir posé sur l’eau`,
+    `un écho ancien`,
+    `un souffle fragile`,
+    `une flamme qui vacille`,
+    `un paysage intérieur`,
+  ];
+  const imagesBesoin = [
+    `une clef de voûte`,
+    `une graine à arroser`,
+    `une pierre d’équilibre`,
+    `un fil à suivre`,
+    `un ancrage discret`,
+  ];
+  const imagesAction = [
+    `une trace dans le sable`,
+    `une porte entrouverte`,
+    `une marche d’escalier`,
+    `une étoile filante`,
+    `un pas esquissé`,
+  ];
+  const imagesCosmos = [
+    `une constellation familière`,
+    `un souffle venu d’avant`,
+    `une mémoire gravée dans la roche`,
+    `un chant collectif`,
+    `un fleuve souterrain`,
   ];
 
-  const bridges = [
-    `La clé : ${need.toLowerCase()}, tenue avec simplicité.`,
-    `Quand ${need.toLowerCase()} devient non négociable, le cœur s'apaise.`,
-    `Revenir à ${need.toLowerCase()} — sans urgence — ouvre la voie.`,
-    `${bq !== '—' ? 'Mémo besoin : « '+bq+' ». ' : ''}Garde ${need.toLowerCase()} en fil conducteur.`,
-    `L'équilibre se rétablit en nourrissant ${need.toLowerCase()}.`,
-    `Ralentir assez pour laisser ${need.toLowerCase()} prendre place.`
+  // Choix aléatoire
+  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+
+  // Construction narrative
+  let texte = "";
+
+  if (intent) {
+    texte += `Ton intention : « ${intent} ». Elle agit comme un fond musical qui colore tout le reste. `;
+  }
+
+  texte += `L’émotion présente est ${low(emo)}${quotes.emo ? ` (${quotes.emo})` : ''}. `;
+  texte += `Elle surgit comme ${pick(imagesEmotion)}. Selon la façon dont tu la regardes, elle peut être appui ou obstacle. `;
+
+  texte += `Le besoin révélé, ${low(need)}${quotes.need ? ` (${quotes.need})` : ''}, se tient comme ${pick(imagesBesoin)}. `;
+  texte += `Il ne demande pas forcément d’être satisfait immédiatement, mais d’être reconnu. Parfois cela ouvre un passage, parfois cela rappelle ce qui manque. `;
+
+  texte += `L’action suggérée, ${low(act)}${quotes.act ? ` (${quotes.act})` : ''}, ressemble à ${pick(imagesAction)}. `;
+  texte += `Tu peux choisir de la suivre ou de la laisser s’effacer : l’un comme l’autre ouvre une expérience différente. `;
+
+  texte += `En arrière-plan, ${low(cos)}${quotes.cos ? ` (${quotes.cos})` : ''} veille, tel ${pick(imagesCosmos)}. `;
+  texte += `Cela rappelle qu’il y a toujours plus vaste que le geste immédiat, comme une respiration plus longue que la tienne. `;
+
+  // Une fin avec variations possibles
+  const fins = [
+    `Ce tirage n’apporte pas de verdict. Il s’offre comme une énigme douce, que tu pourras relire demain différemment.`,
+    `Ici, rien n’est figé : les cartes sont comme des fenêtres. À toi de voir par laquelle tu choisis de regarder.`,
+    `Plutôt qu’un chemin balisé, elles proposent une danse. Tu peux suivre le rythme, ou inventer le tien.`,
+    `Le sens se déplace selon ton regard. Peut-être y verras-tu une invitation à ralentir, peut-être un élan à franchir.`,
   ];
+  texte += pick(fins);
 
-  const actions = [
-    `Un geste net : ${act.toLowerCase()}, puis laisser respirer.`,
-    `Choisir de ${act.toLowerCase()} là où c'est vivant, pas là où c'est bruyant.`,
-    `Micro-pas : ${act.toLowerCase()} envers une personne, un lieu, un détail.`,
-    `${aq !== '—' ? 'Rappel action : « '+aq+' ». ' : ''}Transformer la clarté en mouvement : ${act.toLowerCase()}.`,
-    `Aujourd'hui, ${act.toLowerCase()} sans forcer — juste assez pour déplacer l'aiguille.`,
-    `Couper la dispersion : ${act.toLowerCase()}, puis stop.`
-  ];
-
-  const cosmoses = [
-    `En arrière-plan, ${cos.toLowerCase()} sert de mémoire à transformer.`,
-    `Mémoire en filigrane : ${cos.toLowerCase()} — non pour s'y enfermer, mais pour reconnaître l'empreinte.`,
-    `${cos} éclaire l'angle mort à illuminer sans jugement.${cq !== '—' ? ' « '+cq+' »' : ''}`,
-    `Le contexte large s'appelle ${cos.toLowerCase()} : cela relie le pas au paysage.`,
-    `Derrière l'instant, ${cos.toLowerCase()} rappelle le motif qui revient pour être pacifié.`
-  ];
-
-  const questions = [
-    `Quelle petite action honore ${need.toLowerCase()} sans trahir ${emo.toLowerCase()} ?`,
-    `Où poses-tu un premier pas pour que ${need.toLowerCase()} s'installe vraiment ?`,
-    `Comment ${act.toLowerCase()} peut devenir un engagement respirable, dès maintenant ?`,
-    `Quelle conversation, si elle avait lieu, servirait ${need.toLowerCase()} dès aujourd'hui ?`,
-    `Et si tu faisais moins : que resterait-il qui respecte ${need.toLowerCase()} ?`,
-    `Qu'est-ce qui mérite un non clair pour protéger ${need.toLowerCase()} ?`
-  ];
-
-  const mantras = [
-    `Je marche simple, je marche juste.`,
-    `Un pas clair suffit.`,
-    `Je choisis le vivant plutôt que l'habitude.`,
-    `Je laisse le trop s'éloigner, je garde l'essentiel.`,
-    `J'ouvre l'espace, j'accueille le mouvement.`,
-    `Je nourris ${need.toLowerCase()} par de petits actes`,
-    `Mon corps sait ; je ${act.toLowerCase()} sans me brusquer.`
-  ];
-
-  const introIntent = intent && intent !== '—'
-    ? `<p class="opacity-80 italic mb-2">Intention : “${intent}”</p>`
-    : '';
-
-  const html = `
-    ${introIntent}
-    <div class="space-y-3 leading-relaxed">
-      <p>${pick(openings)}</p>
-      <p>${pick(bridges)}</p>
-      <p>${pick(actions)}</p>
-      <p class="opacity-90">${pick(cosmoses)}</p>
-    </div>
-    <div class="mt-4 pt-4 border-t border-gold/20 space-y-2">
-      <p class="italic">❓ ${pick(questions)}</p>
-      <p class="font-semibold text-gold">🕊️ Mantra — ${pick(mantras)}</p>
-    </div>
-  `;
-  return { html };
+  return { html: `<div class="space-y-3 leading-relaxed">${texte}</div>` };
 }
+
+
+
 
 
   showBtn.addEventListener('click', async () => {
