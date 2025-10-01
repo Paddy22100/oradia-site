@@ -2428,12 +2428,14 @@ ensureImmersiveMenu(); // crée le panneau si besoin
 
     el('oracle')?.scrollIntoView({behavior:'smooth', block:'start'});
   }
-  function exitPelerinImmersive(){
- $$('body > header, body > footer, body > section').forEach(n=>n.classList.remove('hide-immersive'));
+function exitPelerinImmersive(){
+ $('body > header, body > footer, body > section').forEach(n=>n.classList.remove('hide-immersive'));
 el('immersiveMenuBtn')?.remove();
 const p = el('immersiveMenuPanel');
 if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
 
+// Masquer la section oracle pour qu'elle ne soit pas visible sur l'accueil
+el('oracle').classList.add('hidden');
   }
 function ensureImmersiveMenu(){
   if(el('immersiveMenuPanel')) return;
@@ -2458,7 +2460,13 @@ function ensureImmersiveMenu(){
   `;
   document.body.appendChild(panel);
   panel.querySelector('#immersiveMenuClose')?.addEventListener('click', toggleImmersiveMenu);
-  panel.querySelector('#leaveImmersion')?.addEventListener('click', ()=>{ toggleImmersiveMenu(true); exitPelerinImmersive(); });
+    panel.querySelector('#leaveImmersion')?.addEventListener('click', ()=>{ 
+      toggleImmersiveMenu(true); 
+      exitPelerinImmersive();
+      // Masquer la section oracle et retourner à l'accueil
+      el('oracle').classList.add('hidden');
+      document.getElementById('accueil')?.scrollIntoView({behavior: 'smooth'});
+    });
 }
 
 function toggleImmersiveMenu(forceClose){
@@ -2586,10 +2594,6 @@ $$('.card').forEach(card=>{
   });
   // reset
   resetBtn?.addEventListener('click', ()=>{
-    // Rediriger vers l'accueil
-    window.location.href = '#accueil';
-    document.getElementById('accueil')?.scrollIntoView({behavior: 'smooth'});
-    
     // Réinitialiser l'état du tirage
     hide(showBtn); showBtn && (showBtn.disabled=true);
     hide(results); el('fullReading')?.classList.add('hidden');
@@ -2610,8 +2614,12 @@ $$('.card').forEach(card=>{
     el('intentionBox')?.classList.remove('hidden');
     intentionIn.value='';
     
-    // Quitter le mode immersif
+    // Quitter le mode immersif et masquer la section oracle
     exitPelerinImmersive();
+    el('oracle').classList.add('hidden');
+    
+    // Rediriger vers l'accueil
+    document.getElementById('accueil')?.scrollIntoView({behavior: 'smooth'});
   });
 // support tactile flip
   $$('.card .back').forEach(back=>{
@@ -3247,13 +3255,14 @@ const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : 
     renderFan();
     boardSec.scrollIntoView({behavior:'smooth', block:'start'});
   }
-
   startBtn?.addEventListener('click', ()=>{
     intentionBox?.classList.add('hidden');
     boardSec?.classList.remove('hidden');
+    // Afficher la section oracle
+    el('oracle').classList.remove('hidden');
     resetAll();
   });
-  resetBtn?.addEventListener('click', resetAll);
+resetBtn?.addEventListener('click', resetAll);
 })();
 </script>
 <script>
