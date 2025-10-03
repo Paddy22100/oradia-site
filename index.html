@@ -1074,9 +1074,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       <div class="max-w-md mx-auto mt-8 space-y-6">
         <div class="flex gap-3 justify-center">
         <button type="button" id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none" onclick="handleFullReadingClick()">Envie d'un tirage plus complet?</button>
-        <button type="button" id="newGoOffers" class="btn-outline-gold hidden flex-1 sm:flex-none" onclick="handleNewGoOffersClick()">New</button>
         <button id="newPilgrim"  class="btn-gold hidden flex-1 sm:flex-none">Nouveau tirage</button>
-
 <div id="emailForm" class="hidden w-full max-w-2xl mx-auto">
           <div class="bg-[rgba(18,20,32,.6)] border border-[rgba(212,175,55,.25)] rounded-2xl p-6">
             <h3 class="cormorant text-xl text-gold mb-4 text-center">Recevoir le résultat par email</h3>
@@ -2536,11 +2534,8 @@ newBtn?.addEventListener('click', ()=>{
   }
   intentionBox?.scrollIntoView({behavior:'smooth', block:'start'});
   intentionIn?.focus();
-
   // 6) Re-masquer le bouton "New bouton" (il se réaffichera à la prochaine analyse)
   newBtn.classList.add('hidden');
-  el('newGoOffers')?.classList.add('hidden');
-
 });
   if(!board || !startButton || !intentionIn) return;
 
@@ -2715,11 +2710,8 @@ $$('#board .card').forEach(card=>{
     el('fullReading')?.classList.remove('hidden');
     resetBtn?.classList.remove('hidden');
     el('emailForm')?.classList.remove('hidden');
-    el('newPilgrim')?.classList.remove('hidden');
-    el('newGoOffers')?.classList.remove('hidden');
-
-
-    // Cacher le plateau des cartes
+      el('newPilgrim')?.classList.remove('hidden');
+// Cacher le plateau des cartes
     hide(board);
     el('cardsInstruction')?.classList.add('hidden');
     results.scrollIntoView({behavior:'smooth', block:'start'});
@@ -3444,11 +3436,6 @@ document.addEventListener('click', (e) => {
 });
 </script>
 <script>
- function handleNewGoOffersClick() {
-  // même comportement : fermeture immersion, reset pèlerin, puis Offres
-  handleFullReadingClick();
-}
-
 </script>
 
 </body>
