@@ -2983,7 +2983,7 @@ document.addEventListener("DOMContentLoaded", () => {
 })();
 </script>
 <script>
-// Bouton "Afficher le résultat du tirage" + modal d'analyse
+  // Bouton "Afficher le résultat du tirage" + modal d'analyse
 (function(){
   const showBtn   = document.getElementById('showResults');
   const modal     = document.getElementById('analyzeModal');
@@ -2997,6 +2997,61 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Analyse tirage du Pèlerin
 
+  // Fonction pour ouvrir le tirage de la Traversée en mode immersif
+  function openTraverseeImmersive() {
+    // Masquer toutes les sections sauf la Traversée
+    document.querySelectorAll('body > header, body > footer, body > section').forEach(n => {
+      if (n.id !== 'traversee') {
+        n.classList.add('hide-immersive');
+      }
+    });
+    
+    // Afficher la section Traversée
+    const traverseeSection = document.getElementById('traversee');
+    if (traverseeSection) {
+      traverseeSection.classList.remove('hidden');
+      traverseeSection.classList.remove('hide-immersive');
+      
+      // Afficher directement le formulaire de la Traversée
+      const intro = document.getElementById('traversee-intro');
+      const form = document.getElementById('traversee-form');
+      if (intro && form) {
+        intro.classList.add('hidden');
+        form.classList.remove('hidden');
+      }
+      
+      // Scroll vers la section
+      traverseeSection.scrollIntoView({behavior: 'smooth', block: 'start'});
+      
+      // Ajouter le bouton de sortie si pas déjà présent
+      if (!document.getElementById('exitTraverseeBtn')) {
+        const exitBtn = document.createElement('button');
+        exitBtn.id = 'exitTraverseeBtn';
+        exitBtn.className = 'fixed top-4 left-4 z-[1000] bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold p-3 rounded-full shadow-lg';
+        exitBtn.innerHTML = '<i class="fas fa-times"></i>';
+        exitBtn.setAttribute('aria-label', 'Quitter le tirage de la Traversée');
+        exitBtn.addEventListener('click', () => {
+          // Restaurer l'affichage normal
+          document.querySelectorAll('body > header, body > footer, body > section').forEach(n => {
+            n.classList.remove('hide-immersive');
+          });
+          exitBtn.remove();
+          // Retour à l'accueil
+          document.getElementById('accueil').scrollIntoView({behavior: 'smooth'});
+        });
+        document.body.appendChild(exitBtn);
+      }
+    }
+  }
+
+  // Ajouter un bouton pour ouvrir la Traversée
+  const openTraverseeBtn = document.createElement('button');
+  openTraverseeBtn.className = 'btn-gold mt-4';
+  openTraverseeBtn.innerHTML = '<i class="fas fa-compass mr-2"></i> Essayer le tirage de la Traversée';
+  openTraverseeBtn.addEventListener('click', openTraverseeImmersive);
+  
+  // Ajouter le bouton près du bouton de résultats
+  showBtn.parentNode.appendChild(openTraverseeBtn);
 function generateAnalysis({ em, be, ac, co, intention }) {
   const clean = s => (s || '').toString().replace(/\s+/g, ' ').trim();
   const low = s => clean(s).toLowerCase();
@@ -3080,11 +3135,6 @@ function generateAnalysis({ em, be, ac, co, intention }) {
 
   return { html: `<div class="space-y-3 leading-relaxed">${texte}</div>` };
 }
-
-
-
-
-
   showBtn.addEventListener('click', async () => {
     // 1) Ouvre le modal et bloque le scroll
     modal.classList.remove('hidden');
