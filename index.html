@@ -1074,6 +1074,10 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       <div class="max-w-md mx-auto mt-8 space-y-6">
         <div class="flex gap-3 justify-center">
         <button id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none" onclick="handleFullReadingClick()">Envie d'un tirage plus complet?</button>
+        <button id="newGoOffers" class="btn-outline-gold hidden flex-1 sm:flex-none" onclick="handleNewGoOffersClick()">
+  New
+</button>
+
 </div>
         <button id="newPilgrim" class="btn-gold hidden flex-1 sm:flex-none">Nouveau tirage</button>
 <div id="emailForm" class="hidden w-full max-w-2xl mx-auto">
@@ -2535,6 +2539,8 @@ newBtn?.addEventListener('click', ()=>{
 
   // 6) Re-masquer le bouton "New bouton" (il se réaffichera à la prochaine analyse)
   newBtn.classList.add('hidden');
+  el('newGoOffers')?.classList.add('hidden');
+
 });
   if(!board || !startButton || !intentionIn) return;
 
@@ -2710,6 +2716,7 @@ $$('#board .card').forEach(card=>{
     resetBtn?.classList.remove('hidden');
     el('emailForm')?.classList.remove('hidden');
     el('newPilgrim')?.classList.remove('hidden');
+    el('newGoOffers')?.classList.remove('hidden');
 
 
     // Cacher le plateau des cartes
@@ -3435,6 +3442,26 @@ document.addEventListener('click', (e) => {
     document.getElementById('mobileMenuBtn')?.setAttribute('aria-expanded','false');
   }
 });
+</script>
+<script>
+  function handleNewGoOffersClick() {
+    // 1) Fermer le mode immersif (si actif)
+    if (typeof window.exitPelerinImmersive === 'function') {
+      try { window.exitPelerinImmersive(); } catch(e) {}
+    }
+
+    // 2) Réinitialiser complètement le Pèlerin via le bouton déjà câblé
+    const newBtn = document.getElementById('newPilgrim');
+    if (newBtn) { newBtn.click(); }
+
+    // 3) Cacher totalement la section du Pèlerin pour qu’elle ne soit plus visible sur l’accueil
+    const oracle = document.getElementById('oracle');
+    if (oracle) oracle.classList.add('hidden');
+
+    // 4) Aller directement aux Offres
+    if (location.hash !== '#offres') { location.hash = '#offres'; }
+    document.getElementById('offres')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
 </script>
 
 </body>
