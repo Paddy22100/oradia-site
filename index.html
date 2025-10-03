@@ -2170,6 +2170,12 @@ window.exitImmersive?.();
   if (intentionEl) { intentionEl.value = ''; }
   if (startBtn)    { startBtn.disabled = true; }
 
+  // Purge des slots du Pèlerin (évite toute carte résiduelle)
+document.querySelectorAll('#tray .slot').forEach(s => {
+  s.innerHTML = '';
+  s.classList.remove('filled');
+});
+
   // Masquer totalement la section du Pèlerin sur l’accueil
   const oracleSection = document.getElementById('oracle');
   if (oracleSection) oracleSection.classList.add('hidden');
@@ -3417,7 +3423,11 @@ const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : 
   function resetAll(){
     stepIndex = 0;
     picks.fill(null);
-    document.querySelectorAll('.slot').forEach(s=> s.classList.remove('filled'));
+    document.querySelectorAll('#tray .slot').forEach(s => {
+  s.innerHTML = '';            // <-- supprime la mini-carte injectée
+  s.classList.remove('filled');
+});
+
     showBtn.classList.add('hidden'); showBtn.disabled = true;
     updateStepChip();
     renderFan();
