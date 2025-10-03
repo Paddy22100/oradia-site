@@ -1073,13 +1073,10 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
       <div class="max-w-md mx-auto mt-8 space-y-6">
         <div class="flex gap-3 justify-center">
-        <button id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none" onclick="handleFullReadingClick()">Envie d'un tirage plus complet?</button>
-        <button id="newGoOffers" class="btn-outline-gold hidden flex-1 sm:flex-none" onclick="handleNewGoOffersClick()">
-  New
-</button>
+        <button type="button" id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none" onclick="handleFullReadingClick()">Envie d'un tirage plus complet?</button>
+        <button type="button" id="newGoOffers" class="btn-outline-gold hidden flex-1 sm:flex-none" onclick="handleNewGoOffersClick()">New</button>
+        <button id="newPilgrim"  class="btn-gold hidden flex-1 sm:flex-none">Nouveau tirage</button>
 
-</div>
-        <button id="newPilgrim" class="btn-gold hidden flex-1 sm:flex-none">Nouveau tirage</button>
 <div id="emailForm" class="hidden w-full max-w-2xl mx-auto">
           <div class="bg-[rgba(18,20,32,.6)] border border-[rgba(212,175,55,.25)] rounded-2xl p-6">
             <h3 class="cormorant text-xl text-gold mb-4 text-center">Recevoir le résultat par email</h3>
@@ -2106,16 +2103,20 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
   <script>
     // Fonction pour gérer le clic sur "Envie d'un tirage plus complet?"
 function handleFullReadingClick() {
-  // 1) Fermer le mode immersif (si actif)
+  // 1) Quitter le mode immersif s'il est actif
   if (typeof window.exitPelerinImmersive === 'function') {
     try { window.exitPelerinImmersive(); } catch(e) {}
   }
+window.exitImmersive?.();
 
-  // 2) Réinitialiser le Pèlerin (réutilise le handler "Nouveau tirage")
-  const newBtn = document.getElementById('newPilgrim');
-  if (newBtn) { newBtn.click(); }
+  // 2) Purge globale des classes qui cachent la page
+  document.querySelectorAll('body > header, body > footer, body > section')
+    .forEach(n => n.classList.remove('hide-immersive'));
+  document.querySelectorAll('section')
+    .forEach(s => s.classList.remove('hide-sections'));
 
-  // Sécurités de reset (au cas où)
+  // 3) Reset complet du Pèlerin (équivalent "Nouveau tirage" + sécurités)
+
   const showBtn     = document.getElementById('showResults');
   const resultsSec  = document.getElementById('results');
   const boardSec    = document.getElementById('board');
@@ -2123,25 +2124,24 @@ function handleFullReadingClick() {
   const intentionEl = document.getElementById('intention');
   const startBtn    = document.getElementById('startReading');
 
-  if (showBtn) { showBtn.classList.add('hidden'); showBtn.disabled = true; }
-  if (resultsSec) resultsSec.classList.add('hidden');
-  if (boardSec)   boardSec.classList.add('hidden');
-  if (emailForm)  emailForm.classList.add('hidden');
-  if (intentionEl) intentionEl.value = '';
-  if (startBtn) { startBtn.disabled = true; }
+  if (showBtn)     { showBtn.classList.add('hidden'); showBtn.disabled = true; }
+  if (resultsSec)  { resultsSec.classList.add('hidden'); }
+  if (boardSec)    { boardSec.classList.add('hidden'); }
+  if (emailForm)   { emailForm.classList.add('hidden'); }
+  if (intentionEl) { intentionEl.value = ''; }
+  if (startBtn)    { startBtn.disabled = true; }
 
-  // 3) Cacher complètement la section du Pèlerin pour ne PLUS la voir sur l'accueil
+  // Masquer totalement la section du Pèlerin sur l’accueil
   const oracleSection = document.getElementById('oracle');
   if (oracleSection) oracleSection.classList.add('hidden');
 
-  // 4) Aller à la rubrique Offres et mettre le hash proprement
-  const offresSection = document.getElementById('offres');
-  if (offresSection) {
-    // met à jour l'URL puis scroll doux
-    if (location.hash !== '#offres') { location.hash = '#offres'; }
-    offresSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
+  // 4) Navigation robuste vers la section Offres (hash + scroll)
+ location.hash = 'offres';
+
+ 
+  document.getElementById('offres')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 }
+
 
 
     // --------- Données cartes ----------
@@ -3444,24 +3444,11 @@ document.addEventListener('click', (e) => {
 });
 </script>
 <script>
-  function handleNewGoOffersClick() {
-    // 1) Fermer le mode immersif (si actif)
-    if (typeof window.exitPelerinImmersive === 'function') {
-      try { window.exitPelerinImmersive(); } catch(e) {}
-    }
+ function handleNewGoOffersClick() {
+  // même comportement : fermeture immersion, reset pèlerin, puis Offres
+  handleFullReadingClick();
+}
 
-    // 2) Réinitialiser complètement le Pèlerin via le bouton déjà câblé
-    const newBtn = document.getElementById('newPilgrim');
-    if (newBtn) { newBtn.click(); }
-
-    // 3) Cacher totalement la section du Pèlerin pour qu’elle ne soit plus visible sur l’accueil
-    const oracle = document.getElementById('oracle');
-    if (oracle) oracle.classList.add('hidden');
-
-    // 4) Aller directement aux Offres
-    if (location.hash !== '#offres') { location.hash = '#offres'; }
-    document.getElementById('offres')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-  }
 </script>
 
 </body>
