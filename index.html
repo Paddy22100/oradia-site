@@ -2101,24 +2101,44 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
   <!-- SCRIPT -->
   <script>
     // Fonction pour gérer le clic sur "Envie d'un tirage plus complet?"
-    function handleFullReadingClick() {
-      // Fermer le mode immersif du Pèlerin
-      if (window.exitPelerinImmersive) {
-        window.exitPelerinImmersive();
-      }
-      
-      // Réinitialiser le tirage du Pèlerin
-      const newBtn = document.getElementById('newPilgrim');
-      if (newBtn) {
-        newBtn.click();
-      }
-      
-      // Aller à la rubrique offres
-      const offresSection = document.getElementById('offres');
-      if (offresSection) {
-        offresSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      }
-    }
+function handleFullReadingClick() {
+  // 1) Fermer le mode immersif (si actif)
+  if (typeof window.exitPelerinImmersive === 'function') {
+    try { window.exitPelerinImmersive(); } catch(e) {}
+  }
+
+  // 2) Réinitialiser le Pèlerin (réutilise le handler "Nouveau tirage")
+  const newBtn = document.getElementById('newPilgrim');
+  if (newBtn) { newBtn.click(); }
+
+  // Sécurités de reset (au cas où)
+  const showBtn     = document.getElementById('showResults');
+  const resultsSec  = document.getElementById('results');
+  const boardSec    = document.getElementById('board');
+  const emailForm   = document.getElementById('emailForm');
+  const intentionEl = document.getElementById('intention');
+  const startBtn    = document.getElementById('startReading');
+
+  if (showBtn) { showBtn.classList.add('hidden'); showBtn.disabled = true; }
+  if (resultsSec) resultsSec.classList.add('hidden');
+  if (boardSec)   boardSec.classList.add('hidden');
+  if (emailForm)  emailForm.classList.add('hidden');
+  if (intentionEl) intentionEl.value = '';
+  if (startBtn) { startBtn.disabled = true; }
+
+  // 3) Cacher complètement la section du Pèlerin pour ne PLUS la voir sur l'accueil
+  const oracleSection = document.getElementById('oracle');
+  if (oracleSection) oracleSection.classList.add('hidden');
+
+  // 4) Aller à la rubrique Offres et mettre le hash proprement
+  const offresSection = document.getElementById('offres');
+  if (offresSection) {
+    // met à jour l'URL puis scroll doux
+    if (location.hash !== '#offres') { location.hash = '#offres'; }
+    offresSection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
 
     // --------- Données cartes ----------
 window.DATA = {
