@@ -1073,10 +1073,11 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
       <div class="max-w-md mx-auto mt-8 space-y-6">
         <div class="flex gap-3 justify-center">
-          <button id="reset" class="btn-outline-gold hidden flex-1 sm:flex-none" onclick="location.href='#accueil'">Nouveau tirage</button>
-<button id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none">Envie d'un tirage plus complet?</button>
-        </div>
         
+          <button id="reset" class="btn-outline-gold hidden flex-1 sm:flex-none" onclick="location.href='#accueil'">Nouveau tirage</button>
+        <button id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none">Envie d'un tirage plus complet?</button>        </div>
+        <button id="newPilgrim" class="btn-gold hidden flex-1 sm:flex-none">New bouton</button>
+
         <div id="emailForm" class="hidden w-full max-w-2xl mx-auto">
           <div class="bg-[rgba(18,20,32,.6)] border border-[rgba(212,175,55,.25)] rounded-2xl p-6">
             <h3 class="cormorant text-xl text-gold mb-4 text-center">Recevoir le résultat par email</h3>
@@ -2447,6 +2448,7 @@ function initPelerin(){
   const linesOut      = el('lines');
   const synthOut      = el('synthese');
   const results       = el('results');
+  const newBtn        = el('newPilgrim');
 
   if(!board || !startButton || !intentionIn) return;
 
@@ -2620,6 +2622,55 @@ $$('.card').forEach(card=>{
     el('fullReading')?.classList.remove('hidden');
     resetBtn?.classList.remove('hidden');
     el('emailForm')?.classList.remove('hidden');
+    el('newPilgrim')?.classList.remove('hidden');
+// reset doux + retour direct à l’intention
+newBtn?.addEventListener('click', ()=>{
+  // 1) Cacher zone résultats et annexes
+  hide(showBtn); if (showBtn) showBtn.disabled = true;
+  hide(results);
+  el('fullReading')?.classList.add('hidden');
+  resetBtn?.classList.add('hidden');
+  el('emailForm')?.classList.add('hidden');
+
+  // 2) Vider textes
+  el('out-intention') && (el('out-intention').textContent = '—');
+  if (linesOut) linesOut.innerHTML = '';
+  if (synthOut) synthOut.innerHTML = '';
+
+  // 3) Réinitialiser cartes/slots
+  $$('.slot').forEach(s => s.classList.remove('filled'));
+  $$('#board .card').forEach(card=>{
+    card.classList.remove('flipped');
+    const back = $('.back', card);
+    if(back){ back.style.pointerEvents='auto'; back.setAttribute('aria-pressed','false'); }
+    card.querySelector('[data-name]')?.replaceChildren(document.createTextNode('—'));
+    card.querySelector('[data-quote]')?.replaceChildren(document.createTextNode('—'));
+    const pol = card.querySelector('[data-polarity]');
+    if(pol){
+      if(card.dataset.family === 'cosmos'){ pol.style.visibility = 'hidden'; }
+      else { pol.style.visibility = 'visible'; pol.textContent = ''; }
+    }
+  });
+
+  // 4) Masquer plateau et ré-ouvrir la boîte d’intention
+  hide(board);
+  el('cardsInstruction')?.classList.add('hidden');
+  show(startButton);
+  const intentionBox = el('intentionBox');
+  intentionBox?.classList.remove('hidden');
+
+  // 5) Effacer intention + focus
+  if (intentionIn){
+    intentionIn.value = '';
+    intentionIn.setCustomValidity('');
+  }
+  intentionBox?.scrollIntoView({behavior:'smooth', block:'start'});
+  intentionIn?.focus();
+
+  // 6) Re-masquer le bouton "New bouton" (il se réaffichera à la prochaine analyse)
+  newBtn.classList.add('hidden');
+});
+
     // Cacher le plateau des cartes
     hide(board);
     el('cardsInstruction')?.classList.add('hidden');
