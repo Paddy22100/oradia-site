@@ -2647,6 +2647,7 @@ function toggleImmersiveMenu(forceClose){
 window.toggleImmersiveMenu = toggleImmersiveMenu;
 window.ensureImmersiveMenu = ensureImmersiveMenu;
 window.exitPelerinImmersive = exitPelerinImmersive;
+window.enterPelerinImmersive = enterPelerinImmersive;
 
 function isOpenQuestion(txt){
   const s = (txt || '').trim();
@@ -3443,8 +3444,11 @@ document.addEventListener('DOMContentLoaded', () => {
       // Affiche la section et scroll
       oracle.classList.remove('hidden');
       oracle.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // Focus intention -> déclenche enterPelerinImmersive() (déjà câblé dans initPelerin)
-      document.getElementById('intention')?.focus();
+    if (typeof window.enterPelerinImmersive === 'function') {
+  window.enterPelerinImmersive();
+} else {
+  document.getElementById('intention')?.focus();
+}
     }
   });
 });
