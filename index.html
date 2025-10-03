@@ -745,12 +745,30 @@ header {
     
     /* Animation pour le bouton activé */
     .btn-gold:not(:disabled) {
-      animation: buttonPulse 2s ease-in-out infinite;
+      animation: buttonPulse 3s ease-in-out infinite;
     }
     
     @keyframes buttonPulse {
-      0%, 100% { box-shadow: 0 10px 20px rgba(212, 175, 55, 0.3); }
-      50% { box-shadow: 0 15px 30px rgba(212, 175, 55, 0.5); }
+      0%, 100% { box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); }
+      50% { box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5); }
+    }
+
+    /* Effets de brillance sur les boutons */
+    .btn-gold::before,
+    .btn-outline-gold::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn-gold:hover::before,
+    .btn-outline-gold:hover::before {
+      left: 100%;
     }
 /* Mini-carte dans un slot */
 .slot .mini{
@@ -1070,24 +1088,47 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         <div class="result-lines" id="lines"></div>
         <div class="mt-3" id="synthese"></div>
       </section>
-
-      <div class="max-w-md mx-auto mt-8 space-y-6">
-        <div class="flex gap-3 justify-center">
-        <button type="button" id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none" onclick="handleFullReadingClick()">Envie d'un tirage plus complet?</button>
-        <button id="newPilgrim"  class="btn-gold hidden flex-1 sm:flex-none">Nouveau tirage</button>
-<div id="emailForm" class="hidden w-full max-w-2xl mx-auto">
-          <div class="bg-[rgba(18,20,32,.6)] border border-[rgba(212,175,55,.25)] rounded-2xl p-6">
-            <h3 class="cormorant text-xl text-gold mb-4 text-center">Recevoir le résultat par email</h3>
-            <div class="flex flex-col sm:flex-row gap-4 w-full">
-              <input type="email" id="userEmail" placeholder="Votre adresse email" 
-                     class="flex-1 min-w-0 bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg text-light-gold" required>
-              <button id="sendEmailBtn" class="btn-gold whitespace-nowrap px-6 py-3 sm:w-auto w-full">Envoyer</button>
+      <div class="max-w-2xl mx-auto mt-8 space-y-6">
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <button type="button" id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none relative overflow-hidden group" onclick="handleFullReadingClick()">
+            <div class="absolute inset-0 bg-gradient-to-r from-gold/10 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+            <span class="relative z-10 flex items-center justify-center gap-2">
+              <i class="fas fa-stars text-gold"></i>
+              Envie d'un tirage plus complet?
+            </span>
+          </button>
+          <button id="newPilgrim" class="btn-gold hidden flex-1 sm:flex-none relative overflow-hidden group">
+            <div class="absolute inset-0 bg-gradient-to-r from-light-gold/20 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+            <span class="relative z-10 flex items-center justify-center gap-2">
+              <i class="fas fa-redo text-night-blue"></i>
+              Nouveau tirage
+            </span>
+          </button>
+        </div>
+        
+        <div id="emailForm" class="hidden w-full max-w-2xl mx-auto">
+          <div class="bg-gradient-to-br from-[rgba(18,20,32,.8)] to-[rgba(5,20,40,.6)] border border-[rgba(212,175,55,.35)] rounded-2xl p-6 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full -translate-y-16 translate-x-16"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-light-gold/5 rounded-full translate-y-12 -translate-x-12"></div>
+            
+            <div class="relative z-10">
+              <h3 class="cormorant text-xl text-gold mb-4 text-center">Recevoir le résultat par email</h3>
+              <div class="flex flex-col sm:flex-row gap-4 w-full">
+                <input type="email" id="userEmail" placeholder="Votre adresse email" 
+                       class="flex-1 min-w-0 bg-[rgba(5,20,40,.8)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg text-light-gold placeholder-gold/50 focus:border-gold/80 focus:ring-2 focus:ring-gold/20 transition-all duration-300" required>
+                <button id="sendEmailBtn" class="btn-gold whitespace-nowrap px-6 py-3 sm:w-auto w-full relative overflow-hidden group">
+                  <div class="absolute inset-0 bg-gradient-to-r from-light-gold/20 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+                  <span class="relative z-10 flex items-center justify-center gap-2">
+                    <i class="fas fa-paper-plane text-night-blue"></i>
+                    Envoyer
+                  </span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </div>
-      
-    </div>
+</div>
   </section>
 
   <!-- Offres -->
