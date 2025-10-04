@@ -3574,15 +3574,16 @@ document.addEventListener('click', (e) => {
 
     const user = Auth.get();
     if(!user){
-      loginBtn?.classList.remove('hidden');
-      loginBtnMobile?.classList.remove('hidden');
-      footerLogin?.classList.remove('hidden');
+loginBtn?.classList.remove('hidden','md:hidden');
+loginBtnMobile?.classList.remove('hidden','md:hidden');
+footerLogin?.classList.remove('hidden','md:hidden');
       return;
     }
 
-    loginBtn?.classList.add('hidden');
-    loginBtnMobile?.classList.add('hidden');
-    footerLogin?.classList.add('hidden');
+loginBtn?.classList.add('hidden','md:hidden');      // ← clé pour masquer aussi en desktop
+loginBtnMobile?.classList.add('hidden','md:hidden');
+footerLogin?.classList.add('hidden','md:hidden');
+
 
     const badge = document.createElement('div');
     badge.id = 'authBadge';
