@@ -1665,7 +1665,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
           <label class="block text-light-gold mb-2">Mot de passe</label>
           <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
         </div>
-        <button type="submit" class="btn-gold w-full mb-4">Se connecter</button>
+        <button id="loginSubmit" type="submit" class="btn-gold w-full mb-4">Se connecter</button>
         <p class="text-light-gold text-center text-sm">Pas encore de compte ?
           <a href="#" id="showRegister" class="text-gold hover:underline">S'inscrire</a>
         </p>
@@ -3730,6 +3730,30 @@ document.addEventListener('click', (e) => {
   // Init au chargement
   document.addEventListener('DOMContentLoaded', ()=>{
     bindLoginForms();
+    // Fix robuste : on accroche aussi le clic sur le bouton "Se connecter"
+const loginBtn = document.getElementById('loginSubmit');
+if (loginBtn) {
+  loginBtn.addEventListener('click', (e) => {
+    e.preventDefault();
+
+    const form = document.getElementById('memberLoginForm');
+    if (!form) return;
+
+    // Validation native HTML5
+    if (!form.checkValidity()) { form.reportValidity(); return; }
+
+    const email = form.querySelector('input[type="email"]').value.trim();
+
+    // Enregistre la "session" côté front
+    localStorage.setItem('oradiaUser', JSON.stringify({ email, ts: Date.now() }));
+
+    // Ferme la modale et met à jour l’UI
+    document.getElementById('subscriptionModal')?.classList.add('hidden');
+    document.body.style.overflow = '';
+    renderAuthBadge();
+    applyMemberAccess();
+  });
+}
     renderAuthBadge();
     if (Auth.get()) applyMemberAccess();
   });
