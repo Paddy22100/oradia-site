@@ -754,6 +754,22 @@ header {
     }
 
     /* Effets de brillance sur les boutons */
+    .btn-gold::before,
+    .btn-outline-gold::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    .btn-gold:hover::before,
+    .btn-outline-gold:hover::before {
+      left: 100%;
+    }
 /* Mini-carte dans un slot */
 .slot .mini{
   width: 200px;
@@ -850,27 +866,6 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   #synthese summary { font-weight: 600; }
 
   </style>
-  <style>
-  /* --- Badge utilisateur connecté --- */
-  #authBadge{
-    display:flex; align-items:center; gap:.5rem;
-    background:linear-gradient(135deg,#0a1a33,#0b294f);
-    border:1px solid rgba(212,175,55,.35);
-    color:#f5e7a1; border-radius:999px; padding:6px 12px;
-    box-shadow:0 8px 16px rgba(212,175,55,.18);
-    font-size:.9rem;
-  }
-  #authBadge .dot{
-    width:10px; height:10px; border-radius:999px;
-    background:linear-gradient(135deg,#d4af37,#b8860b);
-    box-shadow:0 0 8px rgba(212,175,55,.6);
-  }
-  #authBadge .logout{
-    border:none; background:transparent; color:#d4af37;
-    font-weight:700; cursor:pointer; font-size:1rem; line-height:1;
-  }
-</style>
-
 </head>
 
 <body class="relative">
@@ -1641,7 +1636,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
             <option value="Gune">PayPal</option>
           </select>
         </div>
-        <button type="submit" class="btn-gold w-full hovered-element">Payer 5€</button>
+        <button type="submit" class="btn-gold w-full">Payer 5€</button>
       </form>
     </div>
   </div>
@@ -1665,7 +1660,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
           <label class="block text-light-gold mb-2">Mot de passe</label>
           <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
         </div>
-        <button id="loginSubmit" type="submit" class="btn-gold w-full mb-4">Se connecter</button>
+        <button type="submit" class="btn-gold w-full mb-4">Se connecter</button>
         <p class="text-light-gold text-center text-sm">Pas encore de compte ?
           <a href="#" id="showRegister" class="text-gold hover:underline">S'inscrire</a>
         </p>
@@ -2404,19 +2399,63 @@ function initOrderModal(){
   const orderForm  = el('orderForm');
   if(!orderModal) return;
 
-  orderBtn?.addEventListener('click', (e)=>{ 
-    e.preventDefault(); 
-    show(orderModal); 
-    document.body.style.overflow='hidden'; 
-  });
-  
-  closeOrder?.addEventListener('click', ()=>{ 
-    hide(orderModal); 
-    document.body.style.overflow=''; 
-  });
+  orderBtn?.addEventListener('click', (e)=>{ e.preventDefault(); show(orderModal); document.body.style.overflow='hidden'; });
+  closeOrder?.addEventListener('click', ()=>{ hide(orderModal); document.body.style.overflow=''; });
 
-  // Initialiser le formulaire de commande
-  initOrderForm();
+  orderForm?.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    hide(orderModal); document.body.style.overflow='';
+
+    // Écran "Merci + Accès Traversée"
+    const confirmation = document.createElement('section');
+    confirmation.id = 'confirmation';
+    confirmation.className = 'py-20 px-6';
+    confirmation.innerHTML = `
+      <div class="container mx-auto max-w-6xl">
+        <div class="text-center mb-12">
+          <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Merci pour votre achat !</h2>
+          <p class="text-light-gold max-w-3xl mx-auto">Votre paiement a été validé avec succès.</p>
+        </div>
+        <div class="rounded-2xl p-8 mx-auto max-w-2xl relative" style="background:linear-gradient(145deg, rgba(26,54,93,0.8), rgba(5,20,40,0.9)); border:1px solid rgba(212,175,55,0.3)">
+          <a href="#offres" class="absolute top-4 left-4 text-gold hover:text-light-gold">
+            <i class="fas fa-arrow-left mr-2"></i> Retour aux offres
+          </a>
+          <div class="text-center">
+            <i class="fas fa-check-circle text-6xl text-gold mb-6"></i>
+            <p class="text-light-gold mb-2">Vous avez maintenant accès à 5 tirages complets de l'oracle Oradia.</p>
+            <p class="text-light-gold mb-8">Un e-mail comportant votre code d'accès vous a été envoyé.</p>
+            <button id="newReadingBtn" class="btn-gold">Accéder au tirage de la Traversée</button>
+          </div>
+        </div>
+      </div>`;
+    // Masquer temporairement les sections
+    $$('section').forEach(s=>{ if(s.id!=='confirmation') s.classList.add('hide-sections'); });
+    const offres = el('offres');
+    offres?.parentNode?.insertBefore(confirmation, offres.nextSibling);
+    setTimeout(()=>confirmation.scrollIntoView({behavior:'smooth'}),100);
+
+    // Boutons
+    confirmation.querySelector('a[href="#offres"]').addEventListener('click', (e)=>{
+      e.preventDefault();
+      confirmation.remove();
+      $$('section').forEach(s=>s.classList.remove('hide-sections'));
+      el('offres')?.scrollIntoView({behavior:'smooth'});
+    });
+
+    confirmation.querySelector('#newReadingBtn').addEventListener('click', ()=>{
+      confirmation.remove();
+      $$('section').forEach(s=>s.classList.remove('hide-sections'));
+      // Ouvrir directement le formulaire Traversée
+      const trav = el('traversee');
+      const intro = el('traversee-intro');
+      const form  = el('traversee-form');
+      trav && trav.classList.remove('hidden');
+      intro && intro.classList.add('hidden');
+      form && form.classList.remove('hidden');
+      trav?.scrollIntoView({behavior:'smooth'});
+      form?.querySelector('input, textarea, select')?.focus();
+    });
+  });
 }
 
 /* ---------- Modale Abonnement / Espace membre ---------- */
@@ -2795,9 +2834,6 @@ function initMobileMenu(){
     initPelerin();
     initTraversee();
     tryInitMobileMenu(); // réessaie si éléments pas encore dans le DOM
-    
-    // Initialiser le formulaire de commande au chargement
-    initOrderForm();
   };
 
   if (document.readyState === 'loading') {
@@ -2963,7 +2999,7 @@ document.addEventListener("DOMContentLoaded", () => {
 })();
 </script>
 <script>
-  // Bouton "Afficher le résultat du tirage" + modal d'analyse
+// Bouton "Afficher le résultat du tirage" + modal d'analyse
 (function(){
   const showBtn   = document.getElementById('showResults');
   const modal     = document.getElementById('analyzeModal');
@@ -2977,61 +3013,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Analyse tirage du Pèlerin
 
-  // Fonction pour ouvrir le tirage de la Traversée en mode immersif
-  function openTraverseeImmersive() {
-    // Masquer toutes les sections sauf la Traversée
-    document.querySelectorAll('body > header, body > footer, body > section').forEach(n => {
-      if (n.id !== 'traversee') {
-        n.classList.add('hide-immersive');
-      }
-    });
-    
-    // Afficher la section Traversée
-    const traverseeSection = document.getElementById('traversee');
-    if (traverseeSection) {
-      traverseeSection.classList.remove('hidden');
-      traverseeSection.classList.remove('hide-immersive');
-      
-      // Afficher directement le formulaire de la Traversée
-      const intro = document.getElementById('traversee-intro');
-      const form = document.getElementById('traversee-form');
-      if (intro && form) {
-        intro.classList.add('hidden');
-        form.classList.remove('hidden');
-      }
-      
-      // Scroll vers la section
-      traverseeSection.scrollIntoView({behavior: 'smooth', block: 'start'});
-      
-      // Ajouter le bouton de sortie si pas déjà présent
-      if (!document.getElementById('exitTraverseeBtn')) {
-        const exitBtn = document.createElement('button');
-        exitBtn.id = 'exitTraverseeBtn';
-        exitBtn.className = 'fixed top-4 left-4 z-[1000] bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold p-3 rounded-full shadow-lg';
-        exitBtn.innerHTML = '<i class="fas fa-times"></i>';
-        exitBtn.setAttribute('aria-label', 'Quitter le tirage de la Traversée');
-        exitBtn.addEventListener('click', () => {
-          // Restaurer l'affichage normal
-          document.querySelectorAll('body > header, body > footer, body > section').forEach(n => {
-            n.classList.remove('hide-immersive');
-          });
-          exitBtn.remove();
-          // Retour à l'accueil
-          document.getElementById('accueil').scrollIntoView({behavior: 'smooth'});
-        });
-        document.body.appendChild(exitBtn);
-      }
-    }
-  }
-
-  // Ajouter un bouton pour ouvrir la Traversée
-  const openTraverseeBtn = document.createElement('button');
-  openTraverseeBtn.className = 'btn-gold mt-4';
-  openTraverseeBtn.innerHTML = '<i class="fas fa-compass mr-2"></i> Essayer le tirage de la Traversée';
-  openTraverseeBtn.addEventListener('click', openTraverseeImmersive);
-  
-  // Ajouter le bouton près du bouton de résultats
-  showBtn.parentNode.appendChild(openTraverseeBtn);
 function generateAnalysis({ em, be, ac, co, intention }) {
   const clean = s => (s || '').toString().replace(/\s+/g, ' ').trim();
   const low = s => clean(s).toLowerCase();
@@ -3115,6 +3096,11 @@ function generateAnalysis({ em, be, ac, co, intention }) {
 
   return { html: `<div class="space-y-3 leading-relaxed">${texte}</div>` };
 }
+
+
+
+
+
   showBtn.addEventListener('click', async () => {
     // 1) Ouvre le modal et bloque le scroll
     modal.classList.remove('hidden');
@@ -3504,221 +3490,5 @@ document.addEventListener('click', (e) => {
   }
 });
 </script>
-<script>
-/* =========================================================
-   AUTH FRONT (localStorage) + Bascule UI / Offres
-   ========================================================= */
-(function(){
-  // Helpers courts
-  const $  = (sel, root=document) => root.querySelector(sel);
-  const $$ = (sel, root=document) => Array.from(root.querySelectorAll(sel));
-  const byText = (el) => (el.textContent || '').trim();
-
-  // État "session" simplifié
-  const AUTH_KEY = 'oradiaUser';
-  const Auth = {
-    get(){ try{ return JSON.parse(localStorage.getItem(AUTH_KEY) || 'null'); }catch(e){ return null; } },
-    set(email){ localStorage.setItem(AUTH_KEY, JSON.stringify({email, ts:Date.now()})); },
-    clear(){ localStorage.removeItem(AUTH_KEY); }
-  };
-
-  // UI: affichage badge + masquage boutons "Connexion"
-  function renderAuthBadge(){
-    const loginBtn       = $('#loginBtn');          // ligne 883
-    const loginBtnMobile = $('#loginBtnMobile');    // ligne 893
-    const footerLogin    = $('#footerLogin');       // ligne 1557
-    const headerRight    = loginBtn?.parentElement || $('#headerRight') || document.body;
-
-    $('#authBadge')?.remove();
-
-    const user = Auth.get();
-    if(!user){
-loginBtn?.classList.remove('hidden','md:hidden');
-loginBtnMobile?.classList.remove('hidden','md:hidden');
-footerLogin?.classList.remove('hidden','md:hidden');
-      return;
-    }
-
-loginBtn?.classList.add('hidden','md:hidden');      // ← clé pour masquer aussi en desktop
-loginBtnMobile?.classList.add('hidden','md:hidden');
-footerLogin?.classList.add('hidden','md:hidden');
-
-
-    const badge = document.createElement('div');
-    badge.id = 'authBadge';
-    badge.innerHTML = `
-      <span class="dot" aria-hidden="true"></span>
-      <span class="email">${user.email}</span>
-      <button type="button" class="logout" title="Se déconnecter">✕</button>
-    `;
-    if (loginBtn && loginBtn.parentElement) {
-      loginBtn.parentElement.appendChild(badge);
-    } else if (headerRight) {
-      headerRight.appendChild(badge);
-    } else {
-      document.body.appendChild(badge);
-    }
-
-    badge.querySelector('.logout').addEventListener('click', () => {
-      Auth.clear();
-      renderAuthBadge();
-      revertOffers();
-    });
-  }
-
-  // Transforme les 3 offres en "Commencer le tirage"
-  function applyMemberAccess(){
-    const offres = $('#offres'); // ligne 1119
-    if(!offres) return;
-
-    const ctas = $$('a.btn-gold, button.btn-gold, a.btn-outline-gold, button.btn-outline-gold', offres);
-
-    ctas.forEach(cta => {
-      const txt = byText(cta).toLowerCase();
-      const fresh = cta.cloneNode(true);
-
-      const card = cta.closest('.rounded-2xl');
-      const title = byText(card?.querySelector('h3') || document.createElement('h3')).toLowerCase();
-
-      fresh.textContent = 'Commencer le tirage';
-
-      if (title.includes('gratuit')) {
-        fresh.addEventListener('click', (e)=>{
-          e.preventDefault();
-          const btn = document.getElementById('startPilgrimFromOffer'); // ligne 1165
-          if (btn) btn.click();
-          else document.getElementById('oracle')?.scrollIntoView({behavior:'smooth'});
-        });
-      } else if (title.includes('commande') || title.includes('traversée')) {
-        fresh.addEventListener('click', (e)=>{
-          e.preventDefault();
-          openTraverseeNow();
-        });
-      } else if (title.includes('abonnement') || title.includes('tore')) {
-        fresh.addEventListener('click', (e)=>{
-          e.preventDefault();
-          openTraverseeNow();
-        });
-      } else {
-        fresh.addEventListener('click', (e)=>{
-          e.preventDefault();
-          const btn = document.getElementById('startPilgrimFromOffer');
-          if (btn) btn.click();
-        });
-      }
-
-      cta.replaceWith(fresh);
-    });
-  }
-
-  // Restaure les textes d’origine des boutons Offres (au logout)
-  function revertOffers(){
-    const offres = $('#offres');
-    if(!offres) return;
-    $$('a.btn-gold, button.btn-gold, a.btn-outline-gold, button.btn-outline-gold', offres).forEach(cta=>{
-      const card = cta.closest('.rounded-2xl');
-      const title = byText(card?.querySelector('h3') || document.createElement('h3')).toLowerCase();
-      if (title.includes('gratuit')) {
-        cta.textContent = 'Commencer le tirage';
-      } else if (title.includes('commande') || title.includes('traversée')) {
-        cta.textContent = 'Commander';
-      } else if (title.includes('abonnement') || title.includes('tore')) {
-        cta.textContent = 'S’abonner';
-      }
-    });
-  }
-
-  // Ouvre directement la section Traversée et son formulaire
-  function openTraverseeNow(){
-    const sec   = document.getElementById('traversee');        // section : ligne 1407
-    const intro = document.getElementById('traversee-intro');  // ligne 1463
-    const form  = document.getElementById('traversee-form');   // ligne 1469
-    if (sec) sec.classList.remove('hidden');
-    if (intro) intro.classList.add('hidden');
-    if (form) {
-      form.classList.remove('hidden');
-      form.querySelector('input, textarea, select')?.focus();
-    }
-    sec?.scrollIntoView({behavior:'smooth', block:'start'});
-  }
-
-  // Branche les formulaires de login existants
-  function bindLoginForms(){
-    // Modale espace membre (#subscriptionModal : 1629) → form #memberLoginForm : 1638
-    const memberLoginForm = document.getElementById('memberLoginForm');
-    if (memberLoginForm) {
-      memberLoginForm.addEventListener('submit', (e)=>{
-        e.preventDefault();
-        const email = memberLoginForm.querySelector('input[type="email"]')?.value?.trim();
-        if(!email){ alert('Merci de saisir un email.'); return; }
-        Auth.set(email);
-        document.getElementById('subscriptionModal')?.classList.add('hidden'); // 1629
-        document.body.style.overflow = '';
-        renderAuthBadge();
-        applyMemberAccess();
-      }, { once:false });
-    }
-
-    // Modale "Connexion Dashboard" (#loginModal : 1752) → form #loginFormDashboard : 1759
-    const loginFormDashboard = document.getElementById('loginFormDashboard');
-    if (loginFormDashboard){
-      loginFormDashboard.addEventListener('submit', (e)=>{
-        e.preventDefault();
-        const email = loginFormDashboard.querySelector('input[type="email"]')?.value?.trim();
-        if(!email){ alert('Merci de saisir un email.'); return; }
-        Auth.set(email);
-        document.getElementById('loginModal')?.classList.add('hidden'); // 1752
-        document.body.style.overflow = '';
-        renderAuthBadge();
-        applyMemberAccess();
-      }, { once:false });
-    }
-
-    // Boutons d’ouverture de login (header/footer)
-    const openers = ['#loginBtn','#loginBtnMobile','#footerLogin']
-      .map(sel => document.querySelector(sel)).filter(Boolean);
-    openers.forEach(btn=>{
-      btn.addEventListener('click', (e)=>{
-        if (Auth.get()){
-          e.preventDefault();
-          renderAuthBadge();
-        }
-      });
-    });
-  }
-
-  // Init au chargement
-  document.addEventListener('DOMContentLoaded', ()=>{
-    bindLoginForms();
-    // Fix robuste : on accroche aussi le clic sur le bouton "Se connecter"
-const loginBtn = document.getElementById('loginSubmit');
-if (loginBtn) {
-  loginBtn.addEventListener('click', (e) => {
-    e.preventDefault();
-
-    const form = document.getElementById('memberLoginForm');
-    if (!form) return;
-
-    // Validation native HTML5
-    if (!form.checkValidity()) { form.reportValidity(); return; }
-
-    const email = form.querySelector('input[type="email"]').value.trim();
-
-    // Enregistre la "session" côté front
-    localStorage.setItem('oradiaUser', JSON.stringify({ email, ts: Date.now() }));
-
-    // Ferme la modale et met à jour l’UI
-    document.getElementById('subscriptionModal')?.classList.add('hidden');
-    document.body.style.overflow = '';
-    renderAuthBadge();
-    applyMemberAccess();
-  });
-}
-    renderAuthBadge();
-    if (Auth.get()) applyMemberAccess();
-  });
-})();
-</script>
-
 </body>
 </html>
