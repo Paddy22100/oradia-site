@@ -3493,6 +3493,9 @@ document.addEventListener('click', (e) => {
 
   function isAuthed(){ return localStorage.getItem(AUTH_KEY) === '1'; }
   function setAuthed(v){ v ? localStorage.setItem(AUTH_KEY,'1') : localStorage.removeItem(AUTH_KEY); }
+// ——— RESET ponctuel pour les tests : déconnecte à chaque rechargement.
+// Supprime SÉCURISÉMENT cette ligne quand tout est validé, sinon tu déconnecteras toujours tout le monde.
+localStorage.removeItem('oradiaAuth');
 
   function ensureMemberIcon(){
     // Si déjà présent, ne rien faire
@@ -3503,33 +3506,47 @@ document.addEventListener('click', (e) => {
     if (!loginBtn || !loginBtn.parentElement) return;
     const wrap = loginBtn.parentElement;
 
-    // Crée l’icône membre
-    const btn = document.createElement('button');
-    btn.id = 'memberIcon';
-    btn.type = 'button';
-    btn.innerHTML = `
-      <i class="fas fa-user-circle text-xl"></i>
-      <span class="hidden md:inline">Espace membre</span>
-      <span class="badge" aria-label="connecté"></span>
-    `;
-    btn.addEventListener('click', () => {
-      // À terme : ouvrir un vrai dashboard. Pour l’instant, simple menu/confirm.
-      const go = confirm('Ouvrir le tirage maintenant ? (OK)  —  Se déconnecter ? (Annuler)');
-      if (go){
-        // Scroll vers l’oracle
-        const oracle = document.getElementById('oracle') || document.querySelector('[href="#Jeu"]');
-        if (oracle) {
-          location.hash = '#Jeu';
-          // Option : déclencher un tirage si tu as une fonction dédiée
-          const start = document.getElementById('newPilgrim') || document.querySelector('#oracle .btn-gold');
-          if (start) start.click();
-        }
-      } else {
-        if (confirm('Confirmer la déconnexion ?')){
-          logoutFlow();
-        }
-      }
-    });
+   // Crée l’icône membre + menu
+const cont = document.createElement('div');
+cont.id = 'memberIconWrap';
+cont.className = 'relative inline-block';
+
+const btn = document.createElement('button');
+btn.id = 'memberIcon';
+btn.type = 'button';
+btn.className = 'btn-outline-gold';
+btn.innerHTML = `
+  <i class="fas fa-user-circle text-xl mr-2"></i>
+  <span class="hidden md:inline">Espace membre</span>
+  <span class="badge" aria-label="connecté"></span>
+`;
+
+const menu = document.createElement('div');
+menu.id = 'memberMenu';
+menu.className = 'absolute right-0 mt-2 w-48 rounded-lg border border-gold/30 bg-night-blue shadow-lg hidden z-50';
+menu.innerHTML = `
+  <a href="#Jeu" id="menuStart" class="block px-4 py-2 text-gold hover:bg-gold/10">Commencer le tirage</a>
+  <button id="menuLogout" class="w-full text-left px-4 py-2 text-gold hover:bg-gold/10">Se déconnecter</button>
+`;
+
+// toggles
+btn.addEventListener('click', (e)=>{ e.stopPropagation(); menu.classList.toggle('hidden'); });
+document.addEventListener('click', ()=> menu.classList.add('hidden'));
+
+// actions
+menu.querySelector('#menuStart').addEventListener('click', (e)=>{ e.preventDefault(); menu.classList.add('hidden'); onStartReading(e); });
+menu.querySelector('#menuLogout').addEventListener('click', (e)=>{ e.preventDefault(); menu.classList.add('hidden'); logoutFlow(); });
+
+cont.appendChild(btn);
+cont.appendChild(menu);
+wrap.appendChild(cont);
+
+  // Aller directement au tirage sans popup
+  location.hash = '#Jeu';
+  const start = document.getElementById('newPilgrim') || document.querySelector('#oracle .btn-gold');
+  if (start) start.click();
+});
+
 
     wrap.appendChild(btn);
   }
@@ -3576,6 +3593,27 @@ document.addEventListener('click', (e) => {
         subSubmit.removeEventListener('click', onStartReading);
       }
     }
+// CTA "S’abonner" hors modale (section Offres)
+const subBtn = document.getElementById('subscribeBtn');
+if (subBtn){
+  if (isAuthed()){
+    subBtn.textContent = 'Commencer le tirage';
+    subBtn.setAttribute('href', '#Jeu');
+    subBtn.replaceWith(subBtn.cloneNode(true));             // nettoie anciens handlers
+    const fresh = document.getElementById('subscribeBtn');  // même id après clone
+    fresh?.addEventListener('click', (e)=>{ e.preventDefault(); onStartReading(e); });
+  } else {
+    subBtn.textContent = "S'abonner";
+    subBtn.setAttribute('href', '#');
+    subBtn.replaceWith(subBtn.cloneNode(true));             // nettoie
+    const fresh = document.getElementById('subscribeBtn');
+    fresh?.addEventListener('click', (e)=>{                 // ouvre la modale d’abo
+      e.preventDefault();
+      const m = document.getElementById('subscriptionModal');
+      if (m) { m.classList.remove('hidden'); document.body.style.overflow='hidden'; }
+    });
+  }
+}
 
     // Si tu as un bouton d’offre “Abonnement” hors modale, traite-le pareil ici.
   }
@@ -3605,20 +3643,24 @@ document.addEventListener('click', (e) => {
     const reg = document.getElementById('memberRegisterForm');
     if (reg){
       reg.addEventListener('submit', function(ev){
-        ev.preventDefault();
-        // TODO: brancher ton back-end ici. Pour l’instant, on “valide” en front.
-        loginFlow();
-        alert('Compte créé. Vous êtes connecté.');
-      });
+  ev.preventDefault();
+  loginFlow();
+  // fermer la modale si ouverte
+  const m = document.getElementById('subscriptionModal');
+  if (m) { m.classList.add('hidden'); document.body.style.overflow=''; }
+});
+
     }
 
     const login = document.getElementById('memberLoginForm');
     if (login){
-      login.addEventListener('submit', function(ev){
-        ev.preventDefault();
-        loginFlow();
-        alert('Connexion réussie.');
-      });
+    login.addEventListener('submit', function(ev){
+  ev.preventDefault();
+  loginFlow();
+  const m = document.getElementById('subscriptionModal');
+  if (m) { m.classList.add('hidden'); document.body.style.overflow=''; }
+});
+
     }
 
     // Formulaire d’abonnement (si tu veux qu’il connecte aussi)
@@ -3632,18 +3674,17 @@ document.addEventListener('click', (e) => {
     }
 
     // Boutons “Connexion” (ouvrir la modale de login existante si tu en as une)
-    const loginBtn = document.getElementById('loginBtn');
-    const loginBtnMobile = document.getElementById('loginBtnMobile');
-    [loginBtn, loginBtnMobile].forEach(btn => {
-      if (!btn) return;
-      btn.addEventListener('click', function(ev){
-        // Si tu as une modale spécifique de login “membre”, l’ouvrir ici.
-        // À défaut, on bascule directement pour démonstration :
-        ev.preventDefault();
-        loginFlow();
-        alert('Connexion (démo) activée.');
-      });
-    });
+ const loginBtn = document.getElementById('loginBtn');
+const loginBtnMobile = document.getElementById('loginBtnMobile');
+[loginBtn, loginBtnMobile].forEach(btn => {
+  if (!btn) return;
+  btn.addEventListener('click', function(ev){
+    ev.preventDefault();
+    const m = document.getElementById('subscriptionModal');
+    if (m) { m.classList.remove('hidden'); document.body.style.overflow='hidden'; }
+  });
+});
+
 
     // Si tu as un bouton logout quelque part :
     const dashboardLogout = document.getElementById('logoutBtn');
@@ -3662,5 +3703,6 @@ document.addEventListener('click', (e) => {
   });
 })();
 </script>
+
 </body>
 </html>
