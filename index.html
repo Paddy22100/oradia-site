@@ -753,21 +753,9 @@ header {
       50% { box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5); }
     }
 
-    /* Effets de brillance sur les boutons */
-    .btn-gold::before,
-    .btn-outline-gold::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: -100%;
-      width: 100%;
-      height: 100%;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-      transition: left 0.5s;
-    }
+/* (désactivé) brillance balayage supprimée */
+.btn-gold::before, .btn-outline-gold::before { content: none !important; }
 
-    .btn-gold:hover::before,
-    .btn-outline-gold:hover::before {
       left: 100%;
     }
 /* Mini-carte dans un slot */
@@ -921,10 +909,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
           <p class="text-xl text-light-gold mb-8 max-w-2xl">
             L'oracle Oradia croise les sagesses ancestrales (Yi Jing, ennéagramme, astrologie, etc.) et les outils modernes pour vous guider comme une boussole.
           </p>
-                <p class="text-light-gold max-w-3xl mx-auto">
-                    Il utilise l'IA comme un outils puissant afin de croiser les informations et vous fournir une guidance incroyablement pertinente.
-                         </p>
-                         <p class="text-light-gold max-w-3xl mx-auto">
+                                        <p class="text-light-gold max-w-3xl mx-auto">
                          </p>
                          <p class="text-xl text-light-gold mb-8 max-w-2xl">
                                             </p>
