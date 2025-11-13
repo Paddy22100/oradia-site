@@ -885,9 +885,8 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       <a href="#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
       <a href="#apropos" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
     </nav>
-
-    <button id="loginBtn" class="btn-outline-gold hidden md:inline-block">Connexion</button>
-  </div>
+    <button id="loginBtn" class="btn-outline-gold hidden md:inline-block" style="display: none;">Connexion</button>
+</div>
 
   <!-- Menu mobile déroulant -->
   <nav id="mobileMenu" class="md:hidden hidden mt-3 space-y-2">
@@ -896,8 +895,8 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
     <a href="#Jeu" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Jeu</a>
     <a href="#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
     <a href="#apropos" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
-    <button id="loginBtnMobile" class="w-full btn-outline-gold">Connexion</button>
-  </nav>
+        <button id="loginBtnMobile" class="w-full btn-outline-gold" style="display: none;">Connexion</button>
+</nav>
 </header>
 <!-- Hero -->
   <section id="accueil" class="hero-bg min-h-screen flex items-center pt-20 pb-32 px-6">
@@ -1249,8 +1248,9 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Accès à l'archive des 10 derniers tirages</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Participation à l’amélioration de l’oracle (expérience anonyme)</span></li>
           </ul>
-            <a href="#" id="subscribeBtn" class="btn-gold w-full text-center block relative z-10 mt-auto">Commencer le tirage du Tore</a>
-</div>
+
+          <a href="#" id="subscribeBtn" class="btn-gold w-full text-center block relative z-10 mt-auto">S'abonner</a>
+        </div>
       </div>
     </div>
   </section>
@@ -2134,8 +2134,14 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
   <!-- Scripts -->
   <script src="components/cgu-modal.js"></script>
   <script>
+    // Reset auth state on first load
+    if (!localStorage.getItem('authInitialized')) {
+      localStorage.removeItem('oradiaAuth');
+      localStorage.setItem('authInitialized', 'true');
+    }
+
     // Gestion du modal CGU
-    document.getElementById('showCGU')?.addEventListener('click', (e) => {
+document.getElementById('showCGU')?.addEventListener('click', (e) => {
       e.preventDefault();
       const modal = document.querySelector('cgu-modal');
       if (!modal) {
@@ -3510,44 +3516,78 @@ document.addEventListener('click', (e) => {
     // Trouve la zone du header où se trouve le bouton Connexion (desktop)
     const loginBtn = document.getElementById('loginBtn');
     if (!loginBtn || !loginBtn.parentElement) return;
-    const wrap = loginBtn.parentElement;
+      const wrap = loginBtn.parentElement;
 
-    // Crée l’icône membre
+    // Crée l'icône membre avec menu dropdown
+    const memberContainer = document.createElement('div');
+    memberContainer.className = 'relative';
+    memberContainer.id = 'memberContainer';
+    
     const btn = document.createElement('button');
     btn.id = 'memberIcon';
     btn.type = 'button';
+    btn.className = 'flex items-center gap-2';
     btn.innerHTML = `
       <i class="fas fa-user-circle text-xl"></i>
       <span class="hidden md:inline">Espace membre</span>
       <span class="badge" aria-label="connecté"></span>
+      <i class="fas fa-chevron-down text-xs ml-1"></i>
     `;
-btn.addEventListener('click', () => {
-  // Aller directement au tirage sans popup
-  location.hash = '#Jeu';
-  const start = document.getElementById('newPilgrim') || document.querySelector('#oracle .btn-gold');
-  if (start) start.click();
-});
 
+    // Menu dropdown
+    const dropdown = document.createElement('div');
+    dropdown.id = 'memberDropdown';
+    dropdown.className = 'absolute right-0 mt-2 w-48 bg-night-blue border border-gold/30 rounded-lg shadow-lg py-1 z-50 hidden';
+    dropdown.innerHTML = `
+      <a href="#profil" class="block px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Profil</a>
+      <a href="#dashboard" class="block px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Tableau de bord</a>
+      <button id="logoutBtn" class="w-full text-left px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Déconnexion</button>
+    `;
 
-    wrap.appendChild(btn);
+    memberContainer.appendChild(btn);
+    memberContainer.appendChild(dropdown);
+    wrap.appendChild(memberContainer);
+
+    // Gestion du menu dropdown
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = dropdown.classList.contains('hidden');
+      // Fermer tous les autres menus ouverts
+      document.querySelectorAll('#memberDropdown').forEach(menu => {
+        if (menu !== dropdown) menu.classList.add('hidden');
+      });
+      dropdown.classList.toggle('hidden', !isHidden);
+    });
+
+    // Fermer le menu quand on clique ailleurs
+    document.addEventListener('click', (e) => {
+      if (!memberContainer.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    // Gestion des clics sur les éléments du menu
+    dropdown.querySelector('#logoutBtn').addEventListener('click', () => {
+      logoutFlow();
+      dropdown.classList.add('hidden');
+    });
+wrap.appendChild(btn);
   }
-
   function updateHeaderForAuth(){
     const loginBtn = document.getElementById('loginBtn');         // desktop
     const loginBtnMobile = document.getElementById('loginBtnMobile'); // mobile
     if (isAuthed()){
-      if (loginBtn) loginBtn.classList.add('hidden');
-      if (loginBtnMobile) loginBtnMobile.classList.add('hidden');
+      if (loginBtn) loginBtn.style.display = 'none';
+      if (loginBtnMobile) loginBtnMobile.style.display = 'none';
       ensureMemberIcon();
     } else {
-      if (loginBtn) loginBtn.classList.remove('hidden');
-      if (loginBtnMobile) loginBtnMobile.classList.remove('hidden');
+      if (loginBtn) loginBtn.style.display = 'inline-block';
+      if (loginBtnMobile) loginBtnMobile.style.display = 'block';
       const icon = document.getElementById('memberIcon');
       if (icon) icon.remove();
     }
   }
-
-  function updateCtasForAuth(){
+function updateCtasForAuth(){
     // “Commander” (offre Traversée)
     const orderBtn = document.getElementById('orderBtn');
     if (orderBtn){
