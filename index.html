@@ -1155,9 +1155,9 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
  <p class="text-light-gold text-sm">
               Une question simple, un pas sur le chemin. Le tirage du Pèlerin éclaire passé, présent et futur : ce qui t'accompagne encore, ce qui se joue maintenant, et ce qui se dessine devant toi. C'est un tirage d'initiation, une première porte pour goûter la vibration d'Oradia.
             </p>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>3 cartes + 1 carte Mémoires Cosmos</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>3 cartes (Émotion, Besoin, Mémoire Cosmos)</span></li>
+               <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 carte Mémoires Cosmos</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Interprétation synthétique</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Analyse croisée basique par l'IA</span></li>
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Cartes passerelles</span></li>
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Espace membre</span></li>
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Analyse approfondie</span></li>
@@ -1201,14 +1201,13 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
               Un carrefour, une décision, un choix à poser. Le tirage de la Traversée se déploie comme une boussole intérieure : Nord, Sud, Est, Ouest. Quatre directions pour éclairer ton orientation dans la vie, retrouver ton cap, discerner la voie juste. C'est un tirage pour les passages importants.
             </p>
           <ul class="space-y-3 mb-8 relative z-10">
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>4 cartes vibratoires</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>4 cartes (Émotion, Besoin, Révélation, Action)</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 carte Mémoires Cosmos</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes passerelles</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Analyse croisée par l'IA complète et détaillée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question d'introspection</span></li>
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Espace membre</span></li>
-            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">1 tirage complet quotidien par mail</span></li>
+            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">1 tirage complet personnalisé quotidien par mail</span></li>
           </ul>
 
           <a href="#" id="orderBtn" class="btn-gold w-full text-center block relative z-10 mt-auto">Commander</a>
@@ -1240,7 +1239,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
    <p class="text-light-gold text-sm">
               L'expérience complète. Le Guidage du Tore recueille toutes les dimensions de ton être : émotions, besoins, archétypes, révélations, actions. Il s'appuie aussi sur tes clés personnelles (Human Design, Ennéagramme, astrologie...). C'est une cartographie vibratoire profonde pour avancer avec clarté.
             </p>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 tirage complet quotidien par mail avec votre intention</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 tirage complet personnalisé quotidien par mail avec votre intention</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes passerelles</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question du jour</span></li>
@@ -3493,9 +3492,6 @@ document.addEventListener('click', (e) => {
 
   function isAuthed(){ return localStorage.getItem(AUTH_KEY) === '1'; }
   function setAuthed(v){ v ? localStorage.setItem(AUTH_KEY,'1') : localStorage.removeItem(AUTH_KEY); }
-// ——— RESET ponctuel pour les tests : déconnecte à chaque rechargement.
-// Supprime SÉCURISÉMENT cette ligne quand tout est validé, sinon tu déconnecteras toujours tout le monde.
-
 
   function ensureMemberIcon(){
     // Si déjà présent, ne rien faire
@@ -3506,41 +3502,24 @@ document.addEventListener('click', (e) => {
     if (!loginBtn || !loginBtn.parentElement) return;
     const wrap = loginBtn.parentElement;
 
-   // Crée l’icône membre + menu
-const cont = document.createElement('div');
-cont.id = 'memberIconWrap';
-cont.className = 'relative inline-block';
+    // Crée l’icône membre
+    const btn = document.createElement('button');
+    btn.id = 'memberIcon';
+    btn.type = 'button';
+    btn.innerHTML = `
+      <i class="fas fa-user-circle text-xl"></i>
+      <span class="hidden md:inline">Espace membre</span>
+      <span class="badge" aria-label="connecté"></span>
+    `;
+btn.addEventListener('click', () => {
+  // Aller directement au tirage sans popup
+  location.hash = '#Jeu';
+  const start = document.getElementById('newPilgrim') || document.querySelector('#oracle .btn-gold');
+  if (start) start.click();
+});
 
-const btn = document.createElement('button');
-btn.id = 'memberIcon';
-btn.type = 'button';
-btn.className = 'btn-outline-gold';
-btn.innerHTML = `
-  <i class="fas fa-user-circle text-xl mr-2"></i>
-  <span class="hidden md:inline">Espace membre</span>
-  <span class="badge" aria-label="connecté"></span>
-`;
 
-const menu = document.createElement('div');
-menu.id = 'memberMenu';
-menu.className = 'absolute right-0 mt-2 w-48 rounded-lg border border-gold/30 bg-night-blue shadow-lg hidden z-50';
-menu.innerHTML = `
-  <a href="#Jeu" id="menuStart" class="block px-4 py-2 text-gold hover:bg-gold/10">Commencer le tirage</a>
-  <button id="menuLogout" class="w-full text-left px-4 py-2 text-gold hover:bg-gold/10">Se déconnecter</button>
-`;
-
-// toggles
-btn.addEventListener('click', (e)=>{ e.stopPropagation(); menu.classList.toggle('hidden'); });
-document.addEventListener('click', ()=> menu.classList.add('hidden'));
-
-// actions
-menu.querySelector('#menuStart').addEventListener('click', (e)=>{ e.preventDefault(); menu.classList.add('hidden'); onStartReading(e); });
-menu.querySelector('#menuLogout').addEventListener('click', (e)=>{ e.preventDefault(); menu.classList.add('hidden'); logoutFlow(); });
-
-cont.appendChild(btn);
-cont.appendChild(menu);
-wrap.appendChild(cont);
-wrap.appendChild(btn);
+    wrap.appendChild(btn);
   }
 
   function updateHeaderForAuth(){
@@ -3585,29 +3564,33 @@ wrap.appendChild(btn);
         subSubmit.removeEventListener('click', onStartReading);
       }
     }
-// CTA "S’abonner" hors modale (section Offres)
-const subBtn = document.getElementById('subscribeBtn');
-if (subBtn){
-  if (isAuthed()){
-    subBtn.textContent = 'Commencer le tirage';
-    subBtn.setAttribute('href', '#Jeu');
-    subBtn.replaceWith(subBtn.cloneNode(true));             // nettoie anciens handlers
-    const fresh = document.getElementById('subscribeBtn');  // même id après clone
-    fresh?.addEventListener('click', (e)=>{ e.preventDefault(); onStartReading(e); });
-  } else {
-    subBtn.textContent = "S'abonner";
-    subBtn.setAttribute('href', '#');
-    subBtn.replaceWith(subBtn.cloneNode(true));             // nettoie
-    const fresh = document.getElementById('subscribeBtn');
-    fresh?.addEventListener('click', (e)=>{                 // ouvre la modale d’abo
-      e.preventDefault();
-      const m = document.getElementById('subscriptionModal');
-      if (m) { m.classList.remove('hidden'); document.body.style.overflow='hidden'; }
-    });
-  }
-}
 
     // Si tu as un bouton d’offre “Abonnement” hors modale, traite-le pareil ici.
+    // "S'abonner" (offre Tore)
+    const subscribeBtn = document.getElementById('subscribeBtn');
+    if (subscribeBtn) {
+      if (isAuthed()) {
+        // Lorsque l'utilisateur est connecté, le bouton s'abonner devient "Commencer le tirage"
+        subscribeBtn.textContent = 'Commencer le tirage';
+        // Assure une ancre cohérente pour l'expérience de tirage
+        subscribeBtn.setAttribute('href', '#Jeu');
+        // Supprime tout ancien gestionnaire qui pourrait ouvrir la modale d'inscription
+        const newSubBtn = subscribeBtn.cloneNode(true);
+        subscribeBtn.parentNode.replaceChild(newSubBtn, subscribeBtn);
+        // Ajoute un gestionnaire pour lancer le tirage complet (même comportement que l'offre Traversée)
+        newSubBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          onStartReading(e);
+        }, { once:true });
+      } else {
+        // Si l'utilisateur n'est pas connecté, rétablit le libellé et laisse la logique d'origine gérer la modale
+        subscribeBtn.textContent = "S'abonner";
+        subscribeBtn.setAttribute('href', '#');
+        // Nettoie les éventuels gestionnaires ajoutés précédemment
+        const newSubBtn = subscribeBtn.cloneNode(true);
+        subscribeBtn.parentNode.replaceChild(newSubBtn, subscribeBtn);
+      }
+    }
   }
 
   function onStartReading(e){
