@@ -53,3 +53,13 @@ images/logoscic.png filter=lfs diff=lfs merge=lfs -text
 images/Capture[[:space:]]d'écran[[:space:]]2025-08-09[[:space:]]090137.png filter=lfs diff=lfs merge=lfs -text
 images/Logo[[:space:]]final.png filter=lfs diff=lfs merge=lfs -text
 images/logo2.png filter=lfs diff=lfs merge=lfs -text
+images/Futur.png filter=lfs diff=lfs merge=lfs -text
+images/Généalogie.png filter=lfs diff=lfs merge=lfs -text
+images/L'étoile.png filter=lfs diff=lfs merge=lfs -text
+images/L'océan.png filter=lfs diff=lfs merge=lfs -text
+images/Mémoire[[:space:]]cellulaire.png filter=lfs diff=lfs merge=lfs -text
+images/Mémoire[[:space:]]collective.png filter=lfs diff=lfs merge=lfs -text
+images/Passé.png filter=lfs diff=lfs merge=lfs -text
+images/Présent.png filter=lfs diff=lfs merge=lfs -text
+images/Terre.png filter=lfs diff=lfs merge=lfs -text
+images/Tore.png filter=lfs diff=lfs merge=lfs -text
