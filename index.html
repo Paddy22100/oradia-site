@@ -857,9 +857,11 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 </head>
 
 <body class="relative">
+  <!-- CGU Modal -->
+  <cgu-modal></cgu-modal>
 
   <!-- Scroll to top button -->
-  <button id="scrollTop" class="scroll-top bg-night-blue text-gold p-3 rounded-full border border-gold shadow-lg" aria-label="Remonter en haut">
+<button id="scrollTop" class="scroll-top bg-night-blue text-gold p-3 rounded-full border border-gold shadow-lg" aria-label="Remonter en haut">
     <i class="fas fa-arrow-up"></i>
   </button>
   <!-- Header -->
@@ -1247,9 +1249,8 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Accès à l'archive des 10 derniers tirages</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Participation à l’amélioration de l’oracle (expérience anonyme)</span></li>
           </ul>
-
-          <a href="#" id="subscribeBtn" class="btn-gold w-full text-center block relative z-10 mt-auto">S'abonner</a>
-        </div>
+            <a href="#" id="subscribeBtn" class="btn-gold w-full text-center block relative z-10 mt-auto">Commencer le tirage du Tore</a>
+</div>
       </div>
     </div>
   </section>
@@ -1526,7 +1527,6 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       </div>
     </div>
   </section>
-
   <!-- Footer -->
   <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
     <div class="container mx-auto max-w-6xl">
@@ -1551,7 +1551,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         <div>
           <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
           <ul class="space-y-2">
-            <li><a href="#" id="showCGV" class="text-light-gold hover:text-gold transition">CGU</a></li>
+            <li><button id="showCGU" class="text-light-gold hover:text-gold transition bg-transparent border-none p-0 cursor-pointer">CGU</button></li>
             <li><a href="#" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
             <li><a href="#" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
           </ul>
@@ -1571,8 +1571,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       </div>
     </div>
   </footer>
-
-   <!-- Modal d'analyse -->
+<!-- Modal d'analyse -->
 <div id="analyzeModal"
      class="fixed inset-0 z-[1000] hidden items-center justify-center bg-black/60 backdrop-blur-sm">
   <div class="relative w-full max-w-sm mx-4 rounded-2xl border border-gold/40
@@ -2132,11 +2131,22 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
   });
 })();
 </script>
-
-
-  <!-- SCRIPT -->
+  <!-- Scripts -->
+  <script src="components/cgu-modal.js"></script>
   <script>
-    // Fonction pour gérer le clic sur "Envie d'un tirage plus complet?"
+    // Gestion du modal CGU
+    document.getElementById('showCGU')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const modal = document.querySelector('cgu-modal');
+      if (!modal) {
+        const cguModal = document.createElement('cgu-modal');
+        document.body.appendChild(cguModal);
+        cguModal.open();
+      } else {
+        modal.open();
+      }
+    });
+// Fonction pour gérer le clic sur "Envie d'un tirage plus complet?"
 function handleFullReadingClick() {
   // 1) Quitter le mode immersif s'il est actif
   if (typeof window.exitPelerinImmersive === 'function') {
