@@ -260,7 +260,7 @@
         Tirage du TORE
       </h1>
       <p class="text-light-gold max-w-3xl mx-auto">
-        Guidance vibratoire complète – 7 familles, toutes les dimensions de votre être.
+        Guidance vibratoire complète.
       </p>
     </div>
 
@@ -364,15 +364,25 @@
   const startBtn  = el('tore-start');
   const exitBtn   = el('exitToreBtn');
 
+  // --- helper pour piocher une carte depuis window.DATA ---
+  function pickFromData(familyKey) {
+    const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : [];
+    if (!pool.length) return null;
+    const idx = Math.floor(Math.random() * pool.length);
+    return pool[idx] || null;
+  }
+
   function enterImmersiveTore () {
     document.body.classList.add('hide-immersive-tore');
     exitBtn.classList.remove('hidden');
     window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
   function exitImmersiveTore () {
     document.body.classList.remove('hide-immersive-tore');
     exitBtn.classList.add('hidden');
-    // reset léger – libre à DeepSite de faire plus
+
+    // reset
     intro.classList.remove('hidden');
     form.classList.add('hidden');
     boardWrap.classList.add('hidden');
@@ -404,7 +414,7 @@
                 <p data-quote>—</p>
               </div>
             </div>
-            <div class="bottom"></div>
+            <div class="bottom text-xs opacity-80 mt-2"></div>
           </div>
         </div>
       </article>
@@ -412,38 +422,73 @@
 
     boardWrap.classList.remove('hidden');
 
-    // comportement de base : flip au clic
+    // comportement : au clic, on PIQUE une carte dans window.DATA et on la affiche
     boardHost.querySelectorAll('.tore-card .tore-card-back')
       .forEach(back => {
         back.addEventListener('click', () => {
           const card = back.closest('.tore-card');
+          if (!card || card.classList.contains('flipped')) return;
+
+          const famKey   = card.dataset.family;
+          const data     = pickFromData(famKey);
+          const nameEl   = card.querySelector('[data-name]');
+          const quoteEl  = card.querySelector('[data-quote]');
+          const polEl    = card.querySelector('[data-polarity]');
+          const bottomEl = card.querySelector('.bottom');
+
+          if (data) {
+            nameEl.textContent  = data.name  || 'Carte';
+            quoteEl.textContent = data.quote || '';
+            if (bottomEl) bottomEl.textContent = data.bridge || '';
+
+            // polarité : triangle / rond sauf pour cosmos
+            if (famKey !== 'cosmos' && data.polarity) {
+              polEl.textContent = data.polarity === 'yang' ? '▲' : '●';
+              polEl.style.visibility = 'visible';
+            } else {
+              polEl.textContent = '';
+              polEl.style.visibility = 'hidden';
+            }
+          } else {
+            // aucun DATA trouvé → message de secours
+            nameEl.textContent  = 'Aucune carte trouvée';
+            quoteEl.textContent = 'Aucune donnée disponible pour cette famille.';
+            if (bottomEl) bottomEl.textContent = '';
+            polEl.style.visibility = 'hidden';
+          }
+
           card.classList.add('flipped');
         });
       });
   }
 
-  // listeners
+  // --- listeners ---
+
+  // intro -> formulaire
   startBtn?.addEventListener('click', () => {
     intro.classList.add('hidden');
     form.classList.remove('hidden');
   });
 
+  // formulaire -> plateau + mode immersif
   form?.addEventListener('submit', (e) => {
     e.preventDefault();
     form.classList.add('hidden');
-    enterImmersiveTore();
     buildBoardTore();
-    results.classList.add('hidden'); // à remplir après appel API
+    enterImmersiveTore();
+    results.classList.add('hidden'); // DeepSite pourra remplir plus tard
   });
 
   exitBtn?.addEventListener('click', exitImmersiveTore);
 })();
 </script>
 
+
 <footer class="mt-16 border-t border-[rgba(212,175,55,.25)]">
   <div class="container mx-auto px-6 py-6 text-center text-xs text-light-gold/70">
     © Oradia – Tirage du Tore
   </div>
+  
 </footer>
 </body>
 </html>
