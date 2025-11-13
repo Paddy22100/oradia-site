@@ -1210,9 +1210,8 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Espace membre</span></li>
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">1 tirage complet personnalisé quotidien par mail</span></li>
           </ul>
-
           <a href="#" id="orderBtn" class="btn-gold w-full text-center block relative z-10 mt-auto">Commander</a>
-        </div>
+</div>
 
         <!-- Abonnement -->
         <div class="rounded-2xl p-8 relative overflow-hidden flex flex-col h-full" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
@@ -1247,16 +1246,56 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Espace membre (profils ennéagramme, astro, numérologie...)</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Accès à l'archive des 10 derniers tirages</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Participation à l’amélioration de l’oracle (expérience anonyme)</span></li>
-          </ul>
+        </ul>
+            <a href="tore.html" class="btn-gold w-full text-center block relative z-10 mt-auto hovered-element">Accéder au tirage du Tore</a>
+</div>
+</div>
+    </div>
+  </section>
 
-          <a href="#" id="subscribeBtn" class="btn-gold w-full text-center block relative z-10 mt-auto">S'abonner</a>
+  <!-- Tirage du Tore - Section Immersive -->
+  <section id="tore" class="py-20 px-6 bg-night-blue hidden">
+    <div class="container mx-auto max-w-6xl">
+      <div class="text-center mb-12">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-1">Tirage du Tore</h2>
+        <p class="text-light-gold max-w-3xl mx-auto">Guidance vibratoire complète - 8 cartes pour une vision d'ensemble</p>
+      </div>
+
+      <div class="rounded-2xl p-8 mb-8 relative overflow-hidden" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+        <div class="relative z-10">
+          <div id="tore-intro">
+            <h3 class="cormorant text-2xl text-gold mb-4">Préparation du tirage du Tore</h3>
+            <p class="text-light-gold mb-6">Ce tirage complet nécessite votre intention pour personnaliser l'expérience.</p>
+            <button id="tore-start" class="btn-gold">Commencer le tirage du Tore</button>
+          </div>
+
+          <div id="tore-intention-form" class="hidden">
+            <div class="mb-6">
+              <label class="block text-light-gold mb-2">Votre intention pour ce tirage</label>
+              <textarea id="toreIntentionText" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg min-h-[120px]" placeholder="Exemple : Comment aligner mes actions avec mes aspirations profondes ce mois-ci ?" required></textarea>
+            </div>
+            <button type="button" id="launchToreBoard" class="btn-gold w-full">Lancer le tirage</button>
+          </div>
+
+          <div id="tore-board-container" class="hidden">
+            <div id="toreBoard" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <!-- Les 8 cartes seront générées ici -->
+            </div>
+            <div class="text-center">
+              <button id="analyzeTore" class="btn-gold">Analyser le tirage</button>
+            </div>
+          </div>
+
+          <div id="tore-results" class="hidden">
+            <h3 class="cormorant text-2xl text-gold mb-3">Résultats du tirage du Tore</h3>
+            <div class="result-lines" id="tore-lines"></div>
+            <div class="mt-3" id="tore-synthese"></div>
+          </div>
         </div>
       </div>
     </div>
   </section>
-
- 
-  <!-- Oracle de cartes physique-->
+<!-- Oracle de cartes physique-->
   <section id="Jeu" class="py-20 px-6 bg-dark-blue">
     <div class="container mx-auto max-w-6xl">
       <div class="text-center mb-12">
@@ -1610,8 +1649,8 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         <h3 class="cormorant text-3xl text-gold mb-2">Commande Tirage de la Traversée</h3>
         <p class="text-light-gold">Finalisez votre commande pour obtenir l'accès à 5 tirages</p>
       </div>
-      <form id="orderForm">
- 	  <div class="mb-4">
+      <form id="orderForm" onsubmit="if(localStorage.getItem('oradiaAuth') === '1') { document.getElementById('traversee-start').click(); return false; }">
+<div class="mb-4">
           <label class="block text-light-gold mb-2">Nom</label>
           <input type="text" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
           </div>
@@ -2115,14 +2154,15 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
       form?.classList.remove('hidden');
       el('traversee')?.scrollIntoView({behavior:'smooth'});
     });
-
-    // Étape 2 : soumission = construire le plateau + entrer en immersif
+      // Étape 2 : soumission = construire le plateau + entrer en immersif si connecté
     form?.addEventListener('submit', (e) => {
       e.preventDefault();
-      buildBoard(); // enterImmersive() est appelé à la fin de buildBoard()
+      buildBoard(); 
+      if (localStorage.getItem('oradiaAuth') === '1') {
+        enterImmersive();
+      }
     });
-
-    // Bouton "Quitter le tirage"
+// Bouton "Quitter le tirage"
     exitBtn?.addEventListener('click', () => {
       exitImmersive();
       // Retour à l'accueil
@@ -2139,6 +2179,245 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
       localStorage.removeItem('oradiaAuth');
       localStorage.setItem('authInitialized', 'true');
     }
+
+    // Gestion du bouton "Accéder au tirage du Tore"
+    document.getElementById('subscribeBtn')?.addEventListener('click', function(e) {
+      e.preventDefault();
+      startToreImmersive();
+    });
+
+    // Gestion du bouton "Commencer le tirage" de la traversée
+    document.getElementById('orderBtn')?.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (localStorage.getItem('oradiaAuth') === '1') {
+        // Si connecté, on scroll vers la traversée et on ouvre le formulaire
+        document.getElementById('traversee')?.classList.remove('hidden');
+        document.getElementById('traversee-start')?.click();
+        document.getElementById('traversee')?.scrollIntoView({behavior: 'smooth'});
+      } else {
+        // Sinon, on ouvre la modale de commande normale
+        document.getElementById('orderModal')?.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+// Empêcher l'ouverture de la modale si déjà connecté
+    document.getElementById('orderModal')?.addEventListener('click', function(e) {
+      if (e.target === this && localStorage.getItem('oradiaAuth') === '1') {
+        this.classList.add('hidden');
+        document.body.style.overflow = '';
+        document.getElementById('traversee')?.classList.remove('hidden');
+        document.getElementById('traversee-start')?.click();
+        document.getElementById('traversee')?.scrollIntoView({behavior: 'smooth'});
+      }
+    });
+    // Gestion du bouton "Accéder au tirage du Tore" du Tore
+    document.getElementById('subscribeBtn')?.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (localStorage.getItem('oradiaAuth') === '1') {
+        // Si connecté, on ouvre le tirage du Tore en mode immersif
+        const toreSection = document.getElementById('traversee'); 
+        
+        // Utiliser traversee comme section immersive
+        if (toreSection) {
+          toreSection.classList.remove('hidden');
+          enterToreImmersive();
+          toreSection.scrollIntoView({behavior: 'smooth'});
+        }
+      } else {
+        // Sinon, on ouvre la modale d'abonnement normale
+        document.getElementById('subscriptionModal')?.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+    function startToreImmersive() {
+      // Si l'utilisateur n'est pas connecté, afficher la modale d'abonnement
+      if (localStorage.getItem('oradiaAuth') !== '1') {
+        document.getElementById('subscriptionModal')?.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        return;
+      }
+
+      // Masquer toutes les sections sauf #tore
+      document.querySelectorAll('body > header, body > footer, body > section:not(#tore)').forEach(n => {
+        n.classList.add('hide-immersive');
+      });
+
+      // Afficher la section Tore
+      document.getElementById('tore').classList.remove('hidden');
+
+      // Créer le bouton de sortie
+      if (!document.getElementById('exitToreBtn')) {
+        const exitBtn = document.createElement('button');
+        exitBtn.id = 'exitToreBtn';
+        exitBtn.className = 'fixed top-4 left-4 z-50 bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold p-3 rounded-full shadow-lg';
+        exitBtn.innerHTML = '<i class="fas fa-times"></i>';
+        exitBtn.addEventListener('click', exitToreImmersive);
+        document.body.appendChild(exitBtn);
+      }
+
+      // Scroll vers le haut de la section
+      document.getElementById('tore').scrollIntoView({behavior: 'smooth', block: 'start'});
+    }
+
+    function exitToreImmersive() {
+      // Afficher à nouveau tous les éléments
+      document.querySelectorAll('body > header, body > footer, body > section').forEach(n => {
+        n.classList.remove('hide-immersive');
+      });
+
+      // Masquer la section Tore
+      document.getElementById('tore').classList.add('hidden');
+
+      // Supprimer le bouton de sortie
+      const exitBtn = document.getElementById('exitToreBtn');
+      if (exitBtn) exitBtn.remove();
+
+      // Réinitialiser l'état du tirage
+      document.getElementById('tore-intro').classList.remove('hidden');
+      document.getElementById('tore-intention-form').classList.add('hidden');
+      document.getElementById('tore-board-container').classList.add('hidden');
+      document.getElementById('tore-results').classList.add('hidden');
+      document.getElementById('toreIntentionText').value = '';
+
+      // Retour à l'accueil
+      document.getElementById('accueil')?.scrollIntoView({behavior: 'smooth'});
+    }
+
+    // Logique du tirage du Tore
+    document.getElementById('tore-start')?.addEventListener('click', function() {
+      document.getElementById('tore-intro').classList.add('hidden');
+      document.getElementById('tore-intention-form').classList.remove('hidden');
+      document.getElementById('toreIntentionText').focus();
+    });
+
+    document.getElementById('launchToreBoard')?.addEventListener('click', function() {
+      const intention = document.getElementById('toreIntentionText').value.trim();
+      if (!intention) {
+        document.getElementById('toreIntentionText').setCustomValidity('Veuillez saisir une intention pour ce tirage.');
+        document.getElementById('toreIntentionText').reportValidity();
+        return;
+      }
+
+      document.getElementById('tore-intention-form').classList.add('hidden');
+      document.getElementById('tore-board-container').classList.remove('hidden');
+
+      // Générer les 8 cartes du Tore
+      const toreBoard = document.getElementById('toreBoard');
+      toreBoard.innerHTML = '';
+
+      const families = ['emotions', 'besoins', 'revelations', 'actions', 'cosmos', 'archetypes', 'transmutation', 'cosmos'];
+      families.forEach((fam, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.family = fam;
+        card.innerHTML = `
+          <div class="card-inner">
+            <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte">
+              <div class="logo-circle" aria-hidden="true"></div>
+            </div>
+            <div class="face front">
+              <div class="topbar">
+                <span class="chip">${fam.toUpperCase()}</span>
+                <span class="polarity" data-polarity></span>
+              </div>
+              <div class="art">
+                <div>
+                  <h3 data-name>—</h3>
+                  <div class="quote" data-quote>—</div>
+                </div>
+              </div>
+              <div class="bottom"></div>
+            </div>
+          </div>
+        `;
+        toreBoard.appendChild(card);
+
+        const back = card.querySelector('.back');
+        back.addEventListener('click', () => {
+          if (card.classList.contains('flipped')) return;
+          const data = pick(window.DATA[fam] || []);
+          if (data) {
+            card.querySelector('[data-name]').textContent = data.name;
+            card.querySelector('[data-quote]').textContent = data.quote;
+            const polEl = card.querySelector('[data-polarity]');
+            if (fam !== 'cosmos' && data.polarity) {
+              polEl.textContent = data.polarity === 'yang' ? '▲' : '●';
+            } else {
+              polEl.style.visibility = 'hidden';
+            }
+          }
+          card.classList.add('flipped');
+        });
+      });
+    });
+
+    document.getElementById('analyzeTore')?.addEventListener('click', function() {
+      const intention = document.getElementById('toreIntentionText').value.trim();
+      const cards = document.querySelectorAll('#toreBoard .card.flipped');
+      
+      if (cards.length < 8) {
+        alert('Veuillez retourner toutes les cartes avant l\'analyse');
+        return;
+      }
+
+      document.getElementById('tore-board-container').classList.add('hidden');
+      document.getElementById('tore-results').classList.remove('hidden');
+
+      const linesEl = document.getElementById('tore-lines');
+      linesEl.innerHTML = '';
+      cards.forEach(card => {
+        const name = card.querySelector('[data-name]').textContent;
+        const quote = card.querySelector('[data-quote]').textContent;
+        const fam = card.dataset.family;
+        linesEl.innerHTML += `<p><b>${fam.toUpperCase()} :</b> ${name} — ${quote}</p>`;
+      });
+
+      const synthEl = document.getElementById('tore-synthese');
+      synthEl.innerHTML = `<p><b>Intention :</b> ${intention}</p><p>Le tirage du Tore offre une vision complète de votre cheminement, intégrant toutes les dimensions de l'être.</p>`;
+
+      document.getElementById('tore-results').scrollIntoView({behavior: 'smooth'});
+    });
+
+    document.getElementById('newToreReading')?.addEventListener('click', function() {
+      exitToreImmersive();
+      startToreImmersive();
+    });
+// Empêcher l'ouverture de la modale d'abonnement si déjà connecté
+    document.getElementById('subscriptionModal')?.addEventListener('click', function(e) {
+      if (e.target === this && localStorage.getItem('oradiaAuth') === '1') {
+        this.classList.add('hidden');
+        document.body.style.overflow = '';
+        // Ouvrir le tirage du Tore en mode immersif
+        const toreSection = document.getElementById('traversee');
+        if (toreSection) {
+          toreSection.classList.remove('hidden');
+          enterToreImmersive();
+          toreSection.scrollIntoView({behavior: 'smooth'});
+        }
+      }
+    });
+// Gestion des modales - vérification de l'authentification avant ouverture
+    const modals = ['orderModal', 'subscriptionModal'];
+    modals.forEach(modalId => {
+      const modal = document.getElementById(modalId);
+      const openBtns = document.querySelectorAll(`[data-target="${modalId}"]`);
+      
+      openBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          if (localStorage.getItem('oradiaAuth') === '1') {
+            e.preventDefault();
+            // Redirection appropriée selon la modale
+            if (modalId === 'orderModal') {
+              document.getElementById('traversee')?.classList.remove('hidden');
+              document.getElementById('traversee-start')?.click();
+              document.getElementById('traversee')?.scrollIntoView({behavior: 'smooth'});
+            } else {
+              window.location.href = 'tore.html';
+            }
+          }
+        });
+      });
+    });
 
     // Gestion du modal CGU
 document.getElementById('showCGU')?.addEventListener('click', (e) => {
@@ -2835,7 +3114,6 @@ function initMobileMenu(){
     btn.setAttribute('aria-expanded','false');
   });
 }
-
 /* ---------- Boot compatible SPA ---------- */
 (function start(){
   const run = () => {
@@ -2845,6 +3123,7 @@ function initMobileMenu(){
     initSubscription();
     initPelerin();
     initTraversee();
+    initToreSystem(); // Initialisation du système Tore
     tryInitMobileMenu(); // réessaie si éléments pas encore dans le DOM
   };
 
@@ -2855,6 +3134,10 @@ function initMobileMenu(){
   }
 })();
 
+function initToreSystem() {
+  // La logique Tore est maintenant gérée dans les event listeners ci-dessus
+  console.log('Système Tore initialisé');
+}
 function tryInitMobileMenu(max = 20){
   const btn  = document.getElementById('mobileMenuBtn');
   const menu = document.getElementById('mobileMenu');
@@ -3605,7 +3888,7 @@ function updateCtasForAuth(){
     const subSubmit = document.querySelector('#subscribeForm button[type="submit"]');
     if (subSubmit){
       if (isAuthed()){
-        subSubmit.textContent = 'Commencer le tirage';
+        subSubmit.textContent = 'Accéder au tirage du Tore';
         subSubmit.type = 'button';
         subSubmit.addEventListener('click', onStartReading, { once:true });
       } else {
@@ -3620,10 +3903,10 @@ function updateCtasForAuth(){
     const subscribeBtn = document.getElementById('subscribeBtn');
     if (subscribeBtn) {
       if (isAuthed()) {
-        // Lorsque l'utilisateur est connecté, le bouton s'abonner devient "Commencer le tirage"
-        subscribeBtn.textContent = 'Commencer le tirage';
+        // Lorsque l'utilisateur est connecté, le bouton s'abonner devient "Accéder au tirage du Toree"
+        subscribeBtn.textContent = 'Accéder au tirage du Tore';
         // Assure une ancre cohérente pour l'expérience de tirage
-        subscribeBtn.setAttribute('href', '#Jeu');
+        subscribeBtn.setAttribute('href', '#traversee');
         // Supprime tout ancien gestionnaire qui pourrait ouvrir la modale d'inscription
         const newSubBtn = subscribeBtn.cloneNode(true);
         subscribeBtn.parentNode.replaceChild(newSubBtn, subscribeBtn);
@@ -3641,18 +3924,17 @@ function updateCtasForAuth(){
         subscribeBtn.parentNode.replaceChild(newSubBtn, subscribeBtn);
       }
     }
-  }
-
-  function onStartReading(e){
-    e.preventDefault();
-    location.hash = '#Jeu';
-    const startBtn =
-      document.getElementById('newPilgrim') ||
-      document.querySelector('#oracle button, #oracle a.btn-gold');
-    if (startBtn) startBtn.click();
-  }
-
-  function loginFlow(){
+}
+    function onStartReading(e){
+      e.preventDefault();
+      location.hash = '#Jeu';
+      const startBtn =
+        document.getElementById('newPilgrim') ||
+        document.querySelector('#oracle button, #oracle a.btn-gold') ||
+        document.getElementById('traversee-start');
+      if (startBtn) startBtn.click();
+    }
+function loginFlow(){
     setAuthed(true);
     updateHeaderForAuth();
     updateCtasForAuth();
@@ -3728,6 +4010,11 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
   });
 })();
 </script>
-
+  <!-- Bouton de sortie pour le mode Tore (sera créé dynamiquement) -->
+  <div id="toreExitTemplate" class="hidden">
+    <button id="exitToreBtn" class="fixed top-4 left-4 z-50 bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold p-3 rounded-full shadow-lg">
+      <i class="fas fa-times"></i>
+    </button>
+  </div>
 </body>
 </html>
