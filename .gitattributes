@@ -63,3 +63,10 @@ images/Passé.png filter=lfs diff=lfs merge=lfs -text
 images/Présent.png filter=lfs diff=lfs merge=lfs -text
 images/Terre.png filter=lfs diff=lfs merge=lfs -text
 images/Tore.png filter=lfs diff=lfs merge=lfs -text
+images/Etoile.png filter=lfs diff=lfs merge=lfs -text
+images/Genealogie.png filter=lfs diff=lfs merge=lfs -text
+images/Memoire-cellulaire.png filter=lfs diff=lfs merge=lfs -text
+images/Memoire-collective.png filter=lfs diff=lfs merge=lfs -text
+images/Ocean.png filter=lfs diff=lfs merge=lfs -text
+images/Passe.png filter=lfs diff=lfs merge=lfs -text
+images/Present.png filter=lfs diff=lfs merge=lfs -text

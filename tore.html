@@ -238,8 +238,22 @@
     justify-content: center;
     text-align: center;
     padding: 0 6px;
+    position: relative;
   }
-  .tore-card-front [data-name] {
+  .tore-card-front .art-image {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    opacity: 0.15;
+  }
+  .tore-card-front .art-content {
+    position: relative;
+    z-index: 2;
+  }
+.tore-card-front [data-name] {
     font-family: "Cormorant Garamond", serif;
     font-size: 1.6rem;
     margin-bottom: .3rem;
@@ -553,12 +567,13 @@ window.DATA = {
               <span class="polarity" data-polarity></span>
             </div>
             <div class="art">
-              <div>
+              <img data-image class="art-image" src="" alt="">
+              <div class="art-content">
                 <h3 data-name>—</h3>
                 <p data-quote>—</p>
               </div>
             </div>
-            <div class="bottom text-xs opacity-80 mt-2"></div>
+<div class="bottom text-xs opacity-80 mt-2"></div>
           </div>
         </div>
       </article>
@@ -579,13 +594,21 @@ window.DATA = {
           const quoteEl  = card.querySelector('[data-quote]');
           const polEl    = card.querySelector('[data-polarity]');
           const bottomEl = card.querySelector('.bottom');
-
+          const imageEl  = card.querySelector('[data-image]');
           if (data) {
             nameEl.textContent  = data.name  || 'Carte';
             quoteEl.textContent = data.quote || '';
             if (bottomEl) bottomEl.textContent = data.bridge || '';
-
-            // polarité : triangle / rond sauf pour cosmos
+          // Afficher l'image pour les cartes cosmos
+          if (famKey === 'cosmos' && data.image && imageEl) {
+            imageEl.src = data.image;
+            imageEl.alt = data.name || '';
+            imageEl.style.opacity = '0.15';
+          } else if (imageEl) {
+            imageEl.src = '';
+            imageEl.alt = '';
+          }
+// polarité : triangle / rond sauf pour cosmos
             if (famKey !== 'cosmos' && data.polarity) {
               polEl.textContent = data.polarity === 'yang' ? '▲' : '●';
               polEl.style.visibility = 'visible';
@@ -599,9 +622,12 @@ window.DATA = {
             quoteEl.textContent = 'Aucune donnée disponible pour cette famille.';
             if (bottomEl) bottomEl.textContent = '';
             polEl.style.visibility = 'hidden';
+            if (imageEl) {
+              imageEl.src = '';
+              imageEl.alt = '';
+            }
           }
-
-          card.classList.add('flipped');
+card.classList.add('flipped');
         });
       });
   }
