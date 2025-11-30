@@ -3533,8 +3533,7 @@ const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : 
     card.dataset.card     = item.name || '';
     card.dataset.polarity = item.polarity || '';
   }
-
-  function renderFan(){
+      function renderFan(){
     clearFan();
     const { count, key } = STEPS[stepIndex];
 
@@ -3572,15 +3571,9 @@ const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : 
         </div>
       `;
 
-      // Style spécial pour le dos des cartes cosmos
-      if (key === 'cosmos') {
-        const backFace = art.querySelector('.back');
-        backFace.style.background = 'radial-gradient(800px 500px at 50% 40%, rgba(245, 231, 161, 0.15), transparent 60%), linear-gradient(135deg, #0b1d3a, #08152c)';
-      }
-
       // apparition douce
       art.style.opacity = '0';
-      art.style.transform = `translate(-50%,-50%) rotate(${a}deg) translateY(${radius}px) scale(.985)`;
+      art.style.transform = `translate(-50%,-50%) rotate(${a}deg) translateY(${radius}px)`;
       fan.appendChild(art);
       setTimeout(()=>{
         art.style.transition = 'transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 280ms ease, opacity 280ms ease';
@@ -3592,8 +3585,7 @@ const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : 
       back.addEventListener('click', ()=> onPick(art, i));
     }
   }
-
-  // Récupère le centre d'un slot
+// Récupère le centre d'un slot
   function slotCenter(index){
     const slot = document.getElementById(`slot-${index}`);
     const slotBox = slot.getBoundingClientRect();
