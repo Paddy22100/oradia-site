@@ -186,76 +186,7 @@
     .result-lines{ padding:12px; border-radius:12px; background:rgba(11,29,58,.6); border:1px solid rgba(212,175,55,.2) }
     .hide-sections { display: none !important; }
 
-/* --- Traversée : plateau en croix 5 cartes --- */
-.traversee-board-5{
-  display:grid;
-  grid-template-columns:repeat(3, minmax(0,1fr));
-  grid-template-rows:repeat(3, auto);
-  gap:16px;
-  place-items:center;
-}
-.traversee-board-5 .nord   { grid-area: 1 / 2; }
-.traversee-board-5 .sud    { grid-area: 3 / 2; }
-.traversee-board-5 .ouest  { grid-area: 2 / 1; }
-.traversee-board-5 .est    { grid-area: 2 / 3; }
-.traversee-board-5 .centre { grid-area: 2 / 2; }
 
-/* Traversée : même gabarit + flip 3D que le Pèlerin */
-.traversee-card{
-  width: min(280px, 90vw);
-  height: 400px;
-  perspective: 1000px;
-}
-@media (max-width: 400px){
-  .traversee-card{ height: 360px; }
-}
-
-.traversee-card-inner{
-  position: relative;
-  width: 100%;
-  height: 100%;
-  transform-style: preserve-3d;
-  transition: transform 800ms cubic-bezier(.2, .65, .2, 1), box-shadow .3s;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-}
-
-.traversee-card-back,
-.traversee-card-front{
-  position: absolute;
-  inset: 0;
-  backface-visibility: hidden;
-  border-radius: var(--radius);
-  overflow: hidden;
-  border: 1px solid rgba(212,175,55,.45);
-}
-
-.traversee-card-front{ transform: rotateY(180deg); }
-
-.traversee-card.flipped .traversee-card-inner{
-  transform: rotateY(180deg);
-}
-
-
-@media(max-width:860px){
-  .traversee-board-5{
-    grid-template-columns:1fr; grid-template-rows:auto;
-  }
-  .traversee-board-5 .nord,.traversee-board-5 .sud,.traversee-board-5 .ouest,
-  .traversee-board-5 .est,.traversee-board-5 .centre{ grid-area:auto; }
-}
-
-/* --- Immersif Traversée --- */
-.hide-immersive { display:none !important; }
-
-#exitTraverseeBtn{
-  position:fixed; top:18px; left:18px; z-index:1000;
-  background:linear-gradient(135deg,#d4af37,#b8860b);
-  color:#051428; font-weight:600; border-radius:999px; 
-  padding:10px 16px; border:1px solid rgba(212,175,55,.6);
-  box-shadow:0 10px 20px rgba(212,175,55,.25);
-}
-#exitTraverseeBtn.hidden{ display:none; }
 /* === MOBILE & TABLET POLISH === */
 
 /* Images fluides partout */
@@ -1410,131 +1341,6 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
     </div>
   </section>
 
-
-  <!-- Tirage de la Traversée - caché jusqu'à paiement -->
-  <section id="traversee" class="py-20 px-6 bg-night-blue hidden">
-    <div class="container mx-auto max-w-6xl">
-      <div class="text-center mb-12">
-        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-1">Tirage de la Traversée</h2>
-        <p class="text-light-gold max-w-3xl mx-auto">Guidance vibratoire approfondie pour votre cheminement</p>
-      </div>
-
-      <div class="rounded-2xl p-8 mb-8 relative overflow-hidden" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
-        <!-- Animation tunnel avec marcheur -->
-        <div class="absolute inset-0 z-0 opacity-30 pointer-events-none overflow-hidden">
-          <!-- Tunnel perspective -->
-          <div class="absolute inset-0 bg-gradient-to-b from-night-blue to-dark-blue">
-            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(212,175,55,0.1)_70%)] animate-[pulse_4s_ease-in-out_infinite]"></div>
-          </div>
-          
-          <!-- Lignes de perspective du tunnel -->
-          <div class="absolute inset-0 flex items-center justify-center">
-            <div class="w-full h-full relative">
-              <div class="absolute top-1/2 left-1/2 w-[200%] h-[200%] bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,transparent_60deg,rgba(212,175,55,0.05)_60deg,rgba(212,175,55,0.05)_120deg,transparent_120deg,transparent_180deg,rgba(212,175,55,0.05)_180deg,transparent_240deg,rgba(212,175,55,0.05)_240deg,transparent_300deg,transparent_360deg)] bg-[length:100%_100%] animate-[spin_30s_linear_infinite] origin-center"></div>
-            </div>
-          </div>
-          
-          <!-- Lumière au bout du tunnel -->
-          <div class="absolute top-1/2 left-1/2 w-64 h-64 -translate-x-1/2 -translate-y-1/2">
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(245,231,161,0.8)_0%,rgba(212,175,55,0.4)_30%,transparent_70%)] animate-[pulse_3s_ease-in-out_infinite] rounded-full"></div>
-          </div>
-          
-          <!-- Silhouette du marcheur -->
-          <div class="absolute bottom-[15%] left-1/2 w-12 h-24 md:w-16 md:h-32 -translate-x-1/2 animate-[walking_8s_linear_infinite]">
-            <div class="relative w-full h-full">
-              <!-- Corps -->
-              <div class="absolute bottom-0 left-1/2 w-3 h-16 bg-night-blue -translate-x-1/2 rounded-t-full"></div>
-              <!-- Tête -->
-              <div class="absolute bottom-12 left-1/2 w-5 h-5 bg-night-blue -translate-x-1/2 rounded-full"></div>
-              <!-- Bras gauche -->
-              <div class="absolute bottom-8 left-1/2 w-1 h-8 bg-night-blue -translate-x-1/2 origin-bottom animate-[arm-swing_1s_ease-in-out_infinite] -rotate-12"></div>
-              <!-- Bras droit -->
-              <div class="absolute bottom-8 left-1/2 w-1 h-8 bg-night-blue -translate-x-1/2 origin-bottom animate-[arm-swing_1s_ease-in-out_infinite] rotate-12" style="animation-delay:0.5s"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Ajout des keyframes pour les animations -->
-        <style>
-          @keyframes walking {
-            0% { transform: translateX(-50%) translateX(-300px); opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { transform: translateX(-50%) translateX(300px); opacity: 0; }
-          }
-          @keyframes arm-swing {
-            0%, 100% { transform: translateX(-50%) rotate(-12deg); }
-            50% { transform: translateX(-50%) rotate(12deg); }
-          }
-
-          /* Icône membre connecté (badge) */
-#memberIcon{
-  display: inline-flex; align-items: center; gap: 8px;
-  padding: 8px 12px; border: 1px solid rgba(212,175,55,.35);
-  border-radius: 999px; color: #d4af37; background: rgba(5,20,40,.6);
-}
-#memberIcon .badge{
-  width: 8px; height: 8px; border-radius: 999px; background: #22c55e;
-  box-shadow: 0 0 0 4px rgba(34,197,94,.15);
-}
-
-        </style>
-        <div class="relative z-10">
-        <div id="traversee-intro">
-          <h3 class="cormorant text-2xl text-gold mb-4">Préparation du tirage</h3>
-          <p class="text-light-gold mb-6">Ce tirage approfondi nécessite quelques informations pour personnaliser votre expérience.</p>
-          <button id="traversee-start" class="btn-gold">Commencer</button>
-        </div>
-
-        <form id="traversee-form" class="hidden">
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-            <div>
-              <label class="block text-light-gold mb-2">Prénom</label>
-              <input type="text" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-            </div>
-            <div>
-              <label class="block text-light-gold mb-2">Date de naissance</label>
-              <input type="date" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-            </div>
-            <div>
-              <label class="block text-light-gold mb-2">Ville de naissance</label>
-              <input type="text" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-            </div>
-            <div>
-              <label class="block text-light-gold mb-2">Heure de naissance</label>
-              <input type="time" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
-            </div>
-          </div>
-          <div class="mb-6">
-            <label class="block text-light-gold mb-2">Votre intention pour ce tirage</label>
-            <textarea class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg min-h-[120px]" required></textarea>
-          </div>
-          <button type="submit" class="btn-gold w-full">Lancer le tirage</button>
-        </form>
-
-        <div id="traversee-board" class="hidden">
-          <!-- Board will be generated by JS -->
-        </div>
-
-        <div id="traversee-results" class="hidden">
-
-          <!-- Results will be generated by JS -->
-        </div>
-<!-- Boutons de test API (dev) -->
-<div class="mt-6 flex flex-wrap gap-3">
-  <button id="btnTestTraversee" class="btn-outline-gold">Tester API Traversée</button>
-  <button id="btnTestTore" class="btn-outline-gold">Tester API Tore</button>
-</div>
-
-<!-- Zone d’affichage du retour API -->
-<pre id="apiOutput"
-     class="mt-4 whitespace-pre-wrap bg-[rgba(18,20,32,.6)] border border-[rgba(212,175,55,.25)] rounded-2xl p-4 text-light-gold">
-</pre>
-
-      </div>
-    </div>
-  </section>
-
   <!-- Footer -->
   <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
     <div class="container mx-auto max-w-6xl">
@@ -2447,19 +2253,9 @@ function initOrderModal(){
     });
 
     confirmation.querySelector('#newReadingBtn').addEventListener('click', ()=>{
-      confirmation.remove();
-      $$('section').forEach(s=>s.classList.remove('hide-sections'));
-      // Ouvrir directement le formulaire Traversée
-      const trav = el('traversee');
-      const intro = el('traversee-intro');
-      const form  = el('traversee-form');
-      trav && trav.classList.remove('hidden');
-      intro && intro.classList.add('hidden');
-      form && form.classList.remove('hidden');
-      trav?.scrollIntoView({behavior:'smooth'});
-      form?.querySelector('input, textarea, select')?.focus();
-    });
-  });
+  window.location.href = "traversee.html";
+});
+
 }
 
 /* ---------- Modale Abonnement / Espace membre ---------- */
@@ -2836,7 +2632,6 @@ function initMobileMenu(){
     initOrderModal();
     initSubscription();
     initPelerin();
-    initTraversee();
     tryInitMobileMenu(); // réessaie si éléments pas encore dans le DOM
   };
 
@@ -3445,27 +3240,6 @@ const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : 
   });
   resetBtn?.addEventListener('click', resetAll);
 })();
-</script>
-<script>
-// Démarrer le Pèlerin en mode immersif depuis l’offre
-document.addEventListener('DOMContentLoaded', () => {
-  const btn = document.getElementById('startPilgrimFromOffer');
-  if (!btn) return;
-  btn.addEventListener('click', (e) => {
-    e.preventDefault();
-    const oracle = document.getElementById('oracle');
-    if (oracle) {
-      // Affiche la section et scroll
-      oracle.classList.remove('hidden');
-      oracle.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    if (typeof window.enterPelerinImmersive === 'function') {
-  window.enterPelerinImmersive();
-} else {
-  document.getElementById('intention')?.focus();
-}
-    }
-  });
-});
 </script>
 <script>
 /* DS V3 — Délégation globale pour le menu mobile */
