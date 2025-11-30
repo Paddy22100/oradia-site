@@ -1,0 +1,3680 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+<title>Oradia - Tirage de la Traversée</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#0a192f',
+            'gold': '#d4af37',
+            'light-gold': '#f5e7a1',
+            'dark-blue': '#051428',
+            'celtic-blue': '#1a365d'
+          },
+          fontFamily: {
+            'cormorant': ['Cormorant Garamond', 'serif'],
+            'poppins': ['Poppins', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+
+    :root{ --dore:#d4af37; --text:#e9e7df; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
+
+    body{ margin:0; font-family:'Poppins',sans-serif; background:#0a192f; color:#f5e7a1; overflow-x:hidden; }
+    .header-bg{ background:rgba(5,20,40,.98); }
+    .hero-bg{ background: radial-gradient(circle at center, rgba(26,54,93,.7) 0%, rgba(5,20,40,.9) 70%); background-size:cover; }
+
+    .gold-gradient{
+      background: linear-gradient(90deg, #d4af37, #f5e7a1, #d4af37);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      background-size:300% 300%; animation:gradient-shift 4s ease infinite;
+    }
+    @keyframes gradient-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    .floating{ animation:floating 3s ease-in-out infinite }
+    @keyframes floating{0%{transform:translateY(0)}50%{transform:translateY(-15px)}100%{transform:translateY(0)}}
+    .animate-spin-slow{ animation: spin 12s linear infinite }
+    @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+    @keyframes orbit{0%{transform:rotate(0deg) translateX(100px) rotate(0deg)}100%{transform:rotate(360deg) translateX(100px) rotate(-360deg)}}
+    .pulse{ animation:pulse 2s infinite }
+    @keyframes pulse{
+      0% { box-shadow:0 0 0 0 rgba(212,175,55,.4); transform:translate(-50%,-50%) scale(1) }
+      50%{ box-shadow:0 0 0 10px rgba(212,175,55,.2); transform:translate(-50%,-50%) scale(1.05) }
+      100%{ box-shadow:0 0 0 0 rgba(212,175,55,0); transform:translate(-50%,-50%) scale(1) }
+    }
+
+    /* Animations pour l'intention */
+    @keyframes intentionGlow {
+      0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+      50% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0.1); }
+      100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+    }
+    
+    @keyframes inputPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
+    
+    @keyframes textGlow {
+      0% { text-shadow: 0 0 5px rgba(212, 175, 55, 0.3); }
+      50% { text-shadow: 0 0 20px rgba(212, 175, 55, 0.6); }
+      100% { text-shadow: 0 0 5px rgba(212, 175, 55, 0.3); }
+    }
+    
+    @keyframes ripple {
+      0% { transform: scale(0); opacity: 1; }
+      100% { transform: scale(4); opacity: 0; }
+    }
+    
+    .intention-animate {
+      animation: intentionGlow 3s ease-in-out infinite;
+    }
+    
+    .input-focus {
+      animation: inputPulse 0.5s ease-out;
+    }
+    
+    .text-glow {
+      animation: textGlow 2s ease-in-out infinite;
+    }
+    
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(212, 175, 55, 0.3);
+      transform: scale(0);
+      pointer-events: none;
+    }
+@keyframes zoom {
+      0% { transform: scale(0.8); opacity: 0.5; }
+      50% { transform: scale(1.2); opacity: 0.8; }
+      100% { transform: scale(0.8); opacity: 0.5; }
+    }
+
+    /* Plateau du tirage (5 cartes) */
+    .board{ display:grid; grid-template-columns:repeat(5,1fr); gap:12px; place-items:center; }
+    @media(max-width:860px){ .board{ grid-template-columns:1fr } }
+@media (max-width: 860px){
+  .board .pos-1,
+  .board .pos-2,
+  .board .pos-3,
+  .board .pos-4,
+  .board .pos-5{
+    grid-area: auto !important; /* empile proprement en 1 colonne */
+  }
+}
+    .pos-1{grid-area:1/1} .pos-2{grid-area:1/2} .pos-3{grid-area:1/3} .pos-4{grid-area:1/4} .pos-5{grid-area:1/5}
+
+    .card{ width:min(280px,90vw); height:400px; perspective:1000px; transition:.3s transform }
+    @media(max-width:400px){ .card{ height:360px } }
+    .card:hover{ transform:translateY(-5px) }
+    .card-inner{ position:relative; width:100%; height:100%; transform-style:preserve-3d; transition: transform 800ms cubic-bezier(.2,.65,.2,1), box-shadow .3s; border-radius:var(--radius); box-shadow:var(--shadow) }
+    .card.flipped .card-inner{ transform:rotateY(180deg) }
+    .face{ position:absolute; inset:0; backface-visibility:hidden; border-radius:var(--radius); overflow:hidden; border:1px solid rgba(212,175,55,.45) }
+    .back{ display:grid; place-items:center; background: radial-gradient(800px 500px at 50% 40%, rgba(212,175,55,.10), transparent 60%), linear-gradient(135deg, #0b1d3a, #08152c); cursor:pointer }
+    .logo-circle{ width:140px;height:140px;border-radius:50%; border:6px solid var(--dore); display:grid;place-items:center; position:relative }
+    .logo-circle::after{ content:"ORADIA"; color:var(--dore); font-weight:700; letter-spacing:1px }
+    .front{ transform:rotateY(180deg); background: radial-gradient(900px 600px at 30% -10%, rgba(212,175,55,.15), transparent 60%), linear-gradient(165deg, #0c1f40, #0b1d3a 45%, #0a1833 100%); display:flex; flex-direction:column }
+    .front .topbar{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 14px; border-bottom:1px solid rgba(212,175,55,.25) }
+    .chip{ font-size:.78rem; padding:6px 10px; border-radius:999px; border:1px solid rgba(212,175,55,.45); color:#d4af37; background:rgba(18,20,32,.45) }
+    .polarity{ font-size:1.2rem; line-height:1; color:#d4af37 }
+    .art{ flex:1; margin:14px; border-radius:14px; border:1px solid rgba(212,175,55,.25); display:grid; place-items:center; text-align:center; padding:16px }
+    .art h3{ margin:0 0 8px; color:#d4af37; font-size:1.25rem }
+    .bottom{ padding:10px 14px 12px; display:flex; align-items:center; justify-content:space-between; border-top:1px solid rgba(212,175,55,.2); font-size:.88rem }
+
+    /* Responsive améliorations pour mobile */
+    @media (max-width: 640px) {
+        .card { height: 320px; }
+        .logo-circle { width: 100px; height: 100px; }
+        .logo-circle::after { font-size: 0.9rem; }
+        .front .topbar { padding: 8px 10px; }
+        .chip { font-size: 0.7rem; padding: 4px 8px; }
+        .polarity { font-size: 1rem; }
+        .art { margin: 8px; padding: 12px; }
+        .art h3 { font-size: 1.1rem; }
+        .bottom { padding: 8px 10px; font-size: 0.8rem; }
+    }
+    
+    @media (max-width: 480px) {
+        .card { height: 280px; width: 85vw; }
+        .logo-circle { width: 80px; height: 80px; border-width: 4px; }
+        .logo-circle::after { font-size: 0.8rem; }
+        .front .topbar { padding: 6px 8px; }
+        .chip { font-size: 0.65rem; padding: 3px 6px; }
+        .polarity { font-size: 0.9rem; }
+        .art { margin: 6px; padding: 8px; }
+        .art h3 { font-size: 1rem; margin-bottom: 4px; }
+        .bottom { padding: 6px 8px; font-size: 0.75rem; }
+    }
+    
+    @media (max-width: 360px) {
+        .card { height: 250px; }
+        .logo-circle { width: 70px; height: 70px; }
+        .logo-circle::after { font-size: 0.7rem; }
+        .chip { font-size: 0.6rem; padding: 2px 4px; }
+        .polarity { font-size: 0.8rem; }
+        .art { margin: 4px; padding: 6px; }
+        .art h3 { font-size: 0.9rem; }
+    }
+
+    .btn-gold{ background:linear-gradient(135deg,#d4af37,#b8860b); color:#051428; font-weight:600; border-radius:8px; padding:12px 24px; transition:.3s; display:inline-block; text-align:center }
+    .btn-gold:hover{ transform:translateY(-3px); box-shadow:0 10px 20px rgba(212,175,55,.3) }
+   
+    /* Apparence du bouton désactivé (intention vide) */
+    .btn-gold:disabled{  background: transparent;  color: #d4af37;  border: 2px solid #d4af37;  box-shadow: none;  opacity: 1;  cursor: not-allowed;  pointer-events: none;}
+
+/* L’état actif reste celui déjà défini par .btn-gold */
+    .btn-outline-gold{ background:transparent; color:#d4af37; border:2px solid #d4af37; border-radius:8px; padding:10px 20px; transition:.3s; display:inline-block }
+    .btn-outline-gold:hover{ background:rgba(212,175,55,.1); transform:translateY(-3px) }
+
+    .scroll-top{ position:fixed; bottom:30px; right:30px; z-index:99; opacity:0; transition:opacity .3s }
+    .scroll-top.show{ opacity:1 }
+
+    .result-lines{ padding:12px; border-radius:12px; background:rgba(11,29,58,.6); border:1px solid rgba(212,175,55,.2) }
+    .hide-sections { display: none !important; }
+
+/* --- Traversée : plateau en croix 5 cartes --- */
+.traversee-board-5{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0,1fr));
+  grid-template-rows:repeat(3, auto);
+  gap:16px;
+  place-items:center;
+}
+.traversee-board-5 .nord   { grid-area: 1 / 2; }
+.traversee-board-5 .sud    { grid-area: 3 / 2; }
+.traversee-board-5 .ouest  { grid-area: 2 / 1; }
+.traversee-board-5 .est    { grid-area: 2 / 3; }
+.traversee-board-5 .centre { grid-area: 2 / 2; }
+
+/* Traversée : même gabarit + flip 3D que le Pèlerin */
+.traversee-card{
+  width: min(280px, 90vw);
+  height: 400px;
+  perspective: 1000px;
+}
+@media (max-width: 400px){
+  .traversee-card{ height: 360px; }
+}
+
+.traversee-card-inner{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 800ms cubic-bezier(.2, .65, .2, 1), box-shadow .3s;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.traversee-card-back,
+.traversee-card-front{
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid rgba(212,175,55,.45);
+}
+
+.traversee-card-front{ transform: rotateY(180deg); }
+
+.traversee-card.flipped .traversee-card-inner{
+  transform: rotateY(180deg);
+}
+
+
+@media(max-width:860px){
+  .traversee-board-5{
+    grid-template-columns:1fr; grid-template-rows:auto;
+  }
+  .traversee-board-5 .nord,.traversee-board-5 .sud,.traversee-board-5 .ouest,
+  .traversee-board-5 .est,.traversee-board-5 .centre{ grid-area:auto; }
+}
+
+/* --- Immersif Traversée --- */
+.hide-immersive { display:none !important; }
+
+#exitTraverseeBtn{
+  position:fixed; top:18px; left:18px; z-index:1000;
+  background:linear-gradient(135deg,#d4af37,#b8860b);
+  color:#051428; font-weight:600; border-radius:999px; 
+  padding:10px 16px; border:1px solid rgba(212,175,55,.6);
+  box-shadow:0 10px 20px rgba(212,175,55,.25);
+}
+#exitTraverseeBtn.hidden{ display:none; }
+/* === MOBILE & TABLET POLISH === */
+
+/* Images fluides partout */
+img { max-width: 100%; height: auto; }
+
+/* Cartes du tirage du Pèlerin : ratio flexible sur mobile */
+@media (max-width: 480px){
+  .card{
+    width: 92vw;
+    height: auto;           /* on enlève la hauteur figée */
+    aspect-ratio: 7 / 10;   /* ratio carte */
+  }
+  .card-inner{ height: 100%; }
+}
+
+/* Responsive améliorations pour le tirage du Pèlerin */
+@media (max-width: 1024px) {
+  #oracle .container {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .result-lines {
+    font-size: 0.95rem;
+    padding: 10px;
+  }
+}
+
+@media (max-width: 768px) {
+  #oracle .container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  .result-lines {
+    font-size: 0.9rem;
+    padding: 8px;
+  }
+  
+  #emailForm .bg-\[rgba\(18\,20\,32\,\.6\)\] {
+    padding: 1rem;
+  }
+}
+
+@media (max-width: 640px) {
+  #oracle {
+    padding-top: 1rem;
+    padding-bottom: 1rem;
+  }
+  
+  .result-lines {
+    font-size: 0.85rem;
+    padding: 6px;
+  }
+  
+  #emailForm .bg-\[rgba\(18\,20\,32\,\.6\)\] {
+    padding: 0.75rem;
+  }
+  
+  #emailForm input,
+  #emailForm button {
+    padding: 0.75rem;
+  }
+}
+
+@media (max-width: 480px) {
+  #oracle {
+    padding-left: 0.25rem;
+    padding-right: 0.25rem;
+  }
+  
+  .result-lines {
+    font-size: 0.8rem;
+    padding: 4px;
+  }
+  
+  #emailForm .bg-\[rgba\(18\,20\,32\,\.6\)\] {
+    padding: 0.5rem;
+  }
+  
+  #emailForm input,
+  #emailForm button {
+    padding: 0.5rem;
+    font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 360px) {
+  .result-lines {
+    font-size: 0.75rem;
+  }
+  
+  #emailForm input,
+  #emailForm button {
+    padding: 0.4rem;
+    font-size: 0.85rem;
+  }
+}
+
+/* Cartes de la Traversée : assure une bonne hauteur et wrap du texte */
+.traversee-card .traversee-card-front .art{
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 0.5rem 0.75rem;
+}
+.traversee-card [data-quote]{
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Grille Traversée : micro-ajustements tablettes */
+@media (max-width: 1024px){
+  .traversee-board-5{
+    gap: 12px;
+  }
+}
+
+/* Évite l’overflow horizontal sur petits écrans */
+html, body { overflow-x: hidden; }
+
+/* Bouton “scroll to top” : remonte un peu sur mobiles pour éviter le notch */
+@media (max-width: 480px){
+  .scroll-top{ right: 16px; bottom: 16px; }
+}
+
+/* Boutons : surface de clic confortable */
+button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
+  min-height: 44px;
+}
+#immersiveMenuBtn{ z-index: 1100; }
+#immersiveMenuPanel{ z-index: 1200; }
+
+/* Modales : éviter que le contenu déborde en hauteur */
+#orderModal .max-w-md,
+#subscriptionModal .max-w-md,
+#loginModal .max-w-md{
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Respecte “réduire les animations” si l’utilisateur l’a choisi */
+@media (prefers-reduced-motion: reduce){
+  *{ animation: none !important; transition: none !important; }
+}
+/* ------- Pèlerin : éventail multi-choix + dock (fix) ------- */
+#board{ position:relative; padding-top: 28px; padding-bottom: 8px; }           /* pousse la section */
+
+/* CTA "Afficher l’analyse" au-dessus de l’éventail */
+#board .cta-analyse{
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  z-index: 1000;
+  padding: 16px 36px;
+  font-size: 1.25rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg,#d4af37,#f5e7a1);
+  color: #051428;
+  border: 1px solid rgba(212,175,55,.6);
+  box-shadow: 0 16px 40px rgba(212,175,55,.25), 0 0 0 2px rgba(5,20,40,.6) inset;
+  pointer-events: auto;
+}
+#board .cta-analyse:hover{
+  transform: translate(-50%, -50%) scale(1.03);
+  box-shadow: 0 22px 44px rgba(212,175,55,.35), 0 0 0 2px rgba(5,20,40,.6) inset;
+}
+@media (max-width: 480px){
+  #board .cta-analyse{
+    top: 38%;               /* un poil plus haut pour ne pas masquer les slots */
+    padding: 12px 28px;     /* surface de clic OK mais visuel moins massif */
+    font-size: 1.05rem;     /* lisible sans “shouter” */
+    box-shadow: 0 12px 28px rgba(212,175,55,.25), 0 0 0 2px rgba(5,20,40,.6) inset;
+  }
+}
+
+.fan-wrap{
+  position:relative;
+  width:min(1200px, 96vw);
+  margin: 24px auto 0;                                       /* descend l’éventail */
+  height: 460px;                                             /* réserve l'espace */
+  pointer-events:none;
+}
+.fan-wrap .card{
+  position:absolute; top:50%; left:50%;
+  transform-origin:50% 85%;
+  width:240px; height:360px;
+  pointer-events:auto; background:transparent;
+  will-change:transform, box-shadow, opacity;
+  transition: transform 420ms cubic-bezier(.2,.7,.2,1), box-shadow 220ms ease, opacity .25s ease;
+}
+/* >>> rayon POSITIF = éventail plus BAS dans la page */
+.fan-wrap .card[data-angle]{ transform: translate(-50%,-50%) rotate(var(--angle)) translateY(var(--radius, 160px)); }
+
+.fan-wrap .card:not(.flipped):hover{
+  transform: translate(-50%,-50%) rotate(calc(var(--angle)*1.02)) translateY(calc(var(--radius, 160px) - 12px));
+  box-shadow:0 14px 26px rgba(0,0,0,.35);
+}
+
+/* flip + zoom */
+.fan-wrap .card.flipped{ z-index: 900; }
+.fan-wrap .card.flipped .card-inner{ transform: rotateY(180deg); transition: transform 680ms cubic-bezier(.2,.65,.2,1); }
+.fan-wrap .card.zooming{
+  transition: transform 420ms cubic-bezier(.2,.8,.2,1), box-shadow 300ms ease;
+  transform: translate(-50%,-58%) rotate(0deg) scale(1.08);
+  box-shadow:0 22px 36px rgba(0,0,0,.4);
+}
+.fan-wrap .card.docking{ transition: transform 520ms cubic-bezier(.22,.9,.12,1); box-shadow:none; }
+
+/* Dock (slots) */
+.choice-tray{ position:relative; width:min(1200px, 96vw); margin:22px auto 0; padding:14px 10px 22px; border-top:1px solid rgba(212,175,55,.28); }
+.choice-tray .slots {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 20px;
+  padding: 20px;
+  background: rgba(5, 20, 40, 0.3);
+  border-radius: 18px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  margin-top: 30px;
+  position: relative;
+}
+
+.choice-tray .slots::after {
+  content: "";
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  bottom: -10px;
+  left: -10px;
+  border-radius: 28px;
+  border: 1px solid rgba(245, 231, 161, 0.1);
+  pointer-events: none;
+  z-index: -1;
+}
+
+@media (max-width: 768px) {
+  .choice-tray .slots {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
+}
+.choice-tray .slot {
+  position: relative;
+  min-height: 320px;
+  border: 2px dashed rgba(212, 175, 55, 0.4);
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #f5e7a1;
+  font-size: 1rem;
+  background: rgba(10, 25, 47, 0.3);
+  padding: 12px;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+}
+
+.choice-tray .slot.filled {
+  border: 2px solid rgba(212, 175, 55, 0.6);
+  background: rgba(212, 175, 55, 0.08);
+  box-shadow: 0 4px 20px rgba(212, 175, 55, 0.15);
+}
+
+/* Style spécial pour le slot Mémoire Cosmos */
+.choice-tray .slot[aria-label="Carte MÉMOIRE COSMOS"] {
+  border: 2px dashed rgba(245, 231, 161, 0.6);
+  background: rgba(245, 231, 161, 0.05);
+}
+
+.choice-tray .slot[aria-label="Carte MÉMOIRE COSMOS"].filled {
+  border: 2px solid rgba(245, 231, 161, 0.8);
+  background: rgba(245, 231, 161, 0.1);
+  box-shadow: 0 0 25px rgba(245, 231, 161, 0.25);
+}
+
+.choice-tray .slot[aria-label="Carte MÉMOIRE COSMOS"]::before {
+  color: #f5e7a1;
+  background: rgba(10, 25, 47, 0.9);
+  border: 1px solid rgba(245, 231, 161, 0.5);
+}
+
+.choice-tray .slot::before {
+  content: attr(aria-label);
+  position: absolute;
+  top: -12px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0a192f;
+  padding: 0 12px;
+  font-size: 0.85rem;
+  color: #d4af37;
+  white-space: nowrap;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: 12px;
+}
+
+.choice-tray .slot:hover {
+  border-color: rgba(212, 175, 55, 0.6);
+  background: rgba(212, 175, 55, 0.05);
+}
+
+/* Mini-carte une fois ancrée en bas */
+.card.mini {
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  width: 200px;
+  height: 300px;
+  transform: none !important;
+  margin: 0 auto;
+  transition: all 0.5s ease;
+  z-index: 10;
+}
+
+.card.mini .card-inner {
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+}
+
+.card.mini .front {
+  background: linear-gradient(145deg, rgba(26, 54, 93, 0.9), rgba(5, 20, 40, 0.95));
+  border: 1px solid rgba(212, 175, 55, 0.4);
+}
+
+/* Style spécial pour la carte Mémoires Cosmos */
+.card.mini[data-family="cosmos"] .front {
+  background: linear-gradient(145deg, rgba(245, 231, 161, 0.1), rgba(26, 54, 93, 0.9));
+  border: 1px solid rgba(245, 231, 161, 0.5);
+  box-shadow: 0 0 15px rgba(245, 231, 161, 0.3);
+}
+
+/* Pastille d'étape */
+.step-chip{ display:inline-flex; align-items:center; gap:.5rem; padding:.35rem .6rem; border:1px solid rgba(245,231,161,.45);
+  border-radius:999px; color:#f5e7a1; font-size:.9rem; background:rgba(10,25,47,.35); }
+/* Mobile */
+    @media (max-width:640px){
+      .fan-wrap{ height: 380px; }
+      .fan-wrap .card{ width:190px; height:280px; }
+      .fan-wrap .card[data-angle]{ --radius: 140px; }           /* bas aussi sur mobile */
+      .choice-tray .slot{ min-height:280px; }
+      .card.mini{ width:170px; height:255px; }
+      
+      /* Correction pour le menu mobile */
+      #mobileMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(5, 20, 40, 0.98);
+  backdrop-filter: blur(10px);
+  z-index: 1000;          /* était 50 -> passe à 1000 */
+  border-top: 1px solid rgba(212, 175, 55, 0.3);
+}
+header {
+  position: relative;
+  z-index: 1001;
+  overflow: visible; /* DS V3 : évite que le dropdown soit coupé */
+}
+#mobileMenuBtn {
+  z-index: 1002;          /* était 101 -> passe à 1002 */
+}
+
+      #mobileMenu.hidden {
+        display: none;
+      }
+      
+      #mobileMenu:not(.hidden) {
+        display: block;
+      }
+      }
+
+/* --- Carte miniature affichée dans les slots --- */
+.slot .mini-card{
+  position: relative;
+  width: 180px;               /* adapte si tu veux plus grand */
+  height: 270px;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 12px 24px rgba(0,0,0,.35);
+}
+.slot .mini-card .card-inner{
+  transform: none !important;     /* PAS de flip 3D dans le slot */
+  transition: none !important;
+}
+.slot .mini-card .back{ display:none !important; }  /* on ne montre que la face avant */
+.slot .mini-card .front{ height:100%; }
+    /* Zoom de la carte tenue en main */
+    .card.zooming{
+      transform: translate(-50%, -50%) rotate(0deg) scale(1.3) !important;
+      z-index: 1000;
+      transition: transform 0.7s ease, opacity 0.5s ease;
+    }
+
+    /* Styles pour les nouvelles animations d'intention */
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: rgba(212, 175, 55, 0.6);
+      border-radius: 50%;
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    .cosmic-sparkle {
+      animation: cosmic-float 8s ease-in-out infinite;
+      box-shadow: 0 0 10px 2px rgba(245, 231, 161, 0.5);
+    }
+    
+    .cosmic-flow {
+      width: 2px;
+      background: linear-gradient(to bottom, transparent, rgba(245, 231, 161, 0.4), transparent);
+      animation: cosmic-flow 6s linear infinite;
+    }
+    @keyframes float {
+      0%, 100% { transform: translateY(0) scale(1); opacity: 0.7; }
+      50% { transform: translateY(-20px) scale(1.2); opacity: 1; }
+    }
+    
+    @keyframes cosmic-float {
+      0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.8; }
+      25% { transform: translate(10px, -15px) scale(1.3); opacity: 1; }
+      50% { transform: translate(5px, -25px) scale(1.1); opacity: 0.9; }
+      75% { transform: translate(-5px, -15px) scale(1.4); opacity: 1; }
+    }
+    
+    @keyframes cosmic-flow {
+      0% { transform: translateY(-100%) scaleY(0); opacity: 0; }
+      50% { transform: translateY(0%) scaleY(1); opacity: 0.6; }
+      100% { transform: translateY(100%) scaleY(0); opacity: 0; }
+    }
+.energy-line {
+      position: absolute;
+      width: 1px;
+      height: 100%;
+      background: linear-gradient(to bottom, transparent, rgba(212, 175, 55, 0.3), transparent);
+      animation: energyFlow 4s linear infinite;
+    }
+    
+    @keyframes energyFlow {
+      0% { transform: translateY(-100%); opacity: 0; }
+      50% { opacity: 1; }
+      100% { transform: translateY(100%); opacity: 0; }
+    }
+    
+    .wave-effect {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+      animation: wave 3s linear infinite;
+    }
+    
+    @keyframes wave {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    
+    .button-particles::before,
+    .button-particles::after {
+      content: '';
+      position: absolute;
+      width: 2px;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.8);
+      border-radius: 50%;
+      animation: sparkle 2s ease-in-out infinite;
+    }
+    
+    .button-particles::before {
+      top: 20%;
+      left: 20%;
+      animation-delay: 0s;
+    }
+    
+    .button-particles::after {
+      bottom: 20%;
+      right: 20%;
+      animation-delay: 1s;
+    }
+    
+    @keyframes sparkle {
+      0%, 100% { transform: scale(0); opacity: 0; }
+      50% { transform: scale(1); opacity: 1; }
+    }
+    
+    /* Animation pour le bouton activé */
+    .btn-gold:not(:disabled) {
+      animation: buttonPulse 3s ease-in-out infinite;
+    }
+    
+    @keyframes buttonPulse {
+      0%, 100% { box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); }
+      50% { box-shadow: 0 8px 25px rgba(212, 175, 55, 0.5); }
+    }
+
+/* (désactivé) brillance balayage supprimée */
+.btn-gold::before, .btn-outline-gold::before { content: none !important; }
+
+      left: 100%;
+    }
+/* Mini-carte dans un slot */
+.slot .mini{
+  width: 200px;
+  height: 300px;
+  position: relative !important;
+  left: auto !important;
+  top: auto !important;
+  transform: none;
+  margin: 0 auto;
+  transition: all 0.5s ease;
+}
+
+.slot .mini .card-inner{
+  height: 100%;
+  box-shadow: 0 8px 16px rgba(0,0,0,.3);
+}
+/* Mini-carte dans un slot : plus de place pour le contenu */
+.slot .mini .front .topbar,
+.slot .mini .chip,
+.slot .mini .polarity,
+.slot .mini .bottom {
+  display: none !important;   /* on enlève l'entête et la pastille */
+}
+
+.slot .mini .art h3 {
+  font-size: 1.1rem;
+  line-height: 1.15;
+}
+
+.slot .mini .quote,
+.slot .mini [data-quote] {
+  font-size: .95rem;
+  line-height: 1.35;
+}
+
+.slot.filled{
+  overflow: visible;
+  border: none;
+  background: transparent;
+}
+
+@media (max-width: 640px){
+  .slot .mini{ width: 170px; height: 255px; }
+}
+/* DS V3 — mobile menu : sécurité overflow/stacking */
+header { position: relative; overflow: visible; }        /* garantit que le dropdown n'est pas coupé */
+#mobileMenu {
+  position: absolute; top: 100%; left: 0; right: 0;
+  background: rgba(5,20,40,.98); backdrop-filter: blur(10px);
+  z-index: 1200;                                          /* au-dessus du contenu */
+  border-top: 1px solid rgba(212,175,55,.3);
+}
+#mobileMenuBtn { position: relative; z-index: 1300; }     /* au-dessus du menu lui-même */
+/* ====== MOBILE FIX PÈLERIN (ne change pas le desktop) ====== */
+@media (max-width: 480px){
+  /* Titre & intro alignés à gauche */
+  #oracle .text-center{ text-align: left; }
+  #oracle h2{ font-size: 1.75rem; line-height: 1.2; }   /* plus petit sur téléphone */
+  #oracle p{ font-size: .95rem; }
+
+  /* Éventail + dock : plus petit et calé à gauche dans le conteneur */
+  #board, 
+  #board .fan-wrap,
+  #board .choice-tray { width: 92vw; }                   /* rétrécit le bloc tirage */
+  
+  #board .fan-wrap{
+    margin: 12px 0 0 0;                                  /* au lieu de "auto" -> colle à gauche */
+    --radius: 110px;                                     /* éventail un peu plus bas/compact */
+  }
+
+  /* cartes de l’éventail en version mobile */
+  #board .card{
+    width: 190px; 
+    height: 280px; 
+    transform-origin: 50% 82%;
+  }
+
+  /* dock en bas un peu plus compact aussi */
+  #board .choice-tray{ padding: 12px 8px 18px; }
+}
+
+/* très petits écrans : encore un cran de réduction */
+@media (max-width: 360px){
+  #board .card{ width: 170px; height: 250px; }
+  #board .fan-wrap{ --radius: 100px; }
+}
+  /* === Ajout styles synthèse === */
+  #synthese p { margin: 0.35rem 0; }
+  #synthese ol { margin: 0.35rem 0 0.2rem; padding-left: 1rem; }
+  #synthese .italic { opacity: 0.9; }
+  #synthese .text-gold { color: #d4af37; }
+  #synthese ul { margin: 0.35rem 0 0.2rem; padding-left: 1rem; }
+  #synthese details { border-left: 2px solid rgba(212,175,55,0.25); padding-left: .75rem; }
+  #synthese summary { font-weight: 600; }
+
+  </style>
+</head>
+
+<body class="relative">
+
+  <!-- Scroll to top button -->
+  <button id="scrollTop" class="scroll-top bg-night-blue text-gold p-3 rounded-full border border-gold shadow-lg" aria-label="Remonter en haut">
+    <i class="fas fa-arrow-up"></i>
+  </button>
+  <!-- Header -->
+<header class="header-bg w-full py-3 px-4 md:py-4 md:px-8">
+  <div class="flex items-center justify-between">
+    <div class="flex items-center">
+      <img src="https://i.ibb.co/Q3vbXP4S/logo.png" alt="Oradia Logo"
+           class="w-16 h-16 mr-6 transform hover:scale-110 transition-transform duration-300"/>
+      <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+    </div>
+    <!-- Bouton burger (mobile) -->
+    <button id="mobileMenuBtn" type="button" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold" aria-label="Ouvrir le menu">
+           
+      <i class="fas fa-bars text-lg"></i>
+    </button>
+<!-- Nav desktop -->
+    <nav class="hidden md:flex space-x-6 text-lg">
+      <a href="#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
+      <a href="#offres" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Offres</a>
+      <a href="#Jeu" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Jeu</a>
+      <a href="#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
+      <a href="#apropos" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+    </nav>
+
+    <button id="loginBtn" class="btn-outline-gold hidden md:inline-block">Connexion</button>
+  </div>
+
+  <!-- Menu mobile déroulant -->
+  <nav id="mobileMenu" class="md:hidden hidden mt-3 space-y-2">
+    <a href="#accueil" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-home mr-2"></i>Accueil</a>
+    <a href="#offres" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-tags mr-2"></i>Offres</a>
+    <a href="#Jeu" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Jeu</a>
+    <a href="#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
+    <a href="#apropos" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+    <button id="loginBtnMobile" class="w-full btn-outline-gold">Connexion</button>
+  </nav>
+</header>
+<!-- Hero -->
+  <section id="accueil" class="hero-bg min-h-screen flex items-center pt-20 pb-32 px-6">
+    <div class="container mx-auto max-w-6xl">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="text-center lg:text-left">
+          <h1 class="cormorant text-5xl md:text-6xl lg:text-7xl font-bold mb-6">
+            <span class="block gold-gradient">Découvrez Votre</span>
+            <span class="block mt-2">Chemin Vibratoire</span>
+          </h1>
+          <p class="text-xl text-light-gold mb-8 max-w-2xl">
+            L'oracle Oradia croise les sagesses ancestrales (Yi Jing, ennéagramme, astrologie, etc.) et les outils modernes pour vous guider comme une boussole.
+          </p>
+                                        <p class="text-light-gold max-w-3xl mx-auto">
+                         </p>
+                         <p class="text-xl text-light-gold mb-8 max-w-2xl">
+                                            </p>
+        </div>
+
+        <!-- Visuel -->
+        <div class="flex justify-center">
+          <div class="relative w-80 h-80 lg:w-96 lg:h-96">
+            <div class="absolute inset-0 rounded-full border border-gold/20 animate-[spin_60s_linear_infinite]">
+              <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gold/50 shadow-lg animate-[orbit_12s_linear_infinite] origin-[50%_200px]"></div>
+              <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full bg-light-gold/70 shadow-lg animate-[orbit_8s_linear_infinite] origin-[50%_180px]"></div>
+              <div class="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-gold/30 shadow-lg animate-[orbit_20s_linear_infinite] origin-[50%_220px]"></div>
+            </div>
+            <div class="absolute inset-0 bg-gradient-to-br from-night-blue to-dark-blue rounded-full shadow-2xl flex items-center justify-center floating">
+              <div class="bg-gradient-to-br from-gold to-light-gold w-64 h-64 rounded-full flex items-center justify-center pulse">
+                <div class="bg-night-blue w-56 h-56 rounded-full flex items-center justify-center relative">
+                  <div class="absolute w-1 h-16 bg-gold rounded-full origin-bottom" style="transform: rotate(45deg);"></div>
+                  <div class="absolute w-1 h-16 bg-light-gold rounded-full origin-bottom" style="transform: rotate(-45deg);"></div>
+                  <img src="https://i.ibb.co/HfVZ03nt/logo2.png" alt="Oradia Compass"
+                       class="w-full h-full object-center object-contain rounded-full border-2 border-gold animate-spin-slow">
+                  <div class="absolute inset-0 flex flex-col items-center justify-center">
+                    <span class="cormorant text-2xl text-gold">Oradia</span>
+                    <p class="text-light-gold mt-2">Oracle Vibratoire</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="absolute -top-6 -left-6 w-32 h-32 rounded-full border-4 border-gold opacity-30"></div>
+            <div class="absolute -bottom-6 -right-6 w-32 h-32 rounded-full border-4 border-gold opacity-30"></div>
+          </div>
+        </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Tirage du Pèlerin -->
+<section id="oracle" class="py-12 md:py-20 px-4 md:px-6">
+    <div class="container mx-auto max-w-6xl">
+      <div class="text-center mb-10">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-2">Tirage du Pèlerin</h2>
+        <p class="text-light-gold max-w-3xl mx-auto">Une question simple, un pas sur le chemin.</p>
+      </div>
+      <section id="oracle" class="py-12 md:py-20 px-4 md:px-6">
+  <div class="container mx-auto max-w-6xl">
+    <div class="mb-6">
+      <a href="index.html" class="btn-outline-gold inline-flex items-center">
+        <i class="fas fa-arrow-left mr-2"></i>
+        Retour à l’accueil
+      </a>
+    </div>
+    <div class="text-center mb-10">
+      <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-2">Tirage du Pèlerin</h2>
+      ...
+
+  <!-- Intention - Version améliorée -->
+  <div id="intentionBox" class="relative bg-gradient-to-br from-night-blue/95 to-dark-blue/98 border border-gold/30 rounded-2xl p-6 md:p-8 mb-8 shadow-xl overflow-hidden">
+    <!-- Effets de fond cosmique -->
+    <div class="absolute inset-0 z-0 opacity-30 pointer-events-none">
+      <!-- Particules dorées flottantes -->
+      <div class="absolute top-1/4 left-1/4 w-1 h-1 bg-gold/60 rounded-full animate-pulse" style="animation-delay: 0s;"></div>
+      <div class="absolute top-1/3 right-1/4 w-1 h-1 bg-gold/40 rounded-full animate-pulse" style="animation-delay: 1s;"></div>
+      <div class="absolute bottom-1/4 left-1/3 w-1 h-1 bg-light-gold/50 rounded-full animate-pulse" style="animation-delay: 2s;"></div>
+      <!-- Lignes d'énergie subtiles -->
+      <div class="absolute top-0 left-1/2 w-px h-full bg-gradient-to-b from-transparent via-gold/10 to-transparent"></div>
+      <div class="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-gold/10 to-transparent"></div>
+    </div>
+    
+    <div class="relative z-10">
+      <!-- En-tête élégant -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-gold/20 to-gold/5 rounded-full border-2 border-gold/40 mb-6 relative">
+          <div class="absolute inset-0 rounded-full border-2 border-gold/20 animate-ping" style="animation-duration: 3s;"></div>
+          <i class="fas fa-compass text-2xl md:text-3xl text-gold relative z-10"></i>
+        </div>
+        <h3 class="cormorant text-3xl md:text-4xl text-gold mb-4 text-glow">Formulez votre intention</h3>
+        <p class="text-light-gold/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+          Connectez-vous à votre essence et laissez émerger votre question la plus authentique
+        </p>
+      </div>
+      
+      <!-- Cadre d'intention premium -->
+      <div class="bg-gradient-to-br from-night-blue/40 to-dark-blue/50 border-2 border-gold/40 rounded-2xl p-6 md:p-8 backdrop-blur-lg relative overflow-hidden">
+        <!-- Bordure animée -->
+        <div class="absolute inset-0 rounded-2xl bg-gradient-to-r from-gold/10 via-transparent to-gold/10 animate-pulse" style="animation-duration: 4s;"></div>
+        
+        <div class="relative z-10">
+          <div class="text-center mb-8">
+            <p class="text-light-gold/80 text-sm md:text-base italic mb-4 leading-relaxed">
+              Prenez un moment pour vous concentrer et vous relier profondément à votre intention.
+            </p>
+            <div class="inline-flex items-center bg-gold/10 px-4 py-2 rounded-full border border-gold/30">
+              <i class="fas fa-lightbulb text-gold mr-2"></i>
+              <p class="text-gold font-medium text-sm">Une intention claire ouvre la voie à une guidance plus juste</p>
+            </div>
+          </div>
+          
+          <div class="flex flex-col gap-8">
+            <div class="relative">
+              <div class="relative">
+                <textarea id="intention" 
+                         class="w-full bg-night-blue/30 border-2 border-gold/40 rounded-2xl p-6 text-light-gold placeholder-gold/50
+                                focus:border-gold/80 focus:ring-4 focus:ring-gold/20 focus:outline-none transition-all duration-300 text-base md:text-lg
+                                min-h-[120px] md:min-h-[140px] resize-none shadow-inner"
+                         placeholder="Exemple : Comment puis-je aligner mes actions avec mes valeurs profondes aujourd'hui ?" 
+                         required></textarea>
+                
+                <!-- Compteur de caractères stylisé -->
+                <div class="absolute bottom-4 right-4 bg-gold/20 px-3 py-1 rounded-full border border-gold/30">
+                  <span id="charCount" class="text-gold font-medium text-sm">0</span>
+                  <span class="text-gold/70 text-sm">/200</span>
+                </div>
+                
+                <!-- Icône d'inspiration -->
+                <div class="absolute top-4 left-4 text-gold/50">
+                  <i class="fas fa-pen-nib"></i>
+                </div>
+              </div>
+              
+              <!-- Indicateur de qualité -->
+              <div class="flex items-center justify-between mt-3 px-2">
+                <div class="flex items-center text-gold/60 text-sm">
+                  <i class="fas fa-info-circle mr-2"></i>
+                  <span>Formulez une question ouverte</span>
+                </div>
+                <div class="flex items-center text-gold/60 text-sm">
+                  <i class="fas fa-question-circle mr-2"></i>
+                  <span>Terminez par "?"</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Bouton de démarrage premium -->
+      <div class="text-center mt-8">
+        <button id="startReading" class="btn-gold px-10 py-5 text-lg md:text-xl font-semibold hover:scale-105 transition-all duration-300 rounded-2xl relative overflow-hidden button-particles" disabled>
+          <div class="absolute inset-0 bg-gradient-to-r from-gold/20 to-light-gold/20 transform hover:scale-110 transition-transform duration-300"></div>
+          <i class="fas fa-play-circle mr-3 relative z-10"></i>
+          <span class="relative z-10">Commencer le voyage</span>
+        </button>
+      </div>
+    </div>
+  </div>
+<!-- Plateau (caché au départ) -->
+<section id="board" class="hidden" aria-live="polite">
+  <div class="flex items-center justify-between max-w-5xl mx-auto mb-2">
+    <span class="step-chip hover:bg-gold/20 transition-colors cursor-pointer hovered-element" id="stepInfo">Étape 1/4 • Choisis ta carte ÉMOTIONS</span>
+  </div>
+
+  <div class="fan-wrap" id="fanBoard"></div>
+
+  <div class="choice-tray" id="tray">
+    <div class="slots">
+    <div class="slot" id="slot-0" aria-label="Carte ÉMOTIONS"></div>
+<div class="slot" id="slot-1" aria-label="Carte BESOINS"></div>
+<div class="slot" id="slot-2" aria-label="Carte ACTIONS"></div>
+<div class="slot" id="slot-3" aria-label="Carte MÉMOIRE COSMOS"></div>
+    </div>
+  </div>
+
+  <div class="text-center mt-4">
+<button id="showResults" class="cta-analyse hidden px-6 py-3 border border-gold text-light-gold rounded-lg hover:bg-gold hover:text-dark-blue transition disabled:opacity-40" disabled>
+      Afficher l’analyse
+    </button>
+  </div>
+</section>
+
+      <section id="results" class="hidden mt-6">
+        <h2 class="cormorant text-3xl text-gold mb-3">Résultats du tirage</h2>
+        <div class="mb-2"><b>Intention :</b> <span id="out-intention">—</span></div>
+        <div class="result-lines" id="lines"></div>
+        <div class="mt-3" id="synthese"></div>
+      </section>
+      <div class="max-w-2xl mx-auto mt-8 space-y-6">
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <button type="button" id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none relative overflow-hidden group" onclick="handleFullReadingClick()">
+            <div class="absolute inset-0 bg-gradient-to-r from-gold/10 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+            <span class="relative z-10 flex items-center justify-center gap-2">
+              <i class="fas fa-stars text-gold"></i>
+              Envie d'un tirage plus complet?
+            </span>
+          </button>
+          <button id="newPilgrim" class="btn-gold hidden flex-1 sm:flex-none relative overflow-hidden group">
+            <div class="absolute inset-0 bg-gradient-to-r from-light-gold/20 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+            <span class="relative z-10 flex items-center justify-center gap-2">
+              <i class="fas fa-redo text-night-blue"></i>
+              Nouveau tirage
+            </span>
+          </button>
+        </div>
+        
+        <div id="emailForm" class="hidden w-full max-w-2xl mx-auto">
+          <div class="bg-gradient-to-br from-[rgba(18,20,32,.8)] to-[rgba(5,20,40,.6)] border border-[rgba(212,175,55,.35)] rounded-2xl p-6 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full -translate-y-16 translate-x-16"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-light-gold/5 rounded-full translate-y-12 -translate-x-12"></div>
+            
+            <div class="relative z-10">
+              <h3 class="cormorant text-xl text-gold mb-4 text-center">Recevoir le résultat par email</h3>
+              <div class="flex flex-col sm:flex-row gap-4 w-full">
+                <input type="email" id="userEmail" placeholder="Votre adresse email" 
+                       class="flex-1 min-w-0 bg-[rgba(5,20,40,.8)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg text-light-gold placeholder-gold/50 focus:border-gold/80 focus:ring-2 focus:ring-gold/20 transition-all duration-300" required>
+                <button id="sendEmailBtn" class="btn-gold whitespace-nowrap px-6 py-3 sm:w-auto w-full relative overflow-hidden group">
+                  <div class="absolute inset-0 bg-gradient-to-r from-light-gold/20 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+                  <span class="relative z-10 flex items-center justify-center gap-2">
+                    <i class="fas fa-paper-plane text-night-blue"></i>
+                    Envoyer
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+</div>
+  </section>
+
+  <!-- Offres -->
+  <section id="offres" class="py-20 px-6 bg-dark-blue">
+    <div class="container mx-auto max-w-6xl">
+      <div class="text-center mb-12">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Entrez dans l'univers Oradia</h2>
+        <p class="text-light-gold max-w-3xl mx-auto">Choisissez l'offre qui résonne avec votre cheminement.</p>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 max-w-6xl mx-auto">
+                
+          </div>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Gratuit -->
+        <div class="rounded-2xl p-8 relative overflow-hidden flex flex-col h-full" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+          <!-- Animation des flux temporels -->
+          <div class="absolute inset-0 z-0 opacity-50 pointer-events-none">
+            <!-- Ligne du temps centrale -->
+            <div class="absolute top-0 bottom-0 left-1/2 w-1 bg-gradient-to-b from-gold/30 via-gold/50 to-gold/30 -translate-x-1/2"></div>
+            <!-- Cercles temporels -->
+            <div class="absolute top-1/3 left-1/2 w-16 h-16 rounded-full border-2 border-gold/30 animate-[pulse_4s_ease-in-out_infinite] -translate-x-1/2 -translate-y-1/2"></div>
+            <div class="absolute top-1/2 left-1/2 w-20 h-20 rounded-full border-2 border-gold/50 animate-[pulse_3s_ease-in-out_infinite] -translate-x-1/2 -translate-y-1/2"></div>
+            <div class="absolute top-2/3 left-1/2 w-16 h-16 rounded-full border-2 border-gold/30 animate-[pulse_5s_ease-in-out_infinite] -translate-x-1/2 -translate-y-1/2"></div>
+            <!-- Connexions entre les temps -->
+            <div class="absolute top-1/3 left-1/2 w-1 h-1/6 bg-gradient-to-b from-gold/20 to-transparent -translate-x-1/2"></div>
+            <div class="absolute top-1/2 left-1/2 w-1 h-1/6 bg-gradient-to-t from-gold/20 to-transparent -translate-x-1/2"></div>
+          </div>
+
+          <div class="relative z-10 text-center mb-6">
+            <h3 class="cormorant text-2xl text-gold mb-2">Tirage du pèlerin</h3>
+            <div class="text-4xl font-bold text-light-gold">Gratuit</div>
+          </div>
+
+          <h4 class="cormorant text-xl text-gold mb-2 text-center">Passé / Présent / Futur</h4>
+          <ul class="space-y-3 mb-8 relative z-10">
+ <p class="text-light-gold text-sm">
+              Une question simple, un pas sur le chemin. Le tirage du Pèlerin éclaire passé, présent et futur : ce qui t'accompagne encore, ce qui se joue maintenant, et ce qui se dessine devant toi. C'est un tirage d'initiation, une première porte pour goûter la vibration d'Oradia.
+            </p>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>3 cartes + 1 carte Mémoires Cosmos</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Interprétation synthétique</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Analyse croisée basique par l'IA</span></li>
+            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Cartes passerelles</span></li>
+            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Espace membre</span></li>
+            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Analyse approfondie</span></li>
+          </ul>
+
+          <button id="startPilgrimFromOffer" class="btn-outline-gold w-full text-center relative z-10 mt-auto">
+  Commencer le tirage
+</button>
+
+        </div>
+
+        <!-- Tirage complet -->
+        <div class="rounded-2xl p-8 relative overflow-hidden border-2 border-gold flex flex-col h-full" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9))">
+          <div class="absolute top-0 right-0 bg-gold text-night-blue px-4 py-1 rounded-bl-lg rounded-tr-2xl font-bold z-10">Populaire</div>
+
+          <!-- Boussole mystique animation -->
+          <div class="absolute inset-0 z-0 opacity-60 pointer-events-none">
+            <div class="absolute top-1/2 left-1/2 w-64 h-64 -translate-x-1/2 -translate-y-1/2">
+              <!-- Cercle extérieur -->
+              <div class="absolute inset-0 rounded-full border border-gold/30 animate-[spin_30s_linear_infinite]"></div>
+              <!-- Aiguilles -->
+              <div class="absolute top-1/2 left-1/2 w-1 h-16 bg-gold -translate-x-1/2 -translate-y-1/2 origin-bottom animate-[pulse_3s_ease-in-out_infinite]" style="transform: rotate(45deg);"></div>
+              <div class="absolute top-1/2 left-1/2 w-1 h-16 bg-light-gold -translate-x-1/2 -translate-y-1/2 origin-bottom animate-[pulse_3s_ease-in-out_infinite]" style="transform: rotate(-45deg);"></div>
+              <!-- Points cardinaux -->
+              <div class="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-gold">N</div>
+              <div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-gold">S</div>
+              <div class="absolute top-1/2 left-2 -translate-y-1/2 text-xs text-gold">O</div>
+              <div class="absolute top-1/2 right-2 -translate-y-1/2 text-xs text-gold">E</div>
+              <!-- Particules en orbite -->
+              <div class="absolute top-0 left-1/2 w-2 h-2 rounded-full bg-gold/50 -translate-x-1/2 -translate-y-1/2 animate-[orbit_8s_linear_infinite] origin-[50%_128px]"></div>
+              <div class="absolute top-0 left-1/2 w-3 h-3 rounded-full bg-light-gold/40 -translate-x-1/2 -translate-y-1/2 animate-[orbit_12s_linear_infinite] origin-[50%_150px]"></div>
+            </div>
+          </div>
+
+          <div class="relative z-10 text-center mb-6">
+            <h3 class="cormorant text-2xl text-gold mb-2">Tirages de la traversée</h3>
+            <div class="text-4xl font-bold text-light-gold">5€</div>
+            <h4 class="cormorant text-xl text-gold">Accès à 5 tirages</h4>
+          </div>
+<p class="text-light-gold text-sm">
+              Un carrefour, une décision, un choix à poser. Le tirage de la Traversée se déploie comme une boussole intérieure : Nord, Sud, Est, Ouest. Quatre directions pour éclairer ton orientation dans la vie, retrouver ton cap, discerner la voie juste. C'est un tirage pour les passages importants.
+            </p>
+          <ul class="space-y-3 mb-8 relative z-10">
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>4 cartes vibratoires</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 carte Mémoires Cosmos</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes passerelles</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Analyse croisée par l'IA complète et détaillée</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question d'introspection</span></li>
+            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Espace membre</span></li>
+            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">1 tirage complet quotidien par mail</span></li>
+          </ul>
+
+          <a href="#" id="orderBtn" class="btn-gold w-full text-center block relative z-10 mt-auto">Commander</a>
+        </div>
+
+        <!-- Abonnement -->
+        <div class="rounded-2xl p-8 relative overflow-hidden flex flex-col h-full" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+          <!-- Animation champ magnétique (tore) -->
+          <div class="absolute inset-0 z-0 opacity-50 pointer-events-none">
+            <div class="absolute top-1/2 left-1/2 w-64 h-64 -translate-x-1/2 -translate-y-1/2">
+              <!-- Anneaux -->
+              <div class="absolute inset-0 rounded-full border-2 border-gold/30 animate-[spin_30s_linear_infinite]"></div>
+              <div class="absolute inset-0 rounded-full border-2 border-gold/20 animate-[spin_25s_linear_infinite_reverse] rotate-45"></div>
+              <!-- Lignes de champ -->
+              <div class="absolute top-1/2 left-1/2 w-1 h-32 bg-gradient-to-b from-gold/30 to-transparent -translate-x-1/2 -translate-y-1/2 origin-bottom animate-[pulse_4s_ease-in-out_infinite]"></div>
+              <div class="absolute top-1/2 left-1/2 w-1 h-32 bg-gradient-to-t from-gold/30 to-transparent -translate-x-1/2 -translate-y-1/2 origin-top animate-[pulse_5s_ease-in-out_infinite]"></div>
+              <!-- Particules -->
+              <div class="absolute top-0 left-1/2 w-2 h-2 rounded-full bg-gold/40 -translate-x-1/2 -translate-y-1/2 animate-[orbit_8s_linear_infinite] origin-[50%_150px]"></div>
+              <div class="absolute top-0 left-1/2 w-3 h-3 rounded-full bg-light-gold/30 -translate-x-1/2 -translate-y-1/2 animate-[orbit_12s_linear_infinite] origin-[50%_140px]"></div>
+            </div>
+          </div>
+
+          <div class="relative z-10 text-center mb-6">
+            <h3 class="cormorant text-2xl text-gold mb-2">Tirage du Tore</h3>
+            <div class="text-4xl font-bold text-light-gold">8€ <span class="text-lg">/mois</span></div>
+          </div>
+
+          <ul class="space-y-3 mb-8 relative z-10">
+   <p class="text-light-gold text-sm">
+              L'expérience complète. Le Guidage du Tore recueille toutes les dimensions de ton être : émotions, besoins, archétypes, révélations, actions. Il s'appuie aussi sur tes clés personnelles (Human Design, Ennéagramme, astrologie...). C'est une cartographie vibratoire profonde pour avancer avec clarté.
+            </p>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 tirage complet quotidien par mail avec votre intention</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes passerelles</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question du jour</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Espace membre (profils ennéagramme, astro, numérologie...)</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Accès à l'archive des 10 derniers tirages</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Participation à l’amélioration de l’oracle (expérience anonyme)</span></li>
+          </ul>
+
+          <a href="#" id="subscribeBtn" class="btn-gold w-full text-center block relative z-10 mt-auto">S'abonner</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+ 
+  <!-- Oracle de cartes physique-->
+  <section id="Jeu" class="py-20 px-6 bg-dark-blue">
+    <div class="container mx-auto max-w-6xl">
+      <div class="text-center mb-12">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Oracle de Cartes Oradia</h2>
+        <p class="text-light-gold max-w-3xl mx-auto">Découvrez notre oracle en version physique</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <div class="rounded-2xl p-8 mb-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+            <h3 class="cormorant text-2xl text-gold mb-4">Version Physique en Développement</h3>
+            <p class="text-light-gold mb-4">
+              Une version physique de 64 cartes de l'oracle Oradia est en cours de développement. Vous y retrouverez les 3 types de tirage (tirage du Pèlerin, tirage de La traversée, tirage du Tore) ainsi qu'un livret d'accompagnement illustré. Un partenariat avec une illustratrice est en cours afin de vous proposer une expérience au graphisme unique.
+            </p>
+            <p class="text-light-gold mb-6">
+              Cette version sera idéale pour des ateliers, cercles de partage ou usage personnel. 
+            </p>
+            <h4 class="cormorant text-xl text-gold mb-3">Vous avez hâte n'est-ce pas?</h4>
+            <p class="text-light-gold mb-4">
+              Vous pouvez contribuer à votre hauteur au financement, vous recevoir le jeu en avant-première lorsqu’il sera disponible.
+            </p>
+            <div class="text-center">
+              <a href="..." target="_blank" class="btn-gold inline-block">Faire un don</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="flex justify-center">
+          <div class="rounded-2xl p-4" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+            <img src="https://i.ibb.co/FTDGc0k/Capture-d-cran-2025-08-09-090137.png" alt="Aperçu du jeu" />
+            <p class="text-light-gold text-center mt-4 italic">Aperçu du jeu de cartes en développement</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+ <!-- À propos -->
+  <section id="apropos" class="py-20 px-6">
+    <div class="container mx-auto max-w-6xl">
+      <div class="text-center mb-12">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">À Propos d'Oradia</h2>
+        <p class="text-light-gold max-w-3xl mx-auto">Découvrez l'essence et la mission de l'oracle Oradia</p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div>
+          <div class="rounded-2xl p-8 mb-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+            <h3 class="cormorant text-2xl text-gold mb-4">Oradia - La boussole du pèlerin</h3>
+            <section class="text-light-gold leading-relaxed">
+              <p>Oradia n’est pas un oracle de prédiction.
+                
+                 <h4 class="cormorant text-xl text-gold mb-3">C’est une boussole pour le voyage intérieur.</h4></p>
+              <p>Ses cartes forment un univers vivant :<br>
+                les Émotions qui traversent,<br>
+                les Besoins qui appellent,<br>
+                les Transmutations qui transforment,<br>
+                les Archétypes qui guident,<br>
+                les Révélations qui éclairent,<br>
+                et les Actions qui incarnent.
+              </p>
+              <p>Chaque tirage est une traversée.<br>
+                Le présent dialogue avec le passé,<br>
+                ouvre l’avenir et révèle ton axe profond.
+              </p>
+              <p>Oradia est l’invitation à marcher en conscience,<br>
+                là où chaque pas devient créateur,<br>
+                et chaque signe, une étoile sur ton chemin.
+              </p>
+            </section>
+          </div>
+
+          <div class="rounded-2xl p-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+            <h3 class="cormorant text-2xl text-gold mb-4">Une Approche Éthique</h3>
+            <p class="text-light-gold mb-4">
+              Oradia s'engage dans une démarche écologique et respectueuse du Vivant. Hébergeur éthique, IA raisonnée, outils open-source, souveraineté du développement…
+            </p>
+            <p class="text-light-gold">
+              Pour tout achat sur le site, 1% est reversé à une association œuvrant en faveur du vivant.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex justify-center">
+          <div class="relative">
+            <div class="bg-gradient-to-br from-gold/10 to-night-blue border border-gold/30 rounded-2xl w-full h-96"></div>
+            <div class="absolute -bottom-6 -right-6 w-64 h-64 bg-gradient-to-tr from-gold/5 to-transparent border border-gold/20 rounded-2xl">
+              <img src="https://i.ibb.co/Q3vbXP4S/logo.png" alt="logo" class="w-full h-full object-contain p-4">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- Partenariats / OTRE / Edolg'Or -->
+  <section id="edolgor" class="py-20 px-6 bg-dark-blue">
+    <div class="container mx-auto max-w-6xl">
+      <div class="text-center mb-12">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Nos partenariats</h2>
+        <p class="text-light-gold max-w-3xl mx-auto">
+          Découvrez notre engagement pour un modèle de société innovant et des projets fidèles à nos convictions
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="flex justify-center">
+          <div class="relative">
+            <div class="bg-gradient-to-br from-gold/10 to-night-blue border border-gold/30 rounded-2xl w-full h-96"></div>
+            <div class="absolute -top-6 -left-6 w-64 h-64 bg-gradient-to-tr from-gold/5 to-transparent border border-gold/20 rounded-2xl">
+              <img src="https://i.ibb.co/354MSMtd/Logo-SCIC.png" alt="Logo-SCIC" class="w-full h-full object-contain p-3">
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <!-- Le Projet OTRE -->
+          <div class="rounded-2xl p-8 mb-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+            <h3 class="cormorant text-2xl text-gold mb-4">Le Projet OTRE</h3>
+            <p class="text-light-gold">
+              En route vers un nouveau modèle de société innovant appelé OTRE (Organisation Torique et Régénérative des Êtres), issu de 12 années de recherche empirique.
+              Ce modèle propose une transition sociétale vivante, ludique, inclusive et régénérative, fondée sur l'équilibre des forces,
+              l'intelligence collective et la souveraineté individuelle. Basé sur la géométrie du tore (présente dans la nature, la pomme,
+              le champ magnétique terrestre…), il propose une constellation de solutions pour répondre aux problématiques actuelles.
+            </p>
+          </div>
+
+          <!-- Edolg'Or -->
+          <div class="rounded-2xl p-8" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+            <h3 class="cormorant text-2xl text-gold mb-4">Edolg'Or, notre Contribution</h3>
+            <p class="text-light-gold">
+              Edolg'Or est une association qui vise à favoriser la création, le développement et l’entretien des liens sociaux et culturels
+              par des activités ludiques, artistiques et d’arts vivants à travers un jeu sérieux grandeur nature.
+              Objectif : découvrir la civilisation d'Edolg'OR et l'emplacement de sa cité d'or vivant au rythme du modèle OTRE.
+              Lors de votre achat pour un tirage complet ou un abonnement, vous pouvez reverser 1€ à l'association.
+            </p>
+            <p class="text-light-gold">
+              Les activités proposées créent des espaces d'expression et de reconnexion essentiels.
+            </p>
+            <a href="https://fr.tipeee.com/mjr-wellor " target="_blank" class="btn-outline-gold mt-6 inline-block">Découvrir Edolg'Or</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+    <!-- Tirage de la Traversée -->
+  <section id="traversee" class="py-20 px-6 bg-night-blue">
+    <div class="container mx-auto max-w-6xl">
+      <div class="mb-6">
+        <a href="index.html" class="btn-outline-gold inline-flex items-center">
+          <i class="fas fa-arrow-left mr-2"></i>
+          Retour à l’accueil
+        </a>
+      </div>
+      <div class="text-center mb-12">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-1">Tirage de la Traversée</h2>
+        <p class="text-light-gold max-w-3xl mx-auto">
+          Guidance vibratoire approfondie pour votre cheminement
+        </p>
+      </div>
+
+
+      <div class="rounded-2xl p-8 mb-8 relative overflow-hidden" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+        <!-- Animation tunnel avec marcheur -->
+        <div class="absolute inset-0 z-0 opacity-30 pointer-events-none overflow-hidden">
+          <!-- Tunnel perspective -->
+          <div class="absolute inset-0 bg-gradient-to-b from-night-blue to-dark-blue">
+            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(212,175,55,0.1)_70%)] animate-[pulse_4s_ease-in-out_infinite]"></div>
+          </div>
+          
+          <!-- Lignes de perspective du tunnel -->
+          <div class="absolute inset-0 flex items-center justify-center">
+            <div class="w-full h-full relative">
+              <div class="absolute top-1/2 left-1/2 w-[200%] h-[200%] bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,transparent_60deg,rgba(212,175,55,0.05)_60deg,rgba(212,175,55,0.05)_120deg,transparent_120deg,transparent_180deg,rgba(212,175,55,0.05)_180deg,transparent_240deg,rgba(212,175,55,0.05)_240deg,transparent_300deg,transparent_360deg)] bg-[length:100%_100%] animate-[spin_30s_linear_infinite] origin-center"></div>
+            </div>
+          </div>
+          
+          <!-- Lumière au bout du tunnel -->
+          <div class="absolute top-1/2 left-1/2 w-64 h-64 -translate-x-1/2 -translate-y-1/2">
+            <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(245,231,161,0.8)_0%,rgba(212,175,55,0.4)_30%,transparent_70%)] animate-[pulse_3s_ease-in-out_infinite] rounded-full"></div>
+          </div>
+          
+          <!-- Silhouette du marcheur -->
+          <div class="absolute bottom-[15%] left-1/2 w-12 h-24 md:w-16 md:h-32 -translate-x-1/2 animate-[walking_8s_linear_infinite]">
+            <div class="relative w-full h-full">
+              <!-- Corps -->
+              <div class="absolute bottom-0 left-1/2 w-3 h-16 bg-night-blue -translate-x-1/2 rounded-t-full"></div>
+              <!-- Tête -->
+              <div class="absolute bottom-12 left-1/2 w-5 h-5 bg-night-blue -translate-x-1/2 rounded-full"></div>
+              <!-- Bras gauche -->
+              <div class="absolute bottom-8 left-1/2 w-1 h-8 bg-night-blue -translate-x-1/2 origin-bottom animate-[arm-swing_1s_ease-in-out_infinite] -rotate-12"></div>
+              <!-- Bras droit -->
+              <div class="absolute bottom-8 left-1/2 w-1 h-8 bg-night-blue -translate-x-1/2 origin-bottom animate-[arm-swing_1s_ease-in-out_infinite] rotate-12" style="animation-delay:0.5s"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Ajout des keyframes pour les animations -->
+        <style>
+          @keyframes walking {
+            0% { transform: translateX(-50%) translateX(-300px); opacity: 0; }
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { transform: translateX(-50%) translateX(300px); opacity: 0; }
+          }
+          @keyframes arm-swing {
+            0%, 100% { transform: translateX(-50%) rotate(-12deg); }
+            50% { transform: translateX(-50%) rotate(12deg); }
+          }
+
+          /* Icône membre connecté (badge) */
+#memberIcon{
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 8px 12px; border: 1px solid rgba(212,175,55,.35);
+  border-radius: 999px; color: #d4af37; background: rgba(5,20,40,.6);
+}
+#memberIcon .badge{
+  width: 8px; height: 8px; border-radius: 999px; background: #22c55e;
+  box-shadow: 0 0 0 4px rgba(34,197,94,.15);
+}
+
+        </style>
+        <div class="relative z-10">
+        <div id="traversee-intro">
+          <h3 class="cormorant text-2xl text-gold mb-4">Préparation du tirage</h3>
+          <p class="text-light-gold mb-6">Ce tirage approfondi nécessite quelques informations pour personnaliser votre expérience.</p>
+          <button id="traversee-start" class="btn-gold">Commencer</button>
+        </div>
+
+        <form id="traversee-form" class="hidden">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+              <label class="block text-light-gold mb-2">Prénom</label>
+              <input type="text" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+            </div>
+            <div>
+              <label class="block text-light-gold mb-2">Date de naissance</label>
+              <input type="date" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+            </div>
+            <div>
+              <label class="block text-light-gold mb-2">Ville de naissance</label>
+              <input type="text" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+            </div>
+            <div>
+              <label class="block text-light-gold mb-2">Heure de naissance</label>
+              <input type="time" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+            </div>
+          </div>
+          <div class="mb-6">
+            <label class="block text-light-gold mb-2">Votre intention pour ce tirage</label>
+            <textarea class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg min-h-[120px]" required></textarea>
+          </div>
+          <button type="submit" class="btn-gold w-full">Lancer le tirage</button>
+        </form>
+
+        <div id="traversee-board" class="hidden">
+          <!-- Board will be generated by JS -->
+        </div>
+
+        <div id="traversee-results" class="hidden">
+
+          <!-- Results will be generated by JS -->
+        </div>
+<!-- Boutons de test API (dev) -->
+<div class="mt-6 flex flex-wrap gap-3">
+  <button id="btnTestTraversee" class="btn-outline-gold">Tester API Traversée</button>
+  <button id="btnTestTore" class="btn-outline-gold">Tester API Tore</button>
+</div>
+
+<!-- Zone d’affichage du retour API -->
+<pre id="apiOutput"
+     class="mt-4 whitespace-pre-wrap bg-[rgba(18,20,32,.6)] border border-[rgba(212,175,55,.25)] rounded-2xl p-4 text-light-gold">
+</pre>
+
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
+    <div class="container mx-auto max-w-6xl">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <div class="flex items-center mb-4">
+            <img src="https://i.ibb.co/Q3vbXP4S/logo.png" alt="Oradia Logo" class="w-16 h-16 mr-4" />
+            <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+          </div>
+          <p class="text-light-gold text-sm">Oracle vibratoire pour accompagner votre cheminement personnel et révéler votre essence.</p>
+        </div>
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Navigation</h4>
+          <ul class="space-y-2">
+            <li><a href="#accueil" class="text-light-gold hover:text-gold transition">Accueil</a></li>
+            <li><a href="#oracle" class="text-light-gold hover:text-gold transition">Jeu</a></li>
+            <li><a href="#offres" class="text-light-gold hover:text-gold transition">Offres</a></li>
+            <li><a href="#apropos" class="text-light-gold hover:text-gold transition">À Propos</a></li>
+            <li><a href="#edolgor" class="text-light-gold hover:text-gold transition">Edolg'Or</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
+          <ul class="space-y-2">
+            <li><a href="#" id="showCGV" class="text-light-gold hover:text-gold transition">CGU</a></li>
+            <li><a href="#" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
+            <li><a href="#" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Contact</h4>
+          <ul class="space-y-2">
+            <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><span class="text-light-gold">contact@oradia.fr</span></li>
+            <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><span class="text-light-gold">@oradia_oracle</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="pt-8 border-t border-gold/10 text-center">
+        <p class="text-light-gold text-sm">&copy; 2025 Oradia. Tous droits réservés. |
+          <button id="footerLogin" class="text-gold hover:text-light-gold">Accès Dashboard</button>
+        </p>
+      </div>
+    </div>
+  </footer>
+
+   <!-- Modal d'analyse -->
+<div id="analyzeModal"
+     class="fixed inset-0 z-[1000] hidden items-center justify-center bg-black/60 backdrop-blur-sm">
+  <div class="relative w-full max-w-sm mx-4 rounded-2xl border border-gold/40
+              bg-gradient-to-br from-night-blue to-dark-blue p-8 text-center">
+
+    <!-- Animation -->
+    <div class="mx-auto mb-6 relative w-24 h-24">
+      <div class="absolute inset-0 rounded-full border-4 border-gold/30"></div>
+      <div class="absolute inset-0 rounded-full border-4 border-gold
+                  border-t-transparent animate-[spin_1.1s_linear_infinite]"></div>
+      <img src="https://i.ibb.co/Q3vbXP4S/logo.png" alt="Oradia" class="w-10 h-10 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2">
+    </div>
+
+    <h3 class="cormorant text-2xl text-gold mb-2">Analyse en cours…</h3>
+    <p class="text-light-gold/90">Votre tirage est en cours d'interprétation.</p>
+
+    <div class="mt-6 h-2 w-full rounded-full bg-gold/10 overflow-hidden">
+      <div class="h-full w-1/3 animate-[loader_1.6s_ease-in-out_infinite] bg-gold"></div>
+    </div>
+  </div>
+</div>
+
+<style>
+@keyframes loader {
+  0%   { transform: translateX(-100%); }
+  50%  { transform: translateX(50%);   }
+  100% { transform: translateX(200%);  }
+}
+</style>
+
+  <!-- Modale Commande -->
+  <div id="orderModal" class="fixed inset-0 bg-night-blue/90 z-[100] flex items-center justify-center hidden">
+    <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
+      <button id="closeOrder" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
+      <div class="text-center mb-8">
+        <h3 class="cormorant text-3xl text-gold mb-2">Commande Tirage de la Traversée</h3>
+        <p class="text-light-gold">Finalisez votre commande pour obtenir l'accès à 5 tirages</p>
+      </div>
+      <form id="orderForm">
+ 	  <div class="mb-4">
+          <label class="block text-light-gold mb-2">Nom</label>
+          <input type="text" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+          </div>
+  	  <div class="mb-4">
+          <label class="block text-light-gold mb-2">Prénom</label>
+          <input type="text" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+          </div>
+          <div class="mb-4">
+          <label class="block text-light-gold mb-2">Email</label>
+          <input type="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+          </div>
+          <div class="mb-6">
+          <label class="block text-light-gold mb-2">Moyen de paiement</label>
+          <select class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+            <option value="">Sélectionnez...</option>
+            <option value="card">Carte bancaire</option>
+            <option value="Gune">PayPal</option>
+          </select>
+        </div>
+        <button type="submit" class="btn-gold w-full">Payer 5€</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modale Abonnement -->
+  <div id="subscriptionModal" class="fixed inset-0 bg-night-blue/90 z-50 flex items-center justify-center hidden" style="backdrop-filter: blur(5px);">
+    <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
+      <button id="closeSubscription" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
+      <div class="text-center mb-8">
+        <h3 class="cormorant text-3xl text-gold mb-2">Espace Membre Oradia</h3>
+        <p class="text-light-gold">Connectez-vous ou créez votre compte</p>
+      </div>
+
+      <!-- Login membre -->
+      <form id="memberLoginForm" class="mb-6">
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Email</label>
+          <input type="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-light-gold mb-2">Mot de passe</label>
+          <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <button type="submit" class="btn-gold w-full mb-4">Se connecter</button>
+        <p class="text-light-gold text-center text-sm">Pas encore de compte ?
+          <a href="#" id="showRegister" class="text-gold hover:underline">S'inscrire</a>
+        </p>
+      </form>
+
+<!-- Modale Abonnement (nouvelle) -->
+<div id="subscribeFormModal" class="fixed inset-0 bg-night-blue/90 z-[100] flex items-center justify-center hidden" style="backdrop-filter: blur(5px);">
+  <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-lg w-full mx-4 relative">
+    <button id="closeSubscribeForm" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer">
+      <i class="fas fa-times"></i>
+    </button>
+
+    <div class="text-center mb-6">
+      <h3 class="cormorant text-3xl text-gold mb-2">S’abonner à Oradia</h3>
+      <p class="text-light-gold">Activez votre abonnement (8€ / mois)</p>
+    </div>
+
+    <form id="subscribeForm">
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+        <div>
+          <label class="block text-light-gold mb-2">Nom</label>
+          <input type="text" name="nom" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div>
+          <label class="block text-light-gold mb-2">Prénom</label>
+          <input type="text" name="prenom" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+      </div>
+
+      <div class="mb-4">
+        <label class="block text-light-gold mb-2">Adresse e-mail</label>
+        <input type="email" name="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+      </div>
+
+      <div class="mb-6">
+        <label class="block text-light-gold mb-2">Coordonnées bancaires</label>
+        <input type="text" inputmode="numeric" name="cb" placeholder="Numéro de carte (démo)"
+               class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        <div class="mt-2 grid grid-cols-3 gap-3">
+          <input type="text" inputmode="numeric" name="exp" placeholder="MM/AA"
+                 class="form-input bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+          <input type="text" inputmode="numeric" name="cvc" placeholder="CVC"
+                 class="form-input bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+          <input type="text" name="zip" placeholder="CP"
+                 class="form-input bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg">
+        </div>
+        <p class="text-xs text-light-gold/80 mt-1">Paiements sécurisés (démo).</p>
+      </div>
+
+      <div class="mb-6 rounded-xl p-4" style="background:rgba(5,20,40,.6); border:1px solid rgba(212,175,55,.25)">
+        <p class="text-gold font-semibold mb-2">Votre abonnement inclut :</p>
+        <ul class="space-y-2 text-light-gold text-sm list-disc list-inside">
+          <li>1 tirage complet quotidien par mail avec votre intention</li>
+          <li>Cartes passerelles</li>
+          <li>Synthèse vibratoire personnalisée</li>
+          <li>Mantra et question du jour</li>
+          <li>Espace membre (profils ennéagramme, astro, numérologie.)</li>
+          <li>Accès à l’archive des 10 derniers tirages</li>
+          <li>Participation à l’amélioration de l’oracle (expérience anonyme)</li>
+        </ul>
+      </div>
+
+      <div class="mb-4 flex items-start">
+        <input type="checkbox" id="termsSub" class="mt-1 mr-3" required>
+        <label for="termsSub" class="text-light-gold text-sm">
+          J’accepte les <a href="#cgv" class="text-gold hover:underline">conditions générales</a>.
+        </label>
+      </div>
+
+      <button type="submit" class="btn-gold w-full">S’abonner – 8€ / mois</button>
+    </form>
+  </div>
+</div>
+
+
+      <!-- Register membre -->
+      <form id="memberRegisterForm" class="hidden">
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Email</label>
+          <input type="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Mot de passe</label>
+          <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-light-gold mb-2">Confirmez le mot de passe</label>
+          <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-6 flex items-start">
+          <input type="checkbox" id="terms" class="mt-1 mr-3" required>
+          <label for="terms" class="text-light-gold text-sm">
+            J'accepte les <a href="#cgv" class="text-gold hover:underline">conditions générales</a>
+          </label>
+        </div>
+        <button type="submit" class="btn-gold w-full">Créer le compte & s'abonner</button>
+        <p class="text-light-gold text-center text-sm mt-4">Déjà un compte ?
+          <a href="#" id="showLogin" class="text-gold hover:underline">Se connecter</a>
+        </p>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modale Login Dashboard -->
+  <div id="loginModal" class="fixed inset-0 bg-night-blue/90 z-50 flex items-center justify-center hidden">
+    <div class="bg-dark-blue border border-gold/30 rounded-2xl p-8 max-w-md w-full mx-4 relative">
+      <button id="closeLogin" class="absolute top-4 right-4 text-gold text-2xl" aria-label="Fermer"><i class="fas fa-times"></i></button>
+      <div class="text-center mb-8">
+        <h3 class="cormorant text-3xl text-gold mb-2">Connexion Dashboard</h3>
+        <p class="text-light-gold">Accédez à votre espace d'analyse SEO</p>
+      </div>
+      <form id="loginFormDashboard">
+        <div class="mb-4">
+          <label class="block text-light-gold mb-2">Email</label>
+          <input type="email" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <div class="mb-6">
+          <label class="block text-light-gold mb-2">Mot de passe</label>
+          <input type="password" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
+        </div>
+        <button type="submit" class="btn-gold w-full">Se connecter</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Dashboard -->
+  <div id="dashboard" class="fixed inset-0 bg-night-blue z-50 overflow-auto hidden">
+    <div class="min-h-screen">
+      <header class="bg-night-blue border-b border-gold/20 py-4 px-6 flex justify-between items-center">
+        <div class="flex items-center">
+          <div class="rounded-xl w-10 h-10 border-2 border-dashed" ></div>
+          <span class="cormorant text-2xl font-bold ml-3 gold-gradient">ORADIA DASHBOARD</span>
+        </div>
+        <div class="flex items-center space-x-4">
+          <button id="logoutBtn" class="btn-outline-gold">Déconnexion</button>
+          <div class="rounded-xl w-10 h-10 border-2 border-dashed"></div>
+        </div>
+      </header>
+
+      <div class="p-6">
+        <h2 class="cormorant text-3xl text-gold mb-6">Tableau de Bord Analytique</h2>
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <div class="p-4 rounded-2xl" style="background:rgba(5,20,40,.7); border:1px solid rgba(212,175,55,.2)">
+            <h3 class="text-light-gold text-sm">Visiteurs</h3>
+            <p class="text-2xl font-bold text-gold">1,248</p>
+          </div>
+          <div class="p-4 rounded-2xl" style="background:rgba(5,20,40,.7); border:1px solid rgba(212,175,55,.2)">
+            <h3 class="text-light-gold text-sm">Taux de rebond</h3>
+            <p class="text-2xl font-bold text-gold">32.6%</p>
+          </div>
+          <div class="p-4 rounded-2xl" style="background:rgba(5,20,40,.7); border:1px solid rgba(212,175,55,.2)">
+            <h3 class="text-light-gold text-sm">Conversions</h3>
+            <p class="text-2xl font-bold text-gold">48</p>
+          </div>
+          <div class="p-4 rounded-2xl" style="background:rgba(5,20,40,.7); border:1px solid rgba(212,175,55,.2)">
+            <h3 class="text-light-gold text-sm">Revenus</h3>
+            <p class="text-2xl font-bold text-gold">€245</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script id="traversee-5cards-clean">
+(() => {
+  
+
+  const dirLabel = {
+    nord: "Nord — Vision (Révélations)",
+    sud: "Sud — Ancrage (Transmutation)",
+    est: "Est — Élan (Actions)",
+    ouest: "Ouest — Mémoire (Émotions)",
+    centre: "Centre — Mémoires Cosmos"
+  };
+  const polIcon = p => p==="yang" ? "🔺" : p==="yin" ? "⚫" : "";
+  const safePick = arr => {
+    if (window.crypto?.getRandomValues) { const b=new Uint32Array(1); crypto.getRandomValues(b); return arr[b[0]%arr.length]; }
+    return arr[Math.floor(Math.random()*arr.length)];
+  };
+
+
+// === Source unique pour les familles de la Traversée ===
+const DATA_TRAVERSEE = new Proxy({}, {
+  get: (_, key) => Array.isArray(window.DATA?.[key]) ? window.DATA[key] : []
+});
+
+
+  function slot(slotName, family){
+    const chip = slotName.toUpperCase();
+    return `
+      <article class="traversee-card ${slotName}" data-slot="${slotName}" data-family="${family}" aria-label="Carte ${dirLabel[slotName]}">
+        <div class="traversee-card-inner">
+<div
+  class="traversee-card-back back border border-gold/30 rounded-xl p-6 cursor-pointer"
+  role="button" tabindex="0" aria-pressed="false"
+  aria-label="Retourner la carte">
+  <div class="logo-circle" aria-hidden="true"></div>
+</div>
+
+          <div class="traversee-card-front bg-gradient-to-br from-gold/5 to-night-blue border border-gold/30 rounded-xl p-6">
+            <div class="flex items-center justify-between mb-2">
+              <span class="chip">${chip}</span>
+              <span class="polarity" data-pol></span>
+            </div>
+            <div class="text-xs text-gold/80 mb-2 text-center" data-family-label>—</div>
+            <div class="art">
+              <div>
+                <h4 class="text-gold text-xl mb-2" data-name>—</h4>
+                <p class="text-light-gold" data-quote>—</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </article>
+    `;
+  }
+
+  // BuildBoard
+  function buildBoard() {
+  const host = el('traversee-board');
+  if (!host) return;
+
+  // 1) construire le plateau
+  host.innerHTML = `
+    <h3 class="cormorant text-2xl text-gold mb-6 text-center">
+      Retournez les 5 cartes : Nord • Sud • Est • Ouest • Centre
+    </h3>
+    <div class="traversee-board-5">
+      ${slot('nord','revelations')}
+      ${slot('sud','transmutation')}
+      ${slot('est','actions')}
+      ${slot('ouest','emotions')}
+      ${slot('centre','cosmos')}
+    </div>
+  `;
+  host.classList.remove('hidden');
+
+  // 2) état
+  host._state = {
+    flipped: 0,
+    drawn: { nord:null, sud:null, est:null, ouest:null, centre:null }
+  };
+
+  // 3) interactions (click + clavier)
+  host.querySelectorAll('.traversee-card-back').forEach(back => {
+    const card = back.closest('.traversee-card');
+    const onFlip = () => flipCard(card);
+    back.addEventListener('click', onFlip);
+    back.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFlip(); }
+    });
+  });
+
+  // 4) afficher la section + passer en mode immersif
+  const trav = el('traversee');
+  trav?.classList.remove('hidden');
+  enterImmersive();
+}
+
+  // ---------- helpers DOM ----------
+  const $  = sel => document.querySelector(sel);
+  const $$ = sel => Array.from(document.querySelectorAll(sel)); // ✅
+  const el = id  => document.getElementById(id);
+
+  // ---------- MODE IMMERSIF ----------
+  function enterImmersive(){
+    // masquer header, footer et toutes les sections sauf #traversee
+   $$('body > header, body > footer, body > section:not(#traversee)').forEach(n=>n.classList.add('hide-immersive'));
+
+// Menu immersif traversée (réutilise les mêmes helpers si dispos)
+if(!document.getElementById('immersiveMenuBtn')){
+  const btn = document.createElement('button');
+  btn.id = 'immersiveMenuBtn';
+  btn.setAttribute('aria-label','Ouvrir le menu');
+  btn.className = 'fixed top-4 right-4 z-[100] bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold p-3 rounded-full shadow-lg';
+  btn.innerHTML = '<i class="fas fa-bars"></i>';
+ btn.addEventListener('click', () => {
+  // 1) S'assurer que le panneau existe
+  if (typeof window.ensureImmersiveMenu === 'function') {
+    window.ensureImmersiveMenu();
+  } else {
+    // Plan B minimal si l’implémentation globale n’est pas encore là
+    const p = document.getElementById('immersiveMenuPanel') || (() => {
+      const x = document.createElement('aside');
+      x.id = 'immersiveMenuPanel';
+      x.setAttribute('aria-hidden','true');
+      x.className = 'fixed top-0 right-0 h-full w-[320px] max-w-[85vw] bg-[rgba(5,20,40,0.98)] text-gold z-[1200] translate-x-full transition-transform duration-300 border-l border-gold/30 shadow-2xl';
+      x.innerHTML = `
+        <div class="p-5 border-b border-gold/20 flex items-center justify-between">
+          <div class="font-semibold tracking-wide"></div>
+          <button id="immersiveMenuClose" class="px-3 py-1 border border-gold/40 rounded-lg hover:bg-gold hover:text-night-blue">Fermer</button>
+        </div>
+        <nav class="p-5 space-y-3">
+          <a href="#accueil" class="block hover:text-light-gold">Accueil</a>
+          <a href="#offres" class="block hover:text-light-gold">Offres</a>
+          <a href="#Jeu" class="block hover:text-light-gold">Jeu</a>
+          <a href="#edolgor" class="block hover:text-light-gold">Partenariat</a>
+          <a href="#apropos" class="block hover:text-light-gold">À propos</a>
+        </nav>`;
+      document.body.appendChild(x);
+      x.querySelector('#immersiveMenuClose')?.addEventListener('click', () => {
+        x.setAttribute('aria-hidden','true');
+        x.style.transform = 'translateX(100%)';
+      });
+      return x;
+    })();
+  }
+
+  // 2) Ouvrir/fermer
+  if (typeof window.toggleImmersiveMenu === 'function') {
+    window.toggleImmersiveMenu();
+  } else {
+    const p = document.getElementById('immersiveMenuPanel');
+    if (p) { p.setAttribute('aria-hidden','false'); p.style.transform = 'translateX(0)'; }
+  }
+});
+
+  document.body.appendChild(btn);
+}
+if(!document.getElementById('immersiveMenuPanel')){
+  // si les fonctions n’existent pas dans ce scope, recolle les 2 fonctions ensureImmersiveMenu / toggleImmersiveMenu
+  window.ensureImmersiveMenu?.();
+}
+
+    // scroll sur la section
+    el('traversee')?.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  function exitImmersive(){
+    $$('body > header, body > footer, body > section').forEach(n=>n.classList.remove('hide-immersive'));
+document.getElementById('immersiveMenuBtn')?.remove();
+const p = document.getElementById('immersiveMenuPanel');
+if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
+
+
+    // Réinitialise visuellement la section Traversée
+    const boardHost = el('traversee-board');
+    const results   = el('traversee-results');
+    const intro     = el('traversee-intro');
+    const form      = el('traversee-form');
+
+    if(boardHost){ boardHost.innerHTML=''; boardHost.classList.add('hidden'); }
+    if(results){ results.innerHTML=''; results.classList.add('hidden'); }
+    if(form){ form.reset?.(); form.classList.add('hidden'); }
+    if(intro){ intro.classList.remove('hidden'); }
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+ 
+
+  function flipCard(card){
+    if(!card || card.classList.contains('flipped')) return;
+
+    // on exige que l'intention de la Traversée soit remplie (dans le formulaire de la section Traversée)
+    const tForm = el('traversee-form');
+    const intentionField = tForm?.querySelector('textarea, input[type="text"]');
+    if(intentionField && !intentionField.value.trim()){
+      intentionField.focus();
+      intentionField.setCustomValidity("Veuillez saisir votre intention pour ce tirage.");
+      intentionField.reportValidity();
+      return;
+    } else if (intentionField) {
+      intentionField.setCustomValidity("");
+    }
+
+    const slot = card.dataset.slot;       // nord/sud/est/ouest/centre
+    const fam  = card.dataset.family;     // revelations/transmutation/actions/emotions/cosmos
+    const data = safePick(DATA_TRAVERSEE[fam]||[]);
+
+    // remplir la face avant
+    card.querySelector('[data-name]').textContent  = data?.name || "—";
+    card.querySelector('[data-quote]').textContent = data?.quote || "—";
+    
+    // Afficher le nom de la famille
+    const familyLabel = card.querySelector('[data-family-label]');
+    if (familyLabel) {
+      const familyNames = {
+        'emotions': 'Émotions',
+        'transmutation': 'Transmutation',
+        'revelations': 'Révélations',
+        'actions': 'Actions',
+        'cosmos': 'Mémoires Cosmos'
+      };
+      familyLabel.textContent = familyNames[fam] || "—";
+    }
+    
+    const polEl = card.querySelector('[data-pol]');
+    if(slot === 'centre'){ 
+      polEl.style.visibility='hidden'; 
+      polEl.textContent='';
+      
+      // Mise en valeur spéciale pour la carte centre
+      card.style.boxShadow = "0 0 25px rgba(245, 231, 161, 0.5)";
+      card.querySelector('.traversee-card-front').style.background = "linear-gradient(145deg, rgba(245, 231, 161, 0.15), rgba(5,20,40,.9))";
+      card.querySelector('.traversee-card-front').style.borderColor = "rgba(245, 231, 161, 0.6)";
+    } else { 
+      polEl.style.visibility='visible'; 
+      polEl.textContent = data?.polarity ? polIcon(data.polarity) : ''; 
+    }
+
+    // flip visuel
+    card.classList.add('flipped');
+    
+    // Supprimer le logo Oradia du dos de la carte
+    const backLogo = card.querySelector('.logo-circle');
+    if (backLogo) {
+      backLogo.style.display = 'none';
+    }
+
+
+    // état
+    const host = el('traversee-board');
+    host._state.drawn[slot] = data;
+    host._state.flipped++;
+
+    if(host._state.flipped === 5){
+      showResults(host._state.drawn, intentionField?.value?.trim() || "");
+    }
+  }
+
+  function showResults(drawn, intention){
+    const out = el('traversee-results');
+    if(!out) return;
+
+    const L = (titre, obj, showPol=true) => {
+      const polTxt = showPol && obj?.polarity ? (obj.polarity==='yang'?' (énergie masculine)':' (énergie féminine)') : '';
+      return `<p><b>${titre} :</b> ${obj?.name||'—'}${polTxt}<br><i>« ${obj?.quote||'—'} »</i></p>`;
+    };
+
+    out.innerHTML = `
+      <h3 class="cormorant text-2xl text-gold mb-3">Résultats de la Traversée</h3>
+      ${intention ? `<div class="mb-2"><b>Intention :</b> ${intention}</div>` : ``}
+      <div class="result-lines">
+        ${L("Nord — Révélations (Vision)", drawn.nord)}
+        ${L("Sud — Transmutation (Ancrage)", drawn.sud)}
+        ${L("Est — Actions (Élan)", drawn.est)}
+        ${L("Ouest — Émotions (Mémoire)", drawn.ouest)}
+        ${L("Centre — Mémoires Cosmos", drawn.centre, false)}
+      </div>
+      <div class="mt-3">
+        <b>Synthèse :</b>
+        <p>La Vision (Nord) éclaire l’horizon ; l’Ancrage (Sud) montre ce qui doit se transformer ; l’Élan (Est) indique le mouvement ; la Mémoire (Ouest) révèle la leçon ; le Cosmos (Centre) relie le tout.</p>
+      </div>
+    `;
+    out.classList.remove('hidden');
+    out.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  // ---------- branchement UI de la section #traversee ----------
+  document.addEventListener('DOMContentLoaded', () => {
+    const startBtn = el('traversee-start');
+    const form     = el('traversee-form');
+    const exitBtn  = el('exitTraverseeBtn');
+
+    // Étape 1 : afficher le formulaire
+    startBtn?.addEventListener('click', () => {
+      el('traversee-intro')?.classList.add('hidden');
+      form?.classList.remove('hidden');
+      el('traversee')?.scrollIntoView({behavior:'smooth'});
+    });
+
+    // Étape 2 : soumission = construire le plateau + entrer en immersif
+    form?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      buildBoard(); // enterImmersive() est appelé à la fin de buildBoard()
+    });
+
+    // Bouton "Quitter le tirage"
+    exitBtn?.addEventListener('click', () => {
+      exitImmersive();
+      // Retour à l'accueil
+      document.getElementById('accueil').scrollIntoView({behavior: 'smooth'});
+    });
+  });
+})();
+</script>
+
+
+  <!-- SCRIPT -->
+  <script>
+    // Fonction pour gérer le clic sur "Envie d'un tirage plus complet?"
+function handleFullReadingClick() {
+  // 1) Quitter le mode immersif s'il est actif
+  if (typeof window.exitPelerinImmersive === 'function') {
+    try { window.exitPelerinImmersive(); } catch(e) {}
+  }
+window.exitImmersive?.();
+
+  // 2) Purge globale des classes qui cachent la page
+  document.querySelectorAll('body > header, body > footer, body > section')
+    .forEach(n => n.classList.remove('hide-immersive'));
+  document.querySelectorAll('section')
+    .forEach(s => s.classList.remove('hide-sections'));
+
+  // 3) Reset complet du Pèlerin (équivalent "Nouveau tirage" + sécurités)
+
+  const showBtn     = document.getElementById('showResults');
+  const resultsSec  = document.getElementById('results');
+  const boardSec    = document.getElementById('board');
+  const emailForm   = document.getElementById('emailForm');
+  const intentionEl = document.getElementById('intention');
+  const startBtn    = document.getElementById('startReading');
+
+  if (showBtn)     { showBtn.classList.add('hidden'); showBtn.disabled = true; }
+  if (resultsSec)  { resultsSec.classList.add('hidden'); }
+  if (boardSec)    { boardSec.classList.add('hidden'); }
+  if (emailForm)   { emailForm.classList.add('hidden'); }
+  if (intentionEl) { intentionEl.value = ''; }
+  if (startBtn)    { startBtn.disabled = true; }
+
+  // Purge des slots du Pèlerin (évite toute carte résiduelle)
+document.querySelectorAll('#tray .slot').forEach(s => {
+  s.innerHTML = '';
+  s.classList.remove('filled');
+});
+
+  // Masquer totalement la section du Pèlerin sur l’accueil
+  const oracleSection = document.getElementById('oracle');
+  if (oracleSection) oracleSection.classList.add('hidden');
+
+  // 4) Navigation robuste vers la section Offres (hash + scroll)
+ location.hash = 'offres';
+
+ 
+  document.getElementById('offres')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+
+
+    // --------- Données cartes ----------
+window.DATA = {
+
+  // ▲ = yang (triangle) • ● = yin (cercle)
+
+  emotions: [
+    {name:"JOIE",           quote:"L’onde éclate, la lumière danse dans ton cœur.", bridge:"Partager l’élan comme un rire offert.", polarity:"yang"},
+    {name:"TRISTESSE",      quote:"La pluie descend, lavant la mémoire des pierres.", bridge:"Honorer la perte et se déposer en soi.", polarity:"yin"},
+    {name:"AMOUR",          quote:"Le souffle relie, un fil invisible circule.", bridge:"Oser nommer le lien, même fragile.", polarity:"yang"},
+    {name:"SOLITUDE",       quote:"Le silence s’installe comme une montagne.", bridge:"Écouter la voix intérieure au creux du vide.", polarity:"yin"},
+    {name:"ÉMERVEILLEMENT", quote:"L’enfant intérieur ouvre grand ses yeux.", bridge:"Suivre l’éclat qui attire, sans contrôle.", polarity:"yang"},
+    {name:"DÉGOÛT",         quote:"Le corps rejette ce qui empoisonne.", bridge:"Se détourner et choisir un endroit plus pur.", polarity:"yin"},
+    {name:"SÉRÉNITÉ",       quote:"Le lac reflète le ciel, sans trouble.", bridge:"Goûter la lenteur et laisser surgir l’évidence.", polarity:"yang"},
+    {name:"DOUTE",          quote:"La brume recouvre la vallée.", bridge:"Habiter la question en attendant la clarté.", polarity:"yin"},
+    {name:"COLÈRE",         quote:"Le feu jaillit, brisant les chaînes.", bridge:"Canaliser l’ardeur en force créatrice.", polarity:"yang"},
+    {name:"INJUSTICE",      quote:"La balance penche, l’équité s’efface.", bridge:"Restaurer l’équilibre comme l’eau qui nivelle.", polarity:"yin"},
+    {name:"COURAGE",        quote:"Le pas tremblant franchit la ligne.", bridge:"Avancer malgré l’ombre qui persiste.", polarity:"yang"},
+    {name:"PEUR",           quote:"L’animal se fige aux lisières.", bridge:"Observer le frisson et apprivoiser l’inconnu.", polarity:"yin"},
+    {name:"CONFIANCE",      quote:"L’arbre se dresse, enraciné vers la lumière.", bridge:"Marcher droit, soutenu par l’invisible.", polarity:"yang"},
+    {name:"HONTE",          quote:"Le visage se cache sous le voile.", bridge:"Retirer le tissu et se montrer tel qu’on est.", polarity:"yin"},
+    {name:"FIERTÉ",         quote:"La pierre sculptée témoigne du chemin.", bridge:"Honorer l’œuvre et continuer humblement.", polarity:"yang"},
+    {name:"CULPABILITÉ",    quote:"Les chaînes invisibles pèsent au cœur.", bridge:"Rendre ce qui n’est pas sien et s’alléger.", polarity:"yin"},
+    {name:"IMPATIENCE",     quote:"Le cheval piaffe avant l’aube.", bridge:"Transformer l’élan en juste cadence.", polarity:"yang"},
+    {name:"PATIENCE",       quote:"Le fruit mûrit dans l’ombre.", bridge:"Attendre que l’arbre accomplisse son cycle.", polarity:"yin"},
+  ],
+
+  besoins: [
+    {name:"RECONNAISSANCE", quote:"Le bourgeon éclot quand il est vu.", bridge:"Recevoir l’éloge et l’offrir plus loin.", polarity:"yang"},
+    {name:"SÉCURITÉ",       quote:"Le foyer s’allume, le feu crépite.", bridge:"Revenir au socle intérieur pour se poser.", polarity:"yin"},
+    {name:"LIBERTÉ",        quote:"Le vent brise les clôtures invisibles.", bridge:"Choisir la route ouverte sans regret.", polarity:"yang"},
+    {name:"SOUTIEN",        quote:"Deux troncs s’appuient et forment un arc.", bridge:"Oser tendre la main et accueillir la force commune.", polarity:"yin"},
+    {name:"REPOS",          quote:"Le corps se dépose, la rivière s’apaise.", bridge:"Boire au silence pour renaître.", polarity:"yin"},
+    {name:"CLAIRETÉ",       quote:"Le soleil perce la brume.", bridge:"Nommer la vérité simple qui s’impose.", polarity:"yang"},
+    {name:"APPARTENANCE",   quote:"Le cercle s’ouvre pour accueillir.", bridge:"Affirmer sa place au sein du groupe.", polarity:"yin"},
+    {name:"AUTONOMIE",      quote:"La tige se redresse seule.", bridge:"Décider sans rompre avec ses racines.", polarity:"yang"},
+    {name:"STIMULATION",    quote:"L’étincelle jaillit et anime la marche.", bridge:"Suivre l’appel du nouveau, sans dispersion.", polarity:"yang"},
+    {name:"HARMONIE",       quote:"La lyre vibre de cordes accordées.", bridge:"Ajuster la dissonance et retrouver le chant juste.", polarity:"yin"},
+    {name:"AMOUR REÇU",     quote:"Le cœur s’ouvre comme une coupe.", bridge:"Accueillir sans craindre la tendresse.", polarity:"yang"},
+    {name:"SENS",           quote:"La marche trace un sillon vers le tout.", bridge:"Questionner l’origine pour trouver direction.", polarity:"yin"},
+    {name:"PROTECTION",     quote:"Le manteau couvre de chaleur.", bridge:"Se mettre à l’abri pour reprendre force.", polarity:"yin"},
+    {name:"EXPANSION",      quote:"L’horizon s’élargit et appelle.", bridge:"Oser franchir les limites intérieures.", polarity:"yang"},
+    {name:"INTIMITÉ",       quote:"L’alcôve garde le secret des âmes.", bridge:"Ouvrir doucement l’espace choisi.", polarity:"yin"},
+    {name:"CRÉATIVITÉ",     quote:"L’étincelle façonne une forme neuve.", bridge:"Donner corps à ce qui frappe à la porte.", polarity:"yang"},
+    {name:"VÉRITÉ",         quote:"Le miroir reflète sans détour.", bridge:"Ne rien dissimuler, même fragile.", polarity:"yin"},
+    {name:"GUIDANCE",       quote:"L’étoile brille au-dessus du chemin.", bridge:"Suivre la lueur jusqu’au prochain pas.", polarity:"yang"},
+  ],
+
+  transmutation: [
+    {name:"ACCEPTATION",   quote:"La pierre immobile se laisse sculpter par la rivière.", bridge:"Dire oui au réel, même rugueux.", polarity:"yin"},
+    {name:"TRANSFORMATION",quote:"Le feu consume et révèle la braise d’or.", bridge:"Offrir l’ancienne peau au brasier.", polarity:"yang"},
+    {name:"LÂCHER-PRISE",  quote:"La feuille tombe et nourrit la terre.", bridge:"Relâcher l’attente pour que circule l’essence.", polarity:"yin"},
+    {name:"RECADRAGE",     quote:"Le miroir change d’angle et tout se déplace.", bridge:"Regarder autrement, une vérité nouvelle apparaît.", polarity:"yang"},
+    {name:"PARDON",        quote:"Les chaînes brisées rouillent au sol.", bridge:"Libérer l’autre et soi dans un même souffle.", polarity:"yin"},
+    {name:"ALIGNEMENT",    quote:"Les astres s’ordonnent sur un axe commun.", bridge:"Rassembler ses fragments pour marcher droit.", polarity:"yang"},
+    {name:"DÉTACHEMENT",   quote:"L’oiseau s’élève sans s’accrocher aux branches.", bridge:"Regarder sans retenir ce qui passe.", polarity:"yin"},
+    {name:"PURIFICATION",  quote:"L’eau claire traverse la roche.", bridge:"Laisser couler pour dissoudre l’ancien.", polarity:"yang"},
+    {name:"ANCRAGE",       quote:"Les racines plongent dans le sol fertile.", bridge:"S’asseoir pleinement dans le présent.", polarity:"yin"},
+    {name:"OUVERTURE",     quote:"La porte s’entrouvre, la lumière jaillit.", bridge:"Desserrer les défenses et accueillir l’autre.", polarity:"yang"},
+    {name:"FLUIDITÉ",      quote:"La rivière contourne l’obstacle sans effort.", bridge:"Suivre le courant et rester souple.", polarity:"yin"},
+    {name:"CLARIFICATION", quote:"La brume se lève, les contours se révèlent.", bridge:"Énoncer la vérité nue, sans détour.", polarity:"yang"},
+    {name:"SILENCE",       quote:"Le vide sonore abrite l’invisible.", bridge:"Se taire pour que l’essence apparaisse.", polarity:"yin"},
+    {name:"EXPRESSION",    quote:"La parole jaillit comme source claire.", bridge:"Mettre en mots ce qui était tu.", polarity:"yang"},
+    {name:"VIDE",          quote:"La coupe vide attend d’être remplie.", bridge:"Accueillir le manque comme seuil fertile.", polarity:"yin"},
+    {name:"PLÉNITUDE",     quote:"Le vase déborde de miel et d’offrandes.", bridge:"Partager l’excès plutôt que le retenir.", polarity:"yang"},
+    {name:"INCARNATION",   quote:"Le pas touche la terre lourde.", bridge:"Descendre dans le corps et s’y ancrer.", polarity:"yin"},
+    {name:"TRANSCENDANCE", quote:"L’aigle s’élève au-delà des nuées.", bridge:"S’élever en laissant ce qui pèse.", polarity:"yang"},
+  ],
+
+  archetypes: [
+    {name:"MERLIN",         quote:"Le vieil arbre garde les secrets des âges.", bridge:"Écouter le cycle avant d’agir.", polarity:"yin"},
+    {name:"DRAGON ROUGE",   quote:"Le souffle ardent défend la vie.", bridge:"Déployer la puissance sans la déchaîner.", polarity:"yang"},
+    {name:"DRAGON BLANC",   quote:"Le gardien veille au seuil des mystères.", bridge:"Tenir la frontière avec clarté.", polarity:"yang"},
+    {name:"LA CUVE",        quote:"Le creuset accueille le feu caché.", bridge:"Maintenir la chaleur pour permettre l’œuvre.", polarity:"yin"},
+    {name:"SAINT-MICHEL",   quote:"L’épée fend le voile de l’illusion.", bridge:"Trancher net pour ouvrir le passage.", polarity:"yang"},
+    {name:"LA COLLINE",     quote:"Du sommet, l’horizon se déploie.", bridge:"Prendre hauteur pour discerner la voie.", polarity:"yin"},
+    {name:"LE SAGE",        quote:"Le silence enseigne plus que mille mots.", bridge:"Transmettre peu, mais au moment juste.", polarity:"yin"},
+    {name:"LE GUERRIER",    quote:"Le cœur frappe avec droiture.", bridge:"Avancer d’un pas franc, sans détour.", polarity:"yang"},
+    {name:"L’ALCHIMISTE",   quote:"Le plomb rêve de devenir or.", bridge:"Voir l’or dans la matière brute.", polarity:"yin"},
+    {name:"LE BÂTISSEUR",   quote:"La pierre dressée trace l’ordre.", bridge:"Poser les fondations avant de lever les murs.", polarity:"yang"},
+    {name:"LA PRÊTRESSE",   quote:"Le voile garde l’accès au mystère.", bridge:"Écouter sans forcer l’invisible.", polarity:"yin"},
+    {name:"LE VOYAGEUR",    quote:"Le pas ouvre la route inconnue.", bridge:"Avancer en confiance vers l’imprévu.", polarity:"yang"},
+    {name:"NOMADE",         quote:"Le pas sans fin cherche l’horizon.", bridge:"Avancer léger, changer d’air et de lieu.", polarity:"yang"},
+    {name:"MATRICE",        quote:"Le ventre secret abrite le monde.", bridge:"Protéger le germe jusqu’à l’heure juste.", polarity:"yin"},
+    {name:"RÊVEUR",         quote:"L’œil fermé voit d’autres mondes.", bridge:"Se laisser emporter par l’image intérieure.", polarity:"yin"},
+    {name:"VISIONNAIRE",    quote:"Le regard perce les âges à venir.", bridge:"Dire haut ce que l’avenir murmure.", polarity:"yang"},
+    {name:"GARDIEN DU FEU", quote:"La flamme veille au centre de la nuit.", bridge:"Entretenir la braise pour qu’elle survive.", polarity:"yang"},
+    {name:"TISSEUSE",       quote:"Le fil relie les morceaux épars.", bridge:"Tisser les liens pour restaurer l’unité.", polarity:"yin"},
+  ],
+
+  revelations: [
+    {name:"CLÉ",          quote:"L’objet caché ouvre la chambre secrète.", bridge:"Tourner la clé sans forcer.", polarity:"yang"},
+    {name:"PORTE",        quote:"L’ouverture se dessine dans le mur.", bridge:"Franchir malgré l’inconnu.", polarity:"yin"},
+    {name:"MESSAGE",      quote:"Le souffle apporte un signe audible.", bridge:"Écouter le mot discret.", polarity:"yang"},
+    {name:"SYNCHRONICITÉ",quote:"Les fils invisibles se répondent.", bridge:"Lire le hasard comme une langue.", polarity:"yin"},
+    {name:"SIGNE",        quote:"Un éclat discret scintille sur le chemin.", bridge:"Agrandir le regard pour le reconnaître.", polarity:"yin"},
+    {name:"VISION",       quote:"L’œil perce au-delà des voiles.", bridge:"Maintenir le regard jusqu’à l’ensemble.", polarity:"yang"},
+    {name:"PRÉSAGE",      quote:"Un souffle d’avenir traverse le présent.", bridge:"Accueillir l’avant-goût sans impatience.", polarity:"yin"},
+    {name:"ÉVEIL",        quote:"L’esprit se souvient de lui-même.", bridge:"Garder l’œil intérieur en éveil.", polarity:"yang"},
+    {name:"LUMIÈRE",      quote:"Un rayon fend l’ombre.", bridge:"Orienter le faisceau vers d’autres pas.", polarity:"yang"},
+    {name:"DÉVOILEMENT",  quote:"Le rideau s’écarte, la scène surgit.", bridge:"Laisser voir ce qui doit apparaître.", polarity:"yin"},
+    {name:"VÉRITÉ",       quote:"Le voile tombe, l’essence apparaît.", bridge:"Dire sans détour, avec douceur.", polarity:"yang"},
+    {name:"ILLUSION",     quote:"L’image trompe et captive.", bridge:"Distinguer le faux pour retrouver la clarté.", polarity:"yin"},
+    {name:"ÉTINCELLE",    quote:"Le feu naît d’une poussière de pierre.", bridge:"Protéger la flamme naissante.", polarity:"yang"},
+    {name:"SILENCE",      quote:"L’absence de bruit révèle l’essentiel.", bridge:"Prêter l’oreille au non-dit.", polarity:"yin"},
+    {name:"CHIFFRE",      quote:"Le nombre ordonne l’univers caché.", bridge:"Lire la logique dans le chaos.", polarity:"yang"},
+    {name:"SYMBOLE",      quote:"L’image muette parle au cœur.", bridge:"Suivre l’intuition qu’elle réveille.", polarity:"yin"},
+    {name:"ORIGINE",      quote:"La source coule en amont de tout.", bridge:"Se souvenir des racines pour s’orienter.", polarity:"yin"},
+    {name:"DESTIN",       quote:"La flèche vole vers son but.", bridge:"Avancer sans détour sur la voie tracée.", polarity:"yang"},
+  ],
+
+  actions: [
+    {name:"AGIR",        quote:"La graine pousse en sortant de terre.", bridge:"Poser l’acte simple qui ouvre le cycle.", polarity:"yang"},
+    {name:"ÉCOUTER",     quote:"L’oreille se penche sur le murmure.", bridge:"Entendre ce qui cherche à naître.", polarity:"yin"},
+    {name:"DIRE",        quote:"La parole tranche comme un souffle clair.", bridge:"Dire peu mais juste.", polarity:"yang"},
+    {name:"RECEVOIR",    quote:"Le cœur ouvert accueille le don.", bridge:"Accepter sans se fermer.", polarity:"yin"},
+    {name:"CRÉER",       quote:"Le geste façonne ce qui n’était pas.", bridge:"Laisser émerger la forme plutôt que contraindre.", polarity:"yang"},
+    {name:"ACCUEILLIR",  quote:"La porte s’ouvre à l’inattendu.", bridge:"Recevoir la nouveauté avec douceur.", polarity:"yin"},
+    {name:"PARTAGER",    quote:"La coupe passe de main en main.", bridge:"Offrir sans calcul.", polarity:"yang"},
+    {name:"PROTÉGER",    quote:"L’abri se dresse autour du fragile.", bridge:"Préserver ce qui commence.", polarity:"yin"},
+    {name:"ALLER VERS",  quote:"Le pas cherche la rencontre.", bridge:"Tendre la main à l’inconnu.", polarity:"yang"},
+    {name:"SE RETIRER",  quote:"Le sage quitte la foule.", bridge:"Reculer pour préparer l’acte.", polarity:"yin"},
+    {name:"CHOISIR",     quote:"Le carrefour appelle la décision.", bridge:"Couper l’hésitation et tracer sa route.", polarity:"yang"},
+    {name:"PATIENTER",   quote:"Le fruit mûrit lentement.", bridge:"Attendre le moment propice.", polarity:"yin"},
+    {name:"PROCLAMER",   quote:"La voix s’élève dans l’assemblée.", bridge:"Dire haut pour inscrire.", polarity:"yang"},
+    {name:"OBSERVER",    quote:"L’œil contemple sans agir.", bridge:"Voir clair avant de parler.", polarity:"yin"},
+    {name:"ORDONNER",    quote:"La main trace l’alignement des pierres.", bridge:"Poser un ordre juste.", polarity:"yang"},
+    {name:"RÉCONCILIER", quote:"Les mains se rejoignent après la discorde.", bridge:"Restaurer l’unité avant d’avancer.", polarity:"yin"},
+    {name:"MANIFESTER",  quote:"La parole devient chair.", bridge:"Montrer ce qui était caché.", polarity:"yang"},
+    {name:"ARRÊTER",     quote:"Le pas s’interrompt, la poussière retombe.", bridge:"Suspendre l’élan pour voir clair.", polarity:"yin"},
+  ],
+
+  cosmos: [
+    {name:"ÉTOILE",              quote:"La voûte céleste inscrit la mémoire des mondes. Derrière leur éclat se cache la mémoire de l’infini."},
+    {name:"TERRE",               quote:"Le sol garde les pas de ceux qui ont marché avant. Chaque pierre est une archive que ton corps sait lire."},
+    {name:"OCÉAN",               quote:"Les vagues effacent et recommencent sans fin. Les profondeurs retiennent ce que la surface oublie."},
+    {name:"GÉNÉALOGIE",          quote:"Tes racines prolongent des vies invisibles. Tu es à la fois héritage et commencement."},
+    {name:"FUTUR",               quote:"La graine porte déjà l’ombre de la forêt. Chaque geste d’aujourd’hui écrit une prophétie."},
+    {name:"PASSÉ",               quote:"Les échos d’hier résonnent dans le présent. Celui qui écoute peut en transformer la trame."},
+    {name:"PRÉSENT",             quote:"Tout converge en un seul instant immobile. C’est là que s’ouvre la porte de tous les temps."},
+    {name:"MÉMOIRE CELLULAIRE",  quote:"Chaque cellule conserve la trace du vivant. Le corps est une bibliothèque où rien ne se perd."},
+    {name:"MÉMOIRE COLLECTIVE",  quote:"Le groupe rêve à travers l’individu. Dans la conscience partagée se tisse un monde commun."},
+    {name:"LE TORE",             quote:"Le tore relie l’ombre et la lumière. De son cœur pulse la danse éternelle des cycles."}
+  ]
+};
+
+    const familyLabels = {
+      emotions: "ÉMOTIONS",
+      besoins: "BESOINS",
+      revelations: "RÉVÉLATIONS",
+      actions: "ACTIONS",
+      cosmos: "Carte Mémoires Cosmos"
+    };
+    const polarityIcon = p => p === "yang" ? "🔺" : "⚫";
+    const polarityLabel = p => p === "yang" ? "énergie masculine" : "énergie féminine";
+    const yiInsight = {
+      emotions: "Carte Émotion (base) : climat émotionnel présent.",
+      besoins: "Carte Besoin (relation) : ajustement au monde/soutien.",
+      revelations: "Carte Action (vision) : clarté et direction.",
+      actions: "Carte Mémoires Cosmos (passage) : décision et incarnation."
+    };
+    const rng = n => { const b = new Uint32Array(1); crypto.getRandomValues(b); return b[0] % n; };
+    const pick = arr => arr[rng(arr.length)];
+
+
+/* ---------- Helpers sûrs ---------- */
+const $  = (sel,root=document)=>root.querySelector(sel);
+const $$ = (sel,root=document)=>Array.from(root.querySelectorAll(sel));
+const el = (id)=>document.getElementById(id);
+
+/* Petites utilités */
+function show(n){ n && n.classList.remove('hidden'); }
+function hide(n){ n && n.classList.add('hidden'); }
+
+/* Scroll top button (si présent) */
+function initScrollTop(){
+  const btn = el('scrollTop');
+  if(!btn) return;
+  btn.addEventListener('click', ()=>window.scrollTo({top:0,behavior:'smooth'}));
+  let ticking=false;
+  window.addEventListener('scroll', ()=>{
+    if(ticking) return;
+    window.requestAnimationFrame(()=>{
+      (window.pageYOffset>300)? btn.classList.add('show') : btn.classList.remove('show');
+      ticking=false;
+    });
+    ticking=true;
+  }, {passive:true});
+}
+
+/* ---------- Modale CGU ---------- */
+function initCGV(){
+  const showCGV = el('showCGV');
+  const cgvModal = el('cgvModal');
+  const closeCGV = el('closeCGV');
+  if(!cgvModal) return;
+
+  showCGV?.addEventListener('click', (e)=>{ e.preventDefault(); show(cgvModal); document.body.style.overflow='hidden'; });
+  closeCGV?.addEventListener('click', ()=>{ hide(cgvModal); document.body.style.overflow=''; });
+  cgvModal.addEventListener('click', (e)=>{ if(e.target===cgvModal){ hide(cgvModal); document.body.style.overflow=''; }});
+  document.addEventListener('keydown', (e)=>{ if(e.key==='Escape' && !cgvModal.classList.contains('hidden')){ hide(cgvModal); document.body.style.overflow=''; }});
+}
+
+/* ---------- Modale Commande (tirage Traversée) ---------- */
+function initOrderModal(){
+  const orderBtn   = el('orderBtn');
+  const orderModal = el('orderModal');
+  const closeOrder = el('closeOrder');
+  const orderForm  = el('orderForm');
+  if(!orderModal) return;
+
+  orderBtn?.addEventListener('click', (e)=>{ e.preventDefault(); show(orderModal); document.body.style.overflow='hidden'; });
+  closeOrder?.addEventListener('click', ()=>{ hide(orderModal); document.body.style.overflow=''; });
+
+  orderForm?.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    hide(orderModal); document.body.style.overflow='';
+
+    // Écran "Merci + Accès Traversée"
+    const confirmation = document.createElement('section');
+    confirmation.id = 'confirmation';
+    confirmation.className = 'py-20 px-6';
+    confirmation.innerHTML = `
+      <div class="container mx-auto max-w-6xl">
+        <div class="text-center mb-12">
+          <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Merci pour votre achat !</h2>
+          <p class="text-light-gold max-w-3xl mx-auto">Votre paiement a été validé avec succès.</p>
+        </div>
+        <div class="rounded-2xl p-8 mx-auto max-w-2xl relative" style="background:linear-gradient(145deg, rgba(26,54,93,0.8), rgba(5,20,40,0.9)); border:1px solid rgba(212,175,55,0.3)">
+          <a href="#offres" class="absolute top-4 left-4 text-gold hover:text-light-gold">
+            <i class="fas fa-arrow-left mr-2"></i> Retour aux offres
+          </a>
+          <div class="text-center">
+            <i class="fas fa-check-circle text-6xl text-gold mb-6"></i>
+            <p class="text-light-gold mb-2">Vous avez maintenant accès à 5 tirages complets de l'oracle Oradia.</p>
+            <p class="text-light-gold mb-8">Un e-mail comportant votre code d'accès vous a été envoyé.</p>
+            <button id="newReadingBtn" class="btn-gold">Accéder au tirage de la Traversée</button>
+          </div>
+        </div>
+      </div>`;
+    // Masquer temporairement les sections
+    $$('section').forEach(s=>{ if(s.id!=='confirmation') s.classList.add('hide-sections'); });
+    const offres = el('offres');
+    offres?.parentNode?.insertBefore(confirmation, offres.nextSibling);
+    setTimeout(()=>confirmation.scrollIntoView({behavior:'smooth'}),100);
+
+    // Boutons
+    confirmation.querySelector('a[href="#offres"]').addEventListener('click', (e)=>{
+      e.preventDefault();
+      confirmation.remove();
+      $$('section').forEach(s=>s.classList.remove('hide-sections'));
+      el('offres')?.scrollIntoView({behavior:'smooth'});
+    });
+
+    confirmation.querySelector('#newReadingBtn').addEventListener('click', ()=>{
+      confirmation.remove();
+      $$('section').forEach(s=>s.classList.remove('hide-sections'));
+      // Ouvrir directement le formulaire Traversée
+      const trav = el('traversee');
+      const intro = el('traversee-intro');
+      const form  = el('traversee-form');
+      trav && trav.classList.remove('hidden');
+      intro && intro.classList.add('hidden');
+      form && form.classList.remove('hidden');
+      trav?.scrollIntoView({behavior:'smooth'});
+      form?.querySelector('input, textarea, select')?.focus();
+    });
+  });
+}
+
+/* ---------- Modale Abonnement / Espace membre ---------- */
+function initSubscription(){
+  const subscribeBtn = el('subscribeBtn');
+  const subscriptionModal = el('subscriptionModal');
+  const closeSubscription = el('closeSubscription');
+  const memberLoginForm = el('memberLoginForm');
+  const memberRegisterForm = el('memberRegisterForm');
+  const showRegister = el('showRegister');
+  const showLogin = el('showLogin');
+
+  if(!subscriptionModal) return;
+
+  const open = ()=>{ show(subscriptionModal); document.body.style.overflow='hidden'; };
+  const close= ()=>{ hide(subscriptionModal); document.body.style.overflow=''; };
+
+  subscribeBtn?.addEventListener('click', (e)=>{ e.preventDefault(); open(); });
+  closeSubscription?.addEventListener('click', close);
+
+  showRegister?.addEventListener('click', (e)=>{ e.preventDefault(); hide(memberLoginForm); show(memberRegisterForm); });
+  showLogin?.addEventListener('click', (e)=>{ e.preventDefault(); hide(memberRegisterForm); show(memberLoginForm); });
+
+  // “S’abonner” → petite modale de paiement simplifié (si présente)
+  const subscribeFormModal = el('subscribeFormModal');
+  const closeSubscribeForm  = el('closeSubscribeForm');
+  const subscribeForm       = el('subscribeForm');
+
+  closeSubscribeForm?.addEventListener('click', ()=>{ hide(subscribeFormModal); document.body.style.overflow=''; });
+  subscribeForm?.addEventListener('submit', (e)=>{
+    e.preventDefault();
+    hide(subscribeFormModal); document.body.style.overflow='';
+    // Affiche un “Merci + Se connecter”
+    const confirmation = document.createElement('section');
+    confirmation.id = 'confirmation';
+    confirmation.className = 'py-20 px-6';
+    confirmation.innerHTML = `
+      <div class="container mx-auto max-w-6xl">
+        <div class="text-center mb-12">
+          <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Merci pour votre abonnement !</h2>
+          <p class="text-light-gold max-w-3xl mx-auto">Votre abonnement est activé. Un e-mail de bienvenue vous a été envoyé.</p>
+        </div>
+        <div class="rounded-2xl p-8 mx-auto max-w-2xl relative" style="background:linear-gradient(145deg, rgba(26,54,93,0.8), rgba(5,20,40,0.9)); border:1px solid rgba(212,175,55,0.3)">
+          <a href="#offres" class="absolute top-4 left-4 text-gold hover:text-light-gold">
+            <i class="fas fa-arrow-left mr-2"></i> Retour aux offres
+          </a>
+          <div class="text-center">
+            <i class="fas fa-check-circle text-6xl text-gold mb-6"></i>
+            <p class="text-light-gold mb-8">Accédez maintenant à votre espace membre.</p>
+            <button id="goLoginFromSub" class="btn-gold">Se connecter</button>
+          </div>
+        </div>
+      </div>`;
+    const offres = el('offres');
+    offres?.parentNode?.insertBefore(confirmation, offres.nextSibling);
+    setTimeout(()=>confirmation.scrollIntoView({behavior:'smooth'}),100);
+    confirmation.querySelector('#goLoginFromSub').addEventListener('click', ()=>{
+      confirmation.remove();
+      open(); // ouvre la modale de connexion
+    });
+  });
+
+  // Menus qui ouvrent l’espace membre
+  [el('loginBtn'), el('footerLogin'), el('loginBtnMobile')].forEach(btn=>{
+    btn?.addEventListener('click', (e)=>{ e.preventDefault?.(); open(); });
+  });
+}
+
+/* ---------- Immersif Pèlerin ---------- */
+function initPelerin(){
+  const board         = el('board');
+  const startButton   = el('startReading');
+  const intentionIn   = el('intention');
+  const showBtn       = el('showResults');
+  const resetBtn      = el('reset');
+  const linesOut      = el('lines');
+  const synthOut      = el('synthese');
+  const results       = el('results');
+  const newBtn        = el('newPilgrim');
+
+// reset doux + retour direct à l’intention
+newBtn?.addEventListener('click', ()=>{
+  // 1) Cacher zone résultats et annexes
+  hide(showBtn); if (showBtn) showBtn.disabled = true;
+  hide(results);
+  el('fullReading')?.classList.add('hidden');
+  resetBtn?.classList.add('hidden');
+  el('emailForm')?.classList.add('hidden');
+
+  // 2) Vider textes
+  el('out-intention') && (el('out-intention').textContent = '—');
+  if (linesOut) linesOut.innerHTML = '';
+  if (synthOut) synthOut.innerHTML = '';
+
+  // 3) Réinitialiser cartes/slots
+  $$('.slot').forEach(s => s.classList.remove('filled'));
+  $$('#board .card').forEach(card=>{
+    card.classList.remove('flipped');
+    const back = $('.back', card);
+    if(back){ back.style.pointerEvents='auto'; back.setAttribute('aria-pressed','false'); }
+    card.querySelector('[data-name]')?.replaceChildren(document.createTextNode('—'));
+    card.querySelector('[data-quote]')?.replaceChildren(document.createTextNode('—'));
+    const pol = card.querySelector('[data-polarity]');
+    if(pol){
+      if(card.dataset.family === 'cosmos'){ pol.style.visibility = 'hidden'; }
+      else { pol.style.visibility = 'visible'; pol.textContent = ''; }
+    }
+  });
+
+  // 4) Masquer plateau et ré-ouvrir la boîte d’intention
+  hide(board);
+  el('cardsInstruction')?.classList.add('hidden');
+  show(startButton);
+  startButton.disabled = true;
+
+  const intentionBox = el('intentionBox');
+  intentionBox?.classList.remove('hidden');
+
+  // 5) Effacer intention + focus
+  if (intentionIn){
+    intentionIn.value = '';
+    intentionIn.setCustomValidity('');
+  }
+  intentionBox?.scrollIntoView({behavior:'smooth', block:'start'});
+  intentionIn?.focus();
+  // 6) Re-masquer le bouton "New bouton" (il se réaffichera à la prochaine analyse)
+  newBtn.classList.add('hidden');
+});
+  if(!board || !startButton || !intentionIn) return;
+
+  function enterPelerinImmersive(){
+    $$('body > header, body > footer, body > section:not(#oracle)').forEach(n=>n.classList.add('hide-immersive'));
+ // bouton MENU immersif
+if(!el('immersiveMenuBtn')){
+  const btn = document.createElement('button');
+  btn.id = 'immersiveMenuBtn';
+  btn.setAttribute('aria-label','Ouvrir le menu');
+  btn.className = 'fixed top-4 right-4 z-[100] bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold p-3 rounded-full shadow-lg';
+  btn.innerHTML = '<i class="fas fa-bars"></i>';
+  btn.addEventListener('click', () => {
+  window.ensureImmersiveMenu?.();       // s’assurer que le panneau existe
+  window.toggleImmersiveMenu?.();       // puis ouvrir/fermer
+});
+  document.body.appendChild(btn);
+}
+ensureImmersiveMenu(); // crée le panneau si besoin
+
+    el('oracle')?.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+  function exitPelerinImmersive(){
+ $$('body > header, body > footer, body > section').forEach(n=>n.classList.remove('hide-immersive'));
+el('immersiveMenuBtn')?.remove();
+const p = el('immersiveMenuPanel');
+if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
+
+  }
+function ensureImmersiveMenu(){
+  if(el('immersiveMenuPanel')) return;
+  const panel = document.createElement('aside');
+  panel.id = 'immersiveMenuPanel';
+  panel.setAttribute('aria-hidden','true');
+  panel.className = 'fixed top-0 right-0 h-full w-[320px] max-w-[85vw] bg-[rgba(5,20,40,0.98)] text-gold z-[200] translate-x-full transition-transform duration-300 border-l border-gold/30 shadow-2xl';
+  panel.innerHTML = `
+    <div class="p-5 border-b border-gold/20 flex items-center justify-between">
+      <div class="font-semibold tracking-wide"></div>
+      <button id="immersiveMenuClose" class="px-3 py-1 border border-gold/40 rounded-lg hover:bg-gold hover:text-night-blue">Fermer</button>
+    </div>
+    <nav class="p-5 space-y-3">
+      <a href="#accueil" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">Accueil</a>
+      <a href="#offres" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">Offres</a>
+      <a href="#Jeu" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">Jeu</a>
+      <a href="#edolgor" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">Partenariat</a>
+      <a href="#apropos" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">À propos</a>
+      <hr class="border-gold/20 my-4">
+      <button id="leaveImmersion" class="w-full text-left hover:text-light-gold">Quitter l’immersion</button>
+    </nav>
+  `;
+  document.body.appendChild(panel);
+  panel.querySelector('#immersiveMenuClose')?.addEventListener('click', toggleImmersiveMenu);
+  panel.querySelector('#leaveImmersion')?.addEventListener('click', ()=>{ toggleImmersiveMenu(true); exitPelerinImmersive(); });
+}
+
+function toggleImmersiveMenu(forceClose){
+  const p = el('immersiveMenuPanel'); if(!p) return;
+  const isHidden = p.getAttribute('aria-hidden') === 'true';
+  const shouldOpen = forceClose ? false : isHidden;
+  if(shouldOpen){
+    p.setAttribute('aria-hidden','false');
+    p.style.transform = 'translateX(0)';
+  }else{
+    p.setAttribute('aria-hidden','true');
+    p.style.transform = 'translateX(100%)';
+  }
+}
+window.toggleImmersiveMenu = toggleImmersiveMenu;
+window.ensureImmersiveMenu = ensureImmersiveMenu;
+window.exitPelerinImmersive = exitPelerinImmersive;
+window.enterPelerinImmersive = enterPelerinImmersive;
+
+function isOpenQuestion(txt){
+  const s = (txt || '').trim();
+  if (!s.endsWith('?')) return false;
+
+  const lower = s.toLowerCase();
+
+  // formulations fermées (oui/non) → refuser
+  const closedStarters = [
+    'est-ce que', 'peux-tu', 'puis-je', 'as-tu', 'avez-vous',
+    'es-tu', 'êtes-vous', 'dois-je', 'peut-on', 'sera-t-il', 'serait-il'
+  ];
+  if (closedStarters.some(p => lower.startsWith(p))) return false;
+
+  // formulations ouvertes → accepter
+  const openStarters = [
+    'comment', 'pourquoi', 'quel ', 'quelle ', 'quels ', 'quelles ',
+    'quoi', 'de quelle manière', 'dans quelle mesure', 'à quoi', 'vers quoi'
+  ];
+  if (openStarters.some(p => lower.startsWith(p))) return true;
+
+  // filet de sécurité : assez de mots + « ? »
+  return s.split(/\s+/).length >= 3;
+}
+
+  // validation live - only disable the start button
+  intentionIn.addEventListener('input', ()=>{
+  const ok = isOpenQuestion(intentionIn.value);
+  startButton.disabled = !ok;                        // ne touche qu’à #startReading
+});
+  // Focus → passe en immersif avec effet visuel
+  intentionIn.addEventListener('focus', () => {
+    enterPelerinImmersive();
+    intentionIn.parentElement.classList.add('ring-4', 'ring-gold/20');
+  });
+  
+  intentionIn.addEventListener('blur', () => {
+    intentionIn.parentElement.classList.remove('ring-4', 'ring-gold/20');
+  });
+// lancer le tirage (on garde vos visuels & animations)
+  startButton.addEventListener('click', ()=>{
+    // activer le clic sur chaque dos de carte
+$$('.card .back').forEach(back=>{
+  const card = back.closest('.card');
+  const onFlip = () => window.flipCard(card);
+  back.addEventListener('click', onFlip);
+  back.addEventListener('keypress', (e)=>{
+    if(e.key==='Enter' || e.key===' '){ e.preventDefault(); onFlip(); }
+  });
+});
+
+if(!isOpenQuestion(intentionIn.value)){
+  intentionIn.setCustomValidity("Formule une question ouverte (ex. « Comment… ? », « Pourquoi… ? ») et termine par « ? »");
+  intentionIn.reportValidity();
+  return;
+} else {
+  intentionIn.setCustomValidity("");
+}
+
+ show(board);
+el('cardsInstruction')?.classList.remove('hidden');
+hide(startButton);
+el('intentionBox')?.classList.add('hidden'); // 👈 masque le formulaire
+
+$$('#board .card').forEach(card=>{
+
+  card.classList.remove('flipped');
+  const back = $('.back', card);
+  if(back){ back.style.pointerEvents='auto'; back.setAttribute('aria-pressed','false'); }
+});
+
+  });
+
+  // flip cartes (fonction renderFront/polarité déjà dans votre fichier de données)
+  window.flipCard = function(cardEl){
+    if(cardEl?.classList.contains('flipped')) return;
+    if(!intentionIn.value.trim()){
+      intentionIn.focus();
+      intentionIn.setCustomValidity("Veuillez saisir une intention pour votre tirage");
+      intentionIn.reportValidity();
+      return;
+    }
+    // ICI: on suppose que pick(DATA[family]) & polarityIcon existent déjà
+    const family = cardEl.dataset.family;
+    const data = (window.pick && window.DATA)? pick(DATA[family]) : null;
+    if(!data) return; // sécurité
+    cardEl.querySelector('[data-name]').textContent  = data.name || '—';
+    cardEl.querySelector('[data-quote]').textContent = data.quote || '—';
+    const pol = cardEl.querySelector('[data-polarity]');
+    if(family==='cosmos'){ pol.style.visibility='hidden'; }
+    else { pol.style.visibility='visible'; pol.textContent = (window.polarityIcon? polarityIcon(data.polarity) : (data.polarity||'')); }
+    cardEl.classList.add('flipped');
+    const back = cardEl.querySelector('.back'); back?.setAttribute('aria-pressed','true'); if(back) back.style.pointerEvents='none';
+    // Afficher bouton résultat si toutes retournées — votre logique locale peut s’appliquer ici
+    showBtn?.classList.remove('hidden'); if(showBtn) showBtn.disabled=false;
+  };
+
+  // bouton résultats (on garde votre gabarit)
+  showBtn?.addEventListener('click', ()=>{
+    el('out-intention').textContent = intentionIn.value.trim();
+    show(results);
+    el('fullReading')?.classList.remove('hidden');
+    resetBtn?.classList.remove('hidden');
+    el('emailForm')?.classList.remove('hidden');
+      el('newPilgrim')?.classList.remove('hidden');
+// Cacher le plateau des cartes
+    hide(board);
+    el('cardsInstruction')?.classList.add('hidden');
+    results.scrollIntoView({behavior:'smooth', block:'start'});
+  });
+  // reset
+  resetBtn?.addEventListener('click', ()=>{
+    // Rediriger vers l'accueil
+    window.location.href = '#accueil';
+    document.getElementById('accueil')?.scrollIntoView({behavior: 'smooth'});
+    
+    // Réinitialiser l'état du tirage
+    hide(showBtn); showBtn && (showBtn.disabled=true);
+    hide(results); el('fullReading')?.classList.add('hidden');
+    resetBtn.classList.add('hidden'); el('emailForm')?.classList.add('hidden');
+    linesOut && (linesOut.innerHTML=''); synthOut && (synthOut.innerHTML='');
+    $$('#board .card').forEach(card=>{
+      card.classList.remove('flipped');
+      const back = $('.back', card);
+      if(back){ back.style.pointerEvents='auto'; back.setAttribute('aria-pressed','false'); }
+      card.querySelector('[data-name]').textContent='—';
+      card.querySelector('[data-quote]').textContent='—';
+      const pol = card.querySelector('[data-polarity]');
+      if(pol){ if(card.dataset.family==='cosmos'){ pol.style.visibility='hidden'; } else { pol.style.visibility='visible'; pol.textContent=''; } }
+    });
+    hide(board);
+    el('cardsInstruction')?.classList.add('hidden');
+    show(startButton);
+    startButton.disabled = true;
+
+    el('intentionBox')?.classList.remove('hidden');
+    intentionIn.value='';
+    
+    // Quitter le mode immersif
+    exitPelerinImmersive();
+  });
+// support tactile flip
+  $$('.card .back').forEach(back=>{
+    back.addEventListener('touchstart', (e)=>{ e.preventDefault(); window.flipCard(back.closest('.card')); }, {passive:false});
+  });
+}
+/* ---------- Mobile menu ---------- */
+
+function initMobileMenu(){
+  const btn  = document.getElementById('mobileMenuBtn');
+  const menu = document.getElementById('mobileMenu');
+  const loginBtnMobile = document.getElementById('loginBtnMobile');
+  if(!btn || !menu) return;
+  if (btn.dataset.bound === '1') return; // déjà lié
+  btn.dataset.bound = '1';
+
+  btn.addEventListener('click', (e)=>{
+    e.stopPropagation();
+    menu.classList.toggle('hidden');
+    btn.setAttribute('aria-expanded', menu.classList.contains('hidden') ? 'false' : 'true');
+  });
+
+  loginBtnMobile?.addEventListener('click', ()=>{
+    document.getElementById('subscriptionModal')?.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+    menu.classList.add('hidden');
+    btn.setAttribute('aria-expanded','false');
+  });
+}
+
+/* ---------- Boot compatible SPA ---------- */
+(function start(){
+  const run = () => {
+    initScrollTop();
+    initCGV();
+    initOrderModal();
+    initSubscription();
+    initPelerin();
+    initTraversee();
+    tryInitMobileMenu(); // réessaie si éléments pas encore dans le DOM
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run, { once: true });
+  } else {
+    run(); // DS V3/SPA : DOM déjà prêt -> on démarre tout de suite
+  }
+})();
+
+function tryInitMobileMenu(max = 20){
+  const btn  = document.getElementById('mobileMenuBtn');
+  const menu = document.getElementById('mobileMenu');
+  if (btn && menu) {
+    initMobileMenu();             // fera rien si déjà bound (voir patch #2)
+  } else if (max > 0) {
+    setTimeout(() => tryInitMobileMenu(max - 1), 150);
+  }
+}
+
+</script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+  // cibler toutes les cartes du Pèlerin
+  document.querySelectorAll("#board .card").forEach(card => {
+    const back = card.querySelector(".back");
+
+    back.addEventListener("click", () => {
+      // ajoute la classe flipped sur la carte
+      card.classList.add("flipped");
+    });
+
+    // accessibilité : activation aussi avec la touche Entrée/Espace
+    back.addEventListener("keydown", (e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        card.classList.add("flipped");
+      }
+    });
+  });
+});
+</script>
+<script>
+(() => {
+  // --- DEBUG VISUEL DANS LA CONSOLE ---
+    const LOG = (...a) => console.log('[Pèlerin]', ...a);
+
+  const $  = s => document.querySelector(s);
+  const $$ = s => Array.from(document.querySelectorAll(s));
+  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+
+  // Récupère les éléments du Pèlerin (ils existent bien dans ton HTML)
+  const intentionIn = $('#intention');
+  const startBtn    = $('#startReading');
+  const board       = $('#board');
+  const cardsInstr  = $('#cardsInstruction');
+  const cards       = $$('#board .card');
+
+  if (!intentionIn || !startBtn || !board || cards.length === 0) {
+    console.error('[Pèlerin] Sélecteurs introuvables. Vérifie que #oracle n’est pas supprimé et que #board contient .card');
+    return;
+  }
+
+  let flippedCount = 0;
+
+  // Affiche le plateau et reset proprement
+  startBtn.addEventListener('click', () => {
+    if (!intentionIn.value.trim()) {
+      intentionIn.focus();
+      intentionIn.setCustomValidity('Veuillez saisir une intention pour votre tirage.');
+      intentionIn.reportValidity();
+      return;
+    }
+    intentionIn.setCustomValidity('');
+
+    board.classList.remove('hidden');
+    cardsInstr.classList.remove('hidden');
+
+    flippedCount = 0;
+    cards.forEach(card => {
+      card.classList.remove('flipped');
+      // Remet des tirets AVANT tout clic
+      card.querySelector('[data-name]')?.replaceChildren(document.createTextNode('—'));
+      card.querySelector('[data-quote]')?.replaceChildren(document.createTextNode('—'));
+      const pol = card.querySelector('[data-polarity]');
+      if (pol) pol.textContent = '';
+      const back = card.querySelector('.back');
+      if (back) {
+        back.style.pointerEvents = 'auto';
+        back.setAttribute('aria-pressed', 'false');
+      }
+    });
+
+    LOG('Plateau affiché. Intention =', intentionIn.value.trim());
+  });
+
+  // Injections + flip au clic
+  cards.forEach(card => {
+    const back = card.querySelector('.back');
+    if (!back) return;
+
+    const runFlip = () => {
+      try {
+        if (card.classList.contains('flipped')) return;
+
+        if (!intentionIn.value.trim()) {
+          intentionIn.focus();
+          intentionIn.setCustomValidity('Veuillez saisir une intention pour votre tirage.');
+          intentionIn.reportValidity();
+          return;
+        }
+        intentionIn.setCustomValidity('');
+
+        const family = (card.dataset.family || '').toLowerCase(); // emotions|besoins|actions|cosmos
+        const pool = (window.DATA?.[family] || []);
+        if (!pool || !pool.length) {
+          console.warn('[Pèlerin] Pas de DATA pour la famille:', family);
+          return;
+        }
+
+        const data = pick(pool);
+        LOG('Flip carte', family, '→', data);
+
+        // Injection SÛRE : remplace le contenu des placeholders
+        const nameEl  = card.querySelector('[data-name]');
+        const quoteEl = card.querySelector('[data-quote]');
+        if (nameEl)  nameEl.replaceChildren(document.createTextNode(data.name));
+        if (quoteEl) quoteEl.replaceChildren(document.createTextNode(data.quote));
+
+        // Polarité (sauf cosmos)
+        const polEl = card.querySelector('[data-polarity]');
+        if (polEl) {
+          if (family === 'cosmos') {
+            polEl.textContent = '';
+          } else {
+            // Convention Oradia : triangle = Yang, rond = Yin
+            const isYang = (data.polarity || '').toLowerCase() === 'yang';
+            polEl.textContent = isYang ? '▲' : '●';
+            polEl.title = isYang ? 'Yang' : 'Yin';
+            polEl.setAttribute('aria-label', isYang ? 'Yang' : 'Yin');
+          }
+        }
+
+        // Flip visuel
+        card.classList.add('flipped');
+        flippedCount++;
+
+        // Bloque la face back après le flip
+        back.setAttribute('aria-pressed', 'true');
+        back.style.pointerEvents = 'none';
+
+      } catch (e) {
+        console.error('[Pèlerin] Erreur flip/injection:', e);
+      }
+    };
+
+    back.addEventListener('click', runFlip);
+    back.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); runFlip(); }
+    });
+  });
+
+  LOG('Init Pèlerin OK. Cartes détectées =', cards.length);
+})();
+</script>
+<script>
+// Bouton "Afficher le résultat du tirage" + modal d'analyse
+(function(){
+  const showBtn   = document.getElementById('showResults');
+  const modal     = document.getElementById('analyzeModal');
+  const resultsEl = document.getElementById('results');
+  const linesEl   = document.getElementById('lines');
+  const synthEl  = document.getElementById('synthese');
+  const outInt    = document.getElementById('out-intention');
+  const intention = document.getElementById('intention');
+
+  if(!showBtn) return;
+
+  // Analyse tirage du Pèlerin
+
+function generateAnalysis({ em, be, ac, co, intention }) {
+  const clean = s => (s || '').toString().replace(/\s+/g, ' ').trim();
+  const low = s => clean(s).toLowerCase();
+  const safe = (v, alt='—') => (clean(v) ? clean(v) : alt);
+
+  // Cartes
+  const emo = safe(em?.name);
+  const need = safe(be?.name);
+  const act = safe(ac?.name);
+  const cos = safe(co?.name);
+
+  const quotes = {
+    emo: clean(em?.quote),
+    need: clean(be?.quote),
+    act: clean(ac?.quote),
+    cos: clean(co?.quote),
+  };
+
+  const intent = clean(intention);
+
+  // Petits réservoirs de variations
+  const imagesEmotion = [
+    `un miroir posé sur l’eau`,
+    `un écho ancien`,
+    `un souffle fragile`,
+    `une flamme qui vacille`,
+    `un paysage intérieur`,
+  ];
+  const imagesBesoin = [
+    `une clef de voûte`,
+    `une graine à arroser`,
+    `une pierre d’équilibre`,
+    `un fil à suivre`,
+    `un ancrage discret`,
+  ];
+  const imagesAction = [
+    `une trace dans le sable`,
+    `une porte entrouverte`,
+    `une marche d’escalier`,
+    `une étoile filante`,
+    `un pas esquissé`,
+  ];
+  const imagesCosmos = [
+    `une constellation familière`,
+    `un souffle venu d’avant`,
+    `une mémoire gravée dans la roche`,
+    `un chant collectif`,
+    `un fleuve souterrain`,
+  ];
+
+  // Choix aléatoire
+  const pick = arr => arr[Math.floor(Math.random()*arr.length)];
+
+  // Construction narrative
+  let texte = "";
+
+  if (intent) {
+    texte += `Ton intention : « ${intent} ». Elle agit comme un fond musical qui colore tout le reste. `;
+  }
+
+  texte += `L’émotion présente est ${low(emo)}${quotes.emo ? ` (${quotes.emo})` : ''}. `;
+  texte += `Elle surgit comme ${pick(imagesEmotion)}. Selon la façon dont tu la regardes, elle peut être appui ou obstacle. `;
+
+  texte += `Le besoin révélé, ${low(need)}${quotes.need ? ` (${quotes.need})` : ''}, se tient comme ${pick(imagesBesoin)}. `;
+  texte += `Il ne demande pas forcément d’être satisfait immédiatement, mais d’être reconnu. Parfois cela ouvre un passage, parfois cela rappelle ce qui manque. `;
+
+  texte += `L’action suggérée, ${low(act)}${quotes.act ? ` (${quotes.act})` : ''}, ressemble à ${pick(imagesAction)}. `;
+  texte += `Tu peux choisir de la suivre ou de la laisser s’effacer : l’un comme l’autre ouvre une expérience différente. `;
+
+  texte += `En arrière-plan, ${low(cos)}${quotes.cos ? ` (${quotes.cos})` : ''} veille, tel ${pick(imagesCosmos)}. `;
+  texte += `Cela rappelle qu’il y a toujours plus vaste que le geste immédiat, comme une respiration plus longue que la tienne. `;
+
+  // Une fin avec variations possibles
+  const fins = [
+    `Ce tirage n’apporte pas de verdict. Il s’offre comme une énigme douce, que tu pourras relire demain différemment.`,
+    `Ici, rien n’est figé : les cartes sont comme des fenêtres. À toi de voir par laquelle tu choisis de regarder.`,
+    `Plutôt qu’un chemin balisé, elles proposent une danse. Tu peux suivre le rythme, ou inventer le tien.`,
+    `Le sens se déplace selon ton regard. Peut-être y verras-tu une invitation à ralentir, peut-être un élan à franchir.`,
+  ];
+  texte += pick(fins);
+
+  return { html: `<div class="space-y-3 leading-relaxed">${texte}</div>` };
+}
+
+
+
+
+
+  showBtn.addEventListener('click', async () => {
+    // 1) Ouvre le modal et bloque le scroll
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+
+    try {
+      // 2) (ici tu pourras appeler ton API; on simule un petit délai)
+      await new Promise(r => setTimeout(r, 3000));
+
+      // 3) Récupère ce qui est déjà affiché sur les cartes RETOURNÉES (on cible d'abord les slots)
+      const get = fam => {
+        const slotByFam = { emotions: 'slot-0', besoins: 'slot-1', actions: 'slot-2', cosmos: 'slot-3' };
+        let card =
+          document.querySelector(`#${slotByFam[fam]} .card[data-family="${fam}"]`) ||
+          document.querySelector(`#board .card.mini[data-family="${fam}"]`) ||
+          document.querySelector(`#board .card[data-family="${fam}"].flipped`) ||
+          document.querySelector(`#board .card[data-family="${fam}"]`);
+        if (!card) return { name:'—', quote:'' };
+        const name  = card.querySelector('[data-name]')?.textContent?.trim() || '—';
+        const quote = card.querySelector('[data-quote]')?.textContent?.trim() || '';
+        return { name, quote };
+      };
+
+      const em  = get('emotions');
+      const be  = get('besoins');
+      const ac  = get('actions');
+      const co  = get('cosmos');
+
+      // 4) Remplit la section Résultats
+      outInt.textContent = (intention?.value?.trim() || '—');
+      linesEl.innerHTML = `
+        <p><b>Émotions :</b> ${em.name} — ${em.quote}</p>
+        <p><b>Besoins :</b> ${be.name} — ${be.quote}</p>
+        <p><b>Actions :</b> ${ac.name} — ${ac.quote}</p>
+        <p><b>Mémoires Cosmos :</b> ${co.name} — ${co.quote}</p>
+      `;
+      resultsEl.classList.remove('hidden');
+const analysis = generateAnalysis({ em, be, ac, co, intention: outInt.textContent });
+synthEl.innerHTML = analysis.html;
+
+    } finally {
+      // 5) Ferme le modal et réactive le scroll
+      modal.classList.add('hidden');
+      modal.classList.remove('flex');
+      document.body.style.overflow = '';
+      // (optionnel) cacher le bouton après usage
+      showBtn.classList.add('hidden');
+    }
+  });
+})();
+</script>
+<script>
+// Neutralise tous les liens # qui ne doivent pas scroller
+document.querySelectorAll('a[href="#"]').forEach(a=>{
+  a.addEventListener('click', e => e.preventDefault());
+});
+
+// Smooth-scroll SEULEMENT si l’ancre existe (sinon on bloque)
+document.querySelectorAll('a[href^="#"]:not([href="#"])').forEach(a=>{
+  a.addEventListener('click', e => {
+    const id = a.getAttribute('href').slice(1);
+    const target = document.getElementById(id);
+    if (!target) { e.preventDefault(); return; }
+    e.preventDefault();
+    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
+});
+</script>
+
+<script>
+(function(){
+const STEPS = [
+  { key:'emotions', label:'ÉMOTIONS',    count:18 }, // -> slot-0
+  { key:'besoins',  label:'BESOINS',     count:18 }, // -> slot-1
+  { key:'actions',   label:'ACTIONS',	 count:18 }, // -> slot-2
+  { key:'cosmos',  label:'MÉMOIRE COSMOS',count:10 },  // -> slot-3
+];
+
+  const fan      = document.getElementById('fanBoard');
+  const tray     = document.getElementById('tray');
+  const boardSec = document.getElementById('board');
+  const stepInfo = document.getElementById('stepInfo');
+  const showBtn  = document.getElementById('showResults');
+  const startBtn = document.getElementById('startReading');
+  const intentionBox = document.getElementById('intentionBox');
+  const resetBtn = document.getElementById('reset');
+
+  if(!fan || !boardSec) return;
+
+  let stepIndex = 0;
+  const picks = [null,null,null,null];
+
+  function updateStepChip(){
+    const s = STEPS[stepIndex];
+    stepInfo.textContent = `Étape ${stepIndex+1}/4 • Choisis ta carte ${s.label}`;
+  }
+
+  function clearFan(){ fan.innerHTML = ''; }
+
+     function fillFront(card, familyKey){
+    // 1) Source des cartes : DATA officielle si présente, sinon fallback local
+const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : [];
+
+
+    const raw = pool[Math.floor(Math.random() * pool.length)];
+    if (!raw) return;
+
+    // 2) Uniformise l’item (supporte string OU objet {name, quote, polarity})
+    const item = (typeof raw === 'string') ? { name: raw, quote: '—', polarity: '' } : raw;
+
+    // 3) Injection du titre & de la citation
+    const nameEl  = card.querySelector('[data-name]');
+    const quoteEl = card.querySelector('[data-quote]');
+    if (nameEl)  nameEl.textContent  = item.name || '—';
+    if (quoteEl) quoteEl.textContent = item.quote || '—';
+
+    // 4) Polarité : utiliser l’attribut correct [data-polarity] (et pas [data-pol])
+    const polEl = card.querySelector('[data-polarity]');
+    if (polEl){
+      if (familyKey === 'cosmos'){
+        polEl.textContent = '';
+        polEl.style.visibility = 'hidden';
+      } else {
+        polEl.style.visibility = 'visible';
+        const isYang = (item.polarity || '').toLowerCase() === 'yang';
+        polEl.textContent = isYang ? '▲' : '●';
+        polEl.setAttribute('title', isYang ? 'Yang' : 'Yin');
+        polEl.setAttribute('aria-label', isYang ? 'Yang' : 'Yin');
+      }
+    }
+
+    // 5) Méta
+    card.dataset.key      = familyKey;
+    card.dataset.card     = item.name || '';
+    card.dataset.polarity = item.polarity || '';
+  }
+
+  function renderFan(){
+    clearFan();
+    const { count, key } = STEPS[stepIndex];
+
+    const span   = Math.min(50, 18 + count); // ouverture de l'arc
+    const start  = -span/2;
+    const radius = -70;                      // plus bas dans la page (lié au CSS)
+
+    for(let i=0; i<count; i++){
+      const a = start + (i * (span/Math.max(count-1,1)));
+      const art = document.createElement('article');
+      art.className = 'card';
+      art.dataset.angle = a.toFixed(2);
+      art.dataset.family = key;
+      art.style.setProperty('--angle', a+'deg');
+      art.style.setProperty('--radius', radius+'px');
+
+      // Style spécial pour les cartes cosmos
+      if (key === 'cosmos') {
+        art.style.zIndex = '5';
+      }
+
+      art.innerHTML = `
+        <div class="card-inner">
+          <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte">
+            <div class="logo-circle" aria-hidden="true"></div>
+          </div>
+          <div class="face front">
+            <div class="topbar">
+              <span class="chip">${STEPS[stepIndex].label}</span>
+              <span class="polarity" data-polarity></span>
+            </div>
+            <div class="art"><div><h3 data-name>—</h3><div class="quote" data-quote>—</div></div></div>
+            <div class="bottom"></div>
+          </div>
+        </div>
+      `;
+
+      // Style spécial pour le dos des cartes cosmos
+      if (key === 'cosmos') {
+        const backFace = art.querySelector('.back');
+        backFace.style.background = 'radial-gradient(800px 500px at 50% 40%, rgba(245, 231, 161, 0.15), transparent 60%), linear-gradient(135deg, #0b1d3a, #08152c)';
+      }
+
+      // apparition douce
+      art.style.opacity = '0';
+      art.style.transform = `translate(-50%,-50%) rotate(${a}deg) translateY(${radius}px) scale(.985)`;
+      fan.appendChild(art);
+      setTimeout(()=>{
+        art.style.transition = 'transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 280ms ease, opacity 280ms ease';
+        art.style.opacity = '1';
+        art.style.transform = `translate(-50%,-50%) rotate(${a}deg) translateY(${radius}px)`;
+      }, i*36);
+
+      const back = art.querySelector('.back');
+      back.addEventListener('click', ()=> onPick(art, i));
+    }
+  }
+
+  // Récupère le centre d'un slot
+  function slotCenter(index){
+    const slot = document.getElementById(`slot-${index}`);
+    const slotBox = slot.getBoundingClientRect();
+    const secBox  = boardSec.getBoundingClientRect();
+    return {
+      cx: slotBox.left + slotBox.width/2 - secBox.left,
+      cy: slotBox.top  + slotBox.height/2 - secBox.top
+    };
+  }
+
+  // Flip → Zoom → Dock (delta centre-à-centre)
+  function onPick(card, i) {
+    if (card.classList.contains('flipped')) return;
+
+    // Empêcher de cliquer sur plusieurs cartes de la même famille
+    const currentFamily = STEPS[stepIndex].key;
+    const alreadyPicked = picks.some(pick => pick && pick.family === currentFamily);
+    if (alreadyPicked) return;
+
+    const back = card.querySelector('.back');
+    back.setAttribute('aria-pressed', 'true');
+    back.style.pointerEvents = 'none';
+
+    // Désactiver toutes les cartes de cette famille
+    document.querySelectorAll('#fanBoard .card').forEach(otherCard => {
+      if (!otherCard.classList.contains('flipped')) {
+        otherCard.querySelector('.back').style.pointerEvents = 'none';
+      }
+    });
+
+    // Effets spéciaux pour la carte cosmos
+    const isCosmos = currentFamily === 'cosmos';
+    if (isCosmos) {
+      card.style.boxShadow = '0 0 30px rgba(245, 231, 161, 0.8)';
+      card.style.zIndex = '1000';
+    }
+
+    // 1. Détacher la carte du paquet - monter et se redresser
+    card.style.transition = 'transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1.2), box-shadow 300ms ease';
+    card.style.transform = 'translate(-50%, -50%) rotate(0deg) translateY(-30px)';
+    card.style.zIndex = '1000';
+    
+    // 2. Après l'animation de détachement, flip pour montrer la face
+    setTimeout(() => {
+        // Remplir la face avant
+        fillFront(card, STEPS[stepIndex].key);
+        
+        // Flip pour montrer la face
+        card.classList.add('flipped');
+        
+        // Effets spéciaux pour la face avant cosmos
+        if (isCosmos) {
+          const frontFace = card.querySelector('.front');
+          frontFace.style.background = 'radial-gradient(900px 600px at 30% -10%, rgba(245, 231, 161, 0.25), transparent 60%), linear-gradient(165deg, #0c1f40, #0b1d3a 45%, #0a1833 100%)';
+          frontFace.style.border = '2px solid rgba(245, 231, 161, 0.6)';
+        }
+        
+        // 3. Zoom sur la carte pendant 2 secondes
+        card.style.transition = 'transform 600ms cubic-bezier(0.2, 0.8, 0.2, 1.2)';
+        card.style.transform = 'translate(-50%, -50%) rotate(0deg) translateY(-30px) scale(1.3)';
+        
+        // 4. Après 2s, déplacer vers le slot correspondant
+        setTimeout(() => {
+            const targetIndex = stepIndex;
+            const slot = document.getElementById(`slot-${targetIndex}`);
+            
+            // Calculer la position de destination dans le slot
+            const slotRect = slot.getBoundingClientRect();
+            const boardRect = boardSec.getBoundingClientRect();
+            
+            const targetX = slotRect.left + slotRect.width/2 - boardRect.left;
+            const targetY = slotRect.top + slotRect.height/2 - boardRect.top;
+            
+            // Animer la carte originale vers le slot
+            card.style.transition = 'all 800ms cubic-bezier(0.2, 0.8, 0.2, 1)';
+            card.style.left = targetX + 'px';
+            card.style.top = targetY + 'px';
+            card.style.transform = 'translate(-50%, -50%) rotate(0deg) scale(0.3)';
+            
+            // Une fois l'animation terminée, ajouter au slot
+            setTimeout(() => {
+                slot.textContent = ''; // enlève le libellé statique du slot pour éviter le doublon
+                slot.appendChild(card);
+                card.style.position = 'relative';
+                card.style.left = 'auto';
+                card.style.top = 'auto';
+                card.style.transform = 'scale(0.3)';
+                card.classList.add('mini');
+                slot.classList.add('filled');
+                
+                // Effets spéciaux pour la carte cosmos dans le slot
+                if (isCosmos) {
+                  card.style.boxShadow = '0 0 20px rgba(245, 231, 161, 0.6)';
+                }
+                
+                // Passer à l'étape suivante
+                picks[targetIndex] = { family: STEPS[stepIndex].key, index: i };
+                stepIndex++;
+                
+                if (stepIndex < STEPS.length) {
+                    updateStepChip();
+                    renderFan();
+                } else {
+    stepInfo.textContent = 'Sélection terminée';
+    const board = document.getElementById('board');
+    const fan   = document.getElementById('fanBoard');
+
+    showBtn.classList.remove('hidden');
+    showBtn.disabled = false;
+    showBtn.classList.add('cta-analyse');      // applique le style overlay
+
+    // place le bouton AVANT l’éventail pour qu’il flotte dessus
+    if (board && fan && showBtn.parentElement !== board) {
+      board.insertBefore(showBtn, fan);
+    }
+}
+            }, 800);
+        }, 2000); // 2 secondes après le zoom
+    }, 600); // Après l'animation de détachement
+}
+
+  function resetAll(){
+    stepIndex = 0;
+    picks.fill(null);
+    document.querySelectorAll('#tray .slot').forEach(s => {
+  s.innerHTML = '';            // <-- supprime la mini-carte injectée
+  s.classList.remove('filled');
+});
+
+    showBtn.classList.add('hidden'); showBtn.disabled = true;
+    updateStepChip();
+    renderFan();
+    boardSec.scrollIntoView({behavior:'smooth', block:'start'});
+  }
+
+  startBtn?.addEventListener('click', ()=>{
+    intentionBox?.classList.add('hidden');
+    boardSec?.classList.remove('hidden');
+    resetAll();
+  });
+  resetBtn?.addEventListener('click', resetAll);
+})();
+</script>
+<script>
+// Démarrer le Pèlerin en mode immersif depuis l’offre
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('startPilgrimFromOffer');
+  if (!btn) return;
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const oracle = document.getElementById('oracle');
+    if (oracle) {
+      // Affiche la section et scroll
+      oracle.classList.remove('hidden');
+      oracle.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (typeof window.enterPelerinImmersive === 'function') {
+  window.enterPelerinImmersive();
+} else {
+  document.getElementById('intention')?.focus();
+}
+    }
+  });
+});
+</script>
+<script>
+/* DS V3 — Délégation globale pour le menu mobile */
+document.addEventListener('click', (e) => {
+  const menu = document.getElementById('mobileMenu');
+  if (!menu) return;
+
+  const btn = e.target.closest('#mobileMenuBtn');
+  if (btn) {
+    e.preventDefault();
+    e.stopPropagation();
+    menu.classList.toggle('hidden');
+    btn.setAttribute('aria-expanded', menu.classList.contains('hidden') ? 'false' : 'true');
+    return;
+  }
+
+  if (e.target.closest('#mobileMenu a')) {                // clic sur un lien du menu
+    menu.classList.add('hidden');
+    document.getElementById('mobileMenuBtn')?.setAttribute('aria-expanded','false');
+    return;
+  }
+
+  if (!menu.classList.contains('hidden') && !e.target.closest('#mobileMenu')) {
+    menu.classList.add('hidden');                         // clic à l’extérieur
+    document.getElementById('mobileMenuBtn')?.setAttribute('aria-expanded','false');
+  }
+});
+</script>
+<script>
+(function(){
+  const AUTH_KEY = 'oradiaAuth';
+
+  function isAuthed(){ return localStorage.getItem(AUTH_KEY) === '1'; }
+  function setAuthed(v){ v ? localStorage.setItem(AUTH_KEY,'1') : localStorage.removeItem(AUTH_KEY); }
+
+  function ensureMemberIcon(){
+    // Si déjà présent, ne rien faire
+    if (document.getElementById('memberIcon')) return;
+
+    // Trouve la zone du header où se trouve le bouton Connexion (desktop)
+    const loginBtn = document.getElementById('loginBtn');
+    if (!loginBtn || !loginBtn.parentElement) return;
+    const wrap = loginBtn.parentElement;
+
+    // Crée l’icône membre
+    const btn = document.createElement('button');
+    btn.id = 'memberIcon';
+    btn.type = 'button';
+    btn.innerHTML = `
+      <i class="fas fa-user-circle text-xl"></i>
+      <span class="hidden md:inline">Espace membre</span>
+      <span class="badge" aria-label="connecté"></span>
+    `;
+btn.addEventListener('click', () => {
+  // Aller directement au tirage sans popup
+  location.hash = '#Jeu';
+  const start = document.getElementById('newPilgrim') || document.querySelector('#oracle .btn-gold');
+  if (start) start.click();
+});
+
+
+    wrap.appendChild(btn);
+  }
+
+  function updateHeaderForAuth(){
+    const loginBtn = document.getElementById('loginBtn');         // desktop
+    const loginBtnMobile = document.getElementById('loginBtnMobile'); // mobile
+    if (isAuthed()){
+      if (loginBtn) loginBtn.classList.add('hidden');
+      if (loginBtnMobile) loginBtnMobile.classList.add('hidden');
+      ensureMemberIcon();
+    } else {
+      if (loginBtn) loginBtn.classList.remove('hidden');
+      if (loginBtnMobile) loginBtnMobile.classList.remove('hidden');
+      const icon = document.getElementById('memberIcon');
+      if (icon) icon.remove();
+    }
+  }
+
+  function updateCtasForAuth(){
+    // “Commander” (offre Traversée)
+    const orderBtn = document.getElementById('orderBtn');
+    if (orderBtn){
+      if (isAuthed()){
+        orderBtn.textContent = 'Commencer le tirage';
+        orderBtn.setAttribute('href', '#Jeu');
+        orderBtn.addEventListener('click', onStartReading, { once:true });
+      } else {
+        orderBtn.textContent = 'Commander';
+        orderBtn.removeEventListener('click', onStartReading);
+      }
+    }
+
+    // “S’abonner – 8€ / mois” (in-Modal form)
+    const subSubmit = document.querySelector('#subscribeForm button[type="submit"]');
+    if (subSubmit){
+      if (isAuthed()){
+        subSubmit.textContent = 'Commencer le tirage';
+        subSubmit.type = 'button';
+        subSubmit.addEventListener('click', onStartReading, { once:true });
+      } else {
+        subSubmit.textContent = 'S’abonner – 8€ / mois';
+        subSubmit.type = 'submit';
+        subSubmit.removeEventListener('click', onStartReading);
+      }
+    }
+
+    // Si tu as un bouton d’offre “Abonnement” hors modale, traite-le pareil ici.
+  }
+
+  function onStartReading(e){
+    e.preventDefault();
+    location.hash = '#Jeu';
+    const startBtn =
+      document.getElementById('newPilgrim') ||
+      document.querySelector('#oracle button, #oracle a.btn-gold');
+    if (startBtn) startBtn.click();
+  }
+
+  function loginFlow(){
+    setAuthed(true);
+    updateHeaderForAuth();
+    updateCtasForAuth();
+  }
+  function logoutFlow(){
+    setAuthed(false);
+    updateHeaderForAuth();
+    updateCtasForAuth();
+  }
+
+  function wireAuthForms(){
+    // Formulaires membres (inscription / connexion)
+    const reg = document.getElementById('memberRegisterForm');
+    if (reg){
+      reg.addEventListener('submit', function(ev){
+  ev.preventDefault();
+  loginFlow();
+  // fermer la modale si ouverte
+  const m = document.getElementById('subscriptionModal');
+  if (m) { m.classList.add('hidden'); document.body.style.overflow=''; }
+});
+
+    }
+
+    const login = document.getElementById('memberLoginForm');
+    if (login){
+    login.addEventListener('submit', function(ev){
+  ev.preventDefault();
+  loginFlow();
+  const m = document.getElementById('subscriptionModal');
+  if (m) { m.classList.add('hidden'); document.body.style.overflow=''; }
+});
+
+    }
+
+    // Formulaire d’abonnement (si tu veux qu’il connecte aussi)
+    const sub = document.getElementById('subscribeForm');
+    if (sub){
+      sub.addEventListener('submit', function(ev){
+        // Ici, en vrai, tu enverrais le paiement, puis connecterais l’utilisateur.
+        // En attendant, on ne bloque pas le submit ; si tu préfères, active le flow ci-dessous :
+        // ev.preventDefault(); loginFlow();
+      });
+    }
+
+    // Boutons “Connexion” (ouvrir la modale de login existante si tu en as une)
+ const loginBtn = document.getElementById('loginBtn');
+const loginBtnMobile = document.getElementById('loginBtnMobile');
+[loginBtn, loginBtnMobile].forEach(btn => {
+  if (!btn) return;
+  btn.addEventListener('click', function(ev){
+    ev.preventDefault();
+    const m = document.getElementById('subscriptionModal');
+    if (m) { m.classList.remove('hidden'); document.body.style.overflow='hidden'; }
+  });
+});
+
+
+    // Si tu as un bouton logout quelque part :
+    const dashboardLogout = document.getElementById('logoutBtn');
+    if (dashboardLogout){
+      dashboardLogout.addEventListener('click', function(e){
+        e.preventDefault();
+        logoutFlow();
+      });
+    }
+  }
+
+  document.addEventListener('DOMContentLoaded', function(){
+    updateHeaderForAuth();
+    updateCtasForAuth();
+    wireAuthForms();
+  });
+})();
+</script>
+
+</body>
+</html>
