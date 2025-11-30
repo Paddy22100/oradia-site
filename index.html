@@ -1275,7 +1275,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         <h3 class="cormorant text-3xl text-gold mb-2">Commande Tirage de la Traversée</h3>
         <p class="text-light-gold">Finalisez votre commande pour obtenir l'accès à 5 tirages</p>
       </div>
-      <form id="orderForm" onsubmit="if(localStorage.getItem('oradiaAuth') === '1') { document.getElementById('traversee-start').click(); return false; }">
+             <form id="orderForm">
 <div class="mb-4">
           <label class="block text-light-gold mb-2">Nom</label>
           <input type="text" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
@@ -1499,49 +1499,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       startToreImmersive();
     });
 
-    // Gestion du bouton "Commencer le tirage" de la traversée
-    document.getElementById('orderBtn')?.addEventListener('click', function(e) {
-      e.preventDefault();
-      if (localStorage.getItem('oradiaAuth') === '1') {
-        // Si connecté, on scroll vers la traversée et on ouvre le formulaire
-        document.getElementById('traversee')?.classList.remove('hidden');
-        document.getElementById('traversee-start')?.click();
-        document.getElementById('traversee')?.scrollIntoView({behavior: 'smooth'});
-      } else {
-        // Sinon, on ouvre la modale de commande normale
-        document.getElementById('orderModal')?.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-      }
-    });
-// Empêcher l'ouverture de la modale si déjà connecté
-    document.getElementById('orderModal')?.addEventListener('click', function(e) {
-      if (e.target === this && localStorage.getItem('oradiaAuth') === '1') {
-        this.classList.add('hidden');
-        document.body.style.overflow = '';
-        document.getElementById('traversee')?.classList.remove('hidden');
-        document.getElementById('traversee-start')?.click();
-        document.getElementById('traversee')?.scrollIntoView({behavior: 'smooth'});
-      }
-    });
-    // Gestion du bouton "Accéder au tirage du Tore" du Tore
-    document.getElementById('subscribeBtn')?.addEventListener('click', function(e) {
-      e.preventDefault();
-      if (localStorage.getItem('oradiaAuth') === '1') {
-        // Si connecté, on ouvre le tirage du Tore en mode immersif
-        const toreSection = document.getElementById('traversee'); 
-        
-        // Utiliser traversee comme section immersive
-        if (toreSection) {
-          toreSection.classList.remove('hidden');
-          enterToreImmersive();
-          toreSection.scrollIntoView({behavior: 'smooth'});
-        }
-      } else {
-        // Sinon, on ouvre la modale d'abonnement normale
-        document.getElementById('subscriptionModal')?.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-      }
-    });
+   
     function startToreImmersive() {
       // Si l'utilisateur n'est pas connecté, afficher la modale d'abonnement
       if (localStorage.getItem('oradiaAuth') !== '1') {
@@ -1715,21 +1673,21 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       const modal = document.getElementById(modalId);
       const openBtns = document.querySelectorAll(`[data-target="${modalId}"]`);
       
-      openBtns.forEach(btn => {
+            openBtns.forEach(btn => {
         btn.addEventListener('click', function(e) {
           if (localStorage.getItem('oradiaAuth') === '1') {
             e.preventDefault();
             // Redirection appropriée selon la modale
             if (modalId === 'orderModal') {
-              document.getElementById('traversee')?.classList.remove('hidden');
-              document.getElementById('traversee-start')?.click();
-              document.getElementById('traversee')?.scrollIntoView({behavior: 'smooth'});
+              // 👉 maintenant on part sur la page dédiée Traversée
+              window.location.href = 'traversee.html?access=traversee';
             } else {
               window.location.href = 'tore.html';
             }
           }
         });
       });
+
     });
 
     // Gestion du modal CGU
@@ -2002,19 +1960,7 @@ function initOrderModal(){
       el('offres')?.scrollIntoView({behavior:'smooth'});
     });
 
-    confirmation.querySelector('#newReadingBtn').addEventListener('click', ()=>{
-      confirmation.remove();
-      $$('section').forEach(s=>s.classList.remove('hide-sections'));
-      // Ouvrir directement le formulaire Traversée
-      const trav = el('traversee');
-      const intro = el('traversee-intro');
-      const form  = el('traversee-form');
-      trav && trav.classList.remove('hidden');
-      intro && intro.classList.add('hidden');
-      form && form.classList.remove('hidden');
-      trav?.scrollIntoView({behavior:'smooth'});
-      form?.querySelector('input, textarea, select')?.focus();
-    });
+   
   });
 }
 
@@ -3110,18 +3056,33 @@ wrap.appendChild(btn);
     }
   }
 function updateCtasForAuth(){
-    // “Commander” (offre Traversée)
+       // “Commander” (offre Traversée)
     const orderBtn = document.getElementById('orderBtn');
-    if (orderBtn){
-      if (isAuthed()){
-        orderBtn.textContent = 'Commencer le tirage';
-        orderBtn.setAttribute('href', '#Jeu');
-        orderBtn.addEventListener('click', onStartReading, { once:true });
+    if (orderBtn) {
+      // On clone pour nettoyer tous les anciens listeners (ceux de initOrderModal, etc.)
+      const newOrderBtn = orderBtn.cloneNode(true);
+      orderBtn.parentNode.replaceChild(newOrderBtn, orderBtn);
+
+      if (isAuthed()) {
+        // Utilisateur connecté : accès direct à la page du tirage de la Traversée
+        newOrderBtn.textContent = 'Commencer le tirage';
+        newOrderBtn.setAttribute('href', 'traversee.html?access=traversee');
+        // Pas de listener : le lien fait juste la navigation classique
       } else {
-        orderBtn.textContent = 'Commander';
-        orderBtn.removeEventListener('click', onStartReading);
+        // Utilisateur non connecté : bouton "Commander" ouvre la modale de commande
+        newOrderBtn.textContent = 'Commander';
+        newOrderBtn.setAttribute('href', '#');
+        newOrderBtn.addEventListener('click', function(e){
+          e.preventDefault();
+          const orderModal = document.getElementById('orderModal');
+          if (orderModal) {
+            orderModal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+          }
+        });
       }
     }
+
 
     // “S’abonner – 8€ / mois” (in-Modal form)
     const subSubmit = document.querySelector('#subscribeForm button[type="submit"]');
@@ -3145,7 +3106,7 @@ function updateCtasForAuth(){
         // Lorsque l'utilisateur est connecté, le bouton s'abonner devient "Accéder au tirage du Toree"
         subscribeBtn.textContent = 'Accéder au tirage du Tore';
         // Assure une ancre cohérente pour l'expérience de tirage
-        subscribeBtn.setAttribute('href', '#traversee');
+        subscribeBtn.setAttribute('href', '#tore');
         // Supprime tout ancien gestionnaire qui pourrait ouvrir la modale d'inscription
         const newSubBtn = subscribeBtn.cloneNode(true);
         subscribeBtn.parentNode.replaceChild(newSubBtn, subscribeBtn);
@@ -3165,12 +3126,10 @@ function updateCtasForAuth(){
     }
 }
     function onStartReading(e){
-      e.preventDefault();
-      location.hash = '#Jeu';
       const startBtn =
         document.getElementById('newPilgrim') ||
-        document.querySelector('#oracle button, #oracle a.btn-gold') ||
-        document.getElementById('traversee-start');
+        document.querySelector('#oracle button, #oracle a.btn-gold');
+
       if (startBtn) startBtn.click();
     }
 function loginFlow(){
