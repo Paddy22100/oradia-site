@@ -3214,5 +3214,20 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
       <i class="fas fa-times"></i>
     </button>
   </div>
+  <script>
+  // Démarrage automatique du mode immersif sur la page du Pèlerin
+  document.addEventListener('DOMContentLoaded', () => {
+    if (typeof window.enterPelerinImmersive === 'function') {
+      window.enterPelerinImmersive();
+    } else {
+      const oracle = document.getElementById('oracle');
+      if (oracle) {
+        oracle.classList.remove('hidden');
+        oracle.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('intention')?.focus();
+      }
+    }
+  });
+</script>
 </body>
 </html>
