@@ -2835,5 +2835,21 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
       <i class="fas fa-times"></i>
     </button>
   </div>
+  <script>
+document.addEventListener("DOMContentLoaded", () => {
+    const urlParams = new URLSearchParams(window.location.search);
+
+    // Si on arrive avec ?openIntent=1, on ouvre la modale automatiquement
+    if (urlParams.get("openIntent") === "1") {
+        const modal = document.getElementById("intentModal");
+        if (modal) {
+            modal.classList.remove("hidden");
+            modal.classList.add("flex"); // si ta modale fonctionne avec flex
+        }
+    }
+});
+</script>
+
 </body>
 </html>
+
