@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
-<title>Oradia - Tirage de la Traversée</title>
+  <title>Oradia - Oracle Vibratoire</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
@@ -186,8 +186,77 @@
     .result-lines{ padding:12px; border-radius:12px; background:rgba(11,29,58,.6); border:1px solid rgba(212,175,55,.2) }
     .hide-sections { display: none !important; }
 
+/* --- Traversée : plateau en croix 5 cartes --- */
+.traversee-board-5{
+  display:grid;
+  grid-template-columns:repeat(3, minmax(0,1fr));
+  grid-template-rows:repeat(3, auto);
+  gap:16px;
+  place-items:center;
+}
+.traversee-board-5 .nord   { grid-area: 1 / 2; }
+.traversee-board-5 .sud    { grid-area: 3 / 2; }
+.traversee-board-5 .ouest  { grid-area: 2 / 1; }
+.traversee-board-5 .est    { grid-area: 2 / 3; }
+.traversee-board-5 .centre { grid-area: 2 / 2; }
 
-   /* === MOBILE & TABLET POLISH === */
+/* Traversée : même gabarit + flip 3D que le Pèlerin */
+.traversee-card{
+  width: min(280px, 90vw);
+  height: 400px;
+  perspective: 1000px;
+}
+@media (max-width: 400px){
+  .traversee-card{ height: 360px; }
+}
+
+.traversee-card-inner{
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 800ms cubic-bezier(.2, .65, .2, 1), box-shadow .3s;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+
+.traversee-card-back,
+.traversee-card-front{
+  position: absolute;
+  inset: 0;
+  backface-visibility: hidden;
+  border-radius: var(--radius);
+  overflow: hidden;
+  border: 1px solid rgba(212,175,55,.45);
+}
+
+.traversee-card-front{ transform: rotateY(180deg); }
+
+.traversee-card.flipped .traversee-card-inner{
+  transform: rotateY(180deg);
+}
+
+
+@media(max-width:860px){
+  .traversee-board-5{
+    grid-template-columns:1fr; grid-template-rows:auto;
+  }
+  .traversee-board-5 .nord,.traversee-board-5 .sud,.traversee-board-5 .ouest,
+  .traversee-board-5 .est,.traversee-board-5 .centre{ grid-area:auto; }
+}
+
+/* --- Immersif Traversée --- */
+.hide-immersive { display:none !important; }
+
+#exitTraverseeBtn{
+  position:fixed; top:18px; left:18px; z-index:1000;
+  background:linear-gradient(135deg,#d4af37,#b8860b);
+  color:#051428; font-weight:600; border-radius:999px; 
+  padding:10px 16px; border:1px solid rgba(212,175,55,.6);
+  box-shadow:0 10px 20px rgba(212,175,55,.25);
+}
+#exitTraverseeBtn.hidden{ display:none; }
+/* === MOBILE & TABLET POLISH === */
 
 /* Images fluides partout */
 img { max-width: 100%; height: auto; }
@@ -283,6 +352,25 @@ img { max-width: 100%; height: auto; }
   #emailForm button {
     padding: 0.4rem;
     font-size: 0.85rem;
+  }
+}
+
+/* Cartes de la Traversée : assure une bonne hauteur et wrap du texte */
+.traversee-card .traversee-card-front .art{
+  display: grid;
+  place-items: center;
+  text-align: center;
+  padding: 0.5rem 0.75rem;
+}
+.traversee-card [data-quote]{
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+}
+
+/* Grille Traversée : micro-ajustements tablettes */
+@media (max-width: 1024px){
+  .traversee-board-5{
+    gap: 12px;
   }
 }
 
@@ -769,9 +857,11 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 </head>
 
 <body class="relative">
+  <!-- CGU Modal -->
+  <cgu-modal></cgu-modal>
 
   <!-- Scroll to top button -->
-  <button id="scrollTop" class="scroll-top bg-night-blue text-gold p-3 rounded-full border border-gold shadow-lg" aria-label="Remonter en haut">
+<button id="scrollTop" class="scroll-top bg-night-blue text-gold p-3 rounded-full border border-gold shadow-lg" aria-label="Remonter en haut">
     <i class="fas fa-arrow-up"></i>
   </button>
   <!-- Header -->
@@ -795,9 +885,8 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       <a href="#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
       <a href="#apropos" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
     </nav>
-
-    <button id="loginBtn" class="btn-outline-gold hidden md:inline-block">Connexion</button>
-  </div>
+    <button id="loginBtn" class="btn-outline-gold hidden md:inline-block" style="display: none;">Connexion</button>
+</div>
 
   <!-- Menu mobile déroulant -->
   <nav id="mobileMenu" class="md:hidden hidden mt-3 space-y-2">
@@ -806,8 +895,8 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
     <a href="#Jeu" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Jeu</a>
     <a href="#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
     <a href="#apropos" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
-    <button id="loginBtnMobile" class="w-full btn-outline-gold">Connexion</button>
-  </nav>
+        <button id="loginBtnMobile" class="w-full btn-outline-gold" style="display: none;">Connexion</button>
+</nav>
 </header>
 <!-- Hero -->
   <section id="accueil" class="hero-bg min-h-screen flex items-center pt-20 pb-32 px-6">
@@ -858,7 +947,175 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
     </div>
   </section>
 
-  
+  <!-- Tirage du Pèlerin -->
+  <section id="oracle" class="py-12 md:py-20 px-4 md:px-6 hidden">
+    <div class="container mx-auto max-w-6xl">
+      <div class="text-center mb-10">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-2">Tirage du Pèlerin</h2>
+        <p class="text-light-gold max-w-3xl mx-auto">Une question simple, un pas sur le chemin.</p>
+      </div>
+  <!-- Intention - Version améliorée -->
+  <div id="intentionBox" class="relative bg-gradient-to-br from-night-blue/95 to-dark-blue/98 border border-gold/30 rounded-2xl p-6 md:p-8 mb-8 shadow-xl overflow-hidden">
+    <!-- Effets de fond cosmique -->
+    <div class="absolute inset-0 z-0 opacity-30 pointer-events-none">
+      <!-- Particules dorées flottantes -->
+      <div class="absolute top-1/4 left-1/4 w-1 h-1 bg-gold/60 rounded-full animate-pulse" style="animation-delay: 0s;"></div>
+      <div class="absolute top-1/3 right-1/4 w-1 h-1 bg-gold/40 rounded-full animate-pulse" style="animation-delay: 1s;"></div>
+      <div class="absolute bottom-1/4 left-1/3 w-1 h-1 bg-light-gold/50 rounded-full animate-pulse" style="animation-delay: 2s;"></div>
+      <!-- Lignes d'énergie subtiles -->
+      <div class="absolute top-0 left-1/2 w-px h-full bg-gradient-to-b from-transparent via-gold/10 to-transparent"></div>
+      <div class="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-gold/10 to-transparent"></div>
+    </div>
+    
+    <div class="relative z-10">
+      <!-- En-tête élégant -->
+      <div class="text-center mb-8">
+        <div class="inline-flex items-center justify-center w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-gold/20 to-gold/5 rounded-full border-2 border-gold/40 mb-6 relative">
+          <div class="absolute inset-0 rounded-full border-2 border-gold/20 animate-ping" style="animation-duration: 3s;"></div>
+          <i class="fas fa-compass text-2xl md:text-3xl text-gold relative z-10"></i>
+        </div>
+        <h3 class="cormorant text-3xl md:text-4xl text-gold mb-4 text-glow">Formulez votre intention</h3>
+        <p class="text-light-gold/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
+          Connectez-vous à votre essence et laissez émerger votre question la plus authentique
+        </p>
+      </div>
+      
+      <!-- Cadre d'intention premium -->
+      <div class="bg-gradient-to-br from-night-blue/40 to-dark-blue/50 border-2 border-gold/40 rounded-2xl p-6 md:p-8 backdrop-blur-lg relative overflow-hidden">
+        <!-- Bordure animée -->
+        <div class="absolute inset-0 rounded-2xl bg-gradient-to-r from-gold/10 via-transparent to-gold/10 animate-pulse" style="animation-duration: 4s;"></div>
+        
+        <div class="relative z-10">
+          <div class="text-center mb-8">
+            <p class="text-light-gold/80 text-sm md:text-base italic mb-4 leading-relaxed">
+              Prenez un moment pour vous concentrer et vous relier profondément à votre intention.
+            </p>
+            <div class="inline-flex items-center bg-gold/10 px-4 py-2 rounded-full border border-gold/30">
+              <i class="fas fa-lightbulb text-gold mr-2"></i>
+              <p class="text-gold font-medium text-sm">Une intention claire ouvre la voie à une guidance plus juste</p>
+            </div>
+          </div>
+          
+          <div class="flex flex-col gap-8">
+            <div class="relative">
+              <div class="relative">
+                <textarea id="intention" 
+                         class="w-full bg-night-blue/30 border-2 border-gold/40 rounded-2xl p-6 text-light-gold placeholder-gold/50
+                                focus:border-gold/80 focus:ring-4 focus:ring-gold/20 focus:outline-none transition-all duration-300 text-base md:text-lg
+                                min-h-[120px] md:min-h-[140px] resize-none shadow-inner"
+                         placeholder="Exemple : Comment puis-je aligner mes actions avec mes valeurs profondes aujourd'hui ?" 
+                         required></textarea>
+                
+                <!-- Compteur de caractères stylisé -->
+                <div class="absolute bottom-4 right-4 bg-gold/20 px-3 py-1 rounded-full border border-gold/30">
+                  <span id="charCount" class="text-gold font-medium text-sm">0</span>
+                  <span class="text-gold/70 text-sm">/200</span>
+                </div>
+                
+                <!-- Icône d'inspiration -->
+                <div class="absolute top-4 left-4 text-gold/50">
+                  <i class="fas fa-pen-nib"></i>
+                </div>
+              </div>
+              
+              <!-- Indicateur de qualité -->
+              <div class="flex items-center justify-between mt-3 px-2">
+                <div class="flex items-center text-gold/60 text-sm">
+                  <i class="fas fa-info-circle mr-2"></i>
+                  <span>Formulez une question ouverte</span>
+                </div>
+                <div class="flex items-center text-gold/60 text-sm">
+                  <i class="fas fa-question-circle mr-2"></i>
+                  <span>Terminez par "?"</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Bouton de démarrage premium -->
+      <div class="text-center mt-8">
+        <button id="startReading" class="btn-gold px-10 py-5 text-lg md:text-xl font-semibold hover:scale-105 transition-all duration-300 rounded-2xl relative overflow-hidden button-particles" disabled>
+          <div class="absolute inset-0 bg-gradient-to-r from-gold/20 to-light-gold/20 transform hover:scale-110 transition-transform duration-300"></div>
+          <i class="fas fa-play-circle mr-3 relative z-10"></i>
+          <span class="relative z-10">Commencer le voyage</span>
+        </button>
+      </div>
+    </div>
+  </div>
+<!-- Plateau (caché au départ) -->
+<section id="board" class="hidden" aria-live="polite">
+  <div class="flex items-center justify-between max-w-5xl mx-auto mb-2">
+    <span class="step-chip hover:bg-gold/20 transition-colors cursor-pointer hovered-element" id="stepInfo">Étape 1/4 • Choisis ta carte ÉMOTIONS</span>
+  </div>
+
+  <div class="fan-wrap" id="fanBoard"></div>
+
+  <div class="choice-tray" id="tray">
+    <div class="slots">
+    <div class="slot" id="slot-0" aria-label="Carte ÉMOTIONS"></div>
+<div class="slot" id="slot-1" aria-label="Carte BESOINS"></div>
+<div class="slot" id="slot-2" aria-label="Carte ACTIONS"></div>
+<div class="slot" id="slot-3" aria-label="Carte MÉMOIRE COSMOS"></div>
+    </div>
+  </div>
+
+  <div class="text-center mt-4">
+<button id="showResults" class="cta-analyse hidden px-6 py-3 border border-gold text-light-gold rounded-lg hover:bg-gold hover:text-dark-blue transition disabled:opacity-40" disabled>
+      Afficher l’analyse
+    </button>
+  </div>
+</section>
+
+      <section id="results" class="hidden mt-6">
+        <h2 class="cormorant text-3xl text-gold mb-3">Résultats du tirage</h2>
+        <div class="mb-2"><b>Intention :</b> <span id="out-intention">—</span></div>
+        <div class="result-lines" id="lines"></div>
+        <div class="mt-3" id="synthese"></div>
+      </section>
+      <div class="max-w-2xl mx-auto mt-8 space-y-6">
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <button type="button" id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none relative overflow-hidden group" onclick="handleFullReadingClick()">
+            <div class="absolute inset-0 bg-gradient-to-r from-gold/10 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+            <span class="relative z-10 flex items-center justify-center gap-2">
+              <i class="fas fa-stars text-gold"></i>
+              Envie d'un tirage plus complet?
+            </span>
+          </button>
+          <button id="newPilgrim" class="btn-gold hidden flex-1 sm:flex-none relative overflow-hidden group">
+            <div class="absolute inset-0 bg-gradient-to-r from-light-gold/20 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+            <span class="relative z-10 flex items-center justify-center gap-2">
+              <i class="fas fa-redo text-night-blue"></i>
+              Nouveau tirage
+            </span>
+          </button>
+        </div>
+        
+        <div id="emailForm" class="hidden w-full max-w-2xl mx-auto">
+          <div class="bg-gradient-to-br from-[rgba(18,20,32,.8)] to-[rgba(5,20,40,.6)] border border-[rgba(212,175,55,.35)] rounded-2xl p-6 relative overflow-hidden">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full -translate-y-16 translate-x-16"></div>
+            <div class="absolute bottom-0 left-0 w-24 h-24 bg-light-gold/5 rounded-full translate-y-12 -translate-x-12"></div>
+            
+            <div class="relative z-10">
+              <h3 class="cormorant text-xl text-gold mb-4 text-center">Recevoir le résultat par email</h3>
+              <div class="flex flex-col sm:flex-row gap-4 w-full">
+                <input type="email" id="userEmail" placeholder="Votre adresse email" 
+                       class="flex-1 min-w-0 bg-[rgba(5,20,40,.8)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg text-light-gold placeholder-gold/50 focus:border-gold/80 focus:ring-2 focus:ring-gold/20 transition-all duration-300" required>
+                <button id="sendEmailBtn" class="btn-gold whitespace-nowrap px-6 py-3 sm:w-auto w-full relative overflow-hidden group">
+                  <div class="absolute inset-0 bg-gradient-to-r from-light-gold/20 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+                  <span class="relative z-10 flex items-center justify-center gap-2">
+                    <i class="fas fa-paper-plane text-night-blue"></i>
+                    Envoyer
+                  </span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+</div>
+  </section>
 
   <!-- Offres -->
   <section id="offres" class="py-20 px-6 bg-dark-blue">
@@ -899,9 +1156,9 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
  <p class="text-light-gold text-sm">
               Une question simple, un pas sur le chemin. Le tirage du Pèlerin éclaire passé, présent et futur : ce qui t'accompagne encore, ce qui se joue maintenant, et ce qui se dessine devant toi. C'est un tirage d'initiation, une première porte pour goûter la vibration d'Oradia.
             </p>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>3 cartes + 1 carte Mémoires Cosmos</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>3 cartes (Émotion, Besoin, Mémoire Cosmos)</span></li>
+               <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 carte Mémoires Cosmos</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Interprétation synthétique</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Analyse croisée basique par l'IA</span></li>
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Cartes passerelles</span></li>
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Espace membre</span></li>
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Analyse approfondie</span></li>
@@ -945,18 +1202,16 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
               Un carrefour, une décision, un choix à poser. Le tirage de la Traversée se déploie comme une boussole intérieure : Nord, Sud, Est, Ouest. Quatre directions pour éclairer ton orientation dans la vie, retrouver ton cap, discerner la voie juste. C'est un tirage pour les passages importants.
             </p>
           <ul class="space-y-3 mb-8 relative z-10">
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>4 cartes vibratoires</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>4 cartes (Émotion, Besoin, Révélation, Action)</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 carte Mémoires Cosmos</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes passerelles</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Analyse croisée par l'IA complète et détaillée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question d'introspection</span></li>
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Espace membre</span></li>
-            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">1 tirage complet quotidien par mail</span></li>
+            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">1 tirage complet personnalisé quotidien par mail</span></li>
           </ul>
-
           <a href="#" id="orderBtn" class="btn-gold w-full text-center block relative z-10 mt-auto">Commander</a>
-        </div>
+</div>
 
         <!-- Abonnement -->
         <div class="rounded-2xl p-8 relative overflow-hidden flex flex-col h-full" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
@@ -984,23 +1239,63 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
    <p class="text-light-gold text-sm">
               L'expérience complète. Le Guidage du Tore recueille toutes les dimensions de ton être : émotions, besoins, archétypes, révélations, actions. Il s'appuie aussi sur tes clés personnelles (Human Design, Ennéagramme, astrologie...). C'est une cartographie vibratoire profonde pour avancer avec clarté.
             </p>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 tirage complet quotidien par mail avec votre intention</span></li>
+            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 tirage complet personnalisé quotidien par mail avec votre intention</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes passerelles</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question du jour</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Espace membre (profils ennéagramme, astro, numérologie...)</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Accès à l'archive des 10 derniers tirages</span></li>
             <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Participation à l’amélioration de l’oracle (expérience anonyme)</span></li>
-          </ul>
+        </ul>
+            <a href="tore.html" class="btn-gold w-full text-center block relative z-10 mt-auto hovered-element">Accéder au tirage du Tore</a>
+</div>
+</div>
+    </div>
+  </section>
 
-          <a href="#" id="subscribeBtn" class="btn-gold w-full text-center block relative z-10 mt-auto">S'abonner</a>
+  <!-- Tirage du Tore - Section Immersive -->
+  <section id="tore" class="py-20 px-6 bg-night-blue hidden">
+    <div class="container mx-auto max-w-6xl">
+      <div class="text-center mb-12">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-1">Tirage du Tore</h2>
+        <p class="text-light-gold max-w-3xl mx-auto">Guidance vibratoire complète - 8 cartes pour une vision d'ensemble</p>
+      </div>
+
+      <div class="rounded-2xl p-8 mb-8 relative overflow-hidden" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+        <div class="relative z-10">
+          <div id="tore-intro">
+            <h3 class="cormorant text-2xl text-gold mb-4">Préparation du tirage du Tore</h3>
+            <p class="text-light-gold mb-6">Ce tirage complet nécessite votre intention pour personnaliser l'expérience.</p>
+            <button id="tore-start" class="btn-gold">Commencer le tirage du Tore</button>
+          </div>
+
+          <div id="tore-intention-form" class="hidden">
+            <div class="mb-6">
+              <label class="block text-light-gold mb-2">Votre intention pour ce tirage</label>
+              <textarea id="toreIntentionText" class="w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg min-h-[120px]" placeholder="Exemple : Comment aligner mes actions avec mes aspirations profondes ce mois-ci ?" required></textarea>
+            </div>
+            <button type="button" id="launchToreBoard" class="btn-gold w-full">Lancer le tirage</button>
+          </div>
+
+          <div id="tore-board-container" class="hidden">
+            <div id="toreBoard" class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+              <!-- Les 8 cartes seront générées ici -->
+            </div>
+            <div class="text-center">
+              <button id="analyzeTore" class="btn-gold">Analyser le tirage</button>
+            </div>
+          </div>
+
+          <div id="tore-results" class="hidden">
+            <h3 class="cormorant text-2xl text-gold mb-3">Résultats du tirage du Tore</h3>
+            <div class="result-lines" id="tore-lines"></div>
+            <div class="mt-3" id="tore-synthese"></div>
+          </div>
         </div>
       </div>
     </div>
   </section>
-
- 
-  <!-- Oracle de cartes physique-->
+<!-- Oracle de cartes physique-->
   <section id="Jeu" class="py-20 px-6 bg-dark-blue">
     <div class="container mx-auto max-w-6xl">
       <div class="text-center mb-12">
@@ -1148,22 +1443,13 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   </section>
 
 
-    <!-- Tirage de la Traversée -->
-  <section id="traversee" class="py-20 px-6 bg-night-blue">
+  <!-- Tirage de la Traversée - caché jusqu'à paiement -->
+  <section id="traversee" class="py-20 px-6 bg-night-blue hidden">
     <div class="container mx-auto max-w-6xl">
-      <div class="mb-6">
-        <a href="index.html" class="btn-outline-gold inline-flex items-center">
-          <i class="fas fa-arrow-left mr-2"></i>
-          Retour à l’accueil
-        </a>
-      </div>
       <div class="text-center mb-12">
         <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-1">Tirage de la Traversée</h2>
-        <p class="text-light-gold max-w-3xl mx-auto">
-          Guidance vibratoire approfondie pour votre cheminement
-        </p>
+        <p class="text-light-gold max-w-3xl mx-auto">Guidance vibratoire approfondie pour votre cheminement</p>
       </div>
-
 
       <div class="rounded-2xl p-8 mb-8 relative overflow-hidden" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
         <!-- Animation tunnel avec marcheur -->
@@ -1280,7 +1566,6 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       </div>
     </div>
   </section>
-
   <!-- Footer -->
   <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
     <div class="container mx-auto max-w-6xl">
@@ -1305,7 +1590,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         <div>
           <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
           <ul class="space-y-2">
-            <li><a href="#" id="showCGV" class="text-light-gold hover:text-gold transition">CGU</a></li>
+            <li><button id="showCGU" class="text-light-gold hover:text-gold transition bg-transparent border-none p-0 cursor-pointer">CGU</button></li>
             <li><a href="#" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
             <li><a href="#" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
           </ul>
@@ -1325,8 +1610,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       </div>
     </div>
   </footer>
-
-   <!-- Modal d'analyse -->
+<!-- Modal d'analyse -->
 <div id="analyzeModal"
      class="fixed inset-0 z-[1000] hidden items-center justify-center bg-black/60 backdrop-blur-sm">
   <div class="relative w-full max-w-sm mx-4 rounded-2xl border border-gold/40
@@ -1365,8 +1649,8 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         <h3 class="cormorant text-3xl text-gold mb-2">Commande Tirage de la Traversée</h3>
         <p class="text-light-gold">Finalisez votre commande pour obtenir l'accès à 5 tirages</p>
       </div>
-      <form id="orderForm">
- 	  <div class="mb-4">
+      <form id="orderForm" onsubmit="if(localStorage.getItem('oradiaAuth') === '1') { document.getElementById('traversee-start').click(); return false; }">
+<div class="mb-4">
           <label class="block text-light-gold mb-2">Nom</label>
           <input type="text" class="form-input w-full bg-[rgba(5,20,40,.7)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg" required>
           </div>
@@ -1628,7 +1912,47 @@ const DATA_TRAVERSEE = new Proxy({}, {
     `;
   }
 
-  
+  // BuildBoard
+  function buildBoard() {
+  const host = el('traversee-board');
+  if (!host) return;
+
+  // 1) construire le plateau
+  host.innerHTML = `
+    <h3 class="cormorant text-2xl text-gold mb-6 text-center">
+      Retournez les 5 cartes : Nord • Sud • Est • Ouest • Centre
+    </h3>
+    <div class="traversee-board-5">
+      ${slot('nord','revelations')}
+      ${slot('sud','transmutation')}
+      ${slot('est','actions')}
+      ${slot('ouest','emotions')}
+      ${slot('centre','cosmos')}
+    </div>
+  `;
+  host.classList.remove('hidden');
+
+  // 2) état
+  host._state = {
+    flipped: 0,
+    drawn: { nord:null, sud:null, est:null, ouest:null, centre:null }
+  };
+
+  // 3) interactions (click + clavier)
+  host.querySelectorAll('.traversee-card-back').forEach(back => {
+    const card = back.closest('.traversee-card');
+    const onFlip = () => flipCard(card);
+    back.addEventListener('click', onFlip);
+    back.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFlip(); }
+    });
+  });
+
+  // 4) afficher la section + passer en mode immersif
+  const trav = el('traversee');
+  trav?.classList.remove('hidden');
+  enterImmersive();
+}
 
   // ---------- helpers DOM ----------
   const $  = sel => document.querySelector(sel);
@@ -1705,7 +2029,118 @@ const p = document.getElementById('immersiveMenuPanel');
 if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
 
 
-  
+    // Réinitialise visuellement la section Traversée
+    const boardHost = el('traversee-board');
+    const results   = el('traversee-results');
+    const intro     = el('traversee-intro');
+    const form      = el('traversee-form');
+
+    if(boardHost){ boardHost.innerHTML=''; boardHost.classList.add('hidden'); }
+    if(results){ results.innerHTML=''; results.classList.add('hidden'); }
+    if(form){ form.reset?.(); form.classList.add('hidden'); }
+    if(intro){ intro.classList.remove('hidden'); }
+    window.scrollTo({top:0, behavior:'smooth'});
+  }
+
+ 
+
+  function flipCard(card){
+    if(!card || card.classList.contains('flipped')) return;
+
+    // on exige que l'intention de la Traversée soit remplie (dans le formulaire de la section Traversée)
+    const tForm = el('traversee-form');
+    const intentionField = tForm?.querySelector('textarea, input[type="text"]');
+    if(intentionField && !intentionField.value.trim()){
+      intentionField.focus();
+      intentionField.setCustomValidity("Veuillez saisir votre intention pour ce tirage.");
+      intentionField.reportValidity();
+      return;
+    } else if (intentionField) {
+      intentionField.setCustomValidity("");
+    }
+
+    const slot = card.dataset.slot;       // nord/sud/est/ouest/centre
+    const fam  = card.dataset.family;     // revelations/transmutation/actions/emotions/cosmos
+    const data = safePick(DATA_TRAVERSEE[fam]||[]);
+
+    // remplir la face avant
+    card.querySelector('[data-name]').textContent  = data?.name || "—";
+    card.querySelector('[data-quote]').textContent = data?.quote || "—";
+    
+    // Afficher le nom de la famille
+    const familyLabel = card.querySelector('[data-family-label]');
+    if (familyLabel) {
+      const familyNames = {
+        'emotions': 'Émotions',
+        'transmutation': 'Transmutation',
+        'revelations': 'Révélations',
+        'actions': 'Actions',
+        'cosmos': 'Mémoires Cosmos'
+      };
+      familyLabel.textContent = familyNames[fam] || "—";
+    }
+    
+    const polEl = card.querySelector('[data-pol]');
+    if(slot === 'centre'){ 
+      polEl.style.visibility='hidden'; 
+      polEl.textContent='';
+      
+      // Mise en valeur spéciale pour la carte centre
+      card.style.boxShadow = "0 0 25px rgba(245, 231, 161, 0.5)";
+      card.querySelector('.traversee-card-front').style.background = "linear-gradient(145deg, rgba(245, 231, 161, 0.15), rgba(5,20,40,.9))";
+      card.querySelector('.traversee-card-front').style.borderColor = "rgba(245, 231, 161, 0.6)";
+    } else { 
+      polEl.style.visibility='visible'; 
+      polEl.textContent = data?.polarity ? polIcon(data.polarity) : ''; 
+    }
+
+    // flip visuel
+    card.classList.add('flipped');
+    
+    // Supprimer le logo Oradia du dos de la carte
+    const backLogo = card.querySelector('.logo-circle');
+    if (backLogo) {
+      backLogo.style.display = 'none';
+    }
+
+
+    // état
+    const host = el('traversee-board');
+    host._state.drawn[slot] = data;
+    host._state.flipped++;
+
+    if(host._state.flipped === 5){
+      showResults(host._state.drawn, intentionField?.value?.trim() || "");
+    }
+  }
+
+  function showResults(drawn, intention){
+    const out = el('traversee-results');
+    if(!out) return;
+
+    const L = (titre, obj, showPol=true) => {
+      const polTxt = showPol && obj?.polarity ? (obj.polarity==='yang'?' (énergie masculine)':' (énergie féminine)') : '';
+      return `<p><b>${titre} :</b> ${obj?.name||'—'}${polTxt}<br><i>« ${obj?.quote||'—'} »</i></p>`;
+    };
+
+    out.innerHTML = `
+      <h3 class="cormorant text-2xl text-gold mb-3">Résultats de la Traversée</h3>
+      ${intention ? `<div class="mb-2"><b>Intention :</b> ${intention}</div>` : ``}
+      <div class="result-lines">
+        ${L("Nord — Révélations (Vision)", drawn.nord)}
+        ${L("Sud — Transmutation (Ancrage)", drawn.sud)}
+        ${L("Est — Actions (Élan)", drawn.est)}
+        ${L("Ouest — Émotions (Mémoire)", drawn.ouest)}
+        ${L("Centre — Mémoires Cosmos", drawn.centre, false)}
+      </div>
+      <div class="mt-3">
+        <b>Synthèse :</b>
+        <p>La Vision (Nord) éclaire l’horizon ; l’Ancrage (Sud) montre ce qui doit se transformer ; l’Élan (Est) indique le mouvement ; la Mémoire (Ouest) révèle la leçon ; le Cosmos (Centre) relie le tout.</p>
+      </div>
+    `;
+    out.classList.remove('hidden');
+    out.scrollIntoView({behavior:'smooth', block:'start'});
+  }
 
   // ---------- branchement UI de la section #traversee ----------
   document.addEventListener('DOMContentLoaded', () => {
@@ -1719,14 +2154,15 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
       form?.classList.remove('hidden');
       el('traversee')?.scrollIntoView({behavior:'smooth'});
     });
-
-    // Étape 2 : soumission = construire le plateau + entrer en immersif
+      // Étape 2 : soumission = construire le plateau + entrer en immersif si connecté
     form?.addEventListener('submit', (e) => {
       e.preventDefault();
-      buildBoard(); // enterImmersive() est appelé à la fin de buildBoard()
+      buildBoard(); 
+      if (localStorage.getItem('oradiaAuth') === '1') {
+        enterImmersive();
+      }
     });
-
-    // Bouton "Quitter le tirage"
+// Bouton "Quitter le tirage"
     exitBtn?.addEventListener('click', () => {
       exitImmersive();
       // Retour à l'accueil
@@ -1735,11 +2171,267 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
   });
 })();
 </script>
-
-
-  <!-- SCRIPT -->
+  <!-- Scripts -->
+  <script src="components/cgu-modal.js"></script>
   <script>
-    // Fonction pour gérer le clic sur "Envie d'un tirage plus complet?"
+    // Reset auth state on first load
+    if (!localStorage.getItem('authInitialized')) {
+      localStorage.removeItem('oradiaAuth');
+      localStorage.setItem('authInitialized', 'true');
+    }
+
+    // Gestion du bouton "Accéder au tirage du Tore"
+    document.getElementById('subscribeBtn')?.addEventListener('click', function(e) {
+      e.preventDefault();
+      startToreImmersive();
+    });
+
+    // Gestion du bouton "Commencer le tirage" de la traversée
+    document.getElementById('orderBtn')?.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (localStorage.getItem('oradiaAuth') === '1') {
+        // Si connecté, on scroll vers la traversée et on ouvre le formulaire
+        document.getElementById('traversee')?.classList.remove('hidden');
+        document.getElementById('traversee-start')?.click();
+        document.getElementById('traversee')?.scrollIntoView({behavior: 'smooth'});
+      } else {
+        // Sinon, on ouvre la modale de commande normale
+        document.getElementById('orderModal')?.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+// Empêcher l'ouverture de la modale si déjà connecté
+    document.getElementById('orderModal')?.addEventListener('click', function(e) {
+      if (e.target === this && localStorage.getItem('oradiaAuth') === '1') {
+        this.classList.add('hidden');
+        document.body.style.overflow = '';
+        document.getElementById('traversee')?.classList.remove('hidden');
+        document.getElementById('traversee-start')?.click();
+        document.getElementById('traversee')?.scrollIntoView({behavior: 'smooth'});
+      }
+    });
+    // Gestion du bouton "Accéder au tirage du Tore" du Tore
+    document.getElementById('subscribeBtn')?.addEventListener('click', function(e) {
+      e.preventDefault();
+      if (localStorage.getItem('oradiaAuth') === '1') {
+        // Si connecté, on ouvre le tirage du Tore en mode immersif
+        const toreSection = document.getElementById('traversee'); 
+        
+        // Utiliser traversee comme section immersive
+        if (toreSection) {
+          toreSection.classList.remove('hidden');
+          enterToreImmersive();
+          toreSection.scrollIntoView({behavior: 'smooth'});
+        }
+      } else {
+        // Sinon, on ouvre la modale d'abonnement normale
+        document.getElementById('subscriptionModal')?.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+      }
+    });
+    function startToreImmersive() {
+      // Si l'utilisateur n'est pas connecté, afficher la modale d'abonnement
+      if (localStorage.getItem('oradiaAuth') !== '1') {
+        document.getElementById('subscriptionModal')?.classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+        return;
+      }
+
+      // Masquer toutes les sections sauf #tore
+      document.querySelectorAll('body > header, body > footer, body > section:not(#tore)').forEach(n => {
+        n.classList.add('hide-immersive');
+      });
+
+      // Afficher la section Tore
+      document.getElementById('tore').classList.remove('hidden');
+
+      // Créer le bouton de sortie
+      if (!document.getElementById('exitToreBtn')) {
+        const exitBtn = document.createElement('button');
+        exitBtn.id = 'exitToreBtn';
+        exitBtn.className = 'fixed top-4 left-4 z-50 bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold p-3 rounded-full shadow-lg';
+        exitBtn.innerHTML = '<i class="fas fa-times"></i>';
+        exitBtn.addEventListener('click', exitToreImmersive);
+        document.body.appendChild(exitBtn);
+      }
+
+      // Scroll vers le haut de la section
+      document.getElementById('tore').scrollIntoView({behavior: 'smooth', block: 'start'});
+    }
+
+    function exitToreImmersive() {
+      // Afficher à nouveau tous les éléments
+      document.querySelectorAll('body > header, body > footer, body > section').forEach(n => {
+        n.classList.remove('hide-immersive');
+      });
+
+      // Masquer la section Tore
+      document.getElementById('tore').classList.add('hidden');
+
+      // Supprimer le bouton de sortie
+      const exitBtn = document.getElementById('exitToreBtn');
+      if (exitBtn) exitBtn.remove();
+
+      // Réinitialiser l'état du tirage
+      document.getElementById('tore-intro').classList.remove('hidden');
+      document.getElementById('tore-intention-form').classList.add('hidden');
+      document.getElementById('tore-board-container').classList.add('hidden');
+      document.getElementById('tore-results').classList.add('hidden');
+      document.getElementById('toreIntentionText').value = '';
+
+      // Retour à l'accueil
+      document.getElementById('accueil')?.scrollIntoView({behavior: 'smooth'});
+    }
+
+    // Logique du tirage du Tore
+    document.getElementById('tore-start')?.addEventListener('click', function() {
+      document.getElementById('tore-intro').classList.add('hidden');
+      document.getElementById('tore-intention-form').classList.remove('hidden');
+      document.getElementById('toreIntentionText').focus();
+    });
+
+    document.getElementById('launchToreBoard')?.addEventListener('click', function() {
+      const intention = document.getElementById('toreIntentionText').value.trim();
+      if (!intention) {
+        document.getElementById('toreIntentionText').setCustomValidity('Veuillez saisir une intention pour ce tirage.');
+        document.getElementById('toreIntentionText').reportValidity();
+        return;
+      }
+
+      document.getElementById('tore-intention-form').classList.add('hidden');
+      document.getElementById('tore-board-container').classList.remove('hidden');
+
+      // Générer les 8 cartes du Tore
+      const toreBoard = document.getElementById('toreBoard');
+      toreBoard.innerHTML = '';
+
+      const families = ['emotions', 'besoins', 'revelations', 'actions', 'cosmos', 'archetypes', 'transmutation', 'cosmos'];
+      families.forEach((fam, idx) => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.dataset.family = fam;
+        card.innerHTML = `
+          <div class="card-inner">
+            <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte">
+              <div class="logo-circle" aria-hidden="true"></div>
+            </div>
+            <div class="face front">
+              <div class="topbar">
+                <span class="chip">${fam.toUpperCase()}</span>
+                <span class="polarity" data-polarity></span>
+              </div>
+              <div class="art">
+                <div>
+                  <h3 data-name>—</h3>
+                  <div class="quote" data-quote>—</div>
+                </div>
+              </div>
+              <div class="bottom"></div>
+            </div>
+          </div>
+        `;
+        toreBoard.appendChild(card);
+
+        const back = card.querySelector('.back');
+        back.addEventListener('click', () => {
+          if (card.classList.contains('flipped')) return;
+          const data = pick(window.DATA[fam] || []);
+          if (data) {
+            card.querySelector('[data-name]').textContent = data.name;
+            card.querySelector('[data-quote]').textContent = data.quote;
+            const polEl = card.querySelector('[data-polarity]');
+            if (fam !== 'cosmos' && data.polarity) {
+              polEl.textContent = data.polarity === 'yang' ? '▲' : '●';
+            } else {
+              polEl.style.visibility = 'hidden';
+            }
+          }
+          card.classList.add('flipped');
+        });
+      });
+    });
+
+    document.getElementById('analyzeTore')?.addEventListener('click', function() {
+      const intention = document.getElementById('toreIntentionText').value.trim();
+      const cards = document.querySelectorAll('#toreBoard .card.flipped');
+      
+      if (cards.length < 8) {
+        alert('Veuillez retourner toutes les cartes avant l\'analyse');
+        return;
+      }
+
+      document.getElementById('tore-board-container').classList.add('hidden');
+      document.getElementById('tore-results').classList.remove('hidden');
+
+      const linesEl = document.getElementById('tore-lines');
+      linesEl.innerHTML = '';
+      cards.forEach(card => {
+        const name = card.querySelector('[data-name]').textContent;
+        const quote = card.querySelector('[data-quote]').textContent;
+        const fam = card.dataset.family;
+        linesEl.innerHTML += `<p><b>${fam.toUpperCase()} :</b> ${name} — ${quote}</p>`;
+      });
+
+      const synthEl = document.getElementById('tore-synthese');
+      synthEl.innerHTML = `<p><b>Intention :</b> ${intention}</p><p>Le tirage du Tore offre une vision complète de votre cheminement, intégrant toutes les dimensions de l'être.</p>`;
+
+      document.getElementById('tore-results').scrollIntoView({behavior: 'smooth'});
+    });
+
+    document.getElementById('newToreReading')?.addEventListener('click', function() {
+      exitToreImmersive();
+      startToreImmersive();
+    });
+// Empêcher l'ouverture de la modale d'abonnement si déjà connecté
+    document.getElementById('subscriptionModal')?.addEventListener('click', function(e) {
+      if (e.target === this && localStorage.getItem('oradiaAuth') === '1') {
+        this.classList.add('hidden');
+        document.body.style.overflow = '';
+        // Ouvrir le tirage du Tore en mode immersif
+        const toreSection = document.getElementById('traversee');
+        if (toreSection) {
+          toreSection.classList.remove('hidden');
+          enterToreImmersive();
+          toreSection.scrollIntoView({behavior: 'smooth'});
+        }
+      }
+    });
+// Gestion des modales - vérification de l'authentification avant ouverture
+    const modals = ['orderModal', 'subscriptionModal'];
+    modals.forEach(modalId => {
+      const modal = document.getElementById(modalId);
+      const openBtns = document.querySelectorAll(`[data-target="${modalId}"]`);
+      
+      openBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          if (localStorage.getItem('oradiaAuth') === '1') {
+            e.preventDefault();
+            // Redirection appropriée selon la modale
+            if (modalId === 'orderModal') {
+              document.getElementById('traversee')?.classList.remove('hidden');
+              document.getElementById('traversee-start')?.click();
+              document.getElementById('traversee')?.scrollIntoView({behavior: 'smooth'});
+            } else {
+              window.location.href = 'tore.html';
+            }
+          }
+        });
+      });
+    });
+
+    // Gestion du modal CGU
+document.getElementById('showCGU')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const modal = document.querySelector('cgu-modal');
+      if (!modal) {
+        const cguModal = document.createElement('cgu-modal');
+        document.body.appendChild(cguModal);
+        cguModal.open();
+      } else {
+        modal.open();
+      }
+    });
+// Fonction pour gérer le clic sur "Envie d'un tirage plus complet?"
 function handleFullReadingClick() {
   // 1) Quitter le mode immersif s'il est actif
   if (typeof window.exitPelerinImmersive === 'function') {
@@ -2422,7 +3114,6 @@ function initMobileMenu(){
     btn.setAttribute('aria-expanded','false');
   });
 }
-
 /* ---------- Boot compatible SPA ---------- */
 (function start(){
   const run = () => {
@@ -2431,6 +3122,8 @@ function initMobileMenu(){
     initOrderModal();
     initSubscription();
     initPelerin();
+    initTraversee();
+    initToreSystem(); // Initialisation du système Tore
     tryInitMobileMenu(); // réessaie si éléments pas encore dans le DOM
   };
 
@@ -2441,6 +3134,10 @@ function initMobileMenu(){
   }
 })();
 
+function initToreSystem() {
+  // La logique Tore est maintenant gérée dans les event listeners ci-dessus
+  console.log('Système Tore initialisé');
+}
 function tryInitMobileMenu(max = 20){
   const btn  = document.getElementById('mobileMenuBtn');
   const menu = document.getElementById('mobileMenu');
@@ -2836,8 +3533,7 @@ const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : 
     card.dataset.card     = item.name || '';
     card.dataset.polarity = item.polarity || '';
   }
-
-  function renderFan(){
+      function renderFan(){
     clearFan();
     const { count, key } = STEPS[stepIndex];
 
@@ -2875,15 +3571,9 @@ const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : 
         </div>
       `;
 
-      // Style spécial pour le dos des cartes cosmos
-      if (key === 'cosmos') {
-        const backFace = art.querySelector('.back');
-        backFace.style.background = 'radial-gradient(800px 500px at 50% 40%, rgba(245, 231, 161, 0.15), transparent 60%), linear-gradient(135deg, #0b1d3a, #08152c)';
-      }
-
       // apparition douce
       art.style.opacity = '0';
-      art.style.transform = `translate(-50%,-50%) rotate(${a}deg) translateY(${radius}px) scale(.985)`;
+      art.style.transform = `translate(-50%,-50%) rotate(${a}deg) translateY(${radius}px)`;
       fan.appendChild(art);
       setTimeout(()=>{
         art.style.transition = 'transform 520ms cubic-bezier(.2,.7,.2,1), box-shadow 280ms ease, opacity 280ms ease';
@@ -2895,8 +3585,7 @@ const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : 
       back.addEventListener('click', ()=> onPick(art, i));
     }
   }
-
-  // Récupère le centre d'un slot
+// Récupère le centre d'un slot
   function slotCenter(index){
     const slot = document.getElementById(`slot-${index}`);
     const slotBox = slot.getBoundingClientRect();
@@ -3041,6 +3730,27 @@ const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : 
 })();
 </script>
 <script>
+// Démarrer le Pèlerin en mode immersif depuis l’offre
+document.addEventListener('DOMContentLoaded', () => {
+  const btn = document.getElementById('startPilgrimFromOffer');
+  if (!btn) return;
+  btn.addEventListener('click', (e) => {
+    e.preventDefault();
+    const oracle = document.getElementById('oracle');
+    if (oracle) {
+      // Affiche la section et scroll
+      oracle.classList.remove('hidden');
+      oracle.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    if (typeof window.enterPelerinImmersive === 'function') {
+  window.enterPelerinImmersive();
+} else {
+  document.getElementById('intention')?.focus();
+}
+    }
+  });
+});
+</script>
+<script>
 /* DS V3 — Délégation globale pour le menu mobile */
 document.addEventListener('click', (e) => {
   const menu = document.getElementById('mobileMenu');
@@ -3073,24 +3783,6 @@ document.addEventListener('click', (e) => {
 
   function isAuthed(){ return localStorage.getItem(AUTH_KEY) === '1'; }
   function setAuthed(v){ v ? localStorage.setItem(AUTH_KEY,'1') : localStorage.removeItem(AUTH_KEY); }
-  function hasTraverseeAccess(){
-    // 1) Accès si connecté à l’espace membre
-    if (isAuthed()) return true;
-
-    // 2) Accès si on vient de la page "Merci" avec ?access=traversee
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('access') === 'traversee'){
-      // On mémorise l’accès pour cette session (onglet)
-      sessionStorage.setItem('traverseePaid', '1');
-      return true;
-    }
-
-    // 3) Accès si la session a déjà été marquée comme payée
-    if (sessionStorage.getItem('traverseePaid') === '1') return true;
-
-    // 4) Sinon, accès refusé
-    return false;
-  }
 
   function ensureMemberIcon(){
     // Si déjà présent, ne rien faire
@@ -3099,44 +3791,78 @@ document.addEventListener('click', (e) => {
     // Trouve la zone du header où se trouve le bouton Connexion (desktop)
     const loginBtn = document.getElementById('loginBtn');
     if (!loginBtn || !loginBtn.parentElement) return;
-    const wrap = loginBtn.parentElement;
+      const wrap = loginBtn.parentElement;
 
-    // Crée l’icône membre
+    // Crée l'icône membre avec menu dropdown
+    const memberContainer = document.createElement('div');
+    memberContainer.className = 'relative';
+    memberContainer.id = 'memberContainer';
+    
     const btn = document.createElement('button');
     btn.id = 'memberIcon';
     btn.type = 'button';
+    btn.className = 'flex items-center gap-2';
     btn.innerHTML = `
       <i class="fas fa-user-circle text-xl"></i>
       <span class="hidden md:inline">Espace membre</span>
       <span class="badge" aria-label="connecté"></span>
+      <i class="fas fa-chevron-down text-xs ml-1"></i>
     `;
-btn.addEventListener('click', () => {
-  // Aller directement au tirage sans popup
-  location.hash = '#Jeu';
-  const start = document.getElementById('newPilgrim') || document.querySelector('#oracle .btn-gold');
-  if (start) start.click();
-});
 
+    // Menu dropdown
+    const dropdown = document.createElement('div');
+    dropdown.id = 'memberDropdown';
+    dropdown.className = 'absolute right-0 mt-2 w-48 bg-night-blue border border-gold/30 rounded-lg shadow-lg py-1 z-50 hidden';
+    dropdown.innerHTML = `
+      <a href="#profil" class="block px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Profil</a>
+      <a href="#dashboard" class="block px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Tableau de bord</a>
+      <button id="logoutBtn" class="w-full text-left px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Déconnexion</button>
+    `;
 
-    wrap.appendChild(btn);
+    memberContainer.appendChild(btn);
+    memberContainer.appendChild(dropdown);
+    wrap.appendChild(memberContainer);
+
+    // Gestion du menu dropdown
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isHidden = dropdown.classList.contains('hidden');
+      // Fermer tous les autres menus ouverts
+      document.querySelectorAll('#memberDropdown').forEach(menu => {
+        if (menu !== dropdown) menu.classList.add('hidden');
+      });
+      dropdown.classList.toggle('hidden', !isHidden);
+    });
+
+    // Fermer le menu quand on clique ailleurs
+    document.addEventListener('click', (e) => {
+      if (!memberContainer.contains(e.target)) {
+        dropdown.classList.add('hidden');
+      }
+    });
+
+    // Gestion des clics sur les éléments du menu
+    dropdown.querySelector('#logoutBtn').addEventListener('click', () => {
+      logoutFlow();
+      dropdown.classList.add('hidden');
+    });
+wrap.appendChild(btn);
   }
-
   function updateHeaderForAuth(){
     const loginBtn = document.getElementById('loginBtn');         // desktop
     const loginBtnMobile = document.getElementById('loginBtnMobile'); // mobile
     if (isAuthed()){
-      if (loginBtn) loginBtn.classList.add('hidden');
-      if (loginBtnMobile) loginBtnMobile.classList.add('hidden');
+      if (loginBtn) loginBtn.style.display = 'none';
+      if (loginBtnMobile) loginBtnMobile.style.display = 'none';
       ensureMemberIcon();
     } else {
-      if (loginBtn) loginBtn.classList.remove('hidden');
-      if (loginBtnMobile) loginBtnMobile.classList.remove('hidden');
+      if (loginBtn) loginBtn.style.display = 'inline-block';
+      if (loginBtnMobile) loginBtnMobile.style.display = 'block';
       const icon = document.getElementById('memberIcon');
       if (icon) icon.remove();
     }
   }
-
-  function updateCtasForAuth(){
+function updateCtasForAuth(){
     // “Commander” (offre Traversée)
     const orderBtn = document.getElementById('orderBtn');
     if (orderBtn){
@@ -3154,7 +3880,7 @@ btn.addEventListener('click', () => {
     const subSubmit = document.querySelector('#subscribeForm button[type="submit"]');
     if (subSubmit){
       if (isAuthed()){
-        subSubmit.textContent = 'Commencer le tirage';
+        subSubmit.textContent = 'Accéder au tirage du Tore';
         subSubmit.type = 'button';
         subSubmit.addEventListener('click', onStartReading, { once:true });
       } else {
@@ -3165,18 +3891,42 @@ btn.addEventListener('click', () => {
     }
 
     // Si tu as un bouton d’offre “Abonnement” hors modale, traite-le pareil ici.
-  }
-
-  function onStartReading(e){
-    e.preventDefault();
-    location.hash = '#Jeu';
-    const startBtn =
-      document.getElementById('newPilgrim') ||
-      document.querySelector('#oracle button, #oracle a.btn-gold');
-    if (startBtn) startBtn.click();
-  }
-
-  function loginFlow(){
+    // "S'abonner" (offre Tore)
+    const subscribeBtn = document.getElementById('subscribeBtn');
+    if (subscribeBtn) {
+      if (isAuthed()) {
+        // Lorsque l'utilisateur est connecté, le bouton s'abonner devient "Accéder au tirage du Toree"
+        subscribeBtn.textContent = 'Accéder au tirage du Tore';
+        // Assure une ancre cohérente pour l'expérience de tirage
+        subscribeBtn.setAttribute('href', '#traversee');
+        // Supprime tout ancien gestionnaire qui pourrait ouvrir la modale d'inscription
+        const newSubBtn = subscribeBtn.cloneNode(true);
+        subscribeBtn.parentNode.replaceChild(newSubBtn, subscribeBtn);
+        // Ajoute un gestionnaire pour lancer le tirage complet (même comportement que l'offre Traversée)
+        newSubBtn.addEventListener('click', (e) => {
+          e.preventDefault();
+          onStartReading(e);
+        }, { once:true });
+      } else {
+        // Si l'utilisateur n'est pas connecté, rétablit le libellé et laisse la logique d'origine gérer la modale
+        subscribeBtn.textContent = "S'abonner";
+        subscribeBtn.setAttribute('href', '#');
+        // Nettoie les éventuels gestionnaires ajoutés précédemment
+        const newSubBtn = subscribeBtn.cloneNode(true);
+        subscribeBtn.parentNode.replaceChild(newSubBtn, subscribeBtn);
+      }
+    }
+}
+    function onStartReading(e){
+      e.preventDefault();
+      location.hash = '#Jeu';
+      const startBtn =
+        document.getElementById('newPilgrim') ||
+        document.querySelector('#oracle button, #oracle a.btn-gold') ||
+        document.getElementById('traversee-start');
+      if (startBtn) startBtn.click();
+    }
+function loginFlow(){
     setAuthed(true);
     updateHeaderForAuth();
     updateCtasForAuth();
@@ -3245,21 +3995,14 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
     }
   }
 
-    document.addEventListener('DOMContentLoaded', function(){
-    // Si pas connecté et pas passé par la page "Merci" => retour aux offres
-    if (!hasTraverseeAccess()){
-      window.location.href = 'index.html#offres';
-      return;
-    }
-
-    // Sinon on laisse la page fonctionner normalement
+  document.addEventListener('DOMContentLoaded', function(){
     updateHeaderForAuth();
     updateCtasForAuth();
     wireAuthForms();
   });
 })();
-
 </script>
 
+  </div>
 </body>
 </html>
