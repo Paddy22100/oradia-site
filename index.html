@@ -889,10 +889,9 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <!-- Gratuit -->
-        <div class="rounded-2xl p-8 relative overflow-hidden flex flex-col h-full justify-between"
- style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+        <div class="rounded-2xl p-8 relative overflow-hidden flex flex-col h-full" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
           <!-- Animation des flux temporels -->
           <div class="absolute inset-0 z-0 opacity-50 pointer-events-none">
             <!-- Ligne du temps centrale -->
@@ -924,9 +923,10 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
             <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Analyse approfondie</span></li>
           </ul>
 
-<a href="pelerin.html?start=intention" class="btn-gold w-full text-center block">
+<a href="pelerin.html?start=intention" class="btn-gold">
   Commencer le tirage
 </a>
+
 
         </div>
 
@@ -1514,25 +1514,6 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       e.preventDefault();
       startToreImmersive();
     });
-
-// --- FORCER LA DÉCONNEXION ---
-localStorage.removeItem("oradiaAuth"); // supprime la session
-localStorage.setItem("authInitialized", "false"); // force le reset total
-
-const existingMemberContainer = document.getElementById("memberContainer");
-if (existingMemberContainer) existingMemberContainer.remove();
-
-const loginBtn = document.getElementById("loginBtn");
-if (loginBtn) loginBtn.style.display = "inline-block";
-
-const loginBtnMobile = document.getElementById("loginBtnMobile");
-if (loginBtnMobile) loginBtnMobile.style.display = "block";
-
-</script>
-
-<script>
-(function () {
-    // TON GROS SCRIPT ICI
 
    
     function startToreImmersive() {
@@ -3009,18 +2990,9 @@ document.addEventListener('click', (e) => {
 (function(){
   const AUTH_KEY = 'oradiaAuth';
 
-  // Nettoyage de l’ancienne version qui utilisait localStorage
-  localStorage.removeItem(AUTH_KEY);
+  function isAuthed(){ return localStorage.getItem(AUTH_KEY) === '1'; }
+  function setAuthed(v){ v ? localStorage.setItem(AUTH_KEY,'1') : localStorage.removeItem(AUTH_KEY); }
 
-  // → Désormais, on utilise sessionStorage : déconnecté par défaut
-  function isAuthed(){ return sessionStorage.getItem(AUTH_KEY) === '1'; }
-  function setAuthed(v){
-    if (v) {
-      sessionStorage.setItem(AUTH_KEY, '1');
-    } else {
-      sessionStorage.removeItem(AUTH_KEY);
-    }
-  }
   function ensureMemberIcon(){
     // Si déjà présent, ne rien faire
     if (document.getElementById('memberIcon')) return;
@@ -3245,14 +3217,13 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
     }
   }
 
-    document.addEventListener('DOMContentLoaded', function () {
-    // Forcer la déconnexion à chaque arrivée sur le site
-    logoutFlow();        // => setAuthed(false) + updateHeaderForAuth() + updateCtasForAuth()
-    wireAuthForms();     // on garde le câblage des formulaires
+  document.addEventListener('DOMContentLoaded', function(){
+    updateHeaderForAuth();
+    updateCtasForAuth();
+    wireAuthForms();
   });
 })();
 </script>
-
   <!-- Bouton de sortie pour le mode Tore (sera créé dynamiquement) -->
   <div id="toreExitTemplate" class="hidden">
     <button id="exitToreBtn" class="fixed top-4 left-4 z-50 bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold p-3 rounded-full shadow-lg">
@@ -3291,21 +3262,6 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 });
-</script>
-<script>
-  // Au chargement de la page : forcer la déconnexion
-  localStorage.setItem("isLoggedIn", "false");
-
-  // Masquer le menu membre si jamais il existe encore
-  const memberMenu = document.getElementById("memberMenu");
-  if (memberMenu) memberMenu.style.display = "none";
-
-  // Afficher le bouton Connexion si nécessaire
-  const loginBtn = document.getElementById("loginBtn");
-  if (loginBtn) loginBtn.style.display = "inline-block";
-
-  const loginBtnMobile = document.getElementById("loginBtnMobile");
-  if (loginBtnMobile) loginBtnMobile.style.display = "block";
 </script>
 
 </body>
