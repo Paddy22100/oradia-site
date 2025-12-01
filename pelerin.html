@@ -4008,26 +4008,7 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
       <i class="fas fa-times"></i>
     </button>
   </div>
-  <!-- Modal Intention Pèlerin -->
-<div id="intentionModal" class="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
-  <div class="bg-[#0a192f] p-6 rounded-xl border border-gold max-w-md w-full">
-    <h2 class="text-gold text-2xl font-semibold mb-4 text-center">Ton intention</h2>
-    <p class="text-light-gold mb-4 text-center">
-      Quelle est ton intention pour ce tirage ?
-    </p>
-
-    <input id="intentionInput" 
-           class="w-full p-3 rounded-md bg-[#051428] border border-gold text-light-gold mb-4" 
-           placeholder="Écris ton intention ici..." />
-
-    <button id="startReadingBtn"
-            disabled 
-            class="btn-gold w-full opacity-50">
-      Commencer le tirage
-    </button>
-  </div>
-</div>
-<script>
+  
   // Affiche la modale automatiquement à l'arrivée
   document.addEventListener("DOMContentLoaded", () => {
       document.getElementById("intentionModal").classList.remove("hidden");
@@ -4052,6 +4033,16 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
     document.getElementById("intentionModal").remove();
   });
 </script>
+<script>
+document.addEventListener("DOMContentLoaded", () => {
+    const section = document.getElementById("oracle");
+    if (section) {
+        section.classList.remove("hidden");
+        section.scrollIntoView({ behavior: "smooth" });
+    }
+});
+</script>
 
 </body>
 </html>
+
