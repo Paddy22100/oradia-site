@@ -889,9 +889,9 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
         <!-- Gratuit -->
-        <div class="rounded-2xl p-8 relative overflow-hidden flex flex-col h-full justify-between" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
+        <div class="rounded-2xl p-8 relative overflow-hidden flex flex-col h-full" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
           <!-- Animation des flux temporels -->
           <div class="absolute inset-0 z-0 opacity-50 pointer-events-none">
             <!-- Ligne du temps centrale -->
@@ -3153,23 +3153,11 @@ function loginFlow(){
     updateHeaderForAuth();
     updateCtasForAuth();
   }
-
   function logoutFlow(){
-    // 1) On marque l’utilisateur comme déconnecté
     setAuthed(false);
     updateHeaderForAuth();
     updateCtasForAuth();
-
-    // 2) On ferme le dashboard si jamais il est ouvert
-    const dashboard = document.getElementById('dashboard');
-    if (dashboard) {
-      dashboard.classList.add('hidden');
-    }
-
-    // 3) On revient proprement sur la page d’accueil
-    window.location.href = 'index.html#accueil';
   }
-
 
   function wireAuthForms(){
     // Formulaires membres (inscription / connexion)
@@ -3219,14 +3207,14 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
 });
 
 
-    // Tous les boutons "Déconnexion" (header + dashboard)
-    document.querySelectorAll('#logoutBtn').forEach(btn => {
-      btn.addEventListener('click', function(e){
+    // Si tu as un bouton logout quelque part :
+    const dashboardLogout = document.getElementById('logoutBtn');
+    if (dashboardLogout){
+      dashboardLogout.addEventListener('click', function(e){
         e.preventDefault();
         logoutFlow();
       });
-    });
-
+    }
   }
 
   document.addEventListener('DOMContentLoaded', function(){
