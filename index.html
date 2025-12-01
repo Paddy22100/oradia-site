@@ -3153,11 +3153,23 @@ function loginFlow(){
     updateHeaderForAuth();
     updateCtasForAuth();
   }
+
   function logoutFlow(){
+    // 1) On marque l’utilisateur comme déconnecté
     setAuthed(false);
     updateHeaderForAuth();
     updateCtasForAuth();
+
+    // 2) On ferme le dashboard si jamais il est ouvert
+    const dashboard = document.getElementById('dashboard');
+    if (dashboard) {
+      dashboard.classList.add('hidden');
+    }
+
+    // 3) On revient proprement sur la page d’accueil
+    window.location.href = 'index.html#accueil';
   }
+
 
   function wireAuthForms(){
     // Formulaires membres (inscription / connexion)
@@ -3207,14 +3219,14 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
 });
 
 
-    // Si tu as un bouton logout quelque part :
-    const dashboardLogout = document.getElementById('logoutBtn');
-    if (dashboardLogout){
-      dashboardLogout.addEventListener('click', function(e){
+    // Tous les boutons "Déconnexion" (header + dashboard)
+    document.querySelectorAll('#logoutBtn').forEach(btn => {
+      btn.addEventListener('click', function(e){
         e.preventDefault();
         logoutFlow();
       });
-    }
+    });
+
   }
 
   document.addEventListener('DOMContentLoaded', function(){
