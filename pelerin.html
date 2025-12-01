@@ -3575,13 +3575,13 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
     }
   }
 
-  document.addEventListener('DOMContentLoaded', function(){
-    updateHeaderForAuth();
-    updateCtasForAuth();
+    document.addEventListener('DOMContentLoaded', function () {
+    logoutFlow();
     wireAuthForms();
   });
 })();
 </script>
+
   <!-- Bouton de sortie pour le mode Tore (sera créé dynamiquement) -->
   <div id="toreExitTemplate" class="hidden">
     <button id="exitToreBtn" class="fixed top-4 left-4 z-50 bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold p-3 rounded-full shadow-lg">
@@ -3620,6 +3620,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
