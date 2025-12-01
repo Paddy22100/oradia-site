@@ -1515,6 +1515,25 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       startToreImmersive();
     });
 
+// --- FORCER LA DÉCONNEXION ---
+localStorage.removeItem("oradiaAuth"); // supprime la session
+localStorage.setItem("authInitialized", "false"); // force le reset total
+
+const existingMemberContainer = document.getElementById("memberContainer");
+if (existingMemberContainer) existingMemberContainer.remove();
+
+const loginBtn = document.getElementById("loginBtn");
+if (loginBtn) loginBtn.style.display = "inline-block";
+
+const loginBtnMobile = document.getElementById("loginBtnMobile");
+if (loginBtnMobile) loginBtnMobile.style.display = "block";
+
+</script>
+
+<script>
+(function () {
+    // TON GROS SCRIPT ICI
+
    
     function startToreImmersive() {
       // Si l'utilisateur n'est pas connecté, afficher la modale d'abonnement
