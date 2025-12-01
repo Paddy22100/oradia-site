@@ -11,13 +11,14 @@
     tailwind.config = {
       theme: {
         extend: {
-          colors: {
-            'night-blue': '#0a192f',
-            'gold': '#d4af37',
-            'light-gold': '#f5e7a1',
-            'dark-blue': '#051428',
-            'celtic-blue': '#1a365d'
-          },
+colors: {
+  'night-blue': '#050b18',
+  'gold': '#d9b878',
+  'light-gold': '#f1e4c4',
+  'deep-gold': '#b79854',
+  'dark-blue': '#040816',
+  'celtic-blue': '#172542'
+},
           fontFamily: {
             'cormorant': ['Cormorant Garamond', 'serif'],
             'poppins': ['Poppins', 'sans-serif']
@@ -31,9 +32,36 @@
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
 
-    :root{ --dore:#d4af37; --text:#e9e7df; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
+    :root{
+  --dore:#d9b878;          /* oradia gold */
+  --light-dore:#f1e4c4;    /* doré très clair */
+  --deep-dore:#b79854;     /* doré plus cuivré */
+  --text:#e9e7df;
+  --radius:18px;
+  --shadow:0 10px 30px rgba(0,0,0,.35);
+}
 
-    body{ margin:0; font-family:'Poppins',sans-serif; background:#0a192f; color:#f5e7a1; overflow-x:hidden; }
+
+   body{
+  margin:0;
+  font-family:'Poppins',sans-serif;
+  color:var(--light-dore);
+  overflow-x:hidden;
+  background:
+    radial-gradient(
+      circle at 50% 20%,
+      rgba(249, 223, 158, 0.14),
+      rgba(5, 8, 22, 1) 60%
+    ),
+    radial-gradient(
+      circle at 10% 90%,
+      rgba(120, 160, 255, 0.12),
+      transparent 55%
+    ),
+    #050b18;
+  background-attachment: fixed;
+}
+
     .header-bg{ background:rgba(5,20,40,.98); }
     .hero-bg{ background: radial-gradient(circle at center, rgba(26,54,93,.7) 0%, rgba(5,20,40,.9) 70%); background-size:cover; }
 
@@ -765,6 +793,49 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   #synthese ul { margin: 0.35rem 0 0.2rem; padding-left: 1rem; }
   #synthese details { border-left: 2px solid rgba(212,175,55,0.25); padding-left: .75rem; }
   #synthese summary { font-weight: 600; }
+/* --- Style éditorial Oradia pour les titres --- */
+h1, h2, h3, .cormorant-title{
+  font-family: 'Cormorant Garamond', serif;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+
+h1{
+  font-size: clamp(2.8rem, 4vw, 3.6rem);
+  line-height: 1.1;
+}
+
+h2{
+  font-size: clamp(2.1rem, 3vw, 2.8rem);
+  line-height: 1.15;
+}
+
+h3{
+  font-size: clamp(1.6rem, 2.4vw, 2rem);
+  line-height: 1.2;
+}
+
+/* Ligne décorative sous les titres, inspirée du dossier */
+.title-line{
+  width: 80px;
+  height: 1px;
+  margin: 8px auto 0;
+  background: linear-gradient(90deg, transparent, var(--dore), transparent);
+}
+
+/* Texte courant plus fin, plus "éditorial" */
+body, p{
+  font-weight: 300;
+  font-size: 0.98rem;
+}
+
+/* Petites capitales pour certains sous-titres si besoin */
+.subtitle-smallcaps{
+  font-family: 'Cormorant Garamond', serif;
+  font-variant: small-caps;
+  letter-spacing: 1px;
+  font-size: 0.95rem;
+}
 
   </style>
 </head>
@@ -880,7 +951,11 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   <section id="offres" class="py-20 px-6 bg-dark-blue">
     <div class="container mx-auto max-w-6xl">
       <div class="text-center mb-12">
-        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Entrez dans l'univers Oradia</h2>
+        <h2 class="cormorant-title text-center mb-4 gold-gradient">
+  Entrez dans l'univers Oradia
+</h2>
+<div class="title-line"></div>
+
         <p class="text-light-gold max-w-3xl mx-auto">Choisissez l'offre qui résonne avec votre cheminement.</p>
         
         <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 max-w-6xl mx-auto">
