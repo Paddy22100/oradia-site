@@ -3683,30 +3683,7 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
       <i class="fas fa-times"></i>
     </button>
   </div>
-  
-  // Affiche la modale automatiquement à l'arrivée
-  document.addEventListener("DOMContentLoaded", () => {
-      document.getElementById("intentionModal").classList.remove("hidden");
-  });
 
-  // Active le bouton si du texte est présent
-  const input = document.getElementById("intentionInput");
-  const btn = document.getElementById("startReadingBtn");
-
-  input.addEventListener("input", () => {
-    if (input.value.trim().length > 2) {
-      btn.disabled = false;
-      btn.classList.remove("opacity-50");
-    } else {
-      btn.disabled = true;
-      btn.classList.add("opacity-50");
-    }
-  });
-
-  // Fermeture de la modale → lance le tirage
-  btn.addEventListener("click", () => {
-    document.getElementById("intentionModal").remove();
-  });
 </script>
 <script>
 document.addEventListener("DOMContentLoaded", () => {
@@ -3720,5 +3697,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
