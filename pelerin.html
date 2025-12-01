@@ -3544,8 +3544,30 @@ document.addEventListener('DOMContentLoaded', function() {
     }, 500); // Délai pour s'assurer que tout est prêt
   }
 });
+    // Fermeture de la modal d'intention
+document.getElementById('closeIntentionModal')?.addEventListener('click', function(e) {
+  e.preventDefault();
+  document.getElementById('intentionModal').classList.add('hidden');
+  document.body.style.overflow = '';
+});
+
+// Soumission du formulaire d'intention
+document.getElementById('intentionForm')?.addEventListener('submit', function(e) {
+  e.preventDefault();
+  const intention = document.getElementById('intention').value;
+  // Ici, vous pouvez stocker l'intention (localStorage, variable globale, etc.)
+  localStorage.setItem('pelerinIntention', intention);
+
+  // Masquer la modal et lancer le tirage
+  document.getElementById('intentionModal').classList.add('hidden');
+  document.body.style.overflow = '';
+
+  // Démarrer le tirage (adaptez selon votre logique existante)
+  window.startPelerinReading?.();
+});
 </script>
 
 </body>
 </html>
+
 
