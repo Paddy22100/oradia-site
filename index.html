@@ -3009,9 +3009,18 @@ document.addEventListener('click', (e) => {
 (function(){
   const AUTH_KEY = 'oradiaAuth';
 
-  function isAuthed(){ return localStorage.getItem(AUTH_KEY) === '1'; }
-  function setAuthed(v){ v ? localStorage.setItem(AUTH_KEY,'1') : localStorage.removeItem(AUTH_KEY); }
+  // Nettoyage de l’ancienne version qui utilisait localStorage
+  localStorage.removeItem(AUTH_KEY);
 
+  // → Désormais, on utilise sessionStorage : déconnecté par défaut
+  function isAuthed(){ return sessionStorage.getItem(AUTH_KEY) === '1'; }
+  function setAuthed(v){
+    if (v) {
+      sessionStorage.setItem(AUTH_KEY, '1');
+    } else {
+      sessionStorage.removeItem(AUTH_KEY);
+    }
+  }
   function ensureMemberIcon(){
     // Si déjà présent, ne rien faire
     if (document.getElementById('memberIcon')) return;
