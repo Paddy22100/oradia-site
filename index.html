@@ -33,9 +33,25 @@
 
     :root{ --dore:#d4af37; --text:#e9e7df; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
 
-    body{ margin:0; font-family:'Poppins',sans-serif; background:#0a192f; color:#f5e7a1; overflow-x:hidden; }
-    .header-bg{ background:rgba(5,20,40,.98); }
-    .hero-bg{ background: radial-gradient(circle at center, rgba(26,54,93,.7) 0%, rgba(5,20,40,.9) 70%); background-size:cover; }
+   body{
+  margin:0;
+  font-family:'Poppins',sans-serif;
+  color:var(--light-dore);
+  overflow-x:hidden;
+  background:
+      radial-gradient(
+        circle at 50% 20%,
+        rgba(255,220,150,0.22),
+        rgba(15,28,55,1) 65%
+      ),
+      radial-gradient(
+        circle at 80% 90%,
+        rgba(120,150,255,0.18),
+        transparent 60%
+      ),
+      #0c1630;
+  background-attachment: fixed;
+}
 
     .gold-gradient{
       background: linear-gradient(90deg, #d4af37, #f5e7a1, #d4af37);
