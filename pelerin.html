@@ -868,10 +868,13 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 <header class="header-bg w-full py-3 px-4 md:py-4 md:px-8">
   <div class="flex items-center justify-between">
     <div class="flex items-center">
-      <img src="https://i.ibb.co/Q3vbXP4S/logo.png" alt="Oradia Logo"
-           class="w-16 h-16 mr-6 transform hover:scale-110 transition-transform duration-300"/>
-      <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
-    </div>
+  <a href="index.html#accueil" class="flex items-center">
+    <img src="https://i.ibb.co/Q3vbXP4S/logo.png" alt="Oradia Logo"
+         class="w-16 h-16 mr-6 transform hover:scale-110 transition-transform duration-300"/>
+    <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+  </a>
+</div>
+
     <!-- Bouton burger (mobile) -->
     <button id="mobileMenuBtn" type="button" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold" aria-label="Ouvrir le menu">
            
@@ -879,11 +882,11 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
     </button>
 <!-- Nav desktop -->
     <nav class="hidden md:flex space-x-6 text-lg">
-      <a href="#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
-      <a href="#offres" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Offres</a>
-      <a href="#Jeu" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Jeu</a>
-      <a href="#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
-      <a href="#apropos" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+      <a href="index.html#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
+      <a href="index.html#offres" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Offres</a>
+      <a href="index.html#Jeu" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Jeu</a>
+      <a href="index.html#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
+      <a href="index.html#apropos" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
     </nav>
     <button id="loginBtn" class="btn-outline-gold hidden md:inline-block" style="display: none;">Connexion</button>
 </div>
@@ -928,27 +931,10 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         </div>
         <h3 class="cormorant text-3xl md:text-4xl text-gold mb-4 text-glow">Formulez votre intention</h3>
         <p class="text-light-gold/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-          Connectez-vous à votre essence et laissez émerger votre question la plus authentique
+          Prenez un moment, connectez-vous à votre essence et laissez émerger votre question la plus authentique
         </p>
       </div>
-      
-      <!-- Cadre d'intention premium -->
-      <div class="bg-gradient-to-br from-night-blue/40 to-dark-blue/50 border-2 border-gold/40 rounded-2xl p-6 md:p-8 backdrop-blur-lg relative overflow-hidden">
-        <!-- Bordure animée -->
-        <div class="absolute inset-0 rounded-2xl bg-gradient-to-r from-gold/10 via-transparent to-gold/10 animate-pulse" style="animation-duration: 4s;"></div>
-        
-        <div class="relative z-10">
-          <div class="text-center mb-8">
-            <p class="text-light-gold/80 text-sm md:text-base italic mb-4 leading-relaxed">
-              Prenez un moment pour vous concentrer et vous relier profondément à votre intention.
-            </p>
-            <div class="inline-flex items-center bg-gold/10 px-4 py-2 rounded-full border border-gold/30">
-              <i class="fas fa-lightbulb text-gold mr-2"></i>
-              <p class="text-gold font-medium text-sm">Une intention claire ouvre la voie à une guidance plus juste</p>
-            </div>
-          </div>
-          
-          <div class="flex flex-col gap-8">
+            <div class="flex flex-col gap-8">
             <div class="relative">
               <div class="relative">
                 <textarea id="intention" 
@@ -963,12 +949,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
                   <span id="charCount" class="text-gold font-medium text-sm">0</span>
                   <span class="text-gold/70 text-sm">/200</span>
                 </div>
-                
-                <!-- Icône d'inspiration -->
-                <div class="absolute top-4 left-4 text-gold/50">
-                  <i class="fas fa-pen-nib"></i>
                 </div>
-              </div>
               
               <!-- Indicateur de qualité -->
               <div class="flex items-center justify-between mt-3 px-2">
@@ -1069,51 +1050,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 </div>
   </section>
 
- 
-  <!-- Tirage de la Traversée - caché jusqu'à paiement -->
-  <section id="traversee" class="py-20 px-6 bg-night-blue hidden">
-    <div class="container mx-auto max-w-6xl">
-      <div class="text-center mb-12">
-        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-1">Tirage de la Traversée</h2>
-        <p class="text-light-gold max-w-3xl mx-auto">Guidance vibratoire approfondie pour votre cheminement</p>
-      </div>
-
-      <div class="rounded-2xl p-8 mb-8 relative overflow-hidden" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
-        <!-- Animation tunnel avec marcheur -->
-        <div class="absolute inset-0 z-0 opacity-30 pointer-events-none overflow-hidden">
-          <!-- Tunnel perspective -->
-          <div class="absolute inset-0 bg-gradient-to-b from-night-blue to-dark-blue">
-            <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_center,transparent_0%,rgba(212,175,55,0.1)_70%)] animate-[pulse_4s_ease-in-out_infinite]"></div>
-          </div>
-          
-          <!-- Lignes de perspective du tunnel -->
-          <div class="absolute inset-0 flex items-center justify-center">
-            <div class="w-full h-full relative">
-              <div class="absolute top-1/2 left-1/2 w-[200%] h-[200%] bg-[conic-gradient(from_0deg_at_50%_50%,transparent_0deg,transparent_60deg,rgba(212,175,55,0.05)_60deg,rgba(212,175,55,0.05)_120deg,transparent_120deg,transparent_180deg,rgba(212,175,55,0.05)_180deg,transparent_240deg,rgba(212,175,55,0.05)_240deg,transparent_300deg,transparent_360deg)] bg-[length:100%_100%] animate-[spin_30s_linear_infinite] origin-center"></div>
-            </div>
-          </div>
-          
-          <!-- Lumière au bout du tunnel -->
-          <div class="absolute top-1/2 left-1/2 w-64 h-64 -translate-x-1/2 -translate-y-1/2">
-            <div class="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(245,231,161,0.8)_0%,rgba(212,175,55,0.4)_30%,transparent_70%)] animate-[pulse_3s_ease-in-out_infinite] rounded-full"></div>
-          </div>
-          
-          <!-- Silhouette du marcheur -->
-          <div class="absolute bottom-[15%] left-1/2 w-12 h-24 md:w-16 md:h-32 -translate-x-1/2 animate-[walking_8s_linear_infinite]">
-            <div class="relative w-full h-full">
-              <!-- Corps -->
-              <div class="absolute bottom-0 left-1/2 w-3 h-16 bg-night-blue -translate-x-1/2 rounded-t-full"></div>
-              <!-- Tête -->
-              <div class="absolute bottom-12 left-1/2 w-5 h-5 bg-night-blue -translate-x-1/2 rounded-full"></div>
-              <!-- Bras gauche -->
-              <div class="absolute bottom-8 left-1/2 w-1 h-8 bg-night-blue -translate-x-1/2 origin-bottom animate-[arm-swing_1s_ease-in-out_infinite] -rotate-12"></div>
-              <!-- Bras droit -->
-              <div class="absolute bottom-8 left-1/2 w-1 h-8 bg-night-blue -translate-x-1/2 origin-bottom animate-[arm-swing_1s_ease-in-out_infinite] rotate-12" style="animation-delay:0.5s"></div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Ajout des keyframes pour les animations -->
+         <!-- Ajout des keyframes pour les animations -->
         <style>
           @keyframes walking {
             0% { transform: translateX(-50%) translateX(-300px); opacity: 0; }
@@ -3649,6 +3586,12 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
+
+
+
+
+
 
 
 
