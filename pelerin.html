@@ -868,10 +868,13 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 <header class="header-bg w-full py-3 px-4 md:py-4 md:px-8">
   <div class="flex items-center justify-between">
     <div class="flex items-center">
-      <img src="https://i.ibb.co/Q3vbXP4S/logo.png" alt="Oradia Logo"
-           class="w-16 h-16 mr-6 transform hover:scale-110 transition-transform duration-300"/>
-      <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
-    </div>
+  <a href="index.html#accueil" class="flex items-center">
+    <img src="https://i.ibb.co/Q3vbXP4S/logo.png" alt="Oradia Logo"
+         class="w-16 h-16 mr-6 transform hover:scale-110 transition-transform duration-300"/>
+    <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+  </a>
+</div>
+
     <!-- Bouton burger (mobile) -->
     <button id="mobileMenuBtn" type="button" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold" aria-label="Ouvrir le menu">
            
@@ -879,11 +882,11 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
     </button>
 <!-- Nav desktop -->
     <nav class="hidden md:flex space-x-6 text-lg">
-      <a href="#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
-      <a href="#offres" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Offres</a>
-      <a href="#Jeu" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Jeu</a>
-      <a href="#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
-      <a href="#apropos" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+      <a href="index.html#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
+      <a href="index.html#offres" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Offres</a>
+      <a href="index.html#Jeu" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Jeu</a>
+      <a href="index.html#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
+      <a href="index.html#apropos" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
     </nav>
     <button id="loginBtn" class="btn-outline-gold hidden md:inline-block" style="display: none;">Connexion</button>
 </div>
@@ -3583,6 +3586,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
