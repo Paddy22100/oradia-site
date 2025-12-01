@@ -3244,13 +3244,14 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
     }
   }
 
-  document.addEventListener('DOMContentLoaded', function(){
-    updateHeaderForAuth();
-    updateCtasForAuth();
-    wireAuthForms();
+    document.addEventListener('DOMContentLoaded', function () {
+    // Forcer la déconnexion à chaque arrivée sur le site
+    logoutFlow();        // => setAuthed(false) + updateHeaderForAuth() + updateCtasForAuth()
+    wireAuthForms();     // on garde le câblage des formulaires
   });
 })();
 </script>
+
   <!-- Bouton de sortie pour le mode Tore (sera créé dynamiquement) -->
   <div id="toreExitTemplate" class="hidden">
     <button id="exitToreBtn" class="fixed top-4 left-4 z-50 bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold p-3 rounded-full shadow-lg">
