@@ -82,16 +82,66 @@
   </style>
 </head>
 <body class="bg-night-blue text-light-gold">
-<header class="border-b border-[rgba(212,175,55,.3)] bg-[rgba(5,20,40,.9)]">
-  <div class="container mx-auto flex items-center justify-between px-6 py-4">
-    <div class="flex items-center gap-3">
-      <div class="w-10 h-10 rounded-full border border-gold flex items-center justify-center">
-        <span class="text-gold font-bold tracking-[0.2em] text-xs">OR</span>
-      </div>
-      <span class="font-semibold tracking-[0.25em] uppercase text-xs text-light-gold">ORADIA</span>
+<header class="bg-[rgba(5,20,40,0.8)] py-4 shadow-lg backdrop-blur-lg border-b border-gold/20">
+  <div class="container mx-auto flex items-center justify-between px-4 md:px-6">
+    
+    <!-- Logo -->
+    <a href="index.html#accueil" class="flex items-center gap-4">
+      <img src="https://i.ibb.co/Q3vbXP4S/logo.png" alt="Oradia Logo"
+           class="w-16 h-16 transform hover:scale-110 transition-transform duration-300" />
+      <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+    </a>
+
+    <!-- Navigation desktop -->
+    <nav class="hidden md:flex items-center space-x-8 text-gold font-medium">
+      <a href="index.html#accueil" class="hover:text-light-gold transition">
+        <i class="fas fa-home mr-2"></i>Accueil
+      </a>
+      <a href="index.html#offres" class="hover:text-light-gold transition">
+        <i class="fas fa-tags mr-2"></i>Offres
+      </a>
+      <a href="index.html#Jeu" class="hover:text-light-gold transition">
+        <i class="fas fa-dice mr-2"></i>Jeu
+      </a>
+      <a href="index.html#edolgor" class="hover:text-light-gold transition">
+        <i class="fas fa-handshake mr-2"></i>Partenariat
+      </a>
+      <a href="index.html#apropos" class="hover:text-light-gold transition">
+        <i class="fas fa-info-circle mr-2"></i>À Propos
+      </a>
+    </nav>
+
+    <!-- Espace membre -->
+    <div class="hidden md:flex items-center gap-3 text-gold">
+      <i class="fas fa-user-circle text-2xl"></i>
+      <span class="font-medium">Espace membre</span>
     </div>
-    <a href="index23.html" class="text-sm text-light-gold hover:text-gold transition">
-      <i class="fas fa-arrow-left mr-2"></i>Retour au site
+
+    <!-- Bouton mobile -->
+    <button id="mobileMenuBtn"
+            class="md:hidden text-gold text-3xl focus:outline-none">
+      <i class="fas fa-bars"></i>
+    </button>
+  </div>
+
+  <!-- Menu mobile -->
+  <div id="mobileMenu"
+       class="hidden flex-col items-center md:hidden bg-[rgba(5,20,40,0.95)] border-t border-gold/20 py-6 space-y-4 text-gold font-medium">
+
+    <a href="index.html#accueil" class="hover:text-light-gold transition">
+      <i class="fas fa-home mr-2"></i>Accueil
+    </a>
+    <a href="index.html#offres" class="hover:text-light-gold transition">
+      <i class="fas fa-tags mr-2"></i>Offres
+    </a>
+    <a href="index.html#Jeu" class="hover:text-light-gold transition">
+      <i class="fas fa-dice mr-2"></i>Jeu
+    </a>
+    <a href="index.html#edolgor" class="hover:text-light-gold transition">
+      <i class="fas fa-handshake mr-2"></i>Partenariat
+    </a>
+    <a href="index.html#apropos" class="hover:text-light-gold transition">
+      <i class="fas fa-info-circle mr-2"></i>À Propos
     </a>
   </div>
 </header>
@@ -634,5 +684,16 @@ window.DATA = {
   </div>
   
 </footer>
+  <script>
+  const mobileBtn = document.getElementById("mobileMenuBtn");
+  const mobileMenu = document.getElementById("mobileMenu");
+
+  if (mobileBtn && mobileMenu) {
+    mobileBtn.addEventListener("click", () => {
+      mobileMenu.classList.toggle("hidden");
+    });
+  }
+</script>
+
 </body>
 </html>
