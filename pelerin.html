@@ -3519,5 +3519,33 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
 
 
   </div>
+  <script>
+// Gestion du paramètre URL "start=intention" pour ouvrir la modal d'intention
+document.addEventListener('DOMContentLoaded', function() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const startParam = urlParams.get('start');
+
+  if (startParam === 'intention') {
+    // Attendre que tout soit chargé (notamment les modales)
+    setTimeout(() => {
+      const intentionModal = document.getElementById('intentionModal');
+      if (intentionModal) {
+        intentionModal.classList.remove('hidden');
+        document.body.style.overflow = 'hidden'; // Bloquer le scroll en arrière-plan
+      } else {
+        console.error("Modal d'intention non trouvée !");
+      }
+
+      // Focus sur le champ d'intention si présent
+      const intentionInput = document.getElementById('intention');
+      if (intentionInput) {
+        intentionInput.focus();
+      }
+    }, 500); // Délai pour s'assurer que tout est prêt
+  }
+});
+</script>
+
 </body>
 </html>
+
