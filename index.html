@@ -3263,6 +3263,21 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 </script>
+<script>
+  // Au chargement de la page : forcer la déconnexion
+  localStorage.setItem("isLoggedIn", "false");
+
+  // Masquer le menu membre si jamais il existe encore
+  const memberMenu = document.getElementById("memberMenu");
+  if (memberMenu) memberMenu.style.display = "none";
+
+  // Afficher le bouton Connexion si nécessaire
+  const loginBtn = document.getElementById("loginBtn");
+  if (loginBtn) loginBtn.style.display = "inline-block";
+
+  const loginBtnMobile = document.getElementById("loginBtnMobile");
+  if (loginBtnMobile) loginBtnMobile.style.display = "block";
+</script>
 
 </body>
 </html>
