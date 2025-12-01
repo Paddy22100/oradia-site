@@ -1622,6 +1622,15 @@ document.getElementById("apiOutput")?.classList.remove("hidden");
       // Étape 2 : soumission = construire le plateau + entrer en immersif si connecté
     form?.addEventListener('submit', (e) => {
       e.preventDefault();
+      // Cacher le formulaire lorsque le tirage démarre
+form.classList.add('hidden');
+
+// Afficher le plateau (5 cartes vides au début)
+el('traversee-board')?.classList.remove('hidden');
+
+// (optionnel mais conseillé) scroller vers le plateau
+el('traversee-board')?.scrollIntoView({ behavior: 'smooth' });
+
       buildBoard(); 
       if (localStorage.getItem('oradiaAuth') === '1') {
         enterImmersive();
@@ -3475,6 +3484,7 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
   </div>
 </body>
 </html>
+
 
 
 
