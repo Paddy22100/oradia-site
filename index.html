@@ -3244,12 +3244,11 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
       });
     }
   }
- document.addEventListener('DOMContentLoaded', function(){
-    // Forcer la déconnexion à chaque nouveau chargement de la page
-    setAuthed(false);              // <-- on supprime la clé "oradiaAuth"
-    updateHeaderForAuth();
-    updateCtasForAuth();
-    wireAuthForms();
+
+    document.addEventListener('DOMContentLoaded', function () {
+    // Forcer la déconnexion à chaque arrivée sur le site
+    logoutFlow();        // => setAuthed(false) + updateHeaderForAuth() + updateCtasForAuth()
+    wireAuthForms();     // on garde le câblage des formulaires
   });
 })();
 </script>
