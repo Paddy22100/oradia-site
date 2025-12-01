@@ -887,23 +887,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       <a href="index.html#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
       <a href="#index.htmlapropos" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
     </nav>
-    <div id="memberMenuWrapper" class="hidden md:block relative">
-    <!-- Bouton Espace membre -->
-    <button id="memberMenuBtn" class="flex items-center gap-2 text-gold font-medium hover:text-light-gold transition">
-        <i class="fas fa-user-circle text-2xl"></i>
-        <span>Espace membre</span>
-        <i class="fas fa-chevron-down text-sm ml-1"></i>
-    </button>
-
-    <!-- Dropdown -->
-    <div id="memberDropdown"
-         class="hidden absolute right-0 mt-2 w-48 bg-[rgba(5,20,40,0.95)] border border-gold/30 rounded-lg shadow-lg z-50 backdrop-blur-md">
-        <a href="profil.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Profil</a>
-        <a href="dashboard.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Tableau de bord</a>
-        <button id="logoutBtn" class="w-full text-left px-4 py-2 text-gold hover:bg-gold/10">Déconnexion</button>
-    </div>
-</div>
-
+    <button id="loginBtn" class="btn-outline-gold hidden md:inline-block" style="display: none;">Connexion</button>
 </div>
 
   <!-- Menu mobile déroulant -->
@@ -3471,41 +3455,21 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
     }
   }
 
-  document.addEventListener('DOMContentLoaded', function () {
-    logoutFlow();
+  document.addEventListener('DOMContentLoaded', function(){
+    updateHeaderForAuth();
+    updateCtasForAuth();
     wireAuthForms();
   });
 })();
 </script>
-
   <!-- Bouton de sortie pour le mode Tore (sera créé dynamiquement) -->
   <div id="toreExitTemplate" class="hidden">
     <button id="exitToreBtn" class="fixed top-4 left-4 z-50 bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold p-3 rounded-full shadow-lg">
       <i class="fas fa-times"></i>
     </button>
   </div>
-  <script>
-document.addEventListener("DOMContentLoaded", () => {
-    const btn = document.getElementById("memberMenuBtn");
-    const menu = document.getElementById("memberDropdown");
-
-    if (btn) {
-        btn.addEventListener("click", () => {
-            menu.classList.toggle("hidden");
-        });
-
-        document.addEventListener("click", (e) => {
-            if (!btn.contains(e.target) && !menu.contains(e.target)) {
-                menu.classList.add("hidden");
-            }
-        });
-    }
-});
-</script>
-
 </body>
 </html>
-
 
 
 
