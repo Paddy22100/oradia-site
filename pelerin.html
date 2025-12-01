@@ -1025,13 +1025,14 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       </section>
       <div class="max-w-2xl mx-auto mt-8 space-y-6">
         <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <button type="button" id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none relative overflow-hidden group" onclick="handleFullReadingClick()">
-            <div class="absolute inset-0 bg-gradient-to-r from-gold/10 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
-            <span class="relative z-10 flex items-center justify-center gap-2">
-              <i class="fas fa-stars text-gold"></i>
-              Envie d'un tirage plus complet?
-            </span>
-          </button>
+        <a href="index.html#offres" class="btn-outline-gold hidden flex-1 sm:flex-none relative overflow-hidden group">
+    <div class="absolute inset-0 bg-gradient-to-r from-gold/10 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
+    <span class="relative z-10 flex items-center justify-center gap-2">
+        <i class="fas fa-stars text-gold"></i>
+        Envie d’un tirage plus complet ?
+    </span>
+</a>
+
           <button id="newPilgrim" class="btn-gold hidden flex-1 sm:flex-none relative overflow-hidden group">
             <div class="absolute inset-0 bg-gradient-to-r from-light-gold/20 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
             <span class="relative z-10 flex items-center justify-center gap-2">
@@ -3567,6 +3568,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 </body>
 </html>
+
 
 
 
