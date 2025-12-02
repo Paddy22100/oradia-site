@@ -1,38 +1,44 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&display=swap');
 
+/* ===== RESET & FOND ===== */
 body {
-	padding: 2rem;
-	font-family: -apple-system, BlinkMacSystemFont, "Arial", sans-serif;
+    margin: 0; /* IMPORTANT pour que le fond soit plein écran */
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Arial", sans-serif;
+    background-color: #020817; /* bleu nuit Oradia */
 }
 
+/* ===== TEXTES ===== */
 h1 {
-	font-size: 16px;
-	margin-top: 0;
+    font-size: 16px;
+    margin-top: 0;
 }
 
 p {
-	color: rgb(107, 114, 128);
-	font-size: 15px;
-	margin-bottom: 10px;
-	margin-top: 5px;
+    color: rgb(107, 114, 128);
+    font-size: 15px;
+    margin-bottom: 10px;
+    margin-top: 5px;
 }
 
 .card {
-	max-width: 620px;
-	margin: 0 auto;
-	padding: 16px;
-	border: 1px solid lightgray;
-	border-radius: 16px;
+    max-width: 620px;
+    margin: 0 auto;
+    padding: 16px;
+    border: 1px solid lightgray;
+    border-radius: 16px;
 }
 
 .card p:last-child {
-	margin-bottom: 0;
+    margin-bottom: 0;
 }
+
+/* ===== TITRES HERO ===== */
 .hero-title {
     font-family: "Cinzel", serif;
     font-size: 105px;
     font-weight: 700;
-    color: #D4AF37; /* oradia gold */
+    color: #D4AF37;
     text-align: center;
     letter-spacing: 2px;
     margin: 0;
@@ -46,6 +52,19 @@ p {
     text-align: center;
     margin-top: 15px;
 }
-background-size: cover;
-background-position: center;
-image-rendering: auto;
+
+/* ===== SECTION HERO (IMAGE DE FOND) ===== */
+.hero-section {
+    background-image: url('images/oradia-hero-4k.png'); /* adapte le chemin */
+    background-size: cover;
+    background-position: center center;
+    background-repeat: no-repeat;
+    image-rendering: auto;
+
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    padding: 0;
+}
