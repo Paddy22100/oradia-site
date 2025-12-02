@@ -46,3 +46,6 @@ p {
     text-align: center;
     margin-top: 15px;
 }
+background-size: cover;
+background-position: center;
+image-rendering: auto;
