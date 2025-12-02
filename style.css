@@ -26,3 +26,21 @@ p {
 .card p:last-child {
 	margin-bottom: 0;
 }
+.hero-title {
+    font-family: "Cinzel", serif;
+    font-size: 105px;
+    font-weight: 700;
+    color: #D4AF37; /* oradia gold */
+    text-align: center;
+    letter-spacing: 2px;
+    margin: 0;
+}
+
+.hero-subtitle {
+    font-family: "Cinzel Decorative", serif;
+    font-size: 50px;
+    font-weight: 400;
+    color: #D4AF37;
+    text-align: center;
+    margin-top: 15px;
+}
