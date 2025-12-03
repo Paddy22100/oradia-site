@@ -55,16 +55,26 @@ p {
 
 /* ===== SECTION HERO (IMAGE DE FOND) ===== */
 .hero-section {
-    background-image: url('images/oradia-hero-4k.png'); /* adapte le chemin */
+    background-image: url('./images/oradia-hero-4k.png');
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
-    image-rendering: auto;
-
     min-height: 100vh;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
     padding: 0;
+    position: relative;
+}
+
+.hero-overlay {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(
+        to top,
+        rgba(2, 8, 23, 0.95),
+        rgba(2, 8, 23, 0.40),
+        transparent
+    );
 }
