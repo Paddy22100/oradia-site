@@ -1,6 +1,16 @@
 @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Cormorant+SC:wght@400;500;600;700&display=swap');
 
+/* TITRES PRINCIPAUX = Cinzel */
+h1, h2, h3 {
+    font-family: "Cinzel", serif !important;
+}
+
+/* SOUS-TITRES = Cormorant SC */
+h4, h5, h6 {
+    font-family: "Cormorant SC", serif !important;
+}
+
 /* ===== RESET & FOND ===== */
 body {
     margin: 0; /* IMPORTANT pour que le fond soit plein écran */
