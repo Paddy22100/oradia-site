@@ -838,34 +838,30 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 </nav>
 </header>
 <!-- Hero -->
-<section id="accueil" class="relative min-h-[80vh] md:min-h-screen flex items-end">
+<section id="accueil" class="hero-section relative">
 
-  <!-- Image de fond -->
-  <div class="absolute inset-0">
-    <div
-      class="w-full h-full bg-cover bg-center"
-      style="background-image:url('./images/oradia-hero-4k.png');">
+    <!-- Voile pour lisibilité -->
+    <div class="hero-overlay"></div>
+
+    <!-- Contenu texte -->
+    <div class="relative z-10 w-full px-6 pb-16 md:pb-24">
+        <div class="max-w-6xl mx-auto">
+            <div class="max-w-xl">
+                <h1 class="font-cinzel text-[56px] md:text-[105px] font-semibold text-gold tracking-wide mb-3 leading-none">
+                    ORADIA
+                </h1>
+
+                <div class="h-[1px] w-[230px] bg-gold mt-2 mb-3 mx-auto -translate-x-[30px]"></div>
+
+                <p class="font-cinzel-decorative text-[28px] md:text-[50px] text-gold leading-tight">
+                    L’ORACLE DU VIVANT
+                </p>
+            </div>
+        </div>
     </div>
 
-    <!-- Voile pour lisibilité du texte -->
-    <div class="absolute inset-0 bg-gradient-to-t from-night-blue/95 via-night-blue/40 to-transparent"></div>
-  </div>
+</section>
 
-    <!-- Contenu texte en bas à gauche -->
-    <div class="relative w-full px-6 pb-16 md:pb-24">
-      <div class="max-w-6xl mx-auto">
-        <div class="max-w-xl">
-    <h1 class="font-cinzel text-[56px] md:text-[105px] font-semibold text-gold tracking-wide mb-3 leading-none">
-        ORADIA
-    </h1>
- <div class="h-[1px] w-[230px] bg-gold mt-2 mb-3 mx-auto -translate-x-[30px]"></div>
-    <p class="font-cinzel-decorative text-[28px] md:text-[50px] text-gold leading-tight">
-        L’ORACLE DU VIVANT
-    </p>
-</div>
-      </div>
-    </div>
-  </section>
 
 
   <!-- Offres -->
