@@ -7,6 +7,13 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, "Arial", sans-serif;
     background-color: #020817; /* bleu nuit Oradia */
 }
+.font-cinzel {
+    font-family: "Cinzel", serif;
+}
+
+.font-cinzel-decorative {
+    font-family: "Cinzel Decorative", serif;
+}
 
 /* ===== TEXTES ===== */
 h1 {
