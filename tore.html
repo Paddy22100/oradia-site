@@ -628,65 +628,74 @@ window.DATA = {
           const bottomEl = card.querySelector('.bottom');
 console.log("CLICK TORE → famKey =", famKey, "data.name =", data && data.name);
 
-      if (data) {
+     if (data) {
+  // On détecte si la carte fait partie de la famille COSMOS
+  const isCosmosCard =
+    Array.isArray(window.DATA.cosmos) &&
+    window.DATA.cosmos.some(c => c.name === data.name);
 
-  // --- CAS SPÉCIAL : MÉMOIRE COSMOS → afficher une image ---
-  if (famKey && famKey.toLowerCase() === "cosmos") {
-      console.log("BRANCHE COSMOS OK →", data.name);
+  // ==== CAS SPÉCIAL : MÉMOIRE COSMOS → IMAGE ====
+  if (isCosmosCard) {
+    console.log("COSMOS détecté →", data.name);
 
-      const front = card.querySelector(".tore-card-front");
+    const front = card.querySelector(".tore-card-front");
 
-      // Normalisation du nom de fichier
-      const imgName = data.name
-          .toLowerCase()
-          .replace(/[éèêë]/g, "e")
-          .replace(/[àâä]/g, "a")
-          .replace(/[îï]/g, "i")
-          .replace(/[ûü]/g, "u")
-          .replace(/[^a-z0-9]/g, "_")
-          + ".png";
+    // Normalisation du nom de fichier à partir du nom de la carte
+    const imgName = data.name
+      .toLowerCase()
+      .replace(/[éèêë]/g, "e")
+      .replace(/[àâä]/g, "a")
+      .replace(/[îï]/g, "i")
+      .replace(/[ûü]/g, "u")
+      .replace(/[^a-z0-9]/g, "_")
+      + ".png";
 
-      const imgPath = "images/cosmos/" + imgName;
-      console.log("→ imgPath =", imgPath);
+    const imgPath = "images/cosmos/" + imgName;
+    console.log("→ imgPath =", imgPath);
 
-      // Remplacement complet de la face avant par l’image
-      front.innerHTML = `
-        <img src="${imgPath}" 
-             alt="${data.name}" 
-             class="w-full h-full object-cover"/>
-      `;
+    // On enlève le padding et le fond pour laisser toute la place à l'image
+    front.style.padding = "0";
+    front.style.background = "none";
 
-      // Pas de polarité sur Cosmos
-      if (polEl) {
-        polEl.textContent = "";
-        polEl.style.visibility = "hidden";
-      }
+    // Face avant = image pleine carte
+    front.innerHTML = `
+      <img src="${imgPath}"
+           alt="${data.name}"
+           style="width:100%;height:100%;object-fit:cover;display:block;" />
+    `;
 
-      card.classList.add("flipped");
-      return;
+    // Pas de polarité affichée pour Cosmos
+    if (polEl) {
+      polEl.textContent = "";
+      polEl.style.visibility = "hidden";
+    }
+
+    card.classList.add("flipped");
+    return; // on ne passe PAS par le mode texte
   }
 
-  // --- CAS NORMAL : toutes les autres familles ---
-  nameEl.textContent  = data.name  || 'Carte';
-  quoteEl.textContent = data.quote || '';
-  if (bottomEl) bottomEl.textContent = data.bridge || '';
+  // ==== CAS NORMAL : toutes les autres familles (texte) ====
+  nameEl.textContent  = data.name  || "Carte";
+  quoteEl.textContent = data.quote || "";
+  if (bottomEl) bottomEl.textContent = data.bridge || "";
 
   if (data.polarity) {
-    polEl.textContent = data.polarity === 'yang' ? '▲' : '●';
+    polEl.textContent = data.polarity === "yang" ? "▲" : "●";
     polEl.style.visibility = "visible";
   } else {
     polEl.style.visibility = "hidden";
   }
 
 } else {
-  // Aucun DATA → message fallback
-  nameEl.textContent  = 'Aucune carte trouvée';
-  quoteEl.textContent = 'Aucune donnée disponible pour cette famille.';
-  if (bottomEl) bottomEl.textContent = '';
+  // Fallback si aucune data trouvée
+  nameEl.textContent  = "Aucune carte trouvée";
+  quoteEl.textContent = "Aucune donnée disponible pour cette famille.";
+  if (bottomEl) bottomEl.textContent = "";
   polEl.style.visibility = "hidden";
 }
 
 card.classList.add("flipped");
+
         });
       });
   }
