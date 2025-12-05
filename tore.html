@@ -614,84 +614,74 @@ window.DATA = {
 
     boardWrap.classList.remove('hidden');
 
-    // comportement : au clic, on PIQUE une carte...
+        // comportement : au clic, on PIQUE une carte...
     boardHost.querySelectorAll('.tore-card .tore-card-back')
       .forEach(back => {
         back.addEventListener('click', () => {
-  const card = back.closest('.tore-card');
-  if (!card || card.classList.contains('flipped')) return;
+          const card = back.closest('.tore-card');
+          if (!card || card.classList.contains('flipped')) return;
 
-  // On force la carte centrale (pos-6) à être la famille "cosmos"
-  const rawFamKey = card.dataset.family || '';
-  const famKey    = card.classList.contains('pos-6') ? 'cosmos' : rawFamKey;
+          const famKeyRaw = card.dataset.family || '';
+          const famKey    = famKeyRaw.trim();
+          const data      = pickFromData(famKey);
+          const nameEl    = card.querySelector('[data-name]');
+          const quoteEl   = card.querySelector('[data-quote]');
+          const polEl     = card.querySelector('[data-polarity]');
+          const bottomEl  = card.querySelector('.bottom');
 
-  const data      = pickFromData(famKey);
-  const nameEl    = card.querySelector('[data-name]');
-  const quoteEl   = card.querySelector('[data-quote]');
-  const polEl     = card.querySelector('[data-polarity]');
-  const bottomEl  = card.querySelector('.bottom');
+          console.log('CLICK TORE → classes =', card.className, '| famKey =', famKey, '| data =', data && data.name);
 
-  console.log('TORE click → classes =', card.className, 'famKey =', famKey, 'data =', data && data.name);
-
-
+          // si aucune donnée trouvée
           if (!data) {
             nameEl.textContent  = 'Aucune carte trouvée';
             quoteEl.textContent = 'Aucune donnée disponible pour cette famille.';
             if (bottomEl) bottomEl.textContent = '';
-            if (polEl) polEl.style.visibility = 'hidden';
+            if (polEl)    polEl.style.visibility = 'hidden';
             card.classList.add('flipped');
             return;
           }
 
-          // ===== CAS SPÉCIAL : MÉMOIRE COSMOS (famille "cosmos") → IMAGE =====
+          // ----- REMPLISSAGE TEXTE STANDARD (pour toutes les familles) -----
+          nameEl.textContent  = data.name  || 'Carte';
+          quoteEl.textContent = data.quote || '';
+          if (bottomEl) bottomEl.textContent = data.bridge || '';
+
+          if (polEl) {
+            if (data.polarity) {
+              polEl.textContent = data.polarity === 'yang' ? '▲' : '●';
+              polEl.style.visibility = 'visible';
+            } else {
+              polEl.style.visibility = 'hidden';
+            }
+          }
+
+          // ----- CAS SPÉCIAL : MÉMOIRE COSMOS → ON ÉCRASE LE FRONT AVEC L’IMAGE -----
           if (famKey === 'cosmos') {
             const front = card.querySelector('.tore-card-front');
 
-            // nom de fichier à partir du nom de la carte
             const imgName = data.name
-              .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // enlève les accents
+              .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // enlève les accents
               .toLowerCase()
-              .replace(/[^a-z0-9]/g, "_")
-              + ".png";
+              .replace(/[^a-z0-9]/g, '_')
+              + '.png';
 
-            const imgPath = "images/cosmos/" + imgName;
-            console.log("COSMOS →", data.name, "→", imgPath);
+            const imgPath = 'images/cosmos/' + imgName;
+            console.log('COSMOS →', data.name, '→', imgPath);
 
-            // plein écran pour l’image
-            front.style.padding    = "0";
-            front.style.background = "none";
+            front.style.padding    = '0';
+            front.style.background = 'none';
             front.innerHTML = `
               <img src="${imgPath}"
                    alt="${data.name}"
                    style="width:100%;height:100%;object-fit:cover;display:block;" />
             `;
-
-            if (polEl) {
-              polEl.textContent = "";
-              polEl.style.visibility = "hidden";
-            }
-
-            card.classList.add("flipped");
-            return; // on ne repasse pas par le mode texte
           }
 
-          // ===== CAS NORMAL : autres familles → texte =====
-          nameEl.textContent  = data.name  || "Carte";
-          quoteEl.textContent = data.quote || "";
-          if (bottomEl) bottomEl.textContent = data.bridge || "";
-
-          if (polEl) {
-            if (data.polarity) {
-              polEl.textContent = data.polarity === "yang" ? "▲" : "●";
-              polEl.style.visibility = "visible";
-            } else {
-              polEl.style.visibility = "hidden";
-            }
-          }
-
-          card.classList.add("flipped");
+          // on retourne la carte dans tous les cas
+          card.classList.add('flipped');
         });
       });
+
   }
 
 
