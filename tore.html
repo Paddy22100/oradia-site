@@ -582,7 +582,7 @@ window.DATA = {
     results.innerHTML = '';
   }
 
-    function buildBoardTore () {
+     function buildBoardTore () {
     if (!boardHost) return;
 
     // Construction des 7 tas
@@ -614,7 +614,9 @@ window.DATA = {
 
     boardWrap.classList.remove('hidden');
 
-    // comportement : au clic, on pioche une carte et on l'affiche
+    const cosmosPool = Array.isArray(window.DATA.cosmos) ? window.DATA.cosmos : [];
+
+    // comportement : au clic, on PIQUE une carte dans window.DATA et on l'affiche
     boardHost.querySelectorAll('.tore-card .tore-card-back')
       .forEach(back => {
         back.addEventListener('click', () => {
@@ -628,8 +630,6 @@ window.DATA = {
           const polEl    = card.querySelector('[data-polarity]');
           const bottomEl = card.querySelector('.bottom');
 
-          console.log("CLICK TORE → famKey =", famKey, "data.name =", data && data.name);
-
           if (!data) {
             nameEl.textContent  = 'Aucune carte trouvée';
             quoteEl.textContent = 'Aucune donnée disponible pour cette famille.';
@@ -639,14 +639,13 @@ window.DATA = {
             return;
           }
 
-          // Détection : cette carte appartient-elle à la famille Mémoire Cosmos ?
+          // Est-ce une carte de la famille Mémoire Cosmos ?
           const isCosmosCard =
-            Array.isArray(window.DATA.cosmos) &&
-            window.DATA.cosmos.some(c => c.name === data.name);
+            famKey === 'cosmos' ||
+            cosmosPool.some(c => c.name === data.name);
 
+          // ===== CAS SPÉCIAL : MÉMOIRE COSMOS → IMAGE =====
           if (isCosmosCard) {
-            console.log("COSMOS détecté →", data.name);
-
             const front = card.querySelector('.tore-card-front');
 
             const imgName = data.name
@@ -659,12 +658,10 @@ window.DATA = {
               + '.png';
 
             const imgPath = 'images/cosmos/' + imgName;
-            console.log('→ imgPath =', imgPath);
 
-            // On laisse toute la place à l'image
-            front.style.padding = '0';
+            // plein écran pour l’image
+            front.style.padding    = '0';
             front.style.background = 'none';
-
             front.innerHTML = `
               <img src="${imgPath}"
                    alt="${data.name}"
@@ -680,7 +677,7 @@ window.DATA = {
             return; // on ne repasse pas par le mode texte
           }
 
-          // Cas normal : familles texte
+          // ===== CAS NORMAL : autres familles → texte =====
           nameEl.textContent  = data.name  || 'Carte';
           quoteEl.textContent = data.quote || '';
           if (bottomEl) bottomEl.textContent = data.bridge || '';
