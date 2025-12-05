@@ -514,17 +514,29 @@ window.DATA = {
     {name:"ARRÊTER",     quote:"Le pas s’interrompt, la poussière retombe.", polarity:"yin"},
   ],
 
-  cosmos: [
-    {name:"ÉTOILE",              quote:"La voûte céleste inscrit la mémoire des mondes. Derrière leur éclat se cache la mémoire de l’infini."},
-    {name:"TERRE",               quote:"Le sol garde les pas de ceux qui ont marché avant. Chaque pierre est une archive que ton corps sait lire."},
-    {name:"OCÉAN",               quote:"Les vagues effacent et recommencent sans fin. Les profondeurs retiennent ce que la surface oublie."},
-    {name:"GÉNÉALOGIE",          quote:"Tes racines prolongent des vies invisibles. Tu es à la fois héritage et commencement."},
-    {name:"FUTUR",               quote:"La graine porte déjà l’ombre de la forêt. Chaque geste d’aujourd’hui écrit une prophétie."},
-    {name:"PASSÉ",               quote:"Les échos d’hier résonnent dans le présent. Celui qui écoute peut en transformer la trame."},
-    {name:"PRÉSENT",             quote:"Tout converge en un seul instant immobile. C’est là que s’ouvre la porte de tous les temps."},
-    {name:"MÉMOIRE CELLULAIRE",  quote:"Chaque cellule conserve la trace du vivant. Le corps est une bibliothèque où rien ne se perd."},
-    {name:"MÉMOIRE COLLECTIVE",  quote:"Le groupe rêve à travers l’individu. Dans la conscience partagée se tisse un monde commun."},
-    {name:"LE TORE",             quote:"Le tore relie l’ombre et la lumière. De son cœur pulse la danse éternelle des cycles."}
+    cosmos: [
+    {name:"ÉTOILE",             file:"etoile.png",
+     quote:"La voûte céleste inscrit la mémoire des mondes. Derrière leur éclat se cache la mémoire de l’infini."},
+    {name:"TERRE",              file:"terre.png",
+     quote:"Le sol garde les pas de ceux qui ont marché avant. Chaque pierre est une archive que ton corps sait lire."},
+    {name:"OCÉAN",              file:"ocean.png",
+     quote:"Les vagues effacent et recommencent sans fin. Les profondeurs retiennent ce que la surface oublie."},
+    {name:"GÉNÉALOGIE",         file:"genealogie.png",
+     quote:"Tes racines prolongent des vies invisibles. Tu es à la fois héritage et commencement."},
+    {name:"FUTUR",              file:"futur.png",
+     quote:"La graine porte déjà l’ombre de la forêt. Chaque geste d’aujourd’hui écrit une prophétie."},
+    {name:"PASSÉ",              file:"passe.png",
+     quote:"Les échos d’hier résonnent dans le présent. Celui qui écoute peut en transformer la trame."},
+    {name:"PRÉSENT",            file:"present.png",
+     quote:"Tout converge en un seul instant immobile. C’est là que s’ouvre la porte de tous les temps."},
+    {name:"MÉMOIRE CELLULAIRE", file:"memoire-cellulaire.png",
+     quote:"Chaque cellule conserve la trace du vivant. Le corps est une bibliothèque où rien ne se perd."},
+    {name:"MÉMOIRE COLLECTIVE", file:"memoire-collective.png",
+     quote:"Le groupe rêve à travers l’individu. Dans la conscience partagée se tisse un monde commun."},
+    {name:"LE TORE",            file:"Tore.png",
+     quote:"Le tore relie l’ombre et la lumière. De son cœur pulse la danse éternelle des cycles."}
+  ]
+
   ]
   };
 </script>
@@ -582,7 +594,7 @@ window.DATA = {
     results.innerHTML = '';
   }
 
-       function buildBoardTore () {
+         function buildBoardTore () {
     if (!boardHost) return;
 
     // Construction des 7 tas
@@ -614,14 +626,13 @@ window.DATA = {
 
     boardWrap.classList.remove('hidden');
 
-            // comportement : au clic, on PIQUE une carte...
-    boardHost.querySelectorAll('.tore-card .tore-card-back')
+    // ----- 1) CARTES STANDARD (tout sauf la centrale pos-6) -----
+    boardHost.querySelectorAll('.tore-card:not(.pos-6) .tore-card-back')
       .forEach(back => {
         back.addEventListener('click', () => {
           const card = back.closest('.tore-card');
           if (!card || card.classList.contains('flipped')) return;
 
-          // famille de la carte (emotions, besoins, transmutation, actions, archetypes, revelations, cosmos)
           const famKey   = (card.dataset.family || '').trim();
           const data     = pickFromData(famKey);
           const nameEl   = card.querySelector('[data-name]');
@@ -629,9 +640,6 @@ window.DATA = {
           const polEl    = card.querySelector('[data-polarity]');
           const bottomEl = card.querySelector('.bottom');
 
-          console.log('CLICK TORE → family =', famKey, '| data =', data && data.name);
-
-          // si aucune donnée trouvée
           if (!data) {
             if (nameEl)  nameEl.textContent  = 'Aucune carte trouvée';
             if (quoteEl) quoteEl.textContent = 'Aucune donnée disponible pour cette famille.';
@@ -641,33 +649,7 @@ window.DATA = {
             return;
           }
 
-          // ----- CAS SPÉCIAL : MÉMOIRE COSMOS → UNIQUEMENT UNE IMAGE -----
-          if (famKey === 'cosmos') {
-            const front = card.querySelector('.tore-card-front');
-            if (front) {
-              const imgName = data.name
-                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // enlève les accents
-                .toLowerCase()
-                .replace(/[^a-z0-9]/g, '_')
-                + '.png';
-
-              const imgPath = 'images/cosmos/' + imgName;
-              console.log('COSMOS →', data.name, '→', imgPath);
-
-              front.style.padding    = '0';
-              front.style.background = 'none';
-              front.innerHTML = `
-                <img src="${imgPath}"
-                     alt="${data.name}"
-                     style="width:100%;height:100%;object-fit:cover;display:block;" />
-              `;
-            }
-
-            card.classList.add('flipped');
-            return; // on ne fait PAS le remplissage texte standard
-          }
-
-          // ----- REMPLISSAGE TEXTE STANDARD (toutes les autres familles) -----
+          // Remplissage texte normal
           if (nameEl)  nameEl.textContent  = data.name  || 'Carte';
           if (quoteEl) quoteEl.textContent = data.quote || '';
           if (bottomEl) bottomEl.textContent = data.bridge || '';
@@ -681,12 +663,39 @@ window.DATA = {
             }
           }
 
-          // on retourne la carte dans tous les cas
           card.classList.add('flipped');
         });
       });
 
+    // ----- 2) CARTE COSMOS (centrale pos-6) → IMAGE UNIQUEMENT -----
+    const cosmosBack = boardHost.querySelector('.tore-card.pos-6 .tore-card-back');
+    if (cosmosBack) {
+      cosmosBack.addEventListener('click', () => {
+        const card = cosmosBack.closest('.tore-card');
+        if (!card || card.classList.contains('flipped')) return;
 
+        const data  = pickFromData('cosmos');
+        const front = card.querySelector('.tore-card-front');
+        if (!data || !front) {
+          card.classList.add('flipped');
+          return;
+        }
+
+        const imgFile = data.file || 'Tore.png';
+        const imgPath = 'images/cosmos/' + imgFile;
+
+        front.style.padding    = '0';
+        front.style.background = 'none';
+        front.innerHTML = `
+          <img src="${imgPath}"
+               alt="${data.name}"
+               style="width:100%;height:100%;object-fit:cover;display:block;" />
+        `;
+
+        card.classList.add('flipped');
+      });
+    }
+  }
 
   // --- listeners ---
 
