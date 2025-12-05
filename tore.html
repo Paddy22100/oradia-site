@@ -614,40 +614,62 @@ window.DATA = {
 
     boardWrap.classList.remove('hidden');
 
-        // comportement : au clic, on PIQUE une carte...
+            // comportement : au clic, on PIQUE une carte...
     boardHost.querySelectorAll('.tore-card .tore-card-back')
-  .forEach(back => {
-    back.addEventListener('click', () => {
-      const card = back.closest('.tore-card');
-      if (!card || card.classList.contains('flipped')) return;
+      .forEach(back => {
+        back.addEventListener('click', () => {
+          const card = back.closest('.tore-card');
+          if (!card || card.classList.contains('flipped')) return;
 
-      // on identifie la carte centrale (Mémoire Cosmos) par sa classe pos-6
-      const famKeyRaw    = (card.dataset.family || '').trim();
-      const isCosmosCard = card.classList.contains('pos-6');
-      const famKey       = isCosmosCard ? 'cosmos' : famKeyRaw;
+          // famille de la carte (emotions, besoins, transmutation, actions, archetypes, revelations, cosmos)
+          const famKey   = (card.dataset.family || '').trim();
+          const data     = pickFromData(famKey);
+          const nameEl   = card.querySelector('[data-name]');
+          const quoteEl  = card.querySelector('[data-quote]');
+          const polEl    = card.querySelector('[data-polarity]');
+          const bottomEl = card.querySelector('.bottom');
 
-      const data      = pickFromData(famKey);
-      const nameEl    = card.querySelector('[data-name]');
-      const quoteEl   = card.querySelector('[data-quote]');
-      const polEl     = card.querySelector('[data-polarity]');
-      const bottomEl  = card.querySelector('.bottom');
-
-      console.log('CLICK TORE → classes =', card.className, '| famKey =', famKey, '| data =', data && data.name);
-
+          console.log('CLICK TORE → family =', famKey, '| data =', data && data.name);
 
           // si aucune donnée trouvée
           if (!data) {
-            nameEl.textContent  = 'Aucune carte trouvée';
-            quoteEl.textContent = 'Aucune donnée disponible pour cette famille.';
+            if (nameEl)  nameEl.textContent  = 'Aucune carte trouvée';
+            if (quoteEl) quoteEl.textContent = 'Aucune donnée disponible pour cette famille.';
             if (bottomEl) bottomEl.textContent = '';
             if (polEl)    polEl.style.visibility = 'hidden';
             card.classList.add('flipped');
             return;
           }
 
-          // ----- REMPLISSAGE TEXTE STANDARD (pour toutes les familles) -----
-          nameEl.textContent  = data.name  || 'Carte';
-          quoteEl.textContent = data.quote || '';
+          // ----- CAS SPÉCIAL : MÉMOIRE COSMOS → UNIQUEMENT UNE IMAGE -----
+          if (famKey === 'cosmos') {
+            const front = card.querySelector('.tore-card-front');
+            if (front) {
+              const imgName = data.name
+                .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // enlève les accents
+                .toLowerCase()
+                .replace(/[^a-z0-9]/g, '_')
+                + '.png';
+
+              const imgPath = 'images/cosmos/' + imgName;
+              console.log('COSMOS →', data.name, '→', imgPath);
+
+              front.style.padding    = '0';
+              front.style.background = 'none';
+              front.innerHTML = `
+                <img src="${imgPath}"
+                     alt="${data.name}"
+                     style="width:100%;height:100%;object-fit:cover;display:block;" />
+              `;
+            }
+
+            card.classList.add('flipped');
+            return; // on ne fait PAS le remplissage texte standard
+          }
+
+          // ----- REMPLISSAGE TEXTE STANDARD (toutes les autres familles) -----
+          if (nameEl)  nameEl.textContent  = data.name  || 'Carte';
+          if (quoteEl) quoteEl.textContent = data.quote || '';
           if (bottomEl) bottomEl.textContent = data.bridge || '';
 
           if (polEl) {
@@ -659,34 +681,10 @@ window.DATA = {
             }
           }
 
-          // ----- CAS SPÉCIAL : MÉMOIRE COSMOS → ON ÉCRASE LE FRONT AVEC L’IMAGE -----
-       if (isCosmosCard) {
-        const front = card.querySelector('.tore-card-front');
-         
-            const imgName = data.name
-              .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // enlève les accents
-              .toLowerCase()
-              .replace(/[^a-z0-9]/g, '_')
-              + '.png';
-
-            const imgPath = 'images/cosmos/' + imgName;
-            console.log('COSMOS →', data.name, '→', imgPath);
-
-            front.style.padding    = '0';
-            front.style.background = 'none';
-            front.innerHTML = `
-              <img src="${imgPath}"
-                   alt="${data.name}"
-                   style="width:100%;height:100%;object-fit:cover;display:block;" />
-            `;
-          }
-
           // on retourne la carte dans tous les cas
           card.classList.add('flipped');
         });
       });
-
-  }
 
 
 
