@@ -614,10 +614,9 @@ window.DATA = {
 
     boardWrap.classList.remove('hidden');
 
-    const cosmosPool = Array.isArray(window.DATA.cosmos) ? window.DATA.cosmos : [];
+// comportement : au clic, on PIQUE une carte...
+boardHost.querySelectorAll('.tore-card .tore-card-back')
 
-    // comportement : au clic, on PIQUE une carte dans window.DATA et on l'affiche
-    boardHost.querySelectorAll('.tore-card .tore-card-back')
       .forEach(back => {
         back.addEventListener('click', () => {
           const card = back.closest('.tore-card');
@@ -639,10 +638,9 @@ window.DATA = {
             return;
           }
 
-          // Est-ce une carte de la famille Mémoire Cosmos ?
-          const isCosmosCard =
-            famKey === 'cosmos' ||
-            cosmosPool.some(c => c.name === data.name);
+          // Est-ce la carte centrale Mémoire Cosmos ?
+const isCosmosCard = card.classList.contains('pos-6');
+
 
           // ===== CAS SPÉCIAL : MÉMOIRE COSMOS → IMAGE =====
           if (isCosmosCard) {
