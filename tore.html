@@ -582,7 +582,7 @@ window.DATA = {
     results.innerHTML = '';
   }
 
-     function buildBoardTore () {
+       function buildBoardTore () {
     if (!boardHost) return;
 
     // Construction des 7 tas
@@ -614,9 +614,8 @@ window.DATA = {
 
     boardWrap.classList.remove('hidden');
 
-// comportement : au clic, on PIQUE une carte...
-boardHost.querySelectorAll('.tore-card .tore-card-back')
-
+    // comportement : au clic, on PIQUE une carte...
+    boardHost.querySelectorAll('.tore-card .tore-card-back')
       .forEach(back => {
         back.addEventListener('click', () => {
           const card = back.closest('.tore-card');
@@ -638,33 +637,23 @@ boardHost.querySelectorAll('.tore-card .tore-card-back')
             return;
           }
 
-                    // Est-ce une carte de la Mémoire Cosmos ?
-          const isCosmosCard =
-            famKey === 'cosmos' ||
-            (Array.isArray(window.DATA.cosmos) &&
-             window.DATA.cosmos.some(c => c.name === data.name));
-
-
-
-
-          // ===== CAS SPÉCIAL : MÉMOIRE COSMOS → IMAGE =====
-          if (isCosmosCard) {
+          // ===== CAS SPÉCIAL : MÉMOIRE COSMOS (famille "cosmos") → IMAGE =====
+          if (famKey === 'cosmos') {
             const front = card.querySelector('.tore-card-front');
 
+            // nom de fichier à partir du nom de la carte
             const imgName = data.name
+              .normalize("NFD").replace(/[\u0300-\u036f]/g, "") // enlève les accents
               .toLowerCase()
-              .replace(/[éèêë]/g, 'e')
-              .replace(/[àâä]/g, 'a')
-              .replace(/[îï]/g, 'i')
-              .replace(/[ûü]/g, 'u')
-              .replace(/[^a-z0-9]/g, '_')
-              + '.png';
+              .replace(/[^a-z0-9]/g, "_")
+              + ".png";
 
-            const imgPath = 'images/cosmos/' + imgName;
+            const imgPath = "images/cosmos/" + imgName;
+            console.log("COSMOS →", data.name, "→", imgPath);
 
             // plein écran pour l’image
-            front.style.padding    = '0';
-            front.style.background = 'none';
+            front.style.padding    = "0";
+            front.style.background = "none";
             front.innerHTML = `
               <img src="${imgPath}"
                    alt="${data.name}"
@@ -672,32 +661,33 @@ boardHost.querySelectorAll('.tore-card .tore-card-back')
             `;
 
             if (polEl) {
-              polEl.textContent = '';
-              polEl.style.visibility = 'hidden';
+              polEl.textContent = "";
+              polEl.style.visibility = "hidden";
             }
 
-            card.classList.add('flipped');
+            card.classList.add("flipped");
             return; // on ne repasse pas par le mode texte
           }
 
           // ===== CAS NORMAL : autres familles → texte =====
-          nameEl.textContent  = data.name  || 'Carte';
-          quoteEl.textContent = data.quote || '';
-          if (bottomEl) bottomEl.textContent = data.bridge || '';
+          nameEl.textContent  = data.name  || "Carte";
+          quoteEl.textContent = data.quote || "";
+          if (bottomEl) bottomEl.textContent = data.bridge || "";
 
           if (polEl) {
             if (data.polarity) {
-              polEl.textContent = data.polarity === 'yang' ? '▲' : '●';
-              polEl.style.visibility = 'visible';
+              polEl.textContent = data.polarity === "yang" ? "▲" : "●";
+              polEl.style.visibility = "visible";
             } else {
-              polEl.style.visibility = 'hidden';
+              polEl.style.visibility = "hidden";
             }
           }
 
-          card.classList.add('flipped');
+          card.classList.add("flipped");
         });
       });
   }
+
 
 
   // --- listeners ---
