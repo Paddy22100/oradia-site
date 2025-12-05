@@ -638,8 +638,13 @@ boardHost.querySelectorAll('.tore-card .tore-card-back')
             return;
           }
 
-          // Est-ce la carte centrale Mémoire Cosmos ?
-const isCosmosCard = card.classList.contains('pos-6');
+          // Est-ce une carte de la Mémoire Cosmos ?
+          const isCosmosCard =
+            famKey === 'cosmos' ||
+            (Array.isArray(window.DATA.cosmos) &&
+             window.DATA.cosmos.some(c => c.name === data.name)) ||
+            card.classList.contains('pos-6');
+
 
 
           // ===== CAS SPÉCIAL : MÉMOIRE COSMOS → IMAGE =====
