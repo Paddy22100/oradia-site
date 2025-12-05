@@ -616,20 +616,24 @@ window.DATA = {
 
         // comportement : au clic, on PIQUE une carte...
     boardHost.querySelectorAll('.tore-card .tore-card-back')
-      .forEach(back => {
-        back.addEventListener('click', () => {
-          const card = back.closest('.tore-card');
-          if (!card || card.classList.contains('flipped')) return;
+  .forEach(back => {
+    back.addEventListener('click', () => {
+      const card = back.closest('.tore-card');
+      if (!card || card.classList.contains('flipped')) return;
 
-          const famKeyRaw = card.dataset.family || '';
-          const famKey    = famKeyRaw.trim();
-          const data      = pickFromData(famKey);
-          const nameEl    = card.querySelector('[data-name]');
-          const quoteEl   = card.querySelector('[data-quote]');
-          const polEl     = card.querySelector('[data-polarity]');
-          const bottomEl  = card.querySelector('.bottom');
+      // on identifie la carte centrale (Mémoire Cosmos) par sa classe pos-6
+      const famKeyRaw    = (card.dataset.family || '').trim();
+      const isCosmosCard = card.classList.contains('pos-6');
+      const famKey       = isCosmosCard ? 'cosmos' : famKeyRaw;
 
-          console.log('CLICK TORE → classes =', card.className, '| famKey =', famKey, '| data =', data && data.name);
+      const data      = pickFromData(famKey);
+      const nameEl    = card.querySelector('[data-name]');
+      const quoteEl   = card.querySelector('[data-quote]');
+      const polEl     = card.querySelector('[data-polarity]');
+      const bottomEl  = card.querySelector('.bottom');
+
+      console.log('CLICK TORE → classes =', card.className, '| famKey =', famKey, '| data =', data && data.name);
+
 
           // si aucune donnée trouvée
           if (!data) {
@@ -656,9 +660,9 @@ window.DATA = {
           }
 
           // ----- CAS SPÉCIAL : MÉMOIRE COSMOS → ON ÉCRASE LE FRONT AVEC L’IMAGE -----
-          if (famKey === 'cosmos') {
-            const front = card.querySelector('.tore-card-front');
-
+       if (isCosmosCard) {
+        const front = card.querySelector('.tore-card-front');
+         
             const imgName = data.name
               .normalize('NFD').replace(/[\u0300-\u036f]/g, '')  // enlève les accents
               .toLowerCase()
