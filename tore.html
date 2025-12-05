@@ -618,15 +618,21 @@ window.DATA = {
     boardHost.querySelectorAll('.tore-card .tore-card-back')
       .forEach(back => {
         back.addEventListener('click', () => {
-          const card = back.closest('.tore-card');
-          if (!card || card.classList.contains('flipped')) return;
+  const card = back.closest('.tore-card');
+  if (!card || card.classList.contains('flipped')) return;
 
-          const famKey   = card.dataset.family;
-          const data     = pickFromData(famKey);
-          const nameEl   = card.querySelector('[data-name]');
-          const quoteEl  = card.querySelector('[data-quote]');
-          const polEl    = card.querySelector('[data-polarity]');
-          const bottomEl = card.querySelector('.bottom');
+  // On force la carte centrale (pos-6) à être la famille "cosmos"
+  const rawFamKey = card.dataset.family || '';
+  const famKey    = card.classList.contains('pos-6') ? 'cosmos' : rawFamKey;
+
+  const data      = pickFromData(famKey);
+  const nameEl    = card.querySelector('[data-name]');
+  const quoteEl   = card.querySelector('[data-quote]');
+  const polEl     = card.querySelector('[data-polarity]');
+  const bottomEl  = card.querySelector('.bottom');
+
+  console.log('TORE click → classes =', card.className, 'famKey =', famKey, 'data =', data && data.name);
+
 
           if (!data) {
             nameEl.textContent  = 'Aucune carte trouvée';
