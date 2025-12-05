@@ -627,14 +627,12 @@ window.DATA = {
           const polEl    = card.querySelector('[data-polarity]');
           const bottomEl = card.querySelector('.bottom');
 
-if (data) {
+      // --- CAS SPÉCIAL : COSMOS = image complète ---
+      if (famKey === "cosmos" && data) {
+        const front = card.querySelector(".tore-card-front");
 
-  // --- CAS SPÉCIAL : MÉMOIRE COSMOS → afficher une image ---
-  if (famKey === "cosmos") {
-      const front = card.querySelector(".tore-card-front");
-
-      // Normalisation du nom de fichier
-      const imgName = data.name
+        // Normalisation du nom → nom de fichier
+        const imgName = data.name
           .toLowerCase()
           .replace(/[éèêë]/g, "e")
           .replace(/[àâä]/g, "a")
@@ -643,43 +641,50 @@ if (data) {
           .replace(/[^a-z0-9]/g, "_")
           + ".png";
 
-      const imgPath = "images/cosmos/" + imgName;
+        const imgPath = "images/cosmos/" + imgName;
 
-      // Remplacement complet de la face avant par l’image
-      front.innerHTML = `
-        <img src="${imgPath}" 
-             alt="${data.name}" 
-             class="w-full h-full object-cover"/>
-      `;
+        // Debug (optionnel) : voir si le chemin est OK
+        // console.log("COSMOS →", famKey, data.name, imgPath);
 
-      // Pas de polarité sur Cosmos
-      polEl.style.visibility = "hidden";
+        // Face avant = l’image de la carte
+        front.innerHTML = `
+          <img src="${imgPath}"
+               alt="${data.name}"
+               class="w-full h-full object-cover" />
+        `;
+
+        // Pas de polarité affichée pour Cosmos
+        if (polEl) {
+          polEl.textContent = "";
+          polEl.style.visibility = "hidden";
+        }
+
+        card.classList.add("flipped");
+        return; // on sort ici pour ne pas passer par le mode texte
+      }
+
+      // --- CAS GÉNÉRAL : toutes les autres familles (texte) ---
+      if (data) {
+        nameEl.textContent  = data.name  || "Carte";
+        quoteEl.textContent = data.quote || "";
+        if (bottomEl) bottomEl.textContent = data.bridge || "";
+
+        if (data.polarity) {
+          polEl.textContent = data.polarity === "yang" ? "▲" : "●";
+          polEl.style.visibility = "visible";
+        } else {
+          polEl.style.visibility = "hidden";
+        }
+      } else {
+        // fallback si aucune data
+        nameEl.textContent  = "Aucune carte trouvée";
+        quoteEl.textContent = "Aucune donnée disponible pour cette famille.";
+        if (bottomEl) bottomEl.textContent = "";
+        polEl.style.visibility = "hidden";
+      }
 
       card.classList.add("flipped");
-      return;
-  }
 
-  // --- CAS NORMAL : toutes les autres familles ---
-  nameEl.textContent  = data.name  || 'Carte';
-  quoteEl.textContent = data.quote || '';
-  if (bottomEl) bottomEl.textContent = data.bridge || '';
-
-  if (data.polarity) {
-    polEl.textContent = data.polarity === 'yang' ? '▲' : '●';
-    polEl.style.visibility = "visible";
-  } else {
-    polEl.style.visibility = "hidden";
-  }
-
-} else {
-  // Aucun DATA → message fallback
-  nameEl.textContent  = 'Aucune carte trouvée';
-  quoteEl.textContent = 'Aucune donnée disponible pour cette famille.';
-  if (bottomEl) bottomEl.textContent = '';
-  polEl.style.visibility = "hidden";
-}
-
-card.classList.add("flipped");
 
         });
       });
