@@ -327,6 +327,31 @@
     background-image: url("images/dos/dos_memoire_cosmos.png");
   }
 
+  /* Label de famille sous chaque tas */
+.tore-family-label {
+  position: absolute;
+  left: 50%;
+  bottom: -2.2rem;             /* sous la carte */
+  transform: translateX(-50%);
+  padding: 4px 14px 5px;
+  border-radius: 999px;
+  border: 1px solid rgba(212,175,55,0.55);
+  background: radial-gradient(circle at 50% 0%, rgba(10,26,52,0.95), rgba(2,8,20,0.92));
+  color: #f5e7a1;
+  font-family: "Cinzel", serif;
+  font-size: 0.8rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  text-shadow: 0 0 8px rgba(0,0,0,0.8);
+  pointer-events: none;        /* on ne gêne pas les clics sur la carte */
+}
+
+/* Centre du Tore : on descend un peu plus pour ne pas coller au cercle */
+.tore-card.pos-7 .tore-family-label {
+  bottom: -2.7rem;
+}
+
    .tore-card-front {
     transform: rotateY(180deg);
     background: radial-gradient(circle at 20% 0%, rgba(245,231,161,15), transparent 55%),
@@ -820,7 +845,7 @@ window.DATA = {
     { key: 'actions',       label: 'ACTIONS',        chip: 'Action',          pos: 3 },
     { key: 'archetypes',    label: 'ARCHÉTYPE',      chip: 'Archétype',       pos: 4 },
     { key: 'revelations',   label: 'RÉVÉLATION',     chip: 'Révélation',      pos: 5 },
-    { key: 'memoire_cosmos',label: 'MÉMOIRE_COSMOS', chip: 'Mémoire_Cosmos',  pos: 6 },
+    { key: 'memoire_cosmos',label: 'MÉMOIRE COSMOS', chip: 'Mémoire Cosmos',  pos: 6 },
   ];
 
 // Dossier d'images par famille
@@ -916,7 +941,8 @@ window.DATA = {
         <div class="tore-card-inner">
           <div class="tore-card-back back" role="button" tabindex="0"
                aria-pressed="false" aria-label="Retourner la carte">
-                </div>
+            <div class="logo-circle"></div>
+          </div>
           <div class="tore-card-front">
             <div class="art">
               <div>
@@ -926,6 +952,11 @@ window.DATA = {
             </div>
             <div class="bottom text-xs opacity-80 mt-2"></div>
           </div>
+        </div>
+
+        <!-- Label de famille sous la carte -->
+        <div class="tore-family-label font-cinzel">
+          ${s.label}
         </div>
       </article>
     `).join('');
