@@ -290,25 +290,18 @@
   }
 
   .tore-card-back {
-    background: radial-gradient(circle at 20% 0%, rgba(245,231,161,15), transparent 55%),
-                radial-gradient(circle at 80% 100%, rgba(88,190,255,12), transparent 55%),
-                linear-gradient(160deg,#050b18,#08152b,#050b18);
+    background-color: #020817;
+    background-image: url("images/logo-hd-v2.jpeg");
+    background-size: 70%;
+    background-repeat: no-repeat;
+    background-position: center;
     display: flex;
     align-items: center;
     justify-content: center;
     cursor: pointer;
   }
-  .tore-card-back .logo-circle {
-    border-radius: 999px;
-    padding: 10px 24px;
-    border: 1px solid rgba(212,175,55,6);
-    color: #f5e7a1;
-    letter-spacing: .18em;
-    text-transform: uppercase;
-    font-size: .8rem;
-  }
 
-  .tore-card-front {
+   .tore-card-front {
     transform: rotateY(180deg);
     background: radial-gradient(circle at 20% 0%, rgba(245,231,161,15), transparent 55%),
                 radial-gradient(circle at 80% 100%, rgba(88,190,255,12), transparent 55%),
@@ -363,19 +356,52 @@
      PIÈCE DE TIRAGE ORADIA
      ======================== */
 
-  .tore-coin {
+   .tore-coin {
     width: 110px;
     height: 110px;
     border-radius: 999px;
     background-image: url("images/coin-oradia.png");
     background-size: 200% 100%;        /* 2 faces côte à côte */
-    background-position: left center;  /* face Yang (triangle) par défaut */
+    background-position: left center;  /* face Yang par défaut */
     box-shadow: 0 20px 40px rgba(0,0,0,0.6);
     border: 1px solid rgba(212,175,55,0.7);
     cursor: pointer;
     transform-style: preserve-3d;
     transition: transform 0.3s ease;
+    position: relative;                /* pour les pseudo-éléments */
+    overflow: visible;
   }
+
+  /* halo + onde autour de la pièce */
+  .tore-coin::before,
+  .tore-coin::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: 999px;
+    pointer-events: none;
+  }
+
+  /* halo pulsant (actif quand .glow est présent) */
+  .tore-coin::before {
+    opacity: 0;
+    box-shadow: 0 0 0 0 rgba(212,175,55,0.0);
+    transform: scale(1);
+  }
+  .tore-coin.glow::before {
+    animation: coin-glow 1.8s ease-in-out infinite;
+  }
+
+  /* onde circulaire (actif quand .ripple est présent) */
+  .tore-coin::after {
+    opacity: 0;
+    border: 2px solid rgba(212,175,55,0.8);
+    transform: scale(1);
+  }
+  .tore-coin.ripple::after {
+    animation: coin-ripple 0.8s ease-out forwards;
+  }
+
 
   /* Faces : gauche = Yang (triangle), droite = Yin (cercle) */
   .tore-coin.face-yang {
@@ -396,6 +422,38 @@
     35%  { transform: rotateY(360deg) scale(1.25); }
     70%  { transform: rotateY(720deg) scale(1.05); }
     100% { transform: rotateY(1080deg) scale(1); }
+  }
+  @keyframes coin-glow {
+    0% {
+      opacity: 0.15;
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(212,175,55,0.0);
+    }
+    50% {
+      opacity: 0.6;
+      transform: scale(1.35);
+      box-shadow: 0 0 40px 12px rgba(212,175,55,0.35);
+    }
+    100% {
+      opacity: 0.15;
+      transform: scale(1);
+      box-shadow: 0 0 0 0 rgba(212,175,55,0.0);
+    }
+  }
+
+  @keyframes coin-ripple {
+    0% {
+      opacity: 0.7;
+      transform: scale(1);
+    }
+    80% {
+      opacity: 0.4;
+      transform: scale(2.3);
+    }
+    100% {
+      opacity: 0;
+      transform: scale(2.6);
+    }
   }
 
   /* Aperçu zoom des cartes retournées – version douce */
@@ -434,6 +492,24 @@
     opacity: 1;
   }
 
+  /* Plateau verrouillé pendant que la pièce tourne */
+  #tore-immersif .tore-board-7.board-locked,
+  #tore-immersif .tore-board-7.board-locked * {
+    pointer-events: none !important;
+    cursor: default;
+  }
+/* Vibration subtile du tore */
+@keyframes tore-shake {
+  0%   { transform: translate(0, 0); }
+  25%  { transform: translate(-3px, 1px); }
+  50%  { transform: translate(3px, -1px); }
+  75%  { transform: translate(-2px, 2px); }
+  100% { transform: translate(0, 0); }
+}
+
+.tore-shake {
+  animation: tore-shake 0.25s ease-out;
+}
 
 </style>
 
@@ -814,8 +890,7 @@ window.DATA = {
         <div class="tore-card-inner">
           <div class="tore-card-back back" role="button" tabindex="0"
                aria-pressed="false" aria-label="Retourner la carte">
-            <div class="logo-circle">TORE</div>
-          </div>
+                </div>
           <div class="tore-card-front">
             <div class="art">
               <div>
@@ -832,9 +907,14 @@ window.DATA = {
     boardWrap.classList.remove('hidden');
 
 // On cache la pièce au moment où on (re)lance un tirage
-    if (coinWrapper) {
+        if (coinWrapper) {
       coinWrapper.classList.add('hidden');
     }
+    if (coin) {
+      coin.classList.remove('spin', 'ripple', 'glow');
+      coin.dataset.locked = '0';
+    }
+
 
 // Gestion du clic pour TOUTES les cartes 
     boardHost.querySelectorAll('.tore-card .tore-card-back').forEach(back => {
@@ -878,9 +958,14 @@ front.innerHTML = `
         const totalCards   = boardHost.querySelectorAll('.tore-card').length;
         const flippedCards = boardHost.querySelectorAll('.tore-card.flipped').length;
 
-        if (coinWrapper && totalCards > 0 && flippedCards === totalCards) {
+                if (coinWrapper && totalCards > 0 && flippedCards === totalCards) {
           coinWrapper.classList.remove('hidden');
+          if (coin) {
+            coin.classList.remove('spin', 'ripple');
+            coin.classList.add('glow');   // halo pulsant avant le lancer
+          }
         }
+
       });
     });
     
@@ -907,7 +992,7 @@ if (previewOverlay && previewImg) {
   });
 }
   }
-  // Lancer la pièce de tirage
+    // Lancer la pièce de tirage
   function launchCoin() {
     if (!coin) return;
 
@@ -915,24 +1000,52 @@ if (previewOverlay && previewImg) {
     if (coin.dataset.locked === '1') return;
     coin.dataset.locked = '1';
 
-    // On enlève la face précédente et on lance l'animation
-    coin.classList.remove('face-yang', 'face-yin');
+    // Bloque les interactions sur le plateau pendant le lancer
+    if (boardHost) {
+      boardHost.classList.add('board-locked');
+    }
+
+    // On enlève halo et onde précédents
+    coin.classList.remove('glow', 'ripple', 'face-yang', 'face-yin');
+
+    // Reset animation ripple
+    void coin.offsetWidth;
+
+    // Lancer l’animation de rotation
     coin.classList.add('spin');
 
-    // Fin de l'animation : on choisit une face aléatoire
+    // Fin de l’animation
     setTimeout(() => {
       coin.classList.remove('spin');
 
-      const isYang = Math.random() < 0.5; // true = triangle, false = cercle
-      if (isYang) {
-        coin.classList.add('face-yang');
-      } else {
-        coin.classList.add('face-yin');
+      const isYang = Math.random() < 0.5;
+      coin.classList.add(isYang ? 'face-yang' : 'face-yin');
+
+      // Onde circulaire dorée
+      coin.classList.remove('ripple');
+      void coin.offsetWidth;
+      coin.classList.add('ripple');
+
+      // Vibration subtile du tore
+if (boardWrap) {
+  boardWrap.classList.add('tore-shake');
+
+  setTimeout(() => {
+    boardWrap.classList.remove('tore-shake');
+  }, 300); // même durée que l'animation
+}
+
+      // Déverrouille le plateau
+      if (boardHost) {
+        boardHost.classList.remove('board-locked');
       }
 
+      // Retour de la lueur pulsante
       coin.dataset.locked = '0';
-    }, 1000); // doit matcher la durée de l'animation CSS
+      coin.classList.add('glow');
+    }, 1000);
   }
+
 
   // --- listeners principaux ---
 
