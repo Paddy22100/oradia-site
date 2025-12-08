@@ -39,6 +39,27 @@
     body{ margin:0; font-family:'Poppins',sans-serif; background:#0a192f; color:#f5e7a1; overflow-x:hidden; }
     .header-bg{ background:rgba(5,20,40,.98); }
     .hero-bg{ background: radial-gradient(circle at center, rgba(26,54,93,.7) 0%, rgba(5,20,40,.9) 70%); background-size:cover; }
+/* Section héro avec l'image de fond */
+.hero-section{
+  position: relative;
+  min-height: calc(100vh - 80px);       /* plein écran sous le header */
+  background-image: url("images/logo-hd-v2.jpeg");
+  background-position: center;
+  background-size: cover;
+  background-repeat: no-repeat;
+}
+
+/* Voile sombre par dessus l'image pour la lisibilité du texte */
+.hero-overlay{
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(5,20,40,0.2) 0%,
+    rgba(5,20,40,0.9) 70%
+  );
+  pointer-events: none;
+}
 
     .gold-gradient{
       background: linear-gradient(90deg, #d4af37, #f5e7a1, #d4af37);
