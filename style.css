@@ -74,7 +74,11 @@ p {
 
 /* ===== SECTION HERO (IMAGE DE FOND) ===== */
 .hero-section {
+<<<<<<< HEAD
     background-image: url('/images/oradia-hero-4k.png');
+=======
+    background-image: url('images/oradia-hero-4k.png');
+>>>>>>> b2b0c83 (Mise à jour majeure : plateau Tore + corrections images + ajustement cartes)
     background-size: cover;
     background-position: center center;
     background-repeat: no-repeat;
