@@ -289,16 +289,42 @@
     border: 1px solid rgba(212,175,55,45);
   }
 
-  .tore-card-back {
+   .tore-card-back {
     background-color: #020817;
-    background-image: url("images/logo-hd-v2.jpeg");
-    background-size: 70%;
+    background-size: cover;
     background-repeat: no-repeat;
     background-position: center;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     cursor: pointer;
+  }
+
+  /* Dos par famille */
+
+  .tore-card[data-family="emotions"] .tore-card-back {
+    background-image: url("images/dos/dos_emotion.png");
+  }
+
+  .tore-card[data-family="besoins"] .tore-card-back {
+    background-image: url("images/dos/dos_besoin.png");
+  }
+
+  .tore-card[data-family="transmutation"] .tore-card-back {
+    background-image: url("images/dos/dos_transmutation.png");
+  }
+
+  .tore-card[data-family="actions"] .tore-card-back {
+    background-image: url("images/dos/dos_action.png");
+  }
+
+  .tore-card[data-family="archetypes"] .tore-card-back {
+    background-image: url("images/dos/dos_archetype.png");
+  }
+
+  .tore-card[data-family="revelations"] .tore-card-back {
+    background-image: url("images/dos/dos_revelation.png");
+  }
+
+  .tore-card[data-family="memoire_cosmos"] .tore-card-back {
+    background-image: url("images/dos/dos_memoire_cosmos.png");
   }
 
    .tore-card-front {
