@@ -205,7 +205,7 @@
 
 /* Mémoire Cosmos (centre) */
 .tore-card.pos-6 {
-  transform: translateY(-6%);
+  transform: translateY(-110%);
 }
 
 /* Archétype → décalé plus à droite */
@@ -236,6 +236,10 @@
 
   #tore-immersif .tore-board-7 .pos-0 { grid-area: 3 / 1; }
   #tore-immersif .tore-board-7 .pos-1 { grid-area: 3 / 3; }
+
+#tore-board {
+  position: relative;
+}
 
 /* Cartes un peu plus petites pour rentrer pile dans les cadres */
 .tore-card {
@@ -512,16 +516,28 @@
 
        <!-- PIÈCE DE TIRAGE -->
       <div id="tore-coin-wrapper"
-     class="hidden absolute inset-0 flex flex-col items-center justify-center z-40 pointer-events-none">
+     class="hidden absolute inset-0 flex flex-col-reverse items-center justify-center z-40 pointer-events-none">
 <style>
+#tore-coin-wrapper {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -38%); /* ajuste la position verticale du bloc pièce+bouton */
+  pointer-events: none;
+}
+
 #tore-coin-button {
-  pointer-events: auto;       /* permet le clic */
-  margin-bottom: 140px;       /* ajuste la position du bouton au-dessus de la pièce */
+  pointer-events: auto;
+  margin-top: 20px; /* bouton SOUS la pièce */
 }
 
 #tore-coin {
   pointer-events: auto;
+  margin-bottom: 10px;
 }
+</style>
+
+
 </style>
 
         <button id="tore-coin-button" class="btn-gold">
