@@ -40,6 +40,26 @@
     .header-bg{ background:rgba(5,20,40,.98); }
     .hero-bg{ background: radial-gradient(circle at center, rgba(26,54,93,.7) 0%, rgba(5,20,40,.9) 70%); background-size:cover; }
 
+    /* Section héro avec l'image de fond */
+.hero-section{
+  background-image: url("images/oradia-hero-4k.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Voile sombre par dessus l'image pour la lisibilité du texte */
+.hero-overlay{
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(5,20,40,0.2) 0%,
+    rgba(5,20,40,0.9) 70%
+  );
+  pointer-events: none;
+}
+
     .gold-gradient{
       background: linear-gradient(90deg, #d4af37, #f5e7a1, #d4af37);
       -webkit-background-clip:text; background-clip:text; color:transparent;
