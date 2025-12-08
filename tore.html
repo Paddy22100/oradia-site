@@ -87,8 +87,8 @@
 
     <!-- LOGO -->
     <a href="index.html#accueil" class="flex items-center gap-4">
-      <img src="https://i.ibb.co/Q3vbXP4S/logo.png" alt="Oradia Logo"
-           class="w-16 h-16 transform hover:scale-110 transition-transform duration-300" />
+      <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo"
+     class="w-16 h-16 object-contain transform hover:scale-110 transition-transform duration-300" />
       <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
     </a>
 
@@ -154,16 +154,67 @@
     display: none !important;
   }
 
-  /* Plateau 7 tas façon photo "Six-Points" */
-  #tore-immersif .tore-board-7 {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0,1fr));
-    grid-template-rows: repeat(3, auto);
-    gap: 16px;
-    place-items: center;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
+/* ===== PLATEAU DU TIRAGE DU TORE ===== */
+#tore-immersif .tore-board-7 {
+  position: relative;
+  width: min(1400px, 95vw);
+  aspect-ratio: 1 / 1;
+  margin: 0 auto;
+
+  /* un peu moins de marge interne pour laisser plus de place aux cartes */
+  padding: 7% 10%;
+
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  grid-template-areas:
+    "top-left   .        top-right"
+    "mid-left   center   mid-right"
+    "bottom-left .       bottom-right";
+  gap: 2.4rem;                 /* plus d’espace entre les piles */
+  place-items: center;
+
+  background-image: url("images/plateau.jpeg");
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+
+/* Mapping des 7 cartes sur le plateau */
+.tore-card.pos-0 { grid-area: top-left; }
+.tore-card.pos-1 { grid-area: top-right; }
+.tore-card.pos-2 { grid-area: bottom-left; }
+.tore-card.pos-3 { grid-area: mid-left; }
+.tore-card.pos-4 { grid-area: center; }
+.tore-card.pos-5 { grid-area: mid-right; }
+.tore-card.pos-6 { grid-area: bottom-right; }
+
+/* Ajustements du plateau */
+
+/* Émotions + Besoins → légèrement vers le bas */
+.tore-card.pos-0,
+.tore-card.pos-1 {
+  transform: translateY(-2%);
+}
+
+/* Transmutation → décalé encore plus à gauche */
+.tore-card.pos-2 {
+  transform: translate(-70px, 4%);   /* X = -30px pour aller à gauche */
+}
+
+/* Mémoire Cosmos (centre) */
+.tore-card.pos-6 {
+  transform: translateY(4%);
+}
+
+/* Archétype → décalé plus à droite */
+.tore-card.pos-4 {
+  transform: translate(70px, 0);     /* X = +30px pour aller à droite */
+}
+
+
+
 
   /* Disposition des piles :
      Ligne 1 : Révélation (gauche)          [pos-5]
@@ -186,13 +237,16 @@
   #tore-immersif .tore-board-7 .pos-0 { grid-area: 3 / 1; }
   #tore-immersif .tore-board-7 .pos-1 { grid-area: 3 / 3; }
 
-  /* Cartes du TORE  */
-  .tore-card {
-    width: min(260px, 80vw);
-    height: 380px;
-    perspective: 1000px;
-    position: relative;
-  }
+/* Cartes un peu plus petites pour rentrer pile dans les cadres */
+.tore-card {
+  width: min(260px, 26vw);   /* cartes nettement plus grandes */
+  aspect-ratio: 64 / 90;
+  height: auto;
+  perspective: 1000px;
+  position: relative;
+}
+
+
 
   @media (max-width: 860px) {
     #tore-immersif .tore-board-7 {
@@ -297,6 +351,86 @@
     line-height: 1.4;
     opacity: .9;
   }
+  #tore-immersif .container {
+  max-width: 1500px;   /* augmente la largeur du cadre */
+}
+
+  /* ========================
+     PIÈCE DE TIRAGE ORADIA
+     ======================== */
+
+  .tore-coin {
+    width: 110px;
+    height: 110px;
+    border-radius: 999px;
+    background-image: url("images/coin-oradia.png");
+    background-size: 200% 100%;        /* 2 faces côte à côte */
+    background-position: left center;  /* face Yang (triangle) par défaut */
+    box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    border: 1px solid rgba(212,175,55,0.7);
+    cursor: pointer;
+    transform-style: preserve-3d;
+    transition: transform 0.3s ease;
+  }
+
+  /* Faces : gauche = Yang (triangle), droite = Yin (cercle) */
+  .tore-coin.face-yang {
+    background-position: left center;
+  }
+
+  .tore-coin.face-yin {
+    background-position: right center;
+  }
+
+  /* Animation de lancer */
+  .tore-coin.spin {
+    animation: coin-spin 1s ease-in-out;
+  }
+
+  @keyframes coin-spin {
+    0%   { transform: rotateY(0deg) scale(1); }
+    35%  { transform: rotateY(360deg) scale(1.25); }
+    70%  { transform: rotateY(720deg) scale(1.05); }
+    100% { transform: rotateY(1080deg) scale(1); }
+  }
+
+  /* Aperçu zoom des cartes retournées – version douce */
+  #card-preview-overlay {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0); /* transparent au repos */
+    z-index: 60;
+    pointer-events: none;       /* ne bloque pas la souris */
+    opacity: 0;
+    transition: opacity 0.4s ease, background 0.4s ease;
+  }
+
+  /* Quand le zoom est actif */
+  #card-preview-overlay.card-preview-visible {
+    opacity: 1;
+    background: rgba(0,0,0,0.6);
+  }
+
+  #card-preview-overlay img {
+    max-width: min(480px, 90vw);
+    height: auto;
+    border-radius: 18px;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    border: 1px solid rgba(212,175,55,.7);
+    transform: scale(0.9);
+    opacity: 0;
+    transition: opacity 0.4s ease, transform 0.4s ease;
+  }
+
+  #card-preview-overlay.card-preview-visible img {
+    transform: scale(1);
+    opacity: 1;
+  }
+
+
 </style>
 
 <section id="tore-immersif" class="py-20 px-6 bg-night-blue">
@@ -357,7 +491,7 @@
           </div>
         </div>
         <div class="mb-6">
-          <label class="block text-light-gold mb-2">Votre intention pour ce tirage complet</label>
+          <label class="block text-light-gold mb-2">Renseignez votre intention pour ce tirage</label>
           <textarea name="intention"
                     class="w-full bg-[rgba(5,20,40,7)] border border-[rgba(212,175,55,35)] p-3 rounded-lg min-h-[120px]"
                     required></textarea>
@@ -368,12 +502,31 @@
       <!-- PLATEAU – 7 TAS EN MODE SIX-POINTS -->
       <div id="tore-board" class="hidden relative z-10 mt-10">
         <h3 class="cormorant text-2xl text-gold mb-6 text-center">
-          Retournez les 7 cartes du Tore
+          Retournez les cartes du Tore
         </h3>
         <div class="tore-board-7">
+
           <!-- Les cartes sont générées par le script ci-dessous -->
         </div>
       </div>
+
+       <!-- PIÈCE DE TIRAGE -->
+      <div id="tore-coin-wrapper"
+           class="hidden relative z-10 mt-10 flex flex-col items-center gap-4">
+        <button id="tore-coin-button" class="btn-gold">
+          Lancer la pièce de tirage
+        </button>
+        <div id="tore-coin"
+             class="tore-coin face-yang"
+             aria-label="Pièce de tirage Oradia">
+        </div>
+      </div>
+
+      <!-- Aperçu zoom d'une carte retournée -->
+      <div id="card-preview-overlay">
+  <img id="card-preview-img" src="" alt="Aperçu de la carte">
+</div>
+
 
       <!-- RÉSULTATS TEXTE -->
       <div id="tore-results" class="hidden relative z-10 mt-10">
@@ -415,13 +568,13 @@ window.DATA = {
     {name:"LIBERTÉ",        quote:"Le vent brise les clôtures invisibles.", polarity:"yang"},
     {name:"SOUTIEN",        quote:"Deux troncs s’appuient et forment un arc.", polarity:"yin"},
     {name:"REPOS",          quote:"Le corps se dépose, la rivière s’apaise.", polarity:"yin"},
-    {name:"CLAIRETÉ",       quote:"Le soleil perce la brume.", polarity:"yang"},
+    {name:"CLARETÉ",        quote:"Le soleil perce la brume.", polarity:"yang"},
     {name:"APPARTENANCE",   quote:"Le cercle s’ouvre pour accueillir.", polarity:"yin"},
     {name:"AUTONOMIE",      quote:"La tige se redresse seule.", polarity:"yang"},
     {name:"STIMULATION",    quote:"L’étincelle jaillit et anime la marche.", polarity:"yang"},
     {name:"HARMONIE",       quote:"La lyre vibre de cordes accordées.", polarity:"yin"},
     {name:"AMOUR REÇU",     quote:"Le cœur s’ouvre comme une coupe.", polarity:"yang"},
-    {name:"SENS",           quote:"La marche trace un sillon vers le tout.", polarity:"yin"},
+    {name:"LE SENS",        quote:"La marche trace un sillon vers le tout.", polarity:"yin"},
     {name:"PROTECTION",     quote:"Le manteau couvre de chaleur.", polarity:"yin"},
     {name:"EXPANSION",      quote:"L’horizon s’élargit et appelle.", polarity:"yang"},
     {name:"INTIMITÉ",       quote:"L’alcôve garde le secret des âmes.", polarity:"yin"},
@@ -446,7 +599,7 @@ window.DATA = {
     {name:"SILENCE",       quote:"Le vide sonore abrite l’invisible.", polarity:"yin"},
     {name:"EXPRESSION",    quote:"La parole jaillit comme source claire.", polarity:"yang"},
     {name:"VIDE",          quote:"La coupe vide attend d’être remplie.", polarity:"yin"},
-    {name:"PLÉNITUDE",     quote:"Le vase déborde de miel et d’offrandes.", polarity:"yang"},
+    {name:"PLENITUDE",     quote:"Le vase déborde de miel et d’offrandes.", polarity:"yang"},
     {name:"INCARNATION",   quote:"Le pas touche la terre lourde.", polarity:"yin"},
     {name:"TRANSCENDANCE", quote:"L’aigle s’élève au-delà des nuées.", polarity:"yang"},
   ],
@@ -464,12 +617,12 @@ window.DATA = {
     {name:"LE BÂTISSEUR",   quote:"La pierre dressée trace l’ordre.", polarity:"yang"},
     {name:"LA PRÊTRESSE",   quote:"Le voile garde l’accès au mystère.", polarity:"yin"},
     {name:"LE VOYAGEUR",    quote:"Le pas ouvre la route inconnue.", polarity:"yang"},
-    {name:"NOMADE",         quote:"Le pas sans fin cherche l’horizon.", polarity:"yang"},
-    {name:"MATRICE",        quote:"Le ventre secret abrite le monde.", polarity:"yin"},
-    {name:"RÊVEUR",         quote:"L’œil fermé voit d’autres mondes.", polarity:"yin"},
-    {name:"VISIONNAIRE",    quote:"Le regard perce les âges à venir.", polarity:"yang"},
-    {name:"GARDIEN DU FEU", quote:"La flamme veille au centre de la nuit.", polarity:"yang"},
-    {name:"TISSEUSE",       quote:"Le fil relie les morceaux épars.", polarity:"yin"},
+    {name:"LE NOMADE",         quote:"Le pas sans fin cherche l’horizon.", polarity:"yang"},
+    {name:"LA MATRICE",        quote:"Le ventre secret abrite le monde.", polarity:"yin"},
+    {name:"LE REVEUR",         quote:"L’œil fermé voit d’autres mondes.", polarity:"yin"},
+    {name:"LEVISIONNAIRE",    quote:"Le regard perce les âges à venir.", polarity:"yang"},
+    {name:"LE GARDIEN DU FEU", quote:"La flamme veille au centre de la nuit.", polarity:"yang"},
+    {name:"LA TISSEUSE",       quote:"Le fil relie les morceaux épars.", polarity:"yin"},
   ],
 
   revelations: [
@@ -514,19 +667,19 @@ window.DATA = {
     {name:"ARRÊTER",     quote:"Le pas s’interrompt, la poussière retombe.", polarity:"yin"},
   ],
 
-  cosmos: [
-    {name:"ÉTOILE",              quote:"La voûte céleste inscrit la mémoire des mondes. Derrière leur éclat se cache la mémoire de l’infini."},
-    {name:"TERRE",               quote:"Le sol garde les pas de ceux qui ont marché avant. Chaque pierre est une archive que ton corps sait lire."},
-    {name:"OCÉAN",               quote:"Les vagues effacent et recommencent sans fin. Les profondeurs retiennent ce que la surface oublie."},
-    {name:"GÉNÉALOGIE",          quote:"Tes racines prolongent des vies invisibles. Tu es à la fois héritage et commencement."},
-    {name:"FUTUR",               quote:"La graine porte déjà l’ombre de la forêt. Chaque geste d’aujourd’hui écrit une prophétie."},
-    {name:"PASSÉ",               quote:"Les échos d’hier résonnent dans le présent. Celui qui écoute peut en transformer la trame."},
-    {name:"PRÉSENT",             quote:"Tout converge en un seul instant immobile. C’est là que s’ouvre la porte de tous les temps."},
+  memoire_cosmos: [
+    {name:"ÉTOILE",      quote:"La voûte céleste inscrit la mémoire des mondes. Derrière leur éclat se cache la mémoire de l’infini."},
+    {name:"TERRE",       quote:"Le sol garde les pas de ceux qui ont marché avant. Chaque pierre est une archive que ton corps sait lire."},
+    {name:"OCÉAN",       quote:"Les vagues effacent et recommencent sans fin. Les profondeurs retiennent ce que la surface oublie."},
+    {name:"GÉNÉALOGIE",  quote:"Tes racines prolongent des vies invisibles. Tu es à la fois héritage et commencement."},
+    {name:"FUTUR",       quote:"La graine porte déjà l’ombre de la forêt. Chaque geste d’aujourd’hui écrit une prophétie."},
+    {name:"PASSÉ",       quote:"Les échos d’hier résonnent dans le présent. Celui qui écoute peut en transformer la trame."},
+    {name:"PRÉSENT",     quote:"Tout converge en un seul instant immobile. C’est là que s’ouvre la porte de tous les temps."},
     {name:"MÉMOIRE CELLULAIRE",  quote:"Chaque cellule conserve la trace du vivant. Le corps est une bibliothèque où rien ne se perd."},
     {name:"MÉMOIRE COLLECTIVE",  quote:"Le groupe rêve à travers l’individu. Dans la conscience partagée se tisse un monde commun."},
-    {name:"LE TORE",             quote:"Le tore relie l’ombre et la lumière. De son cœur pulse la danse éternelle des cycles."}
-  ]
-  };
+    {name:"LE TORE",     quote:"Le tore relie l’ombre et la lumière. De son cœur pulse la danse éternelle des cycles."},
+   ],
+};
 </script>
 
 <script>
@@ -538,12 +691,21 @@ window.DATA = {
     { key: 'actions',       label: 'ACTIONS',        chip: 'Action',          pos: 3 },
     { key: 'archetypes',    label: 'ARCHÉTYPE',      chip: 'Archétype',       pos: 4 },
     { key: 'revelations',   label: 'RÉVÉLATION',     chip: 'Révélation',      pos: 5 },
-    { key: 'cosmos',        label: 'MÉMOIRE COSMOS', chip: 'Mémoire Cosmos',  pos: 6 }
+    { key: 'memoire_cosmos',label: 'MÉMOIRE_COSMOS', chip: 'Mémoire_Cosmos',  pos: 6 },
   ];
 
-  const $  = s => document.querySelector(s);
-  const el = id => document.getElementById(id);
+// Dossier d'images par famille
+  const FAMILY_FOLDERS = {
+    emotions: 'emotions',
+    besoins: 'besoins',
+    transmutation: 'transmutations',
+    actions: 'actions',
+    archetypes: 'archetypes',
+    revelations: 'revelations',
+    memoire_cosmos: 'memoire_cosmos',
+  };
 
+  const el = id => document.getElementById(id);
   const section   = el('tore-immersif');
   if (!section) return;
 
@@ -554,13 +716,46 @@ window.DATA = {
   const results   = el('tore-results');
   const startBtn  = el('tore-start');
   const exitBtn   = el('exitToreBtn');
+  const previewOverlay = el('card-preview-overlay');
+  const previewImg     = el('card-preview-img');
+  const coinWrapper = el('tore-coin-wrapper');
+  const coin = el('tore-coin');
+  const coinButton = el('tore-coin-button');
 
-  // --- helper pour piocher une carte depuis window.DATA ---
+// --- helpers ---
+
   function pickFromData(familyKey) {
     const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : [];
     if (!pool.length) return null;
     const idx = Math.floor(Math.random() * pool.length);
     return pool[idx] || null;
+  }
+
+  function slugifyName(name) {
+    return (name || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '') // supprime les accents
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')                     // TOUT ce qui n’est pas lettre/chiffre devient "_"
+      .replace(/^_+|_+$/g, '');                        // enlève les "_" en trop au début/fin
+  }
+
+  function buildImagePath(familyKey, data) {
+    const folder = FAMILY_FOLDERS[familyKey] || familyKey;
+    let file = (data && data.file) ? String(data.file) : '';
+
+// Si un chemin explicite est fourni (cosmos par ex.)
+    if (file.includes('/')) {
+      if (file.startsWith('./') || file.startsWith('images/')) return file;
+      return 'images/' + file.replace(/^\/+/, '');
+    }
+
+// Sinon on déduit le nom du fichier à partir du nom de la carte
+    if (!file) {
+      const slug = slugifyName(data?.name || '');
+      file = slug + '.png';
+    }
+
+    return `images/${folder}/${file}`;
   }
 
   function enterImmersiveTore () {
@@ -573,7 +768,6 @@ window.DATA = {
     document.body.classList.remove('hide-immersive-tore');
     exitBtn.classList.add('hidden');
 
-    // reset
     intro.classList.remove('hidden');
     form.classList.add('hidden');
     boardWrap.classList.add('hidden');
@@ -585,7 +779,8 @@ window.DATA = {
   function buildBoardTore () {
     if (!boardHost) return;
 
-    boardHost.innerHTML = STEPS_TORE.map(s => `
+// Construction des 7 tas
+        boardHost.innerHTML = STEPS_TORE.map(s => `
       <article class="tore-card pos-${s.pos}"
                data-family="${s.key}"
                aria-label="Carte ${s.label}">
@@ -595,10 +790,6 @@ window.DATA = {
             <div class="logo-circle">TORE</div>
           </div>
           <div class="tore-card-front">
-            <div class="topbar">
-              <span class="chip">${s.chip}</span>
-              <span class="polarity" data-polarity></span>
-            </div>
             <div class="art">
               <div>
                 <h3 data-name>—</h3>
@@ -613,73 +804,138 @@ window.DATA = {
 
     boardWrap.classList.remove('hidden');
 
-    // comportement : au clic, on PIQUE une carte dans window.DATA et on la affiche
-    boardHost.querySelectorAll('.tore-card .tore-card-back')
-      .forEach(back => {
-        back.addEventListener('click', () => {
-          const card = back.closest('.tore-card');
-          if (!card || card.classList.contains('flipped')) return;
+// On cache la pièce au moment où on (re)lance un tirage
+    if (coinWrapper) {
+      coinWrapper.classList.add('hidden');
+    }
 
-          const famKey   = card.dataset.family;
-          const data     = pickFromData(famKey);
-          const nameEl   = card.querySelector('[data-name]');
-          const quoteEl  = card.querySelector('[data-quote]');
-          const polEl    = card.querySelector('[data-polarity]');
-          const bottomEl = card.querySelector('.bottom');
+// Gestion du clic pour TOUTES les cartes 
+    boardHost.querySelectorAll('.tore-card .tore-card-back').forEach(back => {
+      const card = back.closest('.tore-card');
+      if (!card) return;
 
-          if (data) {
-            nameEl.textContent  = data.name  || 'Carte';
-            quoteEl.textContent = data.quote || '';
-            if (bottomEl) bottomEl.textContent = data.bridge || '';
+      back.addEventListener('click', () => {
+        if (card.classList.contains('flipped')) return;
 
-            // polarité : triangle / rond sauf pour cosmos
-            if (famKey !== 'cosmos' && data.polarity) {
-              polEl.textContent = data.polarity === 'yang' ? '▲' : '●';
-              polEl.style.visibility = 'visible';
-            } else {
-              polEl.textContent = '';
-              polEl.style.visibility = 'hidden';
-            }
-          } else {
-            // aucun DATA trouvé → message de secours
-            nameEl.textContent  = 'Aucune carte trouvée';
-            quoteEl.textContent = 'Aucune donnée disponible pour cette famille.';
-            if (bottomEl) bottomEl.textContent = '';
-            polEl.style.visibility = 'hidden';
-          }
+        const famKey = (card.dataset.family || '').trim();
+        const data   = pickFromData(famKey);
+        const front  = card.querySelector('.tore-card-front');
 
+        if (!data || !front) {
           card.classList.add('flipped');
-        });
+          return;
+        }
+
+        const imgPath = buildImagePath(famKey, data);
+
+        front.style.padding = '0';
+front.style.background = 'none';
+
+   
+// On affiche l'image ENTIEREMENT dans le cadre
+front.innerHTML = `
+  <img src="${imgPath}"
+       alt="${data.name || ''}"
+       style="
+         width: 100%;
+         height: 100%;
+         object-fit: contain;
+         display: block;
+       " />
+`;
+
+
+        card.classList.add('flipped');
+
+// Si toutes les cartes sont retournées, on affiche la pièce
+        const totalCards   = boardHost.querySelectorAll('.tore-card').length;
+        const flippedCards = boardHost.querySelectorAll('.tore-card.flipped').length;
+
+        if (coinWrapper && totalCards > 0 && flippedCards === totalCards) {
+          coinWrapper.classList.remove('hidden');
+        }
       });
+    });
+    
+// Aperçu zoom au survol des cartes déjà retournées
+if (previewOverlay && previewImg) {
+  boardHost.querySelectorAll('.tore-card').forEach(card => {
+
+    card.addEventListener('mouseenter', () => {
+     
+// On ne zoome que si la carte est déjà retournée
+      if (!card.classList.contains('flipped')) return;
+
+      const img = card.querySelector('.tore-card-front img');
+      if (!img) return;
+
+      previewImg.src = img.src;
+      previewImg.alt = img.alt || '';
+      previewOverlay.classList.add('card-preview-visible');   // <-- on AFFICHE ici
+    });
+
+    card.addEventListener('mouseleave', () => {
+      previewOverlay.classList.remove('card-preview-visible'); // <-- on CACHE ici
+    });
+  });
+}
+  }
+  // Lancer la pièce de tirage
+  function launchCoin() {
+    if (!coin) return;
+
+    // Empêche plusieurs lancers simultanés
+    if (coin.dataset.locked === '1') return;
+    coin.dataset.locked = '1';
+
+    // On enlève la face précédente et on lance l'animation
+    coin.classList.remove('face-yang', 'face-yin');
+    coin.classList.add('spin');
+
+    // Fin de l'animation : on choisit une face aléatoire
+    setTimeout(() => {
+      coin.classList.remove('spin');
+
+      const isYang = Math.random() < 0.5; // true = triangle, false = cercle
+      if (isYang) {
+        coin.classList.add('face-yang');
+      } else {
+        coin.classList.add('face-yin');
+      }
+
+      coin.dataset.locked = '0';
+    }, 1000); // doit matcher la durée de l'animation CSS
   }
 
-  // --- listeners ---
+  // --- listeners principaux ---
 
-  // intro -> formulaire
   startBtn?.addEventListener('click', () => {
     intro.classList.add('hidden');
     form.classList.remove('hidden');
   });
 
-  // formulaire -> plateau + mode immersif
   form?.addEventListener('submit', (e) => {
     e.preventDefault();
     form.classList.add('hidden');
     buildBoardTore();
     enterImmersiveTore();
-    results.classList.add('hidden'); // DeepSite pourra remplir plus tard
+    results.classList.add('hidden'); // DeepSite remplira plus tard
   });
+  if (coinButton) {
+    coinButton.addEventListener('click', launchCoin);
+  }
+
+  if (coin) {
+    // Optionnel : clic direct sur la pièce = même effet
+    coin.addEventListener('click', launchCoin);
+  }
 
   exitBtn?.addEventListener('click', exitImmersiveTore);
 })();
 </script>
 
 
-<footer class="mt-16 border-t border-[rgba(212,175,55,.25)]">
-  <div class="container mx-auto px-6 py-6 text-center text-xs text-light-gold/70">
-    © Oradia – Tirage du Tore
-  </div>
-  
+ 
 </footer>
   <script>
   const mobileBtn = document.getElementById("mobileMenuBtn");
@@ -722,6 +978,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
 });
 </script>
-
+<!-- Footer -->
+  <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
+    <div class="container mx-auto max-w-6xl">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+        <div>
+          <div class="flex items-center mb-4">
+            <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo" class="w-16 h-16 mr-4" />
+            <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+          </div>
+          <p class="text-light-gold text-sm">L'oracle qui vous accompagne sur votre chemin personnel et révèle votre essence.</p>
+        </div>
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Navigation</h4>
+          <ul class="space-y-2">
+            <li><a href="index.html#accueil" class="text-light-gold hover:text-gold transition">Accueil</a></li>
+            <li><a href="index.html#oracle" class="text-light-gold hover:text-gold transition">Jeu</a></li>
+            <li><a href="index.html#offres" class="text-light-gold hover:text-gold transition">Offres</a></li>
+            <li><a href="index.html#apropos" class="text-light-gold hover:text-gold transition">À Propos</a></li>
+            <li><a href="index.html#edolgor" class="text-light-gold hover:text-gold transition">Edolg'Or</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
+          <ul class="space-y-2">
+            <li><button id="showCGU" class="text-light-gold hover:text-gold transition bg-transparent border-none p-0 cursor-pointer">CGU</button></li>
+            <li><a href="#" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
+            <li><a href="#" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Contact</h4>
+          <ul class="space-y-2">
+            <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><span class="text-light-gold">contact@oradia.fr</span></li>
+            <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><span class="text-light-gold">@oradia_oracle</span></li>
+          </ul>
+        </div>
+      </div>
+      <div class="pt-8 border-t border-gold/10 text-center">
+        <p class="text-light-gold text-sm">&copy; 2025 Oradia. Tous droits réservés. |
+          <button id="footerLogin" class="text-gold hover:text-light-gold">Accès Dashboard</button>
+        </p>
+      </div>
+    </div>
+  </footer>
 </body>
 </html>
