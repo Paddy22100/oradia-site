@@ -361,6 +361,8 @@
     flex-direction: column;
     padding: 16px 18px;
     color: #f9f7ef;
+    position: relative;
+
   }
   .tore-card-front .topbar {
     display: flex;
@@ -399,6 +401,82 @@
     line-height: 1.4;
     opacity: .9;
   }
+    /* Marqueur de polarité dans le coin de la carte */
+  .polarity-marker {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    width: 30px;
+    height: 30px;
+    border-radius: 999px;
+    border: 2px solid rgba(212,175,55,0.9);
+    background: radial-gradient(circle at 30% 30%, rgba(245,231,161,0.95), rgba(2,8,20,0.7));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    color: #051428;
+    text-shadow: 0 0 4px rgba(0,0,0,0.9);
+    box-shadow: 0 0 10px rgba(0,0,0,0.7);
+  }
+  .polarity-marker.polarity-yang { font-size: 1.05rem; }
+  .polarity-marker.polarity-yin  { font-size: 0.95rem; }
+
+  /* Feedback visuel match / mismatch */
+  .tore-card.match .tore-card-inner {
+    box-shadow: 0 0 0 2px rgba(80,200,120,0.9), 0 18px 40px rgba(0,0,0,0.75);
+  }
+  .tore-card.mismatch .tore-card-inner {
+    box-shadow: 0 0 0 2px rgba(231,76,60,0.95), 0 18px 40px rgba(0,0,0,0.75);
+  }
+
+  /* Cartes supplémentaires (famille suivante) */
+  .tore-extra-cards {
+    position: absolute;
+    bottom: -10px;
+    right: -20px;
+    display: flex;
+    gap: 6px;
+    pointer-events: none;
+  }
+  .tore-extra-card {
+    width: 80px;
+    aspect-ratio: 64 / 90;
+    border-radius: 12px;
+    border: 1px solid rgba(212,175,55,0.7);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.75);
+    transform: translateY(-6px) rotate(-4deg);
+    opacity: 0;
+    transition: opacity 0.25s ease, transform 0.25s ease;
+  }
+  .tore-extra-card.show {
+    opacity: 1;
+    transform: translateY(0) rotate(0deg);
+  }
+
+  /* Flèche coin → carte */
+  #tore-arrow {
+    position: fixed;
+    height: 3px;
+    width: 0;
+    background: linear-gradient(90deg, #d4af37, #f5e7a1);
+    transform-origin: 0 50%;
+    pointer-events: none;
+    opacity: 0;
+    z-index: 70;
+    transition: opacity 0.25s ease, transform 0.35s ease, width 0.35s ease;
+  }
+  #tore-arrow::after {
+    content: "";
+    position: absolute;
+    right: -8px;
+    top: 50%;
+    transform: translateY(-50%);
+    border-style: solid;
+    border-width: 6px 0 6px 10px;
+    border-color: transparent transparent transparent #f5e7a1;
+  }
+
   #tore-immersif .container {
   max-width: 1500px;   /* augmente la largeur du cadre */
 }
@@ -561,6 +639,180 @@
 .tore-shake {
   animation: tore-shake 0.25s ease-out;
 }
+/* Flèche entre carte et pièce */
+.tore-arrow {
+  position: absolute;
+  top: 14%;
+  right: -70px;
+  width: 60px;
+  height: 2px;
+  background: rgba(212,175,55,0.85);
+  transform-origin: left center;
+  opacity: 0;
+  animation: tore-arrow-appear 0.6s ease-out forwards;
+}
+
+.tore-arrow::after {
+  content: "";
+  position: absolute;
+  right: -6px;
+  top: 50%;
+  transform: translateY(-50%);
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 8px solid currentColor;
+}
+/* --- OVERLAY TIRAGE PASSERELLE --- */
+
+#tore-extra-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.92);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.tore-extra-panel {
+  position: relative;
+  padding: 24px 32px 32px;
+  border-radius: 18px;
+  background: radial-gradient(circle at top, rgba(15,23,42,0.95), rgba(2,6,23,0.98));
+  border: 1px solid rgba(212,175,55,0.7);
+  box-shadow: 0 24px 80px rgba(0,0,0,0.85);
+  color: #f9fafb;
+  text-align: center;
+  max-width: 560px;
+  width: 90%;
+}
+
+.tore-extra-panel h3 {
+  margin: 0;
+  font-size: 18px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: #e5e7eb;
+}
+
+.tore-extra-panel p {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: #cbd5f5;
+}
+
+/* éventail */
+
+.tore-extra-fan {
+  position: relative;
+  height: 200px;
+  margin-top: 26px;
+  margin-bottom: 18px;
+}
+
+.tore-fan-card {
+  position: absolute;
+  top: 22px;
+  left: 50%;
+  width: 90px;
+  height: 140px;
+  margin-left: -45px;
+  border-radius: 10px;
+  background: radial-gradient(circle at 18% 8%, rgba(255,255,255,0.35), rgba(15,23,42,1));
+  border: 1px solid rgba(212,175,55,0.8);
+  box-shadow: 0 12px 35px rgba(0,0,0,0.85);
+  transform-origin: bottom center;
+  cursor: pointer;
+  transition: transform 0.25s ease-out, box-shadow 0.25s ease-out, top 0.25s ease-out;
+}
+
+.tore-fan-card:hover {
+  top: 6px;
+  box-shadow: 0 18px 48px rgba(0,0,0,0.9);
+}
+
+/* 5 cartes en éventail */
+.tore-fan-card:nth-child(1) { transform: rotate(-22deg) translateX(-82px); }
+.tore-fan-card:nth-child(2) { transform: rotate(-11deg) translateX(-40px); }
+.tore-fan-card:nth-child(3) { transform: rotate(0deg); }
+.tore-fan-card:nth-child(4) { transform: rotate(11deg) translateX(40px); }
+.tore-fan-card:nth-child(5) { transform: rotate(22deg) translateX(82px); }
+
+/* bouton annuler (optionnel) */
+.tore-extra-cancel {
+  margin-top: 4px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  border: 1px solid rgba(148,163,184,0.85);
+  background: transparent;
+  color: #e5e7eb;
+  font-size: 13px;
+  letter-spacing: .04em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.tore-extra-cancel:hover {
+  background: rgba(15,23,42,0.9);
+}
+
+/* vert si même polarité, rouge si différent */
+.tore-arrow.match {
+  color: #2ecc71;
+  background: rgba(46,204,113,0.9);
+}
+
+.tore-arrow.mismatch {
+  color: #e74c3c;
+  background: rgba(231,76,60,0.9);
+}
+
+@keyframes tore-arrow-appear {
+  0% {
+    opacity: 0;
+    transform: scaleX(0);
+  }
+  100% {
+    opacity: 1;
+    transform: scaleX(1);
+  }
+}
+
+/* Carte supplémentaire (famille suivante) en cas de passerelle */
+.tore-card-extra {
+  position: absolute;
+  top: 10%;
+  left: 10%;
+  width: 45%;
+  aspect-ratio: 64 / 90;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid rgba(212,175,55,0.85);
+  box-shadow: 0 12px 25px rgba(0,0,0,0.6);
+  transform: translate(14px, -14px) scale(0.9);
+  opacity: 0;
+  background: #020817;
+  animation: tore-extra-appear 0.45s ease-out forwards;
+  z-index: 5;
+}
+
+.tore-card-extra img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+@keyframes tore-extra-appear {
+  0% {
+    opacity: 0;
+    transform: translate(0, 0) scale(0.2);
+  }
+  100% {
+    opacity: 1;
+    transform: translate(14px, -14px) scale(0.9);
+  }
+}
 
 </style>
 
@@ -664,9 +916,6 @@
 }
 </style>
 
-
-</style>
-
         <button id="tore-coin-button" class="btn-gold">
           Lancer la pièce de tirage
         </button>
@@ -675,6 +924,9 @@
              aria-label="Pièce de tirage Oradia">
         </div>
       </div>
+
+      <!-- Flèche coin → carte -->
+      <div id="tore-arrow"></div>
 
       <!-- Aperçu zoom d'une carte retournée -->
       <div id="card-preview-overlay">
@@ -702,7 +954,7 @@ window.DATA = {
     {name:"SOLITUDE",       quote:"Le silence s’installe comme une montagne.", polarity:"yin"},
     {name:"ÉMERVEILLEMENT", quote:"L’enfant intérieur ouvre grand ses yeux.", polarity:"yang"},
     {name:"DÉGOÛT",         quote:"Le corps rejette ce qui empoisonne.", polarity:"yin"},
-    {name:"SÉRÉNITÉ",       quote:"Le lac reflète le ciel, sans trouble.", polarity:"yang"},
+    {name:"SÉRÉNITÉ",       quote:"L'eau se clarifie et reflète désormais le monde sans le déformer.", polarity:"yang"},
     {name:"DOUTE",          quote:"La brume recouvre la vallée.", bridge:"Habiter la question en attendant la clarté.", polarity:"yin"},
     {name:"COLÈRE",         quote:"Le feu jaillit, brisant les chaînes.", polarity:"yang"},
     {name:"INJUSTICE",      quote:"La balance penche, l’équité s’efface.", polarity:"yin"},
@@ -710,8 +962,8 @@ window.DATA = {
     {name:"PEUR",           quote:"L’animal se fige aux lisières.", polarity:"yin"},
     {name:"CONFIANCE",      quote:"L’arbre se dresse, enraciné vers la lumière.", polarity:"yang"},
     {name:"HONTE",          quote:"Le visage se cache sous le voile.", polarity:"yin"},
-    {name:"FIERTÉ",         quote:"La pierre sculptée témoigne du chemin.", polarity:"yang"},
-    {name:"CULPABILITÉ",    quote:"Les chaînes invisibles pèsent au cœur.", bridge:"Rendre ce qui n’est pas sien et s’alléger.", polarity:"yin"},
+    {name:"FIERTÉ",         quote:"Ce que tu as traversé te rend stable, solide et vrai.", polarity:"yang"},
+    {name:"CULPABILITÉ",    quote:"Une lourdeur s'installe, née d'un pas mal posé.", bridge:"Rendre ce qui n’est pas sien et s’alléger.", polarity:"yin"},
     {name:"IMPATIENCE",     quote:"Le cheval piaffe avant l’aube.", polarity:"yang"},
     {name:"PATIENCE",       quote:"Le fruit mûrit dans l’ombre.", polarity:"yin"},
   ],
@@ -749,7 +1001,7 @@ window.DATA = {
     {name:"ANCRAGE",       quote:"Les racines plongent dans le sol fertile.", polarity:"yin"},
     {name:"OUVERTURE",     quote:"La porte s’entrouvre, la lumière jaillit.", polarity:"yang"},
     {name:"FLUIDITÉ",      quote:"La rivière contourne l’obstacle sans effort.", polarity:"yin"},
-    {name:"CLARIFICATION", quote:"La brume se lève, les contours se révèlent.", polarity:"yang"},
+    {name:"CLARIFICATION", quote:"L'essentiel apparait dans la lumière retrouvée.", polarity:"yang"},
     {name:"SILENCE",       quote:"Le vide sonore abrite l’invisible.", polarity:"yin"},
     {name:"EXPRESSION",    quote:"La parole jaillit comme source claire.", polarity:"yang"},
     {name:"VIDE",          quote:"La coupe vide attend d’être remplie.", polarity:"yin"},
@@ -847,6 +1099,16 @@ window.DATA = {
     { key: 'revelations',   label: 'RÉVÉLATION',     chip: 'Révélation',      pos: 5 },
     { key: 'memoire_cosmos',label: 'MÉMOIRE COSMOS', chip: 'Mémoire Cosmos',  pos: 6 },
   ];
+  // Famille de passerelle en cas de différence carte / pièce
+  const BRIDGE_TARGET = {
+    emotions:      'transmutation',
+    transmutation: 'revelations',
+    revelations:   'actions',
+    actions:       'archetypes',
+    archetypes:    'besoins',
+    besoins:       'emotions',
+    // memoire_cosmos: pas de passerelle
+  };
 
 // Dossier d'images par famille
   const FAMILY_FOLDERS = {
@@ -859,7 +1121,16 @@ window.DATA = {
     memoire_cosmos: 'memoire_cosmos',
   };
 
+  const FAMILY_ORDER = STEPS_TORE.map(s => s.key); // ordre horaire
+  let arrowEl = null;
+  let lastCoinResult = null;
+
   const el = id => document.getElementById(id);
+
+    // État du tirage de la pièce : on fait 1 lancer par famille, dans l'ordre STEPS_TORE
+  let toreThrowIndex = 0;                       // 0 → 6
+  const toreBridgeAdded = new Array(STEPS_TORE.length).fill(false);
+
   const section   = el('tore-immersif');
   if (!section) return;
 
@@ -911,6 +1182,111 @@ window.DATA = {
 
     return `images/${folder}/${file}`;
   }
+  function ensureArrowElement() {
+    if (arrowEl) return arrowEl;
+    arrowEl = document.getElementById('tore-arrow');
+    if (!arrowEl) {
+      arrowEl = document.createElement('div');
+      arrowEl.id = 'tore-arrow';
+      document.body.appendChild(arrowEl);
+    }
+    return arrowEl;
+  }
+
+  function addExtraCardForFamily(familyKey) {
+    if (!boardHost) return;
+
+    const currentIndex = FAMILY_ORDER.indexOf(familyKey);
+    if (currentIndex === -1) return;
+
+    const nextFamilyKey = FAMILY_ORDER[(currentIndex + 1) % FAMILY_ORDER.length];
+    const hostArticle = boardHost.querySelector(`.tore-card[data-family="${nextFamilyKey}"]`);
+    if (!hostArticle) return;
+
+    const data = pickFromData(nextFamilyKey);
+    if (!data) return;
+
+    const imgPath = buildImagePath(nextFamilyKey, data);
+
+    let extraWrap = hostArticle.querySelector('.tore-extra-cards');
+    if (!extraWrap) {
+      extraWrap = document.createElement('div');
+      extraWrap.className = 'tore-extra-cards';
+      hostArticle.appendChild(extraWrap);
+    }
+
+    const extraImg = document.createElement('img');
+    extraImg.src = imgPath;
+    extraImg.alt = data.name || '';
+    extraImg.className = 'tore-extra-card';
+    extraWrap.appendChild(extraImg);
+
+    requestAnimationFrame(() => {
+      extraImg.classList.add('show');
+    });
+  }
+
+  function animateArrowToCard(card) {
+    if (!coin) return;
+    const arrow = ensureArrowElement();
+    if (!arrow) return;
+
+    const coinRect = coin.getBoundingClientRect();
+    const targetEl = card.querySelector('.polarity-marker') || card;
+    const targetRect = targetEl.getBoundingClientRect();
+
+    const startX = coinRect.left + coinRect.width / 2;
+    const startY = coinRect.top + coinRect.height / 2;
+    const endX   = targetRect.left + targetRect.width / 2;
+    const endY   = targetRect.top + targetRect.height / 2;
+
+    const dx = endX - startX;
+    const dy = endY - startY;
+
+    const distance = Math.sqrt(dx*dx + dy*dy);
+    const angleDeg = Math.atan2(dy, dx) * 180 / Math.PI;
+
+    arrow.style.left = `${startX}px`;
+    arrow.style.top  = `${startY}px`;
+    arrow.style.width = `${distance}px`;
+    arrow.style.transform = `rotate(${angleDeg}deg)`;
+    arrow.style.opacity = '1';
+
+    setTimeout(() => {
+      arrow.style.opacity = '0';
+    }, 450);
+  }
+
+  function processCoinResult(polarity) {
+    if (!boardHost) return;
+    lastCoinResult = polarity;
+
+    const cards = Array.from(boardHost.querySelectorAll('.tore-card.flipped'));
+    if (!cards.length) return;
+
+    // reset visuel précédent
+    cards.forEach(card => card.classList.remove('match', 'mismatch'));
+
+    cards.forEach((card, index) => {
+      const delay = index * 650;
+
+      setTimeout(() => {
+        animateArrowToCard(card);
+
+        const cardPol = (card.dataset.polarity || '').toLowerCase();
+        const isMatch = cardPol && cardPol === polarity;
+
+        if (isMatch) {
+          card.classList.add('match');
+        } else {
+          card.classList.add('mismatch');
+          if (card.dataset.family) {
+            addExtraCardForFamily(card.dataset.family);
+          }
+        }
+      }, delay);
+    });
+  }
 
   function enterImmersiveTore () {
     document.body.classList.add('hide-immersive-tore');
@@ -932,6 +1308,12 @@ window.DATA = {
 
   function buildBoardTore () {
     if (!boardHost) return;
+    
+    // Reset de l'état du tirage de pièce
+    toreThrowIndex = 0;
+    for (let i = 0; i < toreBridgeAdded.length; i++) {
+      toreBridgeAdded[i] = false;
+    }
 
 // Construction des 7 tas
         boardHost.innerHTML = STEPS_TORE.map(s => `
@@ -985,28 +1367,41 @@ window.DATA = {
         const data   = pickFromData(famKey);
         const front  = card.querySelector('.tore-card-front');
 
+        // On garde la polarité de la carte (yang / yin / none)
+        const pol = (data && (data.polarity === 'yang' || data.polarity === 'yin'))
+          ? data.polarity
+          : 'none';
+        card.dataset.polarity = pol;
+
         if (!data || !front) {
           card.classList.add('flipped');
           return;
         }
 
-        const imgPath = buildImagePath(famKey, data);
+                const imgPath = buildImagePath(famKey, data);
+
+        // on mémorise la polarité pour la comparaison avec la pièce
+        card.dataset.polarity = (data.polarity || '').toLowerCase();
 
         front.style.padding = '0';
-front.style.background = 'none';
+        front.style.background = 'none';
 
-   
-// On affiche l'image ENTIEREMENT dans le cadre
-front.innerHTML = `
-  <img src="${imgPath}"
-       alt="${data.name || ''}"
-       style="
-         width: 100%;
-         height: 100%;
-         object-fit: contain;
-         display: block;
-       " />
-`;
+        const symbol = (data.polarity === 'yang') ? '▲' : '●';
+
+        front.innerHTML = `
+          <div class="polarity-marker polarity-${data.polarity === 'yang' ? 'yang' : 'yin'}">
+            ${symbol}
+          </div>
+          <img src="${imgPath}"
+               alt="${data.name || ''}"
+               style="
+                 width: 100%;
+                 height: 100%;
+                 object-fit: contain;
+                 display: block;
+               " />
+        `;
+
 
 
         card.classList.add('flipped');
@@ -1028,39 +1423,171 @@ front.innerHTML = `
     
 // Aperçu zoom au survol des cartes déjà retournées
 if (previewOverlay && previewImg) {
-  boardHost.querySelectorAll('.tore-card').forEach(card => {
+   boardHost.querySelectorAll('.tore-card').forEach(card => {
 
-    card.addEventListener('mouseenter', () => {
-     
-// On ne zoome que si la carte est déjà retournée
+    card.addEventListener('mouseenter', (e) => {
+      // On ne zoome que si la carte est déjà retournée
       if (!card.classList.contains('flipped')) return;
 
-      const img = card.querySelector('.tore-card-front img');
+      let img = null;
+
+      // 1) si on survole une carte passerelle, on zoome cette carte-là
+      if (e.target && e.target.closest) {
+        const extraImg = e.target.closest('.tore-card-extra')?.querySelector('img');
+        if (extraImg) {
+          img = extraImg;
+        }
+      }
+
+      // 2) sinon, on zoome la carte principale
+      if (!img) {
+        img = card.querySelector('.tore-card-front img');
+      }
+
       if (!img) return;
 
       previewImg.src = img.src;
       previewImg.alt = img.alt || '';
-      previewOverlay.classList.add('card-preview-visible');   // <-- on AFFICHE ici
+      previewOverlay.classList.add('card-preview-visible');
     });
 
     card.addEventListener('mouseleave', () => {
-      previewOverlay.classList.remove('card-preview-visible'); // <-- on CACHE ici
+      previewOverlay.classList.remove('card-preview-visible');
     });
   });
+
 }
   }
-    // Lancer la pièce de tirage
+      // Pose réellement la carte passerelle (famille suivante) sur la pile concernée
+  function placeBridgeCard(stepIndex, familyKey, dataNext) {
+    if (!boardHost) return;
+    if (toreBridgeAdded[stepIndex]) return;
+
+    const currentStep = STEPS_TORE[stepIndex];
+    const baseCard = boardHost.querySelector(`.tore-card[data-family="${currentStep.key}"]`);
+    if (!baseCard) return;
+
+    const imgPath = buildImagePath(familyKey, dataNext);
+
+    const extra = document.createElement('div');
+    extra.className = 'tore-card-extra';
+    extra.innerHTML = `
+      <img src="${imgPath}" alt="${dataNext.name || ''}">
+    `;
+
+    baseCard.appendChild(extra);
+        // Permettre le zoom sur la carte additionnelle comme sur les cartes principales
+    const extraImg = extra.querySelector('img');
+    if (previewOverlay && previewImg && extraImg) {
+      extraImg.addEventListener('mouseenter', () => {
+        previewImg.src = extraImg.src;
+        previewImg.alt = extraImg.alt || '';
+        previewOverlay.classList.add('card-preview-visible');
+      });
+
+      extraImg.addEventListener('mouseleave', () => {
+        previewOverlay.classList.remove('card-preview-visible');
+      });
+    }
+
+    toreBridgeAdded[stepIndex] = true;
+  }
+
+  function getFamilyLabel(key) {
+    const s = STEPS_TORE.find(step => step.key === key);
+    return s ? s.label : key;
+  }
+
+  // Ouvre un overlay avec un éventail de cartes : l'utilisateur choisit sa passerelle
+  function openBridgeFan(stepIndex, nextFamilyKey) {
+    if (!boardHost) return;
+
+    // on évite les doublons d'overlay
+    const existing = document.getElementById('tore-extra-overlay');
+    if (existing) existing.remove();
+
+    const famLabel = getFamilyLabel(nextFamilyKey);
+
+    const overlay = document.createElement('div');
+    overlay.id = 'tore-extra-overlay';
+    overlay.innerHTML = `
+      <div class="tore-extra-panel">
+        <h3>Carte passerelle</h3>
+        <p>Choisis une carte dans la famille&nbsp;<strong>${famLabel}</strong>.</p>
+        <div class="tore-extra-fan">
+          <div class="tore-fan-card" data-slot="0"></div>
+          <div class="tore-fan-card" data-slot="1"></div>
+          <div class="tore-fan-card" data-slot="2"></div>
+          <div class="tore-fan-card" data-slot="3"></div>
+          <div class="tore-fan-card" data-slot="4"></div>
+        </div>
+        <button type="button" class="tore-extra-cancel">Fermer</button>
+      </div>
+    `;
+
+    document.body.appendChild(overlay);
+
+    // clic sur une des cartes de l'éventail
+    overlay.querySelectorAll('.tore-fan-card').forEach(cardEl => {
+      cardEl.addEventListener('click', () => {
+        const dataNext = pickFromData(nextFamilyKey);
+        if (dataNext) {
+          placeBridgeCard(stepIndex, nextFamilyKey, dataNext);
+        }
+        overlay.remove();
+      });
+    });
+
+    // bouton "Fermer" (au cas où)
+    const btnCancel = overlay.querySelector('.tore-extra-cancel');
+    if (btnCancel) {
+      btnCancel.addEventListener('click', () => {
+        overlay.remove();
+      });
+    }
+  }
+
+
+  // Affichage de la flèche entre la carte et la pièce
+  function showArrowForStep(stepIndex, isMatch) {
+    if (!boardHost) return;
+    const step = STEPS_TORE[stepIndex];
+    const card = boardHost.querySelector(`.tore-card[data-family="${step.key}"]`);
+    if (!card) return;
+
+    // Supprime une éventuelle flèche précédente
+    const oldArrow = card.querySelector('.tore-arrow');
+    if (oldArrow && oldArrow.parentNode) {
+      oldArrow.parentNode.removeChild(oldArrow);
+    }
+
+    const arrow = document.createElement('div');
+    arrow.className = 'tore-arrow ' + (isMatch ? 'match' : 'mismatch');
+    card.appendChild(arrow);
+  }
+
+      // Lancer la pièce de tirage : 1 lancer par famille, dans l'ordre STEPS_TORE
   function launchCoin() {
-    if (!coin) return;
+    if (!coin || !boardHost) return;
+
+    // On ne lance la pièce que 7 fois (une par famille)
+    if (toreThrowIndex >= STEPS_TORE.length) {
+      return;
+    }
 
     // Empêche plusieurs lancers simultanés
     if (coin.dataset.locked === '1') return;
     coin.dataset.locked = '1';
 
-    // Bloque les interactions sur le plateau pendant le lancer
-    if (boardHost) {
-      boardHost.classList.add('board-locked');
-    }
+    // Famille concernée par ce lancer
+    const stepIndex = toreThrowIndex;
+    const step = STEPS_TORE[stepIndex];
+    const card = boardHost.querySelector(`.tore-card[data-family="${step.key}"]`);
+    const nextStepIndex = (stepIndex + 1) % STEPS_TORE.length;
+    const nextStep = STEPS_TORE[nextStepIndex];
+
+    // Plateau verrouillé pendant l’animation
+    boardHost.classList.add('board-locked');
 
     // On enlève halo et onde précédents
     coin.classList.remove('glow', 'ripple', 'face-yang', 'face-yin');
@@ -1068,14 +1595,16 @@ if (previewOverlay && previewImg) {
     // Reset animation ripple
     void coin.offsetWidth;
 
-    // Lancer l’animation de rotation
+    // Lancer d’animation de rotation
     coin.classList.add('spin');
 
-    // Fin de l’animation
+    // Fin de l’animation (1s)
     setTimeout(() => {
       coin.classList.remove('spin');
 
       const isYang = Math.random() < 0.5;
+      const coinPolarity = isYang ? 'yang' : 'yin';
+
       coin.classList.add(isYang ? 'face-yang' : 'face-yin');
 
       // Onde circulaire dorée
@@ -1084,25 +1613,41 @@ if (previewOverlay && previewImg) {
       coin.classList.add('ripple');
 
       // Vibration subtile du tore
-if (boardWrap) {
-  boardWrap.classList.add('tore-shake');
-
-  setTimeout(() => {
-    boardWrap.classList.remove('tore-shake');
-  }, 300); // même durée que l'animation
-}
-
-      // Déverrouille le plateau
-      if (boardHost) {
-        boardHost.classList.remove('board-locked');
+      if (boardWrap) {
+        boardWrap.classList.add('tore-shake');
+        setTimeout(() => {
+          boardWrap.classList.remove('tore-shake');
+        }, 300);
       }
 
-      // Retour de la lueur pulsante
+      // Comparaison avec la polarité de la carte
+      if (card) {
+        const cardPolarity = card.dataset.polarity || 'none';
+
+        // pas de polarité (Mémoire Cosmos) → on montre juste une flèche neutre
+        if (cardPolarity === 'none') {
+          showArrowForStep(stepIndex, true);
+        } else {
+          const isMatch = (cardPolarity === coinPolarity);
+          showArrowForStep(stepIndex, isMatch);
+
+                    if (!isMatch) {
+            // polarité différente → l'utilisateur tire une carte passerelle
+            openBridgeFan(stepIndex, nextStep.key);
+          }
+        }
+      }
+
+      // Déverrouille le plateau
+      boardHost.classList.remove('board-locked');
+
+      // Retour de la lueur pulsante + préparation prochain lancer
       coin.dataset.locked = '0';
       coin.classList.add('glow');
+
+      toreThrowIndex += 1; // on passe à la famille suivante pour le prochain lancer
     }, 1000);
   }
-
 
   // --- listeners principaux ---
 
@@ -1128,7 +1673,8 @@ if (boardWrap) {
   }
 
   exitBtn?.addEventListener('click', exitImmersiveTore);
-})();
+}
+)();
 </script>
 
 
