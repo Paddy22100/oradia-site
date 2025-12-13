@@ -401,26 +401,7 @@
     line-height: 1.4;
     opacity: .9;
   }
-    /* Marqueur de polarité dans le coin de la carte */
-  .polarity-marker {
-    position: absolute;
-    top: 8px;
-    right: 8px;
-    width: 30px;
-    height: 30px;
-    border-radius: 999px;
-    border: 2px solid rgba(212,175,55,0.9);
-    background: radial-gradient(circle at 30% 30%, rgba(245,231,161,0.95), rgba(2,8,20,0.7));
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.9rem;
-    color: #051428;
-    text-shadow: 0 0 4px rgba(0,0,0,0.9);
-    box-shadow: 0 0 10px rgba(0,0,0,0.7);
-  }
-  .polarity-marker.polarity-yang { font-size: 1.05rem; }
-  .polarity-marker.polarity-yin  { font-size: 0.95rem; }
+    
 
   /* Feedback visuel match / mismatch */
   .tore-card.match .tore-card-inner {
@@ -1399,26 +1380,22 @@ arrowHideTimer = setTimeout(() => {
                 const imgPath = buildImagePath(famKey, data);
 
         // on mémorise la polarité pour la comparaison avec la pièce
-        card.dataset.polarity = (data.polarity || '').toLowerCase();
+    
 
         front.style.padding = '0';
         front.style.background = 'none';
 
-        const symbol = (data.polarity === 'yang') ? '▲' : '●';
+      front.innerHTML = `
+  <img src="${imgPath}"
+       alt="${data.name || ''}"
+       style="
+         width: 100%;
+         height: 100%;
+         object-fit: contain;
+         display: block;
+       " />
+`;
 
-        front.innerHTML = `
-          <div class="polarity-marker polarity-${data.polarity === 'yang' ? 'yang' : 'yin'}">
-            ${symbol}
-          </div>
-          <img src="${imgPath}"
-               alt="${data.name || ''}"
-               style="
-                 width: 100%;
-                 height: 100%;
-                 object-fit: contain;
-                 display: block;
-               " />
-        `;
 
 
 
