@@ -39,6 +39,14 @@
 }
 
     :root{ --dore:#d4af37; --text:#e9e7df; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
+/* =========================
+   IMMERSION (comme le Tore)
+   ========================= */
+body.hide-immersive-pelerin > header,
+body.hide-immersive-pelerin > footer,
+body.hide-immersive-pelerin > section:not(#oracle):not(#board):not(#results){
+  display: none !important;
+}
 
     body{ margin:0; font-family:'Poppins',sans-serif; background:#0a192f; color:#f5e7a1; overflow-x:hidden; }
     .header-bg{ background:rgba(5,20,40,.98); }
@@ -252,17 +260,6 @@
   .traversee-board-5 .est,.traversee-board-5 .centre{ grid-area:auto; }
 }
 
-/* --- Immersif Traversée --- */
-.hide-immersive { display:none !important; }
-
-#exitTraverseeBtn{
-  position:fixed; top:18px; left:18px; z-index:1000;
-  background:linear-gradient(135deg,#d4af37,#b8860b);
-  color:#051428; font-weight:600; border-radius:999px; 
-  padding:10px 16px; border:1px solid rgba(212,175,55,.6);
-  box-shadow:0 10px 20px rgba(212,175,55,.25);
-}
-#exitTraverseeBtn.hidden{ display:none; }
 /* === MOBILE & TABLET POLISH === */
 
 /* Images fluides partout */
@@ -393,8 +390,7 @@ html, body { overflow-x: hidden; }
 button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   min-height: 44px;
 }
-#immersiveMenuBtn{ z-index: 1100; }
-#immersiveMenuPanel{ z-index: 1200; }
+
 
 /* Modales : éviter que le contenu déborde en hauteur */
 #orderModal .max-w-md,
@@ -926,6 +922,12 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 <!-- Hero -->
    <!-- Tirage du Pèlerin -->
   <section id="oracle" class="py-12 md:py-20 px-4 md:px-6 hidden">
+    <!-- Bouton retour mode immersif (comme le Tore) -->
+<button id="exitPelerinBtn"
+        class="fixed top-4 left-4 hidden z-50 bg-gold text-night-blue font-bold px-4 py-2 rounded-lg shadow-lg">
+  <i class="fas fa-arrow-left mr-2"></i>Quitter le tirage
+</button>
+
     <div class="container mx-auto max-w-6xl">
       <div class="text-center mb-10">
         <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-2">Tirage du Pèlerin</h2>
@@ -1482,59 +1484,12 @@ const DATA_TRAVERSEE = new Proxy({}, {
     });
   });
 
-  // 4) afficher la section + passer en mode immersif
-  const trav = el('traversee');
-  trav?.classList.remove('hidden');
-  enterImmersive();
-}
-
-  // ---------- helpers DOM ----------
+   // ---------- helpers DOM ----------
   const $  = sel => document.querySelector(sel);
   const $$ = sel => Array.from(document.querySelectorAll(sel)); // ✅
   const el = id  => document.getElementById(id);
 
-  // ---------- MODE IMMERSIF ----------
-  function enterImmersive(){
-    // masquer header, footer et toutes les sections sauf #traversee
-   $$('body > header, body > footer, body > section:not(#traversee)').forEach(n=>n.classList.add('hide-immersive'));
-
-// Menu immersif traversée (réutilise les mêmes helpers si dispos)
-if(!document.getElementById('immersiveMenuBtn')){
-  const btn = document.createElement('button');
-  btn.id = 'immersiveMenuBtn';
-  btn.setAttribute('aria-label','Ouvrir le menu');
-  btn.className = 'fixed top-4 right-4 z-[100] bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold p-3 rounded-full shadow-lg';
-  btn.innerHTML = '<i class="fas fa-bars"></i>';
- btn.addEventListener('click', () => {
-  // 1) S'assurer que le panneau existe
-  if (typeof window.ensureImmersiveMenu === 'function') {
-    window.ensureImmersiveMenu();
-  } else {
-    // Plan B minimal si l’implémentation globale n’est pas encore là
-    const p = document.getElementById('immersiveMenuPanel') || (() => {
-      const x = document.createElement('aside');
-      x.id = 'immersiveMenuPanel';
-      x.setAttribute('aria-hidden','true');
-      x.className = 'fixed top-0 right-0 h-full w-[320px] max-w-[85vw] bg-[rgba(5,20,40,0.98)] text-gold z-[1200] translate-x-full transition-transform duration-300 border-l border-gold/30 shadow-2xl';
-      x.innerHTML = `
-        <div class="p-5 border-b border-gold/20 flex items-center justify-between">
-          <div class="font-semibold tracking-wide"></div>
-          <button id="immersiveMenuClose" class="px-3 py-1 border border-gold/40 rounded-lg hover:bg-gold hover:text-night-blue">Fermer</button>
-        </div>
-        <nav class="p-5 space-y-3">
-          <a href="#accueil" class="block hover:text-light-gold">Accueil</a>
-          <a href="#offres" class="block hover:text-light-gold">Offres</a>
-          <a href="#Jeu" class="block hover:text-light-gold">Jeu</a>
-          <a href="#edolgor" class="block hover:text-light-gold">Partenariat</a>
-          <a href="#apropos" class="block hover:text-light-gold">À propos</a>
-        </nav>`;
-      document.body.appendChild(x);
-      x.querySelector('#immersiveMenuClose')?.addEventListener('click', () => {
-        x.setAttribute('aria-hidden','true');
-        x.style.transform = 'translateX(100%)';
-      });
-      return x;
-    })();
+   })();
   }
 
   // 2) Ouvrir/fermer
@@ -1581,128 +1536,7 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
   function flipCard(card){
     if(!card || card.classList.contains('flipped')) return;
 
-    // on exige que l'intention de la Traversée soit remplie (dans le formulaire de la section Traversée)
-    const tForm = el('traversee-form');
-    const intentionField = tForm?.querySelector('textarea, input[type="text"]');
-    if(intentionField && !intentionField.value.trim()){
-      intentionField.focus();
-      intentionField.setCustomValidity("Veuillez saisir votre intention pour ce tirage.");
-      intentionField.reportValidity();
-      return;
-    } else if (intentionField) {
-      intentionField.setCustomValidity("");
-    }
-
-    const slot = card.dataset.slot;       // nord/sud/est/ouest/centre
-    const fam  = card.dataset.family;     // revelations/transmutation/actions/emotions/cosmos
-    const data = safePick(DATA_TRAVERSEE[fam]||[]);
-
-    // remplir la face avant
-    card.querySelector('[data-name]').textContent  = data?.name || "—";
-    card.querySelector('[data-quote]').textContent = data?.quote || "—";
-    
-    // Afficher le nom de la famille
-    const familyLabel = card.querySelector('[data-family-label]');
-    if (familyLabel) {
-      const familyNames = {
-        'emotions': 'Émotions',
-        'transmutation': 'Transmutation',
-        'revelations': 'Révélations',
-        'actions': 'Actions',
-        'cosmos': 'Mémoires Cosmos'
-      };
-      familyLabel.textContent = familyNames[fam] || "—";
-    }
-    
-    const polEl = card.querySelector('[data-pol]');
-    if(slot === 'centre'){ 
-      polEl.style.visibility='hidden'; 
-      polEl.textContent='';
-      
-      // Mise en valeur spéciale pour la carte centre
-      card.style.boxShadow = "0 0 25px rgba(245, 231, 161, 0.5)";
-      card.querySelector('.traversee-card-front').style.background = "linear-gradient(145deg, rgba(245, 231, 161, 0.15), rgba(5,20,40,.9))";
-      card.querySelector('.traversee-card-front').style.borderColor = "rgba(245, 231, 161, 0.6)";
-    } else { 
-      polEl.style.visibility='visible'; 
-      polEl.textContent = data?.polarity ? polIcon(data.polarity) : ''; 
-    }
-
-    // flip visuel
-    card.classList.add('flipped');
-    
-    // Supprimer le logo Oradia du dos de la carte
-    const backLogo = card.querySelector('.logo-circle');
-    if (backLogo) {
-      backLogo.style.display = 'none';
-    }
-
-
-    // état
-    const host = el('traversee-board');
-    host._state.drawn[slot] = data;
-    host._state.flipped++;
-
-    if(host._state.flipped === 5){
-      showResults(host._state.drawn, intentionField?.value?.trim() || "");
-    }
-  }
-
-  function showResults(drawn, intention){
-    const out = el('traversee-results');
-    if(!out) return;
-
-    const L = (titre, obj, showPol=true) => {
-      const polTxt = showPol && obj?.polarity ? (obj.polarity==='yang'?' (énergie masculine)':' (énergie féminine)') : '';
-      return `<p><b>${titre} :</b> ${obj?.name||'—'}${polTxt}<br><i>« ${obj?.quote||'—'} »</i></p>`;
-    };
-
-    out.innerHTML = `
-      <h3 class="cormorant text-2xl text-gold mb-3">Résultats de la Traversée</h3>
-      ${intention ? `<div class="mb-2"><b>Intention :</b> ${intention}</div>` : ``}
-      <div class="result-lines">
-        ${L("Nord — Révélations (Vision)", drawn.nord)}
-        ${L("Sud — Transmutation (Ancrage)", drawn.sud)}
-        ${L("Est — Actions (Élan)", drawn.est)}
-        ${L("Ouest — Émotions (Mémoire)", drawn.ouest)}
-        ${L("Centre — Mémoires Cosmos", drawn.centre, false)}
-      </div>
-      <div class="mt-3">
-        <b>Synthèse :</b>
-        <p>La Vision (Nord) éclaire l’horizon ; l’Ancrage (Sud) montre ce qui doit se transformer ; l’Élan (Est) indique le mouvement ; la Mémoire (Ouest) révèle la leçon ; le Cosmos (Centre) relie le tout.</p>
-      </div>
-    `;
-    out.classList.remove('hidden');
-    out.scrollIntoView({behavior:'smooth', block:'start'});
-  }
-
-  // ---------- branchement UI de la section #traversee ----------
-  document.addEventListener('DOMContentLoaded', () => {
-    const startBtn = el('traversee-start');
-    const form     = el('traversee-form');
-    const exitBtn  = el('exitTraverseeBtn');
-
-    // Étape 1 : afficher le formulaire
-    startBtn?.addEventListener('click', () => {
-      el('traversee-intro')?.classList.add('hidden');
-      form?.classList.remove('hidden');
-      el('traversee')?.scrollIntoView({behavior:'smooth'});
-    });
-      // Étape 2 : soumission = construire le plateau + entrer en immersif si connecté
-    form?.addEventListener('submit', (e) => {
-      e.preventDefault();
-      buildBoard(); 
-      if (localStorage.getItem('oradiaAuth') === '1') {
-        enterImmersive();
-      }
-    });
-// Bouton "Quitter le tirage"
-    exitBtn?.addEventListener('click', () => {
-      exitImmersive();
-      // Retour à l'accueil
-      document.getElementById('accueil').scrollIntoView({behavior: 'smooth'});
-    });
-  });
+   
 })();
 </script>
   <!-- Scripts -->
@@ -1714,11 +1548,6 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
       localStorage.setItem('authInitialized', 'true');
     }
 
-    // Gestion du bouton "Accéder au tirage du Tore"
-    document.getElementById('subscribeBtn')?.addEventListener('click', function(e) {
-      e.preventDefault();
-      startToreImmersive();
-    });
 
     // Gestion du bouton "Commencer le tirage" de la traversée
     document.getElementById('orderBtn')?.addEventListener('click', function(e) {
@@ -1744,216 +1573,8 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
         document.getElementById('traversee')?.scrollIntoView({behavior: 'smooth'});
       }
     });
-    // Gestion du bouton "Accéder au tirage du Tore" du Tore
-    document.getElementById('subscribeBtn')?.addEventListener('click', function(e) {
-      e.preventDefault();
-      if (localStorage.getItem('oradiaAuth') === '1') {
-        // Si connecté, on ouvre le tirage du Tore en mode immersif
-        const toreSection = document.getElementById('traversee'); 
-        
-        // Utiliser traversee comme section immersive
-        if (toreSection) {
-          toreSection.classList.remove('hidden');
-          enterToreImmersive();
-          toreSection.scrollIntoView({behavior: 'smooth'});
-        }
-      } else {
-        // Sinon, on ouvre la modale d'abonnement normale
-        document.getElementById('subscriptionModal')?.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-      }
-    });
-    function startToreImmersive() {
-      // Si l'utilisateur n'est pas connecté, afficher la modale d'abonnement
-      if (localStorage.getItem('oradiaAuth') !== '1') {
-        document.getElementById('subscriptionModal')?.classList.remove('hidden');
-        document.body.style.overflow = 'hidden';
-        return;
-      }
 
-      // Masquer toutes les sections sauf #tore
-      document.querySelectorAll('body > header, body > footer, body > section:not(#tore)').forEach(n => {
-        n.classList.add('hide-immersive');
-      });
-
-      // Afficher la section Tore
-      document.getElementById('tore').classList.remove('hidden');
-
-      // Créer le bouton de sortie
-      if (!document.getElementById('exitToreBtn')) {
-        const exitBtn = document.createElement('button');
-        exitBtn.id = 'exitToreBtn';
-        exitBtn.className = 'fixed top-4 left-4 z-50 bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold p-3 rounded-full shadow-lg';
-        exitBtn.innerHTML = '<i class="fas fa-times"></i>';
-        exitBtn.addEventListener('click', exitToreImmersive);
-        document.body.appendChild(exitBtn);
-      }
-
-      // Scroll vers le haut de la section
-      document.getElementById('tore').scrollIntoView({behavior: 'smooth', block: 'start'});
-    }
-
-    function exitToreImmersive() {
-      // Afficher à nouveau tous les éléments
-      document.querySelectorAll('body > header, body > footer, body > section').forEach(n => {
-        n.classList.remove('hide-immersive');
-      });
-
-      // Masquer la section Tore
-      document.getElementById('tore').classList.add('hidden');
-
-      // Supprimer le bouton de sortie
-      const exitBtn = document.getElementById('exitToreBtn');
-      if (exitBtn) exitBtn.remove();
-
-      // Réinitialiser l'état du tirage
-      document.getElementById('tore-intro').classList.remove('hidden');
-      document.getElementById('tore-intention-form').classList.add('hidden');
-      document.getElementById('tore-board-container').classList.add('hidden');
-      document.getElementById('tore-results').classList.add('hidden');
-      document.getElementById('toreIntentionText').value = '';
-
-      // Retour à l'accueil
-      document.getElementById('accueil')?.scrollIntoView({behavior: 'smooth'});
-    }
-
-    // Logique du tirage du Tore
-    document.getElementById('tore-start')?.addEventListener('click', function() {
-      document.getElementById('tore-intro').classList.add('hidden');
-      document.getElementById('tore-intention-form').classList.remove('hidden');
-      document.getElementById('toreIntentionText').focus();
-    });
-
-    document.getElementById('launchToreBoard')?.addEventListener('click', function() {
-      const intention = document.getElementById('toreIntentionText').value.trim();
-      if (!intention) {
-        document.getElementById('toreIntentionText').setCustomValidity('Veuillez saisir une intention pour ce tirage.');
-        document.getElementById('toreIntentionText').reportValidity();
-        return;
-      }
-
-      document.getElementById('tore-intention-form').classList.add('hidden');
-      document.getElementById('tore-board-container').classList.remove('hidden');
-
-      // Générer les 8 cartes du Tore
-      const toreBoard = document.getElementById('toreBoard');
-      toreBoard.innerHTML = '';
-
-      const families = ['emotions', 'besoins', 'revelations', 'actions', 'cosmos', 'archetypes', 'transmutation', 'cosmos'];
-      families.forEach((fam, idx) => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.dataset.family = fam;
-        card.innerHTML = `
-          <div class="card-inner">
-            <div class="face back" role="button" tabindex="0" aria-pressed="false" aria-label="Retourner la carte">
-              <div class="logo-circle" aria-hidden="true"></div>
-            </div>
-            <div class="face front">
-              <div class="topbar">
-                <span class="chip">${fam.toUpperCase()}</span>
-                <span class="polarity" data-polarity></span>
-              </div>
-              <div class="art">
-                <div>
-                  <h3 data-name>—</h3>
-                  <div class="quote" data-quote>—</div>
-                </div>
-              </div>
-              <div class="bottom"></div>
-            </div>
-          </div>
-        `;
-        toreBoard.appendChild(card);
-
-        const back = card.querySelector('.back');
-        back.addEventListener('click', () => {
-          if (card.classList.contains('flipped')) return;
-          const data = pick(window.DATA[fam] || []);
-          if (data) {
-            card.querySelector('[data-name]').textContent = data.name;
-            card.querySelector('[data-quote]').textContent = data.quote;
-            const polEl = card.querySelector('[data-polarity]');
-            if (fam !== 'cosmos' && data.polarity) {
-              polEl.textContent = data.polarity === 'yang' ? '▲' : '●';
-            } else {
-              polEl.style.visibility = 'hidden';
-            }
-          }
-          card.classList.add('flipped');
-        });
-      });
-    });
-
-    document.getElementById('analyzeTore')?.addEventListener('click', function() {
-      const intention = document.getElementById('toreIntentionText').value.trim();
-      const cards = document.querySelectorAll('#toreBoard .card.flipped');
-      
-      if (cards.length < 8) {
-        alert('Veuillez retourner toutes les cartes avant l\'analyse');
-        return;
-      }
-
-      document.getElementById('tore-board-container').classList.add('hidden');
-      document.getElementById('tore-results').classList.remove('hidden');
-
-      const linesEl = document.getElementById('tore-lines');
-      linesEl.innerHTML = '';
-      cards.forEach(card => {
-        const name = card.querySelector('[data-name]').textContent;
-        const quote = card.querySelector('[data-quote]').textContent;
-        const fam = card.dataset.family;
-        linesEl.innerHTML += `<p><b>${fam.toUpperCase()} :</b> ${name} — ${quote}</p>`;
-      });
-
-      const synthEl = document.getElementById('tore-synthese');
-      synthEl.innerHTML = `<p><b>Intention :</b> ${intention}</p><p>Le tirage du Tore offre une vision complète de votre cheminement, intégrant toutes les dimensions de l'être.</p>`;
-
-      document.getElementById('tore-results').scrollIntoView({behavior: 'smooth'});
-    });
-
-    document.getElementById('newToreReading')?.addEventListener('click', function() {
-      exitToreImmersive();
-      startToreImmersive();
-    });
-// Empêcher l'ouverture de la modale d'abonnement si déjà connecté
-    document.getElementById('subscriptionModal')?.addEventListener('click', function(e) {
-      if (e.target === this && localStorage.getItem('oradiaAuth') === '1') {
-        this.classList.add('hidden');
-        document.body.style.overflow = '';
-        // Ouvrir le tirage du Tore en mode immersif
-        const toreSection = document.getElementById('traversee');
-        if (toreSection) {
-          toreSection.classList.remove('hidden');
-          enterToreImmersive();
-          toreSection.scrollIntoView({behavior: 'smooth'});
-        }
-      }
-    });
-// Gestion des modales - vérification de l'authentification avant ouverture
-    const modals = ['orderModal', 'subscriptionModal'];
-    modals.forEach(modalId => {
-      const modal = document.getElementById(modalId);
-      const openBtns = document.querySelectorAll(`[data-target="${modalId}"]`);
-      
-      openBtns.forEach(btn => {
-        btn.addEventListener('click', function(e) {
-          if (localStorage.getItem('oradiaAuth') === '1') {
-            e.preventDefault();
-            // Redirection appropriée selon la modale
-            if (modalId === 'orderModal') {
-              document.getElementById('traversee')?.classList.remove('hidden');
-              document.getElementById('traversee-start')?.click();
-              document.getElementById('traversee')?.scrollIntoView({behavior: 'smooth'});
-            } else {
-              window.location.href = 'tore.html';
-            }
-          }
-        });
-      });
-    });
-
-    // Gestion du modal CGU
+        // Gestion du modal CGU
 document.getElementById('showCGU')?.addEventListener('click', (e) => {
       e.preventDefault();
       const modal = document.querySelector('cgu-modal');
@@ -2411,32 +2032,31 @@ newBtn?.addEventListener('click', ()=>{
 });
   if(!board || !startButton || !intentionIn) return;
 
+    // --- IMMERSION PÈLERIN (même logique que le Tore) ---
+  const exitBtn = el('exitPelerinBtn');
+
+  if (exitBtn && !exitBtn.dataset.bound) {
+    exitBtn.dataset.bound = "1";
+    exitBtn.addEventListener('click', () => {
+      exitPelerinImmersive();
+      el('accueil')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  }
+
   function enterPelerinImmersive(){
-    $$('body > header, body > footer, body > section:not(#oracle)').forEach(n=>n.classList.add('hide-immersive'));
- // bouton MENU immersif
-if(!el('immersiveMenuBtn')){
-  const btn = document.createElement('button');
-  btn.id = 'immersiveMenuBtn';
-  btn.setAttribute('aria-label','Ouvrir le menu');
-  btn.className = 'fixed top-4 right-4 z-[100] bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold p-3 rounded-full shadow-lg';
-  btn.innerHTML = '<i class="fas fa-bars"></i>';
-  btn.addEventListener('click', () => {
-  window.ensureImmersiveMenu?.();       // s’assurer que le panneau existe
-  window.toggleImmersiveMenu?.();       // puis ouvrir/fermer
-});
-  document.body.appendChild(btn);
-}
-ensureImmersiveMenu(); // crée le panneau si besoin
-
-    el('oracle')?.scrollIntoView({behavior:'smooth', block:'start'});
+    document.body.classList.add('hide-immersive-pelerin');
+    exitBtn?.classList.remove('hidden');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   }
+
   function exitPelerinImmersive(){
- $$('body > header, body > footer, body > section').forEach(n=>n.classList.remove('hide-immersive'));
-el('immersiveMenuBtn')?.remove();
-const p = el('immersiveMenuPanel');
-if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
-
+    document.body.classList.remove('hide-immersive-pelerin');
+    exitBtn?.classList.add('hidden');
   }
+
+  window.exitPelerinImmersive = exitPelerinImmersive;
+  window.enterPelerinImmersive = enterPelerinImmersive;
+
 function ensureImmersiveMenu(){
   if(el('immersiveMenuPanel')) return;
   const panel = document.createElement('aside');
@@ -2619,35 +2239,15 @@ $$('#board .card').forEach(card=>{
     
     // Quitter le mode immersif
     exitPelerinImmersive();
+    el('exitPelerinBtn')?.remove();
+
   });
 // support tactile flip
   $$('.card .back').forEach(back=>{
     back.addEventListener('touchstart', (e)=>{ e.preventDefault(); window.flipCard(back.closest('.card')); }, {passive:false});
   });
 }
-/* ---------- Mobile menu ---------- */
 
-function initMobileMenu(){
-  const btn  = document.getElementById('mobileMenuBtn');
-  const menu = document.getElementById('mobileMenu');
-  const loginBtnMobile = document.getElementById('loginBtnMobile');
-  if(!btn || !menu) return;
-  if (btn.dataset.bound === '1') return; // déjà lié
-  btn.dataset.bound = '1';
-
-  btn.addEventListener('click', (e)=>{
-    e.stopPropagation();
-    menu.classList.toggle('hidden');
-    btn.setAttribute('aria-expanded', menu.classList.contains('hidden') ? 'false' : 'true');
-  });
-
-  loginBtnMobile?.addEventListener('click', ()=>{
-    document.getElementById('subscriptionModal')?.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
-    menu.classList.add('hidden');
-    btn.setAttribute('aria-expanded','false');
-  });
-}
 /* ---------- Boot compatible SPA ---------- */
 (function start(){
   const run = () => {
@@ -3424,33 +3024,7 @@ function updateCtasForAuth(){
       }
     }
 
-    // Si tu as un bouton d’offre “Abonnement” hors modale, traite-le pareil ici.
-    // "S'abonner" (offre Tore)
-    const subscribeBtn = document.getElementById('subscribeBtn');
-    if (subscribeBtn) {
-      if (isAuthed()) {
-        // Lorsque l'utilisateur est connecté, le bouton s'abonner devient "Accéder au tirage du Toree"
-        subscribeBtn.textContent = 'Accéder au tirage du Tore';
-        // Assure une ancre cohérente pour l'expérience de tirage
-        subscribeBtn.setAttribute('href', '#traversee');
-        // Supprime tout ancien gestionnaire qui pourrait ouvrir la modale d'inscription
-        const newSubBtn = subscribeBtn.cloneNode(true);
-        subscribeBtn.parentNode.replaceChild(newSubBtn, subscribeBtn);
-        // Ajoute un gestionnaire pour lancer le tirage complet (même comportement que l'offre Traversée)
-        newSubBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          onStartReading(e);
-        }, { once:true });
-      } else {
-        // Si l'utilisateur n'est pas connecté, rétablit le libellé et laisse la logique d'origine gérer la modale
-        subscribeBtn.textContent = "S'abonner";
-        subscribeBtn.setAttribute('href', '#');
-        // Nettoie les éventuels gestionnaires ajoutés précédemment
-        const newSubBtn = subscribeBtn.cloneNode(true);
-        subscribeBtn.parentNode.replaceChild(newSubBtn, subscribeBtn);
-      }
     }
-}
     function onStartReading(e){
       e.preventDefault();
       location.hash = '#Jeu';
