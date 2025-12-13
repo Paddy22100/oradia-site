@@ -1787,6 +1787,16 @@ window.DATA = {
       actions: "ACTIONS",
       cosmos: "Carte Mémoires Cosmos"
     };
+    // Dossier d'images par famille
+  const FAMILY_FOLDERS = {
+    emotions: 'emotions',
+    besoins: 'besoins',
+    transmutation: 'transmutations',
+    actions: 'actions',
+    archetypes: 'archetypes',
+    revelations: 'revelations',
+    memoire_cosmos: 'memoire_cosmos',
+  };
     const polarityIcon = p => p === "yang" ? "🔺" : "⚫";
     const polarityLabel = p => p === "yang" ? "énergie masculine" : "énergie féminine";
     const yiInsight = {
@@ -2608,6 +2618,49 @@ const STEPS = [
   { key:'actions',   label:'ACTIONS',	 count:18 }, // -> slot-2
   { key:'cosmos',  label:'MÉMOIRE COSMOS',count:10 },  // -> slot-3
 ];
+  // === IMAGES (comme le Tore) ===
+  const FAMILY_FOLDERS = {
+    emotions: 'emotions',
+    besoins: 'besoins',
+    actions: 'actions',
+
+    // IMPORTANT : dans le Pèlerin tu utilises "cosmos"
+    // mais dans ta bibliothèque c’est "memoire_cosmos"
+    cosmos: 'memoire_cosmos',
+
+    // (sécurité si un jour tu réutilises ces clés ici)
+    memoire_cosmos: 'memoire_cosmos',
+    transmutation: 'transmutations',
+    revelations: 'revelations',
+    archetypes: 'archetypes',
+  };
+
+  function slugifyName(name) {
+    return (name || '')
+      .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '_')
+      .replace(/^_+|_+$/g, '');
+  }
+
+  function buildImagePath(familyKey, data) {
+    const folder = FAMILY_FOLDERS[familyKey] || familyKey;
+    let file = (data && data.file) ? String(data.file) : '';
+
+    // si un chemin explicite est fourni
+    if (file.includes('/')) {
+      if (file.startsWith('./') || file.startsWith('images/')) return file;
+      return 'images/' + file.replace(/^\/+/, '');
+    }
+
+    // sinon on déduit depuis le nom
+    if (!file) {
+      const slug = slugifyName(data?.name || '');
+      file = slug + '.png';
+    }
+
+    return `images/${folder}/${file}`;
+  }
 
   const fan      = document.getElementById('fanBoard');
   const tray     = document.getElementById('tray');
@@ -2630,43 +2683,42 @@ const STEPS = [
 
   function clearFan(){ fan.innerHTML = ''; }
 
-     function fillFront(card, familyKey){
-    // 1) Source des cartes : DATA officielle si présente, sinon fallback local
-const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : [];
-
-
-    const raw = pool[Math.floor(Math.random() * pool.length)];
+       function fillFront(card, familyKey){
+    const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : [];
+    const raw  = pool[Math.floor(Math.random() * pool.length)];
     if (!raw) return;
 
-    // 2) Uniformise l’item (supporte string OU objet {name, quote, polarity})
-    const item = (typeof raw === 'string') ? { name: raw, quote: '—', polarity: '' } : raw;
+    const item = (typeof raw === 'string')
+      ? { name: raw, quote: '—', polarity: '' }
+      : raw;
 
-    // 3) Injection du titre & de la citation
-    const nameEl  = card.querySelector('[data-name]');
-    const quoteEl = card.querySelector('[data-quote]');
-    if (nameEl)  nameEl.textContent  = item.name || '—';
-    if (quoteEl) quoteEl.textContent = item.quote || '—';
+    const imgPath = buildImagePath(familyKey, item);
 
-    // 4) Polarité : utiliser l’attribut correct [data-polarity] (et pas [data-pol])
-    const polEl = card.querySelector('[data-polarity]');
-    if (polEl){
-      if (familyKey === 'cosmos'){
-        polEl.textContent = '';
-        polEl.style.visibility = 'hidden';
-      } else {
-        polEl.style.visibility = 'visible';
-        const isYang = (item.polarity || '').toLowerCase() === 'yang';
-        polEl.textContent = isYang ? '▲' : '●';
-        polEl.setAttribute('title', isYang ? 'Yang' : 'Yin');
-        polEl.setAttribute('aria-label', isYang ? 'Yang' : 'Yin');
-      }
+    const front = card.querySelector('.face.front');
+    if (front) {
+      front.style.padding = '0';
+      front.style.background = 'none';
+      front.innerHTML = `
+        <img src="${imgPath}"
+             alt="${item.name || ''}"
+             style="width:100%;height:100%;object-fit:cover;display:block;border-radius:var(--radius);" />
+      `;
     }
 
-    // 5) Méta
+    // On masque la polarité (tes cartes l'ont déjà visuellement)
+    const polEl = card.querySelector('[data-polarity]');
+    if (polEl){
+      polEl.textContent = '';
+      polEl.style.visibility = 'hidden';
+    }
+
+    // Méta
     card.dataset.key      = familyKey;
     card.dataset.card     = item.name || '';
     card.dataset.polarity = item.polarity || '';
+    card.dataset.img      = imgPath;
   }
+
       function renderFan(){
     clearFan();
     const { count, key } = STEPS[stepIndex];
