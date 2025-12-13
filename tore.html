@@ -476,6 +476,20 @@
     border-width: 6px 0 6px 10px;
     border-color: transparent transparent transparent #f5e7a1;
   }
+  /* Couleurs dynamiques de la flèche (1 seule flèche) */
+  #tore-arrow.match {
+    background: rgba(46,204,113,0.95);
+  }
+  #tore-arrow.match::after {
+    border-color: transparent transparent transparent rgba(46,204,113,0.95);
+  }
+
+  #tore-arrow.mismatch {
+    background: rgba(231,76,60,0.95);
+  }
+  #tore-arrow.mismatch::after {
+    border-color: transparent transparent transparent rgba(231,76,60,0.95);
+  }
 
   #tore-immersif .container {
   max-width: 1500px;   /* augmente la largeur du cadre */
@@ -1123,6 +1137,7 @@ window.DATA = {
 
   const FAMILY_ORDER = STEPS_TORE.map(s => s.key); // ordre horaire
   let arrowEl = null;
+  let arrowHideTimer = null;
   let lastCoinResult = null;
 
   const el = id => document.getElementById(id);
@@ -1252,9 +1267,11 @@ window.DATA = {
     arrow.style.transform = `rotate(${angleDeg}deg)`;
     arrow.style.opacity = '1';
 
-    setTimeout(() => {
-      arrow.style.opacity = '0';
-    }, 450);
+if (arrowHideTimer) clearTimeout(arrowHideTimer);
+arrowHideTimer = setTimeout(() => {
+  arrow.style.opacity = '0';
+}, 900);
+
   }
 
   function processCoinResult(polarity) {
@@ -1548,23 +1565,26 @@ if (previewOverlay && previewImg) {
   }
 
 
-  // Affichage de la flèche entre la carte et la pièce
-  function showArrowForStep(stepIndex, isMatch) {
-    if (!boardHost) return;
-    const step = STEPS_TORE[stepIndex];
-    const card = boardHost.querySelector(`.tore-card[data-family="${step.key}"]`);
-    if (!card) return;
+  // Affichage d'UNE seule flèche (la famille en cours) : pièce → carte
+function showArrowForStep(stepIndex, isMatch) {
+  if (!boardHost || !coin) return;
+  const step = STEPS_TORE[stepIndex];
+  if (!step) return;
 
-    // Supprime une éventuelle flèche précédente
-    const oldArrow = card.querySelector('.tore-arrow');
-    if (oldArrow && oldArrow.parentNode) {
-      oldArrow.parentNode.removeChild(oldArrow);
-    }
+  const card = boardHost.querySelector(`.tore-card[data-family="${step.key}"]`);
+  if (!card) return;
 
-    const arrow = document.createElement('div');
-    arrow.className = 'tore-arrow ' + (isMatch ? 'match' : 'mismatch');
-    card.appendChild(arrow);
-  }
+  const arrow = ensureArrowElement();
+  if (!arrow) return;
+
+  // Couleur de la flèche : neutre (or) / match (vert) / mismatch (rouge)
+  arrow.classList.remove('match', 'mismatch');
+  if (isMatch === true) arrow.classList.add('match');
+  else if (isMatch === false) arrow.classList.add('mismatch');
+
+  animateArrowToCard(card);
+}
+
 
       // Lancer la pièce de tirage : 1 lancer par famille, dans l'ordre STEPS_TORE
   function launchCoin() {
@@ -1626,7 +1646,7 @@ if (previewOverlay && previewImg) {
 
         // pas de polarité (Mémoire Cosmos) → on montre juste une flèche neutre
         if (cardPolarity === 'none') {
-          showArrowForStep(stepIndex, true);
+         showArrowForStep(stepIndex, null);
         } else {
           const isMatch = (cardPolarity === coinPolarity);
           showArrowForStep(stepIndex, isMatch);
