@@ -1142,8 +1142,9 @@ window.DATA = {
 
   const el = id => document.getElementById(id);
 
-    // État du tirage de la pièce : on fait 1 lancer par famille, dans l'ordre STEPS_TORE
-  let toreThrowIndex = 0;                       // 0 → 6
+// État du tirage de la pièce : 1 lancer par famille SAUF memoire_cosmos (pas de polarité, pas de lancer)
+let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
+
   const toreBridgeAdded = new Array(STEPS_TORE.length).fill(false);
 
   const section   = el('tore-immersif');
@@ -1589,8 +1590,13 @@ function showArrowForStep(stepIndex, isMatch) {
       // Lancer la pièce de tirage : 1 lancer par famille, dans l'ordre STEPS_TORE
   function launchCoin() {
     if (!coin || !boardHost) return;
+// On saute Mémoire Cosmos : pas de polarité → pas de tirage de pièce pour cette famille
+while (toreThrowIndex < STEPS_TORE.length && STEPS_TORE[toreThrowIndex].key === 'memoire_cosmos') {
+  toreThrowIndex += 1;
+}
 
-    // On ne lance la pièce que 7 fois (une par famille)
+  // On ne lance la pièce que pour les familles avec polarité (Mémoire Cosmos exclue)
+
     if (toreThrowIndex >= STEPS_TORE.length) {
       return;
     }
