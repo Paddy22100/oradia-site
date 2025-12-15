@@ -558,23 +558,60 @@ img { max-width: 100%; height: auto; }
 
 /* Mini-carte une fois ancrée en bas */
 .card.mini {
-  position: relative !important;
-  left: auto !important;
-  top: auto !important;
+  position: relative;
+  left: auto;
+  top: auto;
   width: 100%;
   max-width: 180px;
   aspect-ratio: 2 / 3;
   height: auto;
-  transform: none !important;
+  transform: none;
   margin: 0 auto;
-  transition: all 0.5s ease;
+  transition: transform 180ms ease, box-shadow 180ms ease;
   z-index: 10;
 }
+
 
 
 .card.mini .card-inner {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
   border: 1px solid rgba(212, 175, 55, 0.4);
+}
+/* ===== PREVIEW HD AU SURVOL (solution B) ===== */
+#slotPreview{
+  position: fixed;
+  inset: 0;
+  z-index: 99999;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+#slotPreview.show{ opacity: 1; }
+
+#slotPreview .pv-card{
+  position: absolute;
+  width: 360px;           /* taille preview (augmente si tu veux) */
+  aspect-ratio: 2 / 3;
+  border-radius: 18px;
+  overflow: hidden;
+  box-shadow: 0 22px 60px rgba(0,0,0,.55);
+  border: 1px solid rgba(212,175,55,.55);
+  background: rgba(0,0,0,.85);
+}
+#slotPreview .pv-card img{
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+  image-rendering: auto; /* évite l’effet pixel */
+}
+
+/* bonus : un peu de feedback sur la mini-carte sans la scaler */
+@media (hover:hover) and (pointer:fine){
+  .slot.filled .card.mini{ cursor: zoom-in; }
+  .slot.filled .card.mini:hover .card-inner{
+    box-shadow: 0 10px 30px rgba(0,0,0,.45);
+  }
 }
 
 .card.mini .front {
@@ -633,27 +670,10 @@ header {
       }
       }
 
-/* --- Carte miniature affichée dans les slots --- */
-.slot .mini-card{
-  position: relative;
-  width: 180px;               /* adapte si tu veux plus grand */
-  height: 270px;
-  border-radius: 14px;
-  overflow: hidden;
-  box-shadow: 0 12px 24px rgba(0,0,0,.35);
-}
-.slot .mini-card .card-inner{
-  transform: none !important;     /* PAS de flip 3D dans le slot */
-  transition: none !important;
-}
-.slot .mini-card .back{ display:none !important; }  /* on ne montre que la face avant */
-.slot .mini-card .front{ height:100%; }
-    /* Zoom de la carte tenue en main */
-    .card.zooming{
-      transform: translate(-50%, -50%) rotate(0deg) scale(1.3) !important;
-      z-index: 1000;
-      transition: transform 0.7s ease, opacity 0.5s ease;
-    }
+
+
+/* anti-coupure si besoin */
+.choice-tray, .choice-tray .slots{ overflow: visible; }
 
     /* Styles pour les nouvelles animations d'intention */
     .particle {
@@ -759,52 +779,23 @@ header {
 
 /* (désactivé) brillance balayage supprimée */
 .btn-gold::before, .btn-outline-gold::before { content: none !important; }
-
   
-/* Mini-carte dans un slot */
-.slot .mini{
-  width: 200px;
-  height: 300px;
-  position: relative !important;
-  left: auto !important;
-  top: auto !important;
-  transform: none;
-  margin: 0 auto;
-  transition: all 0.5s ease;
+/* ===== ZOOM AU SURVOL DANS LES SLOTS (desktop) ===== */
+@media (hover:hover) and (pointer:fine){
+  .slot.filled .mini{
+    transform-origin: center center;
+    transition: transform 180ms ease, box-shadow 180ms ease;
+    will-change: transform;
+  }
+
+  .slot.filled .mini:hover{
+    transform: scale(1.25);
+    z-index: 9999;
+    box-shadow: 0 18px 40px rgba(0,0,0,.45);
+  }
+}
 }
 
-.slot .mini .card-inner{
-  height: 100%;
-  box-shadow: 0 8px 16px rgba(0,0,0,.3);
-}
-/* Mini-carte dans un slot : plus de place pour le contenu */
-.slot .mini .front .topbar,
-.slot .mini .chip,
-.slot .mini .polarity,
-.slot .mini .bottom {
-  display: none !important;   /* on enlève l'entête et la pastille */
-}
-
-.slot .mini .art h3 {
-  font-size: 1.1rem;
-  line-height: 1.15;
-}
-
-.slot .mini .quote,
-.slot .mini [data-quote] {
-  font-size: .95rem;
-  line-height: 1.35;
-}
-
-.slot.filled{
-  overflow: visible;
-  border: none;
-  background: transparent;
-}
-
-@media (max-width: 640px){
-  .slot .mini{ width: 170px; height: 255px; }
-}
 /* DS V3 — mobile menu : sécurité overflow/stacking */
 header { position: relative; overflow: visible; }        /* garantit que le dropdown n'est pas coupé */
 #mobileMenu {
@@ -2635,6 +2626,51 @@ const STEPS = [
   const startBtn = document.getElementById('startReading');
   const intentionBox = document.getElementById('intentionBox');
   const resetBtn = document.getElementById('reset');
+// ===== Preview HD (solution B) =====
+const preview = document.createElement('div');
+preview.id = 'slotPreview';
+preview.innerHTML = `<div class="pv-card"><img alt=""></div>`;
+document.body.appendChild(preview);
+
+const pvCard = preview.querySelector('.pv-card');
+const pvImg  = preview.querySelector('img');
+
+function showPreview(imgSrc, x, y){
+  if (!imgSrc) return;
+  pvImg.src = imgSrc;
+
+  // positionne à côté du curseur, en restant dans l’écran
+  const pad = 18;
+  const w = pvCard.offsetWidth || 360;
+  const h = pvCard.offsetHeight || (360 * 1.5);
+
+  let left = x + 24;
+  let top  = y - (h * 0.52);
+
+  const maxLeft = window.innerWidth  - w - pad;
+  const maxTop  = window.innerHeight - h - pad;
+
+  left = Math.max(pad, Math.min(left, maxLeft));
+  top  = Math.max(pad, Math.min(top,  maxTop));
+
+  pvCard.style.left = left + 'px';
+  pvCard.style.top  = top  + 'px';
+
+  preview.classList.add('show');
+}
+
+function hidePreview(){
+  preview.classList.remove('show');
+}
+
+// event delegation : marche même si les cartes sont recréées
+tray.addEventListener('mousemove', (e)=>{
+  const mini = e.target.closest('.slot.filled .card.mini');
+  if (!mini) return hidePreview();
+  showPreview(mini.dataset.img, e.clientX, e.clientY);
+});
+
+tray.addEventListener('mouseleave', hidePreview);
 
   if(!fan || !boardSec) return;
 
@@ -2824,7 +2860,9 @@ const pool = Array.isArray(window.DATA?.[dataKey]) ? window.DATA[dataKey] : [];
                 card.style.position = 'relative';
                 card.style.left = 'auto';
                 card.style.top = 'auto';
-                card.style.transform = 'scale(0.3)';
+                card.style.transform = '';
+                card.style.left = '';
+                card.style.top = '';
                 card.classList.add('mini');
                 slot.classList.add('filled');
                 
