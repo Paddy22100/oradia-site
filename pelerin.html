@@ -1904,11 +1904,11 @@ function isOpenQuestion(txt){
   const ok = isOpenQuestion(intentionIn.value);
   startButton.disabled = !ok;                        // ne touche qu’à #startReading
 });
-  // Focus → passe en immersif avec effet visuel
+    // Focus → simple mise en évidence (pas d’entrée en immersion)
   intentionIn.addEventListener('focus', () => {
-    enterPelerinImmersive();
     intentionIn.parentElement.classList.add('ring-4', 'ring-gold/20');
   });
+
   
   intentionIn.addEventListener('blur', () => {
     intentionIn.parentElement.classList.remove('ring-4', 'ring-gold/20');
@@ -1932,6 +1932,9 @@ if(!isOpenQuestion(intentionIn.value)){
 } else {
   intentionIn.setCustomValidity("");
 }
+  // Entrée en immersion uniquement au clic sur "Commencer le voyage"
+  ensureImmersiveMenu();
+  enterPelerinImmersive();
 
  show(board);
 el('cardsInstruction')?.classList.remove('hidden');
