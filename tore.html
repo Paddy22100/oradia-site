@@ -914,6 +914,10 @@
         <button id="tore-coin-button" class="btn-gold">
           Lancer la pièce de tirage
         </button>
+        <button id="tore-to-analysis" class="btn-gold hidden">
+  Voir l’analyse du tirage
+</button>
+
         <div id="tore-coin"
              class="tore-coin face-yang"
              aria-label="Pièce de tirage Oradia">
@@ -1144,8 +1148,23 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
   const coinWrapper = el('tore-coin-wrapper');
   const coin = el('tore-coin');
   const coinButton = el('tore-coin-button');
+  const toAnalysisBtn = el('tore-to-analysis');  
 
 // --- helpers ---
+
+ function showToreAnalysisCTA() {
+  if (!coinWrapper) return;
+
+  // cacher la pièce + bouton de lancer
+  coin?.classList.add('hidden');
+  coinButton?.classList.add('hidden');
+
+  // afficher le CTA analyse
+  toAnalysisBtn?.classList.remove('hidden');
+
+  // on garde le wrapper visible
+  coinWrapper.classList.remove('hidden');
+}
 
   function pickFromData(familyKey) {
     const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : [];
@@ -1640,7 +1659,16 @@ function showArrowForStep(stepIndex, isMatch) {
 while (toreThrowIndex < STEPS_TORE.length && STEPS_TORE[toreThrowIndex].key === 'memoire_cosmos') {
   toreThrowIndex += 1;
 }
+// Si c'était le dernier lancer (on saute Mémoire Cosmos), on remplace la pièce par le bouton Analyse
+let tmp = toreThrowIndex;
+while (tmp < STEPS_TORE.length && STEPS_TORE[tmp].key === 'memoire_cosmos') tmp++;
 
+if (tmp >= STEPS_TORE.length) {
+  // plus rien à lancer
+  coin?.classList.remove('glow');     // stop halo
+  coin.dataset.locked = '1';          // bloque les clics restants
+  showToreAnalysisCTA();
+}
   // On ne lance la pièce que pour les familles avec polarité (Mémoire Cosmos exclue)
 
     if (toreThrowIndex >= STEPS_TORE.length) {
@@ -1703,10 +1731,12 @@ while (toreThrowIndex < STEPS_TORE.length && STEPS_TORE[toreThrowIndex].key === 
           const isMatch = (cardPolarity === coinPolarity);
           showArrowForStep(stepIndex, isMatch);
 
-                    if (!isMatch) {
-            // polarité différente → l'utilisateur tire une carte passerelle
-            openBridgeFan(stepIndex, nextStep.key);
-          }
+                   if (!isMatch) {
+  // polarité différente → on laisse d'abord la flèche s'afficher
+  setTimeout(() => {
+    openBridgeFan(stepIndex, nextStep.key);
+  }, 1000); // ajuste: 700 à 1200 selon l'effet désiré
+}
         }
       }
 
@@ -1727,6 +1757,14 @@ while (toreThrowIndex < STEPS_TORE.length && STEPS_TORE[toreThrowIndex].key === 
     intro.classList.add('hidden');
     form.classList.remove('hidden');
   });
+  
+toAnalysisBtn?.addEventListener('click', () => {
+  // afficher la zone résultats (si tu l'utilises pour l'analyse)
+  results?.classList.remove('hidden');
+
+  // scroll doux vers l'analyse
+  results?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+});
 
  form?.addEventListener('submit', (e) => {
   e.preventDefault();

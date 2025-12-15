@@ -356,14 +356,7 @@ img { max-width: 100%; height: auto; }
   padding: 0 16px;
 }
 .reading-left{ flex: 0 0 auto; }
-.reading-right{flex: 0 0 860px; }
-
-/* Plateau stable */
-.reading-row .choice-tray{
-  width: 860px;
-  min-width: 860px;
-  max-width: 860px;
-}
+.reading-right{ flex: 0 0 1020px; }
 
 /* Overrides quand fan + tray sont dans la colonne */
 .reading-row .fan-wrap{
@@ -372,7 +365,8 @@ img { max-width: 100%; height: auto; }
   margin: 0;
 }
 .reading-row .choice-tray{
-  width: min(820px, 96vw);
+  width: 100%;
+  max-width: 1020px;
   margin: 0;
   border-top: none;
   padding-top: 0;
@@ -471,7 +465,8 @@ img { max-width: 100%; height: auto; }
   color: #f5e7a1;
   font-size: 1rem;
   background: rgba(10, 25, 47, 0.3);
-  padding: 12px;
+  padding: 8px;
+  overflow: visible;
   transition: all 0.3s ease;
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
 }
@@ -480,7 +475,9 @@ img { max-width: 100%; height: auto; }
   border: 2px solid rgba(212, 175, 55, 0.6);
   background: rgba(212, 175, 55, 0.08);
   box-shadow: 0 4px 20px rgba(212, 175, 55, 0.15);
+  padding: 6px;
 }
+
 
 /* Style spécial pour le slot Mémoire Cosmos */
 .choice-tray .slot[aria-label="Carte MÉMOIRE COSMOS"] {
@@ -537,13 +534,16 @@ img { max-width: 100%; height: auto; }
   position: relative !important;
   left: auto !important;
   top: auto !important;
-  width: 200px;
-  height: 300px;
+  width: 100%;
+  max-width: 180px;
+  aspect-ratio: 2 / 3;
+  height: auto;
   transform: none !important;
   margin: 0 auto;
   transition: all 0.5s ease;
   z-index: 10;
 }
+
 
 .card.mini .card-inner {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
@@ -962,7 +962,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   </div>
 <!-- Plateau (caché au départ) -->
 <section id="board" class="hidden" aria-live="polite">
-  <div class="flex items-center justify-between max-w-[1400px] mx-auto mb-3 px-4">
+  <div class="flex items-center justify-start max-w-[1400px] ml-6 mr-auto mb-3 px-4">
     <span class="step-chip hover:bg-gold/20 transition-colors cursor-pointer hovered-element" id="stepInfo">Étape 1/4 • Choisis ta carte ÉMOTIONS</span>
   </div>
   <div class="reading-row" id="readingRow">
@@ -1911,7 +1911,7 @@ function initPelerin(){
 
     const modal = document.createElement('div');
     modal.id = 'pelerinExitModal';
-    modal.className = 'hidden fixed inset-0 z-[300] items-center justify-center bg-night-blue/80';
+    modal.className = 'hidden fixed inset-0 z-[5000] items-center justify-center bg-night-blue/80';
     modal.style.backdropFilter = 'blur(6px)';
 
     modal.innerHTML = `
@@ -2612,12 +2612,12 @@ const STEPS = [
     const front = card.querySelector('.face.front');
     if (front) {
       front.style.padding = '0';
-      front.style.background = 'none';
-      front.innerHTML = `
-        <img src="${imgPath}"
-             alt="${item.name || ''}"
-             style="width:100%;height:100%;object-fit:cover;display:block;border-radius:var(--radius);" />
-      `;
+      front.style.background = '#000';
+     front.innerHTML = `
+  <img src="${imgPath}"
+       alt="${item.name || ''}"
+       style="width:100%;height:100%;object-fit:contain;object-position:center;display:block;background:#000;" />
+`;
     }
 
     // On masque la polarité (tes cartes l'ont déjà visuellement)
