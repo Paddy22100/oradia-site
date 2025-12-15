@@ -1113,6 +1113,15 @@ window.DATA = {
     revelations: 'revelations',
     memoire_cosmos: 'memoire_cosmos',
   };
+const BACK_IMAGES = {
+  emotions: 'images/dos/dos_emotion.png',
+  besoins: 'images/dos/dos_besoin.png',
+  transmutation: 'images/dos/dos_transmutation.png',
+  actions: 'images/dos/dos_action.png',
+  archetypes: 'images/dos/dos_archetype.png',
+  revelations: 'images/dos/dos_revelation.png',
+  memoire_cosmos: 'images/dos/dos_memoire_cosmos.png',
+};
 
   const FAMILY_ORDER = STEPS_TORE.map(s => s.key); // ordre horaire
   let arrowEl = null;
@@ -1602,6 +1611,15 @@ if (previewOverlay && previewImg) {
     `;
 
     document.body.appendChild(overlay);
+// afficher les dos Oradia dans l'éventail
+const back = BACK_IMAGES[nextFamilyKey];
+overlay.querySelectorAll('.tore-fan-card').forEach(el => {
+  if (back) {
+    el.style.backgroundImage = `url("${back}")`;
+    el.style.backgroundSize = 'cover';
+    el.style.backgroundPosition = 'center';
+  }
+});
 
     // clic sur une des cartes de l'éventail
     overlay.querySelectorAll('.tore-fan-card').forEach(cardEl => {
