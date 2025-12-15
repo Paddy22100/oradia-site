@@ -345,6 +345,54 @@ img { max-width: 100%; height: auto; }
     box-shadow: 0 12px 28px rgba(212,175,55,.25), 0 0 0 2px rgba(5,20,40,.6) inset;
   }
 }
+/* Layout Pèlerin : éventail à gauche, plateau à droite */
+.reading-row{
+  display:flex;
+  align-items:flex-start;
+  justify-content:center;
+  gap: 56px;
+  max-width: 1400px;
+  margin: 8px auto 0;
+  padding: 0 16px;
+}
+.reading-left{ flex: 0 0 auto; }
+.reading-right{flex: 0 0 860px; }
+
+/* Plateau stable */
+.reading-row .choice-tray{
+  width: 860px;
+  min-width: 860px;
+  max-width: 860px;
+}
+
+/* Overrides quand fan + tray sont dans la colonne */
+.reading-row .fan-wrap{
+  width: 520px;
+  height: 520px;
+  margin: 0;
+}
+.reading-row .choice-tray{
+  width: min(820px, 96vw);
+  margin: 0;
+  border-top: none;
+  padding-top: 0;
+}
+
+/* Responsive : pile sur mobile */
+@media (max-width: 980px){
+  .reading-row{
+    flex-direction: column;
+    align-items: center;
+    gap: 22px;
+  }
+  .reading-row .fan-wrap{
+    width: min(900px, 96vw);
+    height: 460px;
+  }
+  .reading-row .choice-tray{
+    width: min(900px, 96vw);
+  }
+}
 
 .fan-wrap{
   position:relative;
@@ -471,6 +519,18 @@ img { max-width: 100%; height: auto; }
   border-color: rgba(212, 175, 55, 0.6);
   background: rgba(212, 175, 55, 0.05);
 }
+/* Slots : respect du ratio carte */
+.slot{
+  aspect-ratio: 2 / 3;
+  overflow: visible;
+}
+
+/* Cartes dans les slots */
+.slot .card{
+  width: 100%;
+  height: auto;
+  max-height: 100%;
+}
 
 /* Mini-carte une fois ancrée en bas */
 .card.mini {
@@ -523,7 +583,11 @@ img { max-width: 100%; height: auto; }
   backdrop-filter: blur(10px);
   z-index: 1000;          /* était 50 -> passe à 1000 */
   border-top: 1px solid rgba(212, 175, 55, 0.3);
+  display: inline-flex;
+  margin-left: 0;
+  margin-right: auto;
 }
+
 header {
   position: relative;
   z-index: 1001;
@@ -898,18 +962,23 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   </div>
 <!-- Plateau (caché au départ) -->
 <section id="board" class="hidden" aria-live="polite">
-  <div class="flex items-center justify-between max-w-5xl mx-auto mb-2">
+  <div class="flex items-center justify-between max-w-[1400px] mx-auto mb-3 px-4">
     <span class="step-chip hover:bg-gold/20 transition-colors cursor-pointer hovered-element" id="stepInfo">Étape 1/4 • Choisis ta carte ÉMOTIONS</span>
   </div>
+  <div class="reading-row" id="readingRow">
+    <div class="reading-left">
+      <div class="fan-wrap" id="fanBoard"></div>
+    </div>
 
-  <div class="fan-wrap" id="fanBoard"></div>
-
-  <div class="choice-tray" id="tray">
-    <div class="slots">
-    <div class="slot" id="slot-0" aria-label="Carte ÉMOTIONS"></div>
-<div class="slot" id="slot-1" aria-label="Carte BESOINS"></div>
-<div class="slot" id="slot-2" aria-label="Carte ACTIONS"></div>
-<div class="slot" id="slot-3" aria-label="Carte MÉMOIRE COSMOS"></div>
+    <div class="reading-right">
+      <div class="choice-tray" id="tray">
+        <div class="slots">
+          <div class="slot" id="slot-0" aria-label="Carte ÉMOTIONS"></div>
+          <div class="slot" id="slot-1" aria-label="Carte BESOINS"></div>
+          <div class="slot" id="slot-2" aria-label="Carte ACTIONS"></div>
+          <div class="slot" id="slot-3" aria-label="Carte MÉMOIRE COSMOS"></div>
+        </div>
+      </div>
     </div>
   </div>
 
