@@ -1758,7 +1758,9 @@ function initPelerin(){
   const newBtn        = el('newPilgrim');
 
 // reset doux + retour direct à l’intention
-newBtn?.addEventListener('click', ()=>{
+  newBtn?.addEventListener('click', ()=>{
+  pelerinHasStarted = false;
+
   // 1) Cacher zone résultats et annexes
   hide(showBtn); if (showBtn) showBtn.disabled = true;
   hide(results);
@@ -1807,16 +1809,34 @@ newBtn?.addEventListener('click', ()=>{
 });
   if(!board || !startButton || !intentionIn) return;
 
-    // --- IMMERSION PÈLERIN (même logique que le Tore) ---
+    // --- IMMERSION PÈLERIN ---
+    
   const exitBtn = el('exitPelerinBtn');
+  let pelerinHasStarted = false;
 
-  if (exitBtn && !exitBtn.dataset.bound) {
+    if (exitBtn && !exitBtn.dataset.bound) {
     exitBtn.dataset.bound = "1";
+
     exitBtn.addEventListener('click', () => {
+      // Si un tirage a commencé → modale Oradia
+      if (pelerinHasStarted) {
+        ensurePelerinExitModal();
+        openPelerinExitModal(() => {
+          // Confirme : quitter + aller à l'accueil (index.html)
+          pelerinHasStarted = false;
+          exitPelerinImmersive();
+          window.location.href = 'index.html#accueil';
+        });
+        return;
+      }
+
+      // Sinon : quitter direct
       exitPelerinImmersive();
-      el('accueil')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      window.location.href = 'index.html#accueil';
     });
   }
+
+
 
   function enterPelerinImmersive(){
     document.body.classList.add('hide-immersive-pelerin');
@@ -1831,6 +1851,76 @@ newBtn?.addEventListener('click', ()=>{
 
   window.exitPelerinImmersive = exitPelerinImmersive;
   window.enterPelerinImmersive = enterPelerinImmersive;
+  // --- MODALE ORADIA : confirmation quitter ---
+  function ensurePelerinExitModal(){
+    if (el('pelerinExitModal')) return;
+
+    const modal = document.createElement('div');
+    modal.id = 'pelerinExitModal';
+    modal.className = 'hidden fixed inset-0 z-[300] items-center justify-center bg-night-blue/80';
+    modal.style.backdropFilter = 'blur(6px)';
+
+    modal.innerHTML = `
+      <div class="w-[92vw] max-w-xl rounded-2xl border border-gold/30 shadow-2xl"
+           style="background:linear-gradient(145deg, rgba(26,54,93,0.88), rgba(5,20,40,0.92));">
+        <div class="p-6 border-b border-gold/20 flex items-start justify-between gap-4">
+          <div>
+            <div class="cormorant text-2xl md:text-3xl font-bold gold-gradient">Quitter le tirage ?</div>
+            <div class="text-light-gold mt-2">Ton tirage en cours sera perdu.</div>
+          </div>
+          <button id="pelerinExitClose" class="text-gold text-2xl leading-none" aria-label="Fermer">×</button>
+        </div>
+
+        <div class="p-6 flex flex-col md:flex-row gap-3 md:justify-end">
+          <button id="pelerinExitCancel"
+                  class="px-5 py-3 rounded-xl border border-gold/40 text-gold hover:bg-gold hover:text-night-blue transition">
+            Annuler
+          </button>
+          <button id="pelerinExitConfirm" class="btn-gold px-6 py-3 rounded-xl">
+            Oui, quitter
+          </button>
+        </div>
+      </div>
+    `;
+
+    document.body.appendChild(modal);
+
+    // click backdrop = annuler
+    modal.addEventListener('click', (e)=>{
+      if (e.target === modal) closePelerinExitModal();
+    });
+
+    modal.querySelector('#pelerinExitClose')?.addEventListener('click', closePelerinExitModal);
+    modal.querySelector('#pelerinExitCancel')?.addEventListener('click', closePelerinExitModal);
+
+    // ESC pour fermer
+    document.addEventListener('keydown', (e)=>{
+      if(e.key === 'Escape' && !modal.classList.contains('hidden')) closePelerinExitModal();
+    });
+  }
+
+  function openPelerinExitModal(onConfirm){
+    const modal = el('pelerinExitModal');
+    if(!modal) return;
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+    document.body.style.overflow = 'hidden';
+
+    const confirmBtn = modal.querySelector('#pelerinExitConfirm');
+    // évite double-binding
+    confirmBtn.onclick = () => {
+      closePelerinExitModal();
+      onConfirm?.();
+    };
+  }
+
+  function closePelerinExitModal(){
+    const modal = el('pelerinExitModal');
+    if(!modal) return;
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+    document.body.style.overflow = '';
+  }
 
 function ensureImmersiveMenu(){
   if(el('immersiveMenuPanel')) return;
@@ -1909,8 +1999,7 @@ function isOpenQuestion(txt){
     intentionIn.parentElement.classList.add('ring-4', 'ring-gold/20');
   });
 
-  
-  intentionIn.addEventListener('blur', () => {
+    intentionIn.addEventListener('blur', () => {
     intentionIn.parentElement.classList.remove('ring-4', 'ring-gold/20');
   });
 // lancer le tirage (on garde vos visuels & animations)
@@ -1936,10 +2025,11 @@ if(!isOpenQuestion(intentionIn.value)){
   ensureImmersiveMenu();
   enterPelerinImmersive();
 
+ pelerinHasStarted = true;
  show(board);
 el('cardsInstruction')?.classList.remove('hidden');
 hide(startButton);
-el('intentionBox')?.classList.add('hidden'); // 👈 masque le formulaire
+el('intentionBox')?.classList.add('hidden'); //  masque le formulaire
 
 $$('#board .card').forEach(card=>{
 
@@ -1989,9 +2079,12 @@ $$('#board .card').forEach(card=>{
   });
   // reset
   resetBtn?.addEventListener('click', ()=>{
+    pelerinHasStarted = false;
+
     // Rediriger vers l'accueil
     window.location.href = '#accueil';
-    document.getElementById('accueil')?.scrollIntoView({behavior: 'smooth'});
+document.getElementById('accueil')?.scrollIntoView({behavior: 'smooth', block: 'start'});
+
     
     // Réinitialiser l'état du tirage
     hide(showBtn); showBtn && (showBtn.disabled=true);
@@ -2017,7 +2110,7 @@ $$('#board .card').forEach(card=>{
     
     // Quitter le mode immersif
     exitPelerinImmersive();
-    el('exitPelerinBtn')?.remove();
+  
 
   });
 // support tactile flip
