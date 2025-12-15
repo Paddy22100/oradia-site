@@ -141,7 +141,7 @@ body.hide-immersive-pelerin > section:not(#oracle):not(#board):not(#results){
     .face{ position:absolute; inset:0; backface-visibility:hidden; border-radius:var(--radius); overflow:hidden; border:1px solid rgba(212,175,55,.45) }
     .back{  display:grid;  place-items:center;  background-color:#020817;  background-size:cover;  background-repeat:no-repeat;  background-position:center;  cursor:pointer;}
 
-    /* Dos par famille (comme le Tore) */
+    /* Dos par famille */
 .card[data-family="emotions"] .back{
   background-image:url("images/dos/dos_emotion.png");
 }
@@ -833,7 +833,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
    <!-- Tirage du Pèlerin -->
   <section id="oracle" class="py-12 md:py-20 px-4 md:px-6 hidden">
     <!-- Bouton retour mode immersif (comme le Tore) -->
-<button id="exitPelerinBtn"
+<button id="exitPelerinBtn" type="button"
         class="fixed top-4 left-4 hidden z-50 bg-gold text-night-blue font-bold px-4 py-2 rounded-lg shadow-lg">
   <i class="fas fa-arrow-left mr-2"></i>Quitter le tirage
 </button>
@@ -843,26 +843,13 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-2">Tirage du Pèlerin</h2>
         <p class="text-light-gold max-w-3xl mx-auto">Une question simple, un pas sur le chemin.</p>
       </div>
-  <!-- Intention - Version améliorée -->
-  <div id="intentionBox" class="relative bg-gradient-to-br from-night-blue/95 to-dark-blue/98 border border-gold/30 rounded-2xl p-6 md:p-8 mb-8 shadow-xl overflow-hidden">
-    <!-- Effets de fond cosmique -->
-    <div class="absolute inset-0 z-0 opacity-30 pointer-events-none">
-      <!-- Particules dorées flottantes -->
-      <div class="absolute top-1/4 left-1/4 w-1 h-1 bg-gold/60 rounded-full animate-pulse" style="animation-delay: 0s;"></div>
-      <div class="absolute top-1/3 right-1/4 w-1 h-1 bg-gold/40 rounded-full animate-pulse" style="animation-delay: 1s;"></div>
-      <div class="absolute bottom-1/4 left-1/3 w-1 h-1 bg-light-gold/50 rounded-full animate-pulse" style="animation-delay: 2s;"></div>
-      <!-- Lignes d'énergie subtiles -->
-      <div class="absolute top-0 left-1/2 w-px h-full bg-gradient-to-b from-transparent via-gold/10 to-transparent"></div>
-      <div class="absolute top-1/2 left-0 w-full h-px bg-gradient-to-r from-transparent via-gold/10 to-transparent"></div>
-    </div>
-    
+  <!-- Intention -->
+  <div id="intentionBox" class="relative rounded-2xl border border-gold/20 bg-night-blue/60 backdrop-blur-sm p-8 md:p-10 mb-10 shadow-xl">
+       
     <div class="relative z-10">
       <!-- En-tête élégant -->
       <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-20 h-20 md:w-24 md:h-24 bg-gradient-to-br from-gold/20 to-gold/5 rounded-full border-2 border-gold/40 mb-6 relative">
-          <div class="absolute inset-0 rounded-full border-2 border-gold/20 animate-ping" style="animation-duration: 3s;"></div>
-          <i class="fas fa-compass text-2xl md:text-3xl text-gold relative z-10"></i>
-        </div>
+           
         <h3 class="cormorant text-3xl md:text-4xl text-gold mb-4 text-glow">Formulez votre intention</h3>
         <p class="text-light-gold/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
           Prenez un moment, connectez-vous à votre essence et laissez émerger votre question la plus authentique
@@ -889,11 +876,9 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
               <div class="flex items-center justify-between mt-3 px-2">
                 <div class="flex items-center text-gold/60 text-sm">
                   <i class="fas fa-info-circle mr-2"></i>
-                  <span>Formulez une question ouverte</span>
+                  <span>Formulez une question ouverte se terminant par un ?</span>
                 </div>
-                <div class="flex items-center text-gold/60 text-sm">
-                  <i class="fas fa-question-circle mr-2"></i>
-                  <span>Terminez par "?"</span>
+         
                 </div>
               </div>
             </div>
@@ -903,7 +888,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       
       <!-- Bouton de démarrage premium -->
       <div class="text-center mt-8">
-        <button id="startReading" class="btn-gold px-10 py-5 text-lg md:text-xl font-semibold hover:scale-105 transition-all duration-300 rounded-2xl relative overflow-hidden button-particles" disabled>
+        <button id="startReading" class="btn-gold px-10 py-4 text-lg rounded-2xl relative overflow-hidden" disabled>
           <div class="absolute inset-0 bg-gradient-to-r from-gold/20 to-light-gold/20 transform hover:scale-110 transition-transform duration-300"></div>
           <i class="fas fa-play-circle mr-3 relative z-10"></i>
           <span class="relative z-10">Commencer le voyage</span>
@@ -1825,14 +1810,14 @@ function initPelerin(){
           // Confirme : quitter + aller à l'accueil (index.html)
           pelerinHasStarted = false;
           exitPelerinImmersive();
-          window.location.href = 'index.html#accueil';
+          window.location.href = '/index.html#accueil';
         });
         return;
       }
 
       // Sinon : quitter direct
       exitPelerinImmersive();
-      window.location.href = 'index.html#accueil';
+      window.location.href = '/index.html#accueil';
     });
   }
 
