@@ -200,7 +200,7 @@
 
 /* Transmutation → décalé encore plus à gauche */
 .tore-card.pos-2 {
-  transform: translate(-70px, 4%);   /* X = -30px pour aller à gauche */
+  transform: translate(-70px, -30px);   /* X = -30px pour aller à gauche */
 }
 
 /* Mémoire Cosmos (centre) */
@@ -210,10 +210,8 @@
 
 /* Archétype → décalé plus à droite */
 .tore-card.pos-4 {
-  transform: translate(70px, 0);     /* X = +30px pour aller à droite */
+  transform: translate(70px, -30px);     /* X = +30px pour aller à droite */
 }
-
-
 
 
   /* Disposition des piles :
@@ -229,11 +227,9 @@
   */
   #tore-immersif .tore-board-7 .pos-5 { grid-area: 1 / 1; }
   #tore-immersif .tore-board-7 .pos-3 { grid-area: 1 / 3; }
-
   #tore-immersif .tore-board-7 .pos-2 { grid-area: 2 / 1; }
   #tore-immersif .tore-board-7 .pos-6 { grid-area: 2 / 2; }
   #tore-immersif .tore-board-7 .pos-4 { grid-area: 2 / 3; }
-
   #tore-immersif .tore-board-7 .pos-0 { grid-area: 3 / 1; }
   #tore-immersif .tore-board-7 .pos-1 { grid-area: 3 / 3; }
 
@@ -242,15 +238,13 @@
 }
 
 /* Cartes un peu plus petites pour rentrer pile dans les cadres */
-.tore-card {
-  width: min(260px, 26vw);   /* cartes nettement plus grandes */
+.tore-card{
+  width: clamp(170px, 17vw, 230px); /* taille stable = moins de collisions */
   aspect-ratio: 64 / 90;
   height: auto;
   perspective: 1000px;
   position: relative;
 }
-
-
 
   @media (max-width: 860px) {
     #tore-immersif .tore-board-7 {
@@ -1604,8 +1598,7 @@ if (previewOverlay && previewImg) {
           <div class="tore-fan-card" data-slot="3"></div>
           <div class="tore-fan-card" data-slot="4"></div>
         </div>
-        <button type="button" class="tore-extra-cancel">Fermer</button>
-      </div>
+             </div>
     `;
 
     document.body.appendChild(overlay);
@@ -1757,7 +1750,7 @@ if (tmp >= STEPS_TORE.length) {
     intro.classList.add('hidden');
     form.classList.remove('hidden');
   });
-  
+
 toAnalysisBtn?.addEventListener('click', () => {
   // afficher la zone résultats (si tu l'utilises pour l'analyse)
   results?.classList.remove('hidden');

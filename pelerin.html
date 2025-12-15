@@ -357,6 +357,33 @@ img { max-width: 100%; height: auto; }
 }
 .reading-left{ flex: 0 0 auto; }
 .reading-right{ flex: 0 0 1020px; }
+/* Zone éventail + CTA */
+.fan-stage{
+  position: relative;
+  width: 520px;
+  height: 520px;
+}
+
+.fan-stage .fan-wrap{
+  width: 100%;
+  height: 100%;
+}
+
+/* Bouton AU-DESSUS de l’éventail */
+.fan-stage .cta-analyse{
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2000;
+}
+
+/* Éventail “désactivé” quand analyse dispo */
+#fanBoard.fan-dim{
+  opacity: .28;            /* effet “désactivé” */
+  filter: saturate(.85);
+  pointer-events: none;    /* plus cliquable */
+}
 
 /* Overrides quand fan + tray sont dans la colonne */
 .reading-row .fan-wrap{
@@ -966,9 +993,18 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
     <span class="step-chip hover:bg-gold/20 transition-colors cursor-pointer hovered-element" id="stepInfo">Étape 1/4 • Choisis ta carte ÉMOTIONS</span>
   </div>
   <div class="reading-row" id="readingRow">
-    <div class="reading-left">
-      <div class="fan-wrap" id="fanBoard"></div>
-    </div>
+<div class="reading-left">
+  <div class="fan-stage">
+    <div class="fan-wrap" id="fanBoard"></div>
+
+    <button id="showResults"
+      class="cta-analyse hidden px-6 py-3 border border-gold/40 rounded-full text-gold hover:bg-gold hover:text-dark-blue transition disabled:opacity-40"
+      disabled>
+      Afficher l’analyse
+    </button>
+  </div>
+</div>
+
 
     <div class="reading-right">
       <div class="choice-tray" id="tray">
@@ -1814,6 +1850,9 @@ function initPelerin(){
 // reset doux + retour direct à l’intention
   newBtn?.addEventListener('click', ()=>{
   pelerinHasStarted = false;
+document.getElementById('fanBoard')?.classList.remove('fan-dim');
+document.getElementById('showResults')?.classList.add('hidden');
+document.getElementById('showResults').disabled = true;
 
   // 1) Cacher zone résultats et annexes
   hide(showBtn); if (showBtn) showBtn.disabled = true;
@@ -2134,6 +2173,9 @@ $$('#board .card').forEach(card=>{
   // reset
   resetBtn?.addEventListener('click', ()=>{
     pelerinHasStarted = false;
+document.getElementById('fanBoard')?.classList.remove('fan-dim');
+document.getElementById('showResults')?.classList.add('hidden');
+document.getElementById('showResults').disabled = true;
 
     // Rediriger vers l'accueil
     window.location.href = '#accueil';
@@ -2790,17 +2832,13 @@ const STEPS = [
                     renderFan();
                 } else {
     stepInfo.textContent = 'Sélection terminée';
-    const board = document.getElementById('board');
-    const fan   = document.getElementById('fanBoard');
+const fan = document.getElementById('fanBoard');
 
-    showBtn.classList.remove('hidden');
-    showBtn.disabled = false;
-    showBtn.classList.add('cta-analyse');      // applique le style overlay
+showBtn.classList.remove('hidden');
+showBtn.disabled = false;
 
-    // place le bouton AVANT l’éventail pour qu’il flotte dessus
-    if (board && fan && showBtn.parentElement !== board) {
-      board.insertBefore(showBtn, fan);
-    }
+fan?.classList.add('fan-dim'); // dim + désactive l’éventail
+
 }
             }, 800);
         }, 2000); // 2 secondes après le zoom
