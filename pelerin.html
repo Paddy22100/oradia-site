@@ -943,7 +943,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
            
         <h3 class="cormorant text-3xl md:text-4xl text-gold mb-4 text-glow">Formulez votre intention</h3>
         <p class="text-light-gold/90 text-base md:text-lg max-w-2xl mx-auto leading-relaxed">
-          Prenez un moment, connectez-vous à votre essence et laissez émerger votre question la plus authentique
+          Prenez un moment, connectez-vous à votre essence et laissez émerger votre question la plus authentique.
         </p>
       </div>
             <div class="flex flex-col gap-8">
@@ -1522,13 +1522,13 @@ window.DATA = {
     {name:"LIBERTÉ",        quote:"Le vent brise les clôtures invisibles.", bridge:"Choisir la route ouverte sans regret.", polarity:"yang"},
     {name:"SOUTIEN",        quote:"Deux troncs s’appuient et forment un arc.", bridge:"Oser tendre la main et accueillir la force commune.", polarity:"yin"},
     {name:"REPOS",          quote:"Le corps se dépose, la rivière s’apaise.", bridge:"Boire au silence pour renaître.", polarity:"yin"},
-    {name:"CLAIRETÉ",       quote:"Le soleil perce la brume.", bridge:"Nommer la vérité simple qui s’impose.", polarity:"yang"},
+    {name:"CLARETÉ",       quote:"Le soleil perce la brume.", bridge:"Nommer la vérité simple qui s’impose.", polarity:"yang"},
     {name:"APPARTENANCE",   quote:"Le cercle s’ouvre pour accueillir.", bridge:"Affirmer sa place au sein du groupe.", polarity:"yin"},
     {name:"AUTONOMIE",      quote:"La tige se redresse seule.", bridge:"Décider sans rompre avec ses racines.", polarity:"yang"},
     {name:"STIMULATION",    quote:"L’étincelle jaillit et anime la marche.", bridge:"Suivre l’appel du nouveau, sans dispersion.", polarity:"yang"},
     {name:"HARMONIE",       quote:"La lyre vibre de cordes accordées.", bridge:"Ajuster la dissonance et retrouver le chant juste.", polarity:"yin"},
     {name:"AMOUR REÇU",     quote:"Le cœur s’ouvre comme une coupe.", bridge:"Accueillir sans craindre la tendresse.", polarity:"yang"},
-    {name:"SENS",           quote:"La marche trace un sillon vers le tout.", bridge:"Questionner l’origine pour trouver direction.", polarity:"yin"},
+    {name:"LE SENS",           quote:"La marche trace un sillon vers le tout.", bridge:"Questionner l’origine pour trouver direction.", polarity:"yin"},
     {name:"PROTECTION",     quote:"Le manteau couvre de chaleur.", bridge:"Se mettre à l’abri pour reprendre force.", polarity:"yin"},
     {name:"EXPANSION",      quote:"L’horizon s’élargit et appelle.", bridge:"Oser franchir les limites intérieures.", polarity:"yang"},
     {name:"INTIMITÉ",       quote:"L’alcôve garde le secret des âmes.", bridge:"Ouvrir doucement l’espace choisi.", polarity:"yin"},
@@ -2516,8 +2516,16 @@ function generateAnalysis({ em, be, ac, co, intention }) {
           document.querySelector(`#board .card[data-family="${fam}"].flipped`) ||
           document.querySelector(`#board .card[data-family="${fam}"]`);
         if (!card) return { name:'—', quote:'' };
-        const name  = card.querySelector('[data-name]')?.textContent?.trim() || '—';
-        const quote = card.querySelector('[data-quote]')?.textContent?.trim() || '';
+        const name  =
+  card.querySelector('[data-name]')?.textContent?.trim()
+  || card.dataset.card
+  || '—';
+
+const quote =
+  card.querySelector('[data-quote]')?.textContent?.trim()
+  || card.dataset.quote
+  || '';
+
         return { name, quote };
       };
 
@@ -2641,7 +2649,8 @@ const STEPS = [
   function clearFan(){ fan.innerHTML = ''; }
 
        function fillFront(card, familyKey){
-    const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : [];
+    const dataKey = (familyKey === 'cosmos') ? 'cosmos' : familyKey;
+const pool = Array.isArray(window.DATA?.[dataKey]) ? window.DATA[dataKey] : [];
     const raw  = pool[Math.floor(Math.random() * pool.length)];
     if (!raw) return;
 
@@ -2674,6 +2683,7 @@ const STEPS = [
     card.dataset.card     = item.name || '';
     card.dataset.polarity = item.polarity || '';
     card.dataset.img      = imgPath;
+    card.dataset.quote = item.quote || '';
   }
 
       function renderFan(){
