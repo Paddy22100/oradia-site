@@ -1666,20 +1666,21 @@ function showArrowForStep(stepIndex, isMatch) {
       // Lancer la pièce de tirage : 1 lancer par famille, dans l'ordre STEPS_TORE
   function launchCoin() {
     if (!coin || !boardHost) return;
+
 // On saute Mémoire Cosmos : pas de polarité → pas de tirage de pièce pour cette famille
 while (toreThrowIndex < STEPS_TORE.length && STEPS_TORE[toreThrowIndex].key === 'memoire_cosmos') {
   toreThrowIndex += 1;
 }
-// Si c'était le dernier lancer (on saute Mémoire Cosmos), on remplace la pièce par le bouton Analyse
-let tmp = toreThrowIndex;
-while (tmp < STEPS_TORE.length && STEPS_TORE[tmp].key === 'memoire_cosmos') tmp++;
 
-if (tmp >= STEPS_TORE.length) {
-  // plus rien à lancer
-  coin?.classList.remove('glow');     // stop halo
-  coin.dataset.locked = '1';          // bloque les clics restants
+// Si plus rien à lancer → on remplace la pièce par le bouton Analyse
+if (toreThrowIndex >= STEPS_TORE.length) {
+  coin.classList.remove('glow');
+  coin.dataset.locked = '1';
   showToreAnalysisCTA();
+  return;
 }
+
+
   // On ne lance la pièce que pour les familles avec polarité (Mémoire Cosmos exclue)
 
     if (toreThrowIndex >= STEPS_TORE.length) {
@@ -1752,16 +1753,30 @@ if (tmp >= STEPS_TORE.length) {
       }
 
       // Déverrouille le plateau
-      boardHost.classList.remove('board-locked');
+boardHost.classList.remove('board-locked');
 
-      // Retour de la lueur pulsante + préparation prochain lancer
-      coin.dataset.locked = '0';
-      coin.classList.add('glow');
+// ✅ on passe à la famille suivante
+toreThrowIndex += 1;
 
-      toreThrowIndex += 1; // on passe à la famille suivante pour le prochain lancer
-    }, 1000);
-  }
+// ✅ on saute Mémoire Cosmos si on tombe dessus
+while (toreThrowIndex < STEPS_TORE.length && STEPS_TORE[toreThrowIndex].key === 'memoire_cosmos') {
+  toreThrowIndex += 1;
+}
 
+// ✅ si terminé après ce lancer → CTA tout de suite (pas besoin d’un clic en plus)
+if (toreThrowIndex >= STEPS_TORE.length) {
+  coin.classList.remove('glow');
+  coin.dataset.locked = '1';
+  showToreAnalysisCTA();
+  return;
+}
+
+// Sinon, on réactive la pièce pour le lancer suivant
+coin.dataset.locked = '0';
+coin.classList.add('glow');
+
+}, 1000);
+}
   // --- listeners principaux ---
 
   startBtn?.addEventListener('click', () => {
@@ -1815,13 +1830,9 @@ toAnalysisBtn?.addEventListener('click', () => {
     window.location.href = '/index.html#accueil';
   });
 }
-
-}
-)();
+})();
 </script>
 
-
- 
 </footer>
   <script>
   const mobileBtn = document.getElementById("mobileMenuBtn");
