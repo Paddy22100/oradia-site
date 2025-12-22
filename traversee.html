@@ -309,7 +309,7 @@ fontFamily: {
   background-image: url("images/dos/dos_revelation.png");
 }
 
-.traversee-card[data-family="memoire_cosmos"] .traversee-card-back {
+.traversee-card[data-family="cosmos"] .traversee-card-back {
   background-image: url("images/dos/dos_memoire_cosmos.png");
 }
 
@@ -1536,7 +1536,7 @@ const DATA_TRAVERSEE = new Proxy({}, {
       ${slot('sud','transmutation')}
       ${slot('est','actions')}
       ${slot('ouest','emotions')}
-      ${slot('centre','memoire_cosmos')}
+      ${slot('centre','cosmos')}
     </div>
   `;
   host.classList.remove('hidden');
@@ -1746,7 +1746,7 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
     // Gérer les cas spéciaux de noms de dossiers
     const folderMap = {
       'transmutation': 'transmutations',
-      'memoire_cosmos': 'cosmos',
+      'cosmos': 'memoire_cosmos',  // Mise à jour du chemin vers le bon dossier
       // Pour les autres familles, on utilise le nom tel quel
     };
     
