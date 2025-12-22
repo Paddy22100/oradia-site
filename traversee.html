@@ -1609,15 +1609,6 @@ const DATA_TRAVERSEE = new Proxy({}, {
       
       console.log(`Événements initialisés pour la carte ${index + 1}`);
     });
-    
-    // Tester le retournement de la première carte après un court délai
-    setTimeout(() => {
-      const firstCard = cards[0];
-      if (firstCard) {
-        console.log('Test: retournement automatique de la première carte');
-        flipCard(firstCard);
-      }
-    }, 500);
   };
   
   // Attacher les événements après un court délai
@@ -1637,16 +1628,15 @@ const DATA_TRAVERSEE = new Proxy({}, {
       void card.offsetHeight;
     });
     
-    // Tester le retournement d'une carte après un court délai
+    // Vérification des cartes après un court délai
     setTimeout(() => {
       const testCard = document.querySelector('.traversee-card');
       if (testCard) {
-        console.log('Testing flip on first card...');
-        testCard.classList.add('flipped');
+        console.log('Vérification des cartes...');
         
         // Vérifier si la classe a été appliquée
         setTimeout(() => {
-          console.log('Card classes after forced flip:', testCard.className);
+          console.log('Classes de la première carte:', testCard.className);
           const inner = testCard.querySelector('.traversee-card-inner');
           if (inner) {
             console.log('Inner transform after forced flip:', window.getComputedStyle(inner).transform);
@@ -1799,12 +1789,45 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
     return `${basePath}.png`;
   }
 
+  // Fonction utilitaire pour mettre à jour le contenu de la carte
+  function updateCardContent(card, data, imgPath) {
+    const front = card.querySelector('.traversee-card-front');
+    if (!front) return;
+    
+    // Sauvegarder l'élément de polarité s'il existe
+    const polarityContainer = front.querySelector('.polarity-container');
+    const polarityElement = polarityContainer ? polarityContainer.querySelector('[data-pol]') : null;
+    
+    // Mettre à jour le contenu de la carte
+    front.innerHTML = `
+      <div class="card-image-container">
+        <img src="${imgPath}" 
+             alt="${data?.name || ''}" 
+             class="card-image"
+             onerror="this.onerror=null; this.style.display='none'; this.parentElement.style.background='rgba(5,20,40,0.5)';"/>
+      </div>
+      <div class="card-details">
+        <div class="card-name">${data?.name || "—"}</div>
+        <div class="card-quote">${data?.quote || "—"}</div>
+      </div>
+      <div class="polarity-container">
+        ${polarityElement ? polarityElement.outerHTML : '<span class="polarity" data-pol></span>'}
+      </div>
+    `;
+    
+    return front.querySelector('[data-pol]');
+  }
+
   function flipCard(card, forceFlip = false) {
     console.log('Début de flipCard:', { 
       slot: card?.dataset?.slot, 
       forceFlip,
       isFlipped: card?.classList?.contains('flipped')
     });
+    
+    // Déclarer intentionField en haut de la fonction pour qu'elle soit disponible partout
+    const tForm = el('traversee-form');
+    const intentionField = tForm?.querySelector('textarea, input[type="text"]');
     
     // Vérifier si la carte est valide
     if (!card) {
@@ -1821,8 +1844,6 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
     // Vérification de l'intention uniquement si on ne force pas le retournement
     if (!forceFlip) {
       // on exige que l'intention de la Traversée soit remplie (dans le formulaire de la section Traversée)
-      const tForm = el('traversee-form');
-      const intentionField = tForm?.querySelector('textarea, input[type="text"]');
       if (intentionField && !intentionField.value.trim()) {
         intentionField.focus();
         intentionField.setCustomValidity("Veuillez saisir votre intention pour ce tirage.");
@@ -1839,23 +1860,9 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
 
     // Récupérer le chemin de l'image
     const imgPath = buildImagePath(fam, data);
-    const front = card.querySelector('.traversee-card-front');
     
-    // Mettre à jour le contenu de la face avant avec l'image
-    if (front) {
-      front.innerHTML = `
-        <div class="card-image-container">
-          <img src="${imgPath}" 
-               alt="${data?.name || ''}" 
-               class="card-image"
-               onerror="this.onerror=null; this.src='images/placeholder-card.jpg';" />
-        </div>
-        <div class="card-details">
-          <div class="card-name">${data?.name || "—"}</div>
-          <div class="card-quote">${data?.quote || "—"}</div>
-        </div>
-      `;
-    }
+    // Mettre à jour le contenu de la carte
+    const polEl = updateCardContent(card, data, imgPath);
     
     // Stocker les informations de la carte dans des attributs de données pour référence
     card.dataset.cardName = data?.name || "—";
@@ -1873,18 +1880,23 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
     };
     card.dataset.cardFamily = familyNames[fam] || "—";
     
-    const polEl = card.querySelector('[data-pol]');
-    if(slot === 'centre'){ 
-      polEl.style.visibility='hidden'; 
-      polEl.textContent='';
-      
-      // Mise en valeur spéciale pour la carte centre
-      card.style.boxShadow = "0 0 25px rgba(245, 231, 161, 0.5)";
-      card.querySelector('.traversee-card-front').style.background = "linear-gradient(145deg, rgba(245, 231, 161, 0.15), rgba(5,20,40,.9))";
-      card.querySelector('.traversee-card-front').style.borderColor = "rgba(245, 231, 161, 0.6)";
-    } else { 
-      polEl.style.visibility='visible'; 
-      polEl.textContent = data?.polarity ? polIcon(data.polarity) : ''; 
+    // Mettre à jour la polarité
+    if (polEl) {
+      if(slot === 'centre'){ 
+        polEl.style.visibility = 'hidden'; 
+        polEl.textContent = '';
+        
+        // Mise en valeur spéciale pour la carte centre
+        card.style.boxShadow = "0 0 25px rgba(245, 231, 161, 0.5)";
+        const front = card.querySelector('.traversee-card-front');
+        if (front) {
+          front.style.background = "linear-gradient(145deg, rgba(245, 231, 161, 0.15), rgba(5,20,40,.9))";
+          front.style.borderColor = "rgba(245, 231, 161, 0.6)";
+        }
+      } else { 
+        polEl.style.visibility = 'visible'; 
+        polEl.textContent = data?.polarity ? polIcon(data.polarity) : ''; 
+      }
     }
 
     // Mettre à jour l'état de la carte
