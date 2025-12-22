@@ -128,8 +128,7 @@ fontFamily: {
     .card.flipped .card-inner{ transform:rotateY(180deg) }
     .face{ position:absolute; inset:0; backface-visibility:hidden; border-radius:var(--radius); overflow:hidden; border:1px solid rgba(212,175,55,.45) }
     .back{ display:grid; place-items:center; background: radial-gradient(800px 500px at 50% 40%, rgba(212,175,55,.10), transparent 60%), linear-gradient(135deg, #0b1d3a, #08152c); cursor:pointer }
-    .logo-circle{ width:140px;height:140px;border-radius:50%; border:6px solid var(--dore); display:grid;place-items:center; position:relative }
-    .logo-circle::after{ content:"ORADIA"; color:var(--dore); font-weight:700; letter-spacing:1px }
+    .logo-circle{ display: none; }
     .front{ transform:rotateY(180deg); background: radial-gradient(900px 600px at 30% -10%, rgba(212,175,55,.15), transparent 60%), linear-gradient(165deg, #0c1f40, #0b1d3a 45%, #0a1833 100%); display:flex; flex-direction:column }
     .front .topbar{ display:flex; align-items:center; justify-content:space-between; gap:8px; padding:12px 14px; border-bottom:1px solid rgba(212,175,55,.25) }
     .chip{ font-size:.78rem; padding:6px 10px; border-radius:999px; border:1px solid rgba(212,175,55,.45); color:#d4af37; background:rgba(18,20,32,.45) }
@@ -141,8 +140,7 @@ fontFamily: {
     /* Responsive améliorations pour mobile */
     @media (max-width: 640px) {
         .card { height: 320px; }
-        .logo-circle { width: 100px; height: 100px; }
-        .logo-circle::after { font-size: 0.9rem; }
+        .logo-circle { display: none; }
         .front .topbar { padding: 8px 10px; }
         .chip { font-size: 0.7rem; padding: 4px 8px; }
         .polarity { font-size: 1rem; }
@@ -153,8 +151,7 @@ fontFamily: {
     
     @media (max-width: 480px) {
         .card { height: 280px; width: 85vw; }
-        .logo-circle { width: 80px; height: 80px; border-width: 4px; }
-        .logo-circle::after { font-size: 0.8rem; }
+        .logo-circle { display: none; }
         .front .topbar { padding: 6px 8px; }
         .chip { font-size: 0.65rem; padding: 3px 6px; }
         .polarity { font-size: 0.9rem; }
@@ -165,8 +162,7 @@ fontFamily: {
     
     @media (max-width: 360px) {
         .card { height: 250px; }
-        .logo-circle { width: 70px; height: 70px; }
-        .logo-circle::after { font-size: 0.7rem; }
+        .logo-circle { display: none; }
         .chip { font-size: 0.6rem; padding: 2px 4px; }
         .polarity { font-size: 0.8rem; }
         .art { margin: 4px; padding: 6px; }
@@ -189,13 +185,27 @@ fontFamily: {
     .result-lines{ padding:12px; border-radius:12px; background:rgba(11,29,58,.6); border:1px solid rgba(212,175,55,.2) }
     .hide-sections { display: none !important; }
 
-/* --- Traversée : plateau en croix 5 cartes --- */
-.traversee-board-5{
-  display:grid;
-  grid-template-columns:repeat(3, minmax(0,1fr));
-  grid-template-rows:repeat(3, auto);
-  gap:16px;
-  place-items:center;
+/* === PLATEAU DE LA TRAVERSÉE === */
+.traversee-board-5 {
+  position: relative;
+  width: min(1000px, 90vw);
+  aspect-ratio: 1/1;
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: repeat(3, 1fr);
+  gap: 1.5rem;
+  place-items: center;
+  background-image: url("images/plateau.jpeg");
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding: 5%;
+  margin: 2rem auto;
+  border-radius: 12px;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+  background-color: rgba(10, 25, 47, 0.8);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  overflow: visible; /* Permet aux cartes de déborder légèrement si nécessaire */
 }
 .traversee-board-5 .nord   { grid-area: 1 / 2; }
 .traversee-board-5 .sud    { grid-area: 3 / 2; }
@@ -204,33 +214,77 @@ fontFamily: {
 .traversee-board-5 .centre { grid-area: 2 / 2; }
 
 /* Traversée : même gabarit + flip 3D que le Pèlerin */
-.traversee-card{
-  width: min(280px, 90vw);
-  height: 400px;
+.traversee-card {
+  width: 100%;
+  max-width: 220px;
+  height: 320px;
   perspective: 1000px;
+  position: relative;
+  margin: 0 auto;
 }
 @media (max-width: 400px){
   .traversee-card{ height: 360px; }
 }
 
-.traversee-card-inner{
+.traversee-card-inner {
   position: relative;
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
   transition: transform 800ms cubic-bezier(.2, .65, .2, 1), box-shadow .3s;
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
+  border-radius: 12px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  will-change: transform;
 }
 
 .traversee-card-back,
-.traversee-card-front{
+.traversee-card-front {
   position: absolute;
   inset: 0;
   backface-visibility: hidden;
-  border-radius: var(--radius);
+  border-radius: 18px;
   overflow: hidden;
-  border: 1px solid rgba(212,175,55,.45);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+}
+
+.traversee-card-back {
+  background-color: #020817;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-position: center;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Dos par famille */
+.traversee-card[data-family="emotions"] .traversee-card-back {
+  background-image: url("images/dos/dos_emotion.png");
+}
+
+.traversee-card[data-family="besoins"] .traversee-card-back {
+  background-image: url("images/dos/dos_besoin.png");
+}
+
+.traversee-card[data-family="transmutation"] .traversee-card-back {
+  background-image: url("images/dos/dos_transmutation.png");
+}
+
+.traversee-card[data-family="actions"] .traversee-card-back {
+  background-image: url("images/dos/dos_action.png");
+}
+
+.traversee-card[data-family="archetypes"] .traversee-card-back {
+  background-image: url("images/dos/dos_archetype.png");
+}
+
+.traversee-card[data-family="revelations"] .traversee-card-back {
+  background-image: url("images/dos/dos_revelation.png");
+}
+
+.traversee-card[data-family="memoire_cosmos"] .traversee-card-back {
+  background-image: url("images/dos/dos_memoire_cosmos.png");
 }
 
 .traversee-card-front{ transform: rotateY(180deg); }
@@ -856,6 +910,72 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   #synthese details { border-left: 2px solid rgba(212,175,55,0.25); padding-left: .75rem; }
   #synthese summary { font-weight: 600; }
 
+  /* Styles pour l'affichage des images des cartes */
+  .traversee-card-front {
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    padding: 0;
+  }
+
+  .card-image-container {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px;
+    background: rgba(5, 20, 40, 0.7);
+  }
+
+  .card-image {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    border-radius: 4px;
+  }
+
+  .card-details {
+    padding: 12px;
+    background: rgba(5, 20, 40, 0.9);
+    border-top: 1px solid rgba(212, 175, 55, 0.3);
+  }
+
+  .card-name {
+    font-family: 'Cormorant Garamond', serif;
+    font-size: 1.1rem;
+    font-weight: 600;
+    color: #f5e7a1;
+    margin-bottom: 4px;
+  }
+
+  .card-quote {
+    font-size: 0.85rem;
+    color: #e2e8f0;
+    font-style: italic;
+    line-height: 1.4;
+  }
+
+  /* Ajustements pour la carte du centre */
+  .traversee-card[data-slot="centre"] .card-details {
+    background: rgba(5, 20, 40, 0.95);
+    border-top: 1px solid rgba(245, 231, 161, 0.4);
+  }
+
+  /* Ajustement pour les petits écrans */
+  @media (max-width: 480px) {
+    .card-details {
+      padding: 8px;
+    }
+    
+    .card-name {
+      font-size: 1rem;
+    }
+    
+    .card-quote {
+      font-size: 0.8rem;
+    }
+  }
+
   </style>
 </head>
 
@@ -1384,7 +1504,7 @@ const DATA_TRAVERSEE = new Proxy({}, {
       ${slot('sud','transmutation')}
       ${slot('est','actions')}
       ${slot('ouest','emotions')}
-      ${slot('centre','cosmos')}
+      ${slot('centre','memoire_cosmos')}
     </div>
   `;
   host.classList.remove('hidden');
@@ -1501,6 +1621,55 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
 
  
 
+  function buildImagePath(familyKey, data) {
+    if (!data || !data.name) return '';
+    
+    // Gérer les cas spéciaux de noms de dossiers
+    const folderMap = {
+      'transmutation': 'transmutations',
+      'memoire_cosmos': 'cosmos',
+      // Pour les autres familles, on utilise le nom tel quel
+    };
+    
+    const folderName = folderMap[familyKey] || familyKey;
+    
+    // Nettoyer le nom du fichier pour correspondre aux noms des images
+    // Les images sont en minuscules avec des underscores
+    let cleanName = data.name
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Supprimer les accents
+      .replace(/[^a-z0-9]/g, '_')      // Remplacer les caractères spéciaux par des underscores
+      .replace(/_+/g, '_')             // Supprimer les underscores multiples
+      .replace(/^_|_$/g, '');          // Supprimer les underscores au début et à la fin
+    
+    // Pour les cartes avec des noms composés, vérifier si elles existent avec des tirets
+    // Par exemple: "lacher-prise" au lieu de "lacher_prise"
+    const altCleanName = cleanName.replace(/_/g, '-');
+    
+    // Vérifier si le fichier existe avec l'extension .png
+    const extensions = ['.png', '.jpg', '.jpeg'];
+    
+    // Construire le chemin de base
+    const basePath = `images/${folderName}/${cleanName}`;
+    const altBasePath = `images/${folderName}/${altCleanName}`;
+    
+    // Vérifier si le fichier existe avec l'une des extensions
+    for (const ext of extensions) {
+      const fullPath = `${basePath}${ext}`;
+      const altFullPath = (altCleanName !== cleanName) ? `${altBasePath}${ext}` : null;
+      
+      // Vérifier si le fichier existe (cette partie nécessiterait une vérification côté serveur)
+      // Pour l'instant, on suppose que les fichiers sont en .png
+      if (ext === '.png') {
+        return fullPath;
+      }
+    }
+    
+    // Si on arrive ici, on retourne le chemin le plus probable
+    return `${basePath}.png`;
+  }
+
   function flipCard(card){
     if(!card || card.classList.contains('flipped')) return;
 
@@ -1520,22 +1689,41 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
     const fam  = card.dataset.family;     // revelations/transmutation/actions/emotions/cosmos
     const data = safePick(DATA_TRAVERSEE[fam]||[]);
 
-    // remplir la face avant
-    card.querySelector('[data-name]').textContent  = data?.name || "—";
-    card.querySelector('[data-quote]').textContent = data?.quote || "—";
+    // Récupérer le chemin de l'image
+    const imgPath = buildImagePath(fam, data);
+    const front = card.querySelector('.traversee-card-front');
     
-    // Afficher le nom de la famille
-    const familyLabel = card.querySelector('[data-family-label]');
-    if (familyLabel) {
-      const familyNames = {
-        'emotions': 'Émotions',
-        'transmutation': 'Transmutation',
-        'revelations': 'Révélations',
-        'actions': 'Actions',
-        'cosmos': 'Mémoires Cosmos'
-      };
-      familyLabel.textContent = familyNames[fam] || "—";
+    // Mettre à jour le contenu de la face avant avec l'image
+    if (front) {
+      front.innerHTML = `
+        <div class="card-image-container">
+          <img src="${imgPath}" 
+               alt="${data?.name || ''}" 
+               class="card-image"
+               onerror="this.onerror=null; this.src='images/placeholder-card.jpg';" />
+        </div>
+        <div class="card-details">
+          <div class="card-name">${data?.name || "—"}</div>
+          <div class="card-quote">${data?.quote || "—"}</div>
+        </div>
+      `;
     }
+    
+    // Stocker les informations de la carte dans des attributs de données pour référence
+    card.dataset.cardName = data?.name || "—";
+    card.dataset.cardQuote = data?.quote || "—";
+    
+    // Mettre à jour le nom de la famille dans l'état
+    const familyNames = {
+      'emotions': 'Émotions',
+      'besoins': 'Besoins',
+      'transmutation': 'Transmutation',
+      'actions': 'Actions',
+      'archetypes': 'Archétypes',
+      'revelations': 'Révélations',
+      'memoire_cosmos': 'Mémoires Cosmos'
+    };
+    card.dataset.cardFamily = familyNames[fam] || "—";
     
     const polEl = card.querySelector('[data-pol]');
     if(slot === 'centre'){ 
