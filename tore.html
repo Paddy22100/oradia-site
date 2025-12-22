@@ -1083,6 +1083,17 @@ window.DATA = {
 
 <script>
 (function () {
+  // L'ordre des familles pour le tirage de la pièce
+  const TIRAGE_ORDER = [
+    'emotions',
+    'transmutation',
+    'revelations',
+    'actions',
+    'archetypes',
+    'besoins'
+  ];
+
+  // Configuration des positions des cartes sur le plateau (ne pas modifier les positions)
   const STEPS_TORE = [
     { key: 'emotions',      label: 'ÉMOTIONS',       chip: 'Émotion',         pos: 0 },
     { key: 'besoins',       label: 'BESOINS',        chip: 'Besoin',          pos: 1 },
@@ -1092,14 +1103,15 @@ window.DATA = {
     { key: 'revelations',   label: 'RÉVÉLATION',     chip: 'Révélation',      pos: 5 },
     { key: 'memoire_cosmos',label: 'MÉMOIRE COSMOS', chip: 'Mémoire Cosmos',  pos: 6 },
   ];
+
   // Famille de passerelle en cas de différence carte / pièce
   const BRIDGE_TARGET = {
-    emotions:      'transmutation',
-    transmutation: 'revelations',
-    revelations:   'actions',
-    actions:       'archetypes',
-    archetypes:    'besoins',
-    besoins:       'emotions',
+    emotions: 'transmutation',     // émotion → transmutation
+    transmutation: 'revelations',  // transmutation → révélation
+    revelations: 'actions',        // révélation → action
+    actions: 'archetypes',         // action → archétype
+    archetypes: 'besoins',         // archétype → besoin
+    besoins: 'emotions'            // besoin → émotion
     // memoire_cosmos: pas de passerelle
   };
 
@@ -1663,40 +1675,53 @@ function showArrowForStep(stepIndex, isMatch) {
 }
 
 
-      // Lancer la pièce de tirage : 1 lancer par famille, dans l'ordre STEPS_TORE
+      // Lancer la pièce de tirage : 1 lancer par famille, dans l'ordre TIRAGE_ORDER
   function launchCoin() {
     if (!coin || !boardHost) return;
 
-// On saute Mémoire Cosmos : pas de polarité → pas de tirage de pièce pour cette famille
-while (toreThrowIndex < STEPS_TORE.length && STEPS_TORE[toreThrowIndex].key === 'memoire_cosmos') {
-  toreThrowIndex += 1;
-}
-
-// Si plus rien à lancer → on remplace la pièce par le bouton Analyse
-if (toreThrowIndex >= STEPS_TORE.length) {
-  coin.classList.remove('glow');
-  coin.dataset.locked = '1';
-  showToreAnalysisCTA();
-  return;
-}
-
-
-  // On ne lance la pièce que pour les familles avec polarité (Mémoire Cosmos exclue)
-
-    if (toreThrowIndex >= STEPS_TORE.length) {
+    // Empêche plusieurs lancers simultanés
+    if (coin.dataset.locked === '1') return;
+    
+    // Vérifier si on a fini tous les tirages
+    if (toreThrowIndex >= TIRAGE_ORDER.length) {
+      coin.classList.remove('glow');
+      coin.dataset.locked = '1';
+      showToreAnalysisCTA();
       return;
     }
 
-    // Empêche plusieurs lancers simultanés
-    if (coin.dataset.locked === '1') return;
+    // Récupérer la famille courante
+    const currentFamily = TIRAGE_ORDER[toreThrowIndex];
+    
+    // On ne lance pas pour la mémoire cosmos
+    if (currentFamily === 'memoire_cosmos') {
+      toreThrowIndex++;
+      launchCoin(); // Passe à la famille suivante
+      return;
+    }
+
+    // Verrouiller la pièce
     coin.dataset.locked = '1';
 
-    // Famille concernée par ce lancer
-    const stepIndex = toreThrowIndex;
-    const step = STEPS_TORE[stepIndex];
+    // Trouver la configuration de l'étape actuelle
+    const step = STEPS_TORE.find(s => s.key === currentFamily);
+    if (!step) {
+      console.error('Famille non trouvée :', currentFamily);
+      return;
+    }
+    
+    // Récupérer l'index de l'étape actuelle dans STEPS_TORE
+    const stepIndex = STEPS_TORE.findIndex(s => s.key === currentFamily);
+    if (stepIndex === -1) {
+      console.error('Index de famille non trouvé :', currentFamily);
+      return;
+    }
+    
     const card = boardHost.querySelector(`.tore-card[data-family="${step.key}"]`);
-    const nextStepIndex = (stepIndex + 1) % STEPS_TORE.length;
-    const nextStep = STEPS_TORE[nextStepIndex];
+    
+    // Trouver la prochaine famille dans l'ordre de tirage
+    const nextFamily = TIRAGE_ORDER[(toreThrowIndex + 1) % TIRAGE_ORDER.length];
+    const nextStep = STEPS_TORE.find(s => s.key === nextFamily);
 
     // Plateau verrouillé pendant l’animation
     boardHost.classList.add('board-locked');
@@ -1738,38 +1763,32 @@ if (toreThrowIndex >= STEPS_TORE.length) {
 
         // pas de polarité (Mémoire Cosmos) → on montre juste une flèche neutre
         if (cardPolarity === 'none') {
-         showArrowForStep(stepIndex, null);
+          showArrowForStep(stepIndex, null);
         } else {
           const isMatch = (cardPolarity === coinPolarity);
           showArrowForStep(stepIndex, isMatch);
 
-                   if (!isMatch) {
-  // polarité différente → on laisse d'abord la flèche s'afficher
-  setTimeout(() => {
-    openBridgeFan(stepIndex, nextStep.key);
-  }, 1000); // ajuste: 700 à 1200 selon l'effet désiré
-}
+          if (!isMatch && nextStep) {
+            // polarité différente → on laisse d'abord la flèche s'afficher
+            setTimeout(() => {
+              openBridgeFan(stepIndex, nextStep.key);
+            }, 1000);
+          }
         }
       }
 
       // Déverrouille le plateau
 boardHost.classList.remove('board-locked');
 
-// ✅ on passe à la famille suivante
+// On passe à la famille suivante
 toreThrowIndex += 1;
 
-// ✅ on saute Mémoire Cosmos si on tombe dessus
-while (toreThrowIndex < STEPS_TORE.length && STEPS_TORE[toreThrowIndex].key === 'memoire_cosmos') {
-  toreThrowIndex += 1;
-}
-
-// ✅ si terminé après ce lancer → CTA tout de suite (pas besoin d’un clic en plus)
-if (toreThrowIndex >= STEPS_TORE.length) {
+// Si on a fini tous les tirages, on affiche le bouton d'analyse
+if (toreThrowIndex >= TIRAGE_ORDER.length) {
   coin.classList.remove('glow');
   coin.dataset.locked = '1';
   showToreAnalysisCTA();
-  return;
-}
+} 
 
 // Sinon, on réactive la pièce pour le lancer suivant
 coin.dataset.locked = '0';
@@ -1907,7 +1926,7 @@ document.addEventListener("DOMContentLoaded", () => {
         <div>
           <h4 class="cormorant text-xl text-gold mb-4">Contact</h4>
           <ul class="space-y-2">
-            <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><span class="text-light-gold">contact@oradia.fr</span></li>
+            <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><span class="text-light-gold">Oradia@protonmail.com</span></li>
             <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><span class="text-light-gold">@oradia_oracle</span></li>
           </ul>
         </div>
