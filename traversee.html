@@ -226,25 +226,51 @@ fontFamily: {
   .traversee-card{ height: 360px; }
 }
 
+/* Conteneur de la carte avec perspective 3D */
+.traversee-card {
+  width: 100%;
+  height: 100%;
+  perspective: 1200px;
+  position: relative;
+  margin: 0 auto;
+  -webkit-perspective: 1200px; /* Pour la compatibilité avec Safari */
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
+}
+
+/* Conteneur intérieur qui effectue la rotation */
 .traversee-card-inner {
   position: relative;
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
-  transition: transform 800ms cubic-bezier(.2, .65, .2, 1), box-shadow .3s;
+  -webkit-transform-style: preserve-3d;
+  transition: transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1);
+  -webkit-transition: -webkit-transform 0.8s cubic-bezier(0.4, 0.2, 0.2, 1);
   border-radius: 12px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
   will-change: transform;
+  transform: rotateY(0deg);
 }
 
+/* Styles communs pour les faces avant et arrière */
 .traversee-card-back,
 .traversee-card-front {
   position: absolute;
-  inset: 0;
+  width: 100%;
+  height: 100%;
   backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
   border-radius: 18px;
   overflow: hidden;
   border: 1px solid rgba(212, 175, 55, 0.45);
+  box-sizing: border-box;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
 }
 
 .traversee-card-back {
@@ -287,10 +313,16 @@ fontFamily: {
   background-image: url("images/dos/dos_memoire_cosmos.png");
 }
 
-.traversee-card-front{ transform: rotateY(180deg); }
-
-.traversee-card.flipped .traversee-card-inner{
+/* Positionnement de la face avant (initialement retournée) */
+.traversee-card-front { 
   transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
+}
+
+/* Animation de rotation lorsque la carte est retournée */
+.traversee-card.flipped .traversee-card-inner {
+  transform: rotateY(180deg);
+  -webkit-transform: rotateY(180deg);
 }
 
 
@@ -1515,20 +1547,117 @@ const DATA_TRAVERSEE = new Proxy({}, {
     drawn: { nord:null, sud:null, est:null, ouest:null, centre:null }
   };
 
-  // 3) interactions (click + clavier)
-  host.querySelectorAll('.traversee-card-back').forEach(back => {
-    const card = back.closest('.traversee-card');
-    const onFlip = () => flipCard(card);
-    back.addEventListener('click', onFlip);
-    back.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onFlip(); }
+  // 3) Gestion des événements de clic simplifiée
+  const attachCardEvents = () => {
+    console.log('Initialisation des événements...');
+    
+    // Sélectionner toutes les cartes
+    const cards = host.querySelectorAll('.traversee-card');
+    console.log(`Nombre de cartes trouvées: ${cards.length}`);
+    
+    // Fonction pour gérer le clic sur une carte
+    const handleCardClick = (e) => {
+      // Trouver le dos de la carte cliquée
+      const cardBack = e.target.closest('.traversee-card-back');
+      if (!cardBack) return;
+      
+      // Trouver la carte parente
+      const card = cardBack.closest('.traversee-card');
+      if (!card) return;
+      
+      console.log('Clic sur la carte:', card.dataset.slot);
+      
+      // Empêcher la propagation
+      e.stopPropagation();
+      
+      // Retourner la carte
+      flipCard(card);
+    };
+    
+    // Ajouter les écouteurs d'événements à chaque carte
+    cards.forEach((card, index) => {
+      console.log(`Initialisation de la carte ${index + 1} (${card.dataset.slot})`);
+      
+      // Sélectionner le dos de la carte
+      const cardBack = card.querySelector('.traversee-card-back');
+      if (!cardBack) {
+        console.error('Dos de carte non trouvé pour:', card.dataset.slot);
+        return;
+      }
+      
+      // Ajouter les styles de survol
+      cardBack.style.cursor = 'pointer';
+      cardBack.style.transition = 'opacity 0.3s';
+      
+      // Gestion des événements de survol
+      cardBack.addEventListener('mouseenter', () => cardBack.style.opacity = '0.9');
+      cardBack.addEventListener('mouseleave', () => cardBack.style.opacity = '1');
+      
+      // Gestion du clic
+      cardBack.addEventListener('click', handleCardClick);
+      
+      // Gestion du clavier pour l'accessibilité
+      cardBack.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          flipCard(card);
+        }
+      });
+      
+      // Rendre la carte focusable pour l'accessibilité
+      cardBack.setAttribute('tabindex', '0');
+      
+      console.log(`Événements initialisés pour la carte ${index + 1}`);
     });
-  });
+    
+    // Tester le retournement de la première carte après un court délai
+    setTimeout(() => {
+      const firstCard = cards[0];
+      if (firstCard) {
+        console.log('Test: retournement automatique de la première carte');
+        flipCard(firstCard);
+      }
+    }, 500);
+  };
+  
+  // Attacher les événements après un court délai
+  setTimeout(attachCardEvents, 100);
 
   // 4) afficher la section + passer en mode immersif
   const trav = el('traversee');
   trav?.classList.remove('hidden');
   enterImmersive();
+  
+  // Forcer le rafraîchissement des styles
+  const forceReflow = () => {
+    console.log('Forcing reflow...');
+    const cards = document.querySelectorAll('.traversee-card');
+    cards.forEach(card => {
+      // Forcer le navigateur à recalculer les styles
+      void card.offsetHeight;
+    });
+    
+    // Tester le retournement d'une carte après un court délai
+    setTimeout(() => {
+      const testCard = document.querySelector('.traversee-card');
+      if (testCard) {
+        console.log('Testing flip on first card...');
+        testCard.classList.add('flipped');
+        
+        // Vérifier si la classe a été appliquée
+        setTimeout(() => {
+          console.log('Card classes after forced flip:', testCard.className);
+          const inner = testCard.querySelector('.traversee-card-inner');
+          if (inner) {
+            console.log('Inner transform after forced flip:', window.getComputedStyle(inner).transform);
+          }
+        }, 100);
+      }
+    }, 200);
+  };
+  
+  // Appeler forceReflow après un court délai
+  setTimeout(forceReflow, 500);
 }
 
   // ---------- helpers DOM ----------
@@ -1670,19 +1799,38 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
     return `${basePath}.png`;
   }
 
-  function flipCard(card){
-    if(!card || card.classList.contains('flipped')) return;
-
-    // on exige que l'intention de la Traversée soit remplie (dans le formulaire de la section Traversée)
-    const tForm = el('traversee-form');
-    const intentionField = tForm?.querySelector('textarea, input[type="text"]');
-    if(intentionField && !intentionField.value.trim()){
-      intentionField.focus();
-      intentionField.setCustomValidity("Veuillez saisir votre intention pour ce tirage.");
-      intentionField.reportValidity();
+  function flipCard(card, forceFlip = false) {
+    console.log('Début de flipCard:', { 
+      slot: card?.dataset?.slot, 
+      forceFlip,
+      isFlipped: card?.classList?.contains('flipped')
+    });
+    
+    // Vérifier si la carte est valide
+    if (!card) {
+      console.error('Aucune carte fournie à flipCard');
       return;
-    } else if (intentionField) {
-      intentionField.setCustomValidity("");
+    }
+    
+    // Si la carte est déjà retournée et qu'on ne force pas le retournement, on ne fait rien
+    if (card.classList.contains('flipped') && !forceFlip) {
+      console.log('La carte est déjà retournée');
+      return;
+    }
+
+    // Vérification de l'intention uniquement si on ne force pas le retournement
+    if (!forceFlip) {
+      // on exige que l'intention de la Traversée soit remplie (dans le formulaire de la section Traversée)
+      const tForm = el('traversee-form');
+      const intentionField = tForm?.querySelector('textarea, input[type="text"]');
+      if (intentionField && !intentionField.value.trim()) {
+        intentionField.focus();
+        intentionField.setCustomValidity("Veuillez saisir votre intention pour ce tirage.");
+        intentionField.reportValidity();
+        return;
+      } else if (intentionField) {
+        intentionField.setCustomValidity("");
+      }
     }
 
     const slot = card.dataset.slot;       // nord/sud/est/ouest/centre
@@ -1739,14 +1887,35 @@ if(p){ p.removeAttribute('style'); p.setAttribute('aria-hidden','true'); }
       polEl.textContent = data?.polarity ? polIcon(data.polarity) : ''; 
     }
 
-    // flip visuel
+    // Mettre à jour l'état de la carte
+    console.log('Adding flipped class to card');
     card.classList.add('flipped');
+    console.log('Card classes after adding flipped:', card.className);
+    
+    // Vérifier si la classe a bien été ajoutée
+    setTimeout(() => {
+      console.log('After timeout - Card classes:', card.className);
+      const inner = card.querySelector('.traversee-card-inner');
+      if (inner) {
+        console.log('Inner element transform:', window.getComputedStyle(inner).transform);
+      }
+    }, 100);
+    
+    // Mettre à jour l'accessibilité
+    const back = card.querySelector('.traversee-card-back');
+    if (back) {
+      back.setAttribute('aria-pressed', 'true');
+      back.setAttribute('tabindex', '-1');
+    }
     
     // Supprimer le logo Oradia du dos de la carte
     const backLogo = card.querySelector('.logo-circle');
     if (backLogo) {
       backLogo.style.display = 'none';
     }
+    
+    // Forcer un reflow pour s'assurer que l'animation se déclenche
+    void card.offsetWidth;
 
 
     // état
