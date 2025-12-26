@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+  <title>Oradia – Tirage de la Traversée</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#0a192f',
+            'gold': '#d4af37',
+            'light-gold': '#f5e7a1',
+            'dark-blue': '#051428',
+            'celtic-blue': '#1a365d'
+          },
+          fontFamily: {
+            'cormorant': ['Cormorant Garamond', 'serif'],
+            'poppins': ['Poppins', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+
+    :root {
+      --dore: #d4af37;
+      --text: #e9e7df;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Poppins', sans-serif;
+      background: #0a192f;
+      color: #f5e7a1;
+    }
+
+    .cormorant { font-family: 'Cormorant Garamond', serif; }
+    .bg-night-blue { background-color: #0a192f; }
+    .text-gold { color: #d4af37; }
+    .text-light-gold { color: #f5e7a1; }
+
+    .btn-gold {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0.75rem 1.5rem;
+      border-radius: 9999px;
+      background: linear-gradient(90deg, #d4af37, #f5e7a1, #d4af37);
+      background-size: 200% 200%;
+      color: #051428;
+      font-weight: 600;
+      font-size: 0.95rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,.45);
+      border: none;
+      cursor: pointer;
+      transition: transform .2s, box-shadow .2s, background-position .4s;
+      text-decoration: none;
+    }
+    
+    .btn-gold:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 15px 40px rgba(0,0,0,.6);
+      background-position: 100% 0;
+    }
+
+    .gold-gradient {
+      background: linear-gradient(90deg, #d4af37, #f5e7a1, #d4af37);
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+
+    /* Mode immersif */
+    body.hide-immersive > header,
+    body.hide-immersive > footer,
+    body.hide-immersive > section:not(#traversee-immersive) {
+      display: none !important;
+    }
+
+    /* Style pour le plateau de traversée */
+    #traversee-immersive .traversee-board {
+      position: relative;
+      width: min(1000px, 90vw);
+      aspect-ratio: 1 / 1;
+      background-image: url("images/plateau.jpeg");
+      background-size: contain;
+      background-position: center;
+      background-repeat: no-repeat;
+      min-height: 0;
+      max-height: 60vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      margin: 0 auto;
+      position: relative;
+      z-index: 1;
+      border: 1px solid rgba(212, 175, 55, 0.5);
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .traversee-card {
+      background: rgba(5, 20, 40, 0.85);
+      border: 1px solid rgba(212, 175, 55, 0.5);
+      border-radius: 12px;
+      padding: 1.5rem 2rem;
+      margin: 1rem 0;
+      max-width: 80%;
+      transition: all 0.3s ease;
+      backdrop-filter: blur(5px);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    }
+
+    .traversee-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+      border-color: rgba(212, 175, 55, 0.7);
+    }
+
+    .traversee-card h3 {
+      color: #f5e7a1;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 1.8rem;
+      margin-bottom: 1rem;
+      text-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+      position: relative;
+      display: inline-block;
+    }
+    
+    .traversee-card h3:after {
+      content: '';
+      position: absolute;
+      bottom: -5px;
+      left: 0;
+      width: 100%;
+      height: 2px;
+      background: linear-gradient(90deg, #d4af37, transparent);
+    }
+
+    .traversee-card p {
+      color: #e9e7df;
+      font-size: 1.1rem;
+      line-height: 1.7;
+      margin-bottom: 1.5rem;
+    }
+  </style>
+</head>
+<body class="bg-night-blue text-light-gold">
+  <!-- Header -->
+  <header class="header-bg w-full py-3 px-4 md:py-4 md:px-8">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center">
+        <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo"
+          class="w-16 h-16 object-contain transform hover:scale-110 transition-transform duration-300" />
+        <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+      </div>
+      
+      <!-- Bouton burger (mobile) -->
+      <button id="mobileMenuBtn" type="button" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold" aria-label="Ouvrir le menu">
+        <i class="fas fa-bars text-lg"></i>
+      </button>
+      
+      <!-- Nav desktop -->
+      <nav class="hidden md:flex space-x-6 text-lg">
+        <a href="index.html#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
+        <a href="index.html#offres" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Offres</a>
+        <a href="index.html#Jeu" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Jeu</a>
+        <a href="index.html#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
+        <a href="index.html#apropos" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+      </nav>
+      
+      <div id="memberMenuWrapper" class="hidden md:block relative">
+        <!-- Bouton Espace membre -->
+        <button id="memberMenuBtn" class="flex items-center gap-2 text-gold font-medium hover:text-light-gold transition">
+          <i class="fas fa-user-circle text-2xl"></i>
+          <span>Espace membre</span>
+          <i class="fas fa-chevron-down text-sm ml-1"></i>
+        </button>
+        
+        <!-- Dropdown -->
+        <div id="memberDropdown" class="hidden absolute right-0 mt-2 w-48 bg-[rgba(5,20,40,0.95)] border border-gold/30 rounded-lg shadow-lg z-50 backdrop-blur-md">
+          <a href="profil.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Profil</a>
+          <a href="dashboard.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Tableau de bord</a>
+          <button id="logoutBtn" class="w-full text-left px-4 py-2 text-gold hover:bg-gold/10">Déconnexion</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Menu mobile déroulant -->
+    <nav id="mobileMenu" class="md:hidden hidden mt-3 space-y-2">
+      <a href="index.html#accueil" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-home mr-2"></i>Accueil</a>
+      <a href="index.html#offres" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-tags mr-2"></i>Offres</a>
+      <a href="index.html#Jeu" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Jeu</a>
+      <a href="index.html#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
+      <a href="index.html#apropos" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+      <button id="loginBtnMobile" class="w-full btn-outline-gold" style="display: none;">Connexion</button>
+    </nav>
+  </header>
+
+  <!-- Section principale de la traversée immersive -->
+  <!-- Bouton de sortie du mode immersif -->
+  <button id="exitImmersiveBtn" class="fixed top-6 left-6 z-50 bg-[rgba(5,20,40,0.8)] text-gold hover:text-light-gold p-3 rounded-full border border-gold/40 shadow-lg transition-all duration-300 hover:bg-[rgba(5,20,40,0.9)] hover:border-gold/60 hidden">
+    <i class="fas fa-times text-xl"></i>
+  </button>
+
+  <section id="traversee-immersive" class="py-4 px-2 md:py-6 md:px-4">
+    <div class="container mx-auto text-center">
+      <h1 class="cormorant text-2xl md:text-3xl font-bold mb-2 gold-gradient">
+        Tirage de la Traversée
+      </h1>
+      <p class="text-base md:text-lg mb-4 max-w-3xl mx-auto">
+        Plongez dans une expérience unique de découverte et de transformation personnelle.
+      </p>
+      
+      <div class="traversee-board">
+        <!-- Écran d'accueil -->
+        <div id="traverseeIntro" class="text-center mb-8">
+          <h2 class="text-2xl md:text-3xl font-bold mb-4">Votre parcours commence ici</h2>
+          <p class="mb-6">Suivez les étapes pour vivre une expérience complète</p>
+          
+          <button id="startTraverseeBtn" class="btn-gold text-lg px-8 py-3">
+            <i class="fas fa-play mr-2"></i>Commencer la traversée
+          </button>
+        </div>
+
+
+
+        <!-- Contenu de la traversée (sera affiché après soumission du formulaire) -->
+        <div id="traverseeContent" class="hidden w-full h-full flex flex-col items-center justify-center">
+          <!-- Le contenu de la traversée sera généré ici par JavaScript -->
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
+    <div class="container mx-auto max-w-6xl text-center">
+      <p class="text-gold mb-4">© 2025 Oradia. Tous droits réservés.</p>
+      <div class="flex justify-center space-x-6">
+        <a href="#" class="text-gold hover:text-light-gold transition">
+          <i class="fab fa-facebook-f"></i>
+        </a>
+        <a href="#" class="text-gold hover:text-light-gold transition">
+          <i class="fab fa-instagram"></i>
+        </a>
+        <a href="#" class="text-gold hover:text-light-gold transition">
+          <i class="fab fa-youtube"></i>
+        </a>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Fonction pour quitter le mode immersif
+    function exitImmersiveTraversee() {
+      document.body.classList.remove('hide-immersive');
+      const exitBtn = document.getElementById('exitImmersiveBtn');
+      if (exitBtn) exitBtn.classList.add('hidden');
+    }
+
+    // Fonction utilitaire pour obtenir une description de carte
+    function getDescriptionCarte(carte, etape) {
+      const descriptions = {
+        'Le Bateleur': 'Nouveaux départs, potentiel inexploité, habileté manuelle',
+        'La Papesse': 'Intuition, mystère, sagesse intérieure',
+        'L\'Impératrice': 'Créativité, fertilité, abondance',
+        'L\'Empereur': 'Autorité, structure, contrôle',
+        'Le Pape': 'Croyance, tradition, conseil spirituel',
+        'L\'Amoureux': 'Choix, relations, harmonie',
+        'Le Chariot': 'Contrôle, volonté, succès',
+        'La Justice': 'Équilibre, vérité, justice',
+        'L\'Hermite': 'Introspection, recherche, sagesse',
+        'La Roue de Fortune': 'Chance, destin, cycles',
+        'La Force': 'Courage, patience, maîtrise de soi',
+        'Le Pendu': 'Lâcher-prise, nouvelle perspective',
+        'L\'Arcane sans nom': 'Transformation, fin d\'un cycle',
+        'Tempérance': 'Modération, équilibre, guérison',
+        'Le Diable': 'Tentation, dépendance, illusions',
+        'La Maison Dieu': 'Bouleversement, révélation soudaine',
+        'L\'Étoile': 'Espoir, inspiration, sérénité',
+        'La Lune': 'Intuition, rêves, inconscient',
+        'Le Soleil': 'Joie, succès, vitalité',
+        'Le Jugement': 'Renaissance, éveil, appel intérieur',
+        'Le Monde': 'Accomplissement, unité, voyage',
+        'Le Mat': 'Liberté, spontanéité, aventure',
+        'default': 'Cette carte révèle des aspects importants de votre situation. Méditez sur son symbolisme pour en comprendre pleinement la signification.'
+      };
+      
+      return descriptions[carte] || descriptions['default'];
+    }
+
+    // Fonction pour générer la traversée avec les cartes
+    function genererTraversee(formData) {
+      console.log('Début de genererTraversee');
+      const traverseeContent = document.getElementById('traverseeContent');
+      if (!traverseeContent) {
+        console.error('traverseeContent non trouvé');
+        return;
+      }
+
+      // Noms des cartes du tarot (simplifié pour le débogage)
+      const cartes = [
+        'Le Bateleur', 'La Papesse', 'L\'Impératrice', 'L\'Empereur', 'Le Pape'
+      ];
+
+      // Pour le débogage, on prend les 3 premières cartes
+      const tirage = [...cartes].slice(0, 3);
+      
+      // Titres des étapes de la traversée
+      const etapes = [
+        'Votre situation actuelle',
+        'Les défis à relever',
+        'Conseils pour avancer'
+      ];
+
+      console.log('Carte 1:', tirage[0]);
+      console.log('Carte 2:', tirage[1]);
+      console.log('Carte 3:', tirage[2]);
+
+      // Version simplifiée pour le débogage
+      let html = `
+        <div class="p-4">
+          <h2 class="text-2xl text-gold mb-6">Votre tirage spécial</h2>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+            ${tirage.map((carte, index) => `
+              <div class="bg-[rgba(5,20,40,0.9)] p-4 rounded-lg border border-gold/30">
+                <div class="h-40 bg-gray-800 rounded flex items-center justify-center mb-3">
+                  <span class="text-white text-center px-2">${carte}</span>
+                </div>
+                <h3 class="text-gold font-bold mb-1">${etapes[index]}</h3>
+                <p class="text-sm text-gray-300">
+                  ${getDescriptionCarte(carte, etapes[index])}
+                </p>
+              </div>
+            `).join('')}
+          </div>
+        </div>
+      `;
+
+      console.log('HTML généré:', html);
+      traverseeContent.innerHTML = html;
+      console.log('Contenu inséré dans traverseeContent');
+    }
+
+    // Script pour gérer la traversée immersive
+    document.addEventListener('DOMContentLoaded', function() {
+      console.log('DOM chargé, initialisation...');
+      
+      // Éléments du DOM
+      const startBtn = document.getElementById('startTraverseeBtn');
+      const traverseeIntro = document.getElementById('traverseeIntro');
+      const traverseeContent = document.getElementById('traverseeContent');
+      const exitBtn = document.getElementById('exitImmersiveBtn');
+      
+      console.log('Éléments DOM:', { 
+        startBtn: startBtn ? 'Trouvé' : 'Non trouvé',
+        traverseeIntro: traverseeIntro ? 'Trouvé' : 'Non trouvé',
+        traverseeContent: traverseeContent ? 'Trouvé' : 'Non trouvé',
+        exitBtn: exitBtn ? 'Trouvé' : 'Non trouvé'
+      });
+      
+      // Afficher un message si des éléments sont manquants
+      if (!startBtn) console.error('ERREUR: Le bouton startTraverseeBtn est manquant');
+      if (!traverseeIntro) console.error('ERREUR: L\'élément traverseeIntro est manquant');
+      if (!traverseeContent) console.error('ERREUR: L\'élément traverseeContent est manquant');
+      
+      // Gestion du bouton de sortie
+      if (exitBtn) {
+        exitBtn.addEventListener('click', function() {
+          if (confirm('Voulez-vous vraiment quitter la traversée ? Votre progression sera sauvegardée.')) {
+            exitImmersiveTraversee();
+            window.location.href = 'index.html#accueil';
+          }
+        });
+      }
+      
+      // Gestion du bouton "Démarrer la traversée"
+      if (startBtn) {
+        startBtn.addEventListener('click', function(e) {
+          console.log('Bouton cliqué, démarrage de la traversée...');
+          e.preventDefault();
+          
+          // Activer le mode immersif
+          document.body.classList.add('hide-immersive');
+          
+          // Afficher le bouton de sortie
+          if (exitBtn) exitBtn.classList.remove('hidden');
+          
+          // Masquer l'intro et afficher le contenu de la traversée
+          if (traverseeIntro) traverseeIntro.classList.add('hidden');
+          if (traverseeContent) {
+            traverseeContent.classList.remove('hidden');
+            traverseeContent.innerHTML = '<p class="text-center py-10">Chargement de votre tirage...</p>';
+          }
+          
+          // Générer le contenu de la traversée avec des données par défaut
+          setTimeout(() => {
+            try {
+              genererTraversee({
+                prenom: 'Cher Visiteur',
+                nom: '',
+                dateNaissance: '',
+                villeNaissance: '',
+                heureNaissance: '',
+                paysNaissance: '',
+                intention: 'Découvrir la traversée immersive'
+              });
+            } catch (error) {
+              console.error('Erreur lors de la génération du tirage:', error);
+              if (traverseeContent) {
+                traverseeContent.innerHTML = `
+                  <div class="text-center p-10 text-red-300">
+                    <p class="text-xl mb-4">Une erreur est survenue lors du chargement du tirage.</p>
+                    <button onclick="window.location.reload()" class="btn-gold mt-4">Réessayer</button>
+                  </div>
+                `;
+              }
+            }
+          }, 500);
+          
+          // Faire défiler vers le haut
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+      } else {
+        console.error('ERREUR: Le bouton startTraverseeBtn est manquant');
+      }
+
+
+      
+      // Gestion du menu mobile
+      const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+      if (mobileMenuBtn) {
+        mobileMenuBtn.addEventListener('click', function() {
+          const mobileMenu = document.createElement('div');
+          mobileMenu.id = 'mobileMenu';
+          mobileMenu.className = 'fixed inset-0 bg-[rgba(5,20,40,0.95)] z-50 flex flex-col items-center justify-center space-y-8';
+          
+          mobileMenu.innerHTML = `
+            <button class="absolute top-6 right-6 text-3xl text-gold" id="closeMobileMenu">
+              <i class="fas fa-times"></i>
+            </button>
+            <a href="index.html#accueil" class="text-2xl text-gold hover:text-light-gold transition">Accueil</a>
+            <a href="index.html#offres" class="text-2xl text-gold hover:text-light-gold transition">Offres</a>
+            <a href="index.html#Jeu" class="text-2xl text-gold hover:text-light-gold transition">Jeu</a>
+            <a href="index.html#apropos" class="text-2xl text-gold hover:text-light-gold transition">À Propos</a>
+          `;
+          
+          document.body.appendChild(mobileMenu);
+          
+          const closeBtn = document.getElementById('closeMobileMenu');
+          if (closeBtn) {
+            closeBtn.addEventListener('click', function() {
+              document.body.removeChild(mobileMenu);
+            });
+          }
+        });
+      }
+      
+      // Fonction pour générer le contenu de la traversée
+      function genererTraversee(formData) {
+        // Utiliser les données du formulaire pour personnaliser l'expérience
+        const prenom = formData?.prenom || '';
+        const nom = formData?.nom || '';
+        const dateNaissance = formData?.dateNaissance ? new Date(formData.dateNaissance) : null;
+        const intention = formData?.intention || '';
+        
+
+        const etapes = [
+          {
+            titre: `Bienvenue, ${prenom || 'Cher Visiteur'}`,
+            description: `Nous allons ensemble explorer les énergies qui vous entourent en ce moment. Votre intention pour ce tirage : "${intention || 'Aucune intention spécifiée'}"`
+          },
+          {
+            titre: "Vos Données de Naissance",
+            description: `Né(e) le ${dateFormatee} à ${formData?.villeNaissance || 'votre lieu de naissance'}, ces informations nous aident à affiner la lecture des énergies qui vous sont propres.`
+          },
+          {
+            titre: "L'Appel du Voyage",
+            description: "Écoutez l'appel qui résonne en vous. Qu'est-ce qui vous pousse à entreprendre cette traversée ?"
+          },
+          {
+            titre: "La Préparation",
+            description: "Préparez-vous à plonger dans cette expérience. Prenez un instant pour vous centrer et respirer profondément."
+          },
+          {
+            titre: "La Rencontre",
+            description: "Faites connaissance avec les énergies qui vous entourent. Observez sans jugement ce qui se présente à vous."
+          },
+          {
+            titre: "L'Exploration",
+            description: "Explorez les différentes facettes de votre être. Laissez-vous guider par votre intuition."
+          },
+          {
+            titre: "L'Intégration",
+            description: "Accueillez les découvertes que vous avez faites. Comment allez-vous les intégrer dans votre vie ?"
+          },
+          {
+            titre: "Le Retour",
+            description: "Préparez-vous à revenir à votre état de conscience ordinaire, enrichi de cette expérience."
+          }
+        ];
+        
+        let contenuHTML = '';
+        
+        etapes.forEach((etape, index) => {
+          contenuHTML += `
+            <div class="traversee-card">
+              <h3>${etape.titre}</h3>
+              <p>${etape.description}</p>
+              ${index < etapes.length - 1 ? '<div class="text-center mt-4"><i class="fas fa-arrow-down text-gold text-xl"></i></div>' : ''}
+            </div>
+          `;
+        });
+        
+        // Ajouter un bouton pour terminer la traversée
+        contenuHTML += `
+          <div class="text-center mt-10">
+            <button id="endTraverseeBtn" class="btn-gold text-lg px-8 py-3">
+              <i class="fas fa-flag-checkered mr-2"></i>Terminer la traversée
+            </button>
+          </div>
+        `;
+        
+        traverseeContent.innerHTML = contenuHTML;
+        
+        // Ajouter l'événement pour le bouton de fin
+        const endBtn = document.getElementById('endTraverseeBtn');
+        if (endBtn) {
+          endBtn.addEventListener('click', function() {
+            // Désactiver le mode immersif
+          exitImmersiveTraversee();
+          traverseeContent.classList.add('hidden');
+          
+          // Faire défiler vers le haut de la page
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+          });
+        }
+        
+        // Faire défiler vers le contenu
+        traverseeContent.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  </script>
+</body>
+</html>

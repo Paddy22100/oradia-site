@@ -121,9 +121,9 @@ fontFamily: {
 }
     .pos-1{grid-area:1/1} .pos-2{grid-area:1/2} .pos-3{grid-area:1/3} .pos-4{grid-area:1/4} .pos-5{grid-area:1/5}
 
-    .card{ width:min(280px,90vw); height:400px; perspective:1000px; transition:.3s transform }
+    .card{ width:min(280px,90vw); height:400px; perspective:1000px; transition:.3s transform, .3s z-index; position:relative; z-index:1; }
     @media(max-width:400px){ .card{ height:360px } }
-    .card:hover{ transform:translateY(-5px) }
+    .card:hover{ transform:scale(1.05) translateY(-5px); z-index:10; box-shadow:0 15px 30px rgba(0,0,0,0.3) !important; }
     .card-inner{ position:relative; width:100%; height:100%; transform-style:preserve-3d; transition: transform 800ms cubic-bezier(.2,.65,.2,1), box-shadow .3s; border-radius:var(--radius); box-shadow:var(--shadow) }
     .card.flipped .card-inner{ transform:rotateY(180deg) }
     .face{ position:absolute; inset:0; backface-visibility:hidden; border-radius:var(--radius); overflow:hidden; border:1px solid rgba(212,175,55,.45) }
@@ -236,6 +236,52 @@ fontFamily: {
   -webkit-perspective: 1200px; /* Pour la compatibilité avec Safari */
   transform-style: preserve-3d;
   -webkit-transform-style: preserve-3d;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  z-index: 1;
+  transform-origin: center center;
+  will-change: transform, z-index;
+  cursor: pointer;
+}
+
+/* Effet de zoom au survol - uniquement sur les cartes non retournées */
+.traversee-card:not(.flipped) {
+  transition: transform 0.3s ease-out, z-index 0.3s ease-out;
+}
+
+.traversee-card:not(.flipped):hover {
+  transform: scale(1.1);
+  z-index: 20;
+}
+
+/* Effet d'élévation au survol */
+.traversee-card:not(.flipped):hover .traversee-card-inner {
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5) !important;
+  transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1), 
+              box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Désactiver l'effet de zoom sur les cartes retournées */
+.traversee-card.flipped {
+  transform: none !important;
+  z-index: 10 !important;
+  cursor: default;
+}
+
+.traversee-card.flipped .traversee-card-inner {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+  transition: transform 0.8s cubic-bezier(0.4, 0, 0.2, 1), 
+              box-shadow 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Amélioration de la réactivité au toucher sur mobile */
+@media (hover: none) {
+  .traversee-card:not(.flipped):active {
+    transform: scale(0.98);
+  }
+  
+  .traversee-card:not(.flipped):hover {
+    transform: none;
+  }
 }
 
 /* Conteneur intérieur qui effectue la rotation */
@@ -3850,15 +3896,3 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
   </div>
 </body>
 </html>
-
-
-
-
-
-
-
-
-
-
-
-
