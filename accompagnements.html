@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+  <title>Oradia - Accompagnements</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#0a192f',
+            'gold': '#d4af37',
+            'light-gold': '#f5e7a1',
+            'dark-blue': '#051428',
+            'celtic-blue': '#1a365d'
+          },
+          fontFamily: {
+            'cormorant': ['Cormorant Garamond', 'serif'],
+            'poppins': ['Poppins', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+
+    :root{ --dore:#d4af37; --text:#e9e7df; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
+
+    body{ margin:0; font-family:'Poppins',sans-serif; background:#0a192f; color:#f5e7a1; overflow-x:hidden; }
+    .header-bg{ background:rgba(5,20,40,.98); }
+    .hero-bg{ background: radial-gradient(circle at center, rgba(26,54,93,.7) 0%, rgba(5,20,40,.9) 70%); background-size:cover; }
+
+    /* Section héro avec l'image de fond */
+.hero-section{
+  background-image: url("images/oradia-hero-4k.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Voile sombre par dessus l'image pour la lisibilité du texte */
+.hero-overlay{
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(5,20,40,0.2) 0%,
+    rgba(5,20,40,0.9) 70%
+  );
+  pointer-events: none;
+}
+
+    .gold-gradient{
+      background: linear-gradient(90deg, #d4af37, #f5e7a1, #d4af37);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      background-size:300% 300%; animation:gradient-shift 4s ease infinite;
+    }
+    @keyframes gradient-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    .floating{ animation:floating 3s ease-in-out infinite }
+    @keyframes floating{0%{transform:translateY(0)}50%{transform:translateY(-15px)}100%{transform:translateY(0)}}
+    .animate-spin-slow{ animation: spin 12s linear infinite }
+    @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+    @keyframes orbit{0%{transform:rotate(0deg) translateX(100px) rotate(0deg)}100%{transform:rotate(360deg) translateX(100px) rotate(-360deg)}}
+    .pulse{ animation:pulse 2s infinite }
+    @keyframes pulse{
+      0% { box-shadow:0 0 0 0 rgba(212,175,55,.4); transform:translate(-50%,-50%) scale(1) }
+      50%{ box-shadow:0 0 0 10px rgba(212,175,55,.2); transform:translate(-50%,-50%) scale(1.05) }
+      100%{ box-shadow:0 0 0 0 rgba(212,175,55,0); transform:translate(-50%,-50%) scale(1) }
+    }
+
+    /* Animations pour l'intention */
+    @keyframes intentionGlow {
+      0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+      50% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0.1); }
+      100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+    }
+    
+    @keyframes inputPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
+    
+    @keyframes textGlow {
+      0% { text-shadow: 0 0 5px rgba(212, 175, 55, 0.3); }
+      50% { text-shadow: 0 0 20px rgba(212, 175, 55, 0.6); }
+      100% { text-shadow: 0 0 5px rgba(212, 175, 55, 0.3); }
+    }
+    
+    @keyframes ripple {
+      0% { transform: scale(0); opacity: 1; }
+      100% { transform: scale(4); opacity: 0; }
+    }
+    
+    .intention-animate {
+      animation: intentionGlow 3s ease-in-out infinite;
+    }
+    
+    .input-focus {
+      animation: inputPulse 0.5s ease-out;
+    }
+    
+    .text-glow {
+      animation: textGlow 2s ease-in-out infinite;
+    }
+    
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(212, 175, 55, 0.3);
+      transform: scale(0);
+      pointer-events: none;
+    }
+@keyframes zoom {
+      0% { transform: scale(0.8); opacity: 0.5; }
+      50% { transform: scale(1.2); opacity: 0.8; }
+      100% { transform: scale(0.8); opacity: 0.5; }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px){
+      .hero-section{ min-height:60vh; }
+      .hero-content{ padding:2rem 1rem; }
+      .hero-title{ font-size:2.5rem; }
+      .hero-subtitle{ font-size:1.1rem; }
+    }
+    
+    @media (max-width: 480px){
+      .hero-title{ font-size:2rem; }
+      .hero-subtitle{ font-size:1rem; }
+    }
+
+    /* Fix pour le menu mobile */
+    #mobileMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(5,20,40,.98);
+  backdrop-filter: blur(10px);
+  z-index: 1001;
+  overflow: visible; /* DS V3 : évite que le dropdown soit coupé */
+}
+#mobileMenuBtn {
+  z-index: 1002;          /* était 101 -> passe à 1002 */
+}
+
+    #mobileMenu.hidden {
+        display: none;
+      }
+      
+      #mobileMenu:not(.hidden) {
+        display: block;
+      }
+      
+      @media (max-width: 640px){
+  .slot .mini{ width: 170px; height: 255px; }
+}
+/* DS V3 — mobile menu : sécurité overflow/stacking */
+header { position: relative; overflow: visible; }        /* garantit que le dropdown n'est pas coupé */
+#mobileMenu {
+  position: absolute; top: 100%; left: 0; right: 0;
+  background: rgba(5,20,40,.98); backdrop-filter: blur(10px);
+  z-index: 1200;                                          /* au-dessus du contenu */
+  border-top: 1px solid rgba(212,175,55,.3);
+}
+#mobileMenuBtn { position: relative; z-index: 1300; }     /* au-dessus du menu lui-même */
+
+/* Accessibilité : focus visible */
+.btn-gold:focus-visible,
+.btn-outline-gold:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--dore);
+  outline-offset: 2px;
+}
+
+/* Animation pour les cartes */
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(212, 175, 55, 0.3);
+}
+
+/* Style pour les sections */
+.section-padding {
+  padding: 4rem 0;
+}
+
+@media (max-width: 768px) {
+  .section-padding {
+    padding: 2rem 0;
+  }
+}
+
+/* Animation pour les titres */
+.title-animate {
+  animation: fadeInUp 1s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Style pour les citations */
+.quote {
+  border-left: 4px solid var(--dore);
+  padding-left: 1.5rem;
+  font-style: italic;
+  margin: 2rem 0;
+}
+
+/* Style pour les listes */
+.custom-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.custom-list li {
+  position: relative;
+  padding-left: 2rem;
+  margin-bottom: 1rem;
+}
+
+.custom-list li:before {
+  content: "◆";
+  position: absolute;
+  left: 0;
+  color: var(--dore);
+}
+
+/* Boutons accessibles */
+button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
+  min-height: 44px;
+}
+#immersiveMenuBtn{ z-index: 1100; }
+#immersiveMenuPanel{ z-index: 1200; }
+
+/* Modales : éviter que le contenu déborde en hauteur */
+#orderModal .max-w-md {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Style pour les cartes d'accompagnement */
+.accompagnement-card {
+  transition: all 0.3s ease;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.accompagnement-card:hover {
+  transform: translateY(-8px);
+  border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: 0 20px 40px rgba(212, 175, 55, 0.2);
+}
+
+/* Tarification */
+.pricing-card {
+  transition: all 0.3s ease;
+}
+
+.pricing-card:hover {
+  transform: scale(1.05);
+}
+
+.pricing-card.featured {
+  border: 2px solid var(--dore);
+  transform: scale(1.05);
+}
+  </style>
+</head>
+
+<body class="bg-night-blue text-light-gold">
+  <!-- Header -->
+  <header class="header-bg w-full py-3 px-4 md:py-4 md:px-8">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center">
+        <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo"
+     class="w-16 h-16 object-contain transform hover:scale-110 transition-transform duration-300" />
+        <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+      </div>
+      <!-- Bouton burger (mobile) -->
+    <button id="mobileMenuBtn" type="button" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold" aria-label="Ouvrir le menu">
+           
+      <i class="fas fa-bars text-lg"></i>
+    </button>
+<!-- Nav desktop -->
+    <nav class="hidden md:flex space-x-6 text-lg">
+      <a href="index.html#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
+      <a href="index.html#oracle" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
+      <a href="accompagnements.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
+      <a href="a-propos.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+      <a href="index.html#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
+      <a href="contact.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-envelope mr-2"></i>Contact</a>
+    </nav>
+    <div id="memberMenuWrapper" class="hidden md:block relative">
+    <!-- Bouton Espace membre -->
+    <button id="memberMenuBtn" class="flex items-center gap-2 text-gold font-medium hover:text-light-gold transition">
+        <i class="fas fa-user-circle text-2xl"></i>
+        <span>Espace membre</span>
+        <i class="fas fa-chevron-down text-sm ml-1"></i>
+    </button>
+
+    <!-- Dropdown -->
+    <div id="memberDropdown"
+         class="hidden absolute right-0 mt-2 w-48 bg-[rgba(5,20,40,0.95)] border border-gold/30 rounded-lg shadow-lg z-50 backdrop-blur-md">
+        <a href="profil.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Profil</a>
+        <a href="dashboard.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Tableau de bord</a>
+        <button id="logoutBtn" class="w-full text-left px-4 py-2 text-gold hover:bg-gold/10">Déconnexion</button>
+    </div>
+</div>
+
+</div>
+
+  <!-- Menu mobile déroulant -->
+  <nav id="mobileMenu" class="md:hidden hidden mt-3 space-y-2">
+    <a href="index.html#accueil" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-home mr-2"></i>Accueil</a>
+    <a href="index.html#oracle" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Oracle</a>
+    <a href="accompagnements.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
+    <a href="a-propos.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+    <a href="index.html#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
+    <a href="contact.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
+  </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section relative min-h-screen flex items-center justify-center">
+    <div class="hero-overlay"></div>
+    <div class="container mx-auto px-4 relative z-10">
+      <div class="hero-content">
+        <h1 class="hero-title cormorant text-5xl md:text-7xl font-bold gold-gradient mb-6 title-animate text-left">
+          Accompagnements
+        </h1>
+        <p class="hero-subtitle text-xl md:text-2xl text-light-gold mb-8 max-w-3xl text-left">
+          Des espaces de dialogue et de réflexion pour faire émerger vos prises de conscience
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Présentation -->
+  <section class="section-padding bg-night-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <div class="bg-dark-blue/50 rounded-2xl p-8 border border-gold/30">
+          <p class="text-xl leading-relaxed mb-6">
+            Dans un monde où tout va souvent très vite, il est précieux de pouvoir s'arrêter un moment, mettre des mots sur ce qui se passe et regarder une situation sous un autre angle.
+          </p>
+          
+          <p class="text-lg leading-relaxed mb-6">
+            Mon rôle n'est pas de donner des réponses toutes faites, mais de créer un espace d'écoute, de dialogue et de réflexion qui permet de faire émerger des prises de conscience et de nouvelles perspectives.
+          </p>
+          
+          <div class="quote">
+            "Chaque expérience peut devenir une porte d'entrée pour mieux comprendre ce qui est en jeu et ce qui cherche à évoluer."
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Accompagnements Individuels -->
+  <section class="section-padding bg-dark-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-6xl mx-auto">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold text-center gold-gradient mb-12">
+          Accompagnements Individuels
+        </h2>
+        
+        <div class="grid md:grid-cols-2 gap-8 items-center">
+          <div class="accompagnement-card bg-night-blue/50 rounded-2xl p-8 border border-gold/30">
+            <div class="w-16 h-16 mx-auto mb-6 rounded-full bg-gold/20 flex items-center justify-center">
+              <i class="fas fa-user text-2xl text-gold"></i>
+            </div>
+            <h3 class="cormorant text-3xl font-bold text-gold mb-6 text-center">SÉANCE D'ACCOMPAGNEMENT VIBRATOIRE</h3>
+            <p class="text-lg leading-relaxed mb-6">
+              Une séance conçue spécialement pour toi, en cohérence avec ton profil unique, tes valeurs profondes et ta manière de fonctionner.
+            </p>
+            
+            <div class="bg-gold/10 rounded-lg p-4 mb-6 border border-gold/20">
+              <h4 class="font-semibold text-gold mb-2 text-lg"><i class="fas fa-gem text-gold mr-2"></i>Objectif</h4>
+              <p class="text-light-gold text-base">Aider à clarifier une résonance intérieure et l'aligner à ta propre voie, par l'écoute, la guidance et la vibration.</p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4 mb-8">
+              <div class="bg-gold/10 rounded-lg p-4 border border-gold/20 text-center">
+                <i class="fas fa-clock text-gold mb-2 text-xl"></i>
+                <p class="text-base font-semibold text-gold">Durée</p>
+                <p class="text-light-gold text-base">1h15</p>
+              </div>
+              <div class="bg-gold/10 rounded-lg p-4 border border-gold/20 text-center">
+                <i class="fas fa-heart text-gold mb-2 text-xl"></i>
+                <p class="text-base font-semibold text-gold">Ambiance</p>
+                <p class="text-light-gold text-base">Cocon, authenticité</p>
+              </div>
+            </div>
+          </div>
+          
+          <div>
+            <h4 class="cormorant text-2xl font-bold text-gold mb-6">Les Piliers de la Séance</h4>
+            <div class="space-y-4">
+              <div class="bg-gold/10 rounded-lg p-4 border border-gold/20">
+                <h5 class="font-semibold text-gold mb-2 text-xl"><i class="fas fa-door-open mr-2"></i>Accueil Vibratoire</h5>
+                <p class="text-light-gold text-lg">Thé, respiration, intention posée ensemble dans un espace de sécurité.</p>
+              </div>
+              <div class="bg-gold/10 rounded-lg p-4 border border-gold/20">
+                <h5 class="font-semibold text-gold mb-2 text-xl"><i class="fas fa-search mr-2"></i>Exploration Intuitive</h5>
+                <p class="text-light-gold text-lg">Cartes, sons, dialogue guidé pour faire émerger les messages intérieurs.</p>
+              </div>
+              <div class="bg-gold/10 rounded-lg p-4 border border-gold/20">
+                <h5 class="font-semibold text-gold mb-2 text-xl"><i class="fas fa-music mr-2"></i>Résonance Sonore</h5>
+                <p class="text-light-gold text-lg">Bain sonore, massage vibratoire, chant intuitif en lien avec ce qui émerge.</p>
+              </div>
+              <div class="bg-gold/10 rounded-lg p-4 border border-gold/20">
+                <h5 class="font-semibold text-gold mb-2 text-xl"><i class="fas fa-gem mr-2"></i>Intégration & Ancrage</h5>
+                <p class="text-light-gold text-lg">Échange libre, tirage d'un galet d'apaisement, clôture ritualisée.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Cercles de Parole -->
+  <section class="section-padding bg-night-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-6xl mx-auto">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold text-center gold-gradient mb-12">
+          Cercles de Parole
+        </h2>
+        
+        <div class="grid md:grid-cols-2 gap-8 items-center">
+          <div>
+            <div class="accompagnement-card bg-dark-blue/50 rounded-2xl p-8 border border-gold/30">
+              <div class="w-16 h-16 mx-auto mb-6 rounded-full bg-gold/20 flex items-center justify-center">
+                <i class="fas fa-comments text-2xl text-gold"></i>
+              </div>
+              <h3 class="cormorant text-2xl font-bold text-gold mb-4 text-center">Partager et Recevoir</h3>
+              <p class="text-lg leading-relaxed mb-6">
+                Des espaces collectifs bienveillants où chacun peut déposer ce qu'il vit et recevoir le soutien du groupe. Les cercles de parole permettent de créer du lien et de se sentir compris dans son parcours.
+              </p>
+              <ul class="custom-list text-lg space-y-3">
+                <li>Groupes de 6 à 8 personnes maximum</li>
+                <li>Thématiques variées (relations, travail, émotions...)</li>
+                <li>Confidentialité et respect bienveillants</li>
+                <li>Co-création de nouvelles perspectives</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div>
+            <h4 class="cormorant text-xl font-bold text-gold mb-4">Prochains cercles</h4>
+            <div class="space-y-4">
+              <div class="bg-gold/10 rounded-lg p-4 border border-gold/20">
+                <h5 class="font-semibold text-gold mb-2">Cercle "Transitions"</h5>
+                <p class="text-light-gold text-sm mb-2">Accueillir les changements de vie</p>
+                <p class="text-light-gold"><i class="fas fa-calendar mr-2"></i>Mardi 18 mars - 19h</p>
+              </div>
+              <div class="bg-gold/10 rounded-lg p-4 border border-gold/20">
+                <h5 class="font-semibold text-gold mb-2">Cercle "Émotions"</h5>
+                <p class="text-light-gold text-sm mb-2">Explorer son paysage intérieur</p>
+                <p class="text-light-gold"><i class="fas fa-calendar mr-2"></i>Jeudi 20 mars - 19h</p>
+              </div>
+              <div class="bg-gold/10 rounded-lg p-4 border border-gold/20">
+                <h5 class="font-semibold text-gold mb-2">Cercle "Relations"</h5>
+                <p class="text-light-gold text-sm mb-2">Harmoniser ses connexions humaines</p>
+                <p class="text-light-gold"><i class="fas fa-calendar mr-2"></i>Mardi 25 mars - 19h</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Intelligence Collective -->
+  <section class="section-padding bg-dark-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-6xl mx-auto">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold text-center gold-gradient mb-12">
+          Intelligence Collective
+        </h2>
+        
+        <div class="grid md:grid-cols-2 gap-8 items-center">
+          <div>
+            <h4 class="cormorant text-xl font-bold text-gold mb-4">Pour les équipes et organisations</h4>
+            <div class="space-y-4">
+              <div class="bg-gold/10 rounded-lg p-4 border border-gold/20">
+                <h5 class="font-semibold text-gold mb-2">Ateliers d'équipe</h5>
+                <p class="text-light-gold text-sm">Renforcer la cohésion et la communication</p>
+              </div>
+              <div class="bg-gold/10 rounded-lg p-4 border border-gold/20">
+                <h5 class="font-semibold text-gold mb-2">Facilitation de réunions</h5>
+                <p class="text-light-gold text-sm">Optimiser les prises de décision collectives</p>
+              </div>
+              <div class="bg-gold/10 rounded-lg p-4 border border-gold/20">
+                <h5 class="font-semibold text-gold mb-2">Cohésion d'équipe</h5>
+                <p class="text-light-gold text-sm">Créer un environnement de travail bienveillant</p>
+              </div>
+            </div>
+          </div>
+          
+          <div class="accompagnement-card bg-night-blue/50 rounded-2xl p-8 border border-gold/30">
+            <div class="w-16 h-16 mx-auto mb-6 rounded-full bg-gold/20 flex items-center justify-center">
+              <i class="fas fa-brain text-2xl text-gold"></i>
+            </div>
+            <h3 class="cormorant text-2xl font-bold text-gold mb-4 text-center">Co-créer des Solutions</h3>
+            <p class="text-lg leading-relaxed mb-6">
+              Des interventions sur-mesure pour les équipes et organisations qui souhaitent développer leur intelligence collective. Nous co-créons des solutions à partir de la sagesse du groupe.
+            </p>
+            <ul class="custom-list text-lg space-y-3">
+              <li>Diagnostic des besoins collectifs</li>
+              <li>Animation de processus participatifs</li>
+              <li>Développement de la coopération</li>
+              <li>Accompagnement du changement</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Tarification -->
+  <section class="section-padding bg-night-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-6xl mx-auto">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold text-center gold-gradient mb-12">
+          Investissement
+        </h2>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+          <div class="pricing-card bg-dark-blue/50 rounded-2xl p-8 border border-gold/30 text-center">
+            <h3 class="cormorant text-2xl font-bold text-gold mb-4">Cercle de Parole</h3>
+            <div class="text-3xl font-bold text-gold mb-4">30€</div>
+            <p class="text-light-gold mb-6">Par séance de 2h</p>
+            <ul class="text-left space-y-2 mb-6">
+              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Groupe de 6-8 personnes</li>
+              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Thématique définie</li>
+              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Espace bienveillant</li>
+            </ul>
+            <a href="#" class="btn-outline-gold border-2 border-gold text-gold font-bold py-3 px-6 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 w-full">
+              Réserver
+            </a>
+          </div>
+          
+          <div class="pricing-card featured bg-dark-blue/50 rounded-2xl p-8 border border-gold/30 text-center">
+            <div class="bg-gold/20 text-night-blue text-sm font-bold px-3 py-1 rounded-full inline-block mb-4">
+              Séance Vibratoire
+            </div>
+            <h3 class="cormorant text-2xl font-bold text-gold mb-4">Accompagnement Individuel</h3>
+            <div class="text-3xl font-bold text-gold mb-4">60€</div>
+            <p class="text-light-gold mb-6">Séance de 1h15</p>
+            <ul class="text-left space-y-2 mb-6">
+              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Accueil vibratoire</li>
+              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Exploration intuitive</li>
+              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Résonance sonore</li>
+              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Galet d'apaisement</li>
+              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Intégration & ancrage</li>
+            </ul>
+            <a href="index.html#offres" class="btn-gold bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-6 rounded-full hover:shadow-lg transition-all duration-300 w-full" target="_self">
+              Prendre rendez-vous
+            </a>
+          </div>
+          
+          <div class="pricing-card bg-dark-blue/50 rounded-2xl p-8 border border-gold/30 text-center">
+            <h3 class="cormorant text-2xl font-bold text-gold mb-4">Intelligence Collective</h3>
+            <div class="text-3xl font-bold text-gold mb-4">Sur devis</div>
+            <p class="text-light-gold mb-6">Adapté à vos besoins</p>
+            <ul class="text-left space-y-2 mb-6">
+              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Diagnostic préalable</li>
+              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Programme sur-mesure</li>
+              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Facilitation professionnelle</li>
+              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Rapport d'intervention</li>
+            </ul>
+            <a href="#" class="btn-outline-gold border-2 border-gold text-gold font-bold py-3 px-6 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 w-full">
+              Contactez-nous
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Contact -->
+  <section class="section-padding bg-dark-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto text-center">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-8">
+          Prêt à Commencer ?
+        </h2>
+        <p class="text-xl mb-8">
+          Chaque parcours est unique. Contactez-moi pour discuter de vos besoins et trouver l'accompagnement qui vous correspond.
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="#" class="btn-gold bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-8 rounded-full hover:shadow-lg transition-all duration-300">
+            <i class="fas fa-envelope mr-2"></i>Prendre contact
+          </a>
+          <a href="index.html#offres" class="btn-outline-gold border-2 border-gold text-gold font-bold py-3 px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300">
+            <i class="fas fa-dice mr-2"></i>Explorer Oradia
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-dark-blue border-t border-gold/20 py-12">
+    <div class="container mx-auto px-4">
+      <div class="grid md:grid-cols-4 gap-8">
+        <div>
+          <h3 class="cormorant text-xl text-gold mb-4">ORADIA</h3>
+          <p class="text-light-gold text-sm">L'Oracle du Vivant</p>
+          <p class="text-light-gold text-sm mt-2">Guidance • Sagesse • Transformation</p>
+        </div>
+        
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Navigation</h4>
+          <ul class="space-y-2">
+            <li><a href="index.html" class="text-light-gold hover:text-gold transition">Accueil</a></li>
+            <li><a href="accompagnements.html" class="text-light-gold hover:text-gold transition">Accompagnements</a></li>
+            <li><a href="pelerin.html" class="text-light-gold hover:text-gold transition">Jeu</a></li>
+            <li><a href="a-propos.html" class="text-light-gold hover:text-gold transition">À Propos</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Ressources</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-light-gold hover:text-gold transition">Blog</a></li>
+            <li><a href="#" class="text-light-gold hover:text-gold transition">Guide d'utilisation</a></li>
+            <li><a href="#" class="text-light-gold hover:text-gold transition">FAQ</a></li>
+            <li><a href="#" class="text-light-gold hover:text-gold transition">Mentions légales</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Suivez-nous</h4>
+          <div class="flex space-x-4">
+            <a href="#" class="text-light-gold hover:text-gold transition">
+              <i class="fab fa-facebook text-2xl"></i>
+            </a>
+            <a href="#" class="text-light-gold hover:text-gold transition">
+              <i class="fab fa-instagram text-2xl"></i>
+            </a>
+            <a href="#" class="text-light-gold hover:text-gold transition">
+              <i class="fab fa-youtube text-2xl"></i>
+            </a>
+            <a href="#" class="text-light-gold hover:text-gold transition">
+              <i class="fab fa-twitter text-2xl"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="border-t border-gold/20 mt-8 pt-8 text-center">
+        <p class="text-light-gold text-sm">
+          © 2026 Oradia - Tous droits réservés | Créé avec ❤️ et intention
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Menu mobile
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    
+    mobileMenuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+    
+    // Menu membre
+    const memberMenuBtn = document.getElementById('memberMenuBtn');
+    const memberMenu = document.getElementById('memberMenu');
+    
+    if (memberMenuBtn && memberMenu) {
+      memberMenuBtn.addEventListener('click', () => {
+        memberMenu.classList.toggle('hidden');
+      });
+    }
+    
+    // Fermer les menus en cliquant ailleurs
+    document.addEventListener('click', (e) => {
+      if (!mobileMenuBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
+        mobileMenu.classList.add('hidden');
+      }
+      
+      if (memberMenuBtn && !memberMenuBtn.contains(e.target) && !memberMenu.contains(e.target)) {
+        memberMenu.classList.add('hidden');
+      }
+    });
+    
+    // Animation au scroll
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('title-animate');
+        }
+      });
+    }, observerOptions);
+    
+    document.querySelectorAll('h2, h3').forEach(el => {
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+  <title>Oradia - À Propos</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#0a192f',
+            'gold': '#d4af37',
+            'light-gold': '#f5e7a1',
+            'dark-blue': '#051428',
+            'celtic-blue': '#1a365d'
+          },
+          fontFamily: {
+            'cormorant': ['Cormorant Garamond', 'serif'],
+            'poppins': ['Poppins', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+
+    :root{ --dore:#d4af37; --text:#e9e7df; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
+
+    body{ margin:0; font-family:'Poppins',sans-serif; background:#0a192f; color:#f5e7a1; overflow-x:hidden; }
+    .header-bg{ background:rgba(5,20,40,.98); }
+    .hero-bg{ background: radial-gradient(circle at center, rgba(26,54,93,.7) 0%, rgba(5,20,40,.9) 70%); background-size:cover; }
+
+    /* Section héro avec l'image de fond */
+.hero-section{
+  background-image: url("images/oradia-hero-4k.png");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/* Voile sombre par dessus l'image pour la lisibilité du texte */
+.hero-overlay{
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at center,
+    rgba(5,20,40,0.2) 0%,
+    rgba(5,20,40,0.9) 70%
+  );
+  pointer-events: none;
+}
+
+    .gold-gradient{
+      background: linear-gradient(90deg, #d4af37, #f5e7a1, #d4af37);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      background-size:300% 300%; animation:gradient-shift 4s ease infinite;
+    }
+    @keyframes gradient-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    .floating{ animation:floating 3s ease-in-out infinite }
+    @keyframes floating{0%{transform:translateY(0)}50%{transform:translateY(-15px)}100%{transform:translateY(0)}}
+    .animate-spin-slow{ animation: spin 12s linear infinite }
+    @keyframes spin{from{transform:rotate(0)}to{transform:rotate(360deg)}}
+    @keyframes orbit{0%{transform:rotate(0deg) translateX(100px) rotate(0deg)}100%{transform:rotate(360deg) translateX(100px) rotate(-360deg)}}
+    .pulse{ animation:pulse 2s infinite }
+    @keyframes pulse{
+      0% { box-shadow:0 0 0 0 rgba(212,175,55,.4); transform:translate(-50%,-50%) scale(1) }
+      50%{ box-shadow:0 0 0 10px rgba(212,175,55,.2); transform:translate(-50%,-50%) scale(1.05) }
+      100%{ box-shadow:0 0 0 0 rgba(212,175,55,0); transform:translate(-50%,-50%) scale(1) }
+    }
+
+    /* Animations pour l'intention */
+    @keyframes intentionGlow {
+      0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.4); }
+      50% { box-shadow: 0 0 0 15px rgba(212, 175, 55, 0.1); }
+      100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+    }
+    
+    @keyframes inputPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); }
+    }
+    
+    @keyframes textGlow {
+      0% { text-shadow: 0 0 5px rgba(212, 175, 55, 0.3); }
+      50% { text-shadow: 0 0 20px rgba(212, 175, 55, 0.6); }
+      100% { text-shadow: 0 0 5px rgba(212, 175, 55, 0.3); }
+    }
+    
+    @keyframes ripple {
+      0% { transform: scale(0); opacity: 1; }
+      100% { transform: scale(4); opacity: 0; }
+    }
+    
+    .intention-animate {
+      animation: intentionGlow 3s ease-in-out infinite;
+    }
+    
+    .input-focus {
+      animation: inputPulse 0.5s ease-out;
+    }
+    
+    .text-glow {
+      animation: textGlow 2s ease-in-out infinite;
+    }
+    
+    .ripple {
+      position: absolute;
+      border-radius: 50%;
+      background: rgba(212, 175, 55, 0.3);
+      transform: scale(0);
+      pointer-events: none;
+    }
+@keyframes zoom {
+      0% { transform: scale(0.8); opacity: 0.5; }
+      50% { transform: scale(1.2); opacity: 0.8; }
+      100% { transform: scale(0.8); opacity: 0.5; }
+    }
+
+    /* Responsive */
+    @media (max-width: 768px){
+      .hero-section{ min-height:60vh; }
+      .hero-content{ padding:2rem 1rem; }
+      .hero-title{ font-size:2.5rem; }
+      .hero-subtitle{ font-size:1.1rem; }
+    }
+    
+    @media (max-width: 480px){
+      .hero-title{ font-size:2rem; }
+      .hero-subtitle{ font-size:1rem; }
+    }
+
+    /* Fix pour le menu mobile */
+    #mobileMenu {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: rgba(5,20,40,.98);
+  backdrop-filter: blur(10px);
+  z-index: 1001;
+  overflow: visible; /* DS V3 : évite que le dropdown soit coupé */
+}
+#mobileMenuBtn {
+  z-index: 1002;          /* était 101 -> passe à 1002 */
+}
+
+    #mobileMenu.hidden {
+        display: none;
+      }
+      
+      #mobileMenu:not(.hidden) {
+        display: block;
+      }
+      
+      @media (max-width: 640px){
+  .slot .mini{ width: 170px; height: 255px; }
+}
+/* DS V3 — mobile menu : sécurité overflow/stacking */
+header { position: relative; overflow: visible; }        /* garantit que le dropdown n'est pas coupé */
+#mobileMenu {
+  position: absolute; top: 100%; left: 0; right: 0;
+  background: rgba(5,20,40,.98); backdrop-filter: blur(10px);
+  z-index: 1200;                                          /* au-dessus du contenu */
+  border-top: 1px solid rgba(212,175,55,.3);
+}
+#mobileMenuBtn { position: relative; z-index: 1300; }     /* au-dessus du menu lui-même */
+
+/* Accessibilité : focus visible */
+.btn-gold:focus-visible,
+.btn-outline-gold:focus-visible,
+a:focus-visible {
+  outline: 2px solid var(--dore);
+  outline-offset: 2px;
+}
+
+/* Animation pour les cartes */
+.card {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 40px rgba(212, 175, 55, 0.3);
+}
+
+/* Style pour les sections */
+.section-padding {
+  padding: 4rem 0;
+}
+
+@media (max-width: 768px) {
+  .section-padding {
+    padding: 2rem 0;
+  }
+}
+
+/* Animation pour les titres */
+.title-animate {
+  animation: fadeInUp 1s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Style pour les citations */
+.quote {
+  border-left: 4px solid var(--dore);
+  padding-left: 1.5rem;
+  font-style: italic;
+  margin: 2rem 0;
+}
+
+/* Style pour les listes */
+.custom-list {
+  list-style: none;
+  padding-left: 0;
+}
+
+.custom-list li {
+  position: relative;
+  padding-left: 2rem;
+  margin-bottom: 1rem;
+}
+
+.custom-list li:before {
+  content: "◆";
+  position: absolute;
+  left: 0;
+  color: var(--dore);
+}
+
+/* Boutons accessibles */
+button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
+  min-height: 44px;
+}
+#immersiveMenuBtn{ z-index: 1100; }
+#immersiveMenuPanel{ z-index: 1200; }
+
+/* Modales : éviter que le contenu déborde en hauteur */
+#orderModal .max-w-md {
+  max-height: 90vh;
+  overflow-y: auto;
+}
+  </style>
+</head>
+
+<body class="bg-night-blue text-light-gold">
+  <!-- Header -->
+  <header class="header-bg w-full py-3 px-4 md:py-4 md:px-8">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center">
+        <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo"
+     class="w-16 h-16 object-contain transform hover:scale-110 transition-transform duration-300" />
+        <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+      </div>
+      <!-- Bouton burger (mobile) -->
+    <button id="mobileMenuBtn" type="button" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold" aria-label="Ouvrir le menu">
+           
+      <i class="fas fa-bars text-lg"></i>
+    </button>
+<!-- Nav desktop -->
+    <nav class="hidden md:flex space-x-6 text-lg">
+      <a href="index.html#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
+      <a href="accompagnements.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
+      <a href="pelerin.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Jeu</a>
+      <a href="index.html#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
+      <a href="a-propos.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+    </nav>
+    <div id="memberMenuWrapper" class="hidden md:block relative">
+    <!-- Bouton Espace membre -->
+    <button id="memberMenuBtn" class="flex items-center gap-2 text-gold font-medium hover:text-light-gold transition">
+        <i class="fas fa-user-circle text-2xl"></i>
+        <span>Espace membre</span>
+        <i class="fas fa-chevron-down text-sm ml-1"></i>
+    </button>
+
+    <!-- Dropdown -->
+    <div id="memberDropdown"
+         class="hidden absolute right-0 mt-2 w-48 bg-[rgba(5,20,40,0.95)] border border-gold/30 rounded-lg shadow-lg z-50 backdrop-blur-md">
+        <a href="profil.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Profil</a>
+        <a href="dashboard.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Tableau de bord</a>
+        <button id="logoutBtn" class="w-full text-left px-4 py-2 text-gold hover:bg-gold/10">Déconnexion</button>
+    </div>
+</div>
+
+</div>
+
+  <!-- Menu mobile déroulant -->
+  <nav id="mobileMenu" class="md:hidden hidden mt-3 space-y-2">
+    <a href="index.html#accueil" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-home mr-2"></i>Accueil</a>
+    <a href="accompagnements.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
+    <a href="pelerin.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Jeu</a>
+    <a href="index.html#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
+    <a href="a-propos.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+  </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section relative min-h-screen flex items-center justify-center">
+    <div class="hero-overlay"></div>
+    <div class="container mx-auto px-4 relative z-10">
+      <div class="hero-content">
+        <h1 class="hero-title cormorant text-5xl md:text-7xl font-bold gold-gradient mb-6 title-animate text-left">
+          À Propos d'Oradia
+        </h1>
+        <p class="hero-subtitle text-xl md:text-2xl text-light-gold mb-8 max-w-3xl text-left">
+          Découvrez l'histoire et la vision de l'Oracle du Vivant
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Histoire -->
+  <section class="section-padding bg-night-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold text-center gold-gradient mb-12">
+          Qui suis-je?
+        </h2>
+        
+        <div class="grid md:grid-cols-2 gap-12 items-center">
+          <div>
+            <p class="text-xl leading-relaxed mb-6 gold-gradient font-semibold">
+              Explorer ce que nous vivons, reconnaître ce qui nous nourrit et clarifier ce qui nous appelle.
+            </p>
+            <p class="text-lg leading-relaxed mb-6">
+              Je suis <strong class="text-gold">facilitateur et accompagnant en transformation personnelle et collective</strong>, et le créateur de l'oracle Oradia.
+            </p>
+            <p class="text-lg leading-relaxed mb-6">
+              J'accompagne les personnes et les groupes qui souhaitent prendre du recul sur ce qu'ils vivent, mieux comprendre leurs expériences et faire émerger des choix plus alignés. Dans un monde où tout va souvent très vite, il est parfois précieux de pouvoir s'arrêter un moment, mettre des mots sur ce qui se passe et regarder une situation sous un autre angle.
+            </p>
+            <div class="quote">
+              "Mon rôle n'est pas de donner des réponses toutes faites, mais de créer un espace d'écoute, de dialogue et de réflexion qui permet de faire émerger des prises de conscience et de nouvelles perspectives."
+            </div>
+          </div>
+          
+          <div class="text-center">
+            <div class="w-64 h-64 mx-auto rounded-full overflow-hidden border-4 border-gold/30 shadow-xl">
+              <img src="images/medias/photo_a_propos.png" alt="Photo du créateur d'Oradia" class="w-full h-full object-cover">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Approche -->
+  <section class="section-padding bg-dark-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold text-center gold-gradient mb-12">
+          Une Approche Basée sur l'Expérience Vécue
+        </h2>
+        
+        <div class="bg-night-blue/50 rounded-2xl p-8 border border-gold/30">
+          <p class="text-lg leading-relaxed mb-8">
+            Dans les accompagnements que je propose, nous explorons aussi bien les tensions que les réussites et les aspirations. Chaque expérience peut devenir une porte d'entrée pour mieux comprendre ce qui est en jeu et ce qui cherche à évoluer.
+          </p>
+          
+          <p class="text-lg leading-relaxed mb-8">
+            Ces espaces permettent d'accueillir ce qui pèse, de reconnaître ce qui nourrit et de clarifier ce qui appelle à se transformer.
+          </p>
+          
+          <div class="grid md:grid-cols-3 gap-6 mb-8">
+            <div class="text-center">
+              <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gold/20 flex items-center justify-center">
+                <i class="fas fa-user text-2xl text-gold"></i>
+              </div>
+              <h3 class="cormorant text-xl font-bold text-gold mb-2">Accompagnements Individuels</h3>
+              <p class="text-light-gold text-sm">Un espace personnel pour explorer votre chemin unique</p>
+            </div>
+            
+            <div class="text-center">
+              <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gold/20 flex items-center justify-center">
+                <i class="fas fa-comments text-2xl text-gold"></i>
+              </div>
+              <h3 class="cormorant text-xl font-bold text-gold mb-2">Cercles de Parole</h3>
+              <p class="text-light-gold text-sm">Partager et recevoir dans un bienveillant collectif</p>
+            </div>
+            
+            <div class="text-center">
+              <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gold/20 flex items-center justify-center">
+                <i class="fas fa-brain text-2xl text-gold"></i>
+              </div>
+              <h3 class="cormorant text-xl font-bold text-gold mb-2">Intelligence Collective</h3>
+              <p class="text-light-gold text-sm">Co-créer des solutions à partir du groupe</p>
+            </div>
+          </div>
+          
+          <p class="text-lg leading-relaxed text-center italic text-light-gold/90">
+            Où chacun peut déposer ce qu'il vit et laisser émerger de nouvelles compréhensions.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Philosophie -->
+  <section class="section-padding bg-dark-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold text-center gold-gradient mb-12">
+          Ma Philosophie
+        </h2>
+        
+        <div class="grid md:grid-cols-3 gap-8">
+          <div class="text-center">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gold/20 flex items-center justify-center">
+              <i class="fas fa-heart text-3xl text-gold"></i>
+            </div>
+            <h3 class="cormorant text-2xl font-bold text-gold mb-4">Authenticité</h3>
+            <p class="text-light-gold">
+              Nous croyons en la puissance de la vérité intérieure et en la sagesse qui réside en chaque être.
+            </p>
+          </div>
+          
+          <div class="text-center">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gold/20 flex items-center justify-center">
+              <i class="fas fa-balance-scale text-3xl text-gold"></i>
+            </div>
+            <h3 class="cormorant text-2xl font-bold text-gold mb-4">Équilibre</h3>
+            <p class="text-light-gold">
+              Harmoniser les énergies du corps, de l'esprit et de l'âme pour retrouver son centre.
+            </p>
+          </div>
+          
+          <div class="text-center">
+            <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gold/20 flex items-center justify-center">
+              <i class="fas fa-seedling text-3xl text-gold"></i>
+            </div>
+            <h3 class="cormorant text-2xl font-bold text-gold mb-4">Croissance</h3>
+            <p class="text-light-gold">
+              Accompagner chaque personne dans son évolution personnelle et spirituelle.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Oradia -->
+  <section class="section-padding bg-night-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold text-center gold-gradient mb-12">
+          Oradia
+        </h2>
+        
+        <div class="bg-dark-blue/50 rounded-2xl p-8 border border-gold/30">
+          <p class="text-lg leading-relaxed mb-6">
+            Oradia est un outil de guidance que j'ai conçu pour accompagner ces explorations.
+          </p>
+          
+          <p class="text-lg leading-relaxed mb-6">
+            Inspiré à la fois des dynamiques de l'expérience humaine et de structures symboliques plus anciennes, il permet d'éclairer les situations vécues et d'ouvrir de nouvelles perspectives de compréhension.
+          </p>
+          
+          <div class="bg-gold/10 rounded-xl p-6 border border-gold/30 mb-6">
+            <p class="text-xl font-semibold text-center text-gold mb-2">
+              Oradia n'est pas un outil de prédiction.
+            </p>
+            <p class="text-lg text-center text-light-gold">
+              Il est avant tout un support de dialogue, de réflexion et de prise de conscience.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Mon Intention -->
+  <section class="section-padding bg-dark-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto text-center">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-12">
+          Mon Intention
+        </h2>
+        
+        <div class="bg-night-blue/50 rounded-2xl p-8 border border-gold/30">
+          <p class="text-xl leading-relaxed mb-8">
+            À travers ces accompagnements et la création d'Oradia, mon intention est simple : <strong class="text-gold">contribuer à créer des espaces où les expériences vécues peuvent devenir des prises de conscience et des chemins d'évolution.</strong>
+          </p>
+          
+          <p class="text-lg leading-relaxed mb-6">
+            Que ce soit à titre personnel ou au sein d'un collectif, ces moments de recul permettent souvent de retrouver plus de clarté, de cohérence et de liberté dans ses choix.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Section Invitation -->
+  <section class="section-padding bg-night-blue">
+    <div class="container mx-auto px-4">
+      <div class="max-w-4xl mx-auto text-center">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-8">
+          Une Invitation
+        </h2>
+        <p class="text-xl mb-8">
+          Si cette approche résonne pour vous, je vous invite à découvrir les accompagnements proposés ou à explorer l'univers d'Oradia.
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-4 justify-center">
+          <a href="accompagnements.html" class="btn-gold bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-8 rounded-full hover:shadow-lg transition-all duration-300">
+            Découvrir les accompagnements
+          </a>
+          <a href="pelerin.html" class="btn-outline-gold border-2 border-gold text-gold font-bold py-3 px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300">
+            Explorer Oradia
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-dark-blue border-t border-gold/20 py-12">
+    <div class="container mx-auto px-4">
+      <div class="grid md:grid-cols-4 gap-8">
+        <div>
+          <h3 class="cormorant text-xl text-gold mb-4">ORADIA</h3>
+          <p class="text-light-gold text-sm">L'Oracle du Vivant</p>
+          <p class="text-light-gold text-sm mt-2">Guidance • Sagesse • Transformation</p>
+        </div>
+        
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Navigation</h4>
+          <ul class="space-y-2">
+            <li><a href="index.html" class="text-light-gold hover:text-gold transition">Accueil</a></li>
+            <li><a href="index.html#offres" class="text-light-gold hover:text-gold transition">Offres</a></li>
+            <li><a href="pelerin.html" class="text-light-gold hover:text-gold transition">Jeu</a></li>
+            <li><a href="a-propos.html" class="text-light-gold hover:text-gold transition">À Propos</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Ressources</h4>
+          <ul class="space-y-2">
+            <li><a href="#" class="text-light-gold hover:text-gold transition">Blog</a></li>
+            <li><a href="#" class="text-light-gold hover:text-gold transition">Guide d'utilisation</a></li>
+            <li><a href="#" class="text-light-gold hover:text-gold transition">FAQ</a></li>
+            <li><a href="#" class="text-light-gold hover:text-gold transition">Mentions légales</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Suivez-nous</h4>
+          <div class="flex space-x-4">
+            <a href="#" class="text-light-gold hover:text-gold transition">
+              <i class="fab fa-facebook text-2xl"></i>
+            </a>
+            <a href="#" class="text-light-gold hover:text-gold transition">
+              <i class="fab fa-instagram text-2xl"></i>
+            </a>
+            <a href="#" class="text-light-gold hover:text-gold transition">
+              <i class="fab fa-youtube text-2xl"></i>
+            </a>
+            <a href="#" class="text-light-gold hover:text-gold transition">
+              <i class="fab fa-twitter text-2xl"></i>
+            </a>
+          </div>
+        </div>
+      </div>
+      
+      <div class="border-t border-gold/20 mt-8 pt-8 text-center">
+        <p class="text-light-gold text-sm">
+          © 2026 Oradia - Tous droits réservés | Créé avec ❤️ et intention
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    // Menu mobile
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    
+    mobileMenuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+    
+    // Menu membre
+    const memberMenuBtn = document.getElementById('memberMenuBtn');
+    const memberMenu = document.getElementById('memberMenu');
+    
+    if (memberMenuBtn && memberMenu) {
+      memberMenuBtn.addEventListener('click', () => {
+        memberMenu.classList.toggle('hidden');
+      });
+    }
+    
+    // Fermer les menus en cliquant ailleurs
+    document.addEventListener('click', (e) => {
+      if (!mobileMenuBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
+        mobileMenu.classList.add('hidden');
+      }
+      
+      if (memberMenuBtn && !memberMenuBtn.contains(e.target) && !memberMenu.contains(e.target)) {
+        memberMenu.classList.add('hidden');
+      }
+    });
+    
+    // Animation au scroll
+    const observerOptions = {
+      threshold: 0.1,
+      rootMargin: '0px 0px -50px 0px'
+    };
+    
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.classList.add('title-animate');
+        }
+      });
+    }, observerOptions);
+    
+    document.querySelectorAll('h2, h3').forEach(el => {
+      observer.observe(el);
+    });
+  </script>
+</body>
+</html>
