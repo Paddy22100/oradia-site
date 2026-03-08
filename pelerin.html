@@ -803,38 +803,249 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   border-top: 1px solid rgba(212,175,55,.3);
 }
 #mobileMenuBtn { position: relative; z-index: 1300; }     /* au-dessus du menu lui-même */
-/* ====== MOBILE FIX PÈLERIN (ne change pas le desktop) ====== */
-@media (max-width: 480px){
-  /* Titre & intro alignés à gauche */
-  #oracle .text-center{ text-align: left; }
-  #oracle h2{ font-size: 1.75rem; line-height: 1.2; }   /* plus petit sur téléphone */
-  #oracle p{ font-size: .95rem; }
-
-  /* Éventail + dock : plus petit et calé à gauche dans le conteneur */
-  #board, 
-  #board .fan-wrap,
-  #board .choice-tray { width: 92vw; }                   /* rétrécit le bloc tirage */
+/* ====== MOBILE OPTIMISATIONS COMPLÈTES ====== */
+@media (max-width: 768px){
+  /* Header responsive */
+  .header-bg { padding: 0.5rem 1rem; }
   
-  #board .fan-wrap{
-    margin: 12px 0 0 0;                                  /* au lieu de "auto" -> colle à gauche */
-    --radius: 110px;                                     /* éventail un peu plus bas/compact */
-  }
-
-  /* cartes de l’éventail en version mobile */
-  #board .card{
-    width: 190px; 
-    height: 280px; 
-    transform-origin: 50% 82%;
-  }
-
-  /* dock en bas un peu plus compact aussi */
-  #board .choice-tray{ padding: 12px 8px 18px; }
+  /* Logo et titre mobile */
+  .header-bg .flex.items-center img { width: 3rem; height: 3rem; }
+  .header-bg .cormorant { font-size: 1.5rem; }
+  
+  /* Hero section mobile */
+  .hero-section { min-height: 70vh; padding: 1rem 0; }
+  .hero-content { padding: 1rem; }
+  .hero-title { font-size: 2.5rem; line-height: 1.1; }
+  .hero-subtitle { font-size: 1.1rem; }
+  
+  /* Sections mobile */
+  .section-padding { padding: 3rem 1rem; }
+  .container { padding: 0 1rem; }
+  .max-w-4xl { max-width: 100%; }
+  .max-w-6xl { max-width: 100%; }
+  
+  /* Grid mobile */
+  .grid-cols-1.md\\:grid-cols-2 { grid-template-columns: 1fr; gap: 1.5rem; }
+  .grid-cols-1.md\\:grid-cols-3 { grid-template-columns: 1fr; gap: 1.5rem; }
+  .grid-cols-3 { grid-template-columns: 1fr; gap: 1rem; }
+  
+  /* Cards mobile */
+  .rounded-2xl { border-radius: 1rem; }
+  .p-8 { padding: 1.5rem; }
+  .p-6 { padding: 1rem; }
+  .p-10 { padding: 2rem; }
+  .text-4xl { font-size: 2rem; }
+  .text-5xl { font-size: 2.5rem; }
+  .text-3xl { font-size: 1.75rem; }
+  .text-2xl { font-size: 1.5rem; }
+  
+  /* Boutons mobile */
+  .btn-gold { padding: 0.75rem 1.5rem; font-size: 0.9rem; }
+  .btn-outline-gold { padding: 0.75rem 1.5rem; font-size: 0.9rem; }
+  
+  /* Navigation mobile */
+  #mobileMenu { max-height: 80vh; overflow-y: auto; }
+  #mobileMenu a { padding: 0.75rem 1rem; font-size: 0.9rem; }
+  
+  /* Espacements mobile */
+  .space-y-4 > * + * { margin-top: 1rem; }
+  .space-y-6 > * + * { margin-top: 1.5rem; }
+  .mb-8 { margin-bottom: 2rem; }
+  .mb-6 { margin-bottom: 1.5rem; }
+  .mb-10 { margin-bottom: 3rem; }
+  .gap-8 { gap: 2rem; }
+  .gap-12 { gap: 3rem; }
+  
+  /* Oracle section mobile */
+  #oracle { padding: 2rem 1rem; }
+  #oracle .text-center { text-align: center; }
+  #oracle h2 { font-size: 2rem; }
+  #oracle p { font-size: 1rem; }
+  
+  /* Formulaire mobile */
+  textarea { min-height: 100px; }
+  .max-w-2xl { max-width: 100%; }
+  
+  /* Board mobile */
+  #board { width: 100%; }
+  #board .fan-wrap { --radius: 120px; }
+  #board .card { width: 160px; height: 240px; }
+  #board .choice-tray { padding: 1rem 0.5rem; }
+  
+  /* Résultats mobile */
+  .flex-col.lg\\:flex-row { flex-direction: column; }
+  .lg\\:w-3\\/5 { width: 100%; }
+  .mt-8 { margin-top: 2rem; }
 }
 
-/* très petits écrans : encore un cran de réduction */
-@media (max-width: 360px){
-  #board .card{ width: 170px; height: 250px; }
-  #board .fan-wrap{ --radius: 100px; }
+@media (max-width: 480px){
+  /* Très petits écrans */
+  .hero-section { min-height: 60vh; }
+  .hero-title { font-size: 2rem; }
+  .hero-subtitle { font-size: 1rem; }
+  
+  /* Header très petit */
+  .header-bg .flex.items-center img { width: 2.5rem; height: 2.5rem; }
+  .header-bg .cormorant { font-size: 1.25rem; }
+  
+  /* Sections très compactes */
+  .section-padding { padding: 2rem 0.75rem; }
+  .p-8 { padding: 1rem; }
+  .p-6 { padding: 0.75rem; }
+  .p-10 { padding: 1.5rem; }
+  .text-4xl { font-size: 1.75rem; }
+  .text-5xl { font-size: 2rem; }
+  .text-3xl { font-size: 1.5rem; }
+  .text-2xl { font-size: 1.25rem; }
+  
+  /* Grid très petit */
+  .grid-cols-3 { gap: 0.75rem; }
+  .gap-8 { gap: 1rem; }
+  .gap-12 { gap: 2rem; }
+  
+  /* Boutons très petits */
+  .btn-gold { padding: 0.6rem 1.2rem; font-size: 0.85rem; }
+  .btn-outline-gold { padding: 0.6rem 1.2rem; font-size: 0.85rem; }
+  
+  /* Texte optimisé */
+  .text-xl { font-size: 1.1rem; }
+  .text-lg { font-size: 1rem; }
+  .text-base { font-size: 0.9rem; }
+  .text-sm { font-size: 0.8rem; }
+  
+  /* Espaces très compacts */
+  .mb-8 { margin-bottom: 1.5rem; }
+  .mb-6 { margin-bottom: 1rem; }
+  .mb-10 { margin-bottom: 2rem; }
+  .gap-8 { gap: 1.5rem; }
+  .gap-12 { gap: 2rem; }
+  
+  /* Oracle très petit */
+  #oracle { padding: 1.5rem 0.75rem; }
+  #oracle h2 { font-size: 1.75rem; }
+  #oracle p { font-size: 0.9rem; }
+  
+  /* Board très petit */
+  #board { width: 95vw; }
+  #board .fan-wrap { --radius: 100px; }
+  #board .card { width: 140px; height: 210px; }
+  #board .choice-tray { padding: 0.75rem 0.5rem; }
+  
+  /* Résultats très petit */
+  .flex-col { flex-direction: column; }
+  .mt-8 { margin-top: 1.5rem; }
+  .p-6 { padding: 0.75rem; }
+  
+  /* Formulaire très petit */
+  textarea { min-height: 80px; font-size: 0.9rem; }
+  .px-4 { padding: 0.75rem; }
+  .py-3 { padding: 0.75rem 0; }
+}
+
+/* ====== TABLETTES (768px - 1024px) ====== */
+@media (min-width: 768px) and (max-width: 1024px){
+  /* Header tablette */
+  .header-bg { padding: 0.75rem 2rem; }
+  
+  /* Hero tablette */
+  .hero-section { min-height: 80vh; }
+  .hero-title { font-size: 3.5rem; }
+  .hero-subtitle { font-size: 1.5rem; }
+  
+  /* Grid tablette */
+  .grid-cols-1.md\\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-cols-1.md\\:grid-cols-3 { grid-template-columns: repeat(2, 1fr); }
+  
+  /* Cards tablette */
+  .p-8 { padding: 2rem; }
+  .p-6 { padding: 1.5rem; }
+  .p-10 { padding: 2.5rem; }
+  
+  /* Board tablette */
+  #board { width: 90vw; }
+  #board .fan-wrap { --radius: 140px; }
+  #board .card { width: 180px; height: 260px; }
+}
+
+/* ====== ACCESSIBILITÉ TOUCH ====== */
+@media (hover: none) and (pointer: coarse){
+  /* Améliorations pour écrans tactiles */
+  .btn-gold { min-height: 48px; min-width: 48px; }
+  .btn-outline-gold { min-height: 48px; min-width: 48px; }
+  a { min-height: 44px; display: flex; align-items: center; }
+  
+  /* Espacement pour éviter les clics accidentels */
+  .slot { margin-bottom: 1rem; }
+  .choice-tray > * { margin-bottom: 0.5rem; }
+}
+
+/* ====== ORIENTATION PAYSAGE MOBILE ====== */
+@media (max-width: 768px) and (orientation: landscape){
+  .hero-section { min-height: 50vh; }
+  .section-padding { padding: 2rem 1rem; }
+  
+  /* Oracle paysage */
+  #oracle { padding: 1rem 1rem; }
+  
+  /* Board paysage */
+  #board { width: 85vw; }
+  #board .fan-wrap { --radius: 80px; }
+  #board .card { width: 120px; height: 180px; }
+}
+
+/* ====== DARK MODE OPTIMISATIONS ====== */
+@media (prefers-color-scheme: dark){
+  .text-light-gold { color: #f5e7a1; }
+}
+
+/* ====== RÉDUCTION DES MOUVEMENTS ====== */
+@media (prefers-reduced-motion: reduce){
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ====== HIGH CONTRAST ====== */
+@media (prefers-contrast: high){
+  .text-gold { color: #FFD700; }
+  .text-light-gold { color: #FFFACD; }
+  .border-gold { border-color: #FFD700; }
+  .bg-gold { background-color: #FFD700; }
+}
+
+/* ====== PERFORMANCE MOBILE ====== */
+@media (max-width: 768px){
+  /* Optimisation des images */
+  img { max-width: 100%; height: auto; }
+  
+  /* Réduction des animations sur mobile */
+  .animate-pulse,
+  .animate-spin,
+  .animate-bounce {
+    animation: none !important;
+  }
+  
+  /* Optimisation des ombres */
+  .shadow-lg { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+  .shadow-xl { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+  
+  /* Optimisation du board */
+  #board { transform: scale(0.9); }
+  #board .card { transform: scale(0.9); }
+}
+
+/* ====== NOTCH ET SAFE AREA ====== */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  header {
+    padding-top: env(safe-area-inset-top);
+  }
 }
   /* === Ajout styles synthèse === */
   #synthese p { margin: 0.35rem 0; }

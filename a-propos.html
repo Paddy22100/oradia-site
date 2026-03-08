@@ -127,18 +127,201 @@
       100% { transform: scale(0.8); opacity: 0.5; }
     }
 
-    /* Responsive */
-    @media (max-width: 768px){
-      .hero-section{ min-height:60vh; }
-      .hero-content{ padding:2rem 1rem; }
-      .hero-title{ font-size:2.5rem; }
-      .hero-subtitle{ font-size:1.1rem; }
-    }
-    
-    @media (max-width: 480px){
-      .hero-title{ font-size:2rem; }
-      .hero-subtitle{ font-size:1rem; }
-    }
+    /* ====== MOBILE OPTIMISATIONS COMPLÈTES ====== */
+@media (max-width: 768px){
+  /* Header responsive */
+  .header-bg { padding: 0.5rem 1rem; }
+  
+  /* Logo et titre mobile */
+  .header-bg .flex.items-center img { width: 3rem; height: 3rem; }
+  .header-bg .cormorant { font-size: 1.5rem; }
+  
+  /* Hero section mobile */
+  .hero-section { min-height: 70vh; padding: 1rem 0; }
+  .hero-content { padding: 1rem; }
+  .hero-title { font-size: 2.5rem; line-height: 1.1; }
+  .hero-subtitle { font-size: 1.1rem; }
+  
+  /* Sections mobile */
+  .section-padding { padding: 3rem 1rem; }
+  .container { padding: 0 1rem; }
+  .max-w-4xl { max-width: 100%; }
+  .max-w-6xl { max-width: 100%; }
+  
+  /* Grid mobile */
+  .grid-cols-1.md\\:grid-cols-2 { grid-template-columns: 1fr; gap: 1.5rem; }
+  .grid-cols-1.md\\:grid-cols-3 { grid-template-columns: 1fr; gap: 1.5rem; }
+  .grid-cols-3 { grid-template-columns: 1fr; gap: 1rem; }
+  
+  /* Cards mobile */
+  .rounded-2xl { border-radius: 1rem; }
+  .p-8 { padding: 1.5rem; }
+  .p-6 { padding: 1rem; }
+  .text-4xl { font-size: 2rem; }
+  .text-5xl { font-size: 2.5rem; }
+  .text-3xl { font-size: 1.75rem; }
+  .text-2xl { font-size: 1.5rem; }
+  
+  /* Boutons mobile */
+  .btn-gold { padding: 0.75rem 1.5rem; font-size: 0.9rem; }
+  .btn-outline-gold { padding: 0.75rem 1.5rem; font-size: 0.9rem; }
+  
+  /* Navigation mobile */
+  #mobileMenu { max-height: 80vh; overflow-y: auto; }
+  #mobileMenu a { padding: 0.75rem 1rem; font-size: 0.9rem; }
+  
+  /* Espacements mobile */
+  .space-y-4 > * + * { margin-top: 1rem; }
+  .space-y-6 > * + * { margin-top: 1.5rem; }
+  .mb-8 { margin-bottom: 2rem; }
+  .mb-6 { margin-bottom: 1.5rem; }
+  .mb-12 { margin-bottom: 3rem; }
+  .gap-12 { gap: 3rem; }
+  
+  /* Images mobile */
+  .w-64.h-64 { width: 12rem; height: 12rem; }
+  .w-20.h-20 { width: 4rem; height: 4rem; }
+  .w-16.h-16 { width: 3.5rem; height: 3.5rem; }
+  
+  /* Centrage mobile */
+  .text-center { text-align: center; }
+}
+
+@media (max-width: 480px){
+  /* Très petits écrans */
+  .hero-section { min-height: 60vh; }
+  .hero-title { font-size: 2rem; }
+  .hero-subtitle { font-size: 1rem; }
+  
+  /* Header très petit */
+  .header-bg .flex.items-center img { width: 2.5rem; height: 2.5rem; }
+  .header-bg .cormorant { font-size: 1.25rem; }
+  
+  /* Sections très compactes */
+  .section-padding { padding: 2rem 0.75rem; }
+  .p-8 { padding: 1rem; }
+  .p-6 { padding: 0.75rem; }
+  .text-4xl { font-size: 1.75rem; }
+  .text-5xl { font-size: 2rem; }
+  .text-3xl { font-size: 1.5rem; }
+  .text-2xl { font-size: 1.25rem; }
+  
+  /* Grid très petit */
+  .grid-cols-3 { gap: 0.75rem; }
+  .gap-8 { gap: 1rem; }
+  
+  /* Boutons très petits */
+  .btn-gold { padding: 0.6rem 1.2rem; font-size: 0.85rem; }
+  .btn-outline-gold { padding: 0.6rem 1.2rem; font-size: 0.85rem; }
+  
+  /* Texte optimisé */
+  .text-xl { font-size: 1.1rem; }
+  .text-lg { font-size: 1rem; }
+  .text-base { font-size: 0.9rem; }
+  .text-sm { font-size: 0.8rem; }
+  
+  /* Espaces très compacts */
+  .mb-8 { margin-bottom: 1.5rem; }
+  .mb-6 { margin-bottom: 1rem; }
+  .mb-4 { margin-bottom: 0.75rem; }
+  .mb-12 { margin-bottom: 2rem; }
+  .gap-12 { gap: 2rem; }
+  
+  /* Images très petites */
+  .w-64.h-64 { width: 10rem; height: 10rem; }
+  .w-20.h-20 { width: 3.5rem; height: 3.5rem; }
+  .w-16.h-16 { width: 3rem; height: 3rem; }
+}
+
+/* ====== TABLETTES (768px - 1024px) ====== */
+@media (min-width: 768px) and (max-width: 1024px){
+  /* Header tablette */
+  .header-bg { padding: 0.75rem 2rem; }
+  
+  /* Hero tablette */
+  .hero-section { min-height: 80vh; }
+  .hero-title { font-size: 3.5rem; }
+  .hero-subtitle { font-size: 1.5rem; }
+  
+  /* Grid tablette */
+  .grid-cols-1.md\\:grid-cols-2 { grid-template-columns: repeat(2, 1fr); }
+  .grid-cols-1.md\\:grid-cols-3 { grid-template-columns: repeat(2, 1fr); }
+  
+  /* Cards tablette */
+  .p-8 { padding: 2rem; }
+  .p-6 { padding: 1.5rem; }
+  
+  /* Images tablette */
+  .w-64.h-64 { width: 14rem; height: 14rem; }
+}
+
+/* ====== ACCESSIBILITÉ TOUCH ====== */
+@media (hover: none) and (pointer: coarse){
+  /* Améliorations pour écrans tactiles */
+  .btn-gold { min-height: 48px; min-width: 48px; }
+  .btn-outline-gold { min-height: 48px; min-width: 48px; }
+  a { min-height: 44px; display: flex; align-items: center; }
+  
+  /* Espacement pour éviter les clics accidentels */
+  .bg-night-blue\\/50 { margin-bottom: 1rem; }
+}
+
+/* ====== ORIENTATION PAYSAGE MOBILE ====== */
+@media (max-width: 768px) and (orientation: landscape){
+  .hero-section { min-height: 50vh; }
+  .section-padding { padding: 2rem 1rem; }
+}
+
+/* ====== DARK MODE OPTIMISATIONS ====== */
+@media (prefers-color-scheme: dark){
+  .text-light-gold { color: #f5e7a1; }
+}
+
+/* ====== RÉDUCTION DES MOUVEMENTS ====== */
+@media (prefers-reduced-motion: reduce){
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ====== HIGH CONTRAST ====== */
+@media (prefers-contrast: high){
+  .text-gold { color: #FFD700; }
+  .text-light-gold { color: #FFFACD; }
+  .border-gold { border-color: #FFD700; }
+  .bg-gold { background-color: #FFD700; }
+}
+
+/* ====== PERFORMANCE MOBILE ====== */
+@media (max-width: 768px){
+  /* Optimisation des images */
+  img { max-width: 100%; height: auto; }
+  
+  /* Réduction des animations sur mobile */
+  .animate-pulse,
+  .animate-spin,
+  .animate-bounce {
+    animation: none !important;
+  }
+  
+  /* Optimisation des ombres */
+  .shadow-lg { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+  .shadow-xl { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
+}
+
+/* ====== NOTCH ET SAFE AREA ====== */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+  }
+  
+  header {
+    padding-top: env(safe-area-inset-top);
+  }
+}
 
     /* Fix pour le menu mobile */
     #mobileMenu {
@@ -280,10 +463,11 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
 <!-- Nav desktop -->
     <nav class="hidden md:flex space-x-6 text-lg">
       <a href="index.html#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
+      <a href="index.html#oracle" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
       <a href="accompagnements.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
-      <a href="pelerin.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Jeu</a>
-      <a href="index.html#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
       <a href="a-propos.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+      <a href="index.html#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
+      <a href="contact.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-envelope mr-2"></i>Contact</a>
     </nav>
     <div id="memberMenuWrapper" class="hidden md:block relative">
     <!-- Bouton Espace membre -->
@@ -307,10 +491,11 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   <!-- Menu mobile déroulant -->
   <nav id="mobileMenu" class="md:hidden hidden mt-3 space-y-2">
     <a href="index.html#accueil" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-home mr-2"></i>Accueil</a>
+    <a href="index.html#oracle" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Oracle</a>
     <a href="accompagnements.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
-    <a href="pelerin.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Jeu</a>
-    <a href="index.html#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariat</a>
     <a href="a-propos.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+    <a href="index.html#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
+    <a href="contact.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
   </nav>
   </header>
 
