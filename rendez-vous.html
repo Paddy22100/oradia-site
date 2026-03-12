@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+  <title>Prendre rendez-vous – Guidance ORADIA</title>
+  <meta name="description" content="Réservez une séance de guidance ORADIA en ligne ou en présentiel. Choisissez un créneau disponible directement dans l'agenda.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#0a192f',
+            'gold': '#d4af37',
+            'light-gold': '#f5e7a1',
+            'dark-blue': '#051428',
+            'celtic-blue': '#1a365d'
+          },
+          fontFamily: {
+            'cormorant': ['Cormorant Garamond', 'serif'],
+            'poppins': ['Poppins', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+
+    :root{ --dore:#d4af37; --text:#e9e7df; --radius:18px; --shadow:0 10px 30px rgba(0,0,0,.35); }
+
+    body{ margin:0; font-family:'Poppins',sans-serif; background:#0a192f; color:#f5e7a1; overflow-x:hidden; }
+    .header-bg{ background:rgba(5,20,40,.98); }
+    .hero-bg{ background: radial-gradient(circle at center, rgba(26,54,93,.7) 0%, rgba(5,20,40,.9) 70%); background-size:cover; }
+
+    .gold-gradient{
+      background: linear-gradient(90deg, #d4af37, #f5e7a1, #d4af37);
+      -webkit-background-clip:text; background-clip:text; color:transparent;
+      background-size:300% 300%; animation:gradient-shift 4s ease infinite;
+    }
+    @keyframes gradient-shift{0%{background-position:0% 50%}50%{background-position:100% 50%}100%{background-position:0% 50%}}
+    .floating{ animation:floating 3s ease-in-out infinite }
+    @keyframes floating{0%{transform:translateY(0)}50%{transform:translateY(-15px)}100%{transform:translateY(0)}}
+
+    .btn-gold{
+      background: linear-gradient(135deg, #d4af37, #f5e7a1);
+      color: #0a192f;
+      font-weight: 600;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+      box-shadow: 0 4px 15px rgba(212,175,55,0.3);
+    }
+    .btn-gold:hover{
+      transform: translateY(-2px);
+      box-shadow: 0 6px 25px rgba(212,175,55,0.4);
+      background: linear-gradient(135deg, #f5e7a1, #d4af37);
+    }
+
+    .btn-outline-gold{
+      background: transparent;
+      color: #d4af37;
+      font-weight: 600;
+      padding: 1rem 2rem;
+      border-radius: 50px;
+      border: 2px solid #d4af37;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-decoration: none;
+      display: inline-block;
+    }
+    .btn-outline-gold:hover{
+      background: #d4af37;
+      color: #0a192f;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(212,175,55,0.3);
+    }
+
+    /* Cal.com Integration Styles */
+    .cal-embed-container {
+      background: rgba(26,54,93,0.3);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 18px;
+      padding: 2rem;
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+    }
+
+    /* Mobile Responsive */
+    @media (max-width: 768px){
+      .header-bg { padding: 0.5rem 1rem; }
+      .header-bg .flex.items-center img { width: 3rem; height: 3rem; }
+      .header-bg .cormorant { font-size: 1.5rem; }
+      
+      .hero-section { min-height: 70vh; padding: 1rem 0; }
+      .hero-content { padding: 1rem; }
+      .hero-title { font-size: 2.5rem; line-height: 1.1; }
+      .hero-subtitle { font-size: 1.1rem; }
+      
+      .section-padding { padding: 3rem 1rem; }
+      .container { padding: 0 1rem; }
+      .max-w-6xl { max-width: 100%; }
+      
+      .rounded-2xl { border-radius: 1rem; }
+      .p-8 { padding: 1.5rem; }
+      .text-4xl { font-size: 2rem; }
+      .text-5xl { font-size: 2.5rem; }
+      
+      .btn-gold { padding: 0.75rem 1.5rem; font-size: 0.9rem; }
+      
+      #mobileMenu { max-height: 80vh; overflow-y: auto; }
+      #mobileMenu a { padding: 0.75rem 1rem; font-size: 0.9rem; }
+    }
+
+    @media (max-width: 480px){
+      .hero-section { min-height: 60vh; }
+      .hero-title { font-size: 2rem; }
+      .hero-subtitle { font-size: 1rem; }
+      
+      .header-bg .flex.items-center img { width: 2.5rem; height: 2.5rem; }
+      .header-bg .cormorant { font-size: 1.25rem; }
+      
+      .section-padding { padding: 2rem 0.75rem; }
+      .p-8 { padding: 1rem; }
+      .text-4xl { font-size: 1.75rem; }
+      .text-5xl { font-size: 2rem; }
+      
+      .btn-gold { padding: 0.6rem 1.2rem; font-size: 0.85rem; }
+    }
+
+    /* DS V3 — mobile menu */
+    header { position: relative; overflow: visible; }
+    #mobileMenu {
+      position: absolute; top: 100%; left: 0; right: 0;
+      background: rgba(5,20,40,.98); backdrop-filter: blur(10px);
+      z-index: 1200;
+      border-top: 1px solid rgba(212,175,55,.3);
+    }
+    #mobileMenuBtn { position: relative; z-index: 1300; }
+  </style>
+</head>
+
+<body class="relative">
+  <!-- Header -->
+  <header class="header-bg w-full py-3 px-4 md:py-4 md:px-8">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center">
+        <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo"
+         class="w-16 h-16 object-contain transform hover:scale-110 transition-transform duration-300" />
+        <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+      </div>
+      <!-- Bouton burger (mobile) -->
+      <button id="mobileMenuBtn" type="button" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold" aria-label="Ouvrir le menu">
+        <i class="fas fa-bars text-lg"></i>
+      </button>
+      <!-- Nav desktop -->
+      <nav class="hidden md:flex space-x-6 text-lg">
+        <a href="index.html#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
+        <a href="index.html#oracle" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
+        <a href="accompagnements.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
+        <a href="a-propos.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+        <a href="index.html#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
+        <a href="contact.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-envelope mr-2"></i>Contact</a>
+      </nav>
+    </div>
+    <!-- Nav mobile -->
+    <nav id="mobileMenu" class="md:hidden hidden mt-3 space-y-2">
+      <a href="index.html#accueil" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-home mr-2"></i>Accueil</a>
+      <a href="index.html#oracle" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Oracle</a>
+      <a href="accompagnements.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
+      <a href="a-propos.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+      <a href="index.html#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
+      <a href="contact.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
+    </nav>
+  </header>
+
+  <!-- Hero Section -->
+  <section class="hero-section min-h-[60vh] flex items-center justify-center relative">
+    <div class="hero-overlay"></div>
+    <div class="container mx-auto px-6 relative z-10">
+      <div class="text-center max-w-4xl mx-auto">
+        <h1 class="cormorant text-5xl md:text-6xl font-bold gold-gradient mb-6 floating">
+          Prendre rendez-vous
+        </h1>
+        <p class="text-xl md:text-2xl text-light-gold mb-8 leading-relaxed">
+          Réservez votre séance de guidance spirituelle en choisissant un créneau disponible dans l'agenda
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Booking Section -->
+  <section class="section-padding py-20">
+    <div class="container mx-auto max-w-6xl">
+      <div class="text-center mb-12">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-4">
+          Choisissez votre créneau
+        </h2>
+        <p class="text-light-gold text-lg max-w-3xl mx-auto">
+          Sélectionnez directement dans l'agenda ci-dessous la date et l'heure qui vous conviennent
+        </p>
+      </div>
+
+      <!-- Cal.com Iframe -->
+      <div class="bg-gold/10 backdrop-blur-sm rounded-2xl p-8 border border-gold/30">
+        <div style="width:100%;height:750px;">
+          <iframe
+            src="https://app.cal.eu/boucheron-rudy"
+            width="100%"
+            height="100%"
+            frameborder="0">
+          </iframe>
+        </div>
+      </div>
+
+      <!-- Informations importantes -->
+      <div class="mt-12 bg-gold/10 rounded-2xl p-8 border border-gold/30">
+        <h3 class="cormorant text-2xl text-gold mb-6 text-center">
+          <i class="fas fa-info-circle mr-3"></i>
+          Informations importantes
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <h4 class="text-gold font-semibold mb-2">
+              <i class="fas fa-video mr-2"></i>
+              Visioconférence
+            </h4>
+            <p class="text-light-gold text-sm">
+              Le lien de visioconférence vous sera envoyé automatiquement par email après confirmation de votre réservation.
+            </p>
+          </div>
+          <div>
+            <h4 class="text-gold font-semibold mb-2">
+              <i class="fas fa-clock mr-2"></i>
+              Ponctualité
+            </h4>
+            <p class="text-light-gold text-sm">
+              Merci de vous connecter 5 minutes avant l'heure prévue pour vérifier votre équipement technique.
+            </p>
+          </div>
+          <div>
+            <h4 class="text-gold font-semibold mb-2">
+              <i class="fas fa-exchange-alt mr-2"></i>
+              Annulation
+            </h4>
+            <p class="text-light-gold text-sm">
+              Annulation possible jusqu'à 24h avant le rendez-vous sans frais.
+            </p>
+          </div>
+          <div>
+            <h4 class="text-gold font-semibold mb-2">
+              <i class="fas fa-laptop mr-2"></i>
+              Équipement requis
+            </h4>
+            <p class="text-light-gold text-sm">
+              Un ordinateur ou smartphone avec webcam, micro et connexion internet stable.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="bg-dark-blue border-t border-gold/20 py-12">
+    <div class="container mx-auto px-6">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+        <div>
+          <div class="flex items-center mb-4">
+            <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo" class="w-12 h-12 object-contain mr-3">
+            <span class="cormorant text-2xl font-bold gold-gradient">ORADIA</span>
+          </div>
+          <p class="text-light-gold text-sm">
+            L'Oracle du Vivant - Guidance spirituelle et accompagnement bienveillant.
+          </p>
+        </div>
+        
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Navigation</h4>
+          <ul class="space-y-2">
+            <li><a href="index.html" class="text-light-gold hover:text-gold transition">Accueil</a></li>
+            <li><a href="accompagnements.html" class="text-light-gold hover:text-gold transition">Accompagnements</a></li>
+            <li><a href="pelerin.html" class="text-light-gold hover:text-gold transition">Oracle</a></li>
+            <li><a href="a-propos.html" class="text-light-gold hover:text-gold transition">À Propos</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Services</h4>
+          <ul class="space-y-2">
+            <li><a href="rendez-vous.html" class="text-light-gold hover:text-gold transition">Prise de rendez-vous</a></li>
+            <li><a href="accompagnements.html" class="text-light-gold hover:text-gold transition">Accompagnements</a></li>
+            <li><a href="contact.html" class="text-light-gold hover:text-gold transition">Contact</a></li>
+            <li><a href="#" class="text-light-gold hover:text-gold transition">FAQ</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Contact</h4>
+          <div class="space-y-2 text-light-gold text-sm">
+            <p><i class="fas fa-envelope mr-2"></i>contact@oradia.fr</p>
+            <p><i class="fas fa-phone mr-2"></i>Par visioconférence uniquement</p>
+          </div>
+        </div>
+      </div>
+      
+      <div class="border-t border-gold/20 mt-8 pt-8 text-center">
+        <p class="text-light-gold text-sm">
+          © 2026 Oradia - Tous droits réservés | Créé avec ❤️ et intention
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    // Mobile menu toggle
+    document.getElementById('mobileMenuBtn').addEventListener('click', function() {
+      const menu = document.getElementById('mobileMenu');
+      menu.classList.toggle('hidden');
+    });
+
+    // Vérifier que l'iframe se charge correctement
+    window.addEventListener('load', function() {
+      const iframe = document.querySelector('iframe');
+      if (iframe) {
+        iframe.addEventListener('load', function() {
+          console.log('Cal.com iframe loaded successfully');
+        });
+        
+        iframe.addEventListener('error', function() {
+          console.error('Failed to load Cal.com iframe');
+        });
+      }
+    });
+  </script>
+</body>
+</html>

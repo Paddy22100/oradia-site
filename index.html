@@ -238,22 +238,6 @@ img { max-width: 100%; height: auto; }
   }
 }
 
-@media (max-width: 768px) {
-  #oracle .container {
-    padding-left: 0.5rem;
-    padding-right: 0.5rem;
-  }
-  
-  .result-lines {
-    font-size: 0.9rem;
-    padding: 8px;
-  }
-  
-  #emailForm .bg-\[rgba\(18\,20\,32\,\.6\)\] {
-    padding: 1rem;
-  }
-}
-
 @media (max-width: 640px) {
   #oracle {
     padding-top: 1rem;
@@ -427,13 +411,6 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   border: 1px solid rgba(245, 231, 161, 0.1);
   pointer-events: none;
   z-index: -1;
-}
-
-@media (max-width: 768px) {
-  .choice-tray .slots {
-    grid-template-columns: 1fr;
-    gap: 30px;
-  }
 }
 .choice-tray .slot {
   position: relative;
@@ -692,8 +669,6 @@ header {
 /* (désactivé) brillance balayage supprimée */
 .btn-gold::before, .btn-outline-gold::before { content: none !important; }
 
-      left: 100%;
-    }
 /* Mini-carte dans un slot */
 .slot .mini{
   width: 200px;
@@ -767,8 +742,8 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   .container { padding: 0 1rem; }
   
   /* Grid mobile */
-  .grid-cols-1.md\\:grid-cols-3 { grid-template-columns: 1fr; gap: 1.5rem; }
-  .grid-cols-1.lg\\:grid-cols-2 { grid-template-columns: 1fr; gap: 1.5rem; }
+  .grid-cols-1.md\:grid-cols-3 { grid-template-columns: 1fr; gap: 1.5rem; }
+  .grid-cols-1.lg\:grid-cols-2 { grid-template-columns: 1fr; gap: 1.5rem; }
   
   /* Cards mobile */
   .rounded-2xl { border-radius: 1rem; }
@@ -786,6 +761,27 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   /* Offres mobile */
   .max-w-6xl { max-width: 100%; }
   .space-x-6 { gap: 1rem; }
+  
+  /* Styles Oracle spécifiques */
+  #oracle .container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+  
+  .result-lines {
+    font-size: 0.9rem;
+    padding: 8px;
+  }
+  
+  #emailForm .bg-\[rgba\(18\,20\,32\,\.6\)\] {
+    padding: 1rem;
+  }
+  
+  /* Choice tray mobile */
+  .choice-tray .slots {
+    grid-template-columns: 1fr;
+    gap: 30px;
+  }
 }
 
 @media (max-width: 480px){
@@ -828,7 +824,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   .hero-subtitle { font-size: 1.5rem; }
   
   /* Grid tablette */
-  .grid-cols-1.md\\:grid-cols-3 { grid-template-columns: repeat(2, 1fr); }
+  .grid-cols-1.md\:grid-cols-3 { grid-template-columns: repeat(2, 1fr); }
   
   /* Cards tablette */
   .p-8 { padding: 2rem; }
@@ -882,22 +878,6 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   .border-gold { border: 1px solid black !important; }
 }
 
-/* ====== PERFORMANCE MOBILE ====== */
-@media (max-width: 768px){
-  /* Optimisation des images */
-  img { max-width: 100%; height: auto; }
-  
-  /* Réduction des animations sur mobile */
-  .animate-pulse,
-  .animate-spin,
-  .animate-bounce {
-    animation: none !important;
-  }
-  
-  /* Optimisation des ombres */
-  .shadow-lg { box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); }
-}
-
 /* ====== NOTCH ET SAFE AREA ====== */
 @supports (padding: max(0px)) {
   body {
@@ -909,14 +889,15 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
     padding-top: env(safe-area-inset-top);
   }
 }
-  /* === Ajout styles synthèse === */
-  #synthese p { margin: 0.35rem 0; }
-  #synthese ol { margin: 0.35rem 0 0.2rem; padding-left: 1rem; }
-  #synthese .italic { opacity: 0.9; }
-  #synthese .text-gold { color: #d4af37; }
-  #synthese ul { margin: 0.35rem 0 0.2rem; padding-left: 1rem; }
-  #synthese details { border-left: 2px solid rgba(212,175,55,0.25); padding-left: .75rem; }
-  #synthese summary { font-weight: 600; }
+
+/* === Ajout styles synthèse === */
+#synthese p { margin: 0.35rem 0; }
+#synthese ol { margin: 0.35rem 0 0.2rem; padding-left: 1rem; }
+#synthese .italic { opacity: 0.9; }
+#synthese .text-gold { color: #d4af37; }
+#synthese ul { margin: 0.35rem 0 0.2rem; padding-left: 1rem; }
+#synthese details { border-left: 2px solid rgba(212,175,55,0.25); padding-left: .75rem; }
+#synthese summary { font-weight: 600; }
 
   </style>
 </head>
@@ -947,6 +928,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       <a href="#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
       <a href="#oracle" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
       <a href="accompagnements.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
+      <a href="rendez-vous.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
       <a href="a-propos.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
       <a href="#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
       <a href="contact.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-envelope mr-2"></i>Contact</a>
@@ -975,6 +957,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
     <a href="#accueil" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-home mr-2"></i>Accueil</a>
     <a href="#oracle" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Oracle</a>
     <a href="accompagnements.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
+    <a href="rendez-vous.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
     <a href="a-propos.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
     <a href="#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
     <a href="contact.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
@@ -1142,6 +1125,24 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
             <a href="tore.html" class="btn-gold w-full text-center block relative z-10 mt-auto hovered-element">Accéder au tirage du Tore</a>
 </div>
 </div>
+    </div>
+  </section>
+
+  <!-- Section Réservation -->
+  <section class="py-20 px-6 bg-gradient-to-b from-night-blue to-dark-blue">
+    <div class="container mx-auto max-w-4xl text-center">
+      <div class="bg-gold/10 backdrop-blur-sm rounded-2xl p-12 border border-gold/30">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-6">
+          Prêt pour une guidance personnalisée ?
+        </h2>
+        <p class="text-xl text-light-gold mb-8 max-w-2xl mx-auto">
+          Réservez votre séance de guidance spirituelle et bénéficiez d'un accompagnement sur mesure pour éclairer votre chemin.
+        </p>
+        <a href="rendez-vous.html" class="btn-gold text-lg px-8 py-4 inline-flex items-center gap-3">
+          <i class="fas fa-calendar-check"></i>
+          Réserver une séance
+        </a>
+      </div>
     </div>
   </section>
 
