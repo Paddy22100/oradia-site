@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mes Précommandes - ORADIA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../style.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'night-blue': '#0a192f',
+                        'gold': '#d4af37',
+                        'light-gold': '#f5e7a1',
+                        'dark-blue': '#051428',
+                        'celtic-blue': '#1a365d'
+                    },
+                    fontFamily: {
+                        'cormorant': ['Cormorant Garamond', 'serif'],
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .precommande-card {
+            background: linear-gradient(145deg, rgba(26,54,93,0.6), rgba(5,20,40,0.8));
+            border: 1px solid rgba(212,175,55,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .precommande-card:hover {
+            border-color: rgba(212,175,55,0.6);
+            box-shadow: 0 4px 20px rgba(212,175,55,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+        
+        .status-paid {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22c55e;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        .status-pending {
+            background: rgba(251, 191, 36, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+        }
+        
+        .status-processing {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3b82f6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .status-shipped {
+            background: rgba(168, 85, 247, 0.2);
+            color: #a855f7;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-left: 40px;
+            margin-bottom: 24px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: 11px;
+            top: 24px;
+            height: calc(100% + 8px);
+            width: 2px;
+            background: rgba(212, 175, 55, 0.3);
+        }
+        
+        .timeline-item:last-child::before {
+            display: none;
+        }
+        
+        .timeline-dot {
+            position: absolute;
+            left: 4px;
+            top: 4px;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: #d4af37;
+            border: 2px solid #0a192f;
+        }
+        
+        .timeline-dot.completed {
+            background: #22c55e;
+        }
+        
+        .timeline-dot.pending {
+            background: #fbbf24;
+        }
+    </style>
+</head>
+<body class="bg-night-blue text-light-gold">
+    <!-- Header -->
+    <header class="bg-[rgba(5,20,40,0.8)] backdrop-blur-md border-b border-gold/20">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <a href="../index.html" class="flex items-center gap-3">
+                    <img src="../images/logo-hd-v2.jpeg" alt="ORADIA" class="w-10 h-10 rounded-full">
+                    <div>
+                        <h1 class="cormorant text-2xl font-bold gold-gradient">ORADIA</h1>
+                        <p class="text-gold/70 text-sm">Espace Membre</p>
+                    </div>
+                </a>
+                
+                <nav class="hidden md:flex items-center gap-6">
+                    <a href="dashboard.html" class="text-gold hover:text-light-gold transition">Tableau de bord</a>
+                    <a href="tirages.html" class="text-gold hover:text-light-gold transition">Mes Tirages</a>
+                    <a href="precommandes.html" class="text-gold hover:text-light-gold transition font-semibold">Précommandes</a>
+                    <a href="profile.html" class="text-gold hover:text-light-gold transition">Profil</a>
+                    <a href="../logout.html" class="text-gold/70 hover:text-gold transition">
+                        <i class="fas fa-sign-out-alt mr-2"></i>Déconnexion
+                    </a>
+                </nav>
+                
+                <button id="mobileMenuBtn" class="md:hidden text-gold text-2xl">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-8">
+        <!-- Header de la page -->
+        <div class="mb-8">
+            <h2 class="cormorant text-3xl md:text-4xl font-bold gold-gradient mb-4">
+                Mes Précommandes
+            </h2>
+            <p class="text-light-gold text-lg">
+                Suivez l'état de vos précommandes et recevez les mises à jour de production.
+            </p>
+        </div>
+
+        <!-- Statuts globaux -->
+        <section class="mb-12">
+            <div class="grid md:grid-cols-4 gap-6">
+                <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30 text-center">
+                    <div class="text-3xl font-bold text-gold mb-2">2</div>
+                    <p class="text-light-gold">Précommandes totales</p>
+                </div>
+                <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30 text-center">
+                    <div class="text-3xl font-bold text-gold mb-2">1</div>
+                    <p class="text-light-gold">Payées</p>
+                </div>
+                <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30 text-center">
+                    <div class="text-3xl font-bold text-gold mb-2">1</div>
+                    <p class="text-light-gold">En attente</p>
+                </div>
+                <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30 text-center">
+                    <div class="text-3xl font-bold text-gold mb-2">237€</div>
+                    <p class="text-light-gold">Montant total</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Liste des précommandes -->
+        <section class="space-y-8">
+            <!-- Précommande 1 - Early Bird -->
+            <div class="precommande-card rounded-2xl p-8">
+                <div class="flex flex-col lg:flex-row gap-8">
+                    <!-- Image et détails du produit -->
+                    <div class="lg:w-1/3">
+                        <div class="bg-gold/10 rounded-2xl p-6 text-center mb-4">
+                            <div class="aspect-square bg-gold/20 rounded-lg mb-4 flex items-center justify-center">
+                                <i class="fas fa-layer-group text-4xl text-gold"></i>
+                            </div>
+                            <h3 class="cormorant text-xl font-bold text-gold mb-2">ORADIA – Early Bird</h3>
+                            <div class="text-2xl font-bold text-gold mb-2">59€</div>
+                            <span class="status-badge status-paid">Payée</span>
+                        </div>
+                        
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-light-gold/70">Commande:</span>
+                                <span class="text-gold">#ORD-001</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-light-gold/70">Date:</span>
+                                <span class="text-gold">14/03/2024</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-light-gold/70">Paiement:</span>
+                                <span class="text-gold">Carte bancaire</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Timeline de production -->
+                    <div class="lg:w-2/3">
+                        <h4 class="cormorant text-xl font-bold text-gold mb-6">Suivi de production</h4>
+                        
+                        <div class="space-y-4">
+                            <div class="timeline-item">
+                                <div class="timeline-dot completed"></div>
+                                <div class="bg-[rgba(5,20,40,0.6)] rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h5 class="text-gold font-semibold">Commande confirmée</h5>
+                                        <span class="text-sm text-light-gold/70">14/03/2024</span>
+                                    </div>
+                                    <p class="text-light-gold text-sm">Votre précommande a été confirmée et le paiement a été accepté.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item">
+                                <div class="timeline-dot completed"></div>
+                                <div class="bg-[rgba(5,20,40,0.6)] rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h5 class="text-gold font-semibold">Objectif atteint</h5>
+                                        <span class="text-sm text-light-gold/70">20/03/2024</span>
+                                    </div>
+                                    <p class="text-light-gold text-sm">L'objectif de 500 précommandes a été atteint. La production peut commencer.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item">
+                                <div class="timeline-dot pending"></div>
+                                <div class="bg-[rgba(5,20,40,0.6)] rounded-lg p-4">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h5 class="text-gold font-semibold">En production</h5>
+                                        <span class="text-sm text-light-gold/70">Prévu: 01/04/2024</span>
+                                    </div>
+                                    <p class="text-light-gold text-sm">Impression des cartes et fabrication des boîtes en cours.</p>
+                                </div>
+                            </div>
+                            
+                            <div class="timeline-item">
+                                <div class="timeline-dot pending"></div>
+                                <div class="bg-[rgba(5,20,40,0.6)] rounded-lg p-4 opacity-60">
+                                    <div class="flex items-center justify-between mb-2">
+                                        <h5 class="text-gold font-semibold">Expédition</h5>
+                                        <span class="text-sm text-light-gold/70">Prévu: 15/09/2024</span>
+                                    </div>
+                                    <p class="text-light-gold text-sm">Votre oracle sera expédié et vous recevrez un numéro de suivi.</p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Adresse de livraison -->
+                        <div class="mt-8 bg-gold/10 rounded-lg p-4">
+                            <h5 class="text-gold font-semibold mb-3">Adresse de livraison</h5>
+                            <div class="text-light-gold">
+                                <p>Marie Dubois</p>
+                                <p>123 rue de la Paix</p>
+                                <p>75001 Paris, France</p>
+                            </div>
+                            <button class="mt-3 text-gold hover:text-light-gold text-sm">
+                                <i class="fas fa-edit mr-2"></i>Modifier l'adresse
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Précommande 2 - Collector -->
+            <div class="precommande-card rounded-2xl p-8">
+                <div class="flex flex-col lg:flex-row gap-8">
+                    <!-- Image et détails du produit -->
+                    <div class="lg:w-1/3">
+                        <div class="bg-gold/10 rounded-2xl p-6 text-center mb-4">
+                            <div class="aspect-square bg-gold/20 rounded-lg mb-4 flex items-center justify-center">
+                                <i class="fas fa-gem text-4xl text-gold"></i>
+                            </div>
+                            <h3 class="cormorant text-xl font-bold text-gold mb-2">ORADIA – Collector</h3>
+                            <div class="text-2xl font-bold text-gold mb-2">149€</div>
+                            <span class="status-badge status-pending">En attente de paiement</span>
+                        </div>
+                        
+                        <div class="space-y-2 text-sm">
+                            <div class="flex justify-between">
+                                <span class="text-light-gold/70">Commande:</span>
+                                <span class="text-gold">#ORD-002</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-light-gold/70">Date:</span>
+                                <span class="text-gold">15/03/2024</span>
+                            </div>
+                            <div class="flex justify-between">
+                                <span class="text-light-gold/70">Paiement:</span>
+                                <span class="text-gold">En attente</span>
+                            </div>
+                        </div>
+                        
+                        <button class="w-full bg-gold text-night-blue font-bold py-3 px-6 rounded-full hover:bg-light-gold transition-all mt-4">
+                            <i class="fas fa-credit-card mr-2"></i>
+                            Finaliser le paiement
+                        </button>
+                    </div>
+                    
+                    <!-- Détails de l'offre -->
+                    <div class="lg:w-2/3">
+                        <h4 class="cormorant text-xl font-bold text-gold mb-6">Détails de l'offre Collector</h4>
+                        
+                        <div class="grid md:grid-cols-2 gap-6 mb-8">
+                            <div class="bg-[rgba(5,20,40,0.6)] rounded-lg p-4">
+                                <h5 class="text-gold font-semibold mb-3">Contenu inclus</h5>
+                                <ul class="space-y-2 text-light-gold text-sm">
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-gold mr-2 mt-1"></i>
+                                        <span>Oracle ORADIA complet (78 cartes)</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-gold mr-2 mt-1"></i>
+                                        <span>Guide d'utilisation dédicacé</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-gold mr-2 mt-1"></i>
+                                        <span>Boîte de collection numérotée</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-gold mr-2 mt-1"></i>
+                                        <span>Pièce de collection exclusive</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-gold mr-2 mt-1"></i>
+                                        <span>Plateau de tirage en bois</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-check text-gold mr-2 mt-1"></i>
+                                        <span>Certificat d'authenticité</span>
+                                    </li>
+                                </ul>
+                            </div>
+                            
+                            <div class="bg-[rgba(5,20,40,0.6)] rounded-lg p-4">
+                                <h5 class="text-gold font-semibold mb-3">Avantages Collector</h5>
+                                <ul class="space-y-2 text-light-gold text-sm">
+                                    <li class="flex items-start">
+                                        <i class="fas fa-star text-gold mr-2 mt-1"></i>
+                                        <span>Numéro de série unique</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-star text-gold mr-2 mt-1"></i>
+                                        <span>Livraison prioritaire</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-star text-gold mr-2 mt-1"></i>
+                                        <span>Emballage premium</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-star text-gold mr-2 mt-1"></i>
+                                        <span>Dédicace personnalisée</span>
+                                    </li>
+                                    <li class="flex items-start">
+                                        <i class="fas fa-star text-gold mr-2 mt-1"></i>
+                                        <span>Accès VIP aux bonus</span>
+                                    </li>
+                                </ul>
+                            </div>
+                        </div>
+                        
+                        <!-- Message d'attente -->
+                        <div class="bg-yellow-500/10 border border-yellow-500/30 rounded-lg p-4">
+                            <div class="flex items-start">
+                                <i class="fas fa-exclamation-triangle text-yellow-400 mr-3 mt-1"></i>
+                                <div>
+                                    <h5 class="text-yellow-400 font-semibold mb-2">Paiement en attente</h5>
+                                    <p class="text-light-gold text-sm">
+                                        Votre commande est en attente de paiement. Veuillez finaliser le paiement pour valider votre précommande.
+                                        Vous avez jusqu'au 20/03/2024 pour compléter votre commande.
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section d'aide -->
+        <section class="mt-12">
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-8 border border-gold/30 text-center">
+                <h3 class="cormorant text-2xl font-bold text-gold mb-4">Besoin d'aide ?</h3>
+                <p class="text-light-gold mb-6">
+                    Notre équipe est à votre disposition pour répondre à toutes vos questions sur vos précommandes.
+                </p>
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="../contact.html?subject=precommande" class="bg-gold text-night-blue font-bold py-3 px-6 rounded-full hover:bg-light-gold transition-all">
+                        <i class="fas fa-envelope mr-2"></i>
+                        Contacter le support
+                    </a>
+                    <a href="../precommande-oracle.html#faq" class="border-2 border-gold text-gold font-bold py-3 px-6 rounded-full hover:bg-gold hover:text-night-blue transition-all">
+                        <i class="fas fa-question-circle mr-2"></i>
+                        Voir la FAQ
+                    </a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-[rgba(5,20,40,0.8)] border-t border-gold/20 py-12 mt-12">
+        <div class="container mx-auto px-6">
+            <div class="text-center">
+                <p class="text-light-gold/60 text-sm">
+                    © 2026 ORADIA - Tous droits réservés
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Simulation de mise à jour en temps réel
+        function updatePrecommandeStatus() {
+            // En production, faire un appel API pour vérifier le statut
+            console.log('Vérification du statut des précommandes...');
+        }
+        
+        // Modification de l'adresse
+        document.querySelectorAll('.fa-edit').forEach(button => {
+            button.parentElement.addEventListener('click', () => {
+                // Ouvrir un modal pour modifier l'adresse
+                alert('Fonctionnalité de modification d\'adresse à implémenter');
+            });
+        });
+        
+        // Finalisation du paiement
+        document.querySelectorAll('.fa-credit-card').forEach(button => {
+            button.parentElement.addEventListener('click', () => {
+                // Rediriger vers la page de paiement
+                window.location.href = '../precommande-oracle.html';
+            });
+        });
+        
+        // Vérification automatique toutes les 30 secondes
+        setInterval(updatePrecommandeStatus, 30000);
+        
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', () => {
+            updatePrecommandeStatus();
+        });
+    </script>
+</body>
+</html>

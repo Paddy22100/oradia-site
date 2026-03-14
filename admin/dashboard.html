@@ -1,0 +1,672 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Admin - ORADIA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+SC:wght@400;500;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+    <style>
+        @import url('../style.css');
+        
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .dashboard-card {
+            @apply bg-[rgba(5,20,40,0.8)] backdrop-blur-md border border-gold/30 rounded-2xl p-6;
+        }
+        
+        .dashboard-stat {
+            @apply bg-night-blue rounded-xl p-4 border border-gold/20;
+        }
+        
+        .sidebar-item {
+            @apply flex items-center gap-3 px-4 py-3 rounded-lg text-light-gold hover:bg-gold/10 hover:text-gold transition-all duration-200 cursor-pointer;
+        }
+        
+        .sidebar-item.active {
+            @apply bg-gold/20 text-gold border-l-4 border-gold;
+        }
+        
+        .stat-card {
+            @apply bg-gradient-to-br from-night-blue to-dark-blue border border-gold/30 rounded-xl p-6;
+        }
+        
+        .btn-gold {
+            @apply bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-2 px-4 rounded-lg hover:shadow-lg hover:shadow-gold/30 transition-all duration-300;
+        }
+        
+        .btn-outline-gold {
+            @apply border-2 border-gold text-gold font-bold py-2 px-4 rounded-lg hover:bg-gold hover:text-night-blue transition-all duration-300;
+        }
+        
+        .table-row {
+            @apply border-b border-gold/10 hover:bg-gold/5 transition-colors;
+        }
+        
+        .badge {
+            @apply px-2 py-1 rounded-full text-xs font-semibold;
+        }
+        
+        .badge-success {
+            @apply bg-green-500/20 text-green-400 border border-green-500/30;
+        }
+        
+        .badge-warning {
+            @apply bg-yellow-500/20 text-yellow-400 border border-yellow-500/30;
+        }
+        
+        .badge-danger {
+            @apply bg-red-500/20 text-red-400 border border-red-500/30;
+        }
+        
+        .loading-spinner {
+            @apply animate-spin rounded-full border-2 border-gold border-t-transparent;
+        }
+        
+        .chart-container {
+            @apply bg-[rgba(5,20,40,0.6)] rounded-xl p-4 border border-gold/20;
+        }
+    </style>
+</head>
+<body class="bg-night-blue text-light-gold min-h-screen">
+    <!-- Sidebar -->
+    <aside class="fixed left-0 top-0 h-full w-64 bg-[rgba(5,20,40,0.95)] backdrop-blur-md border-r border-gold/30 z-40">
+        <div class="p-6">
+            <div class="flex items-center gap-3 mb-8">
+                <img src="../images/logo-hd-v2.jpeg" alt="ORADIA" class="w-12 h-12 rounded-full">
+                <div>
+                    <h1 class="cormorant text-2xl font-bold gold-gradient">ORADIA</h1>
+                    <p class="text-xs text-gold/70">Dashboard Admin</p>
+                </div>
+            </div>
+            
+            <nav class="space-y-2">
+                <div class="sidebar-item active" onclick="showSection('overview')">
+                    <i class="fas fa-chart-line"></i>
+                    <span>Vue d'ensemble</span>
+                </div>
+                <div class="sidebar-item" onclick="showSection('users')">
+                    <i class="fas fa-users"></i>
+                    <span>Gestion utilisateurs</span>
+                </div>
+                <div class="sidebar-item" onclick="showSection('tirages')">
+                    <i class="fas fa-dice"></i>
+                    <span>Tirages</span>
+                </div>
+                <div class="sidebar-item" onclick="showSection('feedbacks')">
+                    <i class="fas fa-comments"></i>
+                    <span>Feedbacks</span>
+                </div>
+                <div class="sidebar-item" onclick="showSection('newsletter')">
+                    <i class="fas fa-envelope"></i>
+                    <span>Newsletter</span>
+                </div>
+                <div class="sidebar-item" onclick="showSection('analytics')">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Analytics</span>
+                </div>
+            </nav>
+            
+            <div class="absolute bottom-6 left-6 right-6">
+                <button onclick="logout()" class="btn-outline-gold w-full">
+                    <i class="fas fa-sign-out-alt mr-2"></i>
+                    Déconnexion
+                </button>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="ml-64 p-6">
+        <!-- Header -->
+        <header class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h2 class="cormorant text-3xl font-bold gold-gradient mb-2">Dashboard Administrateur</h2>
+                    <p class="text-gold/70">Gestion complète de la plateforme ORADIA</p>
+                </div>
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-sm text-gold/70">Dernière synchronisation</p>
+                        <p class="text-gold font-semibold" id="lastSync">--:--</p>
+                    </div>
+                    <button onclick="refreshData()" class="btn-gold">
+                        <i class="fas fa-sync-alt mr-2"></i>
+                        Actualiser
+                    </button>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Overview Section -->
+        <section id="overview-section" class="space-y-6">
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="stat-card">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-gold/70 text-sm">Total Utilisateurs</p>
+                            <p class="text-3xl font-bold text-gold" id="totalUsers">--</p>
+                        </div>
+                        <div class="w-12 h-12 bg-gold/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-users text-gold"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="text-green-400">+12%</span>
+                        <span class="text-gold/50">vs mois dernier</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-gold/70 text-sm">Tirages Aujourd'hui</p>
+                            <p class="text-3xl font-bold text-gold" id="todayTirages">--</p>
+                        </div>
+                        <div class="w-12 h-12 bg-gold/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-dice text-gold"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="text-green-400">+8%</span>
+                        <span class="text-gold/50">vs hier</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-gold/70 text-sm">Revenus Mensuels</p>
+                            <p class="text-3xl font-bold text-gold" id="monthlyRevenue">--€</p>
+                        </div>
+                        <div class="w-12 h-12 bg-gold/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-euro-sign text-gold"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="text-green-400">+15%</span>
+                        <span class="text-gold/50">vs mois dernier</span>
+                    </div>
+                </div>
+                
+                <div class="stat-card">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <p class="text-gold/70 text-sm">Taux Satisfaction</p>
+                            <p class="text-3xl font-bold text-gold" id="satisfactionRate">--%</p>
+                        </div>
+                        <div class="w-12 h-12 bg-gold/20 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-smile text-gold"></i>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2 text-sm">
+                        <span class="text-yellow-400">stable</span>
+                        <span class="text-gold/50">ce mois</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Charts Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Evolution Chart -->
+                <div class="chart-container">
+                    <h3 class="cormorant text-xl font-bold text-gold mb-4">Évolution des Tirages</h3>
+                    <canvas id="tiragesChart" width="400" height="200"></canvas>
+                </div>
+                
+                <!-- Distribution Chart -->
+                <div class="chart-container">
+                    <h3 class="cormorant text-xl font-bold text-gold mb-4">Répartition des Tirages</h3>
+                    <canvas id="distributionChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- Recent Users -->
+                <div class="dashboard-card">
+                    <h3 class="cormorant text-lg font-bold text-gold mb-4">Nouveaux Utilisateurs</h3>
+                    <div id="recentUsers" class="space-y-3">
+                        <!-- Will be populated by JS -->
+                    </div>
+                </div>
+                
+                <!-- Recent Feedbacks -->
+                <div class="dashboard-card">
+                    <h3 class="cormorant text-lg font-bold text-gold mb-4">Feedbacks Récents</h3>
+                    <div id="recentFeedbacks" class="space-y-3">
+                        <!-- Will be populated by JS -->
+                    </div>
+                </div>
+                
+                <!-- Recent Tirages -->
+                <div class="dashboard-card">
+                    <h3 class="cormorant text-lg font-bold text-gold mb-4">Tirages Récents</h3>
+                    <div id="recentTirages" class="space-y-3">
+                        <!-- Will be populated by JS -->
+                    </div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Users Section -->
+        <section id="users-section" class="hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <h3 class="cormorant text-2xl font-bold gold-gradient">Gestion des Utilisateurs</h3>
+                <div class="flex gap-4">
+                    <input type="text" id="userSearch" placeholder="Rechercher..." class="bg-night-blue border border-gold/30 rounded-lg px-4 py-2 text-light-gold">
+                    <select id="userRoleFilter" class="bg-night-blue border border-gold/30 rounded-lg px-4 py-2 text-light-gold">
+                        <option value="">Tous les rôles</option>
+                        <option value="visitor">Visiteur</option>
+                        <option value="client">Client</option>
+                        <option value="member">Membre</option>
+                        <option value="admin">Admin</option>
+                    </select>
+                    <button onclick="exportUsers()" class="btn-outline-gold">
+                        <i class="fas fa-download mr-2"></i>
+                        Exporter
+                    </button>
+                </div>
+            </div>
+            
+            <div class="dashboard-card">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="border-b border-gold/20">
+                                <th class="text-left py-3 px-4 text-gold">Nom</th>
+                                <th class="text-left py-3 px-4 text-gold">Email</th>
+                                <th class="text-left py-3 px-4 text-gold">Rôle</th>
+                                <th class="text-left py-3 px-4 text-gold">Inscription</th>
+                                <th class="text-left py-3 px-4 text-gold">Tirages</th>
+                                <th class="text-left py-3 px-4 text-gold">Statut</th>
+                                <th class="text-left py-3 px-4 text-gold">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody">
+                            <!-- Will be populated by JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Other sections (hidden by default) -->
+        <section id="tirages-section" class="hidden">
+            <div class="dashboard-card">
+                <h3 class="cormorant text-2xl font-bold gold-gradient mb-6">Gestion des Tirages</h3>
+                <p>Section tirages à implémenter...</p>
+            </div>
+        </section>
+        
+        <section id="feedbacks-section" class="hidden">
+            <div class="dashboard-card">
+                <h3 class="cormorant text-2xl font-bold gold-gradient mb-6">Gestion des Feedbacks</h3>
+                <p>Section feedbacks à implémenter...</p>
+            </div>
+        </section>
+        
+        <section id="newsletter-section" class="hidden">
+            <div class="dashboard-card">
+                <h3 class="cormorant text-2xl font-bold gold-gradient mb-6">Newsletter</h3>
+                <p>Section newsletter à implémenter...</p>
+            </div>
+        </section>
+        
+        <section id="analytics-section" class="hidden">
+            <div class="dashboard-card">
+                <h3 class="cormorant text-2xl font-bold gold-gradient mb-6">Analytics Avancés</h3>
+                <p>Section analytics à implémenter...</p>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-night-blue/90 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="text-center">
+            <div class="loading-spinner w-16 h-16 mx-auto mb-4"></div>
+            <p class="text-gold">Chargement...</p>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE = 'http://localhost:3001/api';
+        let authToken = localStorage.getItem('oradiaAdminToken');
+        
+        // Check authentication
+        if (!authToken) {
+            window.location.href = '/auth/login';
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadDashboardData();
+            updateLastSyncTime();
+        });
+        
+        // API Helper
+        async function apiCall(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            const config = {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                },
+                ...options
+            };
+            
+            try {
+                const response = await fetch(url, config);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'API Error');
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('API Error:', error);
+                showNotification('Erreur: ' + error.message, 'error');
+                throw error;
+            }
+        }
+        
+        // Load dashboard data
+        async function loadDashboardData() {
+            showLoading(true);
+            try {
+                const data = await apiCall('/admin/dashboard');
+                updateOverviewCards(data.data.overview);
+                updateCharts(data.data.evolution);
+                updateRecentActivity(data.data.recent);
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Update overview cards
+        function updateOverviewCards(overview) {
+            document.getElementById('totalUsers').textContent = overview.totalUsers || 0;
+            document.getElementById('todayTirages').textContent = overview.totalTirages7Days || 0;
+            document.getElementById('monthlyRevenue').textContent = (overview.totalRevenue30Days || 0).toFixed(0) + '€';
+            document.getElementById('satisfactionRate').textContent = (overview.averageRating ? (overview.averageRating * 20).toFixed(1) : 0) + '%';
+        }
+        
+        // Update charts
+        function updateCharts(evolution) {
+            // Tirages evolution chart
+            const tiragesCtx = document.getElementById('tiragesChart').getContext('2d');
+            new Chart(tiragesCtx, {
+                type: 'line',
+                data: {
+                    labels: evolution.dailyStats.map(d => d._id),
+                    datasets: [{
+                        label: 'Tirages Pèlerin',
+                        data: evolution.dailyStats.map(d => d.tiragesPelerin),
+                        borderColor: '#d4af37',
+                        backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Tirages Traversée',
+                        data: evolution.dailyStats.map(d => d.tiragesTraversee),
+                        borderColor: '#f4e4c1',
+                        backgroundColor: 'rgba(244, 228, 193, 0.1)',
+                        tension: 0.4
+                    }, {
+                        label: 'Tirages Tore',
+                        data: evolution.dailyStats.map(d => d.tiragesTore),
+                        borderColor: '#8b7355',
+                        backgroundColor: 'rgba(139, 115, 85, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#d4af37' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#d4af37' },
+                            grid: { color: 'rgba(212, 175, 55, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: '#d4af37' },
+                            grid: { color: 'rgba(212, 175, 55, 0.1)' }
+                        }
+                    }
+                }
+            });
+            
+            // Distribution chart
+            const distributionCtx = document.getElementById('distributionChart').getContext('2d');
+            const roleData = evolution.roleDistribution;
+            new Chart(distributionCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: roleData.map(r => r._id),
+                    datasets: [{
+                        data: roleData.map(r => r.count),
+                        backgroundColor: ['#d4af37', '#f4e4c1', '#8b7355', '#654321'],
+                        borderColor: '#020817'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#d4af37' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Update recent activity
+        function updateRecentActivity(recent) {
+            // Recent users
+            const usersContainer = document.getElementById('recentUsers');
+            usersContainer.innerHTML = recent.users.map(user => `
+                <div class="flex items-center justify-between p-3 bg-night-blue/50 rounded-lg">
+                    <div>
+                        <p class="text-gold font-semibold">${user.firstName} ${user.lastName}</p>
+                        <p class="text-gold/70 text-sm">${user.email}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="badge ${user.role === 'admin' ? 'badge-warning' : 'badge-success'}">${user.role}</span>
+                        <p class="text-gold/50 text-xs">${new Date(user.createdAt).toLocaleDateString()}</p>
+                    </div>
+                </div>
+            `).join('');
+            
+            // Recent feedbacks
+            const feedbacksContainer = document.getElementById('recentFeedbacks');
+            feedbacksContainer.innerHTML = recent.feedbacks.map(feedback => `
+                <div class="p-3 bg-night-blue/50 rounded-lg">
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="text-gold font-semibold">${feedback.userId.firstName} ${feedback.userId.lastName}</p>
+                        <div class="flex items-center gap-1">
+                            ${generateStars(feedback.rating)}
+                        </div>
+                    </div>
+                    <p class="text-gold/70 text-sm line-clamp-2">${feedback.comment || 'Pas de commentaire'}</p>
+                    <p class="text-gold/50 text-xs mt-1">${feedback.tirageId.type} - ${new Date(feedback.createdAt).toLocaleDateString()}</p>
+                </div>
+            `).join('');
+            
+            // Recent tirages
+            const tiragesContainer = document.getElementById('recentTirages');
+            tiragesContainer.innerHTML = recent.tirages.map(tirage => `
+                <div class="flex items-center justify-between p-3 bg-night-blue/50 rounded-lg">
+                    <div>
+                        <p class="text-gold font-semibold">${tirage.userId.firstName} ${tirage.userId.lastName}</p>
+                        <p class="text-gold/70 text-sm">${tirage.type}</p>
+                    </div>
+                    <div class="text-right">
+                        ${tirage.feedback.rating ? generateStars(tirage.feedback.rating) : '<span class="text-gold/50">--</span>'}
+                        <p class="text-gold/50 text-xs">${new Date(tirage.date).toLocaleDateString()}</p>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Generate star rating HTML
+        function generateStars(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += `<i class="fas fa-star text-xs ${i <= rating ? 'text-yellow-400' : 'text-gold/30'}"></i>`;
+            }
+            return stars;
+        }
+        
+        // Section navigation
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            
+            // Show selected section
+            document.getElementById(`${section}-section`).classList.remove('hidden');
+            
+            // Update sidebar
+            document.querySelectorAll('.sidebar-item').forEach(item => item.classList.remove('active'));
+            event.target.closest('.sidebar-item').classList.add('active');
+            
+            // Load section-specific data
+            if (section === 'users') {
+                loadUsers();
+            }
+        }
+        
+        // Load users
+        async function loadUsers() {
+            try {
+                const data = await apiCall('/admin/users');
+                updateUsersTable(data.data.users);
+            } catch (error) {
+                console.error('Error loading users:', error);
+            }
+        }
+        
+        // Update users table
+        function updateUsersTable(users) {
+            const tbody = document.getElementById('usersTableBody');
+            tbody.innerHTML = users.map(user => `
+                <tr class="table-row">
+                    <td class="py-3 px-4">
+                        <div>
+                            <p class="text-gold font-semibold">${user.firstName} ${user.lastName}</p>
+                        </div>
+                    </td>
+                    <td class="py-3 px-4 text-gold/70">${user.email}</td>
+                    <td class="py-3 px-4">
+                        <span class="badge ${getRoleBadgeClass(user.role)}">${user.role}</span>
+                    </td>
+                    <td class="py-3 px-4 text-gold/70">${new Date(user.createdAt).toLocaleDateString()}</td>
+                    <td class="py-3 px-4 text-gold">${user.stats?.tiragesCount || 0}</td>
+                    <td class="py-3 px-4">
+                        <span class="badge ${user.subscriptionActive ? 'badge-success' : 'badge-warning'}">
+                            ${user.subscriptionActive ? 'Actif' : 'Inactif'}
+                        </span>
+                    </td>
+                    <td class="py-3 px-4">
+                        <button onclick="editUser('${user._id}')" class="text-gold hover:text-light-gold mr-2">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="viewUser('${user._id}')" class="text-gold hover:text-light-gold">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+        
+        // Get role badge class
+        function getRoleBadgeClass(role) {
+            const classes = {
+                admin: 'badge-danger',
+                member: 'badge-success',
+                client: 'badge-warning',
+                visitor: 'badge-warning'
+            };
+            return classes[role] || 'badge-warning';
+        }
+        
+        // Utility functions
+        function showLoading(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (show) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+            } else {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+            }
+        }
+        
+        function showNotification(message, type = 'info') {
+            // Simple notification (could be enhanced with a proper notification system)
+            console.log(`${type}: ${message}`);
+        }
+        
+        function updateLastSyncTime() {
+            const now = new Date();
+            document.getElementById('lastSync').textContent = now.toLocaleTimeString();
+        }
+        
+        function refreshData() {
+            loadDashboardData();
+            updateLastSyncTime();
+        }
+        
+        function logout() {
+            localStorage.removeItem('oradiaAdminToken');
+            window.location.href = '/auth/login';
+        }
+        
+        function exportUsers() {
+            window.open(`${API_BASE}/admin/export/users`, '_blank');
+        }
+        
+        function editUser(userId) {
+            // Implement user edit modal
+            console.log('Edit user:', userId);
+        }
+        
+        function viewUser(userId) {
+            // Implement user detail view
+            console.log('View user:', userId);
+        }
+        
+        // Search and filter handlers
+        document.getElementById('userSearch')?.addEventListener('input', debounce(loadUsers, 500));
+        document.getElementById('userRoleFilter')?.addEventListener('change', loadUsers);
+        
+        // Debounce utility
+        function debounce(func, wait) {
+            let timeout;
+            return function executedFunction(...args) {
+                const later = () => {
+                    clearTimeout(timeout);
+                    func(...args);
+                };
+                clearTimeout(timeout);
+                timeout = setTimeout(later, wait);
+            };
+        }
+    </script>
+</body>
+</html>

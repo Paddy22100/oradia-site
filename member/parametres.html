@@ -1,0 +1,498 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Paramètres - ORADIA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../style.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'night-blue': '#0a192f',
+                        'gold': '#d4af37',
+                        'light-gold': '#f5e7a1',
+                        'dark-blue': '#051428',
+                        'celtic-blue': '#1a365d'
+                    },
+                    fontFamily: {
+                        'cormorant': ['Cormorant Garamond', 'serif'],
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+        
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .settings-section {
+            background: linear-gradient(145deg, rgba(26,54,93,0.6), rgba(5,20,40,0.8));
+            border: 1px solid rgba(212,175,55,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .settings-section:hover {
+            border-color: rgba(212,175,55,0.6);
+            box-shadow: 0 4px 20px rgba(212,175,55,0.15);
+        }
+        
+        .sidebar-link {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-link:hover {
+            background: rgba(212,175,55,0.1);
+            border-left: 3px solid #d4af37;
+            padding-left: 20px;
+        }
+        
+        .toggle-switch {
+            position: relative;
+            width: 48px;
+            height: 24px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(5,20,40,0.8);
+            transition: .4s;
+            border-radius: 24px;
+        }
+        
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+        
+        input:checked + .slider {
+            background-color: #d4af37;
+        }
+        
+        input:checked + .slider:before {
+            transform: translateX(24px);
+        }
+        
+        .danger-zone {
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+        
+        .danger-zone:hover {
+            border-color: rgba(239, 68, 68, 0.8);
+            box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-night-blue text-light-gold">
+    <!-- Header -->
+    <header class="bg-[rgba(5,20,40,0.8)] backdrop-blur-md border-b border-gold/20 sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <a href="../index.html" class="flex items-center gap-3">
+                        <img src="../images/logo-hd-v2.jpeg" alt="ORADIA" class="w-10 h-10 rounded-full">
+                        <div>
+                            <h1 class="cormorant text-2xl font-bold gold-gradient">ORADIA</h1>
+                            <p class="text-gold/70 text-sm">Paramètres</p>
+                        </div>
+                    </a>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <button id="logoutBtn" class="text-gold/70 hover:text-gold transition-colors">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-[rgba(5,20,40,0.6)] border-r border-gold/20 hidden lg:block">
+            <nav class="p-6 space-y-2">
+                <a href="dashboard.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Tableau de bord</span>
+                </a>
+                <a href="tirages.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-cards-blank w-5"></i>
+                    <span>Historique des tirages</span>
+                </a>
+                <a href="profile.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-user-circle w-5"></i>
+                    <span>Mon profil</span>
+                </a>
+                <a href="abonnements.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-crown w-5"></i>
+                    <span>Abonnements</span>
+                </a>
+                <a href="parametres.html" class="sidebar-link flex items-center gap-3 text-gold p-3 rounded-lg bg-gold/10 border-l-3 border-gold">
+                    <i class="fas fa-cog w-5"></i>
+                    <span>Paramètres</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+            <!-- Header Section -->
+            <section class="mb-8">
+                <h2 class="cormorant text-3xl text-gold mb-2">Paramètres du compte</h2>
+                <p class="text-light-gold/80">Gérez vos préférences et la sécurité de votre compte</p>
+            </section>
+
+            <!-- Account Settings -->
+            <section class="mb-8">
+                <h3 class="cormorant text-xl text-gold mb-4 flex items-center gap-3">
+                    <i class="fas fa-user"></i>
+                    Informations du compte
+                </h3>
+                <div class="settings-section rounded-xl p-6 space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-light-gold/70 text-sm mb-2">Nom</label>
+                            <input type="text" value="Jean Dupont" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-light-gold/70 text-sm mb-2">Email</label>
+                            <input type="email" value="jean.dupont@email.com" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-light-gold/70 text-sm mb-2">Téléphone</label>
+                            <input type="tel" value="06 12 34 56 78" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors">
+                        </div>
+                        <div>
+                            <label class="block text-light-gold/70 text-sm mb-2">Date de naissance</label>
+                            <input type="date" value="1985-03-15" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors">
+                        </div>
+                    </div>
+                    <div class="flex justify-end gap-3">
+                        <button class="border border-gold text-gold hover:bg-gold hover:text-night-blue font-bold py-2 px-4 rounded-lg transition-colors">
+                            Annuler
+                        </button>
+                        <button class="bg-gold hover:bg-light-gold text-night-blue font-bold py-2 px-4 rounded-lg transition-colors">
+                            Sauvegarder
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Notification Settings -->
+            <section class="mb-8">
+                <h3 class="cormorant text-xl text-gold mb-4 flex items-center gap-3">
+                    <i class="fas fa-bell"></i>
+                    Notifications
+                </h3>
+                <div class="settings-section rounded-xl p-6 space-y-4">
+                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
+                        <div>
+                            <p class="text-gold font-medium">Email notifications</p>
+                            <p class="text-light-gold/60 text-sm">Recevoir des notifications par email</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
+                        <div>
+                            <p class="text-gold font-medium">Rappels de tirage</p>
+                            <p class="text-light-gold/60 text-sm">Rappels pour vos tirages réguliers</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
+                        <div>
+                            <p class="text-gold font-medium">Nouveaux cercles</p>
+                            <p class="text-light-gold/60 text-sm">Être informé des nouveaux cercles</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="flex justify-between items-center py-3">
+                        <div>
+                            <p class="text-gold font-medium">Newsletter</p>
+                            <p class="text-light-gold/60 text-sm">Actualités et conseils spirituels</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Privacy Settings -->
+            <section class="mb-8">
+                <h3 class="cormorant text-xl text-gold mb-4 flex items-center gap-3">
+                    <i class="fas fa-lock"></i>
+                    Confidentialité et sécurité
+                </h3>
+                <div class="settings-section rounded-xl p-6 space-y-4">
+                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
+                        <div>
+                            <p class="text-gold font-medium">Profil public</p>
+                            <p class="text-light-gold/60 text-sm">Rendre votre profil visible</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
+                        <div>
+                            <p class="text-gold font-medium">Partager les réalisations</p>
+                            <p class="text-light-gold/60 text-sm">Afficher vos badges</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
+                        <div>
+                            <p class="text-gold font-medium">Authentification à deux facteurs</p>
+                            <p class="text-light-gold/60 text-sm">Ajouter une couche de sécurité</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <p class="text-gold font-medium">Changer le mot de passe</p>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <input type="password" placeholder="Mot de passe actuel" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors">
+                            <input type="password" placeholder="Nouveau mot de passe" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors">
+                        </div>
+                        <button class="bg-gold/20 text-gold px-4 py-2 rounded-lg hover:bg-gold/30 transition-colors">
+                            Mettre à jour le mot de passe
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Display Settings -->
+            <section class="mb-8">
+                <h3 class="cormorant text-xl text-gold mb-4 flex items-center gap-3">
+                    <i class="fas fa-palette"></i>
+                    Préférences d'affichage
+                </h3>
+                <div class="settings-section rounded-xl p-6 space-y-4">
+                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
+                        <div>
+                            <p class="text-gold font-medium">Mode sombre</p>
+                            <p class="text-light-gold/60 text-sm">Utiliser le thème sombre</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
+                        <div>
+                            <p class="text-gold font-medium">Animations</p>
+                            <p class="text-light-gold/60 text-sm">Activer les animations</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" checked>
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <p class="text-gold font-medium">Langue</p>
+                        <select class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors">
+                            <option value="fr" selected>Français</option>
+                            <option value="en">English</option>
+                            <option value="es">Español</option>
+                        </select>
+                    </div>
+                    
+                    <div class="space-y-3">
+                        <p class="text-gold font-medium">Fuseau horaire</p>
+                        <select class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors">
+                            <option value="Europe/Paris" selected>Europe/Paris (GMT+1)</option>
+                            <option value="America/New_York">America/New_York (GMT-5)</option>
+                            <option value="Asia/Tokyo">Asia/Tokyo (GMT+9)</option>
+                        </select>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Data Management -->
+            <section class="mb-8">
+                <h3 class="cormorant text-xl text-gold mb-4 flex items-center gap-3">
+                    <i class="fas fa-database"></i>
+                    Gestion des données
+                </h3>
+                <div class="settings-section rounded-xl p-6 space-y-4">
+                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
+                        <div>
+                            <p class="text-gold font-medium">Export des données</p>
+                            <p class="text-light-gold/60 text-sm">Télécharger toutes vos données</p>
+                        </div>
+                        <button class="bg-gold/20 text-gold px-4 py-2 rounded-lg hover:bg-gold/30 transition-colors">
+                            <i class="fas fa-download mr-2"></i>
+                            Exporter
+                        </button>
+                    </div>
+                    
+                    <div class="flex justify-between items-center py-3">
+                        <div>
+                            <p class="text-gold font-medium">Supprimer le compte</p>
+                            <p class="text-light-gold/60 text-sm">Supprimer définitivement votre compte</p>
+                        </div>
+                        <button class="bg-red-600/20 text-red-400 px-4 py-2 rounded-lg hover:bg-red-600/30 transition-colors">
+                            <i class="fas fa-trash mr-2"></i>
+                            Supprimer
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Danger Zone -->
+            <section class="mb-8">
+                <h3 class="cormorant text-xl text-red-400 mb-4 flex items-center gap-3">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    Zone de danger
+                </h3>
+                <div class="danger-zone rounded-xl p-6 border border-red-600/30 bg-red-600/5">
+                    <div class="space-y-4">
+                        <div>
+                            <p class="text-red-400 font-semibold mb-2">Suppression du compte</p>
+                            <p class="text-light-gold/70 text-sm mb-4">
+                                Cette action est irréversible. Toutes vos données seront définitivement supprimées.
+                            </p>
+                            <button class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors" onclick="confirmDelete()">
+                                Supprimer mon compte
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Save Settings -->
+            <section class="text-center">
+                <button class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-8 rounded-lg hover:from-light-gold hover:to-gold transition-all transform hover:scale-105 shadow-lg">
+                    <i class="fas fa-save mr-2"></i>
+                    Sauvegarder tous les paramètres
+                </button>
+            </section>
+        </main>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-[rgba(5,20,40,0.9)] border-t border-gold/20 z-40">
+        <div class="flex justify-around py-2">
+            <a href="dashboard.html" class="flex flex-col items-center p-2 text-light-gold">
+                <i class="fas fa-home text-xl"></i>
+                <span class="text-xs">Accueil</span>
+            </a>
+            <a href="tirages.html" class="flex flex-col items-center p-2 text-light-gold">
+                <i class="fas fa-cards-blank text-xl"></i>
+                <span class="text-xs">Tirages</span>
+            </a>
+            <a href="profile.html" class="flex flex-col items-center p-2 text-light-gold">
+                <i class="fas fa-user text-xl"></i>
+                <span class="text-xs">Profil</span>
+            </a>
+            <a href="parametres.html" class="flex flex-col items-center p-2 text-gold">
+                <i class="fas fa-cog text-xl"></i>
+                <span class="text-xs">Params</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function confirmDelete() {
+            const confirmed = confirm('Êtes-vous absolument sûr de vouloir supprimer votre compte ?\n\nCette action est irréversible et toutes vos données seront perdues.');
+            
+            if (confirmed) {
+                const password = prompt('Veuillez confirmer avec votre mot de passe:');
+                if (password) {
+                    alert('Fonctionnalité de suppression bientôt disponible.');
+                }
+            }
+        }
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+                window.location.href = '../index.html';
+            }
+        });
+
+        // Save buttons
+        document.querySelectorAll('button').forEach(button => {
+            if (button.textContent.includes('Sauvegarder')) {
+                button.addEventListener('click', () => {
+                    alert('Paramètres sauvegardés avec succès!');
+                });
+            }
+        });
+
+        // Export data
+        document.querySelectorAll('button').forEach(button => {
+            if (button.textContent.includes('Exporter')) {
+                button.addEventListener('click', () => {
+                    alert('Fonctionnalité d\'export bientôt disponible!');
+                });
+            }
+        });
+    </script>
+</body>
+</html>

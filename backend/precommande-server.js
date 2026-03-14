@@ -140,82 +140,10 @@ app.get('/api/stats', async (req, res) => {
     }
 });
 
-// Création d'une session de paiement Stripe
+// Création d'une session de paiement Stripe - désactivé
 app.post('/api/create-checkout-session', async (req, res) => {
     try {
-        const { customer, shipping, order } = req.body;
-
-        // Vérification des stocks
-        if (order.offerType === 'early-bird') {
-            const earlyBirdCount = await Precommande.countDocuments({ 
-                'order.offerType': 'early-bird',
-                'payment.status': 'paid'
-            });
-            
-            if (earlyBirdCount >= 100) {
-                return res.status(400).json({ error: 'Plus de disponibilités Early Bird' });
-            }
-        }
-
-        if (order.offerType === 'collector') {
-            const collectorCount = await Precommande.countDocuments({ 
-                'order.offerType': 'collector',
-                'payment.status': 'paid'
-            });
-            
-            if (collectorCount >= 25) {
-                return res.status(400).json({ error: 'Plus de disponibilités Collector' });
-            }
-        }
-
-        // Création de la précommande
-        const orderNumber = generateOrderNumber();
-        const precommande = new Precommande({
-            orderNumber,
-            customer,
-            shipping,
-            order,
-            status: {
-                current: 'confirmed',
-                history: [{
-                    status: 'confirmed',
-                    description: 'Précommande créée en attente de paiement'
-                }]
-            }
-        });
-
-        await precommande.save();
-
-        // Création de la session Stripe
-        const session = await stripe.checkout.sessions.create({
-            payment_method_types: ['card'],
-            line_items: [{
-                price_data: {
-                    currency: 'eur',
-                    product_data: {
-                        name: `ORADIA Oracle - ${order.offerType.charAt(0).toUpperCase() + order.offerType.slice(1)} Edition`,
-                        description: `Précommande de l'oracle ORADIA - offre ${order.offerType}`,
-                        images: ['https://your-domain.com/images/oracle-precommande.jpg']
-                    },
-                    unit_amount: order.amount * 100, // Stripe utilise les centimes
-                },
-                quantity: 1
-            }],
-            mode: 'payment',
-            success_url: `${process.env.FRONTEND_URL}/precommande-success?session_id={CHECKOUT_SESSION_ID}&order=${orderNumber}`,
-            cancel_url: `${process.env.FRONTEND_URL}/precommande-oracle?cancelled=true`,
-            customer_email: customer.email,
-            metadata: {
-                orderNumber,
-                offerType: order.offerType
-            }
-        });
-
-        // Mise à jour de la précommande avec l'ID Stripe
-        precommande.payment.stripePaymentId = session.id;
-        await precommande.save();
-
-        res.json({ sessionId: session.id, orderNumber });
+        return res.status(503).json({ error: 'Service de paiement temporairement indisponible' });
     } catch (error) {
         console.error('Erreur création session Stripe:', error);
         res.status(500).json({ error: error.message });
@@ -227,12 +155,9 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
     const sig = req.headers['stripe-signature'];
     let event;
 
-    try {
-        event = stripe.webhooks.constructEvent(req.body, sig, process.env.STRIPE_WEBHOOK_SECRET);
-    } catch (err) {
-        console.log('Webhook signature verification failed.', err.message);
-        return res.status(400).send(`Webhook Error: ${err.message}`);
-    }
+    // Webhook Stripe désactivé - clé secrète supprimée
+    console.log('Webhook Stripe désactivé - clé secrète supprimée');
+    return res.status(503).json({ error: 'Service temporairement indisponible' });
 
     // Gestion des événements
     switch (event.type) {

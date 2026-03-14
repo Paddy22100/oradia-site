@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - ORADIA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../style.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'night-blue': '#0a192f',
+                        'gold': '#d4af37',
+                        'light-gold': '#f5e7a1',
+                        'dark-blue': '#051428',
+                        'celtic-blue': '#1a365d'
+                    },
+                    fontFamily: {
+                        'cormorant': ['Cormorant Garamond', 'serif'],
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+        
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .login-container {
+            background: linear-gradient(145deg, rgba(26,54,93,0.8), rgba(5,20,40,0.9));
+            border: 1px solid rgba(212,175,55,0.3);
+            box-shadow: 0 8px 30px rgba(212,175,55,0.15);
+        }
+        
+        .input-field {
+            background: rgba(5,20,40,0.8);
+            border: 1px solid rgba(212,175,55,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .input-field:focus {
+            border-color: #d4af37;
+            box-shadow: 0 0 20px rgba(212,175,55,0.3);
+        }
+        
+        .floating-orb {
+            position: absolute;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(212,175,55,0.3), transparent);
+            filter: blur(20px);
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.8s ease-out;
+        }
+        
+        .social-login-btn {
+            transition: all 0.3s ease;
+            border: 1px solid rgba(212,175,55,0.3);
+        }
+        
+        .social-login-btn:hover {
+            border-color: #d4af37;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(212,175,55,0.2);
+        }
+    </style>
+</head>
+<body class="bg-night-blue text-light-gold min-h-screen flex items-center justify-center relative overflow-hidden">
+    <!-- Background Effects -->
+    <div class="floating-orb w-64 h-64 top-10 left-10 opacity-30"></div>
+    <div class="floating-orb w-48 h-48 bottom-20 right-20 opacity-25" style="animation-delay: 2s;"></div>
+    <div class="floating-orb w-32 h-32 top-1/2 left-1/3 opacity-20" style="animation-delay: 4s;"></div>
+
+    <!-- Login Container -->
+    <div class="login-container rounded-3xl p-8 md:p-12 max-w-md w-full mx-4 relative z-10 fade-in">
+        <!-- Logo and Title -->
+        <div class="text-center mb-8">
+            <div class="flex justify-center mb-6">
+                <img src="../images/logo-hd-v2.jpeg" alt="ORADIA" class="w-20 h-20 rounded-full border-2 border-gold/50">
+            </div>
+            <h1 class="cormorant text-3xl md:text-4xl font-bold gold-gradient mb-2">ORADIA</h1>
+            <p class="text-light-gold/80">Connectez-vous à votre espace sacré</p>
+        </div>
+
+        <!-- Login Form -->
+        <form id="loginForm" class="space-y-6">
+            <div>
+                <label for="email" class="block text-light-gold/80 text-sm mb-2">Email</label>
+                <div class="relative">
+                    <i class="fas fa-envelope absolute left-3 top-1/2 transform -translate-y-1/2 text-gold/50"></i>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email" 
+                        required
+                        placeholder="votre@email.com"
+                        class="input-field w-full pl-10 pr-4 py-3 rounded-lg text-light-gold placeholder-gold/50 focus:outline-none"
+                    >
+                </div>
+            </div>
+
+            <div>
+                <label for="password" class="block text-light-gold/80 text-sm mb-2">Mot de passe</label>
+                <div class="relative">
+                    <i class="fas fa-lock absolute left-3 top-1/2 transform -translate-y-1/2 text-gold/50"></i>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password" 
+                        required
+                        placeholder="••••••••"
+                        class="input-field w-full pl-10 pr-12 py-3 rounded-lg text-light-gold placeholder-gold/50 focus:outline-none"
+                    >
+                    <button 
+                        type="button" 
+                        id="togglePassword"
+                        class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gold/50 hover:text-gold transition-colors"
+                    >
+                        <i class="fas fa-eye"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex justify-between items-center">
+                <label class="flex items-center">
+                    <input type="checkbox" class="mr-2 rounded">
+                    <span class="text-light-gold/70 text-sm">Se souvenir de moi</span>
+                </label>
+                <a href="#" class="text-gold/70 hover:text-gold text-sm transition-colors">
+                    Mot de passe oublié ?
+                </a>
+            </div>
+
+            <button 
+                type="submit" 
+                class="w-full bg-gradient-to-r from-gold to-light-gold hover:from-light-gold hover:to-gold text-night-blue font-bold py-3 rounded-lg transition-all transform hover:scale-105 shadow-lg hover:shadow-gold/40"
+            >
+                <i class="fas fa-sign-in-alt mr-2"></i>
+                Se connecter
+            </button>
+        </form>
+
+        <!-- Divider -->
+        <div class="relative my-8">
+            <div class="absolute inset-0 flex items-center">
+                <div class="w-full border-t border-gold/30"></div>
+            </div>
+            <div class="relative flex justify-center text-sm">
+                <span class="px-4 bg-night-blue text-light-gold/70">Ou continuer avec</span>
+            </div>
+        </div>
+
+        <!-- Social Login -->
+        <div class="space-y-3">
+            <button class="social-login-btn w-full bg-[rgba(5,20,40,0.8)] py-3 rounded-lg flex items-center justify-center gap-3 hover:bg-[rgba(5,20,40,0.9)] transition-all">
+                <i class="fab fa-google text-red-400"></i>
+                <span class="text-light-gold">Google</span>
+            </button>
+            
+            <button class="social-login-btn w-full bg-[rgba(5,20,40,0.8)] py-3 rounded-lg flex items-center justify-center gap-3 hover:bg-[rgba(5,20,40,0.9)] transition-all">
+                <i class="fab fa-facebook text-blue-400"></i>
+                <span class="text-light-gold">Facebook</span>
+            </button>
+        </div>
+
+        <!-- Register Link -->
+        <div class="text-center mt-8 pt-6 border-t border-gold/20">
+            <p class="text-light-gold/70 text-sm">
+                Pas encore de compte ? 
+                <a href="register.html" class="text-gold hover:text-light-gold font-medium transition-colors">
+                    Créer un compte
+                </a>
+            </p>
+        </div>
+
+        <!-- Back to Site -->
+        <div class="text-center mt-6">
+            <a href="../index.html" class="text-light-gold/60 hover:text-light-gold text-sm transition-colors">
+                <i class="fas fa-arrow-left mr-2"></i>
+                Retour au site
+            </a>
+        </div>
+    </div>
+
+    <!-- Success Message -->
+    <div id="successMessage" class="hidden fixed top-4 right-4 bg-green-600 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+        <i class="fas fa-check-circle mr-2"></i>
+        Connexion réussie !
+    </div>
+
+    <!-- Error Message -->
+    <div id="errorMessage" class="hidden fixed top-4 right-4 bg-red-600 text-white px-6 py-3 rounded-lg shadow-lg z-50">
+        <i class="fas fa-exclamation-circle mr-2"></i>
+        <span id="errorText">Erreur de connexion</span>
+    </div>
+
+    <script>
+        // Toggle password visibility
+        document.getElementById('togglePassword').addEventListener('click', function() {
+            const passwordInput = document.getElementById('password');
+            const icon = this.querySelector('i');
+            
+            if (passwordInput.type === 'password') {
+                passwordInput.type = 'text';
+                icon.classList.remove('fa-eye');
+                icon.classList.add('fa-eye-slash');
+            } else {
+                passwordInput.type = 'password';
+                icon.classList.remove('fa-eye-slash');
+                icon.classList.add('fa-eye');
+            }
+        });
+
+        // Login form submission
+        document.getElementById('loginForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            
+            // Simulate login (in real app, this would be an API call)
+            if (email && password) {
+                // Show success message
+                const successMsg = document.getElementById('successMessage');
+                successMsg.classList.remove('hidden');
+                
+                // Store user info in localStorage (for demo)
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('userEmail', email);
+                localStorage.setItem('userName', email.split('@')[0]);
+                
+                // Redirect to dashboard after 1.5 seconds
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html';
+                }, 1500);
+            } else {
+                // Show error message
+                const errorMsg = document.getElementById('errorMessage');
+                const errorText = document.getElementById('errorText');
+                errorText.textContent = 'Veuillez remplir tous les champs';
+                errorMsg.classList.remove('hidden');
+                
+                // Hide error after 3 seconds
+                setTimeout(() => {
+                    errorMsg.classList.add('hidden');
+                }, 3000);
+            }
+        });
+
+        // Social login handlers
+        document.querySelectorAll('.social-login-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const provider = this.textContent.trim();
+                alert(`Connexion avec ${provider} bientôt disponible!`);
+            });
+        });
+
+        // Check if user is already logged in
+        window.addEventListener('load', function() {
+            if (localStorage.getItem('isLoggedIn') === 'true') {
+                window.location.href = 'dashboard.html';
+            }
+        });
+
+        // Add floating animation to orbs
+        document.querySelectorAll('.floating-orb').forEach((orb, index) => {
+            orb.style.animationDelay = `${index * 2}s`;
+        });
+    </script>
+</body>
+</html>

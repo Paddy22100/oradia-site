@@ -1,0 +1,891 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Précommande ORADIA – L'Oracle du Vivant</title>
+    <meta name="description" content="Précommandez l'oracle physique ORADIA avant sa sortie officielle. Édition limitée avec tarifs Early Bird exclusifs.">
+    <meta name="keywords" content="oracle, tirage de cartes, précommande, ORADIA, spiritualité, développement personnel">
+    
+    <!-- Open Graph -->
+    <meta property="og:title" content="Précommande ORADIA – L'Oracle du Vivant">
+    <meta property="og:description" content="Précommandez l'oracle physique ORADIA avant sa sortie officielle">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="images/oracle-precommande.jpg">
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    
+    <!-- Stripe -->
+    <script src="https://js.stripe.com/v3/"></script>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'night-blue': '#0a192f',
+                        'gold': '#d4af37',
+                        'light-gold': '#f5e7a1',
+                        'dark-blue': '#051428',
+                        'celtic-blue': '#1a365d'
+                    },
+                    fontFamily: {
+                        'cormorant': ['Cormorant Garamond', 'serif'],
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+        
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-section {
+            background: linear-gradient(145deg, rgba(26,54,93,0.8), rgba(5,20,40,0.9));
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("images/oradia-hero-4k.png") center/cover;
+            opacity: 0.3;
+            z-index: 0;
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .offer-card {
+            background: linear-gradient(145deg, rgba(26,54,93,0.6), rgba(5,20,40,0.8));
+            border: 1px solid rgba(212,175,55,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .offer-card:hover {
+            border-color: rgba(212,175,55,0.6);
+            box-shadow: 0 4px 20px rgba(212,175,55,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #d4af37, #f4e4c1);
+            transition: width 0.5s ease;
+        }
+        
+        .early-bird-badge {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            color: #0a192f;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+    </style>
+</head>
+<body class="bg-night-blue text-light-gold">
+    <button id="backToTop" class="fixed bottom-6 right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-50 backdrop-blur-sm" aria-label="Remonter en haut">
+    <i class="fas fa-arrow-up text-sm"></i>
+</button>
+<!-- Header -->
+    <header class="header-bg w-full py-3 px-4 md:py-4 md:px-8">
+        <div class="flex items-center justify-between">
+            <div class="flex items-center">
+                <a href="index.html#accueil" class="flex items-center">
+                    <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo"
+                 class="w-16 h-16 object-contain transform hover:scale-110 transition-transform duration-300" />
+                    <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+                </a>
+            </div>
+            
+            <!-- Bouton burger (mobile) -->
+            <button id="mobileMenuBtn" type="button" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold" aria-label="Ouvrir le menu">
+                <i class="fas fa-bars text-lg"></i>
+            </button>
+            
+            <!-- Navigation desktop -->
+            <nav class="hidden md:flex space-x-6 text-lg">
+                <a href="index.html#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
+                <a href="index.html#offres" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
+                <a href="accompagnements.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
+                <a href="rendez-vous.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
+                <a href="a-propos.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+                <a href="index.html#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
+                <a href="contact.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-envelope mr-2"></i>Contact</a>
+            </nav>
+            
+            <!-- Espace membre (desktop) -->
+            <div id="memberMenuWrapper" class="hidden md:block relative">
+                <!-- Bouton Espace membre -->
+                <button id="memberMenuBtn" class="flex items-center gap-2 text-gold font-medium hover:text-light-gold transition">
+                    <i class="fas fa-user-circle text-2xl"></i>
+                    <span>Espace membre</span>
+                    <i class="fas fa-chevron-down text-sm ml-1"></i>
+                </button>
+
+                <!-- Dropdown -->
+                <div id="memberDropdown"
+                     class="hidden absolute right-0 mt-2 w-48 bg-[rgba(5,20,40,0.95)] border border-gold/30 rounded-lg shadow-lg z-50 backdrop-blur-md">
+                    <a href="member/profile.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Profil</a>
+                    <a href="member/dashboard.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Tableau de bord</a>
+                    <button id="logoutBtn" class="w-full text-left px-4 py-2 text-gold hover:bg-gold/10">Déconnexion</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Menu mobile déroulant -->
+        <nav id="mobileMenu" class="md:hidden hidden mt-3 space-y-2">
+            <a href="index.html#accueil" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-home mr-2"></i>Accueil</a>
+            <a href="index.html#offres" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Oracle</a>
+            <a href="accompagnements.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
+            <a href="rendez-vous.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
+            <a href="a-propos.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+            <a href="index.html#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
+            <a href="contact.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
+            <button id="loginBtnMobile" class="w-full btn-outline-gold" style="display: none;">Connexion</button>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section id="oracle" class="hero-section py-20 md:py-32">
+        <div class="container mx-auto px-6">
+            <div class="hero-content text-center max-w-4xl mx-auto">
+                <!-- Titre principal -->
+                <h1 class="cormorant text-5xl md:text-7xl font-bold gold-gradient mb-6">
+                    ORADIA – L'Oracle du Vivant
+                </h1>
+                
+                <!-- Description -->
+                <p class="text-xl md:text-2xl text-light-gold mb-8 leading-relaxed">
+                    Un oracle de 64 cartes pour explorer les émotions, les besoins et les transformations intérieures.
+                </p>
+                
+                <!-- Images du produit -->
+                <div class="grid md:grid-cols-3 gap-6 mb-12">
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <div class="aspect-square bg-gold/10 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                            <img src="images/archetypes/le_sage.png" alt="Carte Le Sage - Oracle ORADIA" class="w-full h-full object-contain rounded-lg">
+                        </div>
+                        <p class="text-gold font-semibold">64 cartes illustrées</p>
+                    </div>
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <div class="aspect-square bg-gold/10 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                            <img src="images/apercu-hd.jpeg" alt="Aperçu du livret d'accompagnement - Oracle ORADIA" class="w-full h-full object-contain rounded-lg">
+                        </div>
+                        <p class="text-gold font-semibold">Livret d'accompagnement</p>
+                    </div>
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <div class="aspect-square bg-gold/10 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                            <img src="images/plateau.jpeg" alt="Coffret et pièce de tirage - Oracle ORADIA" class="w-full h-full object-contain rounded-lg">
+                        </div>
+                        <p class="text-gold font-semibold">Coffret et pièce de tirage</p>
+                    </div>
+                </div>
+                
+                <!-- Bouton principal -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                    <a href="#offres" class="bg-gold text-night-blue font-bold py-4 px-8 rounded-full hover:bg-light-gold transition-all transform hover:scale-105 text-lg">
+                        <i class="fas fa-shopping-cart mr-2"></i>
+                        Précommander l'oracle
+                    </a>
+                    <a href="#contenu" class="border-2 border-gold text-gold font-bold py-4 px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all text-lg">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Découvrir le contenu
+                    </a>
+                </div>
+                
+                            </div>
+        </div>
+    </section>
+
+    <!-- Section Vidéo -->
+    <section id="video" class="py-20 bg-[rgba(5,20,40,0.6)]">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto text-center">
+                <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-8">
+                    Présentation de l'oracle
+                </h2>
+                
+                <div class="relative aspect-video bg-[rgba(5,20,40,0.8)] rounded-2xl overflow-hidden border border-gold/30">
+                    <!-- Placeholder pour vidéo YouTube/Vimeo -->
+                    <div class="absolute inset-0 flex items-center justify-center">
+                        <div class="text-center">
+                            <i class="fas fa-play-circle text-6xl text-gold mb-4"></i>
+                            <p class="text-light-gold">Vidéo de présentation à venir</p>
+                            <p class="text-light-gold/70 text-sm mt-2">Découvrez ORADIA en vidéo</p>
+                        </div>
+                    </div>
+                    <!-- Intégration vidéo à remplacer avec l'ID réel -->
+                    <!-- <iframe src="https://player.vimeo.com/video/YOUR_VIDEO_ID" class="absolute inset-0 w-full h-full" frameborder="0" allow="autoplay; fullscreen; picture-in-picture" allowfullscreen></iframe> -->
+                </div>
+            </div>
+        </div>
+    </section>
+
+    
+    <!-- Section Contenu du Coffret -->
+    <section id="contenu" class="py-20 bg-[rgba(5,20,40,0.6)]">
+        <div class="container mx-auto px-6">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient text-center mb-12">
+                    Contenu du Coffret
+                </h2>
+                
+                <div class="grid md:grid-cols-2 gap-12 items-center">
+                    <div>
+                        <div class="space-y-6">
+                            <div class="flex items-center space-x-4">
+                                <i class="fas fa-check-circle text-2xl text-gold"></i>
+                                <span class="text-xl text-light-gold">64 cartes illustrées</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <i class="fas fa-check-circle text-2xl text-gold"></i>
+                                <span class="text-xl text-light-gold">Livret d'accompagnement (~200 pages)</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <i class="fas fa-check-circle text-2xl text-gold"></i>
+                                <span class="text-xl text-light-gold">Conte initiatique de l'univers Oradia</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <i class="fas fa-check-circle text-2xl text-gold"></i>
+                                <span class="text-xl text-light-gold">Pièce de tirage</span>
+                            </div>
+                            <div class="flex items-center space-x-4">
+                                <i class="fas fa-check-circle text-2xl text-gold"></i>
+                                <span class="text-xl text-light-gold">Coffret élégant</span>
+                            </div>
+                        </div>
+                        
+                        <div class="mt-8">
+                            <p class="text-light-gold text-lg leading-relaxed">
+                                Chaque carte est une œuvre d'art unique, créée pour résonner avec 
+                                votre âme et vous guider dans votre voyage de transformation personnelle.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <!-- Carrousel d'images des cartes -->
+                        <div class="relative">
+                            <div class="bg-[rgba(5,20,40,0.8)] rounded-2xl p-6 border border-gold/30">
+                                <div class="aspect-[3/4] bg-gold/10 rounded-lg overflow-hidden mb-4 relative">
+                                    <!-- Carrousel container -->
+                                    <div id="cartesCarousel" class="relative w-full h-full">
+                                        <!-- Slide 1 -->
+                                        <div class="carousel-slide absolute inset-0 flex items-center justify-center">
+                                            <img src="images/archetypes/le_sage.png" alt="Le Sage - Carte ORADIA" class="w-full h-full object-contain rounded-lg">
+                                        </div>
+                                        <!-- Slide 2 -->
+                                        <div class="carousel-slide absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500">
+                                            <img src="images/archetypes/la_pretresse.png" alt="La Prêtresse - Carte ORADIA" class="w-full h-full object-contain rounded-lg">
+                                        </div>
+                                        <!-- Slide 3 -->
+                                        <div class="carousel-slide absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500">
+                                            <img src="images/archetypes/le_guerrier.png" alt="Le Guerrier - Carte ORADIA" class="w-full h-full object-contain rounded-lg">
+                                        </div>
+                                        <!-- Slide 4 -->
+                                        <div class="carousel-slide absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-500">
+                                            <img src="images/archetypes/le_voyageur.png" alt="Le Voyageur - Carte ORADIA" class="w-full h-full object-contain rounded-lg">
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Navigation -->
+                                    <button id="prevSlide" class="absolute left-2 top-1/2 -translate-y-1/2 bg-gold/80 text-night-blue rounded-full w-8 h-8 flex items-center justify-center hover:bg-gold transition-colors">
+                                        <i class="fas fa-chevron-left text-sm"></i>
+                                    </button>
+                                    <button id="nextSlide" class="absolute right-2 top-1/2 -translate-y-1/2 bg-gold/80 text-night-blue rounded-full w-8 h-8 flex items-center justify-center hover:bg-gold transition-colors">
+                                        <i class="fas fa-chevron-right text-sm"></i>
+                                    </button>
+                                </div>
+                                <div class="flex justify-center space-x-2" id="carouselDots">
+                                    <div class="w-2 h-2 bg-gold rounded-full cursor-pointer" data-slide="0"></div>
+                                    <div class="w-2 h-2 bg-gold/50 rounded-full cursor-pointer" data-slide="1"></div>
+                                    <div class="w-2 h-2 bg-gold/50 rounded-full cursor-pointer" data-slide="2"></div>
+                                    <div class="w-2 h-2 bg-gold/50 rounded-full cursor-pointer" data-slide="3"></div>
+                                </div>
+                                <p class="text-center text-light-gold text-sm mt-3">
+                                    Découvrez quelques-unes des 64 cartes magnifiquement illustrées
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Objectif -->
+    <section id="objectif" class="py-20 bg-[rgba(5,20,40,0.6)]">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto text-center">
+                <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-8">
+                    Objectif de Précommande
+                </h2>
+                
+                <p class="text-xl mb-8">
+                    Rejoignez-nous pour faire naître cet oracle unique. 
+                    Votre précommande nous permet de lancer la production.
+                </p>
+                
+                <!-- Barre de progression -->
+                <div class="bg-[rgba(5,20,40,0.8)] rounded-full h-8 mb-4 overflow-hidden">
+                    <div class="progress-bar h-full rounded-full flex items-center justify-center" style="width: 2%">
+                        <span class="text-night-blue font-semibold">10 / 500</span>
+                    </div>
+                </div>
+                
+                <div class="grid md:grid-cols-3 gap-8 mt-12">
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-gold mb-2">10</div>
+                        <p class="text-light-gold">Précommandes</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-gold mb-2">2%</div>
+                        <p class="text-light-gold">Objectif atteint</p>
+                    </div>
+                    <div class="text-center">
+                        <div class="text-3xl font-bold text-gold mb-2">490</div>
+                        <p class="text-light-gold">Restantes</p>
+                    </div>
+                </div>
+                
+                <p class="mt-8 text-light-gold/70">
+                    <i class="fas fa-info-circle mr-2"></i>
+                    Si l'objectif n'est pas atteint, votre commande sera intégralement remboursée.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Offres -->
+    <section id="offres" class="py-20">
+        <div class="container mx-auto px-6">
+            <div class="text-center mb-16">
+                <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-4">
+                    Choisissez Votre Offre
+                </h2>
+                <p class="text-xl text-light-gold">
+                    Trois formules pour tous les budgets et toutes les aspirations
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                
+                <!-- Offre Early Bird -->
+                <div class="offer-card rounded-2xl p-8 relative flex flex-col h-full border-2 border-gold/40 shadow-lg hover:shadow-xl hover:border-gold/60 transition-all duration-300">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                        <span class="bg-gradient-to-r from-gold to-light-gold text-night-blue px-8 py-2 rounded-full text-xs font-bold shadow-lg whitespace-nowrap">
+                            MEILLEURE OFFRE
+                        </span>
+                    </div>
+                    
+                    <div class="text-center mb-6 pt-4">
+                        <h3 class="cormorant text-2xl font-bold text-gold mb-3">Early Bird</h3>
+                        <div class="flex items-baseline justify-center gap-2 mb-2">
+                            <span class="text-5xl font-bold text-gold">35</span>
+                            <span class="text-2xl text-gold">€</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-grow mb-6">
+                        <ul class="space-y-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check-circle text-gold mr-3 flex-shrink-0"></i>
+                                <span class="text-light-gold">Oracle complet</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check-circle text-gold mr-3 flex-shrink-0"></i>
+                                <span class="text-light-gold">64 cartes</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check-circle text-gold mr-3 flex-shrink-0"></i>
+                                <span class="text-light-gold">Livret d'accompagnement</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check-circle text-gold mr-3 flex-shrink-0"></i>
+                                <span class="text-light-gold">Coffret</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-auto">
+                        <button class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-lg hover:scale-105 transition-all duration-300 precommande-btn" data-offer="early-bird">
+                            <i class="fas fa-shopping-cart mr-2"></i>
+                            Précommander
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Offre Standard -->
+                <div class="offer-card rounded-2xl p-8 relative flex flex-col h-full border border-gold/30 shadow-lg hover:shadow-xl hover:border-gold/50 transition-all duration-300">
+                    <div class="text-center mb-6 pt-4">
+                        <h3 class="cormorant text-2xl font-bold text-gold mb-3">Tirage Offert</h3>
+                        <div class="flex items-baseline justify-center gap-2 mb-2">
+                            <span class="text-5xl font-bold text-gold">42</span>
+                            <span class="text-2xl text-gold">€</span>
+                        </div>
+                    </div>
+                    
+                    <div class="flex-grow mb-6">
+                        <ul class="space-y-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-check-circle text-gold mr-3 flex-shrink-0"></i>
+                                <span class="text-light-gold">Oracle complet</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check-circle text-gold mr-3 flex-shrink-0"></i>
+                                <span class="text-light-gold">64 cartes</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check-circle text-gold mr-3 flex-shrink-0"></i>
+                                <span class="text-light-gold">Livret d'accompagnement</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-check-circle text-gold mr-3 flex-shrink-0"></i>
+                                <span class="text-light-gold">Coffret</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-video text-gold mr-3 flex-shrink-0"></i>
+                                <span class="text-light-gold">Tirage gratuit en visio avec le créateur</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-auto">
+                        <button class="w-full bg-gold text-night-blue font-bold py-4 px-8 rounded-full hover:bg-light-gold hover:shadow-lg hover:scale-105 transition-all duration-300 precommande-btn" data-offer="standard">
+                            <i class="fas fa-shopping-cart mr-2"></i>
+                            Précommander
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Offre Édition Signature -->
+                <div class="offer-card rounded-2xl p-8 relative flex flex-col h-full border-2 border-gold shadow-lg hover:shadow-xl hover:border-gold/80 transition-all duration-300">
+                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                        <span class="bg-gradient-to-r from-gold to-light-gold text-night-blue px-8 py-2 rounded-full text-xs font-bold shadow-lg whitespace-nowrap">
+                            ÉDITION SIGNATURE
+                        </span>
+                    </div>
+                    
+                    <div class="text-center mb-6 pt-4">
+                        <div class="flex items-baseline justify-center gap-2 mb-2">
+                            <span class="text-5xl font-bold text-gold">49</span>
+                            <span class="text-2xl text-gold">€</span>
+                        </div>
+                        <p class="text-light-gold text-sm">Exemplaire unique</p>
+                    </div>
+                    
+                    <div class="flex-grow mb-6">
+                        <ul class="space-y-4">
+                            <li class="flex items-center">
+                                <i class="fas fa-star text-gold mr-3 flex-shrink-0"></i>
+                                <span class="text-light-gold">Oracle complet</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-star text-gold mr-3 flex-shrink-0"></i>
+                                <span class="text-light-gold">Exemplaire dédicacé par le créateur</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-star text-gold mr-3 flex-shrink-0"></i>
+                                <span class="text-light-gold">64 cartes</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-star text-gold mr-3 flex-shrink-0"></i>
+                                <span class="text-light-gold">Livret d'accompagnement</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-star text-gold mr-3 flex-shrink-0"></i>
+                                <span class="text-light-gold">Coffret</span>
+                            </li>
+                            <li class="flex items-center">
+                                <i class="fas fa-video text-gold mr-3 flex-shrink-0"></i>
+                                <span class="text-light-gold">Tirage gratuit en visio avec le créateur</span>
+                            </li>
+                        </ul>
+                    </div>
+                    
+                    <div class="mt-auto">
+                        <button class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-lg hover:scale-105 transition-all duration-300 precommande-btn" data-offer="collector">
+                            <i class="fas fa-shopping-cart mr-2"></i>
+                            Précommander
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Calendrier -->
+    <section id="calendrier" class="py-20 bg-[rgba(5,20,40,0.6)]">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient text-center mb-12">
+                    Calendrier de Production
+                </h2>
+                
+                <div class="relative">
+                    <!-- Timeline -->
+                    <div class="space-y-8">
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-gold rounded-full flex items-center justify-center">
+                                <i class="fas fa-shopping-cart text-night-blue"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="cormorant text-xl font-bold text-gold mb-2">Précommandes ouvertes</h3>
+                                <p class="text-light-gold mb-1">Maintenant jusqu'au 31 août 2026</p>
+                                <p class="text-light-gold/70 text-sm">Réservez votre exemplaire à prix préférentiel</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-gold/50 rounded-full flex items-center justify-center">
+                                <i class="fas fa-cogs text-gold"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="cormorant text-xl font-bold text-gold mb-2">Production</h3>
+                                <p class="text-light-gold mb-1">À partir du 1er septembre 2026</p>
+                                <p class="text-light-gold/70 text-sm">Fabrication des cartes et des coffrets</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-center space-x-4">
+                            <div class="flex-shrink-0 w-12 h-12 bg-gold/30 rounded-full flex items-center justify-center">
+                                <i class="fas fa-truck text-gold"></i>
+                            </div>
+                            <div class="flex-1">
+                                <h3 class="cormorant text-xl font-bold text-gold mb-2">Livraison estimée</h3>
+                                <p class="text-light-gold mb-1">À partir du 1er décembre 2026</p>
+                                <p class="text-light-gold/70 text-sm">Expédition de tous les exemplaires</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="mt-12 text-center">
+                    <p class="text-light-gold text-lg">
+                        <i class="fas fa-info-circle mr-2"></i>
+                        Les dates sont estimées et peuvent varier légèrement. 
+                        Vous serez informé de chaque étape par email.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section FAQ -->
+    <section id="faq" class="py-20">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient text-center mb-16">
+                    Questions Fréquentes
+                </h2>
+                
+                <div class="space-y-6">
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
+                            <span>Quand vais-je recevoir mon oracle ?</span>
+                            <i class="fas fa-chevron-down transition-transform"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-4 text-light-gold">
+                            <p>La livraison est estimée à partir du 1er décembre 2026. Les commandes Early Bird seront prioritaires et expédiées en premier.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
+                            <span>Comment fonctionne la précommande ?</span>
+                            <i class="fas fa-chevron-down transition-transform"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-4 text-light-gold">
+                            <p>La précommande vous permet de réserver votre oracle à prix préférentiel avant sa production. Votre paiement est sécurisé et vous serez tenu informé de chaque étape de production.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
+                            <span>Que se passe-t-il si la production est retardée ?</span>
+                            <i class="fas fa-chevron-down transition-transform"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-4 text-light-gold">
+                            <p>En cas de retard de production, vous serez immédiatement informé par email. Nous nous engageons à transparence et à vous tenir informé de l'avancement du projet.</p>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
+                            <span>Puis-je modifier ma commande ?</span>
+                            <i class="fas fa-chevron-down transition-transform"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-4 text-light-gold">
+                            <p>Oui, vous pouvez modifier votre offre ou votre adresse jusqu'au début de la production. Contactez-nous simplement par email pour apporter les modifications nécessaires.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal de Précommande -->
+    <div id="precommandeModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden">
+        <div class="flex items-center justify-center min-h-screen p-4">
+            <div class="bg-gradient-to-br from-[rgba(26,54,93,0.9)] to-[rgba(5,20,40,0.95)] rounded-2xl p-8 max-w-md w-full border border-gold/30">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="cormorant text-2xl font-bold text-gold">Finaliser la Précommande</h3>
+                    <button id="closeModal" class="text-gold hover:text-light-gold">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <div id="selectedOffer" class="mb-6">
+                    <!-- Contenu dynamique -->
+                </div>
+                
+                <form id="precommandeForm" class="space-y-4">
+                    <div>
+                        <label class="block text-gold mb-2">Email</label>
+                        <input type="email" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="votre@email.com">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gold mb-2">Nom complet</label>
+                        <input type="text" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="Jean Dupont">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gold mb-2">Adresse de livraison</label>
+                        <input type="text" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="123 rue de la Paix">
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-gold mb-2">Code postal</label>
+                            <input type="text" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="75000">
+                        </div>
+                        <div>
+                            <label class="block text-gold mb-2">Ville</label>
+                            <input type="text" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="Paris">
+                        </div>
+                    </div>
+                    
+                    <div class="flex items-center">
+                        <input type="checkbox" id="terms" required class="mr-2">
+                        <label for="terms" class="text-sm text-light-gold">
+                            J'accepte les <a href="#" class="text-gold hover:text-light-gold">conditions de précommande</a>
+                        </label>
+                    </div>
+                    
+                    <button type="submit" class="w-full bg-gold text-night-blue font-bold py-3 px-6 rounded-full hover:bg-light-gold transition-all">
+                        <i class="fas fa-lock mr-2"></i>
+                        Payer avec Stripe
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
+        <div class="container mx-auto max-w-6xl">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo" class="w-16 h-16 mr-4" />
+                        <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+                    </div>
+                    <p class="text-light-gold text-sm">L'oracle qui vous accompagne sur votre chemin personnel et révèle votre essence.</p>
+                </div>
+                <div>
+                    <h4 class="cormorant text-xl text-gold mb-4">Navigation</h4>
+                    <ul class="space-y-2">
+                        <li><a href="index.html#accueil" class="text-light-gold hover:text-gold transition">Accueil</a></li>
+                        <li><a href="index.html#oracle" class="text-light-gold hover:text-gold transition">Jeu</a></li>
+                        <li><a href="accompagnements.html" class="text-light-gold hover:text-gold transition">Accompagnements</a></li>
+                        <li><a href="a-propos.html" class="text-light-gold hover:text-gold transition">À Propos</a></li>
+                        <li><a href="index.html#edolgor" class="text-light-gold hover:text-gold transition">Edolg'Or</a></li>
+                        <li><a href="precommande-oracle.html" class="text-light-gold hover:text-gold transition">Précommande</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
+                    <ul class="space-y-2">
+                        <li><a href="cgu.html" class="text-light-gold hover:text-gold transition">Conditions Générales d'Utilisation</a></li>
+                        <li><a href="mentions-legales.html" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
+                        <li><a href="politique-confidentialite.html" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="cormorant text-xl text-gold mb-4">Contact</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><span class="text-light-gold">Oradia@protonmail.com</span></li>
+                        <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><span class="text-light-gold">@oradia_oracle</span></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="pt-8 border-t border-gold/10 text-center">
+                <p class="text-light-gold text-sm">&copy; 2026 Oradia. Tous droits réservés. |
+                    <button id="footerLogin" class="text-gold hover:text-light-gold">Accès Dashboard</button>
+                </p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script>
+        // Configuration Stripe - clé publique supprimée
+        const stripe = null; // Stripe('pk_test_XXXXXXXXXXXXXXXXXXXXXXXX');
+        
+        // Données de précommande (simulées)
+        const precommandeData = {
+            total: 10,
+            objectif: 500,
+            earlyBird: {
+                available: 90,
+                total: 100
+            }
+        };
+        
+        // Mise à jour des compteurs
+        function updateCounters() {
+            document.getElementById('earlyBirdCount').textContent = precommandeData.earlyBird.available;
+            
+            // Mise à jour de la barre de progression
+            const percentage = (precommandeData.total / precommandeData.objectif) * 100;
+            document.querySelector('.progress-bar').style.width = percentage + '%';
+            document.querySelector('.progress-bar span').textContent = `${precommandeData.total} / ${precommandeData.objectif}`;
+        }
+        
+        // Initialisation
+        updateCounters();
+        
+        // FAQ
+        document.querySelectorAll('.faq-question').forEach(button => {
+            button.addEventListener('click', () => {
+                const answer = button.nextElementSibling;
+                const icon = button.querySelector('i');
+                
+                answer.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            });
+        });
+        
+        // Modal de précommande
+        const modal = document.getElementById('precommandeModal');
+        const modalContent = document.getElementById('selectedOffer');
+        
+        document.querySelectorAll('.precommande-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const offer = button.dataset.offer;
+                const offers = {
+                    'early-bird': {
+                        name: 'Early Bird',
+                        price: '35€',
+                        description: 'Tarif exclusif quantité limitée'
+                    },
+                    'standard': {
+                        name: 'Standard',
+                        price: '42€',
+                        description: 'Prix standard complet'
+                    },
+                    'collector': {
+                        name: 'Édition Signature',
+                        price: '49€',
+                        description: 'Exemplaire dédicacé et unique'
+                    }
+                };
+                
+                const selected = offers[offer];
+                modalContent.innerHTML = `
+                    <div class="bg-gold/10 rounded-lg p-4 mb-4">
+                        <h4 class="text-gold font-semibold">${selected.name}</h4>
+                        <p class="text-2xl font-bold text-gold">${selected.price}</p>
+                        <p class="text-light-gold text-sm">${selected.description}</p>
+                    </div>
+                `;
+                
+                modal.classList.remove('hidden');
+            });
+        });
+        
+        document.getElementById('closeModal').addEventListener('click', () => {
+            modal.classList.add('hidden');
+        });
+        
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                modal.classList.add('hidden');
+            }
+        });
+        
+        // Formulaire de précommande
+        document.getElementById('precommandeForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            // Simulation du paiement Stripe
+            const formData = new FormData(e.target);
+            const orderData = {
+                email: formData.get('email'),
+                name: formData.get('name'),
+                address: {
+                    street: formData.get('address'),
+                    postal: formData.get('postal'),
+                    city: formData.get('city')
+                },
+                offer: modalContent.querySelector('h4').textContent,
+                price: modalContent.querySelector('.text-2xl').textContent
+            };
+            
+            // Redirection vers la page de paiement Stripe
+            console.log('Commande:', orderData);
+            alert('Redirection vers le paiement Stripe...');
+            
+            // En production, utilisez:
+            // const response = await fetch('/create-checkout-session', {
+            //     method: 'POST',
+            //     headers: { 'Content-Type': 'application/json' },
+            //     body: JSON.stringify(orderData)
+            // });
+            // const session = await response.json();
+            // stripe.redirectToCheckout({ sessionId: session.id });
+        });
+        
+        // Initialisation
+        updateCounters();
+        
+        // Animation du compteur Early Bird
+        setInterval(() => {
+            if (precommandeData.earlyBird.available > 0 && Math.random() > 0.7) {
+                precommandeData.earlyBird.available--;
+                updateCounters();
+            }
+        }, 30000); // Toutes les 30 secondes
+    </script>
+</body>
+</html>

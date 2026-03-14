@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Historique des Tirages - ORADIA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../style.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'night-blue': '#0a192f',
+                        'gold': '#d4af37',
+                        'light-gold': '#f5e7a1',
+                        'dark-blue': '#051428',
+                        'celtic-blue': '#1a365d'
+                    },
+                    fontFamily: {
+                        'cormorant': ['Cormorant Garamond', 'serif'],
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+        
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .tirage-card {
+            background: linear-gradient(145deg, rgba(26,54,93,0.6), rgba(5,20,40,0.8));
+            border: 1px solid rgba(212,175,55,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .tirage-card:hover {
+            border-color: rgba(212,175,55,0.6);
+            box-shadow: 0 4px 20px rgba(212,175,55,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .sidebar-link {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-link:hover {
+            background: rgba(212,175,55,0.1);
+            border-left: 3px solid #d4af37;
+            padding-left: 20px;
+        }
+        
+        .filter-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .filter-btn:hover {
+            background: rgba(212,175,55,0.2);
+            border-color: #d4af37;
+        }
+        
+        .filter-btn.active {
+            background: rgba(212,175,55,0.3);
+            border-color: #d4af37;
+            color: #d4af37;
+        }
+        
+        .detail-modal {
+            backdrop-filter: blur(8px);
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.4s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-night-blue text-light-gold">
+    <!-- Header -->
+    <header class="bg-[rgba(5,20,40,0.8)] backdrop-blur-md border-b border-gold/20 sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <a href="../index.html" class="flex items-center gap-3">
+                        <img src="../images/logo-hd-v2.jpeg" alt="ORADIA" class="w-10 h-10 rounded-full">
+                        <div>
+                            <h1 class="cormorant text-2xl font-bold gold-gradient">ORADIA</h1>
+                            <p class="text-gold/70 text-sm">Historique des tirages</p>
+                        </div>
+                    </a>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-gold font-medium" id="memberName">Cher Membre</p>
+                        <p class="text-gold/60 text-sm">12 tirages au total</p>
+                    </div>
+                    <button id="logoutBtn" class="text-gold/70 hover:text-gold transition-colors">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-[rgba(5,20,40,0.6)] border-r border-gold/20 hidden lg:block">
+            <nav class="p-6 space-y-2">
+                <a href="dashboard.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Tableau de bord</span>
+                </a>
+                <a href="tirages.html" class="sidebar-link flex items-center gap-3 text-gold p-3 rounded-lg bg-gold/10 border-l-3 border-gold">
+                    <i class="fas fa-cards-blank w-5"></i>
+                    <span>Historique des tirages</span>
+                </a>
+                <a href="profile.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-user-circle w-5"></i>
+                    <span>Mon profil</span>
+                </a>
+                <a href="abonnements.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-crown w-5"></i>
+                    <span>Abonnements</span>
+                </a>
+                <a href="parametres.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-cog w-5"></i>
+                    <span>Paramètres</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+            <!-- Header Section -->
+            <section class="mb-8">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                    <div>
+                        <h2 class="cormorant text-3xl text-gold mb-2">Historique des tirages</h2>
+                        <p class="text-light-gold/80">Consultez et explorez tous vos tirages ORADIA</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button class="bg-gold hover:bg-light-gold text-night-blue font-bold py-2 px-4 rounded-lg transition-colors">
+                            <i class="fas fa-download mr-2"></i>
+                            Exporter
+                        </button>
+                        <a href="../pelerin.html" class="border border-gold text-gold hover:bg-gold hover:text-night-blue font-bold py-2 px-4 rounded-lg transition-colors">
+                            <i class="fas fa-plus mr-2"></i>
+                            Nouveau tirage
+                        </a>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Filters -->
+            <section class="mb-6">
+                <div class="bg-[rgba(26,54,93,0.6)] rounded-xl p-4 border border-gold/20">
+                    <div class="flex flex-wrap gap-3 items-center">
+                        <span class="text-gold font-medium">Filtres:</span>
+                        <button class="filter-btn active border border-gold/50 px-3 py-1 rounded-full text-sm" data-filter="all">
+                            Tous
+                        </button>
+                        <button class="filter-btn border border-gold/30 px-3 py-1 rounded-full text-sm" data-filter="guidance">
+                            Guidance
+                        </button>
+                        <button class="filter-btn border border-gold/30 px-3 py-1 rounded-full text-sm" data-filter="cercle">
+                            Cercle
+                        </button>
+                        <button class="filter-btn border border-gold/30 px-3 py-1 rounded-full text-sm" data-filter="consultation">
+                            Consultation
+                        </button>
+                        <div class="ml-auto flex gap-3">
+                            <select class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-1 text-sm">
+                                <option>Derniers 30 jours</option>
+                                <option>Derniers 3 mois</option>
+                                <option>Dernière année</option>
+                                <option>Toutes les dates</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Statistics -->
+            <section class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+                <div class="bg-gradient-to-r from-[rgba(26,54,93,0.6)] to-[rgba(5,20,40,0.8)] rounded-xl p-4 border border-gold/20">
+                    <div class="text-2xl font-bold text-gold" id="totalCount">12</div>
+                    <div class="text-light-gold/70 text-sm">Total des tirages</div>
+                </div>
+                <div class="bg-gradient-to-r from-[rgba(26,54,93,0.6)] to-[rgba(5,20,40,0.8)] rounded-xl p-4 border border-gold/20">
+                    <div class="text-2xl font-bold text-gold" id="guidanceCount">5</div>
+                    <div class="text-light-gold/70 text-sm">Guidances</div>
+                </div>
+                <div class="bg-gradient-to-r from-[rgba(26,54,93,0.6)] to-[rgba(5,20,40,0.8)] rounded-xl p-4 border border-gold/20">
+                    <div class="text-2xl font-bold text-gold" id="cercleCount">4</div>
+                    <div class="text-light-gold/70 text-sm">Cercles</div>
+                </div>
+                <div class="bg-gradient-to-r from-[rgba(26,54,93,0.6)] to-[rgba(5,20,40,0.8)] rounded-xl p-4 border border-gold/20">
+                    <div class="text-2xl font-bold text-gold" id="consultationCount">3</div>
+                    <div class="text-light-gold/70 text-sm">Consultations</div>
+                </div>
+            </section>
+
+            <!-- Tirages List -->
+            <section class="space-y-4" id="tiragesList">
+                <!-- Tirage cards will be dynamically inserted here -->
+            </section>
+
+            <!-- Load More -->
+            <div class="text-center mt-8">
+                <button id="loadMoreBtn" class="border border-gold text-gold hover:bg-gold hover:text-night-blue font-bold py-3 px-6 rounded-lg transition-colors">
+                    Charger plus de tirages
+                </button>
+            </div>
+        </main>
+    </div>
+
+    <!-- Detail Modal -->
+    <div id="detailModal" class="fixed inset-0 bg-black/50 detail-modal hidden z-50 flex items-center justify-center p-4">
+        <div class="bg-gradient-to-br from-[rgba(26,54,93,0.9)] to-[rgba(5,20,40,0.95)] rounded-2xl p-8 max-w-4xl w-full max-h-[90vh] overflow-y-auto border border-gold/30">
+            <div class="flex justify-between items-start mb-6">
+                <h3 class="cormorant text-2xl text-gold" id="modalTitle">Détails du tirage</h3>
+                <button id="closeModal" class="text-gold/70 hover:text-gold text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div id="modalContent">
+                <!-- Modal content will be dynamically inserted -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-[rgba(5,20,40,0.9)] border-t border-gold/20 z-40">
+        <div class="flex justify-around py-2">
+            <a href="dashboard.html" class="flex flex-col items-center p-2 text-light-gold">
+                <i class="fas fa-home text-xl"></i>
+                <span class="text-xs">Accueil</span>
+            </a>
+            <a href="tirages.html" class="flex flex-col items-center p-2 text-gold">
+                <i class="fas fa-cards-blank text-xl"></i>
+                <span class="text-xs">Tirages</span>
+            </a>
+            <a href="profile.html" class="flex flex-col items-center p-2 text-light-gold">
+                <i class="fas fa-user text-xl"></i>
+                <span class="text-xs">Profil</span>
+            </a>
+            <a href="parametres.html" class="flex flex-col items-center p-2 text-light-gold">
+                <i class="fas fa-cog text-xl"></i>
+                <span class="text-xs">Params</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Données simulées des tirages
+        const tiragesData = [
+            {
+                id: 1,
+                type: "Guidance Personnelle",
+                date: "2024-03-15",
+                intention: "Clarifier mon chemin professionnel",
+                categories: ["Émotions", "Actions", "Cosmos"],
+                result: {
+                    emotions: { name: "Transformation", quote: "Le changement est inévitable, l'adaptation est un choix" },
+                    being: { name: "Sagesse Intérieure", quote: "Votre savoir intérieur est votre plus grand guide" },
+                    actions: { name: "Nouveau Départ", quote: "Chaque fin est un nouveau commencement" },
+                    cosmos: { name: "Alignement", quote: "L'univers conspire pour vous aider" }
+                },
+                synthesis: "Ce tirage indique une période de transformation professionnelle importante. Votre sagesse intérieure vous guide vers un nouveau départ aligné avec votre véritable mission.",
+                status: "Complet"
+            },
+            {
+                id: 2,
+                type: "Cercle d'Empuissancement",
+                date: "2024-03-10",
+                intention: "Trouver ma place dans le groupe",
+                categories: ["Actions", "Cosmos"],
+                result: {
+                    actions: { name: "Contribution", quote: "Votre présence apporte une valeur unique" },
+                    cosmos: { name: "Connexion", quote: "Vous êtes connecté à quelque chose de plus grand" }
+                },
+                synthesis: "Votre contribution au groupe est précieuse et vous êtes connecté à une énergie collective qui vous soutient dans votre chemin.",
+                status: "Partiel"
+            },
+            {
+                id: 3,
+                type: "Consultation Rapide",
+                date: "2024-03-08",
+                intention: "Question sur une décision importante",
+                categories: ["Émotions"],
+                result: {
+                    emotions: { name: "Clarté", quote: "La clarté vient de l'intérieur, pas de l'extérieur" }
+                },
+                synthesis: "Prenez le temps de trouver la clarté intérieure avant de prendre votre décision. La réponse se trouve déjà en vous.",
+                status: "Rapide"
+            },
+            {
+                id: 4,
+                type: "Guidance Approfondie",
+                date: "2024-03-01",
+                intention: "Comprendre mes blocages émotionnels",
+                categories: ["Émotions", "Being", "Actions", "Cosmos"],
+                result: {
+                    emotions: { name: "Libération", quote: "Libérez-vous du passé pour accueillir le futur" },
+                    being: { name: "Authenticité", quote: "Soyez vous-même, les autres suivront" },
+                    actions: { name: "Pardon", quote: "Le pardon est un cadeau que vous vous faites" },
+                    cosmos: { name: "Renaissance", quote: "Chaque jour est une opportunité de renaître" }
+                },
+                synthesis: "Ce tirage vous invite à libérer les émotions du passé pour renaître dans votre authenticité. Le pardon est la clé de votre transformation.",
+                status: "Complet"
+            },
+            {
+                id: 5,
+                type: "Cercle de Parole",
+                date: "2024-02-25",
+                intention: "Partager mes expériences",
+                categories: ["Actions", "Cosmos"],
+                result: {
+                    actions: { name: "Partage", quote: "Le partage multiplie la joie et divise la peine" },
+                    cosmos: { name: "Communauté", quote: "Ensemble, nous sommes plus forts" }
+                },
+                synthesis: "Votre expérience partagée enrichit la communauté. Votre voix a de la valeur et peut aider les autres.",
+                status: "Partiel"
+            }
+        ];
+
+        let currentFilter = 'all';
+        let displayedTirages = 0;
+        const tiragesPerPage = 3;
+
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', () => {
+            updateMemberInfo();
+            updateStatistics();
+            renderTirages();
+            setupEventListeners();
+        });
+
+        function updateMemberInfo() {
+            document.getElementById('memberName').textContent = "Jean Dupont";
+        }
+
+        function updateStatistics() {
+            const total = tiragesData.length;
+            const guidance = tiragesData.filter(t => t.type.includes('Guidance')).length;
+            const cercle = tiragesData.filter(t => t.type.includes('Cercle')).length;
+            const consultation = tiragesData.filter(t => t.type.includes('Consultation')).length;
+
+            document.getElementById('totalCount').textContent = total;
+            document.getElementById('guidanceCount').textContent = guidance;
+            document.getElementById('cercleCount').textContent = cercle;
+            document.getElementById('consultationCount').textContent = consultation;
+        }
+
+        function renderTirages() {
+            const container = document.getElementById('tiragesList');
+            container.innerHTML = '';
+
+            const filteredTirages = currentFilter === 'all' 
+                ? tiragesData 
+                : tiragesData.filter(t => {
+                    if (currentFilter === 'guidance') return t.type.includes('Guidance');
+                    if (currentFilter === 'cercle') return t.type.includes('Cercle');
+                    if (currentFilter === 'consultation') return t.type.includes('Consultation');
+                    return true;
+                });
+
+            const toDisplay = filteredTirages.slice(0, displayedTirages + tiragesPerPage);
+            
+            toDisplay.forEach(tirage => {
+                const card = createTirageCard(tirage);
+                container.appendChild(card);
+            });
+
+            displayedTirages += toDisplay.length;
+
+            // Cacher le bouton "Charger plus" si tout est affiché
+            if (displayedTirages >= filteredTirages.length) {
+                document.getElementById('loadMoreBtn').style.display = 'none';
+            } else {
+                document.getElementById('loadMoreBtn').style.display = 'inline-block';
+            }
+        }
+
+        function createTirageCard(tirage) {
+            const card = document.createElement('div');
+            card.className = 'tirage-card rounded-xl p-6 cursor-pointer slide-in';
+            
+            const date = new Date(tirage.date);
+            const formattedDate = date.toLocaleDateString('fr-FR', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+            });
+
+            card.innerHTML = `
+                <div class="flex justify-between items-start mb-4">
+                    <div class="flex-1">
+                        <div class="flex items-center gap-3 mb-2">
+                            <h4 class="text-gold font-semibold text-lg">${tirage.type}</h4>
+                            <span class="bg-gold/20 text-gold text-xs px-2 py-1 rounded-full">${tirage.status}</span>
+                        </div>
+                        <p class="text-light-gold/60 text-sm mb-2">${formattedDate}</p>
+                        <p class="text-light-gold/80 mb-3"><strong>Intention:</strong> ${tirage.intention}</p>
+                        <div class="flex gap-2 flex-wrap">
+                            ${tirage.categories.map(cat => `
+                                <span class="text-xs bg-[rgba(212,175,55,0.2)] text-gold px-2 py-1 rounded">
+                                    ${cat}
+                                </span>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <button class="text-gold/70 hover:text-gold transition-colors ml-4" onclick="showTirageDetail(${tirage.id})">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+            `;
+
+            card.addEventListener('click', (e) => {
+                if (!e.target.closest('button')) {
+                    showTirageDetail(tirage.id);
+                }
+            });
+
+            return card;
+        }
+
+        function showTirageDetail(tirageId) {
+            const tirage = tiragesData.find(t => t.id === tirageId);
+            if (!tirage) return;
+
+            const modal = document.getElementById('detailModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalContent = document.getElementById('modalContent');
+
+            modalTitle.textContent = tirage.type;
+            
+            const date = new Date(tirage.date);
+            const formattedDate = date.toLocaleDateString('fr-FR', { 
+                day: 'numeric', 
+                month: 'long', 
+                year: 'numeric' 
+            });
+
+            modalContent.innerHTML = `
+                <div class="space-y-6">
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-xl p-4 border border-gold/20">
+                        <h4 class="text-gold font-semibold mb-2">Informations</h4>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-light-gold/70">Date:</span>
+                                <span class="text-light-gold ml-2">${formattedDate}</span>
+                            </div>
+                            <div>
+                                <span class="text-light-gold/70">Type:</span>
+                                <span class="text-light-gold ml-2">${tirage.type}</span>
+                            </div>
+                            <div class="md:col-span-2">
+                                <span class="text-light-gold/70">Intention:</span>
+                                <span class="text-light-gold ml-2">${tirage.intention}</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-xl p-4 border border-gold/20">
+                        <h4 class="text-gold font-semibold mb-4">Résultats du tirage</h4>
+                        <div class="space-y-3">
+                            ${Object.entries(tirage.result).map(([key, value]) => `
+                                <div class="bg-[rgba(26,54,93,0.4)] rounded-lg p-3">
+                                    <div class="flex items-center gap-2 mb-1">
+                                        <span class="text-gold font-medium">${value.name}</span>
+                                        <span class="text-xs bg-[rgba(212,175,55,0.2)] text-gold px-2 py-1 rounded">
+                                            ${key.charAt(0).toUpperCase() + key.slice(1)}
+                                        </span>
+                                    </div>
+                                    <p class="text-light-gold/80 text-sm italic">"${value.quote}"</p>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+
+                    <div class="bg-gradient-to-r from-gold/10 to-light-gold/5 rounded-xl p-4 border border-gold/30">
+                        <h4 class="text-gold font-semibold mb-2">Synthèse</h4>
+                        <p class="text-light-gold leading-relaxed">${tirage.synthesis}</p>
+                    </div>
+
+                    <div class="flex gap-3">
+                        <button class="bg-gold/20 text-gold px-4 py-2 rounded-lg hover:bg-gold/30 transition-colors">
+                            <i class="fas fa-download mr-2"></i>
+                            Télécharger
+                        </button>
+                        <button class="bg-gold/20 text-gold px-4 py-2 rounded-lg hover:bg-gold/30 transition-colors">
+                            <i class="fas fa-share mr-2"></i>
+                            Partager
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            modal.classList.remove('hidden');
+        }
+
+        function setupEventListeners() {
+            // Filtres
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    displayedTirages = 0;
+                    renderTirages();
+                });
+            });
+
+            // Load more
+            document.getElementById('loadMoreBtn').addEventListener('click', () => {
+                renderTirages();
+            });
+
+            // Modal
+            document.getElementById('closeModal').addEventListener('click', () => {
+                document.getElementById('detailModal').classList.add('hidden');
+            });
+
+            document.getElementById('detailModal').addEventListener('click', (e) => {
+                if (e.target.id === 'detailModal') {
+                    document.getElementById('detailModal').classList.add('hidden');
+                }
+            });
+
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+                    window.location.href = '../index.html';
+                }
+            });
+        }
+    </script>
+</body>
+</html>

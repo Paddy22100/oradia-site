@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connexion - ORADIA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+SC:wght@400;500;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('../style.css');
+        
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .auth-card {
+            background: linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9));
+            border: 1px solid rgba(212,175,55,.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .btn-gold {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            color: #020817;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-gold:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(212,175,55,0.3);
+        }
+        
+        .form-input {
+            background: rgba(5,20,40,0.7);
+            border: 1px solid rgba(212,175,55,0.35);
+            padding: 12px 16px;
+            border-radius: 8px;
+            color: #f4e4c1;
+            transition: all 0.3s ease;
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #d4af37;
+            box-shadow: 0 0 0 3px rgba(212,175,55,0.1);
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #f87171;
+            padding: 12px;
+            border-radius: 8px;
+        }
+        
+        .success-message {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #4ade80;
+            padding: 12px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+<body class="bg-night-blue min-h-screen flex items-center justify-center p-4">
+    <!-- Background Pattern -->
+    <div class="absolute inset-0 opacity-5">
+        <div class="absolute inset-0" style="background-image: radial-gradient(circle at 25% 25%, #d4af37 1px, transparent 1px), radial-gradient(circle at 75% 75%, #d4af37 1px, transparent 1px); background-size: 50px 50px;"></div>
+    </div>
+    
+    <!-- Main Container -->
+    <div class="relative z-10 w-full max-w-md">
+        <!-- Logo and Title -->
+        <div class="text-center mb-8">
+            <img src="../images/logo-hd-v2.jpeg" alt="ORADIA" class="w-20 h-20 mx-auto mb-4 rounded-full border-2 border-gold">
+            <h1 class="cormorant text-4xl font-bold gold-gradient mb-2">ORADIA</h1>
+            <p class="text-gold/70">Connectez-vous à votre espace</p>
+        </div>
+        
+        <!-- Auth Card -->
+        <div class="auth-card rounded-2xl p-8 shadow-2xl">
+            <!-- Login Form -->
+            <form id="loginForm" class="space-y-6">
+                <div>
+                    <label for="email" class="block text-gold font-semibold mb-2">Email</label>
+                    <input 
+                        type="email" 
+                        id="email" 
+                        name="email"
+                        required
+                        class="form-input w-full"
+                        placeholder="votre@email.com"
+                    >
+                </div>
+                
+                <div>
+                    <label for="password" class="block text-gold font-semibold mb-2">Mot de passe</label>
+                    <input 
+                        type="password" 
+                        id="password" 
+                        name="password"
+                        required
+                        class="form-input w-full"
+                        placeholder="••••••••"
+                    >
+                </div>
+                
+                <div class="flex items-center justify-between">
+                    <label class="flex items-center">
+                        <input type="checkbox" class="mr-2">
+                        <span class="text-gold/70 text-sm">Se souvenir de moi</span>
+                    </label>
+                    <a href="#" class="text-gold hover:text-light-gold text-sm">Mot de passe oublié?</a>
+                </div>
+                
+                <button type="submit" class="btn-gold w-full flex items-center justify-center gap-2">
+                    <i class="fas fa-sign-in-alt"></i>
+                    Se connecter
+                </button>
+            </form>
+            
+            <!-- Messages Container -->
+            <div id="messageContainer" class="mt-4"></div>
+            
+            <!-- Register Link -->
+            <div class="mt-6 text-center">
+                <p class="text-gold/70">
+                    Pas encore de compte? 
+                    <a href="/auth/register" class="text-gold hover:text-light-gold font-semibold">S'inscrire</a>
+                </p>
+            </div>
+            
+            <!-- Back to Site -->
+            <div class="mt-8 text-center">
+                <a href="../index.html" class="text-gold/70 hover:text-gold text-sm flex items-center justify-center gap-2">
+                    <i class="fas fa-arrow-left"></i>
+                    Retour au site
+                </a>
+            </div>
+        </div>
+        
+        <!-- Admin Access -->
+        <div class="mt-6 text-center">
+            <p class="text-gold/50 text-xs">
+                Accès administrateur : 
+                <a href="/admin/dashboard" class="text-gold/70 hover:text-gold ml-1">Dashboard Admin</a>
+            </p>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-night-blue/90 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="text-center">
+            <div class="animate-spin rounded-full h-16 w-16 border-4 border-gold border-t-transparent mx-auto mb-4"></div>
+            <p class="text-gold">Connexion en cours...</p>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE = 'http://localhost:3001/api';
+        
+        // Form submission
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(e.target);
+            const loginData = {
+                email: formData.get('email'),
+                password: formData.get('password')
+            };
+            
+            try {
+                showLoading(true);
+                clearMessages();
+                
+                const response = await fetch(`${API_BASE}/auth/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(loginData)
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Erreur de connexion');
+                }
+                
+                // Success - Store token and redirect
+                localStorage.setItem('oradiaAdminToken', data.data.token);
+                localStorage.setItem('oradiaUser', JSON.stringify(data.data.user));
+                
+                showMessage('Connexion réussie! Redirection...', 'success');
+                
+                // Redirect based on role
+                setTimeout(() => {
+                    if (data.data.user.role === 'admin') {
+                        window.location.href = '/admin/dashboard';
+                    } else {
+                        window.location.href = '/user/dashboard';
+                    }
+                }, 1500);
+                
+            } catch (error) {
+                showMessage(error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        });
+        
+        // Utility functions
+        function showLoading(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (show) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+            } else {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+            }
+        }
+        
+        function showMessage(message, type) {
+            const container = document.getElementById('messageContainer');
+            const messageClass = type === 'error' ? 'error-message' : 'success-message';
+            const icon = type === 'error' ? 'fa-exclamation-circle' : 'fa-check-circle';
+            
+            container.innerHTML = `
+                <div class="${messageClass} flex items-center gap-2">
+                    <i class="fas ${icon}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+        }
+        
+        function clearMessages() {
+            document.getElementById('messageContainer').innerHTML = '';
+        }
+        
+        // Check if already logged in
+        window.addEventListener('load', function() {
+            const token = localStorage.getItem('oradiaAdminToken');
+            const user = localStorage.getItem('oradiaUser');
+            
+            if (token && user) {
+                const userData = JSON.parse(user);
+                if (userData.role === 'admin') {
+                    window.location.href = '/admin/dashboard';
+                } else {
+                    window.location.href = '/user/dashboard';
+                }
+            }
+        });
+        
+        // Forgot password handler
+        document.querySelector('a[href="#"]').addEventListener('click', function(e) {
+            e.preventDefault();
+            const email = document.getElementById('email').value;
+            
+            if (!email) {
+                showMessage('Veuillez d\'abord entrer votre email', 'error');
+                return;
+            }
+            
+            // Implement forgot password logic
+            forgotPassword(email);
+        });
+        
+        async function forgotPassword(email) {
+            try {
+                showLoading(true);
+                clearMessages();
+                
+                const response = await fetch(`${API_BASE}/auth/forgot-password`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ email })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'Erreur lors de la demande de réinitialisation');
+                }
+                
+                showMessage('Si cet email existe, un email de réinitialisation a été envoyé', 'success');
+                
+            } catch (error) {
+                showMessage(error.message, 'error');
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Enter key submission
+        document.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && e.target.tagName !== 'BUTTON') {
+                document.getElementById('loginForm').dispatchEvent(new Event('submit'));
+            }
+        });
+    </script>
+</body>
+</html>

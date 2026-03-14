@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mon Profil - ORADIA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../style.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'night-blue': '#0a192f',
+                        'gold': '#d4af37',
+                        'light-gold': '#f5e7a1',
+                        'dark-blue': '#051428',
+                        'celtic-blue': '#1a365d'
+                    },
+                    fontFamily: {
+                        'cormorant': ['Cormorant Garamond', 'serif'],
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+        
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .profile-section {
+            background: linear-gradient(145deg, rgba(26,54,93,0.6), rgba(5,20,40,0.8));
+            border: 1px solid rgba(212,175,55,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .profile-section:hover {
+            border-color: rgba(212,175,55,0.6);
+            box-shadow: 0 4px 20px rgba(212,175,55,0.15);
+        }
+        
+        .sidebar-link {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-link:hover {
+            background: rgba(212,175,55,0.1);
+            border-left: 3px solid #d4af37;
+            padding-left: 20px;
+        }
+        
+        .achievement-badge {
+            background: linear-gradient(145deg, rgba(212,175,55,0.2), rgba(212,175,55,0.1));
+            border: 1px solid rgba(212,175,55,0.4);
+            transition: all 0.3s ease;
+        }
+        
+        .achievement-badge:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(212,175,55,0.3);
+        }
+        
+        .tab-btn {
+            transition: all 0.2s ease;
+        }
+        
+        .tab-btn:hover {
+            background: rgba(212,175,55,0.1);
+        }
+        
+        .tab-btn.active {
+            background: rgba(212,175,55,0.2);
+            border-bottom: 2px solid #d4af37;
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #d4af37, #f4e4c1);
+            transition: width 1s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-night-blue text-light-gold">
+    <!-- Header -->
+    <header class="bg-[rgba(5,20,40,0.8)] backdrop-blur-md border-b border-gold/20 sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <a href="../index.html" class="flex items-center gap-3">
+                        <img src="../images/logo-hd-v2.jpeg" alt="ORADIA" class="w-10 h-10 rounded-full">
+                        <div>
+                            <h1 class="cormorant text-2xl font-bold gold-gradient">ORADIA</h1>
+                            <p class="text-gold/70 text-sm">Mon profil</p>
+                        </div>
+                    </a>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <button id="logoutBtn" class="text-gold/70 hover:text-gold transition-colors">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-[rgba(5,20,40,0.6)] border-r border-gold/20 hidden lg:block">
+            <nav class="p-6 space-y-2">
+                <a href="dashboard.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Tableau de bord</span>
+                </a>
+                <a href="tirages.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-cards-blank w-5"></i>
+                    <span>Historique des tirages</span>
+                </a>
+                <a href="profile.html" class="sidebar-link flex items-center gap-3 text-gold p-3 rounded-lg bg-gold/10 border-l-3 border-gold">
+                    <i class="fas fa-user-circle w-5"></i>
+                    <span>Mon profil</span>
+                </a>
+                <a href="abonnements.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-crown w-5"></i>
+                    <span>Abonnements</span>
+                </a>
+                <a href="parametres.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-cog w-5"></i>
+                    <span>Paramètres</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+            <!-- Profile Header -->
+            <section class="mb-8">
+                <div class="bg-gradient-to-r from-[rgba(26,54,93,0.8)] to-[rgba(5,20,40,0.9)] rounded-2xl p-8 border border-gold/30 relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full -translate-y-16 translate-x-16"></div>
+                    <div class="absolute bottom-0 left-0 w-24 h-24 bg-light-gold/5 rounded-full translate-y-12 -translate-x-12"></div>
+                    
+                    <div class="relative z-10 flex flex-col md:flex-row items-center gap-8">
+                        <div class="relative">
+                            <div class="w-32 h-32 rounded-full bg-gradient-to-br from-gold/30 to-gold/10 flex items-center justify-center">
+                                <i class="fas fa-user text-4xl text-gold"></i>
+                            </div>
+                            <button class="absolute bottom-0 right-0 w-10 h-10 bg-gold rounded-full flex items-center justify-center text-night-blue hover:bg-light-gold transition-colors">
+                                <i class="fas fa-camera text-sm"></i>
+                            </button>
+                        </div>
+                        
+                        <div class="flex-1 text-center md:text-left">
+                            <h2 class="cormorant text-3xl text-gold mb-2" id="profileName">Jean Dupont</h2>
+                            <p class="text-light-gold/80 mb-4">Membre depuis Janvier 2024</p>
+                            
+                            <div class="flex flex-wrap gap-4 justify-center md:justify-start mb-4">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-star text-gold"></i>
+                                    <span class="text-light-gold">Niveau: <span class="text-gold font-semibold">Initié</span></span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-fire text-orange-400"></i>
+                                    <span class="text-light-gold">Série: <span class="text-gold font-semibold">7 jours</span></span>
+                                </div>
+                                <div class="flex items-center gap-2">
+                                    <i class="fas fa-cards-blank text-gold"></i>
+                                    <span class="text-light-gold">Tirages: <span class="text-gold font-semibold">12</span></span>
+                                </div>
+                            </div>
+                            
+                            <div class="flex gap-3 justify-center md:justify-start">
+                                <button class="bg-gold hover:bg-light-gold text-night-blue font-bold py-2 px-4 rounded-lg transition-colors">
+                                    <i class="fas fa-edit mr-2"></i>
+                                    Éditer le profil
+                                </button>
+                                <button class="border border-gold text-gold hover:bg-gold hover:text-night-blue font-bold py-2 px-4 rounded-lg transition-colors">
+                                    <i class="fas fa-share-alt mr-2"></i>
+                                    Partager
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Tabs -->
+            <section class="mb-8">
+                <div class="flex gap-2 border-b border-gold/20">
+                    <button class="tab-btn active px-4 py-2 text-gold font-medium" data-tab="overview">
+                        Aperçu
+                    </button>
+                    <button class="tab-btn px-4 py-2 text-light-gold hover:text-gold font-medium" data-tab="achievements">
+                        Réalisations
+                    </button>
+                    <button class="tab-btn px-4 py-2 text-light-gold hover:text-gold font-medium" data-tab="progress">
+                        Progression
+                    </button>
+                    <button class="tab-btn px-4 py-2 text-light-gold hover:text-gold font-medium" data-tab="preferences">
+                        Préférences
+                    </button>
+                </div>
+            </section>
+
+            <!-- Tab Content -->
+            <section id="tabContent">
+                <!-- Overview Tab -->
+                <div id="overview" class="tab-content fade-in">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Personal Info -->
+                        <div class="profile-section rounded-xl p-6">
+                            <h3 class="cormorant text-xl text-gold mb-4">Informations personnelles</h3>
+                            <div class="space-y-3">
+                                <div class="flex justify-between py-2 border-b border-gold/10">
+                                    <span class="text-light-gold/70">Email</span>
+                                    <span class="text-light-gold">jean.dupont@email.com</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gold/10">
+                                    <span class="text-light-gold/70">Téléphone</span>
+                                    <span class="text-light-gold">06 12 34 56 78</span>
+                                </div>
+                                <div class="flex justify-between py-2 border-b border-gold/10">
+                                    <span class="text-light-gold/70">Localisation</span>
+                                    <span class="text-light-gold">Paris, France</span>
+                                </div>
+                                <div class="flex justify-between py-2">
+                                    <span class="text-light-gold/70">Date de naissance</span>
+                                    <span class="text-light-gold">15 Mars 1985</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Spiritual Journey -->
+                        <div class="profile-section rounded-xl p-6">
+                            <h3 class="cormorant text-xl text-gold mb-4">Parcours spirituel</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-light-gold/70">Progression spirituelle</span>
+                                        <span class="text-gold text-sm">65%</span>
+                                    </div>
+                                    <div class="w-full bg-[rgba(5,20,40,0.8)] rounded-full h-2">
+                                        <div class="progress-bar h-2 rounded-full" style="width: 65%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-light-gold/70">Connexion intérieure</span>
+                                        <span class="text-gold text-sm">78%</span>
+                                    </div>
+                                    <div class="w-full bg-[rgba(5,20,40,0.8)] rounded-full h-2">
+                                        <div class="progress-bar h-2 rounded-full" style="width: 78%"></div>
+                                    </div>
+                                </div>
+                                
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-light-gold/70">Sagesse accumulée</span>
+                                        <span class="text-gold text-sm">42%</span>
+                                    </div>
+                                    <div class="w-full bg-[rgba(5,20,40,0.8)] rounded-full h-2">
+                                        <div class="progress-bar h-2 rounded-full" style="width: 42%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Recent Activity -->
+                        <div class="profile-section rounded-xl p-6 lg:col-span-2">
+                            <h3 class="cormorant text-xl text-gold mb-4">Activité récente</h3>
+                            <div class="space-y-3">
+                                <div class="flex items-center gap-4 p-3 bg-[rgba(5,20,40,0.4)] rounded-lg">
+                                    <div class="w-10 h-10 bg-gold/20 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-cards-blank text-gold"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-gold font-medium">Guidance Personnelle</p>
+                                        <p class="text-light-gold/60 text-sm">Il y a 2 jours - Clarifier mon chemin professionnel</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center gap-4 p-3 bg-[rgba(5,20,40,0.4)] rounded-lg">
+                                    <div class="w-10 h-10 bg-gold/20 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-users text-gold"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-gold font-medium">Cercle d'Empuissancement</p>
+                                        <p class="text-light-gold/60 text-sm">Il y a 5 jours - Trouver ma place dans le groupe</p>
+                                    </div>
+                                </div>
+                                
+                                <div class="flex items-center gap-4 p-3 bg-[rgba(5,20,40,0.4)] rounded-lg">
+                                    <div class="w-10 h-10 bg-gold/20 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-calendar-check text-gold"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <p class="text-gold font-medium">Rendez-vous consultation</p>
+                                        <p class="text-light-gold/60 text-sm">Il y a 1 semaine - Guidance approfondie</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Achievements Tab -->
+                <div id="achievements" class="tab-content hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                        <div class="achievement-badge rounded-xl p-6 text-center">
+                            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gold/40 to-gold/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-star text-2xl text-gold"></i>
+                            </div>
+                            <h4 class="text-gold font-semibold mb-2">Premier Tirage</h4>
+                            <p class="text-light-gold/70 text-sm mb-3">A réalisé votre premier tirage ORADIA</p>
+                            <div class="text-xs text-gold/60">Janvier 2024</div>
+                        </div>
+
+                        <div class="achievement-badge rounded-xl p-6 text-center">
+                            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gold/40 to-gold/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-fire text-2xl text-orange-400"></i>
+                            </div>
+                            <h4 class="text-gold font-semibold mb-2">Série de 7 jours</h4>
+                            <p class="text-light-gold/70 text-sm mb-3">Tirages consécutifs pendant une semaine</p>
+                            <div class="text-xs text-gold/60">Mars 2024</div>
+                        </div>
+
+                        <div class="achievement-badge rounded-xl p-6 text-center">
+                            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gold/40 to-gold/20 rounded-full flex items-center justify-center">
+                                <i class="fas fa-crown text-2xl text-gold"></i>
+                            </div>
+                            <h4 class="text-gold font-semibold mb-2">Niveau Initié</h4>
+                            <p class="text-light-gold/70 text-sm mb-3">Atteint le niveau d'Initié</p>
+                            <div class="text-xs text-gold/60">Février 2024</div>
+                        </div>
+
+                        <div class="achievement-badge rounded-xl p-6 text-center opacity-50">
+                            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gold/20 to-gold/10 rounded-full flex items-center justify-center">
+                                <i class="fas fa-gem text-2xl text-gold/50"></i>
+                            </div>
+                            <h4 class="text-gold/50 font-semibold mb-2">Maître Spirituel</h4>
+                            <p class="text-light-gold/50 text-sm mb-3">50 tirages complétés</p>
+                            <div class="text-xs text-gold/40">38/50</div>
+                        </div>
+
+                        <div class="achievement-badge rounded-xl p-6 text-center opacity-50">
+                            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gold/20 to-gold/10 rounded-full flex items-center justify-center">
+                                <i class="fas fa-infinity text-2xl text-gold/50"></i>
+                            </div>
+                            <h4 class="text-gold/50 font-semibold mb-2">Sagesse Infinie</h4>
+                            <p class="text-light-gold/50 text-sm mb-3">100 jours de tirages consécutifs</p>
+                            <div class="text-xs text-gold/40">7/100</div>
+                        </div>
+
+                        <div class="achievement-badge rounded-xl p-6 text-center opacity-50">
+                            <div class="w-16 h-16 mx-auto mb-4 bg-gradient-to-br from-gold/20 to-gold/10 rounded-full flex items-center justify-center">
+                                <i class="fas fa-heart text-2xl text-gold/50"></i>
+                            </div>
+                            <h4 class="text-gold/50 font-semibold mb-2">Guide Spirituel</h4>
+                            <p class="text-light-gold/50 text-sm mb-3">Aider 10 personnes dans leur parcours</p>
+                            <div class="text-xs text-gold/40">3/10</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Progress Tab -->
+                <div id="progress" class="tab-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Level Progress -->
+                        <div class="profile-section rounded-xl p-6">
+                            <h3 class="cormorant text-xl text-gold mb-4">Progression des niveaux</h3>
+                            <div class="space-y-4">
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-gold/20 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-seedling text-gold"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gold font-medium">Novice</span>
+                                            <span class="text-light-gold/70 text-sm">Complété</span>
+                                        </div>
+                                        <div class="w-full bg-gold/30 rounded-full h-2">
+                                            <div class="progress-bar h-2 rounded-full" style="width: 100%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-4">
+                                    <div class="w-12 h-12 bg-gold/20 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-star text-gold"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gold font-medium">Initié</span>
+                                            <span class="text-light-gold/70 text-sm">En cours</span>
+                                        </div>
+                                        <div class="w-full bg-[rgba(5,20,40,0.8)] rounded-full h-2">
+                                            <div class="progress-bar h-2 rounded-full" style="width: 45%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="flex items-center gap-4 opacity-50">
+                                    <div class="w-12 h-12 bg-gold/10 rounded-full flex items-center justify-center">
+                                        <i class="fas fa-crown text-gold/50"></i>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="flex justify-between mb-1">
+                                            <span class="text-gold/50 font-medium">Maître</span>
+                                            <span class="text-light-gold/50 text-sm">Verrouillé</span>
+                                        </div>
+                                        <div class="w-full bg-[rgba(5,20,40,0.4)] rounded-full h-2">
+                                            <div class="bg-[rgba(5,20,40,0.4)] h-2 rounded-full" style="width: 0%"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Skills Development -->
+                        <div class="profile-section rounded-xl p-6">
+                            <h3 class="cormorant text-xl text-gold mb-4">Développement des compétences</h3>
+                            <div class="space-y-4">
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-light-gold">Intuition</span>
+                                        <span class="text-gold text-sm">72%</span>
+                                    </div>
+                                    <div class="w-full bg-[rgba(5,20,40,0.8)] rounded-full h-2">
+                                        <div class="progress-bar h-2 rounded-full" style="width: 72%"></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-light-gold">Méditation</span>
+                                        <span class="text-gold text-sm">58%</span>
+                                    </div>
+                                    <div class="w-full bg-[rgba(5,20,40,0.8)] rounded-full h-2">
+                                        <div class="progress-bar h-2 rounded-full" style="width: 58%"></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-light-gold">Écoute active</span>
+                                        <span class="text-gold text-sm">85%</span>
+                                    </div>
+                                    <div class="w-full bg-[rgba(5,20,40,0.8)] rounded-full h-2">
+                                        <div class="progress-bar h-2 rounded-full" style="width: 85%"></div>
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <div class="flex justify-between mb-1">
+                                        <span class="text-light-gold">Analyse symbolique</span>
+                                        <span class="text-gold text-sm">63%</span>
+                                    </div>
+                                    <div class="w-full bg-[rgba(5,20,40,0.8)] rounded-full h-2">
+                                        <div class="progress-bar h-2 rounded-full" style="width: 63%"></div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Preferences Tab -->
+                <div id="preferences" class="tab-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                        <!-- Notification Settings -->
+                        <div class="profile-section rounded-xl p-6">
+                            <h3 class="cormorant text-xl text-gold mb-4">Notifications</h3>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-gold font-medium">Rappels de tirage</p>
+                                        <p class="text-light-gold/60 text-sm">Recevoir des rappels pour vos tirages réguliers</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-[rgba(5,20,40,0.8)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold"></div>
+                                    </label>
+                                </div>
+
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-gold font-medium">Nouveaux cercles</p>
+                                        <p class="text-light-gold/60 text-sm">Être informé des nouveaux cercles disponibles</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-[rgba(5,20,40,0.8)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold"></div>
+                                    </label>
+                                </div>
+
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-gold font-medium">Newsletter ORADIA</p>
+                                        <p class="text-light-gold/60 text-sm">Recevoir les actualités et conseils spirituels</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-[rgba(5,20,40,0.8)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold"></div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Privacy Settings -->
+                        <div class="profile-section rounded-xl p-6">
+                            <h3 class="cormorant text-xl text-gold mb-4">Confidentialité</h3>
+                            <div class="space-y-4">
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-gold font-medium">Profil public</p>
+                                        <p class="text-light-gold/60 text-sm">Rendre votre profil visible par les autres membres</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer">
+                                        <div class="w-11 h-6 bg-[rgba(5,20,40,0.8)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold"></div>
+                                    </label>
+                                </div>
+
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-gold font-medium">Partager les réalisations</p>
+                                        <p class="text-light-gold/60 text-sm">Afficher vos badges et accomplissements</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-[rgba(5,20,40,0.8)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold"></div>
+                                    </label>
+                                </div>
+
+                                <div class="flex justify-between items-center">
+                                    <div>
+                                        <p class="text-gold font-medium">Statistiques anonymes</p>
+                                        <p class="text-light-gold/60 text-sm">Contribuer aux statistiques globales anonymes</p>
+                                    </div>
+                                    <label class="relative inline-flex items-center cursor-pointer">
+                                        <input type="checkbox" class="sr-only peer" checked>
+                                        <div class="w-11 h-6 bg-[rgba(5,20,40,0.8)] peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-gold"></div>
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-[rgba(5,20,40,0.9)] border-t border-gold/20 z-40">
+        <div class="flex justify-around py-2">
+            <a href="dashboard.html" class="flex flex-col items-center p-2 text-light-gold">
+                <i class="fas fa-home text-xl"></i>
+                <span class="text-xs">Accueil</span>
+            </a>
+            <a href="tirages.html" class="flex flex-col items-center p-2 text-light-gold">
+                <i class="fas fa-cards-blank text-xl"></i>
+                <span class="text-xs">Tirages</span>
+            </a>
+            <a href="profile.html" class="flex flex-col items-center p-2 text-gold">
+                <i class="fas fa-user text-xl"></i>
+                <span class="text-xs">Profil</span>
+            </a>
+            <a href="parametres.html" class="flex flex-col items-center p-2 text-light-gold">
+                <i class="fas fa-cog text-xl"></i>
+                <span class="text-xs">Params</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        // Tab management
+        document.addEventListener('DOMContentLoaded', () => {
+            setupTabs();
+            setupEventListeners();
+            animateProgressBars();
+        });
+
+        function setupTabs() {
+            const tabButtons = document.querySelectorAll('.tab-btn');
+            const tabContents = document.querySelectorAll('.tab-content');
+
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTab = button.dataset.tab;
+
+                    // Update button states
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    // Update content visibility
+                    tabContents.forEach(content => {
+                        content.classList.add('hidden');
+                        content.classList.remove('fade-in');
+                    });
+
+                    const targetContent = document.getElementById(targetTab);
+                    if (targetContent) {
+                        targetContent.classList.remove('hidden');
+                        setTimeout(() => targetContent.classList.add('fade-in'), 10);
+                    }
+                });
+            });
+        }
+
+        function setupEventListeners() {
+            // Logout
+            document.getElementById('logoutBtn').addEventListener('click', () => {
+                if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+                    window.location.href = '../index.html';
+                }
+            });
+
+            // Edit profile button
+            document.querySelectorAll('button').forEach(button => {
+                if (button.textContent.includes('Éditer le profil')) {
+                    button.addEventListener('click', () => {
+                        alert('Fonctionnalité d\'édition de profil bientôt disponible!');
+                    });
+                }
+            });
+        }
+
+        function animateProgressBars() {
+            const progressBars = document.querySelectorAll('.progress-bar');
+            
+            const observer = new IntersectionObserver((entries) => {
+                entries.forEach(entry => {
+                    if (entry.isIntersecting) {
+                        const width = entry.target.style.width;
+                        entry.target.style.width = '0%';
+                        setTimeout(() => {
+                            entry.target.style.width = width;
+                        }, 100);
+                    }
+                });
+            });
+
+            progressBars.forEach(bar => observer.observe(bar));
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Espace Personnel - ORADIA</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+SC:wght@400;500;600;700&family=Lora:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        @import url('../style.css');
+        
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .user-card {
+            background: linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9));
+            border: 1px solid rgba(212,175,55,.3);
+            backdrop-filter: blur(10px);
+        }
+        
+        .btn-gold {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            color: #020817;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-gold:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(212,175,55,0.3);
+        }
+        
+        .btn-outline-gold {
+            border: 2px solid #d4af37;
+            color: #d4af37;
+            font-weight: bold;
+            padding: 12px 24px;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-outline-gold:hover {
+            background: #d4af37;
+            color: #020817;
+        }
+        
+        .stat-card {
+            background: linear-gradient(135deg, rgba(212,175,55,0.1), rgba(244,228,193,0.05));
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(212,175,55,0.2);
+        }
+        
+        .tirage-card {
+            background: linear-gradient(145deg, rgba(5,20,40,0.8), rgba(10,32,64,0.9));
+            border: 1px solid rgba(212,175,55,0.2);
+            border-radius: 12px;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .tirage-card:hover {
+            border-color: rgba(212,175,55,0.5);
+            box-shadow: 0 10px 30px rgba(212,175,55,0.1);
+        }
+        
+        .nav-item {
+            @apply flex items-center gap-3 px-4 py-3 rounded-lg text-light-gold hover:bg-gold/10 hover:text-gold transition-all duration-200 cursor-pointer;
+        }
+        
+        .nav-item.active {
+            @apply bg-gold/20 text-gold border-l-4 border-gold;
+        }
+        
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .badge-success {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        
+        .loading-spinner {
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="bg-night-blue text-light-gold min-h-screen">
+    <!-- Background Pattern -->
+    <div class="fixed inset-0 opacity-5">
+        <div class="absolute inset-0" style="background-image: radial-gradient(circle at 25% 25%, #d4af37 1px, transparent 1px), radial-gradient(circle at 75% 75%, #d4af37 1px, transparent 1px); background-size: 50px 50px;"></div>
+    </div>
+    
+    <!-- Header -->
+    <header class="relative z-10 bg-[rgba(5,20,40,0.8)] backdrop-blur-md border-b border-gold/20">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <img src="../images/logo-hd-v2.jpeg" alt="ORADIA" class="w-12 h-12 rounded-full">
+                    <div>
+                        <h1 class="cormorant text-2xl font-bold gold-gradient">ORADIA</h1>
+                        <p class="text-gold/70 text-sm">Espace Personnel</p>
+                    </div>
+                </div>
+                
+                <div class="flex items-center gap-6">
+                    <div class="text-right">
+                        <p class="text-gold font-semibold" id="userName">--</p>
+                        <p class="text-gold/70 text-sm" id="userEmail">--</p>
+                    </div>
+                    <div class="relative">
+                        <button onclick="toggleUserMenu()" class="flex items-center gap-2 text-gold hover:text-light-gold">
+                            <i class="fas fa-user-circle text-2xl"></i>
+                            <i class="fas fa-chevron-down text-xs"></i>
+                        </button>
+                        <div id="userMenu" class="hidden absolute right-0 mt-2 w-48 bg-[rgba(5,20,40,0.95)] border border-gold/30 rounded-lg shadow-lg z-50">
+                            <a href="#" onclick="showSection('profile')" class="block px-4 py-2 text-gold hover:bg-gold/10">Mon Profil</a>
+                            <a href="#" onclick="showSection('preferences')" class="block px-4 py-2 text-gold hover:bg-gold/10">Préférences</a>
+                            <a href="#" onclick="showSection('history')" class="block px-4 py-2 text-gold hover:bg-gold/10">Historique</a>
+                            <hr class="border-gold/20 my-2">
+                            <a href="../index.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Retour au site</a>
+                            <button onclick="logout()" class="w-full text-left px-4 py-2 text-gold hover:bg-gold/10">Déconnexion</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="relative z-10 container mx-auto px-6 py-8">
+        <!-- Navigation Tabs -->
+        <div class="flex flex-wrap gap-2 mb-8">
+            <button class="nav-item active" onclick="showSection('overview')">
+                <i class="fas fa-home"></i>
+                <span>Accueil</span>
+            </button>
+            <button class="nav-item" onclick="showSection('tirages')">
+                <i class="fas fa-dice"></i>
+                <span>Mes Tirages</span>
+            </button>
+            <button class="nav-item" onclick="showSection('feedbacks')">
+                <i class="fas fa-comments"></i>
+                <span>Mes Feedbacks</span>
+            </button>
+            <button class="nav-item" onclick="showSection('stats')">
+                <i class="fas fa-chart-line"></i>
+                <span>Statistiques</span>
+            </button>
+            <button class="nav-item" onclick="showSection('profile')">
+                <i class="fas fa-user"></i>
+                <span>Profil</span>
+            </button>
+        </div>
+        
+        <!-- Overview Section -->
+        <section id="overview-section" class="space-y-6">
+            <!-- Welcome Card -->
+            <div class="user-card rounded-2xl p-8 text-center">
+                <h2 class="cormorant text-3xl font-bold gold-gradient mb-4">Bienvenue dans votre espace</h2>
+                <p class="text-gold/70 mb-6">Explorez votre cheminement personnel avec ORADIA</p>
+                
+                <!-- Quick Actions -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
+                    <a href="../pelerin.html" class="btn-outline-gold text-center">
+                        <i class="fas fa-walking mr-2"></i>
+                        Tirage Pèlerin
+                    </a>
+                    <a href="../traversee.html" class="btn-outline-gold text-center">
+                        <i class="fas fa-compass mr-2"></i>
+                        Tirage Traversée
+                    </a>
+                    <a href="../tore.html" class="btn-outline-gold text-center">
+                        <i class="fas fa-infinity mr-2"></i>
+                        Tirage Tore
+                    </a>
+                </div>
+            </div>
+            
+            <!-- Stats Overview -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
+                <div class="stat-card text-center">
+                    <i class="fas fa-dice text-3xl text-gold mb-3"></i>
+                    <p class="text-2xl font-bold text-gold" id="totalTirages">--</p>
+                    <p class="text-gold/70">Tirages effectués</p>
+                </div>
+                
+                <div class="stat-card text-center">
+                    <i class="fas fa-star text-3xl text-gold mb-3"></i>
+                    <p class="text-2xl font-bold text-gold" id="averageRating">--</p>
+                    <p class="text-gold/70">Note moyenne</p>
+                </div>
+                
+                <div class="stat-card text-center">
+                    <i class="fas fa-yin-yang text-3xl text-gold mb-3"></i>
+                    <p class="text-2xl font-bold text-gold" id="synchroniciteRate">--%</p>
+                    <p class="text-gold/70">Synchronicités</p>
+                </div>
+                
+                <div class="stat-card text-center">
+                    <i class="fas fa-calendar text-3xl text-gold mb-3"></i>
+                    <p class="text-2xl font-bold text-gold" id="memberSince">--</p>
+                    <p class="text-gold/70">Membre depuis</p>
+                </div>
+            </div>
+            
+            <!-- Recent Activity -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Last Tirage -->
+                <div class="tirage-card">
+                    <h3 class="cormorant text-xl font-bold text-gold mb-4">Dernier Tirage</h3>
+                    <div id="lastTirage" class="space-y-3">
+                        <p class="text-gold/50">Aucun tirage effectué</p>
+                    </div>
+                </div>
+                
+                <!-- Progress Chart -->
+                <div class="tirage-card">
+                    <h3 class="cormorant text-xl font-bold text-gold mb-4">Votre Évolution</h3>
+                    <canvas id="progressChart" width="400" height="200"></canvas>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Tirages Section -->
+        <section id="tirages-section" class="hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <h3 class="cormorant text-2xl font-bold gold-gradient">Mes Tirages</h3>
+                <div class="flex gap-4">
+                    <select id="tirageFilter" class="bg-night-blue border border-gold/30 rounded-lg px-4 py-2 text-light-gold">
+                        <option value="">Tous les types</option>
+                        <option value="pelerin">Pèlerin</option>
+                        <option value="traversee">Traversée</option>
+                        <option value="tore">Tore</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div id="tiragesList" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Will be populated by JS -->
+            </div>
+        </section>
+        
+        <!-- Feedbacks Section -->
+        <section id="feedbacks-section" class="hidden space-y-6">
+            <div class="flex justify-between items-center">
+                <h3 class="cormorant text-2xl font-bold gold-gradient">Mes Feedbacks</h3>
+                <button onclick="showFeedbackForm()" class="btn-gold">
+                    <i class="fas fa-plus mr-2"></i>
+                    Nouveau Feedback
+                </button>
+            </div>
+            
+            <div id="feedbacksList" class="space-y-4">
+                <!-- Will be populated by JS -->
+            </div>
+        </section>
+        
+        <!-- Stats Section -->
+        <section id="stats-section" class="hidden space-y-6">
+            <h3 class="cormorant text-2xl font-bold gold-gradient mb-6">Mes Statistiques</h3>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="tirage-card">
+                    <h4 class="cormorant text-lg font-bold text-gold mb-4">Répartition des Tirages</h4>
+                    <canvas id="tirageDistributionChart" width="400" height="300"></canvas>
+                </div>
+                
+                <div class="tirage-card">
+                    <h4 class="cormorant text-lg font-bold text-gold mb-4">Évolution Mensuelle</h4>
+                    <canvas id="monthlyEvolutionChart" width="400" height="300"></canvas>
+                </div>
+            </div>
+        </section>
+        
+        <!-- Profile Section -->
+        <section id="profile-section" class="hidden space-y-6">
+            <h3 class="cormorant text-2xl font-bold gold-gradient mb-6">Mon Profil</h3>
+            
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Personal Info -->
+                <div class="tirage-card">
+                    <h4 class="cormorant text-lg font-bold text-gold mb-4">Informations Personnelles</h4>
+                    <form id="profileForm" class="space-y-4">
+                        <div>
+                            <label class="block text-gold font-semibold mb-2">Prénom</label>
+                            <input type="text" id="firstName" class="w-full bg-night-blue border border-gold/30 rounded-lg px-4 py-2 text-light-gold">
+                        </div>
+                        <div>
+                            <label class="block text-gold font-semibold mb-2">Nom</label>
+                            <input type="text" id="lastName" class="w-full bg-night-blue border border-gold/30 rounded-lg px-4 py-2 text-light-gold">
+                        </div>
+                        <div>
+                            <label class="block text-gold font-semibold mb-2">Email</label>
+                            <input type="email" id="email" class="w-full bg-night-blue border border-gold/30 rounded-lg px-4 py-2 text-light-gold" readonly>
+                        </div>
+                        <button type="submit" class="btn-gold w-full">
+                            <i class="fas fa-save mr-2"></i>
+                            Enregistrer
+                        </button>
+                    </form>
+                </div>
+                
+                <!-- Preferences -->
+                <div class="tirage-card">
+                    <h4 class="cormorant text-lg font-bold text-gold mb-4">Préférences</h4>
+                    <form id="preferencesForm" class="space-y-4">
+                        <div>
+                            <label class="flex items-center gap-3">
+                                <input type="checkbox" id="newsletterConsent" class="w-4 h-4">
+                                <span class="text-gold">Recevoir la newsletter</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="flex items-center gap-3">
+                                <input type="checkbox" id="analyticsConsent" class="w-4 h-4">
+                                <span class="text-gold">Autoriser les analytics</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="flex items-center gap-3">
+                                <input type="checkbox" id="emailNotifications" class="w-4 h-4">
+                                <span class="text-gold">Notifications par email</span>
+                            </label>
+                        </div>
+                        <div>
+                            <label class="block text-gold font-semibold mb-2">Langue</label>
+                            <select id="language" class="w-full bg-night-blue border border-gold/30 rounded-lg px-4 py-2 text-light-gold">
+                                <option value="fr">Français</option>
+                                <option value="en">English</option>
+                            </select>
+                        </div>
+                        <button type="submit" class="btn-gold w-full">
+                            <i class="fas fa-save mr-2"></i>
+                            Enregistrer
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <!-- Feedback Modal -->
+    <div id="feedbackModal" class="fixed inset-0 bg-night-blue/90 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="user-card rounded-2xl p-8 max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-6">
+                <h3 class="cormorant text-2xl font-bold gold-gradient">Donner votre Feedback</h3>
+                <button onclick="closeFeedbackForm()" class="text-gold hover:text-light-gold text-2xl">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <form id="feedbackForm" class="space-y-6">
+                <div>
+                    <label class="block text-gold font-semibold mb-2">Sélectionnez un tirage</label>
+                    <select id="feedbackTirageSelect" class="w-full bg-night-blue border border-gold/30 rounded-lg px-4 py-2 text-light-gold">
+                        <option value="">Choisissez un tirage...</option>
+                    </select>
+                </div>
+                
+                <div>
+                    <label class="block text-gold font-semibold mb-2">Note globale</label>
+                    <div class="flex gap-2" id="ratingStars">
+                        <i class="fas fa-star text-2xl text-gold/30 cursor-pointer hover:text-yellow-400" data-rating="1"></i>
+                        <i class="fas fa-star text-2xl text-gold/30 cursor-pointer hover:text-yellow-400" data-rating="2"></i>
+                        <i class="fas fa-star text-2xl text-gold/30 cursor-pointer hover:text-yellow-400" data-rating="3"></i>
+                        <i class="fas fa-star text-2xl text-gold/30 cursor-pointer hover:text-yellow-400" data-rating="4"></i>
+                        <i class="fas fa-star text-2xl text-gold/30 cursor-pointer hover:text-yellow-400" data-rating="5"></i>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="block text-gold font-semibold mb-2">Commentaire</label>
+                    <textarea id="feedbackComment" rows="4" class="w-full bg-night-blue border border-gold/30 rounded-lg px-4 py-2 text-light-gold" placeholder="Partagez votre expérience..."></textarea>
+                </div>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-gold font-semibold mb-2">Satisfaction</label>
+                        <select id="feedbackSatisfaction" class="w-full bg-night-blue border border-gold/30 rounded-lg px-4 py-2 text-light-gold">
+                            <option value="tres_insatisfait">Très insatisfait</option>
+                            <option value="insatisfait">Insatisfait</option>
+                            <option value="neutre">Neutre</option>
+                            <option value="satisfait">Satisfait</option>
+                            <option value="tres_satisfait">Très satisfait</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-gold font-semibold mb-2">Pertinence</label>
+                        <select id="feedbackPertinence" class="w-full bg-night-blue border border-gold/30 rounded-lg px-4 py-2 text-light-gold">
+                            <option value="non_pertinent">Non pertinent</option>
+                            <option value="peu_pertinent">Peu pertinent</option>
+                            <option value="pertinent">Pertinent</option>
+                            <option value="tres_pertinent">Très pertinent</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div>
+                    <label class="flex items-center gap-3">
+                        <input type="checkbox" id="feedbackSynchronicite" class="w-4 h-4">
+                        <span class="text-gold">J'ai vécu des synchronicités</span>
+                    </label>
+                    <textarea id="synchroniciteDetails" rows="2" class="w-full bg-night-blue border border-gold/30 rounded-lg px-4 py-2 text-light-gold mt-2" placeholder="Décrivez vos synchronicités..."></textarea>
+                </div>
+                
+                <button type="submit" class="btn-gold w-full">
+                    <i class="fas fa-paper-plane mr-2"></i>
+                    Envoyer le Feedback
+                </button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay" class="fixed inset-0 bg-night-blue/90 backdrop-blur-sm z-50 hidden items-center justify-center">
+        <div class="text-center">
+            <div class="loading-spinner w-16 h-16 border-4 border-gold border-t-transparent rounded-full mx-auto mb-4"></div>
+            <p class="text-gold">Chargement...</p>
+        </div>
+    </div>
+
+    <script>
+        // API Configuration
+        const API_BASE = 'http://localhost:3001/api';
+        let authToken = localStorage.getItem('oradiaAdminToken');
+        let currentUser = null;
+        let selectedRating = 0;
+        
+        // Check authentication
+        if (!authToken) {
+            window.location.href = '/auth/login';
+        }
+        
+        // Initialize dashboard
+        document.addEventListener('DOMContentLoaded', function() {
+            loadUserData();
+            loadDashboardData();
+        });
+        
+        // API Helper
+        async function apiCall(endpoint, options = {}) {
+            const url = `${API_BASE}${endpoint}`;
+            const config = {
+                headers: {
+                    'Authorization': `Bearer ${authToken}`,
+                    'Content-Type': 'application/json'
+                },
+                ...options
+            };
+            
+            try {
+                const response = await fetch(url, config);
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.message || 'API Error');
+                }
+                
+                return data;
+            } catch (error) {
+                console.error('API Error:', error);
+                showNotification('Erreur: ' + error.message, 'error');
+                throw error;
+            }
+        }
+        
+        // Load user data
+        async function loadUserData() {
+            try {
+                const data = await apiCall('/auth/me');
+                currentUser = data.data.user;
+                
+                document.getElementById('userName').textContent = currentUser.fullName;
+                document.getElementById('userEmail').textContent = currentUser.email;
+                document.getElementById('memberSince').textContent = new Date(currentUser.createdAt).getFullYear();
+                
+                // Update profile form
+                document.getElementById('firstName').value = currentUser.firstName;
+                document.getElementById('lastName').value = currentUser.lastName;
+                document.getElementById('email').value = currentUser.email;
+                
+                // Update preferences
+                document.getElementById('newsletterConsent').checked = currentUser.consentements.newsletter;
+                document.getElementById('analyticsConsent').checked = currentUser.consentements.analytics;
+                document.getElementById('emailNotifications').checked = currentUser.profile.preferences.emailNotifications;
+                document.getElementById('language').value = currentUser.profile.preferences.language;
+                
+            } catch (error) {
+                console.error('Error loading user data:', error);
+            }
+        }
+        
+        // Load dashboard data
+        async function loadDashboardData() {
+            showLoading(true);
+            try {
+                const data = await apiCall('/users/stats');
+                updateOverviewStats(data.data.overview);
+                updateCharts(data.data.evolution);
+                updateRecentActivity(data.data.recent);
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+            } finally {
+                showLoading(false);
+            }
+        }
+        
+        // Update overview stats
+        function updateOverviewStats(overview) {
+            document.getElementById('totalTirages').textContent = overview.totalTirages;
+            document.getElementById('averageRating').textContent = overview.averageRating.toFixed(1);
+            document.getElementById('synchroniciteRate').textContent = overview.synchroniciteRate + '%';
+        }
+        
+        // Update charts
+        function updateCharts(evolution) {
+            // Progress chart
+            const ctx = document.getElementById('progressChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: evolution.monthly.map(m => m._id),
+                    datasets: [{
+                        label: 'Tirages par mois',
+                        data: evolution.monthly.map(m => m.tiragesCount),
+                        borderColor: '#d4af37',
+                        backgroundColor: 'rgba(212, 175, 55, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            labels: { color: '#d4af37' }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: { color: '#d4af37' },
+                            grid: { color: 'rgba(212, 175, 55, 0.1)' }
+                        },
+                        y: {
+                            ticks: { color: '#d4af37' },
+                            grid: { color: 'rgba(212, 175, 55, 0.1)' }
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Update recent activity
+        function updateRecentActivity(recent) {
+            // Update last tirage
+            if (recent.tirages && recent.tirages.length > 0) {
+                const lastTirage = recent.tirages[0];
+                document.getElementById('lastTirage').innerHTML = `
+                    <div class="flex justify-between items-center">
+                        <div>
+                            <p class="text-gold font-semibold">${lastTirage.type}</p>
+                            <p class="text-gold/70 text-sm">${new Date(lastTirage.date).toLocaleDateString()}</p>
+                        </div>
+                        <div class="text-right">
+                            ${lastTirage.feedback.rating ? generateStars(lastTirage.feedback.rating) : '<span class="text-gold/50">--</span>'}
+                        </div>
+                    </div>
+                `;
+            }
+        }
+        
+        // Generate star rating HTML
+        function generateStars(rating) {
+            let stars = '';
+            for (let i = 1; i <= 5; i++) {
+                stars += `<i class="fas fa-star text-sm ${i <= rating ? 'text-yellow-400' : 'text-gold/30'}"></i>`;
+            }
+            return stars;
+        }
+        
+        // Section navigation
+        function showSection(section) {
+            // Hide all sections
+            document.querySelectorAll('section').forEach(s => s.classList.add('hidden'));
+            
+            // Show selected section
+            document.getElementById(`${section}-section`).classList.remove('hidden');
+            
+            // Update navigation
+            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+            event.target.closest('.nav-item').classList.add('active');
+            
+            // Load section-specific data
+            if (section === 'tirages') {
+                loadTirages();
+            } else if (section === 'feedbacks') {
+                loadFeedbacks();
+            } else if (section === 'stats') {
+                loadStats();
+            }
+        }
+        
+        // Load tirages
+        async function loadTirages() {
+            try {
+                const data = await apiCall('/users/tirages');
+                updateTiragesList(data.data.tirages);
+            } catch (error) {
+                console.error('Error loading tirages:', error);
+            }
+        }
+        
+        // Update tirages list
+        function updateTiragesList(tirages) {
+            const container = document.getElementById('tiragesList');
+            container.innerHTML = tirages.map(tirage => `
+                <div class="tirage-card">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h4 class="text-gold font-semibold capitalize">${tirage.type}</h4>
+                            <p class="text-gold/70 text-sm">${new Date(tirage.date).toLocaleDateString()}</p>
+                        </div>
+                        <span class="badge ${tirage.status === 'termine' ? 'badge-success' : 'badge-warning'}">
+                            ${tirage.status}
+                        </span>
+                    </div>
+                    <p class="text-gold/80 mb-3 line-clamp-2">${tirage.intention}</p>
+                    <div class="flex justify-between items-center">
+                        ${tirage.feedback.rating ? generateStars(tirage.feedback.rating) : '<span class="text-gold/50">Pas de note</span>'}
+                        <button onclick="viewTirage('${tirage._id}')" class="text-gold hover:text-light-gold text-sm">
+                            <i class="fas fa-eye mr-1"></i>
+                            Voir
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Load feedbacks
+        async function loadFeedbacks() {
+            try {
+                const data = await apiCall('/users/feedbacks');
+                updateFeedbacksList(data.data.feedbacks);
+            } catch (error) {
+                console.error('Error loading feedbacks:', error);
+            }
+        }
+        
+        // Update feedbacks list
+        function updateFeedbacksList(feedbacks) {
+            const container = document.getElementById('feedbacksList');
+            container.innerHTML = feedbacks.map(feedback => `
+                <div class="tirage-card">
+                    <div class="flex justify-between items-start mb-4">
+                        <div>
+                            <h4 class="text-gold font-semibold">${feedback.tirageId.type}</h4>
+                            <p class="text-gold/70 text-sm">${new Date(feedback.createdAt).toLocaleDateString()}</p>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            ${generateStars(feedback.rating)}
+                        </div>
+                    </div>
+                    <p class="text-gold/80 mb-3">${feedback.comment || 'Pas de commentaire'}</p>
+                    <div class="flex gap-2">
+                        <span class="badge badge-success">${feedback.satisfaction}</span>
+                        <span class="badge badge-warning">${feedback.pertinence}</span>
+                        ${feedback.synchronicite ? '<span class="badge badge-success">Synchronicité</span>' : ''}
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // Feedback form handlers
+        function showFeedbackForm() {
+            document.getElementById('feedbackModal').classList.remove('hidden');
+            document.getElementById('feedbackModal').classList.add('flex');
+            loadTiragesForFeedback();
+        }
+        
+        function closeFeedbackForm() {
+            document.getElementById('feedbackModal').classList.add('hidden');
+            document.getElementById('feedbackModal').classList.remove('flex');
+            resetFeedbackForm();
+        }
+        
+        async function loadTiragesForFeedback() {
+            try {
+                const data = await apiCall('/users/tirages');
+                const select = document.getElementById('feedbackTirageSelect');
+                select.innerHTML = '<option value="">Choisissez un tirage...</option>' + 
+                    data.data.tirages.map(tirage => `
+                        <option value="${tirage._id}">${tirage.type} - ${new Date(tirage.date).toLocaleDateString()}</option>
+                    `).join('');
+            } catch (error) {
+                console.error('Error loading tirages for feedback:', error);
+            }
+        }
+        
+        function resetFeedbackForm() {
+            document.getElementById('feedbackForm').reset();
+            selectedRating = 0;
+            updateRatingStars();
+        }
+        
+        // Rating stars
+        document.querySelectorAll('#ratingStars i').forEach(star => {
+            star.addEventListener('click', function() {
+                selectedRating = parseInt(this.dataset.rating);
+                updateRatingStars();
+            });
+        });
+        
+        function updateRatingStars() {
+            document.querySelectorAll('#ratingStars i').forEach((star, index) => {
+                if (index < selectedRating) {
+                    star.classList.remove('text-gold/30');
+                    star.classList.add('text-yellow-400');
+                } else {
+                    star.classList.remove('text-yellow-400');
+                    star.classList.add('text-gold/30');
+                }
+            });
+        }
+        
+        // Form submissions
+        document.getElementById('profileForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await updateProfile();
+        });
+        
+        document.getElementById('preferencesForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await updatePreferences();
+        });
+        
+        document.getElementById('feedbackForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            await submitFeedback();
+        });
+        
+        async function updateProfile() {
+            try {
+                const profileData = {
+                    firstName: document.getElementById('firstName').value,
+                    lastName: document.getElementById('lastName').value
+                };
+                
+                await apiCall('/auth/profile', {
+                    method: 'PUT',
+                    body: JSON.stringify({ profile: profileData })
+                });
+                
+                showNotification('Profil mis à jour avec succès', 'success');
+                
+            } catch (error) {
+                console.error('Error updating profile:', error);
+            }
+        }
+        
+        async function updatePreferences() {
+            try {
+                const preferences = {
+                    consentements: {
+                        newsletter: document.getElementById('newsletterConsent').checked,
+                        analytics: document.getElementById('analyticsConsent').checked
+                    },
+                    profile: {
+                        preferences: {
+                            emailNotifications: document.getElementById('emailNotifications').checked,
+                            language: document.getElementById('language').value
+                        }
+                    }
+                };
+                
+                await apiCall('/users/preferences', {
+                    method: 'PUT',
+                    body: JSON.stringify(preferences)
+                });
+                
+                showNotification('Préférences mises à jour avec succès', 'success');
+                
+            } catch (error) {
+                console.error('Error updating preferences:', error);
+            }
+        }
+        
+        async function submitFeedback() {
+            try {
+                const feedbackData = {
+                    tirageId: document.getElementById('feedbackTirageSelect').value,
+                    rating: selectedRating,
+                    comment: document.getElementById('feedbackComment').value,
+                    satisfaction: document.getElementById('feedbackSatisfaction').value,
+                    pertinence: document.getElementById('feedbackPertinence').value,
+                    synchronicite: document.getElementById('feedbackSynchronicite').checked,
+                    synchroniciteDetails: document.getElementById('synchroniciteDetails').value
+                };
+                
+                await apiCall('/users/feedback', {
+                    method: 'POST',
+                    body: JSON.stringify(feedbackData)
+                });
+                
+                showNotification('Feedback envoyé avec succès', 'success');
+                closeFeedbackForm();
+                loadFeedbacks();
+                
+            } catch (error) {
+                console.error('Error submitting feedback:', error);
+            }
+        }
+        
+        // Utility functions
+        function showLoading(show) {
+            const overlay = document.getElementById('loadingOverlay');
+            if (show) {
+                overlay.classList.remove('hidden');
+                overlay.classList.add('flex');
+            } else {
+                overlay.classList.add('hidden');
+                overlay.classList.remove('flex');
+            }
+        }
+        
+        function showNotification(message, type = 'info') {
+            // Simple notification (could be enhanced)
+            console.log(`${type}: ${message}`);
+        }
+        
+        function toggleUserMenu() {
+            const menu = document.getElementById('userMenu');
+            menu.classList.toggle('hidden');
+        }
+        
+        function logout() {
+            localStorage.removeItem('oradiaAdminToken');
+            localStorage.removeItem('oradiaUser');
+            window.location.href = '/auth/login';
+        }
+        
+        function viewTirage(tirageId) {
+            // Implement tirage detail view
+            console.log('View tirage:', tirageId);
+        }
+        
+        // Close menus when clicking outside
+        document.addEventListener('click', function(e) {
+            const userMenu = document.getElementById('userMenu');
+            const userButton = e.target.closest('button[onclick="toggleUserMenu()"]');
+            
+            if (!userButton && !userMenu.contains(e.target)) {
+                userMenu.classList.add('hidden');
+            }
+        });
+    </script>
+</body>
+</html>

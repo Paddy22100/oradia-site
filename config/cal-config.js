@@ -46,14 +46,44 @@ const CAL_CONFIG = {
   // Configuration des types de rendez-vous
   eventTypes: [
     {
-      id: 'guidance-spirituelle',
-      name: 'Guidance Spirituelle',
-      description: 'Session individuelle de guidance spirituelle',
+      id: 'guidance-personnelle',
+      name: 'Guidance Personnelle',
+      description: 'Session individuelle de guidance personnelle',
       duration: 60, // minutes
-      price: 0, // gratuit ou indiquer le prix
+      price: 60, // €
       currency: 'EUR',
       location: 'Visioconférence Jitsi Meet',
       color: '#d4af37'
+    },
+    {
+      id: 'guidance-approfondie',
+      name: 'Guidance Approfondie',
+      description: 'Session de 90min pour exploration en profondeur',
+      duration: 90, // minutes
+      price: 90, // €
+      currency: 'EUR',
+      location: 'Visioconférence Jitsi Meet',
+      color: '#f4e4c1'
+    },
+    {
+      id: 'accompagnement-cercle',
+      name: 'Accompagnement Cercle',
+      description: 'Participation à un cercle de parole en groupe',
+      duration: 120, // minutes
+      price: 30, // €
+      currency: 'EUR',
+      location: 'Visioconférence Jitsi Meet',
+      color: '#8b7355'
+    },
+    {
+      id: 'consultation-rapide',
+      name: 'Consultation Rapide',
+      description: 'Session de 30min pour question ciblée',
+      duration: 30, // minutes
+      price: 30, // €
+      currency: 'EUR',
+      location: 'Visioconférence Jitsi Meet',
+      color: '#654321'
     }
   ],
 

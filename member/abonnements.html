@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abonnements - ORADIA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="../style.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'night-blue': '#0a192f',
+                        'gold': '#d4af37',
+                        'light-gold': '#f5e7a1',
+                        'dark-blue': '#051428',
+                        'celtic-blue': '#1a365d'
+                    },
+                    fontFamily: {
+                        'cormorant': ['Cormorant Garamond', 'serif'],
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+        
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .pricing-card {
+            background: linear-gradient(145deg, rgba(26,54,93,0.8), rgba(5,20,40,0.9));
+            border: 1px solid rgba(212,175,55,0.3);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pricing-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(212,175,55,0.2);
+            border-color: rgba(212,175,55,0.6);
+        }
+        
+        .pricing-card.featured {
+            border-color: #d4af37;
+            box-shadow: 0 0 30px rgba(212,175,55,0.3);
+        }
+        
+        .pricing-card.featured::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, transparent, #d4af37, transparent);
+            animation: shimmer 2s infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { transform: translateX(-100%); }
+            100% { transform: translateX(100%); }
+        }
+        
+        .sidebar-link {
+            transition: all 0.3s ease;
+        }
+        
+        .sidebar-link:hover {
+            background: rgba(212,175,55,0.1);
+            border-left: 3px solid #d4af37;
+            padding-left: 20px;
+        }
+        
+        .benefit-item {
+            transition: all 0.2s ease;
+        }
+        
+        .benefit-item:hover {
+            color: #d4af37;
+            transform: translateX(4px);
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.6s ease-out;
+        }
+    </style>
+</head>
+<body class="bg-night-blue text-light-gold">
+    <!-- Header -->
+    <header class="bg-[rgba(5,20,40,0.8)] backdrop-blur-md border-b border-gold/20 sticky top-0 z-50">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center gap-4">
+                    <a href="../index.html" class="flex items-center gap-3">
+                        <img src="../images/logo-hd-v2.jpeg" alt="ORADIA" class="w-10 h-10 rounded-full">
+                        <div>
+                            <h1 class="cormorant text-2xl font-bold gold-gradient">ORADIA</h1>
+                            <p class="text-gold/70 text-sm">Abonnements</p>
+                        </div>
+                    </a>
+                </div>
+                
+                <div class="flex items-center gap-4">
+                    <div class="text-right">
+                        <p class="text-gold font-medium">Jean Dupont</p>
+                        <p class="text-gold/60 text-sm">Abonnement: Gratuit</p>
+                    </div>
+                    <button id="logoutBtn" class="text-gold/70 hover:text-gold transition-colors">
+                        <i class="fas fa-sign-out-alt"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="flex min-h-screen">
+        <!-- Sidebar -->
+        <aside class="w-64 bg-[rgba(5,20,40,0.6)] border-r border-gold/20 hidden lg:block">
+            <nav class="p-6 space-y-2">
+                <a href="dashboard.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Tableau de bord</span>
+                </a>
+                <a href="tirages.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-cards-blank w-5"></i>
+                    <span>Historique des tirages</span>
+                </a>
+                <a href="profile.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-user-circle w-5"></i>
+                    <span>Mon profil</span>
+                </a>
+                <a href="abonnements.html" class="sidebar-link flex items-center gap-3 text-gold p-3 rounded-lg bg-gold/10 border-l-3 border-gold">
+                    <i class="fas fa-crown w-5"></i>
+                    <span>Abonnements</span>
+                </a>
+                <a href="parametres.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-cog w-5"></i>
+                    <span>Paramètres</span>
+                </a>
+            </nav>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="flex-1 p-6">
+            <!-- Header Section -->
+            <section class="mb-8 text-center">
+                <h2 class="cormorant text-4xl text-gold mb-4">Choisissez votre chemin spirituel</h2>
+                <p class="text-light-gold/80 text-lg max-w-2xl mx-auto">
+                    Découvrez nos formules d'abonnement conçues pour accompagner votre évolution spirituelle à votre rythme
+                </p>
+            </section>
+
+            <!-- Current Subscription -->
+            <section class="mb-8">
+                <div class="bg-gradient-to-r from-[rgba(26,54,93,0.6)] to-[rgba(5,20,40,0.8)] rounded-2xl p-6 border border-gold/30">
+                    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
+                        <div>
+                            <h3 class="text-gold font-semibold mb-2">Votre abonnement actuel</h3>
+                            <p class="text-light-gold/80">Formule <span class="text-gold font-medium">Gratuite</span></p>
+                            <p class="text-light-gold/60 text-sm">Accès limité aux fonctionnalités de base</p>
+                        </div>
+                        <div class="text-center">
+                            <p class="text-light-gold/60 text-sm mb-2">Prochaine facturation</p>
+                            <p class="text-gold font-semibold">Jamais</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Pricing Cards -->
+            <section class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                <!-- Free Plan -->
+                <div class="pricing-card rounded-2xl p-8 fade-in">
+                    <div class="text-center mb-6">
+                        <h3 class="cormorant text-2xl text-gold mb-2">Gratuit</h3>
+                        <div class="text-4xl font-bold text-gold mb-2">0€</div>
+                        <p class="text-light-gold/70">Pour commencer votre voyage</p>
+                    </div>
+                    
+                    <ul class="space-y-3 mb-8">
+                        <li class="benefit-item flex items-center gap-3">
+                            <i class="fas fa-check text-gold w-5"></i>
+                            <span>1 tirage gratuit par mois</span>
+                        </li>
+                        <li class="benefit-item flex items-center gap-3">
+                            <i class="fas fa-check text-gold w-5"></i>
+                            <span>Accès à l'historique</span>
+                        </li>
+                        <li class="benefit-item flex items-center gap-3">
+                            <i class="fas fa-check text-gold w-5"></i>
+                            <span>Profil de base</span>
+                        </li>
+                        <li class="benefit-item flex items-center gap-3 text-light-gold/50">
+                            <i class="fas fa-times text-light-gold/30 w-5"></i>
+                            <span>Tirages illimités</span>
+                        </li>
+                        <li class="benefit-item flex items-center gap-3 text-light-gold/50">
+                            <i class="fas fa-times text-light-gold/30 w-5"></i>
+                            <span>Cercles exclusifs</span>
+                        </li>
+                        <li class="benefit-item flex items-center gap-3 text-light-gold/50">
+                            <i class="fas fa-times text-light-gold/30 w-5"></i>
+                            <span>Guidance personnalisée</span>
+                        </li>
+                    </ul>
+                    
+                    <button class="w-full bg-[rgba(5,20,40,0.8)] border border-gold text-gold py-3 rounded-lg font-semibold hover:bg-gold hover:text-night-blue transition-colors">
+                        Actuel
+                    </button>
+                </div>
+
+                <!-- Premium Plan -->
+                <div class="pricing-card featured rounded-2xl p-8 fade-in relative">
+                    <div class="absolute top-4 right-4 bg-gold text-night-blue text-sm font-bold px-3 py-1 rounded-full">
+                        Populaire
+                    </div>
+                    
+                    <div class="text-center mb-6">
+                        <h3 class="cormorant text-2xl text-gold mb-2">Premium</h3>
+                        <div class="text-4xl font-bold text-gold mb-2">19€<span class="text-lg text-light-gold/70">/mois</span></div>
+                        <p class="text-light-gold/70">Pour les chercheurs spirituels</p>
+                    </div>
+                    
+                    <ul class="space-y-3 mb-8">
+                        <li class="benefit-item flex items-center gap-3">
+                            <i class="fas fa-check text-gold w-5"></i>
+                            <span>Tirages illimités</span>
+                        </li>
+                        <li class="benefit-item flex items-center gap-3">
+                            <i class="fas fa-check text-gold w-5"></i>
+                            <span>Accès complet à l'historique</span>
+                        </li>
+                        <li class="benefit-item flex items-center gap-3">
+                            <i class="fas fa-check text-gold w-5"></i>
+                            <span>Profil avancé</span>
+                        </li>
+                        <li class="benefit-item flex items-center gap-3">
+                            <i class="fas fa-check text-gold w-5"></i>
+                            <span>Cercles d'empuissancement</span>
+                        </li>
+                        <li class="benefit-item flex items-center gap-3">
+                            <i class="fas fa-check text-gold w-5"></i>
+                            <span>Export des tirages</span>
+                        </li>
+                        <li class="benefit-item flex items-center gap-3">
+                            <i class="fas fa-check text-gold w-5"></i>
+                            <span>Support prioritaire</span>
+                        </li>
+                    </ul>
+                    
+                    <button class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue py-3 rounded-lg font-semibold hover:from-light-gold hover:to-gold transition-all transform hover:scale-105 shadow-lg">
+                        S'abonner
+                    </button>
+                </div>
+
+                <!-- Master Plan -->
+                <div class="pricing-card rounded-2xl p-8 fade-in">
+                    <div class="text-center mb-6">
+                        <h3 class="cormorant text-2xl text-gold mb-2">Master</h3>
+                        <div class="text-4xl font-bold text-gold mb-2">49€<span class="text-lg text-light-gold/70">/mois</span></div>
+                        <p class="text-light-gold/70">Pour les maîtres spirituels</p>
+                    </div>
+                    
+                    <ul class="space-y-3 mb-8">
+                        <li class="benefit-item flex items-center gap-3">
+                            <i class="fas fa-check text-gold w-5"></i>
+                            <span>Tout ce que Premium inclut</span>
+                        </li>
+                        <li class="benefit-item flex items-center gap-3">
+                            <i class="fas fa-check text-gold w-5"></i>
+                            <span>Guidance individuelle mensuelle</span>
+                        </li>
+                        <li class="benefit-item flex items-center gap-3">
+                            <i class="fas fa-check text-gold w-5"></i>
+                            <span>Cercles privés exclusifs</span>
+                        </li>
+                        <li class="benefit-item flex items-center gap-3">
+                            <i class="fas fa-check text-gold w-5"></i>
+                            <span>Formation avancée</span>
+                        </li>
+                        <li class="benefit-item flex items-center gap-3">
+                            <i class="fas fa-check text-gold w-5"></i>
+                            <span>Accès mentorat</span>
+                        </li>
+                        <li class="benefit-item flex items-center gap-3">
+                            <i class="fas fa-check text-gold w-5"></i>
+                            <span>Événements exclusifs</span>
+                        </li>
+                    </ul>
+                    
+                    <button class="w-full bg-[rgba(5,20,40,0.8)] border border-gold text-gold py-3 rounded-lg font-semibold hover:bg-gold hover:text-night-blue transition-colors">
+                        S'abonner
+                    </button>
+                </div>
+            </section>
+
+            <!-- Comparison Table -->
+            <section class="mb-12">
+                <h3 class="cormorant text-2xl text-gold text-center mb-8">Comparaison des fonctionnalités</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full bg-[rgba(26,54,93,0.6)] rounded-xl border border-gold/30">
+                        <thead>
+                            <tr class="border-b border-gold/30">
+                                <th class="text-left p-4 text-gold">Fonctionnalité</th>
+                                <th class="text-center p-4 text-gold">Gratuit</th>
+                                <th class="text-center p-4 text-gold">Premium</th>
+                                <th class="text-center p-4 text-gold">Master</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr class="border-b border-gold/20">
+                                <td class="p-4 text-light-gold">Tirages par mois</td>
+                                <td class="text-center p-4 text-light-gold">1</td>
+                                <td class="text-center p-4 text-gold">Illimités</td>
+                                <td class="text-center p-4 text-gold">Illimités</td>
+                            </tr>
+                            <tr class="border-b border-gold/20">
+                                <td class="p-4 text-light-gold">Historique complet</td>
+                                <td class="text-center p-4"><i class="fas fa-times text-light-gold/30"></i></td>
+                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
+                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
+                            </tr>
+                            <tr class="border-b border-gold/20">
+                                <td class="p-4 text-light-gold">Cercles d'empuissancement</td>
+                                <td class="text-center p-4"><i class="fas fa-times text-light-gold/30"></i></td>
+                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
+                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
+                            </tr>
+                            <tr class="border-b border-gold/20">
+                                <td class="p-4 text-light-gold">Guidance individuelle</td>
+                                <td class="text-center p-4"><i class="fas fa-times text-light-gold/30"></i></td>
+                                <td class="text-center p-4"><i class="fas fa-times text-light-gold/30"></i></td>
+                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
+                            </tr>
+                            <tr class="border-b border-gold/20">
+                                <td class="p-4 text-light-gold">Export des données</td>
+                                <td class="text-center p-4"><i class="fas fa-times text-light-gold/30"></i></td>
+                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
+                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
+                            </tr>
+                            <tr>
+                                <td class="p-4 text-light-gold">Support prioritaire</td>
+                                <td class="text-center p-4"><i class="fas fa-times text-light-gold/30"></i></td>
+                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
+                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+
+            <!-- FAQ Section -->
+            <section class="mb-12">
+                <h3 class="cormorant text-2xl text-gold text-center mb-8">Questions fréquentes</h3>
+                <div class="max-w-3xl mx-auto space-y-4">
+                    <div class="bg-[rgba(26,54,93,0.6)] rounded-xl p-6 border border-gold/20">
+                        <button class="w-full text-left flex justify-between items-center" onclick="toggleFAQ(this)">
+                            <span class="text-gold font-semibold">Puis-je changer d'abonnement à tout moment ?</span>
+                            <i class="fas fa-chevron-down text-gold transition-transform"></i>
+                        </button>
+                        <div class="hidden mt-4 text-light-gold/80">
+                            Oui, vous pouvez mettre à niveau ou rétrograder votre abonnement à tout moment. Les changements prennent effet au début du prochain cycle de facturation.
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[rgba(26,54,93,0.6)] rounded-xl p-6 border border-gold/20">
+                        <button class="w-full text-left flex justify-between items-center" onclick="toggleFAQ(this)">
+                            <span class="text-gold font-semibold">Quelles méthodes de paiement sont acceptées ?</span>
+                            <i class="fas fa-chevron-down text-gold transition-transform"></i>
+                        </button>
+                        <div class="hidden mt-4 text-light-gold/80">
+                            Nous acceptons les cartes bancaires (Visa, MasterCard), PayPal et les virements bancaires. Tous les paiements sont sécurisés via notre partenaire Stripe.
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[rgba(26,54,93,0.6)] rounded-xl p-6 border border-gold/20">
+                        <button class="w-full text-left flex justify-between items-center" onclick="toggleFAQ(this)">
+                            <span class="text-gold font-semibold">Puis-je annuler mon abonnement ?</span>
+                            <i class="fas fa-chevron-down text-gold transition-transform"></i>
+                        </button>
+                        <div class="hidden mt-4 text-light-gold/80">
+                            Oui, vous pouvez annuler votre abonnement à tout moment sans frais. Vous continuerez à bénéficier des avantages jusqu'à la fin de la période facturée.
+                        </div>
+                    </div>
+                    
+                    <div class="bg-[rgba(26,54,93,0.6)] rounded-xl p-6 border border-gold/20">
+                        <button class="w-full text-left flex justify-between items-center" onclick="toggleFAQ(this)">
+                            <span class="text-gold font-semibold">Y a-t-il un essai gratuit ?</span>
+                            <i class="fas fa-chevron-down text-gold transition-transform"></i>
+                        </button>
+                        <div class="hidden mt-4 text-light-gold/80">
+                            Oui ! Nous offrons 14 jours d'essai gratuit sur nos formules Premium et Master. Aucun engagement, vous pouvez annuler avant la fin de l'essai.
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- CTA Section -->
+            <section class="text-center">
+                <div class="bg-gradient-to-r from-[rgba(26,54,93,0.8)] to-[rgba(5,20,40,0.9)] rounded-2xl p-8 border border-gold/30">
+                    <h3 class="cormorant text-2xl text-gold mb-4">Prêt à approfondir votre pratique ?</h3>
+                    <p class="text-light-gold/80 mb-6 max-w-2xl mx-auto">
+                        Rejoignez des milliers de chercheurs spirituels qui ont déjà transformé leur vie avec ORADIA
+                    </p>
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                        <button class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-6 rounded-lg hover:from-light-gold hover:to-gold transition-all transform hover:scale-105">
+                            Commencer l'essai gratuit
+                        </button>
+                        <button class="border border-gold text-gold hover:bg-gold hover:text-night-blue font-bold py-3 px-6 rounded-lg transition-colors">
+                            Contacter le support
+                        </button>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Mobile Menu -->
+    <div class="lg:hidden fixed bottom-0 left-0 right-0 bg-[rgba(5,20,40,0.9)] border-t border-gold/20 z-40">
+        <div class="flex justify-around py-2">
+            <a href="dashboard.html" class="flex flex-col items-center p-2 text-light-gold">
+                <i class="fas fa-home text-xl"></i>
+                <span class="text-xs">Accueil</span>
+            </a>
+            <a href="tirages.html" class="flex flex-col items-center p-2 text-light-gold">
+                <i class="fas fa-cards-blank text-xl"></i>
+                <span class="text-xs">Tirages</span>
+            </a>
+            <a href="profile.html" class="flex flex-col items-center p-2 text-light-gold">
+                <i class="fas fa-user text-xl"></i>
+                <span class="text-xs">Profil</span>
+            </a>
+            <a href="parametres.html" class="flex flex-col items-center p-2 text-light-gold">
+                <i class="fas fa-cog text-xl"></i>
+                <span class="text-xs">Params</span>
+            </a>
+        </div>
+    </div>
+
+    <script>
+        function toggleFAQ(button) {
+            const content = button.nextElementSibling;
+            const icon = button.querySelector('i');
+            
+            content.classList.toggle('hidden');
+            icon.classList.toggle('rotate-180');
+        }
+
+        // Logout
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+                window.location.href = '../index.html';
+            }
+        });
+
+        // Subscribe buttons
+        document.querySelectorAll('button').forEach(button => {
+            if (button.textContent.includes('S\'abonner')) {
+                button.addEventListener('click', () => {
+                    alert('Fonctionnalité de paiement bientôt disponible!');
+                });
+            }
+        });
+
+        // Animation au chargement
+        document.addEventListener('DOMContentLoaded', () => {
+            const cards = document.querySelectorAll('.pricing-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '1';
+                    card.style.transform = 'translateY(0)';
+                }, index * 200);
+            });
+        });
+    </script>
+</body>
+</html>

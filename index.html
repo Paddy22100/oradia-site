@@ -907,63 +907,67 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   <cgu-modal></cgu-modal>
 
   <!-- Scroll to top button -->
-<button id="scrollTop" class="scroll-top bg-night-blue text-gold p-3 rounded-full border border-gold shadow-lg" aria-label="Remonter en haut">
-    <i class="fas fa-arrow-up"></i>
-  </button>
+<button id="backToTop" class="fixed bottom-6 right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-50 backdrop-blur-sm" aria-label="Remonter en haut">
+  <i class="fas fa-arrow-up text-sm"></i>
+</button>
   <!-- Header -->
-<header class="header-bg w-full py-3 px-4 md:py-4 md:px-8">
+  <header class="header-bg w-full py-3 px-4 md:py-4 md:px-8">
   <div class="flex items-center justify-between">
     <div class="flex items-center">
-      <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo"
+      <a href="#accueil" class="flex items-center">
+        <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo"
      class="w-16 h-16 object-contain transform hover:scale-110 transition-transform duration-300" />
-      <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+        <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+      </a>
     </div>
+    
     <!-- Bouton burger (mobile) -->
     <button id="mobileMenuBtn" type="button" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold" aria-label="Ouvrir le menu">
-           
       <i class="fas fa-bars text-lg"></i>
     </button>
-<!-- Nav desktop -->
+    
+    <!-- Navigation desktop -->
     <nav class="hidden md:flex space-x-6 text-lg">
       <a href="#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
-      <a href="#oracle" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
+      <a href="#offres" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
       <a href="accompagnements.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
       <a href="rendez-vous.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
       <a href="a-propos.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
       <a href="#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
       <a href="contact.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-envelope mr-2"></i>Contact</a>
     </nav>
+    
+    <!-- Espace membre (desktop) -->
     <div id="memberMenuWrapper" class="hidden md:block relative">
-    <!-- Bouton Espace membre -->
-    <button id="memberMenuBtn" class="flex items-center gap-2 text-gold font-medium hover:text-light-gold transition">
+      <!-- Bouton Espace membre -->
+      <button id="memberMenuBtn" class="flex items-center gap-2 text-gold font-medium hover:text-light-gold transition">
         <i class="fas fa-user-circle text-2xl"></i>
         <span>Espace membre</span>
         <i class="fas fa-chevron-down text-sm ml-1"></i>
-    </button>
+      </button>
 
-    <!-- Dropdown -->
-    <div id="memberDropdown"
-         class="hidden absolute right-0 mt-2 w-48 bg-[rgba(5,20,40,0.95)] border border-gold/30 rounded-lg shadow-lg z-50 backdrop-blur-md">
-        <a href="profil.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Profil</a>
-        <a href="dashboard.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Tableau de bord</a>
+      <!-- Dropdown -->
+      <div id="memberDropdown"
+           class="hidden absolute right-0 mt-2 w-48 bg-[rgba(5,20,40,0.95)] border border-gold/30 rounded-lg shadow-lg z-50 backdrop-blur-md">
+        <a href="member/profile.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Profil</a>
+        <a href="member/dashboard.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Tableau de bord</a>
         <button id="logoutBtn" class="w-full text-left px-4 py-2 text-gold hover:bg-gold/10">Déconnexion</button>
+      </div>
     </div>
-</div>
-
-</div>
+  </div>
 
   <!-- Menu mobile déroulant -->
   <nav id="mobileMenu" class="md:hidden hidden mt-3 space-y-2">
     <a href="#accueil" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-home mr-2"></i>Accueil</a>
-    <a href="#oracle" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Oracle</a>
+    <a href="#offres" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Oracle</a>
     <a href="accompagnements.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
     <a href="rendez-vous.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
     <a href="a-propos.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
     <a href="#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
     <a href="contact.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
-        <button id="loginBtnMobile" class="w-full btn-outline-gold" style="display: none;">Connexion</button>
-</nav>
-</header>
+    <button id="loginBtnMobile" class="w-full btn-outline-gold" style="display: none;">Connexion</button>
+  </nav>
+  </header>
 <!-- Hero -->
 <section id="accueil" class="hero-section relative">
     <!-- Voile pour lisibilité -->
@@ -994,137 +998,252 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
   <!-- Offres -->
-  <section id="offres" class="py-20 px-6 bg-dark-blue">
-    <div class="container mx-auto max-w-6xl">
-      <div class="text-center mb-12">
-        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Entrez dans l'univers Oradia</h2>
-        <p class="text-light-gold max-w-3xl mx-auto">Choisissez l'offre qui résonne avec votre cheminement.</p>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mt-12 max-w-6xl mx-auto">
-                
+  <section id="offres" class="py-24 px-6 bg-gradient-to-b from-night-blue to-dark-blue relative">
+    <!-- Background pattern -->
+    <div class="absolute inset-0 opacity-5">
+      <div class="absolute inset-0" style="background-image: radial-gradient(circle at 25% 25%, #d4af37 1px, transparent 1px), radial-gradient(circle at 75% 75%, #d4af37 1px, transparent 1px); background-size: 50px 50px;"></div>
+    </div>
+    
+    <div class="container mx-auto max-w-7xl relative z-10">
+      <!-- Header section -->
+      <div class="text-center mb-16">
+        <h2 class="cormorant text-5xl md:text-6xl font-bold mb-6 gold-gradient">Les Trois Voies d'Oradia</h2>
+        <p class="text-xl text-light-gold max-w-4xl mx-auto leading-relaxed">
+          Choisissez la profondeur de votre exploration intérieure. Chaque tirage est une porte vers une compréhension plus juste de votre chemin.
+        </p>
+        <div class="flex justify-center items-center gap-8 mt-8">
+          <div class="flex items-center gap-2">
+            <i class="fas fa-compass text-gold"></i>
+            <span class="text-light-gold">Guidance</span>
+          </div>
+          <div class="w-px h-8 bg-gold/30"></div>
+          <div class="flex items-center gap-2">
+            <i class="fas fa-eye text-gold"></i>
+            <span class="text-light-gold">Clarté</span>
+          </div>
+          <div class="w-px h-8 bg-gold/30"></div>
+          <div class="flex items-center gap-2">
+            <i class="fas fa-route text-gold"></i>
+            <span class="text-light-gold">Direction</span>
           </div>
         </div>
       </div>
 
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-        <!-- Gratuit -->
-        <div class="rounded-2xl p-8 relative overflow-hidden flex flex-col h-full" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
-          <!-- Animation des flux temporels -->
-          <div class="absolute inset-0 z-0 opacity-50 pointer-events-none">
-            <!-- Ligne du temps centrale -->
-            <div class="absolute top-0 bottom-0 left-1/2 w-1 bg-gradient-to-b from-gold/30 via-gold/50 to-gold/30 -translate-x-1/2"></div>
-            <!-- Cercles temporels -->
-            <div class="absolute top-1/3 left-1/2 w-16 h-16 rounded-full border-2 border-gold/30 animate-[pulse_4s_ease-in-out_infinite] -translate-x-1/2 -translate-y-1/2"></div>
-            <div class="absolute top-1/2 left-1/2 w-20 h-20 rounded-full border-2 border-gold/50 animate-[pulse_3s_ease-in-out_infinite] -translate-x-1/2 -translate-y-1/2"></div>
-            <div class="absolute top-2/3 left-1/2 w-16 h-16 rounded-full border-2 border-gold/30 animate-[pulse_5s_ease-in-out_infinite] -translate-x-1/2 -translate-y-1/2"></div>
-            <!-- Connexions entre les temps -->
-            <div class="absolute top-1/3 left-1/2 w-1 h-1/6 bg-gradient-to-b from-gold/20 to-transparent -translate-x-1/2"></div>
-            <div class="absolute top-1/2 left-1/2 w-1 h-1/6 bg-gradient-to-t from-gold/20 to-transparent -translate-x-1/2"></div>
+      <!-- Cards grid -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+        
+        <!-- Tirage du Pèlerin -->
+        <div class="group relative">
+          <!-- Card glow effect -->
+          <div class="absolute -inset-1 bg-gradient-to-r from-gold/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500 blur-xl"></div>
+          
+          <div class="relative bg-[rgba(5,20,40,0.8)] backdrop-blur-md rounded-2xl border border-gold/30 p-8 h-full flex flex-col transition-all duration-300 group-hover:border-gold/50 group-hover:shadow-2xl group-hover:shadow-gold/20">
+            
+            <!-- Icon header -->
+            <div class="flex justify-center mb-6">
+              <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gold/20 to-gold/10 border border-gold/40 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-walking text-2xl text-gold"></i>
+              </div>
+            </div>
+            
+            <!-- Title and price -->
+            <div class="text-center mb-6">
+              <h3 class="cormorant text-3xl font-bold text-gold mb-2">Le Pèlerin</h3>
+              <div class="text-3xl font-bold text-light-gold mb-1">Gratuit</div>
+              <p class="text-sm text-gold/70">Premiers pas sur le chemin</p>
+            </div>
+            
+            <!-- Description -->
+            <div class="mb-6">
+              <p class="text-light-gold leading-relaxed mb-4">
+                Une question simple, un premier éclairage. Le tirage du Pèlerin révèle les trois temps essentiels : ce qui vous accompagne, ce qui se joue maintenant, et ce qui se dessine devant vous.
+              </p>
+              <div class="flex items-center justify-center gap-2 text-gold/80 text-sm">
+                <i class="fas fa-clock"></i>
+                <span>5 minutes</span>
+              </div>
+            </div>
+            
+            <!-- Features -->
+            <div class="space-y-3 mb-8 flex-grow">
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">3 cartes (Émotion, Besoin, Mémoire)</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Interprétation synthétique</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Accès immédiat</span>
+              </div>
+              <div class="flex items-center gap-3 opacity-50">
+                <i class="fas fa-times-circle text-gray-500 text-sm"></i>
+                <span class="text-gray-400 text-sm">Cartes passerelles</span>
+              </div>
+            </div>
+            
+            <!-- CTA -->
+            <a href="pelerin.html?start=intention" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105">
+              <i class="fas fa-play"></i>
+              Commencer le tirage
+            </a>
           </div>
-
-          <div class="relative z-10 text-center mb-6">
-            <h3 class="cormorant text-2xl text-gold mb-2">Tirage du pèlerin</h3>
-            <div class="text-4xl font-bold text-light-gold">Gratuit</div>
-          </div>
-
-          <h4 class="cormorant text-xl text-gold mb-2 text-center">Passé / Présent / Futur</h4>
-          <ul class="space-y-3 mb-8 relative z-10">
- <p class="text-light-gold text-sm">
-              Une question simple, un pas sur le chemin. Le tirage du Pèlerin éclaire passé, présent et futur : ce qui t'accompagne encore, ce qui se joue maintenant, et ce qui se dessine devant toi. C'est un tirage d'initiation, une première porte pour goûter la vibration d'Oradia.
-            </p>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>3 cartes (Émotion, Besoin, Mémoire Cosmos)</span></li>
-               <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 carte Mémoires Cosmos</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Interprétation synthétique</span></li>
-            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Cartes passerelles</span></li>
-            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Espace membre</span></li>
-            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Analyse approfondie</span></li>
-          </ul>
-
-<a href="pelerin.html?start=intention"   class="btn-gold w-full text-center block relative z-10 mt-auto">  Commencer le tirage</a>
-
         </div>
 
-        <!-- Tirage complet -->
-        <div class="rounded-2xl p-8 relative overflow-hidden border-2 border-gold flex flex-col h-full" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9))">
-          <div class="absolute top-0 right-0 bg-gold text-night-blue px-4 py-1 rounded-bl-lg rounded-tr-2xl font-bold z-10">Populaire</div>
-
-          <!-- Boussole mystique animation -->
-          <div class="absolute inset-0 z-0 opacity-60 pointer-events-none">
-            <div class="absolute top-1/2 left-1/2 w-64 h-64 -translate-x-1/2 -translate-y-1/2">
-              <!-- Cercle extérieur -->
-              <div class="absolute inset-0 rounded-full border border-gold/30 animate-[spin_30s_linear_infinite]"></div>
-              <!-- Aiguilles -->
-              <div class="absolute top-1/2 left-1/2 w-1 h-16 bg-gold -translate-x-1/2 -translate-y-1/2 origin-bottom animate-[pulse_3s_ease-in-out_infinite]" style="transform: rotate(45deg);"></div>
-              <div class="absolute top-1/2 left-1/2 w-1 h-16 bg-light-gold -translate-x-1/2 -translate-y-1/2 origin-bottom animate-[pulse_3s_ease-in-out_infinite]" style="transform: rotate(-45deg);"></div>
-              <!-- Points cardinaux -->
-              <div class="absolute top-2 left-1/2 -translate-x-1/2 text-xs text-gold">N</div>
-              <div class="absolute bottom-2 left-1/2 -translate-x-1/2 text-xs text-gold">S</div>
-              <div class="absolute top-1/2 left-2 -translate-y-1/2 text-xs text-gold">O</div>
-              <div class="absolute top-1/2 right-2 -translate-y-1/2 text-xs text-gold">E</div>
-              <!-- Particules en orbite -->
-              <div class="absolute top-0 left-1/2 w-2 h-2 rounded-full bg-gold/50 -translate-x-1/2 -translate-y-1/2 animate-[orbit_8s_linear_infinite] origin-[50%_128px]"></div>
-              <div class="absolute top-0 left-1/2 w-3 h-3 rounded-full bg-light-gold/40 -translate-x-1/2 -translate-y-1/2 animate-[orbit_12s_linear_infinite] origin-[50%_150px]"></div>
+        <!-- Tirage de la Traversée -->
+        <div class="group relative transform scale-105 lg:scale-110">
+          <!-- Popular badge -->
+          <div class="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
+            <div class="bg-gradient-to-r from-gold to-light-gold text-night-blue px-6 py-2 rounded-full font-bold text-sm shadow-lg flex items-center gap-2">
+              <i class="fas fa-star"></i>
+              Le plus populaire
             </div>
           </div>
-
-          <div class="relative z-10 text-center mb-6">
-            <h3 class="cormorant text-2xl text-gold mb-2">Tirages de la traversée</h3>
-            <div class="text-4xl font-bold text-light-gold">5€</div>
-            <h4 class="cormorant text-xl text-gold">Accès à 5 tirages</h4>
-          </div>
-<p class="text-light-gold text-sm">
-              Un carrefour, une décision, un choix à poser. Le tirage de la Traversée se déploie comme une boussole intérieure : Nord, Sud, Est, Ouest. Quatre directions pour éclairer ton orientation dans la vie, retrouver ton cap, discerner la voie juste. C'est un tirage pour les passages importants.
-            </p>
-          <ul class="space-y-3 mb-8 relative z-10">
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>4 cartes (Émotion, Besoin, Révélation, Action)</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 carte Mémoires Cosmos</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes passerelles</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question d'introspection</span></li>
-            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">Espace membre</span></li>
-            <li class="flex items-start"><i class="fas fa-times-circle text-gray-500 mt-1 mr-3"></i><span class="text-gray-400">1 tirage complet personnalisé quotidien par mail</span></li>
-          </ul>
-            <a href="#" id="orderBtn" class="btn-gold w-full text-center block relative z-10 mt-auto">Commander</a>
-
-</div>
-
-        <!-- Abonnement -->
-        <div class="rounded-2xl p-8 relative overflow-hidden flex flex-col h-full" style="background:linear-gradient(145deg, rgba(26,54,93,.8), rgba(5,20,40,.9)); border:1px solid rgba(212,175,55,.3)">
-          <!-- Animation champ magnétique (tore) -->
-          <div class="absolute inset-0 z-0 opacity-50 pointer-events-none">
-            <div class="absolute top-1/2 left-1/2 w-64 h-64 -translate-x-1/2 -translate-y-1/2">
-              <!-- Anneaux -->
-              <div class="absolute inset-0 rounded-full border-2 border-gold/30 animate-[spin_30s_linear_infinite]"></div>
-              <div class="absolute inset-0 rounded-full border-2 border-gold/20 animate-[spin_25s_linear_infinite_reverse] rotate-45"></div>
-              <!-- Lignes de champ -->
-              <div class="absolute top-1/2 left-1/2 w-1 h-32 bg-gradient-to-b from-gold/30 to-transparent -translate-x-1/2 -translate-y-1/2 origin-bottom animate-[pulse_4s_ease-in-out_infinite]"></div>
-              <div class="absolute top-1/2 left-1/2 w-1 h-32 bg-gradient-to-t from-gold/30 to-transparent -translate-x-1/2 -translate-y-1/2 origin-top animate-[pulse_5s_ease-in-out_infinite]"></div>
-              <!-- Particules -->
-              <div class="absolute top-0 left-1/2 w-2 h-2 rounded-full bg-gold/40 -translate-x-1/2 -translate-y-1/2 animate-[orbit_8s_linear_infinite] origin-[50%_150px]"></div>
-              <div class="absolute top-0 left-1/2 w-3 h-3 rounded-full bg-light-gold/30 -translate-x-1/2 -translate-y-1/2 animate-[orbit_12s_linear_infinite] origin-[50%_140px]"></div>
+          
+          <!-- Card glow effect -->
+          <div class="absolute -inset-1 bg-gradient-to-r from-gold/30 to-transparent rounded-2xl opacity-50 group-hover:opacity-100 transition-all duration-500 blur-xl"></div>
+          
+          <div class="relative bg-gradient-to-br from-[rgba(212,175,55,0.1)] to-[rgba(5,20,40,0.9)] backdrop-blur-md rounded-2xl border-2 border-gold/50 p-8 h-full flex flex-col transition-all duration-300 group-hover:border-gold/70 group-hover:shadow-2xl group-hover:shadow-gold/30">
+            
+            <!-- Icon header -->
+            <div class="flex justify-center mb-6">
+              <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gold/30 to-gold/20 border-2 border-gold/60 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 animate-pulse">
+                <i class="fas fa-compass text-2xl text-gold"></i>
+              </div>
             </div>
+            
+            <!-- Title and price -->
+            <div class="text-center mb-6">
+              <h3 class="cormorant text-3xl font-bold text-gold mb-2">La Traversée</h3>
+              <div class="text-3xl font-bold text-light-gold mb-1">5€</div>
+              <p class="text-sm text-gold/70">5 tirages inclus</p>
+            </div>
+            
+            <!-- Description -->
+            <div class="mb-6">
+              <p class="text-light-gold leading-relaxed mb-4">
+                Un carrefour, une décision à prendre. La Traversée se déploie comme une boussole intérieure à quatre directions pour éclairer votre choix et retrouver votre cap.
+              </p>
+              <div class="flex items-center justify-center gap-2 text-gold/80 text-sm">
+                <i class="fas fa-clock"></i>
+                <span>10 minutes</span>
+              </div>
+            </div>
+            
+            <!-- Features -->
+            <div class="space-y-3 mb-8 flex-grow">
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">4 cartes (Émotion, Besoin, Révélation, Action)</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Cartes passerelles</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Synthèse vibratoire</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Mantra personnel</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">5 tirages disponibles</span>
+              </div>
+            </div>
+            
+            <!-- CTA -->
+            <a href="#" id="orderBtn" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105">
+              <i class="fas fa-crown"></i>
+              Commander maintenant
+            </a>
           </div>
+        </div>
 
-          <div class="relative z-10 text-center mb-6">
-            <h3 class="cormorant text-2xl text-gold mb-2">Tirage du Tore</h3>
-            <div class="text-4xl font-bold text-light-gold">8€ <span class="text-lg">/mois</span></div>
+        <!-- Tirage du Tore -->
+        <div class="group relative">
+          <!-- Card glow effect -->
+          <div class="absolute -inset-1 bg-gradient-to-r from-gold/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500 blur-xl"></div>
+          
+          <div class="relative bg-[rgba(5,20,40,0.8)] backdrop-blur-md rounded-2xl border border-gold/30 p-8 h-full flex flex-col transition-all duration-300 group-hover:border-gold/50 group-hover:shadow-2xl group-hover:shadow-gold/20">
+            
+            <!-- Icon header -->
+            <div class="flex justify-center mb-6">
+              <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gold/20 to-gold/10 border border-gold/40 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-infinity text-2xl text-gold"></i>
+              </div>
+            </div>
+            
+            <!-- Title and price -->
+            <div class="text-center mb-6">
+              <h3 class="cormorant text-3xl font-bold text-gold mb-2">Le Tore</h3>
+              <div class="text-3xl font-bold text-light-gold mb-1">8€<span class="text-lg font-normal">/mois</span></div>
+              <p class="text-sm text-gold/70">Guidance continue</p>
+            </div>
+            
+            <!-- Description -->
+            <div class="mb-6">
+              <p class="text-light-gold leading-relaxed mb-4">
+                L'expérience complète. Le Tore explore toutes les dimensions de votre être avec vos clés personnelles pour une cartographie vibratoire profonde et continue.
+              </p>
+              <div class="flex items-center justify-center gap-2 text-gold/80 text-sm">
+                <i class="fas fa-infinity"></i>
+                <span>Illimité</span>
+              </div>
+            </div>
+            
+            <!-- Features -->
+            <div class="space-y-3 mb-8 flex-grow">
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Tirage complet quotidien</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Clés personnelles (astro, HD...)</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Espace membre complet</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Archive des tirages</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Mantra quotidien par email</span>
+              </div>
+            </div>
+            
+            <!-- CTA -->
+            <a href="tore.html" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105">
+              <i class="fas fa-rocket"></i>
+              Accéder au Tore
+            </a>
           </div>
-
-          <ul class="space-y-3 mb-8 relative z-10">
-   <p class="text-light-gold text-sm">
-              L'expérience complète. Le Guidage du Tore recueille toutes les dimensions de ton être : émotions, besoins, archétypes, révélations, actions. Il s'appuie aussi sur tes clés personnelles (Human Design, Ennéagramme, astrologie...). C'est une cartographie vibratoire profonde pour avancer avec clarté.
-            </p>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>1 tirage complet personnalisé quotidien par mail avec votre intention</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Cartes passerelles</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Synthèse vibratoire personnalisée</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Mantra et question du jour</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Espace membre (profils ennéagramme, astro, numérologie...)</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Accès à l'archive des 10 derniers tirages</span></li>
-            <li class="flex items-start"><i class="fas fa-check-circle text-gold mt-1 mr-3"></i><span>Participation à l’amélioration de l’oracle (expérience anonyme)</span></li>
-        </ul>
-            <a href="tore.html" class="btn-gold w-full text-center block relative z-10 mt-auto hovered-element">Accéder au tirage du Tore</a>
-</div>
-</div>
+        </div>
+      </div>
+      
+      <!-- Bottom CTA -->
+      <div class="text-center mt-16">
+        <p class="text-light-gold mb-6">Un doute ? Une question ?</p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <a href="contact.html" class="text-gold hover:text-light-gold transition-colors flex items-center gap-2">
+            <i class="fas fa-envelope"></i>
+            Contactez-nous
+          </a>
+          <span class="text-gold/50">ou</span>
+          <a href="a-propos.html" class="text-gold hover:text-light-gold transition-colors flex items-center gap-2">
+            <i class="fas fa-info-circle"></i>
+            En savoir plus
+          </a>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -1136,7 +1255,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
           Prêt pour une guidance personnalisée ?
         </h2>
         <p class="text-xl text-light-gold mb-8 max-w-2xl mx-auto">
-          Réservez votre séance de guidance spirituelle et bénéficiez d'un accompagnement sur mesure pour éclairer votre chemin.
+          Réservez votre séance d'accompagnement personnalisé et bénéficiez d'un accompagnement sur mesure pour éclairer votre chemin.
         </p>
         <a href="rendez-vous.html" class="btn-gold text-lg px-8 py-4 inline-flex items-center gap-3">
           <i class="fas fa-calendar-check"></i>
@@ -1198,7 +1317,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
     <div class="container mx-auto max-w-6xl">
       <div class="text-center mb-12">
         <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Oracle de Cartes Oradia</h2>
-        <p class="text-light-gold max-w-3xl mx-auto">Découvrez notre oracle en version physique</p>
+        <p class="text-light-gold max-w-3xl mx-auto">L'oracle physique est maintenant en précommande !</p>
       </div>
 
      <div class="rounded-2xl p-8"
@@ -1208,27 +1327,27 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
     
     <!-- Bloc texte -->
     <div>
-      <h3 class="cormorant text-2xl text-gold mb-6">Version Physique en Développement</h3>
+      <h3 class="cormorant text-2xl text-gold mb-6">ORADIA – L'Oracle du Vivant</h3>
 
       <p class="text-light-gold mb-4">
-        Une version physique de 64 cartes de l'oracle Oradia est en cours de développement.
+        Un oracle de 64 cartes pour explorer les émotions, les besoins et les transformations intérieures.
         Vous y retrouverez les 3 types de tirage (tirage du Pèlerin, tirage de La Traversée,
-        tirage du Tore) ainsi qu'un livret d'accompagnement illustré.
+        tirage du Tore) ainsi qu'un livret d'accompagnement de 200 pages.
       </p>
 
       <p class="text-light-gold mb-4">
-        Un partenariat avec une illustratrice est en cours afin de vous proposer une expérience au graphisme unique.
-        Cette version sera idéale pour des ateliers, cercles de partage ou usage personnel.
+        Les illustrations sont créées par une artiste talentueuse pour vous proposer une expérience visuelle unique.
+        Cette version est idéale pour des ateliers, cercles de partage ou usage personnel.
       </p>
 
-      <h4 class="cormorant text-xl text-gold mb-3">Vous avez hâte n'est-ce pas ?</h4>
+      <h4 class="cormorant text-xl text-gold mb-3">Précommandez maintenant !</h4>
 
       <p class="text-light-gold mb-6">
-        Vous pouvez contribuer à votre hauteur au financement, et recevoir le jeu en avant-première
-        lorsqu’il sera disponible.
+        Réservez votre exemplaire à prix préférentiel avant sa sortie officielle.
+        Trois offres disponibles : Early Bird (35€), Standard (42€) et Édition Signature (49€).
       </p>
 
-      <a href="..." class="btn-gold inline-block">Faire un don</a>
+      <a href="precommande-oracle.html" class="btn-gold inline-block">Précommander l'oracle</a>
     </div>
     
 <!-- Bloc image propre -->
@@ -1393,9 +1512,9 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         <div>
           <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
           <ul class="space-y-2">
-            <li><button id="showCGU" class="text-light-gold hover:text-gold transition bg-transparent border-none p-0 cursor-pointer">CGU</button></li>
-            <li><a href="#" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
-            <li><a href="#" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
+            <li><a href="cgu.html" class="text-light-gold hover:text-gold transition">Conditions Générales d'Utilisation</a></li>
+            <li><a href="mentions-legales.html" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
+            <li><a href="politique-confidentialite.html" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
           </ul>
         </div>
         <div>
@@ -1407,7 +1526,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         </div>
       </div>
       <div class="pt-8 border-t border-gold/10 text-center">
-        <p class="text-light-gold text-sm">&copy; 2025 Oradia. Tous droits réservés. |
+        <p class="text-light-gold text-sm">&copy; 2026 Oradia. Tous droits réservés. |
           <button id="footerLogin" class="text-gold hover:text-light-gold">Accès Dashboard</button>
         </p>
       </div>
@@ -3184,8 +3303,8 @@ document.addEventListener('click', (e) => {
     dropdown.id = 'memberDropdown';
     dropdown.className = 'absolute right-0 mt-2 w-48 bg-night-blue border border-gold/30 rounded-lg shadow-lg py-1 z-50 hidden';
     dropdown.innerHTML = `
-      <a href="#profil" class="block px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Profil</a>
-      <a href="#dashboard" class="block px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Tableau de bord</a>
+      <a href="member/profile.html" class="block px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Profil</a>
+      <a href="member/dashboard.html" class="block px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Tableau de bord</a>
       <button id="logoutBtn" class="w-full text-left px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Déconnexion</button>
     `;
 
@@ -3422,6 +3541,28 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+});
+</script>
+
+<script>
+// Bouton retour en haut de page
+const backToTopBtn = document.getElementById('backToTop');
+
+window.addEventListener('scroll', () => {
+  if (window.pageYOffset > 300) {
+    backToTopBtn.classList.remove('opacity-0');
+    backToTopBtn.classList.add('opacity-100');
+  } else {
+    backToTopBtn.classList.add('opacity-0');
+    backToTopBtn.classList.remove('opacity-100');
+  }
+});
+
+backToTopBtn.addEventListener('click', () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
 });
 </script>
 

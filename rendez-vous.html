@@ -156,29 +156,54 @@
   <header class="header-bg w-full py-3 px-4 md:py-4 md:px-8">
     <div class="flex items-center justify-between">
       <div class="flex items-center">
-        <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo"
+        <a href="index.html#accueil" class="flex items-center">
+          <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo"
          class="w-16 h-16 object-contain transform hover:scale-110 transition-transform duration-300" />
-        <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+          <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+        </a>
       </div>
+      
       <!-- Bouton burger (mobile) -->
       <button id="mobileMenuBtn" type="button" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold" aria-label="Ouvrir le menu">
         <i class="fas fa-bars text-lg"></i>
       </button>
-      <!-- Nav desktop -->
+      
+      <!-- Navigation desktop -->
       <nav class="hidden md:flex space-x-6 text-lg">
         <a href="index.html#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
-        <a href="index.html#oracle" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
+        <a href="index.html#offres" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
         <a href="accompagnements.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
+        <a href="rendez-vous.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
         <a href="a-propos.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
         <a href="index.html#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
         <a href="contact.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-envelope mr-2"></i>Contact</a>
       </nav>
+      
+      <!-- Espace membre (desktop) -->
+      <div id="memberMenuWrapper" class="hidden md:block relative">
+        <!-- Bouton Espace membre -->
+        <button id="memberMenuBtn" class="flex items-center gap-2 text-gold font-medium hover:text-light-gold transition">
+          <i class="fas fa-user-circle text-2xl"></i>
+          <span>Espace membre</span>
+          <i class="fas fa-chevron-down text-sm ml-1"></i>
+        </button>
+
+        <!-- Dropdown -->
+        <div id="memberDropdown"
+             class="hidden absolute right-0 mt-2 w-48 bg-[rgba(5,20,40,0.95)] border border-gold/30 rounded-lg shadow-lg z-50 backdrop-blur-md">
+          <a href="member/profile.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Profil</a>
+          <a href="member/dashboard.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Tableau de bord</a>
+          <button id="logoutBtn" class="w-full text-left px-4 py-2 text-gold hover:bg-gold/10">Déconnexion</button>
+        </div>
+      </div>
     </div>
-    <!-- Nav mobile -->
+
+    <!-- Menu mobile déroulant -->
     <nav id="mobileMenu" class="md:hidden hidden mt-3 space-y-2">
       <a href="index.html#accueil" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-home mr-2"></i>Accueil</a>
-      <a href="index.html#oracle" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Oracle</a>
+      <a href="index.html#offres" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Oracle</a>
       <a href="accompagnements.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
+      <a href="rendez-vous.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
       <a href="a-propos.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
       <a href="index.html#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
       <a href="contact.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
@@ -194,7 +219,7 @@
           Prendre rendez-vous
         </h1>
         <p class="text-xl md:text-2xl text-light-gold mb-8 leading-relaxed">
-          Réservez votre séance de guidance spirituelle en choisissant un créneau disponible dans l'agenda
+          Réservez votre séance de guidance personnelle en choisissant un créneau disponible dans l'agenda
         </p>
       </div>
     </div>
@@ -212,15 +237,87 @@
         </p>
       </div>
 
+      <!-- Type de séance selector -->
+      <div class="text-center mb-8">
+        <h3 class="cormorant text-3xl font-bold gold-gradient mb-6">
+          Choisissez votre type de séance
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
+          <div class="session-type-card active" data-type="guidance-personnelle">
+            <div class="session-icon">
+              <i class="fas fa-user-circle"></i>
+            </div>
+            <h4 class="session-title">Guidance Personnelle</h4>
+            <p class="session-description">Session individuelle de 60min</p>
+            <div class="session-price">60€</div>
+            <div class="session-duration">1h</div>
+          </div>
+          
+          <div class="session-type-card" data-type="guidance-approfondie">
+            <div class="session-icon">
+              <i class="fas fa-microscope"></i>
+            </div>
+            <h4 class="session-title">Guidance Approfondie</h4>
+            <p class="session-description">Session de 90min pour exploration en profondeur</p>
+            <div class="session-price">90€</div>
+            <div class="session-duration">1h30</div>
+          </div>
+          
+          <div class="session-type-card" data-type="accompagnement-cercle">
+            <div class="session-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <h4 class="session-title">Accompagnement Cercle</h4>
+            <p class="session-description">Participation à un cercle de parole en groupe</p>
+            <div class="session-price">30€</div>
+            <div class="session-duration">2h</div>
+          </div>
+          
+          <div class="session-type-card" data-type="consultation-rapide">
+            <div class="session-icon">
+              <i class="fas fa-bolt"></i>
+            </div>
+            <h4 class="session-title">Consultation Rapide</h4>
+            <p class="session-description">Session de 30min pour question ciblée</p>
+            <div class="session-price">30€</div>
+            <div class="session-duration">30min</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Cal.com Iframe -->
-      <div class="bg-gold/10 backdrop-blur-sm rounded-2xl p-8 border border-gold/30">
-        <div style="width:100%;height:750px;">
+      <div class="bg-[rgba(5,20,40,0.6)] backdrop-blur-md rounded-2xl p-8 border border-gold/30 shadow-2xl shadow-gold/20">
+        <!-- Message d'information -->
+        <div id="selectionMessage" class="text-center mb-4 text-gold/80">
+          <i class="fas fa-info-circle mr-2"></i>
+          Sélectionnez un type de séance ci-dessus, puis réservez via l'agenda
+        </div>
+        
+        <div class="cal-iframe-container" id="calContainer" style="width:100%;height:750px;position:relative;overflow:hidden;border-radius:12px;">
           <iframe
-            src="https://app.cal.eu/boucheron-rudy"
+            id="calIframe"
+            src="https://cal.com/boucheron-rudy/guidance-oradia-approfondie?embedDomain=oradia.fr&backgroundColor=020817&textColor=f4e4c1&primaryColor=d4af37&borderColor=d4af37&borderWidth=2"
             width="100%"
             height="100%"
-            frameborder="0">
+            frameborder="0"
+            style="border-radius:12px;"
+            allowtransparency="true">
           </iframe>
+        </div>
+        
+        <!-- Lien direct principal -->
+        <div class="text-center mt-6">
+          <p class="text-gold/70 mb-3">Pour réserver votre rendez-vous :</p>
+          <a href="https://cal.com/boucheron-rudy/guidance-oradia-approfondie" 
+             target="_blank" 
+             class="inline-flex items-center gap-2 bg-gold hover:bg-light-gold text-night-blue px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-gold/40">
+            <i class="fas fa-calendar-check"></i>
+            Réserver mon rendez-vous
+          </a>
+          <p class="text-gold/60 text-sm mt-3">
+            <i class="fas fa-info-circle mr-1"></i>
+            Le lien s'ouvrira dans un nouvel onglet pour une meilleure expérience
+          </p>
         </div>
       </div>
 
@@ -273,51 +370,45 @@
   </section>
 
   <!-- Footer -->
-  <footer class="bg-dark-blue border-t border-gold/20 py-12">
-    <div class="container mx-auto px-6">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8">
+  <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
+    <div class="container mx-auto max-w-6xl">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
         <div>
           <div class="flex items-center mb-4">
-            <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo" class="w-12 h-12 object-contain mr-3">
-            <span class="cormorant text-2xl font-bold gold-gradient">ORADIA</span>
+            <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo" class="w-16 h-16 mr-4" />
+            <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
           </div>
-          <p class="text-light-gold text-sm">
-            L'Oracle du Vivant - Guidance spirituelle et accompagnement bienveillant.
-          </p>
+          <p class="text-light-gold text-sm">L'oracle qui vous accompagne sur votre chemin personnel et révèle votre essence.</p>
         </div>
-        
         <div>
           <h4 class="cormorant text-xl text-gold mb-4">Navigation</h4>
           <ul class="space-y-2">
-            <li><a href="index.html" class="text-light-gold hover:text-gold transition">Accueil</a></li>
-            <li><a href="accompagnements.html" class="text-light-gold hover:text-gold transition">Accompagnements</a></li>
+            <li><a href="index.html#accueil" class="text-light-gold hover:text-gold transition">Accueil</a></li>
             <li><a href="pelerin.html" class="text-light-gold hover:text-gold transition">Oracle</a></li>
-            <li><a href="a-propos.html" class="text-light-gold hover:text-gold transition">À Propos</a></li>
-          </ul>
-        </div>
-        
-        <div>
-          <h4 class="cormorant text-xl text-gold mb-4">Services</h4>
-          <ul class="space-y-2">
-            <li><a href="rendez-vous.html" class="text-light-gold hover:text-gold transition">Prise de rendez-vous</a></li>
             <li><a href="accompagnements.html" class="text-light-gold hover:text-gold transition">Accompagnements</a></li>
-            <li><a href="contact.html" class="text-light-gold hover:text-gold transition">Contact</a></li>
-            <li><a href="#" class="text-light-gold hover:text-gold transition">FAQ</a></li>
+            <li><a href="a-propos.html" class="text-light-gold hover:text-gold transition">À Propos</a></li>
+            <li><a href="index.html#edolgor" class="text-light-gold hover:text-gold transition">Edolg'Or</a></li>
           </ul>
         </div>
-        
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
+          <ul class="space-y-2">
+            <li><a href="cgu.html" class="text-light-gold hover:text-gold transition">Conditions Générales d'Utilisation</a></li>
+            <li><a href="mentions-legales.html" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
+            <li><a href="politique-confidentialite.html" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
+          </ul>
+        </div>
         <div>
           <h4 class="cormorant text-xl text-gold mb-4">Contact</h4>
-          <div class="space-y-2 text-light-gold text-sm">
-            <p><i class="fas fa-envelope mr-2"></i>contact@oradia.fr</p>
-            <p><i class="fas fa-phone mr-2"></i>Par visioconférence uniquement</p>
-          </div>
+          <ul class="space-y-2">
+            <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><span class="text-light-gold">Oradia@protonmail.com</span></li>
+            <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><span class="text-light-gold">@oradia_oracle</span></li>
+          </ul>
         </div>
       </div>
-      
-      <div class="border-t border-gold/20 mt-8 pt-8 text-center">
-        <p class="text-light-gold text-sm">
-          © 2026 Oradia - Tous droits réservés | Créé avec ❤️ et intention
+      <div class="pt-8 border-t border-gold/10 text-center">
+        <p class="text-light-gold text-sm">&copy; 2026 Oradia. Tous droits réservés. |
+          <button id="footerLogin" class="text-gold hover:text-light-gold">Accès Dashboard</button>
         </p>
       </div>
     </div>
@@ -331,19 +422,270 @@
       menu.classList.toggle('hidden');
     });
 
-    // Vérifier que l'iframe se charge correctement
-    window.addEventListener('load', function() {
+    // Personnalisation avancée de l'iframe Cal.com
+    document.addEventListener('DOMContentLoaded', function() {
+      // Ajouter des styles personnalisés pour l'iframe
+      const customStyles = document.createElement('style');
+      customStyles.textContent = `
+        /* Styles pour l'iframe Cal.com */
+        iframe {
+          background: transparent !important;
+        }
+        
+        /* Conteneur de l'iframe */
+        .cal-iframe-container {
+          background: linear-gradient(145deg, rgba(26,54,93,0.3), rgba(5,20,40,0.5));
+          border-radius: 12px;
+          overflow: hidden;
+          box-shadow: 0 8px 32px rgba(212,175,55,0.1);
+        }
+        
+        /* Correction pour mobile */
+        @media (max-width: 768px) {
+          .cal-iframe-container iframe {
+            min-height: 600px !important;
+          }
+        }
+        
+        /* Styles pour les cartes de type de séance */
+        .session-type-card {
+          background: linear-gradient(145deg, rgba(26,54,93,0.6), rgba(5,20,40,0.8));
+          border: 2px solid rgba(212,175,55,0.3);
+          border-radius: 16px;
+          padding: 24px;
+          cursor: pointer;
+          transition: all 0.3s ease;
+          position: relative;
+          overflow: hidden;
+        }
+        
+        .session-type-card::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          left: 0;
+          right: 0;
+          bottom: 0;
+          background: linear-gradient(135deg, rgba(212,175,55,0.1), transparent);
+          opacity: 0;
+          transition: opacity 0.3s ease;
+        }
+        
+        .session-type-card:hover {
+          transform: translateY(-4px);
+          border-color: rgba(212,175,55,0.6);
+          box-shadow: 0 12px 40px rgba(212,175,55,0.2);
+        }
+        
+        .session-type-card:hover::before {
+          opacity: 1;
+        }
+        
+        .session-type-card.active {
+          border-color: #d4af37;
+          background: linear-gradient(145deg, rgba(212,175,55,0.2), rgba(5,20,40,0.8));
+          box-shadow: 0 8px 32px rgba(212,175,55,0.3);
+        }
+        
+        .session-type-card.active::before {
+          opacity: 1;
+        }
+        
+        .session-icon {
+          font-size: 2.5rem;
+          color: #d4af37;
+          margin-bottom: 16px;
+        }
+        
+        .session-title {
+          font-family: 'Cormorant SC', serif;
+          font-size: 1.5rem;
+          font-weight: 600;
+          color: #f4e4c1;
+          margin-bottom: 8px;
+        }
+        
+        .session-description {
+          color: rgba(244,228,193,0.7);
+          font-size: 0.9rem;
+          margin-bottom: 16px;
+          line-height: 1.4;
+        }
+        
+        .session-price {
+          font-size: 1.25rem;
+          font-weight: bold;
+          color: #d4af37;
+          margin-bottom: 4px;
+        }
+        
+        .session-duration {
+          color: rgba(244,228,193,0.6);
+          font-size: 0.85rem;
+        }
+        
+        /* Animation de sélection */
+        @keyframes selectSession {
+          0% { transform: scale(1); }
+          50% { transform: scale(1.05); }
+          100% { transform: scale(1); }
+        }
+        
+        .session-type-card.selecting {
+          animation: selectSession 0.3s ease;
+        }
+      `;
+      document.head.appendChild(customStyles);
+
+      // Gestionnaire de sélection des types de séance
+      const sessionCards = document.querySelectorAll('.session-type-card');
+      const calIframe = document.getElementById('calIframe');
+
+      // Configuration des types de séance
+      const sessionTypes = {
+        'guidance-personnelle': {
+          url: 'guidance-oradia-approfondie', // URL existante qui fonctionne
+          colors: {
+            background: '020817',
+            text: 'f4e4c1',
+            primary: 'd4af37',
+            border: 'd4af37'
+          }
+        },
+        'guidance-approfondie': {
+          url: 'guidance-oradia-approfondie', // Utiliser la même URL pour l'instant
+          colors: {
+            background: '020817',
+            text: 'f4e4c1',
+            primary: 'f4e4c1',
+            border: 'f4e4c1'
+          }
+        },
+        'accompagnement-cercle': {
+          url: 'guidance-oradia-approfondie', // Utiliser la même URL pour l'instant
+          colors: {
+            background: '020817',
+            text: 'f4e4c1',
+            primary: '8b7355',
+            border: '8b7355'
+          }
+        },
+        'consultation-rapide': {
+          url: 'guidance-oradia-approfondie', // Utiliser la même URL pour l'instant
+          colors: {
+            background: '020817',
+            text: 'f4e4c1',
+            primary: '654321',
+            border: '654321'
+          }
+        }
+      };
+
+      // Ajouter les écouteurs d'événements
+      sessionCards.forEach(card => {
+        card.addEventListener('click', function() {
+          const sessionType = this.dataset.type;
+          selectSessionType(sessionType);
+        });
+      });
+
+      // Fonction pour sélectionner un type de séance
+      function selectSessionType(type) {
+        // Mettre à jour les cartes
+        sessionCards.forEach(card => {
+          card.classList.remove('active', 'selecting');
+          if (card.dataset.type === type) {
+            card.classList.add('active', 'selecting');
+            setTimeout(() => card.classList.remove('selecting'), 300);
+          }
+        });
+
+        // Mettre à jour le message de sélection
+        const selectionMessage = document.getElementById('selectionMessage');
+        const typeNames = {
+          'guidance-personnelle': 'Guidance Personnelle (60min - 60€)',
+          'guidance-approfondie': 'Guidance Approfondie (90min - 90€)',
+          'accompagnement-cercle': 'Accompagnement Cercle (2h - 30€)',
+          'consultation-rapide': 'Consultation Rapide (30min - 30€)'
+        };
+        
+        if (selectionMessage) {
+          selectionMessage.innerHTML = `
+            <i class="fas fa-check-circle mr-2 text-green-400"></i>
+            Vous avez sélectionné : <span class="font-semibold">${typeNames[type]}</span>
+            <br><span class="text-sm">Cliquez sur "Réserver mon rendez-vous" ci-dessous pour continuer</span>
+          `;
+        }
+
+        console.log(`Session type selected: ${type}`);
+      }
+
+      // Initialiser avec le premier type
+      selectSessionType('guidance-personnelle');
+
+      // Vérifier que l'iframe se charge correctement
       const iframe = document.querySelector('iframe');
       if (iframe) {
         iframe.addEventListener('load', function() {
           console.log('Cal.com iframe loaded successfully');
+
+          // Essayer d'appliquer des styles à l'intérieur de l'iframe (si possible)
+          try {
+            setTimeout(() => {
+              const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+              if (iframeDoc) {
+                // Appliquer des styles pour réduire le blanc
+                const style = iframeDoc.createElement('style');
+                style.textContent = `
+                  body {
+                    background-color: #0a192f !important;
+                    background: #0a192f !important;
+                  }
+                  .cal-com-embed {
+                    background: #0a192f !important;
+                  }
+                `;
+                iframeDoc.head.appendChild(style);
+              }
+            }, 1000);
+          } catch (e) {
+            console.log('Cannot access iframe content due to CORS policy');
+          }
         });
-        
+
         iframe.addEventListener('error', function() {
           console.error('Failed to load Cal.com iframe');
         });
       }
     });
   </script>
+
+<!-- Bouton retour en haut de page -->
+<button id="backToTop" class="fixed bottom-6 right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-50 backdrop-blur-sm" aria-label="Remonter en haut">
+  <i class="fas fa-arrow-up text-sm"></i>
+</button>
+
+<script>
+// Bouton retour en haut de page
+const backToTopBtn = document.getElementById('backToTop');
+
+window.addEventListener('scroll', () => {
+  if (window.pageYOffset > 300) {
+    backToTopBtn.classList.remove('opacity-0');
+    backToTopBtn.classList.add('opacity-100');
+  } else {
+    backToTopBtn.classList.add('opacity-0');
+    backToTopBtn.classList.remove('opacity-100');
+  }
+});
+
+backToTopBtn.addEventListener('click', () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
+});
+</script>
+
 </body>
 </html>

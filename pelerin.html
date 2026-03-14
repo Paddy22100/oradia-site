@@ -1064,9 +1064,9 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   <cgu-modal></cgu-modal>
 
   <!-- Scroll to top button -->
-<button id="scrollTop" class="scroll-top bg-night-blue text-gold p-3 rounded-full border border-gold shadow-lg" aria-label="Remonter en haut">
-    <i class="fas fa-arrow-up"></i>
-  </button>
+<button id="backToTop" class="fixed bottom-6 right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-50 backdrop-blur-sm" aria-label="Remonter en haut">
+  <i class="fas fa-arrow-up text-sm"></i>
+</button>
   <!-- Header -->
 <header class="header-bg w-full py-3 px-4 md:py-4 md:px-8">
   <div class="flex items-center justify-between">
@@ -1083,46 +1083,48 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
            
       <i class="fas fa-bars text-lg"></i>
     </button>
-<!-- Nav desktop -->
+    
+    <!-- Navigation desktop -->
     <nav class="hidden md:flex space-x-6 text-lg">
       <a href="index.html#accueil" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
-      <a href="index.html#oracle" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
+      <a href="pelerin.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
       <a href="accompagnements.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
       <a href="rendez-vous.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
       <a href="a-propos.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
       <a href="index.html#edolgor" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
       <a href="contact.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-envelope mr-2"></i>Contact</a>
     </nav>
+    
+    <!-- Espace membre (desktop) -->
     <div id="memberMenuWrapper" class="hidden md:block relative">
-    <!-- Bouton Espace membre -->
-    <button id="memberMenuBtn" class="flex items-center gap-2 text-gold font-medium hover:text-light-gold transition">
+      <!-- Bouton Espace membre -->
+      <button id="memberMenuBtn" class="flex items-center gap-2 text-gold font-medium hover:text-light-gold transition">
         <i class="fas fa-user-circle text-2xl"></i>
         <span>Espace membre</span>
         <i class="fas fa-chevron-down text-sm ml-1"></i>
-    </button>
+      </button>
 
-    <!-- Dropdown -->
-    <div id="memberDropdown"
-         class="hidden absolute right-0 mt-2 w-48 bg-[rgba(5,20,40,0.95)] border border-gold/30 rounded-lg shadow-lg z-50 backdrop-blur-md">
-        <a href="profil.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Profil</a>
-        <a href="dashboard.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Tableau de bord</a>
+      <!-- Dropdown -->
+      <div id="memberDropdown"
+           class="hidden absolute right-0 mt-2 w-48 bg-[rgba(5,20,40,0.95)] border border-gold/30 rounded-lg shadow-lg z-50 backdrop-blur-md">
+        <a href="member/profile.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Profil</a>
+        <a href="member/dashboard.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Tableau de bord</a>
         <button id="logoutBtn" class="w-full text-left px-4 py-2 text-gold hover:bg-gold/10">Déconnexion</button>
+      </div>
     </div>
-</div>
-
-</div>
+  </div>
 
   <!-- Menu mobile déroulant -->
   <nav id="mobileMenu" class="md:hidden hidden mt-3 space-y-2">
     <a href="index.html#accueil" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-home mr-2"></i>Accueil</a>
-    <a href="index.html#oracle" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Oracle</a>
+    <a href="pelerin.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Oracle</a>
     <a href="accompagnements.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
     <a href="rendez-vous.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
     <a href="a-propos.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
     <a href="index.html#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
     <a href="contact.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
         <button id="loginBtnMobile" class="w-full btn-outline-gold" style="display: none;">Connexion</button>
-</nav>
+  </nav>
 </header>
 <!-- Hero -->
    <!-- Tirage du Pèlerin -->
@@ -1224,82 +1226,171 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 </section>
 
       <section id="results" class="hidden mt-6">
-        <h2 class="cormorant text-3xl text-gold mb-3">Résultats du tirage</h2>
-        <div class="mb-2"><b>Intention :</b> <span id="out-intention">—</span></div>
-        <div class="result-lines" id="lines"></div>
-        <div class="mt-3" id="synthese"></div>
-        <div class="mt-8 max-w-5xl mx-auto flex flex-col lg:flex-row gap-8 items-center">
-          <div class="flex-1 bg-night-blue/50 border border-gold/30 rounded-xl p-6">
-            <h3 class="cormorant text-2xl text-gold mb-4 text-center">Après votre tirage Oradia</h3>
-            <p class="text-light-gold/90 mb-4">
-              Vous pouvez activer une fenêtre d'observation : un délai court (1 à 5 jours) durant lequel vous restez attentif aux résonances possibles dans votre réalité.
-            </p>
-            <p class="text-light-gold/80 mb-6 italic">
-              Ce délai ne force rien.<br>
-              Il sert simplement à orienter l'attention et à clarifier ce que le tirage met en mouvement.
-            </p>
-            <div class="space-y-3 mb-6">
-              <p class="text-light-gold/90"><span class="text-gold font-medium">Dans les 24–48h :</span> micro-signes, intuitions, prises de conscience.</p>
-              <p class="text-light-gold/90"><span class="text-gold font-medium">Dans les 3–5 jours :</span> situations, conversations, synchronicités.</p>
-              <p class="text-light-gold/90"><span class="text-gold font-medium">Au-delà :</span> mouvement intérieur plus profond.</p>
+        <!-- Bouton quitter le tirage pour la section résultats -->
+        <div class="flex justify-between items-center mb-6">
+          <a href="/index.html#accueil" id="quitLink" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-gold hover:bg-gold hover:text-night-blue font-bold py-2 px-4 rounded-lg transition-colors inline-flex items-center">
+            <i class="fas fa-arrow-left mr-2"></i>
+            Quitter le tirage
+          </a>
+        </div>
+        
+        <div class="max-w-6xl mx-auto">
+          <!-- Carte principale des résultats -->
+          <div class="bg-gradient-to-br from-[rgba(26,54,93,0.8)] to-[rgba(5,20,40,0.9)] rounded-3xl p-8 md:p-12 border border-gold/30 shadow-2xl shadow-gold/20 relative overflow-hidden mb-12">
+            <!-- Effets de fond -->
+            <div class="absolute top-0 right-0 w-64 h-64 bg-gold/5 rounded-full -translate-y-32 translate-x-32"></div>
+            <div class="absolute bottom-0 left-0 w-48 h-48 bg-light-gold/5 rounded-full translate-y-24 -translate-x-24"></div>
+            
+            <div class="relative z-10">
+              <!-- Titre simple -->
+              <h2 class="cormorant text-3xl md:text-4xl font-bold text-gold text-center mb-8">Résultats du tirage</h2>
+              
+              <!-- Intention -->
+              <div class="text-center mb-8">
+                <h3 class="cormorant text-xl text-gold mb-2">Votre intention</h3>
+                <div class="text-light-gold text-lg italic" id="out-intention">—</div>
+              </div>
+
+              <!-- Lignes du tirage -->
+              <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 md:p-8 border border-gold/20 mb-8">
+                <div class="result-lines space-y-4" id="lines"></div>
+              </div>
+
+              <!-- Synthèse -->
+              <div class="bg-gradient-to-r from-gold/10 to-light-gold/5 rounded-2xl p-6 md:p-8 border border-gold/30">
+                <h3 class="cormorant text-2xl font-bold text-gold mb-4 text-center">Synthèse du message</h3>
+                <div class="cormorant text-lg text-light-gold leading-relaxed" id="synthese"></div>
+              </div>
             </div>
-            <p class="text-light-gold/80 italic text-center">
-              Si aucun signe n'apparaît, le tirage vous parle d'abord de votre posture et non d'un événement extérieur.
-            </p>
           </div>
-          <div class="w-full lg:w-3/5 flex-shrink-0 flex justify-center lg:justify-start">
-            <img src="images/fenetre_observation.png" alt="Fenêtre d'observation" class="w-full max-w-none h-auto rounded-lg shadow-lg border border-gold/30">
+
+          <!-- Section Fenêtre d'observation -->
+          <div class="bg-gradient-to-br from-[rgba(26,54,93,0.8)] to-[rgba(5,20,40,0.9)] rounded-3xl p-8 md:p-12 border border-gold/30 shadow-2xl shadow-gold/20 relative overflow-hidden">
+            <!-- Effets de fond -->
+            <div class="absolute top-0 left-0 w-32 h-32 bg-gold/5 rounded-full -translate-y-16 -translate-x-16"></div>
+            <div class="absolute bottom-0 right-0 w-40 h-40 bg-light-gold/5 rounded-full translate-y-20 translate-x-20"></div>
+            
+            <div class="relative z-10">
+              <div class="flex flex-col lg:flex-row gap-8 lg:gap-12 items-center">
+                <!-- Contenu texte -->
+                <div class="flex-1">
+                  <div class="flex items-center gap-3 mb-6">
+                    <i class="fas fa-hourglass-half text-2xl text-gold"></i>
+                    <h3 class="cormorant text-3xl font-bold gold-gradient">Fenêtre d'observation</h3>
+                  </div>
+                  
+                  <p class="text-light-gold/90 text-lg mb-6 leading-relaxed">
+                    Après votre tirage ORADIA, vous pouvez activer une période d'observation : un délai court (1 à 5 jours) durant lequel vous restez attentif aux résonances possibles dans votre réalité.
+                  </p>
+                  
+                  <div class="bg-gold/10 rounded-2xl p-6 border border-gold/30 mb-6">
+                    <p class="text-light-gold/80 italic text-center mb-4">
+                      Ce délai ne force rien. Il sert simplement à orienter l'attention et à clarifier ce que le tirage met en mouvement.
+                    </p>
+                    
+                    <div class="space-y-4">
+                      <div class="flex items-start gap-3">
+                        <div class="w-2 h-2 bg-gold rounded-full mt-2 flex-shrink-0"></div>
+                        <div>
+                          <span class="text-gold font-semibold">Dans les 24–48h :</span>
+                          <span class="text-light-gold/90"> micro-signes, intuitions, prises de conscience</span>
+                        </div>
+                      </div>
+                      <div class="flex items-start gap-3">
+                        <div class="w-2 h-2 bg-gold rounded-full mt-2 flex-shrink-0"></div>
+                        <div>
+                          <span class="text-gold font-semibold">Dans les 3–5 jours :</span>
+                          <span class="text-light-gold/90"> situations, conversations, synchronicités</span>
+                        </div>
+                      </div>
+                      <div class="flex items-start gap-3">
+                        <div class="w-2 h-2 bg-gold rounded-full mt-2 flex-shrink-0"></div>
+                        <div>
+                          <span class="text-gold font-semibold">Au-delà :</span>
+                          <span class="text-light-gold/90"> mouvement intérieur plus profond</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <p class="text-light-gold/80 italic text-center text-sm">
+                    Si aucun signe n'apparaît, le tirage vous parle d'abord de votre posture et non d'un événement extérieur.
+                  </p>
+                </div>
+                
+                <!-- Image -->
+                <div class="lg:w-1/2 flex justify-center">
+                  <div class="relative">
+                    <div class="absolute inset-0 bg-gold/20 rounded-2xl blur-xl"></div>
+                    <img src="images/fenetre_observation.png" alt="Fenêtre d'observation" class="relative w-full max-w-md h-auto rounded-2xl shadow-2xl border border-gold/40">
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
-        <style>
-          @media (max-width: 1024px) {
-            .lg\:flex-row {
-              flex-direction: column;
-            }
-            .lg\:w-3\/5 {
-              width: 100%;
-              margin-top: 1.5rem;
-            }
-          }
-        </style>
       </section>
-      <div class="max-w-2xl mx-auto mt-8 space-y-6">
-        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-        <a href="index.html#offres" id="fullReading" class="btn-outline-gold hidden flex-1 sm:flex-none relative overflow-hidden group">
-    <div class="absolute inset-0 bg-gradient-to-r from-gold/10 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
-    <span class="relative z-10 flex items-center justify-center gap-2">
-        <i class="fas fa-stars text-gold"></i>
-        Envie d’un tirage plus complet ?
-    </span>
-</a>
+      <!-- Boutons d'action -->
+      <div class="max-w-4xl mx-auto mt-12">
+        <div class="text-center mb-8">
+          <div class="inline-flex items-center gap-3 mb-6">
+            <div class="w-12 h-0.5 bg-gradient-to-r from-transparent to-gold"></div>
+            <i class="fas fa-compass text-2xl text-gold"></i>
+            <div class="w-12 h-0.5 bg-gradient-to-l from-transparent to-gold"></div>
+          </div>
+          <h3 class="cormorant text-2xl text-gold mb-2">Que souhaitez-vous faire maintenant ?</h3>
+          <p class="text-light-gold/70">Continuez votre exploration ORADIA</p>
+        </div>
+        
+        <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
+          <a href="index.html#offres" id="fullReading" class="hidden group relative overflow-hidden bg-gradient-to-r from-gold/20 to-gold/10 hover:from-gold hover:to-light-gold text-gold hover:text-night-blue font-bold py-4 px-8 rounded-full border-2 border-gold/50 hover:border-gold transition-all duration-500 transform hover:scale-105 shadow-lg hover:shadow-gold/40 flex-1 sm:flex-none max-w-sm">
+            <div class="absolute inset-0 bg-gradient-to-r from-light-gold/20 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
+            <span class="relative z-10 flex items-center justify-center gap-3">
+              <i class="fas fa-stars"></i>
+              Tirage complet
+            </span>
+          </a>
 
-          <button id="newPilgrim" class="btn-gold hidden flex-1 sm:flex-none relative overflow-hidden group">
-            <div class="absolute inset-0 bg-gradient-to-r from-light-gold/20 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
-            <span class="relative z-10 flex items-center justify-center gap-2">
-              <i class="fas fa-redo text-night-blue"></i>
+          <button id="newPilgrim" class="hidden group relative overflow-hidden bg-gradient-to-r from-gold to-light-gold hover:from-light-gold hover:to-gold text-night-blue font-bold py-4 px-8 rounded-full transition-all duration-500 transform hover:scale-105 shadow-lg hover:shadow-gold/40 flex-1 sm:flex-none max-w-sm">
+            <div class="absolute inset-0 bg-gradient-to-r from-light-gold/20 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
+            <span class="relative z-10 flex items-center justify-center gap-3">
+              <i class="fas fa-redo"></i>
               Nouveau tirage
             </span>
           </button>
         </div>
+      </div>
         
-        <div id="emailForm" class="hidden w-full max-w-2xl mx-auto">
-          <div class="bg-gradient-to-br from-[rgba(18,20,32,.8)] to-[rgba(5,20,40,.6)] border border-[rgba(212,175,55,.35)] rounded-2xl p-6 relative overflow-hidden">
-            <div class="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full -translate-y-16 translate-x-16"></div>
-            <div class="absolute bottom-0 left-0 w-24 h-24 bg-light-gold/5 rounded-full translate-y-12 -translate-x-12"></div>
-            
-            <div class="relative z-10">
-              <h3 class="cormorant text-xl text-gold mb-4 text-center">Recevoir le résultat par email</h3>
-              <div class="flex flex-col sm:flex-row gap-4 w-full">
+      <!-- Formulaire email -->
+      <div id="emailForm" class="hidden max-w-2xl mx-auto mt-12">
+        <div class="text-center mb-8">
+          <div class="inline-flex items-center gap-3 mb-4">
+            <div class="w-12 h-0.5 bg-gradient-to-r from-transparent to-gold"></div>
+            <i class="fas fa-envelope text-2xl text-gold"></i>
+            <div class="w-12 h-0.5 bg-gradient-to-l from-transparent to-gold"></div>
+          </div>
+          <h3 class="cormorant text-2xl text-gold mb-2">Garder votre message</h3>
+          <p class="text-light-gold/70">Recevez les résultats de votre tirage par email</p>
+        </div>
+        
+        <div class="bg-gradient-to-br from-[rgba(26,54,93,0.8)] to-[rgba(5,20,40,0.9)] rounded-3xl p-8 border border-gold/30 shadow-2xl shadow-gold/20 relative overflow-hidden">
+          <!-- Effets de fond -->
+          <div class="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full -translate-y-16 translate-x-16"></div>
+          <div class="absolute bottom-0 left-0 w-24 h-24 bg-light-gold/5 rounded-full translate-y-12 -translate-x-12"></div>
+          
+          <div class="relative z-10">
+            <div class="flex flex-col sm:flex-row gap-4 w-full">
+              <div class="flex-1">
                 <input type="email" id="userEmail" placeholder="Votre adresse email" 
-                       class="flex-1 min-w-0 bg-[rgba(5,20,40,.8)] border border-[rgba(212,175,55,.35)] p-3 rounded-lg text-light-gold placeholder-gold/50 focus:border-gold/80 focus:ring-2 focus:ring-gold/20 transition-all duration-300" required>
-                <button id="sendEmailBtn" class="btn-gold whitespace-nowrap px-6 py-3 sm:w-auto w-full relative overflow-hidden group">
-                  <div class="absolute inset-0 bg-gradient-to-r from-light-gold/20 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500"></div>
-                  <span class="relative z-10 flex items-center justify-center gap-2">
-                    <i class="fas fa-paper-plane text-night-blue"></i>
-                    Envoyer
-                  </span>
-                </button>
+                       class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 p-4 rounded-2xl text-light-gold placeholder-gold/50 focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all duration-300 text-lg" required>
               </div>
+              <button id="sendEmailBtn" class="group relative overflow-hidden bg-gradient-to-r from-gold to-light-gold hover:from-light-gold hover:to-gold text-night-blue font-bold py-4 px-8 rounded-full transition-all duration-500 transform hover:scale-105 shadow-lg hover:shadow-gold/40 whitespace-nowrap">
+                <div class="absolute inset-0 bg-gradient-to-r from-light-gold/20 to-transparent transform -translate-x-full group-hover:translate-x-0 transition-transform duration-700"></div>
+                <span class="relative z-10 flex items-center justify-center gap-3">
+                  <i class="fas fa-paper-plane"></i>
+                  Envoyer
+                </span>
+              </button>
             </div>
           </div>
         </div>
@@ -1343,7 +1434,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
             <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo" class="w-16 h-16 mr-4" />
             <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
           </div>
-          <p class="text-light-gold text-sm">Oracle vibratoire pour accompagner votre cheminement personnel et révéler votre essence.</p>
+          <p class="text-light-gold text-sm">L'oracle qui vous accompagne sur votre chemin personnel et révèle votre essence.</p>
         </div>
         <div>
           <h4 class="cormorant text-xl text-gold mb-4">Navigation</h4>
@@ -1358,9 +1449,9 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         <div>
           <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
           <ul class="space-y-2">
-            <li><button id="showCGU" class="text-light-gold hover:text-gold transition bg-transparent border-none p-0 cursor-pointer">CGU</button></li>
-            <li><a href="#" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
-            <li><a href="#" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
+            <li><a href="cgu.html" class="text-light-gold hover:text-gold transition">Conditions Générales d'Utilisation</a></li>
+            <li><a href="mentions-legales.html" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
+            <li><a href="politique-confidentialite.html" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
           </ul>
         </div>
         <div>
@@ -1372,7 +1463,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         </div>
       </div>
       <div class="pt-8 border-t border-gold/10 text-center">
-        <p class="text-light-gold text-sm">&copy; 2025 Oradia. Tous droits réservés. |
+        <p class="text-light-gold text-sm">&copy; 2026 Oradia. Tous droits réservés. |
           <button id="footerLogin" class="text-gold hover:text-light-gold">Accès Dashboard</button>
         </p>
       </div>
@@ -2402,6 +2493,23 @@ $$('#board .card').forEach(card=>{
     el('cardsInstruction')?.classList.add('hidden');
     results.scrollIntoView({behavior:'smooth', block:'start'});
   });
+
+  // JavaScript de secours pour le lien quitter
+  setTimeout(() => {
+    const quitLink = document.getElementById('quitLink');
+    if (quitLink) {
+      quitLink.addEventListener('click', function(e) {
+        // Si le lien normal ne fonctionne pas, forcer la redirection
+        setTimeout(() => {
+          if (window.location.href.includes('pelerin.html')) {
+            console.log('Forcing redirect to index.html#accueil');
+            window.location.href = 'index.html#accueil';
+          }
+        }, 100);
+      });
+    }
+  }, 500);
+
   // reset
   resetBtn?.addEventListener('click', ()=>{
     pelerinHasStarted = false;
@@ -3436,6 +3544,28 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         });
     }
+});
+</script>
+
+<script>
+// Bouton retour en haut de page
+const backToTopBtn = document.getElementById('backToTop');
+
+window.addEventListener('scroll', () => {
+  if (window.pageYOffset > 300) {
+    backToTopBtn.classList.remove('opacity-0');
+    backToTopBtn.classList.add('opacity-100');
+  } else {
+    backToTopBtn.classList.add('opacity-0');
+    backToTopBtn.classList.remove('opacity-100');
+  }
+});
+
+backToTopBtn.addEventListener('click', () => {
+  window.scrollTo({
+    top: 0,
+    behavior: 'smooth'
+  });
 });
 </script>
 

@@ -793,57 +793,45 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   </section>
 
   <!-- Footer -->
-  <footer class="bg-dark-blue border-t border-gold/20 py-12">
-    <div class="container mx-auto px-4">
-      <div class="grid md:grid-cols-4 gap-8">
+  <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
+    <div class="container mx-auto max-w-6xl">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
         <div>
-          <h3 class="cormorant text-xl text-gold mb-4">ORADIA</h3>
-          <p class="text-light-gold text-sm">L'Oracle du Vivant</p>
-          <p class="text-light-gold text-sm mt-2">Guidance • Sagesse • Transformation</p>
+          <div class="flex items-center mb-4">
+            <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo" class="w-16 h-16 mr-4" />
+            <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+          </div>
+          <p class="text-light-gold text-sm">L'oracle qui vous accompagne sur votre chemin personnel et révèle votre essence.</p>
         </div>
-        
         <div>
           <h4 class="cormorant text-xl text-gold mb-4">Navigation</h4>
           <ul class="space-y-2">
             <li><a href="index.html" class="text-light-gold hover:text-gold transition">Accueil</a></li>
+            <li><a href="pelerin.html" class="text-light-gold hover:text-gold transition">Oracle</a></li>
             <li><a href="accompagnements.html" class="text-light-gold hover:text-gold transition">Accompagnements</a></li>
-            <li><a href="pelerin.html" class="text-light-gold hover:text-gold transition">Jeu</a></li>
             <li><a href="a-propos.html" class="text-light-gold hover:text-gold transition">À Propos</a></li>
+            <li><a href="precommande-oracle.html" class="text-light-gold hover:text-gold transition">Précommande</a></li>
           </ul>
         </div>
-        
         <div>
-          <h4 class="cormorant text-xl text-gold mb-4">Ressources</h4>
+          <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
           <ul class="space-y-2">
-            <li><a href="#" class="text-light-gold hover:text-gold transition">Blog</a></li>
-            <li><a href="#" class="text-light-gold hover:text-gold transition">Guide d'utilisation</a></li>
-            <li><a href="#" class="text-light-gold hover:text-gold transition">FAQ</a></li>
-            <li><a href="#" class="text-light-gold hover:text-gold transition">Mentions légales</a></li>
+            <li><a href="cgu.html" class="text-light-gold hover:text-gold transition">Conditions Générales d'Utilisation</a></li>
+            <li><a href="mentions-legales.html" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
+            <li><a href="politique-confidentialite.html" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
           </ul>
         </div>
-        
         <div>
-          <h4 class="cormorant text-xl text-gold mb-4">Suivez-nous</h4>
-          <div class="flex space-x-4">
-            <a href="#" class="text-light-gold hover:text-gold transition">
-              <i class="fab fa-facebook text-2xl"></i>
-            </a>
-            <a href="#" class="text-light-gold hover:text-gold transition">
-              <i class="fab fa-instagram text-2xl"></i>
-            </a>
-            <a href="#" class="text-light-gold hover:text-gold transition">
-              <i class="fab fa-youtube text-2xl"></i>
-            </a>
-            <a href="#" class="text-light-gold hover:text-gold transition">
-              <i class="fab fa-twitter text-2xl"></i>
-            </a>
-          </div>
+          <h4 class="cormorant text-xl text-gold mb-4">Contact</h4>
+          <ul class="space-y-2">
+            <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><span class="text-light-gold">Oradia@protonmail.com</span></li>
+            <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><span class="text-light-gold">@oradia_oracle</span></li>
+          </ul>
         </div>
       </div>
-      
-      <div class="border-t border-gold/20 mt-8 pt-8 text-center">
-        <p class="text-light-gold text-sm">
-          © 2026 Oradia - Tous droits réservés | Créé avec ❤️ et intention
+      <div class="pt-8 border-t border-gold/10 text-center">
+        <p class="text-light-gold text-sm">&copy; 2026 Oradia. Tous droits réservés. |
+          <button id="footerLogin" class="text-gold hover:text-light-gold">Accès Dashboard</button>
         </p>
       </div>
     </div>
