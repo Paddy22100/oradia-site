@@ -95,7 +95,7 @@ const seedData = async () => {
           intention: `Question ${i + 1} pour ${user.firstName}`,
           cards: generateSampleCards(tirageType),
           synthese: {
-            vibratoire: 'Énergie d\'harmonie et d\'équilibre',
+            personnalise: 'Énergie d\'harmonie et d\'équilibre',
             message: 'Votre chemin s\'éclaire avec clarté et sagesse',
             mantra: 'Je suis en paix avec mon cheminement',
             questionIntrospection: 'Quelle leçon puis-je tirer de cette expérience ?',

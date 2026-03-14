@@ -52,7 +52,7 @@ class CGUModal extends HTMLElement {
           <p>L'utilisation du site Oradia implique l'acceptation pleine et entière des présentes conditions générales d'utilisation.</p>
           
           <h3>2. Description des services</h3>
-          <p>Oradia est un oracle vibratoire proposant des tirages de cartes à titre informatif et de développement personnel.</p>
+          <p>Oradia est un oracle personnalisé proposant des tirages de cartes à titre informatif et de développement personnel.</p>
           
           <h3>3. Responsabilité</h3>
           <p>Les tirages proposés ne constituent en aucun cas une consultation médicale, psychologique ou financière.</p>

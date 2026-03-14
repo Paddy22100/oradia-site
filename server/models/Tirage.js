@@ -65,7 +65,7 @@ const tirageSchema = new mongoose.Schema({
   
   // Synthèse et interprétation globale
   synthese: {
-    vibratoire: {
+    personnalise: {
       type: String,
       required: true
     },
@@ -218,7 +218,7 @@ tirageSchema.index({ 'pricing.paid': 1 });
 // Middleware
 tirageSchema.pre('save', function(next) {
   // Auto-complete status si toutes les cartes sont présentes
-  if (this.cards.length > 0 && this.synthese.vibratoire && this.status === 'en_cours') {
+  if (this.cards.length > 0 && this.synthese.personnalise && this.status === 'en_cours') {
     this.status = 'termine';
   }
   next();

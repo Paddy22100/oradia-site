@@ -489,8 +489,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     <!-- Dropdown -->
     <div id="memberDropdown"
          class="hidden absolute right-0 mt-2 w-48 bg-[rgba(5,20,40,0.95)] border border-gold/30 rounded-lg shadow-lg z-50 backdrop-blur-md">
-        <a href="profil.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Profil</a>
-        <a href="dashboard.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Tableau de bord</a>
+        <a href="member/profile.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Profil</a>
+        <a href="member/dashboard.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Tableau de bord</a>
         <button id="logoutBtn" class="w-full text-left px-4 py-2 text-gold hover:bg-gold/10">Déconnexion</button>
     </div>
 </div>
@@ -559,7 +559,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             <div class="w-16 h-16 mx-auto mb-6 rounded-full bg-gold/20 flex items-center justify-center">
               <i class="fas fa-user text-2xl text-gold"></i>
             </div>
-            <h3 class="cormorant text-3xl font-bold text-gold mb-6 text-center">SÉANCE D'ACCOMPAGNEMENT VIBRATOIRE</h3>
+            <h3 class="cormorant text-3xl font-bold text-gold mb-6 text-center">SÉANCE D'ACCOMPAGNEMENT PERSONNALISÉ</h3>
             <p class="text-lg leading-relaxed mb-6">
               Une séance conçue spécialement pour toi, en cohérence avec ton profil unique, tes valeurs profondes et ta manière de fonctionner.
             </p>
@@ -587,7 +587,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             <h4 class="cormorant text-2xl font-bold text-gold mb-6">Les Piliers de la Séance</h4>
             <div class="space-y-4">
               <div class="bg-gold/10 rounded-lg p-4 border border-gold/20">
-                <h5 class="font-semibold text-gold mb-2 text-xl"><i class="fas fa-door-open mr-2"></i>Accueil Vibratoire</h5>
+                <h5 class="font-semibold text-gold mb-2 text-xl"><i class="fas fa-door-open mr-2"></i>Accueil Personnalisé</h5>
                 <p class="text-light-gold text-lg">Thé, respiration, intention posée ensemble dans un espace de sécurité.</p>
               </div>
               <div class="bg-gold/10 rounded-lg p-4 border border-gold/20">
@@ -596,7 +596,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
               </div>
               <div class="bg-gold/10 rounded-lg p-4 border border-gold/20">
                 <h5 class="font-semibold text-gold mb-2 text-xl"><i class="fas fa-music mr-2"></i>Résonance Sonore</h5>
-                <p class="text-light-gold text-lg">Bain sonore, massage vibratoire, chant intuitif en lien avec ce qui émerge.</p>
+                <p class="text-light-gold text-lg">Bain sonore, massage personnalisé, chant intuitif en lien avec ce qui émerge.</p>
               </div>
               <div class="bg-gold/10 rounded-lg p-4 border border-gold/20">
                 <h5 class="font-semibold text-gold mb-2 text-xl"><i class="fas fa-gem mr-2"></i>Intégration & Ancrage</h5>
@@ -708,61 +708,91 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     </div>
   </section>
 
-  <!-- Section Tarification -->
+  <!-- Section Offres -->
   <section class="section-padding bg-night-blue">
     <div class="container mx-auto px-4">
       <div class="max-w-6xl mx-auto">
         <h2 class="cormorant text-4xl md:text-5xl font-bold text-center gold-gradient mb-12">
-          Investissement
+          Offres d'Accompagnement
         </h2>
         
-        <div class="grid md:grid-cols-3 gap-8">
-          <div class="pricing-card bg-dark-blue/50 rounded-2xl p-8 border border-gold/30 text-center">
-            <h3 class="cormorant text-2xl font-bold text-gold mb-4">Cercle de Parole</h3>
-            <div class="text-3xl font-bold text-gold mb-4">30€</div>
-            <p class="text-light-gold mb-6">Par séance de 2h</p>
-            <ul class="text-left space-y-2 mb-6">
-              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Groupe de 6-8 personnes</li>
-              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Thématique définie</li>
-              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Espace bienveillant</li>
-            </ul>
-            <a href="#" class="btn-outline-gold border-2 border-gold text-gold font-bold py-3 px-6 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 w-full">
-              Réserver
-            </a>
-          </div>
-          
-          <div class="pricing-card featured bg-dark-blue/50 rounded-2xl p-8 border border-gold/30 text-center">
-            <div class="bg-gold/20 text-night-blue text-sm font-bold px-3 py-1 rounded-full inline-block mb-4">
-              Séance Vibratoire
+        <div class="grid md:grid-cols-3 gap-8 items-stretch">
+          <!-- Cercle de Parole -->
+          <div class="pricing-card bg-gradient-to-br from-dark-blue/50 to-night-blue/50 rounded-2xl p-8 border border-gold/30 text-center relative overflow-hidden group hover:scale-105 transition-all duration-500 flex flex-col">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full -mr-16 -mt-16 group-hover:bg-gold/20 transition-colors duration-500"></div>
+            <div class="relative z-10 flex flex-col flex-grow">
+              <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-gold/20 to-light-gold/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-comments text-3xl text-gold"></i>
+              </div>
+              <h3 class="cormorant text-2xl font-bold text-gold mb-4">Cercle de Parole</h3>
+              <div class="text-4xl font-bold gold-gradient mb-4">30€</div>
+              <p class="text-light-gold/90 mb-6">Par séance de 2h</p>
+              <ul class="text-left space-y-3 mb-8 text-light-gold">
+                <li class="flex items-center"><i class="fas fa-circle text-xs text-gold mr-3"></i>Groupe de 6-8 personnes</li>
+                <li class="flex items-center"><i class="fas fa-circle text-xs text-gold mr-3"></i>Thématique définie</li>
+                <li class="flex items-center"><i class="fas fa-circle text-xs text-gold mr-3"></i>Espace bienveillant</li>
+                <li class="flex items-center"><i class="fas fa-circle text-xs text-gold mr-3"></i>Partage et écoute</li>
+              </ul>
+              <div class="mt-auto pt-4">
+                <a href="#" class="btn-outline-gold border-2 border-gold text-gold font-bold py-3 px-6 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 w-full group-hover:shadow-lg group-hover:shadow-gold/30">
+                  <i class="fas fa-calendar-plus mr-2"></i>Réserver
+                </a>
+              </div>
             </div>
-            <h3 class="cormorant text-2xl font-bold text-gold mb-4">Accompagnement Individuel</h3>
-            <div class="text-3xl font-bold text-gold mb-4">60€</div>
-            <p class="text-light-gold mb-6">Séance de 1h15</p>
-            <ul class="text-left space-y-2 mb-6">
-              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Accueil vibratoire</li>
-              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Exploration intuitive</li>
-              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Résonance sonore</li>
-              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Galet d'apaisement</li>
-              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Intégration & ancrage</li>
-            </ul>
-            <a href="index.html#offres" class="btn-gold bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-6 rounded-full hover:shadow-lg transition-all duration-300 w-full" target="_self">
-              Prendre rendez-vous
-            </a>
           </div>
           
-          <div class="pricing-card bg-dark-blue/50 rounded-2xl p-8 border border-gold/30 text-center">
-            <h3 class="cormorant text-2xl font-bold text-gold mb-4">Intelligence Collective</h3>
-            <div class="text-3xl font-bold text-gold mb-4">Sur devis</div>
-            <p class="text-light-gold mb-6">Adapté à vos besoins</p>
-            <ul class="text-left space-y-2 mb-6">
-              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Diagnostic préalable</li>
-              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Programme sur-mesure</li>
-              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Facilitation professionnelle</li>
-              <li class="flex items-center"><i class="fas fa-check text-gold mr-2"></i>Rapport d'intervention</li>
-            </ul>
-            <a href="#" class="btn-outline-gold border-2 border-gold text-gold font-bold py-3 px-6 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 w-full">
-              Contactez-nous
-            </a>
+          <!-- Séance Personnalisée -->
+          <div class="pricing-card featured bg-gradient-to-br from-dark-blue/50 to-night-blue/50 rounded-2xl p-8 border-2 border-gold text-center relative overflow-hidden group hover:scale-105 transition-all duration-500 flex flex-col">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gold/20 rounded-full -mr-16 -mt-16 group-hover:bg-gold/30 transition-colors duration-500"></div>
+            <div class="absolute -bottom-8 -left-8 w-24 h-24 bg-light-gold/10 rounded-full group-hover:bg-light-gold/20 transition-colors duration-500"></div>
+            <div class="relative z-10 flex flex-col flex-grow">
+              <div class="bg-gradient-to-r from-gold to-light-gold text-night-blue text-sm font-bold px-4 py-2 rounded-full inline-block mb-6 shadow-lg">
+                <i class="fas fa-star mr-2"></i>Plus Populaire
+              </div>
+              <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-gold/30 to-light-gold/20 flex items-center justify-center group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <i class="fas fa-heart text-3xl text-night-blue"></i>
+              </div>
+              <h3 class="cormorant text-2xl font-bold text-gold mb-4">Séance Personnalisée</h3>
+              <div class="text-4xl font-bold gold-gradient mb-4">60€</div>
+              <p class="text-light-gold/90 mb-6 font-medium">Séance de 1h15</p>
+              <ul class="text-left space-y-3 mb-8 text-light-gold">
+                <li class="flex items-center"><i class="fas fa-gem text-sm text-gold mr-3"></i><span class="font-semibold">Accueil personnalisé</span></li>
+                <li class="flex items-center"><i class="fas fa-gem text-sm text-gold mr-3"></i><span class="font-semibold">Exploration intuitive</span></li>
+                <li class="flex items-center"><i class="fas fa-gem text-sm text-gold mr-3"></i><span class="font-semibold">Résonance sonore</span></li>
+                <li class="flex items-center"><i class="fas fa-gem text-sm text-gold mr-3"></i><span class="font-semibold">Galet d'apaisement</span></li>
+                <li class="flex items-center"><i class="fas fa-gem text-sm text-gold mr-3"></i><span class="font-semibold">Intégration & ancrage</span></li>
+              </ul>
+              <div class="mt-auto pt-4">
+                <a href="index.html#offres" class="btn-gold bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-6 rounded-full hover:shadow-xl transition-all duration-300 w-full group-hover:scale-105" target="_self">
+                  <i class="fas fa-magic mr-2"></i>Prendre rendez-vous
+                </a>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Intelligence Collective -->
+          <div class="pricing-card bg-gradient-to-br from-dark-blue/50 to-night-blue/50 rounded-2xl p-8 border border-gold/30 text-center relative overflow-hidden group hover:scale-105 transition-all duration-500 flex flex-col">
+            <div class="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full -mr-16 -mt-16 group-hover:bg-gold/20 transition-colors duration-500"></div>
+            <div class="relative z-10 flex flex-col flex-grow">
+              <div class="w-20 h-20 mx-auto mb-6 rounded-full bg-gradient-to-br from-gold/20 to-light-gold/10 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
+                <i class="fas fa-brain text-3xl text-gold"></i>
+              </div>
+              <h3 class="cormorant text-2xl font-bold text-gold mb-4">Intelligence Collective</h3>
+              <div class="text-4xl font-bold gold-gradient mb-4">Sur devis</div>
+              <p class="text-light-gold/90 mb-6">Adapté à vos besoins</p>
+              <ul class="text-left space-y-3 mb-8 text-light-gold">
+                <li class="flex items-center"><i class="fas fa-circle text-xs text-gold mr-3"></i>Diagnostic préalable</li>
+                <li class="flex items-center"><i class="fas fa-circle text-xs text-gold mr-3"></i>Programme sur-mesure</li>
+                <li class="flex items-center"><i class="fas fa-circle text-xs text-gold mr-3"></i>Facilitation professionnelle</li>
+                <li class="flex items-center"><i class="fas fa-circle text-xs text-gold mr-3"></i>Rapport d'intervention</li>
+                <li class="flex items-center"><i class="fas fa-circle text-xs text-gold mr-3"></i>Accompagnement continu</li>
+              </ul>
+              <div class="mt-auto pt-4">
+                <a href="#" class="btn-outline-gold border-2 border-gold text-gold font-bold py-3 px-6 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 w-full group-hover:shadow-lg group-hover:shadow-gold/30">
+                  <i class="fas fa-envelope mr-2"></i>Contactez-nous
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -770,23 +800,55 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   </section>
 
   <!-- Section Contact -->
-  <section class="section-padding bg-dark-blue">
-    <div class="container mx-auto px-4">
+  <section class="section-padding bg-gradient-to-br from-dark-blue to-night-blue relative overflow-hidden">
+    <div class="absolute top-0 left-0 w-64 h-64 bg-gold/10 rounded-full -ml-32 -mt-32"></div>
+    <div class="absolute bottom-0 right-0 w-48 h-48 bg-light-gold/10 rounded-full -mr-24 -mb-24"></div>
+    
+    <div class="container mx-auto px-4 relative z-10">
       <div class="max-w-4xl mx-auto text-center">
-        <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-8">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-8 text-center">
           Prêt à Commencer ?
         </h2>
-        <p class="text-xl mb-8">
+        <p class="text-xl text-light-gold/90 mb-12 max-w-2xl mx-auto leading-relaxed">
           Chaque parcours est unique. Contactez-moi pour discuter de vos besoins et trouver l'accompagnement qui vous correspond.
         </p>
         
-        <div class="flex flex-col sm:flex-row gap-4 justify-center">
-          <a href="#" class="btn-gold bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-8 rounded-full hover:shadow-lg transition-all duration-300">
-            <i class="fas fa-envelope mr-2"></i>Prendre contact
+        <div class="flex flex-col sm:flex-row gap-6 justify-center items-center">
+          <a href="contact.html" class="group btn-gold bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-xl transition-all duration-300 hover:scale-105">
+            <i class="fas fa-envelope mr-3 group-hover:animate-pulse"></i>
+            <span>Prendre contact</span>
           </a>
-          <a href="index.html#offres" class="btn-outline-gold border-2 border-gold text-gold font-bold py-3 px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300">
-            <i class="fas fa-dice mr-2"></i>Explorer Oradia
+          <a href="index.html#offres" class="group btn-outline-gold border-2 border-gold text-gold font-bold py-4 px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-gold/30">
+            <i class="fas fa-dice mr-3 group-hover:animate-spin"></i>
+            <span>Explorer Oradia</span>
           </a>
+        </div>
+        
+        <!-- Informations de contact supplémentaires -->
+        <div class="mt-16 grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div class="text-center group">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gold/20 flex items-center justify-center group-hover:bg-gold/30 transition-colors duration-300 group-hover:scale-110">
+              <i class="fas fa-envelope text-2xl text-gold"></i>
+            </div>
+            <h4 class="text-gold font-semibold mb-2">Email</h4>
+            <p class="text-light-gold/80">Oradia@protonmail.com</p>
+          </div>
+          
+          <div class="text-center group">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gold/20 flex items-center justify-center group-hover:bg-gold/30 transition-colors duration-300 group-hover:scale-110">
+              <i class="fab fa-instagram text-2xl text-gold"></i>
+            </div>
+            <h4 class="text-gold font-semibold mb-2">Instagram</h4>
+            <p class="text-light-gold/80">@oradia_oracle</p>
+          </div>
+          
+          <div class="text-center group">
+            <div class="w-16 h-16 mx-auto mb-4 rounded-full bg-gold/20 flex items-center justify-center group-hover:bg-gold/30 transition-colors duration-300 group-hover:scale-110">
+              <i class="fas fa-clock text-2xl text-gold"></i>
+            </div>
+            <h4 class="text-gold font-semibold mb-2">Réponse</h4>
+            <p class="text-light-gold/80">Sous 48h</p>
+          </div>
         </div>
       </div>
     </div>
@@ -848,11 +910,11 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     
     // Menu membre
     const memberMenuBtn = document.getElementById('memberMenuBtn');
-    const memberMenu = document.getElementById('memberMenu');
+    const memberDropdown = document.getElementById('memberDropdown');
     
-    if (memberMenuBtn && memberMenu) {
+    if (memberMenuBtn && memberDropdown) {
       memberMenuBtn.addEventListener('click', () => {
-        memberMenu.classList.toggle('hidden');
+        memberDropdown.classList.toggle('hidden');
       });
     }
     
@@ -862,8 +924,8 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
         mobileMenu.classList.add('hidden');
       }
       
-      if (memberMenuBtn && !memberMenuBtn.contains(e.target) && !memberMenu.contains(e.target)) {
-        memberMenu.classList.add('hidden');
+      if (memberMenuBtn && !memberMenuBtn.contains(e.target) && !memberDropdown.contains(e.target)) {
+        memberDropdown.classList.add('hidden');
       }
     });
     
@@ -883,6 +945,54 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     
     document.querySelectorAll('h2, h3').forEach(el => {
       observer.observe(el);
+    });
+
+    // Gestion de l'authentification et du menu membre
+    document.addEventListener('DOMContentLoaded', () => {
+      const memberMenuWrapper = document.getElementById('memberMenuWrapper');
+      const footerLogin = document.getElementById('footerLogin');
+      const loginBtnMobile = document.getElementById('loginBtnMobile');
+      
+      // Vérifier si l'utilisateur est connecté
+      const token = localStorage.getItem('authToken');
+      const userData = JSON.parse(localStorage.getItem('userData') || '{}');
+      
+      if (token && userData.email) {
+        // Utilisateur connecté
+        if (memberMenuWrapper) {
+          memberMenuWrapper.classList.remove('hidden');
+        }
+        if (footerLogin) {
+          footerLogin.textContent = 'Accès Dashboard';
+          footerLogin.onclick = () => window.location.href = 'member/dashboard.html';
+        }
+        if (loginBtnMobile) {
+          loginBtnMobile.style.display = 'none';
+        }
+      } else {
+        // Utilisateur non connecté
+        if (memberMenuWrapper) {
+          memberMenuWrapper.classList.add('hidden');
+        }
+        if (footerLogin) {
+          footerLogin.textContent = 'Connexion';
+          footerLogin.onclick = () => window.location.href = 'member/login.html';
+        }
+        if (loginBtnMobile) {
+          loginBtnMobile.style.display = 'block';
+          loginBtnMobile.onclick = () => window.location.href = 'member/login.html';
+        }
+      }
+      
+      // Gestion de la déconnexion
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('userData');
+          window.location.href = 'member/login.html';
+        });
+      }
     });
   </script>
 </body>
