@@ -1307,60 +1307,111 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       </div>
     </div>
   </section>
-<!-- Oracle de cartes physique-->
-  <section id="Jeu" class="py-20 px-6 bg-dark-blue">
-    <div class="mt-10">
-  <div class="flex flex-col md:flex-row gap-4 justify-center">
-  </div>
-</div>
-
-    <div class="container mx-auto max-w-6xl">
-      <div class="text-center mb-12">
-        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient">Oracle de Cartes Oradia</h2>
-        <p class="text-light-gold max-w-3xl mx-auto">L'oracle physique est maintenant en précommande !</p>
+<!-- Oracle de cartes physique - Section Précommande -->
+  <section id="Jeu" class="py-20 px-6 bg-gradient-to-br from-night-blue via-dark-blue to-night-blue relative overflow-hidden">
+    <!-- Éléments décoratifs -->
+    <div class="absolute top-0 left-0 w-64 h-64 bg-gold/10 rounded-full -ml-32 -mt-32"></div>
+    <div class="absolute bottom-0 right-0 w-48 h-48 bg-light-gold/10 rounded-full -mr-24 -mb-24"></div>
+    <div class="absolute top-1/2 left-1/4 w-32 h-32 bg-gold/5 rounded-full opacity-50"></div>
+    
+    <div class="container mx-auto max-w-6xl relative z-10">
+      <!-- En-tête de section -->
+      <div class="text-center mb-16">
+        <div class="inline-block bg-gradient-to-r from-gold to-light-gold text-night-blue text-sm font-bold px-6 py-3 rounded-full mb-6 shadow-lg">
+          <i class="fas fa-sparkles mr-2"></i>NOUVEAUTÉ EXCLUSIVE
+        </div>
+        <h2 class="cormorant text-5xl md:text-6xl font-bold gold-gradient mb-6">ORADIA - L'Oracle du Vivant</h2>
+        <p class="text-xl text-light-gold/90 max-w-3xl mx-auto leading-relaxed">
+          L'oracle physique est maintenant en précommande ! Réservez votre exemplaire avant sa sortie officielle
+        </p>
       </div>
 
-     <div class="rounded-2xl p-8"
-     style="background:linear-gradient(145deg, rgba(26,54,93,.85), rgba(5,20,40,.95)); border:1px solid rgba(212,175,55,.35)">
-  
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
-    
-    <!-- Bloc texte -->
-    <div>
-      <h3 class="cormorant text-2xl text-gold mb-6">ORADIA – L'Oracle du Vivant</h3>
-
-      <p class="text-light-gold mb-4">
-        Un oracle de 64 cartes pour explorer les émotions, les besoins et les transformations intérieures.
-        Vous y retrouverez les 3 types de tirage (tirage du Pèlerin, tirage de La Traversée,
-        tirage du Tore) ainsi qu'un livret d'accompagnement de 200 pages.
-      </p>
-
-      <p class="text-light-gold mb-4">
-        Les illustrations sont créées par une artiste talentueuse pour vous proposer une expérience visuelle unique.
-        Cette version est idéale pour des ateliers, cercles de partage ou usage personnel.
-      </p>
-
-      <h4 class="cormorant text-xl text-gold mb-3">Précommandez maintenant !</h4>
-
-      <p class="text-light-gold mb-6">
-        Réservez votre exemplaire à prix préférentiel avant sa sortie officielle.
-        Trois offres disponibles : Early Bird (35€), Standard (42€) et Édition Signature (49€).
-      </p>
-
-      <a href="precommande-oracle.html" class="btn-gold inline-block">Précommander l'oracle</a>
+      <!-- Carte principale de précommande -->
+      <div class="bg-gradient-to-br from-dark-blue/80 to-night-blue/80 backdrop-blur-lg rounded-3xl p-1 border border-gold/30 shadow-2xl">
+        <div class="bg-gradient-to-br from-night-blue to-dark-blue rounded-3xl p-8 md:p-12">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+            
+            <!-- Bloc contenu -->
+            <div class="space-y-8">
+              <!-- Description -->
+              <div class="space-y-6">
+                <h3 class="cormorant text-3xl md:text-4xl font-bold text-gold">Un oracle de 64 cartes pour explorer votre monde intérieur</h3>
+                
+                <div class="space-y-4 text-light-gold/90 leading-relaxed">
+                  <p class="text-lg">
+                    Découvrez les 3 types de tirage (Pèlerin, Traversée, Tore) avec un livret d'accompagnement de 200 pages.
+                  </p>
+                  <p>
+                    Les illustrations créées pour vous proposer une expérience visuelle unique.
+                  </p>
+                  <p>
+                    Idéal pour les ateliers, cercles de partage ou usage personnel.
+                  </p>
+                </div>
+              </div>
+              
+              <!-- Tarifs -->
+              <div class="bg-gradient-to-br from-gold/10 to-light-gold/5 rounded-2xl p-6 border border-gold/20">
+                <h4 class="cormorant text-xl font-bold text-gold mb-4">Choisissez votre formule</h4>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-gold mb-1">35€</div>
+                    <div class="text-sm text-light-gold/80">Early Bird</div>
+                  </div>
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-gold mb-1">42€</div>
+                    <div class="text-sm text-light-gold/80">Standard</div>
+                  </div>
+                  <div class="text-center">
+                    <div class="text-2xl font-bold text-gold mb-1">49€</div>
+                    <div class="text-sm text-light-gold/80">Signature</div>
+                  </div>
+                </div>
+              </div>
+              
+              <!-- Bouton CTA -->
+              <div class="space-y-4">
+                <a href="precommande-oracle.html" class="group inline-flex items-center gap-3 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-xl hover:scale-105 transition-all duration-300 text-lg">
+                  <i class="fas fa-shopping-cart group-hover:animate-bounce"></i>
+                  <span>Précommander l'oracle</span>
+                  <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+                </a>
+              </div>
+            </div>
+            
+            <!-- Bloc image -->
+            <div class="flex justify-center lg:justify-end">
+              <div class="relative group">
+                <!-- Effet de brillance -->
+                <div class="absolute -inset-1 bg-gradient-to-r from-gold/20 to-light-gold/20 rounded-2xl blur opacity-0 group-hover:opacity-75 transition-all duration-500"></div>
+                
+                <!-- Image principale -->
+                <div class="relative overflow-hidden rounded-2xl border-2 border-gold/30 shadow-xl">
+                  <img
+                    src="images/visuel1.png"
+                    alt="Coffret Oradia - Oracle du Vivant"
+                    class="w-full h-auto object-contain max-w-md mx-auto transform group-hover:scale-105 transition-all duration-500"
+                  />
+                </div>
+                
+                <!-- Points décoratifs -->
+                <div class="absolute -top-2 -left-2 w-4 h-4 bg-gold rounded-full animate-pulse"></div>
+                <div class="absolute -bottom-2 -right-2 w-4 h-4 bg-light-gold rounded-full animate-pulse delay-75"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Indicateur de scroll -->
+      <div class="text-center mt-12">
+        <div class="inline-flex items-center gap-2 text-gold/60 hover:text-gold transition-colors cursor-pointer">
+          <span class="text-sm">Découvrez les détails</span>
+          <i class="fas fa-chevron-down animate-bounce"></i>
+        </div>
+      </div>
     </div>
-    
-<!-- Bloc image propre -->
-<div class="flex justify-center">
-  <div class="overflow-hidden rounded-xl border border-[rgba(212,175,55,0.4)] shadow-lg max-w-[280px] mx-auto">
-    <img
-      src="images/apercu-hd.jpeg"
-      alt="Coffret Oradia"
-      class="w-full h-auto object-contain"
-    />
-  </div>
-</div>
-    </section>
+  </section>
 
  <!-- À propos -->
   <section id="apropos" class="py-20 px-6">
