@@ -15,7 +15,7 @@ const updateAdminCredentials = async () => {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
-    console.log('✅ Connecté à MongoDB');
+    // console.log(console.log('✅ Connecté à MongoDB');)
 
     // Chercher l'admin existant
     const existingAdmin = await User.findOne({ role: 'admin' });
@@ -29,9 +29,9 @@ const updateAdminCredentials = async () => {
       
       await existingAdmin.save();
       
-      console.log('✅ Administrateur mis à jour avec succès:');
-      console.log('   📧 Email: Oradia@protonmail.com');
-      console.log('   🔐 Mot de passe: RafalE12#12');
+      // console.log(console.log('✅ Administrateur mis à jour avec succès:');)
+      // console.log(console.log('   📧 Email: Oradia@protonmail.com');)
+      // console.log(console.log('   🔐 Mot de passe: RafalE12#12');)
     } else {
       // Créer un nouvel admin si aucun n'existe
       const adminPassword = await bcrypt.hash('RafalE12#12', 12);
@@ -49,13 +49,13 @@ const updateAdminCredentials = async () => {
       });
       
       await admin.save();
-      console.log('✅ Nouvel administrateur créé:');
-      console.log('   📧 Email: Oradia@protonmail.com');
-      console.log('   🔐 Mot de passe: RafalE12#12');
+      // console.log(console.log('✅ Nouvel administrateur créé:');)
+      // console.log(console.log('   📧 Email: Oradia@protonmail.com');)
+      // console.log(console.log('   🔐 Mot de passe: RafalE12#12');)
     }
 
   } catch (error) {
-    console.error('❌ Erreur lors de la mise à jour de l\'administrateur:', error);
+    // console.error(console.error('❌ Erreur lors de la mise à jour de l\'administrateur:', error);)
   } finally {
     mongoose.disconnect();
   }

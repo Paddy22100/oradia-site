@@ -246,11 +246,11 @@ const validateEnvVars = () => {
   });
   
   if (missing.length > 0) {
-    console.error('Variables d\'environnement manquantes:', missing);
+    // console.error(console.error('Variables d\'environnement manquantes:', missing);)
     process.exit(1);
   }
   
-  console.log('✅ Variables d\'environnement validées');
+  // console.log(console.log('✅ Variables d\'environnement validées');)
 };
 
 // Export pour utilisation

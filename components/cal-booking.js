@@ -32,12 +32,12 @@ class CalComBooking {
     script.async = true;
     
     script.onload = () => {
-      console.log('Cal.com embed loaded successfully');
+      // console.log(console.log('Cal.com embed loaded successfully');)
       this.setupCalEmbed();
     };
     
     script.onerror = () => {
-      console.error('Failed to load Cal.com embed');
+      // console.error(console.error('Failed to load Cal.com embed');)
       this.showFallback();
     };
     
@@ -99,7 +99,7 @@ class CalComBooking {
    * Gère la réservation réussie
    */
   handleBookingCompleted(data) {
-    console.log('Booking completed:', data);
+    // console.log(console.log('Booking completed:', data);)
     
     // Stocker les informations de réservation
     const bookingData = {
@@ -122,7 +122,7 @@ class CalComBooking {
    * Gère l'échec de réservation
    */
   handleBookingFailed(data) {
-    console.error('Booking failed:', data);
+    // console.error(console.error('Booking failed:', data);)
     
     // Afficher un message d'erreur
     this.showErrorMessage('Une erreur est survenue lors de la réservation. Veuillez réessayer.');

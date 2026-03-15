@@ -121,26 +121,26 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/oradia', 
   useUnifiedTopology: true,
 })
 .then(() => {
-  console.log('✅ Connecté à MongoDB');
+  // console.log(console.log('✅ Connecté à MongoDB');)
   startServer();
 })
 .catch((err) => {
-  console.error('❌ Erreur de connexion MongoDB:', err);
+  // console.error(console.error('❌ Erreur de connexion MongoDB:', err);)
   process.exit(1);
 });
 
 function startServer() {
   app.listen(PORT, () => {
-    console.log(`🚀 Serveur ORADIA démarré sur le port ${PORT}`);
-    console.log(`📊 Dashboard Admin: http://localhost:${PORT}/admin/dashboard`);
-    console.log(`👤 Espace Client: http://localhost:${PORT}/user/dashboard`);
-    console.log(`🔐 Auth: http://localhost:${PORT}/auth/login`);
+    // console.log(console.log(`🚀 Serveur ORADIA démarré sur le port ${PORT}`);)
+    // console.log(console.log(`📊 Dashboard Admin: http://localhost:${PORT}/admin/dashboard`);)
+    // console.log(console.log(`👤 Espace Client: http://localhost:${PORT}/user/dashboard`);)
+    // console.log(console.log(`🔐 Auth: http://localhost:${PORT}/auth/login`);)
   });
 }
 
 // Gestion des erreurs
 app.use((err, req, res, next) => {
-  console.error(err.stack);
+  // console.error(console.error(err.stack);)
   res.status(500).json({
     success: false,
     message: 'Erreur serveur',

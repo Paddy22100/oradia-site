@@ -124,20 +124,20 @@ const safeNavigate = (url) => {
     ];
     
     if (!allowedDomains.includes(parsedUrl.hostname)) {
-      console.warn('Navigation bloquée vers domaine non autorisé:', parsedUrl.hostname);
+      // console.warn(console.warn('Navigation bloquée vers domaine non autorisé:', parsedUrl.hostname);)
       return false;
     }
     
     // Bloquer les protocoles dangereux
     const dangerousProtocols = ['javascript:', 'data:', 'vbscript:', 'file:'];
     if (dangerousProtocols.some(protocol => url.toLowerCase().startsWith(protocol))) {
-      console.warn('Navigation bloquée: protocole dangereux détecté');
+      // console.warn(console.warn('Navigation bloquée: protocole dangereux détecté');)
       return false;
     }
     
     return true;
   } catch (error) {
-    console.warn('URL invalide:', url);
+    // console.warn(console.warn('URL invalide:', url);)
     return false;
   }
 };

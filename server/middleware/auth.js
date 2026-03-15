@@ -49,7 +49,7 @@ const authenticate = async (req, res, next) => {
     }
 
   } catch (error) {
-    console.error('Erreur auth middleware:', error);
+    // console.error(console.error('Erreur auth middleware:', error);)
     return res.status(500).json({
       success: false,
       message: 'Erreur serveur lors de l\'authentification.'
@@ -122,7 +122,7 @@ const optionalAuth = async (req, res, next) => {
     next();
 
   } catch (error) {
-    console.error('Erreur optional auth middleware:', error);
+    // console.error(console.error('Erreur optional auth middleware:', error);)
     next();
   }
 };
@@ -180,7 +180,7 @@ const requireActiveSubscription = (req, res, next) => {
 const logActivity = (action) => {
   return (req, res, next) => {
     if (req.user) {
-      console.log(`[${new Date().toISOString()}] ${req.user.email} - ${action} - ${req.method} ${req.originalUrl}`);
+      // console.log(console.log(`[${new Date()).toISOString()}] ${req.user.email} - ${action} - ${req.method} ${req.originalUrl}`);
     }
     next();
   };

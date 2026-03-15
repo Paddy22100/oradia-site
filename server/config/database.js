@@ -7,13 +7,13 @@ const connectDB = async () => {
       useUnifiedTopology: true,
     });
 
-    console.log(`✅ MongoDB Connecté: ${conn.connection.host}`);
+    // console.log(console.log(`✅ MongoDB Connecté: ${conn.connection.host}`);)
     
     // Créer les indexes pour optimiser les performances
     await createIndexes();
     
   } catch (error) {
-    console.error('❌ Erreur de connexion MongoDB:', error.message);
+    // console.error(console.error('❌ Erreur de connexion MongoDB:', error.message);)
     process.exit(1);
   }
 };
@@ -42,9 +42,9 @@ const createIndexes = async () => {
     await mongoose.connection.db.collection('newsletters').createIndex({ active: 1 });
     await mongoose.connection.db.collection('newsletters').createIndex({ segments: 1 });
     
-    console.log('✅ Index MongoDB créés avec succès');
+    // console.log(console.log('✅ Index MongoDB créés avec succès');)
   } catch (error) {
-    console.error('❌ Erreur création indexes:', error.message);
+    // console.error(console.error('❌ Erreur création indexes:', error.message);)
   }
 };
 

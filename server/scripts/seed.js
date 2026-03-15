@@ -15,7 +15,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/oradia', 
 // Seed data
 const seedData = async () => {
   try {
-    console.log('🌱 Starting database seeding...');
+    // console.log(console.log('🌱 Starting database seeding...');)
 
     // Clear existing data
     await User.deleteMany({});
@@ -23,7 +23,7 @@ const seedData = async () => {
     await Feedback.deleteMany({});
     await Newsletter.deleteMany({});
     
-    console.log('🧹 Cleared existing data');
+    // console.log(console.log('🧹 Cleared existing data');)
 
     // Create admin user
     const adminPassword = await bcrypt.hash('RafalE12#12', 12);
@@ -40,7 +40,7 @@ const seedData = async () => {
       }
     });
     await admin.save();
-    console.log('👤 Created admin user: Oradia@protonmail.com / RafalE12#12');
+    // console.log(console.log('👤 Created admin user: Oradia@protonmail.com / RafalE12#12');)
 
     // Create test users
     const testUsers = [];
@@ -76,7 +76,7 @@ const seedData = async () => {
       await user.save();
       testUsers.push(user);
     }
-    console.log(`👥 Created ${testUsers.length} test users`);
+    // console.log(console.log(`👥 Created ${testUsers.length} test users`);)
 
     // Create sample tirages
     const tirageTypes = ['pelerin', 'traversee', 'tore'];
@@ -124,7 +124,7 @@ const seedData = async () => {
         tirages.push(tirage);
       }
     }
-    console.log(`🎲 Created ${tirages.length} sample tirages`);
+    // console.log(console.log(`🎲 Created ${tirages.length} sample tirages`);)
 
     // Create sample feedbacks
     const feedbacks = [];
@@ -158,7 +158,7 @@ const seedData = async () => {
         feedbacks.push(feedback);
       }
     }
-    console.log(`💬 Created ${feedbacks.length} sample feedbacks`);
+    // console.log(console.log(`💬 Created ${feedbacks.length} sample feedbacks`);)
 
     // Create newsletter subscribers
     const subscribers = [];
@@ -190,25 +190,25 @@ const seedData = async () => {
       await subscriber.save();
       subscribers.push(subscriber);
     }
-    console.log(`📧 Created ${subscribers.length} newsletter subscribers`);
+    // console.log(console.log(`📧 Created ${subscribers.length} newsletter subscribers`);)
 
     // Update user statistics
     for (const user of testUsers) {
       await user.updateStats();
     }
 
-    console.log('✅ Database seeding completed successfully!');
-    console.log('\n📊 Summary:');
-    console.log(`   👤 Users: ${testUsers.length + 1} (including admin)`);
-    console.log(`   🎲 Tirages: ${tirages.length}`);
-    console.log(`   💬 Feedbacks: ${feedbacks.length}`);
-    console.log(`   📧 Subscribers: ${subscribers.length}`);
-    console.log('\n🔑 Login credentials:');
-    console.log('   Admin: Oradia@protonmail.com / RafalE12#12');
-    console.log('   Test users: user1@test.com to user20@test.com / password123');
+    // console.log(console.log('✅ Database seeding completed successfully!');)
+    // console.log(console.log('\n📊 Summary:');)
+    // console.log(console.log(`   👤 Users: ${testUsers.length + 1} (including admin))`);
+    // console.log(console.log(`   🎲 Tirages: ${tirages.length}`);)
+    // console.log(console.log(`   💬 Feedbacks: ${feedbacks.length}`);)
+    // console.log(console.log(`   📧 Subscribers: ${subscribers.length}`);)
+    // console.log(console.log('\n🔑 Login credentials:');)
+    // console.log(console.log('   Admin: Oradia@protonmail.com / RafalE12#12');)
+    // console.log(console.log('   Test users: user1@test.com to user20@test.com / password123');)
 
   } catch (error) {
-    console.error('❌ Error seeding database:', error);
+    // console.error(console.error('❌ Error seeding database:', error);)
   } finally {
     mongoose.disconnect();
   }

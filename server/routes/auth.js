@@ -159,7 +159,7 @@ router.post('/register', detectBot, sanitizeInput, registerValidation, async (re
           segments: ['visitors', 'new_users']
         });
       } catch (newsletterError) {
-        console.error('Erreur création newsletter:', newsletterError);
+        // console.error(console.error('Erreur création newsletter:', newsletterError);)
         // Ne pas bloquer l'inscription si la newsletter échoue
       }
     }
@@ -194,7 +194,7 @@ router.post('/register', detectBot, sanitizeInput, registerValidation, async (re
     });
 
   } catch (error) {
-    console.error('Erreur inscription:', error);
+    // console.error(console.error('Erreur inscription:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur serveur lors de l\'inscription',
@@ -277,7 +277,7 @@ router.post('/login', detectBot, sanitizeInput, loginValidation, async (req, res
     });
 
   } catch (error) {
-    console.error('Erreur connexion:', error);
+    // console.error(console.error('Erreur connexion:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur serveur lors de la connexion',
@@ -307,7 +307,7 @@ router.get('/me', authenticate, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur get profile:', error);
+    // console.error(console.error('Erreur get profile:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur serveur',
@@ -390,7 +390,7 @@ router.put('/profile', authenticate, [
             segments: ['visitors']
           });
         } catch (newsletterError) {
-          console.error('Erreur newsletter update:', newsletterError);
+          // console.error(console.error('Erreur newsletter update:', newsletterError);)
         }
       }
     }
@@ -406,7 +406,7 @@ router.put('/profile', authenticate, [
     });
 
   } catch (error) {
-    console.error('Erreur update profile:', error);
+    // console.error(console.error('Erreur update profile:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur serveur lors de la mise à jour',
@@ -463,7 +463,7 @@ router.put('/password', authenticate, [
     });
 
   } catch (error) {
-    console.error('Erreur change password:', error);
+    // console.error(console.error('Erreur change password:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur serveur lors du changement de mot de passe',
@@ -483,7 +483,7 @@ router.post('/logout', authenticate, async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur logout:', error);
+    // console.error(console.error('Erreur logout:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur serveur lors de la déconnexion',
@@ -528,7 +528,7 @@ router.post('/forgot-password', [
 
     // TODO: Envoyer l'email de réinitialisation
     // Pour l'instant, on retourne juste le succès
-    console.log('Token reset password:', resetToken);
+    // console.log(console.log('Token reset password:', resetToken);)
 
     res.json({
       success: true,
@@ -536,7 +536,7 @@ router.post('/forgot-password', [
     });
 
   } catch (error) {
-    console.error('Erreur forgot password:', error);
+    // console.error(console.error('Erreur forgot password:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur serveur',

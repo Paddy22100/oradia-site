@@ -468,7 +468,7 @@
                 
                 return data;
             } catch (error) {
-                console.error('API Error:', error);
+                // console.error(console.error('API Error:', error);)
                 showNotification('Erreur: ' + error.message, 'error');
                 throw error;
             }
@@ -483,7 +483,7 @@
                 updateCharts(data.data.evolution);
                 updateRecentActivity(data.data.recent);
             } catch (error) {
-                console.error('Error loading dashboard:', error);
+                // console.error(console.error('Error loading dashboard:', error);)
             } finally {
                 showLoading(false);
             }
@@ -650,7 +650,7 @@
                 const data = await apiCall('/admin/users');
                 updateUsersTable(data.data.users);
             } catch (error) {
-                console.error('Error loading users:', error);
+                // console.error(console.error('Error loading users:', error);)
             }
         }
         
@@ -712,7 +712,7 @@
         
         function showNotification(message, type = 'info') {
             // Simple notification (could be enhanced with a proper notification system)
-            console.log(`${type}: ${message}`);
+            // console.log(console.log(`${type}: ${message}`);)
         }
         
         function updateLastSyncTime() {
@@ -736,12 +736,12 @@
         
         function editUser(userId) {
             // Implement user edit modal
-            console.log('Edit user:', userId);
+            // console.log(console.log('Edit user:', userId);)
         }
         
         function viewUser(userId) {
             // Implement user detail view
-            console.log('View user:', userId);
+            // console.log(console.log('View user:', userId);)
         }
         
         // Search and filter handlers

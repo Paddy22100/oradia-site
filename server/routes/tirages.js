@@ -63,7 +63,7 @@ router.get('/', authenticate, requireAdmin, logActivity('tirages_list'), async (
     });
 
   } catch (error) {
-    console.error('Erreur liste tirages:', error);
+    // console.error(console.error('Erreur liste tirages:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération des tirages',
@@ -101,7 +101,7 @@ router.get('/:id', authenticate, logActivity('tirage_detail'), async (req, res) 
     });
 
   } catch (error) {
-    console.error('Erreur détail tirage:', error);
+    // console.error(console.error('Erreur détail tirage:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération du tirage',
@@ -142,7 +142,7 @@ router.post('/:id/send-followup', authenticate, requireAdmin, logActivity('send_
     });
 
   } catch (error) {
-    console.error('Erreur envoi suivi:', error);
+    // console.error(console.error('Erreur envoi suivi:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de l\'envoi de l\'email de suivi',
@@ -175,7 +175,7 @@ router.post('/:id/feedback', authenticate, requireAdmin, logActivity('admin_feed
     });
 
   } catch (error) {
-    console.error('Erreur ajout feedback admin:', error);
+    // console.error(console.error('Erreur ajout feedback admin:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de l\'ajout du feedback',

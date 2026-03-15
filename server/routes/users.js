@@ -34,7 +34,7 @@ router.get('/profile', logActivity('profile_view'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur get profile:', error);
+    // console.error(console.error('Erreur get profile:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération du profil',
@@ -77,7 +77,7 @@ router.get('/tirages', logActivity('tirages_history'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur historique tirages:', error);
+    // console.error(console.error('Erreur historique tirages:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération des tirages',
@@ -110,7 +110,7 @@ router.get('/tirages/:id', logActivity('tirage_detail'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur détail tirage:', error);
+    // console.error(console.error('Erreur détail tirage:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération du tirage',
@@ -194,7 +194,7 @@ router.post('/tirages', logActivity('tirage_create'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur création tirage:', error);
+    // console.error(console.error('Erreur création tirage:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la création du tirage',
@@ -293,7 +293,7 @@ router.post('/feedback', logActivity('feedback_create'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur création feedback:', error);
+    // console.error(console.error('Erreur création feedback:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de l\'enregistrement du feedback',
@@ -332,7 +332,7 @@ router.get('/feedbacks', logActivity('feedbacks_history'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur historique feedbacks:', error);
+    // console.error(console.error('Erreur historique feedbacks:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération des feedbacks',
@@ -419,7 +419,7 @@ router.get('/stats', logActivity('stats_view'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur stats utilisateur:', error);
+    // console.error(console.error('Erreur stats utilisateur:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération des statistiques',
@@ -469,7 +469,7 @@ router.put('/preferences', logActivity('preferences_update'), async (req, res) =
     });
 
   } catch (error) {
-    console.error('Erreur mise à jour préférences:', error);
+    // console.error(console.error('Erreur mise à jour préférences:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la mise à jour des préférences',
@@ -519,7 +519,7 @@ router.delete('/account', logActivity('account_delete'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur suppression compte:', error);
+    // console.error(console.error('Erreur suppression compte:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la suppression du compte',

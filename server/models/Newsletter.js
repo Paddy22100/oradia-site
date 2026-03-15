@@ -270,7 +270,7 @@ newsletterSchema.methods.autoSegment = async function() {
     }
     
   } catch (error) {
-    console.error('Erreur auto-segmentation:', error);
+    // console.error(console.error('Erreur auto-segmentation:', error);)
   }
 };
 

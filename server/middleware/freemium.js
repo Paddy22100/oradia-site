@@ -83,7 +83,7 @@ const checkFreemiumAccess = (requiredAccess = 'pelerin') => {
 
       next();
     } catch (error) {
-      console.error('Erreur middleware freemium:', error);
+      // console.error(console.error('Erreur middleware freemium:', error);)
       
       if (error.name === 'JsonWebTokenError') {
         return res.status(401).json({
@@ -168,7 +168,7 @@ const checkDeviceLimitations = async (req) => {
 
     return { allowed: true };
   } catch (error) {
-    console.error('Erreur vérification limitations:', error);
+    // console.error(console.error('Erreur vérification limitations:', error);)
     return { allowed: false, message: 'Erreur de vérification', code: 'CHECK_ERROR' };
   }
 };
@@ -188,7 +188,7 @@ const checkTraverseeAccess = async (userId) => {
 
     return { allowed: true, credits: credits.credits };
   } catch (error) {
-    console.error('Erreur vérification accès Traversée:', error);
+    // console.error(console.error('Erreur vérification accès Traversée:', error);)
     return { allowed: false, message: 'Erreur de vérification', credits: 0 };
   }
 };
@@ -207,7 +207,7 @@ const checkToreAccess = async (userId) => {
 
     return { allowed: true };
   } catch (error) {
-    console.error('Erreur vérification accès Tore:', error);
+    // console.error(console.error('Erreur vérification accès Tore:', error);)
     return { allowed: false, message: 'Erreur de vérification' };
   }
 };
@@ -225,7 +225,7 @@ const useTraverseeCredit = async (userId) => {
     
     return { success: true, remainingCredits };
   } catch (error) {
-    console.error('Erreur utilisation crédit:', error);
+    // console.error(console.error('Erreur utilisation crédit:', error);)
     return { success: false, error: error.message };
   }
 };
@@ -242,7 +242,7 @@ const incrementFreeReading = async (req) => {
     
     return { success: true };
   } catch (error) {
-    console.error('Erreur incrémentation tirage gratuit:', error);
+    // console.error(console.error('Erreur incrémentation tirage gratuit:', error);)
     return { success: false, error: error.message };
   }
 };
@@ -260,7 +260,7 @@ const associateDeviceToUser = async (req, userId) => {
     
     return { success: true };
   } catch (error) {
-    console.error('Erreur association appareil:', error);
+    // console.error(console.error('Erreur association appareil:', error);)
     return { success: false, error: error.message };
   }
 };
@@ -334,7 +334,7 @@ const publicRouteTracker = async (req, res, next) => {
     }
   } catch (error) {
     // Ne pas bloquer la route en cas d'erreur de tracking
-    console.error('Erreur tracking route publique:', error);
+    // console.error(console.error('Erreur tracking route publique:', error);)
   }
   
   next();

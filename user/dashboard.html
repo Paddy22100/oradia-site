@@ -490,7 +490,7 @@
                 
                 return data;
             } catch (error) {
-                console.error('API Error:', error);
+                // console.error(console.error('API Error:', error);)
                 showNotification('Erreur: ' + error.message, 'error');
                 throw error;
             }
@@ -518,7 +518,7 @@
                 document.getElementById('language').value = currentUser.profile.preferences.language;
                 
             } catch (error) {
-                console.error('Error loading user data:', error);
+                // console.error(console.error('Error loading user data:', error);)
             }
         }
         
@@ -531,7 +531,7 @@
                 updateCharts(data.data.evolution);
                 updateRecentActivity(data.data.recent);
             } catch (error) {
-                console.error('Error loading dashboard:', error);
+                // console.error(console.error('Error loading dashboard:', error);)
             } finally {
                 showLoading(false);
             }
@@ -637,7 +637,7 @@
                 const data = await apiCall('/users/tirages');
                 updateTiragesList(data.data.tirages);
             } catch (error) {
-                console.error('Error loading tirages:', error);
+                // console.error(console.error('Error loading tirages:', error);)
             }
         }
         
@@ -673,7 +673,7 @@
                 const data = await apiCall('/users/feedbacks');
                 updateFeedbacksList(data.data.feedbacks);
             } catch (error) {
-                console.error('Error loading feedbacks:', error);
+                // console.error(console.error('Error loading feedbacks:', error);)
             }
         }
         
@@ -723,7 +723,7 @@
                         <option value="${tirage._id}">${tirage.type} - ${new Date(tirage.date).toLocaleDateString()}</option>
                     `).join('');
             } catch (error) {
-                console.error('Error loading tirages for feedback:', error);
+                // console.error(console.error('Error loading tirages for feedback:', error);)
             }
         }
         
@@ -784,7 +784,7 @@
                 showNotification('Profil mis à jour avec succès', 'success');
                 
             } catch (error) {
-                console.error('Error updating profile:', error);
+                // console.error(console.error('Error updating profile:', error);)
             }
         }
         
@@ -811,7 +811,7 @@
                 showNotification('Préférences mises à jour avec succès', 'success');
                 
             } catch (error) {
-                console.error('Error updating preferences:', error);
+                // console.error(console.error('Error updating preferences:', error);)
             }
         }
         
@@ -837,7 +837,7 @@
                 loadFeedbacks();
                 
             } catch (error) {
-                console.error('Error submitting feedback:', error);
+                // console.error(console.error('Error submitting feedback:', error);)
             }
         }
         
@@ -855,7 +855,7 @@
         
         function showNotification(message, type = 'info') {
             // Simple notification (could be enhanced)
-            console.log(`${type}: ${message}`);
+            // console.log(console.log(`${type}: ${message}`);)
         }
         
         function toggleUserMenu() {
@@ -871,7 +871,7 @@
         
         function viewTirage(tirageId) {
             // Implement tirage detail view
-            console.log('View tirage:', tirageId);
+            // console.log(console.log('View tirage:', tirageId);)
         }
         
         // Close menus when clicking outside

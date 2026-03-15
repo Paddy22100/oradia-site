@@ -617,7 +617,7 @@
           `;
         }
 
-        console.log(`Session type selected: ${type}`);
+        // console.log(console.log(`Session type selected: ${type}`);)
       }
 
       // Initialiser avec le premier type
@@ -627,7 +627,7 @@
       const iframe = document.querySelector('iframe');
       if (iframe) {
         iframe.addEventListener('load', function() {
-          console.log('Cal.com iframe loaded successfully');
+          // console.log(console.log('Cal.com iframe loaded successfully');)
 
           // Essayer d'appliquer des styles à l'intérieur de l'iframe (si possible)
           try {
@@ -649,12 +649,12 @@
               }
             }, 1000);
           } catch (e) {
-            console.log('Cannot access iframe content due to CORS policy');
+            // console.log(console.log('Cannot access iframe content due to CORS policy');)
           }
         });
 
         iframe.addEventListener('error', function() {
-          console.error('Failed to load Cal.com iframe');
+          // console.error(console.error('Failed to load Cal.com iframe');)
         });
       }
     });

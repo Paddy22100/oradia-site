@@ -33,7 +33,7 @@ router.post('/create-traversee-session', authenticate, async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Erreur création session Traversée:', error);
+    // console.error(console.error('Erreur création session Traversée:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur serveur'
@@ -69,7 +69,7 @@ router.post('/create-tore-session', authenticate, async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Erreur création session Tore:', error);
+    // console.error(console.error('Erreur création session Tore:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur serveur'
@@ -87,7 +87,7 @@ router.get('/user-status', authenticate, async (req, res) => {
       data: status
     });
   } catch (error) {
-    console.error('Erreur vérification statut:', error);
+    // console.error(console.error('Erreur vérification statut:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur serveur'
@@ -112,7 +112,7 @@ router.post('/cancel-subscription', authenticate, async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Erreur annulation abonnement:', error);
+    // console.error(console.error('Erreur annulation abonnement:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur serveur'
@@ -135,7 +135,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       });
     }
   } catch (error) {
-    console.error('Erreur webhook Stripe:', error);
+    // console.error(console.error('Erreur webhook Stripe:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur serveur'
@@ -160,7 +160,7 @@ router.post('/use-traversee-credit', authenticate, async (req, res) => {
       });
     }
   } catch (error) {
-    console.error('Erreur utilisation crédit:', error);
+    // console.error(console.error('Erreur utilisation crédit:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur serveur'
@@ -178,7 +178,7 @@ router.post('/associate-device', authenticate, async (req, res) => {
       message: 'Appareil associé avec succès'
     });
   } catch (error) {
-    console.error('Erreur association appareil:', error);
+    // console.error(console.error('Erreur association appareil:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur serveur'

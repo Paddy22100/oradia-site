@@ -803,7 +803,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   .text-5xl { font-size: 2rem; }
   
   /* Grid très petit */
-  .grid-cols-1.md\\:grid-cols-3 { gap: 1rem; }
+  .grid-cols-1.md\:grid-cols-3 { gap: 1rem; }
   
   /* Boutons très petits */
   .btn-gold { padding: 0.6rem 1.2rem; font-size: 0.85rem; }
@@ -2780,7 +2780,7 @@ function initMobileMenu(){
 
 function initToreSystem() {
   // La logique Tore est maintenant gérée dans les event listeners ci-dessus
-  console.log('Système Tore initialisé');
+  // console.log(console.log('Système Tore initialisé');)
 }
 function tryInitMobileMenu(max = 20){
   const btn  = document.getElementById('mobileMenuBtn');
@@ -2817,7 +2817,7 @@ document.addEventListener("DOMContentLoaded", () => {
 <script>
 (() => {
   // --- DEBUG VISUEL DANS LA CONSOLE ---
-    const LOG = (...a) => console.log('[Pèlerin]', ...a);
+    const LOG = (...a) => // console.log(console.log('[Pèlerin]', ...a);)
 
   const $  = s => document.querySelector(s);
   const $$ = s => Array.from(document.querySelectorAll(s));
@@ -2831,7 +2831,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const cards       = $$('#board .card');
 
   if (!intentionIn || !startBtn || !board || cards.length === 0) {
-    console.error('[Pèlerin] Sélecteurs introuvables. Vérifie que #oracle n’est pas supprimé et que #board contient .card');
+    // console.error(console.error('[Pèlerin] Sélecteurs introuvables. Vérifie que #oracle n’est pas supprimé et que #board contient .card');)
     return;
   }
 
@@ -2888,7 +2888,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const family = (card.dataset.family || '').toLowerCase(); // emotions|besoins|actions|cosmos
         const pool = (window.DATA?.[family] || []);
         if (!pool || !pool.length) {
-          console.warn('[Pèlerin] Pas de DATA pour la famille:', family);
+          // console.warn(console.warn('[Pèlerin] Pas de DATA pour la famille:', family);)
           return;
         }
 
@@ -2924,7 +2924,7 @@ document.addEventListener("DOMContentLoaded", () => {
         back.style.pointerEvents = 'none';
 
       } catch (e) {
-        console.error('[Pèlerin] Erreur flip/injection:', e);
+        // console.error(console.error('[Pèlerin] Erreur flip/injection:', e);)
       }
     };
 

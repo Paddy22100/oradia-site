@@ -66,7 +66,7 @@ router.get('/', authenticate, requireAdmin, logActivity('feedbacks_list'), async
     });
 
   } catch (error) {
-    console.error('Erreur liste feedbacks:', error);
+    // console.error(console.error('Erreur liste feedbacks:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération des feedbacks',
@@ -105,7 +105,7 @@ router.get('/:id', authenticate, logActivity('feedback_detail'), async (req, res
     });
 
   } catch (error) {
-    console.error('Erreur détail feedback:', error);
+    // console.error(console.error('Erreur détail feedback:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération du feedback',
@@ -154,7 +154,7 @@ router.put('/:id/moderate', authenticate, requireAdmin, logActivity('feedback_mo
     });
 
   } catch (error) {
-    console.error('Erreur modération feedback:', error);
+    // console.error(console.error('Erreur modération feedback:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la modération du feedback',
@@ -186,7 +186,7 @@ router.delete('/:id', authenticate, requireAdmin, logActivity('feedback_delete')
     });
 
   } catch (error) {
-    console.error('Erreur suppression feedback:', error);
+    // console.error(console.error('Erreur suppression feedback:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la suppression du feedback',
@@ -214,7 +214,7 @@ router.get('/stats', authenticate, logActivity('feedbacks_stats'), async (req, r
     });
 
   } catch (error) {
-    console.error('Erreur stats feedbacks:', error);
+    // console.error(console.error('Erreur stats feedbacks:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération des statistiques',
@@ -238,7 +238,7 @@ router.get('/recent', authenticate, logActivity('feedbacks_recent'), async (req,
     });
 
   } catch (error) {
-    console.error('Erreur feedbacks récents:', error);
+    // console.error(console.error('Erreur feedbacks récents:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération des feedbacks récents',
@@ -262,7 +262,7 @@ router.get('/improvements', authenticate, logActivity('feedbacks_improvements'),
     });
 
   } catch (error) {
-    console.error('Erreur suggestions amélioration:', error);
+    // console.error(console.error('Erreur suggestions amélioration:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération des suggestions',

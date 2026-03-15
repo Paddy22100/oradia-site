@@ -98,7 +98,7 @@ router.get('/dashboard', logActivity('dashboard_view'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur dashboard admin:', error);
+    // console.error(console.error('Erreur dashboard admin:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors du chargement du dashboard',
@@ -178,7 +178,7 @@ router.get('/users', logActivity('users_list'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur liste utilisateurs:', error);
+    // console.error(console.error('Erreur liste utilisateurs:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération des utilisateurs',
@@ -224,7 +224,7 @@ router.get('/users/:id', logActivity('user_detail'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur détail utilisateur:', error);
+    // console.error(console.error('Erreur détail utilisateur:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération des détails utilisateur',
@@ -289,7 +289,7 @@ router.put('/users/:id', logActivity('user_update'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur modification utilisateur:', error);
+    // console.error(console.error('Erreur modification utilisateur:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la modification de l\'utilisateur',
@@ -321,7 +321,7 @@ router.delete('/users/:id', logActivity('user_delete'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur suppression utilisateur:', error);
+    // console.error(console.error('Erreur suppression utilisateur:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la désactivation de l\'utilisateur',
@@ -471,7 +471,7 @@ router.get('/analytics', logActivity('analytics_view'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur analytics:', error);
+    // console.error(console.error('Erreur analytics:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors du chargement des statistiques',
@@ -527,7 +527,7 @@ router.get('/export/users', logActivity('export_users'), async (req, res) => {
     res.download(csvPath, `oradia_users_${moment().format('YYYY-MM-DD')}.csv`);
 
   } catch (error) {
-    console.error('Erreur export utilisateurs:', error);
+    // console.error(console.error('Erreur export utilisateurs:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de l\'export des utilisateurs',

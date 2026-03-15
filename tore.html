@@ -1708,14 +1708,14 @@ function showArrowForStep(stepIndex, isMatch) {
     // Trouver la configuration de l'étape actuelle
     const step = STEPS_TORE.find(s => s.key === currentFamily);
     if (!step) {
-      console.error('Famille non trouvée :', currentFamily);
+      // console.error(console.error('Famille non trouvée :', currentFamily);)
       return;
     }
     
     // Récupérer l'index de l'étape actuelle dans STEPS_TORE
     const stepIndex = STEPS_TORE.findIndex(s => s.key === currentFamily);
     if (stepIndex === -1) {
-      console.error('Index de famille non trouvé :', currentFamily);
+      // console.error(console.error('Index de famille non trouvé :', currentFamily);)
       return;
     }
     

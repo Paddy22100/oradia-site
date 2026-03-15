@@ -156,7 +156,7 @@ router.get('/overview', logActivity('analytics_overview'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur analytics overview:', error);
+    // console.error(console.error('Erreur analytics overview:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors du chargement des analytics',
@@ -271,7 +271,7 @@ router.get('/tirages', logActivity('analytics_tirages'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur analytics tirages:', error);
+    // console.error(console.error('Erreur analytics tirages:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors du chargement des analytics des tirages',
@@ -453,7 +453,7 @@ router.get('/users', logActivity('analytics_users'), async (req, res) => {
     });
 
   } catch (error) {
-    console.error('Erreur analytics users:', error);
+    // console.error(console.error('Erreur analytics users:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors du chargement des analytics utilisateurs',
@@ -574,7 +574,7 @@ router.get('/feedbacks', logActivity('analytics_feedbacks'), async (req, res) =>
     });
 
   } catch (error) {
-    console.error('Erreur analytics feedbacks:', error);
+    // console.error(console.error('Erreur analytics feedbacks:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors du chargement des analytics feedbacks',

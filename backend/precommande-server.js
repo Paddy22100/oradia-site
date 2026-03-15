@@ -145,7 +145,7 @@ app.post('/api/create-checkout-session', async (req, res) => {
     try {
         return res.status(503).json({ error: 'Service de paiement temporairement indisponible' });
     } catch (error) {
-        console.error('Erreur création session Stripe:', error);
+        // console.error(console.error('Erreur création session Stripe:', error);)
         res.status(500).json({ error: error.message });
     }
 });
@@ -156,7 +156,7 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
     let event;
 
     // Webhook Stripe désactivé - clé secrète supprimée
-    console.log('Webhook Stripe désactivé - clé secrète supprimée');
+    // console.log(console.log('Webhook Stripe désactivé - clé secrète supprimée');)
     return res.status(503).json({ error: 'Service temporairement indisponible' });
 
     // Gestion des événements
@@ -169,7 +169,7 @@ app.post('/api/stripe-webhook', express.raw({ type: 'application/json' }), async
             await handleExpiredSession(event.data.object);
             break;
         default:
-            console.log(`Unhandled event type ${event.type}`);
+            // console.log(console.log(`Unhandled event type ${event.type}`);)
     }
 
     res.json({ received: true });
@@ -199,9 +199,9 @@ async function handleSuccessfulPayment(session) {
         // Envoi de l'email de confirmation
         await sendConfirmationEmail(precommande);
 
-        console.log(`Paiement confirmé pour la commande ${orderNumber}`);
+        // console.log(console.log(`Paiement confirmé pour la commande ${orderNumber}`);)
     } catch (error) {
-        console.error('Erreur gestion paiement réussi:', error);
+        // console.error(console.error('Erreur gestion paiement réussi:', error);)
     }
 }
 
@@ -216,9 +216,9 @@ async function handleExpiredSession(session) {
         precommande.payment.status = 'failed';
         await precommande.save();
 
-        console.log(`Session expirée pour la commande ${orderNumber}`);
+        // console.log(console.log(`Session expirée pour la commande ${orderNumber}`);)
     } catch (error) {
-        console.error('Erreur gestion session expirée:', error);
+        // console.error(console.error('Erreur gestion session expirée:', error);)
     }
 }
 
@@ -234,9 +234,9 @@ async function sendConfirmationEmail(precommande) {
             html: htmlTemplate
         });
 
-        console.log(`Email de confirmation envoyé à ${precommande.customer.email}`);
+        // console.log(console.log(`Email de confirmation envoyé à ${precommande.customer.email}`);)
     } catch (error) {
-        console.error('Erreur envoi email:', error);
+        // console.error(console.error('Erreur envoi email:', error);)
     }
 }
 
@@ -338,26 +338,26 @@ async function sendStatusUpdateEmail(precommande, status, description) {
             html: htmlContent
         });
 
-        console.log(`Email de mise à jour envoyé pour ${precommande.orderNumber}`);
+        // console.log(console.log(`Email de mise à jour envoyé pour ${precommande.orderNumber}`);)
     } catch (error) {
-        console.error('Erreur envoi email de mise à jour:', error);
+        // console.error(console.error('Erreur envoi email de mise à jour:', error);)
     }
 }
 
 // Démarrage du serveur
 app.listen(PORT, () => {
-    console.log(`🚀 Serveur ORADIA précommandes démarré sur le port ${PORT}`);
-    console.log(`📊 Dashboard: http://localhost:${PORT}/api/stats`);
-    console.log(`🔍 Santé: http://localhost:${PORT}/api/health`);
+    // console.log(console.log(`🚀 Serveur ORADIA précommandes démarré sur le port ${PORT}`);)
+    // console.log(console.log(`📊 Dashboard: http://localhost:${PORT}/api/stats`);)
+    // console.log(console.log(`🔍 Santé: http://localhost:${PORT}/api/health`);)
 });
 
 // Gestion des erreurs non capturées
 process.on('unhandledRejection', (err) => {
-    console.error('Erreur non gérée:', err);
+    // console.error(console.error('Erreur non gérée:', err);)
 });
 
 process.on('uncaughtException', (err) => {
-    console.error('Exception non capturée:', err);
+    // console.error(console.error('Exception non capturée:', err);)
     process.exit(1);
 });
 

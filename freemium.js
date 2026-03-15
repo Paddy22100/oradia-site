@@ -43,7 +43,7 @@ class OradiaFreemium {
           localStorage.removeItem('oradiaToken');
         }
       } catch (error) {
-        console.error('Erreur vérification statut:', error);
+        // console.error(console.error('Erreur vérification statut:', error);)
         localStorage.removeItem('oradiaToken');
       }
     }
@@ -103,7 +103,7 @@ class OradiaFreemium {
         this.showError(data.message || 'Erreur lors de la création de la session de paiement');
       }
     } catch (error) {
-      console.error('Erreur paiement Traversée:', error);
+      // console.error(console.error('Erreur paiement Traversée:', error);)
       this.showError('Une erreur est survenue. Veuillez réessayer.');
     }
   }
@@ -136,7 +136,7 @@ class OradiaFreemium {
         this.showError(data.message || 'Erreur lors de la création de l\'abonnement');
       }
     } catch (error) {
-      console.error('Erreur abonnement Tore:', error);
+      // console.error(console.error('Erreur abonnement Tore:', error);)
       this.showError('Une erreur est survenue. Veuillez réessayer.');
     }
   }
@@ -380,7 +380,7 @@ class OradiaFreemium {
       });
     } catch (error) {
       // Ne pas bloquer si le tracking échoue
-      console.log('Tracking device:', error);
+      // console.log(console.log('Tracking device:', error);)
     }
   }
 
@@ -444,7 +444,7 @@ class OradiaFreemium {
         return false;
       }
     } catch (error) {
-      console.error('Erreur utilisation crédit:', error);
+      // console.error(console.error('Erreur utilisation crédit:', error);)
       this.showError('Une erreur est survenue');
       return false;
     }

@@ -37,7 +37,7 @@ class StripeService {
 
       return { success: true, sessionId: session.id, url: session.url };
     } catch (error) {
-      console.error('Erreur création session Traversée:', error);
+      // console.error(console.error('Erreur création session Traversée:', error);)
       return { success: false, error: error.message };
     }
   }
@@ -90,7 +90,7 @@ class StripeService {
 
       return { success: true, sessionId: session.id, url: session.url };
     } catch (error) {
-      console.error('Erreur création session Tore:', error);
+      // console.error(console.error('Erreur création session Tore:', error);)
       return { success: false, error: error.message };
     }
   }
@@ -102,7 +102,7 @@ class StripeService {
     try {
       event = stripe.webhooks.constructEvent(body, sig, this.webhookSecret);
     } catch (err) {
-      console.error('Erreur signature webhook:', err);
+      // console.error(console.error('Erreur signature webhook:', err);)
       return { success: false, error: 'Signature webhook invalide' };
     }
 
@@ -125,12 +125,12 @@ class StripeService {
           break;
 
         default:
-          console.log(`Événement non traité: ${event.type}`);
+          // console.log(console.log(`Événement non traité: ${event.type}`);)
       }
 
       return { success: true };
     } catch (error) {
-      console.error('Erreur traitement webhook:', error);
+      // console.error(console.error('Erreur traitement webhook:', error);)
       return { success: false, error: error.message };
     }
   }
@@ -159,10 +159,10 @@ class StripeService {
 
       await credit.addCredits(parseInt(creditsCount), paymentId, amount);
       
-      console.log(`Crédits ajoutés: ${creditsCount} pour utilisateur ${userId}`);
+      // console.log(console.log(`Crédits ajoutés: ${creditsCount} pour utilisateur ${userId}`);)
       return { success: true, credits: credit.credits };
     } catch (error) {
-      console.error('Erreur ajout crédits:', error);
+      // console.error(console.error('Erreur ajout crédits:', error);)
       return { success: false, error: error.message };
     }
   }
@@ -190,10 +190,10 @@ class StripeService {
 
       await subscriptionDoc.save();
       
-      console.log(`Abonnement Tore créé/mis à jour pour utilisateur ${userId}`);
+      // console.log(console.log(`Abonnement Tore créé/mis à jour pour utilisateur ${userId}`);)
       return { success: true, subscription: subscriptionDoc };
     } catch (error) {
-      console.error('Erreur création abonnement:', error);
+      // console.error(console.error('Erreur création abonnement:', error);)
       return { success: false, error: error.message };
     }
   }
@@ -211,10 +211,10 @@ class StripeService {
         subscription.currentPeriodEnd = new Date(invoice.period_end * 1000);
         await subscription.save();
         
-        console.log(`Paiement abonnement réussi pour ${subscription.userId}`);
+        // console.log(console.log(`Paiement abonnement réussi pour ${subscription.userId}`);)
       }
     } catch (error) {
-      console.error('Erreur traitement paiement réussi:', error);
+      // console.error(console.error('Erreur traitement paiement réussi:', error);)
     }
   }
 
@@ -229,10 +229,10 @@ class StripeService {
         subscription.status = 'past_due';
         await subscription.save();
         
-        console.log(`Paiement abonnement échoué pour ${subscription.userId}`);
+        // console.log(console.log(`Paiement abonnement échoué pour ${subscription.userId}`);)
       }
     } catch (error) {
-      console.error('Erreur traitement paiement échoué:', error);
+      // console.error(console.error('Erreur traitement paiement échoué:', error);)
     }
   }
 
@@ -247,10 +247,10 @@ class StripeService {
         subscriptionDoc.status = 'cancelled';
         await subscriptionDoc.save();
         
-        console.log(`Abonnement annulé pour ${subscriptionDoc.userId}`);
+        // console.log(console.log(`Abonnement annulé pour ${subscriptionDoc.userId}`);)
       }
     } catch (error) {
-      console.error('Erreur traitement suppression abonnement:', error);
+      // console.error(console.error('Erreur traitement suppression abonnement:', error);)
     }
   }
 
@@ -274,7 +274,7 @@ class StripeService {
 
       return { success: true, message: 'Abonnement sera annulé à la fin de la période' };
     } catch (error) {
-      console.error('Erreur annulation abonnement:', error);
+      // console.error(console.error('Erreur annulation abonnement:', error);)
       return { success: false, error: error.message };
     }
   }
@@ -296,7 +296,7 @@ class StripeService {
         plan: subscription?.plan || null
       };
     } catch (error) {
-      console.error('Erreur vérification statut utilisateur:', error);
+      // console.error(console.error('Erreur vérification statut utilisateur:', error);)
       return { success: false, error: error.message };
     }
   }

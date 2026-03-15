@@ -221,7 +221,7 @@ feedbackSchema.methods.calculateResponseTime = async function() {
       this.metadata.responseTime = diffInHours;
     }
   } catch (error) {
-    console.error('Erreur calcul temps de réponse:', error);
+    // console.error(console.error('Erreur calcul temps de réponse:', error);)
   }
 };
 

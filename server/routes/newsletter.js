@@ -65,7 +65,7 @@ router.get('/subscribers', authenticate, requireAdmin, logActivity('newsletter_s
     });
 
   } catch (error) {
-    console.error('Erreur liste abonnés:', error);
+    // console.error(console.error('Erreur liste abonnés:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération des abonnés',
@@ -140,7 +140,7 @@ router.post('/subscribe', logActivity('newsletter_subscribe'), async (req, res) 
     });
 
   } catch (error) {
-    console.error('Erreur abonnement newsletter:', error);
+    // console.error(console.error('Erreur abonnement newsletter:', error);)
     if (error.code === 11000) {
       return res.status(400).json({
         success: false,
@@ -184,7 +184,7 @@ router.put('/unsubscribe', logActivity('newsletter_unsubscribe'), async (req, re
     });
 
   } catch (error) {
-    console.error('Erreur désabonnement newsletter:', error);
+    // console.error(console.error('Erreur désabonnement newsletter:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors du désabonnement',
@@ -218,7 +218,7 @@ router.get('/stats', authenticate, requireAdmin, logActivity('newsletter_stats')
     });
 
   } catch (error) {
-    console.error('Erreur stats newsletter:', error);
+    // console.error(console.error('Erreur stats newsletter:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la récupération des statistiques',
@@ -266,7 +266,7 @@ router.post('/campaign', authenticate, requireAdmin, logActivity('newsletter_cam
     });
 
   } catch (error) {
-    console.error('Erreur création campagne:', error);
+    // console.error(console.error('Erreur création campagne:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la création de la campagne',
@@ -287,10 +287,10 @@ router.post('/send', authenticate, requireAdmin, logActivity('newsletter_send'),
     
     if (testMode && testEmails.length > 0) {
       // Mode test : envoyer uniquement aux emails de test
-      console.log('Mode test - envoi à:', testEmails);
+      // console.log(console.log('Mode test - envoi à:', testEmails);)
     } else {
       // Mode production : envoyer à tous les abonnés
-      console.log(`Envoi campagne ${campaignId} à ${subscribers.length} abonnés`);
+      // console.log(console.log(`Envoi campagne ${campaignId} à ${subscribers.length} abonnés`);)
     }
 
     res.json({
@@ -305,7 +305,7 @@ router.post('/send', authenticate, requireAdmin, logActivity('newsletter_send'),
     });
 
   } catch (error) {
-    console.error('Erreur envoi campagne:', error);
+    // console.error(console.error('Erreur envoi campagne:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de l\'envoi de la campagne',
@@ -353,7 +353,7 @@ router.put('/subscribers/:id/preferences', authenticate, logActivity('newsletter
     });
 
   } catch (error) {
-    console.error('Erreur mise à jour préférences newsletter:', error);
+    // console.error(console.error('Erreur mise à jour préférences newsletter:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la mise à jour des préférences',
@@ -385,7 +385,7 @@ router.delete('/subscribers/:id', authenticate, requireAdmin, logActivity('newsl
     });
 
   } catch (error) {
-    console.error('Erreur suppression abonné:', error);
+    // console.error(console.error('Erreur suppression abonné:', error);)
     res.status(500).json({
       success: false,
       message: 'Erreur lors de la suppression de l\'abonné',
