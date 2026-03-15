@@ -9,6 +9,8 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="responsive.css">
+  <script src="security.js"></script>
 
   <script>
     tailwind.config = {
@@ -997,6 +999,64 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
 
+  <!-- Présentation Oracle -->
+  <section id="oracle" class="py-16 px-6 bg-gradient-to-b from-dark-blue to-night-blue relative">
+    <!-- Background pattern -->
+    <div class="absolute inset-0 opacity-5">
+      <div class="absolute inset-0" style="background-image: radial-gradient(circle at 50% 50%, #d4af37 2px, transparent 2px); background-size: 60px 60px;"></div>
+    </div>
+    
+    <div class="container mx-auto max-w-4xl relative z-10">
+      <div class="text-center">
+        <div class="mb-8">
+          <div class="w-20 h-20 mx-auto bg-gradient-to-br from-gold/20 to-gold/10 rounded-full border border-gold/30 flex items-center justify-center mb-6">
+            <i class="fas fa-dice text-3xl text-gold"></i>
+          </div>
+          <h2 class="cormorant text-4xl md:text-5xl font-bold mb-6 gold-gradient">L'Oracle Oradia</h2>
+          <p class="text-xl text-light-gold leading-relaxed mb-8">
+            Un oracle vivant qui puise dans la sagesse des cartes pour éclairer votre chemin intérieur. 
+            Chaque tirage est une conversation avec votre âme, une guidance personnalisée pour naviguer 
+            les transformations de la vie.
+          </p>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          <div class="text-center">
+            <div class="w-16 h-16 mx-auto bg-gradient-to-br from-gold/10 to-transparent rounded-full border border-gold/20 flex items-center justify-center mb-4">
+              <i class="fas fa-heart text-xl text-gold"></i>
+            </div>
+            <h3 class="cormorant text-2xl font-bold text-gold mb-3">Émotion</h3>
+            <p class="text-light-gold/80 text-sm">Ce qui vous traverse et vous anime profondément</p>
+          </div>
+          
+          <div class="text-center">
+            <div class="w-16 h-16 mx-auto bg-gradient-to-br from-gold/10 to-transparent rounded-full border border-gold/20 flex items-center justify-center mb-4">
+              <i class="fas fa-sync text-xl text-gold"></i>
+            </div>
+            <h3 class="cormorant text-2xl font-bold text-gold mb-3">Transmutation</h3>
+            <p class="text-light-gold/80 text-sm">Ce qui cherche à se transformer en vous</p>
+          </div>
+          
+          <div class="text-center">
+            <div class="w-16 h-16 mx-auto bg-gradient-to-br from-gold/10 to-transparent rounded-full border border-gold/20 flex items-center justify-center mb-4">
+              <i class="fas fa-infinity text-xl text-gold"></i>
+            </div>
+            <h3 class="cormorant text-2xl font-bold text-gold mb-3">Mémoire Cosmos</h3>
+            <p class="text-light-gold/80 text-sm">La sagesse qui accompagne votre chemin</p>
+          </div>
+        </div>
+        
+        <div class="bg-gold/10 backdrop-blur-sm rounded-2xl p-8 border border-gold/20">
+          <p class="text-light-gold text-lg leading-relaxed italic">
+            "Oradia n'est pas un oracle qui prédit l'avenir, mais une boussole intérieure 
+            qui révèle les directions possibles. Il vous connecte à votre propre sagesse, 
+            à cette part de vous qui sait déjà, profondément, quel est votre chemin."
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
   <!-- Offres -->
   <section id="offres" class="py-24 px-6 bg-gradient-to-b from-night-blue to-dark-blue relative">
     <!-- Background pattern -->
@@ -1030,10 +1090,10 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       </div>
 
       <!-- Cards grid -->
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
         
         <!-- Tirage du Pèlerin -->
-        <div class="group relative">
+        <div id="pelerin" class="group relative h-full">
           <!-- Card glow effect -->
           <div class="absolute -inset-1 bg-gradient-to-r from-gold/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500 blur-xl"></div>
           
@@ -1056,7 +1116,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
             <!-- Description -->
             <div class="mb-6">
               <p class="text-light-gold leading-relaxed mb-4">
-                Une question simple, un premier éclairage. Le tirage du Pèlerin révèle les trois temps essentiels : ce qui vous accompagne, ce qui se joue maintenant, et ce qui se dessine devant vous.
+                Une question simple, un premier éclairage. Le tirage du Pèlerin révèle les dynamiques essentielles à l'œuvre : ce qui vous traverse, ce dont vous avez besoin, ce qui cherche à se transformer, et la mémoire qui accompagne votre chemin.
               </p>
               <div class="flex items-center justify-center gap-2 text-gold/80 text-sm">
                 <i class="fas fa-clock"></i>
@@ -1068,7 +1128,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
             <div class="space-y-3 mb-8 flex-grow">
               <div class="flex items-center gap-3">
                 <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">3 cartes (Émotion, Besoin, Mémoire)</span>
+                <span class="text-light-gold text-sm">4 cartes (Émotion, Besoin, Transmutation, Mémoire Cosmos)</span>
               </div>
               <div class="flex items-center gap-3">
                 <i class="fas fa-check-circle text-gold text-sm"></i>
@@ -1085,15 +1145,17 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
             </div>
             
             <!-- CTA -->
-            <a href="pelerin.html?start=intention" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105">
-              <i class="fas fa-play"></i>
-              Commencer le tirage
-            </a>
+            <div class="mt-auto">
+              <a href="pelerin.html?start=intention" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105 touch-target">
+                <i class="fas fa-play"></i>
+                Commencer gratuitement
+              </a>
+            </div>
           </div>
         </div>
 
         <!-- Tirage de la Traversée -->
-        <div class="group relative transform scale-105 lg:scale-110">
+        <div id="traversee" class="group relative transform scale-105 lg:scale-110 h-full">
           <!-- Popular badge -->
           <div class="absolute -top-4 left-1/2 -translate-x-1/2 z-20">
             <div class="bg-gradient-to-r from-gold to-light-gold text-night-blue px-6 py-2 rounded-full font-bold text-sm shadow-lg flex items-center gap-2">
@@ -1117,14 +1179,14 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
             <!-- Title and price -->
             <div class="text-center mb-6">
               <h3 class="cormorant text-3xl font-bold text-gold mb-2">La Traversée</h3>
-              <div class="text-3xl font-bold text-light-gold mb-1">5€</div>
-              <p class="text-sm text-gold/70">5 tirages inclus</p>
+              <div class="text-3xl font-bold text-light-gold mb-1">3€</div>
+              <p class="text-sm text-gold/70">5 tirages guidés</p>
             </div>
             
             <!-- Description -->
             <div class="mb-6">
               <p class="text-light-gold leading-relaxed mb-4">
-                Un carrefour, une décision à prendre. La Traversée se déploie comme une boussole intérieure à quatre directions pour éclairer votre choix et retrouver votre cap.
+                Un carrefour, une décision à prendre. La Traversée se déploie comme une boussole intérieure à cinq directions pour éclairer votre choix et retrouver votre cap.
               </p>
               <div class="flex items-center justify-center gap-2 text-gold/80 text-sm">
                 <i class="fas fa-clock"></i>
@@ -1136,11 +1198,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
             <div class="space-y-3 mb-8 flex-grow">
               <div class="flex items-center gap-3">
                 <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">4 cartes (Émotion, Besoin, Révélation, Action)</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">Cartes passerelles</span>
+                <span class="text-light-gold text-sm">5 cartes (Émotion, Besoin, Transmutation, Révélation, Mémoire Cosmos)</span>
               </div>
               <div class="flex items-center gap-3">
                 <i class="fas fa-check-circle text-gold text-sm"></i>
@@ -1152,20 +1210,30 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
               </div>
               <div class="flex items-center gap-3">
                 <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">5 tirages disponibles</span>
+                <span class="text-light-gold text-sm">5 tirages guidés disponibles</span>
               </div>
             </div>
             
             <!-- CTA -->
-            <a href="#" id="orderBtn" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105">
-              <i class="fas fa-crown"></i>
-              Commander maintenant
-            </a>
+            <div class="mt-auto">
+              <a href="#" id="orderBtn" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105 touch-target">
+                <i class="fas fa-shopping-cart"></i>
+                Commander
+              </a>
+              
+              <!-- Rassurance -->
+              <div class="text-center mt-3">
+                <p class="text-xs text-gold/60 flex items-center justify-center gap-1">
+                  <i class="fas fa-lock text-xs"></i>
+                  Accès immédiat après paiement
+                </p>
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- Tirage du Tore -->
-        <div class="group relative">
+        <div id="tore" class="group relative h-full">
           <!-- Card glow effect -->
           <div class="absolute -inset-1 bg-gradient-to-r from-gold/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500 blur-xl"></div>
           
@@ -1188,11 +1256,11 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
             <!-- Description -->
             <div class="mb-6">
               <p class="text-light-gold leading-relaxed mb-4">
-                L'expérience complète. Le Tore explore toutes les dimensions de votre être avec vos clés personnelles pour une cartographie personnalisée profonde et continue.
+                L'expérience ultime d'Oradia. Le Tore vous connecte à votre sagesse intérieure avec un accompagnement quotidien personnalisé pour une transformation continue et évolutive.
               </p>
               <div class="flex items-center justify-center gap-2 text-gold/80 text-sm">
                 <i class="fas fa-infinity"></i>
-                <span>Illimité</span>
+                <span>Tirages illimités & guidance continue</span>
               </div>
             </div>
             
@@ -1200,31 +1268,45 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
             <div class="space-y-3 mb-8 flex-grow">
               <div class="flex items-center gap-3">
                 <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">Tirage complet quotidien</span>
+                <span class="text-light-gold text-sm">Tous les tirages illimités (Pèlerin, Traversée, Tore)</span>
               </div>
               <div class="flex items-center gap-3">
                 <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">Clés personnelles (astro, HD...)</span>
+                <span class="text-light-gold text-sm">Cartes passerelles exclusives</span>
               </div>
               <div class="flex items-center gap-3">
                 <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">Espace membre complet</span>
+                <span class="text-light-gold text-sm">Clés personnelles & astrologie avancée</span>
               </div>
               <div class="flex items-center gap-3">
                 <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">Archive des tirages</span>
+                <span class="text-light-gold text-sm">Historique complet & analyse des tendances</span>
               </div>
               <div class="flex items-center gap-3">
                 <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">Mantra quotidien par email</span>
+                <span class="text-light-gold text-sm">Espace membre premium & guidance prioritaire</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Mantra quotidien & rituels sacrés</span>
               </div>
             </div>
             
             <!-- CTA -->
-            <a href="tore.html" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105">
-              <i class="fas fa-rocket"></i>
-              Accéder au Tore
-            </a>
+            <div class="mt-auto">
+              <a href="tore.html" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105 touch-target">
+                <i class="fas fa-infinity"></i>
+                Accéder à l'expérience complète
+              </a>
+              
+              <!-- Rassurance -->
+              <div class="text-center mt-3">
+                <p class="text-xs text-gold/60 flex items-center justify-center gap-1">
+                  <i class="fas fa-sync text-xs"></i>
+                  Annulable à tout moment
+                </p>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -1328,8 +1410,8 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
       <!-- Carte principale de précommande -->
       <div class="bg-gradient-to-br from-dark-blue/80 to-night-blue/80 backdrop-blur-lg rounded-3xl p-1 border border-gold/30 shadow-2xl">
-        <div class="bg-gradient-to-br from-night-blue to-dark-blue rounded-3xl p-8 md:p-12">
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <div class="bg-gradient-to-br from-night-blue to-dark-blue rounded-3xl p-6 md:p-12">
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center">
             
             <!-- Bloc contenu -->
             <div class="space-y-8">
@@ -1371,7 +1453,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
               
               <!-- Bouton CTA -->
               <div class="space-y-4">
-                <a href="precommande-oracle.html" class="group inline-flex items-center gap-3 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-xl hover:scale-105 transition-all duration-300 text-lg">
+                <a href="precommande-oracle.html" class="group inline-flex items-center gap-3 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 lg:px-8 rounded-full hover:shadow-xl hover:scale-105 transition-all duration-300 text-lg touch-target">
                   <i class="fas fa-shopping-cart group-hover:animate-bounce"></i>
                   <span>Précommander l'oracle</span>
                   <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
@@ -1542,7 +1624,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   <!-- Footer -->
   <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
     <div class="container mx-auto max-w-6xl">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-center md:text-left">
         <div>
           <div class="flex items-center mb-4">
             <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo" class="w-16 h-16 mr-4" />
@@ -1564,6 +1646,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
           <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
           <ul class="space-y-2">
             <li><a href="cgu.html" class="text-light-gold hover:text-gold transition">Conditions Générales d'Utilisation</a></li>
+            <li><a href="cgv.html" class="text-light-gold hover:text-gold transition">Conditions Générales de Vente</a></li>
             <li><a href="mentions-legales.html" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
             <li><a href="politique-confidentialite.html" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
           </ul>

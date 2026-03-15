@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conditions Générales de Vente - ORADIA</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="responsive.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'night-blue': '#0a192f',
+                        'gold': '#d4af37',
+                        'light-gold': '#f5e7a1',
+                        'dark-blue': '#051428',
+                        'celtic-blue': '#1a365d'
+                    },
+                    fontFamily: {
+                        'cormorant': ['Cormorant Garamond', 'serif'],
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+        
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-night-blue text-light-gold">
+    <!-- Header -->
+    <header class="bg-[rgba(5,20,40,0.8)] backdrop-blur-md border-b border-gold/20">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="flex items-center gap-3">
+                    <img src="images/logo-hd-v2.jpeg" alt="ORADIA" class="w-10 h-10 rounded-full">
+                    <div>
+                        <h1 class="cormorant text-2xl font-bold gold-gradient">ORADIA</h1>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Contenu principal -->
+    <main class="container mx-auto px-6 py-12 max-w-4xl">
+        <div class="bg-gradient-to-br from-dark-blue/50 to-night-blue/50 rounded-2xl p-6 md:p-8 border border-gold/30">
+            <h1 class="cormorant text-4xl font-bold gold-gradient mb-8 text-center">Conditions Générales de Vente</h1>
+            
+            <div class="space-y-8 text-light-gold/90">
+                <!-- Préambule -->
+                <section>
+                    <h2 class="cormorant text-2xl font-bold text-gold mb-4">Préambule</h2>
+                    <p class="mb-4">
+                        Les présentes Conditions Générales de Vente (CGV) régissent les relations contractuelles entre 
+                        Rudy Boucheron, agissant en qualité de vendeur, et tout client achetant des produits ou services 
+                        sur le site oradia.fr.
+                    </p>
+                    <p>
+                        Toute commande passée sur le site implique l'acceptation pleine et entière des présentes CGV 
+                        sans réserve ni restriction.
+                    </p>
+                </section>
+
+                <!-- Identification du vendeur -->
+                <section>
+                    <h2 class="cormorant text-2xl font-bold text-gold mb-4">Identification du vendeur</h2>
+                    <div class="bg-gold/10 rounded-lg p-4 border border-gold/20">
+                        <p><strong>Rudy Boucheron</strong></p>
+                        <p>Micro-entreprise</p>
+                        <p>SIRET : 82130800400034</p>
+                        <p>Code APE : 9609Z</p>
+                        <p>Email : Oradia@protonmail.com</p>
+                    </div>
+                </section>
+
+                <!-- Produits et services -->
+                <section>
+                    <h2 class="cormorant text-2xl font-bold text-gold mb-4">Produits et services proposés</h2>
+                    
+                    <h3 class="text-xl font-semibold text-gold mb-3">Oracle Oradia (produit physique)</h3>
+                    <p class="mb-4">
+                        Jeu de 64 cartes avec livret d'accompagnement de 200 pages. 
+                        Disponible en précommande avec trois formules : Early Bird (35€), Standard (42€) et Signature (49€).
+                    </p>
+                    
+                    <h3 class="text-xl font-semibold text-gold mb-3">Tirages en ligne (services numériques)</h3>
+                    <p class="mb-4">
+                        Tirages personnalisés accessibles en ligne : Pèlerin (gratuit), Traversée (5€) et Tore (10€).
+                    </p>
+                    
+                    <h3 class="text-xl font-semibold text-gold mb-3">Abonnement mensuel</h3>
+                    <p>
+                        Accès illimité à tous les tirages pour 15€ par mois, résiliable à tout moment.
+                    </p>
+                </section>
+
+                <!-- Prix et modalités de paiement -->
+                <section>
+                    <h2 class="cormorant text-2xl font-bold text-gold mb-4">Prix et modalités de paiement</h2>
+                    <p class="mb-4">
+                        Les prix sont indiqués en euros, toutes taxes comprises. 
+                        Les frais de livraison pour l'oracle physique sont inclus dans le prix pour la France métropolitaine.
+                    </p>
+                    <p class="mb-4">
+                        Le paiement s'effectue par carte bancaire via Stripe, système sécurisé. 
+                        Le paiement est débité lors de la validation de la commande.
+                    </p>
+                    <p>
+                        Pour les abonnements, le prélèvement est effectué mensuellement à la date d'anniversaire de la souscription.
+                    </p>
+                </section>
+
+                <!-- Droit de rétractation -->
+                <section>
+                    <h2 class="cormorant text-2xl font-bold text-gold mb-4">Droit de rétractation</h2>
+                    <p class="mb-4">
+                        Conformément à l'article L221-18 du Code de la consommation, le client dispose d'un délai de 
+                        14 jours à compter de la réception du produit pour exercer son droit de rétractation sans avoir à justifier de motifs 
+                        ni à payer de pénalités.
+                    </p>
+                    
+                    <h3 class="text-xl font-semibold text-gold mb-3">Cas particuliers</h3>
+                    <p class="mb-4">
+                        <strong>Contenus numériques :</strong> Le droit de rétractation ne s'applique pas aux tirages en ligne 
+                        et abonnements dès lors que l'exécution a commencé après accord exprès du client.
+                    </p>
+                    <p class="mb-4">
+                        <strong>Précommandes :</strong> Le délai de rétractation court à compter de la livraison du produit.
+                    </p>
+                    
+                    <h3 class="text-xl font-semibold text-gold mb-3">Modalités d'exercice</h3>
+                    <p>
+                        Pour exercer votre droit de rétractation, envoyez un email à Oradia@protonmail.com 
+                        en indiquant votre décision de vous rétracter.
+                    </p>
+                </section>
+
+                <!-- Livraison -->
+                <section>
+                    <h2 class="cormorant text-2xl font-bold text-gold mb-4">Livraison</h2>
+                    <p class="mb-4">
+                        Les produits sont livrés à l'adresse indiquée par le client lors de la commande.
+                    </p>
+                    <p class="mb-4">
+                        <strong>Délais de livraison :</strong> Les précommandes seront expédiées dès la disponibilité du produit, 
+                        dans un délai maximal de 30 jours à compter de la date de commande.
+                    </p>
+                    <p>
+                        <strong>Transport :</strong> La livraison est assurée par La Poste en Colissimo avec suivi. 
+                        Le risque de perte ou de détérioration est transféré au client dès la remise du colis au transporteur.
+                    </p>
+                </section>
+
+                <!-- Gestion des abonnements -->
+                <section>
+                    <h2 class="cormorant text-2xl font-bold text-gold mb-4">Gestion des abonnements</h2>
+                    <p class="mb-4">
+                        L'abonnement mensuel est renouvelé tacitement chaque mois.
+                    </p>
+                    <p class="mb-4">
+                        <strong>Résiliation :</strong> Le client peut résilier son abonnement à tout moment depuis son espace membre 
+                        ou par email à Oradia@protonmail.com. La résiliation prend effet à la fin du mois en cours.
+                    </p>
+                    <p>
+                        En cas de résiliation, le client conserve l'accès aux services jusqu'à la fin de la période payée.
+                    </p>
+                </section>
+
+                <!-- Responsabilité -->
+                <section>
+                    <h2 class="cormorant text-2xl font-bold text-gold mb-4">Responsabilité et clause de non-responsabilité</h2>
+                    <p class="mb-4">
+                        Les tirages proposés sur Oradia sont des outils d'introspection et de développement personnel.
+                        Ils ne constituent en aucun cas un conseil médical, psychologique, juridique ou financier.
+                    </p>
+                    <p class="mb-4">
+                        Le vendeur ne saurait être tenu pour responsable des interprétations personnelles 
+                        ou des décisions prises par le client suite à un tirage.
+                    </p>
+                    <p>
+                        La responsabilité du vendeur est limitée au montant de la commande et ne couvre pas les dommages 
+                        indirects ou imprévisibles.
+                    </p>
+                </section>
+
+                <!-- Droit applicable -->
+                <section>
+                    <h2 class="cormorant text-2xl font-bold text-gold mb-4">Droit applicable et litiges</h2>
+                    <p class="mb-4">
+                        Les présentes CGV sont soumises au droit français.
+                    </p>
+                    <p class="mb-4">
+                        En cas de litige, une solution amiable sera recherchée avant toute action judiciaire.
+                    </p>
+                    <p>
+                        À défaut d'accord amiable, le litige sera porté devant la juridiction compétente.
+                    </p>
+                </section>
+
+                <!-- Date de mise à jour -->
+                <section class="border-t border-gold/20 pt-6">
+                    <p class="text-center text-light-gold/70">
+                        Date de mise à jour : 15 mars 2026
+                    </p>
+                </section>
+            </div>
+        </div>
+
+        <!-- Bouton retour -->
+        <div class="text-center mt-8">
+            <a href="index.html" class="inline-flex items-center gap-2 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-6 rounded-full hover:shadow-lg transition-all duration-300">
+                <i class="fas fa-arrow-left"></i>
+                Retour à l'accueil
+            </a>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="py-8 px-6 bg-night-blue border-t border-gold/20 mt-12">
+        <div class="container mx-auto text-center">
+            <p class="text-light-gold/70 text-sm">
+                &copy; 2026 ORADIA. Tous droits réservés.
+            </p>
+        </div>
+    </footer>
+</body>
+</html>

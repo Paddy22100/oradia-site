@@ -60,7 +60,7 @@ oradia-site/
 
 **Tirages en ligne :**
 - ✅ Tirage du Pèlerin (gratuit)
-- ✅ Tirage de la Traversée (5€)
+- ✅ Tirage de la Traversée (3€)
 - ✅ Tirage du Tore (8€/mois)
 - ✅ Logique de tirage implémentée dans `traversee.html`, `pelerin.html`
 

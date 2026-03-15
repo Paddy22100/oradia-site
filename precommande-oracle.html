@@ -16,6 +16,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="responsive.css">
     
     <!-- Stripe -->
     <script src="https://js.stripe.com/v3/"></script>
@@ -695,10 +696,12 @@
                         </div>
                     </div>
                     
-                    <div class="flex items-center">
-                        <input type="checkbox" id="terms" required class="mr-2">
+                    <div class="flex items-start">
+                        <input type="checkbox" id="terms" required class="mr-2 mt-1">
                         <label for="terms" class="text-sm text-light-gold">
-                            J'accepte les <a href="#" class="text-gold hover:text-light-gold">conditions de précommande</a>
+                            J'accepte les <a href="cgu.html" target="_blank" class="text-gold hover:text-light-gold">Conditions Générales d'Utilisation</a>, 
+                            les <a href="cgv.html" target="_blank" class="text-gold hover:text-light-gold">Conditions Générales de Vente</a> 
+                            et la <a href="politique-confidentialite.html" target="_blank" class="text-gold hover:text-light-gold">politique de confidentialité</a> *
                         </label>
                     </div>
                     
@@ -714,7 +717,7 @@
     <!-- Footer -->
     <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
         <div class="container mx-auto max-w-6xl">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-center md:text-left">
                 <div>
                     <div class="flex items-center mb-4">
                         <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo" class="w-16 h-16 mr-4" />
@@ -737,6 +740,7 @@
                     <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
                     <ul class="space-y-2">
                         <li><a href="cgu.html" class="text-light-gold hover:text-gold transition">Conditions Générales d'Utilisation</a></li>
+                        <li><a href="cgv.html" class="text-light-gold hover:text-gold transition">Conditions Générales de Vente</a></li>
                         <li><a href="mentions-legales.html" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
                         <li><a href="politique-confidentialite.html" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
                     </ul>

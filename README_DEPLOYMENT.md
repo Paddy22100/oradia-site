@@ -93,8 +93,8 @@ npm start
 
 ### Dashboard Admin
 - **URL** : http://localhost:3001/admin/dashboard
-- **Login** : admin@oradia.com
-- **Password** : admin123
+- **Login** : Oradia@protonmail.com
+- **Password** : RafalE12#12
 
 ### Espace Client
 - **URL** : http://localhost:3001/user/dashboard
@@ -218,7 +218,7 @@ db.users.find().limit(5)
 # Test login
 curl -X POST http://localhost:3001/api/auth/login \
   -H "Content-Type: application/json" \
-  -d '{"email":"admin@oradia.com","password":"admin123"}'
+  -d '{"email":"Oradia@protonmail.com","password":"RafalE12#12"}'
 
 # Test dashboard
 curl -X GET http://localhost:3001/api/admin/dashboard \

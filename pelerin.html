@@ -6,6 +6,8 @@
   <title>Oradia - Oracle Personnalisé</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="responsive.css">
 
   <script>
     tailwind.config = {
@@ -2682,7 +2684,7 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         intentionIn.setCustomValidity('');
 
-        const family = (card.dataset.family || '').toLowerCase(); // emotions|besoins|actions|cosmos
+        const family = (card.dataset.family || '').toLowerCase(); // emotions|besoins|transmutation|cosmos
         const pool = (window.DATA?.[family] || []);
         if (!pool || !pool.length) {
           console.warn('[Pèlerin] Pas de DATA pour la famille:', family);
@@ -2784,12 +2786,12 @@ function generateAnalysis({ em, be, ac, co, intention }) {
     `un fil à suivre`,
     `un ancrage discret`,
   ];
-  const imagesAction = [
-    `une trace dans le sable`,
-    `une porte entrouverte`,
-    `une marche d’escalier`,
-    `une étoile filante`,
-    `un pas esquissé`,
+  const imagesTransmutation = [
+    `une alchimie intérieure`,
+    `une transformation silencieuse`,
+    `un feu sacré`,
+    `une métamorphose`,
+    `un changement de perspective`,
   ];
   const imagesCosmos = [
     `une constellation familière`,
@@ -2815,8 +2817,8 @@ function generateAnalysis({ em, be, ac, co, intention }) {
   texte += `Le besoin révélé, ${low(need)}${quotes.need ? ` (${quotes.need})` : ''}, se tient comme ${pick(imagesBesoin)}. `;
   texte += `Il ne demande pas forcément d’être satisfait immédiatement, mais d’être reconnu. Parfois cela ouvre un passage, parfois cela rappelle ce qui manque. `;
 
-  texte += `L’action suggérée, ${low(act)}${quotes.act ? ` (${quotes.act})` : ''}, ressemble à ${pick(imagesAction)}. `;
-  texte += `Tu peux choisir de la suivre ou de la laisser s’effacer : l’un comme l’autre ouvre une expérience différente. `;
+  texte += `La transmutation proposée, ${low(act)}${quotes.act ? ` (${quotes.act})` : ''}, ressemble à ${pick(imagesTransmutation)}. `;
+  texte += `Elle t'invite à transformer ce qui est en ce qui doit être, que tu choisisses de l'accueillir ou de la laisser œuvrer en silence. `;
 
   texte += `En arrière-plan, ${low(cos)}${quotes.cos ? ` (${quotes.cos})` : ''} veille, tel ${pick(imagesCosmos)}. `;
   texte += `Cela rappelle qu’il y a toujours plus vaste que le geste immédiat, comme une respiration plus longue que la tienne. `;
@@ -2849,7 +2851,7 @@ function generateAnalysis({ em, be, ac, co, intention }) {
 
       // 3) Récupère ce qui est déjà affiché sur les cartes RETOURNÉES (on cible d'abord les slots)
       const get = fam => {
-        const slotByFam = { emotions: 'slot-0', besoins: 'slot-1', actions: 'slot-2', cosmos: 'slot-3' };
+        const slotByFam = { emotions: 'slot-0', besoins: 'slot-1', transmutation: 'slot-2', cosmos: 'slot-3' };
         let card =
           document.querySelector(`#${slotByFam[fam]} .card[data-family="${fam}"]`) ||
           document.querySelector(`#board .card.mini[data-family="${fam}"]`) ||
@@ -2871,7 +2873,7 @@ const quote =
 
       const em  = get('emotions');
       const be  = get('besoins');
-      const ac  = get('actions');
+      const ac  = get('transmutation');
       const co  = get('cosmos');
 
       // 4) Remplit la section Résultats
@@ -2879,12 +2881,43 @@ const quote =
       linesEl.innerHTML = `
         <p><b>Émotions :</b> ${em.name} — ${em.quote}</p>
         <p><b>Besoins :</b> ${be.name} — ${be.quote}</p>
-        <p><b>Actions :</b> ${ac.name} — ${ac.quote}</p>
+        <p><b>Transmutation :</b> ${ac.name} — ${ac.quote}</p>
         <p><b>Mémoires Cosmos :</b> ${co.name} — ${co.quote}</p>
       `;
       resultsEl.classList.remove('hidden');
 const analysis = generateAnalysis({ em, be, ac, co, intention: outInt.textContent });
 synthEl.innerHTML = analysis.html;
+
+      // Ajouter le message de conversion après la synthèse
+      setTimeout(() => {
+        const conversionMessage = document.createElement('div');
+        conversionMessage.className = 'mt-6 p-4 bg-gradient-to-r from-gold/10 to-light-gold/5 rounded-xl border border-gold/30';
+        conversionMessage.innerHTML = `
+          <div class="text-center">
+            <p class="text-light-gold mb-3 text-sm">Vous souhaitez aller plus loin dans votre exploration ?</p>
+            <div class="flex flex-col sm:flex-row gap-3 justify-center">
+              <a href="index.html#offres#traversee" class="inline-flex items-center gap-2 bg-gradient-to-r from-gold to-light-gold text-night-blue px-4 py-2 rounded-full text-sm font-semibold hover:shadow-lg transition-all">
+                <i class="fas fa-compass"></i>
+                Explorer la Traversée
+              </a>
+              <a href="index.html#offres#tore" class="inline-flex items-center gap-2 border border-gold text-gold px-4 py-2 rounded-full text-sm font-semibold hover:bg-gold hover:text-night-blue transition-all">
+                <i class="fas fa-infinity"></i>
+                Découvrir le Tore
+              </a>
+            </div>
+            <p class="text-xs text-gold/60 mt-2">
+              <i class="fas fa-lock text-xs"></i>
+              Accès immédiat • Annulable à tout moment
+            </p>
+          </div>
+        `;
+        
+        // Insérer après la section de synthèse
+        const syntheseSection = synthEl.closest('.bg-gradient-to-r');
+        if (syntheseSection && syntheseSection.parentNode) {
+          syntheseSection.parentNode.insertBefore(conversionMessage, syntheseSection.nextSibling);
+        }
+      }, 1000);
 
     } finally {
       // 5) Ferme le modal et réactive le scroll
@@ -2920,14 +2953,14 @@ document.querySelectorAll('a[href^="#"]:not([href="#"])').forEach(a=>{
 const STEPS = [
   { key:'emotions', label:'ÉMOTIONS',    count:18 }, // -> slot-0
   { key:'besoins',  label:'BESOINS',     count:18 }, // -> slot-1
-  { key:'actions',   label:'ACTIONS',	 count:18 }, // -> slot-2
+  { key:'transmutation', label:'TRANSMUTATION', count:18 }, // -> slot-2
   { key:'cosmos',  label:'MÉMOIRE COSMOS',count:10 },  // -> slot-3
 ];
   // === IMAGES (comme le Tore) ===
   const FAMILY_FOLDERS = {
     emotions: 'emotions',
     besoins: 'besoins',
-    actions: 'actions',
+    actions: 'transmutation',
 
     // IMPORTANT : dans le Pèlerin tu utilises "cosmos"
     // mais dans ta bibliothèque c’est "memoire_cosmos"

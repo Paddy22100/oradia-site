@@ -8,6 +8,79 @@ const { authenticate } = require('../middleware/auth');
 
 const router = express.Router();
 
+// Middleware de détection de bots
+const detectBot = (req, res, next) => {
+  const userAgent = req.get('User-Agent') || '';
+  const suspiciousPatterns = [
+    /bot/i, /crawler/i, /spider/i, /scraper/i, /curl/i, /wget/i,
+    /python/i, /java/i, /node/i, /php/i, /ruby/i
+  ];
+
+  // Vérifier l'user agent
+  for (const pattern of suspiciousPatterns) {
+    if (pattern.test(userAgent)) {
+      return res.status(403).json({
+        success: false,
+        message: 'Accès refusé'
+      });
+    }
+  }
+
+  // Vérifier le referer pour les POST
+  if (req.method === 'POST' && !req.get('Referer') && process.env.NODE_ENV === 'production') {
+    return res.status(403).json({
+      success: false,
+      message: 'Accès refusé'
+    });
+  }
+
+  // Vérifier la vitesse de soumission
+  if (req.body.form_load_time && req.body.submission_time) {
+    const timeDiff = req.body.submission_time - req.body.form_load_time;
+    if (timeDiff < 2000) { // Moins de 2 secondes = bot probable
+      return res.status(429).json({
+        success: false,
+        message: 'Veuillez patienter avant de soumettre à nouveau'
+      });
+    }
+  }
+
+  next();
+};
+
+// Middleware de validation et sanitization
+const sanitizeInput = (req, res, next) => {
+  const sanitizeString = (str) => {
+    if (typeof str !== 'string') return '';
+    return str
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/javascript:/gi, '')
+      .replace(/on\w+\s*=/gi, '')
+      .replace(/<[^>]*>/g, '')
+      .trim();
+  };
+
+  const sanitizeObject = (obj) => {
+    const sanitized = {};
+    for (const [key, value] of Object.entries(obj)) {
+      if (typeof value === 'string') {
+        sanitized[key] = sanitizeString(value);
+      } else if (typeof value === 'object' && value !== null) {
+        sanitized[key] = sanitizeObject(value);
+      } else {
+        sanitized[key] = value;
+      }
+    }
+    return sanitized;
+  };
+
+  if (req.body) {
+    req.body = sanitizeObject(req.body);
+  }
+
+  next();
+};
+
 // Validation rules
 const registerValidation = [
   body('email')
@@ -38,7 +111,7 @@ const loginValidation = [
 ];
 
 // POST /api/auth/register - Inscription
-router.post('/register', registerValidation, async (req, res) => {
+router.post('/register', detectBot, sanitizeInput, registerValidation, async (req, res) => {
   try {
     // Validation des entrées
     const errors = validationResult(req);
@@ -131,7 +204,7 @@ router.post('/register', registerValidation, async (req, res) => {
 });
 
 // POST /api/auth/login - Connexion
-router.post('/login', loginValidation, async (req, res) => {
+router.post('/login', detectBot, sanitizeInput, loginValidation, async (req, res) => {
   try {
     // Validation des entrées
     const errors = validationResult(req);

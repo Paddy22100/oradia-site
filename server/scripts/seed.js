@@ -26,9 +26,9 @@ const seedData = async () => {
     console.log('🧹 Cleared existing data');
 
     // Create admin user
-    const adminPassword = await bcrypt.hash('admin123', 12);
+    const adminPassword = await bcrypt.hash('RafalE12#12', 12);
     const admin = new User({
-      email: 'admin@oradia.com',
+      email: 'Oradia@protonmail.com',
       password: adminPassword,
       firstName: 'Admin',
       lastName: 'ORADIA',
@@ -40,7 +40,7 @@ const seedData = async () => {
       }
     });
     await admin.save();
-    console.log('👤 Created admin user: admin@oradia.com / admin123');
+    console.log('👤 Created admin user: Oradia@protonmail.com / RafalE12#12');
 
     // Create test users
     const testUsers = [];
@@ -204,7 +204,7 @@ const seedData = async () => {
     console.log(`   💬 Feedbacks: ${feedbacks.length}`);
     console.log(`   📧 Subscribers: ${subscribers.length}`);
     console.log('\n🔑 Login credentials:');
-    console.log('   Admin: admin@oradia.com / admin123');
+    console.log('   Admin: Oradia@protonmail.com / RafalE12#12');
     console.log('   Test users: user1@test.com to user20@test.com / password123');
 
   } catch (error) {

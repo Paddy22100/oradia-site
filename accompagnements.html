@@ -9,6 +9,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="responsive.css">
 
   <script>
     tailwind.config = {
@@ -716,7 +717,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           Offres d'Accompagnement
         </h2>
         
-        <div class="grid md:grid-cols-3 gap-8 items-stretch">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8 items-stretch">
           <!-- Cercle de Parole -->
           <div class="pricing-card bg-gradient-to-br from-dark-blue/50 to-night-blue/50 rounded-2xl p-8 border border-gold/30 text-center relative overflow-hidden group hover:scale-105 transition-all duration-500 flex flex-col">
             <div class="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full -mr-16 -mt-16 group-hover:bg-gold/20 transition-colors duration-500"></div>
@@ -734,7 +735,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
                 <li class="flex items-center"><i class="fas fa-circle text-xs text-gold mr-3"></i>Partage et écoute</li>
               </ul>
               <div class="mt-auto pt-4">
-                <a href="#" class="btn-outline-gold border-2 border-gold text-gold font-bold py-3 px-6 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 w-full group-hover:shadow-lg group-hover:shadow-gold/30">
+                <a href="#" class="btn-outline-gold border-2 border-gold text-gold font-bold py-3 px-4 lg:px-6 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 w-full touch-target">
                   <i class="fas fa-calendar-plus mr-2"></i>Réserver
                 </a>
               </div>
@@ -763,7 +764,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
                 <li class="flex items-center"><i class="fas fa-gem text-sm text-gold mr-3"></i><span class="font-semibold">Intégration & ancrage</span></li>
               </ul>
               <div class="mt-auto pt-4">
-                <a href="rendez-vous.html" class="btn-gold bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-6 rounded-full hover:shadow-xl transition-all duration-300 w-full group-hover:scale-105" target="_self">
+                <a href="rendez-vous.html" class="btn-gold bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-4 lg:px-6 rounded-full hover:shadow-xl transition-all duration-300 w-full touch-target" target="_self">
                   <i class="fas fa-magic mr-2"></i>Prendre rendez-vous
                 </a>
               </div>
@@ -788,7 +789,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
                 <li class="flex items-center"><i class="fas fa-circle text-xs text-gold mr-3"></i>Accompagnement continu</li>
               </ul>
               <div class="mt-auto pt-4">
-                <a href="#" class="btn-outline-gold border-2 border-gold text-gold font-bold py-3 px-6 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 w-full group-hover:shadow-lg group-hover:shadow-gold/30">
+                <a href="#" class="btn-outline-gold border-2 border-gold text-gold font-bold py-3 px-4 lg:px-6 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 w-full touch-target">
                   <i class="fas fa-envelope mr-2"></i>Contactez-nous
                 </a>
               </div>

@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Abonnement Activé - Le Tore</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="responsive.css">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'night-blue': '#0a192f',
+                        'gold': '#d4af37',
+                        'light-gold': '#f5e7a1',
+                        'dark-blue': '#051428',
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-night-blue text-light-gold">
+    <!-- Navigation -->
+    <nav class="bg-dark-blue/90 backdrop-blur-md border-b border-gold/30 sticky top-0 z-50">
+        <div class="container mx-auto px-4 py-4">
+            <div class="flex justify-between items-center">
+                <a href="index.html" class="flex items-center gap-3">
+                    <img src="images/logo-hd-v2.jpeg" alt="ORADIA" class="w-10 h-10 rounded-full">
+                    <span class="cormorant text-2xl font-bold gold-gradient">ORADIA</span>
+                </a>
+                <a href="index.html#offres" class="text-gold hover:text-light-gold transition-colors">
+                    <i class="fas fa-arrow-left mr-2"></i>Retour aux offres
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Contenu principal -->
+    <main class="min-h-screen flex items-center justify-center py-20 px-6">
+        <div class="max-w-2xl w-full text-center">
+            <!-- Icône de succès avec animation -->
+            <div class="mb-8">
+                <div class="w-24 h-24 mx-auto bg-gradient-to-br from-gold to-light-gold rounded-full flex items-center justify-center shadow-2xl shadow-gold/30 animate-pulse">
+                    <i class="fas fa-infinity text-4xl text-night-blue"></i>
+                </div>
+            </div>
+
+            <!-- Titre -->
+            <h1 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-6">
+                Bienvenue dans Le Tore
+            </h1>
+
+            <!-- Message -->
+            <div class="bg-dark-blue/50 backdrop-blur-md rounded-2xl border border-gold/30 p-8 mb-8">
+                <p class="text-xl mb-4">
+                    Félicitations ! Votre abonnement au <strong>Tore</strong> est maintenant activé.
+                </p>
+                <p class="text-light-gold/80 mb-4">
+                    Vous avez accès à l'expérience complète d'Oradia :
+                </p>
+                <ul class="text-left space-y-2 max-w-md mx-auto">
+                    <li class="flex items-center gap-3">
+                        <i class="fas fa-check-circle text-gold"></i>
+                        <span>Tirages illimités</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <i class="fas fa-check-circle text-gold"></i>
+                        <span>Interprétations complètes</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <i class="fas fa-check-circle text-gold"></i>
+                        <span>Historique des tirages</span>
+                    </li>
+                    <li class="flex items-center gap-3">
+                        <i class="fas fa-check-circle text-gold"></i>
+                        <span>Fonctionnalités avancées</span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Actions -->
+            <div class="space-y-4">
+                <a href="tore.html" class="inline-flex items-center gap-3 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all transform hover:scale-105">
+                    <i class="fas fa-infinity"></i>
+                    Accéder au Tore
+                </a>
+                
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="member/dashboard.html" class="inline-flex items-center gap-2 border border-gold text-gold py-3 px-6 rounded-full hover:bg-gold hover:text-night-blue transition-colors">
+                        <i class="fas fa-crown"></i>
+                        Mon Espace Membre
+                    </a>
+                    <a href="member/tirages.html" class="inline-flex items-center gap-2 text-gold hover:text-light-gold transition-colors">
+                        <i class="fas fa-history"></i>
+                        Mon Historique
+                    </a>
+                </div>
+            </div>
+
+            <!-- Infos abonnement -->
+            <div class="mt-12 bg-dark-blue/30 rounded-xl p-6 border border-gold/20">
+                <p class="text-sm text-gold/80 mb-2">
+                    <i class="fas fa-sync mr-2"></i>
+                    Votre abonnement se renouvellera automatiquement chaque mois.
+                </p>
+                <p class="text-sm text-gold/60">
+                    Vous pouvez l'annuler à tout moment depuis votre espace membre.
+                </p>
+            </div>
+
+            <!-- Infos supplémentaires -->
+            <div class="mt-8 text-sm text-gold/60">
+                <p>
+                    <i class="fas fa-envelope mr-2"></i>
+                    Un email de confirmation a été envoyé avec les détails de votre abonnement.
+                </p>
+                <p class="mt-2">
+                    <i class="fas fa-headset mr-2"></i>
+                    Besoin d'aide ? <a href="contact.html" class="text-gold hover:text-light-gold underline">Contactez-nous</a>
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-dark-blue border-t border-gold/30 py-8 mt-20">
+        <div class="container mx-auto px-4 text-center">
+            <p class="text-gold/60">
+                © 2026 ORADIA - L'Oracle du Vivant
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Vérifier si l'abonnement a été traité
+        const urlParams = new URLSearchParams(window.location.search);
+        const sessionId = urlParams.get('session_id');
+        
+        if (sessionId) {
+            // Optionnel: vérifier le statut de l'abonnement côté serveur
+            console.log('Session ID:', sessionId);
+            
+            // Nettoyer l'URL
+            window.history.replaceState({}, document.title, window.location.pathname);
+        } else {
+            // Rediriger si pas de session ID
+            window.location.href = 'index.html#offres';
+        }
+
+        // Animation de particules dorées
+        function createParticle() {
+            const particle = document.createElement('div');
+            particle.style.cssText = `
+                position: fixed;
+                width: 4px;
+                height: 4px;
+                background: #d4af37;
+                border-radius: 50%;
+                left: ${Math.random() * 100}%;
+                top: 100%;
+                opacity: 0.8;
+                pointer-events: none;
+                z-index: 9999;
+                box-shadow: 0 0 6px rgba(212, 175, 55, 0.8);
+            `;
+            
+            document.body.appendChild(particle);
+            
+            const duration = 4000;
+            const startTime = Date.now();
+            const startX = parseFloat(particle.style.left);
+            
+            function animate() {
+                const elapsed = Date.now() - startTime;
+                const progress = elapsed / duration;
+                
+                if (progress < 1) {
+                    const y = -progress * window.innerHeight - 100;
+                    const x = startX + Math.sin(progress * Math.PI * 4) * 20;
+                    const opacity = 1 - progress * 0.5;
+                    const scale = 1 + progress * 0.5;
+                    
+                    particle.style.transform = `translate(${x}%, ${y}px) scale(${scale})`;
+                    particle.style.opacity = opacity;
+                    
+                    requestAnimationFrame(animate);
+                } else {
+                    particle.remove();
+                }
+            }
+            
+            animate();
+        }
+
+        // Créer des particules en continu
+        function startParticles() {
+            createParticle();
+            setTimeout(startParticles, 200);
+        }
+
+        // Démarrer les particules après un délai
+        setTimeout(() => {
+            for (let i = 0; i < 5; i++) {
+                setTimeout(() => startParticles(), i * 400);
+            }
+        }, 500);
+
+        // Arrêter les particules après 10 secondes
+        setTimeout(() => {
+            // Les particules s'arrêteront naturellement
+        }, 10000);
+    </script>
+</body>
+</html>
