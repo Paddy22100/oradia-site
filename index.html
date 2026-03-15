@@ -940,7 +940,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
     </nav>
     
     <!-- Espace membre (desktop) -->
-    <div id="memberMenuWrapper" class="hidden md:block relative">
+    <div id="memberMenuWrapper" class="hidden md:hidden relative">
       <!-- Bouton Espace membre -->
       <button id="memberMenuBtn" class="flex items-center gap-2 text-gold font-medium hover:text-light-gold transition">
         <i class="fas fa-user-circle text-2xl"></i>
@@ -956,6 +956,9 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         <button id="logoutBtn" class="w-full text-left px-4 py-2 text-gold hover:bg-gold/10">Déconnexion</button>
       </div>
     </div>
+    
+    <!-- Bouton Connexion (desktop) -->
+    <a href="auth/login-simple.html" id="loginBtn" class="btn-outline-gold md:inline-block">Connexion</a>
   </div>
 
   <!-- Menu mobile déroulant -->
@@ -967,7 +970,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
     <a href="a-propos.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
     <a href="#edolgor" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
     <a href="contact.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
-    <button id="loginBtnMobile" class="w-full btn-outline-gold" style="display: none;">Connexion</button>
+    <a href="auth/login-simple.html" id="loginBtnMobile" class="w-full btn-outline-gold">Connexion</a>
   </nav>
   </header>
 <!-- Hero -->
@@ -2812,12 +2815,9 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     });
   });
-});
-</script>
-<script>
 (() => {
   // --- DEBUG VISUEL DANS LA CONSOLE ---
-    const LOG = (...a) => // console.log(console.log('[Pèlerin]', ...a);)
+    const LOG = (...a) => console.log('[Pèlerin]', ...a);
 
   const $  = s => document.querySelector(s);
   const $$ = s => Array.from(document.querySelectorAll(s));
@@ -2827,16 +2827,15 @@ document.addEventListener("DOMContentLoaded", () => {
   const intentionIn = $('#intention');
   const startBtn    = $('#startReading');
   const board       = $('#board');
-  const cardsInstr  = $('#cardsInstruction');
   const cards       = $$('#board .card');
 
   if (!intentionIn || !startBtn || !board || cards.length === 0) {
-    // console.error(console.error('[Pèlerin] Sélecteurs introuvables. Vérifie que #oracle n’est pas supprimé et que #board contient .card');)
+    console.error('[Pèlerin] Sélecteurs introuvables. Vérifie que #oracle n\'est pas supprimé et que #board contient .card');
     return;
   }
 
-  let flippedCount = 0;
-
+  LOG('Init Pèlerin OK. Cartes détectées =', cards.length);
+})();
   // Affiche le plateau et reset proprement
   startBtn.addEventListener('click', () => {
     if (!intentionIn.value.trim()) {
@@ -3403,9 +3402,27 @@ document.addEventListener('click', (e) => {
 <script>
 (function(){
   const AUTH_KEY = 'oradiaAuth';
+  const EMAIL_KEY = 'oradiaUserEmail';
 
-  function isAuthed(){ return localStorage.getItem(AUTH_KEY) === '1'; }
-  function setAuthed(v){ v ? localStorage.setItem(AUTH_KEY,'1') : localStorage.removeItem(AUTH_KEY); }
+  function isAuthed(){ 
+    const authStatus = localStorage.getItem(AUTH_KEY);
+    const userEmail = localStorage.getItem(EMAIL_KEY);
+    return authStatus === '1' && userEmail && userEmail !== '';
+  }
+  
+  function setAuthed(v, email = null){ 
+    if (v && email) {
+      localStorage.setItem(AUTH_KEY, '1');
+      localStorage.setItem(EMAIL_KEY, email);
+    } else {
+      localStorage.removeItem(AUTH_KEY);
+      localStorage.removeItem(EMAIL_KEY);
+    }
+  }
+
+  function getUserEmail(){
+    return localStorage.getItem(EMAIL_KEY) || '';
+  }
 
   function ensureMemberIcon(){
     // Si déjà présent, ne rien faire
@@ -3416,61 +3433,36 @@ document.addEventListener('click', (e) => {
     if (!loginBtn || !loginBtn.parentElement) return;
       const wrap = loginBtn.parentElement;
 
-    // Crée l'icône membre avec menu dropdown
-    const memberContainer = document.createElement('div');
-    memberContainer.className = 'relative';
-    memberContainer.id = 'memberContainer';
+    // Récupère l'email de l'utilisateur
+    const userEmail = getUserEmail();
     
-    const btn = document.createElement('button');
-    btn.id = 'memberIcon';
-    btn.type = 'button';
-    btn.className = 'flex items-center gap-2';
-    btn.innerHTML = `
-      <i class="fas fa-user-circle text-xl"></i>
-      <span class="hidden md:inline">Espace membre</span>
-      <span class="badge" aria-label="connecté"></span>
-      <i class="fas fa-chevron-down text-xs ml-1"></i>
+    // Crée le conteneur du membre avec email
+    const memberContainer = document.createElement('div');
+    memberContainer.id = 'memberIcon';
+    memberContainer.className = 'relative flex items-center gap-3';
+    
+    // Crée l'affichage email + dropdown
+    memberContainer.innerHTML = `
+      <button id="memberMenuBtn" class="flex items-center gap-2 text-gold font-medium hover:text-light-gold transition">
+        <i class="fas fa-user-circle text-xl"></i>
+        <span class="hidden md:inline text-sm">${userEmail}</span>
+        <i class="fas fa-chevron-down text-xs ml-1"></i>
+      </button>
+
+      <!-- Dropdown -->
+      <div id="memberDropdown"
+           class="hidden absolute right-0 mt-2 w-48 bg-[rgba(5,20,40,0.95)] border border-gold/30 rounded-lg shadow-lg z-50 backdrop-blur-md">
+        <a href="member/profile.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Profil</a>
+        <a href="member/dashboard.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Tableau de bord</a>
+        <button id="logoutBtn" class="w-full text-left px-4 py-2 text-gold hover:bg-gold/10">Déconnexion</button>
+      </div>
     `;
 
-    // Menu dropdown
-    const dropdown = document.createElement('div');
-    dropdown.id = 'memberDropdown';
-    dropdown.className = 'absolute right-0 mt-2 w-48 bg-night-blue border border-gold/30 rounded-lg shadow-lg py-1 z-50 hidden';
-    dropdown.innerHTML = `
-      <a href="member/profile.html" class="block px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Profil</a>
-      <a href="member/dashboard.html" class="block px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Tableau de bord</a>
-      <button id="logoutBtn" class="w-full text-left px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Déconnexion</button>
-    `;
-
-    memberContainer.appendChild(btn);
-    memberContainer.appendChild(dropdown);
+    // Affiche le menu membre et cache le bouton connexion
     wrap.appendChild(memberContainer);
-
-    // Gestion du menu dropdown
-    btn.addEventListener('click', (e) => {
-      e.stopPropagation();
-      const isHidden = dropdown.classList.contains('hidden');
-      // Fermer tous les autres menus ouverts
-      document.querySelectorAll('#memberDropdown').forEach(menu => {
-        if (menu !== dropdown) menu.classList.add('hidden');
-      });
-      dropdown.classList.toggle('hidden', !isHidden);
-    });
-
-    // Fermer le menu quand on clique ailleurs
-    document.addEventListener('click', (e) => {
-      if (!memberContainer.contains(e.target)) {
-        dropdown.classList.add('hidden');
-      }
-    });
-
-    // Gestion des clics sur les éléments du menu
-    dropdown.querySelector('#logoutBtn').addEventListener('click', () => {
-      logoutFlow();
-      dropdown.classList.add('hidden');
-    });
-wrap.appendChild(btn);
+    if (loginBtn) loginBtn.style.display = 'none';
   }
+  
   function updateHeaderForAuth(){
     const loginBtn = document.getElementById('loginBtn');         // desktop
     const loginBtnMobile = document.getElementById('loginBtnMobile'); // mobile
@@ -3485,166 +3477,69 @@ wrap.appendChild(btn);
       if (icon) icon.remove();
     }
   }
-function updateCtasForAuth(){
-       // “Commander” (offre Traversée)
-    const orderBtn = document.getElementById('orderBtn');
-    if (orderBtn) {
-      // On clone pour nettoyer tous les anciens listeners (ceux de initOrderModal, etc.)
-      const newOrderBtn = orderBtn.cloneNode(true);
-      orderBtn.parentNode.replaceChild(newOrderBtn, orderBtn);
 
-      if (isAuthed()) {
-        // Utilisateur connecté : accès direct à la page du tirage de la Traversée
-        newOrderBtn.textContent = 'Commencer le tirage';
-        newOrderBtn.setAttribute('href', 'traversee.html?access=traversee');
-        // Pas de listener : le lien fait juste la navigation classique
-      } else {
-        // Utilisateur non connecté : bouton "Commander" ouvre la modale de commande
-        newOrderBtn.textContent = 'Commander';
-        newOrderBtn.setAttribute('href', '#');
-        newOrderBtn.addEventListener('click', function(e){
-          e.preventDefault();
-          const orderModal = document.getElementById('orderModal');
-          if (orderModal) {
-            orderModal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden';
-          }
-        });
-      }
+  // Fonction de connexion
+  function login(email, password) {
+    // Vérification des identifiants (pour le moment, simulation)
+    if (email === 'oradia@protonmail.com' && password === 'RafalE12#12') {
+      setAuthed(true, email);
+      updateHeaderForAuth();
+      return { success: true, message: 'Connexion réussie' };
+    } else {
+      return { success: false, message: 'Email ou mot de passe incorrect' };
     }
-
-
-    // “S’abonner – 8€ / mois” (in-Modal form)
-    const subSubmit = document.querySelector('#subscribeForm button[type="submit"]');
-    if (subSubmit){
-      if (isAuthed()){
-        subSubmit.textContent = 'Accéder au tirage du Tore';
-        subSubmit.type = 'button';
-        subSubmit.addEventListener('click', onStartReading, { once:true });
-      } else {
-        subSubmit.textContent = 'S’abonner – 8€ / mois';
-        subSubmit.type = 'submit';
-        subSubmit.removeEventListener('click', onStartReading);
-      }
-    }
-
-    // Si tu as un bouton d’offre “Abonnement” hors modale, traite-le pareil ici.
-    // "S'abonner" (offre Tore)
-    const subscribeBtn = document.getElementById('subscribeBtn');
-    if (subscribeBtn) {
-      if (isAuthed()) {
-        // Lorsque l'utilisateur est connecté, le bouton s'abonner devient "Accéder au tirage du Toree"
-        subscribeBtn.textContent = 'Accéder au tirage du Tore';
-        // Assure une ancre cohérente pour l'expérience de tirage
-        subscribeBtn.setAttribute('href', '#tore');
-        // Supprime tout ancien gestionnaire qui pourrait ouvrir la modale d'inscription
-        const newSubBtn = subscribeBtn.cloneNode(true);
-        subscribeBtn.parentNode.replaceChild(newSubBtn, subscribeBtn);
-        // Ajoute un gestionnaire pour lancer le tirage complet (même comportement que l'offre Traversée)
-        newSubBtn.addEventListener('click', (e) => {
-          e.preventDefault();
-          onStartReading(e);
-        }, { once:true });
-      } else {
-        // Si l'utilisateur n'est pas connecté, rétablit le libellé et laisse la logique d'origine gérer la modale
-        subscribeBtn.textContent = "S'abonner";
-        subscribeBtn.setAttribute('href', '#');
-        // Nettoie les éventuels gestionnaires ajoutés précédemment
-        const newSubBtn = subscribeBtn.cloneNode(true);
-        subscribeBtn.parentNode.replaceChild(newSubBtn, subscribeBtn);
-      }
-    }
-}
-    function onStartReading(e){
-      const startBtn =
-        document.getElementById('newPilgrim') ||
-        document.querySelector('#oracle button, #oracle a.btn-gold');
-
-      if (startBtn) startBtn.click();
-    }
-function loginFlow(){
-    setAuthed(true);
-    updateHeaderForAuth();
-    updateCtasForAuth();
   }
-  function logoutFlow(){
+
+  // Fonction de déconnexion
+  function logout() {
     setAuthed(false);
     updateHeaderForAuth();
-    updateCtasForAuth();
+    // Redirection vers l'accueil
+    window.location.hash = '#accueil';
   }
 
-  function wireAuthForms(){
-    // Formulaires membres (inscription / connexion)
-    const reg = document.getElementById('memberRegisterForm');
-    if (reg){
-      reg.addEventListener('submit', function(ev){
-  ev.preventDefault();
-  loginFlow();
-  // fermer la modale si ouverte
-  const m = document.getElementById('subscriptionModal');
-  if (m) { m.classList.add('hidden'); document.body.style.overflow=''; }
-});
-
-    }
-
-    const login = document.getElementById('memberLoginForm');
-    if (login){
-    login.addEventListener('submit', function(ev){
-  ev.preventDefault();
-  loginFlow();
-  const m = document.getElementById('subscriptionModal');
-  if (m) { m.classList.add('hidden'); document.body.style.overflow=''; }
-});
-
-    }
-
-    // Formulaire d’abonnement (si tu veux qu’il connecte aussi)
-    const sub = document.getElementById('subscribeForm');
-    if (sub){
-      sub.addEventListener('submit', function(ev){
-        // Ici, en vrai, tu enverrais le paiement, puis connecterais l’utilisateur.
-        // En attendant, on ne bloque pas le submit ; si tu préfères, active le flow ci-dessous :
-        // ev.preventDefault(); loginFlow();
-      });
-    }
-
-    // Boutons “Connexion” (ouvrir la modale de login existante si tu en as une)
- const loginBtn = document.getElementById('loginBtn');
-const loginBtnMobile = document.getElementById('loginBtnMobile');
-[loginBtn, loginBtnMobile].forEach(btn => {
-  if (!btn) return;
-  btn.addEventListener('click', function(ev){
-    ev.preventDefault();
-    const m = document.getElementById('subscriptionModal');
-    if (m) { m.classList.remove('hidden'); document.body.style.overflow='hidden'; }
-  });
-});
-
-
-    // Si tu as un bouton logout quelque part :
-    const dashboardLogout = document.getElementById('logoutBtn');
-    if (dashboardLogout){
-      dashboardLogout.addEventListener('click', function(e){
-        e.preventDefault();
-        logoutFlow();
-      });
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', function(){
+  // Initialisation au chargement
+  document.addEventListener('DOMContentLoaded', function() {
     updateHeaderForAuth();
-    updateCtasForAuth();
-    wireAuthForms();
+    
+    // Gestion du bouton de déconnexion
+    document.addEventListener('click', function(e) {
+      if (e.target && e.target.id === 'logoutBtn') {
+        e.preventDefault();
+        logout();
+      }
+    });
+
+    // Gestion du menu dropdown
+    const memberMenuBtn = document.getElementById('memberMenuBtn');
+    const memberDropdown = document.getElementById('memberDropdown');
+    
+    if (memberMenuBtn && memberDropdown) {
+      memberMenuBtn.addEventListener('click', function() {
+        memberDropdown.classList.toggle('hidden');
+      });
+    }
+
+    // Fermer le dropdown en cliquant dehors
+    document.addEventListener('click', function(e) {
+      if (memberMenuBtn && memberDropdown && 
+          !memberMenuBtn.contains(e.target) && 
+          !memberDropdown.contains(e.target)) {
+        memberDropdown.classList.add('hidden');
+      }
+    });
   });
-})();
-</script>
-  <!-- Bouton de sortie pour le mode Tore (sera créé dynamiquement) -->
+
+  // Exposer les fonctions globalement
+  window.oradiaAuth = {
+    isAuthed,
+    login,
   <div id="toreExitTemplate" class="hidden">
     <button id="exitToreBtn" class="fixed top-4 left-4 z-50 bg-gradient-to-br from-gold to-light-gold text-night-blue font-bold p-3 rounded-full shadow-lg">
       <i class="fas fa-times"></i>
     </button>
   </div>
-  <script>
+<script>
   // Démarrage automatique du mode immersif sur la page du Pèlerin
   document.addEventListener('DOMContentLoaded', () => {
     if (typeof window.enterPelerinImmersive === 'function') {
@@ -3659,7 +3554,7 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
     }
   });
 </script>
-  <script>
+<script>
 document.addEventListener("DOMContentLoaded", () => {
     const btn = document.getElementById("memberMenuBtn");
     const menu = document.getElementById("memberDropdown");
@@ -3677,7 +3572,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 });
 </script>
-
 <script>
 // Bouton retour en haut de page
 const backToTopBtn = document.getElementById('backToTop');
