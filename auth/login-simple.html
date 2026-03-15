@@ -169,6 +169,50 @@
     </div>
 
     <script>
+        // Système d'authentification ORADIA
+        (function(){
+          const AUTH_KEY = 'oradiaAuth';
+          const EMAIL_KEY = 'oradiaUserEmail';
+
+          function isAuthed(){ 
+            const authStatus = localStorage.getItem(AUTH_KEY);
+            const userEmail = localStorage.getItem(EMAIL_KEY);
+            return authStatus === '1' && userEmail && userEmail !== '';
+          }
+          
+          function setAuthed(v, email = null){ 
+            if (v && email) {
+              localStorage.setItem(AUTH_KEY, '1');
+              localStorage.setItem(EMAIL_KEY, email);
+            } else {
+              localStorage.removeItem(AUTH_KEY);
+              localStorage.removeItem(EMAIL_KEY);
+            }
+          }
+
+          function getUserEmail(){
+            return localStorage.getItem(EMAIL_KEY) || '';
+          }
+
+          // Fonction de connexion
+          function login(email, password) {
+            // Vérification des identifiants (pour le moment, simulation)
+            if (email === 'oradia@protonmail.com' && password === 'RafalE12#12') {
+              setAuthed(true, email);
+              return { success: true, message: 'Connexion réussie' };
+            } else {
+              return { success: false, message: 'Email ou mot de passe incorrect' };
+            }
+          }
+
+          // Exposer les fonctions globalement
+          window.oradiaAuth = {
+            isAuthed,
+            login,
+            getUserEmail
+          };
+        })();
+
         // Inclure le système d'authentification
         document.addEventListener('DOMContentLoaded', function() {
             // Vérifier si déjà connecté
@@ -201,9 +245,9 @@
                     if (result.success) {
                         showMessage(result.message, 'success');
                         
-                        // Rediriger vers le tableau de bord après 1 seconde
+                        // Rediriger vers l'accueil après 1 seconde pour que le header se mette à jour
                         setTimeout(() => {
-                            window.location.href = '../member/dashboard.html';
+                            window.location.href = '../index.html';
                         }, 1000);
                     } else {
                         showMessage(result.message, 'error');
