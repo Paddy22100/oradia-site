@@ -148,8 +148,8 @@ body.hide-immersive-pelerin > section:not(#oracle):not(#board):not(#results){
 .card[data-family="besoins"] .back{
   background-image:url("images/dos/dos_besoin.png");
 }
-.card[data-family="actions"] .back{
-  background-image:url("images/dos/dos_action.png");
+.card[data-family="transmutation"] .back{
+  background-image:url("images/dos/dos_transmutation.png");
 }
 .card[data-family="cosmos"] .back{
   background-image:url("images/dos/dos_memoire_cosmos.png");
@@ -1209,7 +1209,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
         <div class="slots">
           <div class="slot" id="slot-0" aria-label="Carte ÉMOTIONS"></div>
           <div class="slot" id="slot-1" aria-label="Carte BESOINS"></div>
-          <div class="slot" id="slot-2" aria-label="Carte ACTIONS"></div>
+          <div class="slot" id="slot-2" aria-label="Carte TRANSMUTATION"></div>
           <div class="slot" id="slot-3" aria-label="Carte MÉMOIRE COSMOS"></div>
         </div>
       </div>
@@ -2376,7 +2376,8 @@ $$('#board .card').forEach(card=>{
     }
     // ICI: on suppose que pick(DATA[family]) & polarityIcon existent déjà
     const family = cardEl.dataset.family;
-    const data = (window.pick && window.DATA)? pick(DATA[family]) : null;
+    const dataKey = family === 'cosmos' ? 'memoire_cosmos' : family;
+    const data = (window.pick && window.DATA)? pick(DATA[dataKey]) : null;
     if(!data) return; // sécurité
     cardEl.querySelector('[data-name]').textContent  = data.name || '—';
     cardEl.querySelector('[data-quote]').textContent = data.quote || '—';
@@ -2574,8 +2575,9 @@ document.addEventListener("DOMContentLoaded", () => {
         }
         intentionIn.setCustomValidity('');
 
-        const family = (card.dataset.family || '').toLowerCase(); // emotions|besoins|actions|cosmos
-        const pool = (window.DATA?.[family] || []);
+        const family = (card.dataset.family || '').toLowerCase(); // emotions|besoins|transmutation|cosmos
+        const dataKey = family === 'cosmos' ? 'memoire_cosmos' : family;
+        const pool = (window.DATA?.[dataKey] || []);
         if (!pool || !pool.length) {
           console.warn('[Pèlerin] Pas de DATA pour la famille:', family);
           return;
@@ -2671,22 +2673,6 @@ function generateAnalysis({ em, be, ac, co, intention }) {
   ];
   const imagesBesoin = [
     `une clef de voûte`,
-    `une graine à arroser`,
-    `une pierre d’équilibre`,
-    `un fil à suivre`,
-    `un ancrage discret`,
-  ];
-  const imagesAction = [
-    `une trace dans le sable`,
-    `une porte entrouverte`,
-    `une marche d’escalier`,
-    `une étoile filante`,
-    `un pas esquissé`,
-  ];
-  const imagesCosmos = [
-    `une constellation familière`,
-    `un souffle venu d’avant`,
-    `une mémoire gravée dans la roche`,
     `un chant collectif`,
     `un fleuve souterrain`,
   ];
@@ -2707,8 +2693,8 @@ function generateAnalysis({ em, be, ac, co, intention }) {
   texte += `Le besoin révélé, ${low(need)}${quotes.need ? ` (${quotes.need})` : ''}, se tient comme ${pick(imagesBesoin)}. `;
   texte += `Il ne demande pas forcément d’être satisfait immédiatement, mais d’être reconnu. Parfois cela ouvre un passage, parfois cela rappelle ce qui manque. `;
 
-  texte += `L’action suggérée, ${low(act)}${quotes.act ? ` (${quotes.act})` : ''}, ressemble à ${pick(imagesAction)}. `;
-  texte += `Tu peux choisir de la suivre ou de la laisser s’effacer : l’un comme l’autre ouvre une expérience différente. `;
+  texte += `La transmutation proposée, ${low(act)}${quotes.act ? ` (${quotes.act})` : ''}, ressemble à ${pick(imagesTransmutation)}. `;
+  texte += `Elle t'invite à transformer ce qui est en ce qui doit être, que tu choisisses de l'accueillir ou de la laisser œuvrer en silence. `;
 
   texte += `En arrière-plan, ${low(cos)}${quotes.cos ? ` (${quotes.cos})` : ''} veille, tel ${pick(imagesCosmos)}. `;
   texte += `Cela rappelle qu’il y a toujours plus vaste que le geste immédiat, comme une respiration plus longue que la tienne. `;
@@ -2741,7 +2727,7 @@ function generateAnalysis({ em, be, ac, co, intention }) {
 
       // 3) Récupère ce qui est déjà affiché sur les cartes RETOURNÉES (on cible d'abord les slots)
       const get = fam => {
-        const slotByFam = { emotions: 'slot-0', besoins: 'slot-1', actions: 'slot-2', cosmos: 'slot-3' };
+        const slotByFam = { emotions: 'slot-0', besoins: 'slot-1', transmutation: 'slot-2', cosmos: 'slot-3' };
         let card =
           document.querySelector(`#${slotByFam[fam]} .card[data-family="${fam}"]`) ||
           document.querySelector(`#board .card.mini[data-family="${fam}"]`) ||
@@ -2763,7 +2749,7 @@ const quote =
 
       const em  = get('emotions');
       const be  = get('besoins');
-      const ac  = get('actions');
+      const ac  = get('transmutation');
       const co  = get('cosmos');
 
       // 4) Remplit la section Résultats
@@ -2771,7 +2757,7 @@ const quote =
       linesEl.innerHTML = `
         <p><b>Émotions :</b> ${em.name} — ${em.quote}</p>
         <p><b>Besoins :</b> ${be.name} — ${be.quote}</p>
-        <p><b>Actions :</b> ${ac.name} — ${ac.quote}</p>
+        <p><b>Transmutation :</b> ${ac.name} — ${ac.quote}</p>
         <p><b>Mémoires Cosmos :</b> ${co.name} — ${co.quote}</p>
       `;
       resultsEl.classList.remove('hidden');
@@ -2812,14 +2798,14 @@ document.querySelectorAll('a[href^="#"]:not([href="#"])').forEach(a=>{
 const STEPS = [
   { key:'emotions', label:'ÉMOTIONS',    count:18 }, // -> slot-0
   { key:'besoins',  label:'BESOINS',     count:18 }, // -> slot-1
-  { key:'actions',   label:'ACTIONS',	 count:18 }, // -> slot-2
+  { key:'transmutation',   label:'TRANSMUTATION',	 count:18 }, // -> slot-2
   { key:'cosmos',  label:'MÉMOIRE COSMOS',count:10 },  // -> slot-3
 ];
   // === IMAGES (comme le Tore) ===
   const FAMILY_FOLDERS = {
     emotions: 'emotions',
     besoins: 'besoins',
-    actions: 'actions',
+    transmutation: 'transmutations',
 
     // IMPORTANT : dans le Pèlerin tu utilises "cosmos"
     // mais dans ta bibliothèque c’est "memoire_cosmos"
@@ -2926,7 +2912,7 @@ tray.addEventListener('mouseleave', hidePreview);
   function clearFan(){ fan.innerHTML = ''; }
 
        function fillFront(card, familyKey){
-    const dataKey = (familyKey === 'cosmos') ? 'cosmos' : familyKey;
+    const dataKey = (familyKey === 'cosmos') ? 'memoire_cosmos' : familyKey;
 const pool = Array.isArray(window.DATA?.[dataKey]) ? window.DATA[dataKey] : [];
     const raw  = pool[Math.floor(Math.random() * pool.length)];
     if (!raw) return;
