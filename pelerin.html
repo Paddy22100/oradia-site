@@ -3710,45 +3710,35 @@ window.DATA = {
 
   memoire_cosmos: [
 
-    {name:"ÉTOILE",      quote:"La voûte céleste inscrit la mémoire des mondes. Derrière leur éclat se cache la mémoire de l’infini."},
+    {name:"LE TORE", quote:"Le tore relie l'ombre et la lumière. De son centre pulse la danse éternelle des cycles.", polarity:"yang"},
 
-    {name:"TERRE",       quote:"Le sol garde les pas de ceux qui ont marché avant. Chaque pierre est une archive que ton corps sait lire."},
+    {name:"MÉMOIRE CELLULAIRE", quote:"Chaque cellule conserve la trace du vivant. Le corps est une bibliothèque où rien ne se perd.", polarity:"yin"},
 
-    {name:"OCÉAN",       quote:"Les vagues effacent et recommencent sans fin. Les profondeurs retiennent ce que la surface oublie."},
+    {name:"MÉMOIRE COLLECTIVE", quote:"Le groupe rêve à travers l'individu. Dans la conscience partagée se tisse un monde commun.", polarity:"yang"},
 
-    {name:"GÉNÉALOGIE",  quote:"Tes racines prolongent des vies invisibles. Tu es à la fois héritage et commencement."},
+    {name:"ARCHIVE DU VIVANT", quote:"Les racines prolongent une histoire plus vaste que l'individu. Chaque être est à la fois héritage du Vivant et commencement nouveau.", polarity:"yin"},
 
-    {name:"FUTUR",       quote:"La graine porte déjà l’ombre de la forêt. Chaque geste d’aujourd’hui écrit une prophétie."},
+    {name:"SOUVENIR D'ÂME", quote:"Les résonances anciennes émergent sans prévenir. Ce qui revient cherche moins à expliquer qu'à révéler.", polarity:"yang"},
 
-    {name:"PASSÉ",       quote:"Les échos d’hier résonnent dans le présent. Celui qui écoute peut en transformer la trame."},
+    {name:"LE SOUFFLE DU VIVANT", quote:"Une respiration secrète traverse le monde. Dans son rythme silencieux naît l'impulsion du vivant.", polarity:"yin"},
 
-    {name:"PRÉSENT",     quote:"Tout converge en un seul instant immobile. C’est là que s’ouvre la porte de tous les temps."},
+    {name:"TEMPS INTÉRIEUR", quote:"Tout converge dans un instant silencieux. C'est là que s'ouvre la porte des rythmes profonds.", polarity:"yang"},
+    {name:"LIGNES DE VIE", quote:"La graine porte en silence des chemins multiples. Chaque choix trace une direction qui attend d'être vécue.", polarity:"yin"},
 
-    {name:"MÉMOIRE CELLULAIRE",  quote:"Chaque cellule conserve la trace du vivant. Le corps est une bibliothèque où rien ne se perd."},
+    {name:"POINT ZÉRO", quote:"Au centre, tout se suspend dans un silence dense. C'est là que s'esquisse la naissance d'un monde nouveau.", polarity:"yang"},
 
-    {name:"MÉMOIRE COLLECTIVE",  quote:"Le groupe rêve à travers l’individu. Dans la conscience partagée se tisse un monde commun."},
-
-    {name:"LE TORE",     quote:"Le tore relie l’ombre et la lumière. De son cœur pulse la danse éternelle des cycles."},
+    { name:"TISSAGE COSMIQUE", quote:"Des fils invisibles se cherchent dans l'ombre. Dans leur rencontre se révèle une cohérence secrète.", polarity:"yin"},
 
    ],
-
 };
 
-
-
-    const familyLabels = {
-
-      emotions: "ÉMOTIONS",
-
-      besoins: "BESOINS",
-
-      revelations: "RÉVÉLATIONS",
-
-      actions: "ACTIONS",
-
-      cosmos: "Carte Mémoires Cosmos"
-
-    };
+const familyLabels = {
+  emotions: "ÉMOTIONS",
+  besoins: "BESOINS",
+  revelations: "RÉVÉLATIONS",
+  actions: "ACTIONS",
+  cosmos: "Carte Mémoires Cosmos"
+};
 
     // Dossier d'images par famille
 
@@ -5026,13 +5016,49 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const pick = arr => arr[Math.floor(Math.random()*arr.length)];
 
+  function isOpenQuestion(txt){
 
+  const s = (txt || '').trim();
+
+  if (!s.endsWith('?')) return false;
+
+  const lower = s.toLowerCase();
+
+  // formulations fermées (oui/non) → refuser
+
+  const closedStarters = [
+
+    'est-ce que', 'peux-tu', 'puis-je', 'as-tu', 'avez-vous',
+
+    'es-tu', 'êtes-vous', 'dois-je', 'peut-on', 'sera-t-il', 'serait-il'
+
+  ];
+
+  if (closedStarters.some(p => lower.startsWith(p))) return false;
+
+  // formulations ouvertes → accepter
+
+  const openStarters = [
+
+    'comment', 'pourquoi', 'que', 'quel', 'quelle', 'quels', 'quelles',
+
+    'où', 'quand', 'comment', 'de quelle manière', 'de quoi', 'à quoi'
+
+  ];
+
+  if (openStarters.some(p => lower.startsWith(p))) return true;
+
+  // filet de sécurité : assez de mots + « ? »
+
+  return s.split(/\s+/).length >= 3;
+
+}
 
   // Récupère les éléments du Pèlerin (ils existent bien dans ton HTML)
 
   const intentionIn = $('#intention');
 
-  const startBtn    = $('#startReading');
+  const startButton    = $('#startReading');
 
   const board       = $('#board');
 
@@ -5040,9 +5066,32 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const cards       = $$('#board .card');
 
+  // validation live - only disable the start button
+
+  intentionIn.addEventListener('input', ()=>{
+
+  const ok = isOpenQuestion(intentionIn.value);
+
+  startButton.disabled = !ok;                        // ne touche qu'à #startReading
+
+});
+
+    // Focus → simple mise en évidence (pas d'entrée en immersion)
+
+  intentionIn.addEventListener('focus', () => {
+
+    intentionIn.parentElement.classList.add('ring-4', 'ring-gold/20');
+
+  });
 
 
-  if (!intentionIn || !startBtn || !board || cards.length === 0) {
+    intentionIn.addEventListener('blur', () => {
+
+    intentionIn.parentElement.classList.remove('ring-4', 'ring-gold/20');
+
+  });
+
+  if (!intentionIn || !startButton || !board || cards.length === 0) {
 
     console.error('[Pèlerin] Sélecteurs introuvables. Vérifie que #oracle n’est pas supprimé et que #board contient .card');
 
@@ -5050,6 +5099,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
+// ...
 
 
   let flippedCount = 0;
@@ -5058,7 +5108,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Affiche le plateau et reset proprement
 
-  startBtn.addEventListener('click', () => {
+  startButton.addEventListener('click', () => {
 
     if (!intentionIn.value.trim()) {
 
@@ -5328,11 +5378,11 @@ function generateAnalysis({ em, be, ac, co, intention }) {
 
 
 
-  // Petits réservoirs de variations
+  // Réservoirs poétiques enrichis
 
   const imagesEmotion = [
 
-    `un miroir posé sur l’eau`,
+    `un miroir posé sur l'eau`,
 
     `un écho ancien`,
 
@@ -5341,6 +5391,12 @@ function generateAnalysis({ em, be, ac, co, intention }) {
     `une flamme qui vacille`,
 
     `un paysage intérieur`,
+
+    `une rivière qui chuchote`,
+
+    `un parfum d'enfance`,
+
+    `une lumière vacillante`
 
   ];
 
@@ -5352,6 +5408,44 @@ function generateAnalysis({ em, be, ac, co, intention }) {
 
     `un fleuve souterrain`,
 
+    `un ancrage dans la terre`,
+
+    `un appel vers le ciel`,
+
+    `une racine qui cherche la lumière`
+
+  ];
+
+  const imagesTransmutation = [
+
+    `un feu qui purifie`,
+
+    `un serpent qui mue`,
+
+    `une graine qui éclôt`,
+
+    `un métal qui se forge`,
+
+    `un chemin qui se dessine`,
+
+    `une aile qui se déploie`
+
+  ];
+
+  const imagesCosmos = [
+
+    `une étoile qui guide`,
+
+    `un souffle cosmique`,
+
+    `une mémoire ancienne`,
+
+    `un fil d'or invisible`,
+
+    `une danse éternelle`,
+
+    `un silence sacré`
+
   ];
 
 
@@ -5362,55 +5456,165 @@ function generateAnalysis({ em, be, ac, co, intention }) {
 
 
 
-  // Construction narrative
+  // Construction narrative poétique
 
   let texte = "";
 
 
 
+  // Introduction avec intention
+
   if (intent) {
 
-    texte += `Ton intention : « ${intent} ». Elle agit comme un fond musical qui colore tout le reste. `;
+    const ouvertures = [
+
+      `« ${intent} » — cette intention résonne comme un chant fondamental qui donne sa couleur à tout le tirage. `,
+
+      `Avec ta question « ${intent} », tu ouvres un espace sacré où les cartes peuvent révéler leur vérité. `,
+
+      `Ton intention « ${intent} » agit comme une boussole intérieure, orientant chaque carte vers ce qui doit être entendu maintenant. `
+
+    ];
+
+    texte += pick(ouvertures);
 
   }
 
 
 
-  texte += `L’émotion présente est ${low(emo)}${quotes.emo ? ` (${quotes.emo})` : ''}. `;
+  // L'émotion comme point de départ
 
-  texte += `Elle surgit comme ${pick(imagesEmotion)}. Selon la façon dont tu la regardes, elle peut être appui ou obstacle. `;
+  const debutsEmotion = [
 
+    `L'émotion qui se présente, ${low(emo)}${quotes.emo ? ` (${quotes.emo})` : ''}, surgit comme ${pick(imagesEmotion)}. `,
 
+    `Au cœur de ton tirage, ${low(emo)}${quotes.emo ? ` (${quotes.emo})` : ''} apparaît tel ${pick(imagesEmotion)}. `,
 
-  texte += `Le besoin révélé, ${low(need)}${quotes.need ? ` (${quotes.need})` : ''}, se tient comme ${pick(imagesBesoin)}. `;
+    `${low(emo)}${quotes.emo ? ` (${quotes.emo})` : ''} émerge dans ta conscience comme ${pick(imagesEmotion)}. `
 
-  texte += `Il ne demande pas forcément d’être satisfait immédiatement, mais d’être reconnu. Parfois cela ouvre un passage, parfois cela rappelle ce qui manque. `;
+  ];
 
-
-
-  texte += `La transmutation proposée, ${low(act)}${quotes.act ? ` (${quotes.act})` : ''}, ressemble à ${pick(imagesTransmutation)}. `;
-
-  texte += `Elle t'invite à transformer ce qui est en ce qui doit être, que tu choisisses de l'accueillir ou de la laisser œuvrer en silence. `;
+  texte += pick(debutsEmotion);
 
 
 
-  texte += `En arrière-plan, ${low(cos)}${quotes.cos ? ` (${quotes.cos})` : ''} veille, tel ${pick(imagesCosmos)}. `;
+  const interpretationsEmotion = [
 
-  texte += `Cela rappelle qu’il y a toujours plus vaste que le geste immédiat, comme une respiration plus longue que la tienne. `;
+    `Elle n'est ni erreur ni vérité, mais simplement ce qui traverse toi en ce moment. En l'accueillant sans jugement, tu permets à son message de se déposer. `,
+
+    `Cette émotion est une messagère. Elle ne demande pas à être combattue, mais écoutée. Derrière son agitation se cache peut-être une clarté nouvelle. `,
+
+    `Voici le climat intérieur du moment. Comme toute météo, il passera. Mais pour l'instant, il colore tout ce que tu perçois. `
+
+  ];
+
+  texte += pick(interpretationsEmotion);
 
 
 
-  // Une fin avec variations possibles
+  // Le besoin comme ajustement
+
+  const debutsBesoin = [
+
+    `Le besoin qui se révèle, ${low(need)}${quotes.need ? ` (${quotes.need})` : ''}, se tient comme ${pick(imagesBesoin)}. `,
+
+    `Face à cette émotion, ${low(need)}${quotes.need ? ` (${quotes.need})` : ''} émerge tel ${pick(imagesBesoin)}. `,
+
+    `Pour répondre à ce qui t'habite, ${low(need)}${quotes.need ? ` (${quotes.need})` : ''} se présente tel ${pick(imagesBesoin)}. `
+
+  ];
+
+  texte += pick(debutsBesoin);
+
+
+
+  const interpretationsBesoin = [
+
+    `Ce besoin n'est pas une exigence, mais un ajustement naturel. Il ne demande pas à être comblé immédiatement, mais reconnu comme légitime. `,
+
+    `Parfois, reconnaître un besoin suffit à le transformer. L'espace d'écoute que tu lui offres peut déjà apaiser une partie de la tension. `,
+
+    `Ce besoin révèle ce qui cherche à s'équilibrer en toi. Il est le complément naturel de ce que tu ressens, l'autre face de la même pièce. `
+
+  ];
+
+  texte += pick(interpretationsBesoin);
+
+
+
+  // La transmutation comme chemin
+
+  const debutsTransmutation = [
+
+    `La transmutation proposée, ${low(act)}${quotes.act ? ` (${quotes.act})` : ''}, ressemble à ${pick(imagesTransmutation)}. `,
+
+    `Le mouvement qui s'invite, ${low(act)}${quotes.act ? ` (${quotes.act})` : ''}, prend la forme de ${pick(imagesTransmutation)}. `,
+
+    `Pour naviguer entre émotion et besoin, ${low(act)}${quotes.act ? ` (${quotes.act})` : ''} se dessine tel ${pick(imagesTransmutation)}. `
+
+  ];
+
+  texte += pick(debutsTransmutation);
+
+
+
+  const interpretationsTransmutation = [
+
+    `Cette action n'est pas une solution, mais une invitation. Elle te propose de transformer ce qui est en ce qui doit être, selon ton propre rythme. `,
+
+    `Ici se trouve le point de bascule : ce geste, si petit soit-il, peut changer toute la dynamique intérieure. À toi de sentir si le moment est venu. `,
+
+    `La transmutation ne force rien. Elle suggère un mouvement, une possibilité. Tu reste libre de l'accueillir ou de la laisser mûrir en silence. `
+
+  ];
+
+  texte += pick(interpretationsTransmutation);
+
+
+
+  // La carte cosmos comme perspective
+
+  const debutsCosmos = [
+
+    `En arrière-plan, ${low(cos)}${quotes.cos ? ` (${quotes.cos})` : ''} veille, tel ${pick(imagesCosmos)}. `,
+
+    `Plus vaste que tout le reste, ${low(cos)}${quotes.cos ? ` (${quotes.cos})` : ''} se déploie comme ${pick(imagesCosmos)}. `,
+
+    `Au-delà de l'immediat, ${low(cos)}${quotes.cos ? ` (${quotes.cos})` : ''} accomplit tout, tel ${pick(imagesCosmos)}. `
+
+  ];
+
+  texte += pick(debutsCosmos);
+
+
+
+  const interpretationsCosmos = [
+
+    `Cette carte te rappelle qu'il y a toujours plus grand que toi à l'œuvre. Elle connecte ton expérience personnelle à une sagesse plus ancienne. `,
+
+    `Ici se trouve la respiration plus longue que la tienne, le rythme qui contient tous les autres. Ce qui te dépasse te protège autant qu'il te porte. `,
+
+    `Cette perspective cosmique ne minimise pas ce que tu vis, mais l'inscrit dans un plus grand mouvement. Tu n'es ni seul(e), ni abandonné(e). `
+
+  ];
+
+  texte += pick(interpretationsCosmos);
+
+
+
+  // Fins enrichies et variées
 
   const fins = [
 
-    `Ce tirage n’apporte pas de verdict. Il s’offre comme une énigme douce, que tu pourras relire demain différemment.`,
+    `Ce tirage ne ferme rien. Il ouvre des portes que tu pourras franchir, ou simplement regarder. À chaque lecture, une nouvelle résonance apparaîtra. `,
 
-    `Ici, rien n’est figé : les cartes sont comme des fenêtres. À toi de voir par laquelle tu choisis de regarder.`,
+    `Les cartes ont parlé. Libre à toi de laisser leurs échos s'installer, ou de revenir à ta vie. La sagesse opère même sans conscience. `,
 
-    `Plutôt qu’un chemin balisé, elles proposent une danse. Tu peux suivre le rythme, ou inventer le tien.`,
+    `Voici une photographie de l'instant. Demain, avec le même regard, tu y verras peut-être d'autres vérités. Le temps est aussi un interprète. `,
 
-    `Le sens se déplace selon ton regard. Peut-être y verras-tu une invitation à ralentir, peut-être un élan à franchir.`,
+    `Ce tirage est une boussole, pas une carte. Il indique une direction, mais le chemin reste à inventer. Chaque pas révélera le suivant. `,
+
+    `L'oracle s'est tu. Le silence qui suit est aussi précieux que les paroles prononcées. Dans cet espace, quelque chose continue de grandir. `
 
   ];
 
@@ -5418,136 +5622,133 @@ function generateAnalysis({ em, be, ac, co, intention }) {
 
 
 
-  return { html: `<div class="space-y-3 leading-relaxed">${texte}</div>` };
-
+  // Retour avec un visuel magnifique
+  return { html: `<div class="space-y-8">
+    <div class="text-center space-y-4">
+      <div class="inline-flex items-center justify-center w-20 h-20 rounded-full bg-gradient-to-r from-gold/20 to-light-gold/20 border-2 border-gold/40 shadow-lg">
+        <i class="fas fa-feather-alt text-gold text-3xl"></i>
+      </div>
+      <h4 class="cormorant text-3xl text-gold font-medium">Votre interprétation</h4>
+      <div class="w-32 h-1 bg-gradient-to-r from-gold/40 to-light-gold/40 mx-auto rounded-full"></div>
+    </div>
+    
+    <div class="space-y-6">
+      ${texte.split('\n').filter(p => p.trim()).map((p, i) => {
+        if (p.includes('intention')) {
+          return `<div class="bg-gradient-to-r from-gold/10 to-transparent border-l-4 border-gold/50 p-6 rounded-r-lg backdrop-blur-sm">
+            <div class="flex items-start space-x-3">
+              <i class="fas fa-quote-left text-gold/70 mt-2"></i>
+              <p class="text-light-gold/95 text-lg leading-relaxed italic font-medium">${p.trim()}</p>
+            </div>
+          </div>`;
+        } else if (p.includes('émotion')) {
+          return `<div class="flex items-start space-x-4 p-6 bg-gradient-to-br from-red-900/20 to-transparent rounded-xl border border-red-500/20 backdrop-blur-sm">
+            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-r from-red-500/30 to-pink-500/30 flex items-center justify-center shadow-lg">
+              <i class="fas fa-heart text-red-300"></i>
+            </div>
+            <p class="text-light-gold/90 text-base leading-relaxed flex-1">${p.trim()}</p>
+          </div>`;
+        } else if (p.includes('besoin')) {
+          return `<div class="flex items-start space-x-4 p-6 bg-gradient-to-br from-green-900/20 to-transparent rounded-xl border border-green-500/20 backdrop-blur-sm">
+            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-r from-green-500/30 to-emerald-500/30 flex items-center justify-center shadow-lg">
+              <i class="fas fa-hand-holding-heart text-green-300"></i>
+            </div>
+            <p class="text-light-gold/90 text-base leading-relaxed flex-1">${p.trim()}</p>
+          </div>`;
+        } else if (p.includes('transmutation')) {
+          return `<div class="flex items-start space-x-4 p-6 bg-gradient-to-br from-orange-900/20 to-transparent rounded-xl border border-orange-500/20 backdrop-blur-sm">
+            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-r from-orange-500/30 to-amber-500/30 flex items-center justify-center shadow-lg">
+              <i class="fas fa-fire text-orange-300"></i>
+            </div>
+            <p class="text-light-gold/90 text-base leading-relaxed flex-1">${p.trim()}</p>
+          </div>`;
+        } else if (p.includes('cosmos')) {
+          return `<div class="flex items-start space-x-4 p-6 bg-gradient-to-br from-purple-900/20 to-transparent rounded-xl border border-purple-500/20 backdrop-blur-sm">
+            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-gradient-to-r from-purple-500/30 to-indigo-500/30 flex items-center justify-center shadow-lg">
+              <i class="fas fa-star text-purple-300"></i>
+            </div>
+            <p class="text-light-gold/90 text-base leading-relaxed flex-1">${p.trim()}</p>
+          </div>`;
+        } else if (p.includes('Ce tirage') || p.includes('L\'oracle') || p.includes('Ici') || p.includes('Plutôt') || p.includes('Le sens')) {
+          return `<div class="relative p-6 bg-gradient-to-r from-night-blue/40 to-transparent rounded-xl border border-gold/30 backdrop-blur-sm">
+            <div class="absolute inset-0 bg-gradient-to-r from-gold/5 to-transparent rounded-xl"></div>
+            <div class="relative">
+              <p class="text-light-gold/85 text-base leading-relaxed font-medium">${p.trim()}</p>
+            </div>
+          </div>`;
+        } else {
+          return `<div class="p-6 bg-night-blue/20 rounded-lg border border-gold/20 backdrop-blur-sm">
+            <p class="text-light-gold/90 text-base leading-relaxed">${p.trim()}</p>
+          </div>`;
+        }
+      }).join('')}
+    </div>
+    
+    <div class="text-center pt-8 border-t border-gold/20">
+      <div class="inline-flex items-center space-x-3 text-gold/60 text-sm">
+        <i class="fas fa-circle text-xs"></i>
+        <span class="font-medium">Fin de l'interprétation</span>
+        <i class="fas fa-circle text-xs"></i>
+      </div>
+      <p class="text-light-gold/50 text-xs mt-2 italic">Les paroles des cartes résonnent différemment à chaque lecture</p>
+    </div>
+  </div>` };
 }
 
-
-
-
-
-
-
-
-
-
-
   showBtn.addEventListener('click', async () => {
-
     // 1) Ouvre le modal et bloque le scroll
-
     modal.classList.remove('hidden');
-
     modal.classList.add('flex');
-
     document.body.style.overflow = 'hidden';
 
-
-
     try {
-
       // 2) (ici tu pourras appeler ton API; on simule un petit délai)
-
       await new Promise(r => setTimeout(r, 3000));
 
-
-
       // 3) Récupère ce qui est déjà affiché sur les cartes RETOURNÉES (on cible d'abord les slots)
-
       const get = fam => {
-
         const slotByFam = { emotions: 'slot-0', besoins: 'slot-1', transmutation: 'slot-2', cosmos: 'slot-3' };
-
         let card =
-
           document.querySelector(`#${slotByFam[fam]} .card[data-family="${fam}"]`) ||
-
           document.querySelector(`#board .card.mini[data-family="${fam}"]`) ||
-
           document.querySelector(`#board .card[data-family="${fam}"].flipped`) ||
-
           document.querySelector(`#board .card[data-family="${fam}"]`);
-
+        
         if (!card) return { name:'—', quote:'' };
 
-        const name  =
-
-  card.querySelector('[data-name]')?.textContent?.trim()
-
-  || card.dataset.card
-
-  || '—';
-
-
-
-const quote =
-
-  card.querySelector('[data-quote]')?.textContent?.trim()
-
-  || card.dataset.quote
-
-  || '';
-
-
+        const name = card.querySelector('[data-name]')?.textContent?.trim() || card.dataset.card || '—';
+        const quote = card.querySelector('[data-quote]')?.textContent?.trim() || card.dataset.quote || '';
 
         return { name, quote };
-
       };
 
-
-
-      const em  = get('emotions');
-
-      const be  = get('besoins');
-
-      const ac  = get('transmutation');
-
-      const co  = get('cosmos');
-
-
+      const em = get('emotions');
+      const be = get('besoins');
+      const ac = get('transmutation');
+      const co = get('cosmos');
 
       // 4) Remplit la section Résultats
-
       outInt.textContent = (intention?.value?.trim() || '—');
-
       linesEl.innerHTML = `
-
         <p><b>Émotions :</b> ${em.name} — ${em.quote}</p>
-
         <p><b>Besoins :</b> ${be.name} — ${be.quote}</p>
-
         <p><b>Transmutation :</b> ${ac.name} — ${ac.quote}</p>
-
         <p><b>Mémoires Cosmos :</b> ${co.name} — ${co.quote}</p>
-
       `;
 
       resultsEl.classList.remove('hidden');
-
-const analysis = generateAnalysis({ em, be, ac, co, intention: outInt.textContent });
-
-synthEl.innerHTML = analysis.html;
-
-
+      const analysis = generateAnalysis({ em, be, ac, co, intention: outInt.textContent });
+      synthEl.innerHTML = analysis.html;
 
     } finally {
-
       // 5) Ferme le modal et réactive le scroll
-
       modal.classList.add('hidden');
-
       modal.classList.remove('flex');
-
       document.body.style.overflow = '';
-
       // (optionnel) cacher le bouton après usage
-
       showBtn.classList.add('hidden');
-
     }
-
   });
-
 })();
 
 </script>

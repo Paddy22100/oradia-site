@@ -932,6 +932,28 @@
                 updateCounters();
             }
         }, 30000); // Toutes les 30 secondes
+        
+        // Flèche pour remonter en haut de page
+        const backToTopButton = document.getElementById('backToTop');
+        
+        // Afficher/cacher la flèche selon le scroll
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopButton.classList.remove('opacity-0');
+                backToTopButton.classList.add('opacity-100');
+            } else {
+                backToTopButton.classList.remove('opacity-100');
+                backToTopButton.classList.add('opacity-0');
+            }
+        });
+        
+        // Action de remonter en haut
+        backToTopButton.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
     </script>
 </body>
 </html>
