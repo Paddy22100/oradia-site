@@ -1954,13 +1954,13 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       <div class="flex items-center space-x-3">
         <i class="fas fa-sparkles text-2xl animate-pulse"></i>
         <span class="font-bold text-lg">🎯 PRÉCOMMANDE EXCLUSIVE</span>
-        <span class="hidden md:inline font-medium">- L'Oracle du Vivant - Livraison prévue Juin 2025</span>
+        <span class="hidden md:inline font-medium">- L'Oracle du Vivant - Livraison prévue Août 2026</span>
       </div>
       <div class="flex items-center space-x-4">
-        <a href="#Jeu" class="bg-night-blue text-gold px-4 py-2 rounded-lg font-semibold hover:bg-dark-blue transition-colors">
+        <a href="precommande-oracle.html" class="bg-night-blue text-gold px-4 py-2 rounded-lg font-semibold hover:bg-dark-blue transition-colors">
           <i class="fas fa-shopping-cart mr-2"></i>Précommander
         </a>
-        <button id="closeBanner" class="text-night-blue hover:text-dark-blue transition-colors">
+        <button id="closeBanner" class="text-night-blue hover:text-dark-blue transition-colors" title="Fermer">
           <i class="fas fa-times text-xl"></i>
         </button>
       </div>
@@ -1969,7 +1969,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
   <!-- Badge flottant de précommande -->
   <div id="precommandeFloat" class="fixed bottom-6 right-6 z-40 hidden">
-    <a href="#Jeu" class="group bg-gradient-to-br from-gold to-light-gold text-night-blue w-16 h-16 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-all duration-300">
+    <a href="precommande-oracle.html" class="group bg-gradient-to-br from-gold to-light-gold text-night-blue w-16 h-16 rounded-full shadow-2xl flex items-center justify-center hover:scale-110 transition-all duration-300">
       <i class="fas fa-shopping-cart text-xl group-hover:animate-bounce"></i>
     </a>
   </div>
@@ -6995,21 +6995,26 @@ document.addEventListener("DOMContentLoaded", () => {
   const precommandeBanner = document.getElementById('precommandeBanner');
   const precommandeFloat = document.getElementById('precommandeFloat');
   
+  // Toujours afficher le bandeau au chargement (nouvelle session)
+  // Réinitialiser le localStorage à chaque chargement pour une nouvelle session
+  localStorage.removeItem('precommandeBannerClosed');
+  precommandeBanner.style.display = 'block';
+  precommandeFloat.classList.add('hidden');
+  
+  // Debug : afficher l'état du localStorage dans la console
+  console.log('Bandeau - Nouvelle session, affichage du bandeau');
+  
   // Fermer le bandeau et afficher le badge flottant
   if (closeBanner && precommandeBanner && precommandeFloat) {
     closeBanner.addEventListener('click', () => {
       precommandeBanner.style.display = 'none';
       precommandeFloat.classList.remove('hidden');
       
-      // Sauvegarder en localStorage pour ne pas réafficher le bandeau
-      localStorage.setItem('precommandeBannerClosed', 'true');
+      // Sauvegarder en localStorage pour la session en cours
+      const now = new Date().getTime();
+      localStorage.setItem('precommandeBannerClosed', now.toString());
+      console.log('Bandeau fermé à:', new Date(now));
     });
-    
-    // Vérifier si le bandeau a déjà été fermé
-    if (localStorage.getItem('precommandeBannerClosed') === 'true') {
-      precommandeBanner.style.display = 'none';
-      precommandeFloat.classList.remove('hidden');
-    }
   }
 
     const btn = document.getElementById("memberMenuBtn");
