@@ -110,6 +110,24 @@
             0%, 100% { transform: translateY(0); }
             50% { transform: translateY(-10px); }
         }
+        
+        /* FAQ Styles */
+        .faq-answer {
+            transition: all 0.3s ease;
+        }
+        
+        .faq-question i.rotate-180 {
+            transform: rotate(180deg);
+        }
+        
+        .faq-question {
+            transition: background-color 0.2s ease;
+        }
+        
+        .faq-question:hover {
+            background-color: rgba(212, 175, 55, 0.1);
+            border-radius: 0.5rem;
+        }
     </style>
 </head>
 <body class="bg-night-blue text-light-gold">
@@ -411,7 +429,7 @@
                     <div class="text-center mb-6 pt-4">
                         <h3 class="cormorant text-2xl font-bold text-gold mb-3">Early Bird</h3>
                         <div class="flex items-baseline justify-center gap-2 mb-2">
-                            <span class="text-5xl font-bold text-gold">35</span>
+                            <span class="text-5xl font-bold text-gold">38</span>
                             <span class="text-2xl text-gold">€</span>
                         </div>
                     </div>
@@ -450,7 +468,7 @@
                     <div class="text-center mb-6 pt-4">
                         <h3 class="cormorant text-2xl font-bold text-gold mb-3">Tirage Offert</h3>
                         <div class="flex items-baseline justify-center gap-2 mb-2">
-                            <span class="text-5xl font-bold text-gold">42</span>
+                            <span class="text-5xl font-bold text-gold">44</span>
                             <span class="text-2xl text-gold">€</span>
                         </div>
                     </div>
@@ -498,7 +516,7 @@
                     
                     <div class="text-center mb-6 pt-4">
                         <div class="flex items-baseline justify-center gap-2 mb-2">
-                            <span class="text-5xl font-bold text-gold">49</span>
+                            <span class="text-5xl font-bold text-gold">52</span>
                             <span class="text-2xl text-gold">€</span>
                         </div>
                         <p class="text-light-gold text-sm">Exemplaire unique</p>
@@ -583,7 +601,7 @@
                             </div>
                             <div class="flex-1">
                                 <h3 class="cormorant text-xl font-bold text-gold mb-2">Livraison estimée</h3>
-                                <p class="text-light-gold mb-1">À partir du 1er décembre 2026</p>
+                                <p class="text-light-gold mb-1">À partir d'août 2026</p>
                                 <p class="text-light-gold/70 text-sm">Expédition de tous les exemplaires</p>
                             </div>
                         </div>
@@ -616,7 +634,7 @@
                             <i class="fas fa-chevron-down transition-transform"></i>
                         </button>
                         <div class="faq-answer hidden mt-4 text-light-gold">
-                            <p>La livraison est estimée à partir du 1er décembre 2026. Les commandes Early Bird seront prioritaires et expédiées en premier.</p>
+                            <p>La livraison est estimée à partir d'août 2026. Les commandes Early Bird seront prioritaires et expédiées en premier.</p>
                         </div>
                     </div>
                     
@@ -777,23 +795,48 @@
         
         // Mise à jour des compteurs
         function updateCounters() {
-            document.getElementById('earlyBirdCount').textContent = precommandeData.earlyBird.available;
+            // Mettre à jour le compteur Early Bird s'il existe
+            const earlyBirdElement = document.getElementById('earlyBirdCount');
+            if (earlyBirdElement) {
+                earlyBirdElement.textContent = precommandeData.earlyBird.available;
+            }
             
-            // Mise à jour de la barre de progression
-            const percentage = (precommandeData.total / precommandeData.objectif) * 100;
-            document.querySelector('.progress-bar').style.width = percentage + '%';
-            document.querySelector('.progress-bar span').textContent = `${precommandeData.total} / ${precommandeData.objectif}`;
+            // Mettre à jour la barre de progression
+            const progressBar = document.querySelector('.progress-bar');
+            const progressText = document.querySelector('.progress-bar span');
+            if (progressBar && progressText) {
+                const percentage = (precommandeData.total / precommandeData.objectif) * 100;
+                progressBar.style.width = percentage + '%';
+                progressText.textContent = `${precommandeData.total} / ${precommandeData.objectif}`;
+            }
         }
         
         // Initialisation
         updateCounters();
         
-        // FAQ
+        // FAQ - Amélioré avec une seule question ouverte à la fois
         document.querySelectorAll('.faq-question').forEach(button => {
             button.addEventListener('click', () => {
                 const answer = button.nextElementSibling;
                 const icon = button.querySelector('i');
+                const allAnswers = document.querySelectorAll('.faq-answer');
+                const allIcons = document.querySelectorAll('.faq-question i');
                 
+                // Fermer toutes les autres réponses
+                allAnswers.forEach(otherAnswer => {
+                    if (otherAnswer !== answer) {
+                        otherAnswer.classList.add('hidden');
+                    }
+                });
+                
+                // Réinitialiser toutes les icônes
+                allIcons.forEach(otherIcon => {
+                    if (otherIcon !== icon) {
+                        otherIcon.classList.remove('rotate-180');
+                    }
+                });
+                
+                // Toggle la réponse actuelle
                 answer.classList.toggle('hidden');
                 icon.classList.toggle('rotate-180');
             });
@@ -809,17 +852,17 @@
                 const offers = {
                     'early-bird': {
                         name: 'Early Bird',
-                        price: '35€',
+                        price: '38€',
                         description: 'Tarif exclusif quantité limitée'
                     },
                     'standard': {
                         name: 'Standard',
-                        price: '42€',
+                        price: '44€',
                         description: 'Prix standard complet'
                     },
                     'collector': {
                         name: 'Édition Signature',
-                        price: '49€',
+                        price: '52€',
                         description: 'Exemplaire dédicacé et unique'
                     }
                 };
