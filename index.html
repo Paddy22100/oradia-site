@@ -3658,15 +3658,15 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
 
-  <header class="header-bg w-full py-3 px-4 md:py-4 md:px-8">
+  <header class="header-bg w-full py-3 px-3 md:py-4 md:px-4 lg:px-6">
 
 
 
-  <div class="flex items-center justify-between">
+  <div class="flex items-center justify-between flex-nowrap">
 
 
 
-    <div class="flex items-center">
+    <div class="flex items-center flex-shrink-0">
 
 
 
@@ -3675,15 +3675,9 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
         <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo"
+     class="w-12 h-12 md:w-14 md:h-14 object-contain transform hover:scale-110 transition-transform duration-300" />
 
-
-
-     class="w-16 h-16 object-contain transform hover:scale-110 transition-transform duration-300" />
-
-
-
-        <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
-
+        <span class="cormorant text-xl md:text-2xl font-bold gold-gradient">ORADIA</span>
 
 
       </a>
@@ -3702,7 +3696,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
 
-    <button id="mobileMenuBtn" type="button" class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold" aria-label="Ouvrir le menu">
+    <button id="mobileMenuBtn" type="button" class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold" aria-label="Ouvrir le menu">
 
 
 
@@ -3722,7 +3716,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
 
-    <nav class="hidden md:flex space-x-6 text-lg">
+    <nav class="hidden lg:flex items-center space-x-3 md:space-x-4 text-sm md:text-base flex-1 justify-center">
 
 
 
@@ -3766,7 +3760,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
 
-    <div id="memberMenuWrapper" class="hidden md:hidden relative">
+    <div id="memberMenuWrapper" class="hidden lg:hidden relative">
 
 
 
@@ -3835,11 +3829,12 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
     <!-- Bouton Connexion (desktop) -->
-
-
-
-    <a href="auth/login-simple.html" id="loginBtn" class="btn-outline-gold md:inline-block">Connexion</a>
-
+    <a href="auth/login-simple.html" id="loginBtn" class="btn-outline-gold hidden lg:flex flex-shrink-0 ml-2 px-3 py-2 text-sm">Connexion</a>
+    
+    <!-- Icône Connexion (mobile) -->
+    <a href="auth/login-simple.html" class="lg:hidden flex items-center justify-center w-8 h-8 text-gold hover:text-light-gold transition-colors">
+      <i class="fas fa-user-circle text-xl"></i>
+    </a>
 
 
   </div>
@@ -3854,7 +3849,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
 
-  <nav id="mobileMenu" class="md:hidden hidden mt-3 space-y-2">
+  <nav id="mobileMenu" class="lg:hidden hidden mt-3 space-y-2">
 
 
 
@@ -3900,39 +3895,28 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
   <!-- Bandeau d'annonce Précommande -->
 
-  <div id="precommandeBanner" class="bg-gradient-to-r from-gold to-light-gold text-night-blue py-3 px-4 relative z-50">
 
-    <div class="container mx-auto max-w-6xl flex items-center justify-between">
 
-      <div class="flex items-center space-x-3">
-
-        <i class="fas fa-sparkles text-2xl animate-pulse"></i>
-
-        <span class="font-bold text-lg">✨ L'Oracle Oradia vous appelle ? — Précommande ouverte · Livraison Août 2026</span>
-
+  <div id="precommandeBanner" class="bg-gradient-to-r from-gold to-light-gold text-night-blue py-2 sm:py-3 px-3 sm:px-4 relative z-50">
+    <div class="container mx-auto max-w-6xl">
+      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
+        <div class="flex items-center space-x-1.5 sm:space-x-3">
+          <i class="fas fa-sparkles text-lg sm:text-2xl animate-pulse"></i>
+          <span class="font-bold text-xs sm:text-lg leading-tight">✨ L'Oracle Oradia vous appelle ? — Précommande ouverte · Livraison Août 2026</span>
+        </div>
+        <div class="flex items-center space-x-1.5 sm:space-x-4">
+          <a href="precommande-oracle.html" class="bg-night-blue text-gold px-2 py-1 sm:px-4 sm:py-2 rounded-lg font-semibold hover:bg-dark-blue transition-colors text-xs sm:text-base flex items-center">
+            <span class="hidden sm:inline">Précommander</span>
+            <span class="sm:hidden">Commander</span>
+            <i class="fas fa-shopping-cart ml-1 sm:ml-2"></i>
+          </a>
+          <button id="closeBanner" class="text-night-blue hover:text-dark-blue transition-colors p-0.5 sm:p-1" title="Fermer">
+            <i class="fas fa-times text-base sm:text-xl"></i>
+          </button>
+        </div>
       </div>
-
-      <div class="flex items-center space-x-4">
-
-        <a href="precommande-oracle.html" class="bg-night-blue text-gold px-4 py-2 rounded-lg font-semibold hover:bg-dark-blue transition-colors">
-
-          <i class="fas fa-shopping-cart mr-2"></i>Précommander
-
-        </a>
-
-        <button id="closeBanner" class="text-night-blue hover:text-dark-blue transition-colors" title="Fermer">
-
-          <i class="fas fa-times text-xl"></i>
-
-        </button>
-
-      </div>
-
     </div>
-
   </div>
-
-
 
 
 

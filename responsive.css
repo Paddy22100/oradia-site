@@ -83,9 +83,9 @@ p {
 /* ===== HEADER ET NAVIGATION ===== */
 
 /* Header mobile */
-@media (max-width: 767px) {
+@media (max-width: 1023px) {
     header {
-        padding: 0.75rem 1rem !important;
+        padding: 0.75rem 0.75rem !important;
     }
     
     header .flex {
@@ -94,12 +94,12 @@ p {
     
     /* Logo adaptatif */
     header img {
-        width: 2.5rem !important;
-        height: 2.5rem !important;
+        width: 1.75rem !important;
+        height: 1.75rem !important;
     }
     
     header .gold-gradient {
-        font-size: 1.25rem !important;
+        font-size: 1rem !important;
     }
     
     /* Menu mobile amélioré */
