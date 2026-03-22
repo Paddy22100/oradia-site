@@ -24,7 +24,7 @@ La navigation unifiée comprend maintenant les éléments suivants dans cet ordr
 3. Accompagnements (accompagnements.html)
 4. Rendez-vous (rendez-vous.html)
 5. À Propos (a-propos.html)
-6. Partenariats (index.html#edolgor)
+6. Partenariats (partenariats.html)
 7. Contact (contact.html)
 8. Espace membre (dropdown avec Profil, Tableau de bord, Déconnexion)
 

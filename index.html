@@ -3728,87 +3728,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
     
 
-    <!-- Espace membre (desktop) -->
-
-
-
-    <div id="memberMenuWrapper" class="hidden lg:hidden relative">
-
-
-
-      <!-- Bouton Espace membre -->
-
-
-
-      <button id="memberMenuBtn" class="flex items-center gap-2 text-gold font-medium hover:text-light-gold transition">
-
-
-
-        <i class="fas fa-user-circle text-2xl"></i>
-
-
-
-        <span>Espace membre</span>
-
-
-
-        <i class="fas fa-chevron-down text-sm ml-1"></i>
-
-
-
-      </button>
-
-
-
-
-
-      <!-- Dropdown -->
-
-
-
-      <div id="memberDropdown"
-
-
-
-           class="hidden absolute right-0 mt-2 w-48 bg-[rgba(5,20,40,0.95)] border border-gold/30 rounded-lg shadow-lg z-50 backdrop-blur-md">
-
-
-
-        <a href="member/profile.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Profil</a>
-
-
-
-        <a href="member/dashboard.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Tableau de bord</a>
-
-
-
-        <button id="logoutBtn" class="w-full text-left px-4 py-2 text-gold hover:bg-gold/10">Déconnexion</button>
-
-
-
-      </div>
-
-
-
     </div>
-
-    
-
-    
-
-    <!-- Bouton Connexion (desktop) -->
-    <a href="auth/login-simple.html" id="loginBtn" class="btn-outline-gold hidden lg:flex flex-shrink-0 ml-2 px-3 py-2 text-sm whitespace-nowrap">Connexion</a>
-    
-    <!-- Icône Connexion (mobile) -->
-    <a href="auth/login-simple.html" class="lg:hidden flex items-center justify-center w-8 h-8 text-gold hover:text-light-gold transition-colors">
-      <i class="fas fa-user-circle text-xl"></i>
-    </a>
-
-
-  </div>
-
-
-
 
   <!-- Menu mobile déroulant -->
 
@@ -3841,14 +3761,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
     <a href="partenariats.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
 
 
-
     <a href="contact.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
-
-
-
-    <a href="auth/login-simple.html" id="loginBtnMobile" class="w-full btn-outline-gold">Connexion</a>
-
-
 
   </nav>
 
@@ -3857,25 +3770,52 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
   <!-- Bandeau d'annonce Précommande -->
-
-
-
-  <div id="precommandeBanner" class="bg-gradient-to-r from-gold to-light-gold text-night-blue py-2 sm:py-3 px-3 sm:px-4 relative z-50">
+  <div id="precommandeBanner" class="bg-gradient-to-r from-gold to-light-gold text-night-blue py-3 sm:py-3 px-4 sm:px-4 relative z-50">
     <div class="container mx-auto max-w-6xl">
-      <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-3">
-        <div class="flex items-center space-x-1.5 sm:space-x-3">
-          <i class="fas fa-sparkles text-lg sm:text-2xl animate-pulse"></i>
-          <span class="font-bold text-xs sm:text-lg leading-tight">✨ L'Oracle Oradia vous appelle ? — Précommande ouverte · Livraison Août 2026</span>
+      <!-- Version Desktop : disposition horizontale -->
+      <div class="hidden sm:flex items-center justify-between gap-4">
+        <div class="flex items-center space-x-3">
+          <i class="fas fa-sparkles text-2xl animate-pulse"></i>
+          <span class="font-bold text-lg leading-tight">✨ L'Oracle Oradia vous appelle ? — Précommande ouverte · Livraison Août 2026</span>
         </div>
-        <div class="flex items-center space-x-1.5 sm:space-x-4">
-          <a href="precommande-oracle.html" class="bg-night-blue text-gold px-2 py-1 sm:px-4 sm:py-2 rounded-lg font-semibold hover:bg-dark-blue transition-colors text-xs sm:text-base flex items-center">
-            <span class="hidden sm:inline">Précommander</span>
-            <span class="sm:hidden">Commander</span>
-            <i class="fas fa-shopping-cart ml-1 sm:ml-2"></i>
+        <div class="flex items-center space-x-4">
+          <a href="precommande-oracle.html" class="bg-night-blue text-gold px-4 py-2 rounded-lg font-semibold hover:bg-dark-blue transition-colors text-base flex items-center">
+            Précommander
+            <i class="fas fa-shopping-cart ml-2"></i>
           </a>
-          <button id="closeBanner" class="text-night-blue hover:text-dark-blue transition-colors p-0.5 sm:p-1" title="Fermer">
-            <i class="fas fa-times text-base sm:text-xl"></i>
+          <button id="closeBanner" class="text-night-blue hover:text-dark-blue transition-colors p-1" title="Fermer">
+            <i class="fas fa-times text-xl"></i>
           </button>
+        </div>
+      </div>
+      
+      <!-- Version Mobile : disposition verticale premium -->
+      <div class="sm:hidden">
+        <!-- Croix de fermeture discrète en haut à droite -->
+        <button id="closeBannerMobile" class="absolute top-2 right-2 text-night-blue hover:text-dark-blue transition-colors p-1.5" title="Fermer">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+        
+        <!-- Contenu principal centré -->
+        <div class="text-center space-y-4">
+          <!-- Icône et message principal -->
+          <div class="flex items-center justify-center space-x-2">
+            <i class="fas fa-sparkles text-xl animate-pulse"></i>
+            <span class="font-bold text-sm leading-relaxed">
+              ✨ L'Oracle Oradia vous appelle ?
+            </span>
+          </div>
+          
+          <!-- Message secondaire -->
+          <p class="text-xs leading-relaxed text-night-blue/90 font-medium">
+            Précommande ouverte · Livraison Août 2026
+          </p>
+          
+          <!-- Bouton CTA premium -->
+          <a href="precommande-oracle.html" class="inline-flex items-center justify-center bg-night-blue text-gold px-6 py-2.5 rounded-full font-semibold hover:bg-dark-blue transition-all duration-300 hover:scale-105 text-sm shadow-lg">
+            <i class="fas fa-shopping-cart mr-2"></i>
+            Précommander
+          </a>
         </div>
       </div>
     </div>
@@ -13901,7 +13841,7 @@ document.addEventListener('click', (e) => {
 document.addEventListener("DOMContentLoaded", () => {
 
   const closeBanner = document.getElementById('closeBanner');
-
+  const closeBannerMobile = document.getElementById('closeBannerMobile');
   const precommandeBanner = document.getElementById('precommandeBanner');
 
   
@@ -13922,24 +13862,25 @@ document.addEventListener("DOMContentLoaded", () => {
 
   
 
-  // Fermer le bandeau
+  // Fermer le bandeau (desktop et mobile)
 
+  const closeBannerFunction = () => {
+    precommandeBanner.style.display = 'none';
+    
+    // Sauvegarder en localStorage pour la session en cours
+    const now = new Date().getTime();
+    localStorage.setItem('precommandeBannerClosed', now.toString());
+    console.log('Bandeau fermé à:', new Date(now));
+  };
+
+  // Bouton desktop
   if (closeBanner && precommandeBanner) {
+    closeBanner.addEventListener('click', closeBannerFunction);
+  }
 
-    closeBanner.addEventListener('click', () => {
-
-      precommandeBanner.style.display = 'none';
-      
-      // Sauvegarder en localStorage pour la session en cours
-
-      const now = new Date().getTime();
-
-      localStorage.setItem('precommandeBannerClosed', now.toString());
-
-      console.log('Bandeau fermé à:', new Date(now));
-
-    });
-
+  // Bouton mobile
+  if (closeBannerMobile && precommandeBanner) {
+    closeBannerMobile.addEventListener('click', closeBannerFunction);
   }
 
 

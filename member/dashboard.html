@@ -41,16 +41,16 @@
 
         // Vérifier l'authentification au chargement
         document.addEventListener('DOMContentLoaded', function() {
-            if (!window.oradiaAuth.isAuthed()) {
+            if (localStorage.getItem('oradiaAuth') !== 'true') {
                 // Rediriger vers la page de connexion si non connecté
                 window.location.href = '../auth/login-simple.html';
                 return;
             }
 
             // Mettre à jour le header avec l'email
-            const userEmail = window.oradiaAuth.getUserEmail();
+            const userEmail = localStorage.getItem('oradiaUserEmail');
             const memberNameElement = document.getElementById('memberName');
-            if (memberNameElement) {
+            if (memberNameElement && userEmail) {
                 memberNameElement.textContent = userEmail;
             }
 
@@ -60,7 +60,13 @@
                 logoutBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-                        window.oradiaAuth.logout();
+                        // Supprimer les données d'authentification
+                        localStorage.removeItem('oradiaAuth');
+                        localStorage.removeItem('oradiaUserEmail');
+                        localStorage.removeItem('oradiaUserName');
+                        
+                        // Rediriger vers la page de connexion
+                        window.location.href = '../auth/login-simple.html';
                     }
                 });
             }
@@ -494,7 +500,7 @@
             <li><a href="../index.html#offres" class="text-light-gold/70 hover:text-gold transition">Oracle</a></li>
             <li><a href="../accompagnements.html" class="text-light-gold/70 hover:text-gold transition">Accompagnements</a></li>
             <li><a href="../rendez-vous.html" class="text-light-gold/70 hover:text-gold transition">Rendez-vous</a></li>
-            <li><a href="../index.html#edolgor" class="text-light-gold/70 hover:text-gold transition">Partenariats</a></li>
+            <li><a href="../partenariats.html" class="text-light-gold/70 hover:text-gold transition">Partenariats</a></li>
           </ul>
         </div>
         <div>

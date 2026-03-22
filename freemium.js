@@ -244,7 +244,7 @@ class OradiaFreemium {
           </p>
           
           <div class="space-y-3">
-            <a href="member/login.html?redirect=${encodeURIComponent(window.location.href)}" class="block w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-6 rounded-full hover:shadow-lg transition-all text-center">
+            <a href="auth/login-simple.html?redirect=${encodeURIComponent(window.location.href)}" class="block w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-6 rounded-full hover:shadow-lg transition-all text-center">
               Se connecter
             </a>
             
