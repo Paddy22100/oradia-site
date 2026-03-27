@@ -10,38 +10,118 @@
     <link rel="stylesheet" href="../responsive.css">
     <script src="../security.js"></script>
     <script>
-        // Vérifier l'authentification au chargement
+        // Vérifier l'authentification admin au chargement
         document.addEventListener('DOMContentLoaded', function() {
-            if (localStorage.getItem('oradiaAuth') !== 'true') {
-                // Rediriger vers la page de connexion si non connecté
-                window.location.href = '../auth/login-simple.html';
+            // Vérifier la session admin
+            const adminSession = sessionStorage.getItem('adminSession');
+            const adminEmail = sessionStorage.getItem('adminEmail');
+            
+            if (!adminSession || !adminEmail || Date.now() > parseInt(adminSession)) {
+                // Session expirée ou inexistante
+                sessionStorage.removeItem('adminSession');
+                sessionStorage.removeItem('adminEmail');
+                sessionStorage.removeItem('loginAttempts');
+                sessionStorage.removeItem('lockoutUntil');
+                
+                // Rediriger vers la page de login admin
+                window.location.href = '../admin/login.html';
                 return;
             }
 
-            // Mettre à jour le header avec l'email
-            const userEmail = localStorage.getItem('oradiaUserEmail');
-            const memberNameElement = document.getElementById('memberName');
-            if (memberNameElement && userEmail) {
-                memberNameElement.textContent = userEmail;
+            // Vérifier le temps restant de session
+            const timeRemaining = parseInt(adminSession) - Date.now();
+            if (timeRemaining < 5 * 60 * 1000) { // Moins de 5 minutes
+                // Afficher un avertissement de session expirante
+                showSessionWarning(timeRemaining);
             }
 
-            // Gérer la déconnexion
-            const logoutBtn = document.getElementById('logoutBtn');
-            if (logoutBtn) {
-                logoutBtn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-                        // Supprimer les données d'authentification
-                        localStorage.removeItem('oradiaAuth');
-                        localStorage.removeItem('oradiaUserEmail');
-                        localStorage.removeItem('oradiaUserName');
-                        
-                        // Rediriger vers la page de connexion
-                        window.location.href = '../auth/login-simple.html';
-                    }
-                });
-            }
+            // Rafraîchir la session périodiquement
+            setInterval(() => {
+                const currentSession = sessionStorage.getItem('adminSession');
+                if (currentSession && Date.now() < parseInt(currentSession)) {
+                    // Étendre la session de 30 minutes
+                    const newExpiry = Date.now() + (30 * 60 * 1000);
+                    sessionStorage.setItem('adminSession', newExpiry.toString());
+                } else {
+                    // Session expirée
+                    logout();
+                }
+            }, 30 * 60 * 1000); // Toutes les 30 minutes
         });
+
+        // Afficher un avertissement de session
+        function showSessionWarning(timeRemaining) {
+            const minutes = Math.ceil(timeRemaining / 60000);
+            const warningDiv = document.createElement('div');
+            warningDiv.className = 'fixed top-4 right-4 bg-yellow-500/20 border border-yellow-500/50 text-yellow-300 px-4 py-3 rounded-lg z-50';
+            warningDiv.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-clock"></i>
+                    <span>Session expirante dans ${minutes} minute(s)</span>
+                </div>
+            `;
+            document.body.appendChild(warningDiv);
+            
+            // Masquer après 10 secondes
+            setTimeout(() => {
+                if (warningDiv.parentNode) {
+                    warningDiv.parentNode.removeChild(warningDiv);
+                }
+            }, 10000);
+        }
+
+        // Fonction de déconnexion
+        function logout() {
+            // Nettoyer toutes les données de session
+            sessionStorage.removeItem('adminSession');
+            sessionStorage.removeItem('adminEmail');
+            sessionStorage.removeItem('loginAttempts');
+            sessionStorage.removeItem('lockoutUntil');
+            
+            // Nettoyer les données remembered si nécessaire
+            if (!document.getElementById('remember')?.checked) {
+                localStorage.removeItem('rememberedEmail');
+            }
+            
+            // Afficher un message de déconnexion
+            showLogoutMessage();
+            
+            // Rediriger après 2 secondes
+            setTimeout(() => {
+                window.location.href = '../admin/login.html';
+            }, 2000);
+        }
+
+        // Afficher un message de déconnexion
+        function showLogoutMessage() {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'fixed top-4 right-4 bg-green-500/20 border border-green-500/50 text-green-300 px-4 py-3 rounded-lg z-50';
+            messageDiv.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Déconnexion réussie</span>
+                </div>
+            `;
+            document.body.appendChild(messageDiv);
+        }
+
+        // Bouton de déconnexion
+        function addLogoutButton() {
+            const header = document.querySelector('header .container');
+            if (header && !document.getElementById('logoutBtn')) {
+                const logoutBtn = document.createElement('button');
+                logoutBtn.id = 'logoutBtn';
+                logoutBtn.className = 'bg-red-500/20 hover:bg-red-500/30 text-red-300 px-4 py-2 rounded-lg transition-colors flex items-center gap-2';
+                logoutBtn.innerHTML = '<i class="fas fa-sign-out-alt"></i> Déconnexion';
+                logoutBtn.onclick = logout;
+                
+                // Ajouter après le contenu existant du header
+                header.appendChild(logoutBtn);
+            }
+        }
+
+        // Ajouter le bouton de déconnexion après le chargement
+        setTimeout(addLogoutButton, 100);
     </script>
     <script>
         tailwind.config = {
