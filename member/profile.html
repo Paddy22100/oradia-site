@@ -10,38 +10,9 @@
     <link rel="stylesheet" href="../responsive.css">
     <script src="../security.js"></script>
     <script>
-        // Système d'authentification ORADIA
-        (function(){
-          const AUTH_KEY = 'oradiaAuth';
-          const EMAIL_KEY = 'oradiaUserEmail';
-
-          function isAuthed(){ 
-            const authStatus = localStorage.getItem(AUTH_KEY);
-            const userEmail = localStorage.getItem(EMAIL_KEY);
-            return authStatus === '1' && userEmail && userEmail !== '';
-          }
-          
-          function getUserEmail(){
-            return localStorage.getItem(EMAIL_KEY) || '';
-          }
-
-          function logout() {
-            localStorage.removeItem(AUTH_KEY);
-            localStorage.removeItem(EMAIL_KEY);
-            window.location.href = '../index.html';
-          }
-
-          // Exposer les fonctions globalement
-          window.oradiaAuth = {
-            isAuthed,
-            getUserEmail,
-            logout
-          };
-        })();
-
         // Vérifier l'authentification au chargement
         document.addEventListener('DOMContentLoaded', function() {
-            if (!window.oradiaAuth.isAuthed()) {
+            if (localStorage.getItem('oradiaAuth') !== 'true') {
                 // Rediriger vers la page de connexion si non connecté
                 window.location.href = '../auth/login-simple.html';
                 return;
@@ -53,7 +24,13 @@
                 logoutBtn.addEventListener('click', function(e) {
                     e.preventDefault();
                     if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-                        window.oradiaAuth.logout();
+                        // Supprimer les données d'authentification
+                        localStorage.removeItem('oradiaAuth');
+                        localStorage.removeItem('oradiaUserEmail');
+                        localStorage.removeItem('oradiaUserName');
+                        
+                        // Rediriger vers la page de connexion
+                        window.location.href = '../auth/login-simple.html';
                     }
                 });
             }
