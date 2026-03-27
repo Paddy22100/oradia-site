@@ -1,0 +1,38 @@
+# Robots.txt pour ORADIA - L'Oracle du Vivant
+# https://oradia.fr
+
+User-agent: *
+Allow: /
+
+# Priorité des pages importantes
+Allow: /oracle.html
+Allow: /precommande-oracle.html
+Allow: /accompagnements.html
+Allow: /pelerin.html
+Allow: /traversee.html
+Allow: /tore.html
+
+# Pages d'authentification et admin (non indexées)
+Disallow: /admin/
+Disallow: /member/
+Disallow: /auth/
+Disallow: /user/
+
+# Fichiers système et temporaires
+Disallow: /server/
+Disallow: /*.js$
+Disallow: /*.css$
+Disallow: /temp/
+Disallow: /cache/
+Disallow: /logs/
+
+# Images et ressources autorisées
+Allow: /images/
+Allow: /assets/
+Allow: /fonts/
+
+# Sitemap
+Sitemap: https://oradia.fr/sitemap.xml
+
+# Crawl-delay pour économiser les ressources
+Crawl-delay: 1

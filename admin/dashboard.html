@@ -9,6 +9,12 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/date-fns@2.29.3/index.min.js"></script>
+    <script>
+        // Vérification de l'authentification admin
+        if (!sessionStorage.getItem('oradia_admin')) {
+            window.location.replace('login.html');
+        }
+    </script>
     <style>
         @import url('../style.css');
         
@@ -235,6 +241,10 @@
                         <i class="fas fa-sync-alt mr-2"></i>
                         Actualiser
                     </button>
+                    <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors">
+                        <i class="fas fa-sign-out-alt mr-2"></i>
+                        Déconnexion
+                    </button>
                 </div>
             </div>
         </header>
@@ -432,6 +442,13 @@
     </div>
 
     <script>
+        // Fonction de déconnexion
+        function logout() {
+            sessionStorage.removeItem('oradia_admin');
+            localStorage.removeItem('oradiaAdminToken');
+            window.location.replace('login.html');
+        }
+        
         // API Configuration
         const API_BASE = 'http://localhost:3001/api';
         let authToken = localStorage.getItem('oradiaAdminToken');
