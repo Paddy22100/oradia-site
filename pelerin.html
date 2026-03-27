@@ -2159,7 +2159,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
     <!-- Navigation desktop -->
     <nav class="hidden lg:flex items-center space-x-3 md:space-x-4 text-sm md:text-base flex-1 justify-center">
       <a href="/" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
-      <a href="/index.html#offres" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
+      <a href="oracle.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
       <a href="accompagnements.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
       <a href="rendez-vous.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
       <a href="a-propos.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
@@ -2171,7 +2171,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
   <!-- Menu mobile déroulant -->
   <nav id="mobileMenu" class="lg:hidden hidden mt-3 space-y-2">
     <a href="/" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-home mr-2"></i>Accueil</a>
-    <a href="/index.html#offres" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Oracle</a>
+    <a href="oracle.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Oracle</a>
     <a href="accompagnements.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
     <a href="rendez-vous.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
     <a href="a-propos.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
@@ -2628,15 +2628,15 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
           <ul class="space-y-2">
 
-            <li><a href="#accueil" class="text-light-gold hover:text-gold transition">Accueil</a></li>
+            <li><a href="/" class="text-light-gold hover:text-gold transition">Accueil</a></li>
 
-            <li><a href="#oracle" class="text-light-gold hover:text-gold transition">Jeu</a></li>
+            <li><a href="oracle.html" class="text-light-gold hover:text-gold transition">Oracle</a></li>
 
-            <li><a href="#offres" class="text-light-gold hover:text-gold transition">Offres</a></li>
+            <li><a href="index.html#offres" class="text-light-gold hover:text-gold transition">Offres</a></li>
 
-            <li><a href="#apropos" class="text-light-gold hover:text-gold transition">À Propos</a></li>
+            <li><a href="a-propos.html" class="text-light-gold hover:text-gold transition">À Propos</a></li>
 
-            <li><a href="#edolgor" class="text-light-gold hover:text-gold transition">Edolg'Or</a></li>
+            <li><a href="partenariats.html" class="text-light-gold hover:text-gold transition">Partenariats</a></li>
 
           </ul>
 
@@ -2712,9 +2712,9 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
 
-    <h3 class="cormorant text-2xl text-gold mb-2">Analyse en cours…</h3>
+    <h3 class="cormorant text-2xl text-gold mb-2">Prêt pour votre tirage</h3>
 
-    <p class="text-light-gold/90">Votre tirage est en cours d'interprétation.</p>
+    <p class="text-light-gold/90">Commencez votre exploration intérieure.</p>
 
 
 
@@ -4360,15 +4360,15 @@ function ensureImmersiveMenu(){
 
     <nav class="p-5 space-y-3">
 
-      <a href="#accueil" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">Accueil</a>
+      <a href="/" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">Accueil</a>
 
-      <a href="#offres" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">Offres</a>
+      <a href="index.html#offres" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">Offres</a>
 
-      <a href="#Jeu" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">Jeu</a>
+      <a href="oracle.html" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">Oracle</a>
 
-      <a href="#edolgor" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">Partenariat</a>
+      <a href="partenariats.html" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">Partenariat</a>
 
-      <a href="#apropos" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">À propos</a>
+      <a href="a-propos.html" class="block hover:text-light-gold" onclick="window.exitPelerinImmersive?.();">À propos</a>
 
       <hr class="border-gold/20 my-4">
 
@@ -6437,13 +6437,13 @@ document.addEventListener('click', (e) => {
 
 (function(){
 
-  const AUTH_KEY = 'oradiaAuth';
+  const AUTH_KEY = 'oradia_user_token';
 
 
 
-  function isAuthed(){ return localStorage.getItem(AUTH_KEY) === '1'; }
+  function isAuthed(){ return localStorage.getItem(AUTH_KEY) !== null; }
 
-  function setAuthed(v){ v ? localStorage.setItem(AUTH_KEY,'1') : localStorage.removeItem(AUTH_KEY); }
+  function setAuthed(v){ v ? localStorage.setItem(AUTH_KEY,'demo_token') : localStorage.removeItem(AUTH_KEY); }
 
 
 
@@ -6508,8 +6508,6 @@ document.addEventListener('click', (e) => {
     dropdown.innerHTML = `
 
       <a href="#profil" class="block px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Profil</a>
-
-      <a href="#dashboard" class="block px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Tableau de bord</a>
 
       <button id="logoutBtn" class="w-full text-left px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Déconnexion</button>
 

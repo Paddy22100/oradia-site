@@ -191,7 +191,7 @@
             <!-- Navigation desktop -->
             <nav class="hidden lg:flex items-center space-x-3 md:space-x-4 text-sm md:text-base flex-1 justify-center">
                 <a href="/" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
-                <a href="/index.html#offres" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
+                <a href="oracle.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
                 <a href="accompagnements.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
                 <a href="rendez-vous.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
                 <a href="a-propos.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
@@ -212,7 +212,6 @@
                 <div id="memberDropdown"
                      class="hidden absolute right-0 mt-2 w-48 bg-[rgba(5,20,40,0.95)] border border-gold/30 rounded-lg shadow-lg z-50 backdrop-blur-md">
                     <a href="member/profile.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Profil</a>
-                    <a href="member/dashboard.html" class="block px-4 py-2 text-gold hover:bg-gold/10">Tableau de bord</a>
                     <button id="logoutBtn" class="w-full text-left px-4 py-2 text-gold hover:bg-gold/10">Déconnexion</button>
                 </div>
             </div>
@@ -400,25 +399,21 @@
                     Votre précommande nous permet de lancer la production.
                 </p>
                 
-                <!-- Barre de progression -->
-                <div class="bg-[rgba(5,20,40,0.8)] rounded-full h-8 mb-4 overflow-hidden">
-                    <div class="progress-bar h-full rounded-full flex items-center justify-center" style="width: 2%">
-                        <span class="text-night-blue font-semibold">10 / 500</span>
-                    </div>
-                </div>
-                
-                <div class="grid md:grid-cols-3 gap-8 mt-12">
-                    <div class="text-center">
-                        <div class="text-3xl font-bold text-gold mb-2">10</div>
-                        <p class="text-light-gold">Précommandes</p>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-3xl font-bold text-gold mb-2">2%</div>
-                        <p class="text-light-gold">Objectif atteint</p>
-                    </div>
-                    <div class="text-center">
-                        <div class="text-3xl font-bold text-gold mb-2">490</div>
-                        <p class="text-light-gold">Restantes</p>
+                <!-- Informations sur l'édition limitée -->
+                <div class="bg-[rgba(5,20,40,0.8)] rounded-2xl p-6 border border-gold/30">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
+                        <div>
+                            <div class="text-3xl font-bold text-gold mb-2">500</div>
+                            <p class="text-light-gold">Exemplaires maximum</p>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-gold mb-2">2026</div>
+                            <p class="text-light-gold">Livraison prévue</p>
+                        </div>
+                        <div>
+                            <div class="text-3xl font-bold text-gold mb-2">64</div>
+                            <p class="text-light-gold">Cartes vibratoires</p>
+                        </div>
                     </div>
                 </div>
                 
@@ -804,36 +799,46 @@
         // Configuration Stripe - clé publique supprimée
         const stripe = null; // Stripe('pk_test_XXXXXXXXXXXXXXXXXXXXXXXX');
         
-        // Données de précommande (simulées)
-        const precommandeData = {
-            total: 10,
-            objectif: 500,
-            earlyBird: {
-                available: 90,
-                total: 100
-            }
-        };
-        
-        // Mise à jour des compteurs
-        function updateCounters() {
-            // Mettre à jour le compteur Early Bird s'il existe
-            const earlyBirdElement = document.getElementById('earlyBirdCount');
-            if (earlyBirdElement) {
-                earlyBirdElement.textContent = precommandeData.earlyBird.available;
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Animation carrousel
+            const slides = document.querySelectorAll('.carousel-slide');
+            const dots = document.querySelectorAll('#carouselDots > div');
+            const prevBtn = document.getElementById('prevSlide');
+            const nextBtn = document.getElementById('nextSlide');
+            
+            let currentSlide = 0;
+            
+            function showSlide(index) {
+                slides.forEach((slide, i) => {
+                    slide.style.opacity = i === index ? '1' : '0';
+                });
+                dots.forEach((dot, i) => {
+                    dot.className = i === index ? 'w-2 h-2 bg-gold rounded-full cursor-pointer' : 'w-2 h-2 bg-gold/50 rounded-full cursor-pointer';
+                });
             }
             
-            // Mettre à jour la barre de progression
-            const progressBar = document.querySelector('.progress-bar');
-            const progressText = document.querySelector('.progress-bar span');
-            if (progressBar && progressText) {
-                const percentage = (precommandeData.total / precommandeData.objectif) * 100;
-                progressBar.style.width = percentage + '%';
-                progressText.textContent = `${precommandeData.total} / ${precommandeData.objectif}`;
+            function nextSlide() {
+                currentSlide = (currentSlide + 1) % slides.length;
+                showSlide(currentSlide);
             }
-        }
-        
-        // Initialisation
-        updateCounters();
+            
+            function prevSlideFunc() {
+                currentSlide = (currentSlide - 1 + slides.length) % slides.length;
+                showSlide(currentSlide);
+            }
+            
+            if (prevBtn) prevBtn.addEventListener('click', prevSlideFunc);
+            if (nextBtn) nextBtn.addEventListener('click', nextSlide);
+            
+            // Auto-play
+            setInterval(nextSlide, 5000);
+            
+            // Dots navigation
+            dots.forEach((dot, index) => {
+                dot.addEventListener('click', () => showSlide(index));
+            });
+        });
         
         // FAQ - Amélioré avec une seule question ouverte à la fois
         document.querySelectorAll('.faq-question').forEach(button => {
