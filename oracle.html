@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+  <title>L'Oracle Oradia - Les Trois Voies du Tirage • Guidance Spirituelle</title>
+  <meta name="description" content="Découvrez les trois voies de l'Oracle Oradia : Le Pèlerin gratuit, La Traversée guidée à 3€, et Le Tore ultime à 8€/mois. Un oracle vivant pour éclairer votre chemin intérieur." />
+  <meta name="keywords" content="oracle, tirage, voyance, guidance spirituelle, cartes, divination, Oradia" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="responsive.css">
+  <script src="security.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#0a192f',
+            'gold': '#d4af37',
+            'light-gold': '#f5e7a1',
+            'dark-blue': '#051428',
+            'celtic-blue': '#1a365d'
+          },
+          fontFamily: {
+            'cormorant': ['Cormorant Garamond', 'serif'],
+            'cinzel': ['Cinzel', 'serif']
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'pulse-slow': 'pulse 4s ease-in-out infinite',
+            'shimmer': 'shimmer 3s ease-in-out infinite',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&display=swap');
+    
+    .font-cormorant {
+      font-family: 'Cormorant Garamond', serif;
+    }
+    
+    .font-cinzel {
+      font-family: 'Cinzel', serif;
+    }
+    
+    .gold-gradient {
+      background: linear-gradient(135deg, #d4af37, #f5e7a1, #d4af37);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .hero-section {
+      min-height: 100vh;
+      background: linear-gradient(135deg, #0a192f 0%, #051428 50%, #0a192f 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .hero-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 20% 50%, rgba(212, 175, 55, 0.15) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.08) 0%, transparent 50%);
+    }
+    
+    .floating {
+      animation: float 6s ease-in-out infinite;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
+    }
+    
+    @keyframes shimmer {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 1; }
+    }
+    
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    .header-bg {
+      background: linear-gradient(180deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.95) 100%);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid rgba(212,175,55,0.2);
+    }
+    
+    .card-hover {
+      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-8px) scale(1.02);
+    }
+    
+    .premium-glow {
+      box-shadow: 0 0 40px rgba(212,175,55,0.3);
+      transition: all 0.5s ease;
+    }
+    
+    .premium-glow:hover {
+      box-shadow: 0 0 60px rgba(212,175,55,0.5);
+    }
+    
+    .price-badge {
+      background: linear-gradient(135deg, #d4af37, #f5e7a1);
+      animation: shimmer 3s ease-in-out infinite;
+    }
+  </style>
+</head>
+
+<body class="bg-night-blue text-light-gold">
+  
+  <!-- Scroll to top button -->
+  <button id="backToTop" class="fixed bottom-6 right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-50 backdrop-blur-sm" aria-label="Remonter en haut">
+    <i class="fas fa-arrow-up text-sm"></i>
+  </button>
+
+  <!-- Header -->
+  <header class="header-bg w-full py-3 px-3 md:py-4 md:px-4 lg:px-6 fixed top-0 z-50">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex items-center justify-between flex-nowrap">
+        <div class="flex items-center flex-shrink-0">
+          <a href="index.html" class="flex items-center">
+            <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo"
+                 class="w-12 h-12 md:w-14 md:h-14 object-contain transform hover:scale-110 transition-transform duration-300" />
+            <span class="cormorant text-xl md:text-2xl font-bold gold-gradient">ORADIA</span>
+          </a>
+        </div>
+        
+        <!-- Bouton burger (mobile) -->
+        <button id="mobileMenuBtn" type="button" class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold" aria-label="Ouvrir le menu">
+          <i class="fas fa-bars text-lg"></i>
+        </button>
+        
+        <!-- Navigation desktop -->
+        <nav class="hidden lg:flex items-center space-x-3 md:space-x-4 text-sm md:text-base flex-1 justify-center">
+          <a href="index.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
+          <a href="oracle.html" class="text-gold hover:text-light-gold transition font-medium text-light-gold"><i class="fas fa-dice mr-2"></i>Oracle</a>
+          <a href="accompagnements.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
+          <a href="rendez-vous.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
+          <a href="a-propos.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+          <a href="partenariats.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
+          <a href="contact.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-envelope mr-2"></i>Contact</a>
+        </nav>
+      </div>
+    </div>
+    
+    <!-- Menu mobile déroulant -->
+    <nav id="mobileMenu" class="lg:hidden hidden mt-3 space-y-2">
+      <a href="index.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-home mr-2"></i>Accueil</a>
+      <a href="oracle.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors text-light-gold"><i class="fas fa-dice mr-2"></i>Oracle</a>
+      <a href="accompagnements.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
+      <a href="rendez-vous.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
+      <a href="a-propos.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
+      <a href="partenariats.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
+      <a href="contact.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
+    </nav>
+  </header>
+
+  <!-- Bandeau Précommande -->
+  <div id="preorderBanner" class="fixed top-20 left-0 right-0 z-40 bg-gradient-to-r from-gold to-light-gold shadow-lg">
+    <div class="container mx-auto px-4 py-3">
+      <!-- Version Desktop -->
+      <div class="hidden sm:flex items-center justify-between">
+        <div class="flex items-center space-x-4">
+          <i class="fas fa-sparkles text-night-blue animate-pulse"></i>
+          <span class="font-bold text-night-blue">
+            ✨ L'Oracle Oradia vous appelle ? Précommande ouverte · Livraison Août 2026
+          </span>
+        </div>
+        <div class="flex items-center space-x-3">
+          <a href="precommande-oracle.html" class="bg-night-blue text-gold px-6 py-2 rounded-full font-semibold hover:bg-dark-blue transition-all duration-300 hover:scale-105 flex items-center">
+            Précommander
+            <i class="fas fa-shopping-cart ml-2"></i>
+          </a>
+          <button id="closeBanner" class="text-night-blue hover:text-dark-blue transition-colors p-1" title="Fermer">
+            <i class="fas fa-times text-xl"></i>
+          </button>
+        </div>
+      </div>
+      
+      <!-- Version Mobile -->
+      <div class="sm:hidden">
+        <button id="closeBannerMobile" class="absolute top-2 right-2 text-night-blue hover:text-dark-blue transition-colors p-1.5" title="Fermer">
+          <i class="fas fa-times text-lg"></i>
+        </button>
+        <div class="text-center space-y-4">
+          <div class="flex items-center justify-center space-x-2">
+            <i class="fas fa-sparkles text-xl animate-pulse"></i>
+            <span class="font-bold text-sm leading-relaxed">
+              ✨ L'Oracle Oradia vous appelle ?
+            </span>
+          </div>
+          <p class="text-xs leading-relaxed text-night-blue/90 font-medium">
+            Précommande ouverte · Livraison Août 2026
+          </p>
+          <a href="precommande-oracle.html" class="inline-flex items-center justify-center bg-night-blue text-gold px-6 py-2.5 rounded-full font-semibold hover:bg-dark-blue transition-all duration-300 hover:scale-105 text-sm shadow-lg">
+            <i class="fas fa-shopping-cart mr-2"></i>
+            Précommander
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Hero Oracle -->
+  <section class="hero-section relative pt-32">
+    <div class="hero-overlay"></div>
+    <div class="relative z-10 w-full px-6 pb-16 md:pb-24">
+      <div class="max-w-4xl mx-auto text-center">
+        <div class="mb-8">
+          <h1 class="font-cinzel text-[56px] md:text-[95px] font-semibold text-gold tracking-wide mb-4 leading-none">
+            L'Oracle Oradia
+          </h1>
+          <div class="h-[1px] w-[200px] bg-gold mx-auto mb-6"></div>
+        </div>
+        
+        <p class="text-xl md:text-2xl text-light-gold mb-8 leading-relaxed max-w-3xl mx-auto">
+          Un oracle vivant qui puise dans la sagesse des cartes pour illuminer votre chemin intérieur et révéler votre essence profonde
+        </p>
+        
+        <div class="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+          <a href="#offres" class="inline-flex items-center bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 hover:scale-105 premium-glow">
+            <i class="fas fa-compass mr-2"></i>
+            Choisir ma voie
+          </a>
+          <a href="index.html" class="inline-flex items-center border-2 border-gold text-gold font-bold py-4 px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300">
+            <i class="fas fa-home mr-2"></i>
+            Retour à l'accueil
+          </a>
+        </div>
+
+        <!-- Stats de confiance -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
+          <div class="text-center">
+            <div class="text-3xl font-bold text-gold mb-2 stat-number" data-end="1500" data-suffix="+">0</div>
+            <div class="text-sm text-light-gold/70">Tirages réalisés</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-gold mb-2 stat-number" data-end="98" data-suffix="%">0</div>
+            <div class="text-sm text-light-gold/70">Satisfaction</div>
+          </div>
+          <div class="text-center">
+            <div class="text-3xl font-bold text-gold mb-2">24/7</div>
+            <div class="text-sm text-light-gold/70">Disponible</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Présentation Oracle -->
+  <section id="oracle" class="py-20 px-6 bg-gradient-to-b from-dark-blue to-night-blue relative">
+    <div class="absolute inset-0 opacity-5">
+      <div class="absolute inset-0" style="background-image: radial-gradient(circle at 25% 25%, #d4af37 1px, transparent 1px), radial-gradient(circle at 75% 75%, #d4af37 1px, transparent 1px); background-size: 50px 50px;"></div>
+    </div>
+
+    <div class="container mx-auto max-w-6xl relative z-10">
+      <div class="text-center mb-16">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-6 gold-gradient">La Sagesse de l'Oracle</h2>
+        <p class="text-xl text-light-gold max-w-4xl mx-auto leading-relaxed mb-12">
+          Oradia n'est pas un oracle qui prédit l'avenir, mais une conversation avec votre âme. 
+          Chaque tirage révèle les dynamiques essentielles à l'œuvre dans votre vie.
+        </p>
+      </div>
+
+      <!-- Les trois piliers -->
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+        <div class="text-center group">
+          <div class="w-20 h-20 rounded-full bg-gradient-to-br from-gold/20 to-gold/10 border-2 border-gold/40 flex items-center justify-center mx-auto mb-6 floating group-hover:scale-110 transition-transform">
+            <i class="fas fa-heart text-2xl text-gold"></i>
+          </div>
+          <h3 class="cormorant text-2xl font-bold text-gold mb-3">Émotion</h3>
+          <p class="text-light-gold/80 text-sm">Ce qui vous traverse et vous anime profondément</p>
+        </div>
+
+        <div class="text-center group">
+          <div class="w-20 h-20 rounded-full bg-gradient-to-br from-gold/20 to-gold/10 border-2 border-gold/40 flex items-center justify-center mx-auto mb-6 floating group-hover:scale-110 transition-transform" style="animation-delay: 2s;">
+            <i class="fas fa-sync text-2xl text-gold"></i>
+          </div>
+          <h3 class="cormorant text-2xl font-bold text-gold mb-3">Transmutation</h3>
+          <p class="text-light-gold/80 text-sm">Ce qui cherche à se transformer en vous</p>
+        </div>
+
+        <div class="text-center group">
+          <div class="w-20 h-20 rounded-full bg-gradient-to-br from-gold/20 to-gold/10 border-2 border-gold/40 flex items-center justify-center mx-auto mb-6 floating group-hover:scale-110 transition-transform" style="animation-delay: 4s;">
+            <i class="fas fa-infinity text-2xl text-gold"></i>
+          </div>
+          <h3 class="cormorant text-2xl font-bold text-gold mb-3">Mémoire Cosmos</h3>
+          <p class="text-light-gold/80 text-sm">La sagesse qui accompagne votre chemin</p>
+        </div>
+      </div>
+
+      <!-- Citation philosophique -->
+      <div class="bg-gold/10 backdrop-blur-sm rounded-2xl p-8 border border-gold/20">
+        <p class="text-light-gold text-lg leading-relaxed italic text-center">
+          "Oradia n'est pas un oracle qui prédit l'avenir, mais une boussole intérieure 
+          qui révèle les directions possibles. Il vous connecte à votre propre sagesse, 
+          à cette part de vous qui sait déjà, profondément, quel est votre chemin."
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Les Trois Voies - Section Vendeuse -->
+  <section id="offres" class="py-24 px-6 bg-gradient-to-b from-night-blue to-dark-blue relative">
+    <div class="absolute inset-0 opacity-5">
+      <div class="absolute inset-0" style="background-image: radial-gradient(circle at 25% 25%, #d4af37 1px, transparent 1px), radial-gradient(circle at 75% 75%, #d4af37 1px, transparent 1px); background-size: 50px 50px;"></div>
+    </div>
+
+    <div class="container mx-auto max-w-7xl relative z-10">
+      <div class="text-center mb-16">
+        <h2 class="cormorant text-5xl md:text-6xl font-bold mb-6 gold-gradient">Choisissez Votre Voie</h2>
+        <p class="text-xl text-light-gold max-w-4xl mx-auto leading-relaxed mb-4">
+          Chaque voie est une porte vers une compréhension plus profonde de vous-même
+        </p>
+        <div class="flex items-center justify-center gap-4 text-gold">
+          <i class="fas fa-star text-yellow-400"></i>
+          <span class="text-sm">Sans engagement</span>
+          <i class="fas fa-star text-yellow-400"></i>
+          <span class="text-sm">Résultats immédiats</span>
+          <i class="fas fa-star text-yellow-400"></i>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+        
+        <!-- Le Pèlerin -->
+        <div id="pelerin" class="group relative h-full bg-gradient-to-br from-[rgba(10,25,47,0.9)] to-[rgba(5,20,40,0.9)] rounded-3xl border border-gold/30 overflow-hidden card-hover">
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold to-transparent opacity-50"></div>
+          <div class="p-8 flex flex-col h-full">
+            <div class="text-center mb-6">
+              <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gold/20 to-gold/10 border-2 border-gold/40 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-walking text-2xl text-gold"></i>
+              </div>
+              <h3 class="cormorant text-3xl font-bold text-gold mb-2">Le Pèlerin</h3>
+              <p class="text-light-gold/60 text-sm">Premiers pas sur le chemin</p>
+            </div>
+
+            <div class="flex-1 space-y-4 mb-6">
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">4 cartes sacrées</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Interprétation claire</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Accès instantané</span>
+              </div>
+            </div>
+
+            <div class="text-center mb-6">
+              <div class="price-badge text-2xl font-bold text-night-blue px-4 py-2 rounded-full inline-block mb-2">
+                GRATUIT
+              </div>
+              <p class="text-light-gold/60 text-sm">Parfait pour commencer</p>
+            </div>
+
+            <div class="mt-auto">
+              <a href="pelerin.html?start=intention" class="w-full bg-gradient-to-r from-night-blue to-celtic-blue text-gold font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105 touch-target">
+                <i class="fas fa-play"></i>
+                Commencer gratuitement
+              </a>
+              <p class="text-center text-xs text-gold/60 mt-3">
+                <i class="fas fa-lock-open mr-1"></i>
+                Aucune inscription requise
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- La Traversée -->
+        <div id="traversee" class="group relative h-full bg-gradient-to-br from-[rgba(10,25,47,0.9)] to-[rgba(5,20,40,0.9)] rounded-3xl border border-gold/30 overflow-hidden card-hover premium-glow">
+          <div class="absolute top-4 right-4 bg-gold text-night-blue px-3 py-1 rounded-full text-xs font-semibold price-badge">
+            Le plus populaire
+          </div>
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold to-transparent"></div>
+          <div class="p-8 flex flex-col h-full">
+            <div class="text-center mb-6">
+              <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gold/20 to-gold/10 border-2 border-gold/40 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-compass text-2xl text-gold"></i>
+              </div>
+              <h3 class="cormorant text-3xl font-bold text-gold mb-2">La Traversée</h3>
+              <p class="text-light-gold/60 text-sm">Boussole intérieure à cinq directions</p>
+            </div>
+
+            <div class="flex-1 space-y-4 mb-6">
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">5 cartes guidées</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Synthèse personnalisée</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Mantra sacré</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">5 tirages inclus</span>
+              </div>
+            </div>
+
+            <div class="text-center mb-6">
+              <div class="price-badge text-3xl font-bold text-night-blue px-6 py-3 rounded-full inline-block mb-2">
+                3€
+              </div>
+              <p class="text-light-gold/60 text-sm">Accès unique</p>
+            </div>
+
+            <div class="mt-auto">
+              <a href="#" id="orderBtn" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105 touch-target">
+                <i class="fas fa-shopping-cart"></i>
+                Commander maintenant
+              </a>
+              <p class="text-center text-xs text-gold/60 mt-3">
+                <i class="fas fa-bolt mr-1"></i>
+                Livraison instantanée
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Le Tore -->
+        <div id="tore" class="group relative h-full bg-gradient-to-br from-[rgba(10,25,47,0.9)] to-[rgba(5,20,40,0.9)] rounded-3xl border border-gold/30 overflow-hidden card-hover premium-glow">
+          <div class="absolute top-4 right-4 bg-gradient-to-r from-gold to-light-gold text-night-blue px-3 py-1 rounded-full text-xs font-semibold">
+            Premium
+          </div>
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold to-transparent"></div>
+          <div class="p-8 flex flex-col h-full">
+            <div class="text-center mb-6">
+              <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gold/20 to-gold/10 border-2 border-gold/40 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                <i class="fas fa-infinity text-2xl text-gold"></i>
+              </div>
+              <h3 class="cormorant text-3xl font-bold text-gold mb-2">Le Tore</h3>
+              <p class="text-light-gold/60 text-sm">Connexion à votre sagesse infinie</p>
+            </div>
+
+            <div class="flex-1 space-y-4 mb-6">
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Tirages illimités</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Cartes passerelles exclusives</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Clés personnelles & astrologie</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Historique complet</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Espace membre premium</span>
+              </div>
+              <div class="flex items-center gap-3">
+                <i class="fas fa-check-circle text-gold text-sm"></i>
+                <span class="text-light-gold text-sm">Mantra quotidien</span>
+              </div>
+            </div>
+
+            <div class="text-center mb-6">
+              <div class="price-badge text-3xl font-bold text-night-blue px-6 py-3 rounded-full inline-block mb-2">
+                8€<span class="text-lg font-normal">/mois</span>
+              </div>
+              <p class="text-light-gold/60 text-sm">Maîtrise spirituelle</p>
+            </div>
+
+            <div class="mt-auto">
+              <a href="tore.html" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105 touch-target">
+                <i class="fas fa-infinity"></i>
+                Accéder à l'ultime
+              </a>
+              <p class="text-center text-xs text-gold/60 mt-3">
+                <i class="fas fa-sync mr-1"></i>
+                Annulable à tout moment
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Garantie et confiance -->
+      <div class="text-center mt-16">
+        <div class="bg-gold/10 backdrop-blur-sm rounded-2xl p-8 border border-gold/20 max-w-4xl mx-auto">
+          <h3 class="cormorant text-2xl font-bold text-gold mb-6">Garantie de Satisfaction</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="text-center">
+              <i class="fas fa-shield-alt text-3xl text-gold mb-4"></i>
+              <h4 class="font-semibold text-gold mb-2">Sécurisé</h4>
+              <p class="text-sm text-light-gold/70">Paiements 100% sécurisés</p>
+            </div>
+            <div class="text-center">
+              <i class="fas fa-heart text-3xl text-gold mb-4"></i>
+              <h4 class="font-semibold text-gold mb-2">Authentique</h4>
+              <p class="text-sm text-light-gold/70">Vraie guidance spirituelle</p>
+            </div>
+            <div class="text-center">
+              <i class="fas fa-user-clock text-3xl text-gold mb-4"></i>
+              <h4 class="font-semibold text-gold mb-2">Disponible</h4>
+              <p class="text-sm text-light-gold/70">24/7 à votre service</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Bottom CTA -->
+      <div class="text-center mt-16">
+        <p class="text-light-gold mb-6 text-lg">Des questions ? Notre équipe est là pour vous guider</p>
+        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+          <a href="contact.html" class="inline-flex items-center bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300">
+            <i class="fas fa-envelope mr-2"></i>
+            Nous contacter
+          </a>
+          <span class="text-gold/50">ou</span>
+          <a href="a-propos.html" class="text-gold hover:text-light-gold transition-colors flex items-center gap-2">
+            <i class="fas fa-info-circle"></i>
+            En savoir plus
+          </a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
+    <div class="container mx-auto max-w-6xl">
+      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-center md:text-left">
+        <div>
+          <div class="flex items-center mb-4">
+            <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo" class="w-16 h-16 mr-4" />
+            <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+          </div>
+          <p class="text-light-gold text-sm">L'oracle qui vous accompagne sur votre chemin personnel et révèle votre essence.</p>
+        </div>
+        
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Navigation</h4>
+          <ul class="space-y-2">
+            <li><a href="index.html" class="text-light-gold hover:text-gold transition">Accueil</a></li>
+            <li><a href="oracle.html" class="text-light-gold hover:text-gold transition text-light-gold">Oracle</a></li>
+            <li><a href="accompagnements.html" class="text-light-gold hover:text-gold transition">Accompagnements</a></li>
+            <li><a href="rendez-vous.html" class="text-light-gold hover:text-gold transition">Rendez-vous</a></li>
+            <li><a href="partenariats.html" class="text-light-gold hover:text-gold transition">Partenariats</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Ressources</h4>
+          <ul class="space-y-2">
+            <li><a href="a-propos.html" class="text-light-gold hover:text-gold transition">À Propos</a></li>
+            <li><a href="contact.html" class="text-light-gold hover:text-gold transition">Contact</a></li>
+            <li><a href="cgv.html" class="text-light-gold hover:text-gold transition">CGV</a></li>
+            <li><a href="cgu.html" class="text-light-gold hover:text-gold transition">CGU</a></li>
+          </ul>
+        </div>
+        
+        <div>
+          <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
+          <ul class="space-y-2">
+            <li><a href="mentions-legales.html" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
+            <li><a href="politique-confidentialite.html" class="text-light-gold hover:text-gold transition">Confidentialité</a></li>
+          </ul>
+        </div>
+      </div>
+      
+      <div class="border-t border-gold/20 mt-8 pt-8 text-center">
+        <p class="text-light-gold/50 text-sm">
+          &copy; 2026 Oradia. Tous droits réservés.
+        </p>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Scripts -->
+  <script>
+    // Gestion du bandeau précommande
+    const closeBanner = document.getElementById('closeBanner');
+    const closeBannerMobile = document.getElementById('closeBannerMobile');
+    const precommandeBanner = document.getElementById('preorderBanner');
+
+    function closeBannerFunction() {
+      if (precommandeBanner) {
+        precommandeBanner.style.display = 'none';
+      }
+    }
+
+    if (closeBanner && precommandeBanner) {
+      closeBanner.addEventListener('click', closeBannerFunction);
+    }
+
+    if (closeBannerMobile && precommandeBanner) {
+      closeBannerMobile.addEventListener('click', closeBannerFunction);
+    }
+
+    // Gestion du menu mobile
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+
+    if (mobileMenuBtn && mobileMenu) {
+      mobileMenuBtn.addEventListener('click', () => {
+        mobileMenu.classList.toggle('hidden');
+      });
+
+      // Fermer le menu quand on clique ailleurs
+      document.addEventListener('click', (e) => {
+        if (!mobileMenuBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
+          mobileMenu.classList.add('hidden');
+        }
+      });
+    }
+
+    // Smooth scroll
+    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+      anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+          target.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+
+    // Bouton retour en haut
+    const backToTopBtn = document.getElementById('backToTop');
+    
+    window.addEventListener('scroll', () => {
+      if (window.pageYOffset > 300) {
+        backToTopBtn.classList.remove('opacity-0');
+        backToTopBtn.classList.add('opacity-100');
+      } else {
+        backToTopBtn.classList.add('opacity-0');
+        backToTopBtn.classList.remove('opacity-100');
+      }
+    });
+
+    backToTopBtn.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+
+    // Script de sécurité
+    if (typeof security !== 'undefined') {
+      security.init();
+    }
+
+    // Animation des chiffres stats
+    function animateValue(element, start, end, duration) {
+      let startTimestamp = null;
+      const step = (timestamp) => {
+        if (!startTimestamp) startTimestamp = timestamp;
+        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+        element.innerHTML = Math.floor(progress * (end - start) + start) + element.dataset.suffix;
+        if (progress < 1) {
+          window.requestAnimationFrame(step);
+        }
+      };
+      window.requestAnimationFrame(step);
+    }
+
+    // Observer pour les animations
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          if (entry.target.classList.contains('stat-number')) {
+            const end = parseInt(entry.target.dataset.end);
+            animateValue(entry.target, 0, end, 2000);
+            observer.unobserve(entry.target);
+          }
+        }
+      });
+    });
+
+    // Observer les stats
+    document.addEventListener('DOMContentLoaded', () => {
+      const stats = document.querySelectorAll('.stat-number');
+      stats.forEach(stat => {
+        stat.dataset.suffix = stat.dataset.suffix || '';
+        observer.observe(stat);
+      });
+    });
+  </script>
+</body>
+</html>
