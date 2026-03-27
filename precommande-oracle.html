@@ -406,158 +406,155 @@
         </div>
     </section>
 
-    <!-- Section Offres -->
-    <section id="offres" class="py-20">
+    <!-- Section Offres de Précommande -->
+    <section id="offres" class="py-20 bg-gradient-to-b from-[rgba(5,20,40,0.6)] to-[rgba(26,54,93,0.6)]">
         <div class="container mx-auto px-6">
-            <div class="text-center mb-16">
-                <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-4">
+            <div class="max-w-6xl mx-auto">
+                <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient text-center mb-16">
                     Choisissez Votre Offre
                 </h2>
-                <p class="text-xl text-light-gold">
-                    Trois formules pour tous les budgets et toutes les aspirations
-                </p>
-            </div>
-            
-            <div class="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
                 
-                <!-- Offre Early Bird -->
-                <div class="offer-card rounded-2xl p-8 relative flex flex-col h-full border-2 border-gold/40 shadow-lg hover:shadow-xl hover:border-gold/60 transition-all duration-300">
-                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-                        <span class="bg-gradient-to-r from-gold to-light-gold text-night-blue px-8 py-2 rounded-full text-xs font-bold shadow-lg whitespace-nowrap">
-                            MEILLEURE OFFRE
-                        </span>
-                    </div>
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
                     
-                    <div class="text-center mb-6 pt-4">
-                        <h3 class="cormorant text-2xl font-bold text-gold mb-3">Early Bird</h3>
-                        <div class="flex items-baseline justify-center gap-2 mb-2">
-                            <span class="text-5xl font-bold text-gold">38</span>
-                            <span class="text-2xl text-gold">€</span>
+                    <!-- Offre Standard -->
+                    <div id="standard" class="group relative bg-[rgba(5,20,40,0.8)] rounded-2xl p-8 border border-gold/30 shadow-lg hover:shadow-xl hover:border-gold/50 transition-all duration-300 h-full flex flex-col">
+                        <div class="text-center mb-6">
+                            <div class="w-20 h-20 mx-auto mb-4 bg-gold/20 rounded-full flex items-center justify-center group-hover:bg-gold/30 transition-colors">
+                                <i class="fas fa-box text-3xl text-gold"></i>
+                            </div>
+                            <h3 class="cormorant text-2xl font-bold text-gold mb-2">Standard</h3>
+                            <div class="flex items-baseline justify-center gap-2 mb-4">
+                                <span class="text-5xl font-bold text-gold">38</span>
+                                <span class="text-2xl text-gold">€</span>
+                            </div>
+                            <p class="text-light-gold/70 text-sm">L'oracle complet</p>
+                        </div>
+                        
+                        <div class="flex-grow mb-6">
+                            <ul class="space-y-3">
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-gold mr-3 mt-1 flex-shrink-0"></i>
+                                    <span class="text-light-gold">Oracle complet de 64 cartes</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-gold mr-3 mt-1 flex-shrink-0"></i>
+                                    <span class="text-light-gold">Livret d'accompagnement détaillé</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-gold mr-3 mt-1 flex-shrink-0"></i>
+                                    <span class="text-light-gold">Coffret premium</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-check-circle text-gold mr-3 mt-1 flex-shrink-0"></i>
+                                    <span class="text-light-gold">Numéroté et authentifié</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <button class="w-full bg-gold text-night-blue font-bold py-4 px-8 rounded-full hover:bg-light-gold hover:shadow-lg hover:scale-105 transition-all duration-300 precommande-btn touch-target" data-offer="standard">
+                                <i class="fas fa-shopping-cart mr-2"></i>
+                                Précommander
+                            </button>
                         </div>
                     </div>
                     
-                    <div class="flex-grow mb-6">
-                        <ul class="space-y-4">
-                            <li class="flex items-center">
-                                <i class="fas fa-check-circle text-gold mr-3 flex-shrink-0"></i>
-                                <span class="text-light-gold">Oracle complet</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check-circle text-gold mr-3 flex-shrink-0"></i>
-                                <span class="text-light-gold">64 cartes</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check-circle text-gold mr-3 flex-shrink-0"></i>
-                                <span class="text-light-gold">Livret d'accompagnement</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check-circle text-gold mr-3 flex-shrink-0"></i>
-                                <span class="text-light-gold">Coffret</span>
-                            </li>
-                        </ul>
-                    </div>
-                    
-                    <div class="mt-auto">
-                        <button class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-lg hover:scale-105 transition-all duration-300 precommande-btn" data-offer="early-bird">
-                            <i class="fas fa-shopping-cart mr-2"></i>
-                            Précommander
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Offre Standard -->
-                <div class="offer-card rounded-2xl p-8 relative flex flex-col h-full border border-gold/30 shadow-lg hover:shadow-xl hover:border-gold/50 transition-all duration-300">
-                    <div class="text-center mb-6 pt-4">
-                        <h3 class="cormorant text-2xl font-bold text-gold mb-3">Tirage Offert</h3>
-                        <div class="flex items-baseline justify-center gap-2 mb-2">
-                            <span class="text-5xl font-bold text-gold">44</span>
-                            <span class="text-2xl text-gold">€</span>
+                    <!-- Offre Tirage Offert -->
+                    <div id="tirage-offert" class="group relative bg-gradient-to-br from-[rgba(212,175,55,0.1)] to-[rgba(5,20,40,0.8)] rounded-2xl p-8 border-2 border-gold/50 shadow-lg hover:shadow-xl hover:border-gold transition-all duration-300 h-full flex flex-col transform lg:scale-105">
+                        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                            <span class="bg-gradient-to-r from-gold to-light-gold text-night-blue px-6 py-2 rounded-full text-sm font-bold shadow-lg whitespace-nowrap">
+                                LE PLUS POPULAIRE
+                            </span>
+                        </div>
+                        
+                        <div class="text-center mb-6 pt-4">
+                            <div class="w-20 h-20 mx-auto mb-4 bg-gold/30 rounded-full flex items-center justify-center group-hover:bg-gold/40 transition-colors">
+                                <i class="fas fa-video text-3xl text-gold"></i>
+                            </div>
+                            <h3 class="cormorant text-2xl font-bold text-gold mb-2">Tirage Offert</h3>
+                            <div class="flex items-baseline justify-center gap-2 mb-4">
+                                <span class="text-5xl font-bold text-gold">44</span>
+                                <span class="text-2xl text-gold">€</span>
+                            </div>
+                            <p class="text-light-gold/70 text-sm">Plus qu'un oracle, une expérience</p>
+                        </div>
+                        
+                        <div class="flex-grow mb-6">
+                            <ul class="space-y-3">
+                                <li class="flex items-start">
+                                    <i class="fas fa-star text-gold mr-3 mt-1 flex-shrink-0"></i>
+                                    <span class="text-light-gold">Tout l'oracle complet</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-star text-gold mr-3 mt-1 flex-shrink-0"></i>
+                                    <span class="text-light-gold">Tirage personnel en visio</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-star text-gold mr-3 mt-1 flex-shrink-0"></i>
+                                    <span class="text-light-gold">Interprétation complète offerte</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-star text-gold mr-3 mt-1 flex-shrink-0"></i>
+                                    <span class="text-light-gold">Guidance personnalisée</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <button class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-lg hover:scale-105 transition-all duration-300 precommande-btn touch-target" data-offer="tirage-offert">
+                                <i class="fas fa-magic mr-2"></i>
+                                Précommander
+                            </button>
                         </div>
                     </div>
                     
-                    <div class="flex-grow mb-6">
-                        <ul class="space-y-4">
-                            <li class="flex items-center">
-                                <i class="fas fa-check-circle text-gold mr-3 flex-shrink-0"></i>
-                                <span class="text-light-gold">Oracle complet</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check-circle text-gold mr-3 flex-shrink-0"></i>
-                                <span class="text-light-gold">64 cartes</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check-circle text-gold mr-3 flex-shrink-0"></i>
-                                <span class="text-light-gold">Livret d'accompagnement</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-check-circle text-gold mr-3 flex-shrink-0"></i>
-                                <span class="text-light-gold">Coffret</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-video text-gold mr-3 flex-shrink-0"></i>
-                                <span class="text-light-gold">Tirage gratuit en visio avec le créateur</span>
-                            </li>
-                        </ul>
-                    </div>
-                    
-                    <div class="mt-auto">
-                        <button class="w-full bg-gold text-night-blue font-bold py-4 px-8 rounded-full hover:bg-light-gold hover:shadow-lg hover:scale-105 transition-all duration-300 precommande-btn" data-offer="standard">
-                            <i class="fas fa-shopping-cart mr-2"></i>
-                            Précommander
-                        </button>
-                    </div>
-                </div>
-                
-                <!-- Offre Édition Signature -->
-                <div class="offer-card rounded-2xl p-8 relative flex flex-col h-full border-2 border-gold shadow-lg hover:shadow-xl hover:border-gold/80 transition-all duration-300">
-                    <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
-                        <span class="bg-gradient-to-r from-gold to-light-gold text-night-blue px-8 py-2 rounded-full text-xs font-bold shadow-lg whitespace-nowrap">
-                            ÉDITION SIGNATURE
-                        </span>
-                    </div>
-                    
-                    <div class="text-center mb-6 pt-4">
-                        <div class="flex items-baseline justify-center gap-2 mb-2">
-                            <span class="text-5xl font-bold text-gold">52</span>
-                            <span class="text-2xl text-gold">€</span>
+                    <!-- Offre Édition Signature -->
+                    <div id="edition-signature" class="group relative bg-[rgba(5,20,40,0.9)] rounded-2xl p-8 border-2 border-gold shadow-lg hover:shadow-xl hover:border-gold/70 transition-all duration-300 h-full flex flex-col">
+                        <div class="absolute -top-4 left-1/2 transform -translate-x-1/2 z-10">
+                            <span class="bg-gradient-to-r from-gold to-light-gold text-night-blue px-6 py-2 rounded-full text-sm font-bold shadow-lg whitespace-nowrap">
+                                ÉDITION LIMITÉE
+                            </span>
                         </div>
-                        <p class="text-light-gold text-sm">Exemplaire unique</p>
-                    </div>
-                    
-                    <div class="flex-grow mb-6">
-                        <ul class="space-y-4">
-                            <li class="flex items-center">
-                                <i class="fas fa-star text-gold mr-3 flex-shrink-0"></i>
-                                <span class="text-light-gold">Oracle complet</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-star text-gold mr-3 flex-shrink-0"></i>
-                                <span class="text-light-gold">Exemplaire dédicacé par le créateur</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-star text-gold mr-3 flex-shrink-0"></i>
-                                <span class="text-light-gold">64 cartes</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-star text-gold mr-3 flex-shrink-0"></i>
-                                <span class="text-light-gold">Livret d'accompagnement</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-star text-gold mr-3 flex-shrink-0"></i>
-                                <span class="text-light-gold">Coffret</span>
-                            </li>
-                            <li class="flex items-center">
-                                <i class="fas fa-video text-gold mr-3 flex-shrink-0"></i>
-                                <span class="text-light-gold">Tirage gratuit en visio avec le créateur</span>
-                            </li>
-                        </ul>
-                    </div>
-                    
-                    <div class="mt-auto">
-                        <button class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-lg hover:scale-105 transition-all duration-300 precommande-btn" data-offer="collector">
-                            <i class="fas fa-shopping-cart mr-2"></i>
-                            Précommander
-                        </button>
+                        
+                        <div class="text-center mb-6 pt-4">
+                            <div class="w-20 h-20 mx-auto mb-4 bg-gold/20 rounded-full flex items-center justify-center group-hover:bg-gold/30 transition-colors">
+                                <i class="fas fa-feather text-3xl text-gold"></i>
+                            </div>
+                            <h3 class="cormorant text-2xl font-bold text-gold mb-2">Édition Signature</h3>
+                            <div class="flex items-baseline justify-center gap-2 mb-4">
+                                <span class="text-5xl font-bold text-gold">52</span>
+                                <span class="text-2xl text-gold">€</span>
+                            </div>
+                            <p class="text-light-gold/70 text-sm">Un exemplaire unique</p>
+                        </div>
+                        
+                        <div class="flex-grow mb-6">
+                            <ul class="space-y-3">
+                                <li class="flex items-start">
+                                    <i class="fas fa-crown text-gold mr-3 mt-1 flex-shrink-0"></i>
+                                    <span class="text-light-gold">Exemplaire unique et numéroté</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-crown text-gold mr-3 mt-1 flex-shrink-0"></i>
+                                    <span class="text-light-gold">Dédicace personnalisée</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-crown text-gold mr-3 mt-1 flex-shrink-0"></i>
+                                    <span class="text-light-gold">Tirage en visio avec le créateur</span>
+                                </li>
+                                <li class="flex items-start">
+                                    <i class="fas fa-crown text-gold mr-3 mt-1 flex-shrink-0"></i>
+                                    <span class="text-light-gold">Certificat d'authenticité</span>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="mt-auto">
+                            <button class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-lg hover:scale-105 transition-all duration-300 precommande-btn touch-target" data-offer="edition-signature">
+                                <i class="fas fa-gem mr-2"></i>
+                                Précommander
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -852,20 +849,20 @@
             button.addEventListener('click', () => {
                 const offer = button.dataset.offer;
                 const offers = {
-                    'early-bird': {
-                        name: 'Early Bird',
-                        price: '38€',
-                        description: 'Tarif exclusif quantité limitée'
-                    },
                     'standard': {
                         name: 'Standard',
-                        price: '44€',
-                        description: 'Prix standard complet'
+                        price: '38€',
+                        description: "L'oracle complet à prix préférentiel"
                     },
-                    'collector': {
+                    'tirage-offert': {
+                        name: 'Tirage Offert',
+                        price: '44€',
+                        description: "Plus qu'un oracle, une expérience avec tirage en visio"
+                    },
+                    'edition-signature': {
                         name: 'Édition Signature',
                         price: '52€',
-                        description: 'Exemplaire dédicacé et unique'
+                        description: 'Exemplaire unique et dédicacé'
                     }
                 };
                 
