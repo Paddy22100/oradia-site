@@ -12,9 +12,9 @@
         <priority>1.0</priority>
     </url>
     
-    <!-- Oracle en ligne -->
+    <!-- Offres Oracle -->
     <url>
-        <loc>https://oradia.fr/oracle.html</loc>
+        <loc>https://oradia.fr/index.html#offres</loc>
         <lastmod>2026-03-27</lastmod>
         <changefreq>monthly</changefreq>
         <priority>0.9</priority>

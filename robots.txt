@@ -5,7 +5,7 @@ User-agent: *
 Allow: /
 
 # Priorité des pages importantes
-Allow: /oracle.html
+Allow: /index.html#offres
 Allow: /precommande-oracle.html
 Allow: /accompagnements.html
 Allow: /pelerin.html

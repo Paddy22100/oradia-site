@@ -5,8 +5,9 @@
 
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
-  <title>Accompagnements — Oradia · Séances personnalisées & Cercles de parole</title>
-  <meta name="description" content="Séances d'accompagnement individuel, cercles de parole et intelligence collective avec le créateur d'Oradia. 60€ la séance · 30€ le cercle." />
+  <title>Accompagnements Spirituels - Oradia | Séances & Cercles</title>
+  <meta name="description" content="Accompagnements spirituels personnalisés avec Oradia. Séances individuelles (60€), cercles de parole (30€), guidance spirituelle et développement personnel.">
+  <meta name="keywords" content="accompagnement spirituel, séances individuelles, cercles de parole, développement personnel, guidance, transformation, Oradia, coaching spirituel">
   <meta property="og:title" content="Accompagnements — Oradia" />
   <meta property="og:description" content="Des espaces de dialogue et de réflexion pour explorer vos transformations. Séances individuelles, cercles collectifs, accompagnement d'équipes." />
   <meta property="og:image" content="https://oradia.fr/images/medias/photo_a_propos.png" />
@@ -484,7 +485,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
     <!-- Navigation desktop -->
     <nav class="hidden lg:flex items-center space-x-3 md:space-x-4 text-sm md:text-base flex-1 justify-center">
       <a href="/" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
-      <a href="oracle.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
+      <a href="/index.html#offres" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
       <a href="accompagnements.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
       <a href="rendez-vous.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
       <a href="a-propos.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
@@ -496,7 +497,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
   <!-- Menu mobile déroulant -->
   <nav id="mobileMenu" class="lg:hidden hidden mt-3 space-y-2">
     <a href="/" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-home mr-2"></i>Accueil</a>
-    <a href="oracle.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Oracle</a>
+    <a href="/index.html#offres" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Oracle</a>
     <a href="accompagnements.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
     <a href="rendez-vous.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
     <a href="a-propos.html" class="block px-3 py-2 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
@@ -833,7 +834,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
             <i class="fas fa-envelope mr-3 group-hover:animate-pulse"></i>
             <span>Prendre contact</span>
           </a>
-          <a href="oracle.html" class="group btn-outline-gold border-2 border-gold text-gold font-bold py-4 px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-gold/30">
+          <a href="/index.html#offres" class="group btn-outline-gold border-2 border-gold text-gold font-bold py-4 px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-gold/30">
             <i class="fas fa-dice mr-3 group-hover:animate-spin"></i>
             <span>Explorer Oradia</span>
           </a>
@@ -945,7 +946,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           <h4 class="cormorant text-xl text-gold mb-4">Navigation</h4>
           <ul class="space-y-2">
             <li><a href="/" class="text-light-gold/70 hover:text-gold transition">Accueil</a></li>
-            <li><a href="oracle.html" class="text-light-gold/70 hover:text-gold transition">Oracle</a></li>
+            <li><a href="/index.html#offres" class="text-light-gold/70 hover:text-gold transition">Offres</a></li>
             <li><a href="accompagnements.html" class="text-light-gold/70 hover:text-gold transition">Accompagnements</a></li>
             <li><a href="rendez-vous.html" class="text-light-gold/70 hover:text-gold transition">Rendez-vous</a></li>
             <li><a href="partenariats.html" class="text-light-gold/70 hover:text-gold transition">Partenariats</a></li>
@@ -1059,8 +1060,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           memberMenuWrapper.classList.remove('hidden');
         }
         if (footerLogin) {
-          footerLogin.textContent = 'Accès Dashboard';
-          footerLogin.onclick = () => window.location.href = 'member/dashboard.html';
+          footerLogin.remove();
         }
         if (loginBtnMobile) {
           loginBtnMobile.style.display = 'none';
@@ -1071,8 +1071,7 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
           memberMenuWrapper.classList.add('hidden');
         }
         if (footerLogin) {
-          footerLogin.textContent = 'Connexion';
-          footerLogin.onclick = () => window.location.href = 'auth/login-simple.html';
+          footerLogin.remove();
         }
         if (loginBtnMobile) {
           loginBtnMobile.style.display = 'block';
