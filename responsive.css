@@ -82,23 +82,23 @@ p {
 
 /* ===== HEADER ET NAVIGATION ===== */
 
-/* Header mobile */
+/* Header mobile - exclut le header global partagé */
 @media (max-width: 1023px) {
-    header {
+    header:not(.header-bg) {
         padding: 0.75rem 0.75rem !important;
     }
     
-    header .flex {
+    header:not(.header-bg) .flex {
         flex-wrap: nowrap;
     }
     
-    /* Logo adaptatif */
-    header img {
+    /* Logo adaptatif - exclut le header global */
+    header:not(.header-bg) img {
         width: 1.75rem !important;
         height: 1.75rem !important;
     }
     
-    header .gold-gradient {
+    header:not(.header-bg) .gold-gradient {
         font-size: 1rem !important;
     }
     

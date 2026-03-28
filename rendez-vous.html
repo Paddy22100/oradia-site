@@ -153,45 +153,7 @@
 
 <body class="relative">
   <!-- Header -->
-  <header class="header-bg w-full py-2 sm:py-3 px-4 md:py-4 md:px-8">
-    <div class="max-w-7xl mx-auto">
-      <div class="flex items-center justify-between flex-nowrap">
-    <div class="flex items-center flex-shrink-0">
-      <a href="/" class="flex items-center">
-        <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo"
-     class="w-12 h-12 sm:w-14 sm:h-14 md:w-16 md:h-16 object-contain transform hover:scale-110 transition-transform duration-300" />
-        <span class="cormorant text-2xl sm:text-3xl font-bold gold-gradient">ORADIA</span>
-      </a>
-    </div>
-    
-    <!-- Bouton burger (mobile) -->
-    <button id="mobileMenuBtn" type="button" class="lg:hidden inline-flex items-center justify-center w-10 h-10 rounded-lg border border-gold text-gold" aria-label="Ouvrir le menu">
-      <i class="fas fa-bars text-lg"></i>
-    </button>
-    
-    <!-- Navigation desktop -->
-    <nav class="hidden lg:flex items-center space-x-3 md:space-x-4 text-sm md:text-base flex-1 justify-center">
-      <a href="/" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-home mr-2"></i>Accueil</a>
-      <a href="oracle.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-dice mr-2"></i>Oracle</a>
-      <a href="accompagnements.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
-      <a href="rendez-vous.html" class="text-gold hover:text-light-gold transition font-medium text-light-gold"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
-      <a href="a-propos.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
-      <a href="partenariats.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
-      <a href="contact.html" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-envelope mr-2"></i>Contact</a>
-    </nav>
-  </div>
-
-  <!-- Menu mobile déroulant -->
-  <nav id="mobileMenu" class="lg:hidden hidden mt-3 space-y-2">
-    <a href="/" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-home mr-2"></i>Accueil</a>
-    <a href="oracle.html" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-dice mr-2"></i>Oracle</a>
-    <a href="accompagnements.html" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-tags mr-2"></i>Accompagnements</a>
-    <a href="rendez-vous.html" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors text-light-gold"><i class="fas fa-calendar-check mr-2"></i>Rendez-vous</a>
-    <a href="a-propos.html" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
-    <a href="partenariats.html" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-handshake mr-2"></i>Partenariats</a>
-    <a href="contact.html" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
-  </nav>
-</header>
+<div id="header-placeholder"></div>
 
   <!-- Hero Section -->
   <section class="hero-section min-h-[60vh] flex items-center justify-center relative">
@@ -670,4 +632,7 @@ backToTopBtn.addEventListener('click', () => {
 </script>
 
 </body>
+
+<script src="components/header-manager.js" defer></script>
+
 </html>
