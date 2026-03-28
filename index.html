@@ -10579,40 +10579,29 @@ $$('#board .card').forEach(card=>{
 
 
 
-}
+)
 
 
 
 /* ---------- Mobile menu ---------- */
-
-
-
-
-
-
-
+/* FONCTION DÉSACTIVÉE - Gérée par header-manager.js pour éviter les conflits */
+/*
 function initMobileMenu(){
-
 
 
   const btn  = document.getElementById('mobileMenuBtn');
 
 
-
   const menu = document.getElementById('mobileMenu');
-
 
 
   const loginBtnMobile = document.getElementById('loginBtnMobile');
 
 
-
   if(!btn || !menu) return;
 
 
-
   if (btn.dataset.bound === '1') return; // déjà lié
-
 
 
   btn.dataset.bound = '1';
@@ -10620,29 +10609,21 @@ function initMobileMenu(){
 
 
 
-
-
-
   btn.addEventListener('click', (e)=>{
-
 
 
     e.stopPropagation();
 
 
 
-    menu.classList.toggle('hidden');
 
+    menu.classList.toggle('hidden');
 
 
     btn.setAttribute('aria-expanded', menu.classList.contains('hidden') ? 'false' : 'true');
 
 
-
   });
-
-
-
 
 
 
@@ -10650,28 +10631,23 @@ function initMobileMenu(){
   loginBtnMobile?.addEventListener('click', ()=>{
 
 
-
     document.getElementById('subscriptionModal')?.classList.remove('hidden');
-
 
 
     document.body.style.overflow = 'hidden';
 
 
-
     menu.classList.add('hidden');
-
 
 
     btn.setAttribute('aria-expanded','false');
 
 
-
   });
 
 
-
 }
+*/
 
 
 
@@ -10711,7 +10687,7 @@ function initMobileMenu(){
 
 
 
-    tryInitMobileMenu(); // réessaie si éléments pas encore dans le DOM
+    // tryInitMobileMenu(); // réessaie si éléments pas encore dans le DOM - DÉSACTIVÉ : géré par header-manager.js
 
 
 
@@ -13971,9 +13947,5 @@ backToTopBtn.addEventListener('click', () => {
 
 </body>
 
-<script src="components/header-manager.js" defer></script>
-
+<script src="components/header-manager.js"></script>
 </html>
-
-
-

@@ -32,7 +32,8 @@ class HeaderManager {
       await this.loadTemplate();
       this.injectHeader();
       this.setActiveState();
-      this.initMobileMenu();
+      // Attendre un peu que le DOM soit prêt avant d'initialiser le menu mobile
+      setTimeout(() => this.initMobileMenu(), 100);
     } catch (error) {
       console.error('Header initialization failed:', error);
       this.showFallback();
@@ -69,10 +70,29 @@ class HeaderManager {
     const mobileMenuBtn = document.getElementById('mobileMenuBtn');
     const mobileMenu = document.getElementById('mobileMenu');
     
+    console.log('HeaderManager: mobileMenuBtn =', mobileMenuBtn);
+    console.log('HeaderManager: mobileMenu =', mobileMenu);
+    
     if (mobileMenuBtn && mobileMenu) {
-      mobileMenuBtn.addEventListener('click', () => {
+      mobileMenuBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        console.log('HeaderManager: Click sur menu burger');
         mobileMenu.classList.toggle('hidden');
+        const isHidden = mobileMenu.classList.contains('hidden');
+        mobileMenuBtn.setAttribute('aria-expanded', isHidden ? 'false' : 'true');
+        console.log('HeaderManager: Menu basculé, hidden =', isHidden);
       });
+      
+      // Fermer le menu en cliquant à l'extérieur
+      document.addEventListener('click', (e) => {
+        if (!mobileMenuBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
+          mobileMenu.classList.add('hidden');
+          mobileMenuBtn.setAttribute('aria-expanded', 'false');
+        }
+      });
+    } else {
+      console.error('HeaderManager: Éléments du menu mobile non trouvés');
     }
   }
   
