@@ -29,11 +29,18 @@ class HeaderManager {
   
   async init() {
     try {
+      console.log('HeaderManager: Initialisation...');
       await this.loadTemplate();
+      console.log('HeaderManager: Template chargé');
       this.injectHeader();
+      console.log('HeaderManager: Header injecté');
       this.setActiveState();
+      console.log('HeaderManager: État actif défini');
       // Attendre un peu que le DOM soit prêt avant d'initialiser le menu mobile
-      setTimeout(() => this.initMobileMenu(), 100);
+      setTimeout(() => {
+        console.log('HeaderManager: Initialisation menu mobile...');
+        this.initMobileMenu();
+      }, 100);
     } catch (error) {
       console.error('Header initialization failed:', error);
       this.showFallback();
@@ -48,8 +55,12 @@ class HeaderManager {
   
   injectHeader() {
     const placeholder = document.getElementById('header-placeholder');
+    console.log('HeaderManager: Placeholder trouvé:', placeholder);
     if (placeholder) {
       placeholder.innerHTML = this.template;
+      console.log('HeaderManager: Template injecté avec succès');
+    } else {
+      console.error('HeaderManager: Placeholder non trouvé!');
     }
   }
   
