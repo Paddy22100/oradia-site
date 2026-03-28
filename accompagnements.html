@@ -1074,6 +1074,28 @@ button, .btn-gold, .btn-outline-gold, a.btn-gold, a.btn-outline-gold{
       });
     });
   </script>
+
+  <script>
+    // Bouton retour en haut - Code indépendant
+    const backToTopBtn = document.getElementById('backToTop');
+    
+    window.addEventListener('scroll', () => {
+      if (window.pageYOffset > 300) {
+        backToTopBtn.classList.remove('opacity-0');
+        backToTopBtn.classList.add('opacity-100');
+      } else {
+        backToTopBtn.classList.add('opacity-0');
+        backToTopBtn.classList.remove('opacity-100');
+      }
+    });
+    
+    backToTopBtn.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
+  </script>
 </body>
 
 <script src="components/header-manager.js" defer></script>

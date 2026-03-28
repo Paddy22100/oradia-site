@@ -61,6 +61,11 @@
 </head>
 
 <body class="bg-night-blue text-light-gold">
+  <!-- Scroll to top button -->
+  <button id="backToTop" class="fixed bottom-6 right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-50 backdrop-blur-sm" aria-label="Remonter en haut">
+    <i class="fas fa-arrow-up text-sm"></i>
+  </button>
+
   <!-- Header -->
   <div id="header-placeholder"></div>
   <!-- Contenu principal -->
@@ -175,6 +180,26 @@
         mobileMenuBtn.setAttribute('aria-expanded', mobileMenu.classList.contains('hidden') ? 'false' : 'true');
       });
     }
+
+    // Bouton retour en haut
+    const backToTopBtn = document.getElementById('backToTop');
+    
+    window.addEventListener('scroll', () => {
+      if (window.pageYOffset > 300) {
+        backToTopBtn.classList.remove('opacity-0');
+        backToTopBtn.classList.add('opacity-100');
+      } else {
+        backToTopBtn.classList.add('opacity-0');
+        backToTopBtn.classList.remove('opacity-100');
+      }
+    });
+    
+    backToTopBtn.addEventListener('click', () => {
+      window.scrollTo({
+        top: 0,
+        behavior: 'smooth'
+      });
+    });
 
       </script>
 </body>
