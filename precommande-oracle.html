@@ -38,7 +38,7 @@
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="responsive.css">
     
@@ -1110,20 +1110,25 @@ La production est lancée grâce aux premières commandes.</p>
                     body: JSON.stringify(orderData)
                 });
                 
-                const session = await response.json();
+                const rawText = await response.text();
+                console.log('Réponse brute API checkout:', rawText);
+                
+                let session;
+                try {
+                    session = JSON.parse(rawText);
+                } catch (e) {
+                    throw new Error("La réponse de l'API n'est pas du JSON");
+                }
                 
                 if (!response.ok) {
-                    // Erreur de validation ou serveur
-                    const errorMsg = session.details?.join(', ') || session.error || 'Erreur lors de la création de la session';
-                    throw new Error(errorMsg);
+                    throw new Error(session.details?.join(', ') || session.error || 'Erreur serveur');
                 }
                 
-                if (session.sessionId) {
-                    // Rediriger vers Stripe Checkout
-                    await stripeInstance.redirectToCheckout({ sessionId: session.sessionId });
-                } else {
+                if (!session.sessionId) {
                     throw new Error('Session ID manquant');
                 }
+                
+                await stripeInstance.redirectToCheckout({ sessionId: session.sessionId });
                 
             } catch (error) {
                 console.error('Checkout session creation failed:', error);
