@@ -1,0 +1,24 @@
+{
+  "name": "oradia-precommands",
+  "version": "1.0.0",
+  "description": "ORADIA Précommandes Stripe + Supabase - Production Ready",
+  "main": "api/lib/supabase.js",
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.4",
+    "stripe": "^14.9.0"
+  },
+  "devDependencies": {
+    "vercel": "^32.4.1"
+  },
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "echo 'No build step required'",
+    "start": "vercel dev"
+  },
+  "keywords": ["stripe", "supabase", "precommandes", "oradia", "payments"],
+  "author": "ORADIA",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

@@ -2,13 +2,35 @@
   "version": 2,
   "routes": [
     {
-      "src": "/(.*)",
-      "dest": "/$1"
+      "src": "/api/preorders/progress",
+      "dest": "/api/preorders/progress.js"
+    },
+    {
+      "src": "/api/create-checkout-session",
+      "dest": "/api/create-checkout-session.js"
+    },
+    {
+      "src": "/api/stripe-webhook",
+      "dest": "/api/stripe-webhook.js"
     }
   ],
+  "functions": {
+    "api/preorders/progress.js": {
+      "maxDuration": 10
+    },
+    "api/create-checkout-session.js": {
+      "maxDuration": 30
+    },
+    "api/stripe-webhook.js": {
+      "maxDuration": 30
+    }
+  },
+  "env": {
+    "NODE_ENV": "production"
+  },
   "headers": [
     {
-      "source": "/(.*)",
+      "source": "/api/(.*)",
       "headers": [
         {
           "key": "X-Content-Type-Options",
@@ -21,14 +43,6 @@
         {
           "key": "X-XSS-Protection",
           "value": "1; mode=block"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        },
-        {
-          "key": "Permissions-Policy",
-          "value": "camera=(), microphone=(), geolocation=(), payment=(), usb=(), magnetometer=(), gyroscope=()"
         }
       ]
     },
@@ -45,8 +59,5 @@
         }
       ]
     }
-  ],
-  "env": {
-    "NODE_ENV": "production"
-  }
+  ]
 }

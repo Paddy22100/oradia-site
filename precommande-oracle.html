@@ -6,8 +6,8 @@
     
     <!-- SEO Meta Tags -->
     <title>Précommande Oracle Oradia - Édition Limitée 2026</title>
-    <meta name="description" content="Précommandez l'Oracle Oradia physique. Édition limitée à 500 exemplaires, 64 cartes vibratoires, livret guidé. Tarifs Early Bird de 38€ à 52€. Livraison Août-Septembre 2026.">
-    <meta name="keywords" content="précommande oracle, oracle physique, Oradia, édition limitée, early bird, cartes vibratoires, spiritualité, développement personnel, tirage de cartes, oracle du vivant">
+    <meta name="description" content="Précommandez l'Oracle Oradia physique. Première production basée sur les précommandes, 64 cartes vibratoires, livret guidé. Tarifs de 38€ à 52€. Livraison Août-Septembre 2026.">
+    <meta name="keywords" content="précommande oracle, oracle physique, Oradia, première production, cartes vibratoires, spiritualité, développement personnel, tirage de cartes, oracle du vivant">
     <meta name="author" content="Sophie Oradia" />
     <meta name="robots" content="index, follow" />
     <meta name="language" content="fr" />
@@ -16,7 +16,7 @@
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://oradia.fr/precommande-oracle.html" />
     <meta property="og:title" content="Précommande ORADIA – L'Oracle du Vivant | Édition Limitée" />
-    <meta property="og:description" content="Précommandez l'oracle physique ORADIA. Édition limitée à 500 exemplaires, 64 cartes illustrées. Tarifs Early Bird exclusifs.">
+    <meta property="og:description" content="Précommandez l'oracle physique ORADIA. Première production basée sur les précommandes, 64 cartes illustrées.">
     <meta property="og:image" content="https://oradia.fr/images/oracle-precommande.jpg" />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
@@ -27,7 +27,7 @@
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://oradia.fr/precommande-oracle.html" />
     <meta property="twitter:title" content="Précommande ORADIA – L'Oracle du Vivant | Édition Limitée" />
-    <meta property="twitter:description" content="Précommandez l'oracle physique ORADIA. Édition limitée à 500 exemplaires, tarifs Early Bird exclusifs.">
+    <meta property="twitter:description" content="Précommandez l'oracle physique ORADIA. Première production basée sur les précommandes.">
     <meta property="twitter:image" content="https://oradia.fr/images/oracle-precommande.jpg" />
     
     <!-- Canonical URL -->
@@ -44,6 +44,105 @@
     
     <!-- Stripe -->
     <script src="https://js.stripe.com/v3/"></script>
+    
+    <script>
+        // Initialisation Stripe
+        // REMPLACER pk_test_... par votre vraie clé Stripe publique
+        const stripeInstance = Stripe('pk_test_51TAsp69jcRbNO5oykYfnwCWLjGUVyCGLjFrjcgrMSRzMhNnH8gucs00YSTJoCEcwcCGsHvTjscA9Cn7MPvr4xl4c001dVA4e2j');
+        
+        // Fonction pour charger la progression des précommandes (version premium)
+        async function loadPreorderProgress() {
+            const loadingEl = document.getElementById('progressLoading');
+            const contentEl = document.getElementById('progressContent');
+            const errorEl = document.getElementById('progressError');
+            
+            // Afficher le chargement
+            if (loadingEl) loadingEl.classList.remove('hidden');
+            if (contentEl) contentEl.classList.add('hidden');
+            if (errorEl) errorEl.classList.add('hidden');
+            
+            try {
+                const response = await fetch('/api/preorders/progress');
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Mettre à jour la barre de progression avec animation
+                const progressBar = document.getElementById('preorderProgressBar');
+                const soldCount = document.getElementById('preorderSoldCount');
+                const percent = document.getElementById('preorderPercent');
+                const remaining = document.getElementById('preorderRemaining');
+                const rarityText = document.getElementById('rarityText');
+                
+                // Animation douce de la barre de progression
+                setTimeout(() => {
+                    if (progressBar) progressBar.style.width = data.percent + '%';
+                }, 100);
+                
+                // Animation des chiffres
+                if (soldCount) {
+                    animateValue(soldCount, 0, data.sold, 1000);
+                }
+                if (percent) percent.textContent = data.percent + '%';
+                if (remaining) {
+                    animateValue(remaining, 500, data.remaining, 1000);
+                }
+                
+                // Message de rareté dynamique
+                if (rarityText) {
+                    if (data.remaining <= 50) {
+                        rarityText.textContent = `Plus que ${data.remaining} exemplaires disponibles - Dernière chance !`;
+                    } else if (data.remaining <= 100) {
+                        rarityText.textContent = `Plus que ${data.remaining} exemplaires disponibles - Édition limitée`;
+                    } else {
+                        rarityText.textContent = `Plus que ${data.remaining} exemplaires disponibles`;
+                    }
+                }
+                
+                // Afficher le contenu
+                setTimeout(() => {
+                    if (loadingEl) loadingEl.classList.add('hidden');
+                    if (contentEl) contentEl.classList.remove('hidden');
+                }, 500);
+                
+            } catch (error) {
+                console.error('Error loading preorder progress:', error);
+                
+                // Afficher l'erreur
+                setTimeout(() => {
+                    if (loadingEl) loadingEl.classList.add('hidden');
+                    if (errorEl) errorEl.classList.remove('hidden');
+                }, 500);
+                
+                // Garder les valeurs par défaut (0) en cas d'erreur
+            }
+        }
+        
+        // Animation de compteur
+        function animateValue(element, start, end, duration) {
+            const startTime = performance.now();
+            
+            function update(currentTime) {
+                const elapsed = currentTime - startTime;
+                const progress = Math.min(elapsed / duration, 1);
+                
+                const current = Math.floor(start + (end - start) * progress);
+                element.textContent = current;
+                
+                if (progress < 1) {
+                    requestAnimationFrame(update);
+                }
+            }
+            
+            requestAnimationFrame(update);
+        }
+        
+        // Charger la progression au chargement de la page
+        document.addEventListener('DOMContentLoaded', loadPreorderProgress);
+    </script>
     
     <script>
         tailwind.config = {
@@ -186,38 +285,74 @@
                 </h1>
                 
                 <!-- Description -->
-                <p class="text-xl md:text-2xl text-light-gold mb-8 leading-relaxed">
+                <p class="text-xl md:text-2xl text-light-gold mb-6 leading-relaxed max-w-3xl mx-auto">
                     Un oracle de 64 cartes pour explorer les émotions, les besoins et les transformations intérieures.
                 </p>
-                
-                <!-- Images du produit -->
-                <div class="grid md:grid-cols-3 gap-6 mb-12">
-                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
-                        <div class="aspect-square bg-gold/10 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
-                            <img src="images/archetypes/le_sage.png" alt="Carte Le Sage - Oracle ORADIA" class="w-full h-full object-contain rounded-lg">
-                        </div>
-                        <p class="text-gold font-semibold">64 cartes illustrées</p>
-                    </div>
-                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
-                        <div class="aspect-square bg-gold/10 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
-                            <img src="images/apercu-hd.png" alt="Aperçu du livret d'accompagnement - Oracle ORADIA" class="w-full h-full object-contain rounded-lg">
-                        </div>
-                        <p class="text-gold font-semibold">Livret d'accompagnement</p>
-                    </div>
-                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
-                        <div class="aspect-square bg-gold/10 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
-                            <img src="images/Coffret.png" alt="Coffret - Oracle ORADIA" class="w-full h-full object-contain rounded-lg">
-                        </div>
-                        <p class="text-gold font-semibold">Coffret</p>
-                    </div>
+
+                <p class="text-base md:text-xl text-light-gold/85 mb-8 leading-relaxed max-w-3xl mx-auto">
+                    Oradia prend vie en version physique grâce aux premières personnes qui le choisissent.
+                </p>
+
+                <!-- Liste des bénéfices -->
+                <div class="flex flex-col md:flex-row items-center justify-center gap-3 md:gap-6 text-sm md:text-base text-light-gold/75 mb-10">
+                  <div class="flex items-center gap-2">
+                    <i class="fas fa-check-circle text-gold"></i>
+                    <span>64 cartes illustrées</span>
+                  </div>
+                  <div class="hidden md:block w-1 h-1 rounded-full bg-gold/50"></div>
+                  <div class="flex items-center gap-2">
+                    <i class="fas fa-book text-gold"></i>
+                    <span>Livret d'accompagnement</span>
+                  </div>
+                  <div class="hidden md:block w-1 h-1 rounded-full bg-gold/50"></div>
+                  <div class="flex items-center gap-2">
+                    <i class="fas fa-seedling text-gold"></i>
+                    <span>Première production lancée par les précommandes</span>
+                  </div>
                 </div>
-                
+
+                <!-- Images du produit -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+                  <div class="bg-[rgba(5,20,40,0.65)] rounded-2xl p-6 border border-gold/30 backdrop-blur-sm">
+                    <div class="aspect-square bg-gold/10 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                      <img src="images/archetypes/le_sage.png" alt="Carte illustrée de l'oracle ORADIA" class="w-full h-full object-contain rounded-lg">
+                    </div>
+                    <p class="text-gold font-semibold text-lg">64 cartes illustrées</p>
+                    <p class="text-light-gold/70 text-sm mt-2">Pour explorer vos ressenti, vos besoins et vos mouvements intérieurs.</p>
+                  </div>
+                  <div class="bg-[rgba(5,20,40,0.65)] rounded-2xl p-6 border border-gold/30 backdrop-blur-sm">
+                    <div class="aspect-square bg-gold/10 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                      <img src="images/apercu-hd.png" alt="Livret d'accompagnement de l'oracle ORADIA" class="w-full h-full object-contain rounded-lg">
+                    </div>
+                    <p class="text-gold font-semibold text-lg">Livret d'accompagnement</p>
+                    <p class="text-light-gold/70 text-sm mt-2">Un support guidé pour approfondir les tirages et entrer dans l'univers d'Oradia.</p>
+                  </div>
+                  <div class="bg-[rgba(5,20,40,0.65)] rounded-2xl p-6 border border-gold/30 backdrop-blur-sm">
+                    <div class="aspect-square bg-gold/10 rounded-lg mb-4 flex items-center justify-center overflow-hidden">
+                      <img src="images/Coffret.png" alt="Coffret de l'oracle ORADIA" class="w-full h-full object-contain rounded-lg">
+                    </div>
+                    <p class="text-gold font-semibold text-lg">Coffret physique</p>
+                    <p class="text-light-gold/70 text-sm mt-2">Un objet conçu pour durer, à utiliser comme compagnon de cheminement.</p>
+                  </div>
+                </div>
+
                 <!-- Bouton principal -->
-                <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                    <a href="#offres" class="bg-gold text-night-blue font-bold py-4 px-8 rounded-full hover:bg-light-gold transition-all transform hover:scale-105 text-lg">
-                        <i class="fas fa-shopping-cart mr-2"></i>
-                        Précommander l'oracle
-                    </a>
+                <div class="flex flex-col items-center justify-center">
+                  <a href="#offres" class="bg-gold text-night-blue font-bold py-4 px-8 rounded-full hover:bg-light-gold transition-all transform hover:scale-105 text-lg shadow-lg">
+                    <i class="fas fa-shopping-cart mr-2"></i>
+                    Je réserve mon oracle
+                  </a>
+                  <p class="text-light-gold/70 text-sm mt-4 text-center max-w-xl">
+                    Votre précommande permet de lancer la première fabrication de l'oracle en version physique.
+                  </p>
+                </div>
+
+                <!-- Ancre visuelle -->
+                <div class="mt-10 text-center">
+                  <a href="#contenu" class="inline-flex items-center gap-2 text-gold/80 hover:text-gold transition text-sm tracking-wide uppercase">
+                    <span>Découvrir le contenu du coffret</span>
+                    <i class="fas fa-chevron-down text-xs"></i>
+                  </a>
                 </div>
                 
                             </div>
@@ -328,32 +463,75 @@
                 </h2>
                 
                 <p class="text-xl mb-8">
-                    Rejoignez-nous pour faire naître cet oracle unique. 
-                    Votre précommande nous permet de lancer la production.
+                    Oradia n'existe pas encore en version physique.  
+                    Cette première production sera lancée grâce aux précommandes.  
+                    L'objectif actuel est de 500 exemplaires.
                 </p>
                 
-                <!-- Informations sur l'édition limitée -->
+                <!-- Barre de progression premium -->
                 <div class="bg-[rgba(5,20,40,0.8)] rounded-2xl p-6 border border-gold/30">
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center">
-                        <div>
-                            <div class="text-3xl font-bold text-gold mb-2">500</div>
-                            <p class="text-light-gold">Exemplaires maximum</p>
+                    <!-- État chargement -->
+                    <div id="progressLoading" class="text-center py-4">
+                        <div class="inline-flex items-center space-x-2 text-light-gold">
+                            <div class="w-4 h-4 border-2 border-gold border-t-transparent rounded-full animate-spin"></div>
+                            <span class="text-sm">Chargement de la progression...</span>
                         </div>
-                        <div>
-                            <div class="text-3xl font-bold text-gold mb-2">2026</div>
-                            <p class="text-light-gold">Livraison prévue</p>
+                    </div>
+                    
+                    <!-- Contenu progression (caché au chargement) -->
+                    <div id="progressContent" class="hidden">
+                        <!-- Progression principale -->
+                        <div class="mb-6">
+                            <div class="flex justify-between items-center mb-3">
+                                <span class="text-light-gold text-lg font-semibold">Progression</span>
+                                <span id="preorderPercent" class="text-gold text-lg font-bold">0%</span>
+                            </div>
+                            <div class="w-full bg-[rgba(212,175,55,0.2)] rounded-full h-4 overflow-hidden">
+                                <div id="preorderProgressBar" class="bg-gradient-to-r from-gold to-light-gold h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
+                            </div>
                         </div>
-                        <div>
-                            <div class="text-3xl font-bold text-gold mb-2">64</div>
-                            <p class="text-light-gold">Cartes vibratoires</p>
+                        
+                        <!-- Statistiques premium -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 text-center mb-6">
+                            <div class="bg-[rgba(212,175,55,0.05)] rounded-lg p-4">
+                                <div id="preorderSoldCount" class="text-3xl font-bold text-gold mb-2 transition-all duration-500">0</div>
+                                <p class="text-light-gold text-sm">exemplaires réservés</p>
+                            </div>
+                            <div class="bg-[rgba(212,175,55,0.05)] rounded-lg p-4">
+                                <div class="text-3xl font-bold text-gold mb-2">500</div>
+                                <p class="text-light-gold text-sm">objectif total</p>
+                            </div>
+                            <div class="bg-[rgba(212,175,55,0.05)] rounded-lg p-4">
+                                <div id="preorderRemaining" class="text-3xl font-bold text-gold mb-2 transition-all duration-500">500</div>
+                                <p class="text-light-gold text-sm">exemplaires disponibles</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Message rareté -->
+                        <div id="rarityMessage" class="text-center mb-4">
+                            <p class="text-light-gold text-sm">
+                                <i class="fas fa-fire text-gold mr-2"></i>
+                                <span id="rarityText">Plus que 500 exemplaires disponibles</span>
+                            </p>
+                        </div>
+                        
+                        <!-- Message important -->
+                        <div class="p-4 bg-[rgba(212,175,55,0.1)] rounded-lg border border-gold/30">
+                            <p class="text-light-gold text-sm text-center">
+                                <i class="fas fa-shield-alt mr-2"></i>
+                                Si l'objectif n'est pas atteint, votre commande sera intégralement remboursée.
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <!-- Erreur (caché par défaut) -->
+                    <div id="progressError" class="hidden text-center py-4">
+                        <div class="text-light-gold/70 text-sm">
+                            <i class="fas fa-exclamation-triangle mr-2"></i>
+                            Impossible de charger la progression. Veuillez réessayer plus tard.
                         </div>
                     </div>
                 </div>
-                
-                <p class="mt-8 text-light-gold/70">
-                    <i class="fas fa-info-circle mr-2"></i>
-                    Si l'objectif n'est pas atteint, votre commande sera intégralement remboursée.
-                </p>
             </div>
         </div>
     </section>
@@ -363,7 +541,7 @@
         <div class="container mx-auto px-6">
             <div class="max-w-6xl mx-auto">
                 <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient text-center mb-16">
-                    Choisissez Votre Offre
+                    Choisissez votre manière d'entrer dans l'univers Oradia
                 </h2>
                 
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
@@ -408,6 +586,7 @@
                                 <i class="fas fa-shopping-cart mr-2"></i>
                                 Précommander
                             </button>
+                            <p class="text-light-gold/70 text-sm mt-3 text-center">Recevez l'oracle dès sa première production</p>
                         </div>
                     </div>
                     
@@ -457,6 +636,7 @@
                                 <i class="fas fa-magic mr-2"></i>
                                 Précommander
                             </button>
+                            <p class="text-light-gold/70 text-sm mt-3 text-center">Vivez l'expérience Oradia avec le créateur</p>
                         </div>
                     </div>
                     
@@ -503,9 +683,10 @@
                         
                         <div class="mt-auto">
                             <button class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-lg hover:scale-105 transition-all duration-300 precommande-btn touch-target" data-offer="edition-signature">
-                                <i class="fas fa-gem mr-2"></i>
+                                <i class="fas fa-crown mr-2"></i>
                                 Précommander
                             </button>
+                            <p class="text-light-gold/70 text-sm mt-3 text-center">Une version personnelle, créée avec vous</p>
                         </div>
                     </div>
                 </div>
@@ -531,7 +712,7 @@
                             <div class="flex-1">
                                 <h3 class="cormorant text-xl font-bold text-gold mb-2">Précommandes ouvertes</h3>
                                 <p class="text-light-gold mb-1">Maintenant jusqu'au 31 mai 2026</p>
-                                <p class="text-light-gold/70 text-sm">Réservez votre exemplaire à prix préférentiel</p>
+                                <p class="text-light-gold/70 text-sm">Réservez votre exemplaire</p>
                             </div>
                         </div>
                         
@@ -562,8 +743,7 @@
                 <div class="mt-12 text-center">
                     <p class="text-light-gold text-lg">
                         <i class="fas fa-info-circle mr-2"></i>
-                        Les dates sont estimées et peuvent varier légèrement. 
-                        Vous serez informé de chaque étape par email.
+                        La production sera lancée une fois l'objectif de précommandes atteint.
                     </p>
                 </div>
             </div>
@@ -585,7 +765,7 @@
                             <i class="fas fa-chevron-down transition-transform"></i>
                         </button>
                         <div class="faq-answer hidden mt-4 text-light-gold">
-                            <p>La livraison est estimée à partir d'octobre 2026. Les commandes Early Bird seront prioritaires et expédiées en premier.</p>
+                            <p>La livraison est estimée à partir d'octobre 2026. Les commandes seront expédiées dans l'ordre de réception.</p>
                         </div>
                     </div>
                     
@@ -595,7 +775,8 @@
                             <i class="fas fa-chevron-down transition-transform"></i>
                         </button>
                         <div class="faq-answer hidden mt-4 text-light-gold">
-                            <p>La précommande vous permet de réserver votre oracle à prix préférentiel avant sa production. Votre paiement est sécurisé et vous serez tenu informé de chaque étape de production.</p>
+                            <p>La précommande vous permet de réserver votre exemplaire avant fabrication.  
+La production est lancée grâce aux premières commandes.</p>
                         </div>
                     </div>
                     
@@ -641,27 +822,27 @@
                 <form id="precommandeForm" class="space-y-4">
                     <div>
                         <label class="block text-gold mb-2">Email</label>
-                        <input type="email" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="votre@email.com">
+                        <input type="email" name="email" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="votre@email.com">
                     </div>
                     
                     <div>
                         <label class="block text-gold mb-2">Nom complet</label>
-                        <input type="text" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="Jean Dupont">
+                        <input type="text" name="name" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="Jean Dupont">
                     </div>
                     
                     <div>
                         <label class="block text-gold mb-2">Adresse de livraison</label>
-                        <input type="text" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="123 rue de la Paix">
+                        <input type="text" name="address" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="123 rue de la Paix">
                     </div>
                     
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-gold mb-2">Code postal</label>
-                            <input type="text" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="75000">
+                            <input type="text" name="postal" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="75000">
                         </div>
                         <div>
                             <label class="block text-gold mb-2">Ville</label>
-                            <input type="text" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="Paris">
+                            <input type="text" name="city" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="Paris">
                         </div>
                     </div>
                     
@@ -805,14 +986,18 @@
         const modal = document.getElementById('precommandeModal');
         const modalContent = document.getElementById('selectedOffer');
         
+        // Stocker l'offre sélectionnée globalement
+        let selectedOffer = null;
+        
         document.querySelectorAll('.precommande-btn').forEach(button => {
             button.addEventListener('click', () => {
                 const offer = button.dataset.offer;
+                selectedOffer = offer; // Stocker l'offre sélectionnée
                 const offers = {
                     'standard': {
                         name: 'Standard',
                         price: '38€',
-                        description: "L'oracle complet à prix préférentiel"
+                        description: "L'oracle complet"
                     },
                     'tirage-offert': {
                         name: 'Tirage Offert',
@@ -849,48 +1034,136 @@
             }
         });
         
-        // Formulaire de précommande
+        // Formulaire de précommande (version robuste)
         document.getElementById('precommandeForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             
-            // Simulation du paiement Stripe
-            const formData = new FormData(e.target);
-            const orderData = {
-                email: formData.get('email'),
-                name: formData.get('name'),
-                address: {
-                    street: formData.get('address'),
-                    postal: formData.get('postal'),
-                    city: formData.get('city')
-                },
-                offer: modalContent.querySelector('h4').textContent,
-                price: modalContent.querySelector('.text-2xl').textContent
-            };
+            const form = e.target;
+            const submitBtn = form.querySelector('button[type="submit"]');
+            const originalBtnText = submitBtn.innerHTML;
             
-            // Redirection vers la page de paiement Stripe
-            // console.log(console.log('Commande:', orderData);)
-            alert('Redirection vers le paiement Stripe...');
+            // Protection contre les doubles soumissions
+            if (submitBtn.disabled) {
+                return;
+            }
             
-            // En production, utilisez:
-            // const response = await fetch('/create-checkout-session', {
-            //     method: 'POST',
-            //     headers: { 'Content-Type': 'application/json' },
-            //     body: JSON.stringify(orderData)
-            // });
-            // const session = await response.json();
-            // stripe.redirectToCheckout({ sessionId: session.id });
+            // Validation client minimale
+            const formData = new FormData(form);
+            const fullName = formData.get('name');
+            const email = formData.get('email');
+            const shippingAddress = formData.get('address');
+            const postalCode = formData.get('postal');
+            const city = formData.get('city');
+            
+            // Validation rapide
+            if (!fullName || fullName.trim().length < 2) {
+                showError('Veuillez entrer votre nom complet');
+                return;
+            }
+            
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showError('Veuillez entrer une adresse email valide');
+                return;
+            }
+            
+            if (!shippingAddress || shippingAddress.trim().length < 5) {
+                showError('Veuillez entrer une adresse complète');
+                return;
+            }
+            
+            if (!postalCode || !/^\d{5}$/.test(postalCode)) {
+                showError('Veuillez entrer un code postal valide (5 chiffres)');
+                return;
+            }
+            
+            if (!city || city.trim().length < 2) {
+                showError('Veuillez entrer une ville');
+                return;
+            }
+            
+            // Désactiver le bouton et montrer le chargement
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <div class="inline-flex items-center">
+                    <div class="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Traitement en cours...
+                </div>
+            `;
+            
+            try {
+                // Utiliser l'offre stockée globalement
+                const orderData = {
+                    offer: selectedOffer || 'standard',
+                    fullName: fullName.trim(),
+                    email: email.trim(),
+                    shippingAddress: shippingAddress.trim(),
+                    postalCode: postalCode.trim(),
+                    city: city.trim()
+                };
+                
+                // Créer la session Stripe Checkout
+                const response = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderData)
+                });
+                
+                const session = await response.json();
+                
+                if (!response.ok) {
+                    // Erreur de validation ou serveur
+                    const errorMsg = session.details?.join(', ') || session.error || 'Erreur lors de la création de la session';
+                    throw new Error(errorMsg);
+                }
+                
+                if (session.sessionId) {
+                    // Rediriger vers Stripe Checkout
+                    await stripeInstance.redirectToCheckout({ sessionId: session.sessionId });
+                } else {
+                    throw new Error('Session ID manquant');
+                }
+                
+            } catch (error) {
+                console.error('Checkout session creation failed:', error);
+                
+                // Afficher une erreur propre
+                showError(error.message || 'Une erreur est survenue. Veuillez réessayer.');
+                
+                // Restaurer le bouton
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
         });
         
-        // Initialisation
-        updateCounters();
-        
-        // Animation du compteur Early Bird
-        setInterval(() => {
-            if (precommandeData.earlyBird.available > 0 && Math.random() > 0.7) {
-                precommandeData.earlyBird.available--;
-                updateCounters();
-            }
-        }, 30000); // Toutes les 30 secondes
+        // Fonction pour afficher les erreurs
+        function showError(message) {
+            // Créer une notification élégante
+            const notification = document.createElement('div');
+            notification.className = 'fixed top-4 right-4 bg-red-900/90 border border-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 max-w-sm';
+            notification.innerHTML = `
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-circle text-red-400 mr-3 mt-1"></i>
+                    <div>
+                        <h4 class="font-semibold mb-1">Erreur</h4>
+                        <p class="text-sm text-red-200">${message}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-red-400 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Auto-suppression après 5 secondes
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
         
         // Carrousel des cartes
         let currentSlide = 0;
