@@ -1,439 +1,335 @@
 <!DOCTYPE html>
+
 <html lang="fr">
+
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    
-    <!-- SEO Meta Tags -->
-    <title>Paiement Réussi - Précommande Oracle Oradia</title>
-    <meta name="description" content="Votre précommande ORADIA a été confirmée avec succès. Merci de votre confiance !">
-    <meta name="author" content="Sophie Oradia" />
-    <meta name="robots" content="noindex, nofollow" />
-    
-    <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
-    
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-    <link rel="stylesheet" href="style.css">
-    <link rel="stylesheet" href="responsive.css">
-    
-    <style>
-        /* Styles ORADIA cohérents */
-        body {
-            background: linear-gradient(135deg, #0a1929, #1a2332);
-            background-attachment: fixed;
+
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+
+
+
+  <meta charset="UTF-8" />
+
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+  
+  <!-- SEO Meta Tags -->
+  <title>Paiement Réussi - Précommande Oracle Oradia</title>
+  <meta name="description" content="Votre précommande ORADIA a été confirmée avec succès. Merci de votre confiance !" />
+  <meta name="author" content="Sophie Oradia" />
+  <meta name="robots" content="noindex, nofollow" />
+  
+  <!-- Favicon -->
+  <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+  <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+
+
+  <script src="https://cdn.tailwindcss.com"></script>
+
+
+
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+
+
+  <link rel="stylesheet" href="style.css">
+
+
+
+  <link rel="stylesheet" href="responsive.css">
+
+
+
+  <script src="security.js"></script>
+
+
+
+
+  <script>
+
+    tailwind.config = {
+
+      theme: {
+
+        extend: {
+
+          colors: {
+
+            'night-blue': '#0a192f',
+
+            'gold': '#d4af37',
+
+            'light-gold': '#f5e7a1',
+
+            'dark-blue': '#051428',
+
+            'celtic-blue': '#1a365d'
+
+          },
+
+          fontFamily: {
+
+            'cormorant': ['Cormorant Garamond', 'serif'],
+
+            'poppins': ['Poppins', 'sans-serif']
+
+          }
+
         }
-        
-        .gold-gradient {
-            background: linear-gradient(135deg, #D4AF37, #F4E4C1, #D4AF37);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-        
-        .night-blue {
-            background: linear-gradient(135deg, #0a1929, #1a2332);
-        }
-        
-        .light-gold {
-            color: #F4E4C1;
-        }
-        
-        .gold {
-            color: #D4AF37;
-        }
-        
-        .cormorant {
-            font-family: 'Cormorant Garamond', serif;
-        }
-        
-        /* Animations ORADIA */
-        .success-animation {
-            animation: successPulse 2s ease-in-out;
-        }
-        
-        @keyframes successPulse {
-            0% { transform: scale(0.8); opacity: 0; }
-            50% { transform: scale(1.1); opacity: 1; }
-            100% { transform: scale(1); opacity: 1; }
-        }
-        
-        .floating {
-            animation: floating 3s ease-in-out infinite;
-        }
-        
-        @keyframes floating {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        .early-bird-badge {
-            background: linear-gradient(135deg, #d4af37, #f4e4c1);
-            color: #0a192f;
-            animation: pulse 2s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.8; }
-        }
-        
-        /* Cards ORADIA */
-        .success-card {
-            background: linear-gradient(145deg, rgba(26,54,93,0.6), rgba(5,20,40,0.8));
-            border: 1px solid rgba(212,175,55,0.3);
-            transition: all 0.3s ease;
-        }
-        
-        .success-card:hover {
-            border-color: rgba(212,175,55,0.6);
-            box-shadow: 0 4px 20px rgba(212,175,55,0.15);
-            transform: translateY(-2px);
-        }
-        
-        /* Progress bar */
-        .progress-bar {
-            background: linear-gradient(90deg, #d4af37, #f4e4c1);
-            transition: width 0.5s ease;
-        }
-        
-        /* Buttons */
-        .btn-primary {
-            background: linear-gradient(135deg, #D4AF37, #F4E4C1);
-            color: #0a192f;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-primary:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(212,175,55,0.3);
-        }
-        
-        .btn-secondary {
-            border: 1px solid rgba(212,175,55,0.6);
-            color: #F4E4C1;
-            background: transparent;
-            transition: all 0.3s ease;
-        }
-        
-        .btn-secondary:hover {
-            background: rgba(212,175,55,0.1);
-            border-color: #D4AF37;
-        }
-        
-        /* Header cohérent */
-        .header-sticky {
-            background: rgba(5,20,40,0.8);
-            backdrop-filter: blur(10px);
-            border-bottom: 1px solid rgba(212,175,55,0.2);
-        }
-        
-        /* Responsive */
-        @media (max-width: 768px) {
-            .hero-title {
-                font-size: 2.5rem !important;
-            }
-            
-            .success-card {
-                margin: 1rem;
-            }
-        }
-    </style>
+
+      }
+
+    }
+
+  </script>
+
 </head>
-<body class="night-blue text-light-gold">
-    <!-- Header cohérent avec le site -->
-    <header class="header-sticky sticky top-0 z-50">
-        <div class="container mx-auto px-6 py-4">
-            <div class="flex items-center justify-between">
-                <a href="index.html" class="flex items-center space-x-3 group">
-                    <div class="w-10 h-10 bg-gold/20 rounded-full flex items-center justify-center group-hover:bg-gold/30 transition-colors">
-                        <i class="fas fa-sun text-gold"></i>
-                    </div>
-                    <span class="cormorant text-2xl font-bold gold-gradient">ORADIA</span>
-                </a>
-                
-                <nav class="hidden md:flex items-center space-x-8">
-                    <a href="index.html" class="text-light-gold hover:text-gold transition-colors">Accueil</a>
-                    <a href="precommande-oracle.html" class="text-light-gold hover:text-gold transition-colors">Précommander</a>
-                    <a href="index.html#offres" class="text-light-gold hover:text-gold transition-colors">Offres</a>
-                </nav>
-                
-                <button id="mobileMenuBtn" class="md:hidden text-light-gold hover:text-gold">
-                    <i class="fas fa-bars text-xl"></i>
-                </button>
-            </div>
-        </div>
-    </header>
 
-    <!-- Hero Section avec design ORADIA -->
-    <section class="py-20 md:py-32 relative overflow-hidden">
-        <!-- Background décoratif -->
-        <div class="absolute inset-0 opacity-10">
-            <div class="absolute top-10 left-10 w-32 h-32 bg-gold/20 rounded-full blur-3xl"></div>
-            <div class="absolute bottom-10 right-10 w-48 h-48 bg-gold/10 rounded-full blur-3xl"></div>
-        </div>
-        
-        <div class="container mx-auto px-6 relative z-10">
-            <div class="text-center max-w-4xl mx-auto">
-                <!-- Success Icon avec animation ORADIA -->
-                <div class="success-animation mb-8">
-                    <div class="w-32 h-32 bg-green-500/20 rounded-full flex items-center justify-center mx-auto floating border-2 border-green-500/50">
-                        <i class="fas fa-check-circle text-6xl text-green-500"></i>
-                    </div>
-                </div>
-                
-                <!-- Titre principal ORADIA -->
-                <div class="mb-8">
-                    <h1 class="cormorant hero-title text-5xl md:text-7xl font-bold gold-gradient mb-4 text-center leading-tight">
-                        Paiement Réussi
-                    </h1>
-                    <div class="w-24 h-[2px] bg-[#D4AF37] mx-auto mb-6 opacity-80"></div>
-                </div>
-                
-                <!-- Message principal -->
-                <div class="success-card rounded-2xl p-8 mb-12">
-                    <div class="flex items-center justify-center mb-4">
-                        <span class="early-bird-badge px-4 py-2 rounded-full text-sm font-semibold">
-                            🎉 Précommande Confirmée
-                        </span>
-                    </div>
-                    
-                    <p class="text-2xl md:text-3xl text-light-gold font-semibold mb-4">
-                        Merci pour votre confiance !
-                    </p>
-                    
-                    <p class="text-light-gold/80 text-lg mb-6">
-                        Votre paiement a été traité avec succès et votre précommande de l'Oracle Oradia est maintenant confirmée.
-                    </p>
-                    
-                    <div class="flex items-center justify-center space-x-4 text-light-gold/70">
-                        <i class="fas fa-envelope text-gold"></i>
-                        <span>Un email de confirmation vous sera envoyé dans les prochaines minutes</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+<body class="bg-night-blue text-light-gold">
 
-    <!-- Section Détails -->
-    <section class="py-16">
-        <div class="container mx-auto px-6">
-            <div class="max-w-4xl mx-auto">
-                <!-- Carte détails commande -->
-                <div class="success-card rounded-2xl p-8 mb-8">
-                    <h2 class="cormorant text-3xl font-bold text-light-gold mb-6 text-center">
-                        Détails de votre précommande
-                    </h2>
-                    
-                    <div class="grid md:grid-cols-2 gap-8">
-                        <!-- Produit -->
-                        <div class="text-center md:text-left">
-                            <div class="w-16 h-16 bg-gold/20 rounded-full flex items-center justify-center mx-auto md:mx-0 mb-4">
-                                <i class="fas fa-box text-gold text-xl"></i>
-                            </div>
-                            <p class="text-light-gold/70 mb-2">Produit</p>
-                            <p class="text-light-gold font-semibold text-lg">Oracle Oradia - Édition Limitée</p>
-                        </div>
-                        
-                        <!-- Statut -->
-                        <div class="text-center md:text-left">
-                            <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto md:mx-0 mb-4">
-                                <i class="fas fa-check-circle text-green-500 text-xl"></i>
-                            </div>
-                            <p class="text-light-gold/70 mb-2">Statut</p>
-                            <p class="text-green-500 font-semibold text-lg">
-                                Précommande confirmée
-                            </p>
-                        </div>
-                        
-                        <!-- Livraison -->
-                        <div class="text-center md:text-left">
-                            <div class="w-16 h-16 bg-gold/20 rounded-full flex items-center justify-center mx-auto md:mx-0 mb-4">
-                                <i class="fas fa-truck text-gold text-xl"></i>
-                            </div>
-                            <p class="text-light-gold/70 mb-2">Livraison prévue</p>
-                            <p class="text-light-gold font-semibold text-lg">Septembre - Octobre 2026</p>
-                        </div>
-                        
-                        <!-- Suivi -->
-                        <div class="text-center md:text-left">
-                            <div class="w-16 h-16 bg-gold/20 rounded-full flex items-center justify-center mx-auto md:mx-0 mb-4">
-                                <i class="fas fa-envelope text-gold text-xl"></i>
-                            </div>
-                            <p class="text-light-gold/70 mb-2">Suivi</p>
-                            <p class="text-light-gold font-semibold text-lg">Email de confirmation envoyé</p>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Prochaines étapes -->
-                <div class="success-card rounded-2xl p-8 mb-8">
-                    <h2 class="cormorant text-3xl font-bold text-light-gold mb-8 text-center">
-                        Prochaines étapes
-                    </h2>
-                    
-                    <div class="space-y-6">
-                        <!-- Étape 1 -->
-                        <div class="flex items-start space-x-6">
-                            <div class="w-12 h-12 bg-gold/20 rounded-full flex items-center justify-center flex-shrink-0 border-2 border-gold/50">
-                                <i class="fas fa-envelope text-gold"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="text-light-gold font-semibold text-xl mb-2">Email de confirmation</h3>
-                                <p class="text-light-gold/70">Vous recevrez un email récapitulatif dans quelques minutes avec tous les détails de votre commande.</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Étape 2 -->
-                        <div class="flex items-start space-x-6">
-                            <div class="w-12 h-12 bg-gold/20 rounded-full flex items-center justify-center flex-shrink-0 border-2 border-gold/50">
-                                <i class="fas fa-palette text-gold"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="text-light-gold font-semibold text-xl mb-2">Production</h3>
-                                <p class="text-light-gold/70">Lancement de la production basée sur les précommandes. Vous serez tenu informé de l'avancement.</p>
-                            </div>
-                        </div>
-                        
-                        <!-- Étape 3 -->
-                        <div class="flex items-start space-x-6">
-                            <div class="w-12 h-12 bg-gold/20 rounded-full flex items-center justify-center flex-shrink-0 border-2 border-gold/50">
-                                <i class="fas fa-truck text-gold"></i>
-                            </div>
-                            <div class="flex-1">
-                                <h3 class="text-light-gold font-semibold text-xl mb-2">Livraison</h3>
-                                <p class="text-light-gold/70">Expédition prévue en Septembre-Octobre 2026. Vous recevrez un email de suivi colis.</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Actions -->
-                <div class="text-center">
-                    <p class="text-light-gold/80 mb-8 text-lg">
-                        Rejoignez la communauté ORADIA et restez connecté à votre sagesse intérieure
-                    </p>
-                    
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                        <a href="index.html" class="btn-primary px-8 py-4 rounded-full font-semibold text-center">
-                            <i class="fas fa-home mr-2"></i>
-                            Retour à l'accueil
-                        </a>
-                        
-                        <a href="precommande-oracle.html" class="btn-secondary px-8 py-4 rounded-full font-semibold text-center">
-                            <i class="fas fa-gift mr-2"></i>
-                            Autres précommandes
-                        </a>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
+<!-- Header -->
+<div id="header-placeholder"></div>
 
-    <!-- Contact Section -->
-    <section class="py-16 bg-[rgba(5,20,40,0.5)]">
-        <div class="container mx-auto px-6 text-center">
-            <div class="max-w-2xl mx-auto">
-                <h2 class="cormorant text-3xl font-bold text-light-gold mb-6">
-                    Une question ?
-                </h2>
-                <p class="text-light-gold/70 mb-8">
-                    Notre équipe est là pour vous accompagner dans votre voyage avec ORADIA
-                </p>
-                <a href="mailto:contact@oradia.fr" class="btn-primary px-8 py-4 rounded-full font-semibold inline-block">
-                    <i class="fas fa-envelope mr-2"></i>
-                    contact@oradia.fr
-                </a>
-            </div>
-        </div>
-    </section>
-
-    <!-- Footer cohérent -->
-    <footer class="bg-[rgba(5,20,40,0.8)] border-t border-gold/20 py-12">
-        <div class="container mx-auto px-6">
-            <div class="grid md:grid-cols-4 gap-8">
-                <div>
-                    <h3 class="cormorant text-xl font-bold gold-gradient mb-4">ORADIA</h3>
-                    <p class="text-light-gold/70 text-sm">
-                        L'Oracle du Vivant - Guidance spirituelle et développement personnel
-                    </p>
-                </div>
-                
-                <div>
-                    <h4 class="text-light-gold font-semibold mb-4">Pages</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="index.html" class="text-light-gold/70 hover:text-gold transition-colors">Accueil</a></li>
-                        <li><a href="precommande-oracle.html" class="text-light-gold/70 hover:text-gold transition-colors">Précommander</a></li>
-                        <li><a href="index.html#offres" class="text-light-gold/70 hover:text-gold transition-colors">Offres</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h4 class="text-light-gold font-semibold mb-4">Légal</h4>
-                    <ul class="space-y-2 text-sm">
-                        <li><a href="cgu.html" class="text-light-gold/70 hover:text-gold transition-colors">CGU</a></li>
-                        <li><a href="cgv.html" class="text-light-gold/70 hover:text-gold transition-colors">CGV</a></li>
-                        <li><a href="mentions-legales.html" class="text-light-gold/70 hover:text-gold transition-colors">Mentions légales</a></li>
-                        <li><a href="politique-confidentialite.html" class="text-light-gold/70 hover:text-gold transition-colors">Confidentialité</a></li>
-                    </ul>
-                </div>
-                
-                <div>
-                    <h4 class="text-light-gold font-semibold mb-4">Contact</h4>
-                    <ul class="space-y-2 text-sm text-light-gold/70">
-                        <li><i class="fas fa-envelope mr-2"></i>contact@oradia.fr</li>
-                        <li><i class="fas fa-globe mr-2"></i>oradia.fr</li>
-                    </ul>
+<!-- Hero Section avec structure ORADIA exacte -->
+<section id="accueil" class="hero-section relative">
+    <!-- Voile pour lisibilité -->
+    <div class="hero-overlay"></div>
+    
+    <!-- Contenu texte -->
+    <div class="relative z-10 w-full px-4 sm:px-6 pb-12 sm:pb-16 md:pb-24">
+        <div class="max-w-4xl mx-auto text-center">
+            <!-- Icône succès -->
+            <div class="mb-8">
+                <div class="w-24 h-24 bg-green-500/20 rounded-full flex items-center justify-center mx-auto border-2 border-green-500/50">
+                    <i class="fas fa-check-circle text-5xl text-green-500"></i>
                 </div>
             </div>
             
-            <div class="mt-8 pt-8 border-t border-gold/20 text-center">
-                <p class="text-light-gold/70 text-sm">
-                    © 2026 ORADIA - Tous droits réservés
+            <!-- H1 avec style ORADIA -->
+            <h1 class="cormorant text-4xl sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl font-bold gold-gradient mb-8 sm:mb-6 leading-tight">
+                Paiement Réussi
+            </h1>
+            
+            <!-- Sous-titre -->
+            <p class="cormorant text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl text-gold mb-8 sm:mb-8 leading-tight">
+                Précommande Confirmée
+            </p>
+            
+            <!-- Message principal -->
+            <div class="bg-gradient-to-b from-dark-blue to-night-blue/50 border border-gold/30 rounded-2xl p-8 mb-8 sm:mb-12">
+                <p class="lora text-xl md:text-2xl text-light-gold/90 max-w-2xl sm:max-w-3xl mx-auto leading-relaxed mb-6">
+                    🎉 <strong>Merci pour votre confiance !</strong>
                 </p>
+                
+                <p class="lora text-xl md:text-2xl text-light-gold/90 max-w-2xl sm:max-w-3xl mx-auto leading-relaxed mb-6">
+                    Votre paiement a été traité avec succès et votre précommande de l'Oracle Oradia est maintenant confirmée.
+                </p>
+                
+                <div class="flex items-center justify-center space-x-2 text-light-gold/80 text-sm">
+                    <i class="fas fa-envelope text-gold"></i>
+                    <span>Un email de confirmation vous sera envoyé dans les prochaines minutes</span>
+                </div>
+            </div>
+            
+            <!-- Boutons CTA ORADIA -->
+            <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-8">
+                <!-- Primaire -->
+                <a href="index.html" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 sm:px-8 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
+                    <i class="fas fa-home"></i>
+                    <span class="text-sm sm:text-base">Retour à l'accueil</span>
+                </a>
+                
+                <!-- Secondaire -->
+                <a href="precommande-oracle.html" class="border-2 border-gold text-gold font-bold py-4 px-6 sm:px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
+                    <i class="fas fa-gift"></i>
+                    <span class="text-sm sm:text-base">Autres précommandes</span>
+                </a>
+            </div>
+            
+            <!-- Ligne de réassurance -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center text-light-gold/80 text-sm">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-sparkles text-gold"></i>
+                    <span>Livraison Septembre-Octobre 2026</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-layer-group text-gold"></i>
+                    <span>Édition Limitée</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-shield-alt text-gold"></i>
+                    <span>Suivi par email</span>
+                </div>
             </div>
         </div>
-    </footer>
+    </div>
+</section>
 
-    <script>
-        // Mobile menu toggle
-        document.getElementById('mobileMenuBtn').addEventListener('click', function() {
-            // Implementation pour menu mobile si nécessaire
-        });
+<!-- Section Détails -->
+<section id="oracle" class="py-16 px-6 bg-gradient-to-b from-dark-blue to-night-blue relative">
+    <!-- Background pattern -->
+    <div class="absolute inset-0 opacity-5">
+        <div class="absolute top-0 left-0 w-full h-full bg-gradient-to-br from-gold/10 to-transparent"></div>
+    </div>
+    
+    <div class="container mx-auto max-w-6xl relative z-10">
+        <div class="text-center mb-12">
+            <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-8">
+                Détails de votre précommande
+            </h2>
+        </div>
         
-        // Track session_id si présent
-        const urlParams = new URLSearchParams(window.location.search);
-        const sessionId = urlParams.get('session_id');
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <!-- Produit -->
+            <div class="text-center">
+                <div class="w-16 h-16 bg-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-box text-gold text-2xl"></i>
+                </div>
+                <h3 class="cormorant text-xl text-gold mb-2">Produit</h3>
+                <p class="text-light-gold/80">Oracle Oradia - Édition Limitée</p>
+            </div>
+            
+            <!-- Statut -->
+            <div class="text-center">
+                <div class="w-16 h-16 bg-green-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-check-circle text-green-500 text-2xl"></i>
+                </div>
+                <h3 class="cormorant text-xl text-gold mb-2">Statut</h3>
+                <p class="text-light-gold/80">Précommande confirmée</p>
+            </div>
+            
+            <!-- Livraison -->
+            <div class="text-center">
+                <div class="w-16 h-16 bg-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-truck text-gold text-2xl"></i>
+                </div>
+                <h3 class="cormorant text-xl text-gold mb-2">Livraison</h3>
+                <p class="text-light-gold/80">Septembre-Octobre 2026</p>
+            </div>
+            
+            <!-- Suivi -->
+            <div class="text-center">
+                <div class="w-16 h-16 bg-gold/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <i class="fas fa-envelope text-gold text-2xl"></i>
+                </div>
+                <h3 class="cormorant text-xl text-gold mb-2">Suivi</h3>
+                <p class="text-light-gold/80">Email de confirmation</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section Prochaines Étapes -->
+<section class="py-16 px-6 bg-gradient-to-b from-night-blue to-dark-blue">
+    <div class="container mx-auto max-w-6xl">
+        <div class="text-center mb-12">
+            <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-8">
+                Prochaines étapes
+            </h2>
+        </div>
         
-        if (sessionId) {
-            console.log('Session ID:', sessionId);
-            // Optionnel: validation avec le backend
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <!-- Étape 1 -->
+            <div class="text-center">
+                <div class="w-20 h-20 bg-gold/20 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-gold/50">
+                    <i class="fas fa-envelope text-gold text-2xl"></i>
+                </div>
+                <h3 class="cormorant text-2xl text-gold mb-4">Email de confirmation</h3>
+                <p class="text-light-gold/80">Vous recevrez un email récapitulatif dans quelques minutes avec tous les détails de votre commande.</p>
+            </div>
+            
+            <!-- Étape 2 -->
+            <div class="text-center">
+                <div class="w-20 h-20 bg-gold/20 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-gold/50">
+                    <i class="fas fa-palette text-gold text-2xl"></i>
+                </div>
+                <h3 class="cormorant text-2xl text-gold mb-4">Production</h3>
+                <p class="text-light-gold/80">Lancement de la production basée sur les précommandes. Vous serez informé de l'avancement.</p>
+            </div>
+            
+            <!-- Étape 3 -->
+            <div class="text-center">
+                <div class="w-20 h-20 bg-gold/20 rounded-full flex items-center justify-center mx-auto mb-6 border-2 border-gold/50">
+                    <i class="fas fa-truck text-gold text-2xl"></i>
+                </div>
+                <h3 class="cormorant text-2xl text-gold mb-4">Livraison</h3>
+                <p class="text-light-gold/80">Expédition prévue en Septembre-Octobre 2026. Vous recevrez un email de suivi colis.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer ORADIA exact -->
+<footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
+    <div class="container mx-auto max-w-6xl">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-center md:text-left">
+            <div>
+                <div class="flex items-center mb-4">
+                    <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo" class="w-16 h-16 mr-4" />
+                    <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+                </div>
+                <p class="text-light-gold text-sm">L'oracle qui vous accompagne sur votre chemin personnel et révèle votre essence.</p>
+            </div>
+            
+            <div>
+                <h4 class="cormorant text-xl text-gold mb-4">Navigation</h4>
+                <ul class="space-y-2">
+                    <li><a href="index.html" class="text-light-gold hover:text-gold transition">Accueil</a></li>
+                    <li><a href="precommande-oracle.html" class="text-light-gold hover:text-gold transition">Précommander</a></li>
+                    <li><a href="oracle.html" class="text-light-gold hover:text-gold transition">Oracle</a></li>
+                    <li><a href="accompagnements.html" class="text-light-gold hover:text-gold transition">Accompagnements</a></li>
+                </ul>
+            </div>
+            
+            <div>
+                <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
+                <ul class="space-y-2">
+                    <li><a href="cgu.html" class="text-light-gold hover:text-gold transition">Conditions Générales d'Utilisation</a></li>
+                    <li><a href="cgv.html" class="text-light-gold hover:text-gold transition">Conditions Générales de Vente</a></li>
+                    <li><a href="mentions-legales.html" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
+                    <li><a href="politique-confidentialite.html" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
+                </ul>
+            </div>
+            
+            <div>
+                <h4 class="cormorant text-xl text-gold mb-4">Contact</h4>
+                <ul class="space-y-2 text-light-gold">
+                    <li><i class="fas fa-envelope mr-2"></i>contact@oradia.fr</li>
+                    <li><i class="fas fa-globe mr-2"></i>oradia.fr</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="text-center pt-8 border-t border-gold/20">
+            <p class="text-light-gold/70 text-sm">© 2026 ORADIA - Tous droits réservés</p>
+        </div>
+    </div>
+</footer>
+
+<!-- Scripts ORADIA -->
+<script src="components/header.js"></script>
+<script src="components/mobile-menu.js"></script>
+<script src="components/scroll-effects.js"></script>
+
+<script>
+    // Track session_id si présent
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
+    
+    if (sessionId) {
+        console.log('Session ID:', sessionId);
+        // Optionnel: validation avec le backend
+    }
+    
+    // Animation d'entrée pour l'icône succès
+    document.addEventListener('DOMContentLoaded', function() {
+        const successIcon = document.querySelector('.fa-check-circle').parentElement.parentElement;
+        if (successIcon) {
+            successIcon.style.animation = 'pulse 2s ease-in-out';
         }
-        
-        // Animations au scroll
-        const observerOptions = {
-            threshold: 0.1,
-            rootMargin: '0px 0px -50px 0px'
-        };
-        
-        const observer = new IntersectionObserver((entries) => {
-            entries.forEach(entry => {
-                if (entry.isIntersecting) {
-                    entry.target.style.opacity = '1';
-                    entry.target.style.transform = 'translateY(0)';
-                }
-            });
-        }, observerOptions);
-        
-        // Observer les cartes
-        document.querySelectorAll('.success-card').forEach(card => {
-            card.style.opacity = '0';
-            card.style.transform = 'translateY(20px)';
-            card.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
-            observer.observe(card);
-        });
-    </script>
+    });
+</script>
+
 </body>
+
 </html>
