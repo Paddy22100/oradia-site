@@ -28,37 +28,58 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
                 }],
                 subject: '✨ Ta précommande ORADIA est confirmée',
                 htmlContent: `
-                    <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 40px 20px; background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%); color: #d4af37;">
-                        <div style="text-align: center; margin-bottom: 40px;">
-                            <h1 style="font-size: 28px; margin: 0; color: #d4af37; text-shadow: 0 2px 4px rgba(0,0,0,0.3);">ORADIA</h1>
-                            <p style="font-size: 14px; margin: 10px 0; color: #b8860b; font-style: italic;">L'Oracle de ton Âme</p>
-                        </div>
-                        
-                        <div style="background: rgba(255,255,255,0.05); border: 1px solid #d4af37; border-radius: 15px; padding: 30px; margin: 20px 0;">
-                            <h2 style="font-size: 20px; color: #d4af37; margin: 0 0 20px 0; text-align: center;">✨ Ta précommande est confirmée</h2>
-                            
-                            <p style="font-size: 16px; line-height: 1.6; margin: 20px 0; color: #ffffff;">Bonjour${toName ? ' ' + toName : ''},</p>
-                            
-                            <p style="font-size: 16px; line-height: 1.6; margin: 20px 0; color: #ffffff;">Avec une immense gratitude, nous te confirmons que ta précommande ORADIA a été enregistrée avec succès.</p>
-                            
-                            <div style="background: rgba(212,175,55,0.1); border-left: 4px solid #d4af37; padding: 20px; margin: 25px 0; border-radius: 0 8px 8px 0;">
-                                <p style="font-size: 16px; margin: 10px 0; color: #d4af37;"><strong>Offre choisie :</strong> ${offer}</p>
-                                <p style="font-size: 16px; margin: 10px 0; color: #d4af37;"><strong>Montant :</strong> ${amountTotal}€</p>
-                            </div>
-                            
-                            <p style="font-size: 16px; line-height: 1.6; margin: 20px 0; color: #ffffff;">Ton oracle est maintenant en préparation. Nous te recontacterons personnellement dès qu'il sera prêt à t'accompagner dans ton voyage intérieur.</p>
-                            
-                            <p style="font-size: 16px; line-height: 1.6; margin: 20px 0; color: #ffffff;">Merci pour ta confiance et pour choisir d'accueillir la sagesse d'ORADIA dans ta vie.</p>
-                        </div>
-                        
-                        <div style="text-align: center; margin-top: 40px; padding-top: 30px; border-top: 1px solid rgba(212,175,55,0.3);">
-                            <p style="font-size: 14px; margin: 10px 0; color: #b8860b;">Avec toute notre gratitude,</p>
-                            <p style="font-size: 18px; margin: 10px 0; color: #d4af37; font-weight: bold;">Rudy</p>
-                            <p style="font-size: 14px; margin: 5px 0; color: #b8860b; font-style: italic;">Fondateur d'ORADIA</p>
-                            <p style="font-size: 12px; margin: 20px 0 0 0; color: #666;">oradia.fr</p>
-                        </div>
-                    </div>
-                `,
+<div style="background-color:#0b0f1a;padding:40px 0;font-family:Georgia,serif;">
+  <table align="center" width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#111827;border-radius:12px;border:1px solid #d4af37;">
+    
+    <tr>
+      <td style="text-align:center;padding:30px 20px;">
+        <h1 style="color:#d4af37;margin:0;font-size:26px;">ORADIA</h1>
+        <p style="color:#c9a94d;font-style:italic;margin-top:8px;">L'Oracle de ton Âme</p>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="padding:30px 25px;color:#ffffff;">
+        <h2 style="color:#d4af37;text-align:center;margin-bottom:20px;">
+          ✨ Ta précommande est confirmée
+        </h2>
+
+        <p>Bonjour${toName ? ' ' + toName : ''},</p>
+
+        <p>
+          Avec une immense gratitude, nous te confirmons que ta précommande ORADIA a été enregistrée avec succès.
+        </p>
+
+        <table width="100%" cellpadding="0" cellspacing="0" style="margin:25px 0;background:#1f2937;border-left:4px solid #d4af37;border-radius:6px;">
+          <tr>
+            <td style="padding:15px;color:#d4af37;">
+              <strong>Offre :</strong> ${offer}<br/>
+              <strong>Montant :</strong> ${amountTotal}€
+            </td>
+          </tr>
+        </table>
+
+        <p>
+          Ton oracle est maintenant en préparation. Nous te recontacterons personnellement dès qu'il sera prêt.
+        </p>
+
+        <p>
+          Merci pour ta confiance et pour choisir d'accueillir la sagesse d'ORADIA dans ta vie.
+        </p>
+      </td>
+    </tr>
+
+    <tr>
+      <td style="text-align:center;padding:30px 20px;border-top:1px solid rgba(212,175,55,0.2);">
+        <p style="color:#c9a94d;margin:0;">Avec toute notre gratitude</p>
+        <p style="color:#d4af37;font-size:18px;margin:5px 0;"><strong>Rudy</strong></p>
+        <p style="color:#c9a94d;font-size:13px;margin:0;">Fondateur d'ORADIA</p>
+      </td>
+    </tr>
+
+  </table>
+</div>
+`,
                 textContent: `Ta précommande ORADIA est confirmée
 
 Bonjour${toName ? ' ' + toName : ''},
