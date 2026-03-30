@@ -1,12 +1,18 @@
-const supabase = require('./lib/supabase');
+const { createClient } = require('@supabase/supabase-js');
+
+// Variables d'environnement avec fallbacks
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Création directe du client Supabase
+const supabase = createClient(supabaseUrl, supabaseKey);
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
 // Validation des variables d'environnement critiques
 function validateEnvironment() {
     const requiredVars = [
         'STRIPE_SECRET_KEY', 
-        'NEXT_PUBLIC_SUPABASE_URL', 
-        'NEXT_PUBLIC_SUPABASE_ANON_KEY', 
+        'SUPABASE_URL', 
         'SUPABASE_SERVICE_ROLE_KEY', 
         'PREORDER_GOAL'
     ];
@@ -14,16 +20,12 @@ function validateEnvironment() {
     const missing = requiredVars.filter(varName => !process.env[varName]);
     
     if (missing.length > 0) {
-        console.error('❌ Variables d\'environnement manquantes:', missing);
+        console.error('Variables d\'environnement manquantes:', missing);
         throw new Error(`Configuration error: Missing ${missing.join(', ')}`);
     }
     
-    // LOG TEMPORAIRE: Détection environnement
-    const stripeKey = process.env.STRIPE_SECRET_KEY;
-    console.log('🔍 Stripe secret key prefix:', stripeKey ? stripeKey.substring(0, 7) : 'undefined');
-    console.log('🔍 Environment:', process.env.NODE_ENV || 'development');
-    
     // Validation spécifique pour Stripe
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
     if (!stripeKey || !stripeKey.startsWith('sk_')) {
         throw new Error('Invalid STRIPE_SECRET_KEY format');
     }
@@ -61,14 +63,14 @@ function validateInput(data) {
 }
 
 // CORS helper
-function setCORS(res) {
+function setCORS(req, res) {
     const allowedOrigins = [
         'https://oradia.fr', 
         'https://www.oradia.fr',
         'https://oradia-site-trail.vercel.app',
         'https://oradia.vercel.app'
     ];
-    const origin = res.req?.headers?.origin;
+    const origin = req.headers?.origin;
     
     if (allowedOrigins.includes(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin);
@@ -81,7 +83,7 @@ function setCORS(res) {
 
 module.exports = async (req, res) => {
     try {
-        setCORS(res);
+        setCORS(req, res);
         
         if (req.method === 'OPTIONS') {
             return res.status(200).end();
@@ -94,8 +96,6 @@ module.exports = async (req, res) => {
         // Validation environnement au début
         validateEnvironment();
         
-        console.log('=== CHECKOUT SESSION API START ===');
-        console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
         console.log('Creating checkout session...');
         
         const { offer, fullName, email, shippingAddress, postalCode, city } = req.body;
@@ -130,7 +130,6 @@ module.exports = async (req, res) => {
 
         // URL de base robuste
         const baseUrl = process.env.FRONTEND_URL || req.headers.origin || 'https://oradia.fr';
-        console.log(`Using base URL: ${baseUrl}`);
 
         // Créer la session Stripe Checkout
         const session = await stripe.checkout.sessions.create({
@@ -139,17 +138,23 @@ module.exports = async (req, res) => {
                 price_data: {
                     currency: 'eur',
                     product_data: {
-                        name: selectedOffer.name,
-                        description: `Précommande ORADIA - ${selectedOffer.name}`,
-                        images: ['https://oradia.fr/images/oracle-precommande.jpg']
+                        name: 'Oracle ORADIA — Le Voyage intérieur',
+                        description: 'Un outil de guidance pour éclairer ton chemin, comprendre ce que tu vis, et avancer avec clarté.',
+                        images: ['https://oradia.fr/images/oracle-preview.jpg']
                     },
                     unit_amount: selectedOffer.price,
                 },
                 quantity: 1,
             }],
             mode: 'payment',
-            success_url: `${baseUrl}/success-precommande.html?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${baseUrl}/precommande-oracle.html?cancelled=true`,
+            success_url: 'https://oradia.fr/success-precommande.html?session_id={CHECKOUT_SESSION_ID}',
+            cancel_url: 'https://oradia.fr/precommande-oracle.html',
+            custom_text: {
+              submit: {
+                message: '✨ Merci pour ta confiance — ton voyage commence ici.'
+              }
+            },
+            customer_email: email.trim(),
             metadata: {
                 offer,
                 full_name: fullName.trim(),
@@ -158,7 +163,6 @@ module.exports = async (req, res) => {
                 city: city.trim(),
                 source: 'oradia-precommande'
             },
-            customer_email: email.trim(),
         });
 
         console.log(`Stripe session created: ${session.id}`);
