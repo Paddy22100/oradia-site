@@ -1,4 +1,10 @@
-const supabase = require('../lib/supabase');
+const { createClient } = require('@supabase/supabase-js');
+
+// Création directe du client Supabase
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 // Validation des variables d'environnement critiques
 function validateEnvironment() {
@@ -11,8 +17,8 @@ function validateEnvironment() {
     const missing = requiredVars.filter(varName => !process.env[varName]);
     
     if (missing.length > 0) {
-        console.error('Missing environment variables:', missing);
-        console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('SUPABASE')));
+        console.error('[progress] Missing environment variables:', missing);
+        console.error('[progress] Available env vars:', Object.keys(process.env).filter(k => k.includes('SUPABASE')));
         throw new Error(`Configuration error: Missing ${missing.join(', ')}`);
     }
 }
@@ -48,20 +54,21 @@ module.exports = async (req, res) => {
         validateEnvironment();
         
         console.log('=== PREORDER PROGRESS API START ===');
+        console.log('[progress] supabase client created');
         console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL);
         console.log('Fetching preorder progress...');
         
         // Compter les commandes payées avec Supabase
-        console.log('BEFORE Supabase query');
+        console.log('[progress] before query - counting completed orders');
         const { count, error } = await supabase
             .from('preorders')
             .select('*', { count: 'exact', head: true })
             .eq('paid_status', 'completed');
-        console.log('AFTER Supabase query');
+        console.log('[progress] after query - count retrieved');
 
         if (error) {
-            console.error('Supabase query error:', error);
-            console.error('Error details:', JSON.stringify(error, null, 2));
+            console.error('[progress] query error:', error);
+            console.error('[progress] error details:', JSON.stringify(error, null, 2));
             throw new Error(`Database error: ${error.message}`);
         }
 

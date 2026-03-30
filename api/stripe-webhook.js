@@ -1,8 +1,15 @@
-const supabase = require('../lib/supabase');
+const { createClient } = require('@supabase/supabase-js');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+// Création directe du client Supabase
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL,
+  process.env.SUPABASE_SERVICE_ROLE_KEY
+);
 
 // LOG TEMPORAIRE: Détection environnement
 const stripeKey = process.env.STRIPE_SECRET_KEY;
+console.log('[webhook] supabase client created');
 console.log('🔍 Webhook Stripe secret key prefix:', stripeKey ? stripeKey.substring(0, 7) : 'undefined');
 console.log('🔍 Webhook Environment:', process.env.NODE_ENV || 'development');
 
@@ -124,6 +131,7 @@ const handler = async (req, res) => {
                 }
 
                 // Idempotence: vérifier si la session existe déjà
+                console.log('[webhook] before upsert - checking existing order');
                 const { data: existingOrder, error: fetchError } = await supabase
                     .from('preorders')
                     .select('id, paid_status')
@@ -131,7 +139,7 @@ const handler = async (req, res) => {
                     .single();
 
                 if (fetchError && fetchError.code !== 'PGRST116') {
-                    console.error('❌ Database error checking existing order:', fetchError);
+                    console.error('[webhook] upsert error - fetch failed:', fetchError);
                     return res.status(500).json({ 
                         error: 'Database error', 
                         message: fetchError.message 
@@ -162,23 +170,24 @@ const handler = async (req, res) => {
 
                 if (existingOrder) {
                     // Update existing order
-                    console.log('🔄 Mise à jour de la commande existante');
+                    console.log('[webhook] before upsert - updating existing order');
                     const { error: updateError } = await supabase
                         .from('preorders')
                         .update(supabaseData)
                         .eq('stripe_session_id', sessionId);
 
                     if (updateError) {
-                        console.error('❌ Error updating order:', updateError);
+                        console.error('[webhook] upsert error - update failed:', updateError);
                         return res.status(500).json({ 
                             error: 'Update failed', 
                             message: updateError.message 
                         });
                     }
+                    console.log('[webhook] after upsert - order updated successfully');
                     console.log(`✅ Order updated: ${sessionId}`);
                 } else {
                     // Insert new order
-                    console.log('➕ Création d\'une nouvelle commande');
+                    console.log('[webhook] before upsert - inserting new order');
                     const insertData = {
                         ...supabaseData,
                         created_at: new Date().toISOString()
@@ -189,12 +198,13 @@ const handler = async (req, res) => {
                         .insert(insertData);
 
                     if (insertError) {
-                        console.error('❌ Error creating order:', insertError);
+                        console.error('[webhook] upsert error - insert failed:', insertError);
                         return res.status(500).json({ 
                             error: 'Insert failed', 
                             message: insertError.message 
                         });
                     }
+                    console.log('[webhook] after upsert - order inserted successfully');
                     console.log(`✅ New order created: ${sessionId}`);
                 }
 
