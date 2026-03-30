@@ -218,7 +218,7 @@ const handler = async (req, res) => {
         console.error('🚨 Webhook processing error:', error);
         return res.status(500).json({ 
             error: 'Processing error', 
-            message: error.message i
+            message: error.message 
         });
     }
 };
