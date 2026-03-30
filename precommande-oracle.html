@@ -65,7 +65,14 @@
                 const response = await fetch('/api/preorders/progress');
                 
                 if (!response.ok) {
-                    throw new Error(`HTTP ${response.status}`);
+                    // Vérifier si la réponse est du JSON
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('application/json')) {
+                        const errorData = await response.json();
+                        throw new Error(errorData.message || errorData.error || `HTTP ${response.status}`);
+                    } else {
+                        throw new Error(`HTTP ${response.status} - Server error`);
+                    }
                 }
                 
                 const data = await response.json();
@@ -1110,22 +1117,33 @@ La production est lancée grâce aux premières commandes.</p>
                     body: JSON.stringify(orderData)
                 });
                 
-                const rawText = await response.text();
-                console.log('Réponse brute API checkout:', rawText);
-                
+                // Vérifier le content-type avant de parser
+                const contentType = response.headers.get('content-type');
                 let session;
+                
+                if (!contentType || !contentType.includes('application/json')) {
+                    const rawText = await response.text();
+                    console.error('Non-JSON response:', rawText);
+                    throw new Error('Le serveur a renvoyé une réponse invalide. Veuillez réessayer.');
+                }
+                
                 try {
-                    session = JSON.parse(rawText);
-                } catch (e) {
-                    throw new Error("La réponse de l'API n'est pas du JSON");
+                    session = await response.json();
+                } catch (parseError) {
+                    console.error('JSON parse error:', parseError);
+                    throw new Error('La réponse du serveur est corrompue. Veuillez réessayer.');
                 }
                 
                 if (!response.ok) {
-                    throw new Error(session.details?.join(', ') || session.error || 'Erreur serveur');
+                    const errorMessage = session.details?.join(', ') || 
+                                     session.message || 
+                                     session.error || 
+                                     'Erreur lors de la création de la session';
+                    throw new Error(errorMessage);
                 }
                 
-                if (!session.sessionId) {
-                    throw new Error('Session ID manquant');
+                if (!session.success || !session.sessionId) {
+                    throw new Error(session.message || 'Session ID manquant ou invalide');
                 }
                 
                 await stripeInstance.redirectToCheckout({ sessionId: session.sessionId });

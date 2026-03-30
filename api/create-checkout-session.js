@@ -1,5 +1,28 @@
-const supabase = require('../lib/supabase');
+const supabase = require('./lib/supabase');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+// Validation des variables d'environnement critiques
+function validateEnvironment() {
+    const requiredVars = [
+        'STRIPE_SECRET_KEY', 
+        'NEXT_PUBLIC_SUPABASE_URL', 
+        'NEXT_PUBLIC_SUPABASE_ANON_KEY', 
+        'SUPABASE_SERVICE_ROLE_KEY', 
+        'FRONTEND_URL'
+    ];
+    const missing = requiredVars.filter(varName => !process.env[varName]);
+    
+    if (missing.length > 0) {
+        console.error('Missing environment variables:', missing);
+        console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('SUPABASE') || k.includes('STRIPE')));
+        throw new Error(`Configuration error: Missing ${missing.join(', ')}`);
+    }
+    
+    // Validation spécifique pour Stripe
+    if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_SECRET_KEY.startsWith('sk_')) {
+        throw new Error('Invalid STRIPE_SECRET_KEY format');
+    }
+}
 
 // Validation helper
 function validateInput(data) {
@@ -40,7 +63,7 @@ function setCORS(res) {
         'https://oradia-site-trail.vercel.app',
         'https://oradia.vercel.app'
     ];
-    const origin = res.req.headers.origin;
+    const origin = res.req?.headers?.origin;
     
     if (allowedOrigins.includes(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin);
@@ -48,32 +71,43 @@ function setCORS(res) {
     
     res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Content-Type', 'application/json');
 }
 
 module.exports = async (req, res) => {
-    setCORS(res);
-    
-    if (req.method === 'OPTIONS') {
-        return res.status(200).end();
-    }
-
-    if (req.method !== 'POST') {
-        return res.status(405).json({ error: 'Method not allowed' });
-    }
-
     try {
+        setCORS(res);
+        
+        if (req.method === 'OPTIONS') {
+            return res.status(200).end();
+        }
+
+        if (req.method !== 'POST') {
+            return res.status(405).json({ error: 'Method not allowed' });
+        }
+
+        // Validation environnement au début
+        validateEnvironment();
+        
+        console.log('=== CHECKOUT SESSION API START ===');
+        console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL);
+        console.log('Creating checkout session...');
+        
         const { offer, fullName, email, shippingAddress, postalCode, city } = req.body;
+        console.log('Request data:', { offer, fullName, email, shippingAddress, postalCode, city });
         
         // Validation stricte
         const validationErrors = validateInput({ offer, fullName, email, shippingAddress, postalCode, city });
         if (validationErrors.length > 0) {
+            console.error('Validation errors:', validationErrors);
             return res.status(400).json({ 
+                success: false,
                 error: 'Validation failed', 
                 details: validationErrors 
             });
         }
 
-        // Définir les offres
+        // Définir les offres (prix en centimes)
         const offers = {
             'standard': { price: 3800, name: 'Standard - Oracle Oradia' },
             'tirage-offert': { price: 4400, name: 'Tirage Offert - Oracle Oradia' },
@@ -82,11 +116,16 @@ module.exports = async (req, res) => {
 
         const selectedOffer = offers[offer];
         if (!selectedOffer) {
-            return res.status(400).json({ error: 'Invalid offer' });
+            console.error('Invalid offer:', offer);
+            return res.status(400).json({ 
+                success: false,
+                error: 'Invalid offer' 
+            });
         }
 
         // URL de base robuste
         const baseUrl = process.env.FRONTEND_URL || req.headers.origin || 'https://oradia.fr';
+        console.log(`Using base URL: ${baseUrl}`);
 
         // Créer la session Stripe Checkout
         const session = await stripe.checkout.sessions.create({
@@ -117,6 +156,8 @@ module.exports = async (req, res) => {
             customer_email: email.trim(),
         });
 
+        console.log(`Stripe session created: ${session.id}`);
+
         // Enregistrer la commande pending en base
         const orderData = {
             stripe_session_id: session.id,
@@ -144,15 +185,18 @@ module.exports = async (req, res) => {
         }
 
         res.json({ 
-            sessionId: session.id,
-            success: true 
+            success: true,
+            sessionId: session.id
         });
 
     } catch (error) {
         console.error('Checkout session creation failed:', error);
+        
+        // Toujours renvoyer du JSON, même en cas d'erreur
         res.status(500).json({ 
+            success: false,
             error: 'Internal server error',
-            message: 'Failed to create checkout session'
+            message: error.message || 'Failed to create checkout session'
         });
     }
 };
