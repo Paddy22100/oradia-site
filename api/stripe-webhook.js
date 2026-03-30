@@ -5,18 +5,8 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// Logs de diagnostic
-console.log('[supabase] url exact:', supabaseUrl);
-console.log('[supabase] service role exists:', !!supabaseKey);
-
 // Création directe du client Supabase
 const supabase = createClient(supabaseUrl, supabaseKey);
-
-// LOG TEMPORAIRE: Détection environnement
-const stripeKey = process.env.STRIPE_SECRET_KEY;
-console.log('[webhook] supabase client created');
-console.log('🔍 Webhook Stripe secret key prefix:', stripeKey ? stripeKey.substring(0, 7) : 'undefined');
-console.log('🔍 Webhook Environment:', process.env.NODE_ENV || 'development');
 
 const handler = async (req, res) => {
     const sig = req.headers['stripe-signature'];
@@ -50,7 +40,7 @@ const handler = async (req, res) => {
                 const session = event.data.object;
                 const sessionId = session.id;
                 
-                console.log(`🛒 Processing checkout.session.completed: ${sessionId}`);
+                console.log('🛒 Processing checkout.session.completed:', sessionId);
                 console.log('📋 Session payload keys:', Object.keys(session));
 
                 // Extraction robuste des données avec fallbacks
@@ -136,24 +126,6 @@ const handler = async (req, res) => {
                 }
 
                 // Idempotence: vérifier si la session existe déjà
-                console.log('[webhook] before upsert - checking existing order');
-                console.log('[supabase] before simple query - connection test');
-                const { data: testData, error: testError } = await supabase
-                    .from('preorders')
-                    .select('stripe_session_id')
-                    .limit(1);
-                console.log('[supabase] after simple query - connection test');
-                
-                if (testError) {
-                    console.error('[supabase] exact error.message:', testError.message);
-                    console.error('[supabase] exact error.stack:', testError.stack);
-                    return res.status(500).json({ 
-                        error: 'Supabase connection test failed', 
-                        message: testError.message 
-                    });
-                }
-                console.log('[supabase] connection test passed');
-                
                 const { data: existingOrder, error: fetchError } = await supabase
                     .from('preorders')
                     .select('id, paid_status')
@@ -161,9 +133,7 @@ const handler = async (req, res) => {
                     .single();
 
                 if (fetchError && fetchError.code !== 'PGRST116') {
-                    console.error('[webhook] upsert error - fetch failed:', fetchError);
-                    console.error('[supabase] exact error.message:', fetchError.message);
-                    console.error('[supabase] exact error.stack:', fetchError.stack);
+                    console.error('Database error checking existing order:', fetchError);
                     return res.status(500).json({ 
                         error: 'Database error', 
                         message: fetchError.message 
@@ -194,24 +164,21 @@ const handler = async (req, res) => {
 
                 if (existingOrder) {
                     // Update existing order
-                    console.log('[webhook] before upsert - updating existing order');
                     const { error: updateError } = await supabase
                         .from('preorders')
                         .update(supabaseData)
                         .eq('stripe_session_id', sessionId);
 
                     if (updateError) {
-                        console.error('[webhook] upsert error - update failed:', updateError);
+                        console.error('Error updating order:', updateError);
                         return res.status(500).json({ 
                             error: 'Update failed', 
                             message: updateError.message 
                         });
                     }
-                    console.log('[webhook] after upsert - order updated successfully');
-                    console.log(`✅ Order updated: ${sessionId}`);
+                    console.log('Order updated:', sessionId);
                 } else {
                     // Insert new order
-                    console.log('[webhook] before upsert - inserting new order');
                     const insertData = {
                         ...supabaseData,
                         created_at: new Date().toISOString()
@@ -222,14 +189,13 @@ const handler = async (req, res) => {
                         .insert(insertData);
 
                     if (insertError) {
-                        console.error('[webhook] upsert error - insert failed:', insertError);
+                        console.error('Error creating order:', insertError);
                         return res.status(500).json({ 
                             error: 'Insert failed', 
                             message: insertError.message 
                         });
                     }
-                    console.log('[webhook] after upsert - order inserted successfully');
-                    console.log(`✅ New order created: ${sessionId}`);
+                    console.log('New order created:', sessionId);
                 }
 
                 // Log progression
@@ -238,7 +204,7 @@ const handler = async (req, res) => {
                     .select('*', { count: 'exact', head: true })
                     .eq('paid_status', 'completed');
                 
-                console.log(`📊 Total completed orders: ${count}`);
+                console.log(`Total completed orders: ${count}`);
                 
                 return res.status(200).json({ 
                     message: 'Order processed successfully',
@@ -249,11 +215,11 @@ const handler = async (req, res) => {
             }
             
             default:
-                console.log(`ℹ️ Event not handled: ${event.type}`);
+                console.log(`Event not handled: ${event.type}`);
                 return res.status(200).json({ message: 'Event received but not handled' });
         }
     } catch (error) {
-        console.error('🚨 Webhook processing error:', error);
+        console.error('Webhook processing error:', error);
         return res.status(500).json({ 
             error: 'Processing error', 
             message: error.message 
