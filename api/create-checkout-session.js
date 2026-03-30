@@ -140,7 +140,7 @@ module.exports = async (req, res) => {
                     product_data: {
                         name: 'Oracle ORADIA — Le Voyage intérieur',
                         description: 'Un outil de guidance pour éclairer ton chemin, comprendre ce que tu vis, et avancer avec clarté.',
-                        images: ['https://oradia.fr/images/oracle-preview.jpg']
+                        images: ['https://oradia.fr/images/medias/apercu_stripe.jpg']
                     },
                     unit_amount: selectedOffer.price,
                 },
