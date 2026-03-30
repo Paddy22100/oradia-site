@@ -1,16 +1,20 @@
 const { createClient } = require('@supabase/supabase-js');
 
+// Variables d'environnement avec fallbacks
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Logs de diagnostic
+console.log('[supabase] url exact:', supabaseUrl);
+console.log('[supabase] service role exists:', !!supabaseKey);
+
 // Création directe du client Supabase
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // Validation des variables d'environnement critiques
 function validateEnvironment() {
     const requiredVars = [
-        'NEXT_PUBLIC_SUPABASE_URL', 
-        'NEXT_PUBLIC_SUPABASE_ANON_KEY', 
+        'SUPABASE_URL', 
         'SUPABASE_SERVICE_ROLE_KEY', 
         'PREORDER_GOAL'
     ];
@@ -58,6 +62,21 @@ module.exports = async (req, res) => {
         console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL);
         console.log('Fetching preorder progress...');
         
+        // Test minimal de connexion Supabase
+        console.log('[supabase] before simple query - connection test');
+        const { data: testData, error: testError } = await supabase
+            .from('preorders')
+            .select('stripe_session_id')
+            .limit(1);
+        console.log('[supabase] after simple query - connection test');
+        
+        if (testError) {
+            console.error('[supabase] exact error.message:', testError.message);
+            console.error('[supabase] exact error.stack:', testError.stack);
+            throw new Error(`Supabase connection test failed: ${testError.message}`);
+        }
+        console.log('[supabase] connection test passed');
+        
         // Compter les commandes payées avec Supabase
         console.log('[progress] before query - counting completed orders');
         const { count, error } = await supabase
@@ -68,7 +87,8 @@ module.exports = async (req, res) => {
 
         if (error) {
             console.error('[progress] query error:', error);
-            console.error('[progress] error details:', JSON.stringify(error, null, 2));
+            console.error('[progress] exact error.message:', error.message);
+            console.error('[progress] exact error.stack:', error.stack);
             throw new Error(`Database error: ${error.message}`);
         }
 

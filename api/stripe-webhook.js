@@ -1,11 +1,16 @@
 const { createClient } = require('@supabase/supabase-js');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
+// Variables d'environnement avec fallbacks
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Logs de diagnostic
+console.log('[supabase] url exact:', supabaseUrl);
+console.log('[supabase] service role exists:', !!supabaseKey);
+
 // Création directe du client Supabase
-const supabase = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL,
-  process.env.SUPABASE_SERVICE_ROLE_KEY
-);
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 // LOG TEMPORAIRE: Détection environnement
 const stripeKey = process.env.STRIPE_SECRET_KEY;
@@ -132,6 +137,23 @@ const handler = async (req, res) => {
 
                 // Idempotence: vérifier si la session existe déjà
                 console.log('[webhook] before upsert - checking existing order');
+                console.log('[supabase] before simple query - connection test');
+                const { data: testData, error: testError } = await supabase
+                    .from('preorders')
+                    .select('stripe_session_id')
+                    .limit(1);
+                console.log('[supabase] after simple query - connection test');
+                
+                if (testError) {
+                    console.error('[supabase] exact error.message:', testError.message);
+                    console.error('[supabase] exact error.stack:', testError.stack);
+                    return res.status(500).json({ 
+                        error: 'Supabase connection test failed', 
+                        message: testError.message 
+                    });
+                }
+                console.log('[supabase] connection test passed');
+                
                 const { data: existingOrder, error: fetchError } = await supabase
                     .from('preorders')
                     .select('id, paid_status')
@@ -140,6 +162,8 @@ const handler = async (req, res) => {
 
                 if (fetchError && fetchError.code !== 'PGRST116') {
                     console.error('[webhook] upsert error - fetch failed:', fetchError);
+                    console.error('[supabase] exact error.message:', fetchError.message);
+                    console.error('[supabase] exact error.stack:', fetchError.stack);
                     return res.status(500).json({ 
                         error: 'Database error', 
                         message: fetchError.message 
