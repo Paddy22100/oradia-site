@@ -1,6 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-const fetch = require('node-fetch');
 
 // Variables d'environnement avec fallbacks
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
