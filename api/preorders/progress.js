@@ -62,20 +62,26 @@ module.exports = async (req, res) => {
         console.log('Supabase URL:', process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL);
         console.log('Fetching preorder progress...');
         
-        // Test minimal de connexion Supabase
-        console.log('[supabase] before simple query - connection test');
-        const { data: testData, error: testError } = await supabase
-            .from('preorders')
-            .select('stripe_session_id')
-            .limit(1);
-        console.log('[supabase] after simple query - connection test');
-        
-        if (testError) {
-            console.error('[supabase] exact error.message:', testError.message);
-            console.error('[supabase] exact error.stack:', testError.stack);
-            throw new Error(`Supabase connection test failed: ${testError.message}`);
+        // Test brut de connexion HTTP vers Supabase
+        console.log('[test] direct fetch to supabase');
+
+        try {
+          const response = await fetch(`${supabaseUrl}/rest/v1/preorders?select=stripe_session_id&limit=1`, {
+            headers: {
+              apikey: supabaseKey,
+              Authorization: `Bearer ${supabaseKey}` 
+            }
+          });
+
+          console.log('[test] fetch status:', response.status);
+
+          const text = await response.text();
+          console.log('[test] fetch response:', text);
+
+        } catch (err) {
+          console.error('[test] fetch error:', err);
+          throw new Error(`Direct fetch test failed: ${err.message}`);
         }
-        console.log('[supabase] connection test passed');
         
         // Compter les commandes payées avec Supabase
         console.log('[progress] before query - counting completed orders');
