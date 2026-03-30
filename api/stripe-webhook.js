@@ -6,7 +6,7 @@ const handler = async (req, res) => {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
     if (!sig || !webhookSecret) {
-        console.error('Missing webhook signature or secret');
+        console.error('❌ Missing webhook signature or secret');
         return res.status(400).json({ error: 'Missing signature' });
     }
 
@@ -21,8 +21,9 @@ const handler = async (req, res) => {
         
         // Construire l'événement Stripe avec le raw body réel
         event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+        console.log('✅ Signature Stripe validée');
     } catch (err) {
-        console.error('Webhook signature verification failed:', err.message);
+        console.error('❌ Webhook signature verification failed:', err.message);
         return res.status(400).json({ error: `Webhook Error: ${err.message}` });
     }
 
@@ -32,7 +33,91 @@ const handler = async (req, res) => {
                 const session = event.data.object;
                 const sessionId = session.id;
                 
-                console.log(`Processing checkout.session.completed: ${sessionId}`);
+                console.log(`🛒 Processing checkout.session.completed: ${sessionId}`);
+                console.log('📋 Session payload keys:', Object.keys(session));
+
+                // Extraction robuste des données avec fallbacks
+                const extractedData = {
+                    // Email avec fallbacks multiples
+                    email: session.customer_details?.email || 
+                           session.customer_email || 
+                           session.metadata?.email || 
+                           null,
+                    
+                    // Offer depuis metadata (obligatoire)
+                    offer: session.metadata?.offer || null,
+                    
+                    // Nom complet avec fallbacks
+                    full_name: session.metadata?.full_name || 
+                              session.customer_details?.name || 
+                              session.customer_details?.name || 
+                              null,
+                    
+                    // Adresse avec fallbacks metadata优先
+                    shipping_address: session.metadata?.shipping_address || 
+                                    session.customer_details?.address?.line1 || 
+                                    null,
+                    
+                    // Code postal avec fallbacks
+                    postal_code: session.metadata?.postal_code || 
+                                 session.customer_details?.address?.postal_code || 
+                                 null,
+                    
+                    // Ville avec fallbacks
+                    city: session.metadata?.city || 
+                          session.customer_details?.address?.city || 
+                          null,
+                    
+                    // Téléphone avec fallbacks
+                    phone: session.customer_details?.phone || 
+                          session.metadata?.phone || 
+                          null,
+                    
+                    // Champs Stripe avec fallbacks null
+                    stripe_customer_id: session.customer || null,
+                    payment_intent_id: session.payment_intent || null,
+                    
+                    // Champs monétaires
+                    amount_total: session.amount_total || 0,
+                    currency: session.currency || 'eur',
+                    
+                    // Session ID
+                    stripe_session_id: sessionId,
+                    
+                    // Status
+                    paid_status: 'completed'
+                };
+
+                // Logging des valeurs extraites
+                console.log('📝 Données extraites:');
+                console.log('  - email:', extractedData.email);
+                console.log('  - offer:', extractedData.offer);
+                console.log('  - full_name:', extractedData.full_name);
+                console.log('  - shipping_address:', extractedData.shipping_address);
+                console.log('  - postal_code:', extractedData.postal_code);
+                console.log('  - city:', extractedData.city);
+                console.log('  - phone:', extractedData.phone);
+                console.log('  - stripe_customer_id:', extractedData.stripe_customer_id);
+                console.log('  - payment_intent_id:', extractedData.payment_intent_id);
+                console.log('  - amount_total:', extractedData.amount_total);
+                console.log('  - currency:', extractedData.currency);
+
+                // Validation des champs obligatoires
+                if (!extractedData.email) {
+                    console.error('❌ Email manquant - impossible de continuer');
+                    return res.status(400).json({ 
+                        error: 'Missing required field: email',
+                        message: 'Email is required for preorder processing'
+                    });
+                }
+
+                if (!extractedData.offer) {
+                    console.error('❌ Offer manquant - impossible de continuer');
+                    return res.status(400).json({ 
+                        error: 'Missing required field: offer',
+                        message: 'Offer is required for preorder processing'
+                    });
+                }
 
                 // Idempotence: vérifier si la session existe déjà
                 const { data: existingOrder, error: fetchError } = await supabase
@@ -42,42 +127,56 @@ const handler = async (req, res) => {
                     .single();
 
                 if (fetchError && fetchError.code !== 'PGRST116') {
-                    console.error('Database error checking existing order:', fetchError);
-                    return res.status(500).json({ error: 'Database error' });
+                    console.error('❌ Database error checking existing order:', fetchError);
+                    return res.status(500).json({ 
+                        error: 'Database error', 
+                        message: fetchError.message 
+                    });
                 }
 
-                const updateData = {
-                    paid_status: 'completed',
-                    payment_intent_id: session.payment_intent,
-                    amount_total: session.amount_total,
-                    currency: session.currency,
-                    full_name: session.metadata?.full_name || null,
-                    city: session.metadata?.city || null,
-                    postal_code: session.metadata?.postal_code || null,
+                // Préparation de l'objet pour Supabase (uniquement les colonnes existantes)
+                const supabaseData = {
+                    stripe_session_id: extractedData.stripe_session_id,
+                    email: extractedData.email,
+                    offer: extractedData.offer,
+                    full_name: extractedData.full_name,
+                    amount_total: extractedData.amount_total / 100, // Conversion en euros
+                    currency: extractedData.currency,
+                    payment_intent_id: extractedData.payment_intent_id,
+                    stripe_customer_id: extractedData.stripe_customer_id,
+                    paid_status: extractedData.paid_status,
+                    shipping_address: extractedData.shipping_address,
+                    postal_code: extractedData.postal_code,
+                    city: extractedData.city,
+                    phone: extractedData.phone,
                     updated_at: new Date().toISOString()
                 };
 
+                // Log de l'objet exact envoyé à Supabase
+                console.log('📦 Objet Supabase upsert:');
+                console.log(JSON.stringify(supabaseData, null, 2));
+
                 if (existingOrder) {
                     // Update existing order
+                    console.log('🔄 Mise à jour de la commande existante');
                     const { error: updateError } = await supabase
                         .from('preorders')
-                        .update(updateData)
+                        .update(supabaseData)
                         .eq('stripe_session_id', sessionId);
 
                     if (updateError) {
-                        console.error('Error updating order:', updateError);
-                        return res.status(500).json({ error: 'Update failed' });
+                        console.error('❌ Error updating order:', updateError);
+                        return res.status(500).json({ 
+                            error: 'Update failed', 
+                            message: updateError.message 
+                        });
                     }
-                    console.log(`Order updated: ${sessionId}`);
+                    console.log(`✅ Order updated: ${sessionId}`);
                 } else {
-                    // Insert new order (cas où l'insert initiale a échoué)
+                    // Insert new order
+                    console.log('➕ Création d\'une nouvelle commande');
                     const insertData = {
-                        ...updateData,
-                        stripe_session_id: sessionId,
-                        email: session.customer_email,
-                        offer: session.metadata?.offer || 'standard',
-                        shipping_address: session.metadata?.shipping_address || null,
-                        source: session.metadata?.source || 'oradia-precommande',
+                        ...supabaseData,
                         created_at: new Date().toISOString()
                     };
 
@@ -86,10 +185,13 @@ const handler = async (req, res) => {
                         .insert(insertData);
 
                     if (insertError) {
-                        console.error('Error creating order:', insertError);
-                        return res.status(500).json({ error: 'Insert failed' });
+                        console.error('❌ Error creating order:', insertError);
+                        return res.status(500).json({ 
+                            error: 'Insert failed', 
+                            message: insertError.message 
+                        });
                     }
-                    console.log(`New order created: ${sessionId}`);
+                    console.log(`✅ New order created: ${sessionId}`);
                 }
 
                 // Log progression
@@ -98,26 +200,27 @@ const handler = async (req, res) => {
                     .select('*', { count: 'exact', head: true })
                     .eq('paid_status', 'completed');
                 
-                console.log(`Total completed orders: ${count}`);
-                break;
+                console.log(`📊 Total completed orders: ${count}`);
+                
+                return res.status(200).json({ 
+                    message: 'Order processed successfully',
+                    sessionId: sessionId,
+                    email: extractedData.email,
+                    offer: extractedData.offer
+                });
             }
-
+            
             default:
-                console.log(`Unhandled event type: ${event.type}`);
+                console.log(`ℹ️ Event not handled: ${event.type}`);
+                return res.status(200).json({ message: 'Event received but not handled' });
         }
-
-        return res.status(200).json({ received: true });
-
     } catch (error) {
-        console.error('Webhook processing error:', error);
-        return res.status(500).json({ error: 'Processing failed' });
+        console.error('🚨 Webhook processing error:', error);
+        return res.status(500).json({ 
+            error: 'Processing error', 
+            message: error.message i
+        });
     }
 };
 
 module.exports = handler;
-
-module.exports.config = {
-  api: {
-    bodyParser: false,
-  },
-};
