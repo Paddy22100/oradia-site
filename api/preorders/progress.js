@@ -28,14 +28,14 @@ function validateEnvironment() {
 }
 
 // CORS helper
-function setCORS(res) {
+function setCORS(req, res) {
     const allowedOrigins = [
         'https://oradia.fr', 
         'https://www.oradia.fr',
         'https://oradia-site-trail.vercel.app',
         'https://oradia.vercel.app'
     ];
-    const origin = res.req?.headers?.origin;
+    const origin = req.headers?.origin;
     
     if (allowedOrigins.includes(origin)) {
         res.setHeader('Access-Control-Allow-Origin', origin);
@@ -48,7 +48,7 @@ function setCORS(res) {
 
 module.exports = async (req, res) => {
     try {
-        setCORS(res);
+        setCORS(req, res);
         
         if (req.method !== 'GET') {
             return res.status(405).json({ error: 'Method not allowed' });
