@@ -50,10 +50,9 @@ const handler = async (req, res) => {
                     // Nom complet avec fallbacks
                     full_name: session.metadata?.full_name || 
                               session.customer_details?.name || 
-                              session.customer_details?.name || 
                               null,
                     
-                    // Adresse avec fallbacks metadata优先
+                    // Adresse avec fallbacks metadata prioritaire
                     shipping_address: session.metadata?.shipping_address || 
                                     session.customer_details?.address?.line1 || 
                                     null,
@@ -134,7 +133,7 @@ const handler = async (req, res) => {
                     });
                 }
 
-                // Préparation de l'objet pour Supabase (uniquement les colonnes existantes)
+                // Préparation de l'objet pour Supabase (compatible avec table existante)
                 const supabaseData = {
                     stripe_session_id: extractedData.stripe_session_id,
                     email: extractedData.email,
