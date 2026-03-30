@@ -1,6 +1,11 @@
 const supabase = require('../lib/supabase');
 const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
+// LOG TEMPORAIRE: Détection environnement
+const stripeKey = process.env.STRIPE_SECRET_KEY;
+console.log('🔍 Webhook Stripe secret key prefix:', stripeKey ? stripeKey.substring(0, 7) : 'undefined');
+console.log('🔍 Webhook Environment:', process.env.NODE_ENV || 'development');
+
 const handler = async (req, res) => {
     const sig = req.headers['stripe-signature'];
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;

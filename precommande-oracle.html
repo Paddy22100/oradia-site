@@ -50,6 +50,9 @@
         // REMPLACER pk_test_... par votre vraie clé Stripe publique
         const stripeInstance = Stripe('pk_test_51TAsp69jcRbNO5oykYfnwCWLjGUVyCGLjFrjcgrMSRzMhNnH8gucs00YSTJoCEcwcCGsHvTjscA9Cn7MPvr4xl4c001dVA4e2j');
         
+        // LOG TEMPORAIRE: Détection environnement
+        console.log('🔍 Stripe public key prefix:', stripeInstance._apiKey ? stripeInstance._apiKey.substring(0, 7) : 'undefined');
+        
         // Fonction pour charger la progression des précommandes (version premium)
         async function loadPreorderProgress() {
             const loadingEl = document.getElementById('progressLoading');

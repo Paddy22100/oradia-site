@@ -8,18 +8,23 @@ function validateEnvironment() {
         'NEXT_PUBLIC_SUPABASE_URL', 
         'NEXT_PUBLIC_SUPABASE_ANON_KEY', 
         'SUPABASE_SERVICE_ROLE_KEY', 
-        'FRONTEND_URL'
+        'PREORDER_GOAL'
     ];
+    
     const missing = requiredVars.filter(varName => !process.env[varName]);
     
     if (missing.length > 0) {
-        console.error('Missing environment variables:', missing);
-        console.error('Available env vars:', Object.keys(process.env).filter(k => k.includes('SUPABASE') || k.includes('STRIPE')));
+        console.error('❌ Variables d\'environnement manquantes:', missing);
         throw new Error(`Configuration error: Missing ${missing.join(', ')}`);
     }
     
+    // LOG TEMPORAIRE: Détection environnement
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    console.log('🔍 Stripe secret key prefix:', stripeKey ? stripeKey.substring(0, 7) : 'undefined');
+    console.log('🔍 Environment:', process.env.NODE_ENV || 'development');
+    
     // Validation spécifique pour Stripe
-    if (!process.env.STRIPE_SECRET_KEY || !process.env.STRIPE_SECRET_KEY.startsWith('sk_')) {
+    if (!stripeKey || !stripeKey.startsWith('sk_')) {
         throw new Error('Invalid STRIPE_SECRET_KEY format');
     }
 }

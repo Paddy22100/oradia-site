@@ -317,7 +317,12 @@
     const sessionId = urlParams.get('session_id');
     
     if (sessionId) {
-        console.log('Session ID:', sessionId);
+        console.log('🔍 Success page Session ID:', sessionId);
+        console.log('🔍 Pour retrouver cette session dans Stripe Dashboard:');
+        console.log('1. Allez dans https://dashboard.stripe.com/search');
+        console.log('2. Cherchez:', sessionId);
+        console.log('3. Ou directement: https://dashboard.stripe.com/search?query=' + sessionId);
+        
         // Optionnel: validation avec le backend
     }
     
