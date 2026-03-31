@@ -1,8 +1,6 @@
-# 🌟 ORADIA - L'Oracle du Vivant
+# 🌟 ORADIA - La Boussole Intérieure
 
-## 📋 Description
-
-ORADIA est un oracle divinatoire moderne qui puise dans la sagesse des cartes pour offrir guidance et introspection. Conçu comme un pont entre la tradition des oracles et nos quêtes contemporaines de sens.
+## Robots.txt pour ORADIA - La Boussole Intérieureatoire moderne qui puise dans la sagesse des cartes pour offrir guidance et introspection. Conçu comme un pont entre la tradition des oracles et nos quêtes contemporaines de sens.
 
 ### 🎯 Mission
 
