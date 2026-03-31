@@ -215,37 +215,27 @@
 
   position: relative;
 
-  width: min(1400px, 95vw);
+  width: min(1200px, 95vw);
 
   aspect-ratio: 1 / 1;
 
   margin: 0 auto;
 
-
-
-  /* un peu moins de marge interne pour laisser plus de place aux cartes */
-
-  padding: 7% 10%;
-
-
+  padding: 1rem;
 
   display: grid;
 
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: 1fr;
 
-  grid-template-rows: repeat(3, 1fr);
+  grid-template-rows: repeat(7, auto);
 
-  grid-template-areas:
+  gap: 0.75rem;
 
-    "top-left   .        top-right"
+  max-width: 100%;
 
-    "mid-left   center   mid-right"
+  overflow-x: hidden;
 
-    "bottom-left .       bottom-right";
 
-  gap: 2.4rem;                 /* plus d’espace entre les piles */
-
-  place-items: center;
 
 
 
@@ -422,6 +412,30 @@
     }
 
   }
+
+  @media (min-width: 640px) {
+  #tore-immersif .tore-board-7 {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (min-width: 768px) {
+  #tore-immersif .tore-board-7 {
+    grid-template-columns: repeat(3, 1fr);
+    grid-template-rows: repeat(3, 1fr);
+    gap: 1.25rem;
+    padding: 1.5rem;
+    width: min(1200px, 95vw);
+  }
+}
+
+@media (min-width: 1024px) {
+  #tore-immersif .tore-board-7 {
+    gap: 1.5rem;
+    padding: 2rem;
+  }
+}
 
   .tore-card-inner {
 
