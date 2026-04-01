@@ -70,6 +70,8 @@
 
   <link rel="stylesheet" href="responsive.css">
 
+  <link rel="stylesheet" href="production-mode.css">
+
 
 
   <script src="security.js"></script>
@@ -3741,7 +3743,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
             <!-- 2 CTA côte à côte -->
             <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-8">
                 <!-- Primaire -->
-                <a href="pelerin.html?start=intention" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 sm:px-8 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
+                <a href="pelerin.html?start=intention" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 sm:px-8 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target hidden-feature">
                     <i class="fas fa-play"></i>
                     <span class="text-sm sm:text-base">Commencer gratuitement</span>
                 </a>
@@ -4365,7 +4367,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
 
-              <a href="pelerin.html?start=intention" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105 touch-target">
+              <a href="pelerin.html?start=intention" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105 touch-target hidden-feature">
 
 
 
@@ -4649,7 +4651,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
 
-              <a href="traversee.html" id="orderBtn" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105 touch-target">
+              <a href="traversee.html" id="orderBtn" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105 touch-target hidden-feature">
 
                 <i class="fas fa-shopping-cart"></i>
 
@@ -4955,7 +4957,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
 
-              <a href="tore.html" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105 touch-target">
+              <a href="tore.html" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105 touch-target hidden-feature">
 
 
 
@@ -5022,6 +5024,14 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
       
 
 
+
+      <!-- Message tirages en développement -->
+      <div class="text-center mt-12 mb-8">
+        <div class="inline-flex items-center gap-3 bg-gold/10 backdrop-blur-sm rounded-full px-6 py-3 border border-gold/30">
+          <i class="fas fa-clock text-gold"></i>
+          <span class="text-light-gold font-medium">Les tirages en ligne arrivent prochainement</span>
+        </div>
+      </div>
 
       <!-- Bottom CTA -->
 
@@ -5300,7 +5310,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
 
-  <section id="tore" class="py-20 px-6 bg-night-blue hidden">
+  <section id="tore" class="py-20 px-6 bg-night-blue hidden hidden-feature">
 
 
 
@@ -5637,10 +5647,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
               <!-- Tarifs -->
-
-
-
-              <div class="bg-gradient-to-br from-gold/10 to-light-gold/5 rounded-2xl p-6 border border-gold/20">
+              <div class="bg-gradient-to-br from-gold/10 to-light-gold/5 rounded-2xl p-6 border border-gold/20 hidden-feature">
 
 
 
@@ -6226,15 +6233,15 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
 
-            <li><a href="accompagnements.html" class="text-light-gold hover:text-gold transition">Accompagnements</a></li>
+            <li><a href="precommande-oracle.html" class="text-light-gold hover:text-gold transition">Précommande</a></li>
 
 
 
-            <li><a href="rendez-vous.html" class="text-light-gold hover:text-gold transition">Rendez-vous</a></li>
+            <li><a href="a-propos.html" class="text-light-gold hover:text-gold transition">À propos</a></li>
 
 
 
-            <li><a href="partenariats.html" class="text-light-gold hover:text-gold transition">Partenariats</a></li>
+            <li><a href="contact.html" class="text-light-gold hover:text-gold transition">Contact</a></li>
 
 
 
@@ -8107,7 +8114,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
 
-              window.location.href = 'traversee.html?access=traversee';
+              window.location.href = 'precommande-oracle.html';
 
 
 
@@ -8115,7 +8122,7 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
 
 
-              window.location.href = 'tore.html';
+              window.location.href = 'precommande-oracle.html';
 
 
 
@@ -9107,7 +9114,7 @@ function initOrderModal(){
 
 
 
-<a href="traversee.html?access=traversee" id="startTraverseeFromOffer" class="btn-gold">
+<a href="precommande-oracle.html" id="startTraverseeFromOffer" class="btn-gold">
 
 
 
