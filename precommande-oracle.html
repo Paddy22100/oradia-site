@@ -287,6 +287,38 @@
             transition: background-color 0.3s ease;
         }
         
+        /* Bouton backToTop - positionnement optimisé */
+        #backToTop {
+            position: fixed !important;
+            right: 24px !important;
+            bottom: 24px !important;
+            z-index: 999 !important;
+            pointer-events: auto !important;
+        }
+        
+        /* Mobile - marges réduites */
+        @media (max-width: 768px) {
+            #backToTop {
+                right: 16px !important;
+                bottom: 16px !important;
+            }
+        }
+        
+        /* Safe areas pour mobiles modernes */
+        @supports (padding: max(0px)) {
+            #backToTop {
+                right: max(24px, env(safe-area-inset-right)) !important;
+                bottom: max(24px, env(safe-area-inset-bottom)) !important;
+            }
+            
+            @media (max-width: 768px) {
+                #backToTop {
+                    right: max(16px, env(safe-area-inset-right)) !important;
+                    bottom: max(16px, env(safe-area-inset-bottom)) !important;
+                }
+            }
+        }
+        
         #carouselDots div:hover {
             transform: scale(1.2);
         }
@@ -552,7 +584,7 @@
                             Un outil utilisable en séance
                         </h3>
                         
-                        <p class="text-xl md:text-2xl text-light-gold/90 leading-relaxed mb-8 whitespace-nowrap">
+                        <p class="text-lg md:text-2xl text-light-gold/90 leading-relaxed mb-8 whitespace-nowrap">
                             Oradia peut aussi être utilisé par les thérapeutes, praticiens et accompagnants.
                         </p>
                         
