@@ -4,10 +4,9 @@
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
-  <title>L'Oracle Oradia - Les Trois Voies du Tirage • Guidance Spirituelle</title>
-  <meta name="description" content="Découvrez les trois voies de l'Oracle Oradia : Le Pèlerin gratuit, La Traversée guidée à 3€, et Le Tore ultime à 8€/mois. Un oracle vivant pour éclairer votre chemin intérieur." />
-  <meta name="keywords" content="oracle, tirage, voyance, guidance spirituelle, cartes, divination, Oradia" />
-  <!-- Canonical URL -->
+  <title>L'Oracle Oradia - La Boussole Intérieure</title>
+  <meta name="description" content="Découvrez l'Oracle Oradia : 64 cartes pour éclairer votre chemin intérieur et trouver la clarté." />
+  <meta name="keywords" content="oracle, guidance, clarté, introspection, Oradia, cartes spirituelles" />
   <link rel="canonical" href="https://oradia.fr/oracle.html" />
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -28,12 +27,8 @@
           },
           fontFamily: {
             'cormorant': ['Cormorant Garamond', 'serif'],
-            'cinzel': ['Cinzel', 'serif']
-          },
-          animation: {
-            'float': 'float 6s ease-in-out infinite',
-            'pulse-slow': 'pulse 4s ease-in-out infinite',
-            'shimmer': 'shimmer 3s ease-in-out infinite',
+            'cinzel': ['Cinzel', 'serif'],
+            'lora': ['Lora', 'serif']
           }
         }
       }
@@ -41,52 +36,38 @@
   </script>
 
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
     
     .font-cormorant {
       font-family: 'Cormorant Garamond', serif;
     }
     
-    .font-cinzel {
-      font-family: 'Cinzel', serif;
+    .font-lora {
+      font-family: 'Lora', serif;
     }
     
     .gold-gradient {
-      background: linear-gradient(135deg, #d4af37, #f5e7a1, #d4af37);
+      background: linear-gradient(135deg, #d4af37 0%, #f5e7a1 50%, #d4af37 100%);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
       background-clip: text;
     }
     
     .hero-section {
+      background: linear-gradient(135deg, #0a192f 0%, #051428 100%);
       min-height: 100vh;
-      background: linear-gradient(135deg, #0a192f 0%, #051428 50%, #0a192f 100%);
       position: relative;
-      overflow: hidden;
+      background-image: url("images/oradia-hero-4k.png");
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
     }
     
     .hero-overlay {
+      background: radial-gradient(circle at 20% 80%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
+                        radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.05) 0%, transparent 50%);
       position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: radial-gradient(circle at 20% 50%, rgba(212, 175, 55, 0.15) 0%, transparent 50%),
-                  radial-gradient(circle at 80% 80%, rgba(212, 175, 55, 0.08) 0%, transparent 50%);
-    }
-    
-    .floating {
-      animation: float 6s ease-in-out infinite;
-    }
-    
-    @keyframes float {
-      0%, 100% { transform: translateY(0px); }
-      50% { transform: translateY(-20px); }
-    }
-    
-    @keyframes shimmer {
-      0%, 100% { opacity: 0.8; }
-      50% { opacity: 1; }
+      inset: 0;
     }
     
     .touch-target {
@@ -94,38 +75,38 @@
       min-width: 44px;
     }
     
-    .header-bg {
-      background: linear-gradient(180deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.95) 100%);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid rgba(212,175,55,0.2);
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-20px); }
     }
     
-    .card-hover {
-      transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    @keyframes pulse-slow {
+      0%, 100% { opacity: 0.3; }
+      50% { opacity: 0.1; }
     }
     
-    .card-hover:hover {
-      transform: translateY(-8px) scale(1.02);
+    @keyframes shimmer {
+      0% { background-position: -200% center; }
+      100% { background-position: 200% center; }
     }
     
-    .premium-glow {
-      box-shadow: 0 0 40px rgba(212,175,55,0.3);
-      transition: all 0.5s ease;
+    .animate-float {
+      animation: float 6s ease-in-out infinite;
     }
     
-    .premium-glow:hover {
-      box-shadow: 0 0 60px rgba(212,175,55,0.5);
+    .animate-pulse-slow {
+      animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
     }
     
-    .price-badge {
-      background: linear-gradient(135deg, #d4af37, #f5e7a1);
-      animation: shimmer 3s ease-in-out infinite;
+    .shimmer-bg {
+      background: linear-gradient(90deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+      background-size: 200% 100%;
+      animation: shimmer 3s infinite;
     }
   </style>
 </head>
 
-<body class="bg-night-blue text-light-gold">
-  
+<body class="relative bg-night-blue text-light-gold">
   <!-- Scroll to top button -->
   <button id="backToTop" class="fixed bottom-6 right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-50 backdrop-blur-sm" aria-label="Remonter en haut">
     <i class="fas fa-arrow-up text-sm"></i>
@@ -134,411 +115,370 @@
   <!-- Header -->
   <div id="header-placeholder"></div>
 
-  <!-- Bandeau Précommande -->
-  <div id="preorderBanner" class="bg-gradient-to-r from-gold to-light-gold shadow-lg">
-    <div class="container mx-auto px-4 py-3">
-      <!-- Version Desktop -->
-      <div class="hidden sm:flex items-center justify-between">
-        <div class="flex items-center space-x-4">
-          <i class="fas fa-sparkles text-night-blue animate-pulse"></i>
-          <span class="font-bold text-night-blue">
-            ✨ L'Oracle Oradia vous appelle ? Précommande ouverte · Livraison 31 août 2026
+  <!-- Hero Section -->
+  <section class="hero-section py-20 md:py-32">
+    <div class="hero-overlay"></div>
+    <div class="container mx-auto px-6 relative z-10">
+      <div class="text-center max-w-4xl mx-auto">
+        <h1 class="cormorant text-5xl md:text-7xl font-bold mb-6 gold-gradient animate-pulse-slow">
+          L'Oracle Oradia
+        </h1>
+        
+        <div class="mb-4">
+          <span class="block text-2xl md:text-3xl text-light-gold/90 font-light tracking-wider">
+            La Boussole Intérieure
           </span>
         </div>
-        <div class="flex items-center space-x-3">
-          <a href="precommande-oracle.html" class="bg-night-blue text-gold px-6 py-2 rounded-full font-semibold hover:bg-dark-blue transition-all duration-300 hover:scale-105 flex items-center">
-            Précommander
-            <i class="fas fa-shopping-cart ml-2"></i>
+        
+        <div class="w-32 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent mx-auto my-8 animate-pulse-slow"></div>
+        
+        <p class="text-xl md:text-2xl text-light-gold/80 mb-12 leading-relaxed max-w-3xl mx-auto">
+          64 cartes pour trouver la clarté dans les moments de doute
+        </p>
+        
+        <!-- CTA -->
+        <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-8">
+          <a href="precommande-oracle.html" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 sm:px-8 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
+            <span class="text-sm sm:text-base">Précommander maintenant</span>
           </a>
-          <button id="closeBanner" class="text-night-blue hover:text-dark-blue transition-colors p-1" title="Fermer">
-            <i class="fas fa-times text-xl"></i>
-          </button>
         </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Découverte Visuelle -->
+  <section class="py-16 px-6 bg-gradient-to-b from-night-blue to-dark-blue relative">
+    <div class="absolute inset-0 opacity-5">
+      <div class="absolute inset-0" style="background-image: radial-gradient(circle at 50% 50%, #d4af37 2px, transparent 2px); background-size: 60px 60px;"></div>
+    </div>
+    
+    <div class="container mx-auto max-w-6xl relative z-10">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+        <!-- Texte -->
+        <div class="text-center lg:text-left">
+          <h2 class="cormorant text-4xl md:text-5xl font-bold mb-6 gold-gradient">
+            Une Boussole pour l'Âme
+          </h2>
+          
+          <p class="text-xl text-light-gold/90 leading-relaxed font-lora mb-8">
+            Oradia ne prédit pas l'avenir. Il éclaire votre présent avec sagesse et bienveillance.
+          </p>
+          
+          <p class="text-xl text-light-gold/90 leading-relaxed font-lora mb-8">
+            64 cartes uniques pour naviguer les questions importantes et les moments de transition.
+          </p>
+          
+          <!-- Points forts -->
+          <div class="space-y-4">
+            <div class="flex items-center gap-3">
+              <div class="w-3 h-3 bg-gold rounded-full"></div>
+              <span class="text-lg text-light-gold">Clarté dans la confusion</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-3 h-3 bg-gold rounded-full"></div>
+              <span class="text-lg text-light-gold">Guidance pour vos décisions</span>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="w-3 h-3 bg-gold rounded-full"></div>
+              <span class="text-lg text-light-gold">Apaisement dans les doutes</span>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Visuel -->
+        <div class="relative">
+          <div class="absolute inset-0 bg-gradient-to-r from-gold/10 to-transparent rounded-2xl blur-xl"></div>
+          <img src="images/Coffret.png" alt="Coffret Oradia" class="relative w-full h-auto rounded-2xl shadow-2xl shadow-gold/20 border border-gold/30" loading="lazy">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Carrousel des Cartes -->
+  <section class="py-16 px-6 bg-gradient-to-b from-dark-blue to-night-blue relative">
+    <div class="container mx-auto max-w-4xl relative z-10">
+      <div class="text-center mb-12">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-6 gold-gradient">
+          Découvrez les Cartes
+        </h2>
+        
+        <p class="text-xl text-light-gold/80 mb-8">
+          7 familles pour explorer toutes les facettes de votre cheminement
+        </p>
       </div>
       
-      <!-- Version Mobile -->
-      <div class="sm:hidden">
-        <button id="closeBannerMobile" class="absolute top-2 right-2 text-night-blue hover:text-dark-blue transition-colors p-1.5" title="Fermer">
-          <i class="fas fa-times text-lg"></i>
-        </button>
-        <div class="text-center space-y-4">
-          <div class="flex items-center justify-center space-x-2">
-            <i class="fas fa-sparkles text-xl animate-pulse"></i>
-            <span class="font-bold text-sm leading-relaxed">
-              ✨ L'Oracle Oradia vous appelle ?
-            </span>
+      <div class="relative mb-12">
+        <div class="overflow-hidden rounded-2xl bg-[rgba(5,20,40,0.6)] p-2">
+          <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4" style="scrollbar-width: thin; scrollbar-color: #d4af37 #1a365d;">
+            <!-- Cartes représentatives -->
+            <div class="flex-shrink-0 w-48 snap-center">
+              <div class="bg-[rgba(212,175,55,0.05)] rounded-xl p-4 border border-gold/30 hover:border-gold/50 transition-all duration-300">
+                <img src="images/emotions/joie.png" alt="Joie" class="w-full h-64 object-cover rounded-lg mb-3" loading="lazy">
+                <h3 class="cormorant text-xl font-bold text-gold mb-1">Joie</h3>
+                <p class="text-light-gold/80 text-sm">Émotion</p>
+              </div>
+            </div>
+            
+            <div class="flex-shrink-0 w-48 snap-center">
+              <div class="bg-[rgba(212,175,55,0.05)] rounded-xl p-4 border border-gold/30 hover:border-gold/50 transition-all duration-300">
+                <img src="images/besoins/securite.png" alt="Sécurité" class="w-full h-64 object-cover rounded-lg mb-3" loading="lazy">
+                <h3 class="cormorant text-xl font-bold text-gold mb-1">Sécurité</h3>
+                <p class="text-light-gold/80 text-sm">Besoin</p>
+              </div>
+            </div>
+            
+            <div class="flex-shrink-0 w-48 snap-center">
+              <div class="bg-[rgba(212,175,55,0.05)] rounded-xl p-4 border border-gold/30 hover:border-gold/50 transition-all duration-300">
+                <img src="images/transmutations/transformation.png" alt="Transformation" class="w-full h-64 object-cover rounded-lg mb-3" loading="lazy">
+                <h3 class="cormorant text-xl font-bold text-gold mb-1">Transformation</h3>
+                <p class="text-light-gold/80 text-sm">Transmutation</p>
+              </div>
+            </div>
+            
+            <div class="flex-shrink-0 w-48 snap-center">
+              <div class="bg-[rgba(212,175,55,0.05)] rounded-xl p-4 border border-gold/30 hover:border-gold/50 transition-all duration-300">
+                <img src="images/revelations/lumiere.png" alt="Lumière" class="w-full h-64 object-cover rounded-lg mb-3" loading="lazy">
+                <h3 class="cormorant text-xl font-bold text-gold mb-1">Lumière</h3>
+                <p class="text-light-gold/80 text-sm">Révélation</p>
+              </div>
+            </div>
+            
+            <div class="flex-shrink-0 w-48 snap-center">
+              <div class="bg-[rgba(212,175,55,0.05)] rounded-xl p-4 border border-gold/30 hover:border-gold/50 transition-all duration-300">
+                <img src="images/archetypes/le_sage.png" alt="Le Sage" class="w-full h-64 object-cover rounded-lg mb-3" loading="lazy">
+                <h3 class="cormorant text-xl font-bold text-gold mb-1">Le Sage</h3>
+                <p class="text-light-gold/80 text-sm">Archétype</p>
+              </div>
+            </div>
+            
+            <div class="flex-shrink-0 w-48 snap-center">
+              <div class="bg-[rgba(212,175,55,0.05)] rounded-xl p-4 border border-gold/30 hover:border-gold/50 transition-all duration-300">
+                <img src="images/actions/choisir.png" alt="Choisir" class="w-full h-64 object-cover rounded-lg mb-3" loading="lazy">
+                <h3 class="cormorant text-xl font-bold text-gold mb-1">Choisir</h3>
+                <p class="text-light-gold/80 text-sm">Action</p>
+              </div>
+            </div>
+            
+            <div class="flex-shrink-0 w-48 snap-center">
+              <div class="bg-[rgba(212,175,55,0.05)] rounded-xl p-4 border border-gold/30 hover:border-gold/50 transition-all duration-300">
+                <img src="images/memoire_cosmos/point_zero.png" alt="Point Zéro" class="w-full h-64 object-cover rounded-lg mb-3" loading="lazy">
+                <h3 class="cormorant text-xl font-bold text-gold mb-1">Point Zéro</h3>
+                <p class="text-light-gold/80 text-sm">Mémoire Cosmos</p>
+              </div>
+            </div>
           </div>
-          <p class="text-xs leading-relaxed text-night-blue/90 font-medium">
-            Précommande ouverte · Livraison 31 août 2026
-          </p>
-          <a href="precommande-oracle.html" class="inline-flex items-center justify-center bg-night-blue text-gold px-6 py-2.5 rounded-full font-semibold hover:bg-dark-blue transition-all duration-300 hover:scale-105 text-sm shadow-lg">
-            <i class="fas fa-shopping-cart mr-2"></i>
-            Précommander
-          </a>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Hero Oracle -->
-  <section class="hero-section relative pt-32">
-    <div class="hero-overlay"></div>
-    <div class="relative z-10 w-full px-6 pb-16 md:pb-24">
-      <div class="max-w-4xl mx-auto text-center">
-        <div class="mb-8">
-          <h1 class="font-cinzel text-[56px] md:text-[95px] font-semibold text-gold tracking-wide mb-4 leading-none">
-            L'Oracle Oradia
-          </h1>
-          <div class="h-[1px] w-[200px] bg-gold mx-auto mb-6"></div>
         </div>
         
-        <p class="text-xl md:text-2xl text-light-gold mb-8 leading-relaxed max-w-3xl mx-auto">
-          Un oracle vivant qui puise dans la sagesse des cartes pour illuminer votre chemin intérieur et révéler votre essence profonde
-        </p>
-        
-        <div class="flex justify-center mb-12">
-          <a href="#offres" class="inline-flex items-center bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 hover:scale-105 premium-glow">
-            <i class="fas fa-compass mr-2"></i>
-            Choisir ma voie
-          </a>
-        </div>
-
-        <!-- Stats de confiance -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
-          <div class="text-center">
-            <div class="text-3xl font-bold text-gold mb-2 stat-number" data-end="1500" data-suffix="+">0</div>
-            <div class="text-sm text-light-gold/70">Tirages réalisés</div>
-          </div>
-          <div class="text-center">
-            <div class="text-3xl font-bold text-gold mb-2 stat-number" data-end="98" data-suffix="%">0</div>
-            <div class="text-sm text-light-gold/70">Satisfaction</div>
-          </div>
-          <div class="text-center">
-            <div class="text-3xl font-bold text-gold mb-2">24/7</div>
-            <div class="text-sm text-light-gold/70">Disponible</div>
-          </div>
+        <!-- Indicateurs -->
+        <div class="flex justify-center mt-4 gap-2">
+          <div class="w-2 h-2 bg-gold rounded-full"></div>
+          <div class="w-2 h-2 bg-gold/50 rounded-full"></div>
+          <div class="w-2 h-2 bg-gold/50 rounded-full"></div>
+          <div class="w-2 h-2 bg-gold/50 rounded-full"></div>
+          <div class="w-2 h-2 bg-gold/50 rounded-full"></div>
+          <div class="w-2 h-2 bg-gold/50 rounded-full"></div>
+          <div class="w-2 h-2 bg-gold/50 rounded-full"></div>
         </div>
       </div>
     </div>
   </section>
 
-  <!-- Présentation Oracle -->
-  <section id="oracle" class="py-20 px-6 bg-gradient-to-b from-dark-blue to-night-blue relative">
+  <!-- Les 7 Familles - Cercle Parfait 60° -->
+  <section class="py-20 px-6 bg-gradient-to-b from-night-blue to-dark-blue relative overflow-hidden">
     <div class="absolute inset-0 opacity-5">
-      <div class="absolute inset-0" style="background-image: radial-gradient(circle at 25% 25%, #d4af37 1px, transparent 1px), radial-gradient(circle at 75% 75%, #d4af37 1px, transparent 1px); background-size: 50px 50px;"></div>
+      <div class="absolute inset-0" style="background-image: radial-gradient(circle at 50% 50%, #d4af37 2px, transparent 2px); background-size: 60px 60px;"></div>
     </div>
-
-    <div class="container mx-auto max-w-6xl relative z-10">
-      <div class="text-center mb-16">
-        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-6 gold-gradient">La Sagesse de l'Oracle</h2>
-        <p class="text-xl text-light-gold max-w-4xl mx-auto leading-relaxed mb-12">
-          Oradia n'est pas un oracle qui prédit l'avenir, mais une conversation avec votre âme. 
-          Chaque tirage révèle les dynamiques essentielles à l'œuvre dans votre vie.
-        </p>
-      </div>
-
-      <!-- Les trois piliers -->
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
-        <div class="text-center group">
-          <div class="w-20 h-20 rounded-full bg-gradient-to-br from-gold/20 to-gold/10 border-2 border-gold/40 flex items-center justify-center mx-auto mb-6 floating group-hover:scale-110 transition-transform">
-            <i class="fas fa-heart text-2xl text-gold"></i>
-          </div>
-          <h3 class="cormorant text-2xl font-bold text-gold mb-3">Émotion</h3>
-          <p class="text-light-gold/80 text-sm">Ce qui vous traverse et vous anime profondément</p>
-        </div>
-
-        <div class="text-center group">
-          <div class="w-20 h-20 rounded-full bg-gradient-to-br from-gold/20 to-gold/10 border-2 border-gold/40 flex items-center justify-center mx-auto mb-6 floating group-hover:scale-110 transition-transform" style="animation-delay: 2s;">
-            <i class="fas fa-sync text-2xl text-gold"></i>
-          </div>
-          <h3 class="cormorant text-2xl font-bold text-gold mb-3">Transmutation</h3>
-          <p class="text-light-gold/80 text-sm">Ce qui cherche à se transformer en vous</p>
-        </div>
-
-        <div class="text-center group">
-          <div class="w-20 h-20 rounded-full bg-gradient-to-br from-gold/20 to-gold/10 border-2 border-gold/40 flex items-center justify-center mx-auto mb-6 floating group-hover:scale-110 transition-transform" style="animation-delay: 4s;">
-            <i class="fas fa-infinity text-2xl text-gold"></i>
-          </div>
-          <h3 class="cormorant text-2xl font-bold text-gold mb-3">Mémoire Cosmos</h3>
-          <p class="text-light-gold/80 text-sm">La sagesse qui accompagne votre chemin</p>
-        </div>
-      </div>
-
-      <!-- Citation philosophique -->
-      <div class="bg-gold/10 backdrop-blur-sm rounded-2xl p-8 border border-gold/20">
-        <p class="text-light-gold text-lg leading-relaxed italic text-center">
-          "Oradia n'est pas un oracle qui prédit l'avenir, mais une boussole intérieure 
-          qui révèle les directions possibles. Il vous connecte à votre propre sagesse, 
-          à cette part de vous qui sait déjà, profondément, quel est votre chemin."
-        </p>
-      </div>
-    </div>
-  </section>
-
-  <!-- Les Trois Voies - Section Vendeuse -->
-  <section id="offres" class="py-24 px-6 bg-gradient-to-b from-night-blue to-dark-blue relative">
-    <div class="absolute inset-0 opacity-5">
-      <div class="absolute inset-0" style="background-image: radial-gradient(circle at 25% 25%, #d4af37 1px, transparent 1px), radial-gradient(circle at 75% 75%, #d4af37 1px, transparent 1px); background-size: 50px 50px;"></div>
-    </div>
-
+    
+    <!-- Éléments décoratifs flottants -->
+    <div class="absolute top-10 left-10 w-32 h-32 bg-gold/5 rounded-full blur-3xl animate-float"></div>
+    <div class="absolute top-20 right-20 w-24 h-24 bg-gold/5 rounded-full blur-3xl animate-float" style="animation-delay: 1s;"></div>
+    <div class="absolute bottom-10 left-1/4 w-28 h-28 bg-gold/5 rounded-full blur-3xl animate-float" style="animation-delay: 2s;"></div>
+    
     <div class="container mx-auto max-w-7xl relative z-10">
-      <div class="text-center mb-16">
-        <h2 class="cormorant text-5xl md:text-6xl font-bold mb-6 gold-gradient">Choisissez Votre Voie</h2>
-        <p class="text-xl text-light-gold max-w-4xl mx-auto leading-relaxed">
-          Chaque voie est une porte vers une compréhension plus profonde de vous-même
+      <div class="text-center mb-20">
+        <h2 class="cormorant text-5xl md:text-6xl font-bold mb-6 gold-gradient">
+          L'oracle comporte 7 familles, telles 7 portes pour explorer votre monde intérieur
+        </h2>
+        
+        <p class="text-xl md:text-2xl text-light-gold/80 mb-6 max-w-3xl mx-auto">
+          Chaque famille ouvre une dimension unique de votre être
+        </p>
+        
+        <div class="w-32 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent mx-auto my-8"></div>
+      </div>
+      
+      <!-- Cercle parfait avec 60° entre chaque famille -->
+      <div class="relative max-w-6xl mx-auto">
+        <div class="relative h-[800px]">
+          <!-- Mémoire Cosmos - Centre sacré -->
+          <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group z-20">
+            <div class="absolute inset-0 bg-gradient-to-br from-[rgba(212,175,55,0.25)] to-transparent rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
+            <div class="relative bg-gradient-to-br from-[rgba(212,175,55,0.20)] to-[rgba(5,20,40,0.8)] rounded-3xl p-6 border-2 border-gold/60 hover:border-gold/90 transition-all duration-700 hover:scale-110 transform hover:-translate-y-2">
+              <div class="text-center">
+                <div class="w-24 h-32 mx-auto mb-4 relative">
+                  <img src="images/dos/dos_memoire_cosmos.png" alt="Dos carte Mémoire Cosmos" class="w-full h-full object-cover rounded-lg shadow-lg" loading="lazy">
+                  <div class="absolute inset-0 bg-gradient-to-t from-night-blue/50 to-transparent rounded-lg"></div>
+                </div>
+                <h3 class="cormorant text-2xl font-bold text-gold mb-2">Mémoire Cosmos</h3>
+                <p class="text-light-gold/90 font-lora">La sagesse qui guide</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Émotion - Bas à gauche -->
+          <div class="absolute bottom-0 left-8 transform translate-y-8 group">
+            <div class="absolute inset-0 bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-transparent rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
+            <div class="relative bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(5,20,40,0.8)] rounded-3xl p-6 border border-gold/40 hover:border-gold/70 transition-all duration-700 hover:scale-110 transform hover:-translate-y-2">
+              <div class="text-center">
+                <div class="w-24 h-32 mx-auto mb-4 relative">
+                  <img src="images/dos/dos_emotion.png" alt="Dos carte Émotion" class="w-full h-full object-cover rounded-lg shadow-lg" loading="lazy">
+                  <div class="absolute inset-0 bg-gradient-to-t from-night-blue/50 to-transparent rounded-lg"></div>
+                </div>
+                <h3 class="cormorant text-2xl font-bold text-gold mb-2">Émotion</h3>
+                <p class="text-light-gold/90 font-lora">Ce qui vous traverse</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Besoin - Gauche au milieu -->
+          <div class="absolute top-1/2 left-0 transform -translate-y-1/2 -translate-x-8 group">
+            <div class="absolute inset-0 bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-transparent rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
+            <div class="relative bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(5,20,40,0.8)] rounded-3xl p-6 border border-gold/40 hover:border-gold/70 transition-all duration-700 hover:scale-110 transform hover:-translate-y-2">
+              <div class="text-center">
+                <div class="w-24 h-32 mx-auto mb-4 relative">
+                  <img src="images/dos/dos_besoin.png" alt="Dos carte Besoin" class="w-full h-full object-cover rounded-lg shadow-lg" loading="lazy">
+                  <div class="absolute inset-0 bg-gradient-to-t from-night-blue/50 to-transparent rounded-lg"></div>
+                </div>
+                <h3 class="cormorant text-2xl font-bold text-gold mb-2">Besoin</h3>
+                <p class="text-light-gold/90 font-lora">Ce dont vous avez besoin</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Transmutation - Haut à gauche -->
+          <div class="absolute top-0 left-8 transform -translate-y-8 group">
+            <div class="absolute inset-0 bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-transparent rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
+            <div class="relative bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(5,20,40,0.8)] rounded-3xl p-6 border border-gold/40 hover:border-gold/70 transition-all duration-700 hover:scale-110 transform hover:-translate-y-2">
+              <div class="text-center">
+                <div class="w-24 h-32 mx-auto mb-4 relative">
+                  <img src="images/dos/dos_transmutation.png" alt="Dos carte Transmutation" class="w-full h-full object-cover rounded-lg shadow-lg" loading="lazy">
+                  <div class="absolute inset-0 bg-gradient-to-t from-night-blue/50 to-transparent rounded-lg"></div>
+                </div>
+                <h3 class="cormorant text-2xl font-bold text-gold mb-2">Transmutation</h3>
+                <p class="text-light-gold/90 font-lora">Ce qui se transforme</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Révélation - Haut à droite -->
+          <div class="absolute top-0 right-8 transform -translate-y-8 group">
+            <div class="absolute inset-0 bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-transparent rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
+            <div class="relative bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(5,20,40,0.8)] rounded-3xl p-6 border border-gold/40 hover:border-gold/70 transition-all duration-700 hover:scale-110 transform hover:-translate-y-2">
+              <div class="text-center">
+                <div class="w-24 h-32 mx-auto mb-4 relative">
+                  <img src="images/dos/dos_revelation.png" alt="Dos carte Révélation" class="w-full h-full object-cover rounded-lg shadow-lg" loading="lazy">
+                  <div class="absolute inset-0 bg-gradient-to-t from-night-blue/50 to-transparent rounded-lg"></div>
+                </div>
+                <h3 class="cormorant text-2xl font-bold text-gold mb-2">Révélation</h3>
+                <p class="text-light-gold/90 font-lora">Ce qui se révèle</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Archétype - Milieu à droite -->
+          <div class="absolute top-1/2 right-0 transform -translate-y-1/2 translate-x-8 group">
+            <div class="absolute inset-0 bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-transparent rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
+            <div class="relative bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(5,20,40,0.8)] rounded-3xl p-6 border border-gold/40 hover:border-gold/70 transition-all duration-700 hover:scale-110 transform hover:-translate-y-2">
+              <div class="text-center">
+                <div class="w-24 h-32 mx-auto mb-4 relative">
+                  <img src="images/dos/dos_archetype.png" alt="Dos carte Archétype" class="w-full h-full object-cover rounded-lg shadow-lg" loading="lazy">
+                  <div class="absolute inset-0 bg-gradient-to-t from-night-blue/50 to-transparent rounded-lg"></div>
+                </div>
+                <h3 class="cormorant text-2xl font-bold text-gold mb-2">Archétype</h3>
+                <p class="text-light-gold/90 font-lora">Les modèles qui habitent</p>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Action - Bas à droite -->
+          <div class="absolute bottom-0 right-8 transform translate-y-8 group">
+            <div class="absolute inset-0 bg-gradient-to-br from-[rgba(212,175,55,0.15)] to-transparent rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
+            <div class="relative bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(5,20,40,0.8)] rounded-3xl p-6 border border-gold/40 hover:border-gold/70 transition-all duration-700 hover:scale-110 transform hover:-translate-y-2">
+              <div class="text-center">
+                <div class="w-24 h-32 mx-auto mb-4 relative">
+                  <img src="images/dos/dos_action.png" alt="Dos carte Action" class="w-full h-full object-cover rounded-lg shadow-lg" loading="lazy">
+                  <div class="absolute inset-0 bg-gradient-to-t from-night-blue/50 to-transparent rounded-lg"></div>
+                </div>
+                <h3 class="cormorant text-2xl font-bold text-gold mb-2">Action</h3>
+                <p class="text-light-gold/90 font-lora">Ce qui est en mouvement</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Pour Qui - Simple et Direct -->
+  <section class="py-16 px-6 bg-gradient-to-b from-dark-blue to-night-blue relative">
+    <div class="absolute inset-0 opacity-5">
+      <div class="absolute inset-0" style="background-image: radial-gradient(circle at 50% 50%, #d4af37 2px, transparent 2px); background-size: 60px 60px;"></div>
+    </div>
+    
+    <div class="container mx-auto max-w-4xl relative z-10">
+      <div class="text-center mb-12">
+        <h2 class="cormorant text-4xl md:text-5xl font-bold mb-6 gold-gradient">
+          Pour Qui
+        </h2>
+        
+        <p class="text-xl text-light-gold/80">
+          Un oracle pour tous ceux qui cherchent
         </p>
       </div>
-
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-stretch">
+      
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+        <div class="text-center">
+          <h3 class="cormorant text-2xl font-bold text-gold mb-4">Usage Personnel</h3>
+          <p class="text-light-gold/90 font-lora">
+            Pour trouver la clarté, prendre des décisions, naviguer les changements de vie
+          </p>
+        </div>
         
-        <!-- Le Pèlerin -->
-        <div id="pelerin" class="group relative h-full">
-          <!-- Card glow effect -->
-          <div class="absolute -inset-1 bg-gradient-to-r from-gold/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500 blur-xl"></div>
-          
-          <div class="relative bg-[rgba(5,20,40,0.8)] backdrop-blur-md rounded-2xl border border-gold/30 p-4 sm:p-6 md:p-8 h-full flex flex-col transition-all duration-300 group-hover:border-gold/50 group-hover:shadow-2xl group-hover:shadow-gold/20">
-            
-            <!-- Icon header -->
-            <div class="flex justify-center mb-6">
-              <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gold/20 to-gold/10 border border-gold/40 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <i class="fas fa-walking text-2xl text-gold"></i>
-              </div>
-            </div>
-            
-            <!-- Title and price -->
-            <div class="text-center mb-6">
-              <h3 class="cormorant text-3xl font-bold text-gold mb-2">Le Pèlerin</h3>
-              <div class="text-3xl font-bold text-light-gold mb-1">GRATUIT</div>
-              <p class="text-sm text-gold/70">Premiers pas sur le chemin</p>
-            </div>
-
-            <!-- Description -->
-            <div class="mb-6">
-              <p class="text-light-gold leading-relaxed mb-4">
-                Une question simple, un premier éclairage. Le tirage du Pèlerin révèle les dynamiques essentielles à l'œuvre : ce qui vous traverse, ce dont vous avez besoin, ce qui cherche à se transformer, et la mémoire qui accompagne votre chemin.
-              </p>
-              <div class="flex items-center justify-center gap-2 text-gold/80 text-sm">
-                <i class="fas fa-clock"></i>
-                <span>5 minutes</span>
-              </div>
-            </div>
-            
-            <!-- Features -->
-            <div class="space-y-3 mb-8 flex-grow">
-              <div class="flex items-center gap-3">
-                <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">4 cartes (Émotion, Besoin, Transmutation, Mémoire Cosmos)</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">Interprétation synthétique</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">Accès immédiat</span>
-              </div>
-              <div class="flex items-center gap-3 opacity-50">
-                <i class="fas fa-times-circle text-gray-500 text-sm"></i>
-                <span class="text-gray-400 text-sm">Cartes passerelles</span>
-              </div>
-            </div>
-            
-            <!-- CTA -->
-            <div class="mt-auto">
-              <a href="pelerin.html?start=intention" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105 touch-target">
-                <i class="fas fa-play"></i>
-                Commencer gratuitement
-              </a>
-              <p class="text-center text-xs text-gold/60 mt-3">
-                <i class="fas fa-lock-open mr-1"></i>
-                Aucune inscription requise
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- La Traversée -->
-        <div id="traversee" class="group relative h-full premium-glow">
-          <!-- Card glow effect -->
-          <div class="absolute -inset-1 bg-gradient-to-r from-gold/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500 blur-xl"></div>
-          
-          <div class="relative bg-[rgba(5,20,40,0.8)] backdrop-blur-md rounded-2xl border border-gold/30 p-4 sm:p-6 md:p-8 h-full flex flex-col transition-all duration-300 group-hover:border-gold/50 group-hover:shadow-2xl group-hover:shadow-gold/20">
-            
-            <!-- Badge "Le plus populaire" -->
-            <div class="absolute top-4 right-4 bg-gold text-night-blue px-3 py-1 rounded-full text-xs font-semibold">
-              Le plus populaire
-            </div>
-            
-            <!-- Icon header -->
-            <div class="flex justify-center mb-6">
-              <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gold/20 to-gold/10 border border-gold/40 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <i class="fas fa-compass text-2xl text-gold"></i>
-              </div>
-            </div>
-            
-            <!-- Title and price -->
-            <div class="text-center mb-6">
-              <h3 class="cormorant text-3xl font-bold text-gold mb-2">La Traversée</h3>
-              <div class="text-3xl font-bold text-light-gold mb-1">3€</div>
-              <p class="text-sm text-gold/70">Boussole intérieure à cinq directions</p>
-            </div>
-
-            <!-- Description -->
-            <div class="mb-6">
-              <p class="text-light-gold leading-relaxed mb-4">
-                Un carrefour, une décision à prendre. La Traversée se déploie comme une boussole intérieure à cinq directions pour éclairer votre choix et retrouver votre cap.
-              </p>
-              <div class="flex items-center justify-center gap-2 text-gold/80 text-sm">
-                <i class="fas fa-clock"></i>
-                <span>15 minutes</span>
-              </div>
-            </div>
-            
-            <!-- Features -->
-            <div class="space-y-3 mb-8 flex-grow">
-              <div class="flex items-center gap-3">
-                <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">5 cartes guidées</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">Synthèse personnalisée</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">Mantra sacré</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">5 tirages inclus</span>
-              </div>
-            </div>
-            
-            <!-- CTA -->
-            <div class="mt-auto">
-              <a href="precommande-oracle.html" id="orderBtn" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105 touch-target">
-                <i class="fas fa-shopping-cart"></i>
-                Commander maintenant
-              </a>
-              <p class="text-center text-xs text-gold/60 mt-3">
-                <i class="fas fa-bolt mr-1"></i>
-                Livraison instantanée
-              </p>
-            </div>
-          </div>
-        </div>
-
-        <!-- Le Tore -->
-        <div id="tore" class="group relative h-full premium-glow">
-          <!-- Card glow effect -->
-          <div class="absolute -inset-1 bg-gradient-to-r from-gold/20 to-transparent rounded-2xl opacity-0 group-hover:opacity-100 transition-all duration-500 blur-xl"></div>
-          
-          <div class="relative bg-[rgba(5,20,40,0.8)] backdrop-blur-md rounded-2xl border border-gold/30 p-4 sm:p-6 md:p-8 h-full flex flex-col transition-all duration-300 group-hover:border-gold/50 group-hover:shadow-2xl group-hover:shadow-gold/20">
-            
-            <!-- Icon header -->
-            <div class="flex justify-center mb-6">
-              <div class="w-16 h-16 rounded-full bg-gradient-to-br from-gold/20 to-gold/10 border border-gold/40 flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
-                <i class="fas fa-infinity text-2xl text-gold"></i>
-              </div>
-            </div>
-            
-            <!-- Title and price -->
-            <div class="text-center mb-6">
-              <h3 class="cormorant text-3xl font-bold text-gold mb-2">Le Tore</h3>
-              <div class="text-3xl font-bold text-light-gold mb-1">8€<span class="text-lg font-normal">/mois</span></div>
-              <p class="text-sm text-gold/70">Connexion à votre sagesse infinie</p>
-            </div>
-
-            <!-- Description -->
-            <div class="mb-6">
-              <p class="text-light-gold leading-relaxed mb-4">
-                L'expérience ultime d'Oradia. Le Tore vous connecte à votre sagesse intérieure avec un accompagnement quotidien personnalisé pour une transformation continue et évolutive.
-              </p>
-              <div class="flex items-center justify-center gap-2 text-gold/80 text-sm">
-                <i class="fas fa-infinity"></i>
-                <span>Illimité</span>
-              </div>
-            </div>
-            
-            <!-- Features -->
-            <div class="space-y-3 mb-8 flex-grow">
-              <div class="flex items-center gap-3">
-                <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">Tirages illimités</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">Cartes passerelles exclusives</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">Clés personnelles & astrologie</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">Historique complet</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">Espace membre premium</span>
-              </div>
-              <div class="flex items-center gap-3">
-                <i class="fas fa-check-circle text-gold text-sm"></i>
-                <span class="text-light-gold text-sm">Mantra quotidien</span>
-              </div>
-            </div>
-            
-            <!-- CTA -->
-            <div class="mt-auto">
-              <a href="tore.html" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-2 group-hover:scale-105 touch-target">
-                <i class="fas fa-infinity"></i>
-                Accéder à l'ultime
-              </a>
-              <p class="text-center text-xs text-gold/60 mt-3">
-                <i class="fas fa-sync mr-1"></i>
-                Annulable à tout moment
-              </p>
-            </div>
-          </div>
+        <div class="text-center">
+          <h3 class="cormorant text-2xl font-bold text-gold mb-4">Accompagnants</h3>
+          <p class="text-light-gold/90 font-lora">
+            Thérapeutes, coachs, conseillers : un outil puissant pour votre pratique
+          </p>
         </div>
       </div>
+    </div>
+  </section>
 
-      <!-- Garantie et confiance -->
-      <div class="text-center mt-16">
-        <div class="bg-gold/10 backdrop-blur-sm rounded-2xl p-8 border border-gold/20 max-w-4xl mx-auto">
-          <h3 class="cormorant text-2xl font-bold text-gold mb-6">Garantie de Satisfaction</h3>
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="text-center">
-              <i class="fas fa-shield-alt text-3xl text-gold mb-4"></i>
-              <h4 class="font-semibold text-gold mb-2">Sécurisé</h4>
-              <p class="text-sm text-light-gold/70">Paiements 100% sécurisés</p>
-            </div>
-            <div class="text-center">
-              <i class="fas fa-heart text-3xl text-gold mb-4"></i>
-              <h4 class="font-semibold text-gold mb-2">Authentique</h4>
-              <p class="text-sm text-light-gold/70">Vraie guidance spirituelle</p>
-            </div>
-            <div class="text-center">
-              <i class="fas fa-user-clock text-3xl text-gold mb-4"></i>
-              <h4 class="font-semibold text-gold mb-2">Disponible</h4>
-              <p class="text-sm text-light-gold/70">24/7 à votre service</p>
-            </div>
-          </div>
+  <!-- CTA Final -->
+  <section id="precommande" class="py-20 px-6 bg-gradient-to-b from-night-blue to-dark-blue relative">
+    <div class="absolute inset-0 opacity-5">
+      <div class="absolute inset-0" style="background-image: radial-gradient(circle at 50% 50%, #d4af37 2px, transparent 2px); background-size: 60px 60px;"></div>
+    </div>
+    
+    <div class="container mx-auto max-w-4xl relative z-10">
+      <div class="text-center">
+        <div class="mb-12">
+          <h2 class="cormorant text-4xl md:text-5xl font-bold mb-6 gold-gradient">
+            Précommandez Votre Oracle
+          </h2>
+          
+          <p class="text-xl text-light-gold leading-relaxed mb-8">
+            Première édition limitée disponible jusqu'au 31 août 2026
+          </p>
+          
+          <p class="text-lg text-light-gold/80 mb-8">
+            Une fois cette série réservée, la production pourra être lancée. ORADIA prendra vie.
+          </p>
         </div>
-      </div>
-
-      <!-- Bottom CTA -->
-      <div class="text-center mt-16">
-        <p class="text-light-gold mb-6 text-lg">Des questions ? Notre équipe est là pour vous guider</p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <a href="contact.html" class="inline-flex items-center bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-6 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300">
-            <i class="fas fa-envelope mr-2"></i>
-            Nous contacter
-          </a>
-          <span class="text-gold/50">ou</span>
-          <a href="a-propos.html" class="text-gold hover:text-light-gold transition-colors flex items-center gap-2">
-            <i class="fas fa-info-circle"></i>
-            En savoir plus
+        
+        <div class="text-center">
+          <a href="precommande-oracle.html" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center inline-flex items-center justify-center gap-2 group hover:scale-105 touch-target">
+            <span class="text-base">Réserver mon exemplaire</span>
           </a>
         </div>
       </div>
@@ -546,171 +486,31 @@
   </section>
 
   <!-- Footer -->
-  <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
-    <div class="container mx-auto max-w-6xl">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-center md:text-left">
-        <div>
-          <div class="flex items-center mb-4">
-            <img src="images/logo-hd-v2.jpeg" alt="Oradia Logo" class="w-16 h-16 mr-4" />
-            <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
-          </div>
-          <p class="text-light-gold text-sm">L'oracle qui vous accompagne sur votre chemin personnel et révèle votre essence.</p>
-        </div>
-        
-        <div>
-          <h4 class="cormorant text-xl text-gold mb-4">Navigation</h4>
-          <ul class="space-y-2">
-            <li><a href="index.html" class="text-light-gold hover:text-gold transition">Accueil</a></li>
-            <li><a href="oracle.html" class="text-light-gold hover:text-gold transition text-light-gold">Oracle</a></li>
-            <li><a href="accompagnements.html" class="text-light-gold hover:text-gold transition">Accompagnements</a></li>
-            <li><a href="rendez-vous.html" class="text-light-gold hover:text-gold transition">Rendez-vous</a></li>
-            <li><a href="partenariats.html" class="text-light-gold hover:text-gold transition">Partenariats</a></li>
-          </ul>
-        </div>
-        
-        <div>
-          <h4 class="cormorant text-xl text-gold mb-4">Ressources</h4>
-          <ul class="space-y-2">
-            <li><a href="a-propos.html" class="text-light-gold hover:text-gold transition">À Propos</a></li>
-            <li><a href="contact.html" class="text-light-gold hover:text-gold transition">Contact</a></li>
-            <li><a href="cgv.html" class="text-light-gold hover:text-gold transition">CGV</a></li>
-            <li><a href="cgu.html" class="text-light-gold hover:text-gold transition">CGU</a></li>
-          </ul>
-        </div>
-        
-        <div>
-          <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
-          <ul class="space-y-2">
-            <li><a href="mentions-legales.html" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
-            <li><a href="politique-confidentialite.html" class="text-light-gold hover:text-gold transition">Confidentialité</a></li>
-          </ul>
-        </div>
-      </div>
-      
-      <div class="border-t border-gold/20 mt-8 pt-8 text-center">
-        <p class="text-light-gold/50 text-sm">
-          &copy; 2026 Oradia. Tous droits réservés.
-        </p>
-      </div>
-    </div>
-  </footer>
+  <div id="footer-placeholder"></div>
 
   <!-- Scripts -->
+  <script src="components/header-manager.js" defer></script>
+
   <script>
-    // Gestion du bandeau précommande
-    const closeBanner = document.getElementById('closeBanner');
-    const closeBannerMobile = document.getElementById('closeBannerMobile');
-    const precommandeBanner = document.getElementById('preorderBanner');
-
-    function closeBannerFunction() {
-      if (precommandeBanner) {
-        precommandeBanner.style.display = 'none';
-      }
-    }
-
-    if (closeBanner && precommandeBanner) {
-      closeBanner.addEventListener('click', closeBannerFunction);
-    }
-
-    if (closeBannerMobile && precommandeBanner) {
-      closeBannerMobile.addEventListener('click', closeBannerFunction);
-    }
-
-    // Gestion du menu mobile
-    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
-    const mobileMenu = document.getElementById('mobileMenu');
-
-    if (mobileMenuBtn && mobileMenu) {
-      mobileMenuBtn.addEventListener('click', () => {
-        mobileMenu.classList.toggle('hidden');
-      });
-
-      // Fermer le menu quand on clique ailleurs
-      document.addEventListener('click', (e) => {
-        if (!mobileMenuBtn.contains(e.target) && !mobileMenu.contains(e.target)) {
-          mobileMenu.classList.add('hidden');
-        }
-      });
-    }
-
-    // Smooth scroll
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-      anchor.addEventListener('click', function (e) {
-        e.preventDefault();
-        const target = document.querySelector(this.getAttribute('href'));
-        if (target) {
-          target.scrollIntoView({
-            behavior: 'smooth',
-            block: 'start'
-          });
-        }
-      });
-    });
-
-    // Bouton retour en haut
-    const backToTopBtn = document.getElementById('backToTop');
+    // Scroll to top functionality
+    const backToTopButton = document.getElementById('backToTop');
     
     window.addEventListener('scroll', () => {
       if (window.pageYOffset > 300) {
-        backToTopBtn.classList.remove('opacity-0');
-        backToTopBtn.classList.add('opacity-100');
+        backToTopButton.classList.remove('opacity-0');
+        backToTopButton.classList.add('opacity-100');
       } else {
-        backToTopBtn.classList.add('opacity-0');
-        backToTopBtn.classList.remove('opacity-100');
+        backToTopButton.classList.remove('opacity-100');
+        backToTopButton.classList.add('opacity-0');
       }
     });
-
-    backToTopBtn.addEventListener('click', () => {
+    
+    backToTopButton.addEventListener('click', () => {
       window.scrollTo({
         top: 0,
         behavior: 'smooth'
       });
     });
-
-    // Script de sécurité
-    if (typeof security !== 'undefined') {
-      security.init();
-    }
-
-    // Animation des chiffres stats
-    function animateValue(element, start, end, duration) {
-      let startTimestamp = null;
-      const step = (timestamp) => {
-        if (!startTimestamp) startTimestamp = timestamp;
-        const progress = Math.min((timestamp - startTimestamp) / duration, 1);
-        element.innerHTML = Math.floor(progress * (end - start) + start) + element.dataset.suffix;
-        if (progress < 1) {
-          window.requestAnimationFrame(step);
-        }
-      };
-      window.requestAnimationFrame(step);
-    }
-
-    // Observer pour les animations
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          if (entry.target.classList.contains('stat-number')) {
-            const end = parseInt(entry.target.dataset.end);
-            animateValue(entry.target, 0, end, 2000);
-            observer.unobserve(entry.target);
-          }
-        }
-      });
-    });
-
-    // Observer les stats
-    document.addEventListener('DOMContentLoaded', () => {
-      const stats = document.querySelectorAll('.stat-number');
-      stats.forEach(stat => {
-        stat.dataset.suffix = stat.dataset.suffix || '';
-        observer.observe(stat);
-      });
-    });
   </script>
-  <!-- Scripts -->
-
-
-  <script src="components/header-manager.js"></script>
 </body>
 </html>
