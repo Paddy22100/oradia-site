@@ -122,8 +122,8 @@ module.exports = async (req, res) => {
                     },
                 ],
                 mode: 'payment',
-                success_url: `${process.env.FRONTEND_URL}/success-precommande.html`,
-                cancel_url: `${process.env.FRONTEND_URL}/precommande-oracle.html`,
+                success_url: `${process.env.FRONTEND_URL}/success-contribution.html`,
+                cancel_url: `${process.env.FRONTEND_URL}/precommande-oracle.html#contribution-libre`,
             });
 
             return res.json({ url: session.url });

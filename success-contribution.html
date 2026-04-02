@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Merci pour votre soutien - Oradia</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #0a192f 0%, #112240 50%, #1a365d 100%);
+            min-height: 100vh;
+        }
+        
+        .cormorant {
+            font-family: 'Cormorant Garamond', serif;
+        }
+        
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .text-gold {
+            color: #d4af37;
+        }
+        
+        .text-light-gold {
+            color: #f4e4c1;
+        }
+        
+        .bg-gold {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+        }
+        
+        .night-blue {
+            background-color: #0a192f;
+        }
+        
+        .float-animation {
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        .pulse-animation {
+            animation: pulse 3s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+    </style>
+</head>
+<body class="night-blue text-white">
+    <!-- Navigation Header -->
+    <header class="fixed top-0 w-full bg-[rgba(10,25,47,0.95)] backdrop-blur-sm border-b border-gold/20 z-50">
+        <nav class="container mx-auto px-6 py-4">
+            <div class="flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <div class="w-10 h-10 bg-gold rounded-full flex items-center justify-center">
+                        <i class="fas fa-moon text-night-blue text-lg"></i>
+                    </div>
+                    <span class="cormorant text-2xl font-bold gold-gradient">ORADIA</span>
+                </div>
+                <div class="hidden md:flex space-x-8">
+                    <a href="index.html" class="text-light-gold hover:text-gold transition-colors">Accueil</a>
+                    <a href="precommande-oracle.html#offres" class="text-light-gold hover:text-gold transition-colors">Précommande</a>
+                    <a href="index.html#oracle" class="text-light-gold hover:text-gold transition-colors">L'Oracle</a>
+                </div>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Main Content -->
+    <main class="pt-24 pb-16 px-6">
+        <div class="container mx-auto max-w-4xl">
+            <!-- Success Icon -->
+            <div class="text-center mb-8">
+                <div class="inline-flex items-center justify-center w-24 h-24 bg-gold/20 rounded-full pulse-animation mb-6">
+                    <i class="fas fa-heart text-gold text-4xl"></i>
+                </div>
+            </div>
+
+            <!-- Success Message -->
+            <div class="text-center mb-12">
+                <h1 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-6">
+                    Merci pour votre soutien
+                </h1>
+                
+                <div class="max-w-2xl mx-auto">
+                    <p class="text-light-gold text-lg leading-relaxed mb-8">
+                        Votre contribution a bien été reçue.
+                    </p>
+                    
+                    <p class="text-light-gold/80 leading-relaxed mb-8">
+                        Elle soutient directement la création et la diffusion d'Oradia.
+                    </p>
+                    
+                    <div class="bg-[rgba(212,175,55,0.1)] border border-gold/30 rounded-2xl p-6 mb-8">
+                        <p class="text-gold font-semibold mb-2">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Important
+                        </p>
+                        <p class="text-light-gold/90">
+                            cette contribution libre ne correspond pas à une précommande d'oracle.
+                        </p>
+                        <p class="text-light-gold/90 mt-2">
+                            Si vous souhaitez réserver votre exemplaire, vous pouvez revenir à la page de précommande.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+                <a href="precommande-oracle.html#offres" 
+                   class="w-full sm:w-auto bg-gold text-night-blue font-semibold px-8 py-4 rounded-full hover:scale-105 transition-transform duration-200 text-center">
+                    <i class="fas fa-shopping-cart mr-2"></i>
+                    Revenir à la précommande
+                </a>
+                
+                <a href="index.html" 
+                   class="w-full sm:w-auto border-2 border-gold text-gold font-semibold px-8 py-4 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-200 text-center">
+                    <i class="fas fa-home mr-2"></i>
+                    Retour à l'accueil
+                </a>
+            </div>
+
+            <!-- Additional Info -->
+            <div class="mt-16 text-center">
+                <div class="inline-flex items-center space-x-8 text-light-gold/60 text-sm">
+                    <div class="flex items-center">
+                        <i class="fas fa-shield-alt text-gold mr-2"></i>
+                        <span>Paiement sécurisé</span>
+                    </div>
+                    <div class="flex items-center">
+                        <i class="fas fa-envelope text-gold mr-2"></i>
+                        <span>Contact : contact@oradia.fr</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="border-t border-gold/20 py-8">
+        <div class="container mx-auto px-6 text-center">
+            <p class="text-light-gold/60 text-sm">
+                © 2025 Oradia. Tous droits réservés.
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
