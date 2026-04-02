@@ -1102,10 +1102,14 @@
         </h3>
         
         <p class="text-sm md:text-base text-light-gold/80 mb-6 leading-relaxed">
-            Contribution libre conseillée : à partir de 10€<br><br>
+            Contribution conseillée : entre 20€ et 40€<br><br>
             Si vous ressentez l'appel de cet oracle mais que le prix est un frein,
             vous pouvez contribuer librement selon vos moyens.<br><br>
             Chaque contribution soutient directement la création et la diffusion d'Oradia.
+        </p>
+        
+        <p class="text-light-gold/70 text-sm mb-8 text-center">
+            Cette contribution soutient le projet, sans réservation d'oracle.
         </p>
         
         <div class="mt-6 flex flex-col items-center gap-4">
@@ -1113,8 +1117,8 @@
                 <input
                     type="text"
                     id="customAmount"
-                    placeholder="Montant libre (min 10€)"
-                    min="10"
+                    placeholder="Montant libre (min 20€)"
+                    min="20"
                     class="w-64 px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-light-gold/60 transition-all duration-300"
                 />
                 <span class="text-gold text-lg font-medium">€</span>
@@ -1842,8 +1846,8 @@ La production est lancée grâce aux premières commandes.</p>
         async function startCustomCheckout() {
             const amount = document.getElementById('customAmount').value;
 
-            if (!amount || amount < 10) {
-                alert("Minimum 10€");
+            if (!amount || amount < 20) {
+                alert("Minimum 20€");
                 return;
             }
 
