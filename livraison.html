@@ -435,11 +435,11 @@
     <script src="components/footer-manager.js" defer></script>
 
     <script>
-        // Configuration des offres
-        const OFFERS = {
-            'standard': { name: 'Standard', price: 38 },
-            'guidance-incluse': { name: 'Guidance Offerte', price: 48 },
-            'edition-signature': { name: 'Édition Signature', price: 52 }
+        // Configuration unique officielle des offres (prix en euros)
+        const OFFER_CONFIG = {
+            'standard': { name: 'Standard', priceEuros: 38 },
+            'guidance-incluse': { name: 'Guidance Offerte', priceEuros: 48 },
+            'edition-signature': { name: 'Édition Signature', priceEuros: 42 }
         };
 
         // Configuration des produits et poids
@@ -539,11 +539,19 @@
             const savedCart = localStorage.getItem('oradia-cart');
             if (savedCart) {
                 cart = JSON.parse(savedCart);
+                
+                // Normaliser les prix selon la configuration officielle
+                Object.keys(cart).forEach(offerId => {
+                    const officialConfig = OFFER_CONFIG[offerId];
+                    if (officialConfig && cart[offerId]) {
+                        cart[offerId].price = officialConfig.priceEuros;
+                    }
+                });
+                
                 updateOrderSummary();
                 updateDeliveryPrices(); // Mettre à jour les prix de livraison
             } else {
-                // Rediriger vers la page de précommande si le panier est vide
-                window.location.href = 'precommande-oracle.html';
+                window.location.href = 'precommande-oracle.html#cart-section';
             }
         }
 

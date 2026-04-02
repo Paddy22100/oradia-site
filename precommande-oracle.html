@@ -1690,31 +1690,39 @@ La production est lancée grâce aux premières commandes.</p>
         // Configuration des offres
         const MAX_QUANTITY = 10;
         
-        const OFFERS = {
-            'standard': {
-                name: 'Standard',
-                price: 38,
-                description: "L'oracle complet"
+        // Configuration unique officielle des offres (prix en euros)
+        const OFFER_CONFIG = {
+            standard: {
+                name: 'Standard - Oracle Oradia',
+                priceEuros: 38
             },
             'guidance-incluse': {
-                name: 'Guidance Offerte',
-                price: 48,
-                description: "1h de guidance offerte (valeur réelle 60€)"
+                name: 'Guidance Offerte - Oracle Oradia',
+                priceEuros: 48
             },
             'edition-signature': {
-                name: 'Édition Signature',
-                price: 42,
-                description: 'Exemplaire unique et dédicacé'
+                name: 'Édition Signature - Oracle Oradia',
+                priceEuros: 42
             }
         };
         
         // État du panier
         let cart = {};
         
+        // Fonction pour obtenir la description d'une offre
+        function getDescriptionForOffer(offerId) {
+            const descriptions = {
+                'standard': "L'oracle complet",
+                'guidance-incluse': "1h de guidance offerte (valeur réelle 60€)",
+                'edition-signature': 'Exemplaire unique et dédicacé'
+            };
+            return descriptions[offerId] || '';
+        }
+        
         // Fonction pour ajouter une offre au panier
         function addToCart(offerId) {
             console.log('addToCart appelé avec offerId:', offerId);
-            const offer = OFFERS[offerId];
+            const offer = OFFER_CONFIG[offerId];
             console.log('OFFER trouvée:', offer);
             if (!offer) {
                 console.log('Offre non trouvée, retour');
@@ -1733,7 +1741,9 @@ La production est lancée grâce aux premières commandes.</p>
                 // Nouvelle offre, ajouter avec quantité 1
                 cart[offerId] = {
                     ...offer,
-                    quantity: 1
+                    quantity: 1,
+                    price: offer.priceEuros, // Utiliser le prix de la config
+                    description: getDescriptionForOffer(offerId) // Ajouter description
                 };
                 console.log('Nouvelle offre ajoutée au panier:', offerId, cart[offerId]);
             }

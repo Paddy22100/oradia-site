@@ -231,11 +231,20 @@ module.exports = async (req, res) => {
             });
         }
 
-        // Définir les offres (prix en centimes)
-        const offers = {
-            'standard': { price: 3800, name: 'Standard - Oracle Oradia' },
-            'guidance-incluse': { price: 4400, name: 'Guidance Incluse - Oracle Oradia' },
-            'edition-signature': { price: 4200, name: 'Édition Signature - Oracle Oradia' }
+        // Configuration unique officielle des offres (prix en centimes)
+        const OFFER_CONFIG = {
+            standard: {
+                name: 'Standard - Oracle Oradia',
+                priceCents: 3800
+            },
+            'guidance-incluse': {
+                name: 'Guidance Offerte - Oracle Oradia',
+                priceCents: 4800
+            },
+            'edition-signature': {
+                name: 'Édition Signature - Oracle Oradia',
+                priceCents: 4200
+            }
         };
 
         // Configuration des produits et poids (identique au frontend)
@@ -326,8 +335,8 @@ module.exports = async (req, res) => {
         console.log('=== BUILDING LINE ITEMS V2 ===');
         
         for (const item of normalizedData.items) {
-            const offer = offers[item.offer];
-            if (!offer) {
+            const offerConfig = OFFER_CONFIG[item.offer];
+            if (!offerConfig) {
                 console.error(`UNKNOWN OFFER: ${item.offer}`);
                 return res.status(400).json({ 
                     success: false,
@@ -340,19 +349,19 @@ module.exports = async (req, res) => {
                 price_data: {
                     currency: 'eur',
                     product_data: {
-                        name: offer.name,
+                        name: offerConfig.name,
                         description: `Quantité: ${item.quantity}`,
                         images: ['https://oradia.fr/images/medias/apercu_stripe.jpg']
                     },
-                    unit_amount: offer.price,
+                    unit_amount: offerConfig.priceCents,
                 },
                 quantity: item.quantity,
             };
             
             lineItems.push(lineItem);
-            totalAmount += offer.price * item.quantity;
+            totalAmount += offerConfig.priceCents * item.quantity;
             
-            console.log(`ITEM ADDED: ${offer.name} x${item.quantity} = ${offer.price * item.quantity} centimes`);
+            console.log(`ITEM ADDED: ${offerConfig.name} x${item.quantity} = ${offerConfig.priceCents * item.quantity} centimes`);
         }
         
         // Ajouter les frais de livraison si applicable
