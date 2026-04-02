@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Meta Tags -->
+    <title>Livraison - Oracle Oradia</title>
+    <meta name="description" content="Finalisez votre commande Oracle Oradia en choisissant vos coordonnées et le mode de livraison.">
+    <meta name="keywords" content="livraison oracle oradia, commande oracle, frais de port, adresse livraison">
+    <meta name="author" content="Rudy Boucheron" />
+    <meta name="robots" content="noindex, nofollow" />
+    <meta name="language" content="fr" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://oradia.fr/livraison.html" />
+    <meta property="og:title" content="Livraison - Oracle Oradia" />
+    <meta property="og:description" content="Finalisez votre commande Oracle Oradia en choisissant vos coordonnées et le mode de livraison." />
+    <meta property="og:image" content="https://oradia.fr/images/oracle-precommande.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Oradia" />
+    <meta property="og:locale" content="fr_FR" />
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://oradia.fr/livraison.html" />
+    <meta property="twitter:title" content="Livraison - Oracle Oradia" />
+    <meta property="twitter:description" content="Finalisez votre commande Oracle Oradia en choisissant vos coordonnées et le mode de livraison." />
+    <meta property="twitter:image" content="https://oradia.fr/images/oracle-precommande.jpg" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://oradia.fr/livraison.html" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="responsive.css">
+    <link rel="stylesheet" href="production-mode.css">
+    <script src="security.js"></script>
+
+    <style>
+        /* Sticky professionnel pour desktop uniquement */
+        @media (min-width: 1024px) {
+            .order-summary {
+                position: sticky;
+                top: 0;
+                align-self: start;
+                max-height: calc(100vh - 2rem);
+                overflow-y: auto;
+            }
+        }
+    </style>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'night-blue': '#051428',
+                        'dark-blue': '#1A365D',
+                        'gold': '#D4AF37',
+                        'light-gold': '#F4E4C1'
+                    },
+                    fontFamily: {
+                        'cormorant': ['Cormorant Garamond', 'serif'],
+                        'cinzel': ['Cinzel', 'serif'],
+                        'lora': ['Lora', 'serif']
+                    },
+                    animation: {
+                        'float': 'float 6s ease-in-out infinite',
+                        'pulse-slow': 'pulse 4s ease-in-out infinite',
+                        'shimmer': 'shimmer 3s ease-in-out infinite',
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+        
+        .font-cormorant {
+            font-family: 'Cormorant Garamond', serif;
+        }
+        
+        .font-lora {
+            font-family: 'Lora', serif;
+        }
+        
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37 0%, #f5e7a1 50%, #d4af37 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .form-input {
+            width: 100%;
+            background-color: rgba(5,20,40,0.6);
+            border: 1px solid rgba(212,175,55,0.3);
+            border-radius: 0.5rem;
+            padding: 0.75rem;
+            color: #F4E4C1;
+        }
+        
+        .form-input::placeholder {
+            color: rgba(244,228,193,0.5);
+        }
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #D4AF37;
+            box-shadow: 0 0 0 2px rgba(212,175,55,0.2);
+        }
+        
+        .delivery-option {
+            background-color: rgba(5,20,40,0.4);
+            border: 1px solid rgba(212,175,55,0.2);
+            border-radius: 0.5rem;
+            padding: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .delivery-option:hover {
+            border-color: rgba(212,175,55,0.5);
+            background-color: rgba(5,20,40,0.6);
+        }
+        
+        .delivery-option.selected {
+            border-color: #D4AF37;
+            background-color: rgba(212,175,55,0.1);
+            box-shadow: 0 0 0 2px rgba(212,175,55,0.3);
+        }
+    </style>
+</head>
+
+<body class="bg-night-blue text-light-gold">
+
+    <!-- Bouton retour en haut -->
+    <button id="backToTop" class="fixed bottom-8 right-8 bg-gold/20 backdrop-blur-sm border border-gold/30 text-gold p-3 rounded-full shadow-lg hover:bg-gold/30 transition-all duration-300 z-40 hidden">
+        <i class="fas fa-arrow-up text-sm"></i>
+    </button>
+
+    <!-- Header -->
+    <div id="header-placeholder"></div>
+
+    <!-- Progress Steps -->
+    <section class="py-6 bg-gradient-to-b from-night-blue to-dark-blue">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto">
+                <div class="flex justify-center">
+                    <div class="flex items-center space-x-4">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-gold rounded-full flex items-center justify-center text-night-blue font-bold text-sm">1</div>
+                            <span class="ml-2 text-sm text-light-gold">Panier</span>
+                        </div>
+                        <div class="w-12 h-0.5 bg-gold/30"></div>
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-gold rounded-full flex items-center justify-center text-night-blue font-bold text-sm">2</div>
+                            <span class="ml-2 text-sm text-light-gold">Livraison</span>
+                        </div>
+                        <div class="w-12 h-0.5 bg-gold/30"></div>
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 border border-gold/30 rounded-full flex items-center justify-center text-light-gold/50 text-sm">3</div>
+                            <span class="ml-2 text-sm text-light-gold/50">Paiement</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Main Checkout Area -->
+    <main class="py-12 bg-gradient-to-b from-dark-blue to-night-blue min-h-screen">
+        <div class="container mx-auto px-6">
+            <div class="max-w-6xl mx-auto">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+                    
+                    <!-- Colonne principale : Formulaire -->
+                    <div class="lg:col-span-2 space-y-8">
+                        
+                        <!-- Titre -->
+                        <div class="text-center lg:text-left">
+                            <h1 class="cormorant text-3xl md:text-4xl font-bold gold-gradient mb-4">
+                                Finalisez votre commande
+                            </h1>
+                            <p class="text-light-gold/80">
+                                Renseignez vos coordonnées et choisissez votre mode de livraison.
+                            </p>
+                        </div>
+
+                        <!-- Coordonnées -->
+                        <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-8 border border-gold/30 backdrop-blur-sm">
+                            <h2 class="cormorant text-2xl font-bold gold-gradient mb-6">
+                                Vos coordonnées
+                            </h2>
+                            
+                            <form id="deliveryForm" class="space-y-6">
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                                    <div>
+                                        <label class="block text-gold mb-2">Prénom *</label>
+                                        <input type="text" name="firstName" required class="form-input" placeholder="Votre prénom">
+                                    </div>
+                                    <div>
+                                        <label class="block text-gold mb-2">Nom *</label>
+                                        <input type="text" name="lastName" required class="form-input" placeholder="Votre nom">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-gold mb-2">Email *</label>
+                                    <input type="email" name="email" required class="form-input" placeholder="votre@email.com">
+                                </div>
+
+                                <div>
+                                    <label class="block text-gold mb-2">Téléphone</label>
+                                    <input type="tel" name="phone" class="form-input" placeholder="06 12 34 56 78">
+                                </div>
+
+                                <!-- Adresse -->
+                                <div id="address-section" class="border-t border-gold/20 pt-6">
+                                    <h3 class="text-gold font-semibold mb-4 text-lg">Adresse de livraison</h3>
+                                    
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-gold mb-2">Adresse *</label>
+                                            <input type="text" name="address" required class="form-input" placeholder="123 rue des Mystères">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-gold mb-2">Complément d'adresse</label>
+                                            <input type="text" name="addressComplement" class="form-input" placeholder="Appartement, escalier, etc.">
+                                        </div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <label class="block text-gold mb-2">Code postal *</label>
+                                                <input type="text" name="postalCode" required pattern="[0-9]{5}" class="form-input" placeholder="75001">
+                                            </div>
+                                            <div>
+                                                <label class="block text-gold mb-2">Ville *</label>
+                                                <input type="text" name="city" required class="form-input" placeholder="Paris">
+                                            </div>
+                                            <div>
+                                                <label class="block text-gold mb-2">Pays *</label>
+                                                <select name="country" required class="form-input">
+                                                    <option value="FR">France</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Message pour remise en main propre -->
+                                <div id="hand-delivery-message" class="border-t border-gold/20 pt-6 hidden">
+                                    <div class="bg-gold/10 rounded-lg p-4 border border-gold/30">
+                                        <div class="flex items-start space-x-3">
+                                            <i class="fas fa-handshake text-gold text-xl mt-1"></i>
+                                            <div>
+                                                <h4 class="text-gold font-semibold mb-2">Remise en main propre</h4>
+                                                <p class="text-light-gold/80 text-sm">
+                                                    La remise en main propre sera organisée directement avec vous après la commande.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Mode de livraison -->
+                                <div class="border-t border-gold/20 pt-6">
+                                    <h3 class="text-gold font-semibold mb-4 text-lg">Mode de livraison</h3>
+                                    
+                                    <p class="text-light-gold/70 text-sm mb-4">
+                                        Si vous faites partie des personnes pouvant récupérer votre oracle directement, vous pouvez choisir la remise en main propre.
+                                    </p>
+                                    
+                                    <p class="text-light-gold/70 text-sm mb-4">
+                                        Tarifs calculés selon le poids total de votre commande, sur la base des grilles Mondial Relay.
+                                    </p>
+                                    
+                                    <p class="text-light-gold/70 text-sm mb-4">
+                                        France uniquement pour le lancement.
+                                    </p>
+                                    
+                                    <div class="space-y-4">
+                                        <div class="delivery-option" data-delivery="home" data-price="749">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center space-x-4">
+                                                    <i class="fas fa-home text-gold text-xl"></i>
+                                                    <div>
+                                                        <h4 class="text-gold font-semibold">Livraison à domicile</h4>
+                                                        <p class="text-light-gold/70 text-sm">Livraison standard à votre adresse</p>
+                                                    </div>
+                                                </div>
+                                                <div class="text-right">
+                                                    <p class="text-gold font-bold">7,49 €</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="delivery-option" data-delivery="relay" data-price="410">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center space-x-4">
+                                                    <i class="fas fa-store text-gold text-xl"></i>
+                                                    <div>
+                                                        <h4 class="text-gold font-semibold">Point relais</h4>
+                                                        <p class="text-light-gold/70 text-sm">Retrait dans un point relais proche</p>
+                                                    </div>
+                                                </div>
+                                                <div class="text-right">
+                                                    <p class="text-gold font-bold">4,10 €</p>
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <div class="delivery-option" data-delivery="hand_delivery" data-price="0">
+                                            <div class="flex items-center justify-between">
+                                                <div class="flex items-center space-x-4">
+                                                    <i class="fas fa-handshake text-gold text-xl"></i>
+                                                    <div>
+                                                        <h4 class="text-gold font-semibold">Remise en main propre</h4>
+                                                        <p class="text-light-gold/70 text-sm">Pour les personnes que je peux rencontrer directement</p>
+                                                    </div>
+                                                </div>
+                                                <div class="text-right">
+                                                    <p class="text-gold font-bold">0,00 €</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Bouton retour -->
+                        <div class="text-center lg:text-left">
+                            <a href="precommande-oracle.html#cart-section" class="inline-flex items-center text-gold/70 hover:text-gold transition-colors">
+                                <i class="fas fa-arrow-left mr-2"></i>
+                                Retour au panier
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Colonne latérale : Récapitulatif -->
+                    <div class="lg:col-span-1">
+                        <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-8 border border-gold/30 backdrop-blur-sm order-summary">
+                            <!-- Mini visuel produit -->
+                            <div class="flex justify-center mb-6">
+                                <div class="relative w-16 h-16 bg-gradient-to-br from-gold/20 to-light-gold/10 rounded-xl flex items-center justify-center border border-gold/30 shadow-lg shadow-gold/20 overflow-hidden">
+                                    <img src="images/Coffret.png" alt="Coffret Oracle Oradia" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/64x64/d4af37/0a192f?text=📦'">
+                                    <div class="absolute -top-1 -right-1 w-4 h-4 bg-gold rounded-full flex items-center justify-center">
+                                        <i class="fas fa-star text-night-blue text-xs"></i>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <h2 class="cormorant text-2xl font-bold gold-gradient mb-6 text-center">
+                                Votre commande
+                            </h2>
+                            
+                            <!-- Récapitulatif produits -->
+                            <div id="order-summary" class="space-y-4 mb-6">
+                                <!-- Le contenu sera inséré dynamiquement -->
+                            </div>
+
+                            <!-- Total -->
+                            <div class="border-t border-gold/20 pt-4 space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <span class="text-light-gold/70 text-sm">Sous-total produits</span>
+                                    <span id="products-subtotal" class="text-light-gold font-semibold">-</span>
+                                </div>
+                                <div class="flex justify-between items-center">
+                                    <span class="text-light-gold/70 text-sm">Livraison</span>
+                                    <span id="delivery-cost" class="text-light-gold font-semibold">-</span>
+                                </div>
+                                <div class="flex justify-between items-center pt-4 border-t border-gold/20">
+                                    <span class="text-gold font-bold text-lg">Total TTC</span>
+                                    <span id="final-total" class="text-gold font-bold text-4xl">-</span>
+                                </div>
+                            </div>
+
+                            <!-- CTA Principal -->
+                            <div class="mt-8">
+                                <button id="proceedToPayment" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-5 px-8 rounded-full hover:shadow-2xl hover:shadow-gold/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 touch-target relative overflow-hidden group transform hover:scale-105">
+                                    <div class="absolute inset-0 bg-gradient-to-r from-gold/30 to-light-gold/30 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                                    <i class="fas fa-lock mr-3 relative z-10 text-lg"></i>
+                                    <span class="relative z-10 text-lg">Passer au paiement sécurisé</span>
+                                </button>
+                            </div>
+
+                            <!-- Message rassurant -->
+                            <div class="mt-6 text-center">
+                                <p class="text-light-gold/70 text-sm">
+                                    <i class="fas fa-shield-alt mr-2"></i>
+                                    Paiement sécurisé via Stripe
+                                </p>
+                                <p class="text-light-gold/70 text-sm mt-2">
+                                    <i class="fas fa-ban mr-2"></i>
+                                    Aucun prélèvement supplémentaire
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <div id="footer-placeholder"></div>
+
+    <!-- Scripts -->
+    <script src="components/header-manager.js" defer></script>
+    <script src="components/footer-manager.js" defer></script>
+
+    <script>
+        // Configuration des offres
+        const OFFERS = {
+            'standard': { name: 'Standard', price: 38 },
+            'guidance-incluse': { name: 'Guidance Offerte', price: 48 },
+            'edition-signature': { name: 'Édition Signature', price: 52 }
+        };
+
+        // Configuration des produits et poids
+        const PRODUCT_WEIGHT_KG = 0.5; // 500g par oracle
+        
+        // Configuration des tarifs Mondial Relay France (en euros)
+        const MONDIAL_RELAY_RATES = {
+            relay: [
+                { max_weight: 0.25, price: 4.10 },
+                { max_weight: 0.5, price: 4.10 },
+                { max_weight: 1.0, price: 5.99 },
+                { max_weight: 2.0, price: 7.99 },
+                { max_weight: 4.0, price: 7.99 },
+                { max_weight: 5.0, price: 15.99 },
+                { max_weight: 7.0, price: 15.99 },
+                { max_weight: 10.0, price: 15.99 },
+                { max_weight: 15.0, price: 25.99 },
+                { max_weight: 25.0, price: 25.99 }
+            ],
+            home: [
+                { max_weight: 0.25, price: 4.99 },
+                { max_weight: 0.5, price: 7.49 },
+                { max_weight: 1.0, price: 9.49 },
+                { max_weight: 2.0, price: 10.99 },
+                { max_weight: 4.0, price: 16.39 },
+                { max_weight: 5.0, price: 16.39 },
+                { max_weight: 7.0, price: 24.99 },
+                { max_weight: 10.0, price: 24.99 },
+                { max_weight: 15.0, price: 31.49 },
+                { max_weight: 25.0, price: 42.99 }
+            ],
+            hand_delivery: [
+                { max_weight: Infinity, price: 0 } // Remise en main propre = gratuit
+            ]
+        };
+
+        // État du formulaire
+        let cart = {};
+        let selectedDelivery = null;
+        let deliveryPrice = 0;
+
+        // Calculer le poids total de la commande
+        function calculateTotalWeight() {
+            const cartItems = Object.entries(cart);
+            let totalWeight = 0;
+            
+            cartItems.forEach(([offerId, item]) => {
+                totalWeight += item.quantity * PRODUCT_WEIGHT_KG;
+            });
+            
+            return totalWeight;
+        }
+
+        // Calculer le tarif de livraison selon le poids et le mode
+        function calculateDeliveryPrice(weight, deliveryMethod) {
+            if (deliveryMethod === 'hand_delivery') {
+                return 0;
+            }
+            
+            const rates = MONDIAL_RELAY_RATES[deliveryMethod];
+            if (!rates) {
+                console.error('Mode de livraison non trouvé:', deliveryMethod);
+                return 0;
+            }
+            
+            // Trouver la tranche applicable
+            for (const rate of rates) {
+                if (weight <= rate.max_weight) {
+                    return rate.price;
+                }
+            }
+            
+            // Si aucune tranche ne correspond (poids trop élevé)
+            return rates[rates.length - 1].price;
+        }
+
+        // Mettre à jour les prix affichés dans les options de livraison
+        function updateDeliveryPrices() {
+            const totalWeight = calculateTotalWeight();
+            
+            document.querySelectorAll('.delivery-option').forEach(option => {
+                const method = option.dataset.delivery;
+                const price = calculateDeliveryPrice(totalWeight, method);
+                const priceElement = option.querySelector('.text-gold.font-bold');
+                
+                if (priceElement) {
+                    priceElement.textContent = `${price.toFixed(2)} €`;
+                }
+                
+                // Mettre à jour l'attribut data-price pour le calcul
+                option.dataset.price = Math.round(price * 100); // Convertir en centimes
+            });
+        }
+
+        // Récupérer le panier depuis localStorage
+        function loadCart() {
+            const savedCart = localStorage.getItem('oradia-cart');
+            if (savedCart) {
+                cart = JSON.parse(savedCart);
+                updateOrderSummary();
+                updateDeliveryPrices(); // Mettre à jour les prix de livraison
+            } else {
+                // Rediriger vers la page de précommande si le panier est vide
+                window.location.href = 'precommande-oracle.html';
+            }
+        }
+
+        // Mettre à jour le récapitulatif de commande
+        function updateOrderSummary() {
+            const summaryDiv = document.getElementById('order-summary');
+            const cartItems = Object.entries(cart);
+            
+            if (cartItems.length === 0) {
+                summaryDiv.innerHTML = '<p class="text-light-gold/70 text-center">Votre panier est vide</p>';
+                return;
+            }
+
+            let subtotal = 0;
+            let html = '';
+
+            cartItems.forEach(([offerId, item]) => {
+                const lineTotal = item.price * item.quantity;
+                subtotal += lineTotal;
+                
+                html += `
+                    <div class="flex justify-between items-center py-3 border-b border-gold/10">
+                        <div>
+                            <h4 class="text-gold font-semibold">${item.name}</h4>
+                            <p class="text-light-gold/70 text-sm">${item.quantity} × ${item.price.toFixed(2)} €</p>
+                        </div>
+                        <span class="text-gold font-bold">${lineTotal.toFixed(2)} €</span>
+                    </div>
+                `;
+            });
+
+            summaryDiv.innerHTML = html;
+            updateTotals(subtotal);
+        }
+
+        // Mettre à jour les totaux
+        function updateTotals(productsSubtotal) {
+            document.getElementById('products-subtotal').textContent = `${productsSubtotal.toFixed(2)} €`;
+            document.getElementById('delivery-cost').textContent = deliveryPrice > 0 ? `${deliveryPrice.toFixed(2)} €` : '-';
+            
+            const total = productsSubtotal + deliveryPrice;
+            document.getElementById('final-total').textContent = `${total.toFixed(2)} €`;
+        }
+
+        // Gestion des options de livraison
+        document.querySelectorAll('.delivery-option').forEach(option => {
+            option.addEventListener('click', () => {
+                // Désélectionner les autres options
+                document.querySelectorAll('.delivery-option').forEach(opt => {
+                    opt.classList.remove('selected');
+                });
+                
+                // Sélectionner cette option
+                option.classList.add('selected');
+                selectedDelivery = option.dataset.delivery;
+                
+                // Calculer le prix de livraison selon le poids total
+                const totalWeight = calculateTotalWeight();
+                deliveryPrice = calculateDeliveryPrice(totalWeight, selectedDelivery);
+                
+                // Gérer l'affichage de l'adresse selon le mode de livraison
+                const addressSection = document.getElementById('address-section');
+                const handDeliveryMessage = document.getElementById('hand-delivery-message');
+                const addressInputs = addressSection.querySelectorAll('input[required], select[required]');
+                
+                if (selectedDelivery === 'hand_delivery') {
+                    // Masquer le bloc adresse et afficher le message
+                    addressSection.classList.add('hidden');
+                    handDeliveryMessage.classList.remove('hidden');
+                    
+                    // Rendre les champs adresse non obligatoires
+                    addressInputs.forEach(input => {
+                        input.removeAttribute('required');
+                    });
+                } else {
+                    // Afficher le bloc adresse et masquer le message
+                    addressSection.classList.remove('hidden');
+                    handDeliveryMessage.classList.add('hidden');
+                    
+                    // Rendre les champs adresse obligatoires
+                    addressInputs.forEach(input => {
+                        input.setAttribute('required', '');
+                    });
+                }
+                
+                // Mettre à jour les totaux
+                const productsSubtotal = Object.entries(cart).reduce((sum, [id, item]) => {
+                    return sum + (item.price * item.quantity);
+                }, 0);
+                updateTotals(productsSubtotal);
+            });
+        });
+
+        // Validation du formulaire
+        function validateForm() {
+            const form = document.getElementById('deliveryForm');
+            const formData = new FormData(form);
+            
+            // Vérifier les champs requis de base
+            const baseRequiredFields = ['firstName', 'lastName', 'email'];
+            for (const field of baseRequiredFields) {
+                if (!formData.get(field) || formData.get(field).trim() === '') {
+                    showError('Veuillez remplir tous les champs obligatoires');
+                    return false;
+                }
+            }
+            
+            // Vérifier l'email
+            const email = formData.get('email');
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                showError('Veuillez entrer une adresse email valide');
+                return false;
+            }
+            
+            // Vérifier la sélection de livraison
+            if (!selectedDelivery) {
+                showError('Veuillez choisir un mode de livraison');
+                return false;
+            }
+            
+            // Vérifier les champs adresse seulement si ce n'est pas de la remise en main propre
+            if (selectedDelivery !== 'hand_delivery') {
+                const addressRequiredFields = ['address', 'postalCode', 'city', 'country'];
+                for (const field of addressRequiredFields) {
+                    if (!formData.get(field) || formData.get(field).trim() === '') {
+                        showError('Veuillez remplir l\'adresse de livraison complète');
+                        return false;
+                    }
+                }
+                
+                // Vérifier le code postal
+                const postalCode = formData.get('postalCode');
+                if (!/^\d{5}$/.test(postalCode)) {
+                    showError('Veuillez entrer un code postal valide (5 chiffres)');
+                    return false;
+                }
+            }
+            
+            return true;
+        }
+
+        // Afficher une erreur
+        function showError(message) {
+            // Créer ou mettre à jour une notification
+            let notification = document.getElementById('error-notification');
+            
+            if (!notification) {
+                notification = document.createElement('div');
+                notification.id = 'error-notification';
+                notification.className = 'fixed top-20 right-4 bg-red-900/90 border border-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 max-w-sm transform translate-x-full transition-transform duration-300';
+                document.body.appendChild(notification);
+            }
+            
+            notification.innerHTML = `
+                <div class="flex items-start">
+                    <i class="fas fa-exclamation-triangle mr-3 mt-1 flex-shrink-0"></i>
+                    <div>
+                        <p class="font-semibold">Erreur</p>
+                        <p class="text-sm mt-1">${message}</p>
+                    </div>
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-white/70 hover:text-white">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+            
+            // Afficher la notification
+            setTimeout(() => {
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Masquer automatiquement après 5 secondes
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        if (notification.parentElement) {
+                            notification.remove();
+                        }
+                    }, 300);
+                }
+            }, 5000);
+        }
+
+        // Procéder au paiement
+        document.getElementById('proceedToPayment').addEventListener('click', async () => {
+            if (!validateForm()) {
+                return;
+            }
+
+            const form = document.getElementById('deliveryForm');
+            const formData = new FormData(form);
+            const submitBtn = document.getElementById('proceedToPayment');
+            const originalBtnText = submitBtn.innerHTML;
+            
+            // Désactiver le bouton et montrer le chargement
+            submitBtn.disabled = true;
+            submitBtn.innerHTML = `
+                <div class="inline-flex items-center">
+                    <div class="w-4 h-4 border-2 border-night-blue border-t-transparent rounded-full animate-spin mr-2"></div>
+                    Traitement en cours...
+                </div>
+            `;
+
+            try {
+                // Préparer les données
+                const orderData = {
+                    items: Object.entries(cart).map(([offerId, item]) => ({
+                        offer: offerId,
+                        quantity: item.quantity
+                    })),
+                    customerInfo: {
+                        firstName: formData.get('firstName').trim(),
+                        lastName: formData.get('lastName').trim(),
+                        fullName: `${formData.get('firstName').trim()} ${formData.get('lastName').trim()}`,
+                        email: formData.get('email').trim(),
+                        phone: formData.get('phone')?.trim() || '',
+                        shippingAddress: formData.get('address').trim(),
+                        addressComplement: formData.get('addressComplement')?.trim() || '',
+                        postalCode: formData.get('postalCode').trim(),
+                        city: formData.get('city').trim(),
+                        country: formData.get('country')
+                    },
+                    delivery: {
+                        method: selectedDelivery,
+                        price: Math.round(deliveryPrice * 100) // Convertir en centimes
+                    }
+                };
+
+                console.log('Données envoyées au backend:', orderData);
+
+                // Créer la session Stripe
+                const response = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(orderData)
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Erreur lors de la création de la session de paiement');
+                }
+
+                const session = await response.json();
+                
+                if (!session.success || !session.sessionId) {
+                    throw new Error(session.message || 'Session invalide');
+                }
+
+                // Récupérer la clé Stripe depuis la configuration existante
+                const stripeKey = document.querySelector('meta[name="stripe-publishable-key"]')?.content;
+                
+                if (!stripeKey) {
+                    showError('Configuration Stripe manquante');
+                    submitBtn.disabled = false;
+                    submitBtn.innerHTML = originalBtnText;
+                    return;
+                }
+                
+                // Rediriger vers Stripe
+                const stripe = Stripe(stripeKey);
+                await stripe.redirectToCheckout({ sessionId: session.sessionId });
+
+            } catch (error) {
+                console.error('Payment error:', error);
+                showError(error.message || 'Une erreur est survenue. Veuillez réessayer.');
+                
+                // Restaurer le bouton
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = originalBtnText;
+            }
+        });
+
+        // Bouton retour en haut
+        const backToTopBtn = document.getElementById('backToTop');
+        
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.remove('hidden');
+            } else {
+                backToTopBtn.classList.add('hidden');
+            }
+        });
+        
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        });
+
+        // Initialisation au chargement de la page
+        document.addEventListener('DOMContentLoaded', () => {
+            loadCart();
+            
+            // Sélectionner la livraison à domicile par défaut
+            const homeDelivery = document.querySelector('[data-delivery="home"]');
+            if (homeDelivery) {
+                homeDelivery.click();
+            }
+        });
+    </script>
+</body>
+</html>
