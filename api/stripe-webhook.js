@@ -318,45 +318,89 @@ const handler = async (req, res) => {
                 console.log('  - Supabase URL:', supabaseUrl);
                 console.log('  - Supabase Key présente:', !!supabaseKey);
                 
-                // VRAI UPSERT ATOMIQUE (plus de race condition avec retries Stripe)
-                console.log('� AUDIT UPSERT ATOMIQUE:');
-                console.log('  - Session ID:', sessionId);
-                console.log('  - Payload upsert:', JSON.stringify(supabaseData, null, 2));
+                // Préparation des données pour Supabase avec validation
+                const supabaseData = {
+                    stripe_session_id: extractedData.stripe_session_id,
+                    email: extractedData.email,
+                    offer: extractedData.offer,
+                    full_name: extractedData.full_name,
+                    amount_total: extractedData.amount_total / 100, // Conversion en euros
+                    currency: extractedData.currency,
+                    payment_intent_id: extractedData.payment_intent_id,
+                    stripe_customer_id: extractedData.stripe_customer_id,
+                    paid_status: extractedData.paid_status,
+                    shipping_address: extractedData.shipping_address,
+                    postal_code: extractedData.postal_code,
+                    city: extractedData.city,
+                    phone: extractedData.phone,
+                    updated_at: new Date().toISOString()
+                };
                 
-                const { error: upsertError } = await supabase
+                // VRAI UPSERT ATOMIQUE (plus de race condition avec retries Stripe)
+                console.log('🔄 AUDIT UPSERT ATOMIQUE:');
+                console.log('  - Session ID:', sessionId);
+                console.log('📦 Payload upsert (brut):', JSON.stringify(supabaseData, null, 2));
+                
+                // Validation des données avant envoi
+                console.log('🔍 VALIDATION DONNÉES:');
+                console.log('  - stripe_session_id:', supabaseData.stripe_session_id, typeof supabaseData.stripe_session_id);
+                console.log('  - email:', supabaseData.email, typeof supabaseData.email);
+                console.log('  - offer:', supabaseData.offer, typeof supabaseData.offer);
+                console.log('  - amount_total:', supabaseData.amount_total, typeof supabaseData.amount_total);
+                console.log('  - paid_status:', supabaseData.paid_status, typeof supabaseData.paid_status);
+                
+                if (!supabaseData.stripe_session_id) {
+                    console.error('❌ stripe_session_id est NULL ou vide');
+                }
+                if (!supabaseData.email) {
+                    console.error('❌ email est NULL ou vide');
+                }
+                if (!supabaseData.offer) {
+                    console.error('❌ offer est NULL ou vide');
+                }
+                
+                console.log('🚨 ENVOI VERS SUPABASE...');
+                const startTime = Date.now();
+                
+                const { error: upsertError, data: upsertData } = await supabase
                     .from('preorders')
-                    .upsert({
-                        stripe_session_id: extractedData.stripe_session_id,
-                        email: extractedData.email,
-                        offer: extractedData.offer,
-                        full_name: extractedData.full_name,
-                        amount_total: extractedData.amount_total / 100, // Conversion en euros
-                        currency: extractedData.currency,
-                        payment_intent_id: extractedData.payment_intent_id,
-                        stripe_customer_id: extractedData.stripe_customer_id,
-                        paid_status: extractedData.paid_status,
-                        shipping_address: extractedData.shipping_address,
-                        postal_code: extractedData.postal_code,
-                        city: extractedData.city,
-                        phone: extractedData.phone,
-                        updated_at: new Date().toISOString()
-                    }, {
+                    .upsert(supabaseData, {
                         onConflict: 'stripe_session_id',
                         ignoreDuplicates: false
-                    });
+                    })
+                    .select(); // Ajout .select() pour récupérer les données
 
+                const endTime = Date.now();
+                console.log(`⏱️ Durée upsert: ${endTime - startTime}ms`);
+                
                 console.log('📊 RÉSULTAT UPSERT:');
                 console.log('  - upsertError:', upsertError);
-
+                console.log('  - upsertData:', upsertData);
+                
                 if (upsertError) {
-                    console.error('❌ ERREUR UPSERT SUPABASE:', upsertError);
-                    console.error('❌ Code erreur:', upsertError.code);
-                    console.error('❌ Message erreur:', upsertError.message);
-                    console.error('❌ Details erreur:', upsertError.details);
+                    console.error('❌ ERREUR UPSERT SUPABASE DÉTAILLÉE:');
+                    console.error('  - Code erreur:', upsertError.code);
+                    console.error('  - Message erreur:', upsertError.message);
+                    console.error('  - Details erreur:', upsertError.details);
+                    console.error('  - Hint erreur:', upsertError.hint);
+                    console.error('  - Full error object:', JSON.stringify(upsertError, null, 2));
+                    
+                    // Analyse spécifique des erreurs communes
+                    if (upsertError.code === '23505') {
+                        console.error('💡 ERREUR CONFLICT: Probablement un problème de contrainte UNIQUE');
+                    } else if (upsertError.code === '23502') {
+                        console.error('💡 ERREUR NOT NULL: Un champ requis est manquant');
+                    } else if (upsertError.code === '23514') {
+                        console.error('💡 ERREUR CHECK: Une contrainte CHECK est violée');
+                    } else if (upsertError.code === '42501') {
+                        console.error('💡 ERREUR PERMISSION: Problème de permissions RLS');
+                    }
+                    
                     // NE PAS FAIRE DE RETURN - CONTINUER POUR EMAIL
                     console.log('⚠️ Upsert échoué mais continuation pour email');
                 } else {
-                    console.log('✅ Upsert réussi:', sessionId);
+                    console.log('✅ Upsert réussi:');
+                    console.log('  - Données insérées/mises à jour:', upsertData);
                 }
 
                 // Envoyer l'email de confirmation (vérifier si déjà envoyé via upsert)
