@@ -771,6 +771,14 @@ backToTopBtn.addEventListener('click', () => {
     top: 0,
     behavior: 'smooth'
   });
+  
+  // Ensure header is visible by scrolling to top after a brief delay
+  setTimeout(() => {
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+  }, 100);
 });
 </script>
 
