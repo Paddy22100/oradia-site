@@ -579,7 +579,10 @@
         // Mettre à jour les totaux
         function updateTotals(productsSubtotal) {
             document.getElementById('products-subtotal').textContent = `${productsSubtotal.toFixed(2)} €`;
-            document.getElementById('delivery-cost').textContent = deliveryPrice > 0 ? `${deliveryPrice.toFixed(2)} €` : '-';
+            document.getElementById('delivery-cost').textContent = 
+                deliveryPrice !== null && deliveryPrice !== undefined
+                    ? `${deliveryPrice.toFixed(2)} €` 
+                    : '-';
             
             const total = productsSubtotal + deliveryPrice;
             document.getElementById('final-total').textContent = `${total.toFixed(2)} €`;
