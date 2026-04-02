@@ -238,13 +238,87 @@ module.exports = async (req, res) => {
             'edition-signature': { price: 5200, name: 'Édition Signature - Oracle Oradia' }
         };
 
-        // Prix de livraison sécurisés côté serveur - IGNORER TOTALEMENT le prix frontend
-        const DELIVERY_PRICES = {
-            'home': 749,      // 7,49€
-            'relay': 410,     // 4,10€
-            'hand_delivery': 0 // 0,00€
+        // Configuration des produits et poids (identique au frontend)
+        const PRODUCT_WEIGHT_KG = 0.5; // 500g par oracle
+        
+        // Configuration des tarifs Mondial Relay France (en euros) - IDENTIQUE AU FRONTEND
+        const MONDIAL_RELAY_RATES = {
+            relay: [
+                { max_weight: 0.25, price: 4.10 },
+                { max_weight: 0.5, price: 4.10 },
+                { max_weight: 1.0, price: 5.99 },
+                { max_weight: 2.0, price: 7.99 },
+                { max_weight: 4.0, price: 7.99 },
+                { max_weight: 5.0, price: 15.99 },
+                { max_weight: 7.0, price: 15.99 },
+                { max_weight: 10.0, price: 15.99 },
+                { max_weight: 15.0, price: 25.99 },
+                { max_weight: 25.0, price: 25.99 }
+            ],
+            home: [
+                { max_weight: 0.25, price: 4.99 },
+                { max_weight: 0.5, price: 7.49 },
+                { max_weight: 1.0, price: 9.49 },
+                { max_weight: 2.0, price: 10.99 },
+                { max_weight: 4.0, price: 16.39 },
+                { max_weight: 5.0, price: 16.39 },
+                { max_weight: 7.0, price: 24.99 },
+                { max_weight: 10.0, price: 24.99 },
+                { max_weight: 15.0, price: 31.49 },
+                { max_weight: 25.0, price: 42.99 }
+            ],
+            hand_delivery: [
+                { max_weight: Infinity, price: 0 } // Remise en main propre = gratuit
+            ]
         };
 
+        // Calculer le poids total de la commande (identique au frontend)
+        function calculateTotalWeight(items) {
+            let totalWeight = 0;
+            
+            items.forEach(item => {
+                totalWeight += item.quantity * PRODUCT_WEIGHT_KG;
+            });
+            
+            return totalWeight;
+        }
+
+        // Calculer le tarif de livraison selon le poids et le mode (identique au frontend)
+        function calculateDeliveryPrice(weight, deliveryMethod) {
+            if (deliveryMethod === 'hand_delivery') {
+                return 0;
+            }
+            
+            const rates = MONDIAL_RELAY_RATES[deliveryMethod];
+            if (!rates) {
+                console.error('Mode de livraison non trouvé:', deliveryMethod);
+                return 0;
+            }
+            
+            // Trouver la tranche applicable
+            for (const rate of rates) {
+                if (weight <= rate.max_weight) {
+                    return rate.price;
+                }
+            }
+            
+            // Si aucune tranche ne correspond (poids trop élevé)
+            return rates[rates.length - 1].price;
+        }
+
+        // Calculer le poids total et le prix de livraison selon la logique exacte du frontend
+        const totalWeight = calculateTotalWeight(normalizedData.items);
+        const calculatedDeliveryPrice = calculateDeliveryPrice(totalWeight, normalizedData.deliveryMethod);
+        
+        console.log('=== DELIVERY CALCULATION V2 ===');
+        console.log('TOTAL WEIGHT (kg):', totalWeight);
+        console.log('DELIVERY METHOD:', normalizedData.deliveryMethod);
+        console.log('CALCULATED DELIVERY PRICE (€):', calculatedDeliveryPrice);
+        console.log('FRONTEND SENT PRICE (€):', normalizedData.deliveryPrice);
+        
+        // Utiliser le prix calculé par le serveur, ignorer totalement le prix frontend
+        const deliveryPrice = calculatedDeliveryPrice;
+        
         // Calculer le total et créer les line_items
         let totalAmount = 0;
         const lineItems = [];
@@ -280,14 +354,6 @@ module.exports = async (req, res) => {
             
             console.log(`ITEM ADDED: ${offer.name} x${item.quantity} = ${offer.price * item.quantity} centimes`);
         }
-
-        // Sécuriser le prix de livraison - IGNORER TOTALEMENT le prix frontend
-        const expectedDeliveryPrice = DELIVERY_PRICES[normalizedData.deliveryMethod] || 0;
-        const deliveryPrice = expectedDeliveryPrice; // Utiliser UNIQUEMENT le prix serveur
-        
-        console.log('DELIVERY PRICE FROM FRONTEND:', normalizedData.deliveryPrice);
-        console.log('DELIVERY METHOD:', normalizedData.deliveryMethod);
-        console.log('DELIVERY PRICE USED BY SERVER:', deliveryPrice);
         
         // Ajouter les frais de livraison si applicable
         if (normalizedData.deliveryMethod !== 'hand_delivery' && deliveryPrice > 0) {
@@ -296,14 +362,14 @@ module.exports = async (req, res) => {
                     currency: 'eur',
                     product_data: {
                         name: 'Frais de livraison',
-                        description: `Livraison: ${normalizedData.deliveryMethod}`,
+                        description: `Livraison: ${normalizedData.deliveryMethod} (${totalWeight}kg)`,
                     },
-                    unit_amount: deliveryPrice,
+                    unit_amount: Math.round(deliveryPrice * 100), // Convertir € en centimes
                 },
                 quantity: 1,
             });
-            totalAmount += deliveryPrice;
-            console.log(`DELIVERY ADDED: ${deliveryPrice} centimes`);
+            totalAmount += Math.round(deliveryPrice * 100);
+            console.log(`DELIVERY ADDED: ${deliveryPrice}€ = ${Math.round(deliveryPrice * 100)} centimes`);
         }
 
         console.log(`TOTAL AMOUNT: ${totalAmount} centimes (${totalAmount / 100}€)`);
@@ -329,6 +395,8 @@ module.exports = async (req, res) => {
             metadata: {
                 items: JSON.stringify(normalizedData.items),
                 delivery_method: normalizedData.deliveryMethod,
+                total_weight: totalWeight,
+                calculated_delivery_price: calculatedDeliveryPrice,
                 full_name: normalizedData.fullName.trim(),
                 email: normalizedData.email.trim(),
                 phone: normalizedData.phone.trim(),
@@ -338,7 +406,7 @@ module.exports = async (req, res) => {
                 city: normalizedData.city?.trim() || '',
                 country: normalizedData.country,
                 total_amount: totalAmount,
-                delivery_price: deliveryPrice,
+                delivery_price: Math.round(deliveryPrice * 100), // En centimes pour Stripe
                 source: 'oradia-livraison'
             },
         });
@@ -361,7 +429,9 @@ module.exports = async (req, res) => {
             city: normalizedData.city?.trim() || '',
             country: normalizedData.country,
             delivery_method: normalizedData.deliveryMethod,
-            delivery_price: deliveryPrice,
+            total_weight: totalWeight,
+            calculated_delivery_price: calculatedDeliveryPrice,
+            delivery_price: Math.round(deliveryPrice * 100), // En centimes pour la base
             paid_status: 'pending',
             source: 'oradia-livraison'
         };

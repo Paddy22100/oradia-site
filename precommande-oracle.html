@@ -1519,6 +1519,24 @@ La production est lancée grâce aux premières commandes.</p>
         
         // Initialisation
         document.addEventListener('DOMContentLoaded', function() {
+            // Gérer les liens #offres pour garantir le scroll correct
+            const offersLinks = document.querySelectorAll('a[href="#offres"]');
+            offersLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const offersSection = document.getElementById('offres');
+                    if (offersSection) {
+                        console.log('Scroll vers section #offres');
+                        offersSection.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    } else {
+                        console.error('Section #offres non trouvée');
+                    }
+                });
+            });
+            
             // Restaurer le panier depuis localStorage
             const savedCart = localStorage.getItem('oradia-cart');
             if (savedCart) {
