@@ -92,11 +92,13 @@ export default async function handler(req, res) {
         
         <div style="background: #f5f5f5; padding: 20px; border-radius: 8px; margin: 20px 0;">
           <p style="margin: 10px 0;"><strong>Nom:</strong> ${cleanName}</p>
-          <p style="margin: 10px 0;"><strong>Email:</strong> ${cleanEmail}</p>
+          <p style="margin: 10px 0;"><strong>Email:</strong> <span style="color: #d4af37; font-weight: bold;">${cleanEmail}</span></p>
           <p style="margin: 10px 0;"><strong>Sujet:</strong> ${cleanSubject}</p>
-          <p style="margin: 10px 0; color: #666; font-size: 12px;">
-            <i>Pour répondre directement à ${cleanName}, utilisez son adresse : ${cleanEmail}</i>
-          </p>
+          <div style="background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 4px; padding: 10px; margin-top: 15px;">
+            <p style="margin: 0; color: #856404; font-size: 14px;">
+              <strong>📧 Pour répondre au visiteur :</strong> Utilisez l'adresse <strong>${cleanEmail}</strong>
+            </p>
+          </div>
         </div>
         
         <div style="margin: 20px 0;">
