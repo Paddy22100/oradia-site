@@ -406,9 +406,11 @@ const handler = async (req, res) => {
                 // Envoyer l'email de confirmation (vérifier si déjà envoyé via upsert)
                 // Note: avec upsert, on ne peut pas savoir si c'est une mise à jour ou une insertion
                 // On utilise donc une table séparée pour suivre les emails envoyés
+                let emailSent = false; // Initialisation avant le bloc if
+                
                 if (extractedData.email) {
                     console.log('📧 Appel de sendBrevoEmail pour:', extractedData.email);
-                    const emailSent = await sendBrevoEmail({
+                    emailSent = await sendBrevoEmail({
                         toEmail: extractedData.email,
                         toName: extractedData.full_name || 'Ami(e) d\'ORADIA',
                         offer: extractedData.offer,
