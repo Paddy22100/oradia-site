@@ -83,6 +83,9 @@ function setCORS(req, res) {
 
 module.exports = async (req, res) => {
     try {
+        console.log('=== REAL CHECKOUT HANDLER V2 ===');
+        console.log('RAW REQ.BODY FULL:', JSON.stringify(req.body, null, 2));
+        
         setCORS(req, res);
         
         if (req.method === 'OPTIONS') {
@@ -96,14 +99,18 @@ module.exports = async (req, res) => {
         // Validation environnement au début
         validateEnvironment();
         
-        console.log('Creating checkout session...');
+        console.log('=== CHECKOUT SESSION START V2 ===');
         
         // Handle don-libre case separately
         if (req.body.type === 'don-libre') {
+            console.log('DON-LIBRE CASE');
             // Validate minimum amount (20€ = 2000 centimes)
             if (!req.body.customAmount || req.body.customAmount < 2000) {
+                console.error('DON-LIBRE ERROR: Amount too low:', req.body.customAmount);
                 return res.status(400).json({ 
-                    error: 'Minimum amount is 20€' 
+                    success: false,
+                    error: 'Validation failed',
+                    details: ['Minimum amount is 20€']
                 });
             }
 
@@ -126,57 +133,190 @@ module.exports = async (req, res) => {
                 cancel_url: `${process.env.FRONTEND_URL}/precommande-oracle.html#contribution-libre`,
             });
 
+            console.log('DON-LIBRE SESSION CREATED:', session.id);
             return res.json({ url: session.url });
         }
 
-        const { offer, fullName, email, shippingAddress, postalCode, city } = req.body;
-        console.log('Request data:', { offer, fullName, email, shippingAddress, postalCode, city });
+        // Lecture correcte du nouveau format structuré
+        const body = req.body || {};
+        const items = Array.isArray(body.items) ? body.items : [];
+        const customerInfo = body.customerInfo || {};
+        const delivery = body.delivery || {};
         
-        // Validation stricte
-        const validationErrors = validateInput({ offer, fullName, email, shippingAddress, postalCode, city });
-        if (validationErrors.length > 0) {
-            console.error('Validation errors:', validationErrors);
-            return res.status(400).json({ 
+        console.log('=== STRUCTURED BODY PARSING V2 ===');
+        console.log('RAW ITEMS:', JSON.stringify(items, null, 2));
+        console.log('RAW CUSTOMER INFO:', JSON.stringify(customerInfo, null, 2));
+        console.log('RAW DELIVERY:', JSON.stringify(delivery, null, 2));
+        
+        // Création de l'objet normalisé unique
+        const normalizedData = {
+            items: items,
+            fullName: customerInfo.fullName || '',
+            email: customerInfo.email || '',
+            phone: customerInfo.phone || '',
+            shippingAddress: customerInfo.shippingAddress || '',
+            addressComplement: customerInfo.addressComplement || '',
+            postalCode: customerInfo.postalCode || '',
+            city: customerInfo.city || '',
+            country: customerInfo.country || 'FR',
+            deliveryMethod: delivery.method || null,
+            deliveryPrice: delivery.price || 0
+        };
+        
+        console.log('=== NORMALIZED DATA FROM STRUCTURED FORMAT V2 ===');
+        console.log(JSON.stringify(normalizedData, null, 2));
+        
+        // Validation directe sur l'objet normalisé
+        const errors = [];
+        
+        // Validation des items
+        if (!normalizedData.items || !Array.isArray(normalizedData.items) || normalizedData.items.length === 0) {
+            errors.push('Panier vide invalide');
+        } else {
+            const allowedOffers = ['standard', 'guidance-incluse', 'edition-signature'];
+            
+            for (const item of normalizedData.items) {
+                if (!item.offer || !allowedOffers.includes(item.offer)) {
+                    errors.push(`Offre invalide: ${item.offer}`);
+                }
+                if (!item.quantity || typeof item.quantity !== 'number' || item.quantity < 1) {
+                    errors.push(`Quantité invalide pour l'offre: ${item.offer}`);
+                }
+            }
+        }
+        
+        // Validation du client
+        if (!normalizedData.fullName || normalizedData.fullName.trim().length < 2) {
+            errors.push('Nom complet requis (min 2 caractères)');
+        }
+        
+        if (!normalizedData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedData.email)) {
+            errors.push('Email invalide');
+        }
+        
+        // Validation de l'adresse (seulement si livraison != hand_delivery)
+        if (normalizedData.deliveryMethod !== 'hand_delivery') {
+            if (!normalizedData.shippingAddress || normalizedData.shippingAddress.trim().length < 5) {
+                errors.push('Adresse requise (min 5 caractères)');
+            }
+            
+            if (!normalizedData.postalCode || !/^\d{5}$/.test(normalizedData.postalCode)) {
+                errors.push('Code postal invalide (5 chiffres requis)');
+            }
+            
+            if (!normalizedData.city || normalizedData.city.trim().length < 2) {
+                errors.push('Ville requise (min 2 caractères)');
+            }
+        }
+        
+        // Validation de la livraison
+        const allowedDeliveryMethods = ['home', 'relay', 'hand_delivery'];
+        if (normalizedData.deliveryMethod && !allowedDeliveryMethods.includes(normalizedData.deliveryMethod)) {
+            errors.push('Mode de livraison invalide');
+        }
+        
+        console.log('=== VALIDATION ERRORS V2 ===');
+        console.log(JSON.stringify(errors, null, 2));
+        
+        if (errors.length > 0) {
+            console.error('=== VALIDATION FAILED V2 ===');
+            console.error(JSON.stringify(errors, null, 2));
+            console.error('=== NORMALIZED DATA USED FOR VALIDATION V2 ===');
+            console.error(JSON.stringify(normalizedData, null, 2));
+            
+            return res.status(400).json({
                 success: false,
-                error: 'Validation failed', 
-                details: validationErrors 
+                error: 'Validation failed',
+                details: errors
             });
         }
 
         // Définir les offres (prix en centimes)
         const offers = {
             'standard': { price: 3800, name: 'Standard - Oracle Oradia' },
-            'tirage-offert': { price: 4400, name: 'Tirage Offert - Oracle Oradia' },
+            'guidance-incluse': { price: 4400, name: 'Guidance Incluse - Oracle Oradia' },
             'edition-signature': { price: 5200, name: 'Édition Signature - Oracle Oradia' }
         };
 
-        const selectedOffer = offers[offer];
-        if (!selectedOffer) {
-            console.error('Invalid offer:', offer);
-            return res.status(400).json({ 
-                success: false,
-                error: 'Invalid offer' 
-            });
+        // Prix de livraison sécurisés côté serveur - IGNORER TOTALEMENT le prix frontend
+        const DELIVERY_PRICES = {
+            'home': 749,      // 7,49€
+            'relay': 410,     // 4,10€
+            'hand_delivery': 0 // 0,00€
+        };
+
+        // Calculer le total et créer les line_items
+        let totalAmount = 0;
+        const lineItems = [];
+        
+        console.log('=== BUILDING LINE ITEMS V2 ===');
+        
+        for (const item of normalizedData.items) {
+            const offer = offers[item.offer];
+            if (!offer) {
+                console.error(`UNKNOWN OFFER: ${item.offer}`);
+                return res.status(400).json({ 
+                    success: false,
+                    error: 'Validation failed',
+                    details: [`Offre inconnue: ${item.offer}`]
+                });
+            }
+            
+            const lineItem = {
+                price_data: {
+                    currency: 'eur',
+                    product_data: {
+                        name: offer.name,
+                        description: `Quantité: ${item.quantity}`,
+                        images: ['https://oradia.fr/images/medias/apercu_stripe.jpg']
+                    },
+                    unit_amount: offer.price,
+                },
+                quantity: item.quantity,
+            };
+            
+            lineItems.push(lineItem);
+            totalAmount += offer.price * item.quantity;
+            
+            console.log(`ITEM ADDED: ${offer.name} x${item.quantity} = ${offer.price * item.quantity} centimes`);
         }
+
+        // Sécuriser le prix de livraison - IGNORER TOTALEMENT le prix frontend
+        const expectedDeliveryPrice = DELIVERY_PRICES[normalizedData.deliveryMethod] || 0;
+        const deliveryPrice = expectedDeliveryPrice; // Utiliser UNIQUEMENT le prix serveur
+        
+        console.log('DELIVERY PRICE FROM FRONTEND:', normalizedData.deliveryPrice);
+        console.log('DELIVERY METHOD:', normalizedData.deliveryMethod);
+        console.log('DELIVERY PRICE USED BY SERVER:', deliveryPrice);
+        
+        // Ajouter les frais de livraison si applicable
+        if (normalizedData.deliveryMethod !== 'hand_delivery' && deliveryPrice > 0) {
+            lineItems.push({
+                price_data: {
+                    currency: 'eur',
+                    product_data: {
+                        name: 'Frais de livraison',
+                        description: `Livraison: ${normalizedData.deliveryMethod}`,
+                    },
+                    unit_amount: deliveryPrice,
+                },
+                quantity: 1,
+            });
+            totalAmount += deliveryPrice;
+            console.log(`DELIVERY ADDED: ${deliveryPrice} centimes`);
+        }
+
+        console.log(`TOTAL AMOUNT: ${totalAmount} centimes (${totalAmount / 100}€)`);
+        console.log('FINAL LINE ITEMS:', JSON.stringify(lineItems, null, 2));
 
         // URL de base robuste
         const baseUrl = process.env.FRONTEND_URL || req.headers.origin || 'https://oradia.fr';
 
         // Créer la session Stripe Checkout
+        console.log('=== CREATING STRIPE SESSION V2 ===');
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
-            line_items: [{
-                price_data: {
-                    currency: 'eur',
-                    product_data: {
-                        name: 'Oracle ORADIA — Le Voyage intérieur',
-                        description: 'Un outil de guidance pour éclairer ton chemin, comprendre ce que tu vis, et avancer avec clarté.',
-                        images: ['https://oradia.fr/images/medias/apercu_stripe.jpg']
-                    },
-                    unit_amount: selectedOffer.price,
-                },
-                quantity: 1,
-            }],
+            line_items: lineItems,
             mode: 'payment',
             success_url: 'https://oradia.fr/success-precommande.html?session_id={CHECKOUT_SESSION_ID}',
             cancel_url: 'https://oradia.fr/precommande-oracle.html',
@@ -185,32 +325,45 @@ module.exports = async (req, res) => {
                 message: '✨ Merci pour ta confiance — ton voyage commence ici.'
               }
             },
-            customer_email: email.trim(),
+            customer_email: normalizedData.email.trim(),
             metadata: {
-                offer,
-                full_name: fullName.trim(),
-                shipping_address: shippingAddress.trim(),
-                postal_code: postalCode.trim(),
-                city: city.trim(),
-                source: 'oradia-precommande'
+                items: JSON.stringify(normalizedData.items),
+                delivery_method: normalizedData.deliveryMethod,
+                full_name: normalizedData.fullName.trim(),
+                email: normalizedData.email.trim(),
+                phone: normalizedData.phone.trim(),
+                shipping_address: normalizedData.shippingAddress?.trim() || '',
+                address_complement: normalizedData.addressComplement?.trim() || '',
+                postal_code: normalizedData.postalCode?.trim() || '',
+                city: normalizedData.city?.trim() || '',
+                country: normalizedData.country,
+                total_amount: totalAmount,
+                delivery_price: deliveryPrice,
+                source: 'oradia-livraison'
             },
         });
 
-        console.log(`Stripe session created: ${session.id}`);
+        console.log(`=== STRIPE SESSION CREATED V2: ${session.id} ===`);
+        console.log('SESSION URL:', session.url);
 
         // Enregistrer la commande pending en base
         const orderData = {
             stripe_session_id: session.id,
-            email: email.trim(),
-            offer,
-            amount_total: selectedOffer.price,
+            email: normalizedData.email.trim(),
+            items: normalizedData.items,
+            amount_total: totalAmount,
             currency: 'eur',
-            full_name: fullName.trim(),
-            shipping_address: shippingAddress.trim(),
-            postal_code: postalCode.trim(),
-            city: city.trim(),
+            full_name: normalizedData.fullName.trim(),
+            phone: normalizedData.phone.trim(),
+            shipping_address: normalizedData.shippingAddress?.trim() || '',
+            address_complement: normalizedData.addressComplement?.trim() || '',
+            postal_code: normalizedData.postalCode?.trim() || '',
+            city: normalizedData.city?.trim() || '',
+            country: normalizedData.country,
+            delivery_method: normalizedData.deliveryMethod,
+            delivery_price: deliveryPrice,
             paid_status: 'pending',
-            source: 'oradia-precommande'
+            source: 'oradia-livraison'
         };
 
         const { error: insertError } = await supabase
