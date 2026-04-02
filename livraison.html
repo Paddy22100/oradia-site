@@ -703,12 +703,29 @@
             }
             
             let detailsHtml = '';
-            if (details && details.errors && Array.isArray(details.errors)) {
+            if (details && details.details && Array.isArray(details.details)) {
+                const errorCount = details.details.length;
+                const displayErrors = details.details.slice(0, 3);
+                const remainingErrors = errorCount - 3;
+                
                 detailsHtml = `<div class="text-xs mt-2 text-red-200">
-                    <p class="font-semibold">Détails:</p>
-                    <ul class="list-disc list-inside mt-1">
-                        ${details.errors.slice(0, 3).map(err => `<li>${err}</li>`).join('')}
-                        ${details.errors.length > 3 ? `<li>... et ${details.errors.length - 3} autres erreurs</li>` : ''}
+                    <p class="font-semibold">Erreurs de validation:</p>
+                    <ul class="list-disc list-inside mt-1 space-y-1">
+                        ${displayErrors.map(err => `<li>${err}</li>`).join('')}
+                        ${remainingErrors > 0 ? `<li class="text-red-300">... et ${remainingErrors} autre(s) erreur(s)</li>` : ''}
+                    </ul>
+                </div>`;
+            } else if (details && details.errors && Array.isArray(details.errors)) {
+                // Fallback pour l'ancien format
+                const errorCount = details.errors.length;
+                const displayErrors = details.errors.slice(0, 3);
+                const remainingErrors = errorCount - 3;
+                
+                detailsHtml = `<div class="text-xs mt-2 text-red-200">
+                    <p class="font-semibold">Erreurs de validation:</p>
+                    <ul class="list-disc list-inside mt-1 space-y-1">
+                        ${displayErrors.map(err => `<li>${err}</li>`).join('')}
+                        ${remainingErrors > 0 ? `<li class="text-red-300">... et ${remainingErrors} autre(s) erreur(s)</li>` : ''}
                     </ul>
                 </div>`;
             }
@@ -803,19 +820,18 @@
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    console.error('=== CHECKOUT ERROR DETAILS ===');
-                    console.error('HTTP Status:', response.status);
-                    console.error('Error Response:', errorData);
                     
-                    if (errorData.errors && Array.isArray(errorData.errors)) {
-                        console.error('Validation Errors:', errorData.errors.join(', '));
+                    console.error('=== CHECKOUT ERROR RAW ===');
+                    console.error(JSON.stringify(errorData, null, 2));
+                    
+                    if (errorData.details && Array.isArray(errorData.details)) {
+                        console.error('=== VALIDATION DETAILS ===');
+                        errorData.details.forEach((detail, index) => {
+                            console.error(`${index + 1}. ${detail}`);
+                        });
                     }
                     
-                    if (errorData.normalizedData) {
-                        console.error('Normalized Data Received:', errorData.normalizedData);
-                    }
-                    
-                    const errorMessage = errorData.message || errorData.error || 'Erreur lors de la création de la session de paiement';
+                    const errorMessage = errorData.error || errorData.message || 'Erreur lors de la création de la session de paiement';
                     showError(errorMessage, errorData);
                     return;
                 }
