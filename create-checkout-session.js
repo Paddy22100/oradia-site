@@ -31,83 +31,6 @@ function validateEnvironment() {
     }
 }
 
-// Validation helper - supporte ancien et nouveau format
-function validateInput(data) {
-    const errors = [];
-    
-    // Normalisation des données (support ancien et nouveau format)
-    const normalizedData = {
-        items: data.items || [],
-        fullName: data.customerInfo?.fullName || data.fullName || '',
-        email: data.customerInfo?.email || data.email || '',
-        shippingAddress: data.customerInfo?.shippingAddress || data.shippingAddress || '',
-        postalCode: data.customerInfo?.postalCode || data.postalCode || '',
-        city: data.customerInfo?.city || data.city || '',
-        phone: data.customerInfo?.phone || data.phone || '',
-        country: data.customerInfo?.country || data.country || 'FR',
-        addressComplement: data.customerInfo?.addressComplement || data.addressComplement || '',
-        deliveryMethod: data.delivery?.method || data.shippingMethod || null,
-        deliveryPrice: data.delivery?.price ?? data.shippingPrice ?? 0
-    };
-    
-    // Logs de diagnostic
-    console.log('=== DIAGNOSTIC BACKEND ===');
-    console.log('Body reçu:', JSON.stringify(data, null, 2));
-    console.log('Données normalisées:', JSON.stringify(normalizedData, null, 2));
-    
-    // Validation des items
-    if (!normalizedData.items || !Array.isArray(normalizedData.items) || normalizedData.items.length === 0) {
-        errors.push('Panier vide invalide');
-    } else {
-        // Liste des offres autorisées
-        const allowedOffers = ['standard', 'guidance-incluse', 'edition-signature'];
-        
-        for (const item of normalizedData.items) {
-            if (!item.offer || !allowedOffers.includes(item.offer)) {
-                errors.push(`Offre invalide: ${item.offer}`);
-            }
-            if (!item.quantity || typeof item.quantity !== 'number' || item.quantity < 1) {
-                errors.push(`Quantité invalide pour l'offre: ${item.offer}`);
-            }
-        }
-    }
-    
-    // Validation du client
-    if (!normalizedData.fullName || normalizedData.fullName.trim().length < 2) {
-        errors.push('Nom complet requis (min 2 caractères)');
-    }
-    
-    if (!normalizedData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedData.email)) {
-        errors.push('Email invalide');
-    }
-    
-    // Validation de l'adresse (seulement si livraison != hand_delivery)
-    if (normalizedData.deliveryMethod !== 'hand_delivery') {
-        if (!normalizedData.shippingAddress || normalizedData.shippingAddress.trim().length < 5) {
-            errors.push('Adresse requise (min 5 caractères)');
-        }
-        
-        if (!normalizedData.postalCode || !/^\d{5}$/.test(normalizedData.postalCode)) {
-            errors.push('Code postal invalide (5 chiffres requis)');
-        }
-        
-        if (!normalizedData.city || normalizedData.city.trim().length < 2) {
-            errors.push('Ville requise (min 2 caractères)');
-        }
-    }
-    
-    // Validation de la livraison
-    const allowedDeliveryMethods = ['home', 'relay', 'hand_delivery'];
-    if (normalizedData.deliveryMethod && !allowedDeliveryMethods.includes(normalizedData.deliveryMethod)) {
-        errors.push('Mode de livraison invalide');
-    }
-    
-    console.log('Erreurs de validation:', errors);
-    console.log('=== FIN DIAGNOSTIC ===');
-    
-    return { errors, normalizedData };
-}
-
 // CORS helper
 function setCORS(req, res) {
     const allowedOrigins = [
@@ -153,8 +76,8 @@ module.exports = async (req, res) => {
                 console.error('DON-LIBRE ERROR: Amount too low:', req.body.customAmount);
                 return res.status(400).json({ 
                     success: false,
-                    message: 'Validation failed',
-                    errors: ['Minimum amount is 20€']
+                    error: 'Validation failed',
+                    details: ['Minimum amount is 20€']
                 });
             }
 
@@ -181,31 +104,94 @@ module.exports = async (req, res) => {
             return res.json({ url: session.url });
         }
 
-        // Normalisation et validation détaillée
-        const validation = validateInput(req.body);
+        // Lecture correcte du nouveau format structuré
+        const body = req.body || {};
+        const items = Array.isArray(body.items) ? body.items : [];
+        const customerInfo = body.customerInfo || {};
+        const delivery = body.delivery || {};
         
-        if (validation.errors.length > 0) {
-            console.error('=== VALIDATION FAILED ===');
-            console.error('ERRORS:', validation.errors);
-            console.error('NORMALIZED DATA:', JSON.stringify(validation.normalizedData, null, 2));
+        // Création de l'objet normalisé unique
+        const normalizedData = {
+            items: items,
+            fullName: customerInfo.fullName || '',
+            email: customerInfo.email || '',
+            phone: customerInfo.phone || '',
+            shippingAddress: customerInfo.shippingAddress || '',
+            addressComplement: customerInfo.addressComplement || '',
+            postalCode: customerInfo.postalCode || '',
+            city: customerInfo.city || '',
+            country: customerInfo.country || 'FR',
+            deliveryMethod: delivery.method || null,
+            deliveryPrice: delivery.price || 0
+        };
+        
+        console.log('=== NORMALIZED DATA FROM STRUCTURED FORMAT ===');
+        console.log(JSON.stringify(normalizedData, null, 2));
+        
+        // Validation directe sur l'objet normalisé
+        const errors = [];
+        
+        // Validation des items
+        if (!normalizedData.items || !Array.isArray(normalizedData.items) || normalizedData.items.length === 0) {
+            errors.push('Panier vide invalide');
+        } else {
+            const allowedOffers = ['standard', 'guidance-incluse', 'edition-signature'];
             
-            return res.status(400).json({ 
-                success: false,
-                message: 'Validation failed',
-                errors: validation.errors,
-                normalizedData: {
-                    items: validation.normalizedData.items,
-                    fullName: validation.normalizedData.fullName,
-                    email: validation.normalizedData.email,
-                    deliveryMethod: validation.normalizedData.deliveryMethod,
-                    deliveryPrice: validation.normalizedData.deliveryPrice
+            for (const item of normalizedData.items) {
+                if (!item.offer || !allowedOffers.includes(item.offer)) {
+                    errors.push(`Offre invalide: ${item.offer}`);
                 }
+                if (!item.quantity || typeof item.quantity !== 'number' || item.quantity < 1) {
+                    errors.push(`Quantité invalide pour l'offre: ${item.offer}`);
+                }
+            }
+        }
+        
+        // Validation du client
+        if (!normalizedData.fullName || normalizedData.fullName.trim().length < 2) {
+            errors.push('Nom complet requis (min 2 caractères)');
+        }
+        
+        if (!normalizedData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedData.email)) {
+            errors.push('Email invalide');
+        }
+        
+        // Validation de l'adresse (seulement si livraison != hand_delivery)
+        if (normalizedData.deliveryMethod !== 'hand_delivery') {
+            if (!normalizedData.shippingAddress || normalizedData.shippingAddress.trim().length < 5) {
+                errors.push('Adresse requise (min 5 caractères)');
+            }
+            
+            if (!normalizedData.postalCode || !/^\d{5}$/.test(normalizedData.postalCode)) {
+                errors.push('Code postal invalide (5 chiffres requis)');
+            }
+            
+            if (!normalizedData.city || normalizedData.city.trim().length < 2) {
+                errors.push('Ville requise (min 2 caractères)');
+            }
+        }
+        
+        // Validation de la livraison
+        const allowedDeliveryMethods = ['home', 'relay', 'hand_delivery'];
+        if (normalizedData.deliveryMethod && !allowedDeliveryMethods.includes(normalizedData.deliveryMethod)) {
+            errors.push('Mode de livraison invalide');
+        }
+        
+        console.log('=== VALIDATION ERRORS ===');
+        console.log(JSON.stringify(errors, null, 2));
+        
+        if (errors.length > 0) {
+            console.error('=== VALIDATION FAILED ===');
+            console.error(JSON.stringify(errors, null, 2));
+            console.error('=== NORMALIZED DATA USED FOR VALIDATION ===');
+            console.error(JSON.stringify(normalizedData, null, 2));
+            
+            return res.status(400).json({
+                success: false,
+                error: 'Validation failed',
+                details: errors
             });
         }
-
-        const { normalizedData } = validation;
-        console.log('=== VALIDATION PASSED ===');
-        console.log('NORMALIZED DATA:', JSON.stringify(normalizedData, null, 2));
 
         // Définir les offres (prix en centimes)
         const offers = {
@@ -233,8 +219,8 @@ module.exports = async (req, res) => {
                 console.error(`UNKNOWN OFFER: ${item.offer}`);
                 return res.status(400).json({ 
                     success: false,
-                    message: 'Validation failed',
-                    errors: [`Offre inconnue: ${item.offer}`]
+                    error: 'Validation failed',
+                    details: [`Offre inconnue: ${item.offer}`]
                 });
             }
             
