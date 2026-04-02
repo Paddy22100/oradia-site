@@ -44,6 +44,18 @@
     
     <!-- Couleurs ORADIA additionnelles -->
     <style>
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        #offres {
+            scroll-margin-top: 100px;
+        }
+        
+        #cart-section {
+            scroll-margin-top: 100px;
+        }
+        
         .text-gold {
             color: #d4af37 !important;
         }
@@ -1152,20 +1164,19 @@
                         </div>
                     </div>
                     
-                    <!-- Message rassurant -->
-                    <div id="cart-message" class="mt-6 text-center">
-                        <p class="text-light-gold/70 text-sm">
-                            <i class="fas fa-info-circle mr-2"></i>
-                            Les frais de livraison seront calculés à l'étape suivante, selon le mode choisi.
-                        </p>
-                        <p class="text-light-gold/70 text-sm mt-2">
-                            <i class="fas fa-truck mr-2"></i>
-                            Livraison en France uniquement pour le lancement.
-                        </p>
-                    </div>
-                    
                     <!-- Boutons d'action -->
-                    <div class="mt-8 space-y-4">
+                    <div class="mt-10 space-y-4">
+                        <!-- Bloc ajout d'offres -->
+                        <div class="text-center py-5 border-t border-gold/10 bg-[rgba(212,175,55,0.08] rounded-lg px-4 transform transition-all duration-500 hover:scale-[1.02] hover:bg-[rgba(212,175,55,0.12] hover:shadow-lg hover:shadow-gold/20">
+                            <p class="text-gold font-semibold text-sm mb-4 animate-pulse">
+                                Ajouter d'autres exemplaires ?
+                            </p>
+                            <a href="#offres" class="bg-transparent border border-gold/60 text-gold font-medium py-2.5 px-5 rounded-full hover:bg-gold/15 hover:border-gold/80 transition-all duration-300 text-sm inline-flex items-center shadow-sm hover:shadow-md hover:scale-105">
+                                <i class="fas fa-arrow-left mr-2"></i>
+                                Retour aux offres
+                            </a>
+                        </div>
+                        
                         <!-- Bouton principal de paiement -->
                         <button id="checkout-button" disabled class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-xl hover:shadow-gold/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 touch-target relative overflow-hidden group">
                             <div class="absolute inset-0 bg-gradient-to-r from-gold/30 to-light-gold/30 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
@@ -1178,12 +1189,6 @@
                             <i class="fas fa-trash mr-2"></i>
                             Vider le panier
                         </button>
-                        
-                        <!-- Message rassurant final -->
-                        <p class="text-center text-light-gold/70 text-sm">
-                            <i class="fas fa-shield-alt mr-2"></i>
-                            Aucun paiement ne sera effectué avant validation sur la page sécurisée.
-                        </p>
                     </div>
                 </div>
             </div>
@@ -1518,6 +1523,17 @@ La production est lancée grâce aux premières commandes.</p>
         
         // Initialisation
         document.addEventListener('DOMContentLoaded', function() {
+            // Restaurer le panier depuis localStorage
+            const savedCart = localStorage.getItem('oradia-cart');
+            if (savedCart) {
+                try {
+                    cart = JSON.parse(savedCart);
+                    updateCartDisplay();
+                } catch (e) {
+                    console.error('Erreur lors de la restauration du panier:', e);
+                }
+            }
+            
             // Animation carrousel
             const slides = document.querySelectorAll('.carousel-slide');
             const dots = document.querySelectorAll('#carouselDots > div');
@@ -1838,7 +1854,7 @@ La production est lancée grâce aux premières commandes.</p>
                 
                 // Mettre à jour le bouton de paiement
                 checkoutButton.disabled = false;
-                checkoutButtonText.textContent = `Choisir la livraison • ${subtotal.toFixed(2)} €`;
+                checkoutButtonText.textContent = 'Passer à la livraison';
                 console.log('Panier avec items - bouton activé avec sous-total:', subtotal);
                 
                 // Attacher les événements aux nouveaux éléments
@@ -2274,5 +2290,60 @@ La production est lancée grâce aux premières commandes.</p>
 
 <!-- Scripts -->
 <script src="components/header-manager.js" defer></script>
+
+<script>
+    // Gérer le scroll vers l'ancre panier si présent dans l'URL
+    document.addEventListener('DOMContentLoaded', () => {
+        // Debug : vérifier si l'ancre est bien présente
+        console.log('URL hash:', window.location.hash);
+        
+        // Attendre un peu plus longtemps pour que le panier soit restauré
+        setTimeout(() => {
+            // Vérifier si l'URL contient #cart-section
+            if (window.location.hash === '#cart-section') {
+                console.log('Detection de #cart-section, tentative de scroll...');
+                const cartSection = document.getElementById('cart-section');
+                console.log('Element cart-section trouvé:', cartSection);
+                
+                if (cartSection) {
+                    // S'assurer que la section panier est visible
+                    if (cartSection.classList.contains('hidden')) {
+                        cartSection.classList.remove('hidden');
+                        console.log('Section panier rendue visible');
+                    }
+                    
+                    // Forcer le scroll avec plusieurs méthodes
+                    try {
+                        // Méthode 1 : scrollIntoView
+                        cartSection.scrollIntoView({ 
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                        console.log('Scroll avec scrollIntoView effectué');
+                        
+                        // Méthode 2 : fallback si scrollIntoView ne fonctionne pas
+                        setTimeout(() => {
+                            const rect = cartSection.getBoundingClientRect();
+                            if (rect.top > 100 || rect.bottom < 0) {
+                                window.scrollTo({
+                                    top: window.pageYOffset + rect.top - 100,
+                                    behavior: 'smooth'
+                                });
+                                console.log('Scroll fallback effectué');
+                            }
+                        }, 100);
+                        
+                    } catch (error) {
+                        console.error('Erreur lors du scroll:', error);
+                        // Méthode 3 : dernier recours
+                        window.location.hash = '#cart-section';
+                    }
+                } else {
+                    console.error('Element #cart-section non trouvé');
+                }
+            }
+        }, 500); // Augmenté à 500ms pour plus de sécurité
+    });
+</script>
 
 </html>
