@@ -686,7 +686,12 @@
         }
 
         // Afficher une erreur
-        function showError(message) {
+        function showError(message, details = null) {
+            // Afficher les détails dans la console pour debug
+            if (details) {
+                console.error('SHOW ERROR DETAILS:', details);
+            }
+            
             // Créer ou mettre à jour une notification
             let notification = document.getElementById('error-notification');
             
@@ -697,12 +702,24 @@
                 document.body.appendChild(notification);
             }
             
+            let detailsHtml = '';
+            if (details && details.errors && Array.isArray(details.errors)) {
+                detailsHtml = `<div class="text-xs mt-2 text-red-200">
+                    <p class="font-semibold">Détails:</p>
+                    <ul class="list-disc list-inside mt-1">
+                        ${details.errors.slice(0, 3).map(err => `<li>${err}</li>`).join('')}
+                        ${details.errors.length > 3 ? `<li>... et ${details.errors.length - 3} autres erreurs</li>` : ''}
+                    </ul>
+                </div>`;
+            }
+            
             notification.innerHTML = `
                 <div class="flex items-start">
                     <i class="fas fa-exclamation-triangle mr-3 mt-1 flex-shrink-0"></i>
-                    <div>
+                    <div class="flex-1">
                         <p class="font-semibold">Erreur</p>
                         <p class="text-sm mt-1">${message}</p>
+                        ${detailsHtml}
                     </div>
                     <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-white/70 hover:text-white">
                         <i class="fas fa-times"></i>
@@ -786,7 +803,21 @@
 
                 if (!response.ok) {
                     const errorData = await response.json();
-                    throw new Error(errorData.message || 'Erreur lors de la création de la session de paiement');
+                    console.error('=== CHECKOUT ERROR DETAILS ===');
+                    console.error('HTTP Status:', response.status);
+                    console.error('Error Response:', errorData);
+                    
+                    if (errorData.errors && Array.isArray(errorData.errors)) {
+                        console.error('Validation Errors:', errorData.errors.join(', '));
+                    }
+                    
+                    if (errorData.normalizedData) {
+                        console.error('Normalized Data Received:', errorData.normalizedData);
+                    }
+                    
+                    const errorMessage = errorData.message || errorData.error || 'Erreur lors de la création de la session de paiement';
+                    showError(errorMessage, errorData);
+                    return;
                 }
 
                 const session = await response.json();
@@ -811,7 +842,10 @@
 
             } catch (error) {
                 console.error('Payment error:', error);
-                showError(error.message || 'Une erreur est survenue. Veuillez réessayer.');
+                showError(error.message || 'Une erreur est survenue. Veuillez réessayer.', {
+                    errors: [error.message],
+                    stack: error.stack
+                });
                 
                 // Restaurer le bouton
                 submitBtn.disabled = false;
