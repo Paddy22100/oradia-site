@@ -83,6 +83,72 @@ function setCORS(req, res) {
 
 module.exports = async (req, res) => {
     try {
+        // HEALTH CHECK TEMPORAIRE - Mode GET pour test immédiat
+        if (req.method === 'GET') {
+            console.log('🏥 HEALTH CHECK CREATE-CHECKOUT-SESSION');
+            
+            const envStatus = {
+                STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ? '✅' : '❌',
+                STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET ? '✅' : '❌',
+                SUPABASE_URL: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '❌',
+                SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? '✅' : '❌',
+                BREVO_API_KEY: process.env.BREVO_API_KEY ? '✅' : '❌',
+                BREVO_SENDER_EMAIL: process.env.BREVO_SENDER_EMAIL || '❌'
+            };
+            
+            console.log('🔍 Variables environnement:', envStatus);
+            
+            // Test connexion Supabase
+            let supabaseTest = '❌';
+            try {
+                const { count, error } = await supabase
+                    .from('preorders')
+                    .select('count', { count: 'exact', head: true });
+                
+                if (error) {
+                    supabaseTest = `❌ ${error.message}`;
+                } else {
+                    supabaseTest = `✅ ${count} précommandes`;
+                }
+            } catch (error) {
+                supabaseTest = `❌ ${error.message}`;
+            }
+            
+            // Test connexion Brevo
+            let brevoTest = '❌';
+            if (process.env.BREVO_API_KEY && process.env.BREVO_SENDER_EMAIL) {
+                try {
+                    const response = await fetch('https://api.brevo.com/v3/account', {
+                        headers: { 'api-key': process.env.BREVO_API_KEY }
+                    });
+                    
+                    if (response.ok) {
+                        brevoTest = '✅ Connexion réussie';
+                    } else {
+                        brevoTest = `❌ ${response.status}`;
+                    }
+                } catch (error) {
+                    brevoTest = `❌ ${error.message}`;
+                }
+            } else {
+                brevoTest = '❌ Variables manquantes';
+            }
+            
+            const result = {
+                status: '✅ Health check create-checkout-session',
+                timestamp: new Date().toISOString(),
+                environment: envStatus,
+                tests: {
+                    supabase: supabaseTest,
+                    brevo: brevoTest
+                },
+                message: 'Test des variables et connexions - webhook corrigé en attente de déploiement'
+            };
+            
+            return res.status(200).json(result);
+        }
+        
+        // TRAITEMENT NORMAL (méthode POST)
         console.log('=== REAL CHECKOUT HANDLER V2 ===');
         console.log('RAW REQ.BODY FULL:', JSON.stringify(req.body, null, 2));
         
