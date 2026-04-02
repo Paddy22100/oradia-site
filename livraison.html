@@ -45,17 +45,32 @@
     <script src="security.js"></script>
 
     <style>
-        .order-summary {
-          position: sticky;
-          top: 110px;
-        }
-
-        @media (max-width: 1024px) {
-          .order-summary {
-            position: relative;
-          }
+        /* Pas de CSS sticky - géré par JavaScript */
+    </style>
+    
+    <style>
+        /* Sticky simple et fiable */
+        @media (min-width: 1024px) {
+            .order-summary {
+                position: sticky;
+                top: 160px;
+                align-self: start;
+            }
         }
     </style>
+    
+    <script>
+        // Simple vérification desktop
+        window.addEventListener('DOMContentLoaded', function() {
+            if (window.innerWidth < 1024) return;
+            
+            const orderSummary = document.querySelector('.order-summary');
+            if (orderSummary) {
+                // S'assure que le parent permet le sticky
+                orderSummary.parentElement.style.alignSelf = 'start';
+            }
+        });
+    </script>
 
     <script>
         tailwind.config = {
@@ -181,7 +196,7 @@
     <main class="py-12 bg-gradient-to-b from-dark-blue to-night-blue min-h-screen">
         <div class="container mx-auto px-6">
             <div class="max-w-6xl mx-auto">
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 relative">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start" style="min-height: 1200px;">
                     
                     <!-- Colonne principale : Formulaire -->
                     <div class="lg:col-span-2 space-y-8">
@@ -349,7 +364,7 @@
                     </div>
 
                     <!-- Colonne latérale : Récapitulatif -->
-                    <div class="lg:col-span-1">
+                    <div class="lg:col-span-1" style="padding-top: 120px;">
                         <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-8 border border-gold/30 backdrop-blur-sm order-summary">
                             <!-- Mini visuel produit -->
                             <div class="flex justify-center mb-6">
@@ -400,10 +415,6 @@
                                 <p class="text-light-gold/70 text-sm">
                                     <i class="fas fa-shield-alt mr-2"></i>
                                     Paiement sécurisé via Stripe
-                                </p>
-                                <p class="text-light-gold/70 text-sm mt-2">
-                                    <i class="fas fa-ban mr-2"></i>
-                                    Aucun prélèvement supplémentaire
                                 </p>
                             </div>
                         </div>
