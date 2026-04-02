@@ -174,9 +174,12 @@
     </footer>
 
     <script>
-        // Vérifier si l'abonnement a été traité
-        const urlParams = new URLSearchParams(window.location.search);
-        const sessionId = urlParams.get('session_id');
+    // Vidage du panier après commande réussie
+    localStorage.removeItem('oradia-cart');
+    
+    // Vérifier si l'abonnement a été traité
+    const urlParams = new URLSearchParams(window.location.search);
+    const sessionId = urlParams.get('session_id');
         
         if (sessionId) {
             // Optionnel: vérifier le statut de l'abonnement côté serveur

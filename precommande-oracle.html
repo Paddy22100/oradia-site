@@ -1784,6 +1784,7 @@ La production est lancée grâce aux premières commandes.</p>
         // Fonction pour vider tout le panier
         function clearCart() {
             cart = {};
+            localStorage.removeItem('oradia-cart'); // Vider le localStorage
             updateCartDisplay();
         }
         

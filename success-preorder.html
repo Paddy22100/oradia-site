@@ -246,6 +246,9 @@
     
     <!-- Scripts -->
     <script>
+        // Vidage du panier après commande réussie
+        localStorage.removeItem('oradia-cart');
+        
         // Vérifier si la session est valide (optionnel)
         document.addEventListener('DOMContentLoaded', function() {
             const urlParams = new URLSearchParams(window.location.search);

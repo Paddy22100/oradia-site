@@ -312,6 +312,9 @@
 <script src="components/scroll-effects.js"></script>
 
 <script>
+    // Vidage du panier après commande réussie
+    localStorage.removeItem('oradia-cart');
+    
     // Track session_id si présent
     const urlParams = new URLSearchParams(window.location.search);
     const sessionId = urlParams.get('session_id');
