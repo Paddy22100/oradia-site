@@ -7,6 +7,101 @@ class StripeService {
     this.webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
   }
 
+  // Créer une session de précommande pour l'Oracle physique avec panier et livraison
+  async createPreorderSession({ items, customerInfo, delivery, productPrice, shippingPrice, totalAmount }) {
+    try {
+      // Créer les line items pour chaque produit du panier
+      const lineItems = [];
+      
+      items.forEach(item => {
+        lineItems.push({
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: item.offer.name,
+              description: item.offer.description,
+              images: ['https://oradia.vercel.app/images/logo-hd-v2.jpeg']
+            },
+            unit_amount: item.offer.price, // Prix unitaire
+          },
+          quantity: item.quantity, // Quantité commandée
+        });
+      });
+      
+      // Ajouter la livraison avec le bon nom selon le mode
+      const deliveryName = delivery.method === 'home' ? 'Livraison à domicile' : 
+                          delivery.method === 'relay' ? 'Point relais Mondial Relay' : 
+                          'Remise en main propre';
+      
+      // N'ajouter la ligne de livraison que si le prix > 0
+      if (shippingPrice > 0) {
+        lineItems.push({
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: deliveryName,
+              description: `Livraison Oracle Oradia - ${delivery.method === 'home' ? 'Standard' : delivery.method === 'relay' ? 'Point relais Mondial Relay' : 'Remise en main propre'}`,
+            },
+            unit_amount: shippingPrice,
+          },
+          quantity: 1, // Livraison unique par commande
+        });
+      }
+
+      // Configuration des pays autorisés selon le mode de livraison
+      const allowedCountries = delivery.method === 'home' 
+        ? ['FR', 'BE', 'LU', 'CH'] // Livraison à domicile : pays européens
+        : delivery.method === 'relay'
+        ? ['FR'] // Point relais : France uniquement
+        : ['FR']; // Remise en main propre : France
+
+      const session = await stripe.checkout.sessions.create({
+        customer_email: customerInfo.email,
+        payment_method_types: ['card'],
+        mode: 'payment',
+        shipping_address_collection: delivery.method === 'hand_delivery' ? null : {
+          allowed_countries: allowedCountries,
+        },
+        line_items: lineItems,
+        success_url: `${process.env.FRONTEND_URL}/success-preorder?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.FRONTEND_URL}/livraison.html`,
+        metadata: {
+          productType: 'preorder',
+          items: JSON.stringify(items.map(item => ({
+            offer: item.offer.name,
+            quantity: item.quantity,
+            price: item.offer.price
+          }))),
+          customerInfo: JSON.stringify({
+            firstName: customerInfo.firstName,
+            lastName: customerInfo.lastName,
+            fullName: customerInfo.fullName,
+            email: customerInfo.email,
+            phone: customerInfo.phone || '',
+            shippingAddress: customerInfo.shippingAddress,
+            addressComplement: customerInfo.addressComplement || '',
+            postalCode: customerInfo.postalCode,
+            city: customerInfo.city,
+            country: customerInfo.country
+          }),
+          delivery: JSON.stringify({
+            method: delivery.method,
+            price: shippingPrice
+          }),
+          productPrice: productPrice.toString(),
+          shippingPrice: shippingPrice.toString(),
+          totalAmount: totalAmount.toString()
+        },
+        customer_creation: 'always'
+      });
+
+      return { success: true, sessionId: session.id, url: session.url };
+    } catch (error) {
+      console.error('Erreur création session précommande:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
   // Créer une session de paiement pour la Traversée (5 crédits)
   async createTraverseeSession(userId, userEmail) {
     try {

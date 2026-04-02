@@ -93,11 +93,19 @@
                     <div class="bg-[rgba(5,20,40,0.6)] rounded-lg p-6 border border-gold/20">
                         <h3 class="text-gold font-semibold mb-3">Données d'identification</h3>
                         <ul class="list-disc list-inside mb-4 space-y-1">
-                            <li>Nom et prénom</li>
+                            <li>Nom</li>
+                            <li>Prénom</li>
                             <li>Adresse email</li>
                             <li>Adresse postale</li>
-                            <li>Numéro de téléphone</li>
-                            <li>Date de naissance</li>
+                            <li>Code postal</li>
+                            <li>Ville</li>
+                        </ul>
+
+                        <h3 class="text-gold font-semibold mb-3">Données de paiement</h3>
+                        <ul class="list-disc list-inside mb-4 space-y-1">
+                            <li>Informations de paiement traitées par Stripe</li>
+                            <li>Historique des transactions</li>
+                            <li>Informations d'abonnement (le cas échéant)</li>
                         </ul>
 
                         <h3 class="text-gold font-semibold mb-3">Données de profil et d'utilisation</h3>
@@ -106,13 +114,6 @@
                             <li>Historique des tirages de cartes</li>
                             <li>Notes et intentions personnelles</li>
                             <li>Préférences et paramètres du compte</li>
-                        </ul>
-
-                        <h3 class="text-gold font-semibold mb-3">Données de rendez-vous</h3>
-                        <ul class="list-disc list-inside mb-4 space-y-1">
-                            <li>Historique des rendez-vous pris</li>
-                            <li>Notes de consultation (avec consentement)</li>
-                            <li>Coordonnées de visioconférence</li>
                         </ul>
 
                         <h3 class="text-gold font-semibold mb-3">Données techniques et statistiques</h3>
@@ -131,22 +132,30 @@
                         <i class="fas fa-bullseye mr-2"></i>Finalités de la collecte
                     </h2>
                     <div class="bg-[rgba(5,20,40,0.6)] rounded-lg p-6 border border-gold/20">
-                        <p class="mb-4">Vos données personnelles sont collectées pour les finalités suivantes :</p>
+                        <p class="mb-4">Ces données sont collectées dans le cadre de la gestion des commandes, de la livraison et de la relation client.</p>
                         
                         <h3 class="text-gold font-semibold mb-2">Fourniture des services</h3>
                         <ul class="list-disc list-inside mb-4 space-y-1">
                             <li>Création et gestion de votre compte utilisateur</li>
                             <li>Réalisation de tirages de cartes personnalisés</li>
-                            <li>Prise de rendez-vous pour consultations</li>
+                            <li>Gestion des précommandes et commandes</li>
+                            <li>Organisation de la livraison des produits</li>
                             <li>Accès à votre historique et profil</li>
                         </ul>
 
                         <h3 class="text-gold font-semibold mb-2">Communication et suivi</h3>
                         <ul class="list-disc list-inside mb-4 space-y-1">
                             <li>Envoi de la newsletter (avec consentement)</li>
-                            <li>Notifications de rappel pour rendez-vous</li>
+                            <li>Notifications de suivi de commande</li>
+                            <li>Informations de livraison</li>
                             <li>Suivi des demandes de contact</li>
-                            <li>Retours sur vos tirages (avec consentement)</li>
+                        </ul>
+
+                        <h3 class="text-gold font-semibold mb-2">Paiement</h3>
+                        <ul class="list-disc list-inside mb-4 space-y-1">
+                            <li>Traitement des paiements via Stripe</li>
+                            <li>Gestion des abonnements</li>
+                            <li>Facturation et comptabilité</li>
                         </ul>
 
                         <h3 class="text-gold font-semibold mb-2">Amélioration du service</h3>
@@ -158,7 +167,6 @@
 
                         <h3 class="text-gold font-semibold mb-2">Obligations légales</h3>
                         <ul class="list-disc list-inside space-y-1">
-                            <li>Facturation et comptabilité</li>
                             <li>Archivage des données contractuelles</li>
                             <li>Réponse aux demandes administratives</li>
                         </ul>
@@ -193,15 +201,20 @@
                         <i class="fas fa-clock mr-2"></i>Durée de conservation des données
                     </h2>
                     <div class="bg-[rgba(5,20,40,0.6)] rounded-lg p-6 border border-gold/20">
+                        <p class="mb-4">Les données sont conservées pendant la durée nécessaire à la gestion des commandes et aux obligations légales.</p>
+                        
                         <h3 class="text-gold font-semibold mb-2">Données de compte utilisateur</h3>
                         <p class="mb-4">Conservées pendant toute la durée d'utilisation du service, puis supprimées 
                         dans les 30 jours suivant la demande de suppression de compte.</p>
                         
+                        <h3 class="text-gold font-semibold mb-2">Données de commande et livraison</h3>
+                        <p class="mb-4">Conservées 5 ans pour la gestion des commandes, la facturation et les obligations comptables.</p>
+                        
+                        <h3 class="text-gold font-semibold mb-2">Données de paiement</h3>
+                        <p class="mb-4">Les données bancaires ne sont pas stockées. Seules les informations de transaction sont conservées 5 ans pour la comptabilité.</p>
+                        
                         <h3 class="text-gold font-semibold mb-2">Historique des tirages</h3>
                         <p class="mb-4">Conservé pendant 3 ans après le dernier tirage, sauf demande de suppression anticipée.</p>
-                        
-                        <h3 class="text-gold font-semibold mb-2">Données de rendez-vous</h3>
-                        <p class="mb-4">Conservées pendant 2 ans après la consultation pour le suivi et la facturation.</p>
                         
                         <h3 class="text-gold font-semibold mb-2">Newsletter</h3>
                         <p class="mb-4">Données conservées jusqu'à désabonnement. Historique conservé 6 mois pour traçabilité.</p>

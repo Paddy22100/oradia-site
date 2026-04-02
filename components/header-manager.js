@@ -21,7 +21,8 @@ class HeaderManager {
       'pelerin': 'pelerin',
       'tore': 'tore',
       'traversee': 'traversee',
-      'precommande-oracle': 'precommande-oracle'
+      'precommande-oracle': 'precommande-oracle',
+      'livraison': 'precommande-oracle'
     };
     
     return pageMapping[page] || 'home';

@@ -968,10 +968,10 @@
                         </div>
                         
                         <div class="mt-auto">
-                            <button class="w-full bg-gold text-night-blue font-bold py-4 px-8 rounded-full hover:bg-light-gold hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 precommande-btn touch-target relative overflow-hidden group" data-offer="standard">
+                            <button class="w-full bg-gold text-night-blue font-bold py-4 px-8 rounded-full hover:bg-light-gold hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 add-to-cart-btn touch-target relative overflow-hidden group" data-offer="standard">
                                 <div class="absolute inset-0 bg-gradient-to-r from-gold/20 to-light-gold/20 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                <i class="fas fa-shopping-cart mr-2 relative z-10"></i>
-                                <span class="relative z-10">Je réserve mon oracle</span>
+                                <i class="fas fa-plus mr-2 relative z-10"></i>
+                                <span class="relative z-10">Ajouter au panier</span>
                             </button>
                             <p class="text-light-gold/70 text-sm mt-3 text-center">Faites partie des premiers à recevoir Oradia</p>
                         </div>
@@ -1013,10 +1013,10 @@
                         </div>
                         
                         <div class="mt-auto">
-                            <button class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-xl hover:shadow-gold/40 hover:scale-105 transition-all duration-300 precommande-btn touch-target relative overflow-hidden group" data-offer="guidance-incluse">
+                            <button class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-xl hover:shadow-gold/40 hover:scale-105 transition-all duration-300 add-to-cart-btn touch-target relative overflow-hidden group" data-offer="guidance-incluse">
                                 <div class="absolute inset-0 bg-gradient-to-r from-gold/30 to-light-gold/30 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                <i class="fas fa-magic mr-2 relative z-10"></i>
-                                <span class="relative z-10">Je réserve mon oracle + ma guidance maintenant</span>
+                                <i class="fas fa-plus mr-2 relative z-10"></i>
+                                <span class="relative z-10">Ajouter au panier</span>
                             </button>
                             <p class="text-light-gold/70 text-sm mt-4 text-center">L'offre la plus complète pour vivre l'expérience Oradia</p>
                         </div>
@@ -1037,7 +1037,7 @@
                             <h3 class="cormorant text-2xl font-bold text-gold mb-2">ÉDITION SIGNATURE</h3>
                             <p class="text-light-gold/70 text-sm mb-3">Limitée aux 100 premiers exemplaires</p>
                             <div class="flex items-baseline justify-center gap-2 mb-4">
-                                <span class="text-5xl font-bold text-gold">42</span>
+                                <span class="text-5xl font-bold text-gold">52</span>
                                 <span class="text-2xl text-gold">€</span>
                             </div>
                         </div>
@@ -1056,13 +1056,134 @@
                         </div>
                         
                         <div class="mt-auto">
-                            <button class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-xl hover:shadow-gold/40 hover:scale-105 transition-all duration-300 precommande-btn touch-target relative overflow-hidden group" data-offer="edition-signature">
+                            <button class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-xl hover:shadow-gold/40 hover:scale-105 transition-all duration-300 add-to-cart-btn touch-target relative overflow-hidden group" data-offer="edition-signature">
                                 <div class="absolute inset-0 bg-gradient-to-r from-gold/30 to-light-gold/30 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
-                                <i class="fas fa-signature mr-2 relative z-10"></i>
-                                <span class="relative z-10">Je réserve l'édition signature</span>
+                                <i class="fas fa-plus mr-2 relative z-10"></i>
+                                <span class="relative z-10">Ajouter au panier</span>
                             </button>
                             <p class="text-light-gold/70 text-sm mt-3 text-center">Un exemplaire unique, dédié pour vous</p>
                         </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modale de confirmation Vider le panier -->
+    <div id="clear-cart-modal" class="fixed inset-0 z-50 hidden">
+        <!-- Overlay -->
+        <div class="absolute inset-0 bg-black/60 backdrop-blur-sm"></div>
+        
+        <!-- Contenu de la modale -->
+        <div class="absolute inset-0 flex items-center justify-center p-4">
+            <div class="bg-[rgba(5,20,40,0.95)] rounded-2xl border border-gold/30 shadow-2xl max-w-md w-full mx-auto relative">
+                <!-- Croix de fermeture -->
+                <button id="close-clear-modal" class="absolute top-4 right-4 text-light-gold/60 hover:text-gold transition-colors p-2">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+                
+                <!-- Contenu -->
+                <div class="p-8">
+                    <!-- Titre -->
+                    <h3 class="cormorant text-2xl font-bold text-gold text-center mb-6">
+                        Vider le panier ?
+                    </h3>
+                    
+                    <!-- Texte explicatif -->
+                    <p class="text-light-gold/80 text-center mb-8 leading-relaxed">
+                        Cette action supprimera toutes les offres actuellement ajoutées à votre panier.
+                    </p>
+                    
+                    <!-- Boutons -->
+                    <div class="flex flex-col sm:flex-row gap-4">
+                        <!-- Bouton secondaire -->
+                        <button id="cancel-clear-cart" class="flex-1 bg-transparent border border-gold/50 text-gold font-semibold py-3 px-6 rounded-full hover:bg-gold/10 hover:border-gold transition-all duration-300 touch-target">
+                            Conserver le panier
+                        </button>
+                        
+                        <!-- Bouton principal (action destructive) -->
+                        <button id="confirm-clear-cart" class="flex-1 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-6 rounded-full hover:shadow-xl hover:shadow-gold/40 transition-all duration-300 touch-target">
+                            Vider le panier
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Section Panier -->
+    <section id="cart-section" class="py-12 bg-gradient-to-b from-[rgba(5,20,40,0.8)] to-[rgba(26,54,93,0.8)] hidden">
+        <div class="container mx-auto px-6">
+            <div class="max-w-3xl mx-auto">
+                <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-8 border border-gold/30 backdrop-blur-sm">
+                    <h3 class="cormorant text-2xl md:text-3xl font-bold gold-gradient text-center mb-6">
+                        Votre Panier
+                    </h3>
+                    
+                    <!-- Contenu du panier -->
+                    <div id="cart-content">
+                        <!-- État vide -->
+                        <div id="cart-empty" class="text-center py-8">
+                            <i class="fas fa-shopping-cart text-4xl text-gold/50 mb-4"></i>
+                            <p class="text-light-gold/80 text-lg">Votre panier est vide.</p>
+                            <p class="text-light-gold/60 text-sm mt-2">Ajoutez une offre pour continuer.</p>
+                        </div>
+                        
+                        <!-- Items du panier (dynamique) -->
+                        <div id="cart-items" class="space-y-4 hidden">
+                            <!-- Les items seront insérés ici dynamiquement -->
+                        </div>
+                    </div>
+                    
+                    <!-- Récapitulatif des montants -->
+                    <div id="cart-summary" class="mt-6 pt-6 border-t border-gold/20 hidden">
+                        <div class="space-y-3">
+                            <!-- Sous-total produits -->
+                            <div class="flex justify-between items-center">
+                                <span class="text-light-gold/80">Sous-total produits</span>
+                                <span id="cart-subtotal" class="text-light-gold font-bold">-</span>
+                            </div>
+                            
+                            <!-- Information livraison -->
+                            <div class="flex justify-between items-center pt-3 border-t border-gold/20">
+                                <span class="text-light-gold/80">Livraison</span>
+                                <span class="text-light-gold/70 text-sm">Calculée à l'étape suivante</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Message rassurant -->
+                    <div id="cart-message" class="mt-6 text-center">
+                        <p class="text-light-gold/70 text-sm">
+                            <i class="fas fa-info-circle mr-2"></i>
+                            Les frais de livraison seront calculés à l'étape suivante, selon le mode choisi.
+                        </p>
+                        <p class="text-light-gold/70 text-sm mt-2">
+                            <i class="fas fa-truck mr-2"></i>
+                            Livraison en France uniquement pour le lancement.
+                        </p>
+                    </div>
+                    
+                    <!-- Boutons d'action -->
+                    <div class="mt-8 space-y-4">
+                        <!-- Bouton principal de paiement -->
+                        <button id="checkout-button" disabled class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-xl hover:shadow-gold/40 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 touch-target relative overflow-hidden group">
+                            <div class="absolute inset-0 bg-gradient-to-r from-gold/30 to-light-gold/30 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
+                            <i class="fas fa-lock mr-2 relative z-10"></i>
+                            <span id="checkout-button-text" class="relative z-10">Ajoutez une offre pour continuer</span>
+                        </button>
+                        
+                        <!-- Bouton vider le panier -->
+                        <button id="clear-cart-button" class="w-full bg-transparent border border-gold/50 text-gold font-semibold py-3 px-6 rounded-full hover:bg-gold/10 hover:border-gold transition-all duration-300 touch-target hidden">
+                            <i class="fas fa-trash mr-2"></i>
+                            Vider le panier
+                        </button>
+                        
+                        <!-- Message rassurant final -->
+                        <p class="text-center text-light-gold/70 text-sm">
+                            <i class="fas fa-shield-alt mr-2"></i>
+                            Aucun paiement ne sera effectué avant validation sur la page sécurisée.
+                        </p>
                     </div>
                 </div>
             </div>
@@ -1536,56 +1657,319 @@ La production est lancée grâce aux premières commandes.</p>
             waitlistMessage.classList.add('hidden');
         }
         
-        // Modal de précommande
-        const modal = document.getElementById('precommandeModal');
-        const modalContent = document.getElementById('selectedOffer');
+        // Configuration des offres
+        const MAX_QUANTITY = 10;
         
-        // Stocker l'offre sélectionnée globalement
-        let selectedOffer = null;
+        const OFFERS = {
+            'standard': {
+                name: 'Standard',
+                price: 38,
+                description: "L'oracle complet"
+            },
+            'guidance-incluse': {
+                name: 'Guidance Offerte',
+                price: 48,
+                description: "1h de guidance offerte (valeur réelle 60€)"
+            },
+            'edition-signature': {
+                name: 'Édition Signature',
+                price: 52,
+                description: 'Exemplaire unique et dédicacé'
+            }
+        };
         
-        document.querySelectorAll('.precommande-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                const offer = button.dataset.offer;
-                selectedOffer = offer; // Stocker l'offre sélectionnée
-                const offers = {
-                    'standard': {
-                        name: 'Standard',
-                        price: '38€',
-                        description: "L'oracle complet"
-                    },
-                    'tirage-offert': {
-                        name: 'Tirage Offert',
-                        price: '44€',
-                        description: "Plus qu'un oracle, une expérience avec tirage en visio"
-                    },
-                    'edition-signature': {
-                        name: 'Édition Signature',
-                        price: '52€',
-                        description: 'Exemplaire unique et dédicacé'
-                    }
+        // État du panier
+        let cart = {};
+        
+        // Fonction pour ajouter une offre au panier
+        function addToCart(offerId) {
+            console.log('addToCart appelé avec offerId:', offerId);
+            const offer = OFFERS[offerId];
+            console.log('OFFER trouvée:', offer);
+            if (!offer) {
+                console.log('Offre non trouvée, retour');
+                return;
+            }
+            
+            if (cart[offerId]) {
+                // L'offre existe déjà, incrémenter la quantité
+                if (cart[offerId].quantity < MAX_QUANTITY) {
+                    cart[offerId].quantity++;
+                    console.log('Quantité incrémentée pour', offerId, 'nouvelle quantité:', cart[offerId].quantity);
+                } else {
+                    console.log('Quantité maximale atteinte pour', offerId);
+                }
+            } else {
+                // Nouvelle offre, ajouter avec quantité 1
+                cart[offerId] = {
+                    ...offer,
+                    quantity: 1
                 };
-                
-                const selected = offers[offer];
-                modalContent.innerHTML = `
-                    <div class="bg-gold/10 rounded-lg p-4 mb-4">
-                        <h4 class="text-gold font-semibold">${selected.name}</h4>
-                        <p class="text-2xl font-bold text-gold">${selected.price}</p>
-                        <p class="text-light-gold text-sm">${selected.description}</p>
+                console.log('Nouvelle offre ajoutée au panier:', offerId, cart[offerId]);
+            }
+            
+            console.log('Panier avant updateCartDisplay:', cart);
+            updateCartDisplay();
+            showCartSection();
+            
+            // Scroll doux vers le panier
+            setTimeout(() => {
+                document.getElementById('cart-section').scrollIntoView({ 
+                    behavior: 'smooth', 
+                    block: 'center' 
+                });
+            }, 100);
+        }
+        
+        // Fonction pour mettre à jour la quantité d'une offre
+        function updateQuantity(offerId, newQuantity) {
+            if (!cart[offerId]) return;
+            
+            newQuantity = Math.max(1, Math.min(MAX_QUANTITY, newQuantity));
+            cart[offerId].quantity = newQuantity;
+            
+            if (newQuantity === 0) {
+                removeFromCart(offerId);
+            } else {
+                updateCartDisplay();
+            }
+        }
+        
+        // Fonction pour supprimer une offre du panier
+        function removeFromCart(offerId) {
+            delete cart[offerId];
+            updateCartDisplay();
+        }
+        
+        // Fonction pour vider tout le panier
+        function clearCart() {
+            cart = {};
+            updateCartDisplay();
+        }
+        
+        // Fonction pour créer l'HTML d'un item du panier
+        function createCartItemHTML(offerId, item) {
+            const lineTotal = item.price * item.quantity;
+            
+            return `
+                <div class="cart-item bg-[rgba(5,20,40,0.4)] rounded-lg p-4 border border-gold/20" data-offer-id="${offerId}">
+                    <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                        <!-- Infos offre -->
+                        <div class="flex-grow">
+                            <h4 class="text-gold font-semibold">${item.name}</h4>
+                            <p class="text-light-gold/70 text-sm">${item.description}</p>
+                            <p class="text-light-gold/80 text-sm mt-1">${item.price.toFixed(2)} € par unité</p>
+                        </div>
+                        
+                        <!-- Contrôles -->
+                        <div class="flex items-center gap-4">
+                            <!-- Contrôle quantité -->
+                            <div class="flex items-center gap-2 bg-[rgba(5,20,40,0.6)] rounded-lg px-2 py-1 border border-gold/30">
+                                <button class="quantity-minus w-6 h-6 flex items-center justify-center text-gold hover:bg-gold/20 rounded transition-colors" data-offer-id="${offerId}">
+                                    <i class="fas fa-minus text-xs"></i>
+                                </button>
+                                <span class="quantity-display text-gold font-semibold w-8 text-center">${item.quantity}</span>
+                                <button class="quantity-plus w-6 h-6 flex items-center justify-center text-gold hover:bg-gold/20 rounded transition-colors" data-offer-id="${offerId}">
+                                    <i class="fas fa-plus text-xs"></i>
+                                </button>
+                            </div>
+                            
+                            <!-- Total ligne -->
+                            <div class="text-right min-w-[80px]">
+                                <p class="text-gold font-bold text-lg">${lineTotal.toFixed(2)} €</p>
+                            </div>
+                            
+                            <!-- Supprimer -->
+                            <button class="remove-item text-red-400 hover:text-red-300 transition-colors p-2" data-offer-id="${offerId}">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
                     </div>
-                `;
+                </div>
+            `;
+        }
+        
+        // Fonction pour mettre à jour l'affichage du panier
+        function updateCartDisplay() {
+            console.log('updateCartDisplay appelé, cart:', cart);
+            
+            const cartEmpty = document.getElementById('cart-empty');
+            const cartItems = document.getElementById('cart-items');
+            const cartSummary = document.getElementById('cart-summary');
+            const clearButton = document.getElementById('clear-cart-button');
+            const checkoutButton = document.getElementById('checkout-button');
+            const checkoutButtonText = document.getElementById('checkout-button-text');
+            
+            const cartItemsArray = Object.entries(cart);
+            console.log('cartItemsArray.length:', cartItemsArray.length);
+            
+            if (cartItemsArray.length === 0) {
+                // Panier vide
+                cartEmpty.classList.remove('hidden');
+                cartItems.classList.add('hidden');
+                cartSummary.classList.add('hidden');
+                clearButton.classList.add('hidden');
                 
-                modal.classList.remove('hidden');
+                checkoutButton.disabled = true;
+                checkoutButtonText.textContent = 'Ajoutez une offre pour continuer';
+                console.log('Panier vide - bouton désactivé');
+            } else {
+                // Panier avec des items
+                cartEmpty.classList.add('hidden');
+                cartItems.classList.remove('hidden');
+                cartSummary.classList.remove('hidden');
+                clearButton.classList.remove('hidden');
+                
+                // Générer les items
+                cartItems.innerHTML = cartItemsArray
+                    .map(([offerId, item]) => createCartItemHTML(offerId, item))
+                    .join('');
+                
+                // Calculer les totaux
+                let subtotal = 0;
+                cartItemsArray.forEach(([offerId, item]) => {
+                    subtotal += item.price * item.quantity;
+                });
+                
+                console.log('Calcul sous-total - subtotal:', subtotal);
+                
+                // Mettre à jour les montants
+                document.getElementById('cart-subtotal').textContent = `${subtotal.toFixed(2)} €`;
+                
+                // Mettre à jour le bouton de paiement
+                checkoutButton.disabled = false;
+                checkoutButtonText.textContent = `Choisir la livraison • ${subtotal.toFixed(2)} €`;
+                console.log('Panier avec items - bouton activé avec sous-total:', subtotal);
+                
+                // Attacher les événements aux nouveaux éléments
+                attachCartEvents();
+            }
+        }
+        
+        // Fonction pour attacher les événements aux éléments du panier
+        function attachCartEvents() {
+            // Boutons plus/moins
+            document.querySelectorAll('.quantity-plus').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const offerId = e.target.closest('button').dataset.offerId;
+                    const currentQuantity = cart[offerId].quantity;
+                    updateQuantity(offerId, currentQuantity + 1);
+                });
+            });
+            
+            document.querySelectorAll('.quantity-minus').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const offerId = e.target.closest('button').dataset.offerId;
+                    const currentQuantity = cart[offerId].quantity;
+                    updateQuantity(offerId, currentQuantity - 1);
+                });
+            });
+            
+            // Boutons supprimer
+            document.querySelectorAll('.remove-item').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const offerId = e.target.closest('button').dataset.offerId;
+                    removeFromCart(offerId);
+                });
+            });
+        }
+        
+        // Fonction pour afficher la section panier
+        function showCartSection() {
+            document.getElementById('cart-section').classList.remove('hidden');
+        }
+        
+        // Fonction pour obtenir les items du panier pour le backend
+        function getCartItems() {
+            return Object.entries(cart).map(([offerId, item]) => ({
+                offer: offerId,
+                quantity: item.quantity
+            }));
+        }
+        
+        // Fonctions pour gérer la modale de confirmation
+        function showClearCartModal() {
+            const modal = document.getElementById('clear-cart-modal');
+            modal.classList.remove('hidden');
+            
+            // Empêcher le scroll de l'arrière-plan
+            document.body.style.overflow = 'hidden';
+            
+            // Focus sur le bouton principal
+            setTimeout(() => {
+                document.getElementById('confirm-clear-cart').focus();
+            }, 100);
+        }
+        
+        function hideClearCartModal() {
+            const modal = document.getElementById('clear-cart-modal');
+            modal.classList.add('hidden');
+            
+            // Rétablir le scroll
+            document.body.style.overflow = '';
+        }
+        
+        function confirmClearCart() {
+            clearCart();
+            hideClearCartModal();
+        }
+        
+        // Gestionnaires d'événements pour les boutons "Ajouter au panier"
+        document.querySelectorAll('.add-to-cart-btn').forEach(button => {
+            button.addEventListener('click', () => {
+                const offerId = button.dataset.offer;
+                addToCart(offerId);
             });
         });
         
-        document.getElementById('closeModal').addEventListener('click', () => {
-            modal.classList.add('hidden');
+        // Gestionnaire d'événements pour le bouton "Vider le panier"
+        document.getElementById('clear-cart-button').addEventListener('click', () => {
+            showClearCartModal();
         });
         
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.add('hidden');
+        // Gestionnaires d'événements pour la modale de confirmation
+        document.getElementById('confirm-clear-cart').addEventListener('click', () => {
+            confirmClearCart();
+        });
+        
+        document.getElementById('cancel-clear-cart').addEventListener('click', () => {
+            hideClearCartModal();
+        });
+        
+        document.getElementById('close-clear-modal').addEventListener('click', () => {
+            hideClearCartModal();
+        });
+        
+        // Fermeture via touche Échap
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                const modal = document.getElementById('clear-cart-modal');
+                if (!modal.classList.contains('hidden')) {
+                    hideClearCartModal();
+                }
             }
+        });
+        
+        // Fermeture via clic sur l'overlay
+        document.getElementById('clear-cart-modal').addEventListener('click', (e) => {
+            if (e.target === e.currentTarget) {
+                hideClearCartModal();
+            }
+        });
+        
+        // Gestionnaire d'événements pour le bouton de paiement du panier
+        document.getElementById('checkout-button').addEventListener('click', async () => {
+            const cartItems = getCartItems();
+            if (cartItems.length === 0) {
+                showError('Votre panier est vide');
+                return;
+            }
+            
+            // Sauvegarder le panier dans localStorage
+            localStorage.setItem('oradia-cart', JSON.stringify(cart));
+            
+            // Rediriger vers la page de livraison
+            window.location.href = 'livraison.html';
         });
         
         // Formulaire de précommande (version robuste)
@@ -1645,9 +2029,10 @@ La production est lancée grâce aux premières commandes.</p>
             `;
             
             try {
-                // Utiliser l'offre stockée globalement
+                // Utiliser les items du panier
+                const cartItems = getCartItems();
                 const orderData = {
-                    offer: selectedOffer || 'standard',
+                    items: cartItems,
                     fullName: fullName.trim(),
                     email: email.trim(),
                     shippingAddress: shippingAddress.trim(),
@@ -1709,28 +2094,43 @@ La production est lancée grâce aux premières commandes.</p>
         
         // Fonction pour afficher les erreurs
         function showError(message) {
-            // Créer une notification élégante
-            const notification = document.createElement('div');
-            notification.className = 'fixed top-4 right-4 bg-red-900/90 border border-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 max-w-sm';
+            // Créer ou mettre à jour une notification élégante
+            let notification = document.getElementById('error-notification');
+            
+            if (!notification) {
+                notification = document.createElement('div');
+                notification.id = 'error-notification';
+                notification.className = 'fixed top-4 right-4 bg-red-900/90 border border-red-500 text-white px-6 py-4 rounded-lg shadow-lg z-50 max-w-sm transform translate-x-full transition-transform duration-300';
+                document.body.appendChild(notification);
+            }
+            
             notification.innerHTML = `
                 <div class="flex items-start">
-                    <i class="fas fa-exclamation-circle text-red-400 mr-3 mt-1"></i>
+                    <i class="fas fa-exclamation-triangle mr-3 mt-1 flex-shrink-0"></i>
                     <div>
-                        <h4 class="font-semibold mb-1">Erreur</h4>
-                        <p class="text-sm text-red-200">${message}</p>
+                        <p class="font-semibold">Erreur</p>
+                        <p class="text-sm mt-1">${message}</p>
                     </div>
-                    <button onclick="this.parentElement.parentElement.remove()" class="ml-4 text-red-400 hover:text-white">
+                    <button onclick="this.parentElement.parentElement.remove()" class="ml-3 text-white/70 hover:text-white">
                         <i class="fas fa-times"></i>
                     </button>
                 </div>
             `;
             
-            document.body.appendChild(notification);
-            
-            // Auto-suppression après 5 secondes
+            // Afficher la notification
             setTimeout(() => {
-                if (notification.parentNode) {
-                    notification.remove();
+                notification.classList.remove('translate-x-full');
+            }, 100);
+            
+            // Masquer automatiquement après 5 secondes
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.classList.add('translate-x-full');
+                    setTimeout(() => {
+                        if (notification.parentElement) {
+                            notification.remove();
+                        }
+                    }, 300);
                 }
             }, 5000);
         }
