@@ -104,6 +104,52 @@
       background-size: 200% 100%;
       animation: shimmer 3s infinite;
     }
+    
+    /* Mobile-only fix for "Les 7 Familles" section - prevents card overlap */
+    @media (max-width: 639px) {
+      /* Convert absolute positioned circle to vertical grid on mobile */
+      .relative.h-\[600px\].sm\:h-\[700px\].lg\:h-\[800px\] {
+        height: auto !important;
+        display: flex;
+        flex-direction: column;
+        gap: 1.5rem;
+        padding: 1rem 0 3rem 0;
+      }
+      
+      /* Reset all absolute positioned cards to static flow */
+      .relative.h-\[600px\].sm\:h-\[700px\].lg\:h-\[800px\] > div {
+        position: static !important;
+        transform: none !important;
+        width: 100%;
+        max-width: 320px;
+        margin: 0 auto;
+      }
+      
+      /* Mémoire Cosmos (totem) appears last and keeps emphasis */
+      .relative.h-\[600px\].sm\:h-\[700px\].lg\:h-\[800px\] > div:first-child {
+        order: 10;
+        max-width: 340px;
+        margin-top: 2rem;
+      }
+      
+      /* Ensure cards don't hover-scale too much on mobile */
+      .relative.h-\[600px\].sm\:h-\[700px\].lg\:h-\[800px\] > div .group:hover {
+        transform: scale(1.02) !important;
+      }
+    }
+    
+    /* Tablet optimization (640px - 1023px) */
+    @media (min-width: 640px) and (max-width: 1023px) {
+      /* Slightly reduce container height for better tablet fit */
+      .relative.h-\[600px\].sm\:h-\[700px\].lg\:h-\[800px\] {
+        height: 650px !important;
+      }
+      
+      /* Reduce card padding on tablet to prevent overlap */
+      .relative.h-\[600px\].sm\:h-\[700px\].lg\:h-\[800px\] > div > div {
+        padding: 1rem !important;
+      }
+    }
   </style>
 </head>
 
@@ -311,17 +357,25 @@
       <!-- Cercle parfait avec 60° entre chaque famille -->
       <div class="relative max-w-4xl sm:max-w-5xl lg:max-w-6xl mx-auto">
         <div class="relative h-[600px] sm:h-[700px] lg:h-[800px]">
-          <!-- Mémoire Cosmos - Centre sacré -->
-          <div class="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 group z-20">
-            <div class="absolute inset-0 bg-gradient-to-br from-[rgba(212,175,55,0.25)] to-transparent rounded-3xl blur-xl opacity-0 group-hover:opacity-100 transition-all duration-700"></div>
-            <div class="relative bg-gradient-to-br from-[rgba(212,175,55,0.20)] to-[rgba(5,20,40,0.8)] rounded-3xl p-4 sm:p-6 border-2 border-gold/60 hover:border-gold/90 transition-all duration-700 hover:scale-110 transform hover:-translate-y-2">
+          <!-- Mémoire Cosmos - Famille Totem (en bas, mise en valeur) -->
+          <div class="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-12 sm:translate-y-16 group z-30">
+            <!-- Aura dorée plus intense pour le totem -->
+            <div class="absolute inset-0 bg-gradient-to-br from-[rgba(212,175,55,0.4)] to-[rgba(212,175,55,0.2)] rounded-3xl blur-2xl opacity-60 group-hover:opacity-100 transition-all duration-700 animate-pulse-slow"></div>
+            <!-- Carte plus grande et bordure renforcée -->
+            <div class="relative bg-gradient-to-br from-[rgba(212,175,55,0.25)] to-[rgba(5,20,40,0.9)] rounded-3xl p-5 sm:p-7 lg:p-8 border-[3px] border-gold shadow-2xl shadow-gold/40 hover:border-light-gold hover:shadow-gold/60 transition-all duration-700 hover:scale-110 transform hover:-translate-y-3">
               <div class="text-center">
-                <div class="w-16 sm:w-20 h-20 sm:h-28 lg:w-24 lg:h-32 mx-auto mb-3 sm:mb-4 relative">
-                  <img src="images/dos/dos_memoire_cosmos.png" alt="Dos carte Mémoire Cosmos" class="w-full h-full object-cover rounded-lg shadow-lg" loading="lazy">
-                  <div class="absolute inset-0 bg-gradient-to-t from-night-blue/50 to-transparent rounded-lg"></div>
+                <!-- Badge Ancrage -->
+                <div class="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-gradient-to-r from-gold to-light-gold text-night-blue px-3 py-1 rounded-full text-xs font-bold shadow-lg">
+                  ANCRAGE
                 </div>
-                <h3 class="cormorant text-lg sm:text-xl lg:text-2xl font-bold text-gold mb-1 sm:mb-2">Mémoire Cosmos</h3>
-                <p class="text-light-gold/90 font-lora text-sm sm:text-base">La sagesse qui guide</p>
+                <div class="w-16 sm:w-20 h-20 sm:h-28 lg:w-24 lg:h-32 mx-auto mb-3 sm:mb-4 relative">
+                  <img src="images/dos/dos_memoire_cosmos.png" alt="Dos carte Mémoire Cosmos" class="w-full h-full object-contain rounded-lg shadow-xl" loading="lazy">
+                  <div class="absolute inset-0 bg-gradient-to-t from-night-blue/40 to-transparent rounded-lg"></div>
+                  <!-- Éclat doré autour de l'image -->
+                  <div class="absolute -inset-1 bg-gradient-to-br from-gold/30 to-transparent rounded-lg blur-sm -z-10"></div>
+                </div>
+                <h3 class="cormorant text-xl sm:text-2xl lg:text-3xl font-bold gold-gradient mb-2 sm:mb-3">Mémoire Cosmos</h3>
+                <p class="text-light-gold font-lora text-base sm:text-lg font-semibold">La sagesse qui guide</p>
               </div>
             </div>
           </div>
@@ -332,7 +386,7 @@
             <div class="relative bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(5,20,40,0.8)] rounded-3xl p-4 sm:p-6 border border-gold/40 hover:border-gold/70 transition-all duration-700 hover:scale-110 transform hover:-translate-y-2">
               <div class="text-center">
                 <div class="w-16 sm:w-20 h-20 sm:h-28 lg:w-24 lg:h-32 mx-auto mb-3 sm:mb-4 relative">
-                  <img src="images/dos/dos_emotion.png" alt="Dos carte Émotion" class="w-full h-full object-cover rounded-lg shadow-lg" loading="lazy">
+                  <img src="images/dos/dos_emotion.png" alt="Dos carte Émotion" class="w-full h-full object-contain rounded-lg shadow-lg" loading="lazy">
                   <div class="absolute inset-0 bg-gradient-to-t from-night-blue/50 to-transparent rounded-lg"></div>
                 </div>
                 <h3 class="cormorant text-lg sm:text-xl lg:text-2xl font-bold text-gold mb-1 sm:mb-2">Émotion</h3>
@@ -347,7 +401,7 @@
             <div class="relative bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(5,20,40,0.8)] rounded-3xl p-4 sm:p-6 border border-gold/40 hover:border-gold/70 transition-all duration-700 hover:scale-110 transform hover:-translate-y-2">
               <div class="text-center">
                 <div class="w-16 sm:w-20 h-20 sm:h-28 lg:w-24 lg:h-32 mx-auto mb-3 sm:mb-4 relative">
-                  <img src="images/dos/dos_besoin.png" alt="Dos carte Besoin" class="w-full h-full object-cover rounded-lg shadow-lg" loading="lazy">
+                  <img src="images/dos/dos_besoin.png" alt="Dos carte Besoin" class="w-full h-full object-contain rounded-lg shadow-lg" loading="lazy">
                   <div class="absolute inset-0 bg-gradient-to-t from-night-blue/50 to-transparent rounded-lg"></div>
                 </div>
                 <h3 class="cormorant text-lg sm:text-xl lg:text-2xl font-bold text-gold mb-1 sm:mb-2">Besoin</h3>
@@ -362,7 +416,7 @@
             <div class="relative bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(5,20,40,0.8)] rounded-3xl p-4 sm:p-6 border border-gold/40 hover:border-gold/70 transition-all duration-700 hover:scale-110 transform hover:-translate-y-2">
               <div class="text-center">
                 <div class="w-16 sm:w-20 h-20 sm:h-28 lg:w-24 lg:h-32 mx-auto mb-3 sm:mb-4 relative">
-                  <img src="images/dos/dos_transmutation.png" alt="Dos carte Transmutation" class="w-full h-full object-cover rounded-lg shadow-lg" loading="lazy">
+                  <img src="images/dos/dos_transmutation.png" alt="Dos carte Transmutation" class="w-full h-full object-contain rounded-lg shadow-lg" loading="lazy">
                   <div class="absolute inset-0 bg-gradient-to-t from-night-blue/50 to-transparent rounded-lg"></div>
                 </div>
                 <h3 class="cormorant text-lg sm:text-xl lg:text-2xl font-bold text-gold mb-1 sm:mb-2">Transmutation</h3>
@@ -377,7 +431,7 @@
             <div class="relative bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(5,20,40,0.8)] rounded-3xl p-4 sm:p-6 border border-gold/40 hover:border-gold/70 transition-all duration-700 hover:scale-110 transform hover:-translate-y-2">
               <div class="text-center">
                 <div class="w-16 sm:w-20 h-20 sm:h-28 lg:w-24 lg:h-32 mx-auto mb-3 sm:mb-4 relative">
-                  <img src="images/dos/dos_revelation.png" alt="Dos carte Révélation" class="w-full h-full object-cover rounded-lg shadow-lg" loading="lazy">
+                  <img src="images/dos/dos_revelation.png" alt="Dos carte Révélation" class="w-full h-full object-contain rounded-lg shadow-lg" loading="lazy">
                   <div class="absolute inset-0 bg-gradient-to-t from-night-blue/50 to-transparent rounded-lg"></div>
                 </div>
                 <h3 class="cormorant text-lg sm:text-xl lg:text-2xl font-bold text-gold mb-1 sm:mb-2">Révélation</h3>
@@ -392,7 +446,7 @@
             <div class="relative bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(5,20,40,0.8)] rounded-3xl p-4 sm:p-6 border border-gold/40 hover:border-gold/70 transition-all duration-700 hover:scale-110 transform hover:-translate-y-2">
               <div class="text-center">
                 <div class="w-16 sm:w-20 h-20 sm:h-28 lg:w-24 lg:h-32 mx-auto mb-3 sm:mb-4 relative">
-                  <img src="images/dos/dos_archetype.png" alt="Dos carte Archétype" class="w-full h-full object-cover rounded-lg shadow-lg" loading="lazy">
+                  <img src="images/dos/dos_archetype.png" alt="Dos carte Archétype" class="w-full h-full object-contain rounded-lg shadow-lg" loading="lazy">
                   <div class="absolute inset-0 bg-gradient-to-t from-night-blue/50 to-transparent rounded-lg"></div>
                 </div>
                 <h3 class="cormorant text-lg sm:text-xl lg:text-2xl font-bold text-gold mb-1 sm:mb-2">Archétype</h3>
@@ -407,7 +461,7 @@
             <div class="relative bg-gradient-to-br from-[rgba(212,175,55,0.12)] to-[rgba(5,20,40,0.8)] rounded-3xl p-4 sm:p-6 border border-gold/40 hover:border-gold/70 transition-all duration-700 hover:scale-110 transform hover:-translate-y-2">
               <div class="text-center">
                 <div class="w-16 sm:w-20 h-20 sm:h-28 lg:w-24 lg:h-32 mx-auto mb-3 sm:mb-4 relative">
-                  <img src="images/dos/dos_action.png" alt="Dos carte Action" class="w-full h-full object-cover rounded-lg shadow-lg" loading="lazy">
+                  <img src="images/dos/dos_action.png" alt="Dos carte Action" class="w-full h-full object-contain rounded-lg shadow-lg" loading="lazy">
                   <div class="absolute inset-0 bg-gradient-to-t from-night-blue/50 to-transparent rounded-lg"></div>
                 </div>
                 <h3 class="cormorant text-lg sm:text-xl lg:text-2xl font-bold text-gold mb-1 sm:mb-2">Action</h3>
