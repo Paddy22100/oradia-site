@@ -1073,6 +1073,37 @@
         </div>
     </section>
 
+    <!-- Section Contribution Libre -->
+    <section class="mt-16 text-center max-w-2xl mx-auto px-4">
+        <h3 class="text-2xl md:text-3xl font-semibold text-gold mb-4">
+            Contribution libre
+        </h3>
+        
+        <p class="text-sm md:text-base text-light-gold/80 mb-6 leading-relaxed">
+            Contribution libre conseillée : entre 20€ et 40€<br><br>
+            Si vous ressentez l'appel de cet oracle mais que le prix est un frein,
+            vous pouvez contribuer librement selon vos moyens.<br><br>
+            Chaque contribution soutient directement la création et la diffusion d'Oradia.
+        </p>
+        
+        <div class="mt-6 flex flex-col items-center gap-4">
+            <input
+                type="number"
+                id="customAmount"
+                placeholder="Montant libre (min 20€)"
+                min="20"
+                class="w-64 px-4 py-3 rounded-lg text-center text-night-blue"
+            />
+            
+            <button
+                onclick="startCustomCheckout()"
+                class="bg-gold text-night-blue font-semibold px-8 py-4 rounded-full hover:scale-105 transition-transform duration-200"
+            >
+                Contribuer librement
+            </button>
+        </div>
+    </section>
+
     <!-- Section Micro-Réassurance Paiement -->
     <section class="py-8 bg-[rgba(5,20,40,0.8)] border-t border-gold/10">
         <div class="container mx-auto px-6">
@@ -1797,6 +1828,35 @@ La production est lancée grâce aux premières commandes.</p>
                 });
             }, 100);
         });
+    </script>
+<script>
+        async function startCustomCheckout() {
+            const amount = document.getElementById('customAmount').value;
+
+            if (!amount || amount < 20) {
+                alert("Minimum 20€");
+                return;
+            }
+
+            const response = await fetch('/api/create-checkout-session', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    customAmount: amount * 100, // en centimes
+                    type: 'don-libre'
+                })
+            });
+
+            const data = await response.json();
+
+            if (data.url) {
+                window.location.href = data.url;
+            } else {
+                alert("Erreur paiement");
+            }
+        }
     </script>
 </body>
 

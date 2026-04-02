@@ -98,6 +98,30 @@ module.exports = async (req, res) => {
         
         console.log('Creating checkout session...');
         
+        // Handle don-libre case separately
+        if (req.body.type === 'don-libre') {
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                line_items: [
+                    {
+                        price_data: {
+                            currency: 'eur',
+                            product_data: {
+                                name: 'Contribution libre Oradia',
+                            },
+                            unit_amount: req.body.customAmount,
+                        },
+                        quantity: 1,
+                    },
+                ],
+                mode: 'payment',
+                success_url: `${process.env.FRONTEND_URL}/success-precommande.html`,
+                cancel_url: `${process.env.FRONTEND_URL}/precommande-oracle.html`,
+            });
+
+            return res.json({ url: session.url });
+        }
+
         const { offer, fullName, email, shippingAddress, postalCode, city } = req.body;
         console.log('Request data:', { offer, fullName, email, shippingAddress, postalCode, city });
         
