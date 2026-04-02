@@ -11,6 +11,25 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // Fonction d'envoi d'email Brevo
 async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
     try {
+        // Logs de diagnostic pour les variables d'environnement
+        console.log('🔧 Vérification variables Brevo:');
+        console.log('  - BREVO_API_KEY:', process.env.BREVO_API_KEY ? '✅ Configurée' : '❌ Manquante');
+        console.log('  - BREVO_SENDER_EMAIL:', process.env.BREVO_SENDER_EMAIL || '❌ Manquante');
+        console.log('  - BREVO_SENDER_NAME:', process.env.BREVO_SENDER_NAME || '❌ Manquant');
+        
+        if (!process.env.BREVO_API_KEY) {
+            console.error('❌ BREVO_API_KEY manquante - impossible d\'envoyer l\'email');
+            return false;
+        }
+        
+        if (!process.env.BREVO_SENDER_EMAIL) {
+            console.error('❌ BREVO_SENDER_EMAIL manquant - impossible d\'envoyer l\'email');
+            return false;
+        }
+        
+        console.log('📧 Envoi email à:', toEmail);
+        console.log('📧 Détails:', { toName, offer, amountTotal });
+        
         const response = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
             headers: {
@@ -26,6 +45,10 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
                     email: toEmail,
                     name: toName
                 }],
+                replyTo: {
+                    email: "contact@oradia.fr",
+                    name: "Oradia"
+                },
                 subject: 'Ta précommande ORADIA est confirmée',
                 htmlContent: `
 <div style="margin:0;padding:0;background-color:#0b1020;">
@@ -124,17 +147,23 @@ oradia.fr`
             })
         });
 
+        console.log('📧 Brevo response status:', response.status);
+        
         if (!response.ok) {
-            throw new Error(`Brevo API error: ${response.status} ${response.statusText}`);
+            const errorText = await response.text();
+            console.error(`❌ Brevo API error: ${response.status} ${response.statusText}`);
+            console.error('❌ Response body:', errorText);
+            return false; // Ne pas faire planter le webhook
         }
 
         const result = await response.json();
-        console.log('Email sent successfully via Brevo:', result.messageId);
+        console.log('✅ Email sent successfully via Brevo:', result.messageId);
         return true;
 
     } catch (error) {
-        console.error('Failed to send email via Brevo:', error);
-        return false;
+        console.error('❌ Failed to send email via Brevo:', error.message);
+        console.error('❌ Full error:', error);
+        return false; // Ne jamais faire planter le webhook
     }
 }
 
@@ -142,6 +171,9 @@ const handler = async (req, res) => {
     const sig = req.headers['stripe-signature'];
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+    console.log('🔔 Webhook Stripe reçu');
+    console.log('🔔 Headers:', Object.keys(req.headers));
+    
     if (!sig || !webhookSecret) {
         console.error('❌ Missing webhook signature or secret');
         return res.status(400).json({ error: 'Missing signature' });
@@ -165,12 +197,16 @@ const handler = async (req, res) => {
     }
 
     try {
+        console.log('🎯 Webhook event:', event.type);
+        
         switch (event.type) {
             case 'checkout.session.completed': {
                 const session = event.data.object;
                 const sessionId = session.id;
                 
                 console.log('🛒 Processing checkout.session.completed:', sessionId);
+                console.log('📋 Session ID:', session.id);
+                console.log('📧 Client email:', session.customer_details?.email);
                 console.log('📋 Session payload keys:', Object.keys(session));
 
                 // Extraction robuste des données avec fallbacks
@@ -240,11 +276,15 @@ const handler = async (req, res) => {
 
                 // Validation des champs obligatoires
                 if (!extractedData.email) {
-                    console.error('❌ Email manquant - impossible de continuer');
-                    return res.status(400).json({ 
-                        error: 'Missing required field: email',
-                        message: 'Email is required for preorder processing'
+                    console.error('❌ Email manquant - envoi d\'email annulé mais webhook continue');
+                    console.error('❌ Email absent dans:', {
+                        customer_details_email: session.customer_details?.email,
+                        customer_email: session.customer_email,
+                        metadata_email: session.metadata?.email
                     });
+                    // Continuer le traitement sans envoyer d'email
+                } else {
+                    console.log('✅ Email client présent:', extractedData.email);
                 }
 
                 if (!extractedData.offer) {
@@ -328,31 +368,38 @@ const handler = async (req, res) => {
                     console.log('New order created:', sessionId);
                 }
 
-                // Envoyer l'email de confirmation si pas déjà envoyé
+                // Envoyer l'email de confirmation si pas déjà envoyé ET si email présent
                 if (!existingOrder || !existingOrder.email_sent_at) {
-                    console.log('Sending confirmation email...');
-                    const emailSent = await sendBrevoEmail({
-                        toEmail: extractedData.email,
-                        toName: extractedData.full_name || 'Ami(e) d\'ORADIA',
-                        offer: extractedData.offer,
-                        amountTotal: (extractedData.amount_total / 100).toFixed(2)
-                    });
+                    if (extractedData.email) {
+                        console.log('📧 Appel de sendBrevoEmail pour:', extractedData.email);
+                        const emailSent = await sendBrevoEmail({
+                            toEmail: extractedData.email,
+                            toName: extractedData.full_name || 'Ami(e) d\'ORADIA',
+                            offer: extractedData.offer,
+                            amountTotal: (extractedData.amount_total / 100).toFixed(2)
+                        });
+                        console.log('📧 sendBrevoEmail retourné:', emailSent);
 
-                    if (emailSent) {
-                        // Mettre à jour email_sent_at
-                        const { error: emailUpdateError } = await supabase
-                            .from('preorders')
-                            .update({ email_sent_at: new Date().toISOString() })
-                            .eq('stripe_session_id', sessionId);
+                        if (emailSent) {
+                            // Mettre à jour email_sent_at
+                            const { error: emailUpdateError } = await supabase
+                                .from('preorders')
+                                .update({ email_sent_at: new Date().toISOString() })
+                                .eq('stripe_session_id', sessionId);
 
-                        if (emailUpdateError) {
-                            console.error('Error updating email_sent_at:', emailUpdateError);
+                            if (emailUpdateError) {
+                                console.error('Error updating email_sent_at:', emailUpdateError);
+                            } else {
+                                console.log('✅ Email timestamp updated');
+                            }
                         } else {
-                            console.log('Email timestamp updated');
+                            console.error('❌ Email sending failed, but order is still valid');
                         }
                     } else {
-                        console.error('Email sending failed, but order is still valid');
+                        console.log('⚠️ Email absent - envoi d\'email sauté mais commande validée');
                     }
+                } else {
+                    console.log('ℹ️ Email déjà envoyé pour cette session');
                 }
 
                 // Log progression
