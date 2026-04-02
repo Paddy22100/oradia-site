@@ -104,11 +104,11 @@ const handler = async (req, res) => {
                 console.log('  - Offer:', session.metadata?.offer);
                 console.log('  - Amount:', session.amount_total / 100, '€');
 
-                // Extraction des données
+                // Extraction des données - PRIORITÉ metadata.full_name
                 const extractedData = {
                     email: session.customer_details?.email || session.customer_email || session.metadata?.email || null,
                     offer: session.metadata?.offer || null,
-                    full_name: session.metadata?.full_name || session.customer_details?.name || null,
+                    full_name: session.metadata?.full_name || session.customer_details?.name || null, // PRIORITÉ metadata
                     stripe_session_id: sessionId,
                     amount_total: session.amount_total || 0,
                     currency: session.currency || 'eur',
@@ -121,21 +121,34 @@ const handler = async (req, res) => {
                     phone: session.metadata?.phone || null
                 };
 
-                console.log('📊 Données extraites:', extractedData);
+                console.log('📊 DONNÉES EXTRAITES (BRUTES):');
+                console.log('  - email:', extractedData.email);
+                console.log('  - offer:', extractedData.offer);
+                console.log('  - full_name:', extractedData.full_name);
+                console.log('  - stripe_session_id:', extractedData.stripe_session_id);
+                console.log('  - amount_total:', extractedData.amount_total);
+                console.log('  - currency:', extractedData.currency);
+                console.log('  - payment_intent_id:', extractedData.payment_intent_id);
+                console.log('  - stripe_customer_id:', extractedData.stripe_customer_id);
+                console.log('  - paid_status:', extractedData.paid_status);
+                console.log('  - shipping_address:', extractedData.shipping_address);
+                console.log('  - postal_code:', extractedData.postal_code);
+                console.log('  - city:', extractedData.city);
+                console.log('  - phone:', extractedData.phone);
 
                 // Validation
                 if (!extractedData.email || !extractedData.offer) {
-                    console.error('❌ Données manquantes:', { email: !!extractedData.email, offer: !!extractedData.offer });
+                    console.error('❌ DONNÉES MANQUANTES:', { email: !!extractedData.email, offer: !!extractedData.offer });
                     return res.status(400).json({ error: 'Missing required data' });
                 }
 
-                // Préparation données Supabase
+                // Préparation données Supabase - CONVERSION EXPLICITE
                 const supabaseData = {
                     stripe_session_id: extractedData.stripe_session_id,
                     email: extractedData.email,
                     offer: extractedData.offer,
                     full_name: extractedData.full_name,
-                    amount_total: extractedData.amount_total / 100,
+                    amount_total: Number(extractedData.amount_total) / 100, // Conversion explicite en nombre
                     currency: extractedData.currency,
                     payment_intent_id: extractedData.payment_intent_id,
                     stripe_customer_id: extractedData.stripe_customer_id,
@@ -147,22 +160,66 @@ const handler = async (req, res) => {
                     updated_at: new Date().toISOString()
                 };
 
-                console.log('📦 Données Supabase:', JSON.stringify(supabaseData, null, 2));
+                console.log('📦 PAYLOAD SUPABASE (COMPLET):');
+                console.log(JSON.stringify(supabaseData, null, 2));
+                
+                // Validation des types
+                console.log('🔍 VALIDATION TYPES PAYLOAD:');
+                Object.entries(supabaseData).forEach(([key, value]) => {
+                    console.log(`  - ${key}: ${typeof value} = ${value}`);
+                });
 
-                // Upsert Supabase
-                console.log('🚨 Envoi vers Supabase...');
+                // Upsert Supabase avec logs complets
+                console.log('🚨 DÉBUT UPSERT SUPABASE...');
+                console.log('🔍 onConflict: stripe_session_id');
+                console.log('🔍 ignoreDuplicates: false');
+                
+                const startTime = Date.now();
+                
                 const { error: upsertError, data: upsertData } = await supabase
                     .from('preorders')
                     .upsert(supabaseData, {
                         onConflict: 'stripe_session_id',
                         ignoreDuplicates: false
                     })
-                    .select();
+                    .select(); // Récupérer les données retournées
+
+                const endTime = Date.now();
+                console.log(`⏱️ Durée upsert: ${endTime - startTime}ms`);
+                
+                console.log('📊 RÉSULTAT UPSERT:');
+                console.log('  - upsertError:', upsertError);
+                console.log('  - upsertData:', upsertData);
 
                 if (upsertError) {
-                    console.error('❌ Erreur Supabase:', upsertError);
+                    console.error('❌ ERREUR SUPABASE DÉTAILLÉE:');
+                    console.error('  - Code erreur:', upsertError.code);
+                    console.error('  - Message erreur:', upsertError.message);
+                    console.error('  - Details erreur:', upsertError.details);
+                    console.error('  - Hint erreur:', upsertError.hint);
+                    console.error('  - Full error object:');
+                    console.error(JSON.stringify(upsertError, null, 2));
+                    
+                    // Analyse spécifique des erreurs
+                    if (upsertError.code === '23505') {
+                        console.error('💡 ERREUR CONFLICT: Probablement duplicate stripe_session_id');
+                    } else if (upsertError.code === '23502') {
+                        console.error('💡 ERREUR NOT NULL: Champ requis manquant');
+                        console.error('💡 Champs manquants possibles: stripe_session_id, email, offer');
+                    } else if (upsertError.code === '42703') {
+                        console.error('💡 ERREUR COLUMN: Colonne inexistante dans la table');
+                        console.error('💡 Vérifier que toutes les clés existent dans la table preorders');
+                    } else if (upsertError.code === '23514') {
+                        console.error('💡 ERREUR CHECK: Violation contrainte CHECK');
+                    } else if (upsertError.code === '42501') {
+                        console.error('💡 ERREUR PERMISSION: Problème RLS (mais RLS désactivé)');
+                    }
+                    
+                    console.error('❌ LIGNE ÉCHOUANTE: supabase.from(\'preorders\').upsert(...)');
+                    console.error('❌ PAYLOAD EXACT ENVOYÉ:', JSON.stringify(supabaseData, null, 2));
                 } else {
-                    console.log('✅ Supabase upsert réussi:', upsertData);
+                    console.log('✅ UPSERT RÉUSSI:');
+                    console.log('  - Données retournées:', JSON.stringify(upsertData, null, 2));
                 }
 
                 // Email
