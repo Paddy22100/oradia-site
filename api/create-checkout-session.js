@@ -235,7 +235,7 @@ module.exports = async (req, res) => {
         const offers = {
             'standard': { price: 3800, name: 'Standard - Oracle Oradia' },
             'guidance-incluse': { price: 4400, name: 'Guidance Incluse - Oracle Oradia' },
-            'edition-signature': { price: 5200, name: 'Édition Signature - Oracle Oradia' }
+            'edition-signature': { price: 4200, name: 'Édition Signature - Oracle Oradia' }
         };
 
         // Configuration des produits et poids (identique au frontend)
