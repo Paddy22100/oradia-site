@@ -35,12 +35,22 @@ export default async function handler(req, res) {
     const cleanSubject = subject.trim();
     const cleanMessage = message.trim();
 
-    // Validation email
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    // Validation email robuste
+    const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
     if (!emailRegex.test(cleanEmail)) {
       return res.status(400).json({ 
         success: false, 
         message: 'Adresse email invalide.' 
+      });
+    }
+
+    // Validation supplémentaire : pas d'email temporaires ou suspects
+    const suspiciousDomains = ['tempmail.com', '10minutemail.com', 'guerrillamail.com', 'mailinator.com'];
+    const emailDomain = cleanEmail.split('@')[1].toLowerCase();
+    if (suspiciousDomains.some(domain => emailDomain.includes(domain))) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Adresse email non autorisée.' 
       });
     }
 
@@ -84,6 +94,9 @@ export default async function handler(req, res) {
           <p style="margin: 10px 0;"><strong>Nom:</strong> ${cleanName}</p>
           <p style="margin: 10px 0;"><strong>Email:</strong> ${cleanEmail}</p>
           <p style="margin: 10px 0;"><strong>Sujet:</strong> ${cleanSubject}</p>
+          <p style="margin: 10px 0; color: #666; font-size: 12px;">
+            <i>Pour répondre directement à ${cleanName}, utilisez son adresse : ${cleanEmail}</i>
+          </p>
         </div>
         
         <div style="margin: 20px 0;">
@@ -132,10 +145,6 @@ Ce message a été envoyé depuis le formulaire de contact du site ORADIA.
             name: 'ORADIA'
           }
         ],
-        replyTo: {
-          email: cleanEmail,
-          name: cleanName
-        },
         subject: emailSubject,
         htmlContent: emailHtmlContent,
         textContent: emailTextContent
