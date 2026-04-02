@@ -171,12 +171,12 @@
         </h1>
         
         <p class="text-xl md:text-2xl text-light-gold/90 mb-4 leading-relaxed">
-          Nous sommes à votre écoute
+          Je suis à votre écoute
         </p>
         
         <p class="text-base md:text-lg text-light-gold/70 max-w-2xl mx-auto leading-relaxed">
-          Que vous ayez une question sur l'Oracle, que vous souhaitiez en savoir plus sur nos tirages, 
-          ou simplement échanger avec nous, nous serons ravis de vous répondre.
+          Que vous ayez une question sur l'Oracle, que vous souhaitiez en savoir plus sur mes tirages, 
+          ou simplement échanger avec moi, je serai ravi de vous répondre.
         </p>
       </div>
     </div>
@@ -188,7 +188,7 @@
       <div class="grid md:grid-cols-2 gap-12">
         <!-- Contact Form -->
         <div class="bg-night-blue/60 border border-gold/30 rounded-2xl p-8 backdrop-blur-sm">
-          <h2 class="cormorant text-3xl md:text-4xl font-bold gold-gradient mb-6 text-center">Envoyez-nous un message</h2>
+          <h2 class="cormorant text-3xl md:text-4xl font-bold gold-gradient mb-6 text-center">Envoyez-moi un message</h2>
           
           <form id="contactForm" class="space-y-6">
             <div>
@@ -211,6 +211,10 @@
                       class="w-full bg-night-blue/30 border border-gold/40 rounded-lg p-3 text-light-gold focus:border-gold focus:outline-none transition-colors">
                 <option value="">Choisissez un sujet</option>
                 <option value="oracle">Question sur l'Oracle</option>
+                <option value="guidance">Guidance personnalisée</option>
+                <option value="accompagnement">Accompagnement individuel</option>
+                <option value="cercles">Cercles de parole</option>
+                <option value="collective">Intelligence collective</option>
                 <option value="partenariat">Proposition de partenariat</option>
                 <option value="autre">Autre</option>
               </select>
@@ -244,7 +248,7 @@
                 </div>
                 <div>
                   <h3 class="text-gold font-semibold mb-1">Email</h3>
-                  <p class="text-light-gold">Oradia@protonmail.com</p>
+                  <p class="text-light-gold">contact@oradia.fr</p>
                 </div>
               </div>
               
@@ -326,7 +330,7 @@
           formMessage.innerHTML = `
             <div class="bg-gold/20 border border-gold/50 rounded-lg p-4 text-light-gold">
               <i class="fas fa-check-circle mr-2"></i>
-              ${data.message || 'Votre message a bien été envoyé. Nous vous répondrons dans les plus brefs délais.'}
+              ${data.message || 'Votre message a bien été envoyé. Je vous répondrai dans les plus brefs délais.'}
             </div>
           `;
           formMessage.classList.remove('hidden');
