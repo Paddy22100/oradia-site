@@ -21,6 +21,10 @@
       "dest": "/api/stripe-webhook.js"
     },
     {
+      "src": "/api/stripe-webhook-simple",
+      "dest": "/api/stripe-webhook-simple.js"
+    },
+    {
       "src": "/api/test-webhook",
       "dest": "/api/test-webhook.js"
     },
