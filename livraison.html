@@ -43,6 +43,9 @@
     <link rel="stylesheet" href="responsive.css">
     <link rel="stylesheet" href="production-mode.css">
     <script src="security.js"></script>
+    
+    <!-- Stripe -->
+    <script src="https://js.stripe.com/v3/"></script>
 
     <style>
         /* Pas de CSS sticky - géré par JavaScript */
@@ -842,8 +845,11 @@
                     throw new Error(session.message || 'Session invalide');
                 }
 
-                // Récupérer la clé Stripe depuis la configuration existante
-                const stripeKey = document.querySelector('meta[name="stripe-publishable-key"]')?.content;
+                // Récupérer la clé Stripe (cohérent avec precommande-oracle.html)
+                const stripeKey = 'pk_test_51TAsp69jcRbNO5oykYfnwCWLjGUVyCGLjFrjcgrMSRzMhNnH8gucs00YSTJoCEcwcCGsHvTjscA9Cn7MPvr4xl4c001dVA4e2j';
+                
+                console.log('STRIPE KEY FOUND:', !!stripeKey);
+                console.log('STRIPE KEY PREFIX:', stripeKey ? stripeKey.substring(0, 7) : 'missing');
                 
                 if (!stripeKey) {
                     showError('Configuration Stripe manquante');
