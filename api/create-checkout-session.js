@@ -197,6 +197,13 @@ module.exports = async (req, res) => {
                 mode: 'payment',
                 success_url: `${process.env.FRONTEND_URL}/success-contribution.html`,
                 cancel_url: `${process.env.FRONTEND_URL}/precommande-oracle.html#contribution-libre`,
+                metadata: {
+                    offer: 'contribution-libre',
+                    email: customerInfo.email || req.body.email || 'contribution@oradia.fr',
+                    full_name: customerInfo.fullName || req.body.fullName || 'Contribution ORADIA',
+                    amount: (req.body.customAmount / 100).toString(),
+                    source: 'oradia-contribution'
+                }
             });
 
             console.log('DON-LIBRE SESSION CREATED:', session.id);

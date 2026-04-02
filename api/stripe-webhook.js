@@ -236,6 +236,13 @@ const handler = async (req, res) => {
                               } catch {
                                   return null;
                               }
+                          })() ||
+                          (() => {
+                              // Fallback pour contribution libre ou autres cas
+                              if (session.amount_total && session.amount_total >= 2000) {
+                                  return 'contribution-libre';
+                              }
+                              return 'unknown';
                           })(),
                     
                     // Nom complet avec fallbacks
@@ -305,6 +312,40 @@ const handler = async (req, res) => {
                     console.log('✅ Email client présent:', extractedData.email);
                 }
 
+                // Gestion spéciale pour les contributions libres
+                if (extractedData.offer === 'contribution-libre') {
+                    console.log('🎁 CONTRIBUTION LIBRE DÉTECTÉE - Email uniquement');
+                    
+                    // Envoyer l'email de remerciement pour contribution
+                    if (extractedData.email) {
+                        console.log('📧 Envoi email contribution à:', extractedData.email);
+                        const emailSent = await sendBrevoEmail({
+                            toEmail: extractedData.email,
+                            toName: extractedData.full_name || 'Ami(e) d\'ORADIA',
+                            offer: extractedData.offer,
+                            amountTotal: (extractedData.amount_total / 100).toFixed(2)
+                        });
+                        
+                        console.log('📧 Email contribution envoyé:', emailSent);
+                        
+                        return res.status(200).json({
+                            message: 'Contribution processed successfully',
+                            sessionId: sessionId,
+                            email: extractedData.email,
+                            offer: extractedData.offer,
+                            supabaseStatus: 'skipped_contribution',
+                            emailStatus: emailSent ? 'sent' : 'failed'
+                        });
+                    } else {
+                        console.error('❌ Email manquant pour contribution');
+                        return res.status(400).json({
+                            error: 'Email required for contribution',
+                            message: 'Contribution requires valid email'
+                        });
+                    }
+                }
+
+                // Validation des champs obligatoires pour précommandes
                 if (!extractedData.offer) {
                     console.error('❌ Offer manquant - impossible de continuer');
                     return res.status(400).json({ 
