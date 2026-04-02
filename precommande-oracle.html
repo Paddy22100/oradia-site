@@ -1109,13 +1109,16 @@
         </p>
         
         <div class="mt-6 flex flex-col items-center gap-4">
-            <input
-                type="number"
-                id="customAmount"
-                placeholder="Montant libre (min 10€)"
-                min="10"
-                class="w-64 px-4 py-3 rounded-lg text-center text-night-blue"
-            />
+            <div class="flex items-center gap-2">
+                <input
+                    type="text"
+                    id="customAmount"
+                    placeholder="Montant libre (min 10€)"
+                    min="10"
+                    class="w-64 px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-light-gold/60 transition-all duration-300"
+                />
+                <span class="text-gold text-lg font-medium">€</span>
+            </div>
             
             <button
                 onclick="startCustomCheckout()"
@@ -1830,6 +1833,12 @@ La production est lancée grâce aux premières commandes.</p>
         });
     </script>
 <script>
+        // Restrict input to numbers only
+        document.getElementById('customAmount').addEventListener('input', function(e) {
+            // Remove all non-numeric characters
+            this.value = this.value.replace(/[^0-9]/g, '');
+        });
+
         async function startCustomCheckout() {
             const amount = document.getElementById('customAmount').value;
 
