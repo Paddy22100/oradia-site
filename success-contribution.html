@@ -3,21 +3,135 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    
+    <!-- SEO Meta Tags -->
     <title>Merci pour votre soutien - Oradia</title>
+    <meta name="description" content="Merci pour votre contribution libre à Oradia. Votre soutien aide à la création et diffusion de l'oracle.">
+    <meta name="keywords" content="contribution oradia, soutien oracle, remerciement">
+    <meta name="author" content="Sophie Oradia" />
+    <meta name="robots" content="noindex, follow" />
+    <meta name="language" content="fr" />
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://oradia.fr/success-contribution.html" />
+    <meta property="og:title" content="Merci pour votre soutien - Oradia" />
+    <meta property="og:description" content="Votre contribution a bien été reçue. Merci de soutenir la création d'Oradia.">
+    <meta property="og:image" content="https://oradia.fr/images/oracle-precommande.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Oradia" />
+    <meta property="og:locale" content="fr_FR" />
+    
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://oradia.fr/success-contribution.html" />
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="responsive.css">
+    
+    <!-- Couleurs ORADIA additionnelles -->
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Inter:wght@300;400;500;600;700&display=swap');
-        
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #0a192f 0%, #112240 50%, #1a365d 100%);
-            min-height: 100vh;
+        .text-gold {
+            color: #d4af37 !important;
         }
         
-        .cormorant {
-            font-family: 'Cormorant Garamond', serif;
+        .text-light-gold {
+            color: #f5e7a1 !important;
         }
+        
+        .text-night-blue {
+            color: #0a192f !important;
+        }
+        
+        .text-dark-blue {
+            color: #051428 !important;
+        }
+        
+        .bg-night-blue {
+            background-color: #0a192f !important;
+        }
+        
+        .bg-dark-blue {
+            background-color: #051428 !important;
+        }
+        
+        .border-gold {
+            border-color: #d4af37 !important;
+        }
+        
+        .border-gold\/20 {
+            border-color: rgba(212, 175, 55, 0.2) !important;
+        }
+        
+        .border-gold\/30 {
+            border-color: rgba(212, 175, 55, 0.3) !important;
+        }
+        
+        .border-gold\/40 {
+            border-color: rgba(212, 175, 55, 0.4) !important;
+        }
+        
+        .border-gold\/50 {
+            border-color: rgba(212, 175, 55, 0.5) !important;
+        }
+        
+        .bg-gold\/10 {
+            background-color: rgba(212, 175, 55, 0.1) !important;
+        }
+        
+        .bg-gold\/20 {
+            background-color: rgba(212, 175, 55, 0.2) !important;
+        }
+        
+        .bg-gold\/30 {
+            background-color: rgba(212, 175, 55, 0.3) !important;
+        }
+        
+        .text-gold\/60 {
+            color: rgba(212, 175, 55, 0.6) !important;
+        }
+        
+        .text-light-gold\/70 {
+            color: rgba(245, 231, 161, 0.7) !important;
+        }
+        
+        .text-light-gold\/80 {
+            color: rgba(245, 231, 161, 0.8) !important;
+        }
+        
+        .text-light-gold\/90 {
+            color: rgba(245, 231, 161, 0.9) !important;
+        }
+    </style>
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'night-blue': '#0a192f',
+                        'gold': '#d4af37',
+                        'light-gold': '#f5e7a1',
+                        'dark-blue': '#051428',
+                        'celtic-blue': '#1a365d'
+                    },
+                    fontFamily: {
+                        'cormorant': ['Cormorant Garamond', 'serif'],
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
         
         .gold-gradient {
             background: linear-gradient(135deg, #d4af37, #f4e4c1);
@@ -26,95 +140,168 @@
             background-clip: text;
         }
         
-        .text-gold {
-            color: #d4af37;
+        .hero-section {
+            background: linear-gradient(145deg, rgba(26,54,93,0.8), rgba(5,20,40,0.9));
+            position: relative;
+            overflow: hidden;
         }
         
-        .text-light-gold {
-            color: #f4e4c1;
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url("images/oradia-hero-4k.png") center/cover;
+            opacity: 0.3;
+            z-index: 0;
         }
         
-        .bg-gold {
+        .hero-content {
+            position: relative;
+            z-index: 1;
+        }
+        
+        .offer-card {
+            background: linear-gradient(145deg, rgba(26,54,93,0.6), rgba(5,20,40,0.8));
+            border: 1px solid rgba(212,175,55,0.3);
+            transition: all 0.3s ease;
+        }
+        
+        .offer-card:hover {
+            border-color: rgba(212,175,55,0.6);
+            box-shadow: 0 4px 20px rgba(212,175,55,0.15);
+            transform: translateY(-2px);
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #d4af37, #f4e4c1);
+            transition: width 0.5s ease;
+        }
+        
+        .early-bird-badge {
             background: linear-gradient(135deg, #d4af37, #f4e4c1);
-        }
-        
-        .night-blue {
-            background-color: #0a192f;
-        }
-        
-        .float-animation {
-            animation: float 6s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-            0%, 100% { transform: translateY(0px); }
-            50% { transform: translateY(-20px); }
-        }
-        
-        .pulse-animation {
-            animation: pulse 3s ease-in-out infinite;
+            color: #0a192f;
+            animation: pulse 2s infinite;
         }
         
         @keyframes pulse {
-            0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.8; transform: scale(1.05); }
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+        
+        .floating {
+            animation: floating 3s ease-in-out infinite;
+        }
+        
+        @keyframes floating {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        /* FAQ Styles */
+        .faq-answer {
+            transition: all 0.3s ease;
+        }
+        
+        .faq-question i.rotate-180 {
+            transform: rotate(180deg);
+        }
+        
+        .faq-question {
+            transition: background-color 0.2s ease;
+        }
+        
+        .faq-question:hover {
+            background-color: rgba(212, 175, 55, 0.1);
+            border-radius: 0.5rem;
+        }
+        
+        /* Carrousel Styles */
+        .carousel-slide {
+            transition: opacity 0.5s ease-in-out;
+        }
+        
+        #carouselDots div {
+            transition: background-color 0.3s ease;
+        }
+        
+        /* Bouton backToTop - positionnement optimisé */
+        #backToTop {
+            position: fixed !important;
+            right: 24px !important;
+            bottom: 24px !important;
+            z-index: 999 !important;
+            pointer-events: auto !important;
+        }
+        
+        /* Mobile - marges réduites */
+        @media (max-width: 768px) {
+            #backToTop {
+                right: 16px !important;
+                bottom: 16px !important;
+            }
+        }
+        
+        /* Safe areas pour mobiles modernes */
+        @supports (padding: max(0px)) {
+            #backToTop {
+                right: max(24px, env(safe-area-inset-right)) !important;
+                bottom: max(24px, env(safe-area-inset-bottom)) !important;
+            }
+            
+            @media (max-width: 768px) {
+                #backToTop {
+                    right: max(16px, env(safe-area-inset-right)) !important;
+                    bottom: max(16px, env(safe-area-inset-bottom)) !important;
+                }
+            }
+        }
+        
+        #carouselDots div:hover {
+            transform: scale(1.2);
         }
     </style>
 </head>
-<body class="night-blue text-white">
-    <!-- Navigation Header -->
-    <header class="fixed top-0 w-full bg-[rgba(10,25,47,0.95)] backdrop-blur-sm border-b border-gold/20 z-50">
-        <nav class="container mx-auto px-6 py-4">
-            <div class="flex justify-between items-center">
-                <div class="flex items-center space-x-2">
-                    <div class="w-10 h-10 bg-gold rounded-full flex items-center justify-center">
-                        <i class="fas fa-moon text-night-blue text-lg"></i>
-                    </div>
-                    <span class="cormorant text-2xl font-bold gold-gradient">ORADIA</span>
-                </div>
-                <div class="hidden md:flex space-x-8">
-                    <a href="index.html" class="text-light-gold hover:text-gold transition-colors">Accueil</a>
-                    <a href="precommande-oracle.html#offres" class="text-light-gold hover:text-gold transition-colors">Précommande</a>
-                    <a href="index.html#oracle" class="text-light-gold hover:text-gold transition-colors">L'Oracle</a>
-                </div>
-            </div>
-        </nav>
-    </header>
+<body class="bg-night-blue text-light-gold">
+    <button id="backToTop" class="fixed bottom-6 right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-50 backdrop-blur-sm" aria-label="Remonter en haut">
+    <i class="fas fa-arrow-up text-sm"></i>
+</button>
 
-    <!-- Main Content -->
-    <main class="pt-24 pb-16 px-6">
-        <div class="container mx-auto max-w-4xl">
-            <!-- Success Icon -->
-            <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-24 h-24 bg-gold/20 rounded-full pulse-animation mb-6">
-                    <i class="fas fa-heart text-gold text-4xl"></i>
-                </div>
-            </div>
+<!-- Header -->
+<div id="header-placeholder"></div>
 
+<!-- Main Content -->
+<section class="hero-section py-16 sm:py-20 md:py-24 lg:py-32">
+    <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="hero-content text-center max-w-4xl mx-auto">
             <!-- Success Message -->
-            <div class="text-center mb-12">
-                <h1 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-6">
+            <div class="mb-12">
+                <h1 class="cormorant text-4xl sm:text-5xl md:text-6xl font-bold gold-gradient mb-8">
                     Merci pour votre soutien
                 </h1>
                 
                 <div class="max-w-2xl mx-auto">
-                    <p class="text-light-gold text-lg leading-relaxed mb-8">
+                    <p class="text-light-gold text-lg leading-relaxed mb-6">
                         Votre contribution a bien été reçue.
                     </p>
                     
-                    <p class="text-light-gold/80 leading-relaxed mb-8">
+                    <p class="text-light-gold/80 leading-relaxed mb-12">
                         Elle soutient directement la création et la diffusion d'Oradia.
                     </p>
                     
-                    <div class="bg-[rgba(212,175,55,0.1)] border border-gold/30 rounded-2xl p-6 mb-8">
-                        <p class="text-gold font-semibold mb-2">
-                            <i class="fas fa-info-circle mr-2"></i>
-                            Important
-                        </p>
-                        <p class="text-light-gold/90">
+                    <div class="bg-[rgba(212,175,55,0.1)] border border-gold/30 rounded-2xl p-6 mb-12">
+                        <div class="flex items-center justify-center mb-4">
+                            <i class="fas fa-star text-gold text-2xl mr-3"></i>
+                            <p class="text-gold font-semibold">
+                                Important
+                            </p>
+                        </div>
+                        <p class="text-light-gold/90 leading-relaxed">
                             cette contribution libre ne correspond pas à une précommande d'oracle.
                         </p>
-                        <p class="text-light-gold/90 mt-2">
+                        <p class="text-light-gold/90 leading-relaxed mt-3">
                             Si vous souhaitez réserver votre exemplaire, vous pouvez revenir à la page de précommande.
                         </p>
                     </div>
@@ -122,7 +309,7 @@
             </div>
 
             <!-- Action Buttons -->
-            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
                 <a href="precommande-oracle.html#offres" 
                    class="w-full sm:w-auto bg-gold text-night-blue font-semibold px-8 py-4 rounded-full hover:scale-105 transition-transform duration-200 text-center">
                     <i class="fas fa-shopping-cart mr-2"></i>
@@ -136,29 +323,30 @@
                 </a>
             </div>
 
-            <!-- Additional Info -->
-            <div class="mt-16 text-center">
-                <div class="inline-flex items-center space-x-8 text-light-gold/60 text-sm">
-                    <div class="flex items-center">
-                        <i class="fas fa-shield-alt text-gold mr-2"></i>
-                        <span>Paiement sécurisé</span>
-                    </div>
-                    <div class="flex items-center">
-                        <i class="fas fa-envelope text-gold mr-2"></i>
-                        <span>Contact : contact@oradia.fr</span>
-                    </div>
+            <!-- Trust Indicators -->
+            <div class="flex flex-col sm:flex-row justify-center items-center gap-8 text-light-gold/60 text-sm">
+                <div class="flex items-center">
+                    <i class="fas fa-shield-alt text-gold mr-2"></i>
+                    <span>Paiement sécurisé</span>
+                </div>
+                <div class="flex items-center">
+                    <i class="fas fa-envelope text-gold mr-2"></i>
+                    <span>contact@oradia.fr</span>
+                </div>
+                <div class="flex items-center">
+                    <i class="fas fa-heart text-gold mr-2"></i>
+                    <span>Merci pour votre confiance</span>
                 </div>
             </div>
         </div>
-    </main>
+    </div>
+</section>
 
-    <!-- Footer -->
-    <footer class="border-t border-gold/20 py-8">
-        <div class="container mx-auto px-6 text-center">
-            <p class="text-light-gold/60 text-sm">
-                © 2025 Oradia. Tous droits réservés.
-            </p>
-        </div>
-    </footer>
+<!-- Footer -->
+<div id="footer-placeholder"></div>
+
+<!-- Scripts -->
+<script src="components/header-manager.js" defer></script>
+
 </body>
 </html>
