@@ -403,6 +403,7 @@ module.exports = async (req, res) => {
             customer_email: normalizedData.email.trim(),
             metadata: {
                 items: JSON.stringify(normalizedData.items),
+                offer: normalizedData.items[0]?.offer || 'unknown',
                 delivery_method: normalizedData.deliveryMethod,
                 total_weight: totalWeight,
                 calculated_delivery_price: calculatedDeliveryPrice,

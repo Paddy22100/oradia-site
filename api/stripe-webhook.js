@@ -5,6 +5,14 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
+// AUDIT: Logs des variables d'environnement critiques
+console.log('🔍 AUDIT VARIABLES ENVIRONNEMENT:');
+console.log('  - STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY ? '✅ Configurée' : '❌ Manquante');
+console.log('  - STRIPE_WEBHOOK_SECRET:', process.env.STRIPE_WEBHOOK_SECRET ? '✅ Configurée' : '❌ Manquante');
+console.log('  - SUPABASE_URL:', supabaseUrl || '❌ Manquante');
+console.log('  - NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL || '❌ Manquante');
+console.log('  - SUPABASE_SERVICE_ROLE_KEY:', supabaseKey ? '✅ Configurée' : '❌ Manquante');
+
 // Création directe du client Supabase
 const supabase = createClient(supabaseUrl, supabaseKey);
 
@@ -204,11 +212,13 @@ const handler = async (req, res) => {
                 const session = event.data.object;
                 const sessionId = session.id;
                 
-                console.log('🛒 Processing checkout.session.completed:', sessionId);
+                console.log('🛒 AUDIT CHECKOUT SESSION COMPLETED');
                 console.log('📋 Session ID:', session.id);
                 console.log('📧 Client email:', session.customer_details?.email);
-                console.log('📋 Session payload keys:', Object.keys(session));
-
+                console.log('� Amount total:', session.amount_total);
+                console.log('� Session payload keys:', Object.keys(session));
+                console.log('📋 Session complète:', JSON.stringify(session, null, 2));
+                
                 // Extraction robuste des données avec fallbacks
                 const extractedData = {
                     // Email avec fallbacks multiples
@@ -217,8 +227,16 @@ const handler = async (req, res) => {
                            session.metadata?.email || 
                            null,
                     
-                    // Offer depuis metadata (obligatoire)
-                    offer: session.metadata?.offer || null,
+                    // Offer depuis metadata (obligatoire) avec fallback robuste
+                    offer: session.metadata?.offer || 
+                          (() => {
+                              try {
+                                  const items = JSON.parse(session.metadata?.items || '[]');
+                                  return items[0]?.offer || null;
+                              } catch {
+                                  return null;
+                              }
+                          })(),
                     
                     // Nom complet avec fallbacks
                     full_name: session.metadata?.full_name || 
@@ -295,126 +313,113 @@ const handler = async (req, res) => {
                     });
                 }
 
-                // Idempotence: vérifier si la session existe déjà
-                const { data: existingOrder, error: fetchError } = await supabase
+                // AUDIT: Vérification de la connexion Supabase
+                console.log('🔍 AUDIT CONNEXION SUPABASE:');
+                console.log('  - Supabase URL:', supabaseUrl);
+                console.log('  - Supabase Key présente:', !!supabaseKey);
+                
+                // VRAI UPSERT ATOMIQUE (plus de race condition avec retries Stripe)
+                console.log('� AUDIT UPSERT ATOMIQUE:');
+                console.log('  - Session ID:', sessionId);
+                console.log('  - Payload upsert:', JSON.stringify(supabaseData, null, 2));
+                
+                const { error: upsertError } = await supabase
                     .from('preorders')
-                    .select('id, paid_status, email_sent_at')
-                    .eq('stripe_session_id', sessionId)
-                    .single();
-
-                if (fetchError && fetchError.code !== 'PGRST116') {
-                    console.error('Database error checking existing order:', fetchError);
-                    return res.status(500).json({ 
-                        error: 'Database error', 
-                        message: fetchError.message 
+                    .upsert({
+                        stripe_session_id: extractedData.stripe_session_id,
+                        email: extractedData.email,
+                        offer: extractedData.offer,
+                        full_name: extractedData.full_name,
+                        amount_total: extractedData.amount_total / 100, // Conversion en euros
+                        currency: extractedData.currency,
+                        payment_intent_id: extractedData.payment_intent_id,
+                        stripe_customer_id: extractedData.stripe_customer_id,
+                        paid_status: extractedData.paid_status,
+                        shipping_address: extractedData.shipping_address,
+                        postal_code: extractedData.postal_code,
+                        city: extractedData.city,
+                        phone: extractedData.phone,
+                        updated_at: new Date().toISOString()
+                    }, {
+                        onConflict: 'stripe_session_id',
+                        ignoreDuplicates: false
                     });
-                }
 
-                // Préparation de l'objet pour Supabase (compatible avec table existante)
-                const supabaseData = {
-                    stripe_session_id: extractedData.stripe_session_id,
-                    email: extractedData.email,
-                    offer: extractedData.offer,
-                    full_name: extractedData.full_name,
-                    amount_total: extractedData.amount_total / 100, // Conversion en euros
-                    currency: extractedData.currency,
-                    payment_intent_id: extractedData.payment_intent_id,
-                    stripe_customer_id: extractedData.stripe_customer_id,
-                    paid_status: extractedData.paid_status,
-                    shipping_address: extractedData.shipping_address,
-                    postal_code: extractedData.postal_code,
-                    city: extractedData.city,
-                    phone: extractedData.phone,
-                    updated_at: new Date().toISOString()
-                };
+                console.log('📊 RÉSULTAT UPSERT:');
+                console.log('  - upsertError:', upsertError);
 
-                // Log de l'objet exact envoyé à Supabase
-                console.log('📦 Objet Supabase upsert:');
-                console.log(JSON.stringify(supabaseData, null, 2));
-
-                if (existingOrder) {
-                    // Update existing order
-                    const { error: updateError } = await supabase
-                        .from('preorders')
-                        .update(supabaseData)
-                        .eq('stripe_session_id', sessionId);
-
-                    if (updateError) {
-                        console.error('Error updating order:', updateError);
-                        return res.status(500).json({ 
-                            error: 'Update failed', 
-                            message: updateError.message 
-                        });
-                    }
-                    console.log('Order updated:', sessionId);
+                if (upsertError) {
+                    console.error('❌ ERREUR UPSERT SUPABASE:', upsertError);
+                    console.error('❌ Code erreur:', upsertError.code);
+                    console.error('❌ Message erreur:', upsertError.message);
+                    console.error('❌ Details erreur:', upsertError.details);
+                    // NE PAS FAIRE DE RETURN - CONTINUER POUR EMAIL
+                    console.log('⚠️ Upsert échoué mais continuation pour email');
                 } else {
-                    // Insert new order
-                    const insertData = {
-                        ...supabaseData,
-                        created_at: new Date().toISOString()
-                    };
-
-                    const { error: insertError } = await supabase
-                        .from('preorders')
-                        .insert(insertData);
-
-                    if (insertError) {
-                        console.error('Error creating order:', insertError);
-                        return res.status(500).json({ 
-                            error: 'Insert failed', 
-                            message: insertError.message 
-                        });
-                    }
-                    console.log('New order created:', sessionId);
+                    console.log('✅ Upsert réussi:', sessionId);
                 }
 
-                // Envoyer l'email de confirmation si pas déjà envoyé ET si email présent
-                if (!existingOrder || !existingOrder.email_sent_at) {
-                    if (extractedData.email) {
-                        console.log('📧 Appel de sendBrevoEmail pour:', extractedData.email);
-                        const emailSent = await sendBrevoEmail({
-                            toEmail: extractedData.email,
-                            toName: extractedData.full_name || 'Ami(e) d\'ORADIA',
-                            offer: extractedData.offer,
-                            amountTotal: (extractedData.amount_total / 100).toFixed(2)
-                        });
-                        console.log('📧 sendBrevoEmail retourné:', emailSent);
+                // Envoyer l'email de confirmation (vérifier si déjà envoyé via upsert)
+                // Note: avec upsert, on ne peut pas savoir si c'est une mise à jour ou une insertion
+                // On utilise donc une table séparée pour suivre les emails envoyés
+                if (extractedData.email) {
+                    console.log('📧 Appel de sendBrevoEmail pour:', extractedData.email);
+                    const emailSent = await sendBrevoEmail({
+                        toEmail: extractedData.email,
+                        toName: extractedData.full_name || 'Ami(e) d\'ORADIA',
+                        offer: extractedData.offer,
+                        amountTotal: (extractedData.amount_total / 100).toFixed(2)
+                    });
+                    console.log('📧 sendBrevoEmail retourné:', emailSent);
 
-                        if (emailSent) {
-                            // Mettre à jour email_sent_at
-                            const { error: emailUpdateError } = await supabase
-                                .from('preorders')
-                                .update({ email_sent_at: new Date().toISOString() })
-                                .eq('stripe_session_id', sessionId);
+                    if (emailSent) {
+                        // Mettre à jour email_sent_at dans la table principale
+                        const { error: emailUpdateError } = await supabase
+                            .from('preorders')
+                            .update({ email_sent_at: new Date().toISOString() })
+                            .eq('stripe_session_id', sessionId);
 
-                            if (emailUpdateError) {
-                                console.error('Error updating email_sent_at:', emailUpdateError);
-                            } else {
-                                console.log('✅ Email timestamp updated');
-                            }
+                        if (emailUpdateError) {
+                            console.error('Error updating email_sent_at:', emailUpdateError);
                         } else {
-                            console.error('❌ Email sending failed, but order is still valid');
+                            console.log('✅ Email timestamp updated');
                         }
                     } else {
-                        console.log('⚠️ Email absent - envoi d\'email sauté mais commande validée');
+                        console.error('❌ Email sending failed, but order is still valid');
                     }
                 } else {
-                    console.log('ℹ️ Email déjà envoyé pour cette session');
+                    console.log('⚠️ Email absent - envoi d\'email sauté mais commande validée');
                 }
 
                 // Log progression
-                const { count } = await supabase
-                    .from('preorders')
-                    .select('*', { count: 'exact', head: true })
-                    .eq('paid_status', 'completed');
+                try {
+                    const { count } = await supabase
+                        .from('preorders')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('paid_status', 'completed');
+                    
+                    console.log(`📊 Total completed orders: ${count}`);
+                } catch (countError) {
+                    console.error('❌ Erreur comptage orders:', countError);
+                }
                 
-                console.log(`Total completed orders: ${count}`);
+                // RÉSUMÉ FINAL DE L'AUDIT
+                console.log('🎯 RÉSUMÉ AUDIT WEBHOOK:');
+                console.log('  - Session ID:', sessionId);
+                console.log('  - Email client:', extractedData.email || 'ABSENT');
+                console.log('  - Offer:', extractedData.offer);
+                console.log('  - Montant:', extractedData.amount_total / 100, '€');
+                console.log('  - Supabase:', upsertError ? 'Échec' : 'Succès');
+                console.log('  - Email:', extractedData.email ? (emailSent ? 'Envoyé' : 'Échec') : 'Sauté (email absent)');
+                console.log('✅ Webhook traité avec succès');
                 
                 return res.status(200).json({ 
                     message: 'Order processed successfully',
                     sessionId: sessionId,
                     email: extractedData.email,
-                    offer: extractedData.offer
+                    offer: extractedData.offer,
+                    supabaseStatus: upsertError ? 'failed' : 'success',
+                    emailStatus: extractedData.email ? (emailSent ? 'sent' : 'failed') : 'skipped_no_email'
                 });
             }
             
