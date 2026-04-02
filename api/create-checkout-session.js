@@ -100,6 +100,13 @@ module.exports = async (req, res) => {
         
         // Handle don-libre case separately
         if (req.body.type === 'don-libre') {
+            // Validate minimum amount (10€ = 1000 centimes)
+            if (!req.body.customAmount || req.body.customAmount < 1000) {
+                return res.status(400).json({ 
+                    error: 'Minimum amount is 10€' 
+                });
+            }
+
             const session = await stripe.checkout.sessions.create({
                 payment_method_types: ['card'],
                 line_items: [

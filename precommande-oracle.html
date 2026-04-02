@@ -1073,6 +1073,28 @@
         </div>
     </section>
 
+    <!-- Section Micro-Réassurance Paiement -->
+    <section class="py-8 bg-[rgba(5,20,40,0.8)] border-t border-gold/10">
+        <div class="container mx-auto px-6">
+            <div class="max-w-3xl mx-auto text-center">
+                <div class="space-y-4 text-sm text-light-gold/70">
+                    <div class="flex items-center justify-center gap-2">
+                        <i class="fas fa-shield-alt text-gold"></i>
+                        <span>Paiement sécurisé via Stripe</span>
+                    </div>
+                    <div class="flex items-center justify-center gap-2">
+                        <i class="fas fa-ban text-gold"></i>
+                        <span>Aucun prélèvement supplémentaire</span>
+                    </div>
+                    <div class="flex items-center justify-center gap-2">
+                        <i class="fas fa-truck text-gold"></i>
+                        <span>Livraison dès production terminée</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
     <!-- Section Contribution Libre -->
     <section class="mt-16 text-center max-w-2xl mx-auto px-4">
         <h3 class="text-2xl md:text-3xl font-semibold text-gold mb-4">
@@ -1080,7 +1102,7 @@
         </h3>
         
         <p class="text-sm md:text-base text-light-gold/80 mb-6 leading-relaxed">
-            Contribution libre conseillée : entre 20€ et 40€<br><br>
+            Contribution libre conseillée : à partir de 10€<br><br>
             Si vous ressentez l'appel de cet oracle mais que le prix est un frein,
             vous pouvez contribuer librement selon vos moyens.<br><br>
             Chaque contribution soutient directement la création et la diffusion d'Oradia.
@@ -1090,8 +1112,8 @@
             <input
                 type="number"
                 id="customAmount"
-                placeholder="Montant libre (min 20€)"
-                min="20"
+                placeholder="Montant libre (min 10€)"
+                min="10"
                 class="w-64 px-4 py-3 rounded-lg text-center text-night-blue"
             />
             
@@ -1103,8 +1125,6 @@
             </button>
         </div>
     </section>
-
-    <!-- Section Micro-Réassurance Paiement -->
     <section class="py-8 bg-[rgba(5,20,40,0.8)] border-t border-gold/10">
         <div class="container mx-auto px-6">
             <div class="max-w-3xl mx-auto text-center">
@@ -1833,8 +1853,8 @@ La production est lancée grâce aux premières commandes.</p>
         async function startCustomCheckout() {
             const amount = document.getElementById('customAmount').value;
 
-            if (!amount || amount < 20) {
-                alert("Minimum 20€");
+            if (!amount || amount < 10) {
+                alert("Minimum 10€");
                 return;
             }
 
