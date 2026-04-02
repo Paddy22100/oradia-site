@@ -411,27 +411,10 @@
     </main>
 
     <!-- Footer -->
-    <footer class="bg-[rgba(5,20,40,0.8)] border-t border-gold/20 mt-12">
-        <div class="container mx-auto px-6 py-8">
-            <div class="text-center">
-                <div class="mb-6">
-                    <a href="index.html" class="inline-flex items-center gap-2 bg-gold text-night-blue font-bold py-3 px-6 rounded-full hover:bg-light-gold transition-all transform hover:scale-105">
-                        <i class="fas fa-home mr-2"></i>
-                        Retour à l'accueil
-                    </a>
-                </div>
-                <p class="text-light-gold/60 text-sm">
-                    © 2026 ORADIA - Tous droits réservés
-                </p>
-                <div class="mt-4 space-x-4">
-                    <a href="mentions-legales.html" class="text-gold/60 hover:text-gold text-sm transition-colors">Mentions Légales</a>
-                    <a href="politique-confidentialite.html" class="text-gold/60 hover:text-gold text-sm transition-colors">Politique de Confidentialité</a>
-                    <a href="cgu.html" class="text-gold/60 hover:text-gold text-sm transition-colors">CGU</a>
-                </div>
-            </div>
-        </div>
-    </footer>
+    <div id="footer-placeholder"></div>
 
+    <script src="components/header-manager.js" defer></script>
+    <script src="components/footer-manager.js" defer></script>
     <script>
         // Bouton retour en haut
         const backToTopBtn = document.getElementById('backToTop');
