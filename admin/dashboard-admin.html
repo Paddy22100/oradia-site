@@ -116,9 +116,6 @@
                     </div>
                     <div class="text-3xl font-bold text-gold mb-1" id="preordersCount">-</div>
                     <p class="text-light-gold text-sm">Précommandes</p>
-                    <div class="mt-2 h-1 bg-gold/20 rounded-full overflow-hidden">
-                        <div class="h-full bg-gold/60 rounded-full transition-all duration-1000" style="width: 0%" id="preordersProgress"></div>
-                    </div>
                 </div>
                 
                 <!-- Montant Précommandes -->
@@ -131,9 +128,6 @@
                     </div>
                     <div class="text-3xl font-bold text-gold mb-1" id="preordersTotal">-</div>
                     <p class="text-light-gold text-sm">Montant précommandes</p>
-                    <div class="mt-2 h-1 bg-green-500/20 rounded-full overflow-hidden">
-                        <div class="h-full bg-green-500/60 rounded-full transition-all duration-1000" style="width: 0%" id="preordersTotalProgress"></div>
-                    </div>
                 </div>
                 
                 <!-- Dons -->
@@ -146,9 +140,6 @@
                     </div>
                     <div class="text-3xl font-bold text-gold mb-1" id="donorsCount">-</div>
                     <p class="text-light-gold text-sm">Dons</p>
-                    <div class="mt-2 h-1 bg-red-500/20 rounded-full overflow-hidden">
-                        <div class="h-full bg-red-500/60 rounded-full transition-all duration-1000" style="width: 0%" id="donorsProgress"></div>
-                    </div>
                 </div>
                 
                 <!-- Waitlist -->
@@ -161,14 +152,11 @@
                     </div>
                     <div class="text-3xl font-bold text-gold mb-1" id="waitlistCount">-</div>
                     <p class="text-light-gold text-sm">Waitlist</p>
-                    <div class="mt-2 h-1 bg-blue-500/20 rounded-full overflow-hidden">
-                        <div class="h-full bg-blue-500/60 rounded-full transition-all duration-1000" style="width: 0%" id="waitlistProgress"></div>
-                    </div>
                 </div>
             </div>
 
-            <!-- KPI Secondaires -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- KPI Business Additionnels -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
                 <!-- Total Global -->
                 <div class="stat-card rounded-2xl p-6">
                     <div class="text-2xl font-bold text-gold mb-1" id="globalTotal">-</div>
@@ -188,37 +176,36 @@
                 </div>
             </div>
             
-            <!-- KPI Secondaires -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-                <!-- Précommandes sans email -->
-                <div class="stat-card rounded-2xl p-4">
+            <!-- KPI Techniques (plus discrets) -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                <div class="bg-[rgba(5,20,40,0.4)] border border-yellow-500/20 rounded-xl p-4">
                     <div class="flex items-center gap-3">
-                        <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                        <i class="fas fa-exclamation-triangle text-yellow-500/70 text-sm"></i>
                         <div>
-                            <div class="text-lg font-bold text-gold" id="preordersNoEmail">-</div>
-                            <p class="text-light-gold text-sm">Précommandes sans email</p>
+                            <div class="text-lg font-bold text-gold/80" id="preordersNoEmail">-</div>
+                            <p class="text-light-gold/60 text-xs">Précommandes sans email</p>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Dons sans email -->
-                <div class="stat-card rounded-2xl p-4">
+                <div class="bg-[rgba(5,20,40,0.4)] border border-yellow-500/20 rounded-xl p-4">
                     <div class="flex items-center gap-3">
-                        <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                        <i class="fas fa-exclamation-triangle text-yellow-500/70 text-sm"></i>
                         <div>
-                            <div class="text-lg font-bold text-gold" id="donorsNoEmail">-</div>
-                            <p class="text-light-gold text-sm">Dons sans email</p>
+                            <div class="text-lg font-bold text-gold/80" id="donorsNoEmail">-</div>
+                            <p class="text-light-gold/60 text-xs">Dons sans email</p>
                         </div>
                     </div>
                 </div>
                 
                 <!-- Waitlist non synchronisée -->
-                <div class="stat-card rounded-2xl p-4">
+                <div class="bg-[rgba(5,20,40,0.4)] border border-orange-500/20 rounded-xl p-4">
                     <div class="flex items-center gap-3">
-                        <i class="fas fa-sync text-orange-500"></i>
+                        <i class="fas fa-sync text-orange-500/70 text-sm"></i>
                         <div>
-                            <div class="text-lg font-bold text-gold" id="waitlistNotSynced">-</div>
-                            <p class="text-light-gold text-sm">Waitlist non sync Brevo</p>
+                            <div class="text-lg font-bold text-gold/80" id="waitlistNotSynced">-</div>
+                            <p class="text-light-gold/60 text-xs">Waitlist non sync Brevo</p>
                         </div>
                     </div>
                 </div>
@@ -319,30 +306,46 @@
         };
 
         // Charger les données du dashboard
-        let dashboardLoaded = false;
+        let isLoading = false;
         async function loadDashboardData() {
-            if (dashboardLoaded) return;
-            dashboardLoaded = true;
+            if (isLoading) return;
             
             try {
-                // Vérifier la session admin
-                const meResponse = await fetch('/api/admin/me', { credentials: 'include' });
-                if (!meResponse.ok) {
-                    window.location.href = 'login.html';
+                isLoading = true;
+                setLoadingState(true);
+                
+                // Charger l'overview
+                const overviewResponse = await fetch('/api/admin/data?section=overview', { credentials: 'include' });
+                
+                if (overviewResponse.status === 401) {
+                    window.location.href = '/admin/login.html';
                     return;
                 }
-
-                // Charger les KPI
+                
+                if (!overviewResponse.ok) {
+                    throw new Error(`Erreur ${overviewResponse.status}: ${overviewResponse.statusText}`);
+                }
+                
+                const overviewData = await overviewResponse.json();
+                if (overviewData.success) {
+                    updateKPIs(overviewData.data);
+                }
+                
+                // Charger les données des tableaux
                 await Promise.all([
-                    loadOverview(),
                     loadPreorders(),
                     loadDonors(),
                     loadWaitlist()
                 ]);
-
+                
+                showSuccessMessage('Données actualisées');
+                
             } catch (error) {
-                console.error('Erreur chargement dashboard:', error);
-                window.location.href = 'login.html';
+                console.error('Erreur dashboard:', error);
+                showErrorMessage(error.message || 'Erreur lors du chargement des données');
+            } finally {
+                isLoading = false;
+                setLoadingState(false);
             }
         }
 
@@ -357,7 +360,64 @@
             }
         }
 
-        // Charger les précommandes
+        // État de chargement
+        function setLoadingState(loading) {
+            const refreshBtn = document.getElementById('refreshBtn');
+            if (refreshBtn) {
+                refreshBtn.disabled = loading;
+                refreshBtn.innerHTML = loading ? 
+                    '<i class="fas fa-spinner fa-spin mr-2"></i>Chargement...' : 
+                    '<i class="fas fa-sync-alt mr-2"></i>Actualiser';
+            }
+            
+            // Afficher les skeletons pour les KPI
+            if (loading) {
+                showKPIPlaceholders();
+            }
+        }
+        
+        // Afficher les placeholders KPI
+        function showKPIPlaceholders() {
+            const kpiElements = ['preordersCount', 'preordersTotal', 'donorsCount', 'waitlistCount'];
+            kpiElements.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    element.innerHTML = '<div class="animate-pulse bg-gold/20 h-8 w-16 rounded"></div>';
+                }
+            });
+        }
+        
+        // Messages utilisateur
+        function showSuccessMessage(message) {
+            showMessage(message, 'success');
+        }
+        
+        function showErrorMessage(message) {
+            showMessage(message, 'error');
+        }
+        
+        function showMessage(message, type) {
+            const container = document.querySelector('.container');
+            if (!container) return;
+            
+            const messageDiv = document.createElement('div');
+            const bgColor = type === 'success' ? 'bg-green-500/20 border-green-500/50 text-green-400' : 'bg-red-500/20 border-red-500/50 text-red-400';
+            
+            messageDiv.className = `fixed top-4 right-4 ${bgColor} border px-4 py-3 rounded-lg shadow-lg z-50 animate-fadeIn`;
+            messageDiv.innerHTML = `
+                <div class="flex items-center gap-3">
+                    <i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i>
+                    <span>${message}</span>
+                </div>
+            `;
+            
+            container.appendChild(messageDiv);
+            
+            setTimeout(() => {
+                messageDiv.style.opacity = '0';
+                setTimeout(() => messageDiv.remove(), 300);
+            }, 3000);
+        }
         async function loadPreorders(page = 1, limit = 10) {
             const response = await fetch(`/api/admin/data?section=preorders&page=${page}&limit=${limit}`, { credentials: 'include' });
             const data = await response.json();
@@ -409,22 +469,6 @@
                 minute: '2-digit',
                 second: '2-digit'
             }));
-            
-            // Animer les barres de progression
-            animateProgress('preordersProgress', Math.min((data.preorders.count / 100) * 100, 100));
-            animateProgress('preordersTotalProgress', Math.min((data.preorders.total / 1000) * 100, 100));
-            animateProgress('donorsProgress', Math.min((data.donors.count / 50) * 100, 100));
-            animateProgress('waitlistProgress', Math.min((data.waitlist.count / 200) * 100, 100));
-        }
-        
-        // Animer les barres de progression
-        function animateProgress(elementId, targetWidth) {
-            const element = document.getElementById(elementId);
-            if (element) {
-                setTimeout(() => {
-                    element.style.width = targetWidth + '%';
-                }, 100);
-            }
         }
 
         // Mettre à jour un élément du DOM
@@ -443,10 +487,31 @@
             }).format(amount);
         }
 
-        // Mettre à jour le tableau des précommandes
+        // Afficher un état vide
+        function showEmptyState(tableId, message = 'Aucune donnée disponible') {
+            const tbody = document.querySelector(`#${tableId} tbody`);
+            if (!tbody) return;
+            
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="6" class="px-6 py-12 text-center text-light-gold/50">
+                        <div class="flex flex-col items-center gap-3">
+                            <i class="fas fa-inbox text-4xl text-light-gold/30"></i>
+                            <span class="text-lg">${message}</span>
+                        </div>
+                    </td>
+                </tr>
+            `;
+        }
         function updatePreordersTable(preorders, pagination) {
             const tbody = document.querySelector('#preordersTable tbody');
             if (!tbody) return;
+            
+            if (!preorders || preorders.length === 0) {
+                showEmptyState('preordersTable', 'Aucune précommande');
+                updatePagination('preorders', pagination);
+                return;
+            }
             
             tbody.innerHTML = preorders.map((preorder, index) => `
                 <tr class="hover:bg-[rgba(212,175,55,0.1)] transition-all duration-300 border-l-4 border-transparent hover:border-gold/50 animate-fadeIn" style="animation-delay: ${index * 50}ms">
@@ -467,7 +532,7 @@
                     <td class="px-6 py-4">
                         <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusClass(preorder.paid_status)} border border-current/20">
                             <span class="w-2 h-2 rounded-full mr-2 ${preorder.paid_status === 'completed' ? 'bg-green-400' : preorder.paid_status === 'pending' ? 'bg-yellow-400' : 'bg-red-400'}"></span>
-                            ${preorder.paid_status}
+                            ${getFrenchStatus(preorder.paid_status)}
                         </span>
                     </td>
                 </tr>
@@ -476,41 +541,50 @@
             updatePagination('preorders', pagination);
         }
 
-        // Mettre à jour le tableau des dons
-        function updateDonorsTable(donors, pagination) {
-            const tbody = document.querySelector('#donorsTable tbody');
-            if (!tbody) return;
-            
-            tbody.innerHTML = donors.map(donor => `
-                <tr class="hover:bg-[rgba(5,20,40,0.8)] transition">
-                    <td class="px-6 py-4 text-light-gold">${donor.created_at_fr || formatDate(donor.created_at)}</td>
-                    <td class="px-6 py-4 text-light-gold">${donor.email || '-'}</td>
-                    <td class="px-6 py-4 text-light-gold">${donor.full_name || '-'}</td>
-                    <td class="px-6 py-4 text-gold font-semibold">${formatCurrency(donor.amount_total)}</td>
-                    <td class="px-6 py-4"><span class="px-2 py-1 rounded text-sm ${getStatusClass(donor.paid_status)}">${donor.paid_status}</span></td>
-                </tr>
-            `).join('');
-            
+    // Mettre à jour le tableau des dons
+    function updateDonorsTable(donors, pagination) {
+        const tbody = document.querySelector('#donorsTable tbody');
+        if (!tbody) return;
+        
+        if (!donors || donors.length === 0) {
+            showEmptyState('donorsTable', 'Aucun don');
             updatePagination('donors', pagination);
+            return;
         }
+        
+        tbody.innerHTML = donors.map((donor, index) => `
+            <tr class="hover:bg-[rgba(212,175,55,0.1)] transition-all duration-300 border-l-4 border-transparent hover:border-gold/50 animate-fadeIn" style="animation-delay: ${index * 50}ms">
+                <td class="px-6 py-4 text-light-gold font-medium">${donor.created_at_fr || formatDate(donor.created_at)}</td>
+                <td class="px-6 py-4 text-light-gold">
+                    <div class="flex items-center gap-2">
+                        <div class="w-2 h-2 bg-green-400/40 rounded-full"></div>
+                        ${donor.email || '-'}
+                    </div>
+                </td>
+                <td class="px-6 py-4 text-light-gold font-medium">${donor.full_name || '-'}</td>
+                <td class="px-6 py-4 text-green-400 font-bold text-lg">${formatCurrency(donor.amount_total)}</td>
+                <td class="px-6 py-4">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium ${getStatusClass(donor.paid_status)} border border-current/20">
+                        <span class="w-2 h-2 rounded-full mr-2 ${donor.paid_status === 'completed' ? 'bg-green-400' : donor.paid_status === 'pending' ? 'bg-yellow-400' : 'bg-red-400'}"></span>
+                        ${getFrenchStatus(donor.paid_status)}
+                    </span>
+                </td>
+            </tr>
+        `).join('');
+        
+        updatePagination('donors', pagination);
+    }
 
-        // Mettre à jour le tableau de la waitlist
-        function updateWaitlistTable(waitlist, pagination) {
-            const tbody = document.querySelector('#waitlistTable tbody');
-            if (!tbody) return;
-            
-            tbody.innerHTML = waitlist.map(item => `
-                <tr class="hover:bg-[rgba(5,20,40,0.8)] transition">
-                    <td class="px-6 py-4 text-light-gold">${item.email || '-'}</td>
-                    <td class="px-6 py-4 text-light-gold">${item.full_name || '-'}</td>
-                    <td class="px-6 py-4 text-light-gold">${item.created_at_fr || formatDate(item.created_at)}</td>
-                    <td class="px-6 py-4"><span class="px-2 py-1 rounded text-sm ${item.brevo_synced ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">${item.brevo_synced ? 'Sync' : 'Non sync'}</span></td>
-                </tr>
-            `).join('');
-            
+    // Mettre à jour le tableau de la waitlist
+    function updateWaitlistTable(waitlist, pagination) {
+        const tbody = document.querySelector('#waitlistTable tbody');
+        if (!tbody) return;
+        
+        if (!waitlist || waitlist.length === 0) {
+            showEmptyState('waitlistTable', 'Aucune inscription en waitlist');
             updatePagination('waitlist', pagination);
+            return;
         }
-
         // Formater la date
         function formatDate(dateString) {
             if (!dateString) return '-';
@@ -525,6 +599,16 @@
             });
         }
 
+        // Obtenir le statut français
+        function getFrenchStatus(status) {
+            switch (status) {
+                case 'completed': return 'Payé';
+                case 'pending': return 'En attente';
+                case 'failed': return 'Échec';
+                default: return status || '-';
+            }
+        }
+        
         // Obtenir la classe CSS pour le statut
         function getStatusClass(status) {
             switch (status) {
@@ -565,6 +649,7 @@
 
         // Exporter les contacts
         function exportContacts() {
+            showSuccessMessage('Export CSV lancé');
             window.location.href = '/api/admin/contacts-export';
         }
 
@@ -575,15 +660,14 @@
                     method: 'POST',
                     credentials: 'include'
                 });
-                window.location.href = 'login.html';
+                window.location.href = '/admin/login.html';
             } catch (error) {
-                window.location.href = 'login.html';
+                window.location.href = '/admin/login.html';
             }
         }
 
         // Rafraîchir les données
         function refreshData() {
-            dashboardLoaded = false;
             loadDashboardData();
         }
 
