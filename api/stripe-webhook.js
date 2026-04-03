@@ -38,6 +38,12 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
         console.log('📧 Envoi email à:', toEmail);
         console.log('📧 Détails:', { toName, offer, amountTotal });
         
+        // Différencier don vs précommande
+        const isDonation = offer === 'contribution-libre';
+        const subject = isDonation
+            ? 'Merci pour ton soutien à ORADIA'
+            : 'Ta précommande ORADIA est confirmée';
+        
         const response = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
             headers: {
@@ -57,7 +63,7 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
                     email: "contact@oradia.fr",
                     name: "Oradia"
                 },
-                subject: 'Ta précommande ORADIA est confirmée',
+                subject: subject,
                 htmlContent: `
 <div style="margin:0;padding:0;background-color:#0b1020;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0b1020;margin:0;padding:0;">
@@ -79,7 +85,7 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
           <tr>
             <td style="padding:32px 30px 20px 30px;font-family:Georgia,serif;color:#f3f4f6;">
               <h2 style="margin:0 0 22px 0;color:#f0c75e;font-size:28px;line-height:1.3;text-align:center;">
-                ✨ Ta précommande est confirmée
+                ${isDonation ? '✨ Merci pour ton soutien' : '✨ Ta précommande est confirmée'}
               </h2>
 
               <p style="margin:0 0 18px 0;font-size:18px;line-height:1.7;color:#ffffff;">
@@ -87,24 +93,35 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
               </p>
 
               <p style="margin:0 0 18px 0;font-size:17px;line-height:1.8;color:#e5e7eb;">
-                Avec gratitude, nous te confirmons que ta précommande ORADIA a bien été enregistrée.
+                ${isDonation 
+                    ? 'Avec profonde gratitude, nous te remercions pour ton soutien à ORADIA. Ta contribution nous aide à partager la sagesse de l\'Oracle avec plus de personnes.'
+                    : 'Avec gratitude, nous te confirmons que ta précommande ORADIA a bien été enregistrée.'
+                }
               </p>
 
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0;background-color:#1c2438;border:1px solid #c9a94d;border-radius:10px;">
                 <tr>
                   <td style="padding:18px 20px;font-family:Georgia,serif;color:#f0c75e;font-size:16px;line-height:1.8;">
-                    <strong>Offre :</strong> ${offer}<br>
+                    <strong>${isDonation ? 'Contribution' : 'Offre'} :</strong> ${offer}<br>
                     <strong>Montant :</strong> ${amountTotal}€
                   </td>
                 </tr>
               </table>
 
-              <p style="margin:0 0 18px 0;font-size:17px;line-height:1.8;color:#e5e7eb;">
-                Ton oracle est maintenant en préparation. Nous te recontacterons personnellement dès qu'il sera prêt.
-              </p>
+              ${isDonation 
+                ? `<p style="margin:0 0 18px 0;font-size:17px;line-height:1.8;color:#e5e7eb;">
+                    Ton soutien précieux nous permet de continuer notre mission d'accompagner les âmes sur leur chemin de transformation.
+                  </p>`
+                : `<p style="margin:0 0 18px 0;font-size:17px;line-height:1.8;color:#e5e7eb;">
+                    Ton oracle est maintenant en préparation. Nous te recontacterons personnellement dès qu'il sera prêt.
+                  </p>`
+              }
 
               <p style="margin:0 0 12px 0;font-size:17px;line-height:1.8;color:#e5e7eb;">
-                Merci pour ta confiance et pour accueillir la sagesse d'ORADIA dans ta vie.
+                ${isDonation 
+                    ? 'Merci du fond du cœur pour ta générosité et ta confiance en notre vision.'
+                    : 'Merci pour ta confiance et pour accueillir la sagesse d\'ORADIA dans ta vie.'
+                }
               </p>
             </td>
           </tr>
@@ -135,11 +152,29 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
   </table>
 </div>
 `,
-                textContent: `Ta précommande ORADIA est confirmée
+                textContent: `${isDonation 
+    ? `Merci pour ton soutien à ORADIA
 
 Bonjour${toName ? ' ' + toName : ''},
 
-Avec une immense gratitude, nous te confirmons que ta précommande ORADIA a été enregistrée avec succès.
+Avec profonde gratitude, nous te remercions pour ton soutien à ORADIA. Ta contribution nous aide à partager la sagesse de l'Oracle avec plus de personnes.
+
+Contribution : ${offer}
+Montant : ${amountTotal}€
+
+Ton soutien précieux nous permet de continuer notre mission d'accompagner les âmes sur leur chemin de transformation.
+
+Merci du fond du cœur pour ta générosité et ta confiance en notre vision.
+
+Avec toute notre gratitude,
+Rudy
+Fondateur d'ORADIA
+oradia.fr`
+    : `Ta précommande ORADIA est confirmée
+
+Bonjour${toName ? ' ' + toName : ''},
+
+Avec une immense gratitude, nous te confirmons que ta précommande ORADIA a bien été enregistrée avec succès.
 
 Offre choisie : ${offer}
 Montant : ${amountTotal}€
@@ -152,6 +187,7 @@ Avec toute notre gratitude,
 Rudy
 Fondateur d'ORADIA
 oradia.fr`
+}`
             })
         });
 
@@ -320,7 +356,7 @@ const handler = async (req, res) => {
                         stripe_session_id: extractedData.stripe_session_id,
                         payment_intent_id: extractedData.payment_intent_id,
                         email: extractedData.email,
-                        full_name: extractedData.full_name,
+                        full_name: extractedData.full_name || 'Soutien ORADIA',
                         amount_total: amountInEuros, // en euros
                         currency: extractedData.currency,
                         paid_status: 'completed',
@@ -408,7 +444,7 @@ const handler = async (req, res) => {
                     stripe_session_id: extractedData.stripe_session_id,
                     email: extractedData.email,
                     offer: extractedData.offer,
-                    full_name: extractedData.full_name,
+                    full_name: extractedData.full_name || 'Client ORADIA',
                     amount_total: extractedData.amount_total / 100, // Conversion en euros
                     currency: extractedData.currency,
                     payment_intent_id: extractedData.payment_intent_id,

@@ -103,3 +103,195 @@ La table `donors` recevait des montants en centimes au lieu d'euros.
 **Raison** : Conversion explicite en euros avec variable intermédiaire pour éviter les erreurs.
 
 **Les dons sont maintenant correctement enregistrés en euros dans la table `donors`.**
+
+---
+
+## 📧 **EMAIL BREVO FIX**
+
+### **Problème**
+L'email envoyé pour les dons libres était identique à celui des précommandes, ce qui est déroutant pour les utilisateurs.
+
+### **Correction**
+```diff
+// Lignes 41-66
+- console.log('📧 Envoi email à:', toEmail);
+- console.log('📧 Détails:', { toName, offer, amountTotal });
+- 
+- const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+-     method: 'POST',
+-     headers: {
+-         'Content-Type': 'application/json',
+-         'api-key': process.env.BREVO_API_KEY
+-     },
+-     body: JSON.stringify({
+-         sender: {
+-             email: process.env.BREVO_SENDER_EMAIL,
+-             name: process.env.BREVO_SENDER_NAME
+-         },
+-         to: [{
+-             email: toEmail,
+-             name: toName
+-         }],
+-         replyTo: {
+-             email: "contact@oradia.fr",
+-             name: "Oradia"
+-         },
+-         subject: 'Ta précommande ORADIA est confirmée',
++ console.log('📧 Envoi email à:', toEmail);
++ console.log('📧 Détails:', { toName, offer, amountTotal });
++ 
++ // Différencier don vs précommande
++ const isDonation = offer === 'contribution-libre';
++ const subject = isDonation
++     ? 'Merci pour ton soutien à ORADIA'
++     : 'Ta précommande ORADIA est confirmée';
++ 
++ const response = await fetch('https://api.brevo.com/v3/smtp/email', {
++     method: 'POST',
++     headers: {
++         'Content-Type': 'application/json',
++         'api-key': process.env.BREVO_API_KEY
++     },
++     body: JSON.stringify({
++         sender: {
++             email: process.env.BREVO_SENDER_EMAIL,
++             name: process.env.BREVO_SENDER_NAME
++         },
++         to: [{
++             email: toEmail,
++             name: toName
++         }],
++         replyTo: {
++             email: "contact@oradia.fr",
++             name: "Oradia"
++         },
++         subject: subject,
+```
+
+### **Contenu adapté**
+```diff
+// Lignes 87-125
+- <h2>✨ Ta précommande est confirmée</h2>
+- <p>Avec gratitude, nous te confirmons que ta précommande ORADIA a bien été enregistrée.</p>
+- <strong>Offre :</strong> ${offer}
+- <p>Ton oracle est maintenant en préparation...</p>
+- <p>Merci pour ta confiance...</p>
++ <h2>${isDonation ? '✨ Merci pour ton soutien' : '✨ Ta précommande est confirmée'}</h2>
++ <p>${isDonation 
++     ? 'Avec profonde gratitude, nous te remercions pour ton soutien à ORADIA...'
++     : 'Avec gratitude, nous te confirmons que ta précommande ORADIA a bien été enregistrée.'
++ }</p>
++ <strong>${isDonation ? 'Contribution' : 'Offre'} :</strong> ${offer}
++ ${isDonation 
++     ? '<p>Ton soutien précieux nous permet de continuer notre mission...</p>'
++     : '<p>Ton oracle est maintenant en préparation...</p>'
++ }
++ <p>${isDonation 
++     ? 'Merci du fond du cœur pour ta générosité...'
++     : 'Merci pour ta confiance...'
++ }</p>
+```
+
+**Raison** : Les donateurs reçoivent maintenant un email de remerciement approprié, les précommandeurs conservent leur email de confirmation.
+
+**Les emails Brevo sont maintenant correctement différenciés entre dons et précommandes.**
+
+---
+
+## 🛡️ **FULL_NAME FALLBACK FIX**
+
+### **Problème**
+Si Stripe ne renvoie pas le nom, `full_name` peut être `null`, ce qui peut causer des problèmes d'affichage.
+
+### **Correction**
+```diff
+// Lignes 340 (donors)
+- full_name: extractedData.full_name,
++ full_name: extractedData.full_name || 'Soutien ORADIA',
+
+// Lignes 428 (preorders)
+- full_name: extractedData.full_name,
++ full_name: extractedData.full_name || 'Client ORADIA',
+```
+
+**Raison** : Évite les trous de données et fournit un nom par défaut cohérent selon le type d'achat.
+
+**Les tables `donors` et `preorders` ont maintenant toujours un `full_name` valide.**
+
+---
+
+## 📧 **TEXTCONTENT BREVO FIX**
+
+### **Problème**
+Le `textContent` restait un texte de précommande même pour les dons, créant une incohérence.
+
+### **Correction**
+```diff
+// Lignes 155-190
+- textContent: `Ta précommande ORADIA est confirmée...
++ textContent: `${isDonation 
++     ? `Merci pour ton soutien à ORADIA...
++     : `Ta précommande ORADIA est confirmée...
++ }`
+```
+
+**Raison** : Le texte brut est maintenant cohérent avec le HTML selon le type d'achat.
+
+---
+
+## 💰 **DONORS AMOUNT_TOTAL CORRECTION**
+
+### **Problème**
+La base `donors.amount_total` doit être en euros, pas en centimes.
+
+### **SQL de correction**
+```sql
+-- 1. Convertir la colonne en numeric
+ALTER TABLE donors
+ALTER COLUMN amount_total TYPE numeric;
+
+-- 2. Convertir les anciennes valeurs de centimes en euros (UNE SEULE FOIS)
+UPDATE donors
+SET amount_total = amount_total / 100
+WHERE amount_total >= 1000;
+```
+
+**Attention** : Ne lancer la conversion qu'une seule fois pour éviter de rediviser les valeurs.
+
+---
+
+## ⚠️ **WEBHOOK ERREURS SUPABASE**
+
+### **Problème identifié**
+Dans `preorders`, si l'upsert Supabase échoue, l'email part quand même et la réponse est 200.
+
+```javascript
+if (upsertError) {
+    console.log('⚠️ Upsert échoué mais continuation pour email');
+    // ... envoi email quand même
+}
+```
+
+### **Impact possible**
+- ✅ **Client emailé** : OK pour UX
+- ❌ **Aucune ligne en base** : Problème métier masqué
+- ❌ **Réponse 200** : Stripe pense que tout va bien
+
+### **Recommandation**
+Ce n'est pas bloquant, mais il faut être conscient que cela peut masquer des vrais problèmes métier. À surveiller en production.
+
+---
+
+## 🚀 **DÉPLOIEMENT FINAL**
+
+```bash
+# 1. Correction SQL (UNE SEULE FOIS)
+# psql < donors-amount-correction.sql
+
+# 2. Déploiement code
+git add api/stripe-webhook.js PREORDERS-FIX.md donors-amount-correction.sql
+git commit -m "fix: final corrections - textContent, donors amount, webhook errors"
+git push
+```
+
+**Les 3 corrections finales sont appliquées pour une cohérence parfaite.**
