@@ -1219,34 +1219,40 @@
             Contribution libre
         </h3>
         
-        <p class="text-sm md:text-base text-light-gold/80 mb-6 leading-relaxed">
-            Contribution conseillée : entre 20€ et 40€<br><br>
-            Si vous ressentez l'appel de cet oracle mais que le prix est un frein,
-            vous pouvez contribuer librement selon vos moyens.<br><br>
-            Chaque contribution soutient directement la création et la diffusion d'Oradia.
+        <p class="text-light-gold/80 mb-6">
+            Soutenir ORADIA sans précommander l'oracle physique.
         </p>
         
-        <p class="text-light-gold/70 text-sm mb-8 text-center">
-            Cette contribution soutient le projet, sans réservation d'oracle.
-        </p>
-        
-        <div class="mt-6 flex flex-col items-center gap-4">
-            <div class="flex items-center gap-2">
+        <div class="flex flex-col items-center gap-4">
+            <div class="flex flex-col items-center gap-3 w-full max-w-md">
+                <input
+                    type="email"
+                    id="contributionEmail"
+                    placeholder="Votre email"
+                    class="w-full px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-light-gold/60 transition-all duration-300"
+                    required
+                />
+                <input
+                    type="text"
+                    id="contributionName"
+                    placeholder="Votre nom (optionnel)"
+                    class="w-full px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-light-gold/60 transition-all duration-300"
+                />
                 <input
                     type="text"
                     id="customAmount"
                     placeholder="Montant libre (min 20€)"
                     min="20"
-                    class="w-64 px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-light-gold/60 transition-all duration-300"
+                    class="w-full px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-light-gold/60 transition-all duration-300"
                 />
-                <span class="text-gold text-lg font-medium">€</span>
             </div>
             
             <button
                 onclick="startCustomCheckout()"
-                class="bg-gold text-night-blue font-semibold px-8 py-4 rounded-full hover:scale-105 transition-transform duration-200"
+                class="bg-gold text-night-blue font-bold py-3 px-8 rounded-full hover:bg-light-gold hover:shadow-lg hover:shadow-gold/20 transition-all duration-300 transform hover:scale-105"
             >
-                Contribuer librement
+                <i class="fas fa-heart mr-2"></i>
+                Contribuer
             </button>
         </div>
     </section>
@@ -2284,30 +2290,60 @@ La production est lancée grâce aux premières commandes.</p>
         });
 
         async function startCustomCheckout() {
+            console.log('🎁 === CONTRIBUTION LIBRE CHECKOUT START ===');
+            
+            const email = document.getElementById('contributionEmail').value.trim();
+            const name = document.getElementById('contributionName').value.trim();
             const amount = document.getElementById('customAmount').value;
 
+            console.log('📧 Email:', email);
+            console.log('👤 Name:', name);
+            console.log('💰 Amount:', amount);
+
+            // Validation email
+            if (!email || !email.includes('@')) {
+                alert("Veuillez entrer une adresse email valide");
+                return;
+            }
+
+            // Validation montant
             if (!amount || amount < 20) {
                 alert("Minimum 20€");
                 return;
             }
 
-            const response = await fetch('/api/create-checkout-session', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({
-                    customAmount: amount * 100, // en centimes
-                    type: 'don-libre'
-                })
-            });
+            const payload = {
+                customAmount: amount * 100, // en centimes
+                type: 'don-libre',
+                email: email,
+                fullName: name || 'Ami(e) d\'ORADIA'
+            };
 
-            const data = await response.json();
+            console.log('📦 Payload envoyé:', JSON.stringify(payload, null, 2));
 
-            if (data.url) {
-                window.location.href = data.url;
-            } else {
-                alert("Erreur paiement");
+            try {
+                const response = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                console.log('📡 Response status:', response.status);
+                const data = await response.json();
+                console.log('📡 Response data:', data);
+
+                if (data.url) {
+                    console.log('✅ Redirection vers Stripe:', data.url);
+                    window.location.href = data.url;
+                } else {
+                    console.error('❌ Pas d\'URL de redirection');
+                    alert("Erreur paiement");
+                }
+            } catch (error) {
+                console.error('❌ Erreur fetch:', error);
+                alert("Erreur technique. Veuillez réessayer.");
             }
         }
     </script>

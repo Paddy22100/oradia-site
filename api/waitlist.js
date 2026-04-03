@@ -68,8 +68,13 @@ async function addToBrevoWaitlist(email) {
  * Handler principal pour la route /api/waitlist
  */
 export default async function handler(req, res) {
+    console.log('📧 === WAITLIST API CALLED ===');
+    console.log('📋 Method:', req.method);
+    console.log('📋 Headers:', Object.keys(req.headers));
+    
     // Vérifier la méthode HTTP
     if (req.method !== 'POST') {
+        console.error('❌ Méthode non autorisée:', req.method);
         return res.status(405).json({
             success: false,
             message: 'Méthode non autorisée'
@@ -77,8 +82,13 @@ export default async function handler(req, res) {
     }
 
     // Vérifier les variables d'environnement
+    console.log('🔍 Vérification variables environnement:');
+    console.log('- BREVO_API_KEY présente:', !!BREVO_API_KEY);
+    console.log('- BREVO_WAITLIST_LIST_ID présente:', !!BREVO_WAITLIST_LIST_ID);
+    console.log('- BREVO_WAITLIST_LIST_ID valeur:', BREVO_WAITLIST_LIST_ID);
+    
     if (!BREVO_API_KEY || !BREVO_WAITLIST_LIST_ID) {
-        console.error('Variables Brevo manquantes:', {
+        console.error('❌ Variables Brevo manquantes:', {
             hasApiKey: !!BREVO_API_KEY,
             hasListId: !!BREVO_WAITLIST_LIST_ID
         });
@@ -91,6 +101,7 @@ export default async function handler(req, res) {
     try {
         // Parser le body
         const body = req.body;
+        console.log('📦 Body reçu:', JSON.stringify(body, null, 2));
         const { email } = body;
 
         // Validation de l'email
@@ -110,25 +121,32 @@ export default async function handler(req, res) {
         }
 
         // Appel à l'API Brevo
+        console.log('📡 Appel Brevo API pour:', trimmedEmail);
+        console.log('📡 List ID utilisé:', parseInt(BREVO_WAITLIST_LIST_ID));
+        
         const result = await addToBrevoWaitlist(trimmedEmail);
+        
+        console.log('📡 Réponse Brevo - Status:', result.statusCode);
+        console.log('📡 Réponse Brevo - Data:', JSON.stringify(result.data, null, 2));
 
         // Gestion des réponses Brevo
         if (result.statusCode === 201 || result.statusCode === 200) {
             // Succès - contact créé ou mis à jour
+            console.log('✅ Contact ajouté avec succès à la waitlist');
             return res.status(200).json({
                 success: true,
                 message: 'Inscription réussie.'
             });
         } else if (result.statusCode === 400) {
             // Bad request - probablement email invalide ou déjà existant avec conflit
-            console.warn('Brevo 400:', result.data);
+            console.warn('⚠️ Brevo 400:', result.data);
             return res.status(400).json({
                 success: false,
                 message: 'Cet email est déjà inscrit ou invalide.'
             });
         } else {
             // Autres erreurs
-            console.error('Brevo error:', result.statusCode, result.data);
+            console.error('❌ Brevo error:', result.statusCode, result.data);
             return res.status(500).json({
                 success: false,
                 message: 'Erreur lors de l\'inscription. Veuillez réessayer.'
