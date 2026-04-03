@@ -1,8 +1,16 @@
 const https = require('https');
+const { createClient } = require('@supabase/supabase-js');
 
-// Configuration Brevo depuis les variables d'environnement
+// Configuration Supabase
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Configuration Brevo
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const BREVO_WAITLIST_LIST_ID = process.env.BREVO_WAITLIST_LIST_ID;
+
+// Client Supabase
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 /**
  * Validation d'email simple
@@ -17,6 +25,11 @@ function validateEmail(email) {
  */
 async function addToBrevoWaitlist(email) {
     return new Promise((resolve, reject) => {
+        if (!BREVO_API_KEY || !BREVO_WAITLIST_LIST_ID) {
+            reject(new Error('Configuration Brevo manquante'));
+            return;
+        }
+
         const data = JSON.stringify({
             email: email,
             listIds: [parseInt(BREVO_WAITLIST_LIST_ID)],
@@ -50,7 +63,7 @@ async function addToBrevoWaitlist(email) {
                         data: parsedData
                     });
                 } catch (error) {
-                    reject(new Error('Erreur de parsing de la réponse Brevo'));
+                    reject(error);
                 }
             });
         });
@@ -66,43 +79,27 @@ async function addToBrevoWaitlist(email) {
 
 /**
  * Handler principal pour la route /api/waitlist
+ * Option A : Supabase first, Brevo second
  */
 export default async function handler(req, res) {
-    console.log('📧 === WAITLIST API CALLED ===');
-    console.log('📋 Method:', req.method);
-    console.log('📋 Headers:', Object.keys(req.headers));
+    console.log(' === WAITLIST API V2 CALLED ===');
+    console.log(' Method:', req.method);
+    console.log(' Headers:', Object.keys(req.headers));
     
     // Vérifier la méthode HTTP
     if (req.method !== 'POST') {
-        console.error('❌ Méthode non autorisée:', req.method);
+        console.error(' Méthode non autorisée:', req.method);
         return res.status(405).json({
             success: false,
             message: 'Méthode non autorisée'
         });
     }
 
-    // Vérifier les variables d'environnement
-    console.log('🔍 Vérification variables environnement:');
-    console.log('- BREVO_API_KEY présente:', !!BREVO_API_KEY);
-    console.log('- BREVO_WAITLIST_LIST_ID présente:', !!BREVO_WAITLIST_LIST_ID);
-    console.log('- BREVO_WAITLIST_LIST_ID valeur:', BREVO_WAITLIST_LIST_ID);
-    
-    if (!BREVO_API_KEY || !BREVO_WAITLIST_LIST_ID) {
-        console.error('❌ Variables Brevo manquantes:', {
-            hasApiKey: !!BREVO_API_KEY,
-            hasListId: !!BREVO_WAITLIST_LIST_ID
-        });
-        return res.status(500).json({
-            success: false,
-            message: 'Configuration du serveur incomplète'
-        });
-    }
-
     try {
         // Parser le body
         const body = req.body;
-        console.log('📦 Body reçu:', JSON.stringify(body, null, 2));
-        const { email } = body;
+        console.log(' Body reçu:', JSON.stringify(body, null, 2));
+        const { email, fullName } = body;
 
         // Validation de l'email
         if (!email || typeof email !== 'string') {
@@ -120,44 +117,159 @@ export default async function handler(req, res) {
             });
         }
 
-        // Appel à l'API Brevo
-        console.log('📡 Appel Brevo API pour:', trimmedEmail);
-        console.log('📡 List ID utilisé:', parseInt(BREVO_WAITLIST_LIST_ID));
-        
-        const result = await addToBrevoWaitlist(trimmedEmail);
-        
-        console.log('📡 Réponse Brevo - Status:', result.statusCode);
-        console.log('📡 Réponse Brevo - Data:', JSON.stringify(result.data, null, 2));
+        console.log(' Email validé:', trimmedEmail);
 
-        // Gestion des réponses Brevo
-        if (result.statusCode === 201 || result.statusCode === 200) {
-            // Succès - contact créé ou mis à jour
-            console.log('✅ Contact ajouté avec succès à la waitlist');
-            return res.status(200).json({
-                success: true,
-                message: 'Inscription réussie.'
-            });
-        } else if (result.statusCode === 400) {
-            // Bad request - probablement email invalide ou déjà existant avec conflit
-            console.warn('⚠️ Brevo 400:', result.data);
-            return res.status(400).json({
-                success: false,
-                message: 'Cet email est déjà inscrit ou invalide.'
-            });
-        } else {
-            // Autres erreurs
-            console.error('❌ Brevo error:', result.statusCode, result.data);
+        // ÉTAPE 1 : Enregistrement dans Supabase (CRITIQUE)
+        console.log(' ÉTAPE 1: Enregistrement Supabase...');
+        
+        const supabaseData = {
+            email: trimmedEmail,
+            full_name: fullName || null,
+            source: 'oradia-tirages',
+            status: 'active',
+            brevo_synced: false,
+            metadata: {
+                ip_address: req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || 'unknown',
+                user_agent: req.headers['user-agent'] || 'unknown',
+                created_at: new Date().toISOString()
+            }
+        };
+
+        console.log(' Données Supabase:', JSON.stringify(supabaseData, null, 2));
+
+        // Upsert dans Supabase
+        const { data: supabaseResult, error: supabaseError } = await supabase
+            .from('waitlist_tirages')
+            .upsert(supabaseData, {
+                onConflict: 'email',
+                ignoreDuplicates: false
+            })
+            .select()
+            .single();
+
+        if (supabaseError) {
+            console.error(' Erreur Supabase:', supabaseError);
             return res.status(500).json({
                 success: false,
-                message: 'Erreur lors de l\'inscription. Veuillez réessayer.'
+                message: 'Erreur lors de l\'enregistrement en base de données',
+                error: supabaseError.message
             });
         }
 
+        console.log(' Supabase SUCCESS:', JSON.stringify(supabaseResult, null, 2));
+
+        // ÉTAPE 2 : Tentative de synchronisation Brevo (non critique)
+        console.log('📡 ÉTAPE 2: Tentative synchro Brevo...');
+        
+        let brevoSynced = false;
+        let brevoError = null;
+
+        try {
+            if (BREVO_API_KEY && BREVO_WAITLIST_LIST_ID) {
+                console.log('📡 Appel Brevo API pour:', trimmedEmail);
+                const brevoResult = await addToBrevoWaitlist(trimmedEmail);
+                
+                console.log('📡 Réponse Brevo - Status:', brevoResult.statusCode);
+                console.log('📡 Réponse Brevo - Data:', JSON.stringify(brevoResult.data, null, 2));
+
+                if (brevoResult.statusCode === 201 || brevoResult.statusCode === 200) {
+                    // Succès Brevo - mettre à jour Supabase
+                    brevoSynced = true;
+                    
+                    const { error: updateError } = await supabase
+                        .from('waitlist_tirages')
+                        .update({
+                            brevo_synced: true,
+                            brevo_synced_at: new Date().toISOString(),
+                            brevo_error: null,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('email', trimmedEmail);
+
+                    if (updateError) {
+                        console.warn('⚠️ Erreur mise à jour brevo_synced:', updateError);
+                    } else {
+                        console.log('✅ Brevo sync status updated in Supabase');
+                    }
+                } else {
+                    // Échec Brevo - logger mais ne pas casser le flux
+                    brevoError = `Brevo ${brevoResult.statusCode}: ${JSON.stringify(brevoResult.data)}`;
+                    console.warn('⚠️ Brevo FAILED mais Supabase OK - flux continue');
+                    console.warn('⚠️ Brevo error details:', brevoError);
+                    
+                    // Mettre à jour Supabase avec l'erreur
+                    const { error: updateError } = await supabase
+                        .from('waitlist_tirages')
+                        .update({
+                            brevo_synced: false,
+                            brevo_error: brevoError,
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('email', trimmedEmail);
+
+                    if (updateError) {
+                        console.warn('⚠️ Erreur mise à jour brevo_error:', updateError);
+                    }
+                }
+            } else {
+                brevoError = 'Configuration Brevo manquante';
+                console.warn('⚠️ Brevo non configuré - skip sync');
+                
+                // Mettre à jour Supabase avec l'erreur de configuration
+                const { error: updateError } = await supabase
+                    .from('waitlist_tirages')
+                    .update({
+                        brevo_synced: false,
+                        brevo_error: brevoError,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('email', trimmedEmail);
+            }
+        } catch (error) {
+            brevoError = error.message;
+            console.error('❌ Erreur Brevo (non critique):', error);
+            
+            // Mettre à jour Supabase avec l'erreur
+            const { error: updateError } = await supabase
+                .from('waitlist_tirages')
+                .update({
+                    brevo_synced: false,
+                    brevo_error: brevoError,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('email', trimmedEmail);
+        }
+
+        // ÉTAPE 3 : Réponse finale (succès si Supabase OK)
+        console.log(' WAITLIST V2 SUCCESS');
+        console.log(' Résumé:', {
+            email: trimmedEmail,
+            supabase_id: supabaseResult.id,
+            brevo_synced: brevoSynced,
+            brevo_error: brevoError
+        });
+
+        return res.status(200).json({
+            success: true,
+            brevoSynced: brevoSynced,
+            message: brevoSynced 
+                ? 'Inscription réussie et synchronisée avec Brevo.'
+                : 'Inscription enregistrée. Synchronisation Brevo en cours.',
+            data: {
+                id: supabaseResult.id,
+                email: supabaseResult.email,
+                created_at: supabaseResult.created_at
+            }
+        });
+
     } catch (error) {
-        console.error('Waitlist API error:', error);
+        console.error(' Waitlist V2 API error:', error);
+        console.error('Stack trace:', error.stack);
+        
         return res.status(500).json({
             success: false,
-            message: 'Erreur technique. Veuillez réessayer plus tard.'
+            message: 'Erreur technique interne. Veuillez réessayer plus tard.',
+            error: process.env.NODE_ENV === 'development' ? error.message : undefined
         });
     }
 }

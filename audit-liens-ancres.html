@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit des Liens d'Ancres - ORADIA</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background: #051428;
+            color: #f4e4bc;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .section {
+            margin: 30px 0;
+            padding: 20px;
+            border: 1px solid #d4af37;
+            border-radius: 10px;
+            background: rgba(212, 175, 55, 0.05);
+        }
+        .error { color: #ff6b6b; }
+        .success { color: #51cf66; }
+        .warning { color: #ffd43b; }
+        .code {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            margin: 10px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+        th, td {
+            border: 1px solid #d4af37;
+            padding: 10px;
+            text-align: left;
+        }
+        th { background: rgba(212, 175, 55, 0.2); }
+    </style>
+</head>
+<body>
+    <h1>🔍 AUDIT DES LIENS D'ANCRES - ORADIA</h1>
+    
+    <div class="section">
+        <h2>📊 RÉSUMÉ DES LIENS TROUVÉS</h2>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>Fichier</th>
+                    <th>Ancre</th>
+                    <th>Type</th>
+                    <th>Statut</th>
+                    <th>Action</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>precommande-oracle.html</td>
+                    <td>#offres</td>
+                    <td>Scroll</td>
+                    <td class="success">✅ ID existe</td>
+                    <td>✅ Corrigé</td>
+                </tr>
+                <tr>
+                    <td>pelerin.html</td>
+                    <td>#cgv</td>
+                    <td>Scroll</td>
+                    <td class="error">❌ ID manquant</td>
+                    <td>⚠️ À corriger</td>
+                </tr>
+                <tr>
+                    <td>pelerin.html</td>
+                    <td>#profil</td>
+                    <td>Scroll</td>
+                    <td class="error">❌ ID manquant</td>
+                    <td>⚠️ À corriger</td>
+                </tr>
+                <tr>
+                    <td>pelerin.html</td>
+                    <td>#offres</td>
+                    <td>Scroll</td>
+                    <td class="warning">⚠️ Cross-page</td>
+                    <td>⚠️ Redirection</td>
+                </tr>
+                <tr>
+                    <td>user/dashboard.html</td>
+                    <td>#</td>
+                    <td>JS Action</td>
+                    <td class="success">✅ OK</td>
+                    <td>✅ Neutre</td>
+                </tr>
+                <tr>
+                    <td>emails/templates/*.html</td>
+                    <td>#</td>
+                    <td>Placeholder</td>
+                    <td class="success">✅ OK</td>
+                    <td>✅ Neutre</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section">
+        <h2>🚨 PROBLÈMES IDENTIFIÉS</h2>
+        
+        <h3>1. Lien #cgv dans pelerin.html</h3>
+        <div class="code">
+            <a href="#cgv" class="text-gold hover:underline">conditions générales</a>
+        </div>
+        <p class="error">❌ Problème : L'ID #cgv n'existe PAS dans pelerin.html</p>
+        <p><strong>Solution recommandée :</strong> Remplacer par lien vers page CGV</p>
+        <div class="code">
+            <a href="cgv.html" target="_blank" class="text-gold hover:underline">conditions générales</a>
+        </div>
+        
+        <h3>2. Lien #profil dans pelerin.html</h3>
+        <div class="code">
+            <a href="#profil" class="block px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Profil</a>
+        </div>
+        <p class="error">❌ Problème : L'ID #profil n'existe PAS dans pelerin.html</p>
+        <p><strong>Solution recommandée :</strong> Supprimer ou rediriger vers dashboard</p>
+        
+        <h3>3. Liens #offres dans pelerin.html</h3>
+        <p class="warning">⚠️ Problème : Cross-page - #offres existe dans precommande-oracle.html mais PAS dans pelerin.html</p>
+        <p><strong>Solution recommandée :</strong> Rediriger vers precommande-oracle.html#offres</p>
+    </div>
+
+    <div class="section">
+        <h2>✅ LIENS FONCTIONNELS</h2>
+        
+        <h3>precommande-oracle.html</h3>
+        <ul>
+            <li><strong>#offres</strong> - ✅ ID existe, scroll corrigé</li>
+            <li><strong>#cart-section</strong> - ✅ ID existe</li>
+            <li><strong>#contribution-libre</strong> - ✅ ID existe</li>
+            <li><strong>#waitlist</strong> - ✅ ID existe</li>
+        </ul>
+        
+        <h3>Liens JS Action (fonctionnels)</h3>
+        <ul>
+            <li><strong>href="#"</strong> - ✅ Actions JavaScript (showSection, onclick)</li>
+            <li><strong>href="#"</strong> - ✅ Placeholder emails (neutre)</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>🔧 CORRECTIONS RECOMMANDÉES</h2>
+        
+        <h3>pelerin.html - Lien #cgv</h3>
+        <div class="code">
+// Ligne 2944 et 2998
+<a href="#cgv" class="text-gold hover:underline">conditions générales</a>
+
+// CORRECTION :
+<a href="cgv.html" target="_blank" class="text-gold hover:underline">conditions générales</a>
+        </div>
+        
+        <h3>pelerin.html - Lien #profil</h3>
+        <div class="code">
+// Ligne 6447
+<a href="#profil" class="block px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Profil</a>
+
+// CORRECTION OPTION 1 (supprimer) :
+// Supprimer complètement la ligne
+
+// CORRECTION OPTION 2 (rediriger) :
+<a href="user/dashboard.html" class="block px-4 py-2 text-light-gold hover:bg-gold/10 hover:text-gold">Profil</a>
+        </div>
+        
+        <h3>pelerin.html - Liens #offres</h3>
+        <div class="code">
+// Ligne 3702 et 3866
+<a href="#offres" class="absolute top-4 left-4 text-gold hover:text-light-gold">Retour aux offres</a>
+
+// CORRECTION :
+<a href="precommande-oracle.html#offres" class="absolute top-4 left-4 text-gold hover:text-light-gold">Retour aux offres</a>
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📋 CHECKLIST DE VALIDATION</h2>
+        <ol>
+            <li>✅ precommande-oracle.html - #offres : Corrigé</li>
+            <li>⚠️ pelerin.html - #cgv : À corriger (lien vers cgv.html)</li>
+            <li>⚠️ pelerin.html - #profil : À corriger (supprimer ou rediriger)</li>
+            <li>⚠️ pelerin.html - #offres : À corriger (rediriger vers precommande-oracle.html#offres)</li>
+            <li>✅ user/dashboard.html - href="#" : OK (actions JS)</li>
+            <li>✅ emails/templates/*.html - href="#" : OK (placeholders)</li>
+        </ol>
+    </div>
+
+    <div class="section">
+        <h2>🎯 IMPACT UTILISATEUR</h2>
+        <p><strong>Si non corrigé :</strong></p>
+        <ul>
+            <li>❌ Lien "conditions générales" ne fonctionne pas</li>
+            <li>❌ Lien "Profil" dans menu dropdown ne fonctionne pas</li>
+            <li>❌ Boutons "Retour aux offres" ne fonctionnent pas</li>
+        </ul>
+        
+        <p><strong>Après correction :</strong></p>
+        <ul>
+            <li>✅ Tous les liens fonctionnent correctement</li>
+            <li>✅ Meilleure expérience utilisateur</li>
+            <li>✅ Navigation fluide entre pages</li>
+        </ul>
+    </div>
+</body>
+</html>

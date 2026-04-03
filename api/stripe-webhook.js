@@ -314,12 +314,52 @@ const handler = async (req, res) => {
 
                 // Gestion spéciale pour les contributions libres
                 if (extractedData.offer === 'contribution-libre') {
-                    console.log('🎁 CONTRIBUTION LIBRE DÉTECTÉE - Email uniquement');
+                    console.log('🎁 CONTRIBUTION LIBRE DÉTECTÉE - ROUTING VERS DONORS');
+                    
+                    // Préparation des données pour la table donors
+                    const donorData = {
+                        stripe_session_id: extractedData.stripe_session_id,
+                        payment_intent_id: extractedData.payment_intent_id,
+                        email: extractedData.email,
+                        full_name: extractedData.full_name,
+                        amount_total: extractedData.amount_total, // en centimes
+                        currency: extractedData.currency,
+                        paid_status: extractedData.paid_status === 'paid' ? 'completed' : 'pending',
+                        source: 'oradia-contribution',
+                        metadata: {
+                            created_at: new Date(extractedData.created_at).toISOString(),
+                            stripe_customer_id: extractedData.stripe_customer_id
+                        }
+                    };
+                    
+                    console.log('� Données donor à enregistrer:', JSON.stringify(donorData, null, 2));
+                    
+                    // Enregistrement dans la table donors
+                    const { data: donorResult, error: donorError } = await supabase
+                        .from('donors')
+                        .upsert(donorData, {
+                            onConflict: 'stripe_session_id',
+                            ignoreDuplicates: false
+                        })
+                        .select()
+                        .single();
+                    
+                    if (donorError) {
+                        console.error('❌ Erreur insertion donors:', donorError);
+                        return res.status(500).json({
+                            error: 'Failed to process donation',
+                            message: 'Erreur lors de l\'enregistrement du don',
+                            details: donorError.message
+                        });
+                    }
+                    
+                    console.log('✅ Don enregistré dans donors:', JSON.stringify(donorResult, null, 2));
                     
                     // Envoyer l'email de remerciement pour contribution
+                    let emailSent = false;
                     if (extractedData.email) {
                         console.log('📧 Envoi email contribution à:', extractedData.email);
-                        const emailSent = await sendBrevoEmail({
+                        emailSent = await sendBrevoEmail({
                             toEmail: extractedData.email,
                             toName: extractedData.full_name || 'Ami(e) d\'ORADIA',
                             offer: extractedData.offer,
@@ -327,22 +367,19 @@ const handler = async (req, res) => {
                         });
                         
                         console.log('📧 Email contribution envoyé:', emailSent);
-                        
-                        return res.status(200).json({
-                            message: 'Contribution processed successfully',
-                            sessionId: sessionId,
-                            email: extractedData.email,
-                            offer: extractedData.offer,
-                            supabaseStatus: 'skipped_contribution',
-                            emailStatus: emailSent ? 'sent' : 'failed'
-                        });
-                    } else {
-                        console.error('❌ Email manquant pour contribution');
-                        return res.status(400).json({
-                            error: 'Email required for contribution',
-                            message: 'Contribution requires valid email'
-                        });
                     }
+                    
+                    return res.status(200).json({
+                        success: true,
+                        message: 'Don processed successfully',
+                        sessionId: sessionId,
+                        email: extractedData.email,
+                        offer: extractedData.offer,
+                        destination: 'donors',
+                        donor_id: donorResult.id,
+                        supabaseStatus: 'donor_recorded',
+                        emailStatus: emailSent ? 'sent' : 'failed'
+                    });
                 }
 
                 // Validation des champs obligatoires pour précommandes
