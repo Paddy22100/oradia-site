@@ -70,3 +70,36 @@ git push
 ```
 
 **Les précommandes Stripe s'inséreront maintenant correctement dans `preorders` sans erreur de colonne.**
+
+---
+
+## DONORS EUROS FIX
+
+### **Problème**
+La table `donors` recevait des montants en centimes au lieu d'euros.
+
+### **Correction**
+```diff
+// Lignes 315-324
+- // Préparation des données pour la table donors
+- const donorData = {
+-     stripe_session_id: extractedData.stripe_session_id,
+-     payment_intent_id: extractedData.payment_intent_id,
+-     email: extractedData.email,
+-     full_name: extractedData.full_name,
+-     amount_total: extractedData.amount_total, // en centimes
++ // Sécurité mentale - conversion en euros
++ const amountInEuros = extractedData.amount_total / 100;
++ 
++ // Préparation des données pour la table donors
++ const donorData = {
++     stripe_session_id: extractedData.stripe_session_id,
++     payment_intent_id: extractedData.payment_intent_id,
++     email: extractedData.email,
++     full_name: extractedData.full_name,
++     amount_total: amountInEuros, // en euros
+```
+
+**Raison** : Conversion explicite en euros avec variable intermédiaire pour éviter les erreurs.
+
+**Les dons sont maintenant correctement enregistrés en euros dans la table `donors`.**

@@ -312,13 +312,16 @@ const handler = async (req, res) => {
                 if (extractedData.offer === 'contribution-libre') {
                     console.log('🎁 CONTRIBUTION LIBRE DÉTECTÉE - ROUTING VERS DONORS');
                     
+                    // Sécurité mentale - conversion en euros
+                    const amountInEuros = extractedData.amount_total / 100;
+                    
                     // Préparation des données pour la table donors
                     const donorData = {
                         stripe_session_id: extractedData.stripe_session_id,
                         payment_intent_id: extractedData.payment_intent_id,
                         email: extractedData.email,
                         full_name: extractedData.full_name,
-                        amount_total: extractedData.amount_total, // en centimes
+                        amount_total: amountInEuros, // en euros
                         currency: extractedData.currency,
                         paid_status: 'completed',
                         source: 'oradia-contribution',
