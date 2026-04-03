@@ -149,6 +149,42 @@
                     <p class="text-light-gold">Montant dons</p>
                 </div>
             </div>
+            
+            <!-- KPI Secondaires -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <!-- Précommandes sans email -->
+                <div class="stat-card rounded-2xl p-4">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                        <div>
+                            <div class="text-lg font-bold text-gold" id="preordersNoEmail">-</div>
+                            <p class="text-light-gold text-sm">Précommandes sans email</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Dons sans email -->
+                <div class="stat-card rounded-2xl p-4">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-exclamation-triangle text-yellow-500"></i>
+                        <div>
+                            <div class="text-lg font-bold text-gold" id="donorsNoEmail">-</div>
+                            <p class="text-light-gold text-sm">Dons sans email</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Waitlist non synchronisée -->
+                <div class="stat-card rounded-2xl p-4">
+                    <div class="flex items-center gap-3">
+                        <i class="fas fa-sync text-orange-500"></i>
+                        <div>
+                            <div class="text-lg font-bold text-gold" id="waitlistNotSynced">-</div>
+                            <p class="text-light-gold text-sm">Waitlist non sync Brevo</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </section>
 
         <!-- Table Précommandes -->
@@ -426,14 +462,24 @@
             const container = document.querySelector(`#${table}Pagination`);
             if (!container) return;
             
+            // Mapper les noms de table aux fonctions de chargement
+            const loadFunctions = {
+                'preorders': 'loadPreorders',
+                'donors': 'loadDonors', 
+                'waitlist': 'loadWaitlist'
+            };
+            
+            const loadFunction = loadFunctions[table];
+            if (!loadFunction) return;
+            
             container.innerHTML = `
                 <div class="flex items-center justify-between">
                     <span class="text-sm text-light-gold">
                         Affichage de ${(pagination.page - 1) * pagination.limit + 1} à ${Math.min(pagination.page * pagination.limit, pagination.total)} sur ${pagination.total} résultats
                     </span>
                     <div class="flex gap-2">
-                        ${pagination.page > 1 ? `<button onclick="load${capitalize(table)}(${pagination.page - 1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Précédent</button>` : ''}
-                        ${pagination.page < pagination.pages ? `<button onclick="load${capitalize(table)}(${pagination.page + 1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Suivant</button>` : ''}
+                        ${pagination.page > 1 ? `<button onclick="${loadFunction}(${pagination.page - 1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Précédent</button>` : ''}
+                        ${pagination.page < pagination.pages ? `<button onclick="${loadFunction}(${pagination.page + 1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Suivant</button>` : ''}
                     </div>
                 </div>
             `;

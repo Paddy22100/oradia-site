@@ -77,7 +77,7 @@ async function getOverview() {
 
         // Waitlist
         const { data: waitlist, error: waitlistError } = await supabase
-            .from('waitlist')
+            .from('waitlist_tirages')
             .select('email, brevo_synced, created_at');
 
         if (preordersError || donorsError || waitlistError) {
@@ -103,7 +103,7 @@ async function getOverview() {
             data: {
                 preorders: {
                     count: preordersCount,
-                    total: Math.round(globalTotal * 100) / 100,
+                    total: Math.round(preordersTotal * 100) / 100,
                     noEmail: preordersNoEmail
                 },
                 donors: {
@@ -188,7 +188,7 @@ async function getWaitlist(page, limit) {
         const offset = (page - 1) * limit;
         
         const { data, error, count } = await supabase
-            .from('waitlist')
+            .from('waitlist_tirages')
             .select('*', { count: 'exact' })
             .order('created_at', { ascending: false })
             .range(offset, offset + limit - 1);

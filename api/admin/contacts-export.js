@@ -36,7 +36,7 @@ export default async function handler(req, res) {
             
             // Waitlist
             supabase
-                .from('waitlist')
+                .from('waitlist_tirages')
                 .select('email, full_name, created_at, brevo_synced')
                 .order('created_at', { ascending: false })
         ]);
