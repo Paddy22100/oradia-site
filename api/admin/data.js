@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const { verifyAdminAuth } = require('./_auth');
 
 // Variables d'environnement
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -8,7 +9,6 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req, res) {
-    // Seulement les requêtes GET
     if (req.method !== 'GET') {
         return res.status(405).json({ 
             error: 'Method not allowed',
@@ -17,6 +17,7 @@ export default async function handler(req, res) {
     }
 
     try {
+        verifyAdminAuth(req);
         const { section, page = 1, limit = 10 } = req.query;
         
         // Validation du paramètre section
@@ -52,10 +53,9 @@ export default async function handler(req, res) {
         });
 
     } catch (error) {
-        console.error(`Erreur admin data [${req.query.section}]:`, error);
-        res.status(500).json({
-            error: 'Internal Server Error',
-            message: 'Erreur serveur lors de la récupération des données'
+        return res.status(error.statusCode || 500).json({
+            error: error.statusCode ? 'Unauthorized' : 'Internal Server Error',
+            message: error.message || 'Erreur serveur lors de la récupération des données'
         });
     }
 }

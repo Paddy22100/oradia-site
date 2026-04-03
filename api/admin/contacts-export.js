@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const { verifyAdminAuth } = require('./_auth');
 
 // Variables d'environnement
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -8,7 +9,6 @@ const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req, res) {
-    // Seulement les requêtes GET
     if (req.method !== 'GET') {
         return res.status(405).json({ 
             error: 'Method not allowed',
@@ -17,6 +17,7 @@ export default async function handler(req, res) {
     }
 
     try {
+        verifyAdminAuth(req);
         // Récupérer toutes les données
         const [preordersResult, donorsResult, waitlistResult] = await Promise.all([
             // Précommandes payées
@@ -120,10 +121,9 @@ export default async function handler(req, res) {
         res.status(200).send(csvContent);
 
     } catch (error) {
-        console.error('Erreur export contacts:', error);
-        res.status(500).json({
-            error: 'Internal Server Error',
-            message: 'Erreur lors de l\'export des contacts'
+        return res.status(error.statusCode || 500).json({
+            error: error.statusCode ? 'Unauthorized' : 'Internal Server Error',
+            message: error.message || 'Erreur lors de l\'export des contacts'
         });
     }
 }
