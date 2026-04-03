@@ -95,7 +95,7 @@
                         </div>
                         <span class="text-sm text-light-gold/70">+12% cette semaine</span>
                     </div>
-                    <div class="text-3xl font-bold text-gold mb-1">342</div>
+                    <div class="text-3xl font-bold text-gold mb-1" id="total-preorders">-</div>
                     <p class="text-light-gold">Précommandes totales</p>
                 </div>
                 
@@ -107,7 +107,7 @@
                         </div>
                         <span class="text-sm text-light-gold/70">+18% cette semaine</span>
                     </div>
-                    <div class="text-3xl font-bold text-gold mb-1">28,456€</div>
+                    <div class="text-3xl font-bold text-gold mb-1" id="total-amount">-</div>
                     <p class="text-light-gold">Montant collecté</p>
                 </div>
                 
@@ -119,7 +119,7 @@
                         </div>
                         <span class="text-sm text-light-gold/70">En progression</span>
                     </div>
-                    <div class="text-3xl font-bold text-gold mb-1">68.4%</div>
+                    <div class="text-3xl font-bold text-gold mb-1" id="progress-percent">-</div>
                     <p class="text-light-gold">Objectif atteint</p>
                 </div>
                 
@@ -131,7 +131,7 @@
                         </div>
                         <span class="text-sm text-light-gold/70">+8 cette semaine</span>
                     </div>
-                    <div class="text-3xl font-bold text-gold mb-1">312</div>
+                    <div class="text-3xl font-bold text-gold mb-1" id="unique-clients">-</div>
                     <p class="text-light-gold">Clients uniques</p>
                 </div>
             </div>
@@ -153,8 +153,8 @@
                             </svg>
                             <div class="absolute inset-0 flex items-center justify-center">
                                 <div class="text-center">
-                                    <div class="text-3xl font-bold text-gold">68%</div>
-                                    <div class="text-sm text-light-gold">342/500</div>
+                                    <div class="text-3xl font-bold text-gold" id="circle-percent">-</div>
+                                    <div class="text-sm text-light-gold" id="circle-progress">-</div>
                                 </div>
                             </div>
                         </div>
@@ -385,7 +385,7 @@
                 <!-- Pagination -->
                 <div class="flex items-center justify-between px-6 py-4 bg-[rgba(5,20,40,0.8)]">
                     <div class="text-light-gold text-sm">
-                        Affichage de 1 à 10 sur 342 résultats
+                        Affichage de <span id="start-result">1</span> à <span id="end-result">10</span> sur <span id="total-results">-</span> résultats
                     </div>
                     <div class="flex gap-2">
                         <button class="bg-gold/20 text-gold px-3 py-1 rounded hover:bg-gold/30 transition">
@@ -411,7 +411,7 @@
                     <i class="fas fa-envelope text-gold text-2xl mb-4"></i>
                     <h4 class="text-gold font-semibold mb-2">Envoyer Email</h4>
                     <p class="text-light-gold text-sm mb-4">Notifier tous les clients d'une mise à jour</p>
-                    <span class="text-gold/70 text-sm">→ 342 clients concernés</span>
+                    <span class="text-gold/70 text-sm" id="email-count">→ - clients concernés</span>
                 </button>
                 
                 <button class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30 hover:border-gold/60 transition text-left">
@@ -442,7 +442,11 @@
         };
 
         // Charger les données du dashboard
+        let dashboardLoaded = false;
         async function loadDashboardData() {
+            if (dashboardLoaded) return;
+            dashboardLoaded = true;
+            
             try {
                 // Vérifier la session admin
                 const meResponse = await fetch('/api/admin/me', { credentials: 'include' });

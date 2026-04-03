@@ -237,8 +237,12 @@ function showMessage(message, type = 'error') {
     }, 5000);
 }
 
-// Vérifier si déjà connecté au chargement
+// Vérifier si déjà connecté au chargement (une seule fois)
+let sessionChecked = false;
 async function checkExistingSession() {
+    if (sessionChecked) return false;
+    sessionChecked = true;
+    
     try {
         const response = await fetch('/api/admin/me', {
             credentials: 'include'
