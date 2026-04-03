@@ -50,6 +50,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+DROP TRIGGER IF EXISTS waitlist_tirages_updated_at ON waitlist_tirages;
+
 CREATE TRIGGER waitlist_tirages_updated_at
     BEFORE UPDATE ON waitlist_tirages
     FOR EACH ROW

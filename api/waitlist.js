@@ -192,12 +192,14 @@ export default async function handler(req, res) {
                         console.log('✅ Brevo sync status updated in Supabase');
                     }
                 } else {
-                    // Échec Brevo - logger mais ne pas casser le flux
-                    brevoError = `Brevo ${brevoResult.statusCode}: ${JSON.stringify(brevoResult.data)}`;
-                    console.warn('⚠️ Brevo FAILED mais Supabase OK - flux continue');
-                    console.warn('⚠️ Brevo error details:', brevoError);
+                    // Brevo renvoie un statut différent de 200/201 - traiter comme échec
+                    brevoError = `Brevo status ${brevoResult.statusCode}: ${JSON.stringify(brevoResult.data)}`;
+                    console.warn('⚠️ Brevo status non-200/201 mais Supabase OK - flux continue');
+                    console.warn('⚠️ Brevo status:', brevoResult.statusCode);
+                    console.warn('⚠️ Brevo response:', JSON.stringify(brevoResult.data, null, 2));
+                    console.warn('⚠️ Brevo error enregistré:', brevoError);
                     
-                    // Mettre à jour Supabase avec l'erreur
+                    // Mettre à jour Supabase avec l'échec Brevo
                     const { error: updateError } = await supabase
                         .from('waitlist_tirages')
                         .update({
@@ -209,6 +211,8 @@ export default async function handler(req, res) {
 
                     if (updateError) {
                         console.warn('⚠️ Erreur mise à jour brevo_error:', updateError);
+                    } else {
+                        console.log('✅ Brevo sync failure recorded in Supabase');
                     }
                 }
             } else {

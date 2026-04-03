@@ -345,11 +345,19 @@ const handler = async (req, res) => {
                         .single();
                     
                     if (donorError) {
-                        console.error('❌ Erreur insertion donors:', donorError);
+                        console.error('❌ ERREUR CRITIQUE - Insertion donors échouée');
+                        console.error('❌ Détails erreur complète:', JSON.stringify(donorError, null, 2));
+                        console.error('❌ Session ID concerné:', extractedData.stripe_session_id);
+                        console.error('❌ Email concerné:', extractedData.email);
+                        console.error('❌ Amount concerné:', extractedData.amount_total);
+                        
                         return res.status(500).json({
+                            success: false,
                             error: 'Failed to process donation',
-                            message: 'Erreur lors de l\'enregistrement du don',
-                            details: donorError.message
+                            message: 'Erreur critique lors de l\'enregistrement du don en base de données',
+                            details: donorError.message,
+                            sessionId: extractedData.stripe_session_id,
+                            destination: 'donors_failed'
                         });
                     }
                     

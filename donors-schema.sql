@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS donors (
     
     -- Champs client
     email TEXT NOT NULL,
-    full_name TEXT NOT NULL,
+    full_name TEXT,
     
     -- Champs paiement
     amount_total INTEGER NOT NULL, -- en centimes
@@ -52,6 +52,8 @@ BEGIN
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS donors_updated_at ON donors;
 
 CREATE TRIGGER donors_updated_at
     BEFORE UPDATE ON donors
