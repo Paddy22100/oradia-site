@@ -211,199 +211,134 @@
 
     <!-- Script de connexion -->
     <script>
-        // Configuration
-        const ADMIN_CONFIG = {
-            maxAttempts: 3,
-            lockoutDuration: 15 * 60 * 1000, // 15 minutes
-            sessionDuration: 2 * 60 * 60 * 1000 // 2 heures
-        };
+// Éléments DOM
+const loginForm = document.getElementById('loginForm');
+const loginBtn = document.getElementById('loginBtn');
+const loginBtnText = document.getElementById('loginBtnText');
+const emailInput = document.getElementById('email');
+const passwordInput = document.getElementById('password');
+const togglePassword = document.getElementById('togglePassword');
+const eyeIcon = document.getElementById('eyeIcon');
+const messageContainer = document.getElementById('messageContainer');
 
-        // État
-        let loginAttempts = parseInt(sessionStorage.getItem('loginAttempts') || '0');
-        let lockoutUntil = parseInt(sessionStorage.getItem('lockoutUntil') || '0');
+// Afficher un message
+function showMessage(message, type = 'error') {
+    messageContainer.innerHTML = `
+        <div class="${type}-message px-4 py-3 rounded-lg text-sm">
+            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} mr-2"></i>
+            ${message}
+        </div>
+    `;
+    messageContainer.classList.remove('hidden');
+    
+    // Masquer après 5 secondes
+    setTimeout(() => {
+        messageContainer.classList.add('hidden');
+    }, 5000);
+}
 
-        // Éléments DOM
-        const loginForm = document.getElementById('loginForm');
-        const loginBtn = document.getElementById('loginBtn');
-        const loginBtnText = document.getElementById('loginBtnText');
-        const emailInput = document.getElementById('email');
-        const passwordInput = document.getElementById('password');
-        const togglePassword = document.getElementById('togglePassword');
-        const eyeIcon = document.getElementById('eyeIcon');
-        const messageContainer = document.getElementById('messageContainer');
-
-        // Vérifier si l'utilisateur est déjà connecté
-        function checkExistingSession() {
-            const adminSession = sessionStorage.getItem('adminSession');
-            if (adminSession && Date.now() < parseInt(adminSession)) {
-                // Session valide, rediriger vers le dashboard
-                window.location.href = '../member/dashboard.html';
-                return true;
-            }
-            return false;
+// Vérifier si déjà connecté au chargement
+async function checkExistingSession() {
+    try {
+        const response = await fetch('/api/admin/me', {
+            credentials: 'include'
+        });
+        
+        if (response.ok) {
+            // Session valide, rediriger vers dashboard
+            window.location.href = 'dashboard-admin.html';
+            return true;
         }
+    } catch (error) {
+        // Session invalide ou erreur, rester sur login
+        console.log('Session non valide ou expirée');
+    }
+    return false;
+}
 
-        // Afficher un message
-        function showMessage(message, type = 'error') {
-            messageContainer.innerHTML = `
-                <div class="${type}-message px-4 py-3 rounded-lg text-sm">
-                    <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'check-circle'} mr-2"></i>
-                    ${message}
-                </div>
-            `;
-            messageContainer.classList.remove('hidden');
+// Gérer la connexion
+async function handleLogin(e) {
+    e.preventDefault();
+    
+    const email = emailInput.value.trim();
+    const password = passwordInput.value;
+
+    // Validation basique
+    if (!email || !password) {
+        showMessage('Veuillez remplir tous les champs.', 'error');
+        return;
+    }
+
+    // Désactiver le bouton
+    loginBtn.disabled = true;
+    loginBtnText.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Connexion...';
+
+    try {
+        const response = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            credentials: 'include',
+            body: JSON.stringify({ email, password })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showMessage('Connexion réussie! Redirection...', 'success');
             
-            // Masquer après 5 secondes
+            // Rediriger vers le dashboard
             setTimeout(() => {
-                messageContainer.classList.add('hidden');
-            }, 5000);
+                window.location.href = 'dashboard-admin.html';
+            }, 1500);
+        } else {
+            showMessage(result.message || 'Identifiants incorrects', 'error');
         }
+    } catch (error) {
+        showMessage('Erreur de connexion. Réessayez plus tard.', 'error');
+        console.error('Erreur login:', error);
+    } finally {
+        // Réactiver le bouton
+        loginBtn.disabled = false;
+        loginBtnText.textContent = 'Se connecter';
+    }
+}
 
-        // Vérifier le blocage
-        function checkLockout() {
-            if (Date.now() < lockoutUntil) {
-                const remainingTime = Math.ceil((lockoutUntil - Date.now()) / 60000);
-                showMessage(`Trop de tentatives. Réessayez dans ${remainingTime} minutes.`, 'error');
-                loginBtn.disabled = true;
-                loginBtnText.textContent = `Réessayez dans ${remainingTime} min`;
-                
-                // Mettre à jour le compteur chaque minute
-                const countdown = setInterval(() => {
-                    const timeLeft = Math.ceil((lockoutUntil - Date.now()) / 60000);
-                    if (timeLeft <= 0) {
-                        clearInterval(countdown);
-                        resetLockout();
-                    } else {
-                        loginBtnText.textContent = `Réessayez dans ${timeLeft} min`;
-                    }
-                }, 60000);
-                
-                return true;
-            }
-            return false;
-        }
+// Toggle mot de passe
+togglePassword.addEventListener('click', () => {
+    const type = passwordInput.type === 'password' ? 'text' : 'password';
+    passwordInput.type = type;
+    eyeIcon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
+});
 
-        // Réinitialiser le blocage
-        function resetLockout() {
-            loginAttempts = 0;
-            lockoutUntil = 0;
-            sessionStorage.removeItem('loginAttempts');
-            sessionStorage.removeItem('lockoutUntil');
-            loginBtn.disabled = false;
-            loginBtnText.textContent = 'Se connecter';
-        }
+// Gérer le "Se souvenir de moi"
+document.getElementById('remember').addEventListener('change', (e) => {
+    if (e.target.checked) {
+        localStorage.setItem('rememberedEmail', emailInput.value);
+    } else {
+        localStorage.removeItem('rememberedEmail');
+    }
+});
 
-        // Gérer la connexion
-        async function handleLogin(e) {
-            e.preventDefault();
-            
-            // Vérifier le blocage
-            if (checkLockout()) {
-                return;
-            }
+// Initialisation
+document.addEventListener('DOMContentLoaded', async () => {
+    // Vérifier si déjà connecté
+    const isLoggedIn = await checkExistingSession();
+    if (isLoggedIn) {
+        return; // Redirection déjà en cours
+    }
 
-            const email = emailInput.value.trim();
-            const password = passwordInput.value;
+    // Restaurer email remembered
+    const rememberedEmail = localStorage.getItem('rememberedEmail');
+    if (rememberedEmail) {
+        emailInput.value = rememberedEmail;
+        document.getElementById('remember').checked = true;
+    }
 
-            // Validation basique
-            if (!email || !password) {
-                showMessage('Veuillez remplir tous les champs.', 'error');
-                return;
-            }
-
-            // Désactiver le bouton
-            loginBtn.disabled = true;
-            loginBtnText.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Connexion...';
-
-            try {
-                // Simuler une vérification (remplacer par vraie API)
-                const isValid = await verifyCredentials(email, password);
-                
-                if (isValid) {
-                    // Réinitialiser les tentatives
-                    resetLockout();
-                    
-                    // Créer la session
-                    const sessionExpiry = Date.now() + ADMIN_CONFIG.sessionDuration;
-                    sessionStorage.setItem('adminSession', sessionExpiry.toString());
-                    sessionStorage.setItem('adminEmail', email);
-                    
-                    showMessage('Connexion réussie! Redirection...', 'success');
-                    
-                    // Rediriger vers le dashboard
-                    setTimeout(() => {
-                        window.location.href = '../member/dashboard.html';
-                    }, 1500);
-                } else {
-                    // Incrémenter les tentatives
-                    loginAttempts++;
-                    sessionStorage.setItem('loginAttempts', loginAttempts.toString());
-                    
-                    if (loginAttempts >= ADMIN_CONFIG.maxAttempts) {
-                        // Bloquer l'accès
-                        lockoutUntil = Date.now() + ADMIN_CONFIG.lockoutDuration;
-                        sessionStorage.setItem('lockoutUntil', lockoutUntil.toString());
-                        checkLockout();
-                    } else {
-                        const remaining = ADMIN_CONFIG.maxAttempts - loginAttempts;
-                        showMessage(`Email ou mot de passe incorrect. ${remaining} tentative(s) restante(s).`, 'error');
-                        loginBtn.disabled = false;
-                        loginBtnText.textContent = 'Se connecter';
-                    }
-                }
-            } catch (error) {
-                showMessage('Erreur de connexion. Réessayez plus tard.', 'error');
-                loginBtn.disabled = false;
-                loginBtnText.textContent = 'Se connecter';
-            }
-        }
-
-        // Vérifier les identifiants (remplacer par vraie API)
-        async function verifyCredentials(email, password) {
-            // Simuler un délai réseau
-            await new Promise(resolve => setTimeout(resolve, 1000));
-            
-            // TODO: Remplacer par vraie vérification API
-            // Pour le développement, accepter admin@oradia.fr / admin123
-            return email === 'admin@oradia.fr' && password === 'admin123';
-        }
-
-        // Toggle mot de passe
-        togglePassword.addEventListener('click', () => {
-            const type = passwordInput.type === 'password' ? 'text' : 'password';
-            passwordInput.type = type;
-            eyeIcon.className = type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
-        });
-
-        // Gérer le "Se souvenir de moi"
-        document.getElementById('remember').addEventListener('change', (e) => {
-            if (e.target.checked) {
-                localStorage.setItem('rememberedEmail', emailInput.value);
-            } else {
-                localStorage.removeItem('rememberedEmail');
-            }
-        });
-
-        // Initialisation
-        document.addEventListener('DOMContentLoaded', () => {
-            // Vérifier si déjà connecté
-            if (checkExistingSession()) {
-                return;
-            }
-
-            // Restaurer email remembered
-            const rememberedEmail = localStorage.getItem('rememberedEmail');
-            if (rememberedEmail) {
-                emailInput.value = rememberedEmail;
-                document.getElementById('remember').checked = true;
-            }
-
-            // Vérifier le blocage
-            checkLockout();
-
-            // Attacher les événements
-            loginForm.addEventListener('submit', handleLogin);
-        });
+    // Attacher les événements
+    loginForm.addEventListener('submit', handleLogin);
+});
     </script>
 </body>
 </html>

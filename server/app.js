@@ -100,10 +100,7 @@ app.use('/api/feedbacks', feedbackRoutes);
 app.use('/api/newsletter', newsletterRoutes);
 app.use('/api/payments', paymentRoutes);
 
-// Route pour le dashboard admin (servir le HTML)
-app.get('/admin/*', (req, res) => {
-  res.sendFile(path.join(__dirname, '..', 'admin', 'dashboard.html'));
-});
+
 
 // Route pour l'espace client
 app.get('/user/*', (req, res) => {

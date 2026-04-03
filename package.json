@@ -5,7 +5,10 @@
   "main": "api/lib/supabase.js",
   "dependencies": {
     "@supabase/supabase-js": "^2.38.4",
-    "stripe": "^14.9.0"
+    "stripe": "^14.9.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcrypt": "^5.1.1",
+    "cookie": "^0.6.0"
   },
   "scripts": {
     "dev": "vercel dev"
