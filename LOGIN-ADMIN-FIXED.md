@@ -1,3 +1,8 @@
+# 🔧 LOGIN ADMIN - CORRECTION COMPLÈTE
+
+## ✅ **CONTENU FINAL `api/admin/login.js`**
+
+```javascript
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 
@@ -132,3 +137,113 @@ export default async function handler(req, res) {
         });
     }
 }
+```
+
+---
+
+## 📦 **DÉPENDANCES REQUISES**
+
+### **package.json (déjà correct)**
+```json
+{
+  "dependencies": {
+    "@supabase/supabase-js": "^2.38.4",
+    "stripe": "^14.9.0",
+    "jsonwebtoken": "^9.0.2",
+    "bcrypt": "^5.1.1",
+    "cookie": "^0.6.0"
+  }
+}
+```
+
+### **Packages utilisés**
+- ✅ `bcrypt` (pas `bcryptjs`) - cohérent avec package.json
+- ✅ `jsonwebtoken` - token JWT
+- ✅ `cookie` - gestion cookies Vercel
+
+---
+
+## 📊 **LOGS À SURVEILLER DANS VERCEL**
+
+### **Logs de diagnostic attendus**
+```
+🔐 LOGIN ADMIN - DIAGNOSTIC
+  - ADMIN_EMAIL: ✅ Présent
+  - ADMIN_PASSWORD_HASH: ✅ Présent
+  - ADMIN_SESSION_SECRET: ✅ Présent
+  - NODE_ENV: production
+📧 Email reçu: contact@oradia.fr
+🔑 Mot de passe reçu: ✅ Présent
+✅ Email admin vérifié
+🔐 Résultat bcrypt.compare: ✅ Valide
+✅ Mot de passe vérifié
+✅ Cookie créé, connexion réussie
+```
+
+### **Logs d'erreur possibles**
+```
+❌ ADMIN_EMAIL: ❌ Manquant
+❌ Email incorrect: test@test.com attendu: contact@oradia.fr
+❌ Résultat bcrypt.compare: ❌ Invalide
+❌ Erreur parsing body: Unexpected token
+```
+
+---
+
+## 🚀 **ACTION EXACTE POUR RETESTER**
+
+### **1. Déploiement requis**
+OUI - **Redéploiement obligatoire** après modification du code.
+
+```bash
+git add api/admin/login.js
+git commit -m "fix: add diagnostic logs to admin login"
+git push origin main
+```
+
+### **2. Vérifier variables Vercel**
+Dans **Vercel Dashboard → Settings → Environment Variables** :
+- ✅ `ADMIN_EMAIL=contact@oradia.fr`
+- ✅ `ADMIN_PASSWORD_HASH=[hash bcrypt de Oradia2025!]`
+- ✅ `ADMIN_SESSION_SECRET=[clé 32+ caractères]`
+
+### **3. Test immédiat**
+1. **Attendre déploiement** (1-2 minutes)
+2. **Aller sur** : `https://oradia.fr/admin/login.html`
+3. **Saisir** :
+   - Email : `contact@oradia.fr`
+   - Mot de passe : `Oradia2025!`
+4. **Vérifier les logs** dans Vercel Dashboard
+
+### **4. Logs à vérifier**
+Dans **Vercel Dashboard → Functions → Logs** :
+- Chercher `LOGIN ADMIN - DIAGNOSTIC`
+- Vérifier chaque étape du diagnostic
+
+---
+
+## 🎯 **DIAGNOSTIC RAPIDE**
+
+### **Si logs montrent** :
+- `ADMIN_EMAIL: ❌ Manquant` → Configurer variable Vercel
+- `Email reçu: ❌ Manquant` → Problème frontend
+- `bcrypt.compare: ❌ Invalide` → Hash incorrect
+- `Cookie créé, connexion réussie` → Succès !
+
+### **Hash bcrypt pour vérification**
+```bash
+# Générer hash pour "Oradia2025!"
+node -e "const bcrypt = require('bcrypt'); bcrypt.hash('Oradia2025!', 12).then(console.log)"
+```
+
+---
+
+## ✅ **RÉSULTAT ATTENDU**
+
+**Après déploiement et test :**
+- ✅ Logs complets dans Vercel
+- ✅ Connexion réussie
+- ✅ Cookie `oradia_admin_session` posé
+- ✅ Redirection vers dashboard admin
+
+**Prêt pour déploiement et test immédiat !**
