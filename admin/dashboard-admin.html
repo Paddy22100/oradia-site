@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard Précommandes - ORADIA Admin</title>
+    <title>Dashboard Admin - ORADIA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../style.css">
@@ -47,11 +47,6 @@
             box-shadow: 0 4px 20px rgba(212,175,55,0.15);
             transform: translateY(-2px);
         }
-        
-        .progress-ring {
-            transform: rotate(-90deg);
-            transition: stroke-dashoffset 0.5s ease;
-        }
     </style>
 </head>
 <body class="bg-night-blue text-light-gold">
@@ -63,17 +58,19 @@
                     <img src="../images/logo-hd-v2.jpeg" alt="ORADIA" class="w-10 h-10 rounded-full">
                     <div>
                         <h1 class="cormorant text-2xl font-bold gold-gradient">ORADIA</h1>
-                        <p class="text-gold/70 text-sm">Dashboard Précommandes</p>
+                        <p class="text-gold/70 text-sm">Dashboard Admin</p>
                     </div>
                 </div>
                 
                 <div class="flex items-center gap-4">
-                    <button class="bg-gold/20 text-gold px-4 py-2 rounded-lg hover:bg-gold/30 transition">
+                    <button id="refreshBtn" class="bg-gold/20 text-gold px-4 py-2 rounded-lg hover:bg-gold/30 transition">
                         <i class="fas fa-sync-alt mr-2"></i>Rafraîchir
                     </button>
                     <div class="flex items-center gap-2">
-                        <img src="https://picsum.photos/seed/admin/40/40" alt="Admin" class="w-8 h-8 rounded-full">
                         <span class="text-gold">Admin</span>
+                        <button id="logoutBtn" class="ml-2 text-gold/70 hover:text-gold transition">
+                            <i class="fas fa-sign-out-alt"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -82,356 +79,162 @@
 
     <!-- Main Dashboard -->
     <main class="container mx-auto px-6 py-8">
-        <!-- Statistiques principales -->
+        <!-- KPI Overview -->
         <section class="mb-12">
             <h2 class="cormorant text-3xl font-bold text-gold mb-8">Vue d'ensemble</h2>
             
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                <!-- Total précommandes -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                <!-- Précommandes -->
                 <div class="stat-card rounded-2xl p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div class="w-12 h-12 bg-gold/20 rounded-lg flex items-center justify-center">
                             <i class="fas fa-shopping-cart text-gold text-xl"></i>
                         </div>
-                        <span class="text-sm text-light-gold/70">+12% cette semaine</span>
                     </div>
                     <div class="text-3xl font-bold text-gold mb-1" id="preordersCount">-</div>
-                    <p class="text-light-gold">Précommandes totales</p>
+                    <p class="text-light-gold">Précommandes</p>
                 </div>
                 
-                <!-- Montant total -->
+                <!-- Montant Précommandes -->
                 <div class="stat-card rounded-2xl p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div class="w-12 h-12 bg-gold/20 rounded-lg flex items-center justify-center">
                             <i class="fas fa-euro-sign text-gold text-xl"></i>
                         </div>
-                        <span class="text-sm text-light-gold/70">+18% cette semaine</span>
                     </div>
                     <div class="text-3xl font-bold text-gold mb-1" id="preordersTotal">-</div>
-                    <p class="text-light-gold">Montant collecté</p>
+                    <p class="text-light-gold">Montant précommandes</p>
                 </div>
                 
-                <!-- Objectif atteint -->
+                <!-- Dons -->
                 <div class="stat-card rounded-2xl p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div class="w-12 h-12 bg-gold/20 rounded-lg flex items-center justify-center">
-                            <i class="fas fa-bullseye text-gold text-xl"></i>
+                            <i class="fas fa-heart text-gold text-xl"></i>
                         </div>
-                        <span class="text-sm text-light-gold/70">En progression</span>
                     </div>
                     <div class="text-3xl font-bold text-gold mb-1" id="donorsCount">-</div>
-                    <p class="text-light-gold">Dons totaux</p>
+                    <p class="text-light-gold">Dons</p>
                 </div>
                 
-                <!-- Clients -->
+                <!-- Waitlist -->
                 <div class="stat-card rounded-2xl p-6">
                     <div class="flex items-center justify-between mb-4">
                         <div class="w-12 h-12 bg-gold/20 rounded-lg flex items-center justify-center">
                             <i class="fas fa-users text-gold text-xl"></i>
                         </div>
-                        <span class="text-sm text-light-gold/70">+8 cette semaine</span>
                     </div>
                     <div class="text-3xl font-bold text-gold mb-1" id="waitlistCount">-</div>
                     <p class="text-light-gold">Waitlist</p>
                 </div>
             </div>
-        </section>
 
-        <!-- Progression et Répartition -->
-        <section class="mb-12">
-            <div class="grid lg:grid-cols-2 gap-8">
-                <!-- Progression vers l'objectif -->
-                <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-8 border border-gold/30">
-                    <h3 class="cormorant text-2xl font-bold text-gold mb-6">Progression Objectif</h3>
-                    
-                    <div class="flex items-center justify-center mb-8">
-                        <div class="relative">
-                            <svg class="w-32 h-32">
-                                <circle cx="64" cy="64" r="56" stroke="rgba(212,175,55,0.2)" stroke-width="8" fill="none"/>
-                                <circle class="progress-ring" cx="64" cy="64" r="56" stroke="#d4af37" stroke-width="8" fill="none"
-                                        stroke-dasharray="351.86" stroke-dashoffset="111.6"/>
-                            </svg>
-                            <div class="absolute inset-0 flex items-center justify-center">
-                                <div class="text-center">
-                                    <div class="text-3xl font-bold text-gold" id="globalTotal">-</div>
-                                    <div class="text-sm text-light-gold" id="totalContacts">-</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="space-y-4">
-                        <div class="flex justify-between items-center">
-                            <span class="text-light-gold">Early Bird</span>
-                            <div class="flex items-center gap-2">
-                                <div class="w-32 bg-[rgba(5,20,40,0.8)] rounded-full h-2">
-                                    <div class="bg-gold h-2 rounded-full" style="width: 53%"></div>
-                                </div>
-                                <span class="text-gold font-semibold">53/100</span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex justify-between items-center">
-                            <span class="text-light-gold">Standard</span>
-                            <div class="flex items-center gap-2">
-                                <div class="w-32 bg-[rgba(5,20,40,0.8)] rounded-full h-2">
-                                    <div class="bg-gold h-2 rounded-full" style="width: 78%"></div>
-                                </div>
-                                <span class="text-gold font-semibold">234/300</span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex justify-between items-center">
-                            <span class="text-light-gold">Collector</span>
-                            <div class="flex items-center gap-2">
-                                <div class="w-32 bg-[rgba(5,20,40,0.8)] rounded-full h-2">
-                                    <div class="bg-gold h-2 rounded-full" style="width: 44%"></div>
-                                </div>
-                                <span class="text-gold font-semibold">11/25</span>
-                            </div>
-                        </div>
-                    </div>
+            <!-- KPI Secondaires -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <!-- Total Global -->
+                <div class="stat-card rounded-2xl p-6">
+                    <div class="text-2xl font-bold text-gold mb-1" id="globalTotal">-</div>
+                    <p class="text-light-gold">Total global</p>
                 </div>
                 
-                <!-- Répartition géographique -->
-                <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-8 border border-gold/30">
-                    <h3 class="cormorant text-2xl font-bold text-gold mb-6">Répartition Géographique</h3>
-                    
-                    <div class="space-y-4">
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">🇫🇷</span>
-                                <span class="text-light-gold">France</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <div class="w-24 bg-[rgba(5,20,40,0.8)] rounded-full h-2">
-                                    <div class="bg-gold h-2 rounded-full" style="width: 75%"></div>
-                                </div>
-                                <span class="text-gold font-semibold">256</span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">🇧🇪</span>
-                                <span class="text-light-gold">Belgique</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <div class="w-24 bg-[rgba(5,20,40,0.8)] rounded-full h-2">
-                                    <div class="bg-gold h-2 rounded-full" style="width: 15%"></div>
-                                </div>
-                                <span class="text-gold font-semibold">51</span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">🇨🇭</span>
-                                <span class="text-light-gold">Suisse</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <div class="w-24 bg-[rgba(5,20,40,0.8)] rounded-full h-2">
-                                    <div class="bg-gold h-2 rounded-full" style="width: 8%"></div>
-                                </div>
-                                <span class="text-gold font-semibold">27</span>
-                            </div>
-                        </div>
-                        
-                        <div class="flex items-center justify-between">
-                            <div class="flex items-center gap-3">
-                                <span class="text-2xl">🌍</span>
-                                <span class="text-light-gold">Autres</span>
-                            </div>
-                            <div class="flex items-center gap-2">
-                                <div class="w-24 bg-[rgba(5,20,40,0.8)] rounded-full h-2">
-                                    <div class="bg-gold h-2 rounded-full" style="width: 2%"></div>
-                                </div>
-                                <span class="text-gold font-semibold">8</span>
-                            </div>
-                        </div>
-                    </div>
+                <!-- Total Contacts -->
+                <div class="stat-card rounded-2xl p-6">
+                    <div class="text-2xl font-bold text-gold mb-1" id="totalContacts">-</div>
+                    <p class="text-light-gold">Total contacts</p>
+                </div>
+                
+                <!-- Montant Dons -->
+                <div class="stat-card rounded-2xl p-6">
+                    <div class="text-2xl font-bold text-gold mb-1" id="donorsTotal">-</div>
+                    <p class="text-light-gold">Montant dons</p>
                 </div>
             </div>
         </section>
 
-        <!-- Liste des commandes -->
+        <!-- Table Précommandes -->
         <section class="mb-12">
             <div class="flex items-center justify-between mb-8">
-                <h3 class="cormorant text-2xl font-bold text-gold">Commandes Récentes</h3>
-                <div class="flex gap-4">
-                    <button class="bg-gold text-night-blue px-4 py-2 rounded-lg hover:bg-light-gold transition">
-                        <i class="fas fa-download mr-2"></i>Export CSV
-                    </button>
-                    <select class="bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold">
-                        <option value="all">Toutes les commandes</option>
-                        <option value="early-bird">Early Bird</option>
-                        <option value="standard">Standard</option>
-                        <option value="collector">Collector</option>
-                    </select>
-                </div>
+                <h3 class="cormorant text-2xl font-bold text-gold">Précommandes</h3>
+                <button id="exportContactsBtn" class="bg-gold text-night-blue px-4 py-2 rounded-lg hover:bg-light-gold transition">
+                    <i class="fas fa-download mr-2"></i>Export CSV
+                </button>
             </div>
             
             <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="w-full">
+                    <table class="w-full" id="preordersTable">
                         <thead class="bg-[rgba(5,20,40,0.8)]">
                             <tr>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">ID</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Client</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Date</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Email</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Nom</th>
                                 <th class="px-6 py-4 text-left text-gold font-semibold">Offre</th>
                                 <th class="px-6 py-4 text-left text-gold font-semibold">Montant</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Date</th>
                                 <th class="px-6 py-4 text-left text-gold font-semibold">Statut</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gold/20">
-                            <tr class="hover:bg-[rgba(5,20,40,0.8)] transition">
-                                <td class="px-6 py-4 text-light-gold">#ORD-001</td>
-                                <td class="px-6 py-4">
-                                    <div>
-                                        <div class="text-gold font-semibold">Marie Dubois</div>
-                                        <div class="text-sm text-light-gold/70">marie.dubois@email.com</div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="bg-gold/20 text-gold px-2 py-1 rounded text-sm">Early Bird</span>
-                                </td>
-                                <td class="px-6 py-4 text-gold font-semibold">59€</td>
-                                <td class="px-6 py-4 text-light-gold">14/03/2024</td>
-                                <td class="px-6 py-4">
-                                    <span class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-sm">Payée</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex gap-2">
-                                        <button class="text-gold hover:text-light-gold">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button class="text-gold hover:text-light-gold">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="text-gold hover:text-light-gold">
-                                            <i class="fas fa-envelope"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            
-                            <tr class="hover:bg-[rgba(5,20,40,0.8)] transition">
-                                <td class="px-6 py-4 text-light-gold">#ORD-002</td>
-                                <td class="px-6 py-4">
-                                    <div>
-                                        <div class="text-gold font-semibold">Jean Martin</div>
-                                        <div class="text-sm text-light-gold/70">jean.martin@email.com</div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="bg-gold/20 text-gold px-2 py-1 rounded text-sm">Standard</span>
-                                </td>
-                                <td class="px-6 py-4 text-gold font-semibold">89€</td>
-                                <td class="px-6 py-4 text-light-gold">13/03/2024</td>
-                                <td class="px-6 py-4">
-                                    <span class="bg-green-500/20 text-green-400 px-2 py-1 rounded text-sm">Payée</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex gap-2">
-                                        <button class="text-gold hover:text-light-gold">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button class="text-gold hover:text-light-gold">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="text-gold hover:text-light-gold">
-                                            <i class="fas fa-envelope"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                            
-                            <tr class="hover:bg-[rgba(5,20,40,0.8)] transition">
-                                <td class="px-6 py-4 text-light-gold">#ORD-003</td>
-                                <td class="px-6 py-4">
-                                    <div>
-                                        <div class="text-gold font-semibold">Sophie Leroy</div>
-                                        <div class="text-sm text-light-gold/70">sophie.leroy@email.com</div>
-                                    </div>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <span class="bg-gold/20 text-gold px-2 py-1 rounded text-sm">Collector</span>
-                                </td>
-                                <td class="px-6 py-4 text-gold font-semibold">149€</td>
-                                <td class="px-6 py-4 text-light-gold">12/03/2024</td>
-                                <td class="px-6 py-4">
-                                    <span class="bg-yellow-500/20 text-yellow-400 px-2 py-1 rounded text-sm">En attente</span>
-                                </td>
-                                <td class="px-6 py-4">
-                                    <div class="flex gap-2">
-                                        <button class="text-gold hover:text-light-gold">
-                                            <i class="fas fa-eye"></i>
-                                        </button>
-                                        <button class="text-gold hover:text-light-gold">
-                                            <i class="fas fa-edit"></i>
-                                        </button>
-                                        <button class="text-gold hover:text-light-gold">
-                                            <i class="fas fa-envelope"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
                         </tbody>
                     </table>
                 </div>
                 
-                <!-- Pagination -->
-                <div class="flex items-center justify-between px-6 py-4 bg-[rgba(5,20,40,0.8)]">
-                    <div class="text-light-gold text-sm">
-                        Affichage de <span id="start-result">1</span> à <span id="end-result">10</span> sur <span id="preordersCount">-</span> résultats
-                    </div>
-                    <div class="flex gap-2">
-                        <button class="bg-gold/20 text-gold px-3 py-1 rounded hover:bg-gold/30 transition">
-                            <i class="fas fa-chevron-left"></i>
-                        </button>
-                        <button class="bg-gold text-night-blue px-3 py-1 rounded">1</button>
-                        <button class="bg-gold/20 text-gold px-3 py-1 rounded hover:bg-gold/30 transition">2</button>
-                        <button class="bg-gold/20 text-gold px-3 py-1 rounded hover:bg-gold/30 transition">3</button>
-                        <button class="bg-gold/20 text-gold px-3 py-1 rounded hover:bg-gold/30 transition">
-                            <i class="fas fa-chevron-right"></i>
-                        </button>
-                    </div>
+                <div id="preordersPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)]">
                 </div>
             </div>
         </section>
 
-        <!-- Actions rapides -->
-        <section>
-            <h3 class="cormorant text-2xl font-bold text-gold mb-6">Actions Rapides</h3>
+        <!-- Table Dons -->
+        <section class="mb-12">
+            <h3 class="cormorant text-2xl font-bold text-gold mb-8">Dons</h3>
             
-            <div class="grid md:grid-cols-3 gap-6">
-                <button class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30 hover:border-gold/60 transition text-left">
-                    <i class="fas fa-envelope text-gold text-2xl mb-4"></i>
-                    <h4 class="text-gold font-semibold mb-2">Envoyer Email</h4>
-                    <p class="text-light-gold text-sm mb-4">Notifier tous les clients d'une mise à jour</p>
-                    <span class="text-gold/70 text-sm" id="totalContacts">→ - clients concernés</span>
-                </button>
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="donorsTable">
+                        <thead class="bg-[rgba(5,20,40,0.8)]">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Date</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Email</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Nom</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Montant</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gold/20">
+                        </tbody>
+                    </table>
+                </div>
                 
-                <button class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30 hover:border-gold/60 transition text-left">
-                    <i class="fas fa-chart-line text-gold text-2xl mb-4"></i>
-                    <h4 class="text-gold font-semibold mb-2">Rapport Complet</h4>
-                    <p class="text-light-gold text-sm mb-4">Générer un rapport détaillé des ventes</p>
-                    <span class="text-gold/70 text-sm">→ PDF et Excel disponibles</span>
-                </button>
+                <div id="donorsPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)]">
+                </div>
+            </div>
+        </section>
+
+        <!-- Table Waitlist -->
+        <section class="mb-12">
+            <h3 class="cormorant text-2xl font-bold text-gold mb-8">Waitlist</h3>
+            
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="waitlistTable">
+                        <thead class="bg-[rgba(5,20,40,0.8)]">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Email</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Nom</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Date</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gold/20">
+                        </tbody>
+                    </table>
+                </div>
                 
-                <button class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30 hover:border-gold/60 transition text-left">
-                    <i class="fas fa-cog text-gold text-2xl mb-4"></i>
-                    <h4 class="text-gold font-semibold mb-2">Paramètres</h4>
-                    <p class="text-light-gold text-sm mb-4">Configurer les options de précommande</p>
-                    <span class="text-gold/70 text-sm">→ Tarifs, stocks, etc.</span>
-                </button>
+                <div id="waitlistPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)]">
+                </div>
             </div>
         </section>
     </main>
 
-    <!-- Scripts -->
     <script>
         // État global
         let currentData = {
@@ -451,13 +254,9 @@
                 // Vérifier la session admin
                 const meResponse = await fetch('/api/admin/me', { credentials: 'include' });
                 if (!meResponse.ok) {
-                    console.log('Session non valide, redirection vers login');
                     window.location.href = 'login.html';
                     return;
                 }
-
-                const meData = await meResponse.json();
-                console.log('Admin connecté:', meData.admin);
 
                 // Charger les KPI
                 await Promise.all([
@@ -467,11 +266,8 @@
                     loadWaitlist()
                 ]);
 
-                console.log('Dashboard chargé avec succès');
-
             } catch (error) {
                 console.error('Erreur chargement dashboard:', error);
-                showMessage('Erreur de chargement du dashboard', 'error');
                 window.location.href = 'login.html';
             }
         }
@@ -484,8 +280,6 @@
             if (data.success) {
                 currentData.overview = data.data;
                 updateKPIs(data.data);
-            } else {
-                throw new Error(data.message || 'Erreur overview');
             }
         }
 
@@ -497,8 +291,6 @@
             if (data.success) {
                 currentData.preorders = data.data;
                 updatePreordersTable(data.data, data.pagination);
-            } else {
-                throw new Error(data.message || 'Erreur précommandes');
             }
         }
 
@@ -510,8 +302,6 @@
             if (data.success) {
                 currentData.donors = data.data;
                 updateDonorsTable(data.data, data.pagination);
-            } else {
-                throw new Error(data.message || 'Erreur dons');
             }
         }
 
@@ -523,32 +313,21 @@
             if (data.success) {
                 currentData.waitlist = data.data;
                 updateWaitlistTable(data.data, data.pagination);
-            } else {
-                throw new Error(data.message || 'Erreur waitlist');
             }
         }
 
         // Mettre à jour les KPI
         function updateKPIs(data) {
-            // Précommandes
             updateElement('preordersCount', data.preorders.count);
             updateElement('preordersTotal', formatCurrency(data.preorders.total));
-            
-            // Dons
             updateElement('donorsCount', data.donors.count);
             updateElement('donorsTotal', formatCurrency(data.donors.total));
-            
-            // Waitlist
             updateElement('waitlistCount', data.waitlist.count);
-            
-            // Global
             updateElement('globalTotal', formatCurrency(data.global.total));
             updateElement('totalContacts', data.global.totalContacts);
-            
-            // Stats techniques
-            updateElement('preordersNoEmail', data.preorders.noEmail);
-            updateElement('donorsNoEmail', data.donors.noEmail);
-            updateElement('waitlistNotSynced', data.waitlist.notSynced);
+            updateElement('preordersNoEmail', data.preorders.noEmail || 0);
+            updateElement('donorsNoEmail', data.donors.noEmail || 0);
+            updateElement('waitlistNotSynced', data.waitlist.notSynced || 0);
         }
 
         // Mettre à jour un élément du DOM
@@ -573,14 +352,13 @@
             if (!tbody) return;
             
             tbody.innerHTML = preorders.map(preorder => `
-                <tr>
-                    <td>${formatDate(preorder.created_at)}</td>
-                    <td>${preorder.email || '-'}</td>
-                    <td>${preorder.full_name || '-'}</td>
-                    <td>${preorder.offer || '-'}</td>
-                    <td>${formatCurrency(preorder.amount_total)}</td>
-                    <td><span class="badge ${getStatusClass(preorder.paid_status)}">${preorder.paid_status}</span></td>
-                    <td>${preorder.city || '-'}</td>
+                <tr class="hover:bg-[rgba(5,20,40,0.8)] transition">
+                    <td class="px-6 py-4 text-light-gold">${formatDate(preorder.created_at)}</td>
+                    <td class="px-6 py-4 text-light-gold">${preorder.email || '-'}</td>
+                    <td class="px-6 py-4 text-light-gold">${preorder.full_name || '-'}</td>
+                    <td class="px-6 py-4 text-gold">${preorder.offer || '-'}</td>
+                    <td class="px-6 py-4 text-gold font-semibold">${formatCurrency(preorder.amount_total)}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 rounded text-sm ${getStatusClass(preorder.paid_status)}">${preorder.paid_status}</span></td>
                 </tr>
             `).join('');
             
@@ -593,12 +371,12 @@
             if (!tbody) return;
             
             tbody.innerHTML = donors.map(donor => `
-                <tr>
-                    <td>${formatDate(donor.created_at)}</td>
-                    <td>${donor.email || '-'}</td>
-                    <td>${donor.full_name || '-'}</td>
-                    <td>${formatCurrency(donor.amount_total)}</td>
-                    <td><span class="badge ${getStatusClass(donor.paid_status)}">${donor.paid_status}</span></td>
+                <tr class="hover:bg-[rgba(5,20,40,0.8)] transition">
+                    <td class="px-6 py-4 text-light-gold">${formatDate(donor.created_at)}</td>
+                    <td class="px-6 py-4 text-light-gold">${donor.email || '-'}</td>
+                    <td class="px-6 py-4 text-light-gold">${donor.full_name || '-'}</td>
+                    <td class="px-6 py-4 text-gold font-semibold">${formatCurrency(donor.amount_total)}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 rounded text-sm ${getStatusClass(donor.paid_status)}">${donor.paid_status}</span></td>
                 </tr>
             `).join('');
             
@@ -611,11 +389,11 @@
             if (!tbody) return;
             
             tbody.innerHTML = waitlist.map(item => `
-                <tr>
-                    <td>${item.email || '-'}</td>
-                    <td>${item.full_name || '-'}</td>
-                    <td>${formatDate(item.created_at)}</td>
-                    <td><span class="badge ${item.brevo_synced ? 'success' : 'warning'}">${item.brevo_synced ? 'Sync' : 'Non sync'}</span></td>
+                <tr class="hover:bg-[rgba(5,20,40,0.8)] transition">
+                    <td class="px-6 py-4 text-light-gold">${item.email || '-'}</td>
+                    <td class="px-6 py-4 text-light-gold">${item.full_name || '-'}</td>
+                    <td class="px-6 py-4 text-light-gold">${formatDate(item.created_at)}</td>
+                    <td class="px-6 py-4"><span class="px-2 py-1 rounded text-sm ${item.brevo_synced ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">${item.brevo_synced ? 'Sync' : 'Non sync'}</span></td>
                 </tr>
             `).join('');
             
@@ -636,10 +414,10 @@
         // Obtenir la classe CSS pour le statut
         function getStatusClass(status) {
             switch (status) {
-                case 'completed': return 'success';
-                case 'pending': return 'warning';
-                case 'failed': return 'danger';
-                default: return 'secondary';
+                case 'completed': return 'bg-green-500/20 text-green-400';
+                case 'pending': return 'bg-yellow-500/20 text-yellow-400';
+                case 'failed': return 'bg-red-500/20 text-red-400';
+                default: return 'bg-gray-500/20 text-gray-400';
             }
         }
 
@@ -650,15 +428,20 @@
             
             container.innerHTML = `
                 <div class="flex items-center justify-between">
-                    <span class="text-sm text-gray-700">
+                    <span class="text-sm text-light-gold">
                         Affichage de ${(pagination.page - 1) * pagination.limit + 1} à ${Math.min(pagination.page * pagination.limit, pagination.total)} sur ${pagination.total} résultats
                     </span>
                     <div class="flex gap-2">
-                        ${pagination.page > 1 ? `<button onclick="load${table.charAt(0).toUpperCase() + table.slice(1)}(${pagination.page - 1})" class="px-3 py-1 bg-gray-200 rounded">Précédent</button>` : ''}
-                        ${pagination.page < pagination.pages ? `<button onclick="load${table.charAt(0).toUpperCase() + table.slice(1)}(${pagination.page + 1})" class="px-3 py-1 bg-gray-200 rounded">Suivant</button>` : ''}
+                        ${pagination.page > 1 ? `<button onclick="load${capitalize(table)}(${pagination.page - 1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Précédent</button>` : ''}
+                        ${pagination.page < pagination.pages ? `<button onclick="load${capitalize(table)}(${pagination.page + 1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Suivant</button>` : ''}
                     </div>
                 </div>
             `;
+        }
+
+        // Capitaliser
+        function capitalize(str) {
+            return str.charAt(0).toUpperCase() + str.slice(1);
         }
 
         // Exporter les contacts
@@ -675,28 +458,20 @@
                 });
                 window.location.href = 'login.html';
             } catch (error) {
-                console.error('Erreur déconnexion:', error);
                 window.location.href = 'login.html';
             }
         }
 
         // Rafraîchir les données
         function refreshData() {
+            dashboardLoaded = false;
             loadDashboardData();
-        }
-
-        // Afficher un message
-        function showMessage(message, type = 'info') {
-            // Implémentation simple pour le moment
-            console.log(`${type}: ${message}`);
-            // TODO: Implémenter une vraie notification
         }
 
         // Initialisation
         document.addEventListener('DOMContentLoaded', () => {
             loadDashboardData();
             
-            // Attacher les événements aux boutons
             const exportBtn = document.getElementById('exportContactsBtn');
             if (exportBtn) {
                 exportBtn.addEventListener('click', exportContacts);
