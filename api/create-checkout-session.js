@@ -199,8 +199,8 @@ module.exports = async (req, res) => {
                 cancel_url: `${process.env.FRONTEND_URL}/precommande-oracle.html#contribution-libre`,
                 metadata: {
                     offer: 'contribution-libre',
-                    email: customerInfo.email || req.body.email || 'contribution@oradia.fr',
-                    full_name: customerInfo.fullName || req.body.fullName || 'Contribution ORADIA',
+                    email: req.body.email || 'contribution@oradia.fr',
+                    full_name: req.body.fullName || 'Contribution ORADIA',
                     amount: (req.body.customAmount / 100).toString(),
                     source: 'oradia-contribution'
                 }
