@@ -2353,57 +2353,90 @@ La production est lancée grâce aux premières commandes.</p>
 <script src="components/header-manager.js" defer></script>
 
 <script>
-    // Gérer le scroll vers l'ancre panier si présent dans l'URL
+    // Gérer le scroll vers les ancres (#offres, #cart-section, etc.)
     document.addEventListener('DOMContentLoaded', () => {
-        // Debug : vérifier si l'ancre est bien présente
         console.log('URL hash:', window.location.hash);
         
-        // Attendre un peu plus longtemps pour que le panier soit restauré
-        setTimeout(() => {
-            // Vérifier si l'URL contient #cart-section
-            if (window.location.hash === '#cart-section') {
-                console.log('Detection de #cart-section, tentative de scroll...');
-                const cartSection = document.getElementById('cart-section');
-                console.log('Element cart-section trouvé:', cartSection);
+        // Fonction générique de scroll vers une ancre
+        function scrollToAnchor(anchorId, delay = 500) {
+            setTimeout(() => {
+                const targetElement = document.getElementById(anchorId);
+                console.log(`Tentative de scroll vers #${anchorId}`, targetElement);
                 
-                if (cartSection) {
-                    // S'assurer que la section panier est visible
-                    if (cartSection.classList.contains('hidden')) {
-                        cartSection.classList.remove('hidden');
-                        console.log('Section panier rendue visible');
+                if (targetElement) {
+                    // S'assurer que l'élément est visible
+                    if (targetElement.classList.contains('hidden')) {
+                        targetElement.classList.remove('hidden');
+                        console.log(`Element #${anchorId} rendu visible`);
                     }
                     
                     // Forcer le scroll avec plusieurs méthodes
                     try {
                         // Méthode 1 : scrollIntoView
-                        cartSection.scrollIntoView({ 
+                        targetElement.scrollIntoView({ 
                             behavior: 'smooth',
                             block: 'start'
                         });
-                        console.log('Scroll avec scrollIntoView effectué');
+                        console.log(`Scroll vers #${anchorId} avec scrollIntoView`);
                         
                         // Méthode 2 : fallback si scrollIntoView ne fonctionne pas
                         setTimeout(() => {
-                            const rect = cartSection.getBoundingClientRect();
+                            const rect = targetElement.getBoundingClientRect();
                             if (rect.top > 100 || rect.bottom < 0) {
                                 window.scrollTo({
                                     top: window.pageYOffset + rect.top - 100,
                                     behavior: 'smooth'
                                 });
-                                console.log('Scroll fallback effectué');
+                                console.log(`Scroll fallback vers #${anchorId}`);
                             }
                         }, 100);
                         
                     } catch (error) {
-                        console.error('Erreur lors du scroll:', error);
-                        // Méthode 3 : dernier recours
-                        window.location.hash = '#cart-section';
+                        console.error(`Erreur lors du scroll vers #${anchorId}:`, error);
+                        window.location.hash = `#${anchorId}`;
                     }
                 } else {
-                    console.error('Element #cart-section non trouvé');
+                    console.error(`Element #${anchorId} non trouvé`);
+                }
+            }, delay);
+        }
+        
+        // Gérer les différentes ancres
+        const hash = window.location.hash.replace('#', '');
+        if (hash === 'cart-section') {
+            scrollToAnchor('cart-section', 500);
+        } else if (hash === 'offres') {
+            scrollToAnchor('offres', 300);
+        } else if (hash === 'contribution-libre') {
+            scrollToAnchor('contribution-libre', 300);
+        } else if (hash === 'waitlist') {
+            scrollToAnchor('waitlist', 300);
+        }
+    });
+    
+    // Intercepter les clics sur les liens d'ancre pour garantir le scroll
+    document.addEventListener('click', (e) => {
+        const link = e.target.closest('a[href^="#"]');
+        if (link) {
+            const href = link.getAttribute('href');
+            const anchorId = href.replace('#', '');
+            
+            if (anchorId && document.getElementById(anchorId)) {
+                e.preventDefault();
+                console.log(`Clic intercepté sur ${href}`);
+                
+                const targetElement = document.getElementById(anchorId);
+                if (targetElement) {
+                    targetElement.scrollIntoView({ 
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                    
+                    // Mettre à jour l'URL sans recharger
+                    history.pushState(null, null, href);
                 }
             }
-        }, 500); // Augmenté à 500ms pour plus de sécurité
+        }
     });
 </script>
 
