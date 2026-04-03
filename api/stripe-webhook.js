@@ -227,7 +227,7 @@ const handler = async (req, res) => {
                            session.metadata?.email || 
                            null,
                     
-                    // Offer depuis metadata (obligatoire) avec fallback robuste
+                    // Offer depuis metadata (obligatoire) - PAS DE FALLBACK MONTANT
                     offer: session.metadata?.offer || 
                           (() => {
                               try {
@@ -238,8 +238,8 @@ const handler = async (req, res) => {
                               }
                           })() ||
                           (() => {
-                              // Fallback pour contribution libre ou autres cas
-                              if (session.amount_total && session.amount_total >= 2000) {
+                              // Fallback SEULEMENT si metadata.offer explicitement 'contribution-libre'
+                              if (session.metadata?.offer === 'contribution-libre') {
                                   return 'contribution-libre';
                               }
                               return 'unknown';

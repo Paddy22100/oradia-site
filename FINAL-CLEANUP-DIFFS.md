@@ -48,6 +48,50 @@
 
 ---
 
+## 1.3. **api/stripe-webhook.js** - Correction bug fallback montant
+
+```diff
+// Lignes 230-246
+- // Offer depuis metadata (obligatoire) avec fallback robuste
+- offer: session.metadata?.offer || 
+-       (() => {
+-           try {
+-               const items = JSON.parse(session.metadata?.items || '[]');
+-               return items[0]?.offer || null;
+-           } catch {
+-               return null;
+-           }
+-       })() ||
+-       (() => {
+-           // Fallback pour contribution libre ou autres cas
+-           if (session.amount_total && session.amount_total >= 2000) {
+-               return 'contribution-libre';
+-           }
+-           return 'unknown';
+-       })(),
++ // Offer depuis metadata (obligatoire) - PAS DE FALLBACK MONTANT
++ offer: session.metadata?.offer || 
++       (() => {
++           try {
++               const items = JSON.parse(session.metadata?.items || '[]');
++               return items[0]?.offer || null;
++           } catch {
++               return null;
++           }
++       })() ||
++       (() => {
++           // Fallback SEULEMENT si metadata.offer explicitement 'contribution-libre'
++           if (session.metadata?.offer === 'contribution-libre') {
++               return 'contribution-libre';
++           }
++           return 'unknown';
++       })(),
+```
+
+**Raison** : Corrige le bug qui classait incorrectement toute session >= 20€ comme contribution-libre basé sur le montant.
+
+---
+
 ## 2. **api/stripe-webhook.js** - Gestion erreur donors améliorée
 
 ```diff
