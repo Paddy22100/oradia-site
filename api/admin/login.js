@@ -22,22 +22,8 @@ export default async function handler(req, res) {
     }
 
     try {
-        // Parser le body pour Vercel
-        let email, password;
-        
-        if (req.body) {
-            email = req.body.email;
-            password = req.body.password;
-        } else if (req.body === undefined) {
-            // Essayer de parser depuis string si nécessaire
-            try {
-                const parsed = JSON.parse(req.body);
-                email = parsed.email;
-                password = parsed.password;
-            } catch (e) {
-                console.error('❌ Erreur parsing body:', e.message);
-            }
-        }
+        // Parsing simple et saine du body
+        const { email, password } = req.body || {};
         
         console.log('📧 Email reçu:', email || '❌ Manquant');
         console.log('🔑 Mot de passe reçu:', password ? '✅ Présent' : '❌ Manquant');
