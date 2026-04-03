@@ -27,6 +27,14 @@ export default async function handler(req, res) {
         // Vérifier le token
         const decoded = jwt.verify(token, process.env.ADMIN_SESSION_SECRET);
         
+        // Vérifier que c'est bien un token admin
+        if (decoded.type !== 'admin') {
+            return res.status(401).json({
+                error: 'Unauthorized',
+                message: 'Type de session invalide'
+            });
+        }
+        
         // Vérifier si le token n'est pas trop vieux (2 heures max)
         const sessionAge = Math.floor((Date.now() - decoded.loginTime) / 1000 / 60); // en minutes
         if (sessionAge > 120) {
