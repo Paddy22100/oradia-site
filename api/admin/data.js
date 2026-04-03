@@ -140,8 +140,13 @@ async function getPreorders(page, limit) {
 
         if (error) throw error;
 
+        const normalizedData = (data || []).map(item => ({
+            ...item,
+            created_at_fr: formatDateFR(item.created_at)
+        }));
+
         return {
-            data: data || [],
+            data: normalizedData,
             pagination: {
                 page: parseInt(page),
                 limit: parseInt(limit),
@@ -168,8 +173,13 @@ async function getDonors(page, limit) {
 
         if (error) throw error;
 
+        const normalizedData = (data || []).map(item => ({
+            ...item,
+            created_at_fr: formatDateFR(item.created_at)
+        }));
+
         return {
-            data: data || [],
+            data: normalizedData,
             pagination: {
                 page: parseInt(page),
                 limit: parseInt(limit),
@@ -197,8 +207,13 @@ async function getWaitlist(page, limit) {
 
         if (error) throw error;
 
+        const normalizedData = (data || []).map(item => ({
+            ...item,
+            created_at_fr: formatDateFR(item.created_at)
+        }));
+
         return {
-            data: data || [],
+            data: normalizedData,
             pagination: {
                 page: pageNumber,
                 limit: pageSize,
@@ -209,4 +224,17 @@ async function getWaitlist(page, limit) {
     } catch (error) {
         throw new Error('Erreur waitlist: ' + error.message);
     }
+}
+
+function formatDateFR(dateString) {
+    if (!dateString) return '-';
+
+    return new Intl.DateTimeFormat('fr-FR', {
+        timeZone: 'Europe/Paris',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    }).format(new Date(dateString));
 }

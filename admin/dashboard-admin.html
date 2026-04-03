@@ -389,7 +389,7 @@
             
             tbody.innerHTML = preorders.map(preorder => `
                 <tr class="hover:bg-[rgba(5,20,40,0.8)] transition">
-                    <td class="px-6 py-4 text-light-gold">${formatDate(preorder.created_at)}</td>
+                    <td class="px-6 py-4 text-light-gold">${preorder.created_at_fr || formatDate(preorder.created_at)}</td>
                     <td class="px-6 py-4 text-light-gold">${preorder.email || '-'}</td>
                     <td class="px-6 py-4 text-light-gold">${preorder.full_name || '-'}</td>
                     <td class="px-6 py-4 text-gold">${preorder.offer || '-'}</td>
@@ -408,7 +408,7 @@
             
             tbody.innerHTML = donors.map(donor => `
                 <tr class="hover:bg-[rgba(5,20,40,0.8)] transition">
-                    <td class="px-6 py-4 text-light-gold">${formatDate(donor.created_at)}</td>
+                    <td class="px-6 py-4 text-light-gold">${donor.created_at_fr || formatDate(donor.created_at)}</td>
                     <td class="px-6 py-4 text-light-gold">${donor.email || '-'}</td>
                     <td class="px-6 py-4 text-light-gold">${donor.full_name || '-'}</td>
                     <td class="px-6 py-4 text-gold font-semibold">${formatCurrency(donor.amount_total)}</td>
@@ -428,7 +428,7 @@
                 <tr class="hover:bg-[rgba(5,20,40,0.8)] transition">
                     <td class="px-6 py-4 text-light-gold">${item.email || '-'}</td>
                     <td class="px-6 py-4 text-light-gold">${item.full_name || '-'}</td>
-                    <td class="px-6 py-4 text-light-gold">${formatDate(item.created_at)}</td>
+                    <td class="px-6 py-4 text-light-gold">${item.created_at_fr || formatDate(item.created_at)}</td>
                     <td class="px-6 py-4"><span class="px-2 py-1 rounded text-sm ${item.brevo_synced ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">${item.brevo_synced ? 'Sync' : 'Non sync'}</span></td>
                 </tr>
             `).join('');
