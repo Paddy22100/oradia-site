@@ -63,7 +63,7 @@ export default async function handler(req, res) {
         const token = jwt.sign(
             {
                 email: adminEmail,
-                role: 'admin',
+                type: 'admin',
                 loginTime: Date.now()
             },
             sessionSecret,

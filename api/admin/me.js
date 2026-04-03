@@ -41,7 +41,7 @@ export default async function handler(req, res) {
             success: true,
             admin: {
                 email: decoded.email,
-                role: decoded.role,
+                type: decoded.type,
                 sessionAge: sessionAge
             }
         });
