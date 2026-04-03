@@ -20,23 +20,15 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
     try {
         // Logs de diagnostic pour les variables d'environnement
-        console.log('🔧 Vérification variables Brevo:');
-        console.log('  - BREVO_API_KEY:', process.env.BREVO_API_KEY ? '✅ Configurée' : '❌ Manquante');
-        console.log('  - BREVO_SENDER_EMAIL:', process.env.BREVO_SENDER_EMAIL || '❌ Manquante');
-        console.log('  - BREVO_SENDER_NAME:', process.env.BREVO_SENDER_NAME || '❌ Manquant');
-        
         if (!process.env.BREVO_API_KEY) {
-            console.error('❌ BREVO_API_KEY manquante - impossible d\'envoyer l\'email');
+            console.error('❌ BREVO_API_KEY manquante');
             return false;
         }
         
         if (!process.env.BREVO_SENDER_EMAIL) {
-            console.error('❌ BREVO_SENDER_EMAIL manquant - impossible d\'envoyer l\'email');
+            console.error('❌ BREVO_SENDER_EMAIL manquant');
             return false;
         }
-        
-        console.log('📧 Envoi email à:', toEmail);
-        console.log('📧 Détails:', { toName, offer, amountTotal });
         
         // Différencier don vs précommande
         const isDonation = offer === 'contribution-libre';
@@ -191,17 +183,14 @@ oradia.fr`
             })
         });
 
-        console.log('📧 Brevo response status:', response.status);
-        
         if (!response.ok) {
             const errorText = await response.text();
-            console.error(`❌ Brevo API error: ${response.status} ${response.statusText}`);
-            console.error('❌ Response body:', errorText);
-            return false; // Ne pas faire planter le webhook
+            console.error(`❌ Brevo API error: ${response.status}`);
+            return false;
         }
 
         const result = await response.json();
-        console.log('✅ Email sent successfully via Brevo:', result.messageId);
+        console.log('✅ Email sent via Brevo');
         return true;
 
     } catch (error) {
@@ -215,9 +204,6 @@ const handler = async (req, res) => {
     const sig = req.headers['stripe-signature'];
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
-    console.log('🔔 Webhook Stripe reçu');
-    console.log('🔔 Headers:', Object.keys(req.headers));
-    
     if (!sig || !webhookSecret) {
         console.error('❌ Missing webhook signature or secret');
         return res.status(400).json({ error: 'Missing signature' });
@@ -234,26 +220,20 @@ const handler = async (req, res) => {
         
         // Construire l'événement Stripe avec le raw body réel
         event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
-        console.log('✅ Signature Stripe validée');
     } catch (err) {
         console.error('❌ Webhook signature verification failed:', err.message);
         return res.status(400).json({ error: `Webhook Error: ${err.message}` });
     }
 
     try {
-        console.log('🎯 Webhook event:', event.type);
+        console.log(`🎯 Webhook event: ${event.type}`);
         
         switch (event.type) {
             case 'checkout.session.completed': {
                 const session = event.data.object;
                 const sessionId = session.id;
                 
-                console.log('🛒 AUDIT CHECKOUT SESSION COMPLETED');
-                console.log('📋 Session ID:', session.id);
-                console.log('📧 Client email:', session.customer_details?.email);
-                console.log('� Amount total:', session.amount_total);
-                console.log('� Session payload keys:', Object.keys(session));
-                console.log('📋 Session complète:', JSON.stringify(session, null, 2));
+                console.log(`🛒 Session completed: ${sessionId}`);
                 
                 // Extraction robuste des données avec fallbacks
                 const extractedData = {
@@ -313,63 +293,27 @@ const handler = async (req, res) => {
                     paid_status: 'completed'
                 };
 
-                // Logging des valeurs extraites
-                console.log('📝 Données extraites:');
-                console.log('  - email:', extractedData.email);
-                console.log('  - offer:', extractedData.offer);
-                console.log('  - full_name:', extractedData.full_name);
-                console.log('  - shipping_address:', extractedData.shipping_address);
-                console.log('  - postal_code:', extractedData.postal_code);
-                console.log('  - city:', extractedData.city);
-                console.log('  - phone:', extractedData.phone);
-                console.log('  - stripe_customer_id:', extractedData.stripe_customer_id);
-                console.log('  - payment_intent_id:', extractedData.payment_intent_id);
-                console.log('  - amount_total:', extractedData.amount_total);
-                console.log('  - currency:', extractedData.currency);
-
                 // Validation des champs obligatoires
                 if (!extractedData.email) {
                     console.error('❌ Email manquant - envoi d\'email annulé mais webhook continue');
-                    console.error('❌ Email absent dans:', {
-                        customer_details_email: session.customer_details?.email,
-                        customer_email: session.customer_email,
-                        metadata_email: session.metadata?.email
-                    });
                     // Continuer le traitement sans envoyer d'email
-                } else {
-                    console.log('✅ Email client présent:', extractedData.email);
                 }
-
-                // Logs de debug finaux
-                console.log('🎯 FINAL OFFER USED:', extractedData.offer);
-                console.log('🎯 FINAL ROUTE:', extractedData.offer === 'contribution-libre' ? 'donors' : 'preorders');
 
                 // Gestion spéciale pour les contributions libres
                 if (extractedData.offer === 'contribution-libre') {
-                    console.log('🎁 CONTRIBUTION LIBRE DÉTECTÉE - ROUTING VERS DONORS');
-                    
-                    // Sécurité mentale - conversion en euros
                     const amountInEuros = extractedData.amount_total / 100;
                     
-                    // Préparation des données pour la table donors
                     const donorData = {
                         stripe_session_id: extractedData.stripe_session_id,
                         payment_intent_id: extractedData.payment_intent_id,
                         email: extractedData.email,
                         full_name: extractedData.full_name || 'Soutien ORADIA',
-                        amount_total: amountInEuros, // en euros
+                        amount_total: amountInEuros,
                         currency: extractedData.currency,
                         paid_status: 'completed',
-                        source: 'oradia-contribution',
-                        metadata: {
-                            created_at: new Date().toISOString(),
-                            stripe_customer_id: extractedData.stripe_customer_id
-                        }
+                        source: 'oradia-contribution'
                     };
                     
-                    console.log('� Données donor à enregistrer:', JSON.stringify(donorData, null, 2));
-                    
-                    // Enregistrement dans la table donors
                     const { data: donorResult, error: donorError } = await supabase
                         .from('donors')
                         .upsert(donorData, {
@@ -380,28 +324,16 @@ const handler = async (req, res) => {
                         .single();
                     
                     if (donorError) {
-                        console.error('❌ ERREUR CRITIQUE - Insertion donors échouée');
-                        console.error('❌ Détails erreur complète:', JSON.stringify(donorError, null, 2));
-                        console.error('❌ Session ID concerné:', extractedData.stripe_session_id);
-                        console.error('❌ Email concerné:', extractedData.email);
-                        console.error('❌ Amount concerné:', extractedData.amount_total);
-                        
+                        console.error('❌ Insertion donors échouée:', donorError.message);
                         return res.status(500).json({
-                            success: false,
                             error: 'Failed to process donation',
-                            message: 'Erreur critique lors de l\'enregistrement du don en base de données',
-                            details: donorError.message,
-                            sessionId: extractedData.stripe_session_id,
-                            destination: 'donors_failed'
+                            message: donorError.message
                         });
                     }
                     
-                    console.log('✅ Don enregistré dans donors:', JSON.stringify(donorResult, null, 2));
-                    
-                    // Envoyer l'email de remerciement pour contribution
+                    // Vérifier si email déjà envoyé
                     let emailSent = false;
-                    if (extractedData.email) {
-                        console.log('📧 Envoi email contribution à:', extractedData.email);
+                    if (extractedData.email && !donorResult.email_sent_at) {
                         emailSent = await sendBrevoEmail({
                             toEmail: extractedData.email,
                             toName: extractedData.full_name || 'Ami(e) d\'ORADIA',
@@ -409,19 +341,20 @@ const handler = async (req, res) => {
                             amountTotal: (extractedData.amount_total / 100).toFixed(2)
                         });
                         
-                        console.log('📧 Email contribution envoyé:', emailSent);
+                        if (emailSent) {
+                            await supabase
+                                .from('donors')
+                                .update({ email_sent_at: new Date().toISOString() })
+                                .eq('stripe_session_id', sessionId);
+                        }
                     }
                     
                     return res.status(200).json({
                         success: true,
                         message: 'Don processed successfully',
                         sessionId: sessionId,
-                        email: extractedData.email,
-                        offer: extractedData.offer,
                         destination: 'donors',
-                        donor_id: donorResult.id,
-                        supabaseStatus: 'donor_recorded',
-                        emailStatus: emailSent ? 'sent' : 'failed'
+                        emailStatus: emailSent ? 'sent' : 'skipped'
                     });
                 }
 
@@ -434,21 +367,14 @@ const handler = async (req, res) => {
                     });
                 }
 
-                // AUDIT: Vérification de la connexion Supabase
-                console.log('🔍 AUDIT CONNEXION SUPABASE:');
-                console.log('  - Supabase URL:', supabaseUrl);
-                console.log('  - Supabase Key présente:', !!supabaseKey);
-                
-                // Préparation des données pour Supabase avec validation
                 const supabaseData = {
                     stripe_session_id: extractedData.stripe_session_id,
                     email: extractedData.email,
                     offer: extractedData.offer,
                     full_name: extractedData.full_name || 'Client ORADIA',
-                    amount_total: extractedData.amount_total / 100, // Conversion en euros
+                    amount_total: extractedData.amount_total / 100,
                     currency: extractedData.currency,
                     payment_intent_id: extractedData.payment_intent_id,
-                    // stripe_customer_id retiré - colonne probablement absente de preorders
                     paid_status: extractedData.paid_status,
                     shipping_address: extractedData.shipping_address,
                     postal_code: extractedData.postal_code,
@@ -457,136 +383,47 @@ const handler = async (req, res) => {
                     updated_at: new Date().toISOString()
                 };
                 
-                // VRAI UPSERT ATOMIQUE (plus de race condition avec retries Stripe)
-                console.log('🔄 AUDIT UPSERT ATOMIQUE:');
-                console.log('  - Session ID:', sessionId);
-                console.log('📦 Payload upsert (brut):', JSON.stringify(supabaseData, null, 2));
-                
-                // Validation des données avant envoi
-                console.log('🔍 VALIDATION DONNÉES:');
-                console.log('  - stripe_session_id:', supabaseData.stripe_session_id, typeof supabaseData.stripe_session_id);
-                console.log('  - email:', supabaseData.email, typeof supabaseData.email);
-                console.log('  - offer:', supabaseData.offer, typeof supabaseData.offer);
-                console.log('  - amount_total:', supabaseData.amount_total, typeof supabaseData.amount_total);
-                console.log('  - paid_status:', supabaseData.paid_status, typeof supabaseData.paid_status);
-                
-                if (!supabaseData.stripe_session_id) {
-                    console.error('❌ stripe_session_id est NULL ou vide');
-                }
-                if (!supabaseData.email) {
-                    console.error('❌ email est NULL ou vide');
-                }
-                if (!supabaseData.offer) {
-                    console.error('❌ offer est NULL ou vide');
-                }
-                
-                console.log('🚨 ENVOI VERS SUPABASE...');
-                const startTime = Date.now();
-                
                 const { error: upsertError, data: upsertData } = await supabase
                     .from('preorders')
                     .upsert(supabaseData, {
                         onConflict: 'stripe_session_id',
                         ignoreDuplicates: false
                     })
-                    .select(); // Ajout .select() pour récupérer les données
-
-                const endTime = Date.now();
-                console.log(`⏱️ Durée upsert: ${endTime - startTime}ms`);
-                
-                console.log('📊 RÉSULTAT UPSERT:');
-                console.log('  - upsertError:', upsertError);
-                console.log('  - upsertData:', upsertData);
+                    .select()
+                    .single();
                 
                 if (upsertError) {
-                    console.error('❌ ERREUR UPSERT SUPABASE DÉTAILLÉE:');
-                    console.error('  - Code erreur:', upsertError.code);
-                    console.error('  - Message erreur:', upsertError.message);
-                    console.error('  - Details erreur:', upsertError.details);
-                    console.error('  - Hint erreur:', upsertError.hint);
-                    console.error('  - Full error object:', JSON.stringify(upsertError, null, 2));
-                    
-                    // Analyse spécifique des erreurs communes
-                    if (upsertError.code === '23505') {
-                        console.error('💡 ERREUR CONFLICT: Probablement un problème de contrainte UNIQUE');
-                    } else if (upsertError.code === '23502') {
-                        console.error('💡 ERREUR NOT NULL: Un champ requis est manquant');
-                    } else if (upsertError.code === '23514') {
-                        console.error('💡 ERREUR CHECK: Une contrainte CHECK est violée');
-                    } else if (upsertError.code === '42501') {
-                        console.error('💡 ERREUR PERMISSION: Problème de permissions RLS');
-                    }
-                    
-                    // NE PAS FAIRE DE RETURN - CONTINUER POUR EMAIL
-                    console.log('⚠️ Upsert échoué mais continuation pour email');
-                } else {
-                    console.log('✅ Upsert réussi:');
-                    console.log('  - Données insérées/mises à jour:', upsertData);
+                    console.error('❌ Upsert Supabase échoué:', upsertError.message);
+                    return res.status(500).json({
+                        error: 'Database operation failed',
+                        message: upsertError.message
+                    });
                 }
 
-                // Envoyer l'email de confirmation (vérifier si déjà envoyé via upsert)
-                // Note: avec upsert, on ne peut pas savoir si c'est une mise à jour ou une insertion
-                // On utilise donc une table séparée pour suivre les emails envoyés
-                let emailSent = false; // Initialisation avant le bloc if
-                
-                if (extractedData.email) {
-                    console.log('📧 Appel de sendBrevoEmail pour:', extractedData.email);
+                // Vérifier si email déjà envoyé
+                let emailSent = false;
+                if (extractedData.email && !upsertData.email_sent_at) {
                     emailSent = await sendBrevoEmail({
                         toEmail: extractedData.email,
                         toName: extractedData.full_name || 'Ami(e) d\'ORADIA',
                         offer: extractedData.offer,
                         amountTotal: (extractedData.amount_total / 100).toFixed(2)
                     });
-                    console.log('📧 sendBrevoEmail retourné:', emailSent);
-
+                    
                     if (emailSent) {
-                        // Mettre à jour email_sent_at dans la table principale
-                        const { error: emailUpdateError } = await supabase
+                        await supabase
                             .from('preorders')
                             .update({ email_sent_at: new Date().toISOString() })
                             .eq('stripe_session_id', sessionId);
-
-                        if (emailUpdateError) {
-                            console.error('Error updating email_sent_at:', emailUpdateError);
-                        } else {
-                            console.log('✅ Email timestamp updated');
-                        }
-                    } else {
-                        console.error('❌ Email sending failed, but order is still valid');
                     }
-                } else {
-                    console.log('⚠️ Email absent - envoi d\'email sauté mais commande validée');
-                }
-
-                // Log progression
-                try {
-                    const { count } = await supabase
-                        .from('preorders')
-                        .select('*', { count: 'exact', head: true })
-                        .eq('paid_status', 'completed');
-                    
-                    console.log(`📊 Total completed orders: ${count}`);
-                } catch (countError) {
-                    console.error('❌ Erreur comptage orders:', countError);
                 }
                 
-                // RÉSUMÉ FINAL DE L'AUDIT
-                console.log('🎯 RÉSUMÉ AUDIT WEBHOOK:');
-                console.log('  - Session ID:', sessionId);
-                console.log('  - Email client:', extractedData.email || 'ABSENT');
-                console.log('  - Offer:', extractedData.offer);
-                console.log('  - Montant:', extractedData.amount_total / 100, '€');
-                console.log('  - Supabase:', upsertError ? 'Échec' : 'Succès');
-                console.log('  - Email:', extractedData.email ? (emailSent ? 'Envoyé' : 'Échec') : 'Sauté (email absent)');
-                console.log('✅ Webhook traité avec succès');
+                console.log(`✅ Webhook traité: ${sessionId} | DB:OK | Email:${emailSent ? 'OK' : 'Skipped'}`);
                 
                 return res.status(200).json({ 
                     message: 'Order processed successfully',
                     sessionId: sessionId,
-                    email: extractedData.email,
-                    offer: extractedData.offer,
-                    supabaseStatus: upsertError ? 'failed' : 'success',
-                    emailStatus: extractedData.email ? (emailSent ? 'sent' : 'failed') : 'skipped_no_email'
+                    emailStatus: emailSent ? 'sent' : 'skipped'
                 });
             }
             
@@ -595,7 +432,7 @@ const handler = async (req, res) => {
                 return res.status(200).json({ message: 'Event received but not handled' });
         }
     } catch (error) {
-        console.error('Webhook processing error:', error);
+        console.error('❌ Webhook processing error:', error.message);
         return res.status(500).json({ 
             error: 'Processing error', 
             message: error.message 

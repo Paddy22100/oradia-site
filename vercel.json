@@ -9,6 +9,30 @@
   ],
   "routes": [
     {
+      "src": "/api/stripe-webhook",
+      "dest": "/api/stripe-webhook.js"
+    },
+    {
+      "src": "/api/admin/login",
+      "dest": "/api/admin/login.js"
+    },
+    {
+      "src": "/api/admin/logout",
+      "dest": "/api/admin/logout.js"
+    },
+    {
+      "src": "/api/admin/me",
+      "dest": "/api/admin/me.js"
+    },
+    {
+      "src": "/api/admin/data",
+      "dest": "/api/admin/data.js"
+    },
+    {
+      "src": "/api/admin/contacts-export",
+      "dest": "/api/admin/contacts-export.js"
+    },
+    {
       "src": "/api/preorders/progress",
       "dest": "/api/preorders/progress.js"
     },
@@ -17,30 +41,36 @@
       "dest": "/api/create-checkout-session.js"
     },
     {
-      "src": "/api/stripe-webhook",
-      "dest": "/api/stripe-webhook.js"
-    },
-    {
-      "src": "/api/stripe-webhook-simple",
-      "dest": "/api/stripe-webhook-simple.js"
-    },
-    {
-      "src": "/api/test-webhook",
-      "dest": "/api/test-webhook.js"
-    },
-    {
-      "src": "/api/webhook-debug",
-      "dest": "/api/webhook-debug.js"
+      "src": "/api/contact",
+      "dest": "/api/contact.js"
     }
   ],
   "functions": {
+    "api/stripe-webhook.js": {
+      "maxDuration": 30
+    },
+    "api/admin/login.js": {
+      "maxDuration": 10
+    },
+    "api/admin/logout.js": {
+      "maxDuration": 10
+    },
+    "api/admin/me.js": {
+      "maxDuration": 10
+    },
+    "api/admin/data.js": {
+      "maxDuration": 30
+    },
+    "api/admin/contacts-export.js": {
+      "maxDuration": 30
+    },
     "api/preorders/progress.js": {
       "maxDuration": 10
     },
     "api/create-checkout-session.js": {
       "maxDuration": 30
     },
-    "api/stripe-webhook.js": {
+    "api/contact.js": {
       "maxDuration": 30
     }
   },

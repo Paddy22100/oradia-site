@@ -474,7 +474,7 @@
 
         // Charger les KPI overview
         async function loadOverview() {
-            const response = await fetch('/api/admin/overview', { credentials: 'include' });
+            const response = await fetch('/api/admin/data?section=overview', { credentials: 'include' });
             const data = await response.json();
             
             if (data.success) {
@@ -487,7 +487,7 @@
 
         // Charger les précommandes
         async function loadPreorders(page = 1, limit = 10) {
-            const response = await fetch(`/api/admin/preorders?page=${page}&limit=${limit}`, { credentials: 'include' });
+            const response = await fetch(`/api/admin/data?section=preorders&page=${page}&limit=${limit}`, { credentials: 'include' });
             const data = await response.json();
             
             if (data.success) {
@@ -500,7 +500,7 @@
 
         // Charger les dons
         async function loadDonors(page = 1, limit = 10) {
-            const response = await fetch(`/api/admin/donors?page=${page}&limit=${limit}`, { credentials: 'include' });
+            const response = await fetch(`/api/admin/data?section=donors&page=${page}&limit=${limit}`, { credentials: 'include' });
             const data = await response.json();
             
             if (data.success) {
@@ -513,7 +513,7 @@
 
         // Charger la waitlist
         async function loadWaitlist(page = 1, limit = 10) {
-            const response = await fetch(`/api/admin/waitlist?page=${page}&limit=${limit}`, { credentials: 'include' });
+            const response = await fetch(`/api/admin/data?section=waitlist&page=${page}&limit=${limit}`, { credentials: 'include' });
             const data = await response.json();
             
             if (data.success) {

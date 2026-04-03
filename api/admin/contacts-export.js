@@ -1,22 +1,11 @@
-const jwt = require('jsonwebtoken');
 const { createClient } = require('@supabase/supabase-js');
 
-// Middleware pour vérifier l'auth admin
-async function requireAdminAuth(req, res) {
-    const cookies = req.headers.cookie ? require('cookie').parse(req.headers.cookie) : {};
-    const token = cookies.oradia_admin_session;
-    
-    if (!token) {
-        return false;
-    }
-    
-    try {
-        const decoded = jwt.verify(token, process.env.ADMIN_SESSION_SECRET);
-        return decoded.type === 'admin';
-    } catch (error) {
-        return false;
-    }
-}
+// Variables d'environnement
+const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+// Client Supabase
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 export default async function handler(req, res) {
     // Seulement les requêtes GET
@@ -27,90 +16,126 @@ export default async function handler(req, res) {
         });
     }
 
-    // Vérifier l'authentification admin
-    const isAdmin = await requireAdminAuth(req, res);
-    if (!isAdmin) {
-        return res.status(401).json({ 
-            error: 'Unauthorized',
-            message: 'Session admin requise' 
-        });
-    }
-
     try {
-        // Initialiser Supabase côté serveur
-        const supabase = createClient(
-            process.env.SUPABASE_URL,
-            process.env.SUPABASE_SERVICE_ROLE_KEY
-        );
-
         // Récupérer toutes les données
         const [preordersResult, donorsResult, waitlistResult] = await Promise.all([
-            supabase.from('preorders').select('email, full_name, created_at'),
-            supabase.from('donors').select('email, full_name, created_at'),
-            supabase.from('waitlist_tirages').select('email, full_name, created_at')
+            // Précommandes payées
+            supabase
+                .from('preorders')
+                .select('email, full_name, amount_total, paid_status, created_at, offer, city')
+                .eq('paid_status', 'completed')
+                .order('created_at', { ascending: false }),
+            
+            // Dons payés
+            supabase
+                .from('donors')
+                .select('email, full_name, amount_total, paid_status, created_at')
+                .eq('paid_status', 'completed')
+                .order('created_at', { ascending: false }),
+            
+            // Waitlist
+            supabase
+                .from('waitlist')
+                .select('email, full_name, created_at, brevo_synced')
+                .order('created_at', { ascending: false })
         ]);
+
+        const preorders = preordersResult.data || [];
+        const donors = donorsResult.data || [];
+        const waitlist = waitlistResult.data || [];
+
+        // Préparer les données CSV
+        const csvData = [];
         
-        // Consolider les contacts
-        const contacts = [];
-        
+        // En-têtes
+        csvData.push([
+            'Type',
+            'Email',
+            'Nom complet',
+            'Montant (€)',
+            'Statut paiement',
+            'Offre',
+            'Ville',
+            'Date',
+            'Sync Brevo'
+        ]);
+
         // Ajouter les précommandes
-        preordersResult.data?.forEach(item => {
-            if (item.email) {
-                contacts.push({
-                    source: 'preorder',
-                    email: item.email,
-                    name: item.full_name || '',
-                    date: item.created_at
-                });
-            }
+        preorders.forEach(preorder => {
+            csvData.push([
+                'Précommande',
+                preorder.email || '',
+                preorder.full_name || '',
+                preorder.amount_total || 0,
+                preorder.paid_status || '',
+                preorder.offer || '',
+                preorder.city || '',
+                formatDate(preorder.created_at),
+                ''
+            ]);
         });
-        
+
         // Ajouter les dons
-        donorsResult.data?.forEach(item => {
-            if (item.email) {
-                contacts.push({
-                    source: 'donor',
-                    email: item.email,
-                    name: item.full_name || '',
-                    date: item.created_at
-                });
-            }
+        donors.forEach(donor => {
+            csvData.push([
+                'Don',
+                donor.email || '',
+                donor.full_name || '',
+                donor.amount_total || 0,
+                donor.paid_status || '',
+                '',
+                '',
+                formatDate(donor.created_at),
+                ''
+            ]);
         });
-        
+
         // Ajouter la waitlist
-        waitlistResult.data?.forEach(item => {
-            if (item.email) {
-                contacts.push({
-                    source: 'waitlist',
-                    email: item.email,
-                    name: item.full_name || '',
-                    date: item.created_at
-                });
-            }
+        waitlist.forEach(item => {
+            csvData.push([
+                'Waitlist',
+                item.email || '',
+                item.full_name || '',
+                '',
+                '',
+                '',
+                '',
+                formatDate(item.created_at),
+                item.brevo_synced ? 'Oui' : 'Non'
+            ]);
         });
-        
-        // Trier par date (plus récent en premier)
-        contacts.sort((a, b) => new Date(b.date) - new Date(a.date));
-        
+
         // Générer le CSV
-        const csvHeader = 'Source,Email,Nom,Date\n';
-        const csvData = contacts.map(c => 
-            `"${c.source}","${c.email}","${c.name.replace(/"/g, '""')}","${c.date}"`
+        const csvContent = csvData.map(row => 
+            row.map(field => `"${String(field).replace(/"/g, '""')}"`).join(',')
         ).join('\n');
-        
-        const csv = csvHeader + csvData;
-        
-        // Headers pour le download
+
+        // Nom du fichier avec date
+        const fileName = `oradia-contacts-${new Date().toISOString().split('T')[0]}.csv`;
+
+        // Headers pour le téléchargement
         res.setHeader('Content-Type', 'text/csv');
-        res.setHeader('Content-Disposition', `attachment; filename="oradia-contacts-${new Date().toISOString().split('T')[0]}.csv"`);
+        res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
         
-        res.send(csv);
-        
+        res.status(200).send(csvContent);
+
     } catch (error) {
-        console.error('❌ Erreur export contacts:', error);
+        console.error('Erreur export contacts:', error);
         res.status(500).json({
             error: 'Internal Server Error',
             message: 'Erreur lors de l\'export des contacts'
         });
     }
+}
+
+// Formater la date
+function formatDate(dateString) {
+    if (!dateString) return '';
+    return new Date(dateString).toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 }

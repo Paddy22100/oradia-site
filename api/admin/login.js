@@ -29,72 +29,69 @@ export default async function handler(req, res) {
         const adminPasswordHash = process.env.ADMIN_PASSWORD_HASH;
         const sessionSecret = process.env.ADMIN_SESSION_SECRET;
         
+        // Validation des variables d'environnement
         if (!adminEmail || !adminPasswordHash || !sessionSecret) {
-            console.error('❌ Configuration admin manquante');
+            console.error('Variables d\'environnement manquantes pour l\'auth admin');
             return res.status(500).json({
-                error: 'Internal Server Error',
-                message: 'Configuration admin manquante'
+                error: 'Configuration Error',
+                message: 'Erreur de configuration du serveur'
             });
         }
         
-        // Vérifier l'email
+        // Vérifier si c'est l'email admin
         if (email !== adminEmail) {
-            console.log(`❌ Tentative connexion avec email invalide: ${email}`);
             return res.status(401).json({
                 error: 'Unauthorized',
                 message: 'Identifiants incorrects'
             });
         }
         
-        // Vérifier le mot de passe
+        // Vérifier le mot de passe avec bcrypt
         const isValidPassword = await bcrypt.compare(password, adminPasswordHash);
         
         if (!isValidPassword) {
-            console.log(`❌ Tentative connexion avec mot de passe invalide pour: ${email}`);
             return res.status(401).json({
                 error: 'Unauthorized',
                 message: 'Identifiants incorrects'
             });
         }
         
-        // Créer le JWT token
-        const payload = {
-            email,
-            loginTime: Date.now(),
-            type: 'admin'
-        };
-        
-        const token = jwt.sign(payload, sessionSecret, {
-            expiresIn: '2h'
-        });
+        // Créer le token JWT
+        const token = jwt.sign(
+            { 
+                email: adminEmail,
+                role: 'admin',
+                loginTime: Date.now()
+            },
+            sessionSecret,
+            { expiresIn: '2h' }
+        );
         
         // Définir le cookie HttpOnly
-        const cookieOptions = {
+        const cookieValue = cookie.serialize('oradia_admin_session', token, {
             httpOnly: true,
             secure: process.env.NODE_ENV === 'production',
             sameSite: 'strict',
-            maxAge: 2 * 60 * 60 * 1000, // 2 heures
-            path: '/'
-        };
+            path: '/',
+            maxAge: 2 * 60 * 60 * 1000 // 2 heures
+        });
         
-        res.setHeader('Set-Cookie', cookie.serialize('oradia_admin_session', token, cookieOptions));
-        
-        console.log(`✅ Admin connecté: ${email}`);
-        
-        res.json({
+        // Réponse succès
+        res.setHeader('Set-Cookie', cookieValue);
+        res.status(200).json({
             success: true,
             message: 'Connexion réussie',
             admin: {
-                email,
-                loginTime: new Date().toISOString()
+                email: adminEmail,
+                role: 'admin'
             }
         });
         
     } catch (error) {
-        console.error('❌ Erreur connexion admin:', error);
+        console.error('Erreur login admin:', error);
         res.status(500).json({
             error: 'Internal Server Error',
-            message: 'Erreur lors de la connexion'
+            message: 'Erreur serveur lors de la connexion'
         });
     }
 }
