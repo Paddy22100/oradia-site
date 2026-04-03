@@ -185,23 +185,25 @@ async function getDonors(page, limit) {
 // Waitlist avec pagination
 async function getWaitlist(page, limit) {
     try {
-        const offset = (page - 1) * limit;
-        
+        const pageNumber = parseInt(page, 10);
+        const pageSize = parseInt(limit, 10);
+        const offset = (pageNumber - 1) * pageSize;
+
         const { data, error, count } = await supabase
             .from('waitlist_tirages')
-            .select('*', { count: 'exact' })
+            .select('email, full_name, created_at, brevo_synced', { count: 'exact' })
             .order('created_at', { ascending: false })
-            .range(offset, offset + limit - 1);
+            .range(offset, offset + pageSize - 1);
 
         if (error) throw error;
 
         return {
             data: data || [],
             pagination: {
-                page: parseInt(page),
-                limit: parseInt(limit),
+                page: pageNumber,
+                limit: pageSize,
                 total: count || 0,
-                pages: Math.ceil((count || 0) / limit)
+                pages: Math.ceil((count || 0) / pageSize)
             }
         };
     } catch (error) {
