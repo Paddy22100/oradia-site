@@ -227,23 +227,15 @@ const handler = async (req, res) => {
                            session.metadata?.email || 
                            null,
                     
-                    // Offer depuis metadata (obligatoire) - PAS DE FALLBACK MONTANT
-                    offer: session.metadata?.offer || 
-                          (() => {
-                              try {
-                                  const items = JSON.parse(session.metadata?.items || '[]');
-                                  return items[0]?.offer || null;
-                              } catch {
-                                  return null;
-                              }
-                          })() ||
-                          (() => {
-                              // Fallback SEULEMENT si metadata.offer explicitement 'contribution-libre'
-                              if (session.metadata?.offer === 'contribution-libre') {
-                                  return 'contribution-libre';
-                              }
-                              return 'unknown';
-                          })(),
+                    // Offer depuis metadata (obligatoire)
+                    offer: session.metadata?.offer || (() => {
+                        try {
+                            const items = JSON.parse(session.metadata?.items || '[]');
+                            return items[0]?.offer || null;
+                        } catch {
+                            return null;
+                        }
+                    })(),
                     
                     // Nom complet avec fallbacks
                     full_name: session.metadata?.full_name || 
@@ -312,6 +304,10 @@ const handler = async (req, res) => {
                     console.log('✅ Email client présent:', extractedData.email);
                 }
 
+                // Logs de debug finaux
+                console.log('🎯 FINAL OFFER USED:', extractedData.offer);
+                console.log('🎯 FINAL ROUTE:', extractedData.offer === 'contribution-libre' ? 'donors' : 'preorders');
+
                 // Gestion spéciale pour les contributions libres
                 if (extractedData.offer === 'contribution-libre') {
                     console.log('🎁 CONTRIBUTION LIBRE DÉTECTÉE - ROUTING VERS DONORS');
@@ -324,10 +320,10 @@ const handler = async (req, res) => {
                         full_name: extractedData.full_name,
                         amount_total: extractedData.amount_total, // en centimes
                         currency: extractedData.currency,
-                        paid_status: extractedData.paid_status === 'paid' ? 'completed' : 'pending',
+                        paid_status: 'completed',
                         source: 'oradia-contribution',
                         metadata: {
-                            created_at: new Date(extractedData.created_at).toISOString(),
+                            created_at: new Date().toISOString(),
                             stripe_customer_id: extractedData.stripe_customer_id
                         }
                     };
