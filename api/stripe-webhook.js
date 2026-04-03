@@ -409,7 +409,7 @@ const handler = async (req, res) => {
                     amount_total: extractedData.amount_total / 100, // Conversion en euros
                     currency: extractedData.currency,
                     payment_intent_id: extractedData.payment_intent_id,
-                    stripe_customer_id: extractedData.stripe_customer_id,
+                    // stripe_customer_id retiré - colonne probablement absente de preorders
                     paid_status: extractedData.paid_status,
                     shipping_address: extractedData.shipping_address,
                     postal_code: extractedData.postal_code,
