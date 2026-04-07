@@ -39,6 +39,19 @@ async function handler(req, res) {
 
         const points = await searchPickupPoints(postalCode, country);
 
+        // Si c'est une erreur détaillée, la retourner directement
+        if (points && points.error) {
+            return res.status(500).json({
+                success: false,
+                error: 'Internal Server Error',
+                message: points.error,
+                debug: {
+                    details: points.details,
+                    stack: points.stack
+                }
+            });
+        }
+
         return res.status(200).json({
             success: true,
             points
@@ -67,7 +80,13 @@ async function searchPickupPoints(postalCode, country) {
     } catch (error) {
         console.error('Erreur API Mondial Relay DÉTAILLÉE:', error);
         console.error('Stack trace:', error.stack);
-        throw new Error('Service Mondial Relay indisponible');
+        
+        // Retourner l'erreur détaillée pour debug
+        return {
+            error: 'Service Mondial Relay indisponible',
+            details: error.message,
+            stack: error.stack?.substring(0, 500)
+        };
     }
 }
 
