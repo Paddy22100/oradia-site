@@ -112,10 +112,10 @@ async function callMondialRelayAPI(postalCode, country) {
     }
 
     const xmlResponse = await response.text();
-    console.error('=== DEBUG MONDIAL RELAY ===');
-    console.error('STATUS HTTP:', response.status, response.statusText);
-    console.error('RÉPONSE XML (1000 premiers caractères):', xmlResponse.substring(0, 1000));
-    console.error('=== FIN DEBUG ===');
+    console.log('=== DEBUG MONDIAL RELAY ===');
+    console.log('STATUS HTTP:', response.status, response.statusText);
+    console.log('RÉPONSE XML (1000 premiers caractères):', xmlResponse.substring(0, 1000));
+    console.log('=== FIN DEBUG ===');
     
     // Parser la réponse XML et convertir en JSON
     return parseMondialRelayResponse(xmlResponse);
