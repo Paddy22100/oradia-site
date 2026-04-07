@@ -113,8 +113,6 @@ async function callMondialRelayAPI(postalCode, country) {
         payload.PrivateKey = MONDIAL_RELAY_PRIVATE_KEY;
     }
 
-    console.log('Appel API Mondial Relay avec payload:', JSON.stringify(payload, null, 2));
-
     const response = await fetch(MONDIAL_RELAY_API1_URL, {
         method: 'POST',
         headers: {
@@ -124,12 +122,17 @@ async function callMondialRelayAPI(postalCode, country) {
         body: new URLSearchParams(payload).toString()
     });
 
+    console.log(`API Mondial Relay - Status: ${response.status} ${response.statusText}`);
+
     if (!response.ok) {
         throw new Error(`API Mondial Relay HTTP error: ${response.status} ${response.statusText}`);
     }
 
     const xmlResponse = await response.text();
-    console.log('Réponse XML brute:', xmlResponse.substring(0, 500) + '...');
+    console.error('=== DEBUG MONDIAL RELAY ===');
+    console.error('STATUS HTTP:', response.status, response.statusText);
+    console.error('RÉPONSE XML (1000 premiers caractères):', xmlResponse.substring(0, 1000));
+    console.error('=== FIN DEBUG ===');
     
     // Parser la réponse XML et convertir en JSON
     return parseMondialRelayResponse(xmlResponse);
@@ -167,8 +170,8 @@ function parseMondialRelayResponse(xmlResponse) {
         }
         
         if (!relayPoints) {
-            console.log('Structure XML non trouvée, réponse brute:', xmlResponse);
-            return [];
+            console.log('Structure XML attendue non trouvée, réponse brute:', xmlResponse);
+            throw new Error('Structure XML Mondial Relay inattendue');
         }
         
         // Si c'est un tableau de points
