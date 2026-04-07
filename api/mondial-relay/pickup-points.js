@@ -1,16 +1,11 @@
 const xml2js = require('xml2js');
 
-// Configuration Mondial Relay API 1
-const MONDIAL_RELAY_API1_URL = process.env.MONDIAL_RELAY_API1_URL || 'https://api.mondialrelay.com/WebService/WebService.asmx';
+const MONDIAL_RELAY_API1_URL =
+  process.env.MONDIAL_RELAY_API1_URL || 'https://api.mondialrelay.com/WebService/WebService.asmx';
 const MONDIAL_RELAY_ENSEIGNE = process.env.MONDIAL_RELAY_ENSEIGNE;
 const MONDIAL_RELAY_PRIVATE_KEY = process.env.MONDIAL_RELAY_PRIVATE_KEY;
 
-/**
- * Recherche les points relais Mondial Relay
- * GET /api/mondial-relay/pickup-points?postalCode=XXXXX&country=FR
- */
-export default async function handler(req, res) {
-    // Vérifier la méthode
+async function handler(req, res) {
     if (req.method !== 'GET') {
         return res.status(405).json({
             success: false,
@@ -19,7 +14,6 @@ export default async function handler(req, res) {
         });
     }
 
-    // Validation de configuration obligatoire
     if (!MONDIAL_RELAY_ENSEIGNE || !MONDIAL_RELAY_PRIVATE_KEY) {
         console.error('Configuration Mondial Relay manquante:', {
             ENSEIGNE: !!MONDIAL_RELAY_ENSEIGNE,
@@ -35,7 +29,6 @@ export default async function handler(req, res) {
     try {
         const { postalCode, country = 'FR' } = req.query;
 
-        // Validation des paramètres
         if (!postalCode || postalCode.length < 5) {
             return res.status(400).json({
                 success: false,
@@ -44,34 +37,24 @@ export default async function handler(req, res) {
             });
         }
 
-        // Vérifier la configuration
-        if (!MONDIAL_RELAY_ENSEIGNE || !MONDIAL_RELAY_PRIVATE_KEY) {
-            console.error('Configuration Mondial Relay manquante');
-            return res.status(500).json({
-                success: false,
-                error: 'Configuration Error',
-                message: 'Service de livraison temporairement indisponible'
-            });
-        }
-
-        // Appeler l'API Mondial Relay
         const points = await searchPickupPoints(postalCode, country);
 
         return res.status(200).json({
             success: true,
-            points: points
+            points
         });
-
     } catch (error) {
         console.error('Erreur recherche points relais:', error);
-        
+
         return res.status(500).json({
             success: false,
             error: 'Internal Server Error',
-            message: 'Erreur lors de la recherche des points relais'
+            message: error.message || 'Erreur lors de la recherche des points relais'
         });
     }
 }
+
+module.exports = handler;
 
 /**
  * Recherche les points relais via API Mondial Relay
