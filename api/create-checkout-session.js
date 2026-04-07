@@ -555,6 +555,14 @@ module.exports = async (req, res) => {
                     relay_address1: normalizedData.relayPoint.address1,
                     relay_address2: normalizedData.relayPoint.address2 || '',
                     relay_postal_code: normalizedData.relayPoint.postalCode,
+                    relay_city: normalizedData.relayPoint.city,
+                    relay_country: normalizedData.relayPoint.country || 'FR'
+                })
+            }
+        });
+
+        // Données à insérer dans la base de données
+        const orderData = {
             stripe_session_id: session.id,
             email: normalizedData.customerInfo.email.trim(),
             items: normalizedData.items,
