@@ -39,19 +39,6 @@ async function handler(req, res) {
 
         const points = await searchPickupPoints(postalCode, country);
 
-        // Si c'est une erreur détaillée, la retourner directement
-        if (points && points.error) {
-            return res.status(500).json({
-                success: false,
-                error: 'Internal Server Error',
-                message: points.error,
-                debug: {
-                    details: points.details,
-                    stack: points.stack
-                }
-            });
-        }
-
         return res.status(200).json({
             success: true,
             points
@@ -59,10 +46,12 @@ async function handler(req, res) {
     } catch (error) {
         console.error('Erreur recherche points relais:', error);
 
+        // Retourner temporairement l'erreur détaillée en mode debug
         return res.status(500).json({
             success: false,
-            error: 'Internal Server Error',
-            message: error.message || 'Erreur lors de la recherche des points relais'
+            error: 'Mondial Relay debug',
+            message: error.message,
+            stack: error.stack?.slice(0, 500)
         });
     }
 }
@@ -80,13 +69,7 @@ async function searchPickupPoints(postalCode, country) {
     } catch (error) {
         console.error('Erreur API Mondial Relay DÉTAILLÉE:', error);
         console.error('Stack trace:', error.stack);
-        
-        // Retourner l'erreur détaillée pour debug
-        return {
-            error: 'Service Mondial Relay indisponible',
-            details: error.message,
-            stack: error.stack?.substring(0, 500)
-        };
+        throw error;
     }
 }
 
@@ -140,7 +123,7 @@ async function callMondialRelayAPI(postalCode, country) {
 /**
  * Parser la réponse XML de Mondial Relay
  */
-function parseMondialRelayResponse(xmlResponse) {
+async function parseMondialRelayResponse(xmlResponse) {
     try {
         const parser = new xml2js.Parser({ 
             explicitArray: false,
@@ -148,13 +131,18 @@ function parseMondialRelayResponse(xmlResponse) {
             mergeAttrs: true 
         });
         
-        let parsedData;
-        parser.parseString(xmlResponse, (err, result) => {
-            if (err) {
-                throw new Error(`Erreur parsing XML: ${err.message}`);
-            }
-            parsedData = result;
-        });
+        // Logger les 1500 premiers caractères du XML
+        console.log('=== XML PREVIEW (1500 chars) ===');
+        console.log(xmlResponse.substring(0, 1500));
+        console.log('=== END XML PREVIEW ===');
+        
+        // Utiliser parseStringPromise pour éviter le callback hell
+        const parsedData = await parser.parseStringPromise(xmlResponse);
+        
+        // Logger les 3000 premiers caractères du JSON parsé
+        console.log('=== PARSED JSON PREVIEW (3000 chars) ===');
+        console.log(JSON.stringify(parsedData, null, 2).substring(0, 3000));
+        console.log('=== END PARSED JSON PREVIEW ===');
         
         // Extraire les points relais depuis la réponse SOAP
         const points = [];
@@ -164,13 +152,15 @@ function parseMondialRelayResponse(xmlResponse) {
         
         if (parsedData?.soap?.Envelope?.Body?.WSI2_RecherchePointRelaisResponse?.WSI2_RecherchePointRelaisResult?.PointsRelais) {
             relayPoints = parsedData.soap.Envelope.Body.WSI2_RecherchePointRelaisResponse.WSI2_RecherchePointRelaisResult.PointsRelais;
+            console.log('Chemin trouvé: soap.Envelope.Body.WSI2_RecherchePointRelaisResponse.WSI2_RecherchePointRelaisResult.PointsRelais');
         } else if (parsedData?.['soap:Envelope']?.['soap:Body']?.WSI2_RecherchePointRelaisResponse?.WSI2_RecherchePointRelaisResult?.PointsRelais) {
             relayPoints = parsedData['soap:Envelope']['soap:Body'].WSI2_RecherchePointRelaisResponse.WSI2_RecherchePointRelaisResult.PointsRelais;
-        }
-        
-        if (!relayPoints) {
-            console.log('Structure XML attendue non trouvée, réponse brute:', xmlResponse);
-            throw new Error('Structure XML Mondial Relay inattendue');
+            console.log('Chemin trouvé: soap:Envelope.soap:Body.WSI2_RecherchePointRelaisResponse.WSI2_RecherchePointRelaisResult.PointsRelais');
+        } else {
+            // Lancer une erreur détaillée avec preview XML
+            throw new Error(
+                'Structure XML Mondial Relay inattendue. XML preview: ' + xmlResponse.slice(0, 1000)
+            );
         }
         
         // Si c'est un tableau de points
@@ -198,8 +188,7 @@ function parseMondialRelayResponse(xmlResponse) {
         return points;
         
     } catch (error) {
-        console.error('Erreur parsing XML Mondial Relay:', error);
-        console.log('Réponse XML problématique:', xmlResponse);
-        throw new Error('Impossible de parser la réponse de Mondial Relay');
+        // Garder l'erreur détaillée, pas de message générique
+        throw error;
     }
 }
