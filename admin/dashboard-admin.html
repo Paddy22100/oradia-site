@@ -373,39 +373,6 @@
 
             let buttons = [];
 
-            if (!preorder.shipping_status || preorder.shipping_status === 'pending_label') {
-                if (preorder.shipping_method === 'relay' && !preorder.relay_id) {
-                    return '<span class="text-xs text-red-400">Point relais manquant</span>';
-                }
-                buttons.push(`
-                    <button onclick="createShipment('${preorder.id}')" 
-                            class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition text-xs"
-                            title="Créer l'expédition">
-                        <i class="fas fa-truck"></i> Créer
-                    </button>
-                `);
-            }
-
-            if (preorder.shipping_status === 'label_created' && preorder.label_base64) {
-                buttons.push(`
-                    <button onclick="printLabel('${preorder.id}')" 
-                            class="px-3 py-1 bg-blue/20 text-blue rounded hover:bg-blue/30 transition text-xs"
-                            title="Imprimer l'étiquette">
-                        <i class="fas fa-print"></i> Étiquette
-                    </button>
-                `);
-            }
-
-            if (preorder.shipping_status === 'label_created' && !preorder.shipped_at) {
-                buttons.push(`
-                    <button onclick="markAsShipped('${preorder.id}')" 
-                            class="px-3 py-1 bg-green/20 text-green rounded hover:bg-green/30 transition text-xs"
-                            title="Marquer comme expédié">
-                        <i class="fas fa-check"></i> Expédier
-                    </button>
-                `);
-            }
-
             if (preorder.tracking_number) {
                 buttons.push(`
                     <button onclick="copyTracking('${preorder.tracking_number}')" 
@@ -706,87 +673,6 @@
         // Exporter les contacts
         function exportContacts() {
             window.location.href = '/api/admin/contacts-export';
-        }
-
-        // Actions d'expédition
-        async function createShipment(preorderId) {
-            try {
-                const response = await fetch('/api/mondial-relay/create-shipment', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({ preorderId })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    alert('Expédition créée avec succès!');
-                    loadPreorders(); // Rafraîchir le tableau
-                } else {
-                    alert('Erreur lors de la création de l\'expédition: ' + result.message);
-                }
-            } catch (error) {
-                console.error('Erreur création expédition:', error);
-                alert('Erreur lors de la création de l\'expédition');
-            }
-        }
-
-        async function printLabel(preorderId) {
-            try {
-                const response = await fetch(`/api/admin/preorder-shipping-label?id=${preorderId}`, {
-                    credentials: 'include'
-                });
-
-                if (response.ok) {
-                    const blob = await response.blob();
-                    const url = window.URL.createObjectURL(blob);
-                    const a = document.createElement('a');
-                    a.href = url;
-                    a.download = `etiquette_${preorderId}.pdf`;
-                    document.body.appendChild(a);
-                    a.click();
-                    window.URL.revokeObjectURL(url);
-                    document.body.removeChild(a);
-                } else {
-                    const result = await response.json();
-                    alert('Erreur lors de la récupération de l\'étiquette: ' + result.message);
-                }
-            } catch (error) {
-                console.error('Erreur impression étiquette:', error);
-                alert('Erreur lors de la récupération de l\'étiquette');
-            }
-        }
-
-        async function markAsShipped(preorderId) {
-            if (!confirm('Confirmer que cette commande a été expédiée?')) {
-                return;
-            }
-
-            try {
-                const response = await fetch('/api/admin/mark-shipped', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({ preorderId })
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    alert('Commande marquée comme expédiée!');
-                    loadPreorders(); // Rafraîchir le tableau
-                } else {
-                    alert('Erreur lors du marquage: ' + result.message);
-                }
-            } catch (error) {
-                console.error('Erreur marquage expédié:', error);
-                alert('Erreur lors du marquage comme expédié');
-            }
         }
 
         function copyTracking(trackingNumber) {

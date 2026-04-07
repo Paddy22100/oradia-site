@@ -571,7 +571,7 @@ module.exports = async (req, res) => {
             shipping_method: normalizedData.delivery.method,
             shipping_price_cents: normalizedData.delivery.price,
             shipping_provider: normalizedData.delivery.method === 'relay' || normalizedData.delivery.method === 'home' ? 'mondial_relay' : null,
-            shipping_status: normalizedData.delivery.method === 'hand_delivery' ? 'not_required' : 'pending_label',
+            shipping_status: 'pending',
             // Point relais si applicable
             ...(normalizedData.relayPoint && {
                 relay_id: normalizedData.relayPoint.id,
