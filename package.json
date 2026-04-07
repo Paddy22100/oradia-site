@@ -11,7 +11,8 @@
     "stripe": "^14.9.0"
   },
   "scripts": {
-    "dev": "npx serve ."
+    "dev-static": "npx serve .",
+    "dev-vercel": "vercel dev"
   },
   "keywords": [
     "stripe",
