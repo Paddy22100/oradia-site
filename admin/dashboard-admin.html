@@ -245,6 +245,9 @@
                                 <th class="px-6 py-4 text-left text-gold font-semibold tracking-wider text-sm uppercase">Offre</th>
                                 <th class="px-6 py-4 text-left text-gold font-semibold tracking-wider text-sm uppercase">Montant</th>
                                 <th class="px-6 py-4 text-left text-gold font-semibold tracking-wider text-sm uppercase">Statut</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold tracking-wider text-sm uppercase">Livraison</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold tracking-wider text-sm uppercase">Point relais / Tracking</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold tracking-wider text-sm uppercase">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gold/10">
@@ -317,6 +320,104 @@
             donors: [],
             waitlist: []
         };
+
+        // Helpers pour l'affichage des informations de livraison
+        function getShippingMethodLabel(method) {
+            const labels = {
+                'home': 'Domicile',
+                'relay': 'Point relais',
+                'hand_delivery': 'Main propre'
+            };
+            return labels[method] || method || '-';
+        }
+
+        function getShippingMethodClass(method) {
+            const classes = {
+                'home': 'bg-blue/20 text-blue border border-blue/30',
+                'relay': 'bg-green/20 text-green border border-green/30',
+                'hand_delivery': 'bg-purple/20 text-purple border border-purple/30'
+            };
+            return classes[method] || 'bg-gray/20 text-gray border border-gray/30';
+        }
+
+        function getShippingStatusLabel(status) {
+            const labels = {
+                'pending': 'En attente',
+                'pending_label': 'Attente étiquette',
+                'label_created': 'Étiquette créée',
+                'shipped': 'Expédié',
+                'not_required': 'Non requis'
+            };
+            return labels[status] || status || '-';
+        }
+
+        function getShippingStatusClass(status) {
+            const classes = {
+                'pending': 'bg-yellow/20 text-yellow border border-yellow/30',
+                'pending_label': 'bg-orange/20 text-orange border border-orange/30',
+                'label_created': 'bg-blue/20 text-blue border border-blue/30',
+                'shipped': 'bg-green/20 text-green border border-green/30',
+                'not_required': 'bg-gray/20 text-gray border border-gray/30'
+            };
+            return classes[status] || 'bg-gray/20 text-gray border border-gray/30';
+        }
+
+        function getShippingActionButtons(preorder) {
+            if (!preorder.paid_status || preorder.paid_status !== 'completed') {
+                return '<span class="text-xs text-light-gold/40">En attente paiement</span>';
+            }
+
+            if (preorder.shipping_method === 'hand_delivery') {
+                return '<span class="text-xs text-light-gold/40">Main propre</span>';
+            }
+
+            let buttons = [];
+
+            if (!preorder.shipping_status || preorder.shipping_status === 'pending_label') {
+                if (preorder.shipping_method === 'relay' && !preorder.relay_id) {
+                    return '<span class="text-xs text-red-400">Point relais manquant</span>';
+                }
+                buttons.push(`
+                    <button onclick="createShipment('${preorder.id}')" 
+                            class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition text-xs"
+                            title="Créer l'expédition">
+                        <i class="fas fa-truck"></i> Créer
+                    </button>
+                `);
+            }
+
+            if (preorder.shipping_status === 'label_created' && preorder.label_base64) {
+                buttons.push(`
+                    <button onclick="printLabel('${preorder.id}')" 
+                            class="px-3 py-1 bg-blue/20 text-blue rounded hover:bg-blue/30 transition text-xs"
+                            title="Imprimer l'étiquette">
+                        <i class="fas fa-print"></i> Étiquette
+                    </button>
+                `);
+            }
+
+            if (preorder.shipping_status === 'label_created' && !preorder.shipped_at) {
+                buttons.push(`
+                    <button onclick="markAsShipped('${preorder.id}')" 
+                            class="px-3 py-1 bg-green/20 text-green rounded hover:bg-green/30 transition text-xs"
+                            title="Marquer comme expédié">
+                        <i class="fas fa-check"></i> Expédier
+                    </button>
+                `);
+            }
+
+            if (preorder.tracking_number) {
+                buttons.push(`
+                    <button onclick="copyTracking('${preorder.tracking_number}')" 
+                            class="px-3 py-1 bg-purple/20 text-purple rounded hover:bg-purple/30 transition text-xs"
+                            title="Copier le tracking">
+                        <i class="fas fa-copy"></i> Copier
+                    </button>
+                `);
+            }
+
+            return buttons.join('') || '<span class="text-xs text-light-gold/40">-</span>';
+        }
 
         // Charger les données du dashboard
         let dashboardLoaded = false;
@@ -470,6 +571,45 @@
                             ${preorder.paid_status}
                         </span>
                     </td>
+                    <td class="px-6 py-4">
+                        <div class="space-y-2">
+                            <div class="flex items-center gap-2">
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getShippingMethodClass(preorder.shipping_method)}">
+                                    ${getShippingMethodLabel(preorder.shipping_method)}
+                                </span>
+                                ${preorder.shipping_price_cents ? `<span class="text-xs text-light-gold/70">${formatCurrency(preorder.shipping_price_cents)}</span>` : ''}
+                            </div>
+                            <div>
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getShippingStatusClass(preorder.shipping_status)}">
+                                    ${getShippingStatusLabel(preorder.shipping_status)}
+                                </span>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="space-y-1 text-sm">
+                            ${preorder.shipping_method === 'relay' && preorder.relay_name ? `
+                                <div class="text-light-gold">
+                                    <div class="font-medium">${preorder.relay_name}</div>
+                                    <div class="text-xs text-light-gold/60">${preorder.relay_address1}, ${preorder.relay_postal_code} ${preorder.relay_city}</div>
+                                </div>
+                            ` : preorder.tracking_number ? `
+                                <div class="text-light-gold">
+                                    <div class="font-medium">${preorder.tracking_number}</div>
+                                    <div class="text-xs text-light-gold/60">${preorder.shipment_number || ''}</div>
+                                </div>
+                            ` : preorder.shipping_method === 'hand_delivery' ? `
+                                <div class="text-light-gold/60 text-xs">Remise en main propre</div>
+                            ` : `
+                                <div class="text-light-gold/40 text-xs">-</div>
+                            `}
+                        </div>
+                    </td>
+                    <td class="px-6 py-4">
+                        <div class="flex gap-2">
+                            ${getShippingActionButtons(preorder)}
+                        </div>
+                    </td>
                 </tr>
             `).join('');
             
@@ -566,6 +706,105 @@
         // Exporter les contacts
         function exportContacts() {
             window.location.href = '/api/admin/contacts-export';
+        }
+
+        // Actions d'expédition
+        async function createShipment(preorderId) {
+            try {
+                const response = await fetch('/api/mondial-relay/create-shipment', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ preorderId })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Expédition créée avec succès!');
+                    loadPreorders(); // Rafraîchir le tableau
+                } else {
+                    alert('Erreur lors de la création de l\'expédition: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Erreur création expédition:', error);
+                alert('Erreur lors de la création de l\'expédition');
+            }
+        }
+
+        async function printLabel(preorderId) {
+            try {
+                const response = await fetch(`/api/admin/preorder-shipping-label?id=${preorderId}`, {
+                    credentials: 'include'
+                });
+
+                if (response.ok) {
+                    const blob = await response.blob();
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `etiquette_${preorderId}.pdf`;
+                    document.body.appendChild(a);
+                    a.click();
+                    window.URL.revokeObjectURL(url);
+                    document.body.removeChild(a);
+                } else {
+                    const result = await response.json();
+                    alert('Erreur lors de la récupération de l\'étiquette: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Erreur impression étiquette:', error);
+                alert('Erreur lors de la récupération de l\'étiquette');
+            }
+        }
+
+        async function markAsShipped(preorderId) {
+            if (!confirm('Confirmer que cette commande a été expédiée?')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('/api/admin/mark-shipped', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({ preorderId })
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    alert('Commande marquée comme expédiée!');
+                    loadPreorders(); // Rafraîchir le tableau
+                } else {
+                    alert('Erreur lors du marquage: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Erreur marquage expédié:', error);
+                alert('Erreur lors du marquage comme expédié');
+            }
+        }
+
+        function copyTracking(trackingNumber) {
+            navigator.clipboard.writeText(trackingNumber).then(() => {
+                // Afficher un feedback visuel temporaire
+                const button = event.target.closest('button');
+                const originalHTML = button.innerHTML;
+                button.innerHTML = '<i class="fas fa-check"></i> Copié!';
+                button.classList.add('bg-green/30');
+                
+                setTimeout(() => {
+                    button.innerHTML = originalHTML;
+                    button.classList.remove('bg-green/30');
+                }, 2000);
+            }).catch(err => {
+                console.error('Erreur copie tracking:', err);
+                alert('Erreur lors de la copie du numéro de suivi');
+            });
         }
 
         // Déconnexion

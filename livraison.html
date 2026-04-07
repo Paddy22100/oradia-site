@@ -354,6 +354,36 @@
                                         </div>
                                     </div>
                                 </div>
+
+                                <!-- Section Point Relais Mondial Relay -->
+                                <div id="relay-picker-section" class="hidden mt-6">
+                                    <div class="bg-[rgba(212,175,55,0.08)] rounded-xl border border-gold/30 p-4">
+                                        <div class="flex items-center justify-between gap-4 flex-wrap">
+                                            <div>
+                                                <h4 class="text-gold font-semibold">Point relais Mondial Relay</h4>
+                                                <p class="text-light-gold/70 text-sm">Choisissez un point relais proche de votre adresse.</p>
+                                            </div>
+                                            <button type="button" id="chooseRelayBtn" class="bg-gold text-night-blue px-4 py-2 rounded-lg font-semibold hover:bg-light-gold transition">
+                                                Choisir un point relais
+                                            </button>
+                                        </div>
+
+                                        <div id="relay-selected-card" class="hidden mt-4 bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-lg p-4">
+                                            <div class="flex items-start justify-between gap-4">
+                                                <div>
+                                                    <p class="text-gold font-semibold" id="relay-name">-</p>
+                                                    <p class="text-light-gold/80 text-sm" id="relay-address">-</p>
+                                                    <p class="text-light-gold/60 text-xs mt-1" id="relay-id">-</p>
+                                                </div>
+                                                <button type="button" id="changeRelayBtn" class="text-gold/80 hover:text-gold text-sm">
+                                                    Modifier
+                                                </button>
+                                            </div>
+                                        </div>
+
+                                        <p id="relay-error" class="hidden mt-3 text-red-400 text-sm"></p>
+                                    </div>
+                                </div>
                             </form>
                         </div>
 
@@ -427,6 +457,52 @@
         </div>
     </main>
 
+    <!-- Modale Sélection Point Relais -->
+    <div id="relayModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+        <div class="bg-[rgba(5,20,40,0.95)] rounded-2xl border border-gold/30 max-w-4xl w-full max-h-[80vh] overflow-hidden">
+            <div class="p-6 border-b border-gold/20">
+                <div class="flex items-center justify-between">
+                    <h3 class="text-xl font-bold text-gold">Choisir un point relais</h3>
+                    <button type="button" id="closeRelayModal" class="text-light-gold/70 hover:text-gold">
+                        <i class="fas fa-times text-xl"></i>
+                    </button>
+                </div>
+                
+                <!-- Recherche -->
+                <div class="mt-4">
+                    <div class="relative">
+                        <input type="text" id="relaySearch" placeholder="Code postal (ex: 75001)" 
+                               class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold placeholder-light-gold/50 focus:outline-none focus:border-gold/60">
+                        <button type="button" id="searchRelayBtn" class="absolute right-2 top-1/2 transform -translate-y-1/2 bg-gold/20 hover:bg-gold/30 text-gold px-3 py-1 rounded text-sm">
+                            Rechercher
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Contenu de la modale -->
+            <div class="p-6 overflow-y-auto max-h-[60vh]">
+                <!-- État loading -->
+                <div id="relayLoading" class="hidden text-center py-8">
+                    <i class="fas fa-spinner fa-spin text-gold text-2xl mb-4"></i>
+                    <p class="text-light-gold/70">Recherche des points relais...</p>
+                </div>
+
+                <!-- État erreur -->
+                <div id="relayError" class="hidden text-center py-8">
+                    <i class="fas fa-exclamation-triangle text-red-400 text-2xl mb-4"></i>
+                    <p class="text-red-400 mb-2">Erreur lors de la recherche</p>
+                    <p class="text-light-gold/60 text-sm" id="relayErrorDetails"></p>
+                </div>
+
+                <!-- Liste des points relais -->
+                <div id="relayList" class="space-y-3">
+                    <!-- Les points relais seront insérés ici -->
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Footer -->
     <div id="footer-placeholder"></div>
 
@@ -480,6 +556,66 @@
         let cart = {};
         let selectedDelivery = null;
         let deliveryPrice = 0;
+        let selectedRelayPoint = null;
+
+        // Helpers pour la gestion des points relais
+        function saveRelayPoint(point) {
+            selectedRelayPoint = point;
+            localStorage.setItem('oradia-relay-point', JSON.stringify(point));
+            renderRelayPoint();
+        }
+
+        function loadRelayPoint() {
+            const saved = localStorage.getItem('oradia-relay-point');
+            if (saved) {
+                try {
+                    selectedRelayPoint = JSON.parse(saved);
+                } catch (e) {
+                    selectedRelayPoint = null;
+                }
+            }
+        }
+
+        function clearRelayPoint() {
+            selectedRelayPoint = null;
+            localStorage.removeItem('oradia-relay-point');
+        }
+
+        function renderRelayPoint() {
+            const nameEl = document.getElementById('relay-name');
+            const addressEl = document.getElementById('relay-address');
+            const idEl = document.getElementById('relay-id');
+            const cardEl = document.getElementById('relay-selected-card');
+
+            if (selectedRelayPoint) {
+                nameEl.textContent = selectedRelayPoint.name;
+                addressEl.textContent = `${selectedRelayPoint.address1}${selectedRelayPoint.address2 ? ', ' + selectedRelayPoint.address2 : ''}, ${selectedRelayPoint.postalCode} ${selectedRelayPoint.city}`;
+                idEl.textContent = `ID: ${selectedRelayPoint.id}`;
+                cardEl.classList.remove('hidden');
+            } else {
+                cardEl.classList.add('hidden');
+            }
+        }
+
+        function toggleRelayUI(show) {
+            const section = document.getElementById('relay-picker-section');
+            if (show) {
+                section.classList.remove('hidden');
+            } else {
+                section.classList.add('hidden');
+            }
+        }
+
+        function showRelayError(message) {
+            const errorEl = document.getElementById('relay-error');
+            errorEl.textContent = message;
+            errorEl.classList.remove('hidden');
+        }
+
+        function hideRelayError() {
+            const errorEl = document.getElementById('relay-error');
+            errorEl.classList.add('hidden');
+        }
 
         // Calculer le poids total de la commande
         function calculateTotalWeight() {
@@ -620,6 +756,15 @@
                 const handDeliveryMessage = document.getElementById('hand-delivery-message');
                 const addressInputs = addressSection.querySelectorAll('input[required], select[required]');
                 
+                // Gérer l'affichage du sélecteur de point relais
+                if (selectedDelivery === 'relay') {
+                    toggleRelayUI(true);
+                    hideRelayError();
+                } else {
+                    toggleRelayUI(false);
+                    hideRelayError();
+                }
+                
                 if (selectedDelivery === 'hand_delivery') {
                     // Masquer le bloc adresse et afficher le message
                     addressSection.classList.add('hidden');
@@ -672,6 +817,13 @@
             // Vérifier la sélection de livraison
             if (!selectedDelivery) {
                 showError('Veuillez choisir un mode de livraison');
+                return false;
+            }
+            
+            // Vérifier le point relais si mode relay sélectionné
+            if (selectedDelivery === 'relay' && !selectedRelayPoint) {
+                showRelayError('Veuillez choisir un point relais');
+                document.getElementById('chooseRelayBtn').focus();
                 return false;
             }
             
@@ -815,7 +967,16 @@
                     delivery: {
                         method: selectedDelivery,
                         price: Math.round(deliveryPrice * 100) // Convertir en centimes
-                    }
+                    },
+                    relayPoint: selectedDelivery === 'relay' ? {
+                        id: selectedRelayPoint.id,
+                        name: selectedRelayPoint.name,
+                        address1: selectedRelayPoint.address1,
+                        address2: selectedRelayPoint.address2 || '',
+                        postalCode: selectedRelayPoint.postalCode,
+                        city: selectedRelayPoint.city,
+                        country: selectedRelayPoint.country || 'FR'
+                    } : null
                 };
 
                 console.log('Données envoyées au backend:', orderData);
@@ -883,6 +1044,120 @@
             }
         });
 
+        // Fonctions pour la modale de sélection de points relais
+        function openRelayModal() {
+            document.getElementById('relayModal').classList.remove('hidden');
+            document.getElementById('relaySearch').value = '';
+            document.getElementById('relaySearch').focus();
+        }
+
+        function closeRelayModal() {
+            document.getElementById('relayModal').classList.add('hidden');
+            document.getElementById('relayList').innerHTML = '';
+            document.getElementById('relayLoading').classList.add('hidden');
+            document.getElementById('relayError').classList.add('hidden');
+        }
+
+        async function searchRelayPoints() {
+            const postalCode = document.getElementById('relaySearch').value.trim();
+
+            if (!postalCode || postalCode.length < 5) {
+                showRelayError('Veuillez entrer un code postal valide');
+                return;
+            }
+
+            document.getElementById('relayLoading').classList.remove('hidden');
+            document.getElementById('relayError').classList.add('hidden');
+            document.getElementById('relayList').innerHTML = '';
+
+            try {
+                const response = await fetch(`/api/mondial-relay/pickup-points?postalCode=${encodeURIComponent(postalCode)}&country=FR`);
+
+                const contentType = response.headers.get('content-type') || '';
+
+                if (!contentType.includes('application/json')) {
+                    const rawText = await response.text();
+                    console.error('Réponse non JSON pickup-points:', rawText);
+                    throw new Error('Le serveur local ne renvoie pas de JSON. Lance le projet via Vercel/dev backend, pas seulement via Live Server.');
+                }
+
+                const data = await response.json();
+
+                document.getElementById('relayLoading').classList.add('hidden');
+
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || `Erreur HTTP ${response.status}`);
+                }
+
+                renderRelayList(data.points || []);
+            } catch (error) {
+                console.error('Erreur recherche points relais:', error);
+                document.getElementById('relayLoading').classList.add('hidden');
+                document.getElementById('relayError').classList.remove('hidden');
+                document.getElementById('relayErrorDetails').textContent = error.message;
+            }
+        }
+
+        function renderRelayList(points) {
+            const listEl = document.getElementById('relayList');
+            
+            if (!points || points.length === 0) {
+                listEl.innerHTML = `
+                    <div class="text-center py-8">
+                        <i class="fas fa-map-marker-alt text-light-gold/50 text-2xl mb-4"></i>
+                        <p class="text-light-gold/70">Aucun point relais trouvé pour ce code postal</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = points.map(point => `
+                <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-lg p-4 hover:border-gold/40 transition cursor-pointer"
+                     onclick="selectRelayPoint(${JSON.stringify(point).replace(/"/g, '&quot;')})">
+                    <div class="flex justify-between items-start gap-4">
+                        <div class="flex-1">
+                            <h4 class="text-gold font-semibold mb-1">${point.name}</h4>
+                            <p class="text-light-gold/80 text-sm mb-1">
+                                ${point.address1}${point.address2 ? ', ' + point.address2 : ''}
+                            </p>
+                            <p class="text-light-gold/60 text-xs">
+                                ${point.postalCode} ${point.city}
+                            </p>
+                        </div>
+                        <button type="button" class="bg-gold/20 hover:bg-gold/30 text-gold px-3 py-1 rounded text-sm">
+                            Choisir
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function selectRelayPoint(point) {
+            saveRelayPoint(point);
+            closeRelayModal();
+            hideRelayError();
+        }
+
+        // Événements pour la modale
+        document.getElementById('chooseRelayBtn')?.addEventListener('click', openRelayModal);
+        document.getElementById('changeRelayBtn')?.addEventListener('click', openRelayModal);
+        document.getElementById('closeRelayModal')?.addEventListener('click', closeRelayModal);
+        document.getElementById('searchRelayBtn')?.addEventListener('click', searchRelayPoints);
+        
+        // Rechercher avec Entrée
+        document.getElementById('relaySearch')?.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchRelayPoints();
+            }
+        });
+
+        // Fermer la modale avec Escape
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeRelayModal();
+            }
+        });
+
         // Bouton retour en haut
         const backToTopBtn = document.getElementById('backToTop');
         
@@ -901,9 +1176,12 @@
             });
         });
 
-        // Initialisation au chargement de la page
+        // Initialisation unique au chargement de la page
         document.addEventListener('DOMContentLoaded', () => {
+            // Charger les données initiales
             loadCart();
+            loadRelayPoint();
+            renderRelayPoint();
             
             // Sélectionner la livraison à domicile par défaut
             const homeDelivery = document.querySelector('[data-delivery="home"]');
