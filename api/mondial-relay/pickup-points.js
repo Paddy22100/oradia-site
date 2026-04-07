@@ -1,7 +1,8 @@
 const xml2js = require('xml2js');
+const crypto = require('crypto');
 
 const MONDIAL_RELAY_API1_URL =
-  process.env.MONDIAL_RELAY_API1_URL || 'https://api.mondialrelay.com/WebService/WebService.asmx';
+  process.env.MONDIAL_RELAY_API1_URL || 'https://api.mondialrelay.com/Web_Services.asmx';
 const MONDIAL_RELAY_ENSEIGNE = process.env.MONDIAL_RELAY_ENSEIGNE;
 const MONDIAL_RELAY_PRIVATE_KEY = process.env.MONDIAL_RELAY_PRIVATE_KEY;
 
@@ -74,34 +75,102 @@ async function searchPickupPoints(postalCode, country) {
 }
 
 /**
+ * Calcule le hash Security selon la doc Mondial Relay WSI4_PointRelais_Recherche
+ */
+function calculateSecurity(payload, privateKey) {
+    // Ordre exact des paramètres selon doc WSI4_PointRelais_Recherche
+    const securityString = [
+        payload.Enseigne,
+        payload.Pays,
+        payload.NumPointRelais || '',
+        payload.Ville || '',
+        payload.CP || '',
+        payload.Latitude || '',
+        payload.Longitude || '',
+        payload.Taille || '',
+        payload.Poids || '',
+        payload.Action,
+        payload.DelaiEnvoi || '',
+        payload.RayonRecherche || '',
+        payload.NombreResultats || ''
+    ].join('') + privateKey;
+    
+    // Hash MD5 en majuscules selon doc Mondial Relay
+    const hash = crypto.createHash('md5').update(securityString, 'utf8').digest('hex').toUpperCase();
+    
+    console.log('Security string (partielle):', securityString.substring(0, 50) + '...');
+    console.log('Security string (fin):', '...' + securityString.substring(securityString.length - 30));
+    console.log('Security hash calculé (masqué):', hash.substring(0, 8) + '...' + hash.substring(hash.length - 4));
+    
+    return hash;
+}
+
+/**
+ * Génère le body SOAP XML pour WSI4_PointRelais_Recherche
+ */
+function generateSOAPBody(payload) {
+    return `<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <WSI4_PointRelais_Recherche xmlns="http://api.mondialrelay.com/">
+      <Enseigne>${payload.Enseigne}</Enseigne>
+      <Pays>${payload.Pays}</Pays>
+      <NumPointRelais>${payload.NumPointRelais || ''}</NumPointRelais>
+      <Ville>${payload.Ville || ''}</Ville>
+      <CP>${payload.CP || ''}</CP>
+      <Latitude>${payload.Latitude || ''}</Latitude>
+      <Longitude>${payload.Longitude || ''}</Longitude>
+      <Taille>${payload.Taille || ''}</Taille>
+      <Poids>${payload.Poids || ''}</Poids>
+      <Action>${payload.Action}</Action>
+      <DelaiEnvoi>${payload.DelaiEnvoi || ''}</DelaiEnvoi>
+      <RayonRecherche>${payload.RayonRecherche || ''}</RayonRecherche>
+      <NombreResultats>${payload.NombreResultats || ''}</NombreResultats>
+      <Security>${payload.Security}</Security>
+    </WSI4_PointRelais_Recherche>
+  </soap:Body>
+</soap:Envelope>`;
+}
+
+/**
  * Appel réel à l'API Mondial Relay
  */
 async function callMondialRelayAPI(postalCode, country) {
     const payload = {
         Enseigne: MONDIAL_RELAY_ENSEIGNE,
         Pays: country,
-        CP: postalCode,
-        Taille: '30', // Taille de la zone de recherche
-        Action: 'PS', // Recherche de points relais
-        DelaiEnvoi: '0',
-        TypeActivite: '0',
+        NumPointRelais: '',
         Ville: '',
-        RS: '1',
-        NuméroVersion: '3.0'
+        CP: postalCode,
+        Latitude: '',
+        Longitude: '',
+        Taille: '', // Vide par défaut selon doc
+        Poids: '',
+        Action: '24R', // Point Relais L
+        DelaiEnvoi: '0',
+        RayonRecherche: '',
+        NombreResultats: ''
     };
 
-    // Ajouter la clé privée si requise
-    if (MONDIAL_RELAY_PRIVATE_KEY) {
-        payload.PrivateKey = MONDIAL_RELAY_PRIVATE_KEY;
-    }
+    // Calculer le Security hash
+    const security = calculateSecurity(payload, MONDIAL_RELAY_PRIVATE_KEY);
+    payload.Security = security;
+
+    // Générer le body SOAP XML
+    const soapBody = generateSOAPBody(payload);
+
+    console.log('Payload final utilisé:', JSON.stringify(payload, null, 2));
+    console.log('=== SOAP BODY ENVOYÉ ===');
+    console.log(soapBody.substring(0, 1000));
+    console.log('=== FIN SOAP BODY ===');
 
     const response = await fetch(MONDIAL_RELAY_API1_URL, {
         method: 'POST',
         headers: {
-            'Content-Type': 'application/x-www-form-urlencoded',
-            'SOAPAction': 'http://www.mondialrelay.fr/WebService/WebService.asmx/WSI2_RecherchePointRelais'
+            'Content-Type': 'text/xml; charset=utf-8',
+            'SOAPAction': 'http://api.mondialrelay.com/WSI4_PointRelais_Recherche'
         },
-        body: new URLSearchParams(payload).toString()
+        body: soapBody
     });
 
     console.log(`API Mondial Relay - Status: ${response.status} ${response.statusText}`);
@@ -124,71 +193,47 @@ async function callMondialRelayAPI(postalCode, country) {
  * Parser la réponse XML de Mondial Relay
  */
 async function parseMondialRelayResponse(xmlResponse) {
-    try {
-        const parser = new xml2js.Parser({ 
-            explicitArray: false,
-            ignoreAttrs: false,
-            mergeAttrs: true 
-        });
-        
-        // Logger les 1500 premiers caractères du XML
-        console.log('=== XML PREVIEW (1500 chars) ===');
-        console.log(xmlResponse.substring(0, 1500));
-        console.log('=== END XML PREVIEW ===');
-        
-        // Utiliser parseStringPromise pour éviter le callback hell
-        const parsedData = await parser.parseStringPromise(xmlResponse);
-        
-        // Logger les 3000 premiers caractères du JSON parsé
-        console.log('=== PARSED JSON PREVIEW (3000 chars) ===');
-        console.log(JSON.stringify(parsedData, null, 2).substring(0, 3000));
-        console.log('=== END PARSED JSON PREVIEW ===');
-        
-        // Extraire les points relais depuis la réponse SOAP
-        const points = [];
-        
-        // La structure peut varier, essayer plusieurs chemins possibles
-        let relayPoints = null;
-        
-        if (parsedData?.soap?.Envelope?.Body?.WSI2_RecherchePointRelaisResponse?.WSI2_RecherchePointRelaisResult?.PointsRelais) {
-            relayPoints = parsedData.soap.Envelope.Body.WSI2_RecherchePointRelaisResponse.WSI2_RecherchePointRelaisResult.PointsRelais;
-            console.log('Chemin trouvé: soap.Envelope.Body.WSI2_RecherchePointRelaisResponse.WSI2_RecherchePointRelaisResult.PointsRelais');
-        } else if (parsedData?.['soap:Envelope']?.['soap:Body']?.WSI2_RecherchePointRelaisResponse?.WSI2_RecherchePointRelaisResult?.PointsRelais) {
-            relayPoints = parsedData['soap:Envelope']['soap:Body'].WSI2_RecherchePointRelaisResponse.WSI2_RecherchePointRelaisResult.PointsRelais;
-            console.log('Chemin trouvé: soap:Envelope.soap:Body.WSI2_RecherchePointRelaisResponse.WSI2_RecherchePointRelaisResult.PointsRelais');
-        } else {
-            // Lancer une erreur détaillée avec preview XML
-            throw new Error(
-                'Structure XML Mondial Relay inattendue. XML preview: ' + xmlResponse.slice(0, 1000)
-            );
-        }
-        
-        // Si c'est un tableau de points
-        const pointsArray = Array.isArray(relayPoints) ? relayPoints : [relayPoints];
-        
-        for (const point of pointsArray) {
-            if (point && point.Num && point.LgAdr1) {
-                const relayPoint = {
-                    id: point.Num || '',
-                    name: point.LgAdr1 || '',
-                    address1: point.LgAdr1 || '',
-                    address2: point.LgAdr2 || point.LgAdr3 || '',
-                    postalCode: point.CP || '',
-                    city: point.Ville || '',
-                    country: point.Pays || 'FR',
-                    latitude: point.Latitude ? parseFloat(point.Latitude) : null,
-                    longitude: point.Longitude ? parseFloat(point.Longitude) : null
-                };
-                
-                points.push(relayPoint);
-            }
-        }
-        
-        console.log(`Parsing XML réussi: ${points.length} points relais extraits`);
-        return points;
-        
-    } catch (error) {
-        // Garder l'erreur détaillée, pas de message générique
-        throw error;
+    const parser = new xml2js.Parser({
+        explicitArray: false,
+        ignoreAttrs: false,
+        mergeAttrs: true
+    });
+
+    const parsedData = await parser.parseStringPromise(xmlResponse);
+
+    console.log('=== XML PREVIEW ===');
+    console.log(xmlResponse.slice(0, 1500));
+    console.log('=== PARSED JSON PREVIEW ===');
+    console.log(JSON.stringify(parsedData, null, 2).slice(0, 3000));
+
+    let relayPoints = null;
+
+    // Structure pour WSI4_PointRelais_Recherche
+    if (parsedData?.soap?.Envelope?.Body?.WSI4_PointRelais_RechercheResponse?.WSI4_PointRelais_RechercheResult?.PointsRelais) {
+        relayPoints = parsedData.soap.Envelope.Body.WSI4_PointRelais_RechercheResponse.WSI4_PointRelais_RechercheResult.PointsRelais;
+        console.log('Chemin trouvé: soap.Envelope.Body.WSI4_PointRelais_RechercheResponse.WSI4_PointRelais_RechercheResult.PointsRelais');
+    } else if (parsedData?.['soap:Envelope']?.['soap:Body']?.WSI4_PointRelais_RechercheResponse?.WSI4_PointRelais_RechercheResult?.PointsRelais) {
+        relayPoints = parsedData['soap:Envelope']['soap:Body'].WSI4_PointRelais_RechercheResponse.WSI4_PointRelais_RechercheResult.PointsRelais;
+        console.log('Chemin trouvé: soap:Envelope.soap:Body.WSI4_PointRelais_RechercheResponse.WSI4_PointRelais_RechercheResult.PointsRelais');
+    } else {
+        throw new Error(
+            'Structure XML Mondial Relay inattendue. XML preview: ' + xmlResponse.slice(0, 1000)
+        );
     }
+
+    const pointsArray = Array.isArray(relayPoints) ? relayPoints : [relayPoints];
+
+    return pointsArray
+        .filter(point => point && point.Num && point.LgAdr1)
+        .map(point => ({
+            id: point.Num || '',
+            name: point.LgAdr1 || '',
+            address1: point.LgAdr1 || '',
+            address2: point.LgAdr2 || point.LgAdr3 || '',
+            postalCode: point.CP || '',
+            city: point.Ville || '',
+            country: point.Pays || 'FR',
+            latitude: point.Latitude ? parseFloat(point.Latitude) : null,
+            longitude: point.Longitude ? parseFloat(point.Longitude) : null
+        }));
 }
