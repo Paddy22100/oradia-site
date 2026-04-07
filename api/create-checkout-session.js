@@ -1,122 +1,33 @@
 const { createClient } = require('@supabase/supabase-js');
 
-// Variables d'environnement avec fallbacks
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+function getStripeClient() {
+  return require('stripe')(process.env.STRIPE_SECRET_KEY);
+}
 
-// Création directe du client Supabase
-const supabase = createClient(supabaseUrl, supabaseKey);
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+function getSupabaseClient() {
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  return createClient(supabaseUrl, supabaseKey);
+}
 
 // Validation des variables d'environnement critiques
 function validateEnvironment() {
-    const requiredVars = [
-        'STRIPE_SECRET_KEY', 
-        'SUPABASE_URL', 
-        'SUPABASE_SERVICE_ROLE_KEY', 
-        'PREORDER_GOAL'
-    ];
-    
-    const missing = requiredVars.filter(varName => !process.env[varName]);
-    
+    const missing = [];
+
+    if (!process.env.STRIPE_SECRET_KEY) missing.push('STRIPE_SECRET_KEY');
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY');
+    if (!process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        missing.push('SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL');
+    }
+
     if (missing.length > 0) {
-        console.error('Variables d\'environnement manquantes:', missing);
         throw new Error(`Configuration error: Missing ${missing.join(', ')}`);
     }
-    
-    // Validation spécifique pour Stripe
+
     const stripeKey = process.env.STRIPE_SECRET_KEY;
-    if (!stripeKey || !stripeKey.startsWith('sk_')) {
+    if (!stripeKey.startsWith('sk_')) {
         throw new Error('Invalid STRIPE_SECRET_KEY format');
     }
-}
-
-// Validation helper
-function validateInput(data) {
-    const errors = [];
-    
-    // Validation des items
-    if (!data.items || !Array.isArray(data.items) || data.items.length === 0) {
-        errors.push('Articles requis');
-    }
-    
-    // Validation des infos client
-    if (!data.customerInfo) {
-        errors.push('Informations client requises');
-    } else {
-        const customer = data.customerInfo;
-        
-        if (!customer.fullName || customer.fullName.trim().length < 2) {
-            errors.push('Nom complet requis (min 2 caractères)');
-        }
-        
-        if (!customer.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(customer.email)) {
-            errors.push('Email invalide');
-        }
-    }
-    
-    // Validation de la livraison
-    if (!data.delivery) {
-        errors.push('Informations de livraison requises');
-    } else {
-        const delivery = data.delivery;
-        
-        if (!delivery.method || !['home', 'relay', 'hand_delivery'].includes(delivery.method)) {
-            errors.push('Méthode de livraison invalide');
-        }
-        
-        if (typeof delivery.price !== 'number' || delivery.price < 0) {
-            errors.push('Prix de livraison invalide');
-        }
-        
-        // Validation adresse pour home et relay
-        if (delivery.method !== 'hand_delivery') {
-            const customer = data.customerInfo;
-            
-            if (!customer.shippingAddress || customer.shippingAddress.trim().length < 5) {
-                errors.push('Adresse requise (min 5 caractères)');
-            }
-            
-            if (!customer.postalCode || !/^\d{5}$/.test(customer.postalCode)) {
-                errors.push('Code postal invalide (5 chiffres requis)');
-            }
-            
-            if (!customer.city || customer.city.trim().length < 2) {
-                errors.push('Ville requise (min 2 caractères)');
-            }
-        }
-        
-        // Validation point relais pour relay
-        if (delivery.method === 'relay') {
-            if (!data.relayPoint) {
-                errors.push('Point relais requis pour la livraison en point relais');
-            } else {
-                const relay = data.relayPoint;
-                
-                if (!relay.id || relay.id.trim().length === 0) {
-                    errors.push('ID du point relais requis');
-                }
-                
-                if (!relay.name || relay.name.trim().length < 2) {
-                    errors.push('Nom du point relais requis');
-                }
-                
-                if (!relay.address1 || relay.address1.trim().length < 5) {
-                    errors.push('Adresse du point relais requise');
-                }
-                
-                if (!relay.postalCode || !/^\d{5}$/.test(relay.postalCode)) {
-                    errors.push('Code postal du point relais invalide');
-                }
-                
-                if (!relay.city || relay.city.trim().length < 2) {
-                    errors.push('Ville du point relais requise');
-                }
-            }
-        }
-    }
-    
-    return errors;
 }
 
 // CORS helper
@@ -140,62 +51,7 @@ function setCORS(req, res) {
 
 module.exports = async (req, res) => {
     try {
-        // HEALTH CHECK TEMPORAIRE - Mode GET pour test immédiat
-        if (req.method === 'GET') {
-            console.log('Health check create-checkout-session');
-            
-            // Test connexion Supabase
-            let supabaseTest = 'KO';
-            try {
-                const { count, error } = await supabase
-                    .from('preorders')
-                    .select('count', { count: 'exact', head: true });
-                
-                if (error) {
-                    supabaseTest = `KO: ${error.message}`;
-                } else {
-                    supabaseTest = `OK: ${count} précommandes`;
-                }
-            } catch (error) {
-                supabaseTest = `KO: ${error.message}`;
-            }
-            
-            // Test connexion Brevo
-            let brevoTest = 'KO';
-            if (process.env.BREVO_API_KEY && process.env.BREVO_SENDER_EMAIL) {
-                try {
-                    const response = await fetch('https://api.brevo.com/v3/account', {
-                        headers: { 'api-key': process.env.BREVO_API_KEY }
-                    });
-                    
-                    if (response.ok) {
-                        brevoTest = 'OK: Connexion réussie';
-                    } else {
-                        brevoTest = `KO: ${response.status}`;
-                    }
-                } catch (error) {
-                    brevoTest = `KO: ${error.message}`;
-                }
-            } else {
-                brevoTest = 'KO: Variables manquantes';
-            }
-            
-            const result = {
-                status: 'Health check create-checkout-session',
-                timestamp: new Date().toISOString(),
-                tests: {
-                    supabase: supabaseTest,
-                    brevo: brevoTest
-                },
-                message: 'Test des connexions - webhook corrigé en attente de déploiement'
-            };
-            
-            return res.status(200).json(result);
-        }
-        
         // TRAITEMENT NORMAL (méthode POST)
-        console.log('Real checkout handler V2');
-        
         setCORS(req, res);
         
         if (req.method === 'OPTIONS') {
@@ -213,20 +69,27 @@ module.exports = async (req, res) => {
         // Validation environnement au début
         validateEnvironment();
         
-        console.log('Checkout session start V2');
+        // Création des clients après validation
+        const supabase = getSupabaseClient();
+        const stripe = getStripeClient();
+        
+        // Configuration URLs unique
+        const frontendUrl = process.env.FRONTEND_URL || 'https://oradia.fr';
         
         // Handle don-libre case separately
         if (req.body.type === 'don-libre') {
-            console.log('Don-libre case');
             // Validate minimum amount (20€ = 2000 centimes)
             if (!req.body.customAmount || req.body.customAmount < 2000) {
-                console.error('Don-libre error: Amount too low:', req.body.customAmount);
+                console.error('Validation failed: amount too low');
                 return res.status(400).json({ 
                     success: false,
                     error: 'Validation failed',
                     message: 'Le montant minimum est de 20€'
                 });
             }
+
+            const donationEmail = String(req.body.email || 'contribution@oradia.fr').trim();
+            const donationFullName = String(req.body.fullName || 'Contribution ORADIA').trim();
 
             const session = await stripe.checkout.sessions.create({
                 payment_method_types: ['card'],
@@ -243,18 +106,17 @@ module.exports = async (req, res) => {
                     },
                 ],
                 mode: 'payment',
-                success_url: `${process.env.FRONTEND_URL}/success-contribution.html`,
-                cancel_url: `${process.env.FRONTEND_URL}/precommande-oracle.html#contribution-libre`,
+                success_url: `${frontendUrl}/success-contribution.html`,
+                cancel_url: `${frontendUrl}/precommande-oracle.html#contribution-libre`,
                 metadata: {
                     offer: 'contribution-libre',
-                    email: req.body.email || 'contribution@oradia.fr',
-                    full_name: req.body.fullName || 'Contribution ORADIA',
+                    email: donationEmail,
+                    full_name: donationFullName,
                     amount: (req.body.customAmount / 100).toString(),
                     source: 'oradia-contribution'
                 }
             });
 
-            console.log('Don-libre session created:', session.id);
             return res.json({ url: session.url });
         }
 
@@ -263,8 +125,7 @@ module.exports = async (req, res) => {
         const items = Array.isArray(body.items) ? body.items : [];
         const customerInfo = body.customerInfo || {};
         const delivery = body.delivery || {};
-        
-        console.log('Structured body parsing V2');
+        const relayPoint = body.relayPoint || null;
         
         // Création de l'objet normalisé unique
         const normalizedData = {
@@ -277,11 +138,8 @@ module.exports = async (req, res) => {
             postalCode: customerInfo.postalCode || '',
             city: customerInfo.city || '',
             country: customerInfo.country || 'FR',
-            deliveryMethod: delivery.method || null,
-            deliveryPrice: delivery.price || 0
+            deliveryMethod: delivery.method || null
         };
-        
-        console.log('Normalized data from structured format V2');
         
         // Validation directe sur l'objet normalisé
         const errors = [];
@@ -302,17 +160,31 @@ module.exports = async (req, res) => {
             }
         }
         
+        // Validation du mode de livraison d'abord
+        const allowedDeliveryMethods = ['home', 'relay', 'hand_delivery'];
+        if (!normalizedData.deliveryMethod || !allowedDeliveryMethods.includes(normalizedData.deliveryMethod)) {
+            return res.status(400).json({
+                success: false,
+                error: 'Validation failed',
+                message: 'Mode de livraison invalide'
+            });
+        }
+        
         // Validation du client
-        if (!normalizedData.fullName || normalizedData.fullName.trim().length < 2) {
+        const safeEmail = String(normalizedData.email || '').trim();
+        const safePhone = String(normalizedData.phone || '').trim();
+        const safeFullName = String(normalizedData.fullName || '').trim();
+        
+        if (!safeFullName || safeFullName.length < 2) {
             errors.push('Nom complet requis (min 2 caractères)');
         }
         
-        if (!normalizedData.email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizedData.email)) {
+        if (!safeEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(safeEmail)) {
             errors.push('Email invalide');
         }
         
-        // Validation de l'adresse (seulement si livraison != hand_delivery)
-        if (normalizedData.deliveryMethod !== 'hand_delivery') {
+        // Validation de l'adresse selon le mode de livraison
+        if (normalizedData.deliveryMethod === 'home') {
             if (!normalizedData.shippingAddress || normalizedData.shippingAddress.trim().length < 5) {
                 errors.push('Adresse requise (min 5 caractères)');
             }
@@ -326,14 +198,33 @@ module.exports = async (req, res) => {
             }
         }
         
-        // Validation de la livraison
-        const allowedDeliveryMethods = ['home', 'relay', 'hand_delivery'];
-        if (normalizedData.deliveryMethod && !allowedDeliveryMethods.includes(normalizedData.deliveryMethod)) {
-            errors.push('Mode de livraison invalide');
+        // Validation du point relais si livraison en relay
+        if (normalizedData.deliveryMethod === 'relay') {
+            if (
+                !relayPoint ||
+                !relayPoint.id ||
+                !relayPoint.name ||
+                !relayPoint.address1 ||
+                !relayPoint.postalCode ||
+                !relayPoint.city
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    error: 'Validation failed',
+                    message: 'Point relais requis pour la livraison en point relais'
+                });
+            }
+            
+            if (!normalizedData.postalCode || !/^\d{5}$/.test(normalizedData.postalCode)) {
+                errors.push('Code postal invalide (5 chiffres requis)');
+            }
+            
+            if (!normalizedData.city || normalizedData.city.trim().length < 2) {
+                errors.push('Ville requise (min 2 caractères)');
+            }
         }
         
-        console.log('Validation errors:', errors.length > 0 ? errors.join(', ') : 'None');
-        
+        // Validation des erreurs restantes
         if (errors.length > 0) {
             console.error('Validation failed:', errors.join(', '));
             
@@ -432,29 +323,25 @@ module.exports = async (req, res) => {
         const totalWeight = calculateTotalWeight(normalizedData.items);
         const calculatedDeliveryPrice = calculateDeliveryPrice(totalWeight, normalizedData.deliveryMethod);
         
-        console.log('=== DELIVERY CALCULATION V2 ===');
-        console.log('TOTAL WEIGHT (kg):', totalWeight);
-        console.log('DELIVERY METHOD:', normalizedData.deliveryMethod);
-        console.log('CALCULATED DELIVERY PRICE (€):', calculatedDeliveryPrice);
-        console.log('FRONTEND SENT PRICE (€):', normalizedData.deliveryPrice);
-        
         // Utiliser le prix calculé par le serveur, ignorer totalement le prix frontend
         const deliveryPrice = calculatedDeliveryPrice;
+        
+        // Factorisation de l'offre principale pour éviter la duplication
+        const primaryOffer = normalizedData.items[0]?.offer || null;
+        const primaryOfferForStripe = primaryOffer || '';
         
         // Calculer le total et créer les line_items
         let totalAmount = 0;
         const lineItems = [];
         
-        console.log('=== BUILDING LINE ITEMS V2 ===');
-        
         for (const item of normalizedData.items) {
             const offerConfig = OFFER_CONFIG[item.offer];
             if (!offerConfig) {
-                console.error(`UNKNOWN OFFER: ${item.offer}`);
+                console.error('Validation failed: unknown offer');
                 return res.status(400).json({ 
                     success: false,
                     error: 'Validation failed',
-                    details: [`Offre inconnue: ${item.offer}`]
+                    message: `Offre inconnue: ${item.offer}`
                 });
             }
             
@@ -473,8 +360,6 @@ module.exports = async (req, res) => {
             
             lineItems.push(lineItem);
             totalAmount += offerConfig.priceCents * item.quantity;
-            
-            console.log(`Item added: ${offerConfig.name} x${item.quantity}`);
         }
         
         // Ajouter les frais de livraison si applicable
@@ -491,57 +376,43 @@ module.exports = async (req, res) => {
                 quantity: 1,
             });
             totalAmount += Math.round(deliveryPrice * 100);
-            console.log(`Delivery added: ${deliveryPrice}€`);
         }
 
-        console.log(`Total amount: ${totalAmount} centimes (${totalAmount / 100}€)`);
-
-        // URL de base robuste
-        const baseUrl = process.env.FRONTEND_URL || req.headers.origin || 'https://oradia.fr';
-
         // Créer la session Stripe Checkout
-        console.log('Creating Stripe session');
-
-        // Extraire relayPoint du body original
-        const relayPoint = body.relayPoint || null;
 
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: lineItems,
             mode: 'payment',
-            success_url: 'https://oradia.fr/success-precommande.html?session_id={CHECKOUT_SESSION_ID}',
-            cancel_url: 'https://oradia.fr/precommande-oracle.html',
+            success_url: `${frontendUrl}/success-precommande.html?session_id={CHECKOUT_SESSION_ID}`,
+            cancel_url: `${frontendUrl}/precommande-oracle.html`,
             custom_text: {
               submit: {
                 message: '✨ Merci pour ta confiance — ton voyage commence ici.'
               }
             },
-            customer_email: normalizedData.email.trim(),
+            customer_email: safeEmail,
             metadata: {
-                items: JSON.stringify(normalizedData.items),
-                offer: normalizedData.items[0]?.offer || 'unknown',
-                delivery_method: normalizedData.deliveryMethod,
-                delivery_price_cents: normalizedData.deliveryPrice,
-                total_weight: totalWeight,
-                calculated_delivery_price: calculatedDeliveryPrice,
-                full_name: normalizedData.fullName.trim(),
-                email: normalizedData.email.trim(),
-                phone: normalizedData.phone.trim(),
+                offer: primaryOfferForStripe,
+                delivery_method: normalizedData.deliveryMethod || '',
+                delivery_price_cents: String(Math.round(deliveryPrice * 100)),
+                total_amount_cents: String(totalAmount),
+                // Champs client pour reconstruction webhook
+                full_name: safeFullName,
+                email: safeEmail,
+                phone: safePhone,
                 shipping_address: normalizedData.shippingAddress?.trim() || '',
-                address_complement: normalizedData.addressComplement?.trim() || '',
                 postal_code: normalizedData.postalCode?.trim() || '',
                 city: normalizedData.city?.trim() || '',
-                country: normalizedData.country,
-                total_amount: totalAmount,
-                delivery_price: Math.round(deliveryPrice * 100), // En centimes pour Stripe
+                country: normalizedData.country || 'FR',
                 // Métadonnées point relais si applicable
                 ...(relayPoint && {
-                    relay_id: relayPoint.id,
-                    relay_name: relayPoint.name,
-                    relay_address1: relayPoint.address1,
+                    relay_id: relayPoint.id || '',
+                    relay_name: relayPoint.name || '',
+                    relay_address1: relayPoint.address1 || '',
                     relay_address2: relayPoint.address2 || '',
-                    relay_postal_code: relayPoint.postalCode,
-                    relay_city: relayPoint.city,
+                    relay_postal_code: relayPoint.postalCode || '',
+                    relay_city: relayPoint.city || '',
                     relay_country: relayPoint.country || 'FR'
                 })
             }
@@ -550,18 +421,18 @@ module.exports = async (req, res) => {
         // Données à insérer dans la base de données
         const orderData = {
             stripe_session_id: session.id,
-            email: normalizedData.email.trim(),
+            email: safeEmail,
             items: normalizedData.items,
             amount_total: totalAmount / 100,
             currency: 'eur',
-            full_name: normalizedData.fullName.trim(),
-            phone: normalizedData.phone.trim(),
+            full_name: safeFullName,
+            phone: safePhone,
             shipping_address: normalizedData.shippingAddress?.trim() || '',
             address_complement: normalizedData.addressComplement?.trim() || '',
             postal_code: normalizedData.postalCode?.trim() || '',
             city: normalizedData.city?.trim() || '',
-            country: normalizedData.country,
-            offer: normalizedData.items[0]?.offer || null,
+            country: normalizedData.country || 'FR',
+            offer: primaryOffer,
             // Informations de livraison
             shipping_method: normalizedData.deliveryMethod,
             shipping_price_cents: Math.round(deliveryPrice * 100),
@@ -578,8 +449,7 @@ module.exports = async (req, res) => {
                 relay_country: relayPoint.country || 'FR'
             }),
             total_weight: totalWeight,
-            calculated_delivery_price: calculatedDeliveryPrice,
-            delivery_price: Math.round(deliveryPrice * 100), // En centimes pour la base
+            calculated_delivery_price_eur: calculatedDeliveryPrice,
             paid_status: 'pending',
             source: 'oradia-livraison'
         };
@@ -589,10 +459,9 @@ module.exports = async (req, res) => {
             .insert(orderData);
 
         if (insertError) {
-            console.error('Failed to insert pending order:', insertError);
-            // Continuer quand même - le webhook créera l'enregistrement si besoin
-        } else {
-            console.log(`Pending order created: ${session.id}`);
+            console.error('Failed to insert pending order:', insertError.message);
+            // On continue pour ne pas bloquer le paiement.
+            // La persistance finale dépendra du webhook Stripe.
         }
 
         res.json({ 
@@ -601,7 +470,7 @@ module.exports = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Checkout session creation failed:', error);
+        console.error('Checkout session creation failed:', error.message);
         
         // Toujours renvoyer du JSON, même en cas d'erreur
         res.status(500).json({ 

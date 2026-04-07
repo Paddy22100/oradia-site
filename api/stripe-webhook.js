@@ -1,17 +1,35 @@
 const { createClient } = require('@supabase/supabase-js');
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 
-// Variables d'environnement avec fallbacks
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-// Validation silencieuse des variables d'environnement
-if (!supabaseUrl || !supabaseKey) {
-    console.error('Configuration Supabase manquante');
+// Fonctions pour créer les clients après validation environnement
+function getStripeClient() {
+    return require('stripe')(process.env.STRIPE_SECRET_KEY);
 }
 
-// Création directe du client Supabase
-const supabase = createClient(supabaseUrl, supabaseKey);
+function getSupabaseClient() {
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    return createClient(supabaseUrl, supabaseKey);
+}
+
+// Validation des variables d'environnement critiques
+function validateEnvironment() {
+    const missing = [];
+
+    if (!process.env.STRIPE_SECRET_KEY) missing.push('STRIPE_SECRET_KEY');
+    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY');
+    if (!process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+        missing.push('SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL');
+    }
+    if (!process.env.STRIPE_WEBHOOK_SECRET) missing.push('STRIPE_WEBHOOK_SECRET');
+
+    if (missing.length > 0) {
+        throw new Error(`Configuration error: Missing ${missing.join(', ')}`);
+    }
+
+    if (!process.env.STRIPE_SECRET_KEY.startsWith('sk_')) {
+        throw new Error('Invalid STRIPE_SECRET_KEY format');
+    }
+}
 
 // Fonction d'envoi d'email Brevo
 async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
@@ -203,6 +221,13 @@ const handler = async (req, res) => {
         });
     }
 
+    // Validation environnement au début
+    validateEnvironment();
+
+    // Création des clients après validation
+    const stripe = getStripeClient();
+    const supabase = getSupabaseClient();
+
     let event;
     try {
         // Lire le body brut depuis la requête
@@ -380,34 +405,57 @@ const handler = async (req, res) => {
                     });
                 }
 
+                // Lire la commande existante pour fusionner avec les données Stripe
+                const { data: existingOrder } = await supabase
+                    .from('preorders')
+                    .select('*')
+                    .eq('stripe_session_id', sessionId)
+                    .maybeSingle();
+
+                // Fusion intelligente du mode de livraison
+                const mergedShippingMethod =
+                    extractedData.shipping_method || existingOrder?.shipping_method || null;
+
                 const supabaseData = {
                     stripe_session_id: extractedData.stripe_session_id,
-                    email: extractedData.email,
-                    offer: extractedData.offer,
-                    full_name: extractedData.full_name || 'Client ORADIA',
-                    amount_total: extractedData.amount_total / 100, // Convertir en euros pour la base
+                    email: extractedData.email || existingOrder?.email || null,
+                    offer: extractedData.offer || existingOrder?.offer || null,
+                    full_name: extractedData.full_name || existingOrder?.full_name || 'Client ORADIA',
+                    amount_total: extractedData.amount_total / 100,
                     currency: extractedData.currency,
                     payment_intent_id: extractedData.payment_intent_id,
                     paid_status: extractedData.paid_status,
-                    shipping_address: extractedData.shipping_address,
-                    postal_code: extractedData.postal_code,
-                    city: extractedData.city,
-                    phone: extractedData.phone,
+                    shipping_address: extractedData.shipping_address || existingOrder?.shipping_address || null,
+                    postal_code: extractedData.postal_code || existingOrder?.postal_code || null,
+                    city: extractedData.city || existingOrder?.city || null,
+                    phone: extractedData.phone || existingOrder?.phone || null,
                     updated_at: new Date().toISOString(),
-                    // Champs livraison
-                    shipping_method: extractedData.shipping_method,
-                    shipping_price_cents: extractedData.shipping_price_cents
-                        ? parseInt(extractedData.shipping_price_cents, 10)
-                        : null, // Garder en centimes
-                    shipping_provider: extractedData.shipping_method === 'relay' || extractedData.shipping_method === 'home' ? 'mondial_relay' : null,
+
+                    // Champs livraison fusionnés
+                    shipping_method: mergedShippingMethod,
+                    shipping_price_cents:
+                        (() => {
+                            const parsedShippingPrice =
+                                extractedData.shipping_price_cents != null
+                                    ? Number.parseInt(extractedData.shipping_price_cents, 10)
+                                    : null;
+                            return Number.isFinite(parsedShippingPrice)
+                                ? parsedShippingPrice
+                                : existingOrder?.shipping_price_cents ?? null;
+                        })(),
+                    shipping_provider:
+                        mergedShippingMethod === 'relay' || mergedShippingMethod === 'home'
+                            ? 'mondial_relay'
+                            : existingOrder?.shipping_provider || null,
+
                     // Champs point relais
-                    relay_id: extractedData.relay_id,
-                    relay_name: extractedData.relay_name,
-                    relay_address1: extractedData.relay_address1,
-                    relay_address2: extractedData.relay_address2,
-                    relay_postal_code: extractedData.relay_postal_code,
-                    relay_city: extractedData.relay_city,
-                    relay_country: extractedData.relay_country
+                    relay_id: extractedData.relay_id || existingOrder?.relay_id || null,
+                    relay_name: extractedData.relay_name || existingOrder?.relay_name || null,
+                    relay_address1: extractedData.relay_address1 || existingOrder?.relay_address1 || null,
+                    relay_address2: extractedData.relay_address2 || existingOrder?.relay_address2 || null,
+                    relay_postal_code: extractedData.relay_postal_code || existingOrder?.relay_postal_code || null,
+                    relay_city: extractedData.relay_city || existingOrder?.relay_city || null,
+                    relay_country: extractedData.relay_country || existingOrder?.relay_country || null
                 };
                 
                 const { error: upsertError, data: upsertData } = await supabase
@@ -433,7 +481,7 @@ const handler = async (req, res) => {
                 if (extractedData.email && !upsertData.email_sent_at) {
                     emailSent = await sendBrevoEmail({
                         toEmail: extractedData.email,
-                        toName: extractedData.full_name || 'Ami(e) d\'ORADIA',
+                        toName: upsertData.full_name || 'Ami(e) d\'ORADIA',
                         offer: extractedData.offer,
                         amountTotal: (extractedData.amount_total / 100).toFixed(2)
                     });
