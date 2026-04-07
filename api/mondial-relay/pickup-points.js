@@ -1,4 +1,3 @@
-const { createClient } = require('@supabase/supabase-js');
 const xml2js = require('xml2js');
 
 // Configuration Mondial Relay API 1
@@ -88,63 +87,8 @@ async function searchPickupPoints(postalCode, country) {
 
     } catch (error) {
         console.error('Erreur API Mondial Relay:', error);
-        
-        // En secours, utiliser les données mock si l'API échoue
-        console.log('Utilisation des données de test en secours');
-        return generateMockPoints(postalCode, country);
+        throw new Error('Service Mondial Relay indisponible');
     }
-}
-
-/**
- * Génération de points de test (à supprimer quand API réelle implémentée)
- */
-function generateMockPoints(postalCode, country) {
-    const mockPoints = [
-        {
-            id: `${postalCode}001`,
-            name: 'Relais Colis Express',
-            address1: '123 Rue de la République',
-            address2: '',
-            postalCode: postalCode,
-            city: 'PARIS',
-            country: country,
-            latitude: 48.8566,
-            longitude: 2.3522
-        },
-        {
-            id: `${postalCode}002`,
-            name: 'Point Relais Pro',
-            address1: '45 Avenue des Champs-Élysées',
-            address2: 'Bâtiment B',
-            postalCode: postalCode,
-            city: 'PARIS',
-            country: country,
-            latitude: 48.8656,
-            longitude: 2.3211
-        },
-        {
-            id: `${postalCode}003`,
-            name: 'Mondial Relay Shop',
-            address1: '78 Boulevard Haussmann',
-            address2: '',
-            postalCode: postalCode,
-            city: 'PARIS',
-            country: country,
-            latitude: 48.8720,
-            longitude: 2.3124
-        }
-    ];
-
-    // Adapter la ville selon le code postal
-    if (postalCode.startsWith('75')) {
-        return mockPoints.map(p => ({ ...p, city: 'PARIS' }));
-    } else if (postalCode.startsWith('69')) {
-        return mockPoints.map(p => ({ ...p, city: 'LYON' }));
-    } else if (postalCode.startsWith('13')) {
-        return mockPoints.map(p => ({ ...p, city: 'MARSEILLE' }));
-    }
-
-    return mockPoints;
 }
 
 /**
