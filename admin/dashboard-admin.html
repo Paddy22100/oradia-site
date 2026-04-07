@@ -505,10 +505,11 @@
 
         // Formater la monnaie
         function formatCurrency(amount) {
+            const numAmount = Number(amount) || 0;
             return new Intl.NumberFormat('fr-FR', {
                 style: 'currency',
                 currency: 'EUR'
-            }).format(amount);
+            }).format(numAmount);
         }
 
         // Mettre à jour le tableau des précommandes
