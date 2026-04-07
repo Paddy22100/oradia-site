@@ -519,6 +519,10 @@ module.exports = async (req, res) => {
 
         // Créer la session Stripe Checkout
         console.log('=== CREATING STRIPE SESSION V2 ===');
+
+        // Extraire relayPoint du body original
+        const relayPoint = body.relayPoint || null;
+
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: lineItems,
@@ -534,29 +538,29 @@ module.exports = async (req, res) => {
             metadata: {
                 items: JSON.stringify(normalizedData.items),
                 offer: normalizedData.items[0]?.offer || 'unknown',
-                delivery_method: normalizedData.delivery.method,
-                delivery_price_cents: normalizedData.delivery.price,
+                delivery_method: normalizedData.deliveryMethod,
+                delivery_price_cents: normalizedData.deliveryPrice,
                 total_weight: totalWeight,
                 calculated_delivery_price: calculatedDeliveryPrice,
-                full_name: normalizedData.customerInfo.fullName.trim(),
-                email: normalizedData.customerInfo.email.trim(),
-                phone: normalizedData.customerInfo.phone.trim(),
-                shipping_address: normalizedData.customerInfo.shippingAddress?.trim() || '',
-                address_complement: normalizedData.customerInfo.addressComplement?.trim() || '',
-                postal_code: normalizedData.customerInfo.postalCode?.trim() || '',
-                city: normalizedData.customerInfo.city?.trim() || '',
-                country: normalizedData.customerInfo.country,
+                full_name: normalizedData.fullName.trim(),
+                email: normalizedData.email.trim(),
+                phone: normalizedData.phone.trim(),
+                shipping_address: normalizedData.shippingAddress?.trim() || '',
+                address_complement: normalizedData.addressComplement?.trim() || '',
+                postal_code: normalizedData.postalCode?.trim() || '',
+                city: normalizedData.city?.trim() || '',
+                country: normalizedData.country,
                 total_amount: totalAmount,
                 delivery_price: Math.round(deliveryPrice * 100), // En centimes pour Stripe
                 // Métadonnées point relais si applicable
-                ...(normalizedData.relayPoint && {
-                    relay_id: normalizedData.relayPoint.id,
-                    relay_name: normalizedData.relayPoint.name,
-                    relay_address1: normalizedData.relayPoint.address1,
-                    relay_address2: normalizedData.relayPoint.address2 || '',
-                    relay_postal_code: normalizedData.relayPoint.postalCode,
-                    relay_city: normalizedData.relayPoint.city,
-                    relay_country: normalizedData.relayPoint.country || 'FR'
+                ...(relayPoint && {
+                    relay_id: relayPoint.id,
+                    relay_name: relayPoint.name,
+                    relay_address1: relayPoint.address1,
+                    relay_address2: relayPoint.address2 || '',
+                    relay_postal_code: relayPoint.postalCode,
+                    relay_city: relayPoint.city,
+                    relay_country: relayPoint.country || 'FR'
                 })
             }
         });
@@ -564,31 +568,31 @@ module.exports = async (req, res) => {
         // Données à insérer dans la base de données
         const orderData = {
             stripe_session_id: session.id,
-            email: normalizedData.customerInfo.email.trim(),
+            email: normalizedData.email.trim(),
             items: normalizedData.items,
             amount_total: totalAmount,
             currency: 'eur',
-            full_name: normalizedData.customerInfo.fullName.trim(),
-            phone: normalizedData.customerInfo.phone.trim(),
-            shipping_address: normalizedData.customerInfo.shippingAddress?.trim() || '',
-            address_complement: normalizedData.customerInfo.addressComplement?.trim() || '',
-            postal_code: normalizedData.customerInfo.postalCode?.trim() || '',
-            city: normalizedData.customerInfo.city?.trim() || '',
-            country: normalizedData.customerInfo.country,
+            full_name: normalizedData.fullName.trim(),
+            phone: normalizedData.phone.trim(),
+            shipping_address: normalizedData.shippingAddress?.trim() || '',
+            address_complement: normalizedData.addressComplement?.trim() || '',
+            postal_code: normalizedData.postalCode?.trim() || '',
+            city: normalizedData.city?.trim() || '',
+            country: normalizedData.country,
             // Informations de livraison
-            shipping_method: normalizedData.delivery.method,
-            shipping_price_cents: normalizedData.delivery.price,
-            shipping_provider: normalizedData.delivery.method === 'relay' || normalizedData.delivery.method === 'home' ? 'mondial_relay' : null,
+            shipping_method: normalizedData.deliveryMethod,
+            shipping_price_cents: normalizedData.deliveryPrice,
+            shipping_provider: normalizedData.deliveryMethod === 'relay' || normalizedData.deliveryMethod === 'home' ? 'mondial_relay' : null,
             shipping_status: 'pending',
             // Point relais si applicable
-            ...(normalizedData.relayPoint && {
-                relay_id: normalizedData.relayPoint.id,
-                relay_name: normalizedData.relayPoint.name,
-                relay_address1: normalizedData.relayPoint.address1,
-                relay_address2: normalizedData.relayPoint.address2 || '',
-                relay_postal_code: normalizedData.relayPoint.postalCode,
-                relay_city: normalizedData.relayPoint.city,
-                relay_country: normalizedData.relayPoint.country || 'FR'
+            ...(relayPoint && {
+                relay_id: relayPoint.id,
+                relay_name: relayPoint.name,
+                relay_address1: relayPoint.address1,
+                relay_address2: relayPoint.address2 || '',
+                relay_postal_code: relayPoint.postalCode,
+                relay_city: relayPoint.city,
+                relay_country: relayPoint.country || 'FR'
             }),
             total_weight: totalWeight,
             calculated_delivery_price: calculatedDeliveryPrice,
