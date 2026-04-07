@@ -5,13 +5,10 @@ const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-// AUDIT: Logs des variables d'environnement critiques
-console.log('🔍 AUDIT VARIABLES ENVIRONNEMENT:');
-console.log('  - STRIPE_SECRET_KEY:', process.env.STRIPE_SECRET_KEY ? '✅ Configurée' : '❌ Manquante');
-console.log('  - STRIPE_WEBHOOK_SECRET:', process.env.STRIPE_WEBHOOK_SECRET ? '✅ Configurée' : '❌ Manquante');
-console.log('  - SUPABASE_URL:', supabaseUrl || '❌ Manquante');
-console.log('  - NEXT_PUBLIC_SUPABASE_URL:', process.env.NEXT_PUBLIC_SUPABASE_URL || '❌ Manquante');
-console.log('  - SUPABASE_SERVICE_ROLE_KEY:', supabaseKey ? '✅ Configurée' : '❌ Manquante');
+// Validation silencieuse des variables d'environnement
+if (!supabaseUrl || !supabaseKey) {
+    console.error('Configuration Supabase manquante');
+}
 
 // Création directe du client Supabase
 const supabase = createClient(supabaseUrl, supabaseKey);
@@ -19,14 +16,9 @@ const supabase = createClient(supabaseUrl, supabaseKey);
 // Fonction d'envoi d'email Brevo
 async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
     try {
-        // Logs de diagnostic pour les variables d'environnement
-        if (!process.env.BREVO_API_KEY) {
-            console.error('❌ BREVO_API_KEY manquante');
-            return false;
-        }
-        
-        if (!process.env.BREVO_SENDER_EMAIL) {
-            console.error('❌ BREVO_SENDER_EMAIL manquant');
+        // Validation silencieuse des variables d'environnement
+        if (!process.env.BREVO_API_KEY || !process.env.BREVO_SENDER_EMAIL) {
+            console.error('Configuration Brevo manquante');
             return false;
         }
         
@@ -184,18 +176,16 @@ oradia.fr`
         });
 
         if (!response.ok) {
-            const errorText = await response.text();
-            console.error(`❌ Brevo API error: ${response.status}`);
+            console.error(`Brevo API error: ${response.status}`);
             return false;
         }
 
         const result = await response.json();
-        console.log('✅ Email sent via Brevo');
+        console.log('Email sent via Brevo');
         return true;
 
     } catch (error) {
-        console.error('❌ Failed to send email via Brevo:', error.message);
-        console.error('❌ Full error:', error);
+        console.error('Failed to send email via Brevo:', error.message);
         return false; // Ne jamais faire planter le webhook
     }
 }
@@ -205,8 +195,12 @@ const handler = async (req, res) => {
     const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
     if (!sig || !webhookSecret) {
-        console.error('❌ Missing webhook signature or secret');
-        return res.status(400).json({ error: 'Missing signature' });
+        console.error('Missing webhook signature or secret');
+        return res.status(400).json({ 
+            success: false,
+            error: 'Invalid request',
+            message: 'Signature manquante'
+        });
     }
 
     let event;
@@ -221,19 +215,23 @@ const handler = async (req, res) => {
         // Construire l'événement Stripe avec le raw body réel
         event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
     } catch (err) {
-        console.error('❌ Webhook signature verification failed:', err.message);
-        return res.status(400).json({ error: `Webhook Error: ${err.message}` });
+        console.error('Webhook signature verification failed:', err.message);
+        return res.status(400).json({ 
+            success: false,
+            error: 'Invalid request',
+            message: 'Signature invalide'
+        });
     }
 
     try {
-        console.log(`🎯 Webhook event: ${event.type}`);
+        console.log(`Webhook event: ${event.type}`);
         
         switch (event.type) {
             case 'checkout.session.completed': {
                 const session = event.data.object;
                 const sessionId = session.id;
                 
-                console.log(`🛒 Session completed: ${sessionId}`);
+                console.log(`Session completed: ${sessionId}`);
                 
                 // Extraction robuste des données avec fallbacks
                 const extractedData = {
@@ -308,7 +306,7 @@ const handler = async (req, res) => {
 
                 // Validation des champs obligatoires
                 if (!extractedData.email) {
-                    console.error('❌ Email manquant - envoi d\'email annulé mais webhook continue');
+                    console.error('Email manquant - envoi d\'email annulé mais webhook continue');
                     // Continuer le traitement sans envoyer d'email
                 }
 
@@ -337,10 +335,11 @@ const handler = async (req, res) => {
                         .single();
                     
                     if (donorError) {
-                        console.error('❌ Insertion donors échouée:', donorError.message);
+                        console.error('Insertion donors échouée:', donorError.message);
                         return res.status(500).json({
-                            error: 'Failed to process donation',
-                            message: donorError.message
+                            success: false,
+                            error: 'Database error',
+                            message: 'Une erreur est survenue lors du traitement'
                         });
                     }
                     
@@ -373,10 +372,11 @@ const handler = async (req, res) => {
 
                 // Validation des champs obligatoires pour précommandes
                 if (!extractedData.offer) {
-                    console.error('❌ Offer manquant - impossible de continuer');
+                    console.error('Offer manquant - impossible de continuer');
                     return res.status(400).json({ 
-                        error: 'Missing required field: offer',
-                        message: 'Offer is required for preorder processing'
+                        success: false,
+                        error: 'Invalid request',
+                        message: 'Offre requise pour le traitement'
                     });
                 }
 
@@ -385,7 +385,7 @@ const handler = async (req, res) => {
                     email: extractedData.email,
                     offer: extractedData.offer,
                     full_name: extractedData.full_name || 'Client ORADIA',
-                    amount_total: extractedData.amount_total / 100,
+                    amount_total: extractedData.amount_total / 100, // Convertir en euros pour la base
                     currency: extractedData.currency,
                     payment_intent_id: extractedData.payment_intent_id,
                     paid_status: extractedData.paid_status,
@@ -396,7 +396,9 @@ const handler = async (req, res) => {
                     updated_at: new Date().toISOString(),
                     // Champs livraison
                     shipping_method: extractedData.shipping_method,
-                    shipping_price_cents: extractedData.shipping_price_cents,
+                    shipping_price_cents: extractedData.shipping_price_cents
+                        ? parseInt(extractedData.shipping_price_cents, 10)
+                        : null, // Garder en centimes
                     shipping_provider: extractedData.shipping_method === 'relay' || extractedData.shipping_method === 'home' ? 'mondial_relay' : null,
                     // Champs point relais
                     relay_id: extractedData.relay_id,
@@ -418,10 +420,11 @@ const handler = async (req, res) => {
                     .single();
                 
                 if (upsertError) {
-                    console.error('❌ Upsert Supabase échoué:', upsertError.message);
+                    console.error('Upsert Supabase échoué:', upsertError.message);
                     return res.status(500).json({
-                        error: 'Database operation failed',
-                        message: upsertError.message
+                        success: false,
+                        error: 'Database error',
+                        message: 'Une erreur est survenue lors du traitement'
                     });
                 }
 
@@ -443,9 +446,10 @@ const handler = async (req, res) => {
                     }
                 }
                 
-                console.log(`✅ Webhook traité: ${sessionId} | DB:OK | Email:${emailSent ? 'OK' : 'Skipped'}`);
+                console.log(`Webhook traité: ${sessionId} | DB:OK | Email:${emailSent ? 'OK' : 'Skipped'}`);
                 
                 return res.status(200).json({ 
+                    success: true,
                     message: 'Order processed successfully',
                     sessionId: sessionId,
                     emailStatus: emailSent ? 'sent' : 'skipped'
@@ -454,13 +458,17 @@ const handler = async (req, res) => {
             
             default:
                 console.log(`Event not handled: ${event.type}`);
-                return res.status(200).json({ message: 'Event received but not handled' });
+                return res.status(200).json({ 
+                    success: true,
+                    message: 'Event received but not handled' 
+                });
         }
     } catch (error) {
-        console.error('❌ Webhook processing error:', error.message);
+        console.error('Webhook processing error:', error.message);
         return res.status(500).json({ 
-            error: 'Processing error', 
-            message: error.message 
+            success: false,
+            error: 'Internal server error', 
+            message: 'Une erreur est survenue lors du traitement'
         });
     }
 };

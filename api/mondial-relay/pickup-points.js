@@ -45,14 +45,12 @@ async function handler(req, res) {
             points
         });
     } catch (error) {
-        console.error('Erreur recherche points relais:', error);
+        console.error('Erreur recherche points relais:', error.message);
 
-        // Retourner temporairement l'erreur détaillée en mode debug
         return res.status(500).json({
             success: false,
-            error: 'Mondial Relay debug',
-            message: error.message,
-            stack: error.stack?.slice(0, 500)
+            error: 'Service error',
+            message: 'Une erreur est survenue lors de la recherche des points relais'
         });
     }
 }
@@ -68,8 +66,7 @@ async function searchPickupPoints(postalCode, country) {
         console.log(`Recherche points relais pour ${postalCode}, ${country}: ${points.length} trouvés`);
         return points;
     } catch (error) {
-        console.error('Erreur API Mondial Relay DÉTAILLÉE:', error);
-        console.error('Stack trace:', error.stack);
+        console.error('Erreur API Mondial Relay:', error.message);
         throw error;
     }
 }
@@ -99,10 +96,6 @@ function calculateSecurity(payload, privateKey) {
     
     // Hash MD5 en majuscules selon doc Mondial Relay
     const hash = crypto.createHash('md5').update(securityString, 'utf8').digest('hex').toUpperCase();
-    
-    console.log('Security string (partielle):', securityString.substring(0, 50) + '...');
-    console.log('Security string (fin):', '...' + securityString.substring(securityString.length - 30));
-    console.log('Security hash calculé (masqué):', hash.substring(0, 8) + '...' + hash.substring(hash.length - 4));
     
     return hash;
 }
@@ -165,11 +158,6 @@ async function callMondialRelayAPI(postalCode, country) {
     // Générer le body SOAP XML
     const soapBody = generateSOAPBody(payload);
 
-    console.log('Payload final utilisé:', JSON.stringify(payload, null, 2));
-    console.log('=== SOAP BODY ENVOYÉ ===');
-    console.log(soapBody.substring(0, 1000));
-    console.log('=== FIN SOAP BODY ===');
-
     const response = await fetch(MONDIAL_RELAY_API1_URL, {
         method: 'POST',
         headers: {
@@ -180,12 +168,6 @@ async function callMondialRelayAPI(postalCode, country) {
         body: soapBody
     });
 
-    console.log('=== HEADERS REQUÊTE ENVOYÉS ===');
-    console.log('Content-Type: text/xml; charset=utf-8');
-    console.log('SOAPAction: http://www.mondialrelay.fr/webservice/WSI4_PointRelais_Recherche');
-    console.log('MessageType: CALL');
-    console.log('=== FIN HEADERS ===');
-
     console.log(`API Mondial Relay - Status: ${response.status} ${response.statusText}`);
 
     if (!response.ok) {
@@ -193,10 +175,6 @@ async function callMondialRelayAPI(postalCode, country) {
     }
 
     const xmlResponse = await response.text();
-    console.log('=== DEBUG MONDIAL RELAY ===');
-    console.log('STATUS HTTP:', response.status, response.statusText);
-    console.log('RÉPONSE XML (1000 premiers caractères):', xmlResponse.substring(0, 1000));
-    console.log('=== FIN DEBUG ===');
     
     // Parser la réponse XML et convertir en JSON
     return parseMondialRelayResponse(xmlResponse);
@@ -213,11 +191,6 @@ async function parseMondialRelayResponse(xmlResponse) {
     });
 
     const parsedData = await parser.parseStringPromise(xmlResponse);
-
-    console.log('=== XML PREVIEW ===');
-    console.log(xmlResponse.slice(0, 1500));
-    console.log('=== PARSED JSON PREVIEW ===');
-    console.log(JSON.stringify(parsedData, null, 2).slice(0, 3000));
 
     // Récupérer WSI4_PointRelais_RechercheResult avec les variants SOAP possibles
     const result = 
@@ -247,15 +220,6 @@ async function parseMondialRelayResponse(xmlResponse) {
         throw new Error(`Erreur métier Mondial Relay - STAT: ${invalidStat.STAT}`);
     }
 
-    // Logger les STAT des points pour debug
-    console.log('=== STAT DES POINTS RELAIS ===');
-    pointsArray.forEach((point, index) => {
-        if (point?.STAT) {
-            console.log(`Point ${index + 1} STAT: "${String(point.STAT).trim()}"`);
-        }
-    });
-    console.log('=== FIN STAT ===');
-
     const mappedPoints = pointsArray
         .filter(point => point && point.Num && point.LgAdr1)
         .map(point => ({
@@ -269,13 +233,6 @@ async function parseMondialRelayResponse(xmlResponse) {
             latitude: point.Latitude ? parseFloat(point.Latitude) : null,
             longitude: point.Longitude ? parseFloat(point.Longitude) : null
         }));
-
-    // Si aucun point valide n'est retourné, logger le premier point brut pour debug
-    if (mappedPoints.length === 0 && pointsArray.length > 0) {
-        console.log('=== PREMIER POINT BRUT POUR DEBUG ===');
-        console.log('Premier PointRelais_Details brut:', JSON.stringify(pointsArray[0], null, 2));
-        console.log('=== FIN PREMIER POINT BRUT ===');
-    }
 
     return mappedPoints;
 }

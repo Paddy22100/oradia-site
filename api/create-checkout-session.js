@@ -142,37 +142,26 @@ module.exports = async (req, res) => {
     try {
         // HEALTH CHECK TEMPORAIRE - Mode GET pour test immédiat
         if (req.method === 'GET') {
-            console.log('🏥 HEALTH CHECK CREATE-CHECKOUT-SESSION');
-            
-            const envStatus = {
-                STRIPE_SECRET_KEY: process.env.STRIPE_SECRET_KEY ? '✅' : '❌',
-                STRIPE_WEBHOOK_SECRET: process.env.STRIPE_WEBHOOK_SECRET ? '✅' : '❌',
-                SUPABASE_URL: process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || '❌',
-                SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ? '✅' : '❌',
-                BREVO_API_KEY: process.env.BREVO_API_KEY ? '✅' : '❌',
-                BREVO_SENDER_EMAIL: process.env.BREVO_SENDER_EMAIL || '❌'
-            };
-            
-            console.log('🔍 Variables environnement:', envStatus);
+            console.log('Health check create-checkout-session');
             
             // Test connexion Supabase
-            let supabaseTest = '❌';
+            let supabaseTest = 'KO';
             try {
                 const { count, error } = await supabase
                     .from('preorders')
                     .select('count', { count: 'exact', head: true });
                 
                 if (error) {
-                    supabaseTest = `❌ ${error.message}`;
+                    supabaseTest = `KO: ${error.message}`;
                 } else {
-                    supabaseTest = `✅ ${count} précommandes`;
+                    supabaseTest = `OK: ${count} précommandes`;
                 }
             } catch (error) {
-                supabaseTest = `❌ ${error.message}`;
+                supabaseTest = `KO: ${error.message}`;
             }
             
             // Test connexion Brevo
-            let brevoTest = '❌';
+            let brevoTest = 'KO';
             if (process.env.BREVO_API_KEY && process.env.BREVO_SENDER_EMAIL) {
                 try {
                     const response = await fetch('https://api.brevo.com/v3/account', {
@@ -180,34 +169,32 @@ module.exports = async (req, res) => {
                     });
                     
                     if (response.ok) {
-                        brevoTest = '✅ Connexion réussie';
+                        brevoTest = 'OK: Connexion réussie';
                     } else {
-                        brevoTest = `❌ ${response.status}`;
+                        brevoTest = `KO: ${response.status}`;
                     }
                 } catch (error) {
-                    brevoTest = `❌ ${error.message}`;
+                    brevoTest = `KO: ${error.message}`;
                 }
             } else {
-                brevoTest = '❌ Variables manquantes';
+                brevoTest = 'KO: Variables manquantes';
             }
             
             const result = {
-                status: '✅ Health check create-checkout-session',
+                status: 'Health check create-checkout-session',
                 timestamp: new Date().toISOString(),
-                environment: envStatus,
                 tests: {
                     supabase: supabaseTest,
                     brevo: brevoTest
                 },
-                message: 'Test des variables et connexions - webhook corrigé en attente de déploiement'
+                message: 'Test des connexions - webhook corrigé en attente de déploiement'
             };
             
             return res.status(200).json(result);
         }
         
         // TRAITEMENT NORMAL (méthode POST)
-        console.log('=== REAL CHECKOUT HANDLER V2 ===');
-        console.log('RAW REQ.BODY FULL:', JSON.stringify(req.body, null, 2));
+        console.log('Real checkout handler V2');
         
         setCORS(req, res);
         
@@ -216,24 +203,28 @@ module.exports = async (req, res) => {
         }
 
         if (req.method !== 'POST') {
-            return res.status(405).json({ error: 'Method not allowed' });
+            return res.status(405).json({ 
+                success: false,
+                error: 'Method not allowed',
+                message: 'Méthode non autorisée'
+            });
         }
 
         // Validation environnement au début
         validateEnvironment();
         
-        console.log('=== CHECKOUT SESSION START V2 ===');
+        console.log('Checkout session start V2');
         
         // Handle don-libre case separately
         if (req.body.type === 'don-libre') {
-            console.log('DON-LIBRE CASE');
+            console.log('Don-libre case');
             // Validate minimum amount (20€ = 2000 centimes)
             if (!req.body.customAmount || req.body.customAmount < 2000) {
-                console.error('DON-LIBRE ERROR: Amount too low:', req.body.customAmount);
+                console.error('Don-libre error: Amount too low:', req.body.customAmount);
                 return res.status(400).json({ 
                     success: false,
                     error: 'Validation failed',
-                    details: ['Minimum amount is 20€']
+                    message: 'Le montant minimum est de 20€'
                 });
             }
 
@@ -263,7 +254,7 @@ module.exports = async (req, res) => {
                 }
             });
 
-            console.log('DON-LIBRE SESSION CREATED:', session.id);
+            console.log('Don-libre session created:', session.id);
             return res.json({ url: session.url });
         }
 
@@ -273,10 +264,7 @@ module.exports = async (req, res) => {
         const customerInfo = body.customerInfo || {};
         const delivery = body.delivery || {};
         
-        console.log('=== STRUCTURED BODY PARSING V2 ===');
-        console.log('RAW ITEMS:', JSON.stringify(items, null, 2));
-        console.log('RAW CUSTOMER INFO:', JSON.stringify(customerInfo, null, 2));
-        console.log('RAW DELIVERY:', JSON.stringify(delivery, null, 2));
+        console.log('Structured body parsing V2');
         
         // Création de l'objet normalisé unique
         const normalizedData = {
@@ -293,8 +281,7 @@ module.exports = async (req, res) => {
             deliveryPrice: delivery.price || 0
         };
         
-        console.log('=== NORMALIZED DATA FROM STRUCTURED FORMAT V2 ===');
-        console.log(JSON.stringify(normalizedData, null, 2));
+        console.log('Normalized data from structured format V2');
         
         // Validation directe sur l'objet normalisé
         const errors = [];
@@ -345,19 +332,15 @@ module.exports = async (req, res) => {
             errors.push('Mode de livraison invalide');
         }
         
-        console.log('=== VALIDATION ERRORS V2 ===');
-        console.log(JSON.stringify(errors, null, 2));
+        console.log('Validation errors:', errors.length > 0 ? errors.join(', ') : 'None');
         
         if (errors.length > 0) {
-            console.error('=== VALIDATION FAILED V2 ===');
-            console.error(JSON.stringify(errors, null, 2));
-            console.error('=== NORMALIZED DATA USED FOR VALIDATION V2 ===');
-            console.error(JSON.stringify(normalizedData, null, 2));
+            console.error('Validation failed:', errors.join(', '));
             
             return res.status(400).json({
                 success: false,
                 error: 'Validation failed',
-                details: errors
+                message: errors.join(', ')
             });
         }
 
@@ -491,7 +474,7 @@ module.exports = async (req, res) => {
             lineItems.push(lineItem);
             totalAmount += offerConfig.priceCents * item.quantity;
             
-            console.log(`ITEM ADDED: ${offerConfig.name} x${item.quantity} = ${offerConfig.priceCents * item.quantity} centimes`);
+            console.log(`Item added: ${offerConfig.name} x${item.quantity}`);
         }
         
         // Ajouter les frais de livraison si applicable
@@ -508,17 +491,16 @@ module.exports = async (req, res) => {
                 quantity: 1,
             });
             totalAmount += Math.round(deliveryPrice * 100);
-            console.log(`DELIVERY ADDED: ${deliveryPrice}€ = ${Math.round(deliveryPrice * 100)} centimes`);
+            console.log(`Delivery added: ${deliveryPrice}€`);
         }
 
-        console.log(`TOTAL AMOUNT: ${totalAmount} centimes (${totalAmount / 100}€)`);
-        console.log('FINAL LINE ITEMS:', JSON.stringify(lineItems, null, 2));
+        console.log(`Total amount: ${totalAmount} centimes (${totalAmount / 100}€)`);
 
         // URL de base robuste
         const baseUrl = process.env.FRONTEND_URL || req.headers.origin || 'https://oradia.fr';
 
         // Créer la session Stripe Checkout
-        console.log('=== CREATING STRIPE SESSION V2 ===');
+        console.log('Creating Stripe session');
 
         // Extraire relayPoint du body original
         const relayPoint = body.relayPoint || null;
@@ -570,7 +552,7 @@ module.exports = async (req, res) => {
             stripe_session_id: session.id,
             email: normalizedData.email.trim(),
             items: normalizedData.items,
-            amount_total: totalAmount,
+            amount_total: totalAmount / 100,
             currency: 'eur',
             full_name: normalizedData.fullName.trim(),
             phone: normalizedData.phone.trim(),
@@ -579,9 +561,10 @@ module.exports = async (req, res) => {
             postal_code: normalizedData.postalCode?.trim() || '',
             city: normalizedData.city?.trim() || '',
             country: normalizedData.country,
+            offer: normalizedData.items[0]?.offer || null,
             // Informations de livraison
             shipping_method: normalizedData.deliveryMethod,
-            shipping_price_cents: normalizedData.deliveryPrice,
+            shipping_price_cents: Math.round(deliveryPrice * 100),
             shipping_provider: normalizedData.deliveryMethod === 'relay' || normalizedData.deliveryMethod === 'home' ? 'mondial_relay' : null,
             shipping_status: 'pending',
             // Point relais si applicable
@@ -624,7 +607,7 @@ module.exports = async (req, res) => {
         res.status(500).json({ 
             success: false,
             error: 'Internal server error',
-            message: error.message || 'Failed to create checkout session'
+            message: 'Une erreur est survenue lors de la création de la session'
         });
     }
 };
