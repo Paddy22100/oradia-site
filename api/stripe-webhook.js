@@ -290,7 +290,20 @@ const handler = async (req, res) => {
                     stripe_session_id: sessionId,
                     
                     // Status
-                    paid_status: 'completed'
+                    paid_status: 'completed',
+                    
+                    // Champs livraison depuis metadata
+                    shipping_method: session.metadata?.delivery_method || null,
+                    shipping_price_cents: session.metadata?.delivery_price_cents || null,
+                    
+                    // Champs point relais depuis metadata
+                    relay_id: session.metadata?.relay_id || null,
+                    relay_name: session.metadata?.relay_name || null,
+                    relay_address1: session.metadata?.relay_address1 || null,
+                    relay_address2: session.metadata?.relay_address2 || null,
+                    relay_postal_code: session.metadata?.relay_postal_code || null,
+                    relay_city: session.metadata?.relay_city || null,
+                    relay_country: session.metadata?.relay_country || null
                 };
 
                 // Validation des champs obligatoires
@@ -380,7 +393,18 @@ const handler = async (req, res) => {
                     postal_code: extractedData.postal_code,
                     city: extractedData.city,
                     phone: extractedData.phone,
-                    updated_at: new Date().toISOString()
+                    updated_at: new Date().toISOString(),
+                    // Champs livraison
+                    shipping_method: extractedData.shipping_method,
+                    shipping_price_cents: extractedData.shipping_price_cents,
+                    // Champs point relais
+                    relay_id: extractedData.relay_id,
+                    relay_name: extractedData.relay_name,
+                    relay_address1: extractedData.relay_address1,
+                    relay_address2: extractedData.relay_address2,
+                    relay_postal_code: extractedData.relay_postal_code,
+                    relay_city: extractedData.relay_city,
+                    relay_country: extractedData.relay_country
                 };
                 
                 const { error: upsertError, data: upsertData } = await supabase
