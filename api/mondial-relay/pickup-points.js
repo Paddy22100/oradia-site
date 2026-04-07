@@ -92,7 +92,9 @@ function calculateSecurity(payload, privateKey) {
         payload.Action,
         payload.DelaiEnvoi || '',
         payload.RayonRecherche || '',
-        payload.NombreResultats || ''
+        payload.NombreResultats || '',
+        payload.TypeActivite || '',
+        payload.NACE || ''
     ].join('') + privateKey;
     
     // Hash MD5 en majuscules selon doc Mondial Relay
@@ -112,7 +114,7 @@ function generateSOAPBody(payload) {
     return `<?xml version="1.0" encoding="utf-8"?>
 <soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
   <soap:Body>
-    <WSI4_PointRelais_Recherche xmlns="http://api.mondialrelay.com/">
+    <WSI4_PointRelais_Recherche xmlns="http://www.mondialrelay.fr/webservice/">
       <Enseigne>${payload.Enseigne}</Enseigne>
       <Pays>${payload.Pays}</Pays>
       <NumPointRelais>${payload.NumPointRelais || ''}</NumPointRelais>
@@ -125,7 +127,9 @@ function generateSOAPBody(payload) {
       <Action>${payload.Action}</Action>
       <DelaiEnvoi>${payload.DelaiEnvoi || ''}</DelaiEnvoi>
       <RayonRecherche>${payload.RayonRecherche || ''}</RayonRecherche>
-      <NombreResultats>${payload.NombreResultats || ''}</NombreResultats>
+      <NombreResultats>${payload.NombreResultats}</NombreResultats>
+      <TypeActivite>${payload.TypeActivite || ''}</TypeActivite>
+      <NACE>${payload.NACE || ''}</NACE>
       <Security>${payload.Security}</Security>
     </WSI4_PointRelais_Recherche>
   </soap:Body>
@@ -149,7 +153,9 @@ async function callMondialRelayAPI(postalCode, country) {
         Action: '24R', // Point Relais L
         DelaiEnvoi: '0',
         RayonRecherche: '',
-        NombreResultats: ''
+        NombreResultats: '20',
+        TypeActivite: '',
+        NACE: ''
     };
 
     // Calculer le Security hash
@@ -168,10 +174,17 @@ async function callMondialRelayAPI(postalCode, country) {
         method: 'POST',
         headers: {
             'Content-Type': 'text/xml; charset=utf-8',
-            'SOAPAction': 'http://api.mondialrelay.com/WSI4_PointRelais_Recherche'
+            'SOAPAction': 'http://www.mondialrelay.fr/webservice/WSI4_PointRelais_Recherche',
+            'MessageType': 'CALL'
         },
         body: soapBody
     });
+
+    console.log('=== HEADERS REQUÊTE ENVOYÉS ===');
+    console.log('Content-Type: text/xml; charset=utf-8');
+    console.log('SOAPAction: http://www.mondialrelay.fr/webservice/WSI4_PointRelais_Recherche');
+    console.log('MessageType: CALL');
+    console.log('=== FIN HEADERS ===');
 
     console.log(`API Mondial Relay - Status: ${response.status} ${response.statusText}`);
 
@@ -206,34 +219,63 @@ async function parseMondialRelayResponse(xmlResponse) {
     console.log('=== PARSED JSON PREVIEW ===');
     console.log(JSON.stringify(parsedData, null, 2).slice(0, 3000));
 
-    let relayPoints = null;
+    // Récupérer WSI4_PointRelais_RechercheResult avec les variants SOAP possibles
+    const result = 
+        parsedData?.['soap:Envelope']?.['soap:Body']?.WSI4_PointRelais_RechercheResponse?.WSI4_PointRelais_RechercheResult
+        || parsedData?.['soap12:Envelope']?.['soap12:Body']?.WSI4_PointRelais_RechercheResponse?.WSI4_PointRelais_RechercheResult
+        || parsedData?.soap?.Envelope?.Body?.WSI4_PointRelais_RechercheResponse?.WSI4_PointRelais_RechercheResult;
 
-    // Structure pour WSI4_PointRelais_Recherche
-    if (parsedData?.soap?.Envelope?.Body?.WSI4_PointRelais_RechercheResponse?.WSI4_PointRelais_RechercheResult?.PointsRelais) {
-        relayPoints = parsedData.soap.Envelope.Body.WSI4_PointRelais_RechercheResponse.WSI4_PointRelais_RechercheResult.PointsRelais;
-        console.log('Chemin trouvé: soap.Envelope.Body.WSI4_PointRelais_RechercheResponse.WSI4_PointRelais_RechercheResult.PointsRelais');
-    } else if (parsedData?.['soap:Envelope']?.['soap:Body']?.WSI4_PointRelais_RechercheResponse?.WSI4_PointRelais_RechercheResult?.PointsRelais) {
-        relayPoints = parsedData['soap:Envelope']['soap:Body'].WSI4_PointRelais_RechercheResponse.WSI4_PointRelais_RechercheResult.PointsRelais;
-        console.log('Chemin trouvé: soap:Envelope.soap:Body.WSI4_PointRelais_RechercheResponse.WSI4_PointRelais_RechercheResult.PointsRelais');
-    } else {
-        throw new Error(
-            'Structure XML Mondial Relay inattendue. XML preview: ' + xmlResponse.slice(0, 1000)
-        );
+    if (!result) {
+        throw new Error('No WSI4_PointRelais_RechercheResult node found');
     }
 
-    const pointsArray = Array.isArray(relayPoints) ? relayPoints : [relayPoints];
+    const details = result?.PointsRelais?.PointRelais_Details;
+    if (!details) {
+        throw new Error('No PointRelais_Details node found');
+    }
 
-    return pointsArray
+    console.log('Structure trouvée: PointsRelais.PointRelais_Details');
+
+    // Gérer les variantes: objet unique ou tableau
+    const pointsArray = Array.isArray(details) ? details : [details];
+
+    // Vérifier les STAT dans chaque point relais (robuste avec trim)
+    const invalidStat = pointsArray.find(
+        p => String(p?.STAT || '').trim() && String(p.STAT).trim() !== '0'
+    );
+    if (invalidStat) {
+        throw new Error(`Erreur métier Mondial Relay - STAT: ${invalidStat.STAT}`);
+    }
+
+    // Logger les STAT des points pour debug
+    console.log('=== STAT DES POINTS RELAIS ===');
+    pointsArray.forEach((point, index) => {
+        if (point?.STAT) {
+            console.log(`Point ${index + 1} STAT: "${String(point.STAT).trim()}"`);
+        }
+    });
+    console.log('=== FIN STAT ===');
+
+    const mappedPoints = pointsArray
         .filter(point => point && point.Num && point.LgAdr1)
         .map(point => ({
             id: point.Num || '',
             name: point.LgAdr1 || '',
             address1: point.LgAdr1 || '',
-            address2: point.LgAdr2 || point.LgAdr3 || '',
+            address2: point.LgAdr2 || point.LgAdr3 || point.LgAdr4 || '',
             postalCode: point.CP || '',
             city: point.Ville || '',
             country: point.Pays || 'FR',
             latitude: point.Latitude ? parseFloat(point.Latitude) : null,
             longitude: point.Longitude ? parseFloat(point.Longitude) : null
         }));
+
+    // Si aucun point valide n'est retourné, logger le premier point brut pour debug
+    if (mappedPoints.length === 0 && pointsArray.length > 0) {
+        console.log('=== PREMIER POINT BRUT POUR DEBUG ===');
+        console.log('Premier PointRelais_Details brut:', JSON.stringify(pointsArray[0], null, 2));
+        console.log('=== FIN PREMIER POINT BRUT ===');
+    }
+
+    return mappedPoints;
 }
