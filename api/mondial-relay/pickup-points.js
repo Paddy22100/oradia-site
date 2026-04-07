@@ -61,15 +61,12 @@ module.exports = handler;
  */
 async function searchPickupPoints(postalCode, country) {
     try {
-        // Appel réel à l'API Mondial Relay
         const points = await callMondialRelayAPI(postalCode, country);
-        
         console.log(`Recherche points relais pour ${postalCode}, ${country}: ${points.length} trouvés`);
-        
         return points;
-
     } catch (error) {
-        console.error('Erreur API Mondial Relay:', error);
+        console.error('Erreur API Mondial Relay DÉTAILLÉE:', error);
+        console.error('Stack trace:', error.stack);
         throw new Error('Service Mondial Relay indisponible');
     }
 }
