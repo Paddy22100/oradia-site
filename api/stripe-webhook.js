@@ -397,6 +397,7 @@ const handler = async (req, res) => {
                     // Champs livraison
                     shipping_method: extractedData.shipping_method,
                     shipping_price_cents: extractedData.shipping_price_cents,
+                    shipping_provider: extractedData.shipping_method === 'relay' || extractedData.shipping_method === 'home' ? 'mondial_relay' : null,
                     // Champs point relais
                     relay_id: extractedData.relay_id,
                     relay_name: extractedData.relay_name,

@@ -544,7 +544,7 @@
                                 <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getShippingMethodClass(preorder.shipping_method)}">
                                     ${getShippingMethodLabel(preorder.shipping_method)}
                                 </span>
-                                ${preorder.shipping_price_cents ? `<span class="text-xs text-light-gold/70">${formatCurrency(preorder.shipping_price_cents)}</span>` : ''}
+                                ${preorder.shipping_price_cents ? `<span class="text-xs text-light-gold/70">${formatCurrency(preorder.shipping_price_cents / 100)}</span>` : ''}
                             </div>
                             <div>
                                 <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getShippingStatusClass(preorder.shipping_status)}">
