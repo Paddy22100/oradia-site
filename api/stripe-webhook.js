@@ -55,7 +55,7 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
             body: JSON.stringify({
                 sender: {
                     email: process.env.BREVO_SENDER_EMAIL,
-                    name: process.env.BREVO_SENDER_NAME
+                    name: process.env.BREVO_SENDER_NAME || 'ORADIA'
                 },
                 to: [{
                     email: toEmail,
@@ -198,7 +198,6 @@ oradia.fr`
             return false;
         }
 
-        const result = await response.json();
         console.log('Email sent via Brevo');
         return true;
 
@@ -209,46 +208,45 @@ oradia.fr`
 }
 
 const handler = async (req, res) => {
-    const sig = req.headers['stripe-signature'];
-    const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-    if (!sig || !webhookSecret) {
-        console.error('Missing webhook signature or secret');
-        return res.status(400).json({ 
-            success: false,
-            error: 'Invalid request',
-            message: 'Signature manquante'
-        });
-    }
-
-    // Validation environnement au début
-    validateEnvironment();
-
-    // Création des clients après validation
-    const stripe = getStripeClient();
-    const supabase = getSupabaseClient();
-
-    let event;
     try {
-        // Lire le body brut depuis la requête
-        const chunks = [];
-        for await (const chunk of req) {
-            chunks.push(chunk);
+        validateEnvironment();
+
+        const sig = req.headers['stripe-signature'];
+        const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
+
+        if (!sig || !webhookSecret) {
+            return res.status(400).json({
+                success: false,
+                error: 'Invalid request',
+                message: 'Signature manquante'
+            });
         }
-        const rawBody = Buffer.concat(chunks);
-        
-        // Construire l'événement Stripe avec le raw body réel
-        event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
-    } catch (err) {
-        console.error('Webhook signature verification failed:', err.message);
-        return res.status(400).json({ 
-            success: false,
-            error: 'Invalid request',
-            message: 'Signature invalide'
-        });
-    }
 
-    try {
+        // Création des clients après validation
+        const stripe = getStripeClient();
+        const supabase = getSupabaseClient();
+
+        let event;
+        try {
+            // Lire le body brut depuis la requête
+            const chunks = [];
+            for await (const chunk of req) {
+                chunks.push(chunk);
+            }
+            const rawBody = Buffer.concat(chunks);
+            
+            // Construire l'événement Stripe avec le raw body réel
+            event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
+
+        } catch (err) {
+            console.error('Webhook signature verification failed:', err.message);
+            return res.status(400).json({ 
+                success: false,
+                error: 'Invalid request',
+                message: 'Signature invalide'
+            });
+        }
+
         console.log(`Webhook event: ${event.type}`);
         
         switch (event.type) {
@@ -266,15 +264,8 @@ const handler = async (req, res) => {
                            session.metadata?.email || 
                            null,
                     
-                    // Offer depuis metadata (obligatoire)
-                    offer: session.metadata?.offer || (() => {
-                        try {
-                            const items = JSON.parse(session.metadata?.items || '[]');
-                            return items[0]?.offer || null;
-                        } catch {
-                            return null;
-                        }
-                    })(),
+                    // Offer depuis metadata (plus de fallback items)
+                    offer: session.metadata?.offer || null,
                     
                     // Nom complet avec fallbacks
                     full_name: session.metadata?.full_name || 
@@ -286,6 +277,9 @@ const handler = async (req, res) => {
                                     session.customer_details?.address?.line1 || 
                                     null,
                     
+                    // Complément d'adresse
+                    address_complement: session.metadata?.address_complement || null,
+                    
                     // Code postal avec fallbacks
                     postal_code: session.metadata?.postal_code || 
                                  session.customer_details?.address?.postal_code || 
@@ -295,6 +289,11 @@ const handler = async (req, res) => {
                     city: session.metadata?.city || 
                           session.customer_details?.address?.city || 
                           null,
+                    
+                    // Pays avec fallbacks
+                    country: session.metadata?.country || 
+                           session.customer_details?.address?.country || 
+                           null,
                     
                     // Téléphone avec fallbacks
                     phone: session.customer_details?.phone || 
@@ -344,10 +343,12 @@ const handler = async (req, res) => {
                         payment_intent_id: extractedData.payment_intent_id,
                         email: extractedData.email,
                         full_name: extractedData.full_name || 'Soutien ORADIA',
+                        offer: extractedData.offer,
                         amount_total: amountInEuros,
                         currency: extractedData.currency,
                         paid_status: 'completed',
-                        source: 'oradia-contribution'
+                        source: 'oradia-contribution',
+                        country: extractedData.country || 'FR'
                     };
                     
                     const { data: donorResult, error: donorError } = await supabase
@@ -370,12 +371,12 @@ const handler = async (req, res) => {
                     
                     // Vérifier si email déjà envoyé
                     let emailSent = false;
-                    if (extractedData.email && !donorResult.email_sent_at) {
+                    if (donorResult.email && !donorResult.email_sent_at) {
                         emailSent = await sendBrevoEmail({
-                            toEmail: extractedData.email,
-                            toName: extractedData.full_name || 'Ami(e) d\'ORADIA',
-                            offer: extractedData.offer,
-                            amountTotal: (extractedData.amount_total / 100).toFixed(2)
+                            toEmail: donorResult.email,
+                            toName: donorResult.full_name || 'Ami(e) d\'ORADIA',
+                            offer: donorResult.offer,
+                            amountTotal: Number(donorResult.amount_total).toFixed(2)
                         });
                         
                         if (emailSent) {
@@ -406,11 +407,20 @@ const handler = async (req, res) => {
                 }
 
                 // Lire la commande existante pour fusionner avec les données Stripe
-                const { data: existingOrder } = await supabase
+                const { data: existingOrder, error: existingOrderError } = await supabase
                     .from('preorders')
                     .select('*')
                     .eq('stripe_session_id', sessionId)
                     .maybeSingle();
+
+                if (existingOrderError) {
+                    console.error('Lecture preorders échouée:', existingOrderError.message);
+                    return res.status(500).json({
+                        success: false,
+                        error: 'Database error',
+                        message: 'Une erreur est survenue lors du traitement'
+                    });
+                }
 
                 // Fusion intelligente du mode de livraison
                 const mergedShippingMethod =
@@ -426,8 +436,10 @@ const handler = async (req, res) => {
                     payment_intent_id: extractedData.payment_intent_id,
                     paid_status: extractedData.paid_status,
                     shipping_address: extractedData.shipping_address || existingOrder?.shipping_address || null,
+                    address_complement: extractedData.address_complement || existingOrder?.address_complement || null,
                     postal_code: extractedData.postal_code || existingOrder?.postal_code || null,
                     city: extractedData.city || existingOrder?.city || null,
+                    country: extractedData.country || existingOrder?.country || 'FR',
                     phone: extractedData.phone || existingOrder?.phone || null,
                     updated_at: new Date().toISOString(),
 
@@ -478,12 +490,12 @@ const handler = async (req, res) => {
 
                 // Vérifier si email déjà envoyé
                 let emailSent = false;
-                if (extractedData.email && !upsertData.email_sent_at) {
+                if (upsertData.email && !upsertData.email_sent_at) {
                     emailSent = await sendBrevoEmail({
-                        toEmail: extractedData.email,
+                        toEmail: upsertData.email,
                         toName: upsertData.full_name || 'Ami(e) d\'ORADIA',
-                        offer: extractedData.offer,
-                        amountTotal: (extractedData.amount_total / 100).toFixed(2)
+                        offer: upsertData.offer,
+                        amountTotal: Number(upsertData.amount_total).toFixed(2)
                     });
                     
                     if (emailSent) {

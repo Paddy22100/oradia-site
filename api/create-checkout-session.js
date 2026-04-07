@@ -402,6 +402,7 @@ module.exports = async (req, res) => {
                 email: safeEmail,
                 phone: safePhone,
                 shipping_address: normalizedData.shippingAddress?.trim() || '',
+                address_complement: normalizedData.addressComplement?.trim() || '',
                 postal_code: normalizedData.postalCode?.trim() || '',
                 city: normalizedData.city?.trim() || '',
                 country: normalizedData.country || 'FR',
@@ -456,7 +457,10 @@ module.exports = async (req, res) => {
 
         const { error: insertError } = await supabase
             .from('preorders')
-            .insert(orderData);
+            .upsert(orderData, {
+                onConflict: 'stripe_session_id',
+                ignoreDuplicates: false
+            });
 
         if (insertError) {
             console.error('Failed to insert pending order:', insertError.message);
