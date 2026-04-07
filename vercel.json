@@ -33,16 +33,8 @@
       "dest": "/api/admin/contacts-export.js"
     },
     {
-      "src": "/api/preorders/progress",
-      "dest": "/api/preorders/progress.js"
-    },
-    {
       "src": "/api/create-checkout-session",
       "dest": "/api/create-checkout-session.js"
-    },
-    {
-      "src": "/api/contact",
-      "dest": "/api/contact.js"
     }
   ],
   "functions": {
@@ -64,13 +56,7 @@
     "api/admin/contacts-export.js": {
       "maxDuration": 30
     },
-    "api/preorders/progress.js": {
-      "maxDuration": 10
-    },
     "api/create-checkout-session.js": {
-      "maxDuration": 30
-    },
-    "api/contact.js": {
       "maxDuration": 30
     }
   },
