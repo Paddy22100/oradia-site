@@ -128,7 +128,7 @@ async function exportStandardCsv(res, supabase) {
 async function exportMondialRelayCsv(res, supabase) {
     const { data: preorders = [], error } = await supabase
         .from('preorders')
-        .select('stripe_session_id, created_at, full_name, email, phone, shipping_address, address_complement, postal_code, city, country, shipping_method, shipping_status, shipping_provider, relay_id, relay_name, relay_address1, relay_address2, relay_postal_code, relay_city, relay_country')
+        .select('stripe_session_id, created_at, full_name, email, phone, amount_total, shipping_address, address_complement, postal_code, city, country, shipping_method, shipping_status, shipping_provider, relay_id, relay_name, relay_address1, relay_address2, relay_postal_code, relay_city, relay_country')
         .eq('paid_status', 'completed')
         .eq('shipping_method', 'relay')
         .order('created_at', { ascending: false });
@@ -145,28 +145,105 @@ async function exportMondialRelayCsv(res, supabase) {
         const country = normalizeCountry(order.country || 'FR');
         const relayCountry = normalizeCountry(order.relay_country || country);
         const reference = toMondialReference(order.stripe_session_id, order.created_at);
+        const amount = Number(order.amount_total || 0);
+        const safeAmount = Number.isFinite(amount) ? Math.max(amount, 0) : 0;
+        const amountInt = String(Math.floor(safeAmount));
+        const amountDec = String(Math.round((safeAmount - Math.floor(safeAmount)) * 100));
+        const relayId = sanitize(order.relay_id);
+        const relayLabel = sanitize(order.relay_name) || 'POINT RELAIS';
 
         rows.push([
+            // 1  Référence Client
             reference,
+            // 2  Référence Commande
             reference,
+            // 3  Libellé Destinataire
             lastName,
+            // 4  Libellé Complément Destinataire
             firstName,
+            // 5  Adresse Ligne1 Destinataire
             sanitize(order.shipping_address),
+            // 6  Adresse Ligne2 Destinataire
             sanitize(order.address_complement),
+            // 7  Ville Destinataire
             sanitize(order.city),
+            // 8  Code Postal Destinataire
             sanitize(order.postal_code),
+            // 9  Code Pays Destinataire
             country,
+            // 10 Téléphone1 Destinataire
             cleanedPhone,
+            // 11 Téléphone2 Destinataire
             '',
+            // 12 Email Destinataire
             sanitize(order.email),
-            sanitize(order.relay_name) || 'REL',
-            sanitize(order.relay_id),
-            relayCountry,
-            'REL',
-            sanitize(order.relay_id),
+            // 13-22 Libellé Article 1..10
+            relayLabel,
             '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            // 23 Langue Destinataire
+            'FR',
+            // 24 Nombre Colis
+            '1',
+            // 25 Nombre Colis Int
+            '0',
+            // 26 Poids Total Colis
+            '0',
+            // 27 Poids Total Colis Decimal (0.500 kg)
+            '500',
+            // 28 Longueur Moyenne Colis
+            '',
+            // 29 Volume Moyen Colis
+            '',
+            // 30 Valeur Totale Colis
+            amountInt,
+            // 31 Valeur Totale Colis Decimal
+            amountDec,
+            // 32 Devise
+            'EUR',
+            // 33 Option Assurance
+            '',
+            // 34 Option Montant CRT
+            '',
+            // 35 Option Devise CRT
+            '',
+            // 36 Instruction Livraison Colis
+            '',
+            // 37 Type Collecte
+            'REL',
+            // 38 Id Point Retrait Collecte
+            '',
+            // 39 Code Pays Collecte
             relayCountry,
-            'REL'
+            // 40 Type Livraison
+            'REL',
+            // 41 Id Point Retrait Livraison
+            relayId,
+            // 42 Id Point Retrait Livraison Int
+            '',
+            // 43 Code Pays Livraison
+            relayCountry,
+            // 44 Code Mode Livraison
+            '24R',
+            // 45 Option Notification
+            '',
+            // 46 Option Reprise Ancien
+            '',
+            // 47 Option Montage
+            '',
+            // 48 Option RDV
+            '',
+            // 49 Mode De Collecte
+            'REL',
+            // 50 Id Coordonnee Enseigne Selectionnee
+            '',
         ]);
     });
 
