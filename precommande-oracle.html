@@ -435,15 +435,18 @@
         /* CTA mobile sticky discret */
         #mobileStickyCta {
             position: fixed;
-            right: max(16px, env(safe-area-inset-right));
-            bottom: max(80px, env(safe-area-inset-bottom));
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: max(12px, env(safe-area-inset-bottom));
             z-index: 998;
+            width: calc(100% - 24px);
+            max-width: 420px;
             transition: opacity 0.25s ease, transform 0.25s ease;
         }
 
         #mobileStickyCta.mobile-cta-hidden {
             opacity: 0;
-            transform: translateX(10px);
+            transform: translateX(-50%) translateY(10px);
             pointer-events: none;
         }
 
@@ -481,9 +484,9 @@
     <i class="fas fa-arrow-up text-sm"></i>
 </button>
 
-    <a id="mobileStickyCta" href="#offres" class="md:hidden inline-flex items-center justify-center gap-2 bg-[rgba(212,175,55,0.9)] text-night-blue font-semibold py-2 px-3 rounded-full shadow-md shadow-gold/20 border border-gold/30 backdrop-blur-sm">
-        <i class="fas fa-shopping-cart text-sm"></i>
-        <span class="text-sm">Précommander</span>
+    <a id="mobileStickyCta" href="#offres" class="md:hidden inline-flex items-center justify-center gap-2 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-4 rounded-full shadow-lg shadow-gold/30 border border-gold/40">
+        <i class="fas fa-shopping-cart"></i>
+        <span>Je précommande</span>
     </a>
 <!-- Header -->
     <div id="header-placeholder"></div>
@@ -546,7 +549,7 @@
                 
                 <!-- CTA direct immédiat -->
                 <div class="text-center mb-8">
-                    <a href="#offres" class="inline-flex items-center gap-3 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-xl hover:shadow-gold/40 transition-all duration-300 text-lg min-h-[56px] relative overflow-hidden group">
+                    <a href="#offres" class="hidden md:inline-flex items-center gap-3 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-xl hover:shadow-gold/40 transition-all duration-300 text-lg min-h-[56px] relative overflow-hidden group">
                         <div class="absolute inset-0 bg-gradient-to-r from-gold/20 to-light-gold/20 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                         <i class="fas fa-shopping-cart relative z-10"></i>
                         <span class="relative z-10">Je précommande maintenant</span>
@@ -806,8 +809,8 @@
 
                 <!-- Bouton principal -->
                 <div class="flex flex-col items-center justify-center">
-                  <a href="#offres" class="bg-gold text-night-blue font-bold py-4 px-8 rounded-full hover:bg-light-gold transition-all transform hover:scale-105 text-xl shadow-lg">
-                    <i class="fas fa-shopping-cart mr-2"></i>
+                  <a href="#offres" class="hidden md:flex bg-gold text-night-blue font-bold py-4 px-8 rounded-full hover:bg-light-gold transition-all transform hover:scale-105 text-xl shadow-lg items-center gap-2">
+                    <i class="fas fa-shopping-cart"></i>
                     Je réserve mon oracle
                   </a>
                   <p class="text-light-gold/80 text-base mt-4 text-center max-w-md mx-auto break-words">
@@ -1441,26 +1444,28 @@
     <!-- Section SEO Texte -->
     <section id="oracle-oradia-precommande" class="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[rgba(5,20,40,0.6)] to-[rgba(26,54,93,0.6)] relative">
         <div class="container mx-auto max-w-4xl relative z-10">
-            <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold mb-6 gold-gradient text-center">
-                Oracle Oradia : précommandez votre boussole intérieure
+            <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold mb-8 gold-gradient text-center">
+                L'Oracle Oradia : précommandez votre boussole intérieure
             </h2>
 
-            <div class="space-y-5 text-light-gold/90 leading-relaxed text-base sm:text-lg">
+            <div class="bg-[rgba(5,20,40,0.4)] rounded-2xl p-8 sm:p-10 border border-gold/20 backdrop-blur-sm">
+                <div class="space-y-6 text-light-gold/90 leading-relaxed text-base sm:text-lg text-justify">
                 <p>
-                    La précommande de l'Oracle Oradia représente une opportunité unique de faire partie des premiers détenteurs de cet outil de transformation intérieure. Conçu pour accompagner les périodes de doute, les décisions importantes et les changements de vie, Oracle Oradia se distingue par son approche pragmatique et spirituelle. Chaque tirage offre une lecture claire de votre présent : ce que vous ressentez, ce dont vous avez besoin, ce qui cherche à évoluer et les directions possibles à explorer.
+                    La précommande de l'Oracle Oradia représente une opportunité unique de faire partie des premiers détenteurs de cet outil de transformation intérieure. Conçu pour accompagner les périodes de doute, les décisions importantes et les changements de vie, l'Oracle Oradia se distingue par son approche pragmatique et spirituelle. Chaque tirage offre une lecture claire de votre présent : ce que vous ressentez, ce dont vous avez besoin, ce qui cherche à évoluer et les directions possibles à explorer.
                 </p>
                 <p>
-                    En précommandant Oracle Oradia, vous ne réservez pas seulement un jeu de 64 cartes magnifiquement illustrées. Vous investissez dans un compagnon de cheminement qui vous servira pendant des années. L'oracle comprend un guide d'exploration détaillé d'environ 200 pages, un conte initiatique qui plonge au coeur de l'univers Oradia, et une pièce de tirage artisanale. Le coffret de protection assure la conservation de votre oracle pour en faire un véritable héritage personnel.
+                    En précommandant l'Oracle Oradia, vous ne réservez pas seulement un jeu de 64 cartes magnifiquement illustrées. Vous investissez dans un compagnon de cheminement qui vous servira pendant des années. L'oracle comprend un guide d'exploration détaillé d'environ 200 pages, un conte initiatique qui plonge au coeur de l'univers Oradia, et une pièce de tirage artisanale. Le coffret de protection assure la conservation de votre oracle pour en faire un véritable héritage personnel.
                 </p>
                 <p>
-                    La philosophie d'Oracle Oradia repose sur l'idée que chacun possède sa propre sagesse intérieure. L'oracle ne prédit pas l'avenir, il révèle ce qui est déjà présent en vous. Cette approche en fait un outil particulièrement puissant pour les thérapeutes, coachs et praticiens de l'accompagnement. Il aide à ouvrir la parole, à nommer les enjeux, à clarifier les besoins et à soutenir un processus de transformation sans enfermer la personne dans des réponses préétablies.
+                    La philosophie de l'Oracle Oradia repose sur l'idée que chacun possède sa propre sagesse intérieure. L'oracle ne prédit pas l'avenir, il révèle ce qui est déjà présent en vous. Cette approche en fait un outil particulièrement puissant pour les thérapeutes, coachs et praticiens de l'accompagnement. Il aide à ouvrir la parole, à nommer les enjeux, à clarifier les besoins et à soutenir un processus de transformation sans enfermer la personne dans des réponses préétablies.
                 </p>
                 <p>
-                    La première édition d'Oracle Oradia est limitée à 500 exemplaires, ce qui en fait un objet collectionneur à forte valeur symbolique. Chaque coffret est unique, numéroté et conçu avec des matériaux durables. En participant à la précommande, vous devenez acteur de la naissance de cet oracle, permettant le lancement de la fabrication et contribuant à faire vivre ce projet qui a déjà mûri pendant plusieurs années d'expérience en accompagnement personnel.
+                    La première édition de l'Oracle Oradia est limitée à 500 exemplaires, ce qui en fait un objet collectionneur à forte valeur symbolique. Chaque coffret est unique et conçu avec des matériaux durables. En participant à la précommande, vous devenez acteur de la naissance de cet oracle, permettant le lancement de la fabrication et contribuant à faire vivre ce projet qui a déjà mûri pendant plusieurs années d'expérience en accompagnement personnel.
                 </p>
                 <p>
-                    Que vous soyez débutant dans le monde des oracles ou praticien expérimenté, Oracle Oradia s'adapte à votre niveau d'expertise. Son système de sept familles de cartes (Émotion, Besoin, Transmutation, Révélation, Archétype, Action et Mémoire Cosmos) offre une structure complète tout en restant accessible. Les textes du guide vous accompagnent pas à pas dans l'interprétation, vous permettant de développer rapidement votre intuition et votre compréhension des messages subtils qui émergent à travers les tirages.
+                    Que vous soyez débutant dans le monde des oracles ou praticien expérimenté, l'Oracle Oradia s'adapte à votre niveau d'expertise. Son système de sept familles de cartes (Émotion, Besoin, Transmutation, Révélation, Archétype, Action et Mémoire Cosmos) offre une structure complète tout en restant accessible. Les textes du guide vous accompagnent pas à pas dans l'interprétation, vous permettant de développer rapidement votre intuition et votre compréhension des messages subtils qui émergent à travers les tirages.
                 </p>
+                </div>
             </div>
         </div>
     </section>
