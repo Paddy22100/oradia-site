@@ -152,6 +152,10 @@ async function exportStandardCsv(res, supabase) {
 }
 
 async function exportMondialRelayCsv(res, supabase) {
+    // LOCK: Mondial Relay Connect schema V3.1 (44 fields A..AR), validated in production import.
+    // Do not change field count/order without a full revalidation in Connect.
+    const MONDIAL_RELAY_FIELD_COUNT = 44;
+
     const { data: preorders = [], error } = await supabase
         .from('preorders')
         .select('stripe_session_id, created_at, full_name, email, phone, amount_total, shipping_address, address_complement, postal_code, city, country, shipping_method, shipping_status, shipping_provider, relay_id, relay_name, relay_address1, relay_address2, relay_postal_code, relay_city, relay_country')
@@ -262,9 +266,14 @@ async function exportMondialRelayCsv(res, supabase) {
             '', '', '', '', '', '', '', '', ''
         ];
 
-        while (row.length < 44) row.push('');
-        rows.push(row.slice(0, 44));
+        while (row.length < MONDIAL_RELAY_FIELD_COUNT) row.push('');
+        rows.push(row.slice(0, MONDIAL_RELAY_FIELD_COUNT));
     });
+
+    const invalidRowIndex = rows.findIndex((row) => row.length !== MONDIAL_RELAY_FIELD_COUNT);
+    if (invalidRowIndex !== -1) {
+        throw new Error(`Export Mondial Relay invalide: ligne ${invalidRowIndex + 1} avec ${rows[invalidRowIndex].length} champs au lieu de ${MONDIAL_RELAY_FIELD_COUNT}.`);
+    }
 
     const csvContent = toMondialCsv(rows);
     const fileName = `oradia-mondial-relay-${new Date().toISOString().split('T')[0]}.csv`;
