@@ -214,14 +214,6 @@ module.exports = async (req, res) => {
                     message: 'Point relais requis pour la livraison en point relais'
                 });
             }
-            
-            if (!normalizedData.postalCode || !/^\d{5}$/.test(normalizedData.postalCode)) {
-                errors.push('Code postal invalide (5 chiffres requis)');
-            }
-            
-            if (!normalizedData.city || normalizedData.city.trim().length < 2) {
-                errors.push('Ville requise (min 2 caractères)');
-            }
         }
         
         // Validation des erreurs restantes

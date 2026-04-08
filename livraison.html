@@ -289,6 +289,36 @@
                                             </div>
                                         </div>
 
+                                        <!-- Section Point Relais Mondial Relay -->
+                                        <div id="relay-picker-section" class="hidden">
+                                            <div class="bg-[rgba(212,175,55,0.08)] rounded-xl border border-gold/30 p-4">
+                                                <div class="flex items-center justify-between gap-4 flex-wrap">
+                                                    <div>
+                                                        <h4 class="text-gold font-semibold">Point relais Mondial Relay</h4>
+                                                        <p class="text-light-gold/70 text-sm">Choisissez un point relais proche de votre adresse.</p>
+                                                    </div>
+                                                    <button type="button" id="chooseRelayBtn" class="bg-gold text-night-blue px-4 py-2 rounded-lg font-semibold hover:bg-light-gold transition">
+                                                        Choisir un point relais
+                                                    </button>
+                                                </div>
+
+                                                <div id="relay-selected-card" class="hidden mt-4 bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-lg p-4">
+                                                    <div class="flex items-start justify-between gap-4">
+                                                        <div>
+                                                            <p class="text-gold font-semibold" id="relay-name">-</p>
+                                                            <p class="text-light-gold/80 text-sm" id="relay-address">-</p>
+                                                            <p class="text-light-gold/60 text-xs mt-1" id="relay-id">-</p>
+                                                        </div>
+                                                        <button type="button" id="changeRelayBtn" class="text-gold/80 hover:text-gold text-sm">
+                                                            Modifier
+                                                        </button>
+                                                    </div>
+                                                </div>
+
+                                                <p id="relay-error" class="hidden mt-3 text-red-400 text-sm"></p>
+                                            </div>
+                                        </div>
+
                                         <div class="delivery-option" data-delivery="hand_delivery" data-price="0">
                                             <div class="flex items-center justify-between">
                                                 <div class="flex items-center space-x-4">
@@ -306,28 +336,16 @@
                                     </div>
                                 </div>
 
-                                <!-- Message pour remise en main propre -->
-                                <div id="hand-delivery-message" class="border-t border-gold/20 pt-6 hidden">
-                                    <div class="bg-gold/10 rounded-lg p-4 border border-gold/30">
-                                        <div class="flex items-start space-x-3">
-                                            <i class="fas fa-handshake text-gold text-xl mt-1"></i>
-                                            <div>
-                                                <h4 class="text-gold font-semibold mb-2">Remise en main propre</h4>
-                                                <p class="text-light-gold/80 text-sm">
-                                                    La remise en main propre sera organisée directement avec vous après la commande.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
                                 <!-- Adresse -->
                                 <div id="address-section" class="border-t border-gold/20 pt-6">
                                     <h3 class="text-gold font-semibold mb-4 text-lg">Adresse de livraison</h3>
                                     
                                     <div class="space-y-4">
                                         <div>
-                                            <label class="block text-gold mb-2">Adresse *</label>
+                                            <label id="shipping-address-label" class="block text-gold mb-2">Adresse *</label>
+                                            <p id="shipping-address-help" class="hidden text-light-gold/60 text-xs mb-2">
+                                                En point relais, ce champ est facultatif.
+                                            </p>
                                             <input type="text" name="address" required class="form-input" placeholder="123 rue des Mystères">
                                         </div>
 
@@ -355,35 +373,45 @@
                                     </div>
                                 </div>
 
-                                <!-- Section Point Relais Mondial Relay -->
-                                <div id="relay-picker-section" class="hidden mt-6">
-                                    <div class="bg-[rgba(212,175,55,0.08)] rounded-xl border border-gold/30 p-4">
-                                        <div class="flex items-center justify-between gap-4 flex-wrap">
+                                <!-- Adresse de facturation -->
+                                <div class="border-t border-gold/20 pt-6">
+                                    <label for="differentBillingAddress" class="inline-flex items-center gap-3 cursor-pointer text-light-gold/90">
+                                        <input type="checkbox" id="differentBillingAddress" name="differentBillingAddress" class="w-4 h-4 accent-gold">
+                                        <span>Utiliser une adresse de facturation différente</span>
+                                    </label>
+
+                                    <div id="billing-section" class="hidden mt-4 space-y-4">
+                                        <h3 class="text-gold font-semibold text-lg">Adresse de facturation</h3>
+
+                                        <div>
+                                            <label class="block text-gold mb-2">Adresse de facturation *</label>
+                                            <input type="text" name="billingAddress" class="form-input" placeholder="123 rue de Facturation">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-gold mb-2">Complément d'adresse</label>
+                                            <input type="text" name="billingAddressComplement" class="form-input" placeholder="Appartement, escalier, etc.">
+                                        </div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div>
-                                                <h4 class="text-gold font-semibold">Point relais Mondial Relay</h4>
-                                                <p class="text-light-gold/70 text-sm">Choisissez un point relais proche de votre adresse.</p>
+                                                <label class="block text-gold mb-2">Code postal *</label>
+                                                <input type="text" name="billingPostalCode" pattern="[0-9]{5}" class="form-input" placeholder="75001">
                                             </div>
-                                            <button type="button" id="chooseRelayBtn" class="bg-gold text-night-blue px-4 py-2 rounded-lg font-semibold hover:bg-light-gold transition">
-                                                Choisir un point relais
-                                            </button>
-                                        </div>
-
-                                        <div id="relay-selected-card" class="hidden mt-4 bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-lg p-4">
-                                            <div class="flex items-start justify-between gap-4">
-                                                <div>
-                                                    <p class="text-gold font-semibold" id="relay-name">-</p>
-                                                    <p class="text-light-gold/80 text-sm" id="relay-address">-</p>
-                                                    <p class="text-light-gold/60 text-xs mt-1" id="relay-id">-</p>
-                                                </div>
-                                                <button type="button" id="changeRelayBtn" class="text-gold/80 hover:text-gold text-sm">
-                                                    Modifier
-                                                </button>
+                                            <div>
+                                                <label class="block text-gold mb-2">Ville *</label>
+                                                <input type="text" name="billingCity" class="form-input" placeholder="Paris">
+                                            </div>
+                                            <div>
+                                                <label class="block text-gold mb-2">Pays *</label>
+                                                <select name="billingCountry" class="form-input">
+                                                    <option value="FR">France</option>
+                                                </select>
                                             </div>
                                         </div>
-
-                                        <p id="relay-error" class="hidden mt-3 text-red-400 text-sm"></p>
                                     </div>
                                 </div>
+
                             </form>
                         </div>
 
@@ -557,6 +585,83 @@
         let selectedDelivery = null;
         let deliveryPrice = 0;
         let selectedRelayPoint = null;
+
+        function applyDeliveryRequirements() {
+            const addressSection = document.getElementById('address-section');
+            const shippingAddressLabel = document.getElementById('shipping-address-label');
+            const shippingAddressHelp = document.getElementById('shipping-address-help');
+
+            const addressInput = document.querySelector('[name="address"]');
+            const postalCodeInput = document.querySelector('[name="postalCode"]');
+            const cityInput = document.querySelector('[name="city"]');
+            const countryInput = document.querySelector('[name="country"]');
+
+            if (!addressSection || !addressInput || !postalCodeInput || !cityInput || !countryInput) {
+                return;
+            }
+
+            if (selectedDelivery === 'hand_delivery') {
+                addressSection.classList.add('hidden');
+                shippingAddressLabel.textContent = 'Adresse *';
+                shippingAddressHelp.classList.add('hidden');
+
+                addressInput.removeAttribute('required');
+                postalCodeInput.removeAttribute('required');
+                cityInput.removeAttribute('required');
+                countryInput.removeAttribute('required');
+                return;
+            }
+
+            addressSection.classList.remove('hidden');
+
+            if (selectedDelivery === 'relay') {
+                addressSection.classList.add('hidden');
+                shippingAddressLabel.textContent = 'Adresse (facultative en point relais)';
+                shippingAddressHelp.classList.remove('hidden');
+
+                addressInput.removeAttribute('required');
+                postalCodeInput.removeAttribute('required');
+                cityInput.removeAttribute('required');
+                countryInput.removeAttribute('required');
+                return;
+            }
+
+            shippingAddressLabel.textContent = 'Adresse *';
+            shippingAddressHelp.classList.add('hidden');
+
+            addressInput.setAttribute('required', '');
+            postalCodeInput.setAttribute('required', '');
+            cityInput.setAttribute('required', '');
+            countryInput.setAttribute('required', '');
+        }
+
+        function applyBillingRequirements() {
+            const billingCheckbox = document.getElementById('differentBillingAddress');
+            const billingSection = document.getElementById('billing-section');
+            const billingAddressInput = document.querySelector('[name="billingAddress"]');
+            const billingPostalCodeInput = document.querySelector('[name="billingPostalCode"]');
+            const billingCityInput = document.querySelector('[name="billingCity"]');
+            const billingCountryInput = document.querySelector('[name="billingCountry"]');
+
+            if (!billingCheckbox || !billingSection || !billingAddressInput || !billingPostalCodeInput || !billingCityInput || !billingCountryInput) {
+                return;
+            }
+
+            if (billingCheckbox.checked) {
+                billingSection.classList.remove('hidden');
+                billingAddressInput.setAttribute('required', '');
+                billingPostalCodeInput.setAttribute('required', '');
+                billingCityInput.setAttribute('required', '');
+                billingCountryInput.setAttribute('required', '');
+                return;
+            }
+
+            billingSection.classList.add('hidden');
+            billingAddressInput.removeAttribute('required');
+            billingPostalCodeInput.removeAttribute('required');
+            billingCityInput.removeAttribute('required');
+            billingCountryInput.removeAttribute('required');
+        }
 
         // Helpers pour la gestion des points relais
         function saveRelayPoint(point) {
@@ -751,11 +856,6 @@
                 const totalWeight = calculateTotalWeight();
                 deliveryPrice = calculateDeliveryPrice(totalWeight, selectedDelivery);
                 
-                // Gérer l'affichage de l'adresse selon le mode de livraison
-                const addressSection = document.getElementById('address-section');
-                const handDeliveryMessage = document.getElementById('hand-delivery-message');
-                const addressInputs = addressSection.querySelectorAll('input[required], select[required]');
-                
                 // Gérer l'affichage du sélecteur de point relais
                 if (selectedDelivery === 'relay') {
                     toggleRelayUI(true);
@@ -764,26 +864,8 @@
                     toggleRelayUI(false);
                     hideRelayError();
                 }
-                
-                if (selectedDelivery === 'hand_delivery') {
-                    // Masquer le bloc adresse et afficher le message
-                    addressSection.classList.add('hidden');
-                    handDeliveryMessage.classList.remove('hidden');
-                    
-                    // Rendre les champs adresse non obligatoires
-                    addressInputs.forEach(input => {
-                        input.removeAttribute('required');
-                    });
-                } else {
-                    // Afficher le bloc adresse et masquer le message
-                    addressSection.classList.remove('hidden');
-                    handDeliveryMessage.classList.add('hidden');
-                    
-                    // Rendre les champs adresse obligatoires
-                    addressInputs.forEach(input => {
-                        input.setAttribute('required', '');
-                    });
-                }
+
+                applyDeliveryRequirements();
                 
                 // Mettre à jour les totaux
                 const productsSubtotal = Object.entries(cart).reduce((sum, [id, item]) => {
@@ -828,7 +910,7 @@
             }
             
             // Vérifier les champs adresse seulement si ce n'est pas de la remise en main propre
-            if (selectedDelivery !== 'hand_delivery') {
+            if (selectedDelivery === 'home') {
                 const addressRequiredFields = ['address', 'postalCode', 'city', 'country'];
                 for (const field of addressRequiredFields) {
                     if (!formData.get(field) || formData.get(field).trim() === '') {
@@ -836,11 +918,28 @@
                         return false;
                     }
                 }
-                
-                // Vérifier le code postal
+            }
+
+            if (selectedDelivery === 'home') {
                 const postalCode = formData.get('postalCode');
                 if (!/^\d{5}$/.test(postalCode)) {
                     showError('Veuillez entrer un code postal valide (5 chiffres)');
+                    return false;
+                }
+            }
+
+            if (formData.get('differentBillingAddress') === 'on') {
+                const billingRequiredFields = ['billingAddress', 'billingPostalCode', 'billingCity', 'billingCountry'];
+                for (const field of billingRequiredFields) {
+                    if (!formData.get(field) || formData.get(field).trim() === '') {
+                        showError('Veuillez remplir l\'adresse de facturation complète');
+                        return false;
+                    }
+                }
+
+                const billingPostalCode = formData.get('billingPostalCode');
+                if (!/^\d{5}$/.test(billingPostalCode)) {
+                    showError('Veuillez entrer un code postal de facturation valide (5 chiffres)');
                     return false;
                 }
             }
@@ -947,6 +1046,28 @@
 
             try {
                 // Préparer les données
+                const shippingAddress = formData.get('address')?.trim() || '';
+                const shippingPostalCode = formData.get('postalCode')?.trim() || '';
+                const shippingCity = formData.get('city')?.trim() || '';
+                const shippingCountry = formData.get('country') || 'FR';
+                const useDifferentBillingAddress = formData.get('differentBillingAddress') === 'on';
+
+                const billingInfo = useDifferentBillingAddress ? {
+                    isDifferent: true,
+                    address: formData.get('billingAddress')?.trim() || '',
+                    addressComplement: formData.get('billingAddressComplement')?.trim() || '',
+                    postalCode: formData.get('billingPostalCode')?.trim() || '',
+                    city: formData.get('billingCity')?.trim() || '',
+                    country: formData.get('billingCountry') || 'FR'
+                } : {
+                    isDifferent: false,
+                    address: shippingAddress,
+                    addressComplement: formData.get('addressComplement')?.trim() || '',
+                    postalCode: shippingPostalCode,
+                    city: shippingCity,
+                    country: shippingCountry
+                };
+
                 const orderData = {
                     items: Object.entries(cart).map(([offerId, item]) => ({
                         offer: offerId,
@@ -958,11 +1079,12 @@
                         fullName: `${formData.get('firstName').trim()} ${formData.get('lastName').trim()}`,
                         email: formData.get('email').trim(),
                         phone: formData.get('phone')?.trim() || '',
-                        shippingAddress: formData.get('address').trim(),
+                        shippingAddress,
                         addressComplement: formData.get('addressComplement')?.trim() || '',
-                        postalCode: formData.get('postalCode').trim(),
-                        city: formData.get('city').trim(),
-                        country: formData.get('country')
+                        postalCode: shippingPostalCode,
+                        city: shippingCity,
+                        country: shippingCountry,
+                        billingInfo
                     },
                     delivery: {
                         method: selectedDelivery,
@@ -976,7 +1098,8 @@
                         postalCode: selectedRelayPoint.postalCode,
                         city: selectedRelayPoint.city,
                         country: selectedRelayPoint.country || 'FR'
-                    } : null
+                    } : null,
+                    billingInfo
                 };
 
                 console.log('Données envoyées au backend:', orderData);
@@ -1182,6 +1305,12 @@
             loadCart();
             loadRelayPoint();
             renderRelayPoint();
+
+            const differentBillingAddressCheckbox = document.getElementById('differentBillingAddress');
+            if (differentBillingAddressCheckbox) {
+                differentBillingAddressCheckbox.addEventListener('change', applyBillingRequirements);
+            }
+            applyBillingRequirements();
             
             // Sélectionner la livraison à domicile par défaut
             const homeDelivery = document.querySelector('[data-delivery="home"]');
