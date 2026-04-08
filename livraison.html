@@ -1113,8 +1113,23 @@
                     body: JSON.stringify(orderData)
                 });
 
+                const contentType = response.headers.get('content-type') || '';
+                const rawResponse = await response.text();
+                let responseData = null;
+
+                if (rawResponse) {
+                    try {
+                        responseData = JSON.parse(rawResponse);
+                    } catch (parseError) {
+                        console.error('Réponse checkout non-JSON:', rawResponse);
+                    }
+                }
+
                 if (!response.ok) {
-                    const errorData = await response.json();
+                    const fallbackMessage = (!contentType.includes('application/json') || !responseData)
+                        ? 'Le backend API ne répond pas en JSON. Lance le projet avec `vercel dev` au lieu de Live Server seul.'
+                        : null;
+                    const errorData = responseData || { message: fallbackMessage || `Erreur HTTP ${response.status}` };
                     
                     console.error('=== CHECKOUT ERROR RAW ===');
                     console.error(JSON.stringify(errorData, null, 2));
@@ -1131,7 +1146,12 @@
                     return;
                 }
 
-                const session = await response.json();
+                if (!responseData) {
+                    showError('Réponse invalide du backend. Lance le projet avec `vercel dev` pour disposer des routes API.');
+                    return;
+                }
+                
+                const session = responseData;
                 
                 if (!session.success || !session.sessionId) {
                     throw new Error(session.message || 'Session invalide');
