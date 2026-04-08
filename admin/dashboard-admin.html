@@ -229,10 +229,16 @@
         <section class="mb-12">
             <div class="flex items-center justify-between mb-8">
                 <h3 class="cormorant text-2xl font-bold text-gold">Précommandes</h3>
-                <button id="exportContactsBtn" class="bg-gold text-night-blue px-4 py-2 rounded-lg hover:bg-light-gold transition">
-                    <i class="fas fa-download mr-2"></i>Export CSV
-                </button>
+                <div class="flex flex-wrap items-center gap-3">
+                    <button id="exportContactsBtn" class="bg-gold text-night-blue px-4 py-2 rounded-lg hover:bg-light-gold transition font-semibold">
+                        <i class="fas fa-file-csv mr-2"></i>Export global CSV
+                    </button>
+                    <button id="exportMondialRelayBtn" class="bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition font-semibold">
+                        <i class="fas fa-truck mr-2"></i>Export Mondial Relay
+                    </button>
+                </div>
             </div>
+            <p class="text-sm text-light-gold/70 mb-4">L'export Mondial Relay génère un CSV prêt à l'import transporteur pour édition d'étiquettes.</p>
             
             <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden shadow-2xl">
                 <div class="overflow-x-auto">
@@ -375,7 +381,7 @@
 
             if (preorder.tracking_number) {
                 buttons.push(`
-                    <button onclick="copyTracking('${preorder.tracking_number}')" 
+                    <button onclick="copyTracking('${preorder.tracking_number}', this)" 
                             class="px-3 py-1 bg-purple/20 text-purple rounded hover:bg-purple/30 transition text-xs"
                             title="Copier le tracking">
                         <i class="fas fa-copy"></i> Copier
@@ -672,14 +678,16 @@
         }
 
         // Exporter les contacts
-        function exportContacts() {
-            window.location.href = '/api/admin/contacts-export';
+        function exportContacts(format = 'standard') {
+            const qs = format === 'mondial-relay' ? '?format=mondial-relay' : '';
+            window.location.href = `/api/admin/contacts-export${qs}`;
         }
 
-        function copyTracking(trackingNumber) {
+        function copyTracking(trackingNumber, triggerEl) {
             navigator.clipboard.writeText(trackingNumber).then(() => {
                 // Afficher un feedback visuel temporaire
-                const button = event.target.closest('button');
+                const button = triggerEl;
+                if (!button) return;
                 const originalHTML = button.innerHTML;
                 button.innerHTML = '<i class="fas fa-check"></i> Copié!';
                 button.classList.add('bg-green/30');
@@ -719,7 +727,12 @@
             
             const exportBtn = document.getElementById('exportContactsBtn');
             if (exportBtn) {
-                exportBtn.addEventListener('click', exportContacts);
+                exportBtn.addEventListener('click', () => exportContacts('standard'));
+            }
+
+            const exportMondialRelayBtn = document.getElementById('exportMondialRelayBtn');
+            if (exportMondialRelayBtn) {
+                exportMondialRelayBtn.addEventListener('click', () => exportContacts('mondial-relay'));
             }
             
             const logoutBtn = document.getElementById('logoutBtn');

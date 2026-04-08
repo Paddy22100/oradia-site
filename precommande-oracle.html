@@ -1666,7 +1666,7 @@ La production est lancée grâce aux premières commandes.</p>
                     
                     if (response.ok && data.success) {
                         if (data.emailSent === false) {
-                            showWaitlistMessage('Tu es inscrit à la liste d\'attente. L\'email de confirmation n\'a pas pu être envoyé pour le moment.', 'success');
+                            showWaitlistMessage('Tu es inscrit à la liste d\'attente. L\'email de confirmation n\'a pas pu être envoyé pour le moment.', 'warning');
                         } else {
                             showWaitlistMessage('Tu es inscrit à la liste d\'attente. Un email de confirmation vient de t\'être envoyé.', 'success');
                         }
@@ -1695,9 +1695,11 @@ La production est lancée grâce aux premières commandes.</p>
         
         function showWaitlistMessage(message, type) {
             waitlistMessageText.textContent = message;
-            waitlistMessageText.className = type === 'success' 
-                ? 'text-green-400' 
-                : 'text-red-400';
+            waitlistMessageText.className = type === 'success'
+                ? 'text-green-400'
+                : type === 'warning'
+                    ? 'text-orange-300'
+                    : 'text-red-400';
             waitlistMessage.classList.remove('hidden');
         }
         
