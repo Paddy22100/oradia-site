@@ -503,3 +503,120 @@ p {
         width: 100% !important;
     }
 }
+
+/* ===== MOBILE POLISH GLOBAL ===== */
+
+@media (max-width: 767px) {
+    body {
+        -webkit-text-size-adjust: 100%;
+        text-size-adjust: 100%;
+    }
+
+    .hero-section {
+        background-attachment: scroll !important;
+        background-position: center top !important;
+    }
+
+    p {
+        margin-bottom: 0.75rem;
+        line-height: 1.55;
+    }
+
+    .container {
+        padding-left: 0.875rem !important;
+        padding-right: 0.875rem !important;
+    }
+
+    section {
+        scroll-margin-top: 88px;
+    }
+
+    button,
+    a[role="button"],
+    input,
+    select,
+    textarea {
+        font-size: 16px;
+    }
+
+    .form-input,
+    .form-field,
+    input,
+    select,
+    textarea,
+    .touch-target,
+    .btn-responsive {
+        min-height: 46px;
+    }
+
+    .btn-group {
+        gap: 0.625rem;
+    }
+
+    .card,
+    .card-responsive,
+    .delivery-option,
+    .pricing-card {
+        border-radius: 0.875rem;
+    }
+
+    .gap-8 {
+        gap: 1.25rem !important;
+    }
+
+    .p-8 {
+        padding: 1.25rem !important;
+    }
+
+    .p-6 {
+        padding: 1rem !important;
+    }
+
+    .py-16 {
+        padding-top: 2.75rem !important;
+        padding-bottom: 2.75rem !important;
+    }
+
+    .py-24 {
+        padding-top: 3.5rem !important;
+        padding-bottom: 3.5rem !important;
+    }
+
+    .order-summary {
+        position: static !important;
+        top: auto !important;
+    }
+
+    .shadow-2xl,
+    .shadow-xl,
+    .shadow-lg {
+        box-shadow: none !important;
+    }
+
+    .animate-pulse,
+    .animate-bounce,
+    .animate-float,
+    .animate-shimmer,
+    .floating {
+        animation: none !important;
+    }
+
+    .blur-3xl,
+    .blur-2xl,
+    .blur-xl {
+        filter: blur(8px) !important;
+    }
+
+    .transition-all {
+        transition-duration: 180ms !important;
+    }
+
+    .hover\:scale-105:hover,
+    .hover\:scale-110:hover,
+    .group:hover .group-hover\:scale-105,
+    .group:hover .group-hover\:scale-110,
+    .pricing-card:hover,
+    .offer-card:hover {
+        transform: none !important;
+    }
+}

@@ -32,6 +32,32 @@
     
     <!-- Canonical URL -->
     <link rel="canonical" href="https://oradia.fr/precommande-oracle.html" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Product",
+      "name": "Oracle Oradia - Édition Physique",
+      "description": "Oracle physique ORADIA de 64 cartes avec livret guidé et conte initiatique.",
+      "image": [
+        "https://oradia.fr/images/Coffret.png",
+        "https://oradia.fr/images/apercu-hd.png"
+      ],
+      "brand": {
+        "@type": "Brand",
+        "name": "Oradia"
+      },
+      "offers": {
+        "@type": "AggregateOffer",
+        "priceCurrency": "EUR",
+        "lowPrice": "38.00",
+        "highPrice": "48.00",
+        "offerCount": "3",
+        "url": "https://oradia.fr/precommande-oracle.html",
+        "availability": "https://schema.org/PreOrder"
+      }
+    }
+    </script>
     
     <!-- Favicon -->
     <link rel="icon" type="image/jpeg" href="images/logo-hd-v2.jpeg" />
@@ -387,7 +413,7 @@
         @media (max-width: 768px) {
             #backToTop {
                 right: 16px !important;
-                bottom: 16px !important;
+                bottom: 88px !important;
             }
         }
         
@@ -401,8 +427,50 @@
             @media (max-width: 768px) {
                 #backToTop {
                     right: max(16px, env(safe-area-inset-right)) !important;
-                    bottom: max(16px, env(safe-area-inset-bottom)) !important;
+                    bottom: max(88px, env(safe-area-inset-bottom)) !important;
                 }
+            }
+        }
+
+        /* CTA mobile sticky discret */
+        #mobileStickyCta {
+            position: fixed;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: max(12px, env(safe-area-inset-bottom));
+            z-index: 998;
+            width: calc(100% - 24px);
+            max-width: 420px;
+            transition: opacity 0.25s ease, transform 0.25s ease;
+        }
+
+        #mobileStickyCta.mobile-cta-hidden {
+            opacity: 0;
+            transform: translateX(-50%) translateY(10px);
+            pointer-events: none;
+        }
+
+        @media (min-width: 769px) {
+            #mobileStickyCta {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .animate-pulse,
+            .floating,
+            .early-bird-badge {
+                animation: none !important;
+            }
+
+            .blur-3xl,
+            .blur-2xl {
+                filter: blur(10px) !important;
+            }
+
+            .hover\:scale-105:hover,
+            .group:hover .group-hover\:scale-110 {
+                transform: none !important;
             }
         }
         
@@ -415,6 +483,11 @@
     <button id="backToTop" class="fixed bottom-6 right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-50 backdrop-blur-sm" aria-label="Remonter en haut">
     <i class="fas fa-arrow-up text-sm"></i>
 </button>
+
+    <a id="mobileStickyCta" href="#offres" class="md:hidden inline-flex items-center justify-center gap-2 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-4 rounded-full shadow-lg shadow-gold/30 border border-gold/40">
+        <i class="fas fa-shopping-cart"></i>
+        <span>Je précommande</span>
+    </a>
 <!-- Header -->
     <div id="header-placeholder"></div>
             
@@ -592,7 +665,7 @@
                 </section>
 
                 <!-- Section Crédibilité -->
-                <section class="py-16 md:py-24 bg-[rgba(5,20,40,0.3)]">
+                <section class="py-16 md:py-24 bg-[rgba(5,20,40,0.58)] md:bg-[rgba(5,20,40,0.3)]">
                     <div class="container mx-auto px-6">
                         <div class="max-w-3xl mx-auto text-center">
                             <h3 class="cormorant text-3xl md:text-4xl font-bold gold-gradient mb-8">
@@ -617,9 +690,9 @@
                 </section>
 
                 <!-- Section Valeur / Prix -->
-                <section class="py-16 md:py-24 bg-[rgba(26,54,93,0.4)] relative overflow-hidden">
+                <section class="py-16 md:py-24 bg-[rgba(5,20,40,0.62)] md:bg-[rgba(26,54,93,0.4)] relative overflow-hidden">
                     <!-- Pattern subtil -->
-                    <div class="absolute inset-0 opacity-5">
+                    <div class="hidden md:block absolute inset-0 opacity-5">
                         <div class="absolute top-1/4 left-1/4 w-80 h-80 bg-gold rounded-full blur-3xl"></div>
                         <div class="absolute bottom-1/4 right-1/4 w-64 h-64 bg-light-gold rounded-full blur-3xl"></div>
                     </div>
@@ -666,7 +739,7 @@
 
                 <!-- Section Thérapeutes/Praticiens -->
                 <section class="py-16 md:py-20">
-                    <div class="w-full max-w-4xl mx-auto px-4 sm:px-6 text-center bg-[rgba(212,175,55,0.08)] border border-gold/30 rounded-3xl p-6 sm:p-10 md:p-12 box-border">
+                    <div class="w-full max-w-4xl mx-auto px-4 sm:px-6 text-center bg-[rgba(20,32,54,0.42)] sm:bg-[rgba(212,175,55,0.08)] border border-gold/25 sm:border-gold/30 rounded-3xl p-6 sm:p-10 md:p-12 box-border">
                         <h3 class="cormorant text-2xl sm:text-3xl md:text-4xl font-bold gold-gradient mb-6 sm:mb-8">
                             Un outil utilisable en séance
                         </h3>
@@ -2267,35 +2340,6 @@ La production est lancée grâce aux premières commandes.</p>
         });
     </script>
 
-    <script>
-        // Bouton retour en haut - Code indépendant
-        const backToTopBtn = document.getElementById('backToTop');
-        
-        window.addEventListener('scroll', () => {
-            if (window.pageYOffset > 300) {
-                backToTopBtn.classList.remove('opacity-0');
-                backToTopBtn.classList.add('opacity-100');
-            } else {
-                backToTopBtn.classList.add('opacity-0');
-                backToTopBtn.classList.remove('opacity-100');
-            }
-        });
-        
-        backToTopBtn.addEventListener('click', () => {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-            
-            // Ensure header is visible by scrolling to top after a brief delay
-            setTimeout(() => {
-                window.scrollTo({
-                    top: 0,
-                    behavior: 'smooth'
-                });
-            }, 100);
-        });
-    </script>
 <script>
         // Restrict input to numbers only
         document.getElementById('customAmount').addEventListener('input', function(e) {
@@ -2370,6 +2414,24 @@ La production est lancée grâce aux premières commandes.</p>
     // Gérer le scroll vers les ancres (#offres, #cart-section, etc.)
     document.addEventListener('DOMContentLoaded', () => {
         console.log('URL hash:', window.location.hash);
+
+        const mobileStickyCta = document.getElementById('mobileStickyCta');
+        const offersSection = document.getElementById('offres');
+        if (mobileStickyCta && offersSection && window.matchMedia('(max-width: 768px)').matches && 'IntersectionObserver' in window) {
+            const offersObserver = new IntersectionObserver((entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        mobileStickyCta.classList.add('mobile-cta-hidden');
+                    } else {
+                        mobileStickyCta.classList.remove('mobile-cta-hidden');
+                    }
+                });
+            }, {
+                threshold: 0.15
+            });
+
+            offersObserver.observe(offersSection);
+        }
         
         // Fonction générique de scroll vers une ancre
         function scrollToAnchor(anchorId, delay = 500) {
