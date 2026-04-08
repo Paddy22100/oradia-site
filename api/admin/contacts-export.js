@@ -163,8 +163,12 @@ async function exportMondialRelayCsv(res, supabase) {
         const safeAmount = Number.isFinite(amount) ? Math.max(amount, 0) : 0;
         const amountInt = String(Math.floor(safeAmount));
         const amountDec = String(Math.round((safeAmount - Math.floor(safeAmount)) * 100));
-        const relayId = sanitize(order.relay_id);
+        const relayId = sanitize(order.relay_id).replace(/[^a-zA-Z0-9]/g, '');
         const relayLabel = sanitize(order.relay_name) || 'POINT RELAIS';
+
+        if (!relayId) {
+            return;
+        }
 
         const row = [
             // 1  Référence Client
@@ -191,77 +195,67 @@ async function exportMondialRelayCsv(res, supabase) {
             '0',
             // 12 Email Destinataire
             sanitize(order.email),
-            // 13-22 Libellé Article 1..10
+            // 13 Libellé Article1
             relayLabel,
-            '.',
-            '.',
-            '.',
-            '.',
-            '.',
-            '.',
-            '.',
-            '.',
-            '.',
-            // 23 Langue Destinataire
+            // 14 Langue Destinataire
             'FR',
-            // 24 Nombre Colis
+            // 15 Nombre Colis
             '1',
-            // 25 Nombre Colis Int
+            // 16 Nombre Colis Int
             '0',
-            // 26 Poids Total Colis
+            // 17 Poids Total Colis
             '0',
-            // 27 Poids Total Colis Decimal (0.500 kg)
+            // 18 Poids Total Colis Decimal (0.500 kg)
             '500',
-            // 28 Longueur Moyenne Colis
+            // 19 Longueur Moyenne Colis
             '0',
-            // 29 Volume Moyen Colis
+            // 20 Volume Moyen Colis
             '0',
-            // 30 Valeur Totale Colis
+            // 21 Valeur Totale Colis
             amountInt,
-            // 31 Valeur Totale Colis Decimal
+            // 22 Valeur Totale Colis Decimal
             amountDec.padStart(2, '0'),
-            // 32 Devise
+            // 23 Devise
             'EUR',
-            // 33 Option Assurance
+            // 24 Option Assurance
             '0',
-            // 34 Option Montant CRT
+            // 25 Option Montant CRT
             '0',
-            // 35 Option Devise CRT
+            // 26 Option Devise CRT
             'EUR',
-            // 36 Instruction Livraison Colis
-            '.',
-            // 37 Type Collecte
-            'REL',
-            // 38 Id Point Retrait Collecte
+            // 27 Instruction Livraison Colis
+            '',
+            // 28 Type Collecte
+            'R',
+            // 29 Id Point Retrait Collecte
             relayId,
-            // 39 Code Pays Collecte
+            // 30 Code Pays Collecte
             relayCountry,
-            // 40 Type Livraison
-            '24R',
-            // 41 Id Point Retrait Livraison
+            // 31 Type Livraison
+            'R',
+            // 32 Id Point Retrait Livraison
             relayId,
-            // 42 Id Point Retrait Livraison Int
+            // 33 Id Point Retrait Livraison Int
             relayId,
-            // 43 Code Pays Livraison
+            // 34 Code Pays Livraison
             relayCountry,
-            // 44 Code Mode Livraison
+            // 35 Code Mode Livraison
             '24R',
-            // 45 Option Notification
+            // 36 Option Notification
             '0',
-            // 46 Option Reprise Ancien
+            // 37 Option Reprise Ancien
             '0',
-            // 47 Option Montage
+            // 38 Option Montage
             '0',
-            // 48 Option RDV
+            // 39 Option RDV
             '0',
-            // 49 Mode De Collecte
-            'REL',
-            // 50 Id Coordonnee Enseigne Selectionnee
+            // 40 Mode De Collecte
+            'R',
+            // 41 Id Coordonnee Enseigne Selectionnee
             '352435',
         ];
 
-        while (row.length < 50) row.push('');
-        rows.push(row.slice(0, 50));
+        rows.push(row);
     });
 
     const csvContent = toMondialCsv(rows);
@@ -295,11 +289,11 @@ function splitName(fullName) {
 
 function normalizePhone(phone) {
     const clean = sanitize(phone).replace(/[^\d+]/g, '');
-    if (!clean) return '';
-    if (clean.startsWith('+')) return clean;
+    if (!clean) return '+33600000000';
+    if (clean.startsWith('+')) return clean.length > 4 ? clean : '+33600000000';
     if (clean.startsWith('00')) return '+' + clean.slice(2);
-    if (clean.startsWith('0')) return '+33' + clean.slice(1);
-    return clean;
+    if (clean.startsWith('0')) return clean.length > 1 ? '+33' + clean.slice(1) : '+33600000000';
+    return clean.length > 4 ? clean : '+33600000000';
 }
 
 function normalizeCountry(country) {
