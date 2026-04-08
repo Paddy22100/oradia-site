@@ -242,55 +242,6 @@
                                     <input type="tel" name="phone" class="form-input" placeholder="06 12 34 56 78">
                                 </div>
 
-                                <!-- Adresse -->
-                                <div id="address-section" class="border-t border-gold/20 pt-6">
-                                    <h3 class="text-gold font-semibold mb-4 text-lg">Adresse de livraison</h3>
-                                    
-                                    <div class="space-y-4">
-                                        <div>
-                                            <label class="block text-gold mb-2">Adresse *</label>
-                                            <input type="text" name="address" required class="form-input" placeholder="123 rue des Mystères">
-                                        </div>
-
-                                        <div>
-                                            <label class="block text-gold mb-2">Complément d'adresse</label>
-                                            <input type="text" name="addressComplement" class="form-input" placeholder="Appartement, escalier, etc.">
-                                        </div>
-
-                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                                            <div>
-                                                <label class="block text-gold mb-2">Code postal *</label>
-                                                <input type="text" name="postalCode" required pattern="[0-9]{5}" class="form-input" placeholder="75001">
-                                            </div>
-                                            <div>
-                                                <label class="block text-gold mb-2">Ville *</label>
-                                                <input type="text" name="city" required class="form-input" placeholder="Paris">
-                                            </div>
-                                            <div>
-                                                <label class="block text-gold mb-2">Pays *</label>
-                                                <select name="country" required class="form-input">
-                                                    <option value="FR">France</option>
-                                                </select>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Message pour remise en main propre -->
-                                <div id="hand-delivery-message" class="border-t border-gold/20 pt-6 hidden">
-                                    <div class="bg-gold/10 rounded-lg p-4 border border-gold/30">
-                                        <div class="flex items-start space-x-3">
-                                            <i class="fas fa-handshake text-gold text-xl mt-1"></i>
-                                            <div>
-                                                <h4 class="text-gold font-semibold mb-2">Remise en main propre</h4>
-                                                <p class="text-light-gold/80 text-sm">
-                                                    La remise en main propre sera organisée directement avec vous après la commande.
-                                                </p>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-
                                 <!-- Mode de livraison -->
                                 <div class="border-t border-gold/20 pt-6">
                                     <h3 class="text-gold font-semibold mb-4 text-lg">Mode de livraison</h3>
@@ -350,6 +301,55 @@
                                                 <div class="text-right">
                                                     <p class="text-gold font-bold">0,00 €</p>
                                                 </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Message pour remise en main propre -->
+                                <div id="hand-delivery-message" class="border-t border-gold/20 pt-6 hidden">
+                                    <div class="bg-gold/10 rounded-lg p-4 border border-gold/30">
+                                        <div class="flex items-start space-x-3">
+                                            <i class="fas fa-handshake text-gold text-xl mt-1"></i>
+                                            <div>
+                                                <h4 class="text-gold font-semibold mb-2">Remise en main propre</h4>
+                                                <p class="text-light-gold/80 text-sm">
+                                                    La remise en main propre sera organisée directement avec vous après la commande.
+                                                </p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Adresse -->
+                                <div id="address-section" class="border-t border-gold/20 pt-6">
+                                    <h3 class="text-gold font-semibold mb-4 text-lg">Adresse de livraison</h3>
+                                    
+                                    <div class="space-y-4">
+                                        <div>
+                                            <label class="block text-gold mb-2">Adresse *</label>
+                                            <input type="text" name="address" required class="form-input" placeholder="123 rue des Mystères">
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-gold mb-2">Complément d'adresse</label>
+                                            <input type="text" name="addressComplement" class="form-input" placeholder="Appartement, escalier, etc.">
+                                        </div>
+
+                                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                            <div>
+                                                <label class="block text-gold mb-2">Code postal *</label>
+                                                <input type="text" name="postalCode" required pattern="[0-9]{5}" class="form-input" placeholder="75001">
+                                            </div>
+                                            <div>
+                                                <label class="block text-gold mb-2">Ville *</label>
+                                                <input type="text" name="city" required class="form-input" placeholder="Paris">
+                                            </div>
+                                            <div>
+                                                <label class="block text-gold mb-2">Pays *</label>
+                                                <select name="country" required class="form-input">
+                                                    <option value="FR">France</option>
+                                                </select>
                                             </div>
                                         </div>
                                     </div>
