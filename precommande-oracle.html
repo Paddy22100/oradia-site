@@ -1665,7 +1665,11 @@ La production est lancée grâce aux premières commandes.</p>
                     const data = await response.json();
                     
                     if (response.ok && data.success) {
-                        showWaitlistMessage('Tu es inscrit à la liste d\'attente.', 'success');
+                        if (data.emailSent === false) {
+                            showWaitlistMessage('Tu es inscrit à la liste d\'attente. L\'email de confirmation n\'a pas pu être envoyé pour le moment.', 'success');
+                        } else {
+                            showWaitlistMessage('Tu es inscrit à la liste d\'attente. Un email de confirmation vient de t\'être envoyé.', 'success');
+                        }
                         waitlistEmail.value = '';
                     } else {
                         showWaitlistMessage(data.message || 'Une erreur est survenue. Veuillez réessayer.', 'error');

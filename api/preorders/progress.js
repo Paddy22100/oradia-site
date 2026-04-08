@@ -1,4 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
+const { loadLocalEnvIfNeeded } = require('../lib/load-local-env');
+
+loadLocalEnvIfNeeded();
 
 function getSupabaseClient() {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
