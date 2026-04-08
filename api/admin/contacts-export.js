@@ -23,10 +23,10 @@ function sanitizeMondialField(value) {
         .trim();
 }
 
-function toMondialReference(stripeSessionId, createdAt) {
+function toMondialReference(stripeSessionId, createdAt, maxLength) {
     const raw = sanitize(stripeSessionId) || `order-${sanitize(createdAt)}`;
     const compact = raw.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
-    return (compact || 'ORADIA').slice(0, 20);
+    return (compact || 'ORADIA').slice(0, maxLength);
 }
 
 export default async function handler(req, res) {
@@ -157,7 +157,8 @@ async function exportMondialRelayCsv(res, supabase) {
         const cleanedPhone = normalizePhone(order.phone);
         const country = normalizeCountry(order.country || 'FR');
         const relayCountry = normalizeCountry(order.relay_country || country);
-        const reference = toMondialReference(order.stripe_session_id, order.created_at);
+        const referenceClient = toMondialReference(order.stripe_session_id, order.created_at, 9);
+        const referenceCommande = toMondialReference(order.stripe_session_id, order.created_at, 16);
         const amount = Number(order.amount_total || 0);
         const safeAmount = Number.isFinite(amount) ? Math.max(amount, 0) : 0;
         const amountInt = String(Math.floor(safeAmount));
@@ -167,9 +168,9 @@ async function exportMondialRelayCsv(res, supabase) {
 
         const row = [
             // 1  Référence Client
-            reference,
+            referenceClient,
             // 2  Référence Commande
-            reference,
+            referenceCommande,
             // 3  Libellé Destinataire
             lastName,
             // 4  Libellé Complément Destinataire
@@ -187,20 +188,20 @@ async function exportMondialRelayCsv(res, supabase) {
             // 10 Téléphone1 Destinataire
             cleanedPhone,
             // 11 Téléphone2 Destinataire
-            '',
+            '0',
             // 12 Email Destinataire
             sanitize(order.email),
             // 13-22 Libellé Article 1..10
             relayLabel,
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
-            '',
+            '.',
+            '.',
+            '.',
+            '.',
+            '.',
+            '.',
+            '.',
+            '.',
+            '.',
             // 23 Langue Destinataire
             'FR',
             // 24 Nombre Colis
@@ -212,9 +213,9 @@ async function exportMondialRelayCsv(res, supabase) {
             // 27 Poids Total Colis Decimal (0.500 kg)
             '500',
             // 28 Longueur Moyenne Colis
-            '',
+            '0',
             // 29 Volume Moyen Colis
-            '',
+            '0',
             // 30 Valeur Totale Colis
             amountInt,
             // 31 Valeur Totale Colis Decimal
@@ -222,41 +223,41 @@ async function exportMondialRelayCsv(res, supabase) {
             // 32 Devise
             'EUR',
             // 33 Option Assurance
-            '',
+            '0',
             // 34 Option Montant CRT
-            '',
+            '0',
             // 35 Option Devise CRT
-            '',
+            'EUR',
             // 36 Instruction Livraison Colis
-            '',
+            '.',
             // 37 Type Collecte
             'REL',
             // 38 Id Point Retrait Collecte
-            '',
+            relayId,
             // 39 Code Pays Collecte
             relayCountry,
             // 40 Type Livraison
-            'REL',
+            '24R',
             // 41 Id Point Retrait Livraison
             relayId,
             // 42 Id Point Retrait Livraison Int
-            '',
+            relayId,
             // 43 Code Pays Livraison
             relayCountry,
             // 44 Code Mode Livraison
             '24R',
             // 45 Option Notification
-            '',
+            '0',
             // 46 Option Reprise Ancien
-            '',
+            '0',
             // 47 Option Montage
-            '',
+            '0',
             // 48 Option RDV
-            '',
+            '0',
             // 49 Mode De Collecte
             'REL',
             // 50 Id Coordonnee Enseigne Selectionnee
-            '',
+            '352435',
         ];
 
         while (row.length < 50) row.push('');
