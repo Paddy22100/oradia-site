@@ -453,14 +453,14 @@
 
     <script>
         // API Configuration
-        const API_BASE = 'http://localhost:3001/api';
+        const API_BASE = '/api';
         let authToken = localStorage.getItem('oradiaAdminToken');
         let currentUser = null;
         let selectedRating = 0;
         
         // Check authentication
         if (!authToken) {
-            window.location.href = '/auth/login';
+            window.location.href = '../auth/login.html';
         }
         
         // Initialize dashboard
@@ -866,7 +866,7 @@
         function logout() {
             localStorage.removeItem('oradiaAdminToken');
             localStorage.removeItem('oradiaUser');
-            window.location.href = '/auth/login';
+            window.location.href = '../auth/login.html';
         }
         
         function viewTirage(tirageId) {

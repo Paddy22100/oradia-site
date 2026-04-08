@@ -35,6 +35,14 @@
     {
       "src": "/api/create-checkout-session",
       "dest": "/api/create-checkout-session.js"
+    },
+    {
+      "src": "/api/preorders/progress",
+      "dest": "/api/preorders/progress.js"
+    },
+    {
+      "src": "/api/waitlist",
+      "dest": "/api/waitlist.js"
     }
   ],
   "functions": {
@@ -58,6 +66,12 @@
     },
     "api/create-checkout-session.js": {
       "maxDuration": 30
+    },
+    "api/preorders/progress.js": {
+      "maxDuration": 10
+    },
+    "api/waitlist.js": {
+      "maxDuration": 10
     }
   },
   "env": {

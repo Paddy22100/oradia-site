@@ -133,7 +133,7 @@
             <div class="mt-6 text-center">
                 <p class="text-gold/70">
                     Pas encore de compte? 
-                    <a href="/auth/register" class="text-gold hover:text-light-gold font-semibold">S'inscrire</a>
+                    <a href="../member/register.html" class="text-gold hover:text-light-gold font-semibold">S'inscrire</a>
                 </p>
             </div>
             
@@ -150,7 +150,7 @@
         <div class="mt-6 text-center">
             <p class="text-gold/50 text-xs">
                 Accès administrateur : 
-                <a href="/admin/dashboard" class="text-gold/70 hover:text-gold ml-1">Dashboard Admin</a>
+                <a href="../admin/dashboard-admin.html" class="text-gold/70 hover:text-gold ml-1">Dashboard Admin</a>
             </p>
         </div>
     </div>
@@ -165,7 +165,7 @@
 
     <script>
         // API Configuration
-        const API_BASE = 'http://localhost:3001/api';
+        const API_BASE = '/api';
         
         // Form submission
         document.getElementById('loginForm').addEventListener('submit', async function(e) {
@@ -204,9 +204,9 @@
                 // Redirect based on role
                 setTimeout(() => {
                     if (data.data.user.role === 'admin') {
-                        window.location.href = '/admin/dashboard';
+                        window.location.href = '../admin/dashboard-admin.html';
                     } else {
-                        window.location.href = '/user/dashboard';
+                        window.location.href = '../user/dashboard.html';
                     }
                 }, 1500);
                 
@@ -254,9 +254,9 @@
             if (token && user) {
                 const userData = JSON.parse(user);
                 if (userData.role === 'admin') {
-                    window.location.href = '/admin/dashboard';
+                    window.location.href = '../admin/dashboard-admin.html';
                 } else {
-                    window.location.href = '/user/dashboard';
+                    window.location.href = '../user/dashboard.html';
                 }
             }
         });
