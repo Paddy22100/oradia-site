@@ -666,24 +666,15 @@
         // Helpers pour la gestion des points relais
         function saveRelayPoint(point) {
             selectedRelayPoint = point;
-            localStorage.setItem('oradia-relay-point', JSON.stringify(point));
             renderRelayPoint();
         }
 
         function loadRelayPoint() {
-            const saved = localStorage.getItem('oradia-relay-point');
-            if (saved) {
-                try {
-                    selectedRelayPoint = JSON.parse(saved);
-                } catch (e) {
-                    selectedRelayPoint = null;
-                }
-            }
+            selectedRelayPoint = null;
         }
 
         function clearRelayPoint() {
             selectedRelayPoint = null;
-            localStorage.removeItem('oradia-relay-point');
         }
 
         function renderRelayPoint() {
@@ -1323,7 +1314,7 @@
         document.addEventListener('DOMContentLoaded', () => {
             // Charger les données initiales
             loadCart();
-            loadRelayPoint();
+            clearRelayPoint();
             renderRelayPoint();
 
             const differentBillingAddressCheckbox = document.getElementById('differentBillingAddress');
