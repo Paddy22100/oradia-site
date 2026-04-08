@@ -110,12 +110,13 @@ async function exportStandardCsv(res, supabase) {
         ]);
     });
 
-    const csvContent = toCsv(csvData, ',');
+    const csvContent = toCsv(csvData, ';');
     const fileName = `oradia-contacts-${new Date().toISOString().split('T')[0]}.csv`;
+    const excelCsvContent = `sep=;\n${csvContent}`;
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="${fileName}"`);
-    res.status(200).send('\uFEFF' + csvContent);
+    res.status(200).send('\uFEFF' + excelCsvContent);
 }
 
 async function exportMondialRelayCsv(res, supabase) {
@@ -130,29 +131,7 @@ async function exportMondialRelayCsv(res, supabase) {
         throw new Error(`Erreur export Mondial Relay: ${error.message}`);
     }
 
-    const rows = [
-        [
-            'REFERENCE_COMMANDE',
-            'NOM',
-            'PRENOM',
-            'ADRESSE1',
-            'ADRESSE2',
-            'CODE_POSTAL',
-            'VILLE',
-            'PAYS',
-            'TELEPHONE',
-            'EMAIL',
-            'MODE_LIVRAISON',
-            'POINT_RELAIS_ID',
-            'POINT_RELAIS_NOM',
-            'POINT_RELAIS_ADRESSE1',
-            'POINT_RELAIS_ADRESSE2',
-            'POINT_RELAIS_CP',
-            'POINT_RELAIS_VILLE',
-            'POINT_RELAIS_PAYS',
-            'POIDS_G'
-        ]
-    ];
+    const rows = [];
 
     preorders.forEach((order) => {
         const { firstName, lastName } = splitName(order.full_name);
@@ -171,6 +150,7 @@ async function exportMondialRelayCsv(res, supabase) {
             country,
             cleanedPhone,
             sanitize(order.email),
+            cleanedPhone,
             isRelay ? 'RELAIS' : 'DOMICILE',
             isRelay ? sanitize(order.relay_id) : '',
             isRelay ? sanitize(order.relay_name) : '',
