@@ -17,16 +17,29 @@ function toMondialCsv(data) {
 }
 
 function sanitizeMondialField(value) {
-    return sanitize(value)
+    return toAsciiUpper(sanitize(value))
         .replace(/[;\r\n\t]/g, ' ')
-        .replace(/"/g, "'")
+        .replace(/["`]/g, ' ')
         .trim();
 }
 
 function toMondialReference(stripeSessionId, createdAt, maxLength) {
     const raw = sanitize(stripeSessionId) || `order-${sanitize(createdAt)}`;
-    const compact = raw.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    const compact = toAsciiUpper(raw).replace(/[^A-Z0-9]/g, '');
     return (compact || 'ORADIA').slice(0, maxLength);
+}
+
+function toMondialShipmentReference(stripeSessionId, createdAt) {
+    const raw = sanitize(stripeSessionId) || `order-${sanitize(createdAt)}`;
+    const compact = toAsciiUpper(raw).replace(/[^A-Z0-9_ -]/g, '');
+    return (compact || 'ORADIA').slice(0, 15);
+}
+
+function toAsciiUpper(value) {
+    return String(value ?? '')
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .toUpperCase();
 }
 
 export default async function handler(req, res) {
@@ -158,123 +171,99 @@ async function exportMondialRelayCsv(res, supabase) {
         const country = normalizeCountry(order.country || 'FR');
         const relayCountry = normalizeCountry(order.relay_country || country);
         const referenceClient = toMondialReference(order.stripe_session_id, order.created_at, 9);
-        const referenceCommande = toMondialReference(order.stripe_session_id, order.created_at, 16);
+        const referenceCommande = toMondialShipmentReference(order.stripe_session_id, order.created_at);
         const amount = Number(order.amount_total || 0);
         const safeAmount = Number.isFinite(amount) ? Math.max(amount, 0) : 0;
-        const amountInt = String(Math.floor(safeAmount));
-        const amountDec = String(Math.round((safeAmount - Math.floor(safeAmount)) * 100));
-        const relayId = sanitize(order.relay_id).replace(/[^a-zA-Z0-9]/g, '');
-        const relayLabel = sanitize(order.relay_name) || 'POINT RELAIS';
+        const amountCents = String(Math.round(safeAmount * 100));
+        const relayId = sanitize(order.relay_id).replace(/[^0-9]/g, '').slice(0, 6);
+        const relayLabel = sanitize(order.relay_name) || 'ORADIA';
+        const fullName = toAsciiUpper(`MR ${lastName} ${firstName}`).replace(/[^0-9A-Z_\-'., /]/g, ' ').trim();
+        const address1 = toAsciiUpper(sanitize(order.shipping_address)).replace(/[^0-9A-Z_\-'., /]/g, ' ').trim();
+        const address2 = toAsciiUpper(sanitize(order.address_complement)).replace(/[^0-9A-Z_\-'., /]/g, ' ').trim();
+        const city = toAsciiUpper(sanitize(order.city)).replace(/[^A-Z_\-' ]/g, ' ').trim();
+        const email = sanitize(order.email).slice(0, 70);
 
         if (!relayId) {
             return;
         }
 
         const row = [
-            // 1  Référence Client
+            // A N° de Client (F, 0..9)
             referenceClient,
-            // 2  Référence Commande
+            // B Référence de l'expédition (F, 0..15)
             referenceCommande,
-            // 3  Libellé Destinataire
-            lastName,
-            // 4  Libellé Complément Destinataire
-            firstName,
-            // 5  Adresse Ligne1 Destinataire
-            sanitize(order.shipping_address),
-            // 6  Adresse Ligne2 Destinataire
-            sanitize(order.address_complement),
-            // 7  Ville Destinataire
-            sanitize(order.city),
-            // 8  Code Postal Destinataire
+            // C Adresse de livraison (Nom client final)
+            fullName.slice(0, 32),
+            // D Complément du nom
+            '',
+            // E Adresse destinataire (numéro + rue)
+            address1.slice(0, 32),
+            // F Complément d'adresse
+            address2.slice(0, 32),
+            // G Ville
+            city.slice(0, 25),
+            // H Code postal
             sanitize(order.postal_code),
-            // 9  Code Pays Destinataire
+            // I Pays destinataire
             country,
-            // 10 Téléphone1 Destinataire
+            // J Téléphone 1
             cleanedPhone,
-            // 11 Téléphone2 Destinataire
-            '0',
-            // 12 Email Destinataire
-            sanitize(order.email),
-            // 13 Libellé Article1
-            relayLabel,
-            // 14 Libellé Article2
+            // K Téléphone 2
             '',
-            // 15 Libellé Article3
+            // L Email
+            email,
+            // M Type Collecte
+            'A',
+            // N ID Relais Collecte
             '',
-            // 16 Libellé Article4
+            // O Code Pays Collecte
             '',
-            // 17 Libellé Article5
-            '',
-            // 18 Libellé Article6
-            '',
-            // 19 Libellé Article7
-            '',
-            // 20 Libellé Article8
-            '',
-            // 21 Libellé Article9
-            '',
-            // 22 Libellé Article10
-            '',
-            // 23 Langue Destinataire
-            'FR',
-            // 24 Nombre Colis
-            '1',
-            // 25 Nombre Colis Int
-            '0',
-            // 26 Poids Total Colis
-            '0',
-            // 27 Poids Total Colis Decimal (0.500 kg)
-            '500',
-            // 28 Longueur Moyenne Colis
-            '0',
-            // 29 Volume Moyen Colis
-            '0',
-            // 30 Valeur Totale Colis
-            amountInt,
-            // 31 Valeur Totale Colis Decimal
-            amountDec.padStart(2, '0'),
-            // 32 Devise
-            'EUR',
-            // 33 Option Assurance
-            '0',
-            // 34 Option Montant CRT
-            '0',
-            // 35 Option Devise CRT
-            'EUR',
-            // 36 Instruction Livraison Colis
-            '',
-            // 37 Type Collecte
+            // P Type Livraison
             'R',
-            // 38 Id Point Retrait Collecte
+            // Q ID Relais Livraison
             relayId,
-            // 39 Code Pays Collecte
+            // R Code Pays Relais Livraison
             relayCountry,
-            // 40 Type Livraison
-            'R',
-            // 41 Id Point Retrait Livraison
-            relayId,
-            // 42 Id Point Retrait Livraison Int
-            relayId,
-            // 43 Code Pays Livraison
-            relayCountry,
-            // 44 Code Mode Livraison
+            // S Mode Livraison
             '24R',
-            // 45 Option Notification
+            // T Code langue
+            'FR',
+            // U Nombre de colis
+            '1',
+            // V Poids (grammes)
+            '500',
+            // W Longueur (cm)
             '0',
-            // 46 Option Reprise Ancien
+            // X Volume
             '0',
-            // 47 Option Montage
+            // Y Valeur expédition (centimes)
+            amountCents,
+            // Z Devise
+            'EUR',
+            // AA Assurance
             '0',
-            // 48 Option RDV
+            // AB Montant CRT
             '0',
-            // 49 Mode De Collecte
-            'R',
-            // 50 Id Coordonnee Enseigne Selectionnee
-            '352435',
+            // AC Devise CRT
+            'EUR',
+            // AD Instructions livraison
+            '',
+            // AE Top Avisage
+            '0',
+            // AF Top Reprise à Domicile
+            '0',
+            // AG Temps de Montage
+            '0',
+            // AH Top RDV
+            '0',
+            // AI Article 01
+            toAsciiUpper(relayLabel).replace(/[^A-Z0-9 _\-.,/]/g, ' ').slice(0, 30),
+            // AJ..AR Article 02..10
+            '', '', '', '', '', '', '', '', ''
         ];
 
-        while (row.length < 50) row.push('');
-        rows.push(row.slice(0, 50));
+        while (row.length < 44) row.push('');
+        rows.push(row.slice(0, 44));
     });
 
     const csvContent = toMondialCsv(rows);
