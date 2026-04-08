@@ -10,10 +10,23 @@ function getSupabaseClient() {
     return createClient(supabaseUrl, supabaseKey);
 }
 
+function toMondialCsv(data) {
+    return data
+        .map((row) => row.map((field) => sanitizeMondialField(field)).join(';'))
+        .join('\r\n');
+}
+
+function sanitizeMondialField(value) {
+    return sanitize(value)
+        .replace(/[;\r\n\t]/g, ' ')
+        .replace(/"/g, "'")
+        .trim();
+}
+
 function toMondialReference(stripeSessionId, createdAt) {
     const raw = sanitize(stripeSessionId) || `order-${sanitize(createdAt)}`;
-    const compact = raw.replace(/[^a-zA-Z0-9_-]/g, '');
-    return compact.slice(0, 30);
+    const compact = raw.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+    return (compact || 'ORADIA').slice(0, 20);
 }
 
 export default async function handler(req, res) {
@@ -152,7 +165,7 @@ async function exportMondialRelayCsv(res, supabase) {
         const relayId = sanitize(order.relay_id);
         const relayLabel = sanitize(order.relay_name) || 'POINT RELAIS';
 
-        rows.push([
+        const row = [
             // 1  Référence Client
             reference,
             // 2  Référence Commande
@@ -205,7 +218,7 @@ async function exportMondialRelayCsv(res, supabase) {
             // 30 Valeur Totale Colis
             amountInt,
             // 31 Valeur Totale Colis Decimal
-            amountDec,
+            amountDec.padStart(2, '0'),
             // 32 Devise
             'EUR',
             // 33 Option Assurance
@@ -244,10 +257,13 @@ async function exportMondialRelayCsv(res, supabase) {
             'REL',
             // 50 Id Coordonnee Enseigne Selectionnee
             '',
-        ]);
+        ];
+
+        while (row.length < 50) row.push('');
+        rows.push(row.slice(0, 50));
     });
 
-    const csvContent = toCsv(rows, ';');
+    const csvContent = toMondialCsv(rows);
     const fileName = `oradia-mondial-relay-${new Date().toISOString().split('T')[0]}.csv`;
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
