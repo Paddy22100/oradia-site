@@ -10,6 +10,12 @@ function getSupabaseClient() {
     return createClient(supabaseUrl, supabaseKey);
 }
 
+function toMondialReference(stripeSessionId, createdAt) {
+    const raw = sanitize(stripeSessionId) || `order-${sanitize(createdAt)}`;
+    const compact = raw.replace(/[^a-zA-Z0-9_-]/g, '');
+    return compact.slice(0, 30);
+}
+
 export default async function handler(req, res) {
     if (req.method !== 'GET') {
         return res.status(405).json({
@@ -124,7 +130,7 @@ async function exportMondialRelayCsv(res, supabase) {
         .from('preorders')
         .select('stripe_session_id, created_at, full_name, email, phone, shipping_address, address_complement, postal_code, city, country, shipping_method, shipping_status, shipping_provider, relay_id, relay_name, relay_address1, relay_address2, relay_postal_code, relay_city, relay_country')
         .eq('paid_status', 'completed')
-        .in('shipping_method', ['home', 'relay'])
+        .eq('shipping_method', 'relay')
         .order('created_at', { ascending: false });
 
     if (error) {
@@ -137,29 +143,30 @@ async function exportMondialRelayCsv(res, supabase) {
         const { firstName, lastName } = splitName(order.full_name);
         const cleanedPhone = normalizePhone(order.phone);
         const country = normalizeCountry(order.country || 'FR');
-        const isRelay = order.shipping_method === 'relay';
+        const relayCountry = normalizeCountry(order.relay_country || country);
+        const reference = toMondialReference(order.stripe_session_id, order.created_at);
 
         rows.push([
-            order.stripe_session_id || '',
+            reference,
+            reference,
             lastName,
             firstName,
             sanitize(order.shipping_address),
             sanitize(order.address_complement),
-            sanitize(order.postal_code),
             sanitize(order.city),
+            sanitize(order.postal_code),
             country,
             cleanedPhone,
+            '',
             sanitize(order.email),
-            cleanedPhone,
-            isRelay ? 'RELAIS' : 'DOMICILE',
-            isRelay ? sanitize(order.relay_id) : '',
-            isRelay ? sanitize(order.relay_name) : '',
-            isRelay ? sanitize(order.relay_address1) : '',
-            isRelay ? sanitize(order.relay_address2) : '',
-            isRelay ? sanitize(order.relay_postal_code) : '',
-            isRelay ? sanitize(order.relay_city) : '',
-            isRelay ? normalizeCountry(order.relay_country || country) : '',
-            '500'
+            sanitize(order.relay_name) || 'REL',
+            sanitize(order.relay_id),
+            relayCountry,
+            'REL',
+            sanitize(order.relay_id),
+            '',
+            relayCountry,
+            'REL'
         ]);
     });
 
