@@ -197,65 +197,84 @@ async function exportMondialRelayCsv(res, supabase) {
             sanitize(order.email),
             // 13 Libellé Article1
             relayLabel,
-            // 14 Langue Destinataire
-            'FR',
-            // 15 Nombre Colis
-            '1',
-            // 16 Nombre Colis Int
-            '0',
-            // 17 Poids Total Colis
-            '0',
-            // 18 Poids Total Colis Decimal (0.500 kg)
-            '500',
-            // 19 Longueur Moyenne Colis
-            '0',
-            // 20 Volume Moyen Colis
-            '0',
-            // 21 Valeur Totale Colis
-            amountInt,
-            // 22 Valeur Totale Colis Decimal
-            amountDec.padStart(2, '0'),
-            // 23 Devise
-            'EUR',
-            // 24 Option Assurance
-            '0',
-            // 25 Option Montant CRT
-            '0',
-            // 26 Option Devise CRT
-            'EUR',
-            // 27 Instruction Livraison Colis
+            // 14 Libellé Article2
             '',
-            // 28 Type Collecte
+            // 15 Libellé Article3
+            '',
+            // 16 Libellé Article4
+            '',
+            // 17 Libellé Article5
+            '',
+            // 18 Libellé Article6
+            '',
+            // 19 Libellé Article7
+            '',
+            // 20 Libellé Article8
+            '',
+            // 21 Libellé Article9
+            '',
+            // 22 Libellé Article10
+            '',
+            // 23 Langue Destinataire
+            'FR',
+            // 24 Nombre Colis
+            '1',
+            // 25 Nombre Colis Int
+            '0',
+            // 26 Poids Total Colis
+            '0',
+            // 27 Poids Total Colis Decimal (0.500 kg)
+            '500',
+            // 28 Longueur Moyenne Colis
+            '0',
+            // 29 Volume Moyen Colis
+            '0',
+            // 30 Valeur Totale Colis
+            amountInt,
+            // 31 Valeur Totale Colis Decimal
+            amountDec.padStart(2, '0'),
+            // 32 Devise
+            'EUR',
+            // 33 Option Assurance
+            '0',
+            // 34 Option Montant CRT
+            '0',
+            // 35 Option Devise CRT
+            'EUR',
+            // 36 Instruction Livraison Colis
+            '',
+            // 37 Type Collecte
             'R',
-            // 29 Id Point Retrait Collecte
+            // 38 Id Point Retrait Collecte
             relayId,
-            // 30 Code Pays Collecte
+            // 39 Code Pays Collecte
             relayCountry,
-            // 31 Type Livraison
+            // 40 Type Livraison
             'R',
-            // 32 Id Point Retrait Livraison
+            // 41 Id Point Retrait Livraison
             relayId,
-            // 33 Id Point Retrait Livraison Int
+            // 42 Id Point Retrait Livraison Int
             relayId,
-            // 34 Code Pays Livraison
+            // 43 Code Pays Livraison
             relayCountry,
-            // 35 Code Mode Livraison
+            // 44 Code Mode Livraison
             '24R',
-            // 36 Option Notification
+            // 45 Option Notification
             '0',
-            // 37 Option Reprise Ancien
+            // 46 Option Reprise Ancien
             '0',
-            // 38 Option Montage
+            // 47 Option Montage
             '0',
-            // 39 Option RDV
+            // 48 Option RDV
             '0',
-            // 40 Mode De Collecte
+            // 49 Mode De Collecte
             'R',
-            // 41 Id Coordonnee Enseigne Selectionnee
+            // 50 Id Coordonnee Enseigne Selectionnee
             '352435',
         ];
 
-        rows.push(row);
+        while (row.length < 50) row.push('');
+        rows.push(row.slice(0, 50));
     });
 
     const csvContent = toMondialCsv(rows);
