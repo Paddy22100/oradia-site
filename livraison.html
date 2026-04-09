@@ -173,30 +173,65 @@
     <section class="py-6 bg-gradient-to-b from-night-blue to-dark-blue">
         <div class="container mx-auto px-6">
             <div class="max-w-4xl mx-auto">
-                <div class="flex justify-center">
-                    <div class="flex items-center space-x-4">
+                <div class="max-w-4xl mx-auto">
+                <!-- Mobile: Indicateurs compacts -->
+                <div class="sm:hidden">
+                    <div class="flex items-center justify-center space-x-2">
                         <div class="flex items-center">
-                            <div class="w-8 h-8 bg-gold rounded-full flex items-center justify-center text-night-blue font-bold text-sm">1</div>
-                            <span class="ml-2 text-sm text-light-gold">Panier</span>
+                            <div class="w-6 h-6 bg-gold/20 rounded-full flex items-center justify-center text-gold text-xs font-medium border border-gold/30">
+                                <i class="fas fa-check text-xs"></i>
+                            </div>
                         </div>
-                        <div class="w-12 h-0.5 bg-gold/30"></div>
+                        <div class="w-8 h-0.5 bg-gold/20"></div>
                         <div class="flex items-center">
-                            <div class="w-8 h-8 bg-gold rounded-full flex items-center justify-center text-night-blue font-bold text-sm">2</div>
-                            <span class="ml-2 text-sm text-light-gold">Livraison</span>
+                            <div class="w-6 h-6 bg-gold rounded-full flex items-center justify-center text-night-blue text-xs font-bold shadow-sm shadow-gold/20">
+                                2
+                            </div>
                         </div>
-                        <div class="w-12 h-0.5 bg-gold/30"></div>
+                        <div class="w-8 h-0.5 bg-gold/10"></div>
                         <div class="flex items-center">
-                            <div class="w-8 h-8 border border-gold/30 rounded-full flex items-center justify-center text-light-gold/50 text-sm">3</div>
+                            <div class="w-6 h-6 border border-gold/20 rounded-full flex items-center justify-center text-light-gold/40 text-xs">
+                                3
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex justify-center mt-2">
+                        <span class="text-xs text-gold/80 font-medium">Livraison</span>
+                    </div>
+                </div>
+
+                <!-- Desktop: Barre horizontale -->
+                <div class="hidden sm:flex justify-center">
+                    <div class="flex items-center space-x-8">
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-gold/20 rounded-full flex items-center justify-center text-gold text-sm font-medium border border-gold/30">
+                                <i class="fas fa-check text-xs"></i>
+                            </div>
+                            <span class="ml-2 text-sm text-light-gold/70">Panier</span>
+                        </div>
+                        <div class="w-12 h-0.5 bg-gold/20"></div>
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 bg-gold rounded-full flex items-center justify-center text-night-blue text-sm font-bold shadow-sm shadow-gold/20">
+                                2
+                            </div>
+                            <span class="ml-2 text-sm text-light-gold font-medium">Livraison</span>
+                        </div>
+                        <div class="w-12 h-0.5 bg-gold/10"></div>
+                        <div class="flex items-center">
+                            <div class="w-8 h-8 border border-gold/20 rounded-full flex items-center justify-center text-light-gold/40 text-sm">
+                                3
+                            </div>
                             <span class="ml-2 text-sm text-light-gold/50">Paiement</span>
                         </div>
                     </div>
                 </div>
             </div>
+            </div>
         </div>
     </section>
 
     <!-- Main Checkout Area -->
-    <main class="py-12 bg-gradient-to-b from-dark-blue to-night-blue min-h-screen">
+    <main class="py-8 lg:py-12 bg-gradient-to-b from-dark-blue to-night-blue min-h-screen">
         <div class="container mx-auto px-6">
             <div class="max-w-6xl mx-auto">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start" style="min-height: 1200px;">
@@ -425,7 +460,7 @@
                     </div>
 
                     <!-- Colonne latérale : Récapitulatif -->
-                    <div class="lg:col-span-1" style="padding-top: 120px;">
+                    <div class="lg:col-span-1 lg:pt-32 pt-8">
                         <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-8 border border-gold/30 backdrop-blur-sm order-summary">
                             <!-- Mini visuel produit -->
                             <div class="flex justify-center mb-6">

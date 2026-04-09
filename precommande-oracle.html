@@ -1664,6 +1664,19 @@ La production est lancée grâce aux premières commandes.</p>
                 }
             }
             
+            // Vérifier si on vient de la page livraison et scroller vers le panier
+            if (window.location.hash === '#cart-section' || document.referrer.includes('livraison.html')) {
+                setTimeout(() => {
+                    const cartSection = document.getElementById('cart-section');
+                    if (cartSection) {
+                        cartSection.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'start'
+                        });
+                    }
+                }, 100);
+            }
+            
             // Animation carrousel
             const slides = document.querySelectorAll('.carousel-slide');
             const dots = document.querySelectorAll('#carouselDots > div');
