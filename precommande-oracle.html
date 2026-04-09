@@ -1677,6 +1677,9 @@ La production est lancée grâce aux premières commandes.</p>
                 }, 100);
             }
             
+            // Appeler la fonction au chargement et après chaque mise à jour du panier
+            updateMobileCTAVisibility();
+            
             // Animation carrousel
             const slides = document.querySelectorAll('.carousel-slide');
             const dots = document.querySelectorAll('#carouselDots > div');
@@ -1854,6 +1857,22 @@ La production est lancée grâce aux premières commandes.</p>
             return descriptions[offerId] || '';
         }
         
+        // Gérer l'affichage du bouton mobile "Je précommande" selon le contenu du panier
+        function updateMobileCTAVisibility() {
+            const mobileStickyCta = document.getElementById('mobileStickyCta');
+            const cartItemsArray = Object.entries(cart);
+            
+            if (mobileStickyCta) {
+                if (cartItemsArray.length > 0) {
+                    // Cacher le bouton si le panier contient des articles
+                    mobileStickyCta.classList.add('mobile-cta-hidden');
+                } else {
+                    // Montrer le bouton si le panier est vide
+                    mobileStickyCta.classList.remove('mobile-cta-hidden');
+                }
+            }
+        }
+        
         // Fonction pour ajouter une offre au panier
         function addToCart(offerId) {
             console.log('addToCart appelé avec offerId:', offerId);
@@ -1975,6 +1994,9 @@ La production est lancée grâce aux premières commandes.</p>
             const clearButton = document.getElementById('clear-cart-button');
             const checkoutButton = document.getElementById('checkout-button');
             const checkoutButtonText = document.getElementById('checkout-button-text');
+            
+            // Mettre à jour la visibilité du bouton mobile "Je précommande"
+            updateMobileCTAVisibility();
             
             const cartItemsArray = Object.entries(cart);
             console.log('cartItemsArray.length:', cartItemsArray.length);
