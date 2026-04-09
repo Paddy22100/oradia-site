@@ -1632,6 +1632,25 @@ La production est lancée grâce aux premières commandes.</p>
     <script>
         // Configuration Stripe - clé publique supprimée
         const stripe = null; // Stripe('pk_test_XXXXXXXXXXXXXXXXXXXXXXXX');
+
+        function trackEvent(eventName, payload = {}) {
+            const eventPayload = {
+                event: eventName,
+                timestamp: Date.now(),
+                page: 'precommande-oracle',
+                ...payload
+            };
+
+            if (Array.isArray(window.dataLayer)) {
+                window.dataLayer.push(eventPayload);
+            }
+
+            if (typeof window.gtag === 'function') {
+                window.gtag('event', eventName, payload);
+            }
+
+            console.log('[tracking]', eventName, eventPayload);
+        }
         
         // Initialisation
         document.addEventListener('DOMContentLoaded', function() {
@@ -1663,6 +1682,8 @@ La production est lancée grâce aux premières commandes.</p>
                     console.error('Erreur lors de la restauration du panier:', e);
                 }
             }
+
+            updateMobileCTAVisibility();
             
             // Vérifier si on vient de la page livraison et scroller vers le panier
             if (window.location.hash === '#cart-section' || document.referrer.includes('livraison.html')) {
@@ -1676,9 +1697,6 @@ La production est lancée grâce aux premières commandes.</p>
                     }
                 }, 100);
             }
-            
-            // Appeler la fonction au chargement et après chaque mise à jour du panier
-            updateMobileCTAVisibility();
             
             // Animation carrousel
             const slides = document.querySelectorAll('.carousel-slide');
@@ -1860,17 +1878,10 @@ La production est lancée grâce aux premières commandes.</p>
         // Gérer l'affichage du bouton mobile "Je précommande" selon le contenu du panier
         function updateMobileCTAVisibility() {
             const mobileStickyCta = document.getElementById('mobileStickyCta');
-            const cartItemsArray = Object.entries(cart);
-            
-            if (mobileStickyCta) {
-                if (cartItemsArray.length > 0) {
-                    // Cacher le bouton si le panier contient des articles
-                    mobileStickyCta.classList.add('mobile-cta-hidden');
-                } else {
-                    // Montrer le bouton si le panier est vide
-                    mobileStickyCta.classList.remove('mobile-cta-hidden');
-                }
-            }
+            if (!mobileStickyCta) return;
+
+            const cartSize = cart && typeof cart === 'object' ? Object.keys(cart).length : 0;
+            mobileStickyCta.classList.toggle('mobile-cta-hidden', cartSize > 0);
         }
         
         // Fonction pour ajouter une offre au panier
@@ -1904,6 +1915,11 @@ La production est lancée grâce aux premières commandes.</p>
             
             console.log('Panier avant updateCartDisplay:', cart);
             updateCartDisplay();
+            trackEvent('add_to_cart', {
+                offer_id: offerId,
+                quantity: cart[offerId]?.quantity || 1,
+                unit_price: offer.priceEuros
+            });
             showCartSection();
             
             // Scroll doux vers le panier
@@ -1996,7 +2012,9 @@ La production est lancée grâce aux premières commandes.</p>
             const checkoutButtonText = document.getElementById('checkout-button-text');
             
             // Mettre à jour la visibilité du bouton mobile "Je précommande"
-            updateMobileCTAVisibility();
+            if (typeof updateMobileCTAVisibility === 'function') {
+                updateMobileCTAVisibility();
+            }
             
             const cartItemsArray = Object.entries(cart);
             console.log('cartItemsArray.length:', cartItemsArray.length);
@@ -2162,6 +2180,12 @@ La production est lancée grâce aux premières commandes.</p>
                 showError('Votre panier est vide');
                 return;
             }
+
+            const cartTotal = Object.values(cart).reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            trackEvent('start_checkout', {
+                items_count: cartItems.length,
+                total_eur: Number(cartTotal.toFixed(2))
+            });
             
             // Sauvegarder le panier dans localStorage
             localStorage.setItem('oradia-cart', JSON.stringify(cart));
@@ -2480,21 +2504,10 @@ La production est lancée grâce aux premières commandes.</p>
         console.log('URL hash:', window.location.hash);
 
         const mobileStickyCta = document.getElementById('mobileStickyCta');
-        const offersSection = document.getElementById('offres');
-        if (mobileStickyCta && offersSection && window.matchMedia('(max-width: 768px)').matches && 'IntersectionObserver' in window) {
-            const offersObserver = new IntersectionObserver((entries) => {
-                entries.forEach((entry) => {
-                    if (entry.isIntersecting) {
-                        mobileStickyCta.classList.add('mobile-cta-hidden');
-                    } else {
-                        mobileStickyCta.classList.remove('mobile-cta-hidden');
-                    }
-                });
-            }, {
-                threshold: 0.15
-            });
-
-            offersObserver.observe(offersSection);
+        if (mobileStickyCta && window.matchMedia('(max-width: 768px)').matches) {
+            if (typeof updateMobileCTAVisibility === 'function') {
+                updateMobileCTAVisibility();
+            }
         }
         
         // Fonction générique de scroll vers une ancre

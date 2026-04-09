@@ -185,11 +185,11 @@
                             Consultation
                         </button>
                         <div class="ml-auto flex gap-3">
-                            <select class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-1 text-sm">
-                                <option>Derniers 30 jours</option>
-                                <option>Derniers 3 mois</option>
-                                <option>Dernière année</option>
-                                <option>Toutes les dates</option>
+                            <select id="periodFilter" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-1 text-sm">
+                                <option value="today">Aujourd'hui</option>
+                                <option value="7d">7 derniers jours</option>
+                                <option value="30d" selected>30 derniers jours</option>
+                                <option value="all">Toutes les dates</option>
                             </select>
                         </div>
                     </div>
@@ -341,8 +341,23 @@
         ];
 
         let currentFilter = 'all';
+        let currentPeriod = '30d';
         let displayedTirages = 0;
         const tiragesPerPage = 3;
+
+        function isInSelectedPeriod(dateString) {
+            if (currentPeriod === 'all') return true;
+
+            const baseDate = new Date(Math.max(...tiragesData.map(t => new Date(t.date).getTime())));
+            const tirageDate = new Date(dateString);
+            const diffMs = baseDate.getTime() - tirageDate.getTime();
+            const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+            if (currentPeriod === 'today') return diffDays === 0;
+            if (currentPeriod === '7d') return diffDays <= 7;
+            if (currentPeriod === '30d') return diffDays <= 30;
+            return true;
+        }
 
         // Initialisation
         document.addEventListener('DOMContentLoaded', () => {
@@ -372,14 +387,14 @@
             const container = document.getElementById('tiragesList');
             container.innerHTML = '';
 
-            const filteredTirages = currentFilter === 'all' 
-                ? tiragesData 
-                : tiragesData.filter(t => {
-                    if (currentFilter === 'guidance') return t.type.includes('Guidance');
-                    if (currentFilter === 'cercle') return t.type.includes('Cercle');
-                    if (currentFilter === 'consultation') return t.type.includes('Consultation');
-                    return true;
-                });
+            const filteredTirages = tiragesData.filter(t => {
+                const typeMatches = currentFilter === 'all'
+                    || (currentFilter === 'guidance' && t.type.includes('Guidance'))
+                    || (currentFilter === 'cercle' && t.type.includes('Cercle'))
+                    || (currentFilter === 'consultation' && t.type.includes('Consultation'));
+
+                return typeMatches && isInSelectedPeriod(t.date);
+            });
 
             const toDisplay = filteredTirages.slice(0, displayedTirages + tiragesPerPage);
             
@@ -527,6 +542,15 @@
                     renderTirages();
                 });
             });
+
+            const periodFilter = document.getElementById('periodFilter');
+            if (periodFilter) {
+                periodFilter.addEventListener('change', () => {
+                    currentPeriod = periodFilter.value;
+                    displayedTirages = 0;
+                    renderTirages();
+                });
+            }
 
             // Load more
             document.getElementById('loadMoreBtn').addEventListener('click', () => {

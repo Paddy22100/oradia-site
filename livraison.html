@@ -156,6 +156,10 @@
             background-color: rgba(212,175,55,0.1);
             box-shadow: 0 0 0 2px rgba(212,175,55,0.3);
         }
+
+        #mobile-checkout-bar {
+            padding-bottom: max(12px, env(safe-area-inset-bottom));
+        }
     </style>
 </head>
 
@@ -231,7 +235,7 @@
     </section>
 
     <!-- Main Checkout Area -->
-    <main class="py-8 lg:py-12 bg-gradient-to-b from-dark-blue to-night-blue min-h-screen">
+    <main class="py-8 lg:py-12 pb-32 lg:pb-12 bg-gradient-to-b from-dark-blue to-night-blue min-h-screen">
         <div class="container mx-auto px-6">
             <div class="max-w-6xl mx-auto">
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start" style="min-height: 1200px;">
@@ -259,22 +263,22 @@
                                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                     <div>
                                         <label class="block text-gold mb-2">Prénom *</label>
-                                        <input type="text" name="firstName" required class="form-input" placeholder="Votre prénom">
+                                        <input type="text" name="firstName" required autocomplete="given-name" class="form-input" placeholder="Votre prénom">
                                     </div>
                                     <div>
                                         <label class="block text-gold mb-2">Nom *</label>
-                                        <input type="text" name="lastName" required class="form-input" placeholder="Votre nom">
+                                        <input type="text" name="lastName" required autocomplete="family-name" class="form-input" placeholder="Votre nom">
                                     </div>
                                 </div>
 
                                 <div>
                                     <label class="block text-gold mb-2">Email *</label>
-                                    <input type="email" name="email" required class="form-input" placeholder="votre@email.com">
+                                    <input type="email" name="email" required autocomplete="email" class="form-input" placeholder="votre@email.com">
                                 </div>
 
                                 <div>
                                     <label class="block text-gold mb-2">Téléphone</label>
-                                    <input type="tel" name="phone" class="form-input" placeholder="06 12 34 56 78">
+                                    <input type="tel" name="phone" autocomplete="tel" class="form-input" placeholder="06 12 34 56 78">
                                 </div>
 
                                 <!-- Mode de livraison -->
@@ -392,11 +396,11 @@
                                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div>
                                                 <label class="block text-gold mb-2">Code postal *</label>
-                                                <input type="text" name="postalCode" required pattern="[0-9]{5}" class="form-input" placeholder="75001">
+                                                <input type="text" name="postalCode" required pattern="[0-9]{5}" autocomplete="postal-code" class="form-input" placeholder="75001">
                                             </div>
                                             <div>
                                                 <label class="block text-gold mb-2">Ville *</label>
-                                                <input type="text" name="city" required class="form-input" placeholder="Paris">
+                                                <input type="text" name="city" required autocomplete="address-level2" class="form-input" placeholder="Paris">
                                             </div>
                                             <div>
                                                 <label class="block text-gold mb-2">Pays *</label>
@@ -420,7 +424,7 @@
 
                                         <div>
                                             <label class="block text-gold mb-2">Adresse de facturation *</label>
-                                            <input type="text" name="billingAddress" class="form-input" placeholder="123 rue de Facturation">
+                                            <input type="text" name="billingAddress" autocomplete="street-address" class="form-input" placeholder="123 rue de Facturation">
                                         </div>
 
                                         <div>
@@ -431,11 +435,11 @@
                                         <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                                             <div>
                                                 <label class="block text-gold mb-2">Code postal *</label>
-                                                <input type="text" name="billingPostalCode" pattern="[0-9]{5}" class="form-input" placeholder="75001">
+                                                <input type="text" name="billingPostalCode" pattern="[0-9]{5}" autocomplete="postal-code" class="form-input" placeholder="75001">
                                             </div>
                                             <div>
                                                 <label class="block text-gold mb-2">Ville *</label>
-                                                <input type="text" name="billingCity" class="form-input" placeholder="Paris">
+                                                <input type="text" name="billingCity" autocomplete="address-level2" class="form-input" placeholder="Paris">
                                             </div>
                                             <div>
                                                 <label class="block text-gold mb-2">Pays *</label>
@@ -462,10 +466,19 @@
                     <!-- Colonne latérale : Récapitulatif -->
                     <div class="lg:col-span-1 lg:pt-32 pt-8">
                         <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-8 border border-gold/30 backdrop-blur-sm order-summary">
+                            <button id="toggleSummaryMobile" type="button" class="lg:hidden w-full flex items-center justify-between mb-4 px-4 py-3 rounded-xl border border-gold/20 bg-[rgba(5,20,40,0.45)]">
+                                <span class="text-light-gold font-semibold">Votre commande</span>
+                                <div class="flex items-center gap-3">
+                                    <span id="mobile-summary-total" class="text-gold font-bold">-</span>
+                                    <i id="mobile-summary-chevron" class="fas fa-chevron-down text-gold/70 text-xs transition-transform"></i>
+                                </div>
+                            </button>
+
+                            <div id="summaryContent" class="hidden lg:block">
                             <!-- Mini visuel produit -->
                             <div class="flex justify-center mb-6">
                                 <div class="relative w-16 h-16 bg-gradient-to-br from-gold/20 to-light-gold/10 rounded-xl flex items-center justify-center border border-gold/30 shadow-lg shadow-gold/20 overflow-hidden">
-                                    <img src="images/Coffret.png" alt="Coffret Oracle Oradia" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/64x64/d4af37/0a192f?text=📦'">
+                                    <img src="images/Coffret.png" alt="Coffret Oracle Oradia" loading="lazy" class="w-full h-full object-cover" onerror="this.src='https://via.placeholder.com/64x64/d4af37/0a192f?text=📦'">
                                     <div class="absolute -top-1 -right-1 w-4 h-4 bg-gold rounded-full flex items-center justify-center">
                                         <i class="fas fa-star text-night-blue text-xs"></i>
                                     </div>
@@ -513,12 +526,25 @@
                                     Paiement sécurisé via Stripe
                                 </p>
                             </div>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </main>
+
+    <div id="mobile-checkout-bar" class="lg:hidden fixed bottom-0 left-0 right-0 z-40 bg-[rgba(5,20,40,0.92)] border-t border-gold/20 backdrop-blur-sm px-4 pt-3">
+        <div class="max-w-6xl mx-auto flex items-center justify-between gap-3">
+            <div>
+                <p class="text-light-gold/60 text-xs uppercase tracking-wide">Total TTC</p>
+                <p id="mobile-final-total" class="text-gold font-bold text-xl">-</p>
+            </div>
+            <button id="mobileProceedToPayment" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-5 rounded-full disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                Continuer
+            </button>
+        </div>
+    </div>
 
     <!-- Modale Sélection Point Relais -->
     <div id="relayModal" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
@@ -574,6 +600,153 @@
     <script src="components/footer-manager.js" defer></script>
 
     <script>
+        function trackEvent(eventName, payload = {}) {
+            const eventPayload = {
+                event: eventName,
+                timestamp: Date.now(),
+                page: 'livraison',
+                ...payload
+            };
+
+            if (Array.isArray(window.dataLayer)) {
+                window.dataLayer.push(eventPayload);
+            }
+
+            if (typeof window.gtag === 'function') {
+                window.gtag('event', eventName, payload);
+            }
+
+            console.log('[tracking]', eventName, eventPayload);
+        }
+
+        const fieldRules = {
+            firstName: {
+                required: true,
+                message: 'Veuillez entrer votre prénom'
+            },
+            lastName: {
+                required: true,
+                message: 'Veuillez entrer votre nom'
+            },
+            email: {
+                required: true,
+                pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                message: 'Veuillez entrer une adresse email valide'
+            },
+            address: {
+                requiredWhen: () => selectedDelivery === 'home',
+                minLength: 5,
+                message: 'Veuillez entrer une adresse complète'
+            },
+            postalCode: {
+                requiredWhen: () => selectedDelivery === 'home',
+                pattern: /^\d{5}$/,
+                message: 'Veuillez entrer un code postal valide (5 chiffres)'
+            },
+            city: {
+                requiredWhen: () => selectedDelivery === 'home',
+                minLength: 2,
+                message: 'Veuillez entrer une ville'
+            },
+            billingAddress: {
+                requiredWhen: () => document.getElementById('differentBillingAddress')?.checked,
+                minLength: 5,
+                message: 'Veuillez entrer une adresse de facturation complète'
+            },
+            billingPostalCode: {
+                requiredWhen: () => document.getElementById('differentBillingAddress')?.checked,
+                pattern: /^\d{5}$/,
+                message: 'Veuillez entrer un code postal de facturation valide (5 chiffres)'
+            },
+            billingCity: {
+                requiredWhen: () => document.getElementById('differentBillingAddress')?.checked,
+                minLength: 2,
+                message: 'Veuillez entrer une ville de facturation'
+            }
+        };
+
+        function getFieldElement(fieldName) {
+            return document.querySelector(`[name="${fieldName}"]`);
+        }
+
+        function setFieldError(fieldName, message) {
+            const input = getFieldElement(fieldName);
+            if (!input) return;
+
+            input.classList.add('border-red-400');
+            input.classList.remove('border-gold/30');
+
+            let errorEl = input.parentElement.querySelector(`.field-error[data-for="${fieldName}"]`);
+            if (!errorEl) {
+                errorEl = document.createElement('p');
+                errorEl.className = 'field-error text-red-300 text-xs mt-2';
+                errorEl.dataset.for = fieldName;
+                input.parentElement.appendChild(errorEl);
+            }
+            errorEl.textContent = message;
+        }
+
+        function clearFieldError(fieldName) {
+            const input = getFieldElement(fieldName);
+            if (!input) return;
+
+            input.classList.remove('border-red-400');
+            const errorEl = input.parentElement.querySelector(`.field-error[data-for="${fieldName}"]`);
+            if (errorEl) {
+                errorEl.remove();
+            }
+        }
+
+        function validateField(fieldName, silent = false) {
+            const rule = fieldRules[fieldName];
+            const input = getFieldElement(fieldName);
+
+            if (!rule || !input) return true;
+
+            const value = (input.value || '').trim();
+            const mustValidate = rule.required || (typeof rule.requiredWhen === 'function' && rule.requiredWhen());
+
+            if (!mustValidate) {
+                clearFieldError(fieldName);
+                return true;
+            }
+
+            if (!value) {
+                if (!silent) setFieldError(fieldName, rule.message);
+                return false;
+            }
+
+            if (rule.minLength && value.length < rule.minLength) {
+                if (!silent) setFieldError(fieldName, rule.message);
+                return false;
+            }
+
+            if (rule.pattern && !rule.pattern.test(value)) {
+                if (!silent) setFieldError(fieldName, rule.message);
+                return false;
+            }
+
+            clearFieldError(fieldName);
+            return true;
+        }
+
+        function setupInlineValidation() {
+            Object.keys(fieldRules).forEach((fieldName) => {
+                const input = getFieldElement(fieldName);
+                if (!input) return;
+
+                input.addEventListener('blur', () => {
+                    validateField(fieldName, false);
+                });
+
+                input.addEventListener('input', () => {
+                    if (input.parentElement.querySelector(`.field-error[data-for="${fieldName}"]`)) {
+                        validateField(fieldName, false);
+                    }
+                });
+            });
+        }
+
         // Configuration unique officielle des offres (prix en euros)
         const OFFER_CONFIG = {
             'standard': { name: 'Standard', priceEuros: 38 },
@@ -873,6 +1046,8 @@
             
             const total = productsSubtotal + deliveryPrice;
             document.getElementById('final-total').textContent = `${total.toFixed(2)} €`;
+            document.getElementById('mobile-final-total').textContent = `${total.toFixed(2)} €`;
+            document.getElementById('mobile-summary-total').textContent = `${total.toFixed(2)} €`;
         }
 
         // Gestion des options de livraison
@@ -901,6 +1076,10 @@
                 }
 
                 applyDeliveryRequirements();
+                trackEvent('select_delivery', {
+                    method: selectedDelivery,
+                    delivery_eur: Number((deliveryPrice || 0).toFixed(2))
+                });
                 
                 // Mettre à jour les totaux
                 const productsSubtotal = Object.entries(cart).reduce((sum, [id, item]) => {
@@ -914,20 +1093,12 @@
         function validateForm() {
             const form = document.getElementById('deliveryForm');
             const formData = new FormData(form);
-            
-            // Vérifier les champs requis de base
-            const baseRequiredFields = ['firstName', 'lastName', 'email'];
-            for (const field of baseRequiredFields) {
-                if (!formData.get(field) || formData.get(field).trim() === '') {
-                    showError('Veuillez remplir tous les champs obligatoires');
-                    return false;
-                }
-            }
-            
-            // Vérifier l'email
-            const email = formData.get('email');
-            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                showError('Veuillez entrer une adresse email valide');
+
+            const invalidFields = Object.keys(fieldRules).filter((fieldName) => !validateField(fieldName, false));
+            if (invalidFields.length > 0) {
+                showError('Veuillez corriger les champs du formulaire');
+                const firstInvalid = getFieldElement(invalidFields[0]);
+                if (firstInvalid) firstInvalid.focus();
                 return false;
             }
             
@@ -942,41 +1113,6 @@
                 showRelayError('Veuillez choisir un point relais');
                 document.getElementById('chooseRelayBtn').focus();
                 return false;
-            }
-            
-            // Vérifier les champs adresse seulement si ce n'est pas de la remise en main propre
-            if (selectedDelivery === 'home') {
-                const addressRequiredFields = ['address', 'postalCode', 'city', 'country'];
-                for (const field of addressRequiredFields) {
-                    if (!formData.get(field) || formData.get(field).trim() === '') {
-                        showError('Veuillez remplir l\'adresse de livraison complète');
-                        return false;
-                    }
-                }
-            }
-
-            if (selectedDelivery === 'home') {
-                const postalCode = formData.get('postalCode');
-                if (!/^\d{5}$/.test(postalCode)) {
-                    showError('Veuillez entrer un code postal valide (5 chiffres)');
-                    return false;
-                }
-            }
-
-            if (formData.get('differentBillingAddress') === 'on') {
-                const billingRequiredFields = ['billingAddress', 'billingPostalCode', 'billingCity', 'billingCountry'];
-                for (const field of billingRequiredFields) {
-                    if (!formData.get(field) || formData.get(field).trim() === '') {
-                        showError('Veuillez remplir l\'adresse de facturation complète');
-                        return false;
-                    }
-                }
-
-                const billingPostalCode = formData.get('billingPostalCode');
-                if (!/^\d{5}$/.test(billingPostalCode)) {
-                    showError('Veuillez entrer un code postal de facturation valide (5 chiffres)');
-                    return false;
-                }
             }
             
             return true;
@@ -1060,10 +1196,19 @@
         }
 
         // Procéder au paiement
+        let checkoutStarted = false;
+
         document.getElementById('proceedToPayment').addEventListener('click', async () => {
             if (!validateForm()) {
                 return;
             }
+
+            const checkoutTotal = Object.entries(cart).reduce((sum, [, item]) => sum + (item.price * item.quantity), 0) + (deliveryPrice || 0);
+            trackEvent('checkout_submit', {
+                delivery_method: selectedDelivery,
+                total_eur: Number(checkoutTotal.toFixed(2))
+            });
+            checkoutStarted = true;
 
             const form = document.getElementById('deliveryForm');
             const formData = new FormData(form);
@@ -1149,74 +1294,70 @@
                 });
 
                 const contentType = response.headers.get('content-type') || '';
-                const rawResponse = await response.text();
                 let responseData = null;
 
-                if (rawResponse) {
-                    try {
-                        responseData = JSON.parse(rawResponse);
-                    } catch (parseError) {
-                        console.error('Réponse checkout non-JSON:', rawResponse);
-                    }
+                if (contentType.includes('application/json')) {
+                    responseData = await response.json();
+                } else {
+                    const rawText = await response.text();
+                    throw new Error(`Réponse serveur invalide (${response.status}): ${rawText.slice(0, 200)}`);
                 }
 
-                if (!response.ok) {
-                    const fallbackMessage = (!contentType.includes('application/json') || !responseData)
-                        ? 'Le backend API ne répond pas en JSON. Lance le projet avec `vercel dev` au lieu de Live Server seul.'
-                        : null;
-                    const errorData = responseData || { message: fallbackMessage || `Erreur HTTP ${response.status}` };
-                    
-                    console.error('=== CHECKOUT ERROR RAW ===');
-                    console.error(JSON.stringify(errorData, null, 2));
-                    
-                    if (errorData.details && Array.isArray(errorData.details)) {
-                        console.error('=== VALIDATION DETAILS ===');
-                        errorData.details.forEach((detail, index) => {
-                            console.error(`${index + 1}. ${detail}`);
-                        });
-                    }
-                    
-                    const errorMessage = errorData.error || errorData.message || 'Erreur lors de la création de la session de paiement';
-                    showError(errorMessage, errorData);
+                if (!response.ok || !responseData?.success) {
+                    const detailsList = responseData?.details || responseData?.errors || [];
+                    const errorMessage = responseData?.message || responseData?.error || 'Erreur lors de la création de la session de paiement';
+                    const debugInfo = {
+                        response_status: response.status,
+                        response_data: responseData,
+                        order_data: orderData,
+                        content_type: contentType
+                    };
+
+                    console.error('Erreur backend checkout:', debugInfo);
+                    showError(errorMessage, {
+                        status: response.status,
+                        details: detailsList,
+                        raw: debugInfo
+                    });
+
+                    trackEvent('checkout_error', {
+                        delivery_method: selectedDelivery,
+                        reason: errorMessage,
+                        status_code: response.status
+                    });
                     return;
                 }
 
-                if (!responseData) {
-                    showError('Réponse invalide du backend. Lance le projet avec `vercel dev` pour disposer des routes API.');
+                if (responseData.url) {
+                    trackEvent('checkout_success', {
+                        delivery_method: selectedDelivery,
+                        total_eur: Number(checkoutTotal.toFixed(2))
+                    });
+                    window.location.href = responseData.url;
                     return;
                 }
-                
-                const session = responseData;
-                
-                if (!session.success || !session.sessionId) {
-                    throw new Error(session.message || 'Session invalide');
-                }
 
-                // Récupérer la clé Stripe (cohérent avec precommande-oracle.html)
-                const stripeKey = 'pk_test_51TAsp69jcRbNO5oykYfnwCWLjGUVyCGLjFrjcgrMSRzMhNnH8gucs00YSTJoCEcwcCGsHvTjscA9Cn7MPvr4xl4c001dVA4e2j';
-                
-                console.log('STRIPE KEY FOUND:', !!stripeKey);
-                console.log('STRIPE KEY PREFIX:', stripeKey ? stripeKey.substring(0, 7) : 'missing');
-                
-                if (!stripeKey) {
-                    showError('Configuration Stripe manquante');
-                    submitBtn.disabled = false;
-                    submitBtn.innerHTML = originalBtnText;
+                if (responseData.sessionId) {
+                    trackEvent('checkout_success', {
+                        delivery_method: selectedDelivery,
+                        total_eur: Number(checkoutTotal.toFixed(2))
+                    });
+                    window.location.href = `/api/stripe-redirect?session_id=${encodeURIComponent(responseData.sessionId)}`;
                     return;
                 }
-                
-                // Rediriger vers Stripe
-                const stripe = Stripe(stripeKey);
-                await stripe.redirectToCheckout({ sessionId: session.sessionId });
 
+                throw new Error('Aucune URL de redirection Stripe reçue');
             } catch (error) {
-                console.error('Payment error:', error);
-                showError(error.message || 'Une erreur est survenue. Veuillez réessayer.', {
-                    errors: [error.message],
-                    stack: error.stack
+                console.error('Erreur checkout détaillée:', error);
+                showError('Erreur technique. Veuillez réessayer dans quelques instants.', {
+                    message: error.message
                 });
-                
-                // Restaurer le bouton
+
+                trackEvent('checkout_error', {
+                    delivery_method: selectedDelivery,
+                    reason: error.message || 'technical_error'
+                });
+            } finally {
                 submitBtn.disabled = false;
                 submitBtn.innerHTML = originalBtnText;
             }
@@ -1360,6 +1501,40 @@
             loadCart();
             clearRelayPoint();
             renderRelayPoint();
+            setupInlineValidation();
+
+            const checkoutStatus = new URLSearchParams(window.location.search).get('checkout');
+            if (checkoutStatus === 'cancelled') {
+                showError('Paiement annulé. Votre panier et vos informations sont conservés.');
+                trackEvent('checkout_cancelled', { step: 'payment_redirect' });
+            }
+
+            const toggleSummaryBtn = document.getElementById('toggleSummaryMobile');
+            const summaryContent = document.getElementById('summaryContent');
+            const summaryChevron = document.getElementById('mobile-summary-chevron');
+            const mobileProceedBtn = document.getElementById('mobileProceedToPayment');
+            const desktopProceedBtn = document.getElementById('proceedToPayment');
+
+            if (toggleSummaryBtn && summaryContent && summaryChevron) {
+                toggleSummaryBtn.addEventListener('click', () => {
+                    summaryContent.classList.toggle('hidden');
+                    summaryChevron.classList.toggle('rotate-180');
+                });
+            }
+
+            if (mobileProceedBtn && desktopProceedBtn) {
+                mobileProceedBtn.addEventListener('click', () => {
+                    desktopProceedBtn.click();
+                });
+
+                const syncCheckoutButtons = () => {
+                    mobileProceedBtn.disabled = desktopProceedBtn.disabled;
+                };
+
+                syncCheckoutButtons();
+                const observer = new MutationObserver(syncCheckoutButtons);
+                observer.observe(desktopProceedBtn, { attributes: true, attributeFilter: ['disabled'] });
+            }
 
             const differentBillingAddressCheckbox = document.getElementById('differentBillingAddress');
             if (differentBillingAddressCheckbox) {
@@ -1372,6 +1547,23 @@
             if (homeDelivery) {
                 homeDelivery.click();
             }
+
+            const deliveryForm = document.getElementById('deliveryForm');
+            let formTouched = false;
+            if (deliveryForm) {
+                deliveryForm.addEventListener('input', () => {
+                    formTouched = true;
+                });
+            }
+
+            window.addEventListener('beforeunload', () => {
+                if (formTouched && !checkoutStarted) {
+                    trackEvent('abandon_step', {
+                        step: 'livraison',
+                        delivery_method: selectedDelivery || 'none'
+                    });
+                }
+            });
         });
     </script>
 </body>

@@ -18,7 +18,15 @@ export default async function handler(req, res) {
 
     try {
         verifyAdminAuth(req);
-        const { section, page = 1, limit = 10 } = req.query;
+        const {
+            section,
+            page = 1,
+            limit = 10,
+            status = 'all',
+            period = 'all',
+            offer = 'all',
+            q = ''
+        } = req.query;
         
         // Validation du paramètre section
         const validSections = ['overview', 'preorders', 'donors', 'waitlist'];
@@ -36,7 +44,7 @@ export default async function handler(req, res) {
                 result = await getOverview();
                 break;
             case 'preorders':
-                result = await getPreorders(page, limit);
+                result = await getPreorders(page, limit, { status, period, offer, q });
                 break;
             case 'donors':
                 result = await getDonors(page, limit);
@@ -67,7 +75,7 @@ async function getOverview() {
         const { data: preorders, error: preordersError } = await supabase
             .from('preorders')
             .select('amount_total, email, paid_status, created_at')
-            .eq('paid_status', 'completed');
+            .order('created_at', { ascending: false });
 
         // Dons
         const { data: donors, error: donorsError } = await supabase
@@ -84,10 +92,21 @@ async function getOverview() {
             throw new Error('Erreur lors de la récupération des données');
         }
 
-        // Calculs
-        const preordersCount = preorders?.length || 0;
-        const preordersTotal = preorders?.reduce((sum, p) => sum + Number(p.amount_total || 0), 0) || 0;
-        const preordersNoEmail = preorders?.filter(p => !p.email).length || 0;
+        const now = new Date();
+        const dayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const sevenDaysAgo = new Date(now);
+        sevenDaysAgo.setDate(now.getDate() - 7);
+        const thirtyDaysAgo = new Date(now);
+        thirtyDaysAgo.setDate(now.getDate() - 30);
+
+        const allPreorders = preorders || [];
+        const completedPreorders = allPreorders.filter(p => p.paid_status === 'completed');
+        const pendingPreorders = allPreorders.filter(p => p.paid_status === 'pending');
+        const failedPreorders = allPreorders.filter(p => p.paid_status === 'failed');
+
+        const preordersCount = completedPreorders.length;
+        const preordersTotal = completedPreorders.reduce((sum, p) => sum + Number(p.amount_total || 0), 0);
+        const preordersNoEmail = completedPreorders.filter(p => !p.email).length;
 
         const donorsCount = donors?.length || 0;
         const donorsTotal = donors?.reduce((sum, d) => sum + Number(d.amount_total || 0), 0) || 0;
@@ -96,15 +115,31 @@ async function getOverview() {
         const waitlistCount = waitlist?.length || 0;
         const waitlistNotSynced = waitlist?.filter(w => !w.brevo_synced).length || 0;
 
+        const revenueToday = completedPreorders
+            .filter(p => new Date(p.created_at) >= dayStart)
+            .reduce((sum, p) => sum + Number(p.amount_total || 0), 0);
+        const revenue7d = completedPreorders
+            .filter(p => new Date(p.created_at) >= sevenDaysAgo)
+            .reduce((sum, p) => sum + Number(p.amount_total || 0), 0);
+        const revenue30d = completedPreorders
+            .filter(p => new Date(p.created_at) >= thirtyDaysAgo)
+            .reduce((sum, p) => sum + Number(p.amount_total || 0), 0);
+
+        const averageBasket = preordersCount > 0 ? preordersTotal / preordersCount : 0;
+
         const globalTotal = preordersTotal + donorsTotal;
         const totalContacts = preordersCount + donorsCount + waitlistCount;
+        const conversionRate = waitlistCount > 0 ? (preordersCount / waitlistCount) * 100 : 0;
 
         return {
             data: {
                 preorders: {
                     count: preordersCount,
                     total: Math.round(preordersTotal * 100) / 100,
-                    noEmail: preordersNoEmail
+                    noEmail: preordersNoEmail,
+                    pendingCount: pendingPreorders.length,
+                    failedCount: failedPreorders.length,
+                    averageBasket: Math.round(averageBasket * 100) / 100
                 },
                 donors: {
                     count: donorsCount,
@@ -118,6 +153,12 @@ async function getOverview() {
                 global: {
                     total: Math.round(globalTotal * 100) / 100,
                     totalContacts
+                },
+                performance: {
+                    revenueToday: Math.round(revenueToday * 100) / 100,
+                    revenue7d: Math.round(revenue7d * 100) / 100,
+                    revenue30d: Math.round(revenue30d * 100) / 100,
+                    conversionRate: Math.round(conversionRate * 10) / 10
                 }
             }
         };
@@ -127,16 +168,38 @@ async function getOverview() {
 }
 
 // Précommandes avec pagination
-async function getPreorders(page, limit) {
+async function getPreorders(page, limit, filters = {}) {
     try {
-        const offset = (page - 1) * limit;
-        
-        const { data, error, count } = await supabase
+        const pageNumber = parseInt(page, 10);
+        const pageSize = parseInt(limit, 10);
+        const offset = (pageNumber - 1) * pageSize;
+
+        let query = supabase
             .from('preorders')
             .select('*', { count: 'exact' })
-            .eq('paid_status', 'completed')
-            .order('created_at', { ascending: false })
-            .range(offset, offset + limit - 1);
+            .order('created_at', { ascending: false });
+
+        if (filters.status && filters.status !== 'all') {
+            query = query.eq('paid_status', filters.status);
+        }
+
+        if (filters.offer && filters.offer !== 'all') {
+            query = query.eq('offer', filters.offer);
+        }
+
+        if (filters.period && filters.period !== 'all') {
+            const startDate = getPeriodStartDate(filters.period);
+            if (startDate) {
+                query = query.gte('created_at', startDate.toISOString());
+            }
+        }
+
+        if (filters.q && String(filters.q).trim().length > 1) {
+            const safeQ = String(filters.q).trim().replace(/[%_,]/g, '');
+            query = query.or(`email.ilike.%${safeQ}%,full_name.ilike.%${safeQ}%`);
+        }
+
+        const { data, error, count } = await query.range(offset, offset + pageSize - 1);
 
         if (error) throw error;
 
@@ -148,10 +211,10 @@ async function getPreorders(page, limit) {
         return {
             data: normalizedData,
             pagination: {
-                page: parseInt(page),
-                limit: parseInt(limit),
+                page: pageNumber,
+                limit: pageSize,
                 total: count || 0,
-                pages: Math.ceil((count || 0) / limit)
+                pages: Math.ceil((count || 0) / pageSize)
             }
         };
     } catch (error) {
@@ -237,4 +300,26 @@ function formatDateFR(dateString) {
         hour: '2-digit',
         minute: '2-digit'
     }).format(new Date(dateString));
+}
+
+function getPeriodStartDate(period) {
+    const now = new Date();
+
+    if (period === 'today') {
+        return new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    }
+
+    if (period === '7d') {
+        const d = new Date(now);
+        d.setDate(d.getDate() - 7);
+        return d;
+    }
+
+    if (period === '30d') {
+        const d = new Date(now);
+        d.setDate(d.getDate() - 30);
+        return d;
+    }
+
+    return null;
 }

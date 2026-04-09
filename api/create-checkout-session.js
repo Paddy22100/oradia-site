@@ -377,7 +377,7 @@ module.exports = async (req, res) => {
             line_items: lineItems,
             mode: 'payment',
             success_url: `${frontendUrl}/success-precommande.html?session_id={CHECKOUT_SESSION_ID}`,
-            cancel_url: `${frontendUrl}/precommande-oracle.html`,
+            cancel_url: `${frontendUrl}/livraison.html?checkout=cancelled`,
             custom_text: {
               submit: {
                 message: '✨ Merci pour ta confiance — ton voyage commence ici.'

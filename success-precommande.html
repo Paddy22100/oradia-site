@@ -308,6 +308,25 @@
 <script src="components/scroll-effects.js"></script>
 
 <script>
+    function trackEvent(eventName, payload = {}) {
+        const eventPayload = {
+            event: eventName,
+            timestamp: Date.now(),
+            page: 'success-precommande',
+            ...payload
+        };
+
+        if (Array.isArray(window.dataLayer)) {
+            window.dataLayer.push(eventPayload);
+        }
+
+        if (typeof window.gtag === 'function') {
+            window.gtag('event', eventName, payload);
+        }
+
+        console.log('[tracking]', eventName, eventPayload);
+    }
+
     // Vidage du panier après commande réussie
     localStorage.removeItem('oradia-cart');
     
@@ -316,6 +335,9 @@
     const sessionId = urlParams.get('session_id');
     
     if (sessionId) {
+        trackEvent('checkout_success_confirmed', {
+            session_id: sessionId
+        });
         console.log('🔍 Success page Session ID:', sessionId);
         console.log('🔍 Pour retrouver cette session dans Stripe Dashboard:');
         console.log('1. Allez dans https://dashboard.stripe.com/search');
@@ -323,6 +345,10 @@
         console.log('3. Ou directement: https://dashboard.stripe.com/search?query=' + sessionId);
         
         // Optionnel: validation avec le backend
+    } else {
+        trackEvent('checkout_success_confirmed', {
+            session_id: 'missing'
+        });
     }
     
     // Animation d'entrée pour l'icône succès

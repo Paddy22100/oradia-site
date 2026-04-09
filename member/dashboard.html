@@ -341,21 +341,21 @@
                 </div>
                 
                 <div class="stat-card rounded-xl p-6 text-center card-hover">
-                    <div class="text-4xl font-bold text-gold mb-2" id="thisMonth">3</div>
-                    <div class="text-light-gold/80 text-sm">Tirages ce mois</div>
-                    <i class="fas fa-calendar text-gold/30 text-2xl mt-3"></i>
+                    <div class="text-4xl font-bold text-gold mb-2" id="creditsLeft">5</div>
+                    <div class="text-light-gold/80 text-sm">Crédits restants</div>
+                    <i class="fas fa-bolt text-gold/30 text-2xl mt-3"></i>
                 </div>
                 
                 <div class="stat-card rounded-xl p-6 text-center card-hover">
-                    <div class="text-4xl font-bold text-gold mb-2" id="streakDays">7</div>
-                    <div class="text-light-gold/80 text-sm">Jours consécutifs</div>
-                    <i class="fas fa-fire text-gold/30 text-2xl mt-3"></i>
+                    <div class="text-4xl font-bold text-gold mb-2" id="subscriptionStatus">Actif</div>
+                    <div class="text-light-gold/80 text-sm">Abonnement</div>
+                    <i class="fas fa-crown text-gold/30 text-2xl mt-3"></i>
                 </div>
                 
                 <div class="stat-card rounded-xl p-6 text-center card-hover">
-                    <div class="text-4xl font-bold text-gold mb-2" id="memberLevel">Initié</div>
-                    <div class="text-light-gold/80 text-sm">Niveau membre</div>
-                    <i class="fas fa-star text-gold/30 text-2xl mt-3"></i>
+                    <div class="text-2xl font-bold text-gold mb-2" id="nextBillingDate">12 mai</div>
+                    <div class="text-light-gold/80 text-sm">Prochaine échéance</div>
+                    <i class="fas fa-calendar-check text-gold/30 text-2xl mt-3"></i>
                 </div>
             </section>
 
@@ -398,27 +398,27 @@
                         <i class="fas fa-cards-blank text-3xl text-gold mb-4"></i>
                         <h4 class="text-gold font-semibold mb-2">Nouveau tirage</h4>
                         <p class="text-light-gold/70 text-sm mb-4">Commencez une nouvelle consultation</p>
-                        <a href="../pelerin.html" class="inline-block bg-gold/20 text-gold px-4 py-2 rounded-lg hover:bg-gold/30 transition-colors">
+                        <a href="../pelerin.html" class="inline-block bg-gold text-night-blue px-4 py-2 rounded-lg hover:bg-light-gold transition-colors font-semibold">
                             Commencer
                         </a>
                     </div>
                     
                     <div class="bg-gradient-to-br from-[rgba(26,54,93,0.6)] to-[rgba(5,20,40,0.8)] rounded-xl p-6 border border-gold/20 text-center card-hover">
-                        <i class="fas fa-calendar-check text-3xl text-gold mb-4"></i>
-                        <h4 class="text-gold font-semibold mb-2">Prendre rendez-vous</h4>
-                        <p class="text-light-gold/70 text-sm mb-4">Réservez une guidance personnalisée</p>
-                        <a href="../rendez-vous.html" class="inline-block bg-gold/20 text-gold px-4 py-2 rounded-lg hover:bg-gold/30 transition-colors">
-                            Réserver
+                        <i class="fas fa-credit-card text-3xl text-gold mb-4"></i>
+                        <h4 class="text-gold font-semibold mb-2">Gérer mes crédits</h4>
+                        <p class="text-light-gold/70 text-sm mb-4">Achetez ou consultez vos crédits disponibles</p>
+                        <a href="abonnements.html" class="inline-block bg-gold text-night-blue px-4 py-2 rounded-lg hover:bg-light-gold transition-colors font-semibold">
+                            Gérer
                         </a>
                     </div>
                     
                     <div class="bg-gradient-to-br from-[rgba(26,54,93,0.6)] to-[rgba(5,20,40,0.8)] rounded-xl p-6 border border-gold/20 text-center card-hover">
-                        <i class="fas fa-book text-3xl text-gold mb-4"></i>
-                        <h4 class="text-gold font-semibold mb-2">Journal spirituel</h4>
-                        <p class="text-light-gold/70 text-sm mb-4">Notez vos réflexions et insights</p>
-                        <button class="inline-block bg-gold/20 text-gold px-4 py-2 rounded-lg hover:bg-gold/30 transition-colors">
-                            Écrire
-                        </button>
+                        <i class="fas fa-crown text-3xl text-gold mb-4"></i>
+                        <h4 class="text-gold font-semibold mb-2">Mon abonnement</h4>
+                        <p class="text-light-gold/70 text-sm mb-4">Voir le statut et la date de renouvellement</p>
+                        <a href="abonnements.html" class="inline-block bg-gold text-night-blue px-4 py-2 rounded-lg hover:bg-light-gold transition-colors font-semibold">
+                            Voir
+                        </a>
                     </div>
                 </div>
             </section>
@@ -453,9 +453,9 @@
             name: "Jean Dupont",
             memberSince: "Janvier 2024",
             totalTirages: 12,
-            thisMonth: 3,
-            streakDays: 7,
-            level: "Initié",
+            creditsLeft: 5,
+            subscriptionStatus: "Actif",
+            nextBillingDate: "12 mai",
             recentTirages: [
                 {
                     type: "Guidance Personnelle",
@@ -485,9 +485,9 @@
         document.getElementById('memberName').textContent = memberData.name;
         document.getElementById('memberSince').textContent = memberData.memberSince.split(' ')[0];
         document.getElementById('totalTirages').textContent = memberData.totalTirages;
-        document.getElementById('thisMonth').textContent = memberData.thisMonth;
-        document.getElementById('streakDays').textContent = memberData.streakDays;
-        document.getElementById('memberLevel').textContent = memberData.level;
+        document.getElementById('creditsLeft').textContent = memberData.creditsLeft;
+        document.getElementById('subscriptionStatus').textContent = memberData.subscriptionStatus;
+        document.getElementById('nextBillingDate').textContent = memberData.nextBillingDate;
 
         // Afficher les tirages récents
         const recentTiragesContainer = document.getElementById('recentTirages');

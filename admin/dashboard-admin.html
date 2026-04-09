@@ -223,6 +223,31 @@
                     </div>
                 </div>
             </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-8">
+                <div class="stat-card rounded-xl p-4">
+                    <p class="text-light-gold/70 text-xs uppercase tracking-wider">CA aujourd'hui</p>
+                    <p class="text-gold text-xl font-bold" id="revenueToday">-</p>
+                </div>
+                <div class="stat-card rounded-xl p-4">
+                    <p class="text-light-gold/70 text-xs uppercase tracking-wider">CA 7 jours</p>
+                    <p class="text-gold text-xl font-bold" id="revenue7d">-</p>
+                </div>
+                <div class="stat-card rounded-xl p-4">
+                    <p class="text-light-gold/70 text-xs uppercase tracking-wider">CA 30 jours</p>
+                    <p class="text-gold text-xl font-bold" id="revenue30d">-</p>
+                </div>
+                <div class="stat-card rounded-xl p-4">
+                    <p class="text-light-gold/70 text-xs uppercase tracking-wider">Panier moyen</p>
+                    <p class="text-gold text-xl font-bold" id="averageBasket">-</p>
+                </div>
+                <div class="stat-card rounded-xl p-4">
+                    <p class="text-light-gold/70 text-xs uppercase tracking-wider">Conversion waitlist</p>
+                    <p class="text-gold text-xl font-bold" id="conversionRate">-</p>
+                </div>
+            </div>
+
+            <div id="adminAlerts" class="space-y-3 mb-8"></div>
         </section>
 
         <!-- Table Précommandes -->
@@ -239,6 +264,31 @@
                 </div>
             </div>
             <p class="text-sm text-light-gold/70 mb-4">L'export Mondial Relay génère un CSV prêt à l'import transporteur pour édition d'étiquettes.</p>
+
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-4 mb-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
+                    <input id="preordersSearch" type="search" placeholder="Recherche email ou nom" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold" />
+                    <select id="preordersStatusFilter" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold">
+                        <option value="all">Tous statuts</option>
+                        <option value="completed">Payé</option>
+                        <option value="pending">En attente</option>
+                        <option value="failed">Échoué</option>
+                    </select>
+                    <select id="preordersPeriodFilter" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold">
+                        <option value="all">Toutes périodes</option>
+                        <option value="today">Aujourd'hui</option>
+                        <option value="7d">7 derniers jours</option>
+                        <option value="30d">30 derniers jours</option>
+                    </select>
+                    <select id="preordersOfferFilter" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold">
+                        <option value="all">Toutes offres</option>
+                        <option value="standard">Standard</option>
+                        <option value="guidance-incluse">Guidance incluse</option>
+                        <option value="edition-signature">Édition signature</option>
+                    </select>
+                    <button id="resetPreordersFilters" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-3 py-2 text-sm hover:bg-gold/30 transition">Réinitialiser</button>
+                </div>
+            </div>
             
             <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden shadow-2xl">
                 <div class="overflow-x-auto">
@@ -314,6 +364,13 @@
                 
                 <div id="waitlistPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)]">
                 </div>
+            </div>
+        </section>
+
+        <section class="mb-12">
+            <h3 class="cormorant text-2xl font-bold text-gold mb-4">Journal d'actions admin</h3>
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-4">
+                <div id="auditLogList" class="space-y-3"></div>
             </div>
         </section>
     </main>
@@ -433,7 +490,7 @@
 
         // Charger les précommandes
         async function loadPreorders(page = 1, limit = 10) {
-            const response = await fetch(`/api/admin/data?section=preorders&page=${page}&limit=${limit}`, { credentials: 'include' });
+            const response = await fetch(buildPreordersQuery(page, limit), { credentials: 'include' });
             const data = await response.json();
             
             if (data.success) {
@@ -476,6 +533,12 @@
             updateElement('preordersNoEmail', data.preorders.noEmail || 0);
             updateElement('donorsNoEmail', data.donors.noEmail || 0);
             updateElement('waitlistNotSynced', data.waitlist.notSynced || 0);
+            updateElement('revenueToday', formatCurrency(data.performance?.revenueToday || 0));
+            updateElement('revenue7d', formatCurrency(data.performance?.revenue7d || 0));
+            updateElement('revenue30d', formatCurrency(data.performance?.revenue30d || 0));
+            updateElement('averageBasket', formatCurrency(data.preorders?.averageBasket || 0));
+            updateElement('conversionRate', `${Number(data.performance?.conversionRate || 0).toFixed(1)}%`);
+            updateAlertsPanel(data);
             
             // Mettre à jour l'heure de dernière mise à jour
             updateElement('lastUpdate', new Date().toLocaleTimeString('fr-FR', { 
@@ -580,8 +643,12 @@
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <div class="flex gap-2">
+                        <div class="flex gap-2 flex-wrap">
                             ${getShippingActionButtons(preorder)}
+                            <button onclick="markOrderProcessed('${preorder.id || preorder.session_id || ''}')" class="px-3 py-1 bg-green-500/20 text-green-300 rounded hover:bg-green-500/30 transition text-xs">
+                                <i class="fas fa-check mr-1"></i>Traité
+                            </button>
+                            ${preorder.email ? `<button onclick="resendOrderEmail('${preorder.email}')" class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded hover:bg-blue-500/30 transition text-xs"><i class='fas fa-envelope mr-1'></i>Email</button>` : ''}
                         </div>
                     </td>
                 </tr>
@@ -721,9 +788,125 @@
             loadDashboardData();
         }
 
+        const preordersFilters = {
+            status: 'all',
+            period: 'all',
+            offer: 'all',
+            q: ''
+        };
+
+        function buildPreordersQuery(page = 1, limit = 10) {
+            const params = new URLSearchParams({
+                section: 'preorders',
+                page: String(page),
+                limit: String(limit),
+                status: preordersFilters.status,
+                period: preordersFilters.period,
+                offer: preordersFilters.offer,
+                q: preordersFilters.q
+            });
+            return `/api/admin/data?${params.toString()}`;
+        }
+
+        function updateAlertsPanel(data) {
+            const container = document.getElementById('adminAlerts');
+            if (!container) return;
+
+            const alerts = [];
+
+            if ((data.preorders.failedCount || 0) >= 3) {
+                alerts.push({
+                    level: 'danger',
+                    icon: 'fa-triangle-exclamation',
+                    text: `${data.preorders.failedCount} paiements échoués détectés. Vérifiez Stripe et les relances.`
+                });
+            }
+
+            if ((data.preorders.pendingCount || 0) >= 5) {
+                alerts.push({
+                    level: 'warn',
+                    icon: 'fa-hourglass-half',
+                    text: `${data.preorders.pendingCount} paiements en attente. Risque d'abandon élevé.`
+                });
+            }
+
+            if ((data.waitlist.notSynced || 0) > 0) {
+                alerts.push({
+                    level: 'info',
+                    icon: 'fa-rotate',
+                    text: `${data.waitlist.notSynced} contact(s) waitlist non synchronisé(s) Brevo.`
+                });
+            }
+
+            if (alerts.length === 0) {
+                container.innerHTML = `<div class="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-green-300 text-sm"><i class="fas fa-check-circle mr-2"></i>Aucune alerte critique actuellement.</div>`;
+                return;
+            }
+
+            const levelClass = {
+                danger: 'bg-red-500/10 border-red-500/30 text-red-300',
+                warn: 'bg-yellow-500/10 border-yellow-500/30 text-yellow-300',
+                info: 'bg-blue-500/10 border-blue-500/30 text-blue-300'
+            };
+
+            container.innerHTML = alerts.map(alert => `
+                <div class="rounded-xl border p-4 text-sm ${levelClass[alert.level] || levelClass.info}">
+                    <i class="fas ${alert.icon} mr-2"></i>${alert.text}
+                </div>
+            `).join('');
+        }
+
+        function getAuditLog() {
+            try {
+                const raw = localStorage.getItem('oradia-admin-audit-log');
+                return raw ? JSON.parse(raw) : [];
+            } catch {
+                return [];
+            }
+        }
+
+        function pushAuditLog(action, details) {
+            const logs = getAuditLog();
+            logs.unshift({
+                action,
+                details,
+                at: new Date().toISOString()
+            });
+            localStorage.setItem('oradia-admin-audit-log', JSON.stringify(logs.slice(0, 50)));
+            renderAuditLog();
+        }
+
+        function renderAuditLog() {
+            const container = document.getElementById('auditLogList');
+            if (!container) return;
+
+            const logs = getAuditLog();
+            if (logs.length === 0) {
+                container.innerHTML = '<p class="text-light-gold/60 text-sm">Aucune action récente.</p>';
+                return;
+            }
+
+            container.innerHTML = logs.map(log => `
+                <div class="border border-gold/10 rounded-lg p-3 bg-[rgba(5,20,40,0.45)]">
+                    <p class="text-gold text-sm font-semibold">${log.action}</p>
+                    <p class="text-light-gold/80 text-sm">${log.details || '-'}</p>
+                    <p class="text-light-gold/50 text-xs mt-1">${formatDate(log.at)}</p>
+                </div>
+            `).join('');
+        }
+
+        window.markOrderProcessed = function markOrderProcessed(orderId) {
+            pushAuditLog('Commande marquée traitée', `Commande: ${orderId || 'N/A'}`);
+        };
+
+        window.resendOrderEmail = function resendOrderEmail(email) {
+            pushAuditLog('Relance email client', `Email: ${email}`);
+        };
+
         // Initialisation
         document.addEventListener('DOMContentLoaded', () => {
             loadDashboardData();
+            renderAuditLog();
             
             const exportBtn = document.getElementById('exportContactsBtn');
             if (exportBtn) {
@@ -743,6 +926,56 @@
             const refreshBtn = document.getElementById('refreshBtn');
             if (refreshBtn) {
                 refreshBtn.addEventListener('click', refreshData);
+            }
+
+            const searchInput = document.getElementById('preordersSearch');
+            const statusFilter = document.getElementById('preordersStatusFilter');
+            const periodFilter = document.getElementById('preordersPeriodFilter');
+            const offerFilter = document.getElementById('preordersOfferFilter');
+            const resetFiltersBtn = document.getElementById('resetPreordersFilters');
+
+            if (searchInput) {
+                searchInput.addEventListener('input', () => {
+                    preordersFilters.q = searchInput.value.trim();
+                    loadPreorders(1);
+                });
+            }
+
+            if (statusFilter) {
+                statusFilter.addEventListener('change', () => {
+                    preordersFilters.status = statusFilter.value;
+                    loadPreorders(1);
+                });
+            }
+
+            if (periodFilter) {
+                periodFilter.addEventListener('change', () => {
+                    preordersFilters.period = periodFilter.value;
+                    loadPreorders(1);
+                });
+            }
+
+            if (offerFilter) {
+                offerFilter.addEventListener('change', () => {
+                    preordersFilters.offer = offerFilter.value;
+                    loadPreorders(1);
+                });
+            }
+
+            if (resetFiltersBtn) {
+                resetFiltersBtn.addEventListener('click', () => {
+                    preordersFilters.status = 'all';
+                    preordersFilters.period = 'all';
+                    preordersFilters.offer = 'all';
+                    preordersFilters.q = '';
+
+                    if (searchInput) searchInput.value = '';
+                    if (statusFilter) statusFilter.value = 'all';
+                    if (periodFilter) periodFilter.value = 'all';
+                    if (offerFilter) offerFilter.value = 'all';
+
+                    loadPreorders(1);
+                });
             }
         });
     </script>
