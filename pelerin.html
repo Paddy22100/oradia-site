@@ -1187,7 +1187,7 @@ img { max-width: 100%; height: auto; }
 
   position: absolute;
 
-  width: 360px;           /* taille preview (augmente si tu veux) */
+  width: 360px;           /* taille preview (augmente si vous voulez) */
 
   aspect-ratio: 2 / 3;
 
@@ -3293,7 +3293,7 @@ window.DATA = {
 
     {name:"HONTE",          quote:"Le visage se cache sous le voile.", polarity:"yin"},
 
-    {name:"FIERTÉ",         quote:"Ce que tu as traversé te rend stable, solide et vrai.", polarity:"yang"},
+    {name:"FIERTÉ",         quote:"Ce que vous avez traversé vous rend stable, solide et vrai.", polarity:"yang"},
 
     {name:"CULPABILITÉ",    quote:"Une lourdeur s'installe, née d'un pas mal posé.", polarity:"yin"},
 
@@ -3479,7 +3479,7 @@ window.DATA = {
 
     {name:"PATIENTER",   quote:"Le fruit mûrit lentement.", polarity:"yin"},
 
-    {name:"EXPRIMER",    quote:"Ce que tu portes prend forme en parole claire..", polarity:"yang"},
+    {name:"EXPRIMER",    quote:"Ce que vous portez prend forme en parole claire..", polarity:"yang"},
 
     {name:"OBSERVER",    quote:"L’œil contemple sans agir.", polarity:"yin"},
 
@@ -5257,147 +5257,79 @@ function generateAnalysis({ em, be, ac, co, intention }) {
 
       `« ${intent} » — cette intention résonne comme un chant fondamental qui donne sa couleur à tout le tirage. `,
 
-      `Avec ta question « ${intent} », tu ouvres un espace sacré où les cartes peuvent révéler leur vérité. `,
+      `Avec votre question « ${intent} », vous ouvrez un espace sacré où les cartes peuvent révéler leur vérité. `,
 
-      `Ton intention « ${intent} » agit comme une boussole intérieure, orientant chaque carte vers ce qui doit être entendu maintenant. `
+      `Votre intention « ${intent} » agit comme une boussole intérieure, orientant chaque carte vers ce qui doit être entendu maintenant. `
 
     ];
 
     texte += pick(ouvertures);
 
-  }
-
-
-
-  // L'émotion comme point de départ
-
-  const debutsEmotion = [
-
-    `L'émotion qui se présente, ${low(emo)}${quotes.emo ? ` (${quotes.emo})` : ''}, surgit comme ${pick(imagesEmotion)}. `,
-
-    `Au cœur de ton tirage, ${low(emo)}${quotes.emo ? ` (${quotes.emo})` : ''} apparaît tel ${pick(imagesEmotion)}. `,
-
-    `${low(emo)}${quotes.emo ? ` (${quotes.emo})` : ''} émerge dans ta conscience comme ${pick(imagesEmotion)}. `
-
-  ];
-
-  texte += pick(debutsEmotion);
-
-
+// ...
 
   const interpretationsEmotion = [
 
-    `Elle n'est ni erreur ni vérité, mais simplement ce qui traverse toi en ce moment. En l'accueillant sans jugement, tu permets à son message de se déposer. `,
+    `Elle n'est ni erreur ni vérité, mais simplement ce qui traverse vous en ce moment. En l'accueillant sans jugement, vous permettez à son message de se déposer. `,
 
     `Cette émotion est une messagère. Elle ne demande pas à être combattue, mais écoutée. Derrière son agitation se cache peut-être une clarté nouvelle. `,
 
-    `Voici le climat intérieur du moment. Comme toute météo, il passera. Mais pour l'instant, il colore tout ce que tu perçois. `
+    `Voici le climat intérieur du moment. Comme toute météo, il passera. Mais pour l'instant, il colore tout ce que vous percez. `
 
   ];
 
   texte += pick(interpretationsEmotion);
 
-
-
-  // Le besoin comme ajustement
-
-  const debutsBesoin = [
-
-    `Le besoin qui se révèle, ${low(need)}${quotes.need ? ` (${quotes.need})` : ''}, se tient comme ${pick(imagesBesoin)}. `,
-
-    `Face à cette émotion, ${low(need)}${quotes.need ? ` (${quotes.need})` : ''} émerge tel ${pick(imagesBesoin)}. `,
-
-    `Pour répondre à ce qui t'habite, ${low(need)}${quotes.need ? ` (${quotes.need})` : ''} se présente tel ${pick(imagesBesoin)}. `
-
-  ];
-
-  texte += pick(debutsBesoin);
-
-
+// ...
 
   const interpretationsBesoin = [
 
     `Ce besoin n'est pas une exigence, mais un ajustement naturel. Il ne demande pas à être comblé immédiatement, mais reconnu comme légitime. `,
 
-    `Parfois, reconnaître un besoin suffit à le transformer. L'espace d'écoute que tu lui offres peut déjà apaiser une partie de la tension. `,
+    `Parfois, reconnaître un besoin suffit à le transformer. L'espace d'écoute que vous lui offrez peut déjà apaiser une partie de la tension. `,
 
-    `Ce besoin révèle ce qui cherche à s'équilibrer en toi. Il est le complément naturel de ce que tu ressens, l'autre face de la même pièce. `
+    `Ce besoin révèle ce qui cherche à s'équilibrer en vous. Il est le complément naturel de ce que vous ressentez, l'autre face de la même pièce. `
 
   ];
 
   texte += pick(interpretationsBesoin);
 
-
-
-  // La transmutation comme chemin
-
-  const debutsTransmutation = [
-
-    `La transmutation proposée, ${low(act)}${quotes.act ? ` (${quotes.act})` : ''}, ressemble à ${pick(imagesTransmutation)}. `,
-
-    `Le mouvement qui s'invite, ${low(act)}${quotes.act ? ` (${quotes.act})` : ''}, prend la forme de ${pick(imagesTransmutation)}. `,
-
-    `Pour naviguer entre émotion et besoin, ${low(act)}${quotes.act ? ` (${quotes.act})` : ''} se dessine tel ${pick(imagesTransmutation)}. `
-
-  ];
-
-  texte += pick(debutsTransmutation);
-
-
+// ...
 
   const interpretationsTransmutation = [
 
-    `Cette action n'est pas une solution, mais une invitation. Elle te propose de transformer ce qui est en ce qui doit être, selon ton propre rythme. `,
+    `Cette action n'est pas une solution, mais une invitation. Elle vous propose de transformer ce qui est en ce qui doit être, selon votre propre rythme. `,
 
-    `Ici se trouve le point de bascule : ce geste, si petit soit-il, peut changer toute la dynamique intérieure. À toi de sentir si le moment est venu. `,
+    `Ici se trouve le point de bascule : ce geste, si petit soit-il, peut changer toute la dynamique intérieure. À vous de sentir si le moment est venu. `,
 
-    `La transmutation ne force rien. Elle suggère un mouvement, une possibilité. Tu reste libre de l'accueillir ou de la laisser mûrir en silence. `
+    `La transmutation ne force rien. Elle suggère un mouvement, une possibilité. Vous restez libre de l'accueillir ou de la laisser mûrir en silence. `
 
   ];
 
   texte += pick(interpretationsTransmutation);
 
-
-
-  // La carte cosmos comme perspective
-
-  const debutsCosmos = [
-
-    `En arrière-plan, ${low(cos)}${quotes.cos ? ` (${quotes.cos})` : ''} veille, tel ${pick(imagesCosmos)}. `,
-
-    `Plus vaste que tout le reste, ${low(cos)}${quotes.cos ? ` (${quotes.cos})` : ''} se déploie comme ${pick(imagesCosmos)}. `,
-
-    `Au-delà de l'immediat, ${low(cos)}${quotes.cos ? ` (${quotes.cos})` : ''} accomplit tout, tel ${pick(imagesCosmos)}. `
-
-  ];
-
-  texte += pick(debutsCosmos);
-
-
+// ...
 
   const interpretationsCosmos = [
 
-    `Cette carte te rappelle qu'il y a toujours plus grand que toi à l'œuvre. Elle connecte ton expérience personnelle à une sagesse plus ancienne. `,
+    `Cette carte vous rappelle qu'il y a toujours plus grand que vous à l'œuvre. Elle connecte votre expérience personnelle à une sagesse plus ancienne. `,
 
-    `Ici se trouve la respiration plus longue que la tienne, le rythme qui contient tous les autres. Ce qui te dépasse te protège autant qu'il te porte. `,
+    `Ici se trouve la respiration plus longue que la vôtre, le rythme qui contient tous les autres. Ce qui vous dépasse vous protège autant qu'il vous porte. `,
 
-    `Cette perspective cosmique ne minimise pas ce que tu vis, mais l'inscrit dans un plus grand mouvement. Tu n'es ni seul(e), ni abandonné(e). `
+    `Cette perspective cosmique ne minimise pas ce que vous vivez, mais l'inscrit dans un plus grand mouvement. Vous n'êtes ni seul(e), ni abandonné(e). `
 
   ];
 
   texte += pick(interpretationsCosmos);
 
-
-
-  // Fins enrichies et variées
+// ...
 
   const fins = [
 
-    `Ce tirage ne ferme rien. Il ouvre des portes que tu pourras franchir, ou simplement regarder. À chaque lecture, une nouvelle résonance apparaîtra. `,
+    `Ce tirage ne ferme rien. Il ouvre des portes que vous pourrez franchir, ou simplement regarder. À chaque lecture, une nouvelle résonance apparaîtra. `,
 
-    `Les cartes ont parlé. Libre à toi de laisser leurs échos s'installer, ou de revenir à ta vie. La sagesse opère même sans conscience. `,
+    `Les cartes ont parlé. Libre à vous de laisser leurs échos s'installer, ou de revenir à votre vie. La sagesse opère même sans conscience. `,
 
-    `Voici une photographie de l'instant. Demain, avec le même regard, tu y verras peut-être d'autres vérités. Le temps est aussi un interprète. `,
+    `Voici une photographie de l'instant. Demain, avec le même regard, vous y verrez peut-être d'autres vérités. Le temps est aussi un interprète. `,
 
     `Ce tirage est une boussole, pas une carte. Il indique une direction, mais le chemin reste à inventer. Chaque pas révélera le suivant. `,
 
@@ -5489,7 +5421,7 @@ function generateAnalysis({ em, be, ac, co, intention }) {
     document.body.style.overflow = 'hidden';
 
     try {
-      // 2) (ici tu pourras appeler ton API; on simule un petit délai)
+      // 2) (ici vous pourrez appeler votre API; on simule un petit délai)
       await new Promise(r => setTimeout(r, 3000));
 
       // 3) Récupère ce qui est déjà affiché sur les cartes RETOURNÉES (on cible d'abord les slots)
@@ -5604,15 +5536,15 @@ const STEPS = [
 
 
 
-    // IMPORTANT : dans le Pèlerin tu utilises "cosmos"
+    // IMPORTANT : dans le Pèlerin vous utilisez "cosmos"
 
-    // mais dans ta bibliothèque c’est "memoire_cosmos"
+    // mais dans votre bibliothèque c’est "memoire_cosmos"
 
     cosmos: 'memoire_cosmos',
 
 
 
-    // (sécurité si un jour tu réutilises ces clés ici)
+    // (sécurité si un jour vous réutilisez ces clés ici)
 
     memoire_cosmos: 'memoire_cosmos',
 
@@ -5802,7 +5734,7 @@ tray.addEventListener('mouseleave', hidePreview);
 
     const s = STEPS[stepIndex];
 
-    stepInfo.textContent = `Étape ${stepIndex+1}/4 • Choisis ta carte ${s.label}`;
+    stepInfo.textContent = `Étape ${stepIndex+1}/4 • Choisissez votre carte ${s.label}`;
 
   }
 
@@ -5858,7 +5790,7 @@ const pool = Array.isArray(window.DATA?.[dataKey]) ? window.DATA[dataKey] : [];
 
 
 
-    // On masque la polarité (tes cartes l'ont déjà visuellement)
+    // On masque la polarité (vos cartes l'ont déjà visuellement)
 
     const polEl = card.querySelector('[data-polarity]');
 
@@ -6546,7 +6478,7 @@ function updateCtasForAuth(){
 
       if (isAuthed()){
 
-        orderBtn.textContent = 'Commencer le tirage';
+        orderBtn.textContent = 'Commencez le tirage';
 
         orderBtn.setAttribute('href', '#Jeu');
 
@@ -6572,7 +6504,7 @@ function updateCtasForAuth(){
 
       if (isAuthed()){
 
-        subSubmit.textContent = 'Accéder au tirage du Tore';
+        subSubmit.textContent = 'Accédez au tirage du Tore';
 
         subSubmit.type = 'button';
 
@@ -6612,17 +6544,7 @@ function updateCtasForAuth(){
 
     }
 
-function loginFlow(){
-
-    setAuthed(true);
-
-    updateHeaderForAuth();
-
-    updateCtasForAuth();
-
-  }
-
-  function logoutFlow(){
+function logoutFlow(){
 
     setAuthed(false);
 
@@ -6684,7 +6606,7 @@ function loginFlow(){
 
 
 
-    // Formulaire d’abonnement (si tu veux qu’il connecte aussi)
+    // Formulaire d’abonnement (si vous voulez qu’il connecte aussi)
 
     const sub = document.getElementById('subscribeForm');
 
@@ -6692,9 +6614,9 @@ function loginFlow(){
 
       sub.addEventListener('submit', function(ev){
 
-        // Ici, en vrai, tu enverrais le paiement, puis connecterais l’utilisateur.
+        // Ici, en vrai, vous enverriez le paiement, puis connecteriez l’utilisateur.
 
-        // En attendant, on ne bloque pas le submit ; si tu préfères, active le flow ci-dessous :
+        // En attendant, on ne bloque pas le submit ; si vous préférez, active le flow ci-dessous :
 
         // ev.preventDefault(); loginFlow();
 
@@ -6704,7 +6626,7 @@ function loginFlow(){
 
 
 
-    // Boutons “Connexion” (ouvrir la modale de login existante si tu en as une)
+    // Boutons “Connexion” (ouvrir la modale de login existante si vous en avez une)
 
  const loginBtn = document.getElementById('loginBtn');
 
@@ -6730,7 +6652,7 @@ const loginBtnMobile = document.getElementById('loginBtnMobile');
 
 
 
-    // Si tu as un bouton logout quelque part :
+    // Si vous avez un bouton logout quelque part :
 
     const dashboardLogout = document.getElementById('logoutBtn');
 

@@ -96,8 +96,8 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
 
               <p style="margin:0 0 18px 0;font-size:17px;line-height:1.8;color:#e5e7eb;">
                 ${isDonation 
-                    ? 'Avec profonde gratitude, nous te remercions pour ton soutien à ORADIA. Ta contribution nous aide à partager la sagesse de l\'Oracle avec plus de personnes.'
-                    : 'Avec gratitude, nous te confirmons que ta précommande ORADIA a bien été enregistrée.'
+                    ? 'Avec profonde gratitude, nous vous remercions pour votre soutien à ORADIA. Votre contribution nous aide à partager la sagesse de l\'Oracle avec plus de personnes.'
+                    : 'Avec gratitude, nous vous confirmons que votre précommande ORADIA a bien été enregistrée.'
                 }
               </p>
 
@@ -112,10 +112,10 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
 
               ${isDonation 
                 ? `<p style="margin:0 0 18px 0;font-size:17px;line-height:1.8;color:#e5e7eb;">
-                    Ton soutien précieux nous permet de continuer notre mission d'accompagner les âmes sur leur chemin de transformation.
+                    Votre soutien précieux nous permet de continuer notre mission d'accompagner les âmes sur leur chemin de transformation.
                   </p>`
                 : `<p style="margin:0 0 18px 0;font-size:17px;line-height:1.8;color:#e5e7eb;">
-                    Ton oracle est maintenant en préparation. Nous te recontacterons personnellement dès qu'il sera prêt.
+                    Votre oracle est maintenant en préparation. Nous vous recontacterons personnellement dès qu'il sera prêt.
                   </p>`
               }
 
@@ -159,7 +159,7 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
 
 Bonjour${toName ? ' ' + toName : ''},
 
-Avec profonde gratitude, nous te remercions pour ton soutien à ORADIA. Ta contribution nous aide à partager la sagesse de l'Oracle avec plus de personnes.
+Avec profonde gratitude, nous vous remercions pour votre soutien à ORADIA. Votre contribution nous aide à partager la sagesse de l'Oracle avec plus de personnes.
 
 Contribution : ${offer}
 Montant : ${amountTotal}€
@@ -176,14 +176,14 @@ oradia.fr`
 
 Bonjour${toName ? ' ' + toName : ''},
 
-Avec une immense gratitude, nous te confirmons que ta précommande ORADIA a bien été enregistrée avec succès.
+Avec une immense gratitude, nous vous confirmons que votre précommande ORADIA a bien été enregistrée avec succès.
 
 Offre choisie : ${offer}
 Montant : ${amountTotal}€
 
-Ton oracle est maintenant en préparation. Nous te recontacterons personnellement dès qu'il sera prêt à t'accompagner dans ton voyage intérieur.
+Votre oracle est maintenant en préparation. Nous vous recontacterons personnellement dès qu'il sera prêt à vous accompagner dans votre voyage intérieur.
 
-Merci pour ta confiance et pour choisir d'accueillir la sagesse d'ORADIA dans ta vie.
+Merci pour votre confiance et pour choisir d'accueillir la sagesse d'ORADIA dans votre vie.
 
 Avec toute notre gratitude,
 Rudy

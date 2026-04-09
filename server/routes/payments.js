@@ -15,7 +15,7 @@ const OFFERS = {
     'guidance-incluse': {
         name: 'Oracle Oradia - Guidance Offerte',
         price: 4800, // 48€ en centimes
-        description: "1h de guidance offerte (valeur réelle 60€)"
+        description: "30min de guidance offerte (valeur réelle 30€)"
     },
     'edition-signature': {
         name: 'Oracle Oradia - Édition Signature',

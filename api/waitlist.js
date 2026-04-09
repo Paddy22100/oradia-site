@@ -175,7 +175,7 @@ module.exports = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      message: 'Tu es inscrit à la liste d\'attente.',
+      message: 'Vous êtes inscrit à la liste d\'attente.',
       emailSent
     });
   } catch (error) {
