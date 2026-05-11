@@ -241,48 +241,65 @@
   <div id="header-placeholder"></div>
 
 <!-- Hero Section -->
-<section class="hero-section relative">
+<section class="hero-section relative overflow-hidden">
     <!-- Voile pour lisibilité -->
     <div class="hero-overlay"></div>
     
+    <!-- Particules animées -->
+    <div class="absolute inset-0 opacity-20">
+        <div class="absolute top-10 left-10 w-2 h-2 bg-gold rounded-full animate-pulse"></div>
+        <div class="absolute top-20 right-20 w-3 h-3 bg-gold rounded-full animate-pulse" style="animation-delay: 0.5s"></div>
+        <div class="absolute bottom-20 left-1/4 w-2 h-2 bg-gold rounded-full animate-pulse" style="animation-delay: 1s"></div>
+        <div class="absolute bottom-10 right-1/3 w-3 h-3 bg-gold rounded-full animate-pulse" style="animation-delay: 1.5s"></div>
+    </div>
+    
     <!-- Contenu texte -->
-    <div class="relative z-10 w-full px-4 sm:px-6 pb-12 sm:pb-16 md:pb-24">
-        <div class="max-w-4xl mx-auto text-center">
+    <div class="relative z-10 w-full px-4 sm:px-6 pb-12 sm:pb-16 md:pb-24 pt-8">
+        <div class="max-w-5xl mx-auto text-center">
+            <!-- Badge Success -->
+            <div class="inline-flex items-center gap-3 bg-gold/20 border-2 border-gold/50 rounded-full px-6 py-3 backdrop-blur-sm mb-8 animate-fade-in-up">
+                <i class="fas fa-check-circle text-gold text-2xl"></i>
+                <span class="text-gold font-bold text-lg">Tirage Réussi</span>
+            </div>
+            
             <!-- H1 -->
-            <h1 class="cormorant text-4xl sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl font-bold gold-gradient mb-8 sm:mb-6 leading-tight">
-                Votre Analyse
+            <h1 class="cormorant text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold gold-gradient mb-6 leading-tight animate-fade-in-up" style="animation-delay: 0.2s">
+                Votre Guidance Révélée
             </h1>
             
             <!-- Sous-titre -->
-            <p class="cormorant text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl text-gold mb-8 sm:mb-8 leading-tight drop-shadow-lg">
-                Résultats de votre tirage
+            <p class="cormorant text-2xl sm:text-3xl md:text-4xl text-light-gold mb-8 leading-tight drop-shadow-lg animate-fade-in-up" style="animation-delay: 0.4s">
+                Les messages de l'Oracle pour vous
             </p>
             
-            <!-- Baseline -->
-            <p class="lora text-xl md:text-2xl text-light-gold/90 max-w-2xl sm:max-w-3xl mx-auto leading-relaxed mb-6 sm:mb-8 drop-shadow-lg">
-                Une interprétation profonde de votre tirage en lien avec votre intention
-            </p>
+            <!-- Séparateur doré -->
+            <div class="w-32 h-1 bg-gradient-to-r from-transparent via-gold to-transparent mx-auto mb-8 animate-fade-in-up" style="animation-delay: 0.6s"></div>
             
-            <!-- Intention -->
-            <div class="analysis-card max-w-2xl mx-auto mb-8">
-                <div class="flex items-center justify-center mb-4">
-                    <i class="fas fa-lightbulb text-gold text-2xl mr-4"></i>
-                    <h2 class="font-cinzel text-2xl font-bold text-gold">Votre Intention</h2>
+            <!-- Intention Card - Plus impactante -->
+            <div class="max-w-3xl mx-auto mb-10 animate-fade-in-up" style="animation-delay: 0.8s">
+                <div class="bg-gradient-to-br from-gold/20 via-gold/10 to-transparent border-2 border-gold/40 rounded-2xl p-8 backdrop-blur-sm relative overflow-hidden">
+                    <div class="absolute top-0 right-0 w-32 h-32 bg-gold/10 rounded-full blur-3xl"></div>
+                    <div class="relative z-10">
+                        <div class="flex items-center justify-center mb-4">
+                            <i class="fas fa-compass text-gold text-3xl mr-4"></i>
+                            <h2 class="font-cinzel text-2xl md:text-3xl font-bold text-gold">Votre Intention</h2>
+                        </div>
+                        <div class="w-24 h-1 bg-gradient-to-r from-transparent via-gold/50 to-transparent mx-auto mb-6"></div>
+                        <p id="userIntention" class="text-xl md:text-2xl italic leading-relaxed text-light-gold font-lora"></p>
+                    </div>
                 </div>
-                <div class="border-t border-gold/30 pt-4 mb-4"></div>
-                <p id="userIntention" class="text-lg italic leading-relaxed"></p>
             </div>
             
-            <!-- Boutons d'action -->
-            <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-8">
-                <a href="tore.html" class="border-2 border-gold text-gold font-bold py-4 px-6 sm:px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
-                    <i class="fas fa-redo"></i>
-                    <span class="text-sm sm:text-base">Faire un autre tirage</span>
+            <!-- Boutons d'action - Plus visibles -->
+            <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center animate-fade-in-up" style="animation-delay: 1s">
+                <a href="tore.html" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 sm:px-10 rounded-full hover:shadow-lg hover:shadow-gold/50 transition-all duration-300 text-center flex items-center justify-center gap-3 group hover:scale-105 touch-target">
+                    <i class="fas fa-redo text-xl"></i>
+                    <span class="text-base sm:text-lg">Nouveau Tirage Gratuit</span>
                 </a>
                 
-                <button onclick="window.print()" class="border-2 border-gold text-gold font-bold py-4 px-6 sm:px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
+                <button onclick="window.print()" class="border-2 border-gold/50 text-gold font-semibold py-4 px-6 sm:px-8 rounded-full hover:bg-gold/10 hover:border-gold transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
                     <i class="fas fa-print"></i>
-                    <span class="text-sm sm:text-base">Imprimer l'analyse</span>
+                    <span class="text-sm sm:text-base">Imprimer</span>
                 </button>
             </div>
         </div>
@@ -352,6 +369,107 @@
                 <div class="border-t border-gold/30 pt-4 mb-4"></div>
                 <div id="synthesisContent" class="text-lg leading-relaxed">
                     <!-- La synthèse sera générée dynamiquement -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Message de conversion - Oracle Physique - VERSION PREMIUM -->
+        <div class="mb-16 fade-in-up" style="animation-delay: 0.3s">
+            <div class="relative overflow-hidden rounded-3xl">
+                <!-- Background avec dégradé premium -->
+                <div class="absolute inset-0 bg-gradient-to-br from-gold/20 via-gold/10 to-purple-500/10"></div>
+                <div class="absolute inset-0 bg-gradient-to-r from-transparent via-gold/5 to-transparent animate-shimmer"></div>
+                
+                <!-- Cercles décoratifs -->
+                <div class="absolute top-0 left-0 w-64 h-64 bg-gold/10 rounded-full blur-3xl"></div>
+                <div class="absolute bottom-0 right-0 w-64 h-64 bg-purple-500/10 rounded-full blur-3xl"></div>
+                
+                <div class="relative z-10 border-2 border-gold/40 rounded-3xl p-8 md:p-16 backdrop-blur-sm">
+                    <!-- Badge Premium -->
+                    <div class="inline-flex items-center gap-2 bg-gold/30 border border-gold/50 rounded-full px-4 py-2 mb-6">
+                        <i class="fas fa-star text-gold"></i>
+                        <span class="text-gold font-bold text-sm">EXPÉRIENCE COMPLÈTE</span>
+                    </div>
+                    
+                    <h3 class="cormorant text-4xl md:text-5xl lg:text-6xl font-bold text-gold mb-6 leading-tight">
+                        Cette guidance vous a touché ?
+                    </h3>
+                    
+                    <p class="text-xl md:text-2xl text-light-gold mb-8 max-w-3xl mx-auto leading-relaxed font-lora">
+                        Imaginez avoir l'Oracle Oradia physique entre vos mains. 
+                        <span class="text-gold font-semibold">64 cartes magnifiquement illustrées</span>, 
+                        un outil de transformation à utiliser quand vous en avez besoin, 
+                        <span class="text-gold font-semibold">sans limite</span>.
+                    </p>
+                    
+                    <!-- Grille d'avantages -->
+                    <div class="grid md:grid-cols-3 gap-6 mb-10 max-w-4xl mx-auto">
+                        <div class="bg-night-blue/50 border border-gold/30 rounded-2xl p-6 text-center hover:border-gold/60 transition-all duration-300 hover:scale-105">
+                            <div class="w-16 h-16 mx-auto bg-gold/20 rounded-full flex items-center justify-center mb-4">
+                                <i class="fas fa-infinity text-gold text-2xl"></i>
+                            </div>
+                            <h4 class="font-cinzel text-xl font-bold text-gold mb-2">Illimité</h4>
+                            <p class="text-light-gold/80 text-sm">Tirages sans restriction, quand vous voulez</p>
+                        </div>
+                        
+                        <div class="bg-night-blue/50 border border-gold/30 rounded-2xl p-6 text-center hover:border-gold/60 transition-all duration-300 hover:scale-105">
+                            <div class="w-16 h-16 mx-auto bg-gold/20 rounded-full flex items-center justify-center mb-4">
+                                <i class="fas fa-book-open text-gold text-2xl"></i>
+                            </div>
+                            <h4 class="font-cinzel text-xl font-bold text-gold mb-2">Livret Complet</h4>
+                            <p class="text-light-gold/80 text-sm">Guide d'interprétation détaillé</p>
+                        </div>
+                        
+                        <div class="bg-night-blue/50 border border-gold/30 rounded-2xl p-6 text-center hover:border-gold/60 transition-all duration-300 hover:scale-105">
+                            <div class="w-16 h-16 mx-auto bg-gold/20 rounded-full flex items-center justify-center mb-4">
+                                <i class="fas fa-hands text-gold text-2xl"></i>
+                            </div>
+                            <h4 class="font-cinzel text-xl font-bold text-gold mb-2">Tangible</h4>
+                            <p class="text-light-gold/80 text-sm">L'expérience physique des cartes</p>
+                        </div>
+                    </div>
+                    
+                    <!-- CTA Principal -->
+                    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center mb-8">
+                        <a href="precommande-oracle.html" class="bg-gradient-to-r from-gold via-light-gold to-gold text-night-blue font-bold py-5 px-10 md:px-12 rounded-full hover:shadow-2xl hover:shadow-gold/50 transition-all duration-300 flex items-center gap-3 hover:scale-110 text-lg group relative overflow-hidden">
+                            <div class="absolute inset-0 bg-gradient-to-r from-light-gold to-gold opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                            <i class="fas fa-box-open text-2xl relative z-10"></i>
+                            <span class="relative z-10">Précommander l'Oracle Physique</span>
+                        </a>
+                        
+                        <a href="rendez-vous.html" class="border-2 border-gold text-gold font-bold py-5 px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 flex items-center gap-2 hover:scale-105">
+                            <i class="fas fa-calendar-alt"></i>
+                            <span>Consultation Personnalisée</span>
+                        </a>
+                    </div>
+                    
+                    <!-- Témoignage / Social Proof -->
+                    <div class="max-w-2xl mx-auto bg-gold/5 border border-gold/20 rounded-xl p-6 mb-6">
+                        <div class="flex items-center gap-2 mb-3">
+                            <i class="fas fa-quote-left text-gold"></i>
+                            <span class="text-gold font-semibold text-sm">Ce que disent les utilisateurs</span>
+                        </div>
+                        <p class="text-light-gold/90 italic text-sm leading-relaxed">
+                            "L'Oracle Oradia m'accompagne dans mes moments de doute. Avoir les cartes physiques change tout, 
+                            c'est une expérience bien plus profonde et intime."
+                        </p>
+                    </div>
+                    
+                    <!-- Réassurance -->
+                    <div class="flex flex-wrap justify-center gap-6 text-sm text-light-gold/70">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-shipping-fast text-gold"></i>
+                            <span>Livraison soignée</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-shield-alt text-gold"></i>
+                            <span>Paiement sécurisé</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-heart text-gold"></i>
+                            <span>Fabriqué avec soin</span>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
