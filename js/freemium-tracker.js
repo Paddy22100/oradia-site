@@ -27,7 +27,11 @@ class FreemiumTracker {
                 year: new Date().getFullYear()
             };
         }
-        return JSON.parse(data);
+        try {
+            return JSON.parse(data);
+        } catch (e) {
+            return { count: 0, lastDraw: null, month: new Date().getMonth(), year: new Date().getFullYear() };
+        }
     }
 
     /**

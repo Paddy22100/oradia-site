@@ -539,14 +539,8 @@
     }
   }
 
-  /* Curseur pointer sur les cartes retournées désactivé pour éviter les bugs */
   .tore-card.flipped .tore-card-front {
     cursor: default;
-    /* transition désactivées */
-  }
-
-  .tore-card.flipped .tore-card-front:hover {
-    /* transform et opacity désactivés */
   }
 
 
@@ -967,9 +961,9 @@
 
    .tore-coin {
 
-    width: 110px;
+    width: clamp(80px, 12vw, 110px);
 
-    height: 110px;
+    height: clamp(80px, 12vw, 110px);
 
     border-radius: 999px;
 
@@ -1383,7 +1377,7 @@
 
   position: relative;
 
-  padding: 40px 50px 50px;
+  padding: clamp(20px, 5vw, 40px) clamp(16px, 5vw, 50px) clamp(24px, 5vw, 50px);
 
   border-radius: 24px;
 
@@ -1409,7 +1403,7 @@
 
   margin: 0;
 
-  font-size: 24px;
+  font-size: clamp(16px, 4vw, 24px);
 
   letter-spacing: .08em;
 
@@ -1425,7 +1419,7 @@
 
   margin: 15px 0 0;
 
-  font-size: 18px;
+  font-size: clamp(14px, 3vw, 18px);
 
   color: #cbd5f5;
 
@@ -1441,7 +1435,7 @@
 
   position: relative;
 
-  height: 260px;
+  height: clamp(180px, 30vw, 260px);
 
   margin-top: 30px;
 
@@ -1459,11 +1453,11 @@
 
   left: 50%;
 
-  width: 110px;
+  width: clamp(70px, 14vw, 110px);
 
-  height: 170px;
+  height: clamp(110px, 22vw, 170px);
 
-  margin-left: -55px;
+  margin-left: clamp(-55px, -7vw, -35px);
 
   border-radius: 10px;
 
@@ -1669,220 +1663,93 @@
 
 
 
-<section id="tore-immersif" class="py-20 px-6 bg-night-blue">
+<section id="tore-immersif" class="relative min-h-screen"
+  style="background: linear-gradient(135deg, #0a192f 0%, #051428 100%); background-image: url('images/oradia-hero-4k.png'); background-size: cover; background-position: center; background-attachment: fixed;">
 
-  <div class="container mx-auto max-w-6xl">
+  <!-- Voile comme l'index -->
+  <div class="absolute inset-0" style="background: radial-gradient(circle at 20% 80%, rgba(212,175,55,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(212,175,55,0.04) 0%, transparent 50%), linear-gradient(135deg, rgba(10,25,47,0.65) 0%, rgba(5,20,40,0.75) 100%);"></div>
 
-    <div class="text-center mb-12">
+  <!-- Bouton quitter (caché jusqu'au tirage) -->
+  <button id="exitToreBtn" class="fixed top-4 left-4 hidden z-50 bg-gold text-night-blue font-bold px-4 py-2 rounded-lg shadow-lg">
+    <i class="fas fa-arrow-left mr-2"></i>Quitter le tirage
+  </button>
 
-      <h1 class="cormorant text-4xl md:text-5xl font-bold mb-4 gold-gradient pb-1">
+  <div class="relative z-10 container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
 
-        Tirage du TORE
+    <!-- FORMULAIRE D'INTENTION -->
+    <form id="tore-form" class="flex flex-col items-center justify-center min-h-screen py-20">
 
-      </h1>
-
-      <p class="text-light-gold max-w-3xl mx-auto mb-6">
-
-        Guidance personnalisée complète.
-
-      </p>
-      
-      <!-- Badge Gratuit -->
-      <div class="inline-flex items-center gap-3 bg-gold/10 border border-gold/30 rounded-full px-6 py-3 backdrop-blur-sm">
-        <i class="fas fa-gift text-gold text-xl"></i>
-        <span class="text-gold font-semibold">Essai Gratuit - 5 tirages offerts ce mois-ci</span>
+      <!-- Titre principal unique -->
+      <div class="text-center mb-10">
+        <h1 class="cormorant text-5xl sm:text-6xl lg:text-7xl font-bold gold-gradient pb-2 leading-tight">
+          Tirage du TORE
+        </h1>
+        <p class="text-light-gold/80 text-lg sm:text-xl mt-3">7 cartes pour une guidance complète</p>
+        <div class="w-24 h-px bg-gradient-to-r from-transparent via-gold to-transparent mx-auto mt-6"></div>
       </div>
 
-    </div>
+      <!-- Bloc formulaire unique sans cadres multiples -->
+      <div class="w-full max-w-2xl">
 
-
-
-    <div class="rounded-2xl p-8 mb-8 relative overflow-hidden"
-
-         style="background:linear-gradient(145deg,rgba(26,54,93,.8),rgba(5,20,40,.9));border:1px solid rgba(212,175,55,.3)">
-
-
-
-      <!-- Bouton retour mode immersif -->
-
-      <button id="exitToreBtn"
-
-              class="fixed top-4 left-4 hidden z-50 bg-gold text-night-blue font-bold px-4 py-2 rounded-lg shadow-lg">
-
-        <i class="fas fa-arrow-left mr-2"></i>Quitter le tirage
-
-      </button>
-
-
-
-      <!-- FORMULAIRE D'INTENTION -->
-
-      <form id="tore-form" class="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
-
-        <!-- Carte conteneur élégante -->
-        <div class="bg-gradient-to-b from-[rgba(10,25,47,0.95)] to-[rgba(5,20,40,0.95)] 
-                    border border-gold/20 rounded-3xl p-6 sm:p-8 md:p-12 
-                    shadow-[0_0_60px_rgba(212,175,55,0.15)]
-                    backdrop-blur-sm">
-
-          <!-- En-tête simplifié -->
-          <div class="text-center mb-8 sm:mb-10">
-            <h2 class="cormorant text-3xl sm:text-4xl lg:text-5xl text-gold mb-4 sm:mb-6 leading-tight">
-              Tirage du TORE
-            </h2>
-            <div class="w-20 sm:w-24 h-1 bg-gradient-to-r from-transparent via-gold to-transparent mx-auto mb-6 sm:mb-8"></div>
-            
-            <!-- Aperçu du plateau -->
-            <div class="mb-6 sm:mb-8">
-              <div class="relative w-full max-w-xs sm:max-w-md mx-auto" style="aspect-ratio: 1/1;">
-                
-                <!-- Cartes disposées en cercle avec couleurs des familles -->
-                
-                <!-- Transmutation (haut gauche) - Jaune -->
-                <div class="absolute w-16 h-24 sm:w-20 sm:h-28 rounded-lg shadow-2xl overflow-hidden border-2 border-gold/40" 
-                     style="left: 18%; top: 8%; transform: rotate(-15deg);">
-                  <div class="w-full h-full bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 flex items-center justify-center">
-                    <div class="relative w-16 h-16 sm:w-20 sm:h-20">
-                      <div class="absolute inset-0 rounded-full border-2 border-yellow-200/40"></div>
-                      <div class="absolute inset-2 rounded-full border border-yellow-200/30"></div>
-                      <div class="absolute inset-4 rounded-full border border-yellow-200/20"></div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Archétypes (haut droite) - Violet -->
-                <div class="absolute w-16 h-24 sm:w-20 sm:h-28 rounded-lg shadow-2xl overflow-hidden border-2 border-gold/40" 
-                     style="right: 18%; top: 8%; transform: rotate(15deg);">
-                  <div class="w-full h-full bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 flex items-center justify-center">
-                    <div class="relative w-16 h-16 sm:w-20 sm:h-20">
-                      <div class="absolute inset-0 rounded-full border-2 border-purple-200/40"></div>
-                      <div class="absolute inset-2 rounded-full border border-purple-200/30"></div>
-                      <div class="absolute inset-4 rounded-full border border-purple-200/20"></div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Besoins (gauche) - Orange -->
-                <div class="absolute w-16 h-24 sm:w-20 sm:h-28 rounded-lg shadow-2xl overflow-hidden border-2 border-gold/40" 
-                     style="left: 3%; top: 38%; transform: rotate(-45deg);">
-                  <div class="w-full h-full bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 flex items-center justify-center">
-                    <div class="relative w-16 h-16 sm:w-20 sm:h-20">
-                      <div class="absolute inset-0 rounded-full border-2 border-orange-200/40"></div>
-                      <div class="absolute inset-2 rounded-full border border-orange-200/30"></div>
-                      <div class="absolute inset-4 rounded-full border border-orange-200/20"></div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Révélations (droite) - Vert -->
-                <div class="absolute w-16 h-24 sm:w-20 sm:h-28 rounded-lg shadow-2xl overflow-hidden border-2 border-gold/40" 
-                     style="right: 3%; top: 38%; transform: rotate(45deg);">
-                  <div class="w-full h-full bg-gradient-to-br from-green-400 via-green-500 to-green-600 flex items-center justify-center">
-                    <div class="relative w-16 h-16 sm:w-20 sm:h-20">
-                      <div class="absolute inset-0 rounded-full border-2 border-green-200/40"></div>
-                      <div class="absolute inset-2 rounded-full border border-green-200/30"></div>
-                      <div class="absolute inset-4 rounded-full border border-green-200/20"></div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Émotions (bas gauche) - Rouge -->
-                <div class="absolute w-16 h-24 sm:w-20 sm:h-28 rounded-lg shadow-2xl overflow-hidden border-2 border-gold/40" 
-                     style="left: 13%; bottom: 15%; transform: rotate(-25deg);">
-                  <div class="w-full h-full bg-gradient-to-br from-red-400 via-red-500 to-red-600 flex items-center justify-center">
-                    <div class="relative w-16 h-16 sm:w-20 sm:h-20">
-                      <div class="absolute inset-0 rounded-full border-2 border-red-200/40"></div>
-                      <div class="absolute inset-2 rounded-full border border-red-200/30"></div>
-                      <div class="absolute inset-4 rounded-full border border-red-200/20"></div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Actions (bas droite) - Jaune doré -->
-                <div class="absolute w-16 h-24 sm:w-20 sm:h-28 rounded-lg shadow-2xl overflow-hidden border-2 border-gold/40" 
-                     style="right: 13%; bottom: 15%; transform: rotate(25deg);">
-                  <div class="w-full h-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500 flex items-center justify-center">
-                    <div class="relative w-16 h-16 sm:w-20 sm:h-20">
-                      <div class="absolute inset-0 rounded-full border-2 border-yellow-100/40"></div>
-                      <div class="absolute inset-2 rounded-full border border-yellow-100/30"></div>
-                      <div class="absolute inset-4 rounded-full border border-yellow-100/20"></div>
-                    </div>
-                  </div>
-                </div>
-                
-                <!-- Mémoire Cosmos (centre) - Bleu -->
-                <div class="absolute w-20 h-28 sm:w-24 sm:h-32 rounded-lg shadow-2xl overflow-hidden border-2 border-gold/60" 
-                     style="left: 50%; top: 50%; transform: translate(-50%, -50%);">
-                  <div class="w-full h-full bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 flex items-center justify-center">
-                    <div class="relative w-20 h-20 sm:w-24 sm:h-24">
-                      <div class="absolute inset-0 rounded-full border-2 border-blue-200/40"></div>
-                      <div class="absolute inset-2 rounded-full border border-blue-200/30"></div>
-                      <div class="absolute inset-4 rounded-full border border-blue-200/20"></div>
-                      <div class="absolute inset-6 rounded-full border border-blue-200/10"></div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <p class="text-light-gold/80 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed px-4 mb-4">
-              Quelle intention portez-vous en ce moment ?
-            </p>
-            
-            <!-- Information question ouverte -->
-            <div class="flex items-center justify-center gap-2 text-gold/80 text-xs sm:text-sm mb-2">
-              <i class="fas fa-info-circle"></i>
-              <span>Formulez une question ouverte se terminant par un ?</span>
-            </div>
-          </div>
-
-          <!-- Champ d'intention -->
-          <div class="mb-8 sm:mb-10">
-            <div class="relative">
-              <textarea id="tore-intention-input"
-                        name="intention"
-                        class="w-full bg-gradient-to-b from-[rgba(5,20,40,0.9)] to-[rgba(5,20,40,0.7)] 
-                               border-2 border-[rgba(212,175,55,0.3)] 
-                               p-4 sm:p-6 rounded-2xl 
-                               min-h-[160px] sm:min-h-[180px] md:min-h-[200px]
-                               text-light-gold text-base sm:text-lg leading-relaxed
-                               focus:border-gold focus:outline-none focus:shadow-[0_0_25px_rgba(212,175,55,0.4)]
-                               transition-all duration-300
-                               placeholder:text-light-gold/40 placeholder:italic
-                               resize-none"
-                        placeholder="Comment puis-je... ? Quelle est... ? Pourquoi... ?"
-                        required></textarea>
-              
-              <!-- Icône décorative (cachée sur mobile) -->
-              <div class="hidden sm:flex absolute -top-4 -right-4 w-12 h-12 
-                          bg-gradient-to-br from-gold/20 to-gold/5 
-                          rounded-full items-center justify-center backdrop-blur-sm
-                          shadow-lg">
-                <i class="fas fa-feather text-gold text-lg"></i>
-              </div>
-            </div>
-          </div>
-
-          <!-- Bouton -->
-          <div class="text-center">
-            <button id="tore-submit-btn"
-                    type="submit" 
-                    disabled
-                    class="btn-gold w-full sm:w-auto px-8 sm:px-12 py-3 sm:py-4 
-                           text-base sm:text-lg relative overflow-hidden group
-                           touch-target
-                           disabled:opacity-50 disabled:cursor-not-allowed">
-              <span class="relative z-10 flex items-center justify-center gap-2 sm:gap-3">
-                <i class="fas fa-compass text-lg sm:text-xl"></i>
-                <span>Commencer</span>
-                <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
-              </span>
-            </button>
-          </div>
-
+        <!-- Sous-titre question -->
+        <div class="text-center mb-6">
+          <h2 class="cormorant text-3xl sm:text-4xl text-gold font-semibold">
+            Quelle intention portez-vous ?
+          </h2>
+          <p class="text-light-gold/70 text-sm sm:text-base mt-2 leading-relaxed">
+            Prenez un moment. L’Oracle vous guidera à travers les réponses que vous portez déjà en vous.
+          </p>
         </div>
 
-      </form>
+        <!-- Conseil discret -->
+        <div class="flex items-start gap-2 mb-5 px-1">
+          <i class="fas fa-lightbulb text-gold/70 text-sm mt-0.5 flex-shrink-0"></i>
+          <p class="text-light-gold/60 text-xs sm:text-sm leading-relaxed italic">
+            Formulez une question ouverte : « Comment », « Quelle », « Pourquoi »… et terminez par un ?
+          </p>
+        </div>
+
+        <!-- Textarea -->
+        <div class="relative mb-6">
+          <div class="absolute inset-0 rounded-2xl blur-xl opacity-0 transition-opacity duration-300 focus-within:opacity-100" style="background: radial-gradient(circle, rgba(212,175,55,0.15), transparent 70%);"></div>
+          <textarea id="tore-intention-input"
+                    name="intention"
+                    class="relative w-full rounded-2xl p-5 sm:p-6
+                           text-light-gold text-base sm:text-lg leading-relaxed
+                           focus:outline-none transition-all duration-300
+                           placeholder:text-light-gold/30 placeholder:italic
+                           resize-none"
+                    style="background: rgba(10,25,47,0.7); border: 1px solid rgba(212,175,55,0.35); backdrop-filter: blur(12px); min-height: 160px;"
+                    placeholder="Comment puis-je avancer sur mon chemin ? Quelle est la prochaine étape pour moi ?"
+                    required></textarea>
+          <div class="absolute bottom-3 right-4 text-gold/40 text-xs">
+            <span id="char-count">0</span> caractères
+          </div>
+        </div>
+
+        <!-- Bouton -->
+        <div class="text-center">
+          <button id="tore-submit-btn"
+                  type="submit"
+                  disabled
+                  class="btn-gold px-10 sm:px-14 py-4 text-base sm:text-lg rounded-full
+                         transition-all duration-300 hover:scale-105 hover:shadow-[0_0_30px_rgba(212,175,55,0.4)]
+                         touch-target
+                         disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100">
+            <span class="flex items-center gap-3">
+              <i class="fas fa-compass"></i>
+              <span class="font-cinzel">Commencer le Tirage</span>
+              <i class="fas fa-arrow-right"></i>
+            </span>
+          </button>
+          <p class="text-light-gold/40 text-xs mt-3">
+            <i class="fas fa-lock mr-1"></i>Votre intention reste confidentielle
+          </p>
+        </div>
+
+      </div>
+
+    </form>
 
 
 
@@ -1890,10 +1757,8 @@
 
       <div id="tore-board" class="hidden relative z-10 mt-10">
 
-        <h3 class="cormorant text-2xl text-gold mb-6 text-center">
-
+        <h3 class="cormorant text-base sm:text-xl text-gold mb-4 sm:mb-6 text-center px-2">
           Suivez l'ordre indiqué pour retourner les 7 cartes, puis lancez la pièce 6 fois.
-
         </h3>
 
         <div class="tore-board-7">
@@ -1912,7 +1777,7 @@
 
       <div id="tore-coin-wrapper"
 
-     class="hidden absolute inset-0 flex flex-col-reverse items-center justify-center z-40 pointer-events-none">
+     class="hidden absolute inset-0 flex flex-col-reverse items-center justify-center z-40" style="pointer-events: none;">
 
 <style>
 
@@ -1956,17 +1821,13 @@
 
 
 
-        <button id="tore-coin-button" class="btn-gold">
-
+        <button id="tore-coin-button" class="btn-gold touch-target">
           Lancer la pièce de tirage
-
         </button>
 
-        <button id="tore-to-analysis" class="btn-gold hidden">
-
-  Voir l’analyse du tirage
-
-</button>
+        <button id="tore-to-analysis" class="btn-gold touch-target hidden">
+          Voir mon analyse
+        </button>
 
 
 
@@ -1989,60 +1850,51 @@
 
 
       <!-- Message de guidage pour l'intégration -->
-      <div id="tore-guide-message" class="hidden fixed inset-0 z-50 flex items-center justify-center pointer-events-none" style="background: radial-gradient(circle at center, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.95) 100%);">
-        <div class="bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl border-2 border-gold/40 rounded-3xl p-8 sm:p-10 max-w-6xl mx-4 shadow-[0_25px_50px_-12px_rgba(212,175,55,0.25),0_0_0_1px_rgba(212,175,55,0.1)] pointer-events-auto relative overflow-hidden">
+      <div id="tore-guide-message" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4" style="background: radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%); pointer-events: auto; overflow-y: auto;">
+        <div class="bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl border-2 border-gold/40 rounded-3xl p-5 sm:p-8 w-full max-w-3xl shadow-[0_25px_50px_-12px_rgba(212,175,55,0.25)] relative overflow-hidden my-auto">
           <!-- Effet de lumière subtile -->
           <div class="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-blue-900/20 rounded-3xl"></div>
           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
           <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
           
-          <div class="relative flex flex-col md:flex-row gap-10 sm:gap-16 items-center">
-            <!-- Image de la carte à gauche -->
+          <div class="relative flex flex-col sm:flex-row gap-6 sm:gap-8 items-center">
+            <!-- Image de la carte -->
             <div class="flex-shrink-0 relative">
-              <!-- Lueur dorée autour de la carte -->
               <div class="absolute inset-0 bg-gradient-to-br from-gold/20 to-transparent rounded-2xl blur-xl scale-110"></div>
-              <div class="absolute inset-0 bg-gradient-to-tl from-blue-500/10 to-transparent rounded-2xl blur-xl scale-110"></div>
-              <img id="guide-card-image" src="" alt="Carte tirée" class="relative rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.4),0_0_20px_rgba(212,175,55,0.2)]" style="max-width: 450px; max-height: 600px; object-fit: contain;" />
+              <img id="guide-card-image" src="" alt="Carte tirée" class="relative rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.4),0_0_20px_rgba(212,175,55,0.2)]" style="width: clamp(120px, 30vw, 220px); height: auto; object-fit: contain;" />
             </div>
             
-            <!-- Texte à droite -->
-            <div class="flex-1 text-center md:text-left space-y-2">
+            <!-- Texte -->
+            <div class="flex-1 text-center sm:text-left space-y-2 w-full">
               <!-- Famille -->
-              <div class="text-gold/90 text-lg sm:text-xl uppercase tracking-[0.2em] mb-4 font-cinzel drop-shadow-[0_2px_4px_rgba(212,175,55,0.3)]" id="guide-family"></div>
+              <div class="text-gold/90 text-base sm:text-lg uppercase tracking-[0.15em] mb-2 font-cinzel" id="guide-family"></div>
               
               <!-- Nom de la carte -->
-              <div class="text-light-gold text-2xl sm:text-3xl mb-6 font-cormorant drop-shadow-[0_2px_4px_rgba(212,175,55,0.2)]" id="guide-card-name"></div>
+              <div class="text-light-gold text-xl sm:text-2xl mb-3 font-cormorant" id="guide-card-name"></div>
               
               <!-- Texte de guidage -->
-              <div class="relative">
-                <div class="absolute inset-0 bg-gradient-to-r from-gold/10 to-transparent rounded-lg blur-sm"></div>
-                <p class="text-light-gold/95 text-lg sm:text-xl mb-8 font-cormorant italic leading-relaxed text-justify relative px-4 py-2" id="guide-text"></p>
-              </div>
+              <p class="text-light-gold/90 text-base sm:text-lg mb-4 font-cormorant italic leading-relaxed" id="guide-text"></p>
               
-              <!-- Séparateur amélioré -->
-              <div class="relative my-8">
+              <!-- Séparateur -->
+              <div class="relative my-4">
                 <div class="w-full h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
-                <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gold rounded-full shadow-[0_0_8px_rgba(212,175,55,0.6)]"></div>
+                <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gold rounded-full"></div>
               </div>
               
               <!-- Message d'intégration -->
-              <p class="text-gray-300/90 text-base sm:text-lg mb-4 text-justify font-light">Prenez un instant pour intégrer cette carte...</p>
+              <p class="text-gray-300/90 text-sm sm:text-base mb-3 font-light">Prenez un instant pour intégrer cette carte...</p>
               
               <!-- Nombre de cartes restantes dans Actions -->
-              <div id="guide-actions-count" class="text-gray-400/80 text-sm mb-8 font-light hidden">
+              <div id="guide-actions-count" class="text-gray-400/80 text-sm mb-4 font-light hidden">
                 <i class="fas fa-layer-group mr-2"></i>
                 <span id="guide-actions-text"></span>
               </div>
               
-              <!-- Bouton Continuer amélioré -->
-              <div class="relative mt-20 text-center md:text-center">
-                <div class="relative inline-block ml-auto mr-auto md:ml-auto md:mr-0 md:mr-[25%]">
-                  <div class="absolute inset-0 bg-gradient-to-r from-gold/30 to-transparent rounded-lg blur-md"></div>
-                  <button id="guide-continue-btn" class="relative btn-gold px-12 py-4 text-base sm:text-lg font-medium shadow-[0_4px_12px_rgba(212,175,55,0.3)] hover:shadow-[0_6px_20px_rgba(212,175,55,0.4)] transform transition-all duration-300 hover:scale-[1.02]">
-                    <i class="fas fa-arrow-right mr-3"></i>
-                    Continuer
-                  </button>
-                </div>
+              <!-- Bouton Continuer -->
+              <div class="text-center sm:text-left mt-4">
+                <button id="guide-continue-btn" class="btn-gold px-8 py-3 text-sm sm:text-base touch-target">
+                  <i class="fas fa-arrow-right mr-2"></i>Continuer
+                </button>
               </div>
             </div>
           </div>
@@ -2520,6 +2372,8 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
   let toreHasStarted = false;
 
   let isGuideMessageShown = false; // Bloquer les clics pendant le message de guidage
+  let isCoinAnimating = false; // Bloquer les clics pendant l'animation de la pièce
+  let isBridgeFanOpen = false; // Bloquer les clics pendant l'éventail de cartes passerelles
 
   let coinThrowIndex = 0; // Index pour les lancers de pièce (0-5 pour les 6 familles)
 
@@ -2595,6 +2449,11 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
     guideMessage.classList.remove('hidden');
     isGuideMessageShown = true; // Bloquer les clics sur les autres cartes
     
+    // Bloquer les interactions avec le plateau
+    if (boardHost) {
+      boardHost.style.pointerEvents = 'none';
+    }
+    
     // Gérer le bouton Continuer (au lieu du timeout automatique)
     if (guideContinueBtn && guideContinueBtn.parentNode) {
       // Retirer les anciens listeners pour éviter les doublons
@@ -2605,6 +2464,12 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
       newBtn.addEventListener('click', () => {
         guideMessage.classList.add('hidden');
         isGuideMessageShown = false; // Débloquer les clics
+        
+        // Débloquer les interactions avec le plateau
+        if (boardHost) {
+          boardHost.style.pointerEvents = 'auto';
+        }
+        
         // Indiquer la prochaine carte à tirer
         highlightNextCard();
       });
@@ -2613,6 +2478,12 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
       guideContinueBtn.addEventListener('click', () => {
         guideMessage.classList.add('hidden');
         isGuideMessageShown = false; // Débloquer les clics
+        
+        // Débloquer les interactions avec le plateau
+        if (boardHost) {
+          boardHost.style.pointerEvents = 'auto';
+        }
+        
         // Indiquer la prochaine carte à tirer
         highlightNextCard();
       });
@@ -2669,198 +2540,47 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
 // Variable globale pour suivre l'état du tirage
 let isToreComplete = false;
 
-// Fonction pour ajouter le zoom à une carte - VERSION DÉSACTIVÉE
-function addZoomToCard(card) {
-  // Zoom complètement désactivé pour éviter les bugs
-  console.log('Zoom désactivé pour la carte:', card.dataset.family);
-  return;
-}
-
 function showToreAnalysisCTA() {
-  console.log('=== showToreAnalysisCTA appelée ===');
-  console.log('coinWrapper existe:', !!coinWrapper);
+  if (!coinWrapper) return;
 
-  if (!coinWrapper) {
-    console.log('coinWrapper non trouvé, retour');
-    return;
-  }
-
-
-
-  // cacher la pièce + bouton de lancer
-
+  // Cacher pièce + bouton lancer
   coin?.classList.add('hidden');
-
   coinButton?.classList.add('hidden');
-
-
-
-  // afficher le CTA analyse - forcer l'affichage
-
-  if (toAnalysisBtn) {
-
-    toAnalysisBtn.classList.remove('hidden');
-
-    toAnalysisBtn.style.display = 'inline-block';
-
-    toAnalysisBtn.style.visibility = 'visible';
-
-    console.log('Bouton d\'analyse affiché');
-
-  }
-
-
-
-  // Marquer le tirage comme terminé (zoom désactivé)
 
   isToreComplete = true;
 
-  console.log('Tirage terminé - Zoom désactivé');
-
-  // Définir allFlippedCards ici pour éviter ReferenceError
-  let allFlippedCards = [];
-  if (boardHost) {
-    allFlippedCards = boardHost.querySelectorAll('.tore-card.flipped');
-    // Zoom désactivé pour éviter les bugs
-    console.log('Zoom désactivé -', allFlippedCards.length, 'cartes trouvées');
-  }
-
-
-
-  // Préparer les données pour l'analyse
-
+  // Collecter les cartes retournées
   const cards = [];
-
-  const bridgeCards = []; // Cartes passerelles (lignes mutantes)
-
-  allFlippedCards.forEach(card => {
-
-    const family = card.dataset.family;
-
-    const name = card.dataset.name;
-
-    if (family && name) {
-
-      const cardData = { family, name };
-
-      // Vérifier si c'est une carte passerelle (ligne mutante)
-      const extraCard = card.querySelector('.tore-card-extra');
-      if (extraCard) {
-        const bridgeImg = extraCard.querySelector('img');
-        if (bridgeImg && bridgeImg.src) {
-          // Extraire le nom de la carte passerelle depuis l'image
-          const bridgeName = bridgeImg.src.split('/').pop().replace('.png', '');
-          cardData.bridgeCard = { family: 'actions', name: bridgeName };
-          cardData.isMutating = true; // Marquer comme ligne mutante
+  if (boardHost) {
+    boardHost.querySelectorAll('.tore-card.flipped').forEach(card => {
+      const family = card.dataset.family;
+      const name = card.dataset.name;
+      if (family && name) {
+        const cardData = { family, name };
+        const extraCard = card.querySelector('.tore-card-extra');
+        if (extraCard) {
+          const bridgeImg = extraCard.querySelector('img');
+          if (bridgeImg && bridgeImg.src) {
+            const bridgeName = bridgeImg.src.split('/').pop().replace('.png', '');
+            cardData.bridgeCard = { family: 'actions', name: bridgeName };
+            cardData.isMutating = true;
+          }
         }
+        cards.push(cardData);
       }
-
-      cards.push(cardData);
-
-    }
-
-  });
-
-
-
-  // Ajouter l'événement pour le bouton d'analyse
-
-  console.log('=== DÉBOGAGE BOUTON ANALYSE ===');
-  console.log('Recherche du bouton...');
-  
-  const analysisBtn = el('tore-to-analysis');
-  console.log('Bouton trouvé:', !!analysisBtn);
-  console.log('Bouton visible:', analysisBtn?.offsetParent !== null);
-  console.log('Classes bouton:', analysisBtn?.className);
-
-  if (analysisBtn) {
-
-    // Cacher l'ancien bouton
-    analysisBtn.style.display = 'none';
-    
-    // Créer un lien HTML simple au lieu d'un bouton
-    const intention = el('intentionInput')?.value || 'question personnelle';
-    const cardsData = encodeURIComponent(JSON.stringify(cards));
-    const analysisUrl = `tore-analysis.html?intention=${encodeURIComponent(intention)}&cards=${cardsData}`;
-    
-    const newLink = document.createElement('a');
-    newLink.href = analysisUrl;
-    newLink.textContent = '🔍 Voir mon analyse';
-    newLink.style.cssText = `
-      background: linear-gradient(135deg, #d4af37 0%, #f5e7a1 100%) !important;
-      color: #0f172a !important;
-      font-weight: bold !important;
-      padding: 12px 24px !important;
-      border-radius: 50px !important;
-      text-decoration: none !important;
-      font-size: 16px !important;
-      margin: 20px auto !important;
-      display: inline-block !important;
-      transition: all 0.3s ease !important;
-    `;
-    
-    // Ajouter le nouveau lien à l'intérieur du tore-coin-wrapper mais en remplaçant la pièce
-    const coinWrapper = el('tore-coin-wrapper');
-    const coin = el('tore-coin');
-    
-    if (coinWrapper && coin) {
-      // Cacher la pièce mais garder le wrapper
-      coin.style.display = 'none';
-      
-      // Ajouter le lien dans le wrapper, centré
-      newLink.style.position = 'absolute';
-      newLink.style.top = '50%';
-      newLink.style.left = '50%';
-      newLink.style.transform = 'translate(-50%, -50%)';
-      newLink.style.zIndex = '10';
-      
-      coinWrapper.appendChild(newLink);
-      
-      console.log('Lien ajouté dans le tore-coin-wrapper en remplacement de la pièce');
-    } else {
-      // Fallback : ajouter après l'ancien bouton
-      analysisBtn.parentNode.insertBefore(newLink, analysisBtn.nextSibling);
-      console.log('Fallback : lien ajouté après l\'ancien bouton');
-    }
-    
-    // Forcer le lien à être visible et cliquable
-    setTimeout(() => {
-      console.log('Vérification du lien créé:');
-      console.log('Lien existe:', !!newLink);
-      console.log('Lien visible:', newLink.offsetParent !== null);
-      console.log('Lien href:', newLink.href);
-      console.log('Lien parent:', newLink.parentNode);
-      
-      // Rendre le lien encore plus visible pour le test
-      newLink.style.background = 'red !important';
-      newLink.style.color = 'white !important';
-      newLink.style.border = '3px solid yellow !important';
-      newLink.style.fontSize = '20px !important';
-      newLink.style.padding = '20px !important';
-      
-      console.log('Lien rendu visible pour test');
-    }, 100);
-
-    console.log('Nouveau lien d\'analyse créé avec URL:', analysisUrl);
-
-  } else {
-
-    console.error('Bouton d\'analyse non trouvé!');
-    console.log('Recherche manuelle...');
-    const allButtons = document.querySelectorAll('button');
-    console.log('Tous les boutons trouvés:', allButtons.length);
-    allButtons.forEach((btn, index) => {
-      console.log(`Bouton ${index}:`, btn.id, btn.textContent, btn.className);
     });
-
   }
 
+  // Sauvegarder les données dans sessionStorage pour tore-analysis.html
+  const intention = sessionStorage.getItem('tore_intention') || '';
+  sessionStorage.setItem('tore_cards', JSON.stringify(cards));
 
-
-  // on garde le wrapper visible
+  // Afficher le bouton d'analyse
+  if (toAnalysisBtn) {
+    toAnalysisBtn.classList.remove('hidden');
+  }
 
   coinWrapper.classList.remove('hidden');
-
 }
 
 
@@ -3455,10 +3175,23 @@ function closeToreExitModal(){
 
       back.addEventListener('click', () => {
 
+        // BLOQUER si la carte est déjà retournée
         if (card.classList.contains('flipped')) return;
 
         // BLOQUER les clics si le message de guidage est affiché
-        if (isGuideMessageShown) return;
+        if (isGuideMessageShown) {
+          return;
+        }
+        
+        // BLOQUER les clics si l'éventail de cartes passerelles est ouvert
+        if (isBridgeFanOpen) {
+          return;
+        }
+        
+        // BLOQUER les clics si la pièce est en train d'être lancée
+        if (isCoinAnimating) {
+          return;
+        }
 
 
 
@@ -3582,11 +3315,6 @@ function closeToreExitModal(){
           highlightNextCard();
         }, 600);
 
-        // Ajouter le zoom immédiatement pour cette carte
-        setTimeout(() => {
-          addZoomToCard(card);
-        }, 800); // Après l'animation de flip
-
         // Afficher le message de guidage APRÈS l'animation flip (1 seconde)
         setTimeout(() => {
           showGuideMessage(famKey, data);
@@ -3693,6 +3421,9 @@ if (previewOverlay) {
   function openBridgeFan(stepIndex, nextFamilyKey) {
 
     if (!boardHost) return;
+    
+    // Marquer que l'éventail est ouvert
+    isBridgeFanOpen = true;
 
     // FORCER la famille 'actions' pour toutes les passerelles
     nextFamilyKey = 'actions';
@@ -3731,18 +3462,6 @@ if (previewOverlay) {
     const totalUsedActionsCards = drawnActionsCards + totalBridgeCount;
     const remainingPhysicalCards = totalPhysicalActionsCards - totalUsedActionsCards;
     
-    // Débogage pour voir les valeurs
-    console.log('DEBUG Éventail Actions:', {
-      totalPhysicalActionsCards,
-      drawnActionsCards,
-      totalBridgeCount,
-      totalUsedActionsCards,
-      remainingPhysicalCards,
-      allFlippedCards: boardHost.querySelectorAll('.tore-card.flipped').length,
-      actionCards: boardHost.querySelectorAll('.tore-card[data-family="actions"]').length,
-      actionFlippedCards: boardHost.querySelectorAll('.tore-card[data-family="actions"].flipped').length,
-      toreBridgeAdded: toreBridgeAdded
-    });
     
     // Générer l'éventail avec le nombre de cartes restantes
     let fanCardsHTML = '';
@@ -3816,6 +3535,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
         }
 
         overlay.remove();
+        isBridgeFanOpen = false; // Débloquer les interactions
 
       });
 
@@ -3832,6 +3552,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
       btnCancel.addEventListener('click', () => {
 
         overlay.remove();
+        isBridgeFanOpen = false; // Débloquer les interactions
 
       });
 
@@ -3891,7 +3612,9 @@ function showArrowForStep(stepIndex, isMatch) {
     if (!coin || !boardHost) return;
 
     // Empêche plusieurs lancers simultanés
-    if (coin.dataset.locked === '1') return;
+    if (coin.dataset.locked === '1' || isCoinAnimating) {
+      return;
+    }
 
     // Vérifier si on a fini tous les lancers de pièce (6 familles avec polarité)
     const familiesWithCoin = TIRAGE_ORDER.filter(f => f !== 'memoire_cosmos');
@@ -3905,8 +3628,9 @@ function showArrowForStep(stepIndex, isMatch) {
     // Récupérer la famille actuelle pour ce lancer de pièce
     const currentFamily = familiesWithCoin[coinThrowIndex];
     
-    // Verrouiller la pièce
+    // Verrouiller la pièce et bloquer les interactions
     coin.dataset.locked = '1';
+    isCoinAnimating = true;
 
     // Trouver la configuration de l'étape actuelle
     const step = STEPS_TORE.find(s => s.key === currentFamily);
@@ -3983,6 +3707,7 @@ function showArrowForStep(stepIndex, isMatch) {
 
       // Déverrouille le plateau
       boardHost.classList.remove('board-locked');
+      isCoinAnimating = false;
 
       // Passer au lancer de pièce suivant
       coinThrowIndex += 1;
@@ -4072,9 +3797,6 @@ function showArrowForStep(stepIndex, isMatch) {
         }
       });
       
-      console.log('Validation intention configurée');
-    } else {
-      console.error('Éléments intention non trouvés:', { input: !!input, btn: !!btn });
     }
   }
   
@@ -4084,51 +3806,47 @@ function showArrowForStep(stepIndex, isMatch) {
 
 
 toAnalysisBtn?.addEventListener('click', () => {
-
-  // afficher la zone résultats (si vous l'utilisez pour l'analyse)
-
-  results?.classList.remove('hidden');
-
-
-
-  // scroll doux vers l'analyse
-
-  results?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
+  window.location.href = 'tore-analysis.html';
 });
 
 
 
  form?.addEventListener('submit', (e) => {
-
   e.preventDefault();
 
   // Vérifier que la question est ouverte
   const intentionValue = toreIntentionInput?.value || '';
   if (!isOpenQuestion(intentionValue)) {
-    toreIntentionInput?.setCustomValidity("Formulez une question ouverte (ex. « Comment… ? », « Pourquoi… ? ») et terminez par « ? »");
+    toreIntentionInput?.setCustomValidity("Formulez une question ouverte (ex. « Comment… ? », « Pourquoi… ? ») et terminez par « ? »" );
     toreIntentionInput?.reportValidity();
     return;
   } else {
     toreIntentionInput?.setCustomValidity("");
   }
+  
+  // Sauvegarder l'intention dans sessionStorage
+  sessionStorage.setItem('tore_intention', intentionValue);
 
   form.classList.add('hidden');
-
   buildBoardTore();
-
   enterImmersiveTore();
-
   toreHasStarted = true;
-
-  results.classList.add('hidden'); // DeepSite remplira plus tard
+  results.classList.add('hidden');
 
   // Indiquer la première carte à tirer après un court délai
   setTimeout(() => {
     highlightNextCard();
   }, 1000);
-
 });
+
+// Compteur de caractères pour le textarea
+const charCountEl = document.getElementById('char-count');
+if (toreIntentionInput && charCountEl) {
+  toreIntentionInput.addEventListener('input', () => {
+    charCountEl.textContent = toreIntentionInput.value.length;
+  });
+}
+
 
 
 
