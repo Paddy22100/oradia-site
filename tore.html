@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 
 <html lang="fr">
 
@@ -1593,23 +1593,23 @@
 
   position: absolute;
 
-  top: 10%;
+  bottom: 0;
 
-  left: 10%;
+  left: 50%;
 
-  width: 45%;
+  transform: translateX(-50%) translateY(30%) scale(0.85);
+
+  width: 80%;
 
   aspect-ratio: 64 / 90;
 
-  border-radius: 12px;
+  border-radius: 10px;
 
   overflow: hidden;
 
-  border: 1px solid rgba(212,175,55,0.85);
+  border: 2px solid rgba(212,175,55,0.9);
 
-  box-shadow: 0 12px 25px rgba(0,0,0,0.6);
-
-  transform: translate(14px, -14px) scale(0.9);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.75), 0 0 12px rgba(212,175,55,0.3);
 
   opacity: 0;
 
@@ -1651,7 +1651,7 @@
 
     opacity: 1;
 
-    transform: translate(14px, -14px) scale(0.9);
+    transform: translateX(-50%) translateY(30%) scale(0.85);
 
   }
 
@@ -1804,6 +1804,16 @@
   pointer-events: auto;
 
   margin-top: 20px; /* bouton SOUS la pièce */
+
+}
+
+
+
+#tore-to-analysis {
+
+  pointer-events: auto;
+
+  margin-top: 12px;
 
 }
 
@@ -2351,6 +2361,9 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
   // Tableau pour stocker toutes les cartes déjà tirées (éviter les doublons)
   const drawnCards = new Set();
 
+  // Map famille → donnée complète de la carte tirée (pour l'analyse)
+  const flippedCardData = new Map();
+
 
 
   const section   = el('tore-immersif');
@@ -2504,8 +2517,11 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
     const flippedCards = boardHost.querySelectorAll('.tore-card.flipped').length;
     
     if (totalCards > 0 && flippedCards === totalCards) {
-      // Toutes les cartes sont retournées, afficher la pièce
-      showCoinAfterAllCards();
+      // Toutes les cartes sont retournées : attendre que le guide soit fermé avant d'afficher la pièce
+      if (!isGuideMessageShown) {
+        showCoinAfterAllCards();
+      }
+      // Si le guide est ouvert, showCoinAfterAllCards sera appelé par le bouton Continuer
       return;
     }
     
@@ -2554,20 +2570,27 @@ function showToreAnalysisCTA() {
   if (boardHost) {
     boardHost.querySelectorAll('.tore-card.flipped').forEach(card => {
       const family = card.dataset.family;
-      const name = card.dataset.name;
-      if (family && name) {
-        const cardData = { family, name };
-        const extraCard = card.querySelector('.tore-card-extra');
-        if (extraCard) {
-          const bridgeImg = extraCard.querySelector('img');
-          if (bridgeImg && bridgeImg.src) {
-            const bridgeName = bridgeImg.src.split('/').pop().replace('.png', '');
-            cardData.bridgeCard = { family: 'actions', name: bridgeName };
-            cardData.isMutating = true;
-          }
+      if (!family) return;
+
+      // Récupérer la donnée complète depuis la Map (stockée au flip)
+      const fullData = flippedCardData.get(family);
+      const name = (fullData && fullData.name) ? fullData.name : (card.dataset.name || '');
+      // Construire le chemin image réel via buildImagePath
+      const imgSrc = fullData ? buildImagePath(family, fullData) : '';
+
+      const cardData = { family, name: name || 'unknown', imgSrc };
+
+      const extraCard = card.querySelector('.tore-card-extra');
+      if (extraCard) {
+        const bridgeImg = extraCard.querySelector('img');
+        if (bridgeImg && bridgeImg.src) {
+          const bridgeSrc = bridgeImg.src;
+          const bridgeName = bridgeSrc.split('/').pop().replace('.png', '');
+          cardData.bridgeCard = { family: 'actions', name: bridgeName, imgSrc: bridgeSrc };
+          cardData.isMutating = true;
         }
-        cards.push(cardData);
       }
+      cards.push(cardData);
     });
   }
 
@@ -3251,7 +3274,11 @@ function closeToreExitModal(){
 
         card.dataset.polarity = pol;
 
-
+        if (data && data.name) {
+          card.dataset.name = data.name;
+          // Stocker la donnée complète pour l'analyse
+          flippedCardData.set(famKey, data);
+        }
 
         if (!data || !front) {
 
@@ -3310,15 +3337,15 @@ function closeToreExitModal(){
         // Incrémenter l'index de tirage pour passer à la famille suivante
         toreThrowIndex++;
 
-        // Mettre à jour le highlight de la prochaine carte
-        setTimeout(() => {
-          highlightNextCard();
-        }, 600);
-
         // Afficher le message de guidage APRÈS l'animation flip (1 seconde)
         setTimeout(() => {
           showGuideMessage(famKey, data);
         }, 1000);
+
+        // Mettre à jour le highlight (600ms) — la pièce n'apparaît que si le guide est fermé
+        setTimeout(() => {
+          highlightNextCard();
+        }, 600);
 
 
 
@@ -3805,8 +3832,34 @@ function showArrowForStep(stepIndex, isMatch) {
 
 
 
-toAnalysisBtn?.addEventListener('click', () => {
-  window.location.href = 'tore-analysis.html';
+document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
+  // Re-collecter les cartes au moment du clic pour garantir les données dans sessionStorage
+  const cards = [];
+  if (boardHost) {
+    boardHost.querySelectorAll('.tore-card.flipped').forEach(card => {
+      const family = card.dataset.family;
+      if (!family) return;
+      const fullData = flippedCardData.get(family);
+      const name = (fullData && fullData.name) ? fullData.name : (card.dataset.name || '');
+      const imgSrc = fullData ? buildImagePath(family, fullData) : '';
+      const cardData = { family, name: name || 'unknown', imgSrc };
+      const extraCard = card.querySelector('.tore-card-extra');
+      if (extraCard) {
+        const bridgeImg = extraCard.querySelector('img');
+        if (bridgeImg && bridgeImg.src) {
+          const bridgeSrc = bridgeImg.src;
+          const bridgeName = bridgeSrc.split('/').pop().replace('.png', '');
+          cardData.bridgeCard = { family: 'actions', name: bridgeName, imgSrc: bridgeSrc };
+          cardData.isMutating = true;
+        }
+      }
+      cards.push(cardData);
+    });
+  }
+  if (cards.length > 0) {
+    sessionStorage.setItem('tore_cards', JSON.stringify(cards));
+    window.location.href = 'tore-analysis.html';
+  }
 });
 
 
@@ -4066,7 +4119,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><span class="text-light-gold">contact@oradia.fr</span></li>
 
-            <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><span class="text-light-gold">@oradia_oracle</span></li>
+            <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><span class="text-light-gold">@paddy_oradia.fr</span></li>
 
           </ul>
 

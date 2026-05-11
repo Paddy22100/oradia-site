@@ -206,15 +206,223 @@
       color: #d4af37 !important;
     }
     
+    /* Textes par défaut sur fond sombre */
+    body {
+      color: #e9e7df;
+      background: #0a192f;
+    }
+
     .analysis-card p,
+    .analysis-card li,
+    .pro-offer p,
+    .pro-offer li {
+      color: #e9e7df !important;
+      line-height: 1.8;
+    }
+
     .analysis-card h1,
     .analysis-card h2,
     .analysis-card h3,
-    .pro-offer p,
     .pro-offer h1,
     .pro-offer h2,
     .pro-offer h3 {
-      color: #e9e7df !important;
+      color: #d4af37 !important;
+    }
+
+    /* Section cartes : fond plus contrasté */
+    .analysis-section {
+      background: linear-gradient(180deg, #051428 0%, #0a192f 50%, #051428 100%);
+    }
+
+    /* Titres de section */
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: clamp(1.5rem, 3vw, 2.5rem);
+      font-weight: 700;
+      color: #d4af37;
+      letter-spacing: 0.05em;
+    }
+
+    /* Grille cartes */
+    #cardsDisplay {
+      align-items: start;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: center;
+    }
+
+    /* Groupe carte + passerelle */
+    .card-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0;
+      width: 200px;
+      padding: 4px;
+    }
+    @media (max-width: 640px) {
+      .card-group { width: 140px; }
+    }
+
+    /* Carte individuelle */
+    .card-grid-item {
+      width: 100%;
+      background: rgba(5, 20, 40, 0.85);
+      border: 1px solid rgba(212,175,55,0.35);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+    }
+    .card-grid-item:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 24px rgba(212,175,55,0.3);
+      border-color: rgba(212,175,55,0.7);
+    }
+    .card-grid-item.bridge {
+      border-color: rgba(212,175,55,0.8);
+      border-radius: 8px;
+      box-shadow: 0 0 18px rgba(212,175,55,0.2), 0 0 6px rgba(245,231,161,0.1);
+      transform: scale(1.03);
+    }
+    .card-grid-item.bridge:hover {
+      box-shadow: 0 12px 28px rgba(212,175,55,0.4), 0 0 22px rgba(245,231,161,0.2);
+      border-color: rgba(245,231,161,0.95);
+      transform: scale(1.06) translateY(-2px);
+    }
+    .card-grid-item > img {
+      width: 100%;
+      aspect-ratio: 64 / 90;
+      object-fit: cover;
+      object-position: top center;
+      display: block;
+      border-radius: 9px 9px 0 0;
+    }
+    .card-grid-label {
+      padding: 4px 6px 2px;
+      font-size: 0.55rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #d4af37;
+      font-family: 'Cinzel', serif;
+      text-align: center;
+      line-height: 1.3;
+      background: rgba(5,20,40,0.95);
+    }
+    .card-grid-label.bridge-label {
+      color: #f5e7a1;
+    }
+    .card-grid-name {
+      padding: 2px 6px 6px;
+      font-size: 0.75rem;
+      color: #f5e7a1;
+      font-family: 'Cormorant Garamond', serif;
+      font-style: italic;
+      text-align: center;
+      line-height: 1.3;
+      background: rgba(5,20,40,0.95);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .card-grid-name.bridge-name {
+      color: #f5e7a1;
+    }
+
+    /* Connecteur entre carte et passerelle */
+    .bridge-connector {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 3px 0;
+      gap: 2px;
+    }
+    .bridge-connector::before {
+      content: '';
+      width: 1px;
+      height: 8px;
+      background: linear-gradient(180deg, rgba(212,175,55,0.8), rgba(245,231,161,0.5));
+    }
+    .bridge-connector i {
+      color: #d4af37;
+      font-size: 0.7rem;
+      animation: spin 3s linear infinite;
+    }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+    .bridge-connector::after {
+      content: '';
+      width: 1px;
+      height: 8px;
+      background: rgba(212,175,55,0.5);
+    }
+
+    /* Badge passerelle */
+    .bridge-badge {
+      background: rgba(180,140,30,0.85);
+      padding: 2px 6px;
+      font-size: 0.5rem;
+      font-family: 'Cinzel', serif;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: #fff8e1;
+      text-align: center;
+    }
+
+    /* Sections analyse */
+    .analysis-card {
+      background: rgba(5, 20, 40, 0.9);
+      border: 1px solid rgba(212,175,55,0.3);
+      border-radius: 16px;
+      padding: 1.5rem 2rem;
+    }
+    .analysis-card .card-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid rgba(212,175,55,0.2);
+    }
+    .analysis-card .card-header i {
+      color: #d4af37;
+      font-size: 1.1rem;
+    }
+    .analysis-card .card-header h3 {
+      color: #d4af37 !important;
+      font-family: 'Cinzel', serif;
+      font-size: 1rem;
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+    .analysis-card .card-body {
+      color: #e9e7df;
+      font-size: 1rem;
+      line-height: 1.8;
+    }
+    .mutating-tag {
+      display: inline-block;
+      background: rgba(139,92,246,0.15);
+      border: 1px solid rgba(139,92,246,0.4);
+      color: #c4b5fd;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: 999px;
+      margin-left: 8px;
+      vertical-align: middle;
+    }
+
+    /* Séparateur doré */
+    .gold-divider {
+      width: 80px;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, #d4af37, transparent);
+      margin: 1rem auto;
     }
     
     .text-purple-300 {
@@ -256,19 +464,13 @@
     <!-- Contenu texte -->
     <div class="relative z-10 w-full px-4 sm:px-6 pb-12 sm:pb-16 md:pb-24 pt-8">
         <div class="max-w-5xl mx-auto text-center">
-            <!-- Badge Success -->
-            <div class="inline-flex items-center gap-3 bg-gold/20 border-2 border-gold/50 rounded-full px-6 py-3 backdrop-blur-sm mb-8 animate-fade-in-up">
-                <i class="fas fa-check-circle text-gold text-2xl"></i>
-                <span class="text-gold font-bold text-lg">Tirage Réussi</span>
-            </div>
-            
             <!-- H1 -->
-            <h1 class="cormorant text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-bold gold-gradient mb-6 leading-tight animate-fade-in-up" style="animation-delay: 0.2s">
-                Votre Guidance Révélée
+            <h1 class="font-cinzel text-4xl sm:text-5xl md:text-6xl font-bold gold-gradient mb-4 leading-tight animate-fade-in-up" style="animation-delay: 0.2s">
+                Votre Guidance
             </h1>
             
             <!-- Sous-titre -->
-            <p class="cormorant text-2xl sm:text-3xl md:text-4xl text-light-gold mb-8 leading-tight drop-shadow-lg animate-fade-in-up" style="animation-delay: 0.4s">
+            <p class="font-cormorant text-xl sm:text-2xl md:text-3xl mb-8 leading-relaxed drop-shadow-lg animate-fade-in-up" style="animation-delay: 0.4s; color: #f5e7a1;">
                 Les messages de l'Oracle pour vous
             </p>
             
@@ -290,18 +492,6 @@
                 </div>
             </div>
             
-            <!-- Boutons d'action - Plus visibles -->
-            <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center animate-fade-in-up" style="animation-delay: 1s">
-                <a href="tore.html" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 sm:px-10 rounded-full hover:shadow-lg hover:shadow-gold/50 transition-all duration-300 text-center flex items-center justify-center gap-3 group hover:scale-105 touch-target">
-                    <i class="fas fa-redo text-xl"></i>
-                    <span class="text-base sm:text-lg">Nouveau Tirage Gratuit</span>
-                </a>
-                
-                <button onclick="window.print()" class="border-2 border-gold/50 text-gold font-semibold py-4 px-6 sm:px-8 rounded-full hover:bg-gold/10 hover:border-gold transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
-                    <i class="fas fa-print"></i>
-                    <span class="text-sm sm:text-base">Imprimer</span>
-                </button>
-            </div>
         </div>
     </div>
 </section>
@@ -317,62 +507,62 @@
     <div class="container mx-auto max-w-6xl relative z-10">
         <!-- Cartes tirées -->
         <div class="mb-16">
-            <div class="text-center mb-12 fade-in-up">
-                <div class="mb-6 sm:mb-8">
-                    <div class="w-16 sm:w-20 h-16 sm:h-20 mx-auto bg-gradient-to-br from-gold/20 to-gold/10 rounded-full border border-gold/30 flex items-center justify-center mb-4 sm:mb-6">
-                        <i class="fas fa-layer-group text-2xl sm:text-3xl text-gold"></i>
-                    </div>
-                    
-                    <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 gold-gradient">Vos Cartes</h2>
-                    
-                    <p class="text-lg sm:text-xl text-light-gold leading-relaxed mb-6 sm:mb-8">
-                        Les messages de votre tirage
-                    </p>
-                </div>
-                
-                <div id="cardsDisplay" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8">
+            <div class="text-center mb-10 fade-in-up">
+                <h2 class="section-title mb-2">Vos 7 Cartes</h2>
+                <div class="gold-divider"></div>
+            </div>
+            <div id="cardsDisplay" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 md:gap-5">
                 <!-- Les cartes seront insérées ici dynamiquement -->
             </div>
-            </div>
         </div>
         
-        <!-- Analyse détaillée -->
-        <div class="mb-16">
-            <div class="text-center mb-12 fade-in-up">
-                <div class="mb-6 sm:mb-8">
-                    <div class="w-16 sm:w-20 h-16 sm:h-20 mx-auto bg-gradient-to-br from-gold/20 to-gold/10 rounded-full border border-gold/30 flex items-center justify-center mb-4 sm:mb-6">
-                        <i class="fas fa-search text-2xl sm:text-3xl text-gold"></i>
-                    </div>
-                    
-                    <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 gold-gradient">Analyse Détaillée</h2>
-                    
-                    <p class="text-lg sm:text-xl text-light-gold leading-relaxed mb-6 sm:mb-8">
-                        Les messages de votre tirage
-                    </p>
+        <!-- Analyse -->
+        <div class="mb-10">
+            <div class="text-center mb-10 fade-in-up">
+                <h2 class="section-title mb-2">Votre Analyse</h2>
+                <div class="gold-divider"></div>
+            </div>
+            <div id="analysisContent">
+                <!-- Le contenu sera généré dynamiquement -->
+            </div>
+        </div>
+
+        <!-- Boutons d'action après la synthèse -->
+        <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-16 fade-in-up">
+            <a href="tore.html" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-8 rounded-full hover:shadow-lg hover:shadow-gold/50 transition-all duration-300 text-center flex items-center justify-center gap-3 hover:scale-105 touch-target font-cinzel">
+                <i class="fas fa-redo"></i>
+                <span>Nouveau Tirage</span>
+            </a>
+            <button onclick="openEmailModal()" class="border-2 border-gold/50 text-gold font-semibold py-4 px-6 sm:px-8 rounded-full hover:bg-gold/10 hover:border-gold transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
+                <i class="fas fa-envelope"></i>
+                <span class="text-sm sm:text-base">Recevoir par mail</span>
+            </button>
+        </div>
+        
+        <!-- Modale email tirage -->
+        <div id="emailModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(3,10,22,0.85); backdrop-filter:blur(6px); align-items:center; justify-content:center;">
+            <div style="background:linear-gradient(135deg,rgba(5,20,40,0.98),rgba(3,10,22,0.98)); border:1px solid rgba(212,175,55,0.4); border-radius:20px; padding:2.5rem; max-width:420px; width:90%; box-shadow:0 24px 64px rgba(0,0,0,0.6), 0 0 40px rgba(212,175,55,0.08); position:relative;">
+                <button onclick="closeEmailModal()" style="position:absolute; top:1rem; right:1.2rem; background:none; border:none; color:rgba(212,175,55,0.5); font-size:1.2rem; cursor:pointer; line-height:1;">&times;</button>
+                <div style="text-align:center; margin-bottom:1.5rem;">
+                    <i class="fas fa-envelope" style="color:#d4af37; font-size:2rem; margin-bottom:0.8rem; display:block;"></i>
+                    <h3 style="font-family:'Cinzel',serif; color:#d4af37; font-size:1.1rem; font-weight:700; margin:0 0 0.4rem;">Recevoir mon tirage</h3>
+                    <p style="color:#c8c0a8; font-size:0.88rem; margin:0;">Entrez votre adresse e-mail pour recevoir un résumé de votre analyse.</p>
                 </div>
-                
-                <div id="analysisContent" class="space-y-8">
-                    <!-- Le contenu sera généré dynamiquement -->
+                <form id="emailForm" onsubmit="sendTirageEmail(event)">
+                    <input type="email" id="tirageEmail" placeholder="votre@email.com" required
+                        style="width:100%; box-sizing:border-box; padding:0.8rem 1rem; border-radius:50px; border:1px solid rgba(212,175,55,0.4); background:rgba(255,255,255,0.05); color:#f5e7a1; font-size:0.9rem; outline:none; margin-bottom:1rem;"
+                        onfocus="this.style.borderColor='rgba(212,175,55,0.8)'" onblur="this.style.borderColor='rgba(212,175,55,0.4)'">
+                    <button type="submit" style="width:100%; padding:0.85rem; border-radius:50px; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#030a16; font-family:'Cinzel',serif; font-weight:700; font-size:0.9rem; border:none; cursor:pointer; letter-spacing:0.05em;">
+                        <i class="fas fa-paper-plane" style="margin-right:6px;"></i>Envoyer
+                    </button>
+                </form>
+                <div id="emailSuccess" style="display:none; text-align:center; padding:1rem 0;">
+                    <i class="fas fa-check-circle" style="color:#d4af37; font-size:2rem; margin-bottom:0.6rem; display:block;"></i>
+                    <p style="color:#f5e7a1; font-family:'Cinzel',serif; font-size:0.9rem; margin:0;">Votre tirage a été envoyé !</p>
                 </div>
             </div>
         </div>
-        
-        <!-- Synthèse -->
-        <div class="mb-16">
-            <div class="analysis-card fade-in-up">
-                <div class="flex items-center mb-6">
-                    <div class="w-12 sm:w-16 h-12 sm:h-16 bg-gradient-to-br from-gold/20 to-gold/10 rounded-full border border-gold/30 flex items-center justify-center mr-4">
-                        <i class="fas fa-star text-xl text-gold"></i>
-                    </div>
-                    <h2 class="font-cinzel text-2xl font-bold text-gold">Synthèse</h2>
-                </div>
-                <div class="border-t border-gold/30 pt-4 mb-4"></div>
-                <div id="synthesisContent" class="text-lg leading-relaxed">
-                    <!-- La synthèse sera générée dynamiquement -->
-                </div>
-            </div>
-        </div>
-        
+
         <!-- Message de conversion - Oracle Physique - VERSION PREMIUM -->
         <div class="mb-16 fade-in-up" style="animation-delay: 0.3s">
             <div class="relative overflow-hidden rounded-3xl">
@@ -402,31 +592,11 @@
                         <span class="text-gold font-semibold">sans limite</span>.
                     </p>
                     
-                    <!-- Grille d'avantages -->
-                    <div class="grid md:grid-cols-3 gap-6 mb-10 max-w-4xl mx-auto">
-                        <div class="bg-night-blue/50 border border-gold/30 rounded-2xl p-6 text-center hover:border-gold/60 transition-all duration-300 hover:scale-105">
-                            <div class="w-16 h-16 mx-auto bg-gold/20 rounded-full flex items-center justify-center mb-4">
-                                <i class="fas fa-infinity text-gold text-2xl"></i>
-                            </div>
-                            <h4 class="font-cinzel text-xl font-bold text-gold mb-2">Illimité</h4>
-                            <p class="text-light-gold/80 text-sm">Tirages sans restriction, quand vous voulez</p>
-                        </div>
-                        
-                        <div class="bg-night-blue/50 border border-gold/30 rounded-2xl p-6 text-center hover:border-gold/60 transition-all duration-300 hover:scale-105">
-                            <div class="w-16 h-16 mx-auto bg-gold/20 rounded-full flex items-center justify-center mb-4">
-                                <i class="fas fa-book-open text-gold text-2xl"></i>
-                            </div>
-                            <h4 class="font-cinzel text-xl font-bold text-gold mb-2">Livret Complet</h4>
-                            <p class="text-light-gold/80 text-sm">Guide d'interprétation détaillé</p>
-                        </div>
-                        
-                        <div class="bg-night-blue/50 border border-gold/30 rounded-2xl p-6 text-center hover:border-gold/60 transition-all duration-300 hover:scale-105">
-                            <div class="w-16 h-16 mx-auto bg-gold/20 rounded-full flex items-center justify-center mb-4">
-                                <i class="fas fa-hands text-gold text-2xl"></i>
-                            </div>
-                            <h4 class="font-cinzel text-xl font-bold text-gold mb-2">Tangible</h4>
-                            <p class="text-light-gold/80 text-sm">L'expérience physique des cartes</p>
-                        </div>
+                    <!-- Aperçu visuel -->
+                    <div class="mb-10 max-w-sm mx-auto">
+                        <img src="images/medias/apercu_stripe.png"
+                             alt="Aperçu de l'Oracle Oradia"
+                             class="w-full rounded-2xl shadow-2xl shadow-gold/20 border border-gold/20 hover:scale-[1.02] transition-transform duration-500">
                     </div>
                     
                     <!-- CTA Principal -->
@@ -437,10 +607,6 @@
                             <span class="relative z-10">Précommander l'Oracle Physique</span>
                         </a>
                         
-                        <a href="rendez-vous.html" class="border-2 border-gold text-gold font-bold py-5 px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 flex items-center gap-2 hover:scale-105">
-                            <i class="fas fa-calendar-alt"></i>
-                            <span>Consultation Personnalisée</span>
-                        </a>
                     </div>
                     
                     <!-- Témoignage / Social Proof -->
@@ -455,66 +621,62 @@
                         </p>
                     </div>
                     
-                    <!-- Réassurance -->
-                    <div class="flex flex-wrap justify-center gap-6 text-sm text-light-gold/70">
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-shipping-fast text-gold"></i>
-                            <span>Livraison soignée</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-shield-alt text-gold"></i>
-                            <span>Paiement sécurisé</span>
-                        </div>
-                        <div class="flex items-center gap-2">
-                            <i class="fas fa-heart text-gold"></i>
-                            <span>Fabriqué avec soin</span>
-                        </div>
+                    <div>
                     </div>
                 </div>
             </div>
         </div>
         
-        <!-- Offre professionnelle -->
+        <!-- Invitation consultation personnelle -->
         <div class="pro-offer mb-16 fade-in-up">
-            <div class="text-center mb-12">
-                <div class="w-16 sm:w-20 h-16 sm:h-20 mx-auto bg-gradient-to-br from-gold/20 to-gold/10 rounded-full border border-gold/30 flex items-center justify-center mb-6">
-                    <i class="fas fa-crown text-2xl sm:text-3xl text-gold"></i>
+            <div class="analysis-card overflow-hidden" style="padding:0;">
+                <div class="flex flex-col md:flex-row">
+
+                    <!-- Photo -->
+                    <div class="flex-shrink-0 flex items-center justify-center p-6 md:p-8">
+                        <img src="images/medias/photo_a_propos.png"
+                             alt="Rudy — Oracle Oradia"
+                             style="width:180px; height:auto; display:block; border-radius:12px;">
+                    </div>
+
+                    <!-- Texte personnel -->
+                    <div class="md:w-3/5 p-8 md:p-10 flex flex-col justify-center">
+
+                        <p style="font-family:'Cinzel',serif; font-size:0.7rem; font-weight:700; color:#d4af37; text-transform:uppercase; letter-spacing:0.1em; margin-bottom:1rem;">
+                            <i class="fas fa-hand-holding-heart" style="margin-right:6px;"></i>Un mot de ma part
+                        </p>
+
+                        <h2 class="cormorant text-2xl sm:text-3xl font-bold gold-gradient mb-5 leading-tight">
+                            Ce que les cartes ont révélé mérite d'être exploré plus loin.
+                        </h2>
+
+                        <p style="color:#c8c0a8; font-size:0.95rem; line-height:1.8; margin-bottom:1rem; font-family:'Lora',serif; font-style:italic;">
+                            "Ce tirage n'est qu'un premier éclairage. Si quelque chose a résonné en vous — 
+                            une carte, une phrase, un silence — je serai sincèrement ravi d'aller plus loin avec vous."
+                        </p>
+
+                        <p style="color:#e9e7df; font-size:0.9rem; line-height:1.75; margin-bottom:1.8rem;">
+                            En consultation, je prends le temps de lire votre tirage avec vous, 
+                            de comprendre ce qui vous a amené ici, et de vous offrir des clés concrètes 
+                            pour avancer. Ce n'est pas une séance générique — c'est une conversation vraie, 
+                            à votre rythme.
+                        </p>
+
+                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:1.8rem; padding:0.9rem 1.2rem; background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.2); border-radius:12px;">
+                            <i class="fas fa-clock" style="color:#d4af37; font-size:1.1rem; flex-shrink:0;"></i>
+                            <div>
+                                <p style="color:#d4af37; font-family:'Cinzel',serif; font-size:0.78rem; font-weight:700; margin:0;">30 minutes · En visio</p>
+                            </div>
+                        </div>
+
+                        <a href="rendez-vous.html"
+                           class="btn-gold self-start flex items-center gap-3 hover:scale-105 transition-transform">
+                            <i class="fas fa-calendar-alt"></i>
+                            Je réserve ma consultation
+                        </a>
+
+                    </div>
                 </div>
-                
-                <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 gold-gradient">Une Guidance Plus Profonde ?</h2>
-                
-                <p class="text-lg sm:text-xl text-light-gold leading-relaxed mb-8 max-w-2xl mx-auto">
-                    Votre tirage révèle des messages importants. Pour une interprétation complète et personnalisée, 
-                    découvrez ma consultation individuelle avec guidance personnalisée.
-                </p>
-            </div>
-            
-            <div class="grid md:grid-cols-3 gap-8 mb-12">
-                <div class="text-center analysis-card p-6 card-hover">
-                    <div class="text-4xl font-bold text-gold mb-3">60min</div>
-                    <p class="font-medium text-light-gold">Consultation approfondie</p>
-                    <i class="fas fa-clock text-gold mt-3"></i>
-                </div>
-                <div class="text-center analysis-card p-6 card-hover">
-                    <div class="text-4xl font-bold text-gold mb-3">100%</div>
-                    <p class="font-medium text-light-gold">Personnalisée pour vous</p>
-                    <i class="fas fa-heart text-gold mt-3"></i>
-                </div>
-                <div class="text-center analysis-card p-6 card-hover">
-                    <div class="text-4xl font-bold text-gold mb-3">∞</div>
-                    <p class="font-medium text-light-gold">Soutien continu</p>
-                    <i class="fas fa-infinity text-gold mt-3"></i>
-                </div>
-            </div>
-            
-            <div class="text-center">
-                <a href="rendez-vous.html" class="btn-gold">
-                    <i class="fas fa-calendar-alt mr-3"></i>
-                    Réserver ma consultation
-                </a>
-                <p class="text-sm mt-4 text-light-gold">
-                    Première consultation avec tarif préférentiel
-                </p>
             </div>
         </div>
     </div>
@@ -537,7 +699,13 @@
                         surprise: "La surprise dans votre vie ouvre des portes inattendues et vous invite à accueillir l'inattendu avec confiance.",
                         degout: "Votre dégoût vous signale ce qui n'est plus aligné avec votre vérité, vous invitant à faire le ménage dans votre vie.",
                         fierte: "Votre fierté est le reflet de vos accomplissements et de votre valeur personnelle. Elle vous rappelle votre force intérieure.",
-                        honte: "Votre honte est une invitation à la compassion envers vous-même et à l'intégration de toutes vos parts."
+                        honte: "Votre honte est une invitation à la compassion envers vous-même et à l'intégration de toutes vos parts.",
+                        confusion: "La confusion que vous traversez n'est pas un échec — c'est souvent le signe qu'un ancien cadre se défait pour laisser place à quelque chose de plus juste.",
+                        desespoir: "Votre désespoir touche quelque chose de profond. Il vous invite à ne plus porter seul ce poids et à chercher un soutien véritable.",
+                        enthousiasme: "L'enthousiasme qui vous anime est un signal clair : vous êtes sur le bon chemin. Faites confiance à cet élan.",
+                        gratitude: "La gratitude que vous portez ouvre les portes de l'abondance. Ce que vous reconnaissez comme précieux se multiplie.",
+                        solitude: "La solitude ressentie est une invitation à aller à la rencontre de vous-même, avant d'aller vers les autres.",
+                        esperance: "L'espérance que vous portez est une force réelle. Elle vous maintient en mouvement même dans les moments difficiles."
                     },
                     besoins: {
                         reconnaissance: "Le besoin de reconnaissance révèle votre désir d'être vu et valorisé pour qui vous êtes vraiment.",
@@ -547,7 +715,11 @@
                         croissance: "Le besoin de croissance est l'élan de votre âme qui cherche constamment à évoluer et à s'épanouir.",
                         appartenance: "Le besoin d'appartenance vous connecte aux autres et vous rappelle que vous n'êtes jamais seul.",
                         expression: "Le besoin d'expression vous invite à partager votre vérité unique avec le monde.",
-                        paix: "Le besoin de paix vous guide vers l'harmonie intérieure et la sérénité de l'esprit."
+                        paix: "Le besoin de paix vous guide vers l'harmonie intérieure et la sérénité de l'esprit.",
+                        clarte: "Le besoin de clarté qui se manifeste vous dit que vous êtes prêt à voir les choses telles qu'elles sont vraiment, sans filtre.",
+                        connexion: "Votre besoin de connexion authentique est légitime. Cherchez les liens qui vous nourrissent vraiment.",
+                        sens: "Le besoin de sens est au cœur de ce que vous traversez. Il vous pousse à aller au-delà des apparences.",
+                        respect: "Le besoin de respect — de vous-même et des autres — se rappelle à vous. Honorez ce que vous valez."
                     },
                     transmutation: {
                         transformation: "La transformation est en cours dans votre vie. Ce qui doit changer se révèle clairement maintenant.",
@@ -557,7 +729,11 @@
                         evolution: "L'évolution est votre chemin naturel. Chaque étape vous rapproche de votre véritable essence.",
                         metamorphose: "La métamorphose vous transforme en profondeur, modifiant votre perception et votre réalité.",
                         transfiguration: "La transfiguration vous élève vers un état de conscience supérieur, illuminant votre chemin.",
-                        actualisation: "L'actualisation vous permet de concrétiser vos potentiels et de manifester vos rêves."
+                        actualisation: "L'actualisation vous permet de concrétiser vos potentiels et de manifester vos rêves.",
+                        acceptation: "L'acceptation n'est pas la résignation — c'est la porte d'entrée vers un changement véritable et durable.",
+                        lacherprise: "Le lâcher-prise que cette carte évoque n'est pas une perte — c'est une libération qui crée de l'espace pour ce qui vient.",
+                        integration: "L'intégration de vos expériences passées est en cours. Ce que vous avez vécu devient une ressource.",
+                        renouveau: "Un renouveau profond s'amorce. Faites confiance au cycle qui se met en place."
                     },
                     memoire_cosmos: {
                         sagesse_ancienne: "La sagesse ancienne se réveille en vous, connectant votre conscience à la mémoire collective.",
@@ -565,9 +741,33 @@
                         intuition: "Votre intuition s'éveille, vous guidant avec précision sur votre chemin de vie.",
                         guidance: "La guidance intérieure vous accompagne, vous montrant la voie même dans l'obscurité.",
                         protection: "La protection naturelle vous entoure, vous gardant dans votre évolution personnelle.",
-                        grace: "La gratitude coule dans votre vie, apportant des bénédictions inattendues.",
+                        grace: "La grâce circule dans votre vie, apportant des synchronicités et des rencontres signifiantes.",
                         illumination: "La clarté progressive éclaire votre compréhension et élargit votre conscience.",
-                        harmonie: "L'harmonie s'installe en vous, alignant toutes les parties de votre être."
+                        harmonie: "L'harmonie s'installe en vous, alignant toutes les parties de votre être.",
+                        tissage_cosmique: "Cette carte évoque le fil invisible qui relie tous les événements de votre vie. Rien n'est isolé — tout se tisse.",
+                        memoire: "Votre mémoire profonde — celle de l'âme — se réveille. Elle porte des réponses que votre mental n'a pas encore trouvées.",
+                        ancrage: "L'ancrage est le fondement de tout mouvement juste. Plus vous êtes enraciné, plus vous pouvez vous élever.",
+                        ouverture: "Une ouverture intérieure se produit. Restez disponible à ce qui cherche à entrer dans votre vie."
+                    },
+                    revelation: {
+                        recevoir: "Recevoir — vraiment recevoir — est un acte courageux. Cette carte vous invite à cesser de refuser ce qui vous est offert.",
+                        voir: "La capacité à voir clairement se développe en vous. Ce que vous n'osiez pas regarder en face devient maintenant accessible.",
+                        comprendre: "Une compréhension plus profonde émerge. Les pièces du puzzle commencent à s'assembler.",
+                        reconnaitre: "Reconnaître ce qui est vrai pour vous est un acte de courage. Cette carte vous y invite.",
+                        observer: "L'observation sans jugement est une forme de sagesse. Regardez ce qui est, sans vouloir le changer immédiatement."
+                    },
+                    archetypes: {
+                        le_voyageur: "Le Voyageur en vous est en route vers quelque chose de nouveau. Ce déplacement est nécessaire, même si la destination n'est pas encore claire.",
+                        le_guerisseur: "Le Guérisseur se réveille — en vous d'abord. La guérison que vous cherchez commence par vous accorder de la bienveillance.",
+                        le_gardien: "Le Gardien vous rappelle vos responsabilités envers ce qui vous est confié. Protégez ce qui a de la valeur pour vous.",
+                        le_createur: "Le Créateur en vous réclame de l'espace. Donnez vie à ce qui sommeille en vous depuis trop longtemps.",
+                        le_sage: "Le Sage vous invite à prendre du recul. La réponse que vous cherchez nécessite de la distance et de la perspective.",
+                        le_guide: "Le Guide intérieur se manifeste. Faites confiance à ce que vous savez déjà, même si vous ne l'avez pas encore formulé."
+                    },
+                    portail: {
+                        porte: "Une porte se présente à vous. Elle représente un passage entre ce que vous étiez et ce que vous devenez. Serez-vous prêt à franchir ce seuil ?",
+                        seuil: "Vous êtes au seuil d'un nouveau chapitre. Ce passage peut être inconfortable, mais il est nécessaire à votre évolution.",
+                        passage: "Le passage que vous traversez est temporaire. Gardez foi — il y a une sortie, et elle mène vers quelque chose de meilleur."
                     },
                     // Cartes passerelles (lignes mutantes du Yi King)
                     bridge_cards: {
@@ -637,10 +837,13 @@
                     if (card.bridgeCard) {
                         const bridgeMeaning = this.cardMeanings.bridge_cards?.[card.bridgeCard.name];
                         if (bridgeMeaning) {
-                            // Combiner la signification de la carte principale et de la ligne mutante
-                            meaning = `${meaning}\n\n**LIGNE MUTANTE :** ${bridgeMeaning}`;
+                            const cleanBridge = bridgeMeaning.replace(/^Ligne mutante\s*:\s*/i, '');
+                            meaning = (meaning || '') + ' Une invitation se dessine : ' + cleanBridge;
                             isMutating = true;
                         }
+                    }
+                    if (!meaning) {
+                        meaning = 'Cette carte apporte une énergie de transformation et d\'éveil à votre tirage.';
                     }
                     
                     if (meaning) {
@@ -682,97 +885,236 @@
                 return relevance;
             }
             
+            // Utilitaire : seed pseudo-aléatoire basé sur les cartes tirées
+            _seed(cards) {
+                return cards.reduce((acc, c) => acc + (c.name || '').split('').reduce((s, ch) => s + ch.charCodeAt(0), 0), 0);
+            }
+            _pick(arr, seed, offset = 0) {
+                return arr[(seed + offset) % arr.length];
+            }
+
             generateMessage(cards, intention) {
                 const themes = this.identifyThemes(cards, intention);
                 const mainCards = themes.slice(0, 3);
-                
-                let message = `Votre intention "${intention}" résonne profondément avec les énergies présentes dans votre tirage. `;
-                
-                // Compter les lignes mutantes
+                const seed = this._seed(cards);
+
+                const intros = [
+                    `Ce tirage répond à votre intention : "${intention}". Les cartes ont choisi de vous parler clairement. `,
+                    `Votre intention — "${intention}" — a guidé les cartes qui se sont présentées à vous. Voici ce qu'elles révèlent. `,
+                    `En portant l'intention "${intention}", vous avez appelé ces énergies. Elles ont quelque chose d'important à vous dire. `,
+                    `Les cartes ont entendu votre intention : "${intention}". Ce qu'elles vous montrent mérite votre attention. `
+                ];
+                let message = this._pick(intros, seed);
+
                 const mutatingCards = themes.filter(theme => theme.isMutating);
                 const hasMutatingLines = mutatingCards.length > 0;
-                
-                if (hasMutatingLines) {
-                    message += `Ce tirage contient ${mutatingCards.length} ligne${mutatingCards.length > 1 ? 's' : ''} mutante${mutatingCards.length > 1 ? 's' : ''}, indiquant une transformation profonde et imminente selon la sagesse du Yi King. `;
-                }
-                
-                mainCards.forEach((theme, index) => {
-                    const cardName = theme.card.name.replace('_', ' ');
+
+                const n = mutatingCards.length;
+                const bridgeIntros = [
+                    `Ce tirage porte ${n} carte${n > 1 ? 's' : ''} passerelle${n > 1 ? 's' : ''} — un signe que quelque chose est en plein mouvement en vous. `,
+                    `La présence de ${n} passerelle${n > 1 ? 's' : ''} dans ce tirage indique un tournant : ${n > 1 ? 'plusieurs énergies cherchent' : 'une énergie cherche'} à se métamorphoser. `,
+                    `${n > 1 ? `Ces ${n} cartes portent` : 'Cette carte porte'} la marque d'une passerelle — ce qui était figé commence à se libérer. `
+                ];
+                if (hasMutatingLines) message += this._pick(bridgeIntros, seed, 1);
+
+                const familyNames = { emotions: 'Émotion', besoins: 'Besoin', transmutation: 'Transmutation', memoire_cosmos: 'Mémoire Cosmos', revelation: 'Révélation', portail: 'Portail', archetypes: 'Archétypes', actions: 'Actions' };
+                const cardIntroTemplates = [
+                    (name, family, meaning) => `La carte « ${name} » (${family}) vous dit : ${meaning}. `,
+                    (name, family, meaning) => `« ${name} » (${family}) apporte ce message : ${meaning}. `,
+                    (name, family, meaning) => `Dans le registre ${family}, la carte « ${name} » éclaire votre situation : ${meaning}. `
+                ];
+                const bridgeTemplates = [
+                    (name, family, bridge) => `La carte « ${name} » (${family}) est en mouvement — sa passerelle « ${bridge} » annonce une transformation en cours. `,
+                    (name, family, bridge) => `« ${name} » (${family}) se transforme : la passerelle « ${bridge} » signale que quelque chose change en profondeur. `
+                ];
+
+                const FALLBACK = "cette carte apporte une énergie de transformation et d'éveil à votre tirage";
+                // Limiter à 2 cartes les plus pertinentes pour ne pas surcharger
+                mainCards.slice(0, 2).forEach((theme, i) => {
+                    const cardName = theme.card.name.replace(/_/g, ' ');
+                    const familyLabel = familyNames[theme.card.family] || theme.card.family;
                     if (theme.isMutating) {
-                        const bridgeName = theme.bridgeCard.name.replace('_', ' ');
-                        message += `La carte ${theme.card.family} "${cardName}" avec sa ligne mutante "${bridgeName}" révèle une transformation alchimique majeure. `;
+                        const bridgeName = theme.bridgeCard.name.replace(/_/g, ' ');
+                        const tpl = this._pick(bridgeTemplates, seed, i + 2);
+                        message += tpl(cardName, familyLabel, bridgeName);
                     } else {
-                        message += `La carte ${theme.card.family} "${cardName}" vous révèle que ${theme.meaning.toLowerCase()} `;
+                        const shortMeaning = theme.meaning.split('.')[0].toLowerCase();
+                        if (shortMeaning.includes('énergie de transformation et d\'éveil')) return;
+                        const tpl = this._pick(cardIntroTemplates, seed, i + 2);
+                        message += tpl(cardName, familyLabel, shortMeaning);
                     }
                 });
-                
-                if (hasMutatingLines) {
-                    message += "Les lignes mutantes indiquent que les énergies sont en cours de transformation à un niveau quantique. Ce qui semble stable est en réalité en pleine mutation vers une nouvelle réalité. ";
-                }
-                
-                message += "Ces messages s'entrelacent pour vous guider vers une compréhension plus profonde de votre situation actuelle et de votre potentiel de transformation.";
-                
+
+                const closings = [
+                    "Ces messages convergent pour vous offrir un éclairage précieux sur ce que vous traversez.",
+                    "Ensemble, ces cartes dessinent une direction claire pour vous en ce moment.",
+                    "Ce n'est pas un hasard si ces cartes se sont présentées — elles parlent de vous, pour vous.",
+                    "Laissez ces messages résonner en vous. La compréhension viendra au bon moment."
+                ];
+                const bridgeClosings = [
+                    " Les passerelles présentes vous invitent à ne pas résister au changement qui s'opère.",
+                    " Les cartes passerelles rappellent que c'est dans le mouvement que la clarté émerge."
+                ];
+
+                message += this._pick(closings, seed, 5);
+                if (hasMutatingLines) message += this._pick(bridgeClosings, seed, 6);
+
                 return message;
             }
             
             generateAdvice(cards, intention) {
                 const themes = this.identifyThemes(cards, intention);
-                
-                let advice = "Based sur votre tirage et votre intention, voici les conseils personnels qui se dégagent : ";
-                
-                // Conseils spécifiques selon les cartes
-                themes.forEach(theme => {
-                    if (theme.card.family === 'emotions') {
-                        advice += "Accueillez vos émotions comme des messagers précieux. ";
-                    } else if (theme.card.family === 'besoins') {
-                        advice += "Honorez vos besoins profonds, ils sont votre boussole intérieure. ";
-                    } else if (theme.card.family === 'transmutation') {
-                        advice += "Faites confiance au processus de transformation qui s'opère en vous. ";
-                    } else if (theme.card.family === 'memoire_cosmos') {
-                        advice += "Connectez-vous à la sagesse universelle qui vous guide. ";
+                const hasBridge = themes.some(t => t.isMutating);
+
+                const adviceByFamily = {
+                    emotions: [
+                        'Prenez le temps d\'accueillir ce que vous ressentez sans jugement. Vos émotions sont des boussoles, pas des obstacles.',
+                        'Ce que vous vivez intérieurement mérite votre attention pleine et entière. Écoutez-vous avant d\'agir.'
+                    ],
+                    besoins: [
+                        'Identifiez ce dont vous avez vraiment besoin en ce moment, au-delà des apparences. Ce besoin est légitime.',
+                        'Nourrir vos besoins profonds n\'est pas un luxe, c\'est une nécessité pour avancer avec clarté.'
+                    ],
+                    transmutation: [
+                        'Quelque chose cherche à se transformer en vous. Résistez moins, laissez ce mouvement s\'accomplir naturellement.',
+                        'Les périodes de changement peuvent sembler déstabilisantes, mais elles portent en elles les graines d\'un renouveau.'
+                    ],
+                    memoire_cosmos: [
+                        'Faites confiance à ce que vous savez déjà au fond de vous. Cette sagesse intérieure ne vous trompe pas.',
+                        'Prenez du recul, observez votre chemin depuis une perspective plus large. La réponse est déjà en vous.'
+                    ],
+                    revelation: [
+                        'Une vérité cherche à se révéler. Restez ouvert à ce qui pourrait changer votre regard sur la situation.',
+                    ],
+                    archetypes: [
+                        'Observez quels rôles ou schémas se répètent dans votre vie. C\'est peut-être l\'heure d\'en habiter un nouveau.'
+                    ]
+                };
+
+                const adviceIntros = [
+                    `À la lumière de votre intention — "${intention}" — voici ce que ce tirage vous invite à explorer : `,
+                    `Ce tirage, porté par votre intention "${intention}", vous adresse ces invitations : `,
+                    `Pour répondre à "${intention}", vos cartes vous suggèrent ceci : `,
+                    `Votre intention "${intention}" ouvre ces pistes concrètes : `
+                ];
+                const seed = this._seed(cards);
+                const seen = new Set();
+                let advice = this._pick(adviceIntros, seed);
+
+                // Max 2 familles pour ne pas surcharger
+                themes.forEach((theme, i) => {
+                    if (seen.size >= 2) return;
+                    const family = theme.card.family;
+                    if (!seen.has(family) && adviceByFamily[family]) {
+                        const options = adviceByFamily[family];
+                        advice += this._pick(options, seed, i + 1) + ' ';
+                        seen.add(family);
                     }
                 });
-                
+
+                const bridgeAdvices = [
+                    'Les cartes passerelles vous invitent à ne pas forcer — laissez le mouvement s\'accomplir à son rythme.',
+                    'Là où une passerelle apparaît, il y a une invitation à traverser un seuil. Faites confiance au passage.',
+                    'Les passerelles de ce tirage signalent que vous êtes exactement là où vous devez être pour que quelque chose change.'
+                ];
+                if (hasBridge) advice += this._pick(bridgeAdvices, seed, 7);
+
                 return advice;
             }
             
             generateSynthesis(cards, intention) {
                 const themes = this.identifyThemes(cards, intention);
-                
-                let synthesis = `Votre tirage pour l'intention "${intention}" révèle une histoire cohérente et profonde. `;
-                
-                synthesis += "Les cartes qui se sont présentées vous montrent que vous êtes à un moment clé de votre évolution. ";
-                synthesis += "Les énergies émotionnelles, vos besoins fondamentaux, le processus de transformation et la sagesse intérieure convergent ";
-                synthesis += "pour vous offrir une vision complète de votre situation. ";
-                
-                synthesis += "Ce tirage vous invite à faire confiance à votre intuition, à accueillir les changements nécessaires ";
-                synthesis += "et à vous souvenir que vous êtes guidé à chaque instant. ";
-                
-                synthesis += "La réponse que vous cherchez se trouve déjà en vous, et ces cartes ne font que révéler ";
-                synthesis += "la sagesse qui sommeille dans votre cœur.";
-                
+                const hasBridge = themes.some(t => t.isMutating);
+                const seed = this._seed(cards);
+                const families = [...new Set(themes.map(t => t.card.family))];
+
+                const openings = [
+                    `Ce tirage trace un portrait juste et nuancé de ce que vous vivez autour de "${intention}". `,
+                    `Les cartes tirées pour "${intention}" forment un ensemble cohérent qui vous parle directement. `,
+                    `Ce que ce tirage révèle autour de "${intention}" est à la fois précis et profond. `,
+                    `Votre tirage autour de "${intention}" dessine une image claire de votre moment présent. `
+                ];
+
+                const middles = [
+                    'Vous traversez une période où plusieurs dimensions de votre vie cherchent à s\'aligner. Ce n\'est pas une coïncidence — c\'est un mouvement naturel vers plus de cohérence. ',
+                    'Les énergies présentes dans ce tirage indiquent que vous êtes à un endroit charnière. Quelque chose se termine doucement, et quelque chose d\'autre prend forme. ',
+                    'Ce tirage montre que vous n\'êtes pas dans l\'impasse — vous êtes dans un passage. La différence est importante : un passage mène quelque part. ',
+                    'Les cartes parlent d\'un moment de reconfiguration intérieure. Rien ne se perd, tout se transforme — et ce tirage en est le reflet. '
+                ];
+
+                const familyInsights = {
+                    emotions: [
+                        'Vos émotions jouent un rôle central dans ce que vous vivez : elles ne sont pas un bruit de fond, elles sont le signal. ',
+                        'Le registre émotionnel est particulièrement actif en ce moment. Ce que vous ressentez mérite d\'être entendu, pas mis de côté. '
+                    ],
+                    besoins: [
+                        'Vos besoins profonds réclament votre attention. Les nommer clairement, c\'est déjà commencer à les honorer. ',
+                        'Quelque chose en vous a besoin d\'être nourri. Ce tirage vous invite à identifier ce manque sans le minimiser. '
+                    ],
+                    transmutation: [
+                        'Une transformation est à l\'œuvre. Elle peut sembler lente, mais elle est réelle. ',
+                        'Quelque chose mue en vous. Ce mouvement est positif, même s\'il est inconfortable. '
+                    ],
+                    memoire_cosmos: [
+                        'Votre sagesse intérieure est plus accessible qu\'il n\'y paraît. Ce tirage vous invite à lui faire confiance. ',
+                        'La mémoire profonde de qui vous êtes est là, disponible. Vous savez plus que vous ne le pensez. '
+                    ]
+                };
+
+                const closings = [
+                    'La réponse que vous cherchez est déjà en chemin. Ce tirage en est le signe.',
+                    'Ces cartes ne prédisent pas — elles révèlent. Et ce qu\'elles révèlent ici est encourageant.',
+                    'Faites confiance à ce qui se présente. Le mouvement est déjà en cours.',
+                    'Vous avez plus de ressources en vous que vous ne l\'imaginez. Ce tirage le confirme.'
+                ];
+
+                const bridgeClosings = [
+                    ' Les passerelles dans ce tirage sont un signe que le changement n\'est pas à venir — il est déjà là.',
+                    ' Là où une passerelle apparaît, une porte s\'ouvre. Vous n\'avez qu\'à franchir le seuil.'
+                ];
+
+                let synthesis = this._pick(openings, seed);
+                synthesis += this._pick(middles, seed, 1);
+
+                // 1 seul insight famille pour garder la synthèse courte
+                const firstFamWithInsight = families.find(fam => familyInsights[fam]);
+                if (firstFamWithInsight) {
+                    synthesis += this._pick(familyInsights[firstFamWithInsight], seed, 2);
+                }
+
+                synthesis += this._pick(closings, seed, 5);
+                if (hasBridge) synthesis += this._pick(bridgeClosings, seed, 6);
+
                 return synthesis;
             }
         }
         
         // Initialisation
         document.addEventListener('DOMContentLoaded', function() {
-            // Récupérer les données du tirage
-            const urlParams = new URLSearchParams(window.location.search);
-            const intention = urlParams.get('intention') || 'question personnelle';
-            const cardsData = urlParams.get('cards');
-            
-            if (!cardsData) {
-                // Rediriger vers la page de tirage si pas de données
+            // Lire depuis sessionStorage en priorité, fallback URL params
+            let intention = sessionStorage.getItem('tore_intention') || '';
+            let cardsRaw = sessionStorage.getItem('tore_cards');
+
+            // Fallback : paramètres URL (ancien système)
+            if (!cardsRaw) {
+                const urlParams = new URLSearchParams(window.location.search);
+                intention = intention || urlParams.get('intention') || '';
+                cardsRaw = urlParams.get('cards') ? decodeURIComponent(urlParams.get('cards')) : null;
+            }
+
+            if (!cardsRaw) {
                 window.location.href = 'tore.html';
                 return;
             }
-            
+
             try {
-                const cards = JSON.parse(decodeURIComponent(cardsData));
-                displayAnalysis(cards, intention);
-            } catch (error) {
-                console.error('Erreur lors de la lecture des cartes:', error);
+                const cards = JSON.parse(cardsRaw);
+                if (!Array.isArray(cards) || cards.length === 0) {
+                    window.location.href = 'tore.html';
+                    return;
+                }
+                displayAnalysis(cards, intention || 'question personnelle');
+            } catch (e) {
                 window.location.href = 'tore.html';
             }
         });
@@ -803,35 +1145,50 @@
                 
                 const isMutating = card.isMutating || card.bridgeCard;
                 
+                const familyLabel = card.family === 'emotions' ? 'Émotion' :
+                                    card.family === 'besoins' ? 'Besoin' :
+                                    card.family === 'transmutation' ? 'Transmutation' :
+                                    card.family === 'memoire_cosmos' ? 'Mémoire' :
+                                    card.family === 'revelation' ? 'Révélation' :
+                                    card.family === 'portail' ? 'Portail' :
+                                    card.family.replace(/_/g, ' ');
+
+                // Groupe : carte principale + éventuellement passerelle
                 cardElement.innerHTML = `
-                    <div class="analysis-card p-6 ${isMutating ? 'border-purple-500' : 'border-gold'} card-hover relative">
-                        <div class="w-20 h-28 mx-auto mb-4 rounded-lg overflow-hidden border-2 ${isMutating ? 'border-purple-500/50' : 'border-gold/30'}">
-                            <img src="images/${card.family}/${card.name}.png" 
-                                 alt="${card.name}" 
-                                 class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
-                        </div>
-                        
-                        <h3 class="text-sm font-bold ${isMutating ? 'text-purple-400' : 'text-gold'} capitalize mb-2">${card.family.replace('_', ' ')}</h3>
-                        <p class="text-sm text-gold/90 capitalize mb-3">${card.name.replace('_', ' ')}</p>
-                        
-                        ${isMutating ? `
-                            <div class="border-t border-purple-500/30 pt-3 mb-3">
-                                <div class="text-sm font-bold text-purple-400 mb-2 flex items-center justify-center">
-                                    <i class="fas fa-yin-yang mr-2"></i>
-                                    LIGNE MUTANTE
-                                </div>
-                                <div class="w-16 h-20 mx-auto mb-2 rounded-lg overflow-hidden border-2 border-purple-500/30">
-                                    <img src="images/${card.bridgeCard.family}/${card.bridgeCard.name}.png" 
-                                         alt="${card.bridgeCard.name}" 
-                                         class="w-full h-full object-cover">
-                                </div>
-                                <p class="text-sm text-purple-300 capitalize font-medium">${card.bridgeCard.name.replace('_', ' ')}</p>
+                    <div class="card-group fade-in-up" style="animation-delay:${index * 0.1}s">
+
+                        <!-- Carte principale -->
+                        <div class="card-grid-item">
+                            <img src="${card.imgSrc || ('images/' + card.family + '/' + card.name + '.png')}"
+                                 alt="${card.name}"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div style="display:none; aspect-ratio:64/90; background:rgba(5,20,40,0.9); align-items:center; justify-content:center; padding:8px;">
+                                <span style="color:#d4af37; font-size:0.6rem; text-align:center; font-family:'Cinzel',serif;">${card.name}</span>
                             </div>
-                        ` : ''}
-                        
-                        <div class="flex justify-center mt-3">
-                            <i class="fas ${isMutating ? 'fa-yin-yang text-purple-400' : 'fa-star text-gold'} text-lg"></i>
+                            <div class="card-grid-label">${familyLabel}</div>
+                            <div class="card-grid-name">${card.name.replace(/_/g, ' ')}</div>
                         </div>
+
+                        ${isMutating && card.bridgeCard ? `
+                        <!-- Connecteur visuel -->
+                        <div class="bridge-connector">
+                            <i class="fas fa-rotate"></i>
+                        </div>
+
+                        <!-- Carte passerelle -->
+                        <div class="card-grid-item bridge">
+                            <img src="${card.bridgeCard.imgSrc || ('images/' + card.bridgeCard.family + '/' + card.bridgeCard.name + '.png')}"
+                                 alt="${card.bridgeCard.name}"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                            <div style="display:none; aspect-ratio:64/90; background:rgba(5,20,40,0.9); align-items:center; justify-content:center; padding:8px;">
+                                <span style="color:#c4b5fd; font-size:0.6rem; text-align:center; font-family:'Cinzel',serif;">${card.bridgeCard.name}</span>
+                            </div>
+                            <div class="bridge-badge"><i class="fas fa-rotate"></i> Passerelle</div>
+                            <div class="card-grid-label bridge-label">Actions</div>
+                            <div class="card-grid-name bridge-name">${card.bridgeCard.name.replace(/_/g, ' ')}</div>
+                        </div>
+                        ` : ''}
+
                     </div>
                 `;
                 container.appendChild(cardElement);
@@ -841,99 +1198,80 @@
         function displayDetailedAnalysis(analysis) {
             const container = document.getElementById('analysisContent');
             container.innerHTML = '';
-            
-            // Message principal
-            const messageCard = document.createElement('div');
-            messageCard.className = 'analysis-card mb-8 fade-in-up';
-            messageCard.innerHTML = `
-                <div class="flex items-center mb-4">
-                    <i class="fas fa-envelope-open-text text-gold text-xl mr-4"></i>
-                    <h3 class="font-cinzel text-xl font-bold text-gold">Message des Cartes</h3>
+
+            const oracleCard = document.createElement('div');
+            oracleCard.className = 'analysis-card fade-in-up';
+            oracleCard.innerHTML = `
+                <div class="card-header">
+                    <i class="fas fa-scroll"></i>
+                    <h3>Message de l'Oracle</h3>
                 </div>
-                <div class="border-t border-gold/30 pt-4 mb-4"></div>
-                <p class="text-lg leading-relaxed">${analysis.message}</p>
-            `;
-            container.appendChild(messageCard);
-            
-            // Analyse par famille
-            const families = {};
-            analysis.themes.forEach(theme => {
-                if (!families[theme.card.family]) {
-                    families[theme.card.family] = [];
-                }
-                families[theme.card.family].push(theme);
-            });
-            
-            Object.entries(families).forEach(([family, themes], familyIndex) => {
-                const familyCard = document.createElement('div');
-                familyCard.className = 'analysis-card mb-8 fade-in-up';
-                familyCard.style.animationDelay = `${0.2 + familyIndex * 0.15}s`;
-                
-                const familyTitle = family === 'emotions' ? 'Émotions' :
-                                  family === 'besoins' ? 'Besoins' :
-                                  family === 'transmutation' ? 'Transmutation' :
-                                  family === 'memoire_cosmos' ? 'Mémoire Cosmos' : family;
-                
-                const familyIcon = family === 'emotions' ? 'fa-heart' :
-                                  family === 'besoins' ? 'fa-hands-holding-heart' :
-                                  family === 'transmutation' ? 'fa-fire' :
-                                  family === 'memoire_cosmos' ? 'fa-moon' : 'fa-star';
-                
-                familyCard.innerHTML = `
-                    <div class="flex items-center mb-4">
-                        <i class="fas ${familyIcon} text-gold text-xl mr-4"></i>
-                        <h3 class="font-cinzel text-xl font-bold text-gold">${familyTitle}</h3>
-                    </div>
-                    <div class="border-t border-gold/30 pt-4 mb-4"></div>
-                    <div class="space-y-4">
-                        ${themes.map((theme, index) => `
-                            <div class="flex items-start p-4 rounded-lg ${theme.isMutating ? 'bg-purple-500/10 border border-purple-500/30' : 'bg-gold/5 border border-gold/20'} card-hover">
-                                <i class="fas ${theme.isMutating ? 'fa-yin-yang text-purple-400' : 'fa-star text-gold'} text-lg mr-4 mt-1"></i>
-                                <div class="flex-1">
-                                    <div class="flex items-center mb-2">
-                                        <p class="font-bold ${theme.isMutating ? 'text-purple-300' : 'text-gold'} capitalize">${theme.card.name.replace('_', ' ')}</p>
-                                        ${theme.isMutating ? `
-                                            <span class="ml-3 px-2 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-xs font-bold text-purple-400">LIGNE MUTANTE</span>
-                                        ` : ''}
-                                    </div>
-                                    ${theme.isMutating ? `
-                                        <div class="mb-3 p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
-                                            <p class="text-xs font-bold text-purple-400 mb-1">Carte Passerelle : ${theme.bridgeCard.name.replace('_', ' ')}</p>
-                                            <p class="text-sm text-purple-200 leading-relaxed">${this.cardMeanings.bridge_cards[theme.bridgeCard.name]}</p>
-                                        </div>
-                                    ` : ''}
-                                    <p class="text-sm leading-relaxed">${theme.meaning}</p>
-                                </div>
-                            </div>
-                        `).join('')}
-                    </div>
-                `;
-                
-                container.appendChild(familyCard);
-            });
-            
-            // Conseils
-            const adviceCard = document.createElement('div');
-            adviceCard.className = 'analysis-card mb-8 fade-in-up';
-            adviceCard.style.animationDelay = `${0.2 + Object.keys(families).length * 0.15}s`;
-            adviceCard.innerHTML = `
-                <div class="flex items-center mb-4">
-                    <i class="fas fa-lightbulb text-gold text-xl mr-4"></i>
-                    <h3 class="font-cinzel text-xl font-bold text-gold">Conseils Personnels</h3>
+                <div class="card-body" style="margin-bottom:0;">${analysis.message}</div>
+
+                <div style="border-top:1px solid rgba(212,175,55,0.15); margin-top:1.4rem; padding-top:1.2rem;">
+                    <p style="font-family:'Cinzel',serif; font-size:0.7rem; font-weight:700; color:#d4af37; text-transform:uppercase; letter-spacing:0.07em; margin:0 0 0.7rem; display:flex; align-items:center; gap:6px;"><i class="fas fa-compass"></i>Pistes à explorer</p>
+                    <div class="card-body" style="font-style:italic; color:#c8c0a8;">${analysis.advice}</div>
                 </div>
-                <div class="border-t border-gold/30 pt-4 mb-4"></div>
-                <p class="text-lg leading-relaxed">${analysis.advice}</p>
+
+                <div style="border-top:1px solid rgba(212,175,55,0.15); margin-top:1.4rem; padding-top:1.2rem;">
+                    <p style="font-family:'Cinzel',serif; font-size:0.7rem; font-weight:700; color:#d4af37; text-transform:uppercase; letter-spacing:0.07em; margin:0 0 0.7rem; display:flex; align-items:center; gap:6px;"><i class="fas fa-feather"></i>Synthèse</p>
+                    <div class="card-body" id="synthesisContent" style="color:#e9e7df;">${analysis.synthesis}</div>
+                </div>
             `;
-            container.appendChild(adviceCard);
+            container.appendChild(oracleCard);
         }
-        
+
         function displaySynthesis(synthesis) {
-            document.getElementById('synthesisContent').innerHTML = synthesis;
+            const el = document.getElementById('synthesisContent');
+            if (el) el.innerHTML = synthesis;
+        }
+
+        function openEmailModal() {
+            const modal = document.getElementById('emailModal');
+            modal.style.display = 'flex';
+            document.getElementById('emailSuccess').style.display = 'none';
+            document.getElementById('emailForm').style.display = 'block';
+            document.getElementById('tirageEmail').value = '';
+        }
+
+        function closeEmailModal() {
+            document.getElementById('emailModal').style.display = 'none';
+        }
+
+        document.getElementById('emailModal').addEventListener('click', function(e) {
+            if (e.target === this) closeEmailModal();
+        });
+
+        function sendTirageEmail(e) {
+            e.preventDefault();
+            const email = document.getElementById('tirageEmail').value;
+            const intention = sessionStorage.getItem('tore_intention') || '';
+            const cardsRaw = sessionStorage.getItem('tore_cards');
+            const cards = cardsRaw ? JSON.parse(cardsRaw) : [];
+
+            // Construction du corps du mail via mailto (fallback sans serveur)
+            const cardNames = cards.map(c => c.name ? c.name.replace(/_/g, ' ') : '').filter(Boolean).join(', ');
+            const synthesis = document.getElementById('synthesisContent')?.innerText || '';
+            const message = document.getElementById('analysisContent')?.innerText || '';
+
+            const subject = encodeURIComponent('Mon tirage Oradia');
+            const body = encodeURIComponent(
+                `Mon intention : ${intention}\n\nCartes tirées : ${cardNames}\n\n--- Analyse ---\n${message.slice(0, 800)}\n\n--- Synthèse ---\n${synthesis.slice(0, 400)}\n\noradia.fr`
+            );
+
+            // Ouvrir le client mail natif
+            window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+
+            // Afficher le succès
+            document.getElementById('emailForm').style.display = 'none';
+            document.getElementById('emailSuccess').style.display = 'block';
+            setTimeout(closeEmailModal, 2500);
         }
     </script>
     
     <!-- Scripts pour header/footer -->
     <script src="components/header-manager.js" defer></script>
+    <script src="components/footer-manager.js" defer></script>
     
     <!-- Scroll to top functionality -->
     <script>
