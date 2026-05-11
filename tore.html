@@ -109,43 +109,63 @@
 
       justify-content:center;
 
-      padding:0.75rem 1.5rem;
+      padding:0.875rem 2rem;
 
-      border-radius:9999px;
+      border-radius:50px;
 
-      background:linear-gradient(90deg,#d4af37,#f5e7a1,#d4af37);
+      background:linear-gradient(135deg,#d4af37,#f4e4c1);
 
-      background-size:200% 200%;
+      color:#0a192f;
 
-      color:#051428;
+      font-weight:700;
 
-      font-weight:600;
-
-      font-size:0.95rem;
-
-      box-shadow:0 10px 30px rgba(0,0,0,.45);
+      font-size:1rem;
 
       border:none;
 
       cursor:pointer;
 
-      transition:transform .2s, box-shadow .2s, background-position .4s;
+      transition:all 0.3s ease;
 
-      text-decoration:none;
+      font-family:'Poppins',sans-serif;
+
+      letter-spacing:0.5px;
+
+      box-shadow:0 8px 20px rgba(212,175,55,0.4);
 
     }
 
     .btn-gold:hover {
 
-      transform:translateY(-1px);
+      transform:translateY(-2px) scale(1.02);
 
-      box-shadow:0 15px 40px rgba(0,0,0,.6);
-
-      background-position:100% 0;
+      box-shadow:0 12px 30px rgba(212,175,55,0.6);
 
     }
 
+    .btn-gold:active {
 
+      transform:translateY(0) scale(0.98);
+
+    }
+
+    /* Responsive boutons */
+
+    @media (max-width: 639px) {
+
+      .btn-gold {
+
+        padding:0.75rem 1.5rem;
+
+        font-size:0.9rem;
+
+        width:100%;
+
+        max-width:320px;
+
+      }
+
+    }
 
     .gold-gradient {
 
@@ -215,13 +235,13 @@
 
   position: relative;
 
-  width: min(1200px, 95vw);
+  width: min(1200px, 100%);
 
   aspect-ratio: 1 / 1;
 
   margin: 0 auto;
 
-  padding: 1rem;
+  padding: 0.5rem;
 
   display: grid;
 
@@ -229,7 +249,7 @@
 
   grid-template-rows: repeat(7, auto);
 
-  gap: 0.75rem;
+  gap: 0.5rem;
 
   max-width: 100%;
 
@@ -275,85 +295,69 @@
 
 
 
-/* Émotions + Besoins → légèrement vers le bas */
+/* Ajustements pour créer une impression de cercle autour de Mémoire Cosmos */
 
-.tore-card.pos-0,
-
+/* Transmutations (haut gauche) - remonter légèrement et rapprocher du centre */
 .tore-card.pos-1 {
-
-  transform: translateY(-2%);
-
+  transform: translate(40px, 15px);
 }
 
-
-
-/* Transmutation → décalé encore plus à gauche */
-
+/* Archétypes (haut droite) - remonter légèrement et rapprocher du centre */
 .tore-card.pos-2 {
-
-  transform: translate(-70px, -30px);   /* X = -30px pour aller à gauche */
-
+  transform: translate(-40px, 15px);
 }
 
-
-
-/* Mémoire Cosmos (centre) */
-
-.tore-card.pos-6 {
-
-  transform: translateY(-110%);
-
+/* Émotions (bas gauche) - descendre encore davantage et rapprocher du centre */
+.tore-card.pos-3 {
+  transform: translate(40px, -15px);
 }
 
-
-
-/* Archétype → décalé plus à droite */
-
-.tore-card.pos-4 {
-
-  transform: translate(70px, -30px);     /* X = +30px pour aller à droite */
-
+/* Actions (bas droite) - descendre encore davantage et rapprocher du centre */
+.tore-card.pos-5 {
+  transform: translate(-40px, -15px);
 }
 
+/* Besoins et Révélations restent alignés horizontalement avec Mémoire Cosmos */
 
 
 
 
-  /* Disposition des piles :
 
-     Ligne 1 : Révélation (gauche)          [pos-5]
+  /* Disposition des piles selon schéma :
+
+     Ligne 1 : Transmutations (gauche)     [pos-1]
 
                (rien au centre)
 
-               Action (droite)             [pos-3]
+               Archétypes (droite)         [pos-2]
 
-     Ligne 2 : Transmutation (gauche)      [pos-2]
+     Ligne 2 : Besoins (gauche)            [pos-0]
 
                Mémoire Cosmos (centre)     [pos-6]
 
-               Archétype (droite)          [pos-4]
+               Révélations (droite)        [pos-4]
 
-     Ligne 3 : Émotions (gauche)           [pos-0]
+     Ligne 3 : Émotions (gauche)           [pos-3]
 
                (rien au centre)
 
-               Besoin (droite)             [pos-1]
+               Actions (droite)            [pos-5]
 
   */
 
-  #tore-immersif .tore-board-7 .pos-5 { grid-area: 1 / 1; }
+  #tore-immersif .tore-board-7 .pos-1 { grid-area: 1 / 1; }
 
-  #tore-immersif .tore-board-7 .pos-3 { grid-area: 1 / 3; }
+  #tore-immersif .tore-board-7 .pos-2 { grid-area: 1 / 3; }
 
-  #tore-immersif .tore-board-7 .pos-2 { grid-area: 2 / 1; }
+  #tore-immersif .tore-board-7 .pos-0 { grid-area: 2 / 1; }
 
   #tore-immersif .tore-board-7 .pos-6 { grid-area: 2 / 2; }
 
   #tore-immersif .tore-board-7 .pos-4 { grid-area: 2 / 3; }
 
-  #tore-immersif .tore-board-7 .pos-0 { grid-area: 3 / 1; }
+  #tore-immersif .tore-board-7 .pos-3 { grid-area: 3 / 1; }
 
-  #tore-immersif .tore-board-7 .pos-1 { grid-area: 3 / 3; }
+  #tore-immersif .tore-board-7 .pos-5 { grid-area: 3 / 3; }
 
 
 
@@ -365,11 +369,11 @@
 
 
 
-/* Cartes un peu plus petites pour rentrer pile dans les cadres */
+/* Cartes responsives pour tous les supports */
 
 .tore-card{
 
-  width: clamp(170px, 17vw, 230px); /* taille stable = moins de collisions */
+  width: clamp(120px, 20vw, 230px); /* Adaptation mobile -> desktop */
 
   aspect-ratio: 64 / 90;
 
@@ -379,63 +383,90 @@
 
   position: relative;
 
+  margin: 0 auto; /* Centrage sur mobile */
+
 }
 
 
 
-  @media (max-width: 860px) {
-
+  /* RESPONSIVE MOBILE (< 640px) : Disposition verticale */
+  @media (max-width: 639px) {
     #tore-immersif .tore-board-7 {
-
       grid-template-columns: 1fr;
-
       grid-template-rows: auto;
-
+      gap: 0.75rem;
+      padding: 0.5rem;
+      background-size: cover;
     }
 
     #tore-immersif .tore-board-7 .pos-0,
-
     #tore-immersif .tore-board-7 .pos-1,
-
     #tore-immersif .tore-board-7 .pos-2,
-
     #tore-immersif .tore-board-7 .pos-3,
-
     #tore-immersif .tore-board-7 .pos-4,
-
     #tore-immersif .tore-board-7 .pos-5,
-
     #tore-immersif .tore-board-7 .pos-6 {
-
       grid-area: auto;
-
+      transform: none !important; /* Annuler les décalages sur mobile */
     }
 
+    .tore-card {
+      width: clamp(140px, 50vw, 200px);
+    }
   }
 
-  @media (min-width: 640px) {
-  #tore-immersif .tore-board-7 {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 1rem;
-  }
-}
+  /* RESPONSIVE TABLETTE (640px - 767px) : 2 colonnes */
+  @media (min-width: 640px) and (max-width: 767px) {
+    #tore-immersif .tore-board-7 {
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      padding: 1rem;
+    }
 
-@media (min-width: 768px) {
-  #tore-immersif .tore-board-7 {
-    grid-template-columns: repeat(3, 1fr);
-    grid-template-rows: repeat(3, 1fr);
-    gap: 1.25rem;
-    padding: 1.5rem;
-    width: min(1200px, 95vw);
-  }
-}
+    .tore-card {
+      width: clamp(150px, 18vw, 200px);
+    }
 
-@media (min-width: 1024px) {
-  #tore-immersif .tore-board-7 {
-    gap: 1.5rem;
-    padding: 2rem;
+    /* Réduire les décalages sur tablette */
+    .tore-card.pos-2 {
+      transform: translate(-30px, -15px);
+    }
+    .tore-card.pos-4 {
+      transform: translate(30px, -15px);
+    }
+    .tore-card.pos-6 {
+      transform: translateY(-60%);
+    }
   }
-}
+
+  /* RESPONSIVE DESKTOP (768px - 1023px) : 3 colonnes */
+  @media (min-width: 768px) and (max-width: 1023px) {
+    #tore-immersif .tore-board-7 {
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 1.25rem;
+      padding: 1.5rem;
+      width: min(1200px, 95vw);
+    }
+
+    .tore-card {
+      width: clamp(160px, 17vw, 210px);
+    }
+  }
+
+  /* RESPONSIVE LARGE DESKTOP (>= 1024px) : Taille optimale */
+  @media (min-width: 1024px) {
+    #tore-immersif .tore-board-7 {
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 1.5rem;
+      padding: 2rem;
+    }
+
+    .tore-card {
+      width: clamp(170px, 17vw, 230px);
+    }
+  }
 
   .tore-card-inner {
 
@@ -447,11 +478,11 @@
 
     transform-style: preserve-3d;
 
-    transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
 
-    border-radius: 18px;
+    border-radius: 12px;
 
-    box-shadow: 0 20px 40px rgba(0,0,0,0.75);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.6), 0 0 20px rgba(212,175,55,0.15);
 
   }
 
@@ -471,11 +502,11 @@
 
     backface-visibility: hidden;
 
-    border-radius: 18px;
+    border-radius: 12px;
 
     overflow: hidden;
 
-    border: 1px solid rgba(212,175,55,45);
+    border: 2px solid rgba(212,175,55,0.4);
 
   }
 
@@ -493,6 +524,39 @@
 
     cursor: pointer;
 
+    transition: transform 0.3s ease;
+
+  }
+
+  .tore-card-back:hover {
+
+    transform: scale(1.02);
+
+  }
+
+  /* Indication visuelle de la prochaine carte à tirer */
+  .tore-card.next-to-draw .tore-card-back {
+    animation: pulse-next-card 2s ease-in-out infinite;
+    box-shadow: 0 0 0 3px rgba(212,175,55,0.6), 0 0 20px rgba(212,175,55,0.4);
+  }
+
+  @keyframes pulse-next-card {
+    0%, 100% {
+      box-shadow: 0 0 0 3px rgba(212,175,55,0.6), 0 0 20px rgba(212,175,55,0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 5px rgba(212,175,55,0.8), 0 0 30px rgba(212,175,55,0.6);
+    }
+  }
+
+  /* Curseur pointer sur les cartes retournées désactivé pour éviter les bugs */
+  .tore-card.flipped .tore-card-front {
+    cursor: default;
+    /* transition désactivées */
+  }
+
+  .tore-card.flipped .tore-card-front:hover {
+    /* transform et opacity désactivés */
   }
 
 
@@ -505,6 +569,8 @@
 
     background-image: url("images/dos/dos_emotion.png");
 
+    background-size: contain;
+
   }
 
 
@@ -512,6 +578,8 @@
   .tore-card[data-family="besoins"] .tore-card-back {
 
     background-image: url("images/dos/dos_besoin.png");
+
+    background-size: contain;
 
   }
 
@@ -521,6 +589,8 @@
 
     background-image: url("images/dos/dos_transmutation.png");
 
+    background-size: contain;
+
   }
 
 
@@ -528,6 +598,8 @@
   .tore-card[data-family="actions"] .tore-card-back {
 
     background-image: url("images/dos/dos_action.png");
+
+    background-size: contain;
 
   }
 
@@ -537,6 +609,8 @@
 
     background-image: url("images/dos/dos_archetype.png");
 
+    background-size: contain;
+
   }
 
 
@@ -545,6 +619,8 @@
 
     background-image: url("images/dos/dos_revelation.png");
 
+    background-size: contain;
+
   }
 
 
@@ -552,6 +628,8 @@
   .tore-card[data-family="memoire_cosmos"] .tore-card-back {
 
     background-image: url("images/dos/dos_memoire_cosmos.png");
+
+    background-size: contain;
 
   }
 
@@ -689,19 +767,25 @@
 
     font-family: "Cormorant Garamond", serif;
 
-    font-size: 1.6rem;
+    font-size: clamp(1.2rem, 2vw, 1.6rem);
 
     margin-bottom: .3rem;
+
+    font-weight: 600;
+
+    color: #d4af37;
 
   }
 
   .tore-card-front [data-quote] {
 
-    font-size: .93rem;
+    font-size: clamp(0.8rem, 1.5vw, 0.93rem);
 
     line-height: 1.4;
 
     opacity: .9;
+
+    color: #f5e7a1;
 
   }
 
@@ -713,14 +797,32 @@
 
   .tore-card.match .tore-card-inner {
 
-    box-shadow: 0 0 0 2px rgba(80,200,120,0.9), 0 18px 40px rgba(0,0,0,0.75);
+    box-shadow: 0 0 0 3px rgba(80,200,120,0.9), 0 10px 30px rgba(80,200,120,0.3), 0 0 20px rgba(212,175,55,0.15);
+
+    animation: pulse-match 1s ease-out;
 
   }
 
   .tore-card.mismatch .tore-card-inner {
 
-    box-shadow: 0 0 0 2px rgba(231,76,60,0.95), 0 18px 40px rgba(0,0,0,0.75);
+    box-shadow: 0 0 0 3px rgba(231,76,60,0.95), 0 10px 30px rgba(231,76,60,0.3), 0 0 20px rgba(212,175,55,0.15);
 
+    animation: pulse-mismatch 1s ease-out;
+
+  }
+
+  @keyframes pulse-match {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.08); }
+    60% { transform: scale(0.98); }
+    100% { transform: scale(1); }
+  }
+
+  @keyframes pulse-mismatch {
+    0% { transform: scale(1); }
+    30% { transform: scale(1.08); }
+    60% { transform: scale(0.98); }
+    100% { transform: scale(1); }
   }
 
 
@@ -745,21 +847,31 @@
 
   .tore-extra-card {
 
-    width: 80px;
+    width: clamp(60px, 10vw, 80px);
 
     aspect-ratio: 64 / 90;
 
     border-radius: 12px;
 
-    border: 1px solid rgba(212,175,55,0.7);
+    border: 2px solid rgba(212,175,55,0.7);
 
-    box-shadow: 0 12px 24px rgba(0,0,0,0.75);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6), 0 0 15px rgba(212,175,55,0.2);
 
     transform: translateY(-6px) rotate(-4deg);
 
     opacity: 0;
 
-    transition: opacity 0.25s ease, transform 0.25s ease;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+
+    cursor: zoom-in;
+
+  }
+
+  .tore-extra-card:hover {
+
+    transform: translateY(-8px) rotate(-2deg) scale(1.05);
+
+    box-shadow: 0 12px 30px rgba(0,0,0,0.7), 0 0 25px rgba(212,175,55,0.3);
 
   }
 
@@ -1077,15 +1189,15 @@
 
     justify-content: center;
 
-    background: rgba(0,0,0,0); /* transparent au repos */
+    background: rgba(0,0,0,0);
 
-    z-index: 60;
+    z-index: 9999;
 
-    pointer-events: none;       /* ne bloque pas la souris */
+    pointer-events: none;
 
     opacity: 0;
 
-    transition: opacity 0.4s ease, background 0.4s ease;
+    transition: opacity 0.3s ease, background 0.3s ease;
 
   }
 
@@ -1097,35 +1209,45 @@
 
     opacity: 1;
 
-    background: rgba(0,0,0,0.6);
+    background: rgba(0,0,0,0.75);
+
+    pointer-events: auto;
 
   }
 
 
 
-  #card-preview-overlay img {
+  #card-preview-overlay #card-preview-img {
 
-    max-width: min(480px, 90vw);
+    max-width: min(500px, 90vw);
 
-    height: auto;
+    max-height: 80vh;
 
-    border-radius: 18px;
+    border-radius: 12px;
 
-    box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.9), 0 0 40px rgba(212,175,55,0.4);
 
-    border: 1px solid rgba(212,175,55,.7);
+    border: 2px solid rgba(212,175,55,0.8);
 
-    transform: scale(0.9);
+    transform: scale(0.85);
 
     opacity: 0;
 
-    transition: opacity 0.4s ease, transform 0.4s ease;
+    transition: opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+
+    background-size: contain;
+
+    background-repeat: no-repeat;
+
+    background-position: center;
+
+    aspect-ratio: 64 / 90;
 
   }
 
 
 
-  #card-preview-overlay.card-preview-visible img {
+  #card-preview-overlay.card-preview-visible #card-preview-img {
 
     transform: scale(1);
 
@@ -1153,11 +1275,13 @@
 
   0%   { transform: translate(0, 0); }
 
-  25%  { transform: translate(-3px, 1px); }
+  20%  { transform: translate(-4px, 2px); }
 
-  50%  { transform: translate(3px, -1px); }
+  40%  { transform: translate(4px, -2px); }
 
-  75%  { transform: translate(-2px, 2px); }
+  60%  { transform: translate(-3px, 1px); }
+
+  80%  { transform: translate(3px, -1px); }
 
   100% { transform: translate(0, 0); }
 
@@ -1167,7 +1291,7 @@
 
 .tore-shake {
 
-  animation: tore-shake 0.25s ease-out;
+  animation: tore-shake 0.4s cubic-bezier(0.36, 0.07, 0.19, 0.97);
 
 }
 
@@ -1185,13 +1309,37 @@
 
   height: 2px;
 
-  background: rgba(212,175,55,0.85);
+  background: linear-gradient(90deg, rgba(212,175,55,0.9), rgba(212,175,55,0.6));
 
   transform-origin: left center;
 
   opacity: 0;
 
-  animation: tore-arrow-appear 0.6s ease-out forwards;
+  animation: tore-arrow-appear 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+
+  box-shadow: 0 0 10px rgba(212,175,55,0.5);
+
+}
+
+
+
+@keyframes tore-arrow-appear {
+
+  0% {
+
+    opacity: 0;
+
+    transform: scaleX(0);
+
+  }
+
+  100% {
+
+    opacity: 1;
+
+    transform: scaleX(1);
+
+  }
 
 }
 
@@ -1245,9 +1393,9 @@
 
   position: relative;
 
-  padding: 24px 32px 32px;
+  padding: 40px 50px 50px;
 
-  border-radius: 18px;
+  border-radius: 24px;
 
   background: radial-gradient(circle at top, rgba(15,23,42,0.95), rgba(2,6,23,0.98));
 
@@ -1259,9 +1407,9 @@
 
   text-align: center;
 
-  max-width: 560px;
+  max-width: 1000px;
 
-  width: 90%;
+  width: 98%;
 
 }
 
@@ -1271,7 +1419,7 @@
 
   margin: 0;
 
-  font-size: 18px;
+  font-size: 24px;
 
   letter-spacing: .08em;
 
@@ -1285,9 +1433,9 @@
 
 .tore-extra-panel p {
 
-  margin: 10px 0 0;
+  margin: 15px 0 0;
 
-  font-size: 14px;
+  font-size: 18px;
 
   color: #cbd5f5;
 
@@ -1303,11 +1451,11 @@
 
   position: relative;
 
-  height: 200px;
+  height: 260px;
 
-  margin-top: 26px;
+  margin-top: 30px;
 
-  margin-bottom: 18px;
+  margin-bottom: 24px;
 
 }
 
@@ -1317,15 +1465,15 @@
 
   position: absolute;
 
-  top: 22px;
+  top: 30px;
 
   left: 50%;
 
-  width: 90px;
+  width: 110px;
 
-  height: 140px;
+  height: 170px;
 
-  margin-left: -45px;
+  margin-left: -55px;
 
   border-radius: 10px;
 
@@ -1355,17 +1503,23 @@
 
 
 
-/* 5 cartes en éventail */
+/* 8 cartes en éventail homogène */
 
-.tore-fan-card:nth-child(1) { transform: rotate(-22deg) translateX(-82px); }
+.tore-fan-card:nth-child(1) { transform: rotate(-28deg) translateX(-100px); }
 
-.tore-fan-card:nth-child(2) { transform: rotate(-11deg) translateX(-40px); }
+.tore-fan-card:nth-child(2) { transform: rotate(-20deg) translateX(-70px); }
 
-.tore-fan-card:nth-child(3) { transform: rotate(0deg); }
+.tore-fan-card:nth-child(3) { transform: rotate(-12deg) translateX(-40px); }
 
-.tore-fan-card:nth-child(4) { transform: rotate(11deg) translateX(40px); }
+.tore-fan-card:nth-child(4) { transform: rotate(-4deg) translateX(-10px); }
 
-.tore-fan-card:nth-child(5) { transform: rotate(22deg) translateX(82px); }
+.tore-fan-card:nth-child(5) { transform: rotate(4deg) translateX(10px); }
+
+.tore-fan-card:nth-child(6) { transform: rotate(12deg) translateX(40px); }
+
+.tore-fan-card:nth-child(7) { transform: rotate(20deg) translateX(70px); }
+
+.tore-fan-card:nth-child(8) { transform: rotate(28deg) translateX(100px); }
 
 
 
@@ -1565,93 +1719,172 @@
 
 
 
-      <!-- INTRO -->
+      <!-- FORMULAIRE D'INTENTION -->
 
-        <div id="tore-intro" class="relative z-10 text-center flex flex-col items-center">
+      <form id="tore-form" class="relative z-10 w-full max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12">
 
-        <h2 class="cormorant text-2xl text-gold mb-4">Préparation du tirage du TORE</h2>
+        <!-- Carte conteneur élégante -->
+        <div class="bg-gradient-to-b from-[rgba(10,25,47,0.95)] to-[rgba(5,20,40,0.95)] 
+                    border border-gold/20 rounded-3xl p-6 sm:p-8 md:p-12 
+                    shadow-[0_0_60px_rgba(212,175,55,0.15)]
+                    backdrop-blur-sm">
 
-        <p class="text-light-gold mb-6 max-w-2xl mx-auto">
-
-          J'ai besoin de quelques informations pour calibrer l’expérience.
-
-        </p>
-
-        <button id="tore-start" class="btn-gold mt-4">Commencer le tirage</button>
-
-      </div>
-
-
-
-      <!-- FORMULAIRE AVANT LE PLATEAU -->
-
-      <form id="tore-form" class="hidden relative z-10 mt-6">
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-
-          <div>
-
-            <label class="block text-light-gold mb-2">Prénoms</label>
-
-            <input type="text" name="prenom"
-
-                   class="w-full bg-[rgba(5,20,40,7)] border border-[rgba(212,175,55,35)] p-3 rounded-lg"
-
-                   required>
-
+          <!-- En-tête simplifié -->
+          <div class="text-center mb-8 sm:mb-10">
+            <h2 class="cormorant text-3xl sm:text-4xl lg:text-5xl text-gold mb-4 sm:mb-6 leading-tight">
+              Tirage du TORE
+            </h2>
+            <div class="w-20 sm:w-24 h-1 bg-gradient-to-r from-transparent via-gold to-transparent mx-auto mb-6 sm:mb-8"></div>
+            
+            <!-- Aperçu du plateau -->
+            <div class="mb-6 sm:mb-8">
+              <div class="relative w-full max-w-xs sm:max-w-md mx-auto" style="aspect-ratio: 1/1;">
+                
+                <!-- Cartes disposées en cercle avec couleurs des familles -->
+                
+                <!-- Transmutation (haut gauche) - Jaune -->
+                <div class="absolute w-16 h-24 sm:w-20 sm:h-28 rounded-lg shadow-2xl overflow-hidden border-2 border-gold/40" 
+                     style="left: 18%; top: 8%; transform: rotate(-15deg);">
+                  <div class="w-full h-full bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 flex items-center justify-center">
+                    <div class="relative w-16 h-16 sm:w-20 sm:h-20">
+                      <div class="absolute inset-0 rounded-full border-2 border-yellow-200/40"></div>
+                      <div class="absolute inset-2 rounded-full border border-yellow-200/30"></div>
+                      <div class="absolute inset-4 rounded-full border border-yellow-200/20"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Archétypes (haut droite) - Violet -->
+                <div class="absolute w-16 h-24 sm:w-20 sm:h-28 rounded-lg shadow-2xl overflow-hidden border-2 border-gold/40" 
+                     style="right: 18%; top: 8%; transform: rotate(15deg);">
+                  <div class="w-full h-full bg-gradient-to-br from-purple-500 via-purple-600 to-purple-700 flex items-center justify-center">
+                    <div class="relative w-16 h-16 sm:w-20 sm:h-20">
+                      <div class="absolute inset-0 rounded-full border-2 border-purple-200/40"></div>
+                      <div class="absolute inset-2 rounded-full border border-purple-200/30"></div>
+                      <div class="absolute inset-4 rounded-full border border-purple-200/20"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Besoins (gauche) - Orange -->
+                <div class="absolute w-16 h-24 sm:w-20 sm:h-28 rounded-lg shadow-2xl overflow-hidden border-2 border-gold/40" 
+                     style="left: 3%; top: 38%; transform: rotate(-45deg);">
+                  <div class="w-full h-full bg-gradient-to-br from-orange-400 via-orange-500 to-orange-600 flex items-center justify-center">
+                    <div class="relative w-16 h-16 sm:w-20 sm:h-20">
+                      <div class="absolute inset-0 rounded-full border-2 border-orange-200/40"></div>
+                      <div class="absolute inset-2 rounded-full border border-orange-200/30"></div>
+                      <div class="absolute inset-4 rounded-full border border-orange-200/20"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Révélations (droite) - Vert -->
+                <div class="absolute w-16 h-24 sm:w-20 sm:h-28 rounded-lg shadow-2xl overflow-hidden border-2 border-gold/40" 
+                     style="right: 3%; top: 38%; transform: rotate(45deg);">
+                  <div class="w-full h-full bg-gradient-to-br from-green-400 via-green-500 to-green-600 flex items-center justify-center">
+                    <div class="relative w-16 h-16 sm:w-20 sm:h-20">
+                      <div class="absolute inset-0 rounded-full border-2 border-green-200/40"></div>
+                      <div class="absolute inset-2 rounded-full border border-green-200/30"></div>
+                      <div class="absolute inset-4 rounded-full border border-green-200/20"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Émotions (bas gauche) - Rouge -->
+                <div class="absolute w-16 h-24 sm:w-20 sm:h-28 rounded-lg shadow-2xl overflow-hidden border-2 border-gold/40" 
+                     style="left: 13%; bottom: 15%; transform: rotate(-25deg);">
+                  <div class="w-full h-full bg-gradient-to-br from-red-400 via-red-500 to-red-600 flex items-center justify-center">
+                    <div class="relative w-16 h-16 sm:w-20 sm:h-20">
+                      <div class="absolute inset-0 rounded-full border-2 border-red-200/40"></div>
+                      <div class="absolute inset-2 rounded-full border border-red-200/30"></div>
+                      <div class="absolute inset-4 rounded-full border border-red-200/20"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Actions (bas droite) - Jaune doré -->
+                <div class="absolute w-16 h-24 sm:w-20 sm:h-28 rounded-lg shadow-2xl overflow-hidden border-2 border-gold/40" 
+                     style="right: 13%; bottom: 15%; transform: rotate(25deg);">
+                  <div class="w-full h-full bg-gradient-to-br from-yellow-300 via-yellow-400 to-yellow-500 flex items-center justify-center">
+                    <div class="relative w-16 h-16 sm:w-20 sm:h-20">
+                      <div class="absolute inset-0 rounded-full border-2 border-yellow-100/40"></div>
+                      <div class="absolute inset-2 rounded-full border border-yellow-100/30"></div>
+                      <div class="absolute inset-4 rounded-full border border-yellow-100/20"></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Mémoire Cosmos (centre) - Bleu -->
+                <div class="absolute w-20 h-28 sm:w-24 sm:h-32 rounded-lg shadow-2xl overflow-hidden border-2 border-gold/60" 
+                     style="left: 50%; top: 50%; transform: translate(-50%, -50%);">
+                  <div class="w-full h-full bg-gradient-to-br from-blue-500 via-blue-600 to-blue-700 flex items-center justify-center">
+                    <div class="relative w-20 h-20 sm:w-24 sm:h-24">
+                      <div class="absolute inset-0 rounded-full border-2 border-blue-200/40"></div>
+                      <div class="absolute inset-2 rounded-full border border-blue-200/30"></div>
+                      <div class="absolute inset-4 rounded-full border border-blue-200/20"></div>
+                      <div class="absolute inset-6 rounded-full border border-blue-200/10"></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <p class="text-light-gold/80 text-sm sm:text-base max-w-2xl mx-auto leading-relaxed px-4 mb-4">
+              Quelle intention portez-vous en ce moment ?
+            </p>
+            
+            <!-- Information question ouverte -->
+            <div class="flex items-center justify-center gap-2 text-gold/80 text-xs sm:text-sm mb-2">
+              <i class="fas fa-info-circle"></i>
+              <span>Formulez une question ouverte se terminant par un ?</span>
+            </div>
           </div>
 
-          <div>
-
-            <label class="block text-light-gold mb-2">Date de naissance</label>
-
-            <input type="date" name="date"
-
-                   class="w-full bg-[rgba(5,20,40,7)] border border-[rgba(212,175,55,35)] p-3 rounded-lg"
-
-                   required>
-
+          <!-- Champ d'intention -->
+          <div class="mb-8 sm:mb-10">
+            <div class="relative">
+              <textarea id="tore-intention-input"
+                        name="intention"
+                        class="w-full bg-gradient-to-b from-[rgba(5,20,40,0.9)] to-[rgba(5,20,40,0.7)] 
+                               border-2 border-[rgba(212,175,55,0.3)] 
+                               p-4 sm:p-6 rounded-2xl 
+                               min-h-[160px] sm:min-h-[180px] md:min-h-[200px]
+                               text-light-gold text-base sm:text-lg leading-relaxed
+                               focus:border-gold focus:outline-none focus:shadow-[0_0_25px_rgba(212,175,55,0.4)]
+                               transition-all duration-300
+                               placeholder:text-light-gold/40 placeholder:italic
+                               resize-none"
+                        placeholder="Comment puis-je... ? Quelle est... ? Pourquoi... ?"
+                        required></textarea>
+              
+              <!-- Icône décorative (cachée sur mobile) -->
+              <div class="hidden sm:flex absolute -top-4 -right-4 w-12 h-12 
+                          bg-gradient-to-br from-gold/20 to-gold/5 
+                          rounded-full items-center justify-center backdrop-blur-sm
+                          shadow-lg">
+                <i class="fas fa-feather text-gold text-lg"></i>
+              </div>
+            </div>
           </div>
 
-          <div>
-
-            <label class="block text-light-gold mb-2">Ville de naissance</label>
-
-            <input type="text" name="ville"
-
-                   class="w-full bg-[rgba(5,20,40,7)] border border-[rgba(212,175,55,35)] p-3 rounded-lg"
-
-                   required>
-
-          </div>
-
-          <div>
-
-            <label class="block text-light-gold mb-2">Heure de naissance</label>
-
-            <input type="time" name="heure"
-
-                   class="w-full bg-[rgba(5,20,40,7)] border border-[rgba(212,175,55,35)] p-3 rounded-lg"
-
-                   required>
-
+          <!-- Bouton -->
+          <div class="text-center">
+            <button id="tore-submit-btn"
+                    type="submit" 
+                    disabled
+                    class="btn-gold w-full sm:w-auto px-8 sm:px-12 py-3 sm:py-4 
+                           text-base sm:text-lg relative overflow-hidden group
+                           touch-target
+                           disabled:opacity-50 disabled:cursor-not-allowed">
+              <span class="relative z-10 flex items-center justify-center gap-2 sm:gap-3">
+                <i class="fas fa-compass text-lg sm:text-xl"></i>
+                <span>Commencer</span>
+                <i class="fas fa-arrow-right group-hover:translate-x-1 transition-transform"></i>
+              </span>
+            </button>
           </div>
 
         </div>
-
-        <div class="mb-6">
-
-          <label class="block text-light-gold mb-2">Renseignez votre intention pour ce tirage</label>
-
-          <textarea name="intention"
-
-                    class="w-full bg-[rgba(5,20,40,7)] border border-[rgba(212,175,55,35)] p-3 rounded-lg min-h-[120px]"
-
-                    required></textarea>
-
-        </div>
-
-        <button type="submit" class="btn-gold w-full">Lancer le tirage du TORE</button>
 
       </form>
 
@@ -1663,7 +1896,7 @@
 
         <h3 class="cormorant text-2xl text-gold mb-6 text-center">
 
-          Retournez les 7 cartes du Tore puis lancez la pièce 6 fois.
+          Suivez l'ordre indiqué pour retourner les 7 cartes, puis lancez la pièce 6 fois.
 
         </h3>
 
@@ -1691,13 +1924,15 @@
 
   position: absolute;
 
-  top: 50%;
+  top: 75%; /* Position encore plus basse pour éviter Mémoire Cosmos */
 
   left: 50%;
 
-  transform: translate(-50%, -38%); /* ajuste la position verticale du bloc pièce+bouton */
+  transform: translate(-50%, -50%);
 
   pointer-events: none;
+
+  z-index: 50; /* Assurer qu'il est au-dessus des cartes */
 
 }
 
@@ -1757,11 +1992,66 @@
 
 
 
-      <!-- Aperçu zoom d'une carte retournée -->
-
-      <div id="card-preview-overlay">
-  <div id="card-preview-img" alt="Aperçu de la carte"></div>
-</div>
+      <!-- Message de guidage pour l'intégration -->
+      <div id="tore-guide-message" class="hidden fixed inset-0 z-50 flex items-center justify-center pointer-events-none" style="background: radial-gradient(circle at center, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.95) 100%);">
+        <div class="bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl border-2 border-gold/40 rounded-3xl p-8 sm:p-10 max-w-6xl mx-4 shadow-[0_25px_50px_-12px_rgba(212,175,55,0.25),0_0_0_1px_rgba(212,175,55,0.1)] pointer-events-auto relative overflow-hidden">
+          <!-- Effet de lumière subtile -->
+          <div class="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-blue-900/20 rounded-3xl"></div>
+          <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
+          <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
+          
+          <div class="relative flex flex-col md:flex-row gap-10 sm:gap-16 items-center">
+            <!-- Image de la carte à gauche -->
+            <div class="flex-shrink-0 relative">
+              <!-- Lueur dorée autour de la carte -->
+              <div class="absolute inset-0 bg-gradient-to-br from-gold/20 to-transparent rounded-2xl blur-xl scale-110"></div>
+              <div class="absolute inset-0 bg-gradient-to-tl from-blue-500/10 to-transparent rounded-2xl blur-xl scale-110"></div>
+              <img id="guide-card-image" src="" alt="Carte tirée" class="relative rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.4),0_0_20px_rgba(212,175,55,0.2)]" style="max-width: 450px; max-height: 600px; object-fit: contain;" />
+            </div>
+            
+            <!-- Texte à droite -->
+            <div class="flex-1 text-center md:text-left space-y-2">
+              <!-- Famille -->
+              <div class="text-gold/90 text-lg sm:text-xl uppercase tracking-[0.2em] mb-4 font-cinzel drop-shadow-[0_2px_4px_rgba(212,175,55,0.3)]" id="guide-family"></div>
+              
+              <!-- Nom de la carte -->
+              <div class="text-light-gold text-2xl sm:text-3xl mb-6 font-cormorant drop-shadow-[0_2px_4px_rgba(212,175,55,0.2)]" id="guide-card-name"></div>
+              
+              <!-- Texte de guidage -->
+              <div class="relative">
+                <div class="absolute inset-0 bg-gradient-to-r from-gold/10 to-transparent rounded-lg blur-sm"></div>
+                <p class="text-light-gold/95 text-lg sm:text-xl mb-8 font-cormorant italic leading-relaxed text-justify relative px-4 py-2" id="guide-text"></p>
+              </div>
+              
+              <!-- Séparateur amélioré -->
+              <div class="relative my-8">
+                <div class="w-full h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
+                <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gold rounded-full shadow-[0_0_8px_rgba(212,175,55,0.6)]"></div>
+              </div>
+              
+              <!-- Message d'intégration -->
+              <p class="text-gray-300/90 text-base sm:text-lg mb-4 text-justify font-light">Prenez un instant pour intégrer cette carte...</p>
+              
+              <!-- Nombre de cartes restantes dans Actions -->
+              <div id="guide-actions-count" class="text-gray-400/80 text-sm mb-8 font-light hidden">
+                <i class="fas fa-layer-group mr-2"></i>
+                <span id="guide-actions-text"></span>
+              </div>
+              
+              <!-- Bouton Continuer amélioré -->
+              <div class="relative mt-20 text-center md:text-center">
+                <div class="relative inline-block ml-auto mr-auto md:ml-auto md:mr-0 md:mr-[25%]">
+                  <div class="absolute inset-0 bg-gradient-to-r from-gold/30 to-transparent rounded-lg blur-md"></div>
+                  <button id="guide-continue-btn" class="relative btn-gold px-12 py-4 text-base sm:text-lg font-medium shadow-[0_4px_12px_rgba(212,175,55,0.3)] hover:shadow-[0_6px_20px_rgba(212,175,55,0.4)] transform transition-all duration-300 hover:scale-[1.02]">
+                    <i class="fas fa-arrow-right mr-3"></i>
+                    Continuer
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
 
 
@@ -1867,11 +2157,11 @@ window.DATA = {
 
     {name:"INTIMITÉ",       quote:"L’alcôve garde le secret des âmes.", polarity:"yin"},
 
-    {name:"CRÉATIVITÉ",     quote:"L’étincelle façonne une forme neuve.", polarity:"yang"},
+    {name:"CRÉATIVITÉ",     quote:"L'étincelle façonne une forme neuve.", polarity:"yang"},
 
-    {name:"VÉRITÉ",         quote:"Le miroir reflète sans détour.", polarity:"yin"},
+    {name:"AUTHENTICITÉ",   quote:"L'être se révèle sans masque.", polarity:"yin"},
 
-    {name:"GUIDANCE",       quote:"L’étoile brille au-dessus du chemin.", polarity:"yang"},
+    {name:"GUIDANCE",       quote:"L'étoile brille au-dessus du chemin.", polarity:"yang"},
 
   ],
 
@@ -1907,9 +2197,9 @@ window.DATA = {
 
     {name:"ESPRIT LIBRE",  quote:"Le passage s'ouvre, la lumière intérieure circule librement.", polarity:"yang"},
 
-    {name:"VIDE",          quote:"La coupe vide attend d’être remplie.", polarity:"yin"},
+    {name:"VIDE",          quote:"La coupe vide attend d'être remplie.", polarity:"yin"},
 
-    {name:"PLENITUDE",     quote:"Le vase déborde de miel et d’offrandes.", polarity:"yang"},
+    {name:"PLÉNITUDE",     quote:"Le vase déborde de miel et d'offrandes.", polarity:"yang"},
 
     {name:"INCARNATION",   quote:"Le pas touche la terre lourde.", polarity:"yin"},
 
@@ -1936,6 +2226,26 @@ window.DATA = {
     {name:"LE VISIONNAIRE", quote:"Le regard perce les âges à venir.", polarity:"yang"},
 
     {name:"LA TISSEUSE",    quote:"Le fil relie les morceaux épars.", polarity:"yin"},
+
+    {name:"LE GUERRIER",    quote:"La lame tranche ce qui entrave.", polarity:"yang"},
+
+    {name:"LE SAGE",        quote:"La parole pèse chaque mot.", polarity:"yin"},
+
+    {name:"LE MAGE",        quote:"La main façonne l'invisible.", polarity:"yang"},
+
+    {name:"L'ENFANT",       quote:"Le rire ouvre les portes fermées.", polarity:"yin"},
+
+    {name:"LE JUSTE",       quote:"La balance pèse sans trembler.", polarity:"yang"},
+
+    {name:"LE VEILLEUR",    quote:"L'œil veille dans la nuit.", polarity:"yin"},
+
+    {name:"LE PASSEUR",     quote:"Le pont relie les deux rives.", polarity:"yang"},
+
+    {name:"LE PORTEUR",     quote:"L'épaule porte le fardeau sacré.", polarity:"yin"},
+
+    {name:"L'INITIATEUR",   quote:"La main ouvre le passage.", polarity:"yang"},
+
+    {name:"L'OBSERVATEUR",  quote:"Le regard voit sans juger.", polarity:"yin"},
 
   ],
 
@@ -2059,62 +2369,68 @@ window.DATA = {
 (function () {
 
   // L'ordre des familles pour le tirage de la pièce
+  // Émotion → Besoin → Transmutation → Archétypes → Révélation → Action → Mémoire Cosmos
 
   const TIRAGE_ORDER = [
 
     'emotions',
 
+    'besoins',
+
     'transmutation',
+
+    'archetypes',
 
     'revelations',
 
     'actions',
 
-    'archetypes',
-
-    'besoins'
+    'memoire_cosmos'
 
   ];
 
 
 
-  // Configuration des positions des cartes sur le plateau (ne pas modifier les positions)
+  // Configuration des positions des cartes sur le plateau
+  // Ordre horaire depuis Émotion (bas gauche) : Émotion → Action → Révélation → Archétypes → Transmutation → Besoin → Mémoire Cosmos (centre)
+  // Disposition selon schéma : Transmutations-Archétypes (haut) | Besoins-Mémoires-Révélations (milieu) | Émotions-Actions (bas)
 
   const STEPS_TORE = [
 
-    { key: 'emotions',      label: 'ÉMOTIONS',       chip: 'Émotion',         pos: 0 },
+    { key: 'emotions',      label: 'ÉMOTIONS',       chip: 'Émotion',         pos: 3, guide: "Accueillez l'émotion qui se révèle..." },
 
-    { key: 'besoins',       label: 'BESOINS',        chip: 'Besoin',          pos: 1 },
+    { key: 'besoins',       label: 'BESOINS',        chip: 'Besoin',          pos: 0, guide: "Reconnaissez le besoin profond qui émerge..." },
 
-    { key: 'transmutation', label: 'TRANSMUTATION',  chip: 'Transmutation',   pos: 2 },
+    { key: 'transmutation', label: 'TRANSMUTATION',  chip: 'Transmutation',   pos: 1, guide: "Observez ce qui cherche à se transformer..." },
 
-    { key: 'actions',       label: 'ACTIONS',        chip: 'Action',          pos: 3 },
+    { key: 'actions',       label: 'ACTIONS',        chip: 'Action',          pos: 5, guide: "Intégrez l'action juste à poser..." },
 
-    { key: 'archetypes',    label: 'ARCHÉTYPE',      chip: 'Archétype',       pos: 4 },
+    { key: 'archetypes',    label: 'ARCHÉTYPE',      chip: 'Archétype',       pos: 2, guide: "Laissez l'archétype vous guider..." },
 
-    { key: 'revelations',   label: 'RÉVÉLATION',     chip: 'Révélation',      pos: 5 },
+    { key: 'revelations',   label: 'RÉVÉLATION',     chip: 'Révélation',      pos: 4, guide: "Accueillez la révélation qui se dévoile..." },
 
-    { key: 'memoire_cosmos',label: 'MÉMOIRE COSMOS', chip: 'Mémoire Cosmos',  pos: 6 },
+    { key: 'memoire_cosmos',label: 'MÉMOIRE COSMOS', chip: 'Mémoire Cosmos',  pos: 6, guide: "Recevez la mémoire qui vous accompagne..." },
 
   ];
 
 
 
   // Famille de passerelle en cas de différence carte / pièce
+  // TOUTES les passerelles proviennent de la famille 'actions'
 
   const BRIDGE_TARGET = {
 
-    emotions: 'transmutation',     // émotion → transmutation
+    emotions: 'actions',           // émotion → action
 
-    transmutation: 'revelations',  // transmutation → révélation
+    transmutation: 'actions',      // transmutation → action
 
     revelations: 'actions',        // révélation → action
 
-    actions: 'archetypes',         // action → archétype
+    actions: 'actions',            // action → action
 
-    archetypes: 'besoins',         // archétype → besoin
+    archetypes: 'actions',         // archétype → action
 
-    besoins: 'emotions'            // besoin → émotion
+    besoins: 'actions'             // besoin → action
 
     // memoire_cosmos: pas de passerelle
 
@@ -2184,6 +2500,9 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
 
   const toreBridgeAdded = new Array(STEPS_TORE.length).fill(false);
 
+  // Tableau pour stocker toutes les cartes déjà tirées (éviter les doublons)
+  const drawnCards = new Set();
+
 
 
   const section   = el('tore-immersif');
@@ -2191,8 +2510,6 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
   if (!section) return;
 
 
-
-  const intro     = el('tore-intro');
 
   const form      = el('tore-form');
 
@@ -2202,11 +2519,13 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
 
   const results   = el('tore-results');
 
-  const startBtn  = el('tore-start');
-
   const exitBtn   = el('exitToreBtn');
 
   let toreHasStarted = false;
+
+  let isGuideMessageShown = false; // Bloquer les clics pendant le message de guidage
+
+  let coinThrowIndex = 0; // Index pour les lancers de pièce (0-5 pour les 6 familles)
 
   const previewOverlay = el('card-preview-overlay');
 
@@ -2218,17 +2537,157 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
 
   const coinButton = el('tore-coin-button');
 
-  const toAnalysisBtn = el('tore-to-analysis');  
+  const toAnalysisBtn = el('tore-to-analysis');
+  const guideMessage = el('tore-guide-message');
+  const guideFamily = el('guide-family');
+  const guideCardName = el('guide-card-name');
+  const guideText = el('guide-text');
+  const guideCardImage = el('guide-card-image');
+  const guideContinueBtn = el('guide-continue-btn');
 
 
 
 // --- helpers ---
 
+  // Afficher le message de guidage après avoir tiré une carte
+  function showGuideMessage(familyKey, cardData) {
+    if (!guideMessage || !guideFamily || !guideText) return;
+    
+    const step = STEPS_TORE.find(s => s.key === familyKey);
+    if (!step || !step.guide) return;
+    
+    guideFamily.textContent = step.label;
+    
+    // Afficher le nom de la carte
+    if (guideCardName && cardData && cardData.name) {
+      guideCardName.textContent = cardData.name;
+    }
+    
+    guideText.textContent = step.guide;
+    
+    // Afficher l'image de la carte
+    if (guideCardImage && cardData) {
+      const imgPath = buildImagePath(familyKey, cardData);
+      guideCardImage.src = imgPath;
+      guideCardImage.alt = cardData.name || step.label;
+    }
+    
+    // Afficher le nombre de cartes restantes dans la famille Actions
+    const actionsCountEl = document.getElementById('guide-actions-count');
+    const actionsTextEl = document.getElementById('guide-actions-text');
+    if (actionsCountEl && actionsTextEl) {
+      if (familyKey === 'actions') {
+        // Calculer les cartes Actions restantes
+        const actionsStep = STEPS_TORE.find(s => s.key === 'actions');
+        if (actionsStep && actionsStep.cards) {
+          const totalActionsCards = actionsStep.cards.length;
+          const drawnActionsCards = boardHost.querySelectorAll('.tore-card[data-family="actions"].flipped').length;
+          const remainingActionsCards = totalActionsCards - drawnActionsCards;
+          
+          if (remainingActionsCards > 0) {
+            actionsTextEl.textContent = `Il reste ${remainingActionsCards} carte${remainingActionsCards > 1 ? 's' : ''} dans la famille Actions`;
+            actionsCountEl.classList.remove('hidden');
+          } else {
+            actionsCountEl.classList.add('hidden');
+          }
+        }
+      } else {
+        actionsCountEl.classList.add('hidden');
+      }
+    }
+    
+    guideMessage.classList.remove('hidden');
+    isGuideMessageShown = true; // Bloquer les clics sur les autres cartes
+    
+    // Gérer le bouton Continuer (au lieu du timeout automatique)
+    if (guideContinueBtn && guideContinueBtn.parentNode) {
+      // Retirer les anciens listeners pour éviter les doublons
+      const newBtn = guideContinueBtn.cloneNode(true);
+      guideContinueBtn.parentNode.replaceChild(newBtn, guideContinueBtn);
+      
+      // Ajouter le nouveau listener
+      newBtn.addEventListener('click', () => {
+        guideMessage.classList.add('hidden');
+        isGuideMessageShown = false; // Débloquer les clics
+        // Indiquer la prochaine carte à tirer
+        highlightNextCard();
+      });
+    } else if (guideContinueBtn) {
+      // Si le bouton existe mais n'a pas de parentNode, ajouter directement le listener
+      guideContinueBtn.addEventListener('click', () => {
+        guideMessage.classList.add('hidden');
+        isGuideMessageShown = false; // Débloquer les clics
+        // Indiquer la prochaine carte à tirer
+        highlightNextCard();
+      });
+    }
+  }
 
+  // Mettre en évidence la prochaine carte à tirer selon l'ordre
+  function highlightNextCard() {
+    if (!boardHost) return;
+    
+    // Retirer tous les highlights existants
+    boardHost.querySelectorAll('.tore-card').forEach(c => {
+      c.classList.remove('next-to-draw');
+    });
+    
+    // Vérifier si toutes les cartes sont retournées pour afficher la pièce
+    const totalCards = boardHost.querySelectorAll('.tore-card').length;
+    const flippedCards = boardHost.querySelectorAll('.tore-card.flipped').length;
+    
+    if (totalCards > 0 && flippedCards === totalCards) {
+      // Toutes les cartes sont retournées, afficher la pièce
+      showCoinAfterAllCards();
+      return;
+    }
+    
+    // Trouver la prochaine carte non retournée selon TIRAGE_ORDER
+    for (const familyKey of TIRAGE_ORDER) {
+      const card = boardHost.querySelector(`.tore-card[data-family="${familyKey}"]`);
+      if (card && !card.classList.contains('flipped')) {
+        card.classList.add('next-to-draw');
+        break;
+      }
+    }
+  }
 
- function showToreAnalysisCTA() {
+ function showCoinAfterAllCards() {
+  // Afficher la pièce après que toutes les 7 cartes soient tirées
+  if (coinWrapper && boardHost) {
+    const totalCards = boardHost.querySelectorAll('.tore-card').length;
+    const flippedCards = boardHost.querySelectorAll('.tore-card.flipped').length;
+    
+    if (totalCards > 0 && flippedCards === totalCards) {
+      coinWrapper.classList.remove('hidden');
+      if (coin) {
+        coin.classList.remove('spin', 'ripple');
+        coin.classList.add('glow');   // halo pulsant avant le lancer
+      }
+      // Réinitialiser l'index des lancers de pièce
+      coinThrowIndex = 0;
+    }
+  }
+}
 
-  if (!coinWrapper) return;
+// Variable globale pour suivre l'état du tirage
+let isToreComplete = false;
+
+// Fonction pour ajouter le zoom à une carte - VERSION DÉSACTIVÉE
+function addZoomToCard(card) {
+  // Zoom complètement désactivé pour éviter les bugs
+  console.log('Zoom désactivé pour la carte:', card.dataset.family);
+  return;
+}
+
+function showToreAnalysisCTA() {
+  console.log('=== showToreAnalysisCTA appelée ===');
+  console.log('coinWrapper existe:', !!coinWrapper);
+
+  if (!coinWrapper) {
+    console.log('coinWrapper non trouvé, retour');
+    return;
+  }
 
 
 
@@ -2240,9 +2699,165 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
 
 
 
-  // afficher le CTA analyse
+  // afficher le CTA analyse - forcer l'affichage
 
-  toAnalysisBtn?.classList.remove('hidden');
+  if (toAnalysisBtn) {
+
+    toAnalysisBtn.classList.remove('hidden');
+
+    toAnalysisBtn.style.display = 'inline-block';
+
+    toAnalysisBtn.style.visibility = 'visible';
+
+    console.log('Bouton d\'analyse affiché');
+
+  }
+
+
+
+  // Marquer le tirage comme terminé (zoom désactivé)
+
+  isToreComplete = true;
+
+  console.log('Tirage terminé - Zoom désactivé');
+
+  // Définir allFlippedCards ici pour éviter ReferenceError
+  let allFlippedCards = [];
+  if (boardHost) {
+    allFlippedCards = boardHost.querySelectorAll('.tore-card.flipped');
+    // Zoom désactivé pour éviter les bugs
+    console.log('Zoom désactivé -', allFlippedCards.length, 'cartes trouvées');
+  }
+
+
+
+  // Préparer les données pour l'analyse
+
+  const cards = [];
+
+  const bridgeCards = []; // Cartes passerelles (lignes mutantes)
+
+  allFlippedCards.forEach(card => {
+
+    const family = card.dataset.family;
+
+    const name = card.dataset.name;
+
+    if (family && name) {
+
+      const cardData = { family, name };
+
+      // Vérifier si c'est une carte passerelle (ligne mutante)
+      const extraCard = card.querySelector('.tore-card-extra');
+      if (extraCard) {
+        const bridgeImg = extraCard.querySelector('img');
+        if (bridgeImg && bridgeImg.src) {
+          // Extraire le nom de la carte passerelle depuis l'image
+          const bridgeName = bridgeImg.src.split('/').pop().replace('.png', '');
+          cardData.bridgeCard = { family: 'actions', name: bridgeName };
+          cardData.isMutating = true; // Marquer comme ligne mutante
+        }
+      }
+
+      cards.push(cardData);
+
+    }
+
+  });
+
+
+
+  // Ajouter l'événement pour le bouton d'analyse
+
+  console.log('=== DÉBOGAGE BOUTON ANALYSE ===');
+  console.log('Recherche du bouton...');
+  
+  const analysisBtn = el('tore-to-analysis');
+  console.log('Bouton trouvé:', !!analysisBtn);
+  console.log('Bouton visible:', analysisBtn?.offsetParent !== null);
+  console.log('Classes bouton:', analysisBtn?.className);
+
+  if (analysisBtn) {
+
+    // Cacher l'ancien bouton
+    analysisBtn.style.display = 'none';
+    
+    // Créer un lien HTML simple au lieu d'un bouton
+    const intention = el('intentionInput')?.value || 'question personnelle';
+    const cardsData = encodeURIComponent(JSON.stringify(cards));
+    const analysisUrl = `tore-analysis.html?intention=${encodeURIComponent(intention)}&cards=${cardsData}`;
+    
+    const newLink = document.createElement('a');
+    newLink.href = analysisUrl;
+    newLink.textContent = '🔍 Voir mon analyse';
+    newLink.style.cssText = `
+      background: linear-gradient(135deg, #d4af37 0%, #f5e7a1 100%) !important;
+      color: #0f172a !important;
+      font-weight: bold !important;
+      padding: 12px 24px !important;
+      border-radius: 50px !important;
+      text-decoration: none !important;
+      font-size: 16px !important;
+      margin: 20px auto !important;
+      display: inline-block !important;
+      transition: all 0.3s ease !important;
+    `;
+    
+    // Ajouter le nouveau lien à l'intérieur du tore-coin-wrapper mais en remplaçant la pièce
+    const coinWrapper = el('tore-coin-wrapper');
+    const coin = el('tore-coin');
+    
+    if (coinWrapper && coin) {
+      // Cacher la pièce mais garder le wrapper
+      coin.style.display = 'none';
+      
+      // Ajouter le lien dans le wrapper, centré
+      newLink.style.position = 'absolute';
+      newLink.style.top = '50%';
+      newLink.style.left = '50%';
+      newLink.style.transform = 'translate(-50%, -50%)';
+      newLink.style.zIndex = '10';
+      
+      coinWrapper.appendChild(newLink);
+      
+      console.log('Lien ajouté dans le tore-coin-wrapper en remplacement de la pièce');
+    } else {
+      // Fallback : ajouter après l'ancien bouton
+      analysisBtn.parentNode.insertBefore(newLink, analysisBtn.nextSibling);
+      console.log('Fallback : lien ajouté après l\'ancien bouton');
+    }
+    
+    // Forcer le lien à être visible et cliquable
+    setTimeout(() => {
+      console.log('Vérification du lien créé:');
+      console.log('Lien existe:', !!newLink);
+      console.log('Lien visible:', newLink.offsetParent !== null);
+      console.log('Lien href:', newLink.href);
+      console.log('Lien parent:', newLink.parentNode);
+      
+      // Rendre le lien encore plus visible pour le test
+      newLink.style.background = 'red !important';
+      newLink.style.color = 'white !important';
+      newLink.style.border = '3px solid yellow !important';
+      newLink.style.fontSize = '20px !important';
+      newLink.style.padding = '20px !important';
+      
+      console.log('Lien rendu visible pour test');
+    }, 100);
+
+    console.log('Nouveau lien d\'analyse créé avec URL:', analysisUrl);
+
+  } else {
+
+    console.error('Bouton d\'analyse non trouvé!');
+    console.log('Recherche manuelle...');
+    const allButtons = document.querySelectorAll('button');
+    console.log('Tous les boutons trouvés:', allButtons.length);
+    allButtons.forEach((btn, index) => {
+      console.log(`Bouton ${index}:`, btn.id, btn.textContent, btn.className);
+    });
+
+  }
 
 
 
@@ -2254,14 +2869,40 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
 
 
 
-  function pickFromData(familyKey) {
+  function pickFromData(familyKey, avoidDuplicates = true) {
 
     const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : [];
 
     if (!pool.length) return null;
 
-    const idx = Math.floor(Math.random() * pool.length);
+    // Si on veut éviter les doublons
+    if (avoidDuplicates) {
+      // Filtrer les cartes déjà tirées
+      const availableCards = pool.filter(card => {
+        const cardId = card.name || card.file || JSON.stringify(card);
+        return !drawnCards.has(cardId);
+      });
 
+      // Si toutes les cartes ont été tirées, on réinitialise
+      if (availableCards.length === 0) {
+        drawnCards.clear();
+        const idx = Math.floor(Math.random() * pool.length);
+        const selectedCard = pool[idx];
+        const cardId = selectedCard.name || selectedCard.file || JSON.stringify(selectedCard);
+        drawnCards.add(cardId);
+        return selectedCard;
+      }
+
+      // Piocher parmi les cartes disponibles
+      const idx = Math.floor(Math.random() * availableCards.length);
+      const selectedCard = availableCards[idx];
+      const cardId = selectedCard.name || selectedCard.file || JSON.stringify(selectedCard);
+      drawnCards.add(cardId);
+      return selectedCard;
+    }
+
+    // Sinon, pioche aléatoire classique
+    const idx = Math.floor(Math.random() * pool.length);
     return pool[idx] || null;
 
   }
@@ -2556,9 +3197,7 @@ arrowHideTimer = setTimeout(() => {
 
 
 
-    intro.classList.remove('hidden');
-
-    form.classList.add('hidden');
+    form.classList.remove('hidden');
 
     boardWrap.classList.add('hidden');
 
@@ -2822,9 +3461,50 @@ function closeToreExitModal(){
 
         if (card.classList.contains('flipped')) return;
 
+        // BLOQUER les clics si le message de guidage est affiché
+        if (isGuideMessageShown) return;
+
 
 
         const famKey = (card.dataset.family || '').trim();
+
+        
+
+        // BLOQUER le tirage si ce n'est pas la bonne famille selon l'ordre
+
+        const expectedFamily = TIRAGE_ORDER[toreThrowIndex];
+
+        if (famKey !== expectedFamily) {
+
+          // Afficher un message visuel temporaire
+
+          const label = card.querySelector('.tore-family-label');
+
+          if (label) {
+
+            const originalText = label.textContent;
+
+            label.textContent = `Tirez d'abord ${STEPS_TORE.find(s => s.key === expectedFamily)?.label || expectedFamily}`;
+
+            label.style.color = '#ff6b6b';
+
+            setTimeout(() => {
+
+              label.textContent = originalText;
+
+              label.style.color = '';
+
+            }, 2000);
+
+          }
+
+          return; // Bloquer le clic
+
+        }
+
+        
+
+        // Continuer normalement si c'est la bonne famille
 
         const data   = pickFromData(famKey);
 
@@ -2898,29 +3578,21 @@ function closeToreExitModal(){
 
         card.classList.add('flipped');
 
+        // Incrémenter l'index de tirage pour passer à la famille suivante
+        toreThrowIndex++;
 
+        // Mettre à jour le highlight de la prochaine carte
+        setTimeout(() => {
+          highlightNextCard();
+        }, 600);
 
-// Si toutes les cartes sont retournées, on affiche la pièce
+        // Ajouter le zoom immédiatement pour cette carte
+        setTimeout(() => {
+          addZoomToCard(card);
+        }, 800); // Après l'animation de flip
 
-        const totalCards   = boardHost.querySelectorAll('.tore-card').length;
-
-        const flippedCards = boardHost.querySelectorAll('.tore-card.flipped').length;
-
-
-
-                if (coinWrapper && totalCards > 0 && flippedCards === totalCards) {
-
-          coinWrapper.classList.remove('hidden');
-
-          if (coin) {
-
-            coin.classList.remove('spin', 'ripple');
-
-            coin.classList.add('glow');   // halo pulsant avant le lancer
-
-          }
-
-        }
+        // Afficher le message de guidage pour cette famille avec l'image de la carte
+        showGuideMessage(famKey, data);
 
 
 
@@ -2930,81 +3602,37 @@ function closeToreExitModal(){
 
     
 
-// Aperçu zoom au survol des cartes déjà retournées
-
-if (previewOverlay && previewImg) {
-
-   boardHost.querySelectorAll('.tore-card').forEach(card => {
-
-
-
-    card.addEventListener('mouseenter', (e) => {
-
-      // On ne zoome que si la carte est déjà retournée
-
-      if (!card.classList.contains('flipped')) return;
-
-
-
-      let img = null;
-
-
-
-      // 1) si on survole une carte passerelle, on zoome cette carte-là
-
-      if (e.target && e.target.closest) {
-
-        const extraImg = e.target.closest('.tore-card-extra')?.querySelector('img');
-
-        if (extraImg) {
-
-          img = extraImg;
-
-        }
-
-      }
-
-
-
-      // 2) sinon, on zoome la carte principale
-
-      if (!img) {
-
-        img = card.querySelector('.tore-card-front img');
-
-      }
-
-
-
-      if (!img) return;
-
-
-
-      previewImg.src = img.src;
-
-      previewImg.alt = img.alt || '';
-
-      previewOverlay.classList.add('card-preview-visible');
-
-    });
-
-
-
-    card.addEventListener('mouseleave', () => {
-
-      previewOverlay.classList.remove('card-preview-visible');
-
-    });
-
+// Fermer l'overlay au clic aussi (pour mobile)
+if (previewOverlay) {
+  previewOverlay.addEventListener('click', () => {
+    previewOverlay.classList.remove('card-preview-visible');
+    if (previewImg) previewImg.style.backgroundImage = '';
   });
-
-
-
 }
 
   }
 
       // Pose réellement la carte passerelle (famille suivante) sur la pile concernée
+
+  // Ajouter le zoom aux cartes passerelles aussi
+  function addZoomToBridgeCard(bridgeCard) {
+    if (!previewOverlay || !previewImg || !bridgeCard) return;
+    
+    // SURVOL pour afficher le zoom
+    bridgeCard.addEventListener('mouseenter', (e) => {
+      const img = bridgeCard.querySelector('img');
+      if (!img || !img.src) return;
+      
+      previewImg.style.backgroundImage = `url('${img.src}')`;
+      previewOverlay.classList.add('card-preview-visible');
+    });
+
+    // SORTIE du survol pour cacher le zoom
+    bridgeCard.addEventListener('mouseleave', () => {
+      previewOverlay.classList.remove('card-preview-visible');
+      if (previewImg) previewImg.style.backgroundImage = '';
+    });
+  }
 
   function placeBridgeCard(stepIndex, familyKey, dataNext) {
 
@@ -3040,31 +3668,8 @@ if (previewOverlay && previewImg) {
 
     baseCard.appendChild(extra);
 
-        // Permettre le zoom sur la carte additionnelle comme sur les cartes principales
-
-    const extraImg = extra.querySelector('img');
-
-    if (previewOverlay && previewImg && extraImg) {
-
-      extraImg.addEventListener('mouseenter', () => {
-
-        previewImg.src = extraImg.src;
-
-        previewImg.alt = extraImg.alt || '';
-
-        previewOverlay.classList.add('card-preview-visible');
-
-      });
-
-
-
-      extraImg.addEventListener('mouseleave', () => {
-
-        previewOverlay.classList.remove('card-preview-visible');
-
-      });
-
-    }
+    // Ajouter le zoom à la carte passerelle
+    addZoomToBridgeCard(extra);
 
 
 
@@ -3085,12 +3690,14 @@ if (previewOverlay && previewImg) {
 
 
   // Ouvre un overlay avec un éventail de cartes : l'utilisateur choisit sa passerelle
+  // Les cartes passerelles proviennent TOUJOURS de la famille 'actions'
 
   function openBridgeFan(stepIndex, nextFamilyKey) {
 
     if (!boardHost) return;
 
-
+    // FORCER la famille 'actions' pour toutes les passerelles
+    nextFamilyKey = 'actions';
 
     // on évite les doublons d'overlay
 
@@ -3108,6 +3715,45 @@ if (previewOverlay && previewImg) {
 
     overlay.id = 'tore-extra-overlay';
 
+    // Calculer le nombre de cartes restantes pour l'éventail
+    const totalPhysicalActionsCards = 9; // 9 cartes physiques Actions
+    
+    // Compter les cartes Actions déjà tirées sur le plateau
+    const drawnActionsCards = boardHost.querySelectorAll('.tore-card[data-family="actions"].flipped').length;
+    
+    // Compter les cartes passerelles déjà ajoutées pour toutes les familles
+    let totalBridgeCount = 0;
+    for (let i = 0; i < toreBridgeAdded.length; i++) {
+      if (toreBridgeAdded[i]) {
+        totalBridgeCount++;
+      }
+    }
+    
+    // Total des cartes Actions utilisées
+    const totalUsedActionsCards = drawnActionsCards + totalBridgeCount;
+    const remainingPhysicalCards = totalPhysicalActionsCards - totalUsedActionsCards;
+    
+    // Débogage pour voir les valeurs
+    console.log('DEBUG Éventail Actions:', {
+      totalPhysicalActionsCards,
+      drawnActionsCards,
+      totalBridgeCount,
+      totalUsedActionsCards,
+      remainingPhysicalCards,
+      allFlippedCards: boardHost.querySelectorAll('.tore-card.flipped').length,
+      actionCards: boardHost.querySelectorAll('.tore-card[data-family="actions"]').length,
+      actionFlippedCards: boardHost.querySelectorAll('.tore-card[data-family="actions"].flipped').length,
+      toreBridgeAdded: toreBridgeAdded
+    });
+    
+    // Générer l'éventail avec le nombre de cartes restantes
+    let fanCardsHTML = '';
+    const fanCardCount = Math.max(1, remainingPhysicalCards); // Au moins 1 carte
+    
+    for (let i = 0; i < fanCardCount; i++) {
+      fanCardsHTML += `<div class="tore-fan-card" data-slot="${i}"></div>`;
+    }
+
     overlay.innerHTML = `
 
       <div class="tore-extra-panel">
@@ -3116,17 +3762,15 @@ if (previewOverlay && previewImg) {
 
         <p>Choisis une carte dans la famille&nbsp;<strong>${famLabel}</strong>.</p>
 
-        <div class="tore-extra-fan">
+        <div class="tore-extra-fan relative">
 
-          <div class="tore-fan-card" data-slot="0"></div>
-
-          <div class="tore-fan-card" data-slot="1"></div>
-
-          <div class="tore-fan-card" data-slot="2"></div>
-
-          <div class="tore-fan-card" data-slot="3"></div>
-
-          <div class="tore-fan-card" data-slot="4"></div>
+          <!-- Lueur subtile derrière l'éventail -->
+          <div class="absolute inset-0 bg-gradient-to-br from-gold/10 via-transparent to-blue-900/10 rounded-2xl blur-xl"></div>
+          
+          <!-- Cartes de l'éventail avec espacement amélioré -->
+          <div class="relative flex justify-center items-center gap-3 p-4">
+            ${fanCardsHTML}
+          </div>
 
         </div>
 
@@ -3164,11 +3808,12 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
 
       cardEl.addEventListener('click', () => {
 
-        const dataNext = pickFromData(nextFamilyKey);
+        // Piocher une carte de la famille 'actions' sans doublon
+        const dataNext = pickFromData('actions', true);
 
         if (dataNext) {
 
-          placeBridgeCard(stepIndex, nextFamilyKey, dataNext);
+          placeBridgeCard(stepIndex, 'actions', dataNext);
 
         }
 
@@ -3242,259 +3887,201 @@ function showArrowForStep(stepIndex, isMatch) {
 
 
 
-      // Lancer la pièce de tirage : 1 lancer par famille, dans l'ordre TIRAGE_ORDER
-
+      // Lancer la pièce de tirage : 6 lancers successifs pour les 6 familles avec polarité
   function launchCoin() {
 
     if (!coin || !boardHost) return;
 
-
-
     // Empêche plusieurs lancers simultanés
-
     if (coin.dataset.locked === '1') return;
 
-    
-
-    // Vérifier si on a fini tous les tirages
-
-    if (toreThrowIndex >= TIRAGE_ORDER.length) {
-
+    // Vérifier si on a fini tous les lancers de pièce (6 familles avec polarité)
+    const familiesWithCoin = TIRAGE_ORDER.filter(f => f !== 'memoire_cosmos');
+    if (coinThrowIndex >= familiesWithCoin.length) {
       coin.classList.remove('glow');
-
       coin.dataset.locked = '1';
-
       showToreAnalysisCTA();
-
       return;
-
     }
 
-
-
-    // Récupérer la famille courante
-
-    const currentFamily = TIRAGE_ORDER[toreThrowIndex];
-
+    // Récupérer la famille actuelle pour ce lancer de pièce
+    const currentFamily = familiesWithCoin[coinThrowIndex];
     
-
-    // On ne lance pas pour la mémoire cosmos
-
-    if (currentFamily === 'memoire_cosmos') {
-
-      toreThrowIndex++;
-
-      launchCoin(); // Passe à la famille suivante
-
-      return;
-
-    }
-
-
-
     // Verrouiller la pièce
-
     coin.dataset.locked = '1';
 
-
-
     // Trouver la configuration de l'étape actuelle
-
     const step = STEPS_TORE.find(s => s.key === currentFamily);
-
     if (!step) {
-
-      // console.error(console.error('Famille non trouvée :', currentFamily);)
-
       return;
-
     }
-
     
-
     // Récupérer l'index de l'étape actuelle dans STEPS_TORE
-
     const stepIndex = STEPS_TORE.findIndex(s => s.key === currentFamily);
-
     if (stepIndex === -1) {
-
-      // console.error(console.error('Index de famille non trouvé :', currentFamily);)
-
       return;
-
     }
-
     
-
     const card = boardHost.querySelector(`.tore-card[data-family="${step.key}"]`);
-
     
-
     // Trouver la prochaine famille dans l'ordre de tirage
-
     const nextFamily = TIRAGE_ORDER[(toreThrowIndex + 1) % TIRAGE_ORDER.length];
-
     const nextStep = STEPS_TORE.find(s => s.key === nextFamily);
-
-
-
-    // Plateau verrouillé pendant l’animation
-
+    
+    // Plateau verrouillé pendant l'animation
     boardHost.classList.add('board-locked');
 
-
-
     // On enlève halo et onde précédents
-
     coin.classList.remove('glow', 'ripple', 'face-yang', 'face-yin');
 
-
-
     // Reset animation ripple
-
     void coin.offsetWidth;
 
-
-
-    // Lancer d’animation de rotation
-
+    // Lancer d'animation de rotation
     coin.classList.add('spin');
 
-
-
-    // Fin de l’animation (1s)
-
+    // Fin de l'animation (1s)
     setTimeout(() => {
-
       coin.classList.remove('spin');
 
-
-
       const isYang = Math.random() < 0.5;
-
       const coinPolarity = isYang ? 'yang' : 'yin';
-
-
 
       coin.classList.add(isYang ? 'face-yang' : 'face-yin');
 
-
-
       // Onde circulaire dorée
-
       coin.classList.remove('ripple');
-
       void coin.offsetWidth;
-
       coin.classList.add('ripple');
 
-
-
       // Vibration subtile du tore
-
       if (boardWrap) {
-
         boardWrap.classList.add('tore-shake');
-
         setTimeout(() => {
-
           boardWrap.classList.remove('tore-shake');
-
         }, 300);
-
       }
-
-
 
       // Comparaison avec la polarité de la carte
-
       if (card) {
-
         const cardPolarity = card.dataset.polarity || 'none';
 
-
-
         // pas de polarité (Mémoire Cosmos) → on montre juste une flèche neutre
-
         if (cardPolarity === 'none') {
-
           showArrowForStep(stepIndex, null);
-
         } else {
-
           const isMatch = (cardPolarity === coinPolarity);
-
           showArrowForStep(stepIndex, isMatch);
 
-
-
+          // Si polarité différente, ouvrir l'éventail de cartes passerelles
           if (!isMatch && nextStep) {
-
             // polarité différente → on laisse d'abord la flèche s'afficher
-
             setTimeout(() => {
-
               openBridgeFan(stepIndex, nextStep.key);
-
             }, 1000);
-
           }
-
         }
-
       }
 
-
-
       // Déverrouille le plateau
+      boardHost.classList.remove('board-locked');
 
-boardHost.classList.remove('board-locked');
+      // Passer au lancer de pièce suivant
+      coinThrowIndex += 1;
 
+      // Si on a fini tous les lancers de pièce, on attend avant d'afficher le bouton d'analyse
+      if (coinThrowIndex >= familiesWithCoin.length) {
+        coin.classList.remove('glow');
+        coin.dataset.locked = '1';
+        // Attendre 2 secondes pour laisser le temps de voir le résultat de la dernière pièce
+        setTimeout(() => {
+          showToreAnalysisCTA();
+        }, 2000);
+      } else {
+        // Sinon, on réactive la pièce pour le lancer suivant
+        coin.dataset.locked = '0';
+        coin.classList.add('glow');
+      }
 
+    }, 1000);
+  }
 
-// On passe à la famille suivante
+  // Afficher un message pour la carte passerelle
+  function showBridgeCardMessage(stepIndex, familyKey) {
+    // Mettre en évidence la carte de la famille Actions (passerelle)
+    const bridgeCard = boardHost.querySelector(`.tore-card[data-family="actions"]`);
+    if (bridgeCard) {
+      // Ajouter un effet visuel pour indiquer la carte passerelle
+      bridgeCard.classList.add('bridge-highlight');
+      setTimeout(() => {
+        bridgeCard.classList.remove('bridge-highlight');
+      }, 2000);
+    }
+  }
 
-toreThrowIndex += 1;
-
-
-
-// Si on a fini tous les tirages, on affiche le bouton d'analyse
-
-if (toreThrowIndex >= TIRAGE_ORDER.length) {
-
-  coin.classList.remove('glow');
-
-  coin.dataset.locked = '1';
-
-  showToreAnalysisCTA();
-
-} 
-
-
-
-// Sinon, on réactive la pièce pour le lancer suivant
-
-coin.dataset.locked = '0';
-
-coin.classList.add('glow');
-
-
-
-}, 1000);
-
-}
 
   // --- listeners principaux ---
 
 
 
-  startBtn?.addEventListener('click', () => {
+  // Le formulaire est maintenant affiché directement, pas besoin de bouton start
 
-    intro.classList.add('hidden');
+  // Validation des questions ouvertes
+  const toreIntentionInput = el('tore-intention-input');
+  const toreSubmitBtn = el('tore-submit-btn');
 
-    form.classList.remove('hidden');
+  function isOpenQuestion(txt) {
+    const s = (txt || '').trim();
+    if (!s.endsWith('?')) return false;
 
-  });
+    const lower = s.toLowerCase();
+
+    // Formulations fermées (oui/non) → refuser
+    const closedStarters = [
+      'est-ce que', 'peux-tu', 'puis-je', 'as-tu', 'avez-vous',
+      'es-tu', 'êtes-vous', 'dois-je', 'peut-on', 'sera-t-il', 'serait-il'
+    ];
+    if (closedStarters.some(p => lower.startsWith(p))) return false;
+
+    // Formulations ouvertes → accepter
+    const openStarters = [
+      'comment', 'pourquoi', 'quel ', 'quelle ', 'quels ', 'quelles ',
+      'quoi', 'de quelle manière', 'dans quelle mesure', 'à quoi', 'vers quoi'
+    ];
+    if (openStarters.some(p => lower.startsWith(p))) return true;
+
+    // Filet de sécurité : assez de mots + « ? »
+    return s.split(/\s+/).length >= 3;
+  }
+
+  // Vérifier la question à chaque saisie
+  // Utiliser une vérification plus robuste
+  function setupIntentionValidation() {
+    const input = el('tore-intention-input');
+    const btn = el('tore-submit-btn');
+    
+    if (input && btn) {
+      // Initialiser l'état du bouton
+      btn.disabled = !isOpenQuestion(input.value);
+      
+      // Ajouter l'écouteur d'événement
+      input.addEventListener('input', () => {
+        const isValid = isOpenQuestion(input.value);
+        btn.disabled = !isValid;
+        
+        if (isValid) {
+          input.setCustomValidity('');
+        }
+      });
+      
+      console.log('Validation intention configurée');
+    } else {
+      console.error('Éléments intention non trouvés:', { input: !!input, btn: !!btn });
+    }
+  }
+  
+  // Exécuter la configuration
+  setupIntentionValidation();
 
 
 
@@ -3518,6 +4105,16 @@ toAnalysisBtn?.addEventListener('click', () => {
 
   e.preventDefault();
 
+  // Vérifier que la question est ouverte
+  const intentionValue = toreIntentionInput?.value || '';
+  if (!isOpenQuestion(intentionValue)) {
+    toreIntentionInput?.setCustomValidity("Formulez une question ouverte (ex. « Comment… ? », « Pourquoi… ? ») et terminez par « ? »");
+    toreIntentionInput?.reportValidity();
+    return;
+  } else {
+    toreIntentionInput?.setCustomValidity("");
+  }
+
   form.classList.add('hidden');
 
   buildBoardTore();
@@ -3527,6 +4124,11 @@ toAnalysisBtn?.addEventListener('click', () => {
   toreHasStarted = true;
 
   results.classList.add('hidden'); // DeepSite remplira plus tard
+
+  // Indiquer la première carte à tirer après un court délai
+  setTimeout(() => {
+    highlightNextCard();
+  }, 1000);
 
 });
 
@@ -3794,6 +4396,12 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 100);
     });
   </script>
+
+<!-- Aperçu zoom d'une carte retournée - déplacé ici pour échapper au overflow-hidden -->
+<div id="card-preview-overlay">
+  <div id="card-preview-img" alt="Aperçu de la carte"></div>
+</div>
+
 </body>
 
 <!-- Scripts -->

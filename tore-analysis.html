@@ -1,0 +1,851 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cinzel+Decorative:wght@400;700&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+  
+  <!-- SEO Meta Tags -->
+  <title>Analyse de votre tirage - Oracle Oradia</title>
+  <meta name="description" content="Analyse personnalisée de votre tirage avec l'Oracle Oradia. Découvrez les messages de vos cartes et obtenez une guidance claire." />
+  <meta name="keywords" content="oracle, analyse, tirage, guidance, clarté, introspection, Oradia, cartes" />
+  <meta name="author" content="Sophie Oradia" />
+  <meta name="robots" content="index, follow" />
+  <meta name="language" content="fr" />
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://oradia.fr/tore-analysis.html" />
+  <meta property="og:title" content="Analyse de votre tirage - Oracle Oradia" />
+  <meta property="og:description" content="Analyse personnalisée de votre tirage avec l'Oracle Oradia." />
+  <meta property="og:image" content="https://oradia.fr/images/oracle-precommande.jpg" />
+  <meta property="og:image:width" content="1200" />
+  <meta property="og:image:height" content="630" />
+  <meta property="og:site_name" content="Oradia" />
+  <meta property="og:locale" content="fr_FR" />
+  
+  <!-- Twitter -->
+  <meta property="twitter:card" content="summary_large_image" />
+  <meta property="twitter:url" content="https://oradia.fr/tore-analysis.html" />
+  <meta property="twitter:title" content="Analyse de votre tirage - Oracle Oradia" />
+  <meta property="twitter:description" content="Analyse personnalisée de votre tirage avec l'Oracle Oradia." />
+  <meta property="twitter:image" content="https://oradia.fr/images/oracle-precommande.jpg" />
+  
+  <!-- Canonical URL -->
+  <link rel="canonical" href="https://oradia.fr/tore-analysis.html" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="responsive.css">
+  <link rel="stylesheet" href="production-mode.css">
+  <script src="security.js"></script>
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#0a192f',
+            'gold': '#d4af37',
+            'light-gold': '#f5e7a1',
+            'dark-blue': '#051428',
+            'celtic-blue': '#1a365d'
+          },
+          fontFamily: {
+            'cormorant': ['Cormorant Garamond', 'serif'],
+            'cinzel': ['Cinzel', 'serif'],
+            'lora': ['Lora', 'serif']
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'pulse-slow': 'pulse 4s ease-in-out infinite',
+            'shimmer': 'shimmer 3s ease-in-out infinite',
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+    
+    .font-cormorant {
+      font-family: 'Cormorant Garamond', serif;
+    }
+    
+    .font-lora {
+      font-family: 'Lora', serif;
+    }
+    
+    .gold-gradient {
+      background: linear-gradient(135deg, #d4af37 0%, #f5e7a1 50%, #d4af37 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .hero-section {
+      background: linear-gradient(135deg, #0a192f 0%, #051428 100%);
+      min-height: 60vh;
+      position: relative;
+      background-image: url("images/oradia-hero-4k.png");
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+    
+    .hero-overlay {
+      background: radial-gradient(circle at 20% 80%, rgba(212, 175, 55, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.05) 0%, transparent 50%),
+                  linear-gradient(135deg, rgba(10, 25, 47, 0.3) 0%, rgba(5, 20, 40, 0.4) 100%);
+      position: absolute;
+      inset: 0;
+    }
+    
+    .analysis-section {
+      background: linear-gradient(135deg, #0a192f 0%, #051428 100%);
+      position: relative;
+    }
+    
+    .analysis-overlay {
+      background: radial-gradient(circle at 20% 80%, rgba(212, 175, 55, 0.05) 0%, transparent 50%),
+                  radial-gradient(circle at 80% 20%, rgba(212, 175, 55, 0.03) 0%, transparent 50%),
+                  linear-gradient(135deg, rgba(10, 25, 47, 0.2) 0%, rgba(5, 20, 40, 0.3) 100%);
+      position: absolute;
+      inset: 0;
+    }
+    
+    .touch-target {
+      min-height: 44px;
+      min-width: 44px;
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    @keyframes shimmer {
+      0%, 100% { opacity: 0.8; }
+      50% { opacity: 1; }
+    }
+    
+    .analysis-card {
+      background: rgba(5, 20, 40, 0.9);
+      border: 1px solid #d4af37;
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 10;
+    }
+    
+    .pro-offer {
+      background: rgba(212, 175, 55, 0.1);
+      border: 1px solid #d4af37;
+      border-radius: 18px;
+      box-shadow: 0 10px 30px rgba(0,0,0,.35);
+      padding: 2rem;
+      margin-bottom: 2rem;
+      position: relative;
+      z-index: 10;
+    }
+    
+    .btn-gold {
+      background: linear-gradient(135deg, #d4af37 0%, #f5e7a1 100%);
+      color: #020817;
+      padding: 1rem 2rem;
+      border-radius: 18px;
+      border: none;
+      font-family: "Cinzel", serif;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      text-decoration: none;
+    }
+    
+    .btn-gold:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 40px rgba(212, 175, 55, 0.4);
+    }
+    
+    .card-hover {
+      transition: all 0.3s ease;
+    }
+    
+    .card-hover:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 30px rgba(212, 175, 55, 0.3);
+    }
+    
+    .fade-in-up {
+      animation: fadeInUp 0.6s ease-out;
+    }
+    
+    @keyframes fadeInUp {
+      from { 
+        opacity: 0; 
+        transform: translateY(20px); 
+      }
+      to { 
+        opacity: 1; 
+        transform: translateY(0); 
+      }
+    }
+    
+    /* Amélioration du contraste pour la lisibilité */
+    .text-light-gold {
+      color: #f5e7a1 !important;
+    }
+    
+    .text-gold {
+      color: #d4af37 !important;
+    }
+    
+    .analysis-card p,
+    .analysis-card h1,
+    .analysis-card h2,
+    .analysis-card h3,
+    .pro-offer p,
+    .pro-offer h1,
+    .pro-offer h2,
+    .pro-offer h3 {
+      color: #e9e7df !important;
+    }
+    
+    .text-purple-300 {
+      color: #c4b5fd !important;
+    }
+    
+    .text-purple-400 {
+      color: #a78bfa !important;
+    }
+    
+    .text-purple-200 {
+      color: #ddd6fe !important;
+    }
+  </style>
+</head>
+
+<body class="relative">
+  <!-- Scroll to top button -->
+  <button id="backToTop" class="fixed bottom-6 right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-50 backdrop-blur-sm" aria-label="Remonter en haut">
+    <i class="fas fa-arrow-up text-sm"></i>
+  </button>
+
+  <!-- Header -->
+  <div id="header-placeholder"></div>
+
+<!-- Hero Section -->
+<section class="hero-section relative">
+    <!-- Voile pour lisibilité -->
+    <div class="hero-overlay"></div>
+    
+    <!-- Contenu texte -->
+    <div class="relative z-10 w-full px-4 sm:px-6 pb-12 sm:pb-16 md:pb-24">
+        <div class="max-w-4xl mx-auto text-center">
+            <!-- H1 -->
+            <h1 class="cormorant text-4xl sm:text-5xl md:text-7xl lg:text-8xl xl:text-9xl font-bold gold-gradient mb-8 sm:mb-6 leading-tight">
+                Votre Analyse
+            </h1>
+            
+            <!-- Sous-titre -->
+            <p class="cormorant text-xl sm:text-2xl md:text-3xl lg:text-4xl xl:text-5xl text-gold mb-8 sm:mb-8 leading-tight drop-shadow-lg">
+                Résultats de votre tirage
+            </p>
+            
+            <!-- Baseline -->
+            <p class="lora text-xl md:text-2xl text-light-gold/90 max-w-2xl sm:max-w-3xl mx-auto leading-relaxed mb-6 sm:mb-8 drop-shadow-lg">
+                Une interprétation profonde de votre tirage en lien avec votre intention
+            </p>
+            
+            <!-- Intention -->
+            <div class="analysis-card max-w-2xl mx-auto mb-8">
+                <div class="flex items-center justify-center mb-4">
+                    <i class="fas fa-lightbulb text-gold text-2xl mr-4"></i>
+                    <h2 class="font-cinzel text-2xl font-bold text-gold">Votre Intention</h2>
+                </div>
+                <div class="border-t border-gold/30 pt-4 mb-4"></div>
+                <p id="userIntention" class="text-lg italic leading-relaxed"></p>
+            </div>
+            
+            <!-- Boutons d'action -->
+            <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-8">
+                <a href="tore.html" class="border-2 border-gold text-gold font-bold py-4 px-6 sm:px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
+                    <i class="fas fa-redo"></i>
+                    <span class="text-sm sm:text-base">Faire un autre tirage</span>
+                </a>
+                
+                <button onclick="window.print()" class="border-2 border-gold text-gold font-bold py-4 px-6 sm:px-8 rounded-full hover:bg-gold hover:text-night-blue transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
+                    <i class="fas fa-print"></i>
+                    <span class="text-sm sm:text-base">Imprimer l'analyse</span>
+                </button>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Section Analyse -->
+<section class="analysis-section py-16 px-4 sm:px-6 lg:px-8 relative">
+    <!-- Background pattern -->
+    <div class="analysis-overlay"></div>
+    <div class="absolute inset-0 opacity-5">
+        <div class="absolute inset-0" style="background-image: radial-gradient(circle at 50% 50%, #d4af37 2px, transparent 2px); background-size: 60px 60px;"></div>
+    </div>
+    
+    <div class="container mx-auto max-w-6xl relative z-10">
+        <!-- Cartes tirées -->
+        <div class="mb-16">
+            <div class="text-center mb-12 fade-in-up">
+                <div class="mb-6 sm:mb-8">
+                    <div class="w-16 sm:w-20 h-16 sm:h-20 mx-auto bg-gradient-to-br from-gold/20 to-gold/10 rounded-full border border-gold/30 flex items-center justify-center mb-4 sm:mb-6">
+                        <i class="fas fa-layer-group text-2xl sm:text-3xl text-gold"></i>
+                    </div>
+                    
+                    <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 gold-gradient">Vos Cartes</h2>
+                    
+                    <p class="text-lg sm:text-xl text-light-gold leading-relaxed mb-6 sm:mb-8">
+                        Les messages de votre tirage
+                    </p>
+                </div>
+                
+                <div id="cardsDisplay" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 md:gap-8">
+                <!-- Les cartes seront insérées ici dynamiquement -->
+            </div>
+            </div>
+        </div>
+        
+        <!-- Analyse détaillée -->
+        <div class="mb-16">
+            <div class="text-center mb-12 fade-in-up">
+                <div class="mb-6 sm:mb-8">
+                    <div class="w-16 sm:w-20 h-16 sm:h-20 mx-auto bg-gradient-to-br from-gold/20 to-gold/10 rounded-full border border-gold/30 flex items-center justify-center mb-4 sm:mb-6">
+                        <i class="fas fa-search text-2xl sm:text-3xl text-gold"></i>
+                    </div>
+                    
+                    <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 gold-gradient">Analyse Détaillée</h2>
+                    
+                    <p class="text-lg sm:text-xl text-light-gold leading-relaxed mb-6 sm:mb-8">
+                        Les messages de votre tirage
+                    </p>
+                </div>
+                
+                <div id="analysisContent" class="space-y-8">
+                    <!-- Le contenu sera généré dynamiquement -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Synthèse -->
+        <div class="mb-16">
+            <div class="analysis-card fade-in-up">
+                <div class="flex items-center mb-6">
+                    <div class="w-12 sm:w-16 h-12 sm:h-16 bg-gradient-to-br from-gold/20 to-gold/10 rounded-full border border-gold/30 flex items-center justify-center mr-4">
+                        <i class="fas fa-star text-xl text-gold"></i>
+                    </div>
+                    <h2 class="font-cinzel text-2xl font-bold text-gold">Synthèse</h2>
+                </div>
+                <div class="border-t border-gold/30 pt-4 mb-4"></div>
+                <div id="synthesisContent" class="text-lg leading-relaxed">
+                    <!-- La synthèse sera générée dynamiquement -->
+                </div>
+            </div>
+        </div>
+        
+        <!-- Offre professionnelle -->
+        <div class="pro-offer mb-16 fade-in-up">
+            <div class="text-center mb-12">
+                <div class="w-16 sm:w-20 h-16 sm:h-20 mx-auto bg-gradient-to-br from-gold/20 to-gold/10 rounded-full border border-gold/30 flex items-center justify-center mb-6">
+                    <i class="fas fa-crown text-2xl sm:text-3xl text-gold"></i>
+                </div>
+                
+                <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold mb-4 sm:mb-6 gold-gradient">Une Guidance Plus Profonde ?</h2>
+                
+                <p class="text-lg sm:text-xl text-light-gold leading-relaxed mb-8 max-w-2xl mx-auto">
+                    Votre tirage révèle des messages importants. Pour une interprétation complète et personnalisée, 
+                    découvrez ma consultation individuelle avec guidance personnalisée.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8 mb-12">
+                <div class="text-center analysis-card p-6 card-hover">
+                    <div class="text-4xl font-bold text-gold mb-3">60min</div>
+                    <p class="font-medium text-light-gold">Consultation approfondie</p>
+                    <i class="fas fa-clock text-gold mt-3"></i>
+                </div>
+                <div class="text-center analysis-card p-6 card-hover">
+                    <div class="text-4xl font-bold text-gold mb-3">100%</div>
+                    <p class="font-medium text-light-gold">Personnalisée pour vous</p>
+                    <i class="fas fa-heart text-gold mt-3"></i>
+                </div>
+                <div class="text-center analysis-card p-6 card-hover">
+                    <div class="text-4xl font-bold text-gold mb-3">∞</div>
+                    <p class="font-medium text-light-gold">Soutien continu</p>
+                    <i class="fas fa-infinity text-gold mt-3"></i>
+                </div>
+            </div>
+            
+            <div class="text-center">
+                <a href="rendez-vous.html" class="btn-gold">
+                    <i class="fas fa-calendar-alt mr-3"></i>
+                    Réserver ma consultation
+                </a>
+                <p class="text-sm mt-4 text-light-gold">
+                    Première consultation avec tarif préférentiel
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Footer -->
+<div id="footer-placeholder"></div>
+
+<!-- Scripts -->
+<script>
+    // Système d'analyse intelligent
+    class ToreAnalyzer {
+            constructor() {
+                this.cardMeanings = {
+                    emotions: {
+                        joie: "La joie qui vous anime est le signe que vous êtes aligné avec votre véritable nature. C'est une énergie pure qui vous guide vers les bonnes décisions.",
+                        tristesse: "Votre tristesse est un messager précieux qui vous invite à accueillir vos émotions pour les transformer. Elle contient la sagesse de votre cœur.",
+                        colere: "Votre colère est une force de transformation qui vous pousse à poser vos limites et à réclamer ce qui est juste pour vous.",
+                        peur: "Votre peur vous protège et vous invite à développer votre courage. Elle est le gardien de votre croissance personnelle.",
+                        surprise: "La surprise dans votre vie ouvre des portes inattendues et vous invite à accueillir l'inattendu avec confiance.",
+                        degout: "Votre dégoût vous signale ce qui n'est plus aligné avec votre vérité, vous invitant à faire le ménage dans votre vie.",
+                        fierte: "Votre fierté est le reflet de vos accomplissements et de votre valeur personnelle. Elle vous rappelle votre force intérieure.",
+                        honte: "Votre honte est une invitation à la compassion envers vous-même et à l'intégration de toutes vos parts."
+                    },
+                    besoins: {
+                        reconnaissance: "Le besoin de reconnaissance révèle votre désir d'être vu et valorisé pour qui vous êtes vraiment.",
+                        securite: "Le besoin de sécurité vous invite à construire des fondations solides dans votre vie, tant matérielles qu'émotionnelles.",
+                        amour: "Le besoin d'amour est le moteur le plus profond de votre existence, vous connectant à votre essence même.",
+                        liberte: "Le besoin de liberté vous pousse à vous affranchir des limitations et à exprimer votre authenticité.",
+                        croissance: "Le besoin de croissance est l'élan de votre âme qui cherche constamment à évoluer et à s'épanouir.",
+                        appartenance: "Le besoin d'appartenance vous connecte aux autres et vous rappelle que vous n'êtes jamais seul.",
+                        expression: "Le besoin d'expression vous invite à partager votre vérité unique avec le monde.",
+                        paix: "Le besoin de paix vous guide vers l'harmonie intérieure et la sérénité de l'esprit."
+                    },
+                    transmutation: {
+                        transformation: "La transformation est en cours dans votre vie. Ce qui doit changer se révèle clairement maintenant.",
+                        liberation: "La libération s'opère. Vous vous libérez d'anciens schémas pour accueillir le nouveau.",
+                        alchimie: "L'alchimie intérieure transforme vos expériences en sagesse et vos épreuves en force.",
+                        renaissance: "La renaissance vous invite à laisser mourir l'ancien pour accueillir une version nouvelle de vous-même.",
+                        evolution: "L'évolution est votre chemin naturel. Chaque étape vous rapproche de votre véritable essence.",
+                        metamorphose: "La métamorphose vous transforme en profondeur, modifiant votre perception et votre réalité.",
+                        transfiguration: "La transfiguration vous élève vers un état de conscience supérieur, illuminant votre chemin.",
+                        actualisation: "L'actualisation vous permet de concrétiser vos potentiels et de manifester vos rêves."
+                    },
+                    memoire_cosmos: {
+                        sagesse_ancienne: "La sagesse ancienne se réveille en vous, connectant votre conscience à la mémoire collective.",
+                        heritage: "Votre héritage personnel riche se manifeste, vous rappelant vos racines profondes.",
+                        intuition: "Votre intuition s'éveille, vous guidant avec précision sur votre chemin de vie.",
+                        guidance: "La guidance intérieure vous accompagne, vous montrant la voie même dans l'obscurité.",
+                        protection: "La protection naturelle vous entoure, vous gardant dans votre évolution personnelle.",
+                        grace: "La gratitude coule dans votre vie, apportant des bénédictions inattendues.",
+                        illumination: "La clarté progressive éclaire votre compréhension et élargit votre conscience.",
+                        harmonie: "L'harmonie s'installe en vous, alignant toutes les parties de votre être."
+                    },
+                    // Cartes passerelles (lignes mutantes du Yi King)
+                    bridge_cards: {
+                        patienter: "Ligne mutante : Le temps de l'attente fertile. La patience n'est pas passive, mais une préparation active à la transformation imminente.",
+                        reconcilier: "Ligne mutante : La réconciliation des opposés. Ce qui semblait séparé trouve maintenant son unité dans une compréhension supérieure.",
+                        lacher: "Ligne mutante : Le lâcher-prise. Vous êtes invité à vous détacher de l'ancien pour accueillir le nouveau avec confiance.",
+                        accueillir: "Ligne mutante : L'accueil de l'inattendu. Ce qui arrive n'est pas hasard, mais une réponse naturelle à votre intention.",
+                        ecouter: "Ligne mutante : L'écoute profonde. Au-delà des mots, vous entendez maintenant le murmure de votre sagesse intérieure.",
+                        agir: "Ligne mutante : L'action juste. Le moment est venu de passer de la contemplation à l'action alignée avec votre vérité.",
+                        choisir: "Ligne mutante : Le choix important. Votre décision actuelle façonne votre réalité future et révèle votre véritable pouvoir.",
+                        transformer: "Ligne mutante : La transmutation profonde. Les énergies se transforment à un niveau profond, changeant votre réalité fondamentale.",
+                        integrer: "Ligne mutante : L'intégration des contraires. Différentes parties de vous s'unissent pour créer une nouvelle synthèse.",
+                        creer: "Ligne mutante : La créativité personnelle. Vous devenez le canal par lequel votre potentiel se manifeste et se crée à travers vous.",
+                        guider: "Ligne mutante : La guidance intérieure. Votre sagesse intérieure prend le relais, vous guidant avec une certitude absolue.",
+                        proteger: "Ligne mutante : La protection naturelle. Vous êtes protégé non pas par l'isolement, mais par votre connexion à votre entourage.",
+                        celebrer: "Ligne mutante : La célébration de la vie. Chaque instant devient une célébration de votre existence et de votre croissance.",
+                        pardonner: "Ligne mutante : Le pardon libérateur. Le pardon n'est pas pour l'autre, mais pour vous libérer du poids du passé.",
+                        partager: "Ligne mutante : Le partage généreux. Ce que vous donnez revient multiplié, créant un cercle vertueux d'abondance.",
+                        aimer: "Ligne mutante : L'amour inconditionnel. Vous accédez à une dimension de l'amour qui transcende les conditions et les attentes."
+                    }
+                };
+                
+                this.intentionPatterns = {
+                    amour: ['joie', 'amour', 'appartenance', 'sagesse_ancienne', 'grace'],
+                    travail: ['fierte', 'croissance', 'actualisation', 'guidance', 'transformation'],
+                    sante: ['paix', 'securite', 'liberation', 'protection', 'harmonie'],
+                    famille: ['reconnaissance', 'appartenance', 'heritage', 'securite', 'amour'],
+                    personnel: ['intuition', 'illumination', 'sagesse_ancienne', 'transfiguration', 'grace'],
+                    argent: ['securite', 'actualisation', 'croissance', 'abondance', 'liberte'],
+                    relation: ['amour', 'reconnaissance', 'communication', 'harmonie', 'appartenance'],
+                    decision: ['guidance', 'intuition', 'clarte', 'courage', 'liberte']
+                };
+            }
+            
+            analyzeCards(cards, intention) {
+                const analysis = {
+                    intention: intention,
+                    cards: cards,
+                    themes: this.identifyThemes(cards, intention),
+                    message: this.generateMessage(cards, intention),
+                    advice: this.generateAdvice(cards, intention),
+                    synthesis: this.generateSynthesis(cards, intention)
+                };
+                
+                return analysis;
+            }
+            
+            identifyThemes(cards, intention) {
+                const themes = [];
+                const intentionLower = intention.toLowerCase();
+                
+                // Identifier le thème principal basé sur l'intention
+                let mainTheme = 'general';
+                for (const [theme, keywords] of Object.entries(this.intentionPatterns)) {
+                    if (keywords.some(keyword => intentionLower.includes(keyword))) {
+                        mainTheme = theme;
+                        break;
+                    }
+                }
+                
+                // Analyser chaque carte
+                cards.forEach(card => {
+                    let meaning = this.cardMeanings[card.family]?.[card.name];
+                    let isMutating = false;
+                    
+                    // Vérifier si c'est une carte avec ligne mutante (carte passerelle)
+                    if (card.bridgeCard) {
+                        const bridgeMeaning = this.cardMeanings.bridge_cards?.[card.bridgeCard.name];
+                        if (bridgeMeaning) {
+                            // Combiner la signification de la carte principale et de la ligne mutante
+                            meaning = `${meaning}\n\n**LIGNE MUTANTE :** ${bridgeMeaning}`;
+                            isMutating = true;
+                        }
+                    }
+                    
+                    if (meaning) {
+                        themes.push({
+                            card: card,
+                            meaning: meaning,
+                            relevance: this.calculateRelevance(card, mainTheme),
+                            isMutating: isMutating,
+                            bridgeCard: card.bridgeCard
+                        });
+                    }
+                });
+                
+                return themes.sort((a, b) => b.relevance - a.relevance);
+            }
+            
+            calculateRelevance(card, theme) {
+                const intentionKeywords = this.intentionPatterns[theme] || [];
+                const cardName = card.name.toLowerCase();
+                const cardFamily = card.family;
+                
+                let relevance = 1;
+                
+                // Points de pertinence basés sur les mots-clés
+                intentionKeywords.forEach(keyword => {
+                    if (cardName.includes(keyword)) relevance += 2;
+                });
+                
+                // Points bonus selon la famille
+                const familyBonus = {
+                    emotions: theme === 'amour' || theme === 'relation' ? 2 : 1,
+                    besoins: theme === 'travail' || theme === 'famille' ? 2 : 1,
+                    transmutation: theme === 'sante' || theme === 'personnel' ? 2 : 1,
+                    memoire_cosmos: theme === 'personnel' || theme === 'decision' ? 2 : 1
+                };
+                
+                relevance += familyBonus[cardFamily] || 0;
+                
+                return relevance;
+            }
+            
+            generateMessage(cards, intention) {
+                const themes = this.identifyThemes(cards, intention);
+                const mainCards = themes.slice(0, 3);
+                
+                let message = `Votre intention "${intention}" résonne profondément avec les énergies présentes dans votre tirage. `;
+                
+                // Compter les lignes mutantes
+                const mutatingCards = themes.filter(theme => theme.isMutating);
+                const hasMutatingLines = mutatingCards.length > 0;
+                
+                if (hasMutatingLines) {
+                    message += `Ce tirage contient ${mutatingCards.length} ligne${mutatingCards.length > 1 ? 's' : ''} mutante${mutatingCards.length > 1 ? 's' : ''}, indiquant une transformation profonde et imminente selon la sagesse du Yi King. `;
+                }
+                
+                mainCards.forEach((theme, index) => {
+                    const cardName = theme.card.name.replace('_', ' ');
+                    if (theme.isMutating) {
+                        const bridgeName = theme.bridgeCard.name.replace('_', ' ');
+                        message += `La carte ${theme.card.family} "${cardName}" avec sa ligne mutante "${bridgeName}" révèle une transformation alchimique majeure. `;
+                    } else {
+                        message += `La carte ${theme.card.family} "${cardName}" vous révèle que ${theme.meaning.toLowerCase()} `;
+                    }
+                });
+                
+                if (hasMutatingLines) {
+                    message += "Les lignes mutantes indiquent que les énergies sont en cours de transformation à un niveau quantique. Ce qui semble stable est en réalité en pleine mutation vers une nouvelle réalité. ";
+                }
+                
+                message += "Ces messages s'entrelacent pour vous guider vers une compréhension plus profonde de votre situation actuelle et de votre potentiel de transformation.";
+                
+                return message;
+            }
+            
+            generateAdvice(cards, intention) {
+                const themes = this.identifyThemes(cards, intention);
+                
+                let advice = "Based sur votre tirage et votre intention, voici les conseils personnels qui se dégagent : ";
+                
+                // Conseils spécifiques selon les cartes
+                themes.forEach(theme => {
+                    if (theme.card.family === 'emotions') {
+                        advice += "Accueillez vos émotions comme des messagers précieux. ";
+                    } else if (theme.card.family === 'besoins') {
+                        advice += "Honorez vos besoins profonds, ils sont votre boussole intérieure. ";
+                    } else if (theme.card.family === 'transmutation') {
+                        advice += "Faites confiance au processus de transformation qui s'opère en vous. ";
+                    } else if (theme.card.family === 'memoire_cosmos') {
+                        advice += "Connectez-vous à la sagesse universelle qui vous guide. ";
+                    }
+                });
+                
+                return advice;
+            }
+            
+            generateSynthesis(cards, intention) {
+                const themes = this.identifyThemes(cards, intention);
+                
+                let synthesis = `Votre tirage pour l'intention "${intention}" révèle une histoire cohérente et profonde. `;
+                
+                synthesis += "Les cartes qui se sont présentées vous montrent que vous êtes à un moment clé de votre évolution. ";
+                synthesis += "Les énergies émotionnelles, vos besoins fondamentaux, le processus de transformation et la sagesse intérieure convergent ";
+                synthesis += "pour vous offrir une vision complète de votre situation. ";
+                
+                synthesis += "Ce tirage vous invite à faire confiance à votre intuition, à accueillir les changements nécessaires ";
+                synthesis += "et à vous souvenir que vous êtes guidé à chaque instant. ";
+                
+                synthesis += "La réponse que vous cherchez se trouve déjà en vous, et ces cartes ne font que révéler ";
+                synthesis += "la sagesse qui sommeille dans votre cœur.";
+                
+                return synthesis;
+            }
+        }
+        
+        // Initialisation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Récupérer les données du tirage
+            const urlParams = new URLSearchParams(window.location.search);
+            const intention = urlParams.get('intention') || 'question personnelle';
+            const cardsData = urlParams.get('cards');
+            
+            if (!cardsData) {
+                // Rediriger vers la page de tirage si pas de données
+                window.location.href = 'tore.html';
+                return;
+            }
+            
+            try {
+                const cards = JSON.parse(decodeURIComponent(cardsData));
+                displayAnalysis(cards, intention);
+            } catch (error) {
+                console.error('Erreur lors de la lecture des cartes:', error);
+                window.location.href = 'tore.html';
+            }
+        });
+        
+        function displayAnalysis(cards, intention) {
+            // Afficher l'intention
+            document.getElementById('userIntention').textContent = intention;
+            
+            // Afficher les cartes
+            displayCards(cards);
+            
+            // Générer et afficher l'analyse
+            const analyzer = new ToreAnalyzer();
+            const analysis = analyzer.analyzeCards(cards, intention);
+            
+            displayDetailedAnalysis(analysis);
+            displaySynthesis(analysis.synthesis);
+        }
+        
+        function displayCards(cards) {
+            const container = document.getElementById('cardsDisplay');
+            container.innerHTML = '';
+            
+            cards.forEach((card, index) => {
+                const cardElement = document.createElement('div');
+                cardElement.className = 'card-hover text-center fade-in-up';
+                cardElement.style.animationDelay = `${index * 0.1}s`;
+                
+                const isMutating = card.isMutating || card.bridgeCard;
+                
+                cardElement.innerHTML = `
+                    <div class="analysis-card p-6 ${isMutating ? 'border-purple-500' : 'border-gold'} card-hover relative">
+                        <div class="w-20 h-28 mx-auto mb-4 rounded-lg overflow-hidden border-2 ${isMutating ? 'border-purple-500/50' : 'border-gold/30'}">
+                            <img src="images/${card.family}/${card.name}.png" 
+                                 alt="${card.name}" 
+                                 class="w-full h-full object-cover hover:scale-105 transition-transform duration-300">
+                        </div>
+                        
+                        <h3 class="text-sm font-bold ${isMutating ? 'text-purple-400' : 'text-gold'} capitalize mb-2">${card.family.replace('_', ' ')}</h3>
+                        <p class="text-sm text-gold/90 capitalize mb-3">${card.name.replace('_', ' ')}</p>
+                        
+                        ${isMutating ? `
+                            <div class="border-t border-purple-500/30 pt-3 mb-3">
+                                <div class="text-sm font-bold text-purple-400 mb-2 flex items-center justify-center">
+                                    <i class="fas fa-yin-yang mr-2"></i>
+                                    LIGNE MUTANTE
+                                </div>
+                                <div class="w-16 h-20 mx-auto mb-2 rounded-lg overflow-hidden border-2 border-purple-500/30">
+                                    <img src="images/${card.bridgeCard.family}/${card.bridgeCard.name}.png" 
+                                         alt="${card.bridgeCard.name}" 
+                                         class="w-full h-full object-cover">
+                                </div>
+                                <p class="text-sm text-purple-300 capitalize font-medium">${card.bridgeCard.name.replace('_', ' ')}</p>
+                            </div>
+                        ` : ''}
+                        
+                        <div class="flex justify-center mt-3">
+                            <i class="fas ${isMutating ? 'fa-yin-yang text-purple-400' : 'fa-star text-gold'} text-lg"></i>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(cardElement);
+            });
+        }
+        
+        function displayDetailedAnalysis(analysis) {
+            const container = document.getElementById('analysisContent');
+            container.innerHTML = '';
+            
+            // Message principal
+            const messageCard = document.createElement('div');
+            messageCard.className = 'analysis-card mb-8 fade-in-up';
+            messageCard.innerHTML = `
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-envelope-open-text text-gold text-xl mr-4"></i>
+                    <h3 class="font-cinzel text-xl font-bold text-gold">Message des Cartes</h3>
+                </div>
+                <div class="border-t border-gold/30 pt-4 mb-4"></div>
+                <p class="text-lg leading-relaxed">${analysis.message}</p>
+            `;
+            container.appendChild(messageCard);
+            
+            // Analyse par famille
+            const families = {};
+            analysis.themes.forEach(theme => {
+                if (!families[theme.card.family]) {
+                    families[theme.card.family] = [];
+                }
+                families[theme.card.family].push(theme);
+            });
+            
+            Object.entries(families).forEach(([family, themes], familyIndex) => {
+                const familyCard = document.createElement('div');
+                familyCard.className = 'analysis-card mb-8 fade-in-up';
+                familyCard.style.animationDelay = `${0.2 + familyIndex * 0.15}s`;
+                
+                const familyTitle = family === 'emotions' ? 'Émotions' :
+                                  family === 'besoins' ? 'Besoins' :
+                                  family === 'transmutation' ? 'Transmutation' :
+                                  family === 'memoire_cosmos' ? 'Mémoire Cosmos' : family;
+                
+                const familyIcon = family === 'emotions' ? 'fa-heart' :
+                                  family === 'besoins' ? 'fa-hands-holding-heart' :
+                                  family === 'transmutation' ? 'fa-fire' :
+                                  family === 'memoire_cosmos' ? 'fa-moon' : 'fa-star';
+                
+                familyCard.innerHTML = `
+                    <div class="flex items-center mb-4">
+                        <i class="fas ${familyIcon} text-gold text-xl mr-4"></i>
+                        <h3 class="font-cinzel text-xl font-bold text-gold">${familyTitle}</h3>
+                    </div>
+                    <div class="border-t border-gold/30 pt-4 mb-4"></div>
+                    <div class="space-y-4">
+                        ${themes.map((theme, index) => `
+                            <div class="flex items-start p-4 rounded-lg ${theme.isMutating ? 'bg-purple-500/10 border border-purple-500/30' : 'bg-gold/5 border border-gold/20'} card-hover">
+                                <i class="fas ${theme.isMutating ? 'fa-yin-yang text-purple-400' : 'fa-star text-gold'} text-lg mr-4 mt-1"></i>
+                                <div class="flex-1">
+                                    <div class="flex items-center mb-2">
+                                        <p class="font-bold ${theme.isMutating ? 'text-purple-300' : 'text-gold'} capitalize">${theme.card.name.replace('_', ' ')}</p>
+                                        ${theme.isMutating ? `
+                                            <span class="ml-3 px-2 py-1 rounded-full bg-purple-500/20 border border-purple-500/30 text-xs font-bold text-purple-400">LIGNE MUTANTE</span>
+                                        ` : ''}
+                                    </div>
+                                    ${theme.isMutating ? `
+                                        <div class="mb-3 p-3 rounded-lg bg-purple-500/10 border border-purple-500/20">
+                                            <p class="text-xs font-bold text-purple-400 mb-1">Carte Passerelle : ${theme.bridgeCard.name.replace('_', ' ')}</p>
+                                            <p class="text-sm text-purple-200 leading-relaxed">${this.cardMeanings.bridge_cards[theme.bridgeCard.name]}</p>
+                                        </div>
+                                    ` : ''}
+                                    <p class="text-sm leading-relaxed">${theme.meaning}</p>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+                
+                container.appendChild(familyCard);
+            });
+            
+            // Conseils
+            const adviceCard = document.createElement('div');
+            adviceCard.className = 'analysis-card mb-8 fade-in-up';
+            adviceCard.style.animationDelay = `${0.2 + Object.keys(families).length * 0.15}s`;
+            adviceCard.innerHTML = `
+                <div class="flex items-center mb-4">
+                    <i class="fas fa-lightbulb text-gold text-xl mr-4"></i>
+                    <h3 class="font-cinzel text-xl font-bold text-gold">Conseils Personnels</h3>
+                </div>
+                <div class="border-t border-gold/30 pt-4 mb-4"></div>
+                <p class="text-lg leading-relaxed">${analysis.advice}</p>
+            `;
+            container.appendChild(adviceCard);
+        }
+        
+        function displaySynthesis(synthesis) {
+            document.getElementById('synthesisContent').innerHTML = synthesis;
+        }
+    </script>
+    
+    <!-- Scripts pour header/footer -->
+    <script src="components/header-manager.js" defer></script>
+    
+    <!-- Scroll to top functionality -->
+    <script>
+        // Scroll to top functionality
+        const backToTopBtn = document.getElementById('backToTop');
+
+        window.addEventListener('scroll', () => {
+            if (window.pageYOffset > 300) {
+                backToTopBtn.classList.remove('opacity-0');
+                backToTopBtn.classList.add('opacity-100');
+            } else {
+                backToTopBtn.classList.add('opacity-0');
+                backToTopBtn.classList.remove('opacity-100');
+            }
+        });
+
+        backToTopBtn.addEventListener('click', () => {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+            
+            // Ensure header is visible by scrolling to top after a brief delay
+            setTimeout(() => {
+                window.scrollTo({
+                    top: 0,
+                    behavior: 'smooth'
+                });
+            }, 100);
+        });
+    </script>
+</body>
+</html>
