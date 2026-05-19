@@ -394,7 +394,7 @@ module.exports = async (req, res) => {
                             value: 'Précommande'
                         }
                     ],
-                    footer: 'ORADIA - SIRET: [TON_SIRET] - contact@oradia.fr'
+                    footer: 'ORADIA - Rudy Boucheron - Micro-entreprise - SIRET: 82130800400034 - APE: 9609Z - contact@oradia.fr'
                 }
             },
             metadata: {
