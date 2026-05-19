@@ -26,9 +26,10 @@ const seedData = async () => {
     // console.log(console.log('🧹 Cleared existing data');)
 
     // Create admin user
-    const adminPassword = await bcrypt.hash('RafalE12#12', 12);
+    // ⚠️ SÉCURITÉ : Utiliser update-admin.js pour configurer l'admin en production
+    const adminPassword = await bcrypt.hash(process.env.ADMIN_PASSWORD || 'CHANGE_ME_IN_PRODUCTION', 12);
     const admin = new User({
-      email: 'Oradia@protonmail.com',
+      email: process.env.ADMIN_EMAIL || 'Oradia@protonmail.com',
       password: adminPassword,
       firstName: 'Admin',
       lastName: 'ORADIA',

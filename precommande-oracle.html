@@ -159,12 +159,15 @@
     <script src="https://js.stripe.com/v3/"></script>
     
     <script>
-        // Initialisation Stripe
-        // REMPLACER pk_test_... par votre vraie clé Stripe publique
-        const stripeInstance = Stripe('pk_test_51TAsp69jcRbNO5oykYfnwCWLjGUVyCGLjFrjcgrMSRzMhNnH8gucs00YSTJoCEcwcCGsHvTjscA9Cn7MPvr4xl4c001dVA4e2j');
+        // Initialisation Stripe avec clé PUBLIQUE de PRODUCTION
+        // ⚠️ IMPORTANT : Remplacer par votre clé pk_live_... depuis le dashboard Stripe
+        // Cette clé est PUBLIQUE et peut être exposée côté client (c'est normal)
+        const stripeInstance = Stripe('pk_live_REMPLACER_PAR_VOTRE_CLE_PUBLIQUE_STRIPE');
         
-        // LOG TEMPORAIRE: Détection environnement
-        console.log('🔍 Stripe public key prefix:', stripeInstance._apiKey ? stripeInstance._apiKey.substring(0, 7) : 'undefined');
+        // Vérification environnement
+        if (stripeInstance._apiKey && stripeInstance._apiKey.startsWith('pk_test_')) {
+            console.warn('⚠️ ATTENTION : Vous utilisez encore une clé de TEST Stripe !');
+        }
         
         // Fonction pour charger la progression des précommandes (version premium)
         async function loadPreorderProgress() {
