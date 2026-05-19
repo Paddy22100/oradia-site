@@ -20,24 +20,34 @@ const updateAdminCredentials = async () => {
     // Chercher l'admin existant
     const existingAdmin = await User.findOne({ role: 'admin' });
     
+    // Vérifier que les variables d'environnement sont définies
+    const adminEmail = process.env.ADMIN_EMAIL || 'Oradia@protonmail.com';
+    const adminPassword = process.env.ADMIN_PASSWORD;
+
+    if (!adminPassword) {
+      console.error('❌ ERREUR: Variable ADMIN_PASSWORD non définie dans .env');
+      console.error('   Définissez ADMIN_PASSWORD dans votre fichier .env');
+      process.exit(1);
+    }
+
     if (existingAdmin) {
       // Mettre à jour l'email et le mot de passe
-      const newPassword = await bcrypt.hash('RafalE12#12', 12);
+      const hashedPassword = await bcrypt.hash(adminPassword, 12);
       
-      existingAdmin.email = 'Oradia@protonmail.com';
-      existingAdmin.password = newPassword;
+      existingAdmin.email = adminEmail;
+      existingAdmin.password = hashedPassword;
       
       await existingAdmin.save();
       
-      // console.log(console.log('✅ Administrateur mis à jour avec succès:');)
-      // console.log(console.log('   📧 Email: Oradia@protonmail.com');)
-      // console.log(console.log('   🔐 Mot de passe: RafalE12#12');)
+      console.log('✅ Administrateur mis à jour avec succès');
+      console.log(`   📧 Email: ${adminEmail}`);
+      console.log('   🔐 Mot de passe: [PROTÉGÉ]');
     } else {
       // Créer un nouvel admin si aucun n'existe
-      const adminPassword = await bcrypt.hash('RafalE12#12', 12);
+      const hashedPassword = await bcrypt.hash(adminPassword, 12);
       const admin = new User({
-        email: 'Oradia@protonmail.com',
-        password: adminPassword,
+        email: adminEmail,
+        password: hashedPassword,
         firstName: 'Admin',
         lastName: 'ORADIA',
         role: 'admin',
@@ -49,9 +59,9 @@ const updateAdminCredentials = async () => {
       });
       
       await admin.save();
-      // console.log(console.log('✅ Nouvel administrateur créé:');)
-      // console.log(console.log('   📧 Email: Oradia@protonmail.com');)
-      // console.log(console.log('   🔐 Mot de passe: RafalE12#12');)
+      console.log('✅ Nouvel administrateur créé');
+      console.log(`   📧 Email: ${adminEmail}`);
+      console.log('   🔐 Mot de passe: [PROTÉGÉ]');
     }
 
   } catch (error) {
