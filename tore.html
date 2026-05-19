@@ -967,6 +967,194 @@
     100% { transform: translate(-50%, -50%) scale(0.85); opacity: 0; }
   }
 
+  /* ── Boussole Oradia (écran de chargement analyse) ── */
+  #oradia-compass-overlay {
+    position: fixed;
+    inset: 0;
+    z-index: 200;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at center, rgba(5,12,30,0.97) 0%, rgba(2,6,23,0.99) 100%);
+    pointer-events: none;
+  }
+
+  #oradia-compass-overlay.hidden { display: none; }
+
+  .compass-logo-ring {
+    position: relative;
+    width: 220px;
+    height: 220px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .compass-ring {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top-color: rgba(212,175,55,0.9);
+    border-right-color: rgba(212,175,55,0.3);
+    animation: compassSpin 1.4s linear infinite;
+  }
+
+  .compass-ring-outer {
+    inset: -14px;
+    border-top-color: rgba(140,190,255,0.5);
+    border-right-color: transparent;
+    border-bottom-color: rgba(140,190,255,0.2);
+    animation-duration: 2.2s;
+    animation-direction: reverse;
+  }
+
+  .compass-ring-inner {
+    inset: 22px;
+    border-top-color: rgba(212,175,55,0.6);
+    border-left-color: rgba(212,175,55,0.2);
+    border-right-color: transparent;
+    animation-duration: 1s;
+  }
+
+  .compass-logo-img {
+    width: 110px;
+    height: 110px;
+    border-radius: 50%;
+    object-fit: cover;
+    animation: compassLogoSpin 3s cubic-bezier(0.4,0,0.2,1) forwards;
+    box-shadow: 0 0 40px rgba(212,175,55,0.45);
+  }
+
+  .compass-needle {
+    position: absolute;
+    width: 4px;
+    height: 72px;
+    border-radius: 3px;
+    background: linear-gradient(to top, rgba(231,76,60,0.95) 50%, rgba(212,175,55,0.9) 50%);
+    transform-origin: center 75%;
+    animation: compassNeedle 3s cubic-bezier(0.4,0,0.2,1) forwards;
+    box-shadow: 0 0 12px rgba(212,175,55,0.5);
+  }
+
+  .compass-text {
+    margin-top: 36px;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-style: italic;
+    font-size: 22px;
+    color: rgba(212,175,55,0.82);
+    letter-spacing: 0.1em;
+    animation: compassTextPulse 1.2s ease-in-out infinite;
+  }
+
+  .compass-dots {
+    display: inline-block;
+    animation: compassDots 1.5s steps(4, end) infinite;
+    width: 30px;
+    overflow: hidden;
+    vertical-align: bottom;
+  }
+
+  @keyframes compassSpin {
+    to { transform: rotate(360deg); }
+  }
+
+  @keyframes compassLogoSpin {
+    0%   { transform: rotate(0deg); }
+    40%  { transform: rotate(200deg); }
+    70%  { transform: rotate(320deg); }
+    85%  { transform: rotate(355deg); }
+    92%  { transform: rotate(348deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes compassNeedle {
+    0%   { transform: rotate(-30deg); }
+    30%  { transform: rotate(180deg); }
+    60%  { transform: rotate(90deg); }
+    80%  { transform: rotate(340deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes compassTextPulse {
+    0%, 100% { opacity: 0.75; }
+    50%       { opacity: 1; }
+  }
+
+  @keyframes compassDots {
+    0%  { width: 0; }
+    25% { width: 6px; }
+    50% { width: 12px; }
+    75% { width: 18px; }
+    100%{ width: 24px; }
+  }
+
+  @keyframes compassFadeOut {
+    from { opacity: 1; }
+    to   { opacity: 0; }
+  }
+
+  /* ── Animations d'apparition des modales ── */
+
+  @keyframes modalOverlayIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+
+  @keyframes modalPanelIn {
+    from {
+      opacity: 0;
+      transform: translateY(28px) scale(0.96);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes modalPanelInBottom {
+    from {
+      opacity: 0;
+      transform: translateY(40px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+  }
+
+  @keyframes modalPanelInLeft {
+    from {
+      opacity: 0;
+      transform: translateX(-30px) scale(0.97);
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0) scale(1);
+    }
+  }
+
+  /* Classe utilitaire : fond de modale */
+  .modal-anim-overlay {
+    animation: modalOverlayIn 0.35s ease forwards;
+  }
+
+  /* Panneau centré (guide carte) */
+  .modal-anim-panel {
+    animation: modalPanelIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  /* Panneau bas (polarity) */
+  .modal-anim-panel-bottom {
+    animation: modalPanelInBottom 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
+  /* Panneau gauche (bridge-split gauche) */
+  .modal-anim-panel-left {
+    animation: modalPanelInLeft 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+  }
+
 
 
   /* Cartes supplémentaires (famille suivante) */
@@ -1027,10 +1215,12 @@
 
 
 
-  /* Ligne lumineuse coin → carte */
+  /* Ligne lumineuse coin → carte — position:absolute pour ignorer le scroll */
 
   #tore-arrow {
-    position: fixed;
+    position: absolute;
+    top: 0;
+    left: 0;
     pointer-events: none;
     z-index: 70;
     overflow: visible;
@@ -1482,7 +1672,7 @@
 
   inset: 0;
 
-  background: rgba(2, 6, 23, 0.92);
+  background: rgba(2, 6, 23, 0.88);
 
   display: flex;
 
@@ -1492,6 +1682,42 @@
 
   z-index: 999;
 
+}
+
+/* Layout côte à côte : modale polarity gauche + éventail droite */
+#tore-extra-overlay.bridge-split {
+  flex-direction: row;
+  align-items: stretch;
+  justify-content: center;
+  gap: 0;
+  padding: 24px 16px;
+}
+
+#tore-extra-overlay.bridge-split .bridge-polarity-side {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: min(380px, 42vw);
+  padding-right: 16px;
+}
+
+#tore-extra-overlay.bridge-split .tore-extra-panel {
+  flex: 1;
+  max-width: 580px;
+}
+
+@media (max-width: 700px) {
+  #tore-extra-overlay.bridge-split {
+    flex-direction: column;
+    overflow-y: auto;
+    gap: 16px;
+    padding: 16px 12px;
+  }
+  #tore-extra-overlay.bridge-split .bridge-polarity-side {
+    width: 100%;
+    padding-right: 0;
+  }
 }
 
 
@@ -1987,59 +2213,72 @@
 
 
 
-      <!-- Flèche coin → carte (SVG) -->
-      <svg id="tore-arrow" style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:70;overflow:visible;"></svg>
+      <!-- Flèche coin → carte (SVG) - recréé dynamiquement en position:absolute -->
+      <svg id="tore-arrow" style="display:none;"></svg>
 
 
+
+      <!-- Overlay boussole Oradia : analyse en cours -->
+      <div id="oradia-compass-overlay" class="hidden">
+        <div class="compass-logo-ring">
+          <div class="compass-ring compass-ring-outer"></div>
+          <div class="compass-ring"></div>
+          <div class="compass-ring compass-ring-inner"></div>
+          <img class="compass-logo-img" src="images/logo-hd-v2.jpeg" alt="Oradia" />
+          <div class="compass-needle"></div>
+        </div>
+        <p class="compass-text">Analyse du tirage en cours<span class="compass-dots">...</span></p>
+      </div>
 
       <!-- Message de guidage pour l'intégration -->
-      <div id="tore-guide-message" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4" style="background: radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%); pointer-events: auto; overflow-y: auto;">
-        <div class="bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl border-2 border-gold/40 rounded-3xl p-5 sm:p-8 w-full max-w-3xl shadow-[0_25px_50px_-12px_rgba(212,175,55,0.25)] relative overflow-hidden my-auto">
+      <div id="tore-guide-message" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6" style="background: radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%); pointer-events: auto; overflow-y: auto;">
+        <div class="bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl border-2 border-gold/40 rounded-3xl w-full max-w-4xl shadow-[0_25px_50px_-12px_rgba(212,175,55,0.25)] relative overflow-hidden my-auto flex flex-col" style="min-height: min(80vh, 580px);">
           <!-- Effet de lumière subtile -->
-          <div class="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-blue-900/20 rounded-3xl"></div>
+          <div class="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-blue-900/20 rounded-3xl pointer-events-none"></div>
           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
           <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
           
-          <div class="relative flex flex-col sm:flex-row gap-6 sm:gap-8 items-center">
+          <!-- Contenu principal : flex-1 pour prendre l'espace -->
+          <div class="relative flex flex-col sm:flex-row gap-6 sm:gap-10 items-center flex-1 p-6 sm:p-10">
             <!-- Image de la carte -->
             <div class="flex-shrink-0 relative">
               <div class="absolute inset-0 bg-gradient-to-br from-gold/20 to-transparent rounded-2xl blur-xl scale-110"></div>
-              <img id="guide-card-image" src="" alt="Carte tirée" class="relative rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.4),0_0_20px_rgba(212,175,55,0.2)]" style="width: clamp(120px, 30vw, 220px); height: auto; object-fit: contain;" />
+              <img id="guide-card-image" src="" alt="Carte tirée" class="relative rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.4),0_0_20px_rgba(212,175,55,0.2)]" style="width: clamp(150px, 28vw, 260px); height: auto; object-fit: contain;" />
             </div>
             
             <!-- Texte -->
-            <div class="flex-1 text-center sm:text-left space-y-2 w-full">
+            <div class="flex-1 text-center sm:text-left w-full flex flex-col gap-3">
               <!-- Famille -->
-              <div class="text-gold/90 text-base sm:text-lg uppercase tracking-[0.15em] mb-2 font-cinzel" id="guide-family"></div>
+              <div class="text-gold/90 text-sm sm:text-base uppercase tracking-[0.2em] font-cinzel" id="guide-family"></div>
               
               <!-- Nom de la carte -->
-              <div class="text-light-gold text-xl sm:text-2xl mb-3 font-cormorant" id="guide-card-name"></div>
+              <div class="text-light-gold text-2xl sm:text-3xl font-cormorant font-semibold leading-tight" id="guide-card-name"></div>
               
               <!-- Texte de guidage -->
-              <p class="text-light-gold/90 text-base sm:text-lg mb-4 font-cormorant italic leading-relaxed" id="guide-text"></p>
+              <p class="text-light-gold/85 text-lg sm:text-xl font-cormorant italic leading-relaxed" id="guide-text"></p>
               
               <!-- Séparateur -->
-              <div class="relative my-4">
+              <div class="relative my-2">
                 <div class="w-full h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
                 <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gold rounded-full"></div>
               </div>
               
               <!-- Message d'intégration -->
-              <p class="text-gray-300/90 text-sm sm:text-base mb-3 font-light">Prenez un instant pour intégrer cette carte...</p>
+              <p class="text-gray-300/80 text-sm sm:text-base font-light">Prenez un instant pour intégrer cette carte...</p>
               
               <!-- Nombre de cartes restantes dans Actions -->
-              <div id="guide-actions-count" class="text-gray-400/80 text-sm mb-4 font-light hidden">
+              <div id="guide-actions-count" class="text-gray-400/80 text-sm font-light hidden">
                 <i class="fas fa-layer-group mr-2"></i>
                 <span id="guide-actions-text"></span>
               </div>
-              
-              <!-- Bouton Continuer -->
-              <div class="text-center sm:text-left mt-4">
-                <button id="guide-continue-btn" class="btn-gold px-8 py-3 text-sm sm:text-base touch-target">
-                  <i class="fas fa-arrow-right mr-2"></i>Continuer
-                </button>
-              </div>
             </div>
+          </div>
+          
+          <!-- Bouton Continuer : centré, espacement égal avec le texte au-dessus et le bas du cadre -->
+          <div class="relative flex justify-center items-center py-6 sm:py-8" style="border-top: 1px solid rgba(212,175,55,0.15);">
+            <button id="guide-continue-btn" class="btn-gold px-10 py-3.5 text-base sm:text-lg touch-target">
+              <i class="fas fa-arrow-right mr-2"></i>Continuer
+            </button>
           </div>
         </div>
       </div>
@@ -2595,6 +2834,41 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
 
 // --- helpers ---
 
+  // Anime l'apparition d'un overlay (fond) et son panneau intérieur
+  function animateModalIn(overlayEl, panelEl, panelClass) {
+    if (!overlayEl) return;
+    // Fond
+    overlayEl.style.animation = 'none';
+    void overlayEl.offsetWidth;
+    overlayEl.style.animation = 'modalOverlayIn 0.3s ease forwards';
+    // Panneau
+    if (panelEl) {
+      panelEl.style.animation = 'none';
+      void panelEl.offsetWidth;
+      panelEl.style.animation = (panelClass || 'modalPanelIn') + ' 0.42s cubic-bezier(0.22,1,0.36,1) forwards';
+    }
+  }
+
+  // Affiche la boussole 3 secondes puis navigue vers une URL
+  function showCompassThenNavigate(url) {
+    const overlay = document.getElementById('oradia-compass-overlay');
+    if (!overlay) { window.location.href = url; return; }
+
+    overlay.classList.remove('hidden');
+    overlay.style.animation = '';
+    overlay.style.opacity = '1';
+
+    // Forcer le redémarrage des animations CSS enfants
+    const img = overlay.querySelector('.compass-logo-img');
+    const needle = overlay.querySelector('.compass-needle');
+    [img, needle].forEach(node => { if(node){ node.style.animation='none'; void node.offsetWidth; node.style.animation=''; } });
+
+    setTimeout(() => {
+      overlay.style.animation = 'compassFadeOut 0.5s ease forwards';
+      setTimeout(() => { window.location.href = url; }, 500);
+    }, 3000);
+  }
+
   // Afficher le message de guidage après avoir tiré une carte
   function showGuideMessage(familyKey, cardData) {
     if (!guideMessage || !guideFamily || !guideText) {
@@ -2649,6 +2923,9 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
     }
     
     guideMessage.classList.remove('hidden');
+    // Animation d'apparition
+    const guidePanel = guideMessage.querySelector('.bg-gradient-to-br');
+    animateModalIn(guideMessage, guidePanel, 'modalPanelIn');
     isGuideMessageShown = true; // Bloquer les clics sur les autres cartes
     isCardFlipping = false; // Le guide prend le relais, on libère ce verrou
 
@@ -3065,10 +3342,13 @@ function showToreAnalysisCTA() {
     const targetEl  = card.querySelector('.tore-card-inner') || card;
     const targetRect = targetEl.getBoundingClientRect();
 
-    const startX = coinRect.left  + coinRect.width  / 2;
-    const startY = coinRect.top   + coinRect.height / 2;
-    const endX   = targetRect.left + targetRect.width  / 2;
-    const endY   = targetRect.top  + targetRect.height / 2;
+    // getBoundingClientRect → coords viewport → ajouter scroll pour coords document
+    const sx = window.scrollX || window.pageXOffset || 0;
+    const sy = window.scrollY || window.pageYOffset || 0;
+    const startX = coinRect.left  + coinRect.width  / 2 + sx;
+    const startY = coinRect.top   + coinRect.height / 2 + sy;
+    const endX   = targetRect.left + targetRect.width  / 2 + sx;
+    const endY   = targetRect.top  + targetRect.height / 2 + sy;
     const dist   = Math.sqrt((endX-startX)**2 + (endY-startY)**2);
 
     // Récupérer le SVG (ou le recréer si ce n'est pas un SVG)
@@ -3077,7 +3357,10 @@ function showToreAnalysisCTA() {
       if (arrow) arrow.remove();
       arrow = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       arrow.id = 'tore-arrow';
-      arrow.style.cssText = 'position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:70;overflow:visible;';
+      // position:absolute ancrée au coin (0,0) du document → immune au scroll
+      arrow.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:70;overflow:visible;';
+      // S'assurer que le body est bien le conteneur de positionnement
+      if (document.body.style.position !== 'relative') document.body.style.position = 'relative';
       document.body.appendChild(arrow);
     }
 
@@ -3773,33 +4056,76 @@ if (previewOverlay) {
       fanCardsHTML += `<div class="tore-fan-card" data-slot="${i}"></div>`;
     }
 
+    // Récupérer le contenu actuel de la modale polarity pour l'afficher à gauche
+    const polarityModal = document.getElementById('tore-polarity-reveal');
+    const polarityInner = document.getElementById('tore-polarity-inner');
+    const polarityCloneHTML = polarityInner ? polarityInner.outerHTML.replace(/id="/g, 'id="clone-') : '';
+
+    overlay.classList.add('bridge-split');
+
     overlay.innerHTML = `
+      <!-- Gauche : résumé comparaison polarité -->
+      <div class="bridge-polarity-side">
+        <div style="width:100%;background:linear-gradient(135deg,#0a1628,#0d1f3c);border:2px solid rgba(212,175,55,0.4);border-radius:20px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,0.7);position:relative;overflow:hidden;">
+          <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.7),transparent);"></div>
+          <div style="text-align:center;margin-bottom:12px;">
+            <p style="font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:rgba(212,175,55,0.55);font-family:'Cinzel',serif;" id="clone-polarity-family"></p>
+          </div>
+          <div style="display:flex;align-items:center;justify-content:center;gap:18px;margin:12px 0;">
+            <div style="text-align:center;">
+              <div id="clone-coin-sym" style="font-size:44px;line-height:1;"></div>
+              <span style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.4);font-family:'Cormorant Garamond',Georgia,serif;">Pièce</span>
+            </div>
+            <div id="clone-operator" style="font-size:28px;font-weight:700;color:rgba(231,76,60,0.9);text-shadow:0 0 12px rgba(231,76,60,0.6);">≠</div>
+            <div style="text-align:center;">
+              <div id="clone-card-sym" style="font-size:44px;line-height:1;"></div>
+              <span style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.4);font-family:'Cormorant Garamond',Georgia,serif;">Carte</span>
+            </div>
+          </div>
+          <div style="width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.25),transparent);margin:10px 0;"></div>
+          <div style="text-align:center;">
+            <div style="font-family:'Cinzel',serif;font-size:16px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(231,76,60,0.9);">Passerelle</div>
+            <p style="font-size:11px;color:rgba(216,191,114,0.5);font-family:'Lora',Georgia,serif;font-style:italic;margin-top:6px;line-height:1.4;">Une carte passerelle viendra<br>relier ces deux polarités.</p>
+          </div>
+          <div style="position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.7),transparent);"></div>
+        </div>
+      </div>
 
+      <!-- Droite : éventail -->
       <div class="tore-extra-panel">
-
         <h3>Carte passerelle</h3>
-
         <p>Choisis une carte dans la famille&nbsp;<strong>${famLabel}</strong>.</p>
-
         <div class="tore-extra-fan relative">
-
-          <!-- Lueur subtile derrière l'éventail -->
           <div class="absolute inset-0 bg-gradient-to-br from-gold/10 via-transparent to-blue-900/10 rounded-2xl blur-xl"></div>
-          
-          <!-- Cartes de l'éventail avec espacement amélioré -->
           <div class="relative flex justify-center items-center gap-3 p-4">
             ${fanCardsHTML}
           </div>
-
         </div>
-
-             </div>
-
+      </div>
     `;
+
+    // Alimenter les clones avec les valeurs réelles de la modale polarity
+    const origCoinSym = document.getElementById('tore-polarity-coin-symbol');
+    const origCardSym = document.getElementById('tore-polarity-card-symbol');
+    const origFamily  = document.getElementById('tore-polarity-family');
+    if (origCoinSym) { const el = overlay.querySelector('#clone-coin-sym'); if(el){el.textContent=origCoinSym.textContent;el.style.color=origCoinSym.style.color;} }
+    if (origCardSym) { const el = overlay.querySelector('#clone-card-sym'); if(el){el.textContent=origCardSym.textContent;el.style.color=origCardSym.style.color;} }
+    if (origFamily)  { const el = overlay.querySelector('#clone-polarity-family'); if(el){el.textContent=origFamily.textContent;} }
+
+    // Masquer la modale polarity (l'info est maintenant dans l'overlay)
+    if (polarityModal) polarityModal.classList.add('hidden');
 
 
 
     document.body.appendChild(overlay);
+    // Animation d'apparition overlay bridge-split
+    overlay.style.animation = 'none';
+    void overlay.offsetWidth;
+    overlay.style.animation = 'modalOverlayIn 0.35s ease forwards';
+    const polSide = overlay.querySelector('.bridge-polarity-side > div');
+    const fanPanel = overlay.querySelector('.tore-extra-panel');
+    if (polSide) { polSide.style.animation = 'none'; void polSide.offsetWidth; polSide.style.animation = 'modalPanelInLeft 0.4s cubic-bezier(0.22,1,0.36,1) 0.06s both'; }
+    if (fanPanel) { fanPanel.style.animation = 'none'; void fanPanel.offsetWidth; fanPanel.style.animation = 'modalPanelIn 0.44s cubic-bezier(0.22,1,0.36,1) 0.14s both'; }
 
 // afficher les dos Oradia dans l'éventail
 
@@ -3981,6 +4307,8 @@ function showArrowForStep(stepIndex, isMatch) {
     });
 
     modal.classList.remove('hidden');
+    // Animation d'apparition
+    animateModalIn(modal, document.getElementById('tore-polarity-inner'), 'modalPanelInBottom');
 
     // Bouton Continuer
     if (continueBtn) {
@@ -4222,7 +4550,8 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   }
   if (cards.length > 0) {
     sessionStorage.setItem('tore_cards', JSON.stringify(cards));
-    window.location.href = 'tore-analysis.html';
+    // Afficher la boussole 3s puis naviguer
+    showCompassThenNavigate('tore-analysis.html');
   }
 });
 
