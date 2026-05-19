@@ -798,7 +798,7 @@
             const sendEmail = confirm('Envoyer un email de suivi au client ?');
 
             try {
-                const response = await fetch('/api/admin/update-shipping', {
+                const response = await fetch('/api/admin/data', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
