@@ -480,5 +480,121 @@ backToTopBtn.addEventListener('click', () => {
 });
 </script>
 
+<!-- Pop-up Newsletter -->
+<div id="newsletter-popup" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(5,10,20,0.85);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;">
+  <div style="position:relative;max-width:480px;width:100%;background:linear-gradient(135deg,#0a1628 0%,#051428 100%);border:1px solid rgba(212,175,55,0.4);box-shadow:0 20px 60px rgba(0,0,0,0.6),0 0 40px rgba(212,175,55,0.08);padding:48px 40px 40px;">
+    
+    <!-- Bouton fermer -->
+    <button onclick="closeNewsletterPopup()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:rgba(212,175,55,0.5);font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;transition:color 0.2s;" onmouseover="this.style.color='#d4af37'" onmouseout="this.style.color='rgba(212,175,55,0.5)'">✕</button>
+
+    <!-- Icône décorative -->
+    <div style="text-align:center;margin-bottom:24px;">
+      <div style="display:inline-block;width:56px;height:56px;border:1px solid rgba(212,175,55,0.3);border-radius:50%;line-height:56px;font-size:24px;">✦</div>
+    </div>
+
+    <!-- Titre -->
+    <h2 style="margin:0 0 8px;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:300;text-align:center;letter-spacing:2px;text-transform:uppercase;">Rejoindre l'univers</h2>
+    <p style="margin:0 0 24px;color:#d8bf72;font-family:'Lora',Georgia,serif;font-size:14px;font-style:italic;text-align:center;line-height:1.6;">Sois informé(e) en priorité des nouvelles cartes,<br>tirages et de l'ouverture des précommandes.</p>
+
+    <!-- Séparateur -->
+    <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:0 auto 28px;"></div>
+
+    <!-- Formulaire -->
+    <form id="popup-newsletter-form" onsubmit="submitNewsletterPopup(event)" style="display:flex;flex-direction:column;gap:12px;">
+      <input 
+        type="email" 
+        id="popup-email" 
+        placeholder="ton@email.fr" 
+        required
+        style="background:rgba(255,255,255,0.05);border:1px solid rgba(212,175,55,0.3);color:#e8e9eb;font-family:'Lora',Georgia,serif;font-size:14px;padding:14px 18px;outline:none;transition:border-color 0.2s;"
+        onfocus="this.style.borderColor='rgba(212,175,55,0.7)'"
+        onblur="this.style.borderColor='rgba(212,175,55,0.3)'"
+      />
+      <button 
+        type="submit"
+        style="background:linear-gradient(135deg,#d4af37,#f0c75e);color:#0a1628;font-family:'Lora',Georgia,serif;font-size:14px;font-weight:600;padding:14px;border:none;cursor:pointer;letter-spacing:0.5px;transition:opacity 0.2s;"
+        onmouseover="this.style.opacity='0.9'"
+        onmouseout="this.style.opacity='1'"
+      >
+        Rejoindre la liste d'attente
+      </button>
+    </form>
+
+    <!-- Message succès (caché) -->
+    <div id="popup-success" style="display:none;text-align:center;padding:16px 0;">
+      <p style="color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;margin:0 0 8px;">✦ Merci ✦</p>
+      <p style="color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:13px;margin:0;">Tu feras partie des premiers informés.</p>
+    </div>
+
+    <!-- Lien fermeture discret -->
+    <p style="text-align:center;margin:20px 0 0;">
+      <button onclick="closeNewsletterPopup()" style="background:none;border:none;color:rgba(156,163,175,0.6);font-family:'Lora',Georgia,serif;font-size:12px;cursor:pointer;text-decoration:underline;">Non merci, continuer sans</button>
+    </p>
+  </div>
+</div>
+
+<script>
+(function() {
+  const POPUP_KEY = 'oradia_newsletter_popup_shown';
+
+  // Ne pas afficher si déjà vu ou déjà inscrit
+  if (localStorage.getItem(POPUP_KEY)) return;
+
+  function showPopup() {
+    const popup = document.getElementById('newsletter-popup');
+    if (!popup) return;
+    popup.style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  // Déclencheur 1 : après 40 secondes
+  const timer = setTimeout(showPopup, 40000);
+
+  // Déclencheur 2 : exit intent (souris vers le haut de la page)
+  document.addEventListener('mouseleave', function(e) {
+    if (e.clientY <= 10) {
+      clearTimeout(timer);
+      showPopup();
+    }
+  }, { once: true });
+})();
+
+function closeNewsletterPopup() {
+  const popup = document.getElementById('newsletter-popup');
+  popup.style.display = 'none';
+  document.body.style.overflow = '';
+  localStorage.setItem('oradia_newsletter_popup_shown', '1');
+}
+
+async function submitNewsletterPopup(e) {
+  e.preventDefault();
+  const email = document.getElementById('popup-email').value.trim();
+  if (!email) return;
+
+  try {
+    const res = await fetch('/api/waitlist', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ email })
+    });
+
+    if (res.ok) {
+      document.getElementById('popup-newsletter-form').style.display = 'none';
+      document.getElementById('popup-success').style.display = 'block';
+      localStorage.setItem('oradia_newsletter_popup_shown', '1');
+      setTimeout(closeNewsletterPopup, 3000);
+    }
+  } catch (err) {
+    // Ferme quand même pour ne pas bloquer l'utilisateur
+    closeNewsletterPopup();
+  }
+}
+
+// Fermer avec Echap
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closeNewsletterPopup();
+});
+</script>
+
 </body>
 </html>
