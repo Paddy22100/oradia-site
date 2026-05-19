@@ -530,6 +530,11 @@
     box-shadow: 0 0 0 3px rgba(212,175,55,0.6), 0 0 20px rgba(212,175,55,0.4);
   }
 
+  @keyframes slideUpGuide {
+    from { transform: translateY(100%); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+
   @keyframes pulse-next-card {
     0%, 100% {
       box-shadow: 0 0 0 3px rgba(212,175,55,0.6), 0 0 20px rgba(212,175,55,0.4);
@@ -537,6 +542,46 @@
     50% {
       box-shadow: 0 0 0 5px rgba(212,175,55,0.8), 0 0 30px rgba(212,175,55,0.6);
     }
+  }
+
+  /* Carte en cours de flip : toujours pleine luminosité */
+  #tore-immersif .tore-board-7.has-active-card .tore-card.just-flipped {
+    opacity: 1 !important;
+    filter: none !important;
+  }
+
+  /* Cartes inactives : atténuées mais encore visibles */
+  #tore-immersif .tore-board-7.has-active-card .tore-card:not(.next-to-draw):not(.flipped):not(.just-flipped) {
+    opacity: 0.45;
+    filter: brightness(0.6) saturate(0.4);
+    pointer-events: none;
+    cursor: default;
+    transition: opacity 0.35s ease, filter 0.35s ease;
+  }
+
+  /* Carte active : pleine luminosité */
+  #tore-immersif .tore-board-7.has-active-card .tore-card.next-to-draw {
+    opacity: 1;
+    filter: none;
+    z-index: 10;
+    position: relative;
+    transition: opacity 0.35s ease, filter 0.35s ease;
+  }
+
+  /* Cartes déjà retournées : légèrement atténuées */
+  #tore-immersif .tore-board-7.has-active-card .tore-card.flipped {
+    opacity: 0.6;
+    filter: brightness(0.7) saturate(0.5);
+    pointer-events: none;
+    transition: opacity 0.35s ease, filter 0.35s ease;
+  }
+
+  /* Retour à la normale quand plus de carte active */
+  #tore-immersif .tore-board-7:not(.has-active-card) .tore-card {
+    opacity: 1;
+    filter: none;
+    pointer-events: auto;
+    transition: opacity 0.35s ease, filter 0.35s ease;
   }
 
   .tore-card.flipped .tore-card-front {
@@ -1674,6 +1719,19 @@
     <i class="fas fa-arrow-left mr-2"></i>Quitter le tirage
   </button>
 
+  <!-- Toast de guidage fixe en bas d'écran (visible pendant toute la phase de tirage des cartes) -->
+  <div id="tore-step-guide" class="hidden fixed bottom-0 left-0 right-0 z-50"
+    style="background:linear-gradient(to top, rgba(2,8,20,0.98) 0%, rgba(5,18,40,0.95) 100%);border-top:2px solid rgba(212,175,55,0.7);backdrop-filter:blur(16px);padding:14px 20px 18px;box-shadow:0 -8px 32px rgba(0,0,0,0.7), 0 -1px 0 rgba(212,175,55,0.15);animation:slideUpGuide 0.4s ease forwards;">
+    <div style="max-width:640px;margin:0 auto;display:flex;align-items:center;gap:14px;">
+      <div id="tore-step-dots" style="display:flex;gap:6px;flex-shrink:0;"></div>
+      <div style="flex:1;min-width:0;">
+        <p id="tore-step-label" class="cormorant" style="color:#f0c75e;font-size:clamp(16px,3vw,19px);margin:0 0 3px;font-weight:700;letter-spacing:0.03em;"></p>
+        <p id="tore-step-instruction" style="color:rgba(216,191,114,0.85);font-size:clamp(12px,2.5vw,14px);margin:0;font-family:'Lora',Georgia,serif;font-style:italic;"></p>
+      </div>
+      <div style="flex-shrink:0;color:rgba(212,175,55,0.5);font-size:20px;line-height:1;">✦</div>
+    </div>
+  </div>
+
   <div class="relative z-10 container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
 
     <!-- FORMULAIRE D'INTENTION -->
@@ -1757,9 +1815,7 @@
 
       <div id="tore-board" class="hidden relative z-10 mt-10">
 
-        <h3 class="cormorant text-base sm:text-xl text-gold mb-4 sm:mb-6 text-center px-2">
-          Suivez l'ordre indiqué pour retourner les 7 cartes, puis lancez la pièce 6 fois.
-        </h3>
+        <!-- Bandeau de guidage contextuel (rendu fixed via CSS, positionné ici dans le DOM) -->
 
         <div class="tore-board-7">
 
@@ -2387,6 +2443,7 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
   let isGuideMessageShown = false; // Bloquer les clics pendant le message de guidage
   let isCoinAnimating = false; // Bloquer les clics pendant l'animation de la pièce
   let isBridgeFanOpen = false; // Bloquer les clics pendant l'éventail de cartes passerelles
+  let isCardFlipping = false; // Bloquer les clics pendant l'animation de retournement
 
   let coinThrowIndex = 0; // Index pour les lancers de pièce (0-5 pour les 6 familles)
 
@@ -2414,10 +2471,16 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
 
   // Afficher le message de guidage après avoir tiré une carte
   function showGuideMessage(familyKey, cardData) {
-    if (!guideMessage || !guideFamily || !guideText) return;
+    if (!guideMessage || !guideFamily || !guideText) {
+      isCardFlipping = false;
+      return;
+    }
     
     const step = STEPS_TORE.find(s => s.key === familyKey);
-    if (!step || !step.guide) return;
+    if (!step || !step.guide) {
+      isCardFlipping = false;
+      return;
+    }
     
     guideFamily.textContent = step.label;
     
@@ -2461,7 +2524,8 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
     
     guideMessage.classList.remove('hidden');
     isGuideMessageShown = true; // Bloquer les clics sur les autres cartes
-    
+    isCardFlipping = false; // Le guide prend le relais, on libère ce verrou
+
     // Bloquer les interactions avec le plateau
     if (boardHost) {
       boardHost.style.pointerEvents = 'none';
@@ -2476,29 +2540,40 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
       // Ajouter le nouveau listener
       newBtn.addEventListener('click', () => {
         guideMessage.classList.add('hidden');
-        isGuideMessageShown = false; // Débloquer les clics
+        isGuideMessageShown = false;
         
-        // Débloquer les interactions avec le plateau
         if (boardHost) {
           boardHost.style.pointerEvents = 'auto';
         }
         
-        // Indiquer la prochaine carte à tirer
-        highlightNextCard();
+        // Vérifier si toutes les cartes sont retournées → afficher la pièce
+        // Sinon, passer à la prochaine carte
+        const total = boardHost ? boardHost.querySelectorAll('.tore-card').length : 0;
+        const flipped = boardHost ? boardHost.querySelectorAll('.tore-card.flipped').length : 0;
+        if (total > 0 && flipped === total) {
+          boardHost.classList.remove('has-active-card'); // toutes retournées : lever l'effet
+          setTimeout(() => showCoinAfterAllCards(), 400);
+        } else {
+          setTimeout(() => highlightNextCard(), 400);
+        }
       });
     } else if (guideContinueBtn) {
-      // Si le bouton existe mais n'a pas de parentNode, ajouter directement le listener
       guideContinueBtn.addEventListener('click', () => {
         guideMessage.classList.add('hidden');
-        isGuideMessageShown = false; // Débloquer les clics
+        isGuideMessageShown = false;
         
-        // Débloquer les interactions avec le plateau
         if (boardHost) {
           boardHost.style.pointerEvents = 'auto';
         }
         
-        // Indiquer la prochaine carte à tirer
-        highlightNextCard();
+        const total = boardHost ? boardHost.querySelectorAll('.tore-card').length : 0;
+        const flipped = boardHost ? boardHost.querySelectorAll('.tore-card.flipped').length : 0;
+        if (total > 0 && flipped === total) {
+          boardHost.classList.remove('has-active-card');
+          setTimeout(() => showCoinAfterAllCards(), 400);
+        } else {
+          setTimeout(() => highlightNextCard(), 400);
+        }
       });
     }
   }
@@ -2511,27 +2586,94 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
     boardHost.querySelectorAll('.tore-card').forEach(c => {
       c.classList.remove('next-to-draw');
     });
+    const toreBoard7 = boardHost; // boardHost est déjà .tore-board-7
     
     // Vérifier si toutes les cartes sont retournées pour afficher la pièce
     const totalCards = boardHost.querySelectorAll('.tore-card').length;
     const flippedCards = boardHost.querySelectorAll('.tore-card.flipped').length;
     
     if (totalCards > 0 && flippedCards === totalCards) {
-      // Toutes les cartes sont retournées : attendre que le guide soit fermé avant d'afficher la pièce
-      if (!isGuideMessageShown) {
-        showCoinAfterAllCards();
-      }
-      // Si le guide est ouvert, showCoinAfterAllCards sera appelé par le bouton Continuer
+      // Toutes les cartes sont retournées
+      // La pièce sera affichée UNIQUEMENT via le bouton Continuer du guide Mémoire Cosmos
+      if (toreBoard7) toreBoard7.classList.remove('has-active-card');
+      updateStepGuide(null, flippedCards, totalCards);
       return;
     }
     
     // Trouver la prochaine carte non retournée selon TIRAGE_ORDER
+    let nextFamilyFound = null;
     for (const familyKey of TIRAGE_ORDER) {
       const card = boardHost.querySelector(`.tore-card[data-family="${familyKey}"]`);
       if (card && !card.classList.contains('flipped')) {
         card.classList.add('next-to-draw');
+        nextFamilyFound = familyKey;
         break;
       }
+    }
+
+    // Activer/désactiver le focus visuel sur le plateau
+    if (toreBoard7) {
+      if (nextFamilyFound) {
+        toreBoard7.classList.add('has-active-card');
+      } else {
+        toreBoard7.classList.remove('has-active-card');
+      }
+    }
+
+    // Mettre à jour le bandeau de guidage
+    updateStepGuide(nextFamilyFound, flippedCards, totalCards);
+  }
+
+  function updateStepGuide(nextFamily, flippedCount, totalCount) {
+    const label = document.getElementById('tore-step-label');
+    const instruction = document.getElementById('tore-step-instruction');
+    const dotsContainer = document.getElementById('tore-step-dots');
+    if (!label || !instruction || !dotsContainer) return;
+
+    const FAMILY_NAMES = {
+      emotions: 'Émotions',
+      besoins: 'Besoins',
+      transmutation: 'Transmutation',
+      archetypes: 'Archétypes',
+      revelations: 'Révélations',
+      actions: 'Actions',
+      memoire_cosmos: 'Mémoire Cosmos'
+    };
+
+    // Mise à jour des points de progression
+    dotsContainer.innerHTML = '';
+    TIRAGE_ORDER.forEach((fam, i) => {
+      const dot = document.createElement('div');
+      const isFlipped = boardHost.querySelector(`.tore-card[data-family="${fam}"].flipped`);
+      const isNext = fam === nextFamily;
+      dot.style.cssText = `width:8px;height:8px;border-radius:50%;transition:all 0.3s ease;${
+        isFlipped
+          ? 'background:#d4af37;box-shadow:0 0 4px rgba(212,175,55,0.6);'
+          : isNext
+            ? 'background:rgba(212,175,55,0.5);border:1px solid #d4af37;transform:scale(1.3);'
+            : 'background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.2);'
+      }`;
+      dotsContainer.appendChild(dot);
+    });
+
+    if (!nextFamily) {
+      // Toutes les cartes retournées → phase pièce
+      label.textContent = 'Toutes les cartes sont révélées ✦';
+      instruction.textContent = 'Lancez maintenant la pièce de tirage pour chaque famille.';
+    } else {
+      const cardNum = flippedCount + 1;
+      const famName = FAMILY_NAMES[nextFamily] || nextFamily;
+      label.textContent = `Carte ${cardNum} / ${totalCount} — ${famName}`;
+      const tips = {
+        emotions: 'Cliquez sur la carte qui brille pour la révéler.',
+        besoins: 'Respirez et posez votre intention. Cliquez sur la carte dorée.',
+        transmutation: 'Qu\'est-ce qui cherche à se transformer en vous ? Cliquez.',
+        archetypes: 'Quelle énergie vous traverse ? Retournez la carte.',
+        revelations: 'Ce qui se révèle maintenant. Cliquez pour découvrir.',
+        actions: 'Quelle action s\'offre à vous ? Retournez la carte.',
+        memoire_cosmos: 'La dernière carte — la mémoire qui relie tout. Cliquez.'
+      };
+      instruction.textContent = tips[nextFamily] || 'Cliquez sur la carte qui brille pour la révéler.';
     }
   }
 
@@ -2545,10 +2687,12 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
       coinWrapper.classList.remove('hidden');
       if (coin) {
         coin.classList.remove('spin', 'ripple');
-        coin.classList.add('glow');   // halo pulsant avant le lancer
+        coin.classList.add('glow');
       }
-      // Réinitialiser l'index des lancers de pièce
       coinThrowIndex = 0;
+      // Masquer le toast de guidage : la phase pièce prend le relais
+      const sg = el('tore-step-guide');
+      if (sg) sg.classList.add('hidden');
     }
   }
 }
@@ -2939,6 +3083,8 @@ arrowHideTimer = setTimeout(() => {
     form.classList.remove('hidden');
 
     boardWrap.classList.add('hidden');
+    const stepGuideHide = el('tore-step-guide');
+    if (stepGuideHide) stepGuideHide.classList.add('hidden');
 
     if (boardHost) boardHost.innerHTML = '';
 
@@ -3163,6 +3309,8 @@ function closeToreExitModal(){
 
 
     boardWrap.classList.remove('hidden');
+    const stepGuide = el('tore-step-guide');
+    if (stepGuide) stepGuide.classList.remove('hidden');
 
 
 
@@ -3202,19 +3350,13 @@ function closeToreExitModal(){
         if (card.classList.contains('flipped')) return;
 
         // BLOQUER les clics si le message de guidage est affiché
-        if (isGuideMessageShown) {
-          return;
-        }
-        
+        if (isGuideMessageShown) return;
         // BLOQUER les clics si l'éventail de cartes passerelles est ouvert
-        if (isBridgeFanOpen) {
-          return;
-        }
-        
+        if (isBridgeFanOpen) return;
         // BLOQUER les clics si la pièce est en train d'être lancée
-        if (isCoinAnimating) {
-          return;
-        }
+        if (isCoinAnimating) return;
+        // BLOQUER les clics si une carte est en cours de retournement
+        if (isCardFlipping) return;
 
 
 
@@ -3223,35 +3365,12 @@ function closeToreExitModal(){
         
 
         // BLOQUER le tirage si ce n'est pas la bonne famille selon l'ordre
+        // (sécurité JS en complément du pointer-events CSS)
 
         const expectedFamily = TIRAGE_ORDER[toreThrowIndex];
 
         if (famKey !== expectedFamily) {
-
-          // Afficher un message visuel temporaire
-
-          const label = card.querySelector('.tore-family-label');
-
-          if (label) {
-
-            const originalText = label.textContent;
-
-            label.textContent = `Tirez d'abord ${STEPS_TORE.find(s => s.key === expectedFamily)?.label || expectedFamily}`;
-
-            label.style.color = '#ff6b6b';
-
-            setTimeout(() => {
-
-              label.textContent = originalText;
-
-              label.style.color = '';
-
-            }, 2000);
-
-          }
-
-          return; // Bloquer le clic
-
+          return;
         }
 
         
@@ -3332,20 +3451,18 @@ function closeToreExitModal(){
 
 
 
-        card.classList.add('flipped');
+        isCardFlipping = true; // Verrouiller immédiatement
+        card.classList.remove('next-to-draw');
+        card.classList.add('flipped', 'just-flipped'); // just-flipped = exclue de l'atténuation
 
         // Incrémenter l'index de tirage pour passer à la famille suivante
         toreThrowIndex++;
 
         // Afficher le message de guidage APRÈS l'animation flip (1 seconde)
         setTimeout(() => {
+          card.classList.remove('just-flipped'); // retirer l'exception
           showGuideMessage(famKey, data);
         }, 1000);
-
-        // Mettre à jour le highlight (600ms) — la pièce n'apparaît que si le guide est fermé
-        setTimeout(() => {
-          highlightNextCard();
-        }, 600);
 
 
 
