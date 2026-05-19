@@ -1285,7 +1285,7 @@
                 console.log('Données envoyées au backend:', orderData);
 
                 // Créer la session Stripe
-                const response = await fetch('/api/create-checkout-session', {
+                const response = await fetch('/api/payments/create-checkout-session', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1342,7 +1342,7 @@
                         delivery_method: selectedDelivery,
                         total_eur: Number(checkoutTotal.toFixed(2))
                     });
-                    window.location.href = `/api/stripe-redirect?session_id=${encodeURIComponent(responseData.sessionId)}`;
+                    window.location.href = `https://checkout.stripe.com/pay/${encodeURIComponent(responseData.sessionId)}`;
                     return;
                 }
 

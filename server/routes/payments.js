@@ -235,9 +235,19 @@ router.post('/create-checkout-session', validatePreorder, async (req, res) => {
             totalAmount
         });
 
+        if (!session.success) {
+            console.error('Erreur service Stripe:', session.error);
+            return res.status(500).json({
+                success: false,
+                message: 'Erreur lors de la création de la session de paiement',
+                details: session.error
+            });
+        }
+
         res.json({
             success: true,
-            sessionId: session.id,
+            sessionId: session.sessionId,
+            url: session.url,
             message: 'Session de paiement créée avec succès'
         });
 
