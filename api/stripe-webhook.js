@@ -116,7 +116,7 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
               <p style="margin:0 0 28px 0;color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;">
                 ${isDonation 
                     ? 'Avec une profonde gratitude, nous te remercions pour ton soutien à ORADIA. Ta contribution nous aide à partager la sagesse de l\'Oracle avec celles et ceux qui en ont besoin.'
-                    : 'C\'est avec joie que nous confirmons ta précommande. Ton Oracle est désormais en préparation, façonné avec soin pour t\'accompagner dans ton voyage intérieur.'
+                    : 'C\'est avec joie que nous confirmons ta précommande. Ton Oracle sera façonné avec soin dès le lancement de la production. Tu fais partie des premiers à rejoindre cette aventure.'
                 }
               </p>
 
@@ -148,7 +148,7 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
               <p style="margin:32px 0 0 0;color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;">
                 ${isDonation 
                     ? 'Ton soutien nous permet de poursuivre notre mission d\'accompagnement des âmes en quête de sens et de transformation.'
-                    : 'Nous te recontacterons personnellement dès que ton Oracle sera prêt à rejoindre ton chemin. En attendant, prépare ton cœur à accueillir sa sagesse.'
+                    : 'Nous te tiendrons informé(e) de l\'avancement de la production et te recontacterons personnellement dès que ton Oracle sera prêt à rejoindre ton chemin.'
                 }
               </p>
 
@@ -166,7 +166,7 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
           <tr>
             <td align="center" style="padding:40px 40px 48px 40px;">
               <p style="margin:0 0 8px 0;color:#9ca3af;font-family:'Lora',Georgia,serif;font-size:13px;font-style:italic;letter-spacing:0.5px;">
-                Avec toute notre gratitude,
+                Avec toute ma gratitude,
               </p>
               <p style="margin:0 0 4px 0;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:600;letter-spacing:1px;">
                 Rudy
@@ -210,16 +210,16 @@ oradia.fr`
 
 Bonjour${toName ? ' ' + toName : ''},
 
-Avec une immense gratitude, nous vous confirmons que votre précommande ORADIA a bien été enregistrée avec succès.
+C'est avec joie que nous confirmons ta précommande. Ton Oracle sera façonné avec soin dès le lancement de la production. Tu fais partie des premiers à rejoindre cette aventure.
 
 Offre choisie : ${offer}
 Montant : ${amountTotal}€
 
-Votre oracle est maintenant en préparation. Nous vous recontacterons personnellement dès qu'il sera prêt à vous accompagner dans votre voyage intérieur.
+Nous te tiendrons informé(e) de l'avancement de la production et te recontacterons personnellement dès que ton Oracle sera prêt à rejoindre ton chemin.
 
-Merci pour votre confiance et pour choisir d'accueillir la sagesse d'ORADIA dans votre vie.
+Merci pour ta confiance et pour accueillir la sagesse d'ORADIA dans ta vie.
 
-Avec toute notre gratitude,
+Avec toute ma gratitude,
 Rudy
 Fondateur d'ORADIA
 oradia.fr`

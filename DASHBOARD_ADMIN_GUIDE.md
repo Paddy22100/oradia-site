@@ -149,15 +149,60 @@
 3. Cliquer sur **"Imprimer les étiquettes"**
 4. Format recommandé : **PDF A4** (4 étiquettes par page)
 
-### Étape 5 : Mise à jour du tracking
-1. Mondial Relay génère les numéros de tracking
-2. Copier les numéros depuis Mondial Relay Connect
-3. Les coller dans le dashboard ORADIA (colonne "Tracking")
-4. Les clients recevront un email avec le lien de suivi
+### Étape 5 : Marquer comme expédié et notifier le client ✨ **NOUVEAU**
+1. Dans le dashboard ORADIA, trouver la commande
+2. Cliquer sur le bouton **"Expédier"** (vert avec icône camion)
+3. Saisir le **numéro de suivi** Mondial Relay (obligatoire)
+4. Saisir le **numéro d'expédition** (optionnel)
+5. Confirmer l'envoi de l'**email de suivi** au client
+6. ✅ La commande passe en statut "Expédié"
+7. 📧 Le client reçoit un email avec :
+   - Le numéro de suivi
+   - Le lien direct vers le tracking Mondial Relay
+   - Les informations du point relais (si applicable)
+   - Un message personnalisé élégant
+
+### Étape 6 : Suivi post-expédition
+1. Le bouton "Expédier" devient "Copier" (violet)
+2. Cliquer pour copier rapidement le numéro de tracking
+3. Le statut de livraison s'affiche en vert "Expédié"
 
 ---
 
-## 🛡️ Sécurité et Validations
+## � Email de Suivi Automatique
+
+### Design de l'email
+L'email de suivi est **cohérent avec l'univers ORADIA** :
+- ✅ **Typographie élégante** : Cormorant Garamond + Lora
+- ✅ **Palette dorée** : Fond sombre mystique avec accents or
+- ✅ **Image de l'Oracle** en header avec overlay dégradé
+- ✅ **Bouton CTA** : "Suivre mon colis" (lien direct Mondial Relay)
+- ✅ **Informations point relais** : Nom, adresse complète
+- ✅ **Signature personnalisée** : Rudy, Fondateur d'ORADIA
+
+### Contenu de l'email
+**Objet** : "Ton Oracle ORADIA est en route ✨"
+
+**Message principal** :
+- Confirmation que l'Oracle a été expédié
+- Numéro de suivi bien visible
+- Informations du point relais (si applicable)
+- Instructions pour le retrait (pièce d'identité requise)
+- Lien direct vers le tracking Mondial Relay
+
+### Quand l'email est envoyé
+- ✅ **Automatiquement** : Quand tu cliques sur "Expédier" et confirmes l'envoi
+- ✅ **Optionnel** : Tu peux choisir de ne pas envoyer l'email (décocher)
+- ✅ **Une seule fois** : L'email n'est envoyé qu'une fois par commande
+
+### Personnalisation
+- Nom du client utilisé dans le message
+- Adaptation du texte selon le mode de livraison (relais vs domicile)
+- Informations du point relais affichées uniquement si applicable
+
+---
+
+## �🛡️ Sécurité et Validations
 
 ### Protection des données
 - ✅ Authentification admin obligatoire (JWT)

@@ -436,6 +436,7 @@
 
             let buttons = [];
 
+            // Si déjà expédié : bouton copier tracking
             if (preorder.tracking_number) {
                 buttons.push(`
                     <button onclick="copyTracking('${preorder.tracking_number}', this)" 
@@ -444,9 +445,18 @@
                         <i class="fas fa-copy"></i> Copier
                     </button>
                 `);
+            } else {
+                // Si pas encore expédié : bouton marquer comme expédié
+                buttons.push(`
+                    <button onclick="markAsShipped(${preorder.id})" 
+                            class="px-3 py-1 bg-green/20 text-green rounded hover:bg-green/30 transition text-xs"
+                            title="Marquer comme expédié">
+                        <i class="fas fa-shipping-fast"></i> Expédier
+                    </button>
+                `);
             }
 
-            return buttons.join('') || '<span class="text-xs text-light-gold/40">-</span>';
+            return buttons.join(' ') || '<span class="text-xs text-light-gold/40">-</span>';
         }
 
         // Charger les données du dashboard
@@ -767,6 +777,56 @@
                 console.error('Erreur copie tracking:', err);
                 alert('Erreur lors de la copie du numéro de suivi');
             });
+        }
+
+        // Marquer une commande comme expédiée
+        async function markAsShipped(orderId) {
+            const order = currentData.preorders.find(p => p.id === orderId);
+            if (!order) {
+                alert('Commande introuvable');
+                return;
+            }
+
+            // Modal de saisie du tracking
+            const trackingNumber = prompt(`Numéro de suivi Mondial Relay pour ${order.full_name}:`);
+            if (!trackingNumber || trackingNumber.trim() === '') {
+                return;
+            }
+
+            const shipmentNumber = prompt('Numéro d\'expédition (optionnel, laisser vide si non applicable):');
+            
+            const sendEmail = confirm('Envoyer un email de suivi au client ?');
+
+            try {
+                const response = await fetch('/api/admin/update-shipping', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        orderId: orderId,
+                        trackingNumber: trackingNumber.trim(),
+                        shipmentNumber: shipmentNumber ? shipmentNumber.trim() : null,
+                        sendEmail: sendEmail
+                    })
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.message || 'Erreur lors de la mise à jour');
+                }
+
+                alert(`✅ Commande marquée comme expédiée${data.emailSent ? ' et email envoyé' : ''} !`);
+                
+                // Recharger les précommandes
+                await loadPreorders();
+
+            } catch (error) {
+                console.error('Erreur markAsShipped:', error);
+                alert('❌ Erreur: ' + error.message);
+            }
         }
 
         // Déconnexion
