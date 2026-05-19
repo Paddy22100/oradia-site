@@ -619,4 +619,66 @@ p {
     .offer-card:hover {
         transform: none !important;
     }
+
+    /* Carte "Guidance incluse" - annuler le scale-105 desktop sur mobile */
+    #guidance-incluse.lg\:scale-105,
+    [class*="lg:scale-105"] {
+        transform: none !important;
+    }
+
+    /* Active states tactiles (remplace le hover) */
+    button:active,
+    a[role="button"]:active,
+    .btn-gold:active,
+    .touch-target:active {
+        transform: scale(0.97) !important;
+        opacity: 0.9;
+        transition: transform 0.1s ease !important;
+    }
+
+    /* Inputs : éviter le zoom automatique iOS (font-size < 16px déclenche le zoom) */
+    input[type="text"],
+    input[type="email"],
+    input[type="tel"],
+    input[type="number"],
+    input[type="password"],
+    select,
+    textarea {
+        font-size: 16px !important;
+        -webkit-appearance: none;
+        appearance: none;
+        border-radius: 0;
+    }
+
+    /* Pop-up newsletter : padding réduit sur petit écran */
+    #newsletter-popup > div {
+        padding: 36px 20px 28px !important;
+        margin: 0 4px !important;
+    }
+
+    #newsletter-popup h2 {
+        font-size: 22px !important;
+    }
+
+    /* Panier : boutons pleine largeur */
+    #checkout-button,
+    #clear-cart-button {
+        padding-left: 1rem !important;
+        padding-right: 1rem !important;
+        font-size: 15px !important;
+    }
+
+    /* Espacements formulaire précommande */
+    #cart-section .p-8 {
+        padding: 1rem !important;
+    }
+
+    /* Overflow des badges "LE PLUS POPULAIRE" */
+    .absolute.-top-4 {
+        top: -12px !important;
+    }
+    .absolute.-top-4 span {
+        font-size: 10px !important;
+        padding: 4px 12px !important;
+    }
 }
