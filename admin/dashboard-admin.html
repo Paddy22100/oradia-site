@@ -93,6 +93,40 @@
         </div>
     </header>
 
+    <!-- Modal Expédition -->
+    <div id="shippingModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm">
+        <div class="bg-[#0a1628] border border-gold/30 rounded-xl p-8 w-full max-w-md mx-4 shadow-2xl">
+            <h3 class="text-gold font-bold text-xl mb-2" style="font-family:'Cormorant Garamond',serif;">Marquer comme expédié</h3>
+            <p class="text-light-gold/70 text-sm mb-6" id="shippingModalName"></p>
+            
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-light-gold/80 text-sm mb-1">Numéro de suivi <span class="text-gold">*</span></label>
+                    <input id="shippingTrackingInput" type="text" placeholder="Ex: 12345678901234"
+                        class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-4 py-2 focus:outline-none focus:border-gold text-sm">
+                </div>
+                <div>
+                    <label class="block text-light-gold/80 text-sm mb-1">Numéro d'expédition <span class="text-light-gold/40">(optionnel)</span></label>
+                    <input id="shippingShipmentInput" type="text" placeholder="Optionnel"
+                        class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-4 py-2 focus:outline-none focus:border-gold text-sm">
+                </div>
+                <label class="flex items-center gap-3 cursor-pointer">
+                    <input id="shippingSendEmailCheckbox" type="checkbox" checked class="w-4 h-4 accent-yellow-500">
+                    <span class="text-light-gold text-sm">Envoyer l'email de suivi au client</span>
+                </label>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button id="shippingModalCancel" class="flex-1 px-4 py-2 border border-gold/30 text-light-gold rounded-lg hover:bg-gold/10 transition text-sm">
+                    Annuler
+                </button>
+                <button id="shippingModalConfirm" class="flex-1 px-4 py-2 bg-gold text-night-blue font-semibold rounded-lg hover:bg-light-gold transition text-sm">
+                    <i class="fas fa-shipping-fast mr-2"></i>Confirmer
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Main Dashboard -->
     <main class="container mx-auto px-6 py-8">
         <!-- KPI Overview -->
@@ -448,7 +482,7 @@
             } else {
                 // Si pas encore expédié : bouton marquer comme expédié
                 buttons.push(`
-                    <button onclick="markAsShipped(${preorder.id})" 
+                    <button onclick="markAsShipped('${preorder.id}')" 
                             class="px-3 py-1 bg-green/20 text-green rounded hover:bg-green/30 transition text-xs"
                             title="Marquer comme expédié">
                         <i class="fas fa-shipping-fast"></i> Expédier
@@ -780,53 +814,77 @@
         }
 
         // Marquer une commande comme expédiée
-        async function markAsShipped(orderId) {
-            const order = currentData.preorders.find(p => p.id === orderId);
+        function markAsShipped(orderId) {
+            const order = currentData.preorders.find(p => String(p.id) === String(orderId) || p.stripe_session_id === orderId);
             if (!order) {
-                alert('Commande introuvable');
+                alert('Commande introuvable (id: ' + orderId + ')');
                 return;
             }
 
-            // Modal de saisie du tracking
-            const trackingNumber = prompt(`Numéro de suivi Mondial Relay pour ${order.full_name}:`);
-            if (!trackingNumber || trackingNumber.trim() === '') {
-                return;
-            }
+            // Afficher le modal
+            const modal = document.getElementById('shippingModal');
+            document.getElementById('shippingModalName').textContent = `Commande de ${order.full_name || order.email}`;
+            document.getElementById('shippingTrackingInput').value = '';
+            document.getElementById('shippingShipmentInput').value = '';
+            document.getElementById('shippingSendEmailCheckbox').checked = true;
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            document.getElementById('shippingTrackingInput').focus();
 
-            const shipmentNumber = prompt('Numéro d\'expédition (optionnel, laisser vide si non applicable):');
-            
-            const sendEmail = confirm('Envoyer un email de suivi au client ?');
+            // Handler Annuler
+            document.getElementById('shippingModalCancel').onclick = () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            };
 
-            try {
-                const response = await fetch('/api/admin/data', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    credentials: 'include',
-                    body: JSON.stringify({
-                        orderId: orderId,
-                        trackingNumber: trackingNumber.trim(),
-                        shipmentNumber: shipmentNumber ? shipmentNumber.trim() : null,
-                        sendEmail: sendEmail
-                    })
-                });
-
-                const data = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(data.message || 'Erreur lors de la mise à jour');
+            // Handler Confirmer
+            document.getElementById('shippingModalConfirm').onclick = async () => {
+                const trackingNumber = document.getElementById('shippingTrackingInput').value.trim();
+                if (!trackingNumber) {
+                    document.getElementById('shippingTrackingInput').classList.add('border-red-500');
+                    document.getElementById('shippingTrackingInput').focus();
+                    return;
                 }
+                document.getElementById('shippingTrackingInput').classList.remove('border-red-500');
 
-                alert(`✅ Commande marquée comme expédiée${data.emailSent ? ' et email envoyé' : ''} !`);
-                
-                // Recharger les précommandes
-                await loadPreorders();
+                const shipmentNumber = document.getElementById('shippingShipmentInput').value.trim();
+                const sendEmail = document.getElementById('shippingSendEmailCheckbox').checked;
 
-            } catch (error) {
-                console.error('Erreur markAsShipped:', error);
-                alert('❌ Erreur: ' + error.message);
-            }
+                const confirmBtn = document.getElementById('shippingModalConfirm');
+                confirmBtn.disabled = true;
+                confirmBtn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>En cours...';
+
+                try {
+                    const response = await fetch('/api/admin/data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        credentials: 'include',
+                        body: JSON.stringify({
+                            orderId: orderId,
+                            trackingNumber,
+                            shipmentNumber: shipmentNumber || null,
+                            sendEmail
+                        })
+                    });
+
+                    const data = await response.json();
+
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+
+                    if (!response.ok) throw new Error(data.message || 'Erreur lors de la mise à jour');
+
+                    alert(`✅ Expédié${data.emailSent ? ' · Email envoyé au client' : ''} !`);
+                    await loadPreorders();
+
+                } catch (error) {
+                    console.error('Erreur markAsShipped:', error);
+                    alert('❌ Erreur : ' + error.message);
+                } finally {
+                    confirmBtn.disabled = false;
+                    confirmBtn.innerHTML = '<i class="fas fa-shipping-fast mr-2"></i>Confirmer';
+                }
+            };
         }
 
         // Déconnexion
