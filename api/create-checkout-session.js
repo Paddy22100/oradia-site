@@ -462,7 +462,8 @@ module.exports = async (req, res) => {
 
         res.json({ 
             success: true,
-            sessionId: session.id
+            sessionId: session.id,
+            url: session.url
         });
 
     } catch (error) {
