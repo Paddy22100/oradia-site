@@ -67,83 +67,116 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
                 },
                 subject: subject,
                 htmlContent: `
-<div style="margin:0;padding:0;background-color:#0b1020;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background-color:#0b1020;margin:0;padding:0;">
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:0;background:#050a14;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#050a14;margin:0;padding:0;">
     <tr>
-      <td align="center" style="padding:40px 16px;">
-
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:620px;background-color:#11182b;border:1px solid #c9a94d;border-radius:16px;overflow:hidden;">
+      <td align="center" style="padding:48px 20px;">
+        
+        <!-- Container principal -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:linear-gradient(135deg, #0a1628 0%, #051428 100%);border:1px solid rgba(212,175,55,0.3);border-radius:0;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
           
+          <!-- Header avec image -->
           <tr>
-            <td align="center" style="padding:32px 24px 16px 24px;background:linear-gradient(180deg,#11182b 0%,#16203a 100%);">
-              <img src="https://oradia.fr/images/medias/apercu_stripe.jpg" alt="ORADIA" width="180" style="display:block;width:180px;max-width:100%;height:auto;border:0;margin:0 auto 20px auto;">
-              <h1 style="margin:0;color:#d4af37;font-family:Georgia,serif;font-size:30px;line-height:1.2;">ORADIA</h1>
-              <p style="margin:8px 0 0 0;color:#d8bf72;font-family:Georgia,serif;font-size:16px;line-height:1.5;font-style:italic;">
-                L'Oracle de ton Âme
+            <td align="center" style="padding:0;position:relative;">
+              <div style="position:relative;width:100%;height:240px;overflow:hidden;">
+                <img src="https://oradia.fr/images/medias/apercu_stripe.jpg" alt="Oracle ORADIA" width="600" style="display:block;width:100%;height:240px;object-fit:cover;border:0;opacity:0.85;">
+                <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(180deg, rgba(5,10,20,0) 0%, rgba(5,10,20,0.95) 100%);"></div>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Titre principal -->
+          <tr>
+            <td align="center" style="padding:32px 40px 24px 40px;">
+              <h1 style="margin:0;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:36px;font-weight:300;line-height:1.2;letter-spacing:2px;text-transform:uppercase;">
+                ${isDonation ? 'Gratitude' : 'Confirmation'}
+              </h1>
+              <div style="width:60px;height:1px;background:linear-gradient(90deg, transparent 0%, #d4af37 50%, transparent 100%);margin:20px auto;"></div>
+              <p style="margin:0;color:#d8bf72;font-family:'Lora',Georgia,serif;font-size:15px;font-style:italic;line-height:1.6;letter-spacing:0.5px;">
+                ${isDonation ? 'Merci pour ton soutien précieux' : 'Ta précommande est bien enregistrée'}
               </p>
             </td>
           </tr>
 
+          <!-- Corps du message -->
           <tr>
-            <td style="padding:32px 30px 20px 30px;font-family:Georgia,serif;color:#f3f4f6;">
-              <h2 style="margin:0 0 22px 0;color:#f0c75e;font-size:28px;line-height:1.3;text-align:center;">
-                ${isDonation ? '✨ Merci pour ton soutien' : '✨ Ta précommande est confirmée'}
-              </h2>
-
-              <p style="margin:0 0 18px 0;font-size:18px;line-height:1.7;color:#ffffff;">
-                Bonjour${toName ? ' ' + toName : ''},
+            <td style="padding:0 40px 32px 40px;">
+              
+              <p style="margin:0 0 24px 0;color:#e8e9eb;font-family:'Lora',Georgia,serif;font-size:16px;line-height:1.8;">
+                ${toName ? toName + ',' : 'Cher(e) ami(e),'}
               </p>
 
-              <p style="margin:0 0 18px 0;font-size:17px;line-height:1.8;color:#e5e7eb;">
+              <p style="margin:0 0 28px 0;color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;">
                 ${isDonation 
-                    ? 'Avec profonde gratitude, nous vous remercions pour votre soutien à ORADIA. Votre contribution nous aide à partager la sagesse de l\'Oracle avec plus de personnes.'
-                    : 'Avec gratitude, nous vous confirmons que votre précommande ORADIA a bien été enregistrée.'
+                    ? 'Avec une profonde gratitude, nous te remercions pour ton soutien à ORADIA. Ta contribution nous aide à partager la sagesse de l\'Oracle avec celles et ceux qui en ont besoin.'
+                    : 'C\'est avec joie que nous confirmons ta précommande. Ton Oracle est désormais en préparation, façonné avec soin pour t\'accompagner dans ton voyage intérieur.'
                 }
               </p>
 
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:26px 0;background-color:#1c2438;border:1px solid #c9a94d;border-radius:10px;">
+              <!-- Encadré détails -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:32px 0;background:rgba(17,24,43,0.6);border-left:3px solid #d4af37;backdrop-filter:blur(10px);">
                 <tr>
-                  <td style="padding:18px 20px;font-family:Georgia,serif;color:#f0c75e;font-size:16px;line-height:1.8;">
-                    <strong>${isDonation ? 'Contribution' : 'Offre'} :</strong> ${offer}<br>
-                    <strong>Montant :</strong> ${amountTotal}€
+                  <td style="padding:24px 28px;">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                      <tr>
+                        <td style="padding:0 0 12px 0;color:#9ca3af;font-family:'Lora',Georgia,serif;font-size:13px;text-transform:uppercase;letter-spacing:1px;">
+                          ${isDonation ? 'Contribution' : 'Offre sélectionnée'}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:0 0 20px 0;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:600;line-height:1.3;">
+                          ${offer}
+                        </td>
+                      </tr>
+                      <tr>
+                        <td style="padding:16px 0 0 0;border-top:1px solid rgba(212,175,55,0.2);color:#e8e9eb;font-family:'Lora',Georgia,serif;font-size:18px;font-weight:600;">
+                          ${amountTotal} €
+                        </td>
+                      </tr>
+                    </table>
                   </td>
                 </tr>
               </table>
 
-              ${isDonation 
-                ? `<p style="margin:0 0 18px 0;font-size:17px;line-height:1.8;color:#e5e7eb;">
-                    Votre soutien précieux nous permet de continuer notre mission d'accompagner les âmes sur leur chemin de transformation.
-                  </p>`
-                : `<p style="margin:0 0 18px 0;font-size:17px;line-height:1.8;color:#e5e7eb;">
-                    Votre oracle est maintenant en préparation. Nous vous recontacterons personnellement dès qu'il sera prêt.
-                  </p>`
-              }
-
-              <p style="margin:0 0 12px 0;font-size:17px;line-height:1.8;color:#e5e7eb;">
+              <p style="margin:32px 0 0 0;color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;">
                 ${isDonation 
-                    ? 'Merci du fond du cœur pour ta générosité et ta confiance en notre vision.'
-                    : 'Merci pour ta confiance et pour accueillir la sagesse d\'ORADIA dans ta vie.'
+                    ? 'Ton soutien nous permet de poursuivre notre mission d\'accompagnement des âmes en quête de sens et de transformation.'
+                    : 'Nous te recontacterons personnellement dès que ton Oracle sera prêt à rejoindre ton chemin. En attendant, prépare ton cœur à accueillir sa sagesse.'
                 }
               </p>
+
             </td>
           </tr>
 
+          <!-- Séparateur décoratif -->
           <tr>
-            <td align="center" style="padding:26px 24px 34px 24px;border-top:1px solid rgba(212,175,55,0.25);background-color:#101728;">
-              <p style="margin:0 0 8px 0;color:#d8bf72;font-family:Georgia,serif;font-size:15px;line-height:1.6;">
-                Avec toute notre gratitude
+            <td align="center" style="padding:0 40px;">
+              <div style="width:100%;height:1px;background:linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.3) 50%, transparent 100%);"></div>
+            </td>
+          </tr>
+
+          <!-- Signature -->
+          <tr>
+            <td align="center" style="padding:40px 40px 48px 40px;">
+              <p style="margin:0 0 8px 0;color:#9ca3af;font-family:'Lora',Georgia,serif;font-size:13px;font-style:italic;letter-spacing:0.5px;">
+                Avec toute notre gratitude,
               </p>
-              <p style="margin:0;color:#d4af37;font-family:Georgia,serif;font-size:24px;line-height:1.3;font-weight:bold;">
+              <p style="margin:0 0 4px 0;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:600;letter-spacing:1px;">
                 Rudy
               </p>
-              <p style="margin:8px 0 14px 0;color:#d8bf72;font-family:Georgia,serif;font-size:14px;line-height:1.5;font-style:italic;">
+              <p style="margin:0 0 24px 0;color:#d8bf72;font-family:'Lora',Georgia,serif;font-size:13px;font-style:italic;">
                 Fondateur d'ORADIA
               </p>
-              <p style="margin:0;">
-                <a href="https://oradia.fr" style="color:#f0c75e;text-decoration:none;font-family:Arial,sans-serif;font-size:14px;">
-                  oradia.fr
-                </a>
-              </p>
+              <a href="https://oradia.fr" style="display:inline-block;color:#d4af37;text-decoration:none;font-family:'Lora',Georgia,serif;font-size:13px;letter-spacing:1px;border-bottom:1px solid rgba(212,175,55,0.4);padding-bottom:2px;transition:all 0.3s ease;">
+                oradia.fr
+              </a>
             </td>
           </tr>
 
@@ -152,7 +185,8 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
       </td>
     </tr>
   </table>
-</div>
+</body>
+</html>
 `,
                 textContent: `${isDonation 
     ? `Merci pour ton soutien à ORADIA
