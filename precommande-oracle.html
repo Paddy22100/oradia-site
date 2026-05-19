@@ -703,7 +703,7 @@
                     <div class="container mx-auto px-6 relative z-10">
                         <div class="max-w-3xl mx-auto text-center">
                             <h3 class="cormorant text-3xl md:text-4xl font-bold gold-gradient mb-8">
-                                Un outil que vous gardes toute votre vie
+                                Un outil que vous gardez toute votre vie
                             </h3>
                             
                             <div class="space-y-6 text-lg md:text-xl text-light-gold/90 leading-relaxed max-w-4xl mx-auto">
@@ -1358,8 +1358,14 @@
                             </div>
                             <div class="flex-1">
                                 <h3 class="cormorant text-xl font-bold text-gold mb-2">Précommandes ouvertes</h3>
-                                <p class="text-light-gold mb-1">Maintenant jusqu'au 31 août 2026</p>
-                                <p class="text-light-gold/70 text-sm">Réservez votre exemplaire</p>
+                                <p class="text-light-gold mb-2">Jusqu'au 31 août 2026</p>
+                                <!-- Compteur temps restant -->
+                                <div id="countdown-timer" class="bg-[rgba(212,175,55,0.15)] border border-gold/30 rounded-lg px-4 py-2 inline-block">
+                                    <span class="text-gold font-bold cormorant text-lg">⏳ </span>
+                                    <span id="days-left" class="text-gold font-bold">--</span>
+                                    <span class="text-light-gold/80 text-sm"> jours restants</span>
+                                </div>
+                                <p class="text-light-gold/70 text-sm mt-2">Réservez votre exemplaire</p>
                             </div>
                         </div>
                         
@@ -2495,6 +2501,32 @@ La production est lancée grâce aux premières commandes.</p>
                 alert("Erreur technique. Veuillez réessayer.");
             }
         }
+    </script>
+
+    <!-- Compteur temps restant précommande -->
+    <script>
+        function updateCountdown() {
+            const endDate = new Date('2026-08-31T23:59:59');
+            const now = new Date();
+            const diff = endDate - now;
+            
+            if (diff > 0) {
+                const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+                const daysElement = document.getElementById('days-left');
+                if (daysElement) {
+                    daysElement.textContent = days;
+                }
+            } else {
+                const timerElement = document.getElementById('countdown-timer');
+                if (timerElement) {
+                    timerElement.innerHTML = '<span class="text-red-400 font-bold">Précommandes fermées</span>';
+                }
+            }
+        }
+        
+        // Mettre à jour au chargement et toutes les heures
+        updateCountdown();
+        setInterval(updateCountdown, 3600000);
     </script>
 </body>
 

@@ -58,9 +58,6 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal, invoiceUrl 
                     <a href="${invoiceUrl}" style="display:inline-block;background:#d4af37;color:#0a1628;font-family:'Lora',Georgia,serif;font-size:14px;font-weight:600;text-decoration:none;padding:12px 24px;border-radius:4px;letter-spacing:0.5px;">
                       Télécharger la facture PDF
                     </a>
-                    <p style="margin:12px 0 0 0;color:#9ca3af;font-family:'Lora',Georgia,serif;font-size:12px;">
-                      Cette facture est nécessaire pour votre comptabilité
-                    </p>
                   </td>
                 </tr>
               </table>
