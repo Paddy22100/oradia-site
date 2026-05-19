@@ -384,6 +384,19 @@ module.exports = async (req, res) => {
               }
             },
             customer_email: safeEmail,
+            invoice_creation: {
+                enabled: true,
+                invoice_data: {
+                    description: `Précommande Oracle Oradia - ${primaryOffer || 'Standard'}`,
+                    custom_fields: [
+                        {
+                            name: 'Type',
+                            value: 'Précommande'
+                        }
+                    ],
+                    footer: 'ORADIA - SIRET: [TON_SIRET] - contact@oradia.fr'
+                }
+            },
             metadata: {
                 offer: primaryOfferForStripe,
                 delivery_method: normalizedData.deliveryMethod || '',

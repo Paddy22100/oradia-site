@@ -32,7 +32,7 @@ function validateEnvironment() {
 }
 
 // Fonction d'envoi d'email Brevo
-async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
+async function sendBrevoEmail({ toEmail, toName, offer, amountTotal, invoiceUrl = null }) {
     try {
         // Validation silencieuse des variables d'environnement
         if (!process.env.BREVO_API_KEY || !process.env.BREVO_SENDER_EMAIL) {
@@ -45,6 +45,26 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
         const subject = isDonation
             ? 'Merci pour ton soutien à ORADIA'
             : 'Ta précommande ORADIA est confirmée';
+        
+        // Section facture PDF (seulement pour les précommandes avec facture)
+        const invoiceSection = (!isDonation && invoiceUrl) ? `
+              <!-- Téléchargement facture -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:32px 0;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:4px;">
+                <tr>
+                  <td style="padding:20px 24px;text-align:center;">
+                    <p style="margin:0 0 12px 0;color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;text-transform:uppercase;letter-spacing:1px;">
+                      📄 Votre facture est disponible
+                    </p>
+                    <a href="${invoiceUrl}" style="display:inline-block;background:#d4af37;color:#0a1628;font-family:'Lora',Georgia,serif;font-size:14px;font-weight:600;text-decoration:none;padding:12px 24px;border-radius:4px;letter-spacing:0.5px;">
+                      Télécharger la facture PDF
+                    </a>
+                    <p style="margin:12px 0 0 0;color:#9ca3af;font-family:'Lora',Georgia,serif;font-size:12px;">
+                      Cette facture est nécessaire pour votre comptabilité
+                    </p>
+                  </td>
+                </tr>
+              </table>
+        ` : '';
         
         const response = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
@@ -144,6 +164,8 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal }) {
                   </td>
                 </tr>
               </table>
+
+              ${invoiceSection}
 
               <p style="margin:32px 0 0 0;color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;">
                 ${isDonation 
@@ -525,17 +547,32 @@ const handler = async (req, res) => {
                 // Vérifier si email déjà envoyé
                 let emailSent = false;
                 if (upsertData.email && !upsertData.email_sent_at) {
+                    // Récupérer la facture Stripe si disponible
+                    let invoiceUrl = null;
+                    if (session.invoice) {
+                        try {
+                            const invoice = await stripe.invoices.retrieve(session.invoice);
+                            invoiceUrl = invoice.hosted_invoice_url || null;
+                        } catch (invoiceError) {
+                            console.error('Erreur récupération facture:', invoiceError.message);
+                        }
+                    }
+                    
                     emailSent = await sendBrevoEmail({
                         toEmail: upsertData.email,
                         toName: upsertData.full_name || 'Ami(e) d\'ORADIA',
                         offer: upsertData.offer,
-                        amountTotal: Number(upsertData.amount_total).toFixed(2)
+                        amountTotal: Number(upsertData.amount_total).toFixed(2),
+                        invoiceUrl: invoiceUrl
                     });
                     
                     if (emailSent) {
                         await supabase
                             .from('preorders')
-                            .update({ email_sent_at: new Date().toISOString() })
+                            .update({ 
+                                email_sent_at: new Date().toISOString(),
+                                stripe_invoice_url: invoiceUrl 
+                            })
                             .eq('stripe_session_id', sessionId);
                     }
                 }
