@@ -1,0 +1,18 @@
+# Fichiers de développement à ne pas déployer
+*.md
+!README.md
+.git
+.gitignore
+.env.example
+node_modules
+package-lock.json
+
+# Fichiers temporaires
+*.log
+*.tmp
+.DS_Store
+Thumbs.db
+
+# Scripts de développement
+clean-console-logs.js
+generate-hash.js
