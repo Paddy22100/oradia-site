@@ -348,9 +348,19 @@ Génère la newsletter complète maintenant. Chaque section délimitée par son 
   // ── DRAFTS ───────────────────────────────────────────────────────────────────
   if (action === 'drafts') {
     if (req.method === 'GET') {
+      const { id } = req.query;
+      if (id) {
+        const { data, error } = await supabase
+          .from('newsletter_drafts')
+          .select('*')
+          .eq('id', id)
+          .single();
+        if (error) return res.status(404).json({ error: error.message });
+        return res.status(200).json(data);
+      }
       const { data, error } = await supabase
         .from('newsletter_drafts')
-        .select('id, subject, intention, statut, created_at, sent_at')
+        .select('id, subject, intention, statut, content, created_at, sent_at')
         .order('created_at', { ascending: false });
       if (error) return res.status(500).json({ error: error.message });
       return res.status(200).json(data);

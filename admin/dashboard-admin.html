@@ -1631,12 +1631,32 @@
             `).join('');
         }
 
-        function nlOpenDraft(id) {
+        async function nlOpenDraft(id) {
             nlCurrentDraftId = id;
+            showTab('newsletter');
             nlShowTab('generate');
-            document.getElementById('nl-send-zone').classList.remove('hidden');
-            nlStatus('info', 'Brouillon chargé.');
-            document.getElementById('newsletter-section').scrollIntoView({ behavior: 'smooth' });
+            try {
+                // Récupérer le contenu complet depuis l'API
+                const res = await fetch(`/api/admin/newsletter?action=drafts&id=${id}`, { credentials: 'include' });
+                const draft = res.ok ? await res.json() : null;
+                const data = draft || nlDrafts.find(d => d.id === id);
+                if (data) {
+                    const contentEl  = document.getElementById('nl-content');
+                    const subjectEl  = document.getElementById('nl-subject');
+                    const placeholder = document.getElementById('nl-placeholder');
+                    const saveZone   = document.getElementById('nl-save-zone');
+                    const sendZone   = document.getElementById('nl-send-zone');
+                    if (data.content) {
+                        contentEl.value = data.content;
+                        contentEl.classList.remove('hidden');
+                        if (placeholder) placeholder.classList.add('hidden');
+                    }
+                    if (subjectEl && data.subject) subjectEl.value = data.subject;
+                    if (saveZone)  saveZone.classList.remove('hidden');
+                    if (sendZone)  sendZone.classList.remove('hidden');
+                }
+                nlStatus('info', 'Brouillon chargé.');
+            } catch(e) { nlStatus('error', 'Impossible de charger le brouillon : ' + e.message); }
         }
 
         async function nlLoadIdeas() {
