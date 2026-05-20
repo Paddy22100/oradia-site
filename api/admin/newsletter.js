@@ -4,20 +4,27 @@
 
 import Anthropic from '@anthropic-ai/sdk';
 import { createClient } from '@supabase/supabase-js';
+import jwt from 'jsonwebtoken';
+import { parse as parseCookie } from 'cookie';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
+// ── Auth (cookie JWT — même mécanisme que _auth.js) ───────────────────────────
 function checkAuth(req, res) {
-  const token = req.headers.authorization?.replace('Bearer ', '');
-  if (token !== process.env.ADMIN_SECRET_TOKEN) {
+  try {
+    const cookies = parseCookie(req.headers.cookie || '');
+    const token = cookies.oradia_admin_session;
+    if (!token) { res.status(401).json({ error: 'Non autorisé' }); return false; }
+    const decoded = jwt.verify(token, process.env.ADMIN_SESSION_SECRET);
+    if (decoded.type !== 'admin') { res.status(401).json({ error: 'Non autorisé' }); return false; }
+    return true;
+  } catch (e) {
     res.status(401).json({ error: 'Non autorisé' });
     return false;
   }
-  return true;
 }
 
 // ── textToHtml (pour l'envoi Brevo) ──────────────────────────────────────────
