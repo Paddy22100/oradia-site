@@ -492,7 +492,14 @@
         <!-- ══ ONGLET : WAITLIST ══ -->
         <div id="tab-waitlist" class="tab-panel">
         <section class="mb-10">
-            <h3 class="cormorant text-2xl font-bold text-gold mb-8">Waitlist</h3>
+            <div class="flex items-center justify-between mb-8">
+                <h3 class="cormorant text-2xl font-bold text-gold">Contacts Newsletter</h3>
+                <button onclick="syncBrevo()" id="syncBrevoBtn"
+                    class="flex items-center gap-2 bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition text-sm font-semibold">
+                    <i class="fas fa-sync-alt"></i> Sync Brevo
+                </button>
+            </div>
+            <div id="sync-status" class="hidden mb-4 px-4 py-3 rounded-lg text-sm border"></div>
             
             <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
                 <div class="overflow-x-auto">
@@ -1629,6 +1636,33 @@
                     </td>
                 </tr>
             `).join('');
+        }
+
+        // ── Sync Brevo ────────────────────────────────────────────────────────────
+        async function syncBrevo() {
+            const btn = document.getElementById('syncBrevoBtn');
+            const statusEl = document.getElementById('sync-status');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Synchronisation...';
+            statusEl.className = 'mb-4 px-4 py-3 rounded-lg text-sm border bg-gold/10 border-gold/30 text-gold';
+            statusEl.textContent = 'Synchronisation en cours...';
+            statusEl.classList.remove('hidden');
+            try {
+                const res = await fetch('/api/admin/sync-brevo', {
+                    method: 'POST', credentials: 'include'
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+                statusEl.className = 'mb-4 px-4 py-3 rounded-lg text-sm border bg-green-500/10 border-green-500/30 text-green-300';
+                statusEl.textContent = `✓ ${data.synced} contact(s) synchronisé(s) vers Brevo. ${data.already > 0 ? data.already + ' déjà sync.' : ''} ${data.errors > 0 ? data.errors + ' erreur(s).' : ''}`;
+                await loadWaitlist();
+            } catch(e) {
+                statusEl.className = 'mb-4 px-4 py-3 rounded-lg text-sm border bg-red-500/10 border-red-500/30 text-red-300';
+                statusEl.textContent = '✗ ' + e.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Sync Brevo';
+            }
         }
 
         async function nlOpenDraft(id) {

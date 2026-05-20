@@ -29,6 +29,10 @@
       "dest": "/api/admin/newsletter.js"
     },
     {
+      "src": "/api/admin/sync-brevo",
+      "dest": "/api/admin/sync-brevo.js"
+    },
+    {
       "src": "/api/create-checkout-session",
       "dest": "/api/create-checkout-session.js"
     },
@@ -59,6 +63,9 @@
       "maxDuration": 30
     },
     "api/admin/newsletter.js": {
+      "maxDuration": 30
+    },
+    "api/admin/sync-brevo.js": {
       "maxDuration": 30
     },
     "api/create-checkout-session.js": {
