@@ -5,6 +5,7 @@ const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const path = require('path');
 require('dotenv').config();
+require('dotenv').config({ path: require('path').join(__dirname, '..', '.env.local'), override: false });
 
 // Import routes
 const authRoutes = require('./routes/auth');

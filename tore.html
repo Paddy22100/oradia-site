@@ -1655,7 +1655,7 @@
 
   inset: 0;
 
-  background: rgba(2, 6, 23, 0.88);
+  background: url('images/oradia-hero-4k.png') center/cover no-repeat;
 
   display: flex;
 
@@ -1667,39 +1667,68 @@
 
 }
 
+#tore-extra-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: rgba(2, 6, 23, 0.52);
+  z-index: 0;
+}
+
+#tore-extra-overlay > * {
+  position: relative;
+  z-index: 1;
+}
+
 /* Layout côte à côte : modale polarity gauche + éventail droite */
 #tore-extra-overlay.bridge-split {
   flex-direction: row;
   align-items: stretch;
   justify-content: center;
-  gap: 0;
-  padding: 24px 16px;
+  gap: 20px;
+  padding: 24px 20px;
 }
 
 #tore-extra-overlay.bridge-split .bridge-polarity-side {
   display: flex;
-  align-items: center;
+  align-items: stretch;
   justify-content: center;
   flex: 0 0 auto;
-  width: min(380px, 42vw);
-  padding-right: 16px;
+  width: min(360px, 42vw);
+}
+
+#tore-extra-overlay.bridge-split .bridge-polarity-side > div {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
 }
 
 #tore-extra-overlay.bridge-split .tore-extra-panel {
   flex: 1;
-  max-width: 580px;
+  max-width: 520px;
+}
+
+/* Keyframe : polarity glisse vers la gauche en entrant dans la vue split */
+@keyframes polaritySlideLeft {
+  from { transform: translateX(0); opacity: 1; }
+  to   { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes bridgePanelSlideIn {
+  from { transform: translateX(40px); opacity: 0; }
+  to   { transform: translateX(0);    opacity: 1; }
 }
 
 @media (max-width: 700px) {
   #tore-extra-overlay.bridge-split {
     flex-direction: column;
     overflow-y: auto;
-    gap: 16px;
+    gap: 14px;
     padding: 16px 12px;
   }
   #tore-extra-overlay.bridge-split .bridge-polarity-side {
     width: 100%;
-    padding-right: 0;
   }
 }
 
@@ -1709,15 +1738,18 @@
 
   position: relative;
 
-  padding: clamp(20px, 5vw, 40px) clamp(16px, 5vw, 50px) clamp(24px, 5vw, 50px);
+  padding: clamp(20px, 4vw, 36px) clamp(16px, 4vw, 40px) clamp(20px, 4vw, 36px);
 
   border-radius: 24px;
 
-  background: radial-gradient(circle at top, rgba(15,23,42,0.95), rgba(2,6,23,0.98));
+  background: linear-gradient(145deg, rgba(10,22,40,0.55), rgba(3,10,22,0.62));
 
-  border: 1px solid rgba(212,175,55,0.7);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
 
-  box-shadow: 0 24px 80px rgba(0,0,0,0.85);
+  border: 1px solid rgba(212,175,55,0.5);
+
+  box-shadow: 0 24px 80px rgba(0,0,0,0.6), inset 0 1px 0 rgba(212,175,55,0.15);
 
   color: #f9fafb;
 
@@ -3049,15 +3081,15 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
       const famName = FAMILY_NAMES[nextFamily] || nextFamily;
       label.textContent = `Carte ${cardNum} / ${totalCount} — ${famName}`;
       const tips = {
-        emotions: 'Cliquez sur la carte qui brille pour la révéler.',
-        besoins: 'Respirez et posez votre intention. Cliquez sur la carte dorée.',
-        transmutation: 'Qu\'est-ce qui cherche à se transformer en vous ? Cliquez.',
+        emotions: 'Révélez l\'émotion qui anime ce tirage.',
+        besoins: 'Qu\'est-ce dont votre âme a besoin en ce moment ? Retournez la carte.',
+        transmutation: 'Ce qui cherche à se transformer en vous. Cliquez pour le voir.',
         archetypes: 'Quelle énergie vous traverse ? Retournez la carte.',
         revelations: 'Ce qui se révèle maintenant. Cliquez pour découvrir.',
         actions: 'Quelle action s\'offre à vous ? Retournez la carte.',
-        memoire_cosmos: 'La dernière carte — la mémoire qui relie tout. Cliquez.'
+        memoire_cosmos: 'La mémoire qui relie tout. Recevez-la.'
       };
-      instruction.textContent = tips[nextFamily] || 'Cliquez sur la carte qui brille pour la révéler.';
+      instruction.textContent = tips[nextFamily] || 'Retournez la carte pour la révéler.';
     }
   }
 
@@ -4046,27 +4078,35 @@ if (previewOverlay) {
     overlay.innerHTML = `
       <!-- Gauche : résumé comparaison polarité -->
       <div class="bridge-polarity-side">
-        <div style="width:100%;background:linear-gradient(135deg,#0a1628,#0d1f3c);border:2px solid rgba(212,175,55,0.4);border-radius:20px;padding:20px;box-shadow:0 20px 60px rgba(0,0,0,0.7);position:relative;overflow:hidden;">
+        <div style="width:100%;border-radius:24px;padding:28px 24px;position:relative;overflow:hidden;
+          background:linear-gradient(145deg,rgba(10,22,40,0.55),rgba(3,10,22,0.62));
+          backdrop-filter:blur(16px);-webkit-backdrop-filter:blur(16px);
+          border:1px solid rgba(212,175,55,0.5);
+          box-shadow:0 24px 80px rgba(0,0,0,0.6),inset 0 1px 0 rgba(212,175,55,0.15);">
+          <!-- Barre haut -->
           <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.7),transparent);"></div>
-          <div style="text-align:center;margin-bottom:12px;">
-            <p style="font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:rgba(212,175,55,0.55);font-family:'Cinzel',serif;" id="clone-polarity-family"></p>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:center;gap:18px;margin:12px 0;">
+          <!-- Famille -->
+          <p id="clone-polarity-family" style="font-size:10px;letter-spacing:0.25em;text-transform:uppercase;color:rgba(212,175,55,0.6);font-family:'Cinzel',serif;text-align:center;margin:0 0 20px;"></p>
+          <!-- Comparaison -->
+          <div style="display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:20px;">
             <div style="text-align:center;">
-              <div id="clone-coin-sym" style="font-size:44px;line-height:1;"></div>
-              <span style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.4);font-family:'Cormorant Garamond',Georgia,serif;">Pièce</span>
+              <div id="clone-coin-sym" style="font-size:52px;line-height:1;"></div>
+              <span style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.45);font-family:'Cormorant Garamond',Georgia,serif;display:block;margin-top:6px;">Pièce</span>
             </div>
-            <div id="clone-operator" style="font-size:28px;font-weight:700;color:rgba(231,76,60,0.9);text-shadow:0 0 12px rgba(231,76,60,0.6);">≠</div>
+            <div id="clone-operator" style="font-size:32px;font-weight:700;color:rgba(231,76,60,0.9);text-shadow:0 0 12px rgba(231,76,60,0.6);">≠</div>
             <div style="text-align:center;">
-              <div id="clone-card-sym" style="font-size:44px;line-height:1;"></div>
-              <span style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.4);font-family:'Cormorant Garamond',Georgia,serif;">Carte</span>
+              <div id="clone-card-sym" style="font-size:52px;line-height:1;"></div>
+              <span style="font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.45);font-family:'Cormorant Garamond',Georgia,serif;display:block;margin-top:6px;">Carte</span>
             </div>
           </div>
-          <div style="width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.25),transparent);margin:10px 0;"></div>
+          <!-- Séparateur -->
+          <div style="width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);margin-bottom:20px;"></div>
+          <!-- Résultat -->
           <div style="text-align:center;">
-            <div style="font-family:'Cinzel',serif;font-size:16px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(231,76,60,0.9);">Passerelle</div>
-            <p style="font-size:11px;color:rgba(216,191,114,0.5);font-family:'Lora',Georgia,serif;font-style:italic;margin-top:6px;line-height:1.4;">Une carte passerelle viendra<br>relier ces deux polarités.</p>
+            <div style="font-family:'Cinzel',serif;font-size:15px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(231,76,60,0.9);margin-bottom:8px;">Passerelle</div>
+            <p style="font-size:12px;color:rgba(216,191,114,0.6);font-family:'Lora',Georgia,serif;font-style:italic;line-height:1.5;margin:0;">Une carte passerelle viendra<br>relier ces deux polarités.</p>
           </div>
+          <!-- Barre bas -->
           <div style="position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.7),transparent);"></div>
         </div>
       </div>
@@ -4092,8 +4132,18 @@ if (previewOverlay) {
     if (origCardSym) { const el = overlay.querySelector('#clone-card-sym'); if(el){el.textContent=origCardSym.textContent;el.style.color=origCardSym.style.color;} }
     if (origFamily)  { const el = overlay.querySelector('#clone-polarity-family'); if(el){el.textContent=origFamily.textContent;} }
 
-    // Masquer la modale polarity (l'info est maintenant dans l'overlay)
-    if (polarityModal) polarityModal.classList.add('hidden');
+    // Glisser la modale polarity vers la gauche puis la masquer
+    if (polarityModal) {
+      polarityModal.style.transition = 'transform 0.35s cubic-bezier(0.22,1,0.36,1), opacity 0.35s ease';
+      polarityModal.style.transform = 'translateX(-60px)';
+      polarityModal.style.opacity = '0';
+      setTimeout(() => {
+        polarityModal.classList.add('hidden');
+        polarityModal.style.transition = '';
+        polarityModal.style.transform = '';
+        polarityModal.style.opacity = '';
+      }, 380);
+    }
 
 
 

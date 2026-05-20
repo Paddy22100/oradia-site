@@ -67,17 +67,44 @@ class BrevoService {
      */
     async sendTirageAnalysis({ email, intention, cards, analysis, synthesis }) {
         const html = this.generateTirageAnalysisHTML({ intention, cards, analysis, synthesis });
-        const text = this.generateTirageAnalysisText({ intention, cards, analysis, synthesis });
 
-        const mailOptions = {
+        // Utilise l'API HTTP Brevo (même méthode que waitlist.js)
+        const apiKey = process.env.BREVO_API_KEY;
+        const senderEmail = process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr';
+        const senderName = process.env.BREVO_SENDER_NAME || 'ORADIA';
+
+        if (apiKey) {
+            const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'api-key': apiKey
+                },
+                body: JSON.stringify({
+                    sender: { email: senderEmail, name: senderName },
+                    to: [{ email }],
+                    replyTo: { email: 'contact@oradia.fr', name: 'Oradia' },
+                    subject: '✨ Votre analyse Oradia — Les cartes ont parlé',
+                    htmlContent: html
+                })
+            });
+            if (!response.ok) {
+                const err = await response.text();
+                throw new Error(`Brevo API error ${response.status}: ${err}`);
+            }
+            const data = await response.json();
+            return { success: true, messageId: data.messageId };
+        }
+
+        // Fallback SMTP Nodemailer si pas de BREVO_API_KEY
+        const text = this.generateTirageAnalysisText({ intention, cards, analysis, synthesis });
+        const info = await this.transporter.sendMail({
             from: this.fromEmail,
             to: email,
             subject: '✨ Votre analyse Oradia — Les cartes ont parlé',
             text,
             html
-        };
-
-        const info = await this.transporter.sendMail(mailOptions);
+        });
         return { success: true, messageId: info.messageId };
     }
 

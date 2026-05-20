@@ -1346,7 +1346,9 @@
                     throw new Error(data.message || 'Erreur inconnue');
                 }
             } catch (err) {
-                errEl.textContent = "L'envoi a échoué. Vérifiez votre adresse et réessayez.";
+                errEl.textContent = err.message && err.message !== 'Erreur inconnue'
+                    ? err.message
+                    : "L'envoi a échoué. Vérifiez votre adresse et réessayez.";
                 errEl.style.display = 'block';
                 btn.disabled = false;
                 btn.style.opacity = '1';

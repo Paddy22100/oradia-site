@@ -222,10 +222,11 @@ router.post('/send-email', logActivity('tirage_email_sent'), async (req, res) =>
     res.json({ success: true, message: 'Analyse envoyée avec succès' });
 
   } catch (error) {
+    console.error('❌ /api/tirages/send-email error:', error.message, error.code || '');
     res.status(500).json({
       success: false,
       message: 'Erreur lors de l\'envoi de l\'email',
-      error: process.env.NODE_ENV === 'development' ? error.message : {}
+      error: error.message
     });
   }
 });
