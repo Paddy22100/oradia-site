@@ -98,7 +98,7 @@ async function getOverview() {
 
         // Waitlist
         const { data: waitlist, error: waitlistError } = await supabase
-            .from('waitlist_tirages')
+            .from('newsletter_contacts')
             .select('email, brevo_synced, created_at');
 
         if (preordersError || donorsError || waitlistError) {
@@ -276,7 +276,7 @@ async function getWaitlist(page, limit) {
         const offset = (pageNumber - 1) * pageSize;
 
         const { data, error, count } = await supabase
-            .from('waitlist_tirages')
+            .from('newsletter_contacts')
             .select('email, full_name, created_at, brevo_synced', { count: 'exact' })
             .order('created_at', { ascending: false })
             .range(offset, offset + pageSize - 1);

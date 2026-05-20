@@ -81,7 +81,7 @@ async function exportStandardCsv(res, supabase) {
             .eq('paid_status', 'completed')
             .order('created_at', { ascending: false }),
         supabase
-            .from('waitlist_tirages')
+            .from('newsletter_contacts')
             .select('email, full_name, created_at, brevo_synced')
             .order('created_at', { ascending: false })
     ]);

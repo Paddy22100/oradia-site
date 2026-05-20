@@ -287,7 +287,7 @@ module.exports = async (req, res) => {
     const supabase = getSupabaseClient();
 
     const { error } = await supabase
-      .from('waitlist_tirages')
+      .from('newsletter_contacts')
       .upsert(
         {
           email,
