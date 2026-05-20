@@ -33,6 +33,26 @@
       "dest": "/api/admin/contacts-export.js"
     },
     {
+      "src": "/api/admin/newsletter-generate",
+      "dest": "/api/admin/newsletter-generate.js"
+    },
+    {
+      "src": "/api/admin/newsletter-ideas",
+      "dest": "/api/admin/newsletter-ideas.js"
+    },
+    {
+      "src": "/api/admin/newsletter-save",
+      "dest": "/api/admin/newsletter-save.js"
+    },
+    {
+      "src": "/api/admin/newsletter-send",
+      "dest": "/api/admin/newsletter-send.js"
+    },
+    {
+      "src": "/api/admin/newsletter-drafts",
+      "dest": "/api/admin/newsletter-drafts.js"
+    },
+    {
       "src": "/api/create-checkout-session",
       "dest": "/api/create-checkout-session.js"
     },
@@ -63,6 +83,21 @@
     },
     "api/admin/contacts-export.js": {
       "maxDuration": 30
+    },
+    "api/admin/newsletter-generate.js": {
+      "maxDuration": 30
+    },
+    "api/admin/newsletter-ideas.js": {
+      "maxDuration": 10
+    },
+    "api/admin/newsletter-save.js": {
+      "maxDuration": 10
+    },
+    "api/admin/newsletter-send.js": {
+      "maxDuration": 30
+    },
+    "api/admin/newsletter-drafts.js": {
+      "maxDuration": 10
     },
     "api/create-checkout-session.js": {
       "maxDuration": 30

@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Newsletter — ORADIA Admin</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="../style.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#0a192f',
+            'gold': '#d4af37',
+            'light-gold': '#f5e7a1',
+            'dark-blue': '#051428',
+            'celtic-blue': '#1a365d'
+          },
+          fontFamily: {
+            'cormorant': ['Cormorant Garamond', 'serif'],
+            'poppins': ['Poppins', 'sans-serif']
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    .gold-gradient {
+      background: linear-gradient(135deg, #d4af37, #f4e4c1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fadeIn { animation: fadeIn 0.5s ease-out forwards; opacity: 0; }
+
+    .stat-card {
+      background: linear-gradient(145deg, rgba(26,54,93,0.6), rgba(5,20,40,0.8));
+      border: 1px solid rgba(212,175,55,0.3);
+      transition: all 0.3s ease;
+    }
+    .stat-card:hover {
+      border-color: rgba(212,175,55,0.6);
+      box-shadow: 0 4px 20px rgba(212,175,55,0.15);
+      transform: translateY(-2px);
+    }
+
+    .panel-card {
+      background: linear-gradient(145deg, rgba(26,54,93,0.4), rgba(5,20,40,0.6));
+      border: 1px solid rgba(212,175,55,0.2);
+    }
+
+    .input-field {
+      background: rgba(5,20,40,0.8);
+      border: 1px solid rgba(212,175,55,0.3);
+      color: #f5e7a1;
+      transition: border-color 0.2s;
+    }
+    .input-field:focus {
+      outline: none;
+      border-color: rgba(212,175,55,0.7);
+    }
+    .input-field::placeholder { color: rgba(245,231,161,0.3); }
+
+    .tab-btn {
+      background: transparent;
+      border-bottom: 2px solid transparent;
+      color: rgba(245,231,161,0.5);
+      transition: all 0.2s;
+      padding: 12px 20px;
+      font-family: 'Cormorant Garamond', serif;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    .tab-btn:hover { color: #f5e7a1; }
+    .tab-btn.active {
+      color: #d4af37;
+      border-bottom-color: #d4af37;
+    }
+
+    .idea-card {
+      background: rgba(5,20,40,0.5);
+      border: 1px solid rgba(212,175,55,0.15);
+      transition: border-color 0.2s;
+    }
+    .idea-card:hover { border-color: rgba(212,175,55,0.35); }
+
+    .draft-row { border-bottom: 1px solid rgba(212,175,55,0.1); transition: background 0.2s; }
+    .draft-row:hover { background: rgba(212,175,55,0.05); }
+
+    textarea { resize: vertical; }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .spinner {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(212,175,55,0.3);
+      border-top-color: #d4af37;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+  </style>
+</head>
+<body class="bg-night-blue text-light-gold min-h-screen">
+
+  <!-- HEADER identique au dashboard existant -->
+  <header class="bg-[rgba(5,20,40,0.8)] backdrop-blur-md border-b border-gold/20 sticky top-0 z-40">
+    <div class="container mx-auto px-6 py-4">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <img src="../images/logo-hd-v2.jpeg" alt="ORADIA" class="w-10 h-10 rounded-full">
+          <div>
+            <h1 class="cormorant text-2xl font-bold gold-gradient">ORADIA</h1>
+            <p class="text-gold/70 text-sm">Newsletter — La lettre du vivant</p>
+          </div>
+        </div>
+        <div class="flex items-center gap-4">
+          <a href="dashboard-admin.html" class="text-gold/60 hover:text-gold transition text-sm">
+            <i class="fas fa-arrow-left mr-1"></i> Dashboard
+          </a>
+          <button id="logoutBtn" class="text-gold/70 hover:text-gold transition">
+            <i class="fas fa-sign-out-alt"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <!-- MAIN -->
+  <main class="container mx-auto px-6 py-8">
+
+    <!-- TITRE + STATS -->
+    <div class="flex items-center justify-between mb-8">
+      <h2 class="cormorant text-3xl font-bold text-gold">La lettre du vivant</h2>
+      <span class="text-sm text-light-gold/50" id="last-update"></span>
+    </div>
+
+    <!-- KPI -->
+    <div class="grid grid-cols-3 gap-6 mb-10">
+      <div class="stat-card rounded-2xl p-6">
+        <div class="text-gold/60 text-xs uppercase tracking-widest mb-2">Total newsletters</div>
+        <div class="cormorant text-4xl font-bold text-gold" id="kpi-total">—</div>
+      </div>
+      <div class="stat-card rounded-2xl p-6">
+        <div class="text-gold/60 text-xs uppercase tracking-widest mb-2">Brouillons</div>
+        <div class="cormorant text-4xl font-bold text-gold" id="kpi-brouillons">—</div>
+      </div>
+      <div class="stat-card rounded-2xl p-6">
+        <div class="text-gold/60 text-xs uppercase tracking-widest mb-2">Envoyées</div>
+        <div class="cormorant text-4xl font-bold text-gold" id="kpi-envoyes">—</div>
+      </div>
+    </div>
+
+    <!-- STATUS BAR -->
+    <div id="status-bar" class="hidden mb-6 px-4 py-3 rounded-lg text-sm border"></div>
+
+    <!-- TABS -->
+    <div class="border-b border-gold/20 mb-8 flex gap-0">
+      <button class="tab-btn active" onclick="showTab('generate')" data-tab="generate">
+        <i class="fas fa-magic mr-2"></i>Générer
+      </button>
+      <button class="tab-btn" onclick="showTab('drafts')" data-tab="drafts">
+        <i class="fas fa-layer-group mr-2"></i>Brouillons
+      </button>
+      <button class="tab-btn" onclick="showTab('ideas')" data-tab="ideas">
+        <i class="fas fa-feather-alt mr-2"></i>Carnet d'idées
+      </button>
+    </div>
+
+    <!-- TAB : GÉNÉRER -->
+    <div id="tab-generate" class="tab-content animate-fadeIn">
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+        <!-- Paramètres -->
+        <div class="panel-card rounded-2xl p-6">
+          <h3 class="cormorant text-xl text-gold mb-5">Paramètres de génération</h3>
+
+          <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Intention / thème *</label>
+          <input type="text" id="intention" class="input-field w-full rounded-lg px-4 py-2 mb-4 text-sm"
+            placeholder="Ex: la résistance juste, l'adaptome, la vulnérabilité...">
+
+          <div class="grid grid-cols-2 gap-4 mb-4">
+            <div>
+              <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Source</label>
+              <select id="source" class="input-field w-full rounded-lg px-4 py-2 text-sm">
+                <option value="les_deux">Les deux livres</option>
+                <option value="boussole">La Boussole Intérieure</option>
+                <option value="roman">Le roman du Pèlerin</option>
+              </select>
+            </div>
+            <div>
+              <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Ton</label>
+              <select id="ton" class="input-field w-full rounded-lg px-4 py-2 text-sm">
+                <option value="contemplatif">Contemplatif & incarné</option>
+                <option value="poetique">Poétique & sensoriel</option>
+                <option value="scientifique">Ancré & scientifique</option>
+                <option value="narratif">Narratif & story</option>
+              </select>
+            </div>
+          </div>
+
+          <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Énergie du moment <span class="text-gold/30 normal-case tracking-normal">(facultatif)</span></label>
+          <input type="text" id="energie" class="input-field w-full rounded-lg px-4 py-2 mb-4 text-sm"
+            placeholder="Saison, hexagramme, actualité, lune...">
+
+          <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Fragments du carnet <span class="text-gold/30 normal-case tracking-normal">(facultatif)</span></label>
+          <textarea id="idees-bonus" class="input-field w-full rounded-lg px-4 py-2 mb-5 text-sm" rows="3"
+            placeholder="Colle ici des fragments de ton carnet à intégrer..."></textarea>
+
+          <button onclick="generateNewsletter()" id="btn-generate"
+            class="w-full bg-gold text-night-blue font-semibold rounded-lg py-3 hover:bg-light-gold transition flex items-center justify-center gap-2">
+            <i class="fas fa-magic"></i> Générer la newsletter
+          </button>
+        </div>
+
+        <!-- Résultat -->
+        <div class="panel-card rounded-2xl p-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="cormorant text-xl text-gold">Contenu généré</h3>
+            <div class="flex gap-2">
+              <button onclick="copyContent()" class="text-xs text-gold/60 hover:text-gold transition px-2 py-1 border border-gold/20 rounded">
+                <i class="fas fa-copy mr-1"></i>Copier
+              </button>
+              <button onclick="regenerate()" class="text-xs text-gold/60 hover:text-gold transition px-2 py-1 border border-gold/20 rounded">
+                <i class="fas fa-redo mr-1"></i>Regénérer
+              </button>
+            </div>
+          </div>
+
+          <div id="generate-placeholder" class="flex flex-col items-center justify-center h-48 text-gold/20">
+            <i class="fas fa-magic text-4xl mb-3"></i>
+            <p class="cormorant text-lg">La newsletter apparaîtra ici</p>
+          </div>
+
+          <textarea id="generated-content" class="input-field w-full rounded-lg px-4 py-3 text-sm hidden" rows="16"
+            placeholder=""></textarea>
+
+          <div id="save-zone" class="hidden mt-4">
+            <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1 mt-2">Objet email</label>
+            <input type="text" id="email-subject" class="input-field w-full rounded-lg px-4 py-2 mb-4 text-sm"
+              placeholder="Objet de l'email...">
+
+            <div class="flex gap-3">
+              <button onclick="saveDraft()" id="btn-save"
+                class="flex-1 bg-gold/20 text-gold border border-gold/40 rounded-lg py-2 hover:bg-gold/30 transition text-sm">
+                <i class="fas fa-save mr-2"></i>Sauvegarder brouillon
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Envoi -->
+      <div id="send-zone" class="hidden panel-card rounded-2xl p-6 mt-8">
+        <h3 class="cormorant text-xl text-gold mb-4">Envoyer à tes abonnés</h3>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Email de test <span class="text-gold/30 normal-case tracking-normal">(recommandé)</span></label>
+            <div class="flex gap-2">
+              <input type="email" id="test-email" class="input-field flex-1 rounded-lg px-4 py-2 text-sm"
+                placeholder="ton@email.fr">
+              <button onclick="sendTest()"
+                class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 hover:bg-gold/30 transition text-sm whitespace-nowrap">
+                <i class="fas fa-paper-plane mr-1"></i>Tester
+              </button>
+            </div>
+          </div>
+
+          <div class="flex items-end">
+            <button onclick="sendReal()" id="btn-send-real"
+              class="w-full bg-gold text-night-blue font-semibold rounded-lg py-2 hover:bg-light-gold transition text-sm flex items-center justify-center gap-2">
+              <i class="fas fa-broadcast-tower"></i> Envoyer à tous les abonnés
+            </button>
+          </div>
+        </div>
+        <p class="text-xs text-gold/30 mt-3 text-center font-style-italic">
+          Teste d'abord par email avant l'envoi réel — cette action est irréversible.
+        </p>
+      </div>
+    </div>
+
+    <!-- TAB : BROUILLONS -->
+    <div id="tab-drafts" class="tab-content hidden animate-fadeIn">
+      <div class="panel-card rounded-2xl overflow-hidden">
+        <table class="w-full">
+          <thead>
+            <tr class="border-b border-gold/20">
+              <th class="text-left px-6 py-4 text-xs uppercase tracking-widest text-gold/60 font-normal">Sujet / Intention</th>
+              <th class="text-left px-6 py-4 text-xs uppercase tracking-widest text-gold/60 font-normal">Statut</th>
+              <th class="text-left px-6 py-4 text-xs uppercase tracking-widest text-gold/60 font-normal">Date</th>
+              <th class="px-6 py-4"></th>
+            </tr>
+          </thead>
+          <tbody id="drafts-table-body">
+            <tr><td colspan="4" class="text-center py-12 text-gold/30 cormorant text-lg">Chargement...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- TAB : IDÉES -->
+    <div id="tab-ideas" class="tab-content hidden animate-fadeIn">
+
+      <!-- Ajouter -->
+      <div class="panel-card rounded-2xl p-6 mb-6">
+        <h3 class="cormorant text-xl text-gold mb-4">Ajouter un fragment</h3>
+        <textarea id="new-idea" class="input-field w-full rounded-lg px-4 py-2 mb-3 text-sm" rows="3"
+          placeholder="Une réflexion, une phrase de tes livres, une observation, une image qui surgit..."></textarea>
+        <div class="flex gap-3">
+          <input type="text" id="new-idea-source" class="input-field flex-1 rounded-lg px-4 py-2 text-sm"
+            placeholder="Source : Chapitre 3, observation, lecture...">
+          <button onclick="addIdea()"
+            class="bg-gold text-night-blue font-semibold rounded-lg px-5 py-2 hover:bg-light-gold transition text-sm">
+            <i class="fas fa-plus mr-1"></i> Ajouter
+          </button>
+        </div>
+      </div>
+
+      <!-- Liste -->
+      <div class="grid grid-cols-1 gap-3" id="ideas-list">
+        <div class="text-center py-12 text-gold/30 cormorant text-lg">Chargement...</div>
+      </div>
+    </div>
+
+  </main>
+
+<script>
+  // ===== AUTH via cookie de session (même système que dashboard-admin.html) =====
+  let currentDraftId = null;
+  let ideas = [];
+  let drafts = [];
+
+  async function checkAuth() {
+    const res = await fetch('/api/admin/me', { credentials: 'include' });
+    if (!res.ok) window.location.href = 'login.html';
+  }
+
+  document.getElementById('logoutBtn').addEventListener('click', async () => {
+    await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
+    window.location.href = 'login.html';
+  });
+
+  // ===== INIT =====
+  async function init() {
+    await checkAuth();
+    await Promise.all([loadDrafts(), loadIdeas()]);
+    document.getElementById('last-update').textContent =
+      'Mis à jour ' + new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  // ===== TABS =====
+  function showTab(name) {
+    document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+    document.querySelectorAll('.tab-btn').forEach(el => el.classList.remove('active'));
+    document.getElementById(`tab-${name}`).classList.remove('hidden');
+    document.querySelector(`[data-tab="${name}"]`).classList.add('active');
+  }
+
+  // ===== STATUS =====
+  function showStatus(type, msg) {
+    const el = document.getElementById('status-bar');
+    el.className = 'mb-6 px-4 py-3 rounded-lg text-sm border';
+    if (type === 'success') el.classList.add('bg-green-900/30', 'border-green-500/30', 'text-green-300');
+    if (type === 'error')   el.classList.add('bg-red-900/30',   'border-red-500/30',   'text-red-300');
+    if (type === 'info')    el.classList.add('bg-gold/10',       'border-gold/30',       'text-gold');
+    el.textContent = msg;
+    el.classList.remove('hidden');
+    if (type === 'success') setTimeout(() => el.classList.add('hidden'), 4000);
+  }
+
+  // ===== GENERATE =====
+  async function generateNewsletter() {
+    const intention = document.getElementById('intention').value.trim();
+    if (!intention) return showStatus('error', 'L\'intention est requise');
+
+    const btn = document.getElementById('btn-generate');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner mr-2"></span>Claude rédige...';
+    showStatus('info', 'Génération en cours — quelques secondes...');
+
+    try {
+      const res = await fetch('/api/admin/newsletter-generate', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          intention,
+          source: document.getElementById('source').value,
+          ton: document.getElementById('ton').value,
+          energie: document.getElementById('energie').value.trim() || undefined,
+          idees_bonus: document.getElementById('idees-bonus').value.trim() || undefined
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || 'Erreur génération');
+
+      document.getElementById('generate-placeholder').classList.add('hidden');
+      const editor = document.getElementById('generated-content');
+      editor.classList.remove('hidden');
+      editor.value = data.content;
+
+      // Extraction objet
+      const objetMatch = data.content.match(/OBJET\s*:\s*(.+)/i);
+      if (objetMatch) document.getElementById('email-subject').value = objetMatch[1].trim();
+
+      document.getElementById('save-zone').classList.remove('hidden');
+      document.getElementById('send-zone').classList.add('hidden');
+      currentDraftId = null;
+      showStatus('success', 'Newsletter générée. Relis et ajuste avant de sauvegarder.');
+
+    } catch (e) {
+      showStatus('error', e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-magic mr-2"></i>Générer la newsletter';
+    }
+  }
+
+  function regenerate() { generateNewsletter(); }
+
+  function copyContent() {
+    navigator.clipboard.writeText(document.getElementById('generated-content').value);
+    showStatus('success', 'Contenu copié dans le presse-papier');
+  }
+
+  // ===== SAVE =====
+  async function saveDraft() {
+    const content = document.getElementById('generated-content').value.trim();
+    if (!content) return;
+
+    const btn = document.getElementById('btn-save');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner mr-2"></span>Sauvegarde...';
+
+    try {
+      const res = await fetch('/api/admin/newsletter-save', {
+        method: 'POST',
+        credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: currentDraftId,
+          subject: document.getElementById('email-subject').value.trim(),
+          content,
+          intention: document.getElementById('intention').value.trim()
+        })
+      });
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+
+      currentDraftId = data.id;
+      document.getElementById('send-zone').classList.remove('hidden');
+      showStatus('success', 'Brouillon sauvegardé.');
+      await loadDrafts();
+    } catch (e) {
+      showStatus('error', e.message);
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-save mr-2"></i>Sauvegarder brouillon';
+    }
+  }
+
+  // ===== SEND =====
+  async function sendTest() {
+    const email = document.getElementById('test-email').value.trim();
+    if (!email) return showStatus('error', 'Entrez un email de test');
+    if (!currentDraftId) return showStatus('error', 'Sauvegardez d\'abord le brouillon');
+    showStatus('info', 'Envoi du test...');
+    try {
+      const res = await fetch('/api/admin/newsletter-send', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draft_id: currentDraftId, test_email: email,
+          subject: document.getElementById('email-subject').value.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      showStatus('success', `Email de test envoyé à ${email} ✓`);
+    } catch (e) { showStatus('error', e.message); }
+  }
+
+  async function sendReal() {
+    if (!currentDraftId) return showStatus('error', 'Sauvegardez d\'abord le brouillon');
+    if (!confirm('Envoyer cette newsletter à tous tes abonnés Brevo ?\n\nCette action est irréversible.')) return;
+    const btn = document.getElementById('btn-send-real');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner mr-2"></span>Envoi...';
+    try {
+      const res = await fetch('/api/admin/newsletter-send', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ draft_id: currentDraftId,
+          subject: document.getElementById('email-subject').value.trim() })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error);
+      showStatus('success', 'Newsletter envoyée à tous tes abonnés ✓');
+      await loadDrafts();
+    } catch (e) { showStatus('error', e.message); }
+    finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fas fa-broadcast-tower mr-2"></i>Envoyer à tous les abonnés';
+    }
+  }
+
+  // ===== DRAFTS =====
+  async function loadDrafts() {
+    try {
+      const res = await fetch('/api/admin/newsletter-drafts', { credentials: 'include' });
+      drafts = await res.json();
+      renderDrafts();
+      updateKPIs();
+    } catch(e) { console.error(e); }
+  }
+
+  function renderDrafts() {
+    const tbody = document.getElementById('drafts-table-body');
+    if (!drafts.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="text-center py-12 text-gold/30 cormorant text-lg">Aucune newsletter pour l\'instant</td></tr>';
+      return;
+    }
+    tbody.innerHTML = drafts.map(d => `
+      <tr class="draft-row">
+        <td class="px-6 py-4">
+          <p class="text-sm text-light-gold">${d.subject || '—'}</p>
+          ${d.intention ? `<p class="text-xs text-gold/40 mt-0.5 italic">${d.intention}</p>` : ''}
+        </td>
+        <td class="px-6 py-4">
+          <span class="text-xs px-2 py-1 rounded-full ${d.statut === 'envoyé'
+            ? 'bg-green-900/40 text-green-300 border border-green-500/30'
+            : 'bg-gold/10 text-gold border border-gold/30'}">
+            ${d.statut === 'envoyé' ? '✓ Envoyée' : '◈ Brouillon'}
+          </span>
+        </td>
+        <td class="px-6 py-4 text-xs text-gold/40">
+          ${new Date(d.sent_at || d.created_at).toLocaleDateString('fr-FR')}
+        </td>
+        <td class="px-6 py-4 text-right">
+          <button onclick="openDraft('${d.id}')"
+            class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/40 rounded px-3 py-1 transition">
+            Ouvrir
+          </button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  function updateKPIs() {
+    const envoyes = drafts.filter(d => d.statut === 'envoyé').length;
+    document.getElementById('kpi-total').textContent = drafts.length;
+    document.getElementById('kpi-brouillons').textContent = drafts.length - envoyes;
+    document.getElementById('kpi-envoyes').textContent = envoyes;
+  }
+
+  function openDraft(id) {
+    currentDraftId = id;
+    showTab('generate');
+    document.getElementById('send-zone').classList.remove('hidden');
+    showStatus('info', `Brouillon chargé. Modifie et resauvegarde si besoin.`);
+  }
+
+  // ===== IDEAS =====
+  async function loadIdeas() {
+    try {
+      const res = await fetch('/api/admin/newsletter-ideas', { credentials: 'include' });
+      ideas = await res.json();
+      renderIdeas();
+    } catch(e) { console.error(e); }
+  }
+
+  function renderIdeas() {
+    const list = document.getElementById('ideas-list');
+    if (!ideas.length) {
+      list.innerHTML = '<div class="text-center py-12 text-gold/30 cormorant text-lg">Le carnet est vide — commence à noter</div>';
+      return;
+    }
+    list.innerHTML = ideas.map(idea => `
+      <div class="idea-card rounded-xl p-4 flex gap-4 items-start" id="idea-${idea.id}">
+        <div class="flex-1">
+          <p class="text-sm text-light-gold leading-relaxed">${idea.content}</p>
+          ${idea.source ? `<p class="text-xs text-gold/40 mt-1 italic">${idea.source}</p>` : ''}
+        </div>
+        <div class="flex gap-2 flex-shrink-0">
+          <button onclick="useIdea('${idea.id}')" title="Utiliser dans la newsletter"
+            class="text-gold/40 hover:text-gold transition px-2 py-1 text-xs border border-gold/20 hover:border-gold/40 rounded">
+            → Utiliser
+          </button>
+          <button onclick="deleteIdea('${idea.id}')" title="Supprimer"
+            class="text-red-400/40 hover:text-red-400 transition px-2 py-1 text-xs">
+            <i class="fas fa-times"></i>
+          </button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  async function addIdea() {
+    const content = document.getElementById('new-idea').value.trim();
+    if (!content) return;
+    try {
+      const res = await fetch('/api/admin/newsletter-ideas', {
+        method: 'POST', credentials: 'include',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content, source: document.getElementById('new-idea-source').value.trim() || null })
+      });
+      const idea = await res.json();
+      if (!res.ok) throw new Error(idea.error);
+      ideas.unshift(idea);
+      renderIdeas();
+      document.getElementById('new-idea').value = '';
+      document.getElementById('new-idea-source').value = '';
+      showStatus('success', 'Fragment ajouté ✓');
+    } catch(e) { showStatus('error', e.message); }
+  }
+
+  async function deleteIdea(id) {
+    if (!confirm('Supprimer ce fragment ?')) return;
+    await fetch(`/api/admin/newsletter-ideas?id=${id}`, { method: 'DELETE', credentials: 'include' });
+    ideas = ideas.filter(i => i.id !== id);
+    renderIdeas();
+  }
+
+  function useIdea(id) {
+    const idea = ideas.find(i => i.id === id);
+    if (!idea) return;
+    const cur = document.getElementById('idees-bonus').value;
+    document.getElementById('idees-bonus').value = cur ? cur + '\n\n' + idea.content : idea.content;
+    showTab('generate');
+    showStatus('info', 'Fragment ajouté aux paramètres de génération ✓');
+  }
+
+  // ===== START =====
+  init();
+</script>
+</body>
+</html>
