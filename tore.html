@@ -392,18 +392,68 @@
 
 
 
-  /* RESPONSIVE MOBILE (< 480px) : Grille compacte 2+centre */
-  @media (max-width: 479px) {
-    #tore-immersif .tore-board-7 {
-      aspect-ratio: auto;
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, auto);
-      gap: 6px;
-      padding: 6px;
-      background-image: none; /* plateau masqué sur très petit écran */
-      padding-bottom: 100px; /* espace pour le bandeau bas */
+  /* RESPONSIVE MOBILE PORTRAIT (< 640px) : plateau sans scroll */
+  @media (max-width: 639px) and (orientation: portrait) {
+
+    /* La section immersive prend exactement la hauteur du viewport */
+    #tore-immersif {
+      height: 100dvh;
+      min-height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
 
+    /* Le conteneur intermédiaire propage la hauteur */
+    #tore-immersif > .relative.z-10 {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+      padding-left: 0;
+      padding-right: 0;
+      max-width: 100%;
+    }
+
+    /* Le board prend tout l'espace restant */
+    #tore-board {
+      flex: 1;
+      display: flex !important;
+      flex-direction: column;
+      min-height: 0;
+      margin-top: 0 !important;
+      padding-bottom: 0 !important;
+    }
+
+    /* La grille remplit le board */
+    #tore-immersif .tore-board-7 {
+      flex: 1;
+      min-height: 0;
+      aspect-ratio: auto;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: repeat(3, 1fr);
+      gap: 4px;
+      padding: 4px;
+      padding-bottom: 80px; /* espace bandeau bas fixe */
+      background-image: none;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    /* Les cartes s'adaptent à la cellule de grille */
+    .tore-card {
+      width: 100%;
+      max-width: none;
+      height: 100%;
+    }
+
+    .tore-card-inner,
+    .tore-card-back,
+    .tore-card-front {
+      height: 100%;
+    }
+
+    /* Annuler les transforms de positionnement circulaire */
     #tore-immersif .tore-board-7 .pos-0,
     #tore-immersif .tore-board-7 .pos-1,
     #tore-immersif .tore-board-7 .pos-2,
@@ -413,23 +463,18 @@
     #tore-immersif .tore-board-7 .pos-6 {
       transform: none !important;
     }
-
-    .tore-card {
-      width: 100%;
-      max-width: none;
-    }
   }
 
-  /* RESPONSIVE MOBILE MOYEN (480px - 639px) */
-  @media (min-width: 480px) and (max-width: 639px) {
+  /* RESPONSIVE MOBILE PAYSAGE (< 640px landscape) : grille compacte */
+  @media (max-width: 639px) and (orientation: landscape) {
     #tore-immersif .tore-board-7 {
       aspect-ratio: auto;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, auto);
-      gap: 8px;
-      padding: 8px;
-      background-size: contain;
-      padding-bottom: 110px;
+      gap: 4px;
+      padding: 4px;
+      background-image: none;
+      padding-bottom: 70px;
     }
 
     #tore-immersif .tore-board-7 .pos-0,
