@@ -1,7 +1,7 @@
 // api/admin/auth.js
 // Route unifiée : login + logout + me  (?action=login|logout|me)
 
-import bcrypt from 'bcrypt';
+import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { parse as parseCookie, serialize as serializeCookie } from 'cookie';
 
