@@ -204,6 +204,9 @@ Génère la newsletter complète maintenant. Chaque section délimitée par son 
     if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
     const { draft_id, subject, test_email } = req.body;
     if (!draft_id) return res.status(400).json({ error: 'draft_id requis' });
+    if (!process.env.BREVO_API_KEY || !process.env.BREVO_SENDER_EMAIL) {
+      return res.status(500).json({ error: 'Erreur envoi test', details: 'BREVO_API_KEY ou BREVO_SENDER_EMAIL manquant dans les variables Vercel' });
+    }
 
     const { data: draft, error: fetchError } = await supabase
       .from('newsletter_drafts').select('*').eq('id', draft_id).single();

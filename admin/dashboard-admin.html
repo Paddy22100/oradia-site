@@ -1408,7 +1408,7 @@
                         subject: document.getElementById('nl-subject').value.trim() })
                 });
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.error);
+                if (!res.ok) throw new Error((data.error || 'Erreur') + (data.details ? ' — ' + JSON.stringify(data.details) : ''));
                 nlStatus('success', 'Email de test envoyé à ' + email + ' ✓');
             } catch(e) { nlStatus('error', e.message); }
         }
