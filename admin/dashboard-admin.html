@@ -1330,7 +1330,7 @@
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Claude rédige...';
             nlStatus('info', 'Génération en cours — quelques secondes...');
             try {
-                const res = await fetch('/api/admin/newsletter-generate', {
+                const res = await fetch('/api/admin/newsletter?action=generate', {
                     method: 'POST', credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1372,7 +1372,7 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sauvegarde...';
             try {
-                const res = await fetch('/api/admin/newsletter-save', {
+                const res = await fetch('/api/admin/newsletter?action=save', {
                     method: 'POST', credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1401,7 +1401,7 @@
             if (!nlCurrentDraftId) return nlStatus('error', 'Sauvegardez d\'abord le brouillon');
             nlStatus('info', 'Envoi du test...');
             try {
-                const res = await fetch('/api/admin/newsletter-send', {
+                const res = await fetch('/api/admin/newsletter?action=send', {
                     method: 'POST', credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ draft_id: nlCurrentDraftId, test_email: email,
@@ -1420,7 +1420,7 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Envoi...';
             try {
-                const res = await fetch('/api/admin/newsletter-send', {
+                const res = await fetch('/api/admin/newsletter?action=send', {
                     method: 'POST', credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ draft_id: nlCurrentDraftId,
@@ -1439,7 +1439,7 @@
 
         async function nlLoadDrafts() {
             try {
-                const res = await fetch('/api/admin/newsletter-drafts', { credentials: 'include' });
+                const res = await fetch('/api/admin/newsletter?action=drafts', { credentials: 'include' });
                 nlDrafts = await res.json();
                 nlRenderDrafts();
                 const envoyes = nlDrafts.filter(d => d.statut === 'envoyé').length;
@@ -1491,7 +1491,7 @@
 
         async function nlLoadIdeas() {
             try {
-                const res = await fetch('/api/admin/newsletter-ideas', { credentials: 'include' });
+                const res = await fetch('/api/admin/newsletter?action=ideas', { credentials: 'include' });
                 nlIdeas = await res.json();
                 nlRenderIdeas();
             } catch(e) { console.error(e); }
@@ -1527,7 +1527,7 @@
             const content = document.getElementById('nl-new-idea').value.trim();
             if (!content) return;
             try {
-                const res = await fetch('/api/admin/newsletter-ideas', {
+                const res = await fetch('/api/admin/newsletter?action=ideas', {
                     method: 'POST', credentials: 'include',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ content, source: document.getElementById('nl-new-idea-source').value.trim() || null })
@@ -1544,7 +1544,7 @@
 
         async function nlDeleteIdea(id) {
             if (!confirm('Supprimer ce fragment ?')) return;
-            await fetch('/api/admin/newsletter-ideas?id=' + id, { method: 'DELETE', credentials: 'include' });
+            await fetch('/api/admin/newsletter?action=ideas&id=' + id, { method: 'DELETE', credentials: 'include' });
             nlIdeas = nlIdeas.filter(i => i.id !== id);
             nlRenderIdeas();
         }
