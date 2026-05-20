@@ -338,12 +338,12 @@
   let drafts = [];
 
   async function checkAuth() {
-    const res = await fetch('/api/admin/me', { credentials: 'include' });
+    const res = await fetch('/api/admin/auth?action=me', { credentials: 'include' });
     if (!res.ok) window.location.href = 'login.html';
   }
 
   document.getElementById('logoutBtn').addEventListener('click', async () => {
-    await fetch('/api/admin/logout', { method: 'POST', credentials: 'include' });
+    await fetch('/api/admin/auth?action=logout', { method: 'POST', credentials: 'include' });
     window.location.href = 'login.html';
   });
 

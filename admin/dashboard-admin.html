@@ -693,7 +693,7 @@
             
             try {
                 // Vérifier la session admin
-                const meResponse = await fetch('/api/admin/me', { credentials: 'include' });
+                const meResponse = await fetch('/api/admin/auth?action=me', { credentials: 'include' });
                 if (!meResponse.ok) {
                     window.location.href = 'login.html';
                     return;
@@ -1082,7 +1082,7 @@
         // Déconnexion
         async function logout() {
             try {
-                await fetch('/api/admin/logout', {
+                await fetch('/api/admin/auth?action=logout', {
                     method: 'POST',
                     credentials: 'include'
                 });

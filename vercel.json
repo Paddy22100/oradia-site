@@ -13,16 +13,8 @@
       "dest": "/api/stripe-webhook.js"
     },
     {
-      "src": "/api/admin/login",
-      "dest": "/api/admin/login.js"
-    },
-    {
-      "src": "/api/admin/logout",
-      "dest": "/api/admin/logout.js"
-    },
-    {
-      "src": "/api/admin/me",
-      "dest": "/api/admin/me.js"
+      "src": "/api/admin/auth",
+      "dest": "/api/admin/auth.js"
     },
     {
       "src": "/api/admin/data",
@@ -57,13 +49,7 @@
     "api/stripe-webhook.js": {
       "maxDuration": 30
     },
-    "api/admin/login.js": {
-      "maxDuration": 10
-    },
-    "api/admin/logout.js": {
-      "maxDuration": 10
-    },
-    "api/admin/me.js": {
+    "api/admin/auth.js": {
       "maxDuration": 10
     },
     "api/admin/data.js": {
