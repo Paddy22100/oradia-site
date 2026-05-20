@@ -67,6 +67,42 @@ function getRequestBody(req) {
   return {};
 }
 
+async function addContactToBrevoList(email) {
+  const apiKey = process.env.BREVO_API_KEY;
+  const listId = process.env.BREVO_WAITLIST_LIST_ID;
+
+  if (!apiKey || !listId) {
+    console.warn('Brevo config missing for contact list addition');
+    return false;
+  }
+
+  try {
+    const response = await fetch('https://api.brevo.com/v3/contacts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': apiKey
+      },
+      body: JSON.stringify({
+        email,
+        listIds: [parseInt(listId)],
+        updateEnabled: true
+      })
+    });
+
+    if (!response.ok && response.status !== 204) {
+      const err = await response.json().catch(() => ({}));
+      console.error('Brevo add contact error:', err);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Brevo add contact failed:', error.message);
+    return false;
+  }
+}
+
 async function sendWaitlistConfirmationEmail(email) {
   const apiKey = process.env.BREVO_API_KEY;
   const senderEmail = process.env.BREVO_SENDER_EMAIL;
@@ -274,12 +310,16 @@ module.exports = async (req, res) => {
       });
     }
 
-    const emailSent = await sendWaitlistConfirmationEmail(email);
+    const [emailSent, contactAdded] = await Promise.all([
+      sendWaitlistConfirmationEmail(email),
+      addContactToBrevoList(email)
+    ]);
 
     return res.status(200).json({
       success: true,
       message: 'Vous êtes inscrit à la liste d\'attente.',
-      emailSent
+      emailSent,
+      contactAdded
     });
   } catch (error) {
     console.error('Waitlist endpoint failed:', error.message);

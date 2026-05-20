@@ -217,35 +217,39 @@ Génère la newsletter complète maintenant. Chaque section délimitée par son 
     const emailSubject = subject || draft.subject || 'La lettre du vivant';
     const htmlContent = textToHtml(draft.content);
 
-    const campaignPayload = test_email
-      ? { name: `TEST — ${emailSubject}`, subject: `[TEST] ${emailSubject}`,
-          sender: { name: process.env.BREVO_SENDER_NAME || 'Rudy — La Boussole Intérieure',
-            email: process.env.BREVO_SENDER_EMAIL },
-          type: 'classic', htmlContent }
-      : { name: emailSubject, subject: emailSubject,
-          sender: { name: process.env.BREVO_SENDER_NAME || 'Rudy — La Boussole Intérieure',
-            email: process.env.BREVO_SENDER_EMAIL },
-          type: 'classic', htmlContent,
-          recipients: { listIds: [parseInt(process.env.BREVO_LIST_ID)] } };
+    const senderName = process.env.BREVO_SENDER_NAME || 'Rudy — La Boussole Intérieure';
+    const senderEmail = process.env.BREVO_SENDER_EMAIL;
 
     try {
+      // ── TEST : envoi transactionnel direct (smtp/email), pas besoin que le contact existe
+      if (test_email) {
+        const testRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            sender: { name: senderName, email: senderEmail },
+            to: [{ email: test_email }],
+            subject: `[TEST] ${emailSubject}`,
+            htmlContent
+          })
+        });
+        if (!testRes.ok) return res.status(500).json({ error: 'Erreur envoi test', details: await testRes.json() });
+        return res.status(200).json({ success: true, mode: 'test' });
+      }
+
+      // ── ENVOI RÉEL : créer la campagne puis envoyer à la liste
       const createRes = await fetch('https://api.brevo.com/v3/emailCampaigns', {
         method: 'POST',
         headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
-        body: JSON.stringify(campaignPayload)
+        body: JSON.stringify({
+          name: emailSubject, subject: emailSubject,
+          sender: { name: senderName, email: senderEmail },
+          type: 'classic', htmlContent,
+          recipients: { listIds: [parseInt(process.env.BREVO_LIST_ID)] }
+        })
       });
       const campaign = await createRes.json();
-      if (!createRes.ok) return res.status(500).json({ error: 'Erreur Brevo', details: campaign });
-
-      if (test_email) {
-        const testRes = await fetch(`https://api.brevo.com/v3/emailCampaigns/${campaign.id}/sendTest`, {
-          method: 'POST',
-          headers: { 'api-key': process.env.BREVO_API_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ emailTo: [test_email] })
-        });
-        if (!testRes.ok) return res.status(500).json({ error: 'Erreur envoi test', details: await testRes.json() });
-        return res.status(200).json({ success: true, mode: 'test', campaign_id: campaign.id });
-      }
+      if (!createRes.ok) return res.status(500).json({ error: 'Erreur création campagne Brevo', details: campaign });
 
       const sendRes = await fetch(`https://api.brevo.com/v3/emailCampaigns/${campaign.id}/sendNow`, {
         method: 'POST', headers: { 'api-key': process.env.BREVO_API_KEY }
