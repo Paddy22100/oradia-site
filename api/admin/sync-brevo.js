@@ -1,9 +1,9 @@
 const { createClient } = require('@supabase/supabase-js');
-const { verifyAdminToken } = require('./auth');
+const { verifyAdminAuth } = require('./_auth');
 
 function getSupabaseClient() {
   return createClient(
-    process.env.SUPABASE_URL,
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL,
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
 }
@@ -21,11 +21,14 @@ async function addContactToBrevo(email, listId, apiKey) {
   return true;
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
-  const admin = verifyAdminToken(req);
-  if (!admin) return res.status(401).json({ error: 'Non autorisé' });
+  try {
+    verifyAdminAuth(req);
+  } catch(e) {
+    return res.status(401).json({ error: 'Non autorisé' });
+  }
 
   const apiKey = process.env.BREVO_API_KEY;
   const listId = process.env.BREVO_WAITLIST_LIST_ID;
