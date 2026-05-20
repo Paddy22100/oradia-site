@@ -47,6 +47,10 @@
     {
       "src": "/api/waitlist",
       "dest": "/api/waitlist.js"
+    },
+    {
+      "src": "/api/mondial-relay/pickup-points",
+      "dest": "/api/mondial-relay/pickup-points.js"
     }
   ],
   "functions": {
@@ -79,6 +83,9 @@
     },
     "api/waitlist.js": {
       "maxDuration": 10
+    },
+    "api/mondial-relay/pickup-points.js": {
+      "maxDuration": 15
     }
   },
   "env": {
