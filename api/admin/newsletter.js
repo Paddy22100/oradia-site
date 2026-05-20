@@ -132,6 +132,9 @@ STRUCTURE OBLIGATOIRE :
 7. SIGNATURE : Max 2 lignes dans la voix de Rudy.
 Génère la newsletter complète maintenant. Chaque section délimitée par son titre en MAJUSCULES.`;
 
+    if (!process.env.ANTHROPIC_API_KEY) {
+      return res.status(500).json({ error: 'Erreur génération Claude', details: 'ANTHROPIC_API_KEY manquante dans les variables Vercel' });
+    }
     try {
       const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
       const message = await client.messages.create({

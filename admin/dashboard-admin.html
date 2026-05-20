@@ -1342,7 +1342,7 @@
                     })
                 });
                 const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Erreur génération');
+                if (!res.ok) throw new Error((data.error || 'Erreur génération') + (data.details ? ' — ' + data.details : ''));
                 document.getElementById('nl-placeholder').classList.add('hidden');
                 const editor = document.getElementById('nl-content');
                 editor.classList.remove('hidden');
