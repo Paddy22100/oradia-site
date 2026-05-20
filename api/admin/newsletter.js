@@ -30,43 +30,122 @@ function checkAuth(req, res) {
 // ── textToHtml (pour l'envoi Brevo) ──────────────────────────────────────────
 function textToHtml(text) {
   const lines = text.split('\n');
-  let html = '';
+  let bodyHtml = '';
   for (const line of lines) {
     const trimmed = line.trim();
-    if (!trimmed) { html += '<br>'; continue; }
-    if (/^[A-ZÀÂÉÈÊËÎÏÔÙÛÜ\s]{3,}\s*:/.test(trimmed)) {
-      html += `<p style="font-size:11px;letter-spacing:2px;color:#8B7355;text-transform:uppercase;margin:24px 0 8px;">${trimmed}</p>`;
+    if (!trimmed) { bodyHtml += '<tr><td style="padding:6px 0;"></td></tr>'; continue; }
+    // Titres de section en MAJUSCULES (ex: "RÉFLEXION :", "OBJET :")
+    if (/^[A-ZÀÂÉÈÊËÎÏÔÙÛÜ][A-ZÀÂÉÈÊËÎÏÔÙÛÜ\s\u00C0-\u00FF]{2,}\s*:/.test(trimmed)) {
+      bodyHtml += `<tr><td style="padding:28px 0 10px 0;">
+        <p style="margin:0;font-family:Georgia,serif;font-size:10px;letter-spacing:3px;color:#d4af37;text-transform:uppercase;font-weight:600;">${trimmed}</p>
+        <div style="width:32px;height:1px;background:#d4af37;margin-top:8px;opacity:0.6;"></div>
+      </td></tr>`;
       continue;
     }
+    // Lien oradia.fr (→ oradia.fr)
     if (trimmed.startsWith('→')) {
-      html += `<p style="margin:16px 0;"><a href="https://oradia.fr" style="color:#C4922A;text-decoration:none;font-weight:600;">${trimmed}</a></p>`;
+      bodyHtml += `<tr><td style="padding:20px 0 8px 0;text-align:center;">
+        <a href="https://oradia.fr" style="display:inline-block;color:#d4af37;font-family:Georgia,serif;font-size:13px;letter-spacing:2px;text-decoration:none;text-transform:uppercase;border-bottom:1px solid rgba(212,175,55,0.4);padding-bottom:3px;">${trimmed}</a>
+      </td></tr>`;
+      continue;
+    }
+    // Séparateurs ---
+    if (/^-{3,}$/.test(trimmed)) {
+      bodyHtml += `<tr><td style="padding:16px 0;">
+        <div style="width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);"></div>
+      </td></tr>`;
+      continue;
+    }
+    // Texte en italique *...*
+    if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
+      bodyHtml += `<tr><td style="padding:12px 0;">
+        <p style="margin:0;font-family:Georgia,serif;font-size:16px;line-height:1.8;color:#f0c75e;font-style:italic;">${trimmed.slice(2,-2)}</p>
+      </td></tr>`;
       continue;
     }
     if (trimmed.startsWith('*') && trimmed.endsWith('*')) {
-      html += `<p style="font-style:italic;color:#5C4A2A;font-size:17px;line-height:1.7;margin:16px 0;border-left:3px solid #C4922A;padding-left:16px;">${trimmed.slice(1, -1)}</p>`;
+      bodyHtml += `<tr><td style="padding:8px 0 8px 20px;border-left:2px solid rgba(212,175,55,0.5);">
+        <p style="margin:0;font-family:Georgia,serif;font-size:15px;line-height:1.9;color:#d8bf72;font-style:italic;">${trimmed.slice(1,-1)}</p>
+      </td></tr>`;
       continue;
     }
-    html += `<p style="font-size:15px;line-height:1.8;color:#2C1810;margin:8px 0;">${trimmed}</p>`;
+    // Paragraphe normal
+    bodyHtml += `<tr><td style="padding:6px 0;">
+      <p style="margin:0;font-family:Georgia,serif;font-size:15px;line-height:1.9;color:#d1d5db;">${trimmed}</p>
+    </td></tr>`;
   }
-  return `<!DOCTYPE html><html><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
-<body style="margin:0;padding:0;background:#F8F4EE;font-family:Georgia,serif;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#F8F4EE;padding:40px 20px;">
-    <tr><td align="center">
-      <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
-        <tr><td style="background:#1C1208;padding:32px 40px;text-align:center;border-radius:8px 8px 0 0;">
-          <p style="margin:0;color:#C4922A;font-size:11px;letter-spacing:3px;text-transform:uppercase;">La Boussole Intérieure</p>
-          <p style="margin:8px 0 0;color:#F8F4EE;font-size:22px;font-weight:normal;font-style:italic;">La lettre du vivant</p>
-        </td></tr>
-        <tr><td style="background:#FFFFFF;padding:48px 40px;border-radius:0 0 8px 8px;">
-          ${html}
-          <hr style="border:none;border-top:1px solid #E8DDD0;margin:40px 0;">
-          <p style="font-size:12px;color:#9E8B7A;text-align:center;line-height:1.6;">
-            Vous recevez cette lettre parce que vous êtes inscrit sur <a href="https://oradia.fr" style="color:#C4922A;">oradia.fr</a><br>
-            <a href="{{unsubscribe}}" style="color:#9E8B7A;">Se désinscrire</a>
-          </p>
-        </td></tr>
-      </table>
-    </td></tr>
+
+  return `<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:0;background:#050a14;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#050a14;margin:0;padding:0;">
+    <tr>
+      <td align="center" style="padding:48px 20px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:linear-gradient(135deg,#0a1628 0%,#051428 100%);border:1px solid rgba(212,175,55,0.3);box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+
+          <!-- Header image -->
+          <tr>
+            <td align="center" style="padding:0;position:relative;">
+              <div style="position:relative;width:100%;height:200px;overflow:hidden;">
+                <img src="https://oradia.fr/images/medias/apercu_stripe.jpg" alt="Oradia" width="600" style="display:block;width:100%;height:200px;object-fit:cover;border:0;opacity:0.7;">
+                <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(5,10,20,0) 0%,rgba(5,10,20,0.97) 100%);"></div>
+              </div>
+            </td>
+          </tr>
+
+          <!-- Titre -->
+          <tr>
+            <td align="center" style="padding:32px 40px 24px 40px;">
+              <p style="margin:0;font-family:Georgia,serif;font-size:10px;letter-spacing:4px;color:#d4af37;text-transform:uppercase;">La Boussole Intérieure</p>
+              <h1 style="margin:12px 0 0 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:34px;font-weight:300;color:#f0c75e;letter-spacing:2px;line-height:1.2;">La lettre du vivant</h1>
+              <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:20px auto 0;"></div>
+            </td>
+          </tr>
+
+          <!-- Corps -->
+          <tr>
+            <td style="padding:8px 48px 40px 48px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                ${bodyHtml}
+              </table>
+            </td>
+          </tr>
+
+          <!-- Séparateur -->
+          <tr>
+            <td align="center" style="padding:0 40px;">
+              <div style="width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);"></div>
+            </td>
+          </tr>
+
+          <!-- Signature -->
+          <tr>
+            <td align="center" style="padding:36px 40px 48px 40px;">
+              <p style="margin:0 0 6px 0;font-family:Georgia,serif;font-size:13px;color:#9ca3af;font-style:italic;">Avec toute ma gratitude,</p>
+              <p style="margin:0 0 4px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:600;color:#f0c75e;letter-spacing:1px;">Rudy</p>
+              <p style="margin:0 0 20px 0;font-family:Georgia,serif;font-size:13px;color:#d8bf72;font-style:italic;">La Boussole Intérieure</p>
+              <a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-family:Georgia,serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid rgba(212,175,55,0.4);padding-bottom:2px;">oradia.fr</a>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding:24px 40px;background:rgba(5,10,20,0.6);border-top:1px solid rgba(212,175,55,0.15);">
+              <p style="margin:0;font-family:Georgia,serif;font-size:11px;color:#6b7280;text-align:center;line-height:1.7;">
+                Vous recevez cette lettre parce que vous êtes abonné à <a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;">oradia.fr</a><br>
+                <a href="{{unsubscribe}}" style="color:#6b7280;text-decoration:underline;">Se désinscrire</a>
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
   </table>
 </body></html>`;
 }
