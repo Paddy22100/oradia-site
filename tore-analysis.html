@@ -540,25 +540,75 @@
         </div>
         
         <!-- Modale email tirage -->
-        <div id="emailModal" style="display:none; position:fixed; inset:0; z-index:9999; background:rgba(3,10,22,0.85); backdrop-filter:blur(6px); align-items:center; justify-content:center;">
-            <div style="background:linear-gradient(135deg,rgba(5,20,40,0.98),rgba(3,10,22,0.98)); border:1px solid rgba(212,175,55,0.4); border-radius:20px; padding:2.5rem; max-width:420px; width:90%; box-shadow:0 24px 64px rgba(0,0,0,0.6), 0 0 40px rgba(212,175,55,0.08); position:relative;">
-                <button onclick="closeEmailModal()" style="position:absolute; top:1rem; right:1.2rem; background:none; border:none; color:rgba(212,175,55,0.5); font-size:1.2rem; cursor:pointer; line-height:1;">&times;</button>
-                <div style="text-align:center; margin-bottom:1.5rem;">
-                    <i class="fas fa-envelope" style="color:#d4af37; font-size:2rem; margin-bottom:0.8rem; display:block;"></i>
-                    <h3 style="font-family:'Cinzel',serif; color:#d4af37; font-size:1.1rem; font-weight:700; margin:0 0 0.4rem;">Recevoir mon tirage</h3>
-                    <p style="color:#c8c0a8; font-size:0.88rem; margin:0;">Entrez votre adresse e-mail pour recevoir un résumé de votre analyse.</p>
+        <div id="emailModal" style="display:none; position:fixed; inset:0; z-index:9999; background:url('images/oradia-hero-4k.png') center/cover no-repeat; align-items:center; justify-content:center; padding:16px;">
+            <!-- Voile sombre léger -->
+            <div style="position:absolute; inset:0; background:rgba(3,10,22,0.45);"></div>
+            <div style="background:linear-gradient(145deg,rgba(10,22,40,0.55),rgba(3,10,22,0.6)); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border:1px solid rgba(212,175,55,0.4); border-radius:24px; padding:0; max-width:460px; width:100%; box-shadow:0 32px 80px rgba(0,0,0,0.5), 0 0 60px rgba(212,175,55,0.1); position:relative; overflow:hidden;">
+                <!-- Barre lumineuse haut -->
+                <div style="position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(212,175,55,0.7),transparent);"></div>
+                <!-- Bouton fermer -->
+                <button onclick="closeEmailModal()" style="position:absolute; top:1rem; right:1.2rem; background:none; border:none; color:rgba(212,175,55,0.4); font-size:1.3rem; cursor:pointer; line-height:1; z-index:1; transition:color .2s;" onmouseover="this.style.color='rgba(212,175,55,0.9)'" onmouseout="this.style.color='rgba(212,175,55,0.4)'">&times;</button>
+
+                <!-- En-tête -->
+                <div style="text-align:center; padding:2.2rem 2rem 1.4rem; border-bottom:1px solid rgba(212,175,55,0.12);">
+                    <div style="width:52px; height:52px; border-radius:50%; background:rgba(212,175,55,0.1); border:1px solid rgba(212,175,55,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">
+                        <i class="fas fa-envelope-open-text" style="color:#d4af37; font-size:1.4rem;"></i>
+                    </div>
+                    <h3 style="font-family:'Cinzel',serif; color:#d4af37; font-size:1.15rem; font-weight:700; margin:0 0 0.5rem; letter-spacing:0.06em;">Recevoir mon analyse</h3>
+                    <p style="color:rgba(200,192,168,0.7); font-size:0.85rem; margin:0; line-height:1.5;">Un email élégant avec vos cartes,<br>le message de l'oracle et la synthèse.</p>
                 </div>
-                <form id="emailForm" onsubmit="sendTirageEmail(event)">
-                    <input type="email" id="tirageEmail" placeholder="votre@email.com" required
-                        style="width:100%; box-sizing:border-box; padding:0.8rem 1rem; border-radius:50px; border:1px solid rgba(212,175,55,0.4); background:rgba(255,255,255,0.05); color:#f5e7a1; font-size:0.9rem; outline:none; margin-bottom:1rem;"
-                        onfocus="this.style.borderColor='rgba(212,175,55,0.8)'" onblur="this.style.borderColor='rgba(212,175,55,0.4)'">
-                    <button type="submit" style="width:100%; padding:0.85rem; border-radius:50px; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#030a16; font-family:'Cinzel',serif; font-weight:700; font-size:0.9rem; border:none; cursor:pointer; letter-spacing:0.05em;">
-                        <i class="fas fa-paper-plane" style="margin-right:6px;"></i>Envoyer
-                    </button>
-                </form>
-                <div id="emailSuccess" style="display:none; text-align:center; padding:1rem 0;">
-                    <i class="fas fa-check-circle" style="color:#d4af37; font-size:2rem; margin-bottom:0.6rem; display:block;"></i>
-                    <p style="color:#f5e7a1; font-family:'Cinzel',serif; font-size:0.9rem; margin:0;">Votre tirage a été envoyé !</p>
+
+                <!-- Formulaire -->
+                <div id="emailForm" style="padding:1.8rem 2rem 2rem;">
+                    <form onsubmit="sendTirageEmail(event)">
+                        <label style="display:block; color:rgba(212,175,55,0.6); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.2em; margin-bottom:0.5rem;">Votre adresse e-mail</label>
+                        <input type="email" id="tirageEmail" placeholder="votre@email.com" required
+                            style="width:100%; box-sizing:border-box; padding:0.85rem 1.1rem; border-radius:50px; border:1px solid rgba(212,175,55,0.35); background:rgba(255,255,255,0.04); color:#f5e7a1; font-size:0.9rem; outline:none; margin-bottom:1.2rem; font-family:Georgia,serif;"
+                            onfocus="this.style.borderColor='rgba(212,175,55,0.75)'" onblur="this.style.borderColor='rgba(212,175,55,0.35)'">
+
+                        <!-- Case newsletter -->
+                        <label id="newsletterLabel" style="display:block; cursor:pointer; margin-bottom:1.5rem; border-radius:14px; background:rgba(212,175,55,0.04); border:1px solid rgba(212,175,55,0.15); overflow:hidden; transition:border-color .2s, background .2s;" onmouseover="this.style.borderColor='rgba(212,175,55,0.35)';this.style.background='rgba(212,175,55,0.07)'" onmouseout="this.style.borderColor='rgba(212,175,55,0.15)';this.style.background='rgba(212,175,55,0.04)'">
+                            <input type="checkbox" id="newsletterConsent" style="display:none;" checked>
+                            <!-- Motif boussole Oradia (statique) -->
+                            <div style="text-align:center; padding:18px 16px 14px; border-bottom:1px solid rgba(212,175,55,0.1);">
+                                <div style="position:relative; width:80px; height:80px; margin:0 auto 10px; display:flex; align-items:center; justify-content:center;">
+                                    <!-- Anneau extérieur -->
+                                    <div style="position:absolute; inset:-6px; border-radius:50%; border:1.5px solid transparent; border-top-color:rgba(140,190,255,0.45); border-bottom-color:rgba(140,190,255,0.2); transform:rotate(-30deg);"></div>
+                                    <!-- Anneau principal -->
+                                    <div style="position:absolute; inset:0; border-radius:50%; border:2px solid transparent; border-top-color:rgba(212,175,55,0.9); border-right-color:rgba(212,175,55,0.3);"></div>
+                                    <!-- Anneau intérieur -->
+                                    <div style="position:absolute; inset:12px; border-radius:50%; border:1.5px solid transparent; border-top-color:rgba(212,175,55,0.6); border-left-color:rgba(212,175,55,0.2); transform:rotate(45deg);"></div>
+                                    <!-- Logo central -->
+                                    <img src="images/logo-hd-v2.jpeg" alt="Oradia" style="width:44px; height:44px; border-radius:50%; object-fit:cover; box-shadow:0 0 16px rgba(212,175,55,0.4); position:relative; z-index:1;">
+                                </div>
+                                <p style="color:#d4af37; font-family:'Cinzel',serif; font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase; margin:0;">Rester dans la lumière</p>
+                            </div>
+                            <!-- Texte + checkbox -->
+                            <div style="display:flex; align-items:center; gap:12px; padding:12px 16px 14px;">
+                                <div id="newsletterCheckVisual" style="width:20px; height:20px; border-radius:6px; border:1.5px solid #d4af37; background:#d4af37; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all .2s;">
+                                    <svg id="newsletterCheck" width="11" height="9" viewBox="0 0 11 9" fill="none" style="opacity:1; transition:opacity .2s;"><path d="M1 4L4 7.5L10 1" stroke="#030a16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                                </div>
+                                <div>
+                                    <p style="color:rgba(225,215,190,0.9); font-size:0.83rem; line-height:1.55; margin:0 0 3px;">Recevoir les nouvelles d'Oradia</p>
+                                    <p style="color:rgba(212,175,55,0.45); font-size:0.72rem; margin:0;">Tirages, inspirations et actualités de l'oracle. Désabonnement libre.</p>
+                                </div>
+                            </div>
+                        </label>
+
+                        <button type="submit" id="emailSubmitBtn" style="width:100%; padding:0.9rem; border-radius:50px; background:linear-gradient(135deg,#d4af37,#f5e7a1,#d4af37); background-size:200%; color:#030a16; font-family:'Cinzel',serif; font-weight:700; font-size:0.9rem; border:none; cursor:pointer; letter-spacing:0.06em; transition:opacity .2s;">
+                            <i class="fas fa-paper-plane" style="margin-right:8px;"></i>Envoyer mon analyse
+                        </button>
+                        <p id="emailError" style="display:none; text-align:center; color:rgba(231,76,60,0.8); font-size:0.82rem; margin:0.8rem 0 0;"></p>
+                    </form>
+                </div>
+
+                <!-- Succès -->
+                <div id="emailSuccess" style="display:none; text-align:center; padding:2.5rem 2rem;">
+                    <div style="width:60px; height:60px; border-radius:50%; background:rgba(46,204,113,0.12); border:1px solid rgba(46,204,113,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 1.2rem;">
+                        <i class="fas fa-check" style="color:#2ecc71; font-size:1.5rem;"></i>
+                    </div>
+                    <h4 style="font-family:'Cinzel',serif; color:#d4af37; font-size:1rem; font-weight:700; margin:0 0 0.5rem;">Analyse envoyée !</h4>
+                    <p style="color:rgba(200,192,168,0.7); font-size:0.85rem; margin:0;">Vérifiez votre boîte de réception.</p>
                 </div>
             </div>
         </div>
@@ -1232,40 +1282,76 @@
             document.getElementById('emailSuccess').style.display = 'none';
             document.getElementById('emailForm').style.display = 'block';
             document.getElementById('tirageEmail').value = '';
+            const cb = document.getElementById('newsletterConsent');
+            cb.checked = true;
+            document.getElementById('newsletterCheckVisual').style.background = '#d4af37';
+            document.getElementById('newsletterCheckVisual').style.borderColor = '#d4af37';
+            document.getElementById('newsletterCheck').style.opacity = '1';
         }
 
         function closeEmailModal() {
             document.getElementById('emailModal').style.display = 'none';
         }
 
+        document.getElementById('newsletterLabel').addEventListener('click', function(){
+            const cb = document.getElementById('newsletterConsent');
+            const vis = document.getElementById('newsletterCheckVisual');
+            const chk = document.getElementById('newsletterCheck');
+            cb.checked = !cb.checked;
+            if (cb.checked) {
+                vis.style.background = '#d4af37';
+                vis.style.borderColor = '#d4af37';
+                chk.style.opacity = '1';
+            } else {
+                vis.style.background = 'transparent';
+                vis.style.borderColor = 'rgba(212,175,55,0.4)';
+                chk.style.opacity = '0';
+            }
+        });
+
         document.getElementById('emailModal').addEventListener('click', function(e) {
             if (e.target === this) closeEmailModal();
         });
 
-        function sendTirageEmail(e) {
+        async function sendTirageEmail(e) {
             e.preventDefault();
             const email = document.getElementById('tirageEmail').value;
+            const subscribeNewsletter = document.getElementById('newsletterConsent').checked;
             const intention = sessionStorage.getItem('tore_intention') || '';
             const cardsRaw = sessionStorage.getItem('tore_cards');
             const cards = cardsRaw ? JSON.parse(cardsRaw) : [];
-
-            // Construction du corps du mail via mailto (fallback sans serveur)
-            const cardNames = cards.map(c => c.name ? c.name.replace(/_/g, ' ') : '').filter(Boolean).join(', ');
+            const analysis = document.getElementById('analysisContent')?.innerText || '';
             const synthesis = document.getElementById('synthesisContent')?.innerText || '';
-            const message = document.getElementById('analysisContent')?.innerText || '';
 
-            const subject = encodeURIComponent('Mon tirage Oradia');
-            const body = encodeURIComponent(
-                `Mon intention : ${intention}\n\nCartes tirées : ${cardNames}\n\n--- Analyse ---\n${message.slice(0, 800)}\n\n--- Synthèse ---\n${synthesis.slice(0, 400)}\n\noradia.fr`
-            );
+            const btn = document.getElementById('emailSubmitBtn');
+            const errEl = document.getElementById('emailError');
+            btn.disabled = true;
+            btn.style.opacity = '0.6';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i>Envoi en cours...';
+            errEl.style.display = 'none';
 
-            // Ouvrir le client mail natif
-            window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
+            try {
+                const resp = await fetch('/api/tirages/send-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, intention, cards, analysis, synthesis, subscribeNewsletter })
+                });
+                const data = await resp.json();
 
-            // Afficher le succès
-            document.getElementById('emailForm').style.display = 'none';
-            document.getElementById('emailSuccess').style.display = 'block';
-            setTimeout(closeEmailModal, 2500);
+                if (data.success) {
+                    document.getElementById('emailForm').style.display = 'none';
+                    document.getElementById('emailSuccess').style.display = 'block';
+                    setTimeout(closeEmailModal, 3000);
+                } else {
+                    throw new Error(data.message || 'Erreur inconnue');
+                }
+            } catch (err) {
+                errEl.textContent = "L'envoi a échoué. Vérifiez votre adresse et réessayez.";
+                errEl.style.display = 'block';
+                btn.disabled = false;
+                btn.style.opacity = '1';
+                btn.innerHTML = '<i class="fas fa-paper-plane" style="margin-right:8px;"></i>Envoyer mon analyse';
+            }
         }
     </script>
     

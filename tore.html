@@ -1027,16 +1027,6 @@
     box-shadow: 0 0 40px rgba(212,175,55,0.45);
   }
 
-  .compass-needle {
-    position: absolute;
-    width: 4px;
-    height: 72px;
-    border-radius: 3px;
-    background: linear-gradient(to top, rgba(231,76,60,0.95) 50%, rgba(212,175,55,0.9) 50%);
-    transform-origin: center 75%;
-    animation: compassNeedle 3s cubic-bezier(0.4,0,0.2,1) forwards;
-    box-shadow: 0 0 12px rgba(212,175,55,0.5);
-  }
 
   .compass-text {
     margin-top: 36px;
@@ -1069,13 +1059,6 @@
     100% { transform: rotate(360deg); }
   }
 
-  @keyframes compassNeedle {
-    0%   { transform: rotate(-30deg); }
-    30%  { transform: rotate(180deg); }
-    60%  { transform: rotate(90deg); }
-    80%  { transform: rotate(340deg); }
-    100% { transform: rotate(360deg); }
-  }
 
   @keyframes compassTextPulse {
     0%, 100% { opacity: 0.75; }
@@ -2214,7 +2197,7 @@
 
 
       <!-- Flèche coin → carte (SVG) - recréé dynamiquement en position:absolute -->
-      <svg id="tore-arrow" style="display:none;"></svg>
+      <svg id="tore-arrow"></svg>
 
 
 
@@ -2225,7 +2208,6 @@
           <div class="compass-ring"></div>
           <div class="compass-ring compass-ring-inner"></div>
           <img class="compass-logo-img" src="images/logo-hd-v2.jpeg" alt="Oradia" />
-          <div class="compass-needle"></div>
         </div>
         <p class="compass-text">Analyse du tirage en cours<span class="compass-dots">...</span></p>
       </div>
@@ -2860,8 +2842,7 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
 
     // Forcer le redémarrage des animations CSS enfants
     const img = overlay.querySelector('.compass-logo-img');
-    const needle = overlay.querySelector('.compass-needle');
-    [img, needle].forEach(node => { if(node){ node.style.animation='none'; void node.offsetWidth; node.style.animation=''; } });
+    if (img) { img.style.animation = 'none'; void img.offsetWidth; img.style.animation = ''; }
 
     setTimeout(() => {
       overlay.style.animation = 'compassFadeOut 0.5s ease forwards';
@@ -3357,12 +3338,11 @@ function showToreAnalysisCTA() {
       if (arrow) arrow.remove();
       arrow = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
       arrow.id = 'tore-arrow';
-      // position:absolute ancrée au coin (0,0) du document → immune au scroll
-      arrow.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:70;overflow:visible;';
-      // S'assurer que le body est bien le conteneur de positionnement
-      if (document.body.style.position !== 'relative') document.body.style.position = 'relative';
-      document.body.appendChild(arrow);
     }
+    // Toujours (re)positionner dans body et forcer le style
+    arrow.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:70;overflow:visible;display:block;';
+    if (document.body.style.position !== 'relative') document.body.style.position = 'relative';
+    if (arrow.parentElement !== document.body) document.body.appendChild(arrow);
 
     // Couleur selon le contexte (passé via data-match sur le SVG parent)
     const matchState = arrow.dataset.match;

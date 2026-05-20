@@ -2,6 +2,8 @@ const express = require('express');
 const { authenticate, requireAdmin, logActivity } = require('../middleware/auth');
 const Tirage = require('../models/Tirage');
 const User = require('../models/User');
+const brevoService = require('../services/brevoService');
+const Newsletter = require('../models/Newsletter');
 
 const router = express.Router();
 
@@ -179,6 +181,50 @@ router.post('/:id/feedback', authenticate, requireAdmin, logActivity('admin_feed
     res.status(500).json({
       success: false,
       message: 'Erreur lors de l\'ajout du feedback',
+      error: process.env.NODE_ENV === 'development' ? error.message : {}
+    });
+  }
+});
+
+// POST /api/tirages/send-email - Envoyer l'analyse par email
+router.post('/send-email', logActivity('tirage_email_sent'), async (req, res) => {
+  try {
+    const { email, intention, cards, analysis, synthesis, subscribeNewsletter } = req.body;
+
+    if (!email || !cards || !Array.isArray(cards)) {
+      return res.status(400).json({ success: false, message: 'Email et cartes requis' });
+    }
+
+    // Envoyer l'email d'analyse
+    await brevoService.sendTirageAnalysis({ email, intention, cards, analysis, synthesis });
+
+    // Inscrire à la newsletter si demandé
+    if (subscribeNewsletter) {
+      try {
+        const existing = await Newsletter.findOne({ email });
+        if (!existing) {
+          await Newsletter.create({
+            email,
+            source: 'tore_analysis_email',
+            segments: ['visitors', 'tirage_users'],
+            preferences: { frequency: 'weekly', contentTypes: ['newsletter_general'], language: 'fr' },
+            metadata: { ipAddress: req.ip, userAgent: req.get('User-Agent') }
+          });
+        } else if (!existing.active) {
+          existing.active = true;
+          await existing.save();
+        }
+      } catch (newsletterErr) {
+        // Ne pas bloquer l'envoi de l'email si la newsletter échoue
+      }
+    }
+
+    res.json({ success: true, message: 'Analyse envoyée avec succès' });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de l\'envoi de l\'email',
       error: process.env.NODE_ENV === 'development' ? error.message : {}
     });
   }
