@@ -75,24 +75,30 @@ export default async function handler(req, res) {
 
   const results = { produit: null, ambiance_locale: [], unsplash: [] };
 
-  // 1. Image produit Oradia — choisie selon le thème
+  // 1. Images produit Oradia — jusqu'à 3 selon le thème
   const PRODUIT_IMAGES = [
-    { path: '/images/Coffret.png', name: 'Le Coffret La Boussole Intérieure', tags: ['coffret','boussole','oracle','cadeau'] },
+    { path: '/images/Coffret.png', name: 'Le Coffret Oradia', tags: ['coffret','boussole','oracle','cadeau','intention','theme'] },
     { path: '/images/plateau.jpeg', name: 'Le Plateau de tirage', tags: ['plateau','tirage','oracle','cartes'] },
-    { path: '/images/apercu-hd.png', name: 'Aperçu des cartes', tags: ['cartes','oracle','tirage','deck'] },
-    { path: '/images/fenetre_observation.png', name: 'Fenêtre d\'observation', tags: ['observation','conscience','regard','interieur'] },
-    { path: '/images/coin-oradia.png', name: 'Coin Oradia', tags: ['oradia','symbole','logo'] },
-    { path: '/images/medias/apercu_stripe.png', name: 'Aperçu produit', tags: ['produit','precommande','oracle'] }
+    { path: '/images/apercu-hd.png', name: 'Les Cartes Oradia', tags: ['cartes','oracle','tirage','deck','intention'] },
+    { path: '/images/fenetre_observation.png', name: 'Fenêtre d\'observation', tags: ['observation','conscience','regard','interieur','introspection'] },
+    { path: '/images/coin-oradia.png', name: 'Oradia', tags: ['oradia','symbole','logo','marque'] },
+    { path: '/images/medias/apercu_stripe.png', name: 'Aperçu de l\'Oracle', tags: ['produit','precommande','oracle','intention'] },
+    { path: '/images/tirage-exemple.png', name: 'Exemple de tirage', tags: ['tirage','exemple','cartes','oracle'] },
+    { path: '/images/carte-emotion.png', name: 'Carte Émotion', tags: ['emotion','carte','famille','ressenti'] },
+    { path: '/images/carte-besoin.png', name: 'Carte Besoin', tags: ['besoin','carte','famille','besoins'] }
   ];
 
   const intentionLower = (intention + ' ' + (theme_keywords || '')).toLowerCase();
-  let bestProduit = PRODUIT_IMAGES[0];
-  let bestScore = 0;
-  for (const img of PRODUIT_IMAGES) {
+  
+  // Scorer toutes les images produit
+  const scoredProduits = PRODUIT_IMAGES.map(img => {
     const score = img.tags.filter(t => intentionLower.includes(t)).length;
-    if (score > bestScore) { bestScore = score; bestProduit = img; }
-  }
-  results.produit = bestProduit;
+    return { ...img, score };
+  });
+  
+  // Trier par score et prendre les 3 meilleures
+  scoredProduits.sort((a, b) => b.score - a.score);
+  results.produit = scoredProduits.slice(0, 3);
 
   // 2. Images ambiance locales depuis GitHub
   try {
@@ -119,7 +125,7 @@ export default async function handler(req, res) {
       });
 
       scored.sort((a, b) => b.score - a.score || Math.random() - 0.5);
-      results.ambiance_locale = scored.slice(0, 2).map(f => ({
+      results.ambiance_locale = scored.slice(0, 4).map(f => ({
         path: `/images/newsletter/ambiance/${f.name}`,
         name: f.name.replace(/[_\-]/g, ' ').replace(/\.[^.]+$/, ''),
         source: 'local'
@@ -136,7 +142,7 @@ export default async function handler(req, res) {
     const oradiaKeywords = 'spiritual contemplative minimalist nature meditation mindfulness serene peaceful';
     const query = encodeURIComponent(`${keywords} ${oradiaKeywords}`);
     const unsplashRes = await fetch(
-      `https://api.unsplash.com/search/photos?query=${query}&per_page=8&orientation=landscape&content_filter=high&color=tones`,
+      `https://api.unsplash.com/search/photos?query=${query}&per_page=12&orientation=landscape&content_filter=high`,
       {
         headers: {
           'Authorization': `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}` 
@@ -154,7 +160,7 @@ export default async function handler(req, res) {
         return !exclude.some(word => desc.includes(word));
       });
       
-      results.unsplash = filtered.slice(0, 3).map(photo => ({
+      results.unsplash = filtered.slice(0, 5).map(photo => ({
         path: photo.urls.regular,
         thumb: photo.urls.small,
         name: photo.alt_description || photo.description || 'Photo Unsplash',
