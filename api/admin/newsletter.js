@@ -170,7 +170,7 @@ function textToHtml(text) {
                           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
                             <tr>
                               <td style="width:72px;vertical-align:top;padding-top:4px;">
-                                <img src="https://oradia.fr/images/rudy-boucheron.jpg" alt="Rudy Boucheron" width="60" height="60"
+                                <img src="https://oradia.fr/images/medias/photo_a_propos.png" alt="Rudy Boucheron" width="60" height="60"
                                   style="display:block;width:60px;height:60px;border-radius:50%;border:1.5px solid rgba(212,175,55,0.35);object-fit:cover;object-position:top;"
                                   onerror="this.src='https://oradia.fr/images/logo-hd-v2.jpeg'">
                               </td>
@@ -193,22 +193,11 @@ function textToHtml(text) {
                             <tr>
                               <td align="center" style="padding:24px 40px 16px 40px;">
                                 <!-- Instagram -->
-                                <a href="https://www.instagram.com/oradia.fr" style="display:inline-block;margin:0 8px;text-decoration:none;">
+                                <a href="https://www.instagram.com/oradia_officiel" style="display:inline-block;margin:0 8px;text-decoration:none;">
                                   <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;">
                                     <tr>
                                       <td style="width:36px;height:36px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:50%;text-align:center;vertical-align:middle;">
                                         <img src="https://cdn-icons-png.flaticon.com/32/2111/2111463.png" width="16" height="16" alt="Instagram"
-                                          style="display:block;width:16px;height:16px;margin:10px auto;filter:sepia(1) saturate(2) hue-rotate(5deg) brightness(1.2);">
-                                      </td>
-                                    </tr>
-                                  </table>
-                                </a>
-                                <!-- Facebook -->
-                                <a href="https://www.facebook.com/oradia.fr" style="display:inline-block;margin:0 8px;text-decoration:none;">
-                                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;">
-                                    <tr>
-                                      <td style="width:36px;height:36px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:50%;text-align:center;vertical-align:middle;">
-                                        <img src="https://cdn-icons-png.flaticon.com/32/733/733547.png" width="16" height="16" alt="Facebook"
                                           style="display:block;width:16px;height:16px;margin:10px auto;filter:sepia(1) saturate(2) hue-rotate(5deg) brightness(1.2);">
                                       </td>
                                     </tr>
