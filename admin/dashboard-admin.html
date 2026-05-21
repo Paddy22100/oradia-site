@@ -843,15 +843,42 @@
             // Nettoyer flag de redirection
             sessionStorage.removeItem('oradia_redirecting');
             
+            // Vérifier si on a une session récente (moins de 5 minutes)
+            const authDataStr = sessionStorage.getItem('oradia_auth');
+            let skipInitialCheck = false;
+            
+            if (authDataStr) {
+                try {
+                    const authData = JSON.parse(authDataStr);
+                    const age = Date.now() - authData.timestamp;
+                    // Si session créée il y a moins de 5 minutes, faire confiance
+                    if (age < 5 * 60 * 1000 && authData.valid) {
+                        console.log('Session récente valide, skip initial check');
+                        skipInitialCheck = true;
+                    }
+                } catch (e) {
+                    console.error('Erreur parse auth data:', e);
+                }
+            }
+            
             try {
-                // Vérifier la session admin
-                const meResponse = await fetch('/api/admin/auth?action=me', { credentials: 'include' });
-                if (!meResponse.ok) {
-                    // Session invalide, nettoyer et rediriger
-                    document.cookie = 'oradia_admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                    sessionStorage.setItem('oradia_redirecting', Date.now().toString());
-                    window.location.href = 'login.html';
-                    return;
+                // Vérifier la session admin (sauf si on vient de se connecter)
+                if (!skipInitialCheck) {
+                    const meResponse = await fetch('/api/admin/auth?action=me', { credentials: 'include' });
+                    
+                    console.log('Auth check:', meResponse.status, meResponse.ok);
+                    
+                    if (!meResponse.ok) {
+                        // Session invalide, nettoyer et rediriger
+                        console.log('Session invalide, redirection vers login');
+                        sessionStorage.removeItem('oradia_auth');
+                        document.cookie = 'oradia_admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                        sessionStorage.setItem('oradia_redirecting', Date.now().toString());
+                        window.location.href = 'login.html';
+                        return;
+                    }
+                    
+                    console.log('Session valide, chargement dashboard');
                 }
 
                 // Charger les KPI
@@ -1253,13 +1280,15 @@
                 });
                 // Nettoyer complètement
                 document.cookie = 'oradia_admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                sessionStorage.clear();
+                sessionStorage.removeItem('oradia_auth');
+                sessionStorage.removeItem('oradia_redirecting');
                 localStorage.removeItem('admin_email');
                 sessionStorage.setItem('oradia_redirecting', Date.now().toString());
                 window.location.href = 'login.html';
             } catch (error) {
                 document.cookie = 'oradia_admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                sessionStorage.clear();
+                sessionStorage.removeItem('oradia_auth');
+                sessionStorage.removeItem('oradia_redirecting');
                 sessionStorage.setItem('oradia_redirecting', Date.now().toString());
                 window.location.href = 'login.html';
             }

@@ -301,12 +301,20 @@ async function handleLogin(e) {
         const result = await response.json();
 
         if (result.success) {
+            console.log('Login réussi');
+            
             showMessage('Connexion réussie! Redirection...', 'success');
             
-            // Rediriger vers le dashboard
-            setTimeout(() => {
-                window.location.href = 'dashboard-admin.html';
-            }, 1500);
+            // Marquer session comme valide avec timestamp
+            const authData = {
+                valid: true,
+                timestamp: Date.now(),
+                email: result.admin?.email || email
+            };
+            sessionStorage.setItem('oradia_auth', JSON.stringify(authData));
+            
+            // Rediriger immédiatement
+            window.location.href = 'dashboard-admin.html';
         } else {
             showMessage(result.message || 'Identifiants incorrects', 'error');
         }
