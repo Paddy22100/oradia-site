@@ -1509,12 +1509,141 @@
                 document.getElementById('nl-save-zone').classList.remove('hidden');
                 document.getElementById('nl-send-zone').classList.add('hidden');
                 nlCurrentDraftId = null;
-                nlStatus('success', 'Newsletter générée. Relis, ajuste, puis sauvegarde.');
+                nlStatus('success', 'Newsletter générée. Choisis une image puis sauvegarde.');
+                nlFetchAndShowImages(intention);
             } catch(e) { nlStatus('error', e.message); }
             finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-magic mr-2"></i>Générer la newsletter';
             }
+        }
+
+        // ── Sélection d'images ───────────────────────────────────────────────────
+        let nlSelectedImage = null;
+
+        async function nlFetchAndShowImages(intention) {
+            const existing = document.getElementById('nl-image-picker');
+            if (existing) existing.remove();
+
+            const picker = document.createElement('div');
+            picker.id = 'nl-image-picker';
+            picker.className = 'mt-6 bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6';
+            picker.innerHTML = `
+                <h4 class="cormorant text-xl text-gold mb-2">
+                    <i class="fas fa-images mr-2"></i>Choisir une illustration
+                </h4>
+                <p class="text-xs text-gold/40 mb-5 uppercase tracking-widest">1 visuel produit · ambiance locale · Unsplash — clique pour sélectionner</p>
+                <div id="nl-images-grid" class="grid grid-cols-5 gap-3">
+                    <div class="col-span-5 text-center py-6 text-gold/30 text-sm">
+                        <i class="fas fa-spinner fa-spin mr-2"></i>Recherche d'images...
+                    </div>
+                </div>
+                <div id="nl-image-selected-label" class="hidden mt-4 text-xs text-green-300">
+                    <i class="fas fa-check-circle mr-1"></i><span></span>
+                </div>
+                <button onclick="nlClearImage()" class="mt-3 text-xs text-gold/40 hover:text-gold/70 transition">
+                    ✕ Continuer sans image
+                </button>
+            `;
+
+            const saveZone = document.getElementById('nl-save-zone');
+            saveZone.parentNode.insertBefore(picker, saveZone);
+
+            try {
+                const res = await fetch('/api/admin/newsletter-images', {
+                    method: 'POST',
+                    credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        intention,
+                        theme_keywords: document.getElementById('nl-energie').value.trim() || intention
+                    })
+                });
+
+                const data = await res.json();
+                const grid = document.getElementById('nl-images-grid');
+
+                const allImages = [];
+                if (data.produit) allImages.push({ ...data.produit, source: 'local', label: 'Produit' });
+                (data.ambiance_locale || []).forEach(img => allImages.push({ ...img, label: 'Ma bibliothèque' }));
+                (data.unsplash || []).forEach(img => allImages.push({ ...img, label: 'Unsplash' }));
+
+                if (!allImages.length) {
+                    grid.innerHTML = '<p class="col-span-5 text-center text-gold/30 text-sm py-4">Aucune image trouvée</p>';
+                    return;
+                }
+
+                grid.innerHTML = allImages.map((img, i) => `
+                    <div onclick="nlSelectImage('${img.path}', ${i}, '${img.source}', '${(img.download_url || '').replace(/'/g,"\\'")}', '${(img.filename || '').replace(/'/g,"\\'")}', '${(img.photographer || '').replace(/'/g,"\\'")}' )"
+                        id="nl-img-option-${i}"
+                        class="cursor-pointer rounded-xl overflow-hidden border-2 border-transparent hover:border-gold/50 transition-all duration-200 group relative">
+                        <img src="${img.thumb || img.path}" alt="${img.name}"
+                            class="w-full h-24 object-cover group-hover:scale-105 transition-transform duration-300"
+                            onerror="this.closest('div').style.display='none'">
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-2">
+                            <span class="text-xs text-white/90 capitalize leading-tight">${img.name.slice(0,20)}</span>
+                            <span class="text-xs px-1 rounded mt-0.5 inline-block w-fit
+                                ${img.source === 'unsplash' ? 'bg-blue-500/50 text-blue-200' :
+                                  img.label === 'Produit' ? 'bg-gold/50 text-night-blue' :
+                                  'bg-green-500/40 text-green-200'}">
+                                ${img.label}
+                            </span>
+                        </div>
+                    </div>
+                `).join('');
+
+            } catch(e) {
+                document.getElementById('nl-images-grid').innerHTML =
+                    '<p class="col-span-5 text-center text-red-400 text-sm py-4">Erreur chargement images</p>';
+            }
+        }
+
+        async function nlSelectImage(path, index, source, downloadUrl, filename, photographer) {
+            nlSelectedImage = path;
+
+            document.querySelectorAll('[id^="nl-img-option-"]').forEach(el => {
+                el.classList.remove('border-gold', 'ring-2', 'ring-gold/40');
+                el.classList.add('border-transparent');
+            });
+            document.getElementById(`nl-img-option-${index}`)?.classList.add('border-gold', 'ring-2', 'ring-gold/40');
+
+            const label = document.getElementById('nl-image-selected-label');
+            label.classList.remove('hidden');
+
+            // Si image Unsplash — sauvegarde automatique dans GitHub
+            if (source === 'unsplash' && downloadUrl && filename) {
+                label.querySelector('span').textContent = 'Sauvegarde en cours...';
+                try {
+                    const saveRes = await fetch('/api/admin/newsletter-image-save', {
+                        method: 'POST',
+                        credentials: 'include',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ unsplash_url: downloadUrl, filename })
+                    });
+                    const saved = await saveRes.json();
+                    if (saved.success) {
+                        nlSelectedImage = saved.path;
+                        label.querySelector('span').textContent =
+                            `✓ Image sauvegardée dans ta bibliothèque${photographer ? ' · Photo : ' + photographer : ''}`;
+                    } else {
+                        label.querySelector('span').textContent = 'Image Unsplash sélectionnée (non sauvegardée)';
+                    }
+                } catch(e) {
+                    label.querySelector('span').textContent = 'Image Unsplash sélectionnée';
+                }
+            } else {
+                label.querySelector('span').textContent =
+                    'Sélectionnée : ' + path.split('/').pop().replace(/[_\.]/g,' ').replace(/png|jpg|jpeg/,'').trim();
+            }
+        }
+
+        function nlClearImage() {
+            nlSelectedImage = null;
+            document.querySelectorAll('[id^="nl-img-option-"]').forEach(el => {
+                el.classList.remove('border-gold', 'ring-2', 'ring-gold/40');
+                el.classList.add('border-transparent');
+            });
+            document.getElementById('nl-image-selected-label')?.classList.add('hidden');
         }
 
         function nlCopy() {

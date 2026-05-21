@@ -33,6 +33,14 @@
       "dest": "/api/admin/sync-brevo.js"
     },
     {
+      "src": "/api/admin/newsletter-images",
+      "dest": "/api/admin/newsletter-images.js"
+    },
+    {
+      "src": "/api/admin/newsletter-image-save",
+      "dest": "/api/admin/newsletter-image-save.js"
+    },
+    {
       "src": "/api/create-checkout-session",
       "dest": "/api/create-checkout-session.js"
     },
@@ -66,6 +74,12 @@
       "maxDuration": 30
     },
     "api/admin/sync-brevo.js": {
+      "maxDuration": 30
+    },
+    "api/admin/newsletter-images.js": {
+      "maxDuration": 30
+    },
+    "api/admin/newsletter-image-save.js": {
       "maxDuration": 30
     },
     "api/create-checkout-session.js": {

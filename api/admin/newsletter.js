@@ -29,117 +29,225 @@ function checkAuth(req, res) {
 
 // ── textToHtml (pour l'envoi Brevo) ──────────────────────────────────────────
 function textToHtml(text) {
-  const lines = text.split('\n');
+  // Séparer objet et corps sur le séparateur ---
+  const parts = text.split(/\n---\n/);
+  const bodyText = parts.length >= 2 ? parts.slice(1).join('\n---\n') : text;
+
+  // Citation tirée des livres — extraite si ligne entre guillemets (« » ou " ")
+  let citation = '';
+  const citationMatch = bodyText.match(/[«""]([^»""]{40,200})[»""]/);
+  if (citationMatch) citation = citationMatch[1];
+
+  const lines = bodyText.split('\n');
   let bodyHtml = '';
   for (const line of lines) {
     const trimmed = line.trim();
-    if (!trimmed) { bodyHtml += '<tr><td style="padding:6px 0;"></td></tr>'; continue; }
-    // Titres de section en MAJUSCULES (ex: "RÉFLEXION :", "OBJET :")
-    if (/^[A-ZÀÂÉÈÊËÎÏÔÙÛÜ][A-ZÀÂÉÈÊËÎÏÔÙÛÜ\s\u00C0-\u00FF]{2,}\s*:/.test(trimmed)) {
-      bodyHtml += `<tr><td style="padding:28px 0 10px 0;">
-        <p style="margin:0;font-family:Georgia,serif;font-size:10px;letter-spacing:3px;color:#d4af37;text-transform:uppercase;font-weight:600;">${trimmed}</p>
-        <div style="width:32px;height:1px;background:#d4af37;margin-top:8px;opacity:0.6;"></div>
-      </td></tr>`;
-      continue;
-    }
-    // Lien oradia.fr (→ oradia.fr)
+    if (!trimmed) { bodyHtml += '<tr><td style="padding:5px 0;"></td></tr>'; continue; }
+    // Séparateurs --- (ignorés dans le corps, déjà utilisés pour split)
+    if (/^-{3,}$/.test(trimmed)) continue;
+    // Lien → oradia.fr
     if (trimmed.startsWith('→')) {
-      bodyHtml += `<tr><td style="padding:20px 0 8px 0;text-align:center;">
-        <a href="https://oradia.fr" style="display:inline-block;color:#d4af37;font-family:Georgia,serif;font-size:13px;letter-spacing:2px;text-decoration:none;text-transform:uppercase;border-bottom:1px solid rgba(212,175,55,0.4);padding-bottom:3px;">${trimmed}</a>
+      bodyHtml += `<tr><td style="padding:24px 0 8px 0;text-align:left;">
+        <a href="https://oradia.fr" style="color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-style:italic;text-decoration:none;border-bottom:1px solid rgba(212,175,55,0.35);padding-bottom:2px;">${trimmed}</a>
       </td></tr>`;
       continue;
     }
-    // Séparateurs ---
-    if (/^-{3,}$/.test(trimmed)) {
-      bodyHtml += `<tr><td style="padding:16px 0;">
-        <div style="width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);"></div>
-      </td></tr>`;
-      continue;
-    }
-    // Texte en italique *...*
-    if (trimmed.startsWith('**') && trimmed.endsWith('**')) {
-      bodyHtml += `<tr><td style="padding:12px 0;">
-        <p style="margin:0;font-family:Georgia,serif;font-size:16px;line-height:1.8;color:#f0c75e;font-style:italic;">${trimmed.slice(2,-2)}</p>
-      </td></tr>`;
-      continue;
-    }
-    if (trimmed.startsWith('*') && trimmed.endsWith('*')) {
-      bodyHtml += `<tr><td style="padding:8px 0 8px 20px;border-left:2px solid rgba(212,175,55,0.5);">
-        <p style="margin:0;font-family:Georgia,serif;font-size:15px;line-height:1.9;color:#d8bf72;font-style:italic;">${trimmed.slice(1,-1)}</p>
-      </td></tr>`;
-      continue;
-    }
+    // Ligne "Rudy" seule = signature — on l'ignore, gérée dans le footer
+    if (/^Rudy\s*$/.test(trimmed)) continue;
     // Paragraphe normal
-    bodyHtml += `<tr><td style="padding:6px 0;">
-      <p style="margin:0;font-family:Georgia,serif;font-size:15px;line-height:1.9;color:#d1d5db;">${trimmed}</p>
+    bodyHtml += `<tr><td style="padding:7px 0;">
+      <p style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;line-height:1.85;color:#ddd5c0;font-weight:300;">${trimmed}</p>
     </td></tr>`;
   }
+
+  // Bloc citation à insérer avant la signature
+  const citationHtml = citation ? `
+          <!-- Citation -->
+          <tr>
+            <td style="padding:8px 48px 36px 48px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="padding:24px 28px;border-left:2px solid rgba(212,175,55,0.5);background:rgba(212,175,55,0.04);">
+                    <p style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;line-height:1.9;color:#c9b87a;font-style:italic;">${citation}</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>` : '';
 
   return `<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width,initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;0,700;1,300;1,400;1,600&display=swap" rel="stylesheet">
 </head>
-<body style="margin:0;padding:0;background:#050a14;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#050a14;margin:0;padding:0;">
+<body style="margin:0;padding:0;background:#040e1e;">
+
+  <!--[if mso]><table role="presentation" width="100%"><tr><td><![endif]-->
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+    style="background:#040e1e;margin:0;padding:0;min-height:100%;">
     <tr>
-      <td align="center" style="padding:48px 20px;">
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:linear-gradient(135deg,#0a1628 0%,#051428 100%);border:1px solid rgba(212,175,55,0.3);box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+      <td align="center" style="padding:40px 16px;">
 
-          <!-- Header image -->
-          <tr>
-            <td align="center" style="padding:0;position:relative;">
-              <div style="position:relative;width:100%;height:200px;overflow:hidden;">
-                <img src="https://oradia.fr/images/medias/apercu_stripe.jpg" alt="Oradia" width="600" style="display:block;width:100%;height:200px;object-fit:cover;border:0;opacity:0.7;">
-                <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(5,10,20,0) 0%,rgba(5,10,20,0.97) 100%);"></div>
-              </div>
-            </td>
-          </tr>
+        <!-- Wrapper max 600px -->
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+          style="max-width:600px;position:relative;">
 
-          <!-- Titre -->
+          <!-- IMAGE DE FOND en cellule répétée sur tout le mail -->
           <tr>
-            <td align="center" style="padding:32px 40px 24px 40px;">
-              <p style="margin:0;font-family:Georgia,serif;font-size:10px;letter-spacing:4px;color:#d4af37;text-transform:uppercase;">La Boussole Intérieure</p>
-              <h1 style="margin:12px 0 0 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:34px;font-weight:300;color:#f0c75e;letter-spacing:2px;line-height:1.2;">La lettre du vivant</h1>
-              <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:20px auto 0;"></div>
-            </td>
-          </tr>
+            <td style="padding:0;">
 
-          <!-- Corps -->
-          <tr>
-            <td style="padding:8px 48px 40px 48px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                ${bodyHtml}
+              <!-- Carte principale avec fond image -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                style="background-color:#051428;background-image:url('https://oradia.fr/images/oradia-hero-ak.png');background-size:cover;background-position:center top;background-repeat:no-repeat;border:1px solid rgba(212,175,55,0.25);box-shadow:0 12px 48px rgba(0,0,0,0.6);">
+
+                <!-- Overlay sombre pour lisibilité -->
+                <tr>
+                  <td style="padding:0;background:rgba(4,14,30,0.82);">
+                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+
+                      <!-- HEADER : Logo + titre -->
+                      <tr>
+                        <td align="center" style="padding:40px 40px 0 40px;">
+                          <!-- Logo rond -->
+                          <img src="https://oradia.fr/images/logo-hd-v2.jpeg" alt="ORADIA" width="64" height="64"
+                            style="display:block;width:64px;height:64px;border-radius:50%;border:1.5px solid rgba(212,175,55,0.4);margin:0 auto 20px auto;object-fit:cover;">
+                          <!-- Surtitre -->
+                          <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:11px;letter-spacing:5px;color:#d4af37;text-transform:uppercase;font-weight:400;">La Boussole Intérieure</p>
+                          <!-- Titre principal -->
+                          <h1 style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:300;color:#f5e7a1;letter-spacing:1px;line-height:1.3;">La lettre du vivant</h1>
+                          <!-- Filet doré -->
+                          <div style="width:48px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:20px auto 0;"></div>
+                        </td>
+                      </tr>
+
+                      <!-- Espace -->
+                      <tr><td style="padding:8px 0;"></td></tr>
+
+                      <!-- BANDEAU PRÉ-VENTE -->
+                      <tr>
+                        <td style="padding:0 32px 24px 32px;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
+                            style="background:linear-gradient(135deg,rgba(212,175,55,0.12) 0%,rgba(212,175,55,0.05) 100%);border:1px solid rgba(212,175,55,0.3);border-radius:4px;overflow:hidden;">
+                            <tr>
+                              <td style="padding:18px 20px;vertical-align:middle;width:60%;">
+                                <p style="margin:0 0 4px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:10px;letter-spacing:4px;color:#d4af37;text-transform:uppercase;">Disponible en pré-vente</p>
+                                <p style="margin:0 0 10px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:19px;font-weight:600;color:#f5e7a1;line-height:1.3;">L'Oracle Oradia</p>
+                                <p style="margin:0 0 14px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:13px;color:rgba(212,175,55,0.7);line-height:1.6;">Un outil de révélation intérieure. Cartes, livrets, tirage guidé.</p>
+                                <a href="https://oradia.fr/precommande-oracle.html"
+                                  style="display:inline-block;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.5);color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:8px 16px;">
+                                  Précommander →
+                                </a>
+                              </td>
+                              <td style="padding:12px 16px 12px 0;vertical-align:middle;width:40%;text-align:right;">
+                                <img src="https://oradia.fr/images/medias/apercu_stripe.png" alt="Oracle Oradia" width="130"
+                                  style="display:block;width:130px;max-width:100%;margin-left:auto;border-radius:3px;opacity:0.92;">
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      <!-- CORPS DU TEXTE -->
+                      <tr>
+                        <td style="padding:8px 48px 24px 48px;">
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            ${bodyHtml}
+                          </table>
+                        </td>
+                      </tr>
+
+                      ${citationHtml}
+
+                      <!-- SIGNATURE -->
+                      <tr>
+                        <td style="padding:0 48px 40px 48px;">
+                          <div style="width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.2),transparent);margin-bottom:28px;"></div>
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="width:72px;vertical-align:top;padding-top:4px;">
+                                <img src="https://oradia.fr/images/rudy-boucheron.jpg" alt="Rudy Boucheron" width="60" height="60"
+                                  style="display:block;width:60px;height:60px;border-radius:50%;border:1.5px solid rgba(212,175,55,0.35);object-fit:cover;object-position:top;"
+                                  onerror="this.src='https://oradia.fr/images/logo-hd-v2.jpeg'">
+                              </td>
+                              <td style="padding-left:16px;vertical-align:top;">
+                                <p style="margin:0 0 2px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:24px;font-weight:600;color:#f0c75e;letter-spacing:0.5px;line-height:1.1;">Rudy Boucheron</p>
+                                <p style="margin:0 0 6px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:12px;letter-spacing:2px;color:rgba(212,175,55,0.55);text-transform:uppercase;">Auteur · Thérapeute · Oradia</p>
+                                <a href="https://oradia.fr" style="font-family:'Cormorant Garamond',Georgia,serif;font-size:12px;color:rgba(212,175,55,0.5);text-decoration:none;letter-spacing:1px;">oradia.fr</a>
+                              </td>
+                            </tr>
+                          </table>
+                        </td>
+                      </tr>
+
+                      <!-- FOOTER -->
+                      <tr>
+                        <td style="padding:0;border-top:1px solid rgba(212,175,55,0.1);">
+
+                          <!-- Réseaux sociaux -->
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td align="center" style="padding:24px 40px 16px 40px;">
+                                <!-- Instagram -->
+                                <a href="https://www.instagram.com/oradia.fr" style="display:inline-block;margin:0 8px;text-decoration:none;">
+                                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;">
+                                    <tr>
+                                      <td style="width:36px;height:36px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:50%;text-align:center;vertical-align:middle;">
+                                        <img src="https://cdn-icons-png.flaticon.com/32/2111/2111463.png" width="16" height="16" alt="Instagram"
+                                          style="display:block;width:16px;height:16px;margin:10px auto;filter:sepia(1) saturate(2) hue-rotate(5deg) brightness(1.2);">
+                                      </td>
+                                    </tr>
+                                  </table>
+                                </a>
+                                <!-- Facebook -->
+                                <a href="https://www.facebook.com/oradia.fr" style="display:inline-block;margin:0 8px;text-decoration:none;">
+                                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;">
+                                    <tr>
+                                      <td style="width:36px;height:36px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:50%;text-align:center;vertical-align:middle;">
+                                        <img src="https://cdn-icons-png.flaticon.com/32/733/733547.png" width="16" height="16" alt="Facebook"
+                                          style="display:block;width:16px;height:16px;margin:10px auto;filter:sepia(1) saturate(2) hue-rotate(5deg) brightness(1.2);">
+                                      </td>
+                                    </tr>
+                                  </table>
+                                </a>
+                                <!-- Site web -->
+                                <a href="https://oradia.fr" style="display:inline-block;margin:0 8px;text-decoration:none;">
+                                  <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="display:inline-block;">
+                                    <tr>
+                                      <td style="width:36px;height:36px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:50%;text-align:center;vertical-align:middle;">
+                                        <img src="https://cdn-icons-png.flaticon.com/32/1006/1006771.png" width="16" height="16" alt="Site web"
+                                          style="display:block;width:16px;height:16px;margin:10px auto;filter:sepia(1) saturate(2) hue-rotate(5deg) brightness(1.2);">
+                                      </td>
+                                    </tr>
+                                  </table>
+                                </a>
+                              </td>
+                            </tr>
+                          </table>
+
+                          <!-- Texte légal -->
+                          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                            <tr>
+                              <td style="padding:0 40px 28px 40px;border-top:1px solid rgba(255,255,255,0.04);">
+                                <p style="margin:16px 0 0 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:11px;color:rgba(255,255,255,0.28);text-align:center;line-height:1.9;letter-spacing:0.3px;">
+                                  Chaque mercredi, Rudy vous écrit une lettre.<br>
+                                  Vous recevez ce mail parce que vous avez accepté de recevoir les communications Oradia.<br>
+                                  Vous ne souhaitez plus recevoir cette newsletter ?<br>
+                                  <a href="{{unsubscribe}}" style="color:rgba(212,175,55,0.4);text-decoration:underline;">Vous pouvez vous désinscrire ici.</a>
+                                </p>
+                              </td>
+                            </tr>
+                          </table>
+
+                        </td>
+                      </tr>
+
+                    </table>
+                  </td>
+                </tr>
+
               </table>
-            </td>
-          </tr>
-
-          <!-- Séparateur -->
-          <tr>
-            <td align="center" style="padding:0 40px;">
-              <div style="width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);"></div>
-            </td>
-          </tr>
-
-          <!-- Signature -->
-          <tr>
-            <td align="center" style="padding:36px 40px 48px 40px;">
-              <p style="margin:0 0 6px 0;font-family:Georgia,serif;font-size:13px;color:#9ca3af;font-style:italic;">Avec toute ma gratitude,</p>
-              <p style="margin:0 0 4px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:600;color:#f0c75e;letter-spacing:1px;">Rudy</p>
-              <p style="margin:0 0 20px 0;font-family:Georgia,serif;font-size:13px;color:#d8bf72;font-style:italic;">La Boussole Intérieure</p>
-              <a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-family:Georgia,serif;font-size:12px;letter-spacing:2px;text-transform:uppercase;border-bottom:1px solid rgba(212,175,55,0.4);padding-bottom:2px;">oradia.fr</a>
-            </td>
-          </tr>
-
-          <!-- Footer -->
-          <tr>
-            <td style="padding:24px 40px;background:rgba(5,10,20,0.6);border-top:1px solid rgba(212,175,55,0.15);">
-              <p style="margin:0;font-family:Georgia,serif;font-size:11px;color:#6b7280;text-align:center;line-height:1.7;">
-                Vous recevez cette lettre parce que vous êtes abonné à <a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;">oradia.fr</a><br>
-                <a href="{{unsubscribe}}" style="color:#6b7280;text-decoration:underline;">Se désinscrire</a>
-              </p>
             </td>
           </tr>
 
@@ -147,6 +255,8 @@ function textToHtml(text) {
       </td>
     </tr>
   </table>
+  <!--[if mso]></td></tr></table><![endif]-->
+
 </body></html>`;
 }
 
@@ -194,22 +304,25 @@ export default async function handler(req, res) {
       : source === 'boussole' ? LIVRE_BOUSSOLE
       : `${LIVRE_BOUSSOLE}\n\n${LIVRE_ROMAN}`;
 
-    const prompt = `Tu es le porte-voix de Rudy Boucheron, auteur, thérapeute et stratège basé en Bretagne.
-Tu écris une newsletter hebdomadaire pour les abonnés d'Oradia, son site dédié à La Boussole Intérieure.
-VOIX : directe, poétique sans être mièvre, ancrée dans le corps et le vivant. Ton ${ton || 'contemplatif et incarné'}.
-SOURCES : ${sourceTexte}
-${energie ? `ÉNERGIE DU MOMENT : ${energie}` : ''}
-${idees_bonus ? `FRAGMENTS DU CARNET : ${idees_bonus}` : ''}
-INTENTION : ${intention}
-STRUCTURE OBLIGATOIRE :
-1. OBJET : Une phrase d'accroche email (max 60 caractères)
-2. ACCROCHE : 2-3 lignes narratives qui ouvrent l'espace
-3. RÉFLEXION : 150-200 mots tirés des livres, concret et incarné
-4. PRISE DE CONSCIENCE : Une phrase courte et percutante
-5. QUESTION À TENIR : Une seule question, pas de réponse
-6. PONT ORACLE : 3-4 lignes reliées à La Boussole Intérieure. Termine par : "→ oradia.fr"
-7. SIGNATURE : Max 2 lignes dans la voix de Rudy.
-Génère la newsletter complète maintenant. Chaque section délimitée par son titre en MAJUSCULES.`;
+    const prompt = `Tu es Rudy Boucheron — auteur, thérapeute et stratège breton. Tu écris une lettre hebdomadaire à tes abonnés, des gens ordinaires qui cherchent à mieux se comprendre. Des gens qui ont une vie, des doutes, des fatigues, et qui parfois sentent qu'il y a quelque chose à comprendre dans ce qu'ils vivent. Qui sont en évolution et en quête de sens. Qui sont dans la spiritualité.
+
+TA VOIX : directe, chaude, sans jargon. Tu parles comme tu penses — avec des phrases courtes quand c'est fort, des phrases plus longues quand tu déroules une idée. Jamais de tirets. Jamais de titres en majuscules dans le corps du texte. Tu n'expliques pas — tu montres, tu racontes, tu poses. Les mots complexes ou que l'on utilise pas tous les jours comme "fascias" peuvent exister si tu les expliques simplement, de préférence avec une image.
+
+CE QUE TU ÉCRIS : une seule lettre fluide, sans rupture visible entre les parties. Le lecteur ne doit pas sentir la structure — il doit sentir qu'on lui parle. Tu pars d'une observation concrète du vivant (une sensation, une image de la nature, quelque chose qu'on fait tous), tu la relies à une idée tirée de tes livres, tu la laisses résonner avec une question ou une image forte, et tu glisses naturellement vers La Boussole Intérieure comme une invitation — pas comme une publicité. Jamais "cliquez ici" ou "découvrez". Plutôt : "c'est exactement pour ça que j'ai créé La Boussole. Si tu sens que c'est le moment, elle t'attend sur oradia.fr"
+
+INTENTION DE CETTE LETTRE : ${intention}
+SOURCE : ${source === 'roman' ? 'le roman du Pèlerin et ses figures (le Vieux Chêne, la Fileuse des Spires, le Guérisseur du Choc...)' : source === 'boussole' ? 'le livre La Boussole Intérieure (mémoire implicite, adaptome, fenêtre de tolérance, le dragon et l\'archange, le canal direct...)' : 'les deux livres — le roman du Pèlerin et l\'essai La Boussole Intérieure'}
+TON : ${ton === 'poetique' ? 'sensoriel, lent, beaucoup d\'images' : ton === 'scientifique' ? 'ancré dans le concret et le corps, avec des références claires mais vulgarisées' : ton === 'narratif' ? 'tu racontes une scène, une situation, quelqu\'un que tu as rencontré (anonymisé)' : 'contemplatif — tu poses des choses sans tout résoudre'}
+${energie ? `ÉNERGIE DU MOMENT à tisser naturellement : ${energie}` : ''}
+${idees_bonus ? `FRAGMENTS DE TON CARNET à intégrer si pertinent : ${idees_bonus}` : ''}
+
+FORMAT DE TA RÉPONSE — deux blocs séparés par ---
+
+OBJET EMAIL (une seule ligne, max 55 caractères, pas de question, pas de "découvrez", quelque chose qui donne envie d'ouvrir)
+
+---
+
+LE CORPS DE LA LETTRE (400 à 500 mots, un seul bloc de texte fluide avec des sauts de ligne entre les paragraphes, aucun titre, aucun tiret, aucune liste, aucune section visible. La signature à la fin : "Rudy" suivi d'une ligne blanche puis "→ oradia.fr")`;
 
     if (!process.env.ANTHROPIC_API_KEY) {
       return res.status(500).json({ error: 'Erreur génération Claude', details: 'ANTHROPIC_API_KEY manquante dans les variables Vercel' });
@@ -218,7 +331,7 @@ Génère la newsletter complète maintenant. Chaque section délimitée par son 
       const client = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY });
       const message = await client.messages.create({
         model: 'claude-sonnet-4-5',
-        max_tokens: 1200,
+        max_tokens: 1800,
         messages: [{ role: 'user', content: prompt }]
       });
       return res.status(200).json({ content: message.content[0].text, usage: message.usage });
