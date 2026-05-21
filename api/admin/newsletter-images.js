@@ -5,7 +5,7 @@
 export default async function handler(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Méthode non autorisée' });
 
-  const meRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://oradia.fr'}/api/admin/me`, {
+  const meRes = await fetch(`${process.env.NEXT_PUBLIC_SITE_URL || 'https://oradia.fr'}/api/admin/auth?action=me`, {
     headers: { cookie: req.headers.cookie || '' }
   });
   if (!meRes.ok) return res.status(401).json({ error: 'Non autorisé' });
