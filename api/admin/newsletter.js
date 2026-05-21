@@ -31,7 +31,10 @@ function checkAuth(req, res) {
 function textToHtml(text) {
   // Séparer objet et corps sur le séparateur ---
   const parts = text.split(/\n---\n/);
-  const bodyText = parts.length >= 2 ? parts.slice(1).join('\n---\n') : text;
+  let bodyText = parts.length >= 2 ? parts.slice(1).join('\n---\n') : text;
+  
+  // Supprimer les tirés au début du corps
+  bodyText = bodyText.replace(/^[\s\n]*-{3,}[\s\n]*/, '');
 
   // Citation tirée des livres — extraite si ligne entre guillemets (« » ou " ")
   let citation = '';
@@ -322,7 +325,7 @@ OBJET EMAIL (une seule ligne, max 55 caractères, pas de question, pas de "déco
 
 ---
 
-LE CORPS DE LA LETTRE (400 à 500 mots, un seul bloc de texte fluide avec des sauts de ligne entre les paragraphes, aucun titre, aucun tiret, aucune liste, aucune section visible. La signature à la fin : "Rudy" suivi d'une ligne blanche puis "→ oradia.fr")`;
+LE CORPS DE LA LETTRE (400 à 500 mots, un seul bloc de texte fluide avec des sauts de ligne entre les paragraphes, aucun titre, aucun tiret, aucune liste, aucune section visible. Termine par une citation entre guillemets français « » (30 à 150 caractères) qui résonne avec le thème de la lettre — une phrase percutante tirée de tes livres ou de ton inspiration. Puis la signature : "Rudy" suivi d'une ligne blanche puis "→ oradia.fr")`;
 
     if (!process.env.ANTHROPIC_API_KEY) {
       return res.status(500).json({ error: 'Erreur génération Claude', details: 'ANTHROPIC_API_KEY manquante dans les variables Vercel' });

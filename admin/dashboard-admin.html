@@ -1625,18 +1625,25 @@
                 window.nlAllImages = allImages;
                 grid.innerHTML = allImages.map((img, i) => `
                     <div id="nl-img-option-${i}"
-                        class="cursor-pointer rounded-xl overflow-hidden border-2 border-transparent hover:border-gold/50 transition-all duration-200 group relative">
+                        class="cursor-pointer rounded-xl overflow-hidden border-2 border-transparent hover:border-gold/50 transition-all duration-200 group relative"
+                        onclick="nlPreviewImage(${i})">
                         <img src="${img.thumb || img.path}" alt="${img.name}"
-                            onclick="nlPreviewImage(${i})"
                             class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
-                            onerror="this.closest('div').style.display='none'">
+                            onerror="this.onerror=null; this.src='${img.path}';"
+                            loading="lazy">
+                        <!-- Badge sélectionné (caché par défaut) -->
+                        <div id="nl-selected-badge-${i}" class="hidden absolute top-2 left-2 px-2 py-1 bg-green-500 text-white text-xs rounded-full font-semibold">
+                            <i class="fas fa-check mr-1"></i>Sélectionnée
+                        </div>
+                        <!-- Bouton +/check -->
                         <button onclick="event.stopPropagation(); nlToggleImage(${i})" 
-                            class="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center transition"
+                            class="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center transition z-10"
                             id="nl-img-toggle-${i}">
                             <i class="fas fa-plus text-white text-sm"></i>
                         </button>
-                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-2">
-                            <span class="text-xs text-white/90 capitalize leading-tight">${img.name.slice(0,20)}</span>
+                        <!-- Overlay infos -->
+                        <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-2 pointer-events-none">
+                            <span class="text-xs text-white/90 capitalize leading-tight">${img.name.slice(0,25)}</span>
                             <span class="text-xs px-1 rounded mt-0.5 inline-block w-fit
                                 ${img.source === 'unsplash' ? 'bg-blue-500/50 text-blue-200' :
                                   img.label === 'Produit' ? 'bg-gold/50 text-night-blue' :
@@ -1686,6 +1693,7 @@
                 nlSelectedImages.splice(existingIndex, 1);
                 document.getElementById(`nl-img-option-${index}`)?.classList.remove('border-gold', 'ring-2', 'ring-gold/40');
                 document.getElementById(`nl-img-toggle-${index}`).innerHTML = '<i class="fas fa-plus text-white text-sm"></i>';
+                document.getElementById(`nl-selected-badge-${index}`)?.classList.add('hidden');
             } else {
                 // Sélectionner (max 3)
                 if (nlSelectedImages.length >= 3) {
@@ -1714,6 +1722,7 @@
                 nlSelectedImages.push({ index, path: finalPath, name: img.name });
                 document.getElementById(`nl-img-option-${index}`)?.classList.add('border-gold', 'ring-2', 'ring-gold/40');
                 document.getElementById(`nl-img-toggle-${index}`).innerHTML = '<i class="fas fa-check text-white text-sm"></i>';
+                document.getElementById(`nl-selected-badge-${index}`)?.classList.remove('hidden');
             }
             
             nlUpdateSelectedPreviews();
@@ -1751,6 +1760,9 @@
             });
             document.querySelectorAll('[id^="nl-img-toggle-"]').forEach(btn => {
                 btn.innerHTML = '<i class="fas fa-plus text-white text-sm"></i>';
+            });
+            document.querySelectorAll('[id^="nl-selected-badge-"]').forEach(badge => {
+                badge.classList.add('hidden');
             });
             nlUpdateSelectedPreviews();
             document.getElementById('nl-image-selected-label')?.classList.add('hidden');
