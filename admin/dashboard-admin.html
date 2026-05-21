@@ -840,8 +840,13 @@
             if (dashboardLoaded) return;
             dashboardLoaded = true;
             
-            // Nettoyer flag de redirection
-            sessionStorage.removeItem('oradia_redirecting');
+            // Nettoyer immédiatement le flag de redirection
+            const redirecting = sessionStorage.getItem('oradia_redirecting');
+            if (redirecting) {
+                const age = Date.now() - parseInt(redirecting);
+                console.log('Flag redirection présent, âge:', age, 'ms');
+                sessionStorage.removeItem('oradia_redirecting');
+            }
             
             // Vérifier si on a une session récente (moins de 5 minutes)
             const authDataStr = sessionStorage.getItem('oradia_auth');

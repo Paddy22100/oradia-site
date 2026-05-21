@@ -239,12 +239,16 @@ function showMessage(message, type = 'error') {
 
 // Vérifier si déjà connecté au chargement (une seule fois)
 async function checkExistingSession() {
-    // Éviter boucle de redirection
+    // Éviter boucle de redirection - mais seulement pendant 1 seconde
     const redirecting = sessionStorage.getItem('oradia_redirecting');
-    if (redirecting && Date.now() - parseInt(redirecting) < 3000) {
-        console.log('Redirection en cours, attente...');
+    if (redirecting) {
+        const age = Date.now() - parseInt(redirecting);
+        if (age < 1000) {
+            console.log('Redirection récente, attente...');
+            return false;
+        }
+        // Si plus de 1 seconde, nettoyer et continuer
         sessionStorage.removeItem('oradia_redirecting');
-        return false;
     }
     
     try {
@@ -254,19 +258,23 @@ async function checkExistingSession() {
         
         if (response.ok) {
             // Session valide, rediriger vers dashboard
+            console.log('Session valide détectée, redirection...');
             sessionStorage.setItem('oradia_redirecting', Date.now().toString());
             window.location.href = 'dashboard-admin.html';
             return true;
         } else {
             // Session invalide, nettoyer les cookies
+            console.log('Pas de session valide');
             document.cookie = 'oradia_admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
             sessionStorage.removeItem('oradia_redirecting');
+            sessionStorage.removeItem('oradia_auth');
         }
     } catch (error) {
         // Session invalide ou erreur, rester sur login
-        console.log('Session non valide ou expirée');
+        console.log('Erreur vérification session:', error);
         document.cookie = 'oradia_admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         sessionStorage.removeItem('oradia_redirecting');
+        sessionStorage.removeItem('oradia_auth');
     }
     return false;
 }

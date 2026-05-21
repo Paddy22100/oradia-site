@@ -23,9 +23,16 @@ export default async function handler(req, res) {
     if (action === 'login') {
         if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
         try {
+            console.log('🔐 LOGIN ATTEMPT');
             const { email, password } = req.body || {};
             if (!email || !password) return res.status(400).json({ error: 'Email et mot de passe requis' });
             const { ADMIN_EMAIL, ADMIN_PASSWORD_HASH, ADMIN_SESSION_SECRET } = process.env;
+            console.log('ENV CHECK:', {
+                hasEmail: !!ADMIN_EMAIL,
+                hasHash: !!ADMIN_PASSWORD_HASH,
+                hasSecret: !!ADMIN_SESSION_SECRET,
+                nodeEnv: process.env.NODE_ENV
+            });
             if (!ADMIN_EMAIL || !ADMIN_PASSWORD_HASH || !ADMIN_SESSION_SECRET)
                 return res.status(500).json({ error: 'Erreur de configuration du serveur' });
             if (email !== ADMIN_EMAIL) return res.status(401).json({ error: 'Identifiants incorrects' });
@@ -33,10 +40,12 @@ export default async function handler(req, res) {
             if (!valid) return res.status(401).json({ error: 'Identifiants incorrects' });
             const token = jwt.sign({ email: ADMIN_EMAIL, type: 'admin', loginTime: Date.now() },
                 ADMIN_SESSION_SECRET, { expiresIn: '2h' });
-            res.setHeader('Set-Cookie', serializeCookie('oradia_admin_session', token, {
+            const cookieValue = serializeCookie('oradia_admin_session', token, {
                 httpOnly: true, secure: process.env.NODE_ENV === 'production',
                 sameSite: 'lax', path: '/', maxAge: 2 * 60 * 60
-            }));
+            });
+            console.log('✅ LOGIN SUCCESS - Cookie:', cookieValue.substring(0, 100) + '...');
+            res.setHeader('Set-Cookie', cookieValue);
             return res.status(200).json({ success: true, message: 'Connexion réussie',
                 admin: { email: ADMIN_EMAIL, role: 'admin' } });
         } catch (e) {
@@ -58,11 +67,14 @@ export default async function handler(req, res) {
     if (action === 'me') {
         if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
         try {
+            console.log('🔍 ME CHECK - Cookies:', req.headers.cookie?.substring(0, 100) || 'AUCUN');
             const decoded = verifyAdminAuth(req);
             const sessionAge = Math.floor((Date.now() - decoded.loginTime) / 1000 / 60);
+            console.log('✅ ME SUCCESS - Email:', decoded.email, 'Age:', sessionAge, 'min');
             return res.status(200).json({ success: true,
                 admin: { email: decoded.email, type: decoded.type, sessionAge } });
         } catch (e) {
+            console.log('❌ ME FAILED:', e.message);
             return res.status(e.statusCode || 500).json({ error: e.message });
         }
     }
