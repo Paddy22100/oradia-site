@@ -238,10 +238,14 @@ function showMessage(message, type = 'error') {
 }
 
 // Vérifier si déjà connecté au chargement (une seule fois)
-let sessionChecked = false;
 async function checkExistingSession() {
-    if (sessionChecked) return false;
-    sessionChecked = true;
+    // Éviter boucle de redirection
+    const redirecting = sessionStorage.getItem('oradia_redirecting');
+    if (redirecting && Date.now() - parseInt(redirecting) < 3000) {
+        console.log('Redirection en cours, attente...');
+        sessionStorage.removeItem('oradia_redirecting');
+        return false;
+    }
     
     try {
         const response = await fetch('/api/admin/auth?action=me', {
@@ -250,12 +254,18 @@ async function checkExistingSession() {
         
         if (response.ok) {
             // Session valide, rediriger vers dashboard
+            sessionStorage.setItem('oradia_redirecting', Date.now().toString());
             window.location.href = 'dashboard-admin.html';
             return true;
+        } else {
+            // Session invalide, nettoyer les cookies
+            document.cookie = 'admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            sessionStorage.removeItem('oradia_redirecting');
         }
     } catch (error) {
         // Session invalide ou erreur, rester sur login
         console.log('Session non valide ou expirée');
+        sessionStorage.removeItem('oradia_redirecting');
     }
     return false;
 }

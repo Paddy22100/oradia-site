@@ -840,10 +840,16 @@
             if (dashboardLoaded) return;
             dashboardLoaded = true;
             
+            // Nettoyer flag de redirection
+            sessionStorage.removeItem('oradia_redirecting');
+            
             try {
                 // Vérifier la session admin
                 const meResponse = await fetch('/api/admin/auth?action=me', { credentials: 'include' });
                 if (!meResponse.ok) {
+                    // Session invalide, nettoyer et rediriger
+                    document.cookie = 'admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                    sessionStorage.setItem('oradia_redirecting', Date.now().toString());
                     window.location.href = 'login.html';
                     return;
                 }
@@ -858,6 +864,8 @@
 
             } catch (error) {
                 console.error('Erreur chargement dashboard:', error);
+                document.cookie = 'admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                sessionStorage.setItem('oradia_redirecting', Date.now().toString());
                 window.location.href = 'login.html';
             }
         }
@@ -1243,8 +1251,16 @@
                     method: 'POST',
                     credentials: 'include'
                 });
+                // Nettoyer complètement
+                document.cookie = 'admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                sessionStorage.clear();
+                localStorage.removeItem('admin_email');
+                sessionStorage.setItem('oradia_redirecting', Date.now().toString());
                 window.location.href = 'login.html';
             } catch (error) {
+                document.cookie = 'admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                sessionStorage.clear();
+                sessionStorage.setItem('oradia_redirecting', Date.now().toString());
                 window.location.href = 'login.html';
             }
         }
