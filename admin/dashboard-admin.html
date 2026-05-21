@@ -840,15 +840,9 @@
             if (dashboardLoaded) return;
             dashboardLoaded = true;
             
-            // Nettoyer immédiatement le flag de redirection
-            const redirecting = sessionStorage.getItem('oradia_redirecting');
-            if (redirecting) {
-                const age = Date.now() - parseInt(redirecting);
-                console.log('Flag redirection présent, âge:', age, 'ms');
-                sessionStorage.removeItem('oradia_redirecting');
-            }
+            console.log('🔄 Chargement dashboard...');
             
-            // Vérifier si on a une session récente (moins de 5 minutes)
+            // Vérifier si on a une session récente (moins de 2 minutes)
             const authDataStr = sessionStorage.getItem('oradia_auth');
             let skipInitialCheck = false;
             
@@ -856,34 +850,35 @@
                 try {
                     const authData = JSON.parse(authDataStr);
                     const age = Date.now() - authData.timestamp;
-                    // Si session créée il y a moins de 5 minutes, faire confiance
-                    if (age < 5 * 60 * 1000 && authData.valid) {
-                        console.log('Session récente valide, skip initial check');
+                    // Si session créée il y a moins de 2 minutes, faire confiance
+                    if (age < 2 * 60 * 1000 && authData.valid) {
+                        console.log('✅ Session récente (' + Math.round(age/1000) + 's), skip vérification');
                         skipInitialCheck = true;
+                    } else {
+                        console.log('⏰ Session trop ancienne (' + Math.round(age/1000) + 's), vérification requise');
                     }
                 } catch (e) {
-                    console.error('Erreur parse auth data:', e);
+                    console.error('❌ Erreur parse auth:', e);
                 }
+            } else {
+                console.log('ℹ️ Pas de session en cache');
             }
             
             try {
-                // Vérifier la session admin (sauf si on vient de se connecter)
+                // Vérifier la session admin (sauf si session très récente)
                 if (!skipInitialCheck) {
+                    console.log('🔍 Vérification session API...');
                     const meResponse = await fetch('/api/admin/auth?action=me', { credentials: 'include' });
-                    
-                    console.log('Auth check:', meResponse.status, meResponse.ok);
                     
                     if (!meResponse.ok) {
                         // Session invalide, nettoyer et rediriger
-                        console.log('Session invalide, redirection vers login');
+                        console.log('❌ Session invalide (status ' + meResponse.status + '), redirection login');
                         sessionStorage.removeItem('oradia_auth');
-                        document.cookie = 'oradia_admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                        sessionStorage.setItem('oradia_redirecting', Date.now().toString());
                         window.location.href = 'login.html';
                         return;
                     }
                     
-                    console.log('Session valide, chargement dashboard');
+                    console.log('✅ Session API valide');
                 }
 
                 // Charger les KPI
@@ -1278,25 +1273,20 @@
 
         // Déconnexion
         async function logout() {
+            console.log('🚪 Déconnexion...');
             try {
                 await fetch('/api/admin/auth?action=logout', {
                     method: 'POST',
                     credentials: 'include'
                 });
-                // Nettoyer complètement
-                document.cookie = 'oradia_admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                sessionStorage.removeItem('oradia_auth');
-                sessionStorage.removeItem('oradia_redirecting');
-                localStorage.removeItem('admin_email');
-                sessionStorage.setItem('oradia_redirecting', Date.now().toString());
-                window.location.href = 'login.html';
             } catch (error) {
-                document.cookie = 'oradia_admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                sessionStorage.removeItem('oradia_auth');
-                sessionStorage.removeItem('oradia_redirecting');
-                sessionStorage.setItem('oradia_redirecting', Date.now().toString());
-                window.location.href = 'login.html';
+                console.error('Erreur logout API:', error);
             }
+            
+            // Nettoyer complètement
+            sessionStorage.clear();
+            localStorage.removeItem('admin_email');
+            window.location.href = 'login.html';
         }
 
         // Rafraîchir les données
