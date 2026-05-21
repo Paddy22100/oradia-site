@@ -848,7 +848,7 @@
                 const meResponse = await fetch('/api/admin/auth?action=me', { credentials: 'include' });
                 if (!meResponse.ok) {
                     // Session invalide, nettoyer et rediriger
-                    document.cookie = 'admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                    document.cookie = 'oradia_admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
                     sessionStorage.setItem('oradia_redirecting', Date.now().toString());
                     window.location.href = 'login.html';
                     return;
@@ -864,7 +864,7 @@
 
             } catch (error) {
                 console.error('Erreur chargement dashboard:', error);
-                document.cookie = 'admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                document.cookie = 'oradia_admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
                 sessionStorage.setItem('oradia_redirecting', Date.now().toString());
                 window.location.href = 'login.html';
             }
@@ -1252,13 +1252,13 @@
                     credentials: 'include'
                 });
                 // Nettoyer complètement
-                document.cookie = 'admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                document.cookie = 'oradia_admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
                 sessionStorage.clear();
                 localStorage.removeItem('admin_email');
                 sessionStorage.setItem('oradia_redirecting', Date.now().toString());
                 window.location.href = 'login.html';
             } catch (error) {
-                document.cookie = 'admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+                document.cookie = 'oradia_admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
                 sessionStorage.clear();
                 sessionStorage.setItem('oradia_redirecting', Date.now().toString());
                 window.location.href = 'login.html';

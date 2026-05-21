@@ -259,12 +259,13 @@ async function checkExistingSession() {
             return true;
         } else {
             // Session invalide, nettoyer les cookies
-            document.cookie = 'admin_token=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+            document.cookie = 'oradia_admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
             sessionStorage.removeItem('oradia_redirecting');
         }
     } catch (error) {
         // Session invalide ou erreur, rester sur login
         console.log('Session non valide ou expirée');
+        document.cookie = 'oradia_admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
         sessionStorage.removeItem('oradia_redirecting');
     }
     return false;
