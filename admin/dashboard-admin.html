@@ -1614,11 +1614,11 @@
             if (source === 'unsplash' && downloadUrl && filename) {
                 label.querySelector('span').textContent = 'Sauvegarde en cours...';
                 try {
-                    const saveRes = await fetch('/api/admin/newsletter-image-save', {
+                    const saveRes = await fetch('/api/admin/newsletter-images', {
                         method: 'POST',
                         credentials: 'include',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ unsplash_url: downloadUrl, filename })
+                        body: JSON.stringify({ action: 'save', unsplash_url: downloadUrl, filename })
                     });
                     const saved = await saveRes.json();
                     if (saved.success) {
