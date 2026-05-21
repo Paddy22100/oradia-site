@@ -129,12 +129,14 @@ export default async function handler(req, res) {
     console.error('Erreur lecture GitHub ambiance:', e);
   }
 
-  // 3. Images Unsplash
+  // 3. Images Unsplash — recherche adaptée à l'univers Oradia
   try {
     const keywords = theme_keywords || intention;
-    const query = encodeURIComponent(`${keywords} nature spiritual contemplative`);
+    // Mots-clés spirituels et contemplatifs pour Oradia
+    const oradiaKeywords = 'spiritual contemplative minimalist nature meditation mindfulness serene peaceful';
+    const query = encodeURIComponent(`${keywords} ${oradiaKeywords}`);
     const unsplashRes = await fetch(
-      `https://api.unsplash.com/search/photos?query=${query}&per_page=6&orientation=landscape&content_filter=high`,
+      `https://api.unsplash.com/search/photos?query=${query}&per_page=8&orientation=landscape&content_filter=high&color=tones`,
       {
         headers: {
           'Authorization': `Client-ID ${process.env.UNSPLASH_ACCESS_KEY}` 
@@ -144,7 +146,15 @@ export default async function handler(req, res) {
 
     if (unsplashRes.ok) {
       const data = await unsplashRes.json();
-      results.unsplash = data.results.slice(0, 2).map(photo => ({
+      // Filtrer les images avec des couleurs douces et composition minimaliste
+      const filtered = data.results.filter(photo => {
+        const desc = (photo.alt_description || photo.description || '').toLowerCase();
+        // Exclure images trop chargées ou urbaines
+        const exclude = ['city', 'urban', 'crowd', 'busy', 'neon', 'bright'];
+        return !exclude.some(word => desc.includes(word));
+      });
+      
+      results.unsplash = filtered.slice(0, 3).map(photo => ({
         path: photo.urls.regular,
         thumb: photo.urls.small,
         name: photo.alt_description || photo.description || 'Photo Unsplash',

@@ -648,10 +648,16 @@
                             <input type="text" id="nl-subject"
                                 class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-4 text-sm focus:outline-none focus:border-gold"
                                 placeholder="Objet de l'email...">
-                            <button onclick="nlSave()" id="nl-btn-save"
-                                class="w-full bg-gold/20 text-gold border border-gold/40 rounded-lg py-2 hover:bg-gold/30 transition text-sm">
-                                <i class="fas fa-save mr-2"></i>Sauvegarder le brouillon
-                            </button>
+                            <div class="grid grid-cols-2 gap-3">
+                                <button onclick="nlPreview()" id="nl-btn-preview"
+                                    class="bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg py-2 hover:bg-blue-500/30 transition text-sm">
+                                    <i class="fas fa-eye mr-2"></i>Aperçu
+                                </button>
+                                <button onclick="nlSave()" id="nl-btn-save"
+                                    class="bg-gold/20 text-gold border border-gold/40 rounded-lg py-2 hover:bg-gold/30 transition text-sm">
+                                    <i class="fas fa-save mr-2"></i>Sauvegarder
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1559,7 +1565,7 @@
         }
 
         // ── Sélection d'images ───────────────────────────────────────────────────
-        let nlSelectedImage = null;
+        let nlSelectedImages = [];
 
         async function nlFetchAndShowImages(intention) {
             const existing = document.getElementById('nl-image-picker');
@@ -1570,10 +1576,11 @@
             picker.className = 'mt-6 bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6';
             picker.innerHTML = `
                 <h4 class="cormorant text-xl text-gold mb-2">
-                    <i class="fas fa-images mr-2"></i>Choisir une illustration
+                    <i class="fas fa-images mr-2"></i>Choisir 3 illustrations maximum
                 </h4>
-                <p class="text-xs text-gold/40 mb-5 uppercase tracking-widest">1 visuel produit · ambiance locale · Unsplash — clique pour sélectionner</p>
-                <div id="nl-images-grid" class="grid grid-cols-5 gap-3">
+                <p class="text-xs text-gold/60 mb-3">Les images seront affichées dans la newsletter. Clique sur une image pour la voir en grand.</p>
+                <p class="text-xs text-gold/40 mb-5 uppercase tracking-widest">Sélectionne jusqu'à 3 images — Produit · Bibliothèque · Unsplash</p>
+                <div id="nl-images-grid" class="grid grid-cols-3 gap-4">
                     <div class="col-span-5 text-center py-6 text-gold/30 text-sm">
                         <i class="fas fa-spinner fa-spin mr-2"></i>Recherche d'images...
                     </div>
@@ -1581,8 +1588,9 @@
                 <div id="nl-image-selected-label" class="hidden mt-4 text-xs text-green-300">
                     <i class="fas fa-check-circle mr-1"></i><span></span>
                 </div>
-                <button onclick="nlClearImage()" class="mt-3 text-xs text-gold/40 hover:text-gold/70 transition">
-                    ✕ Continuer sans image
+                <div id="nl-selected-previews" class="mt-4 grid grid-cols-3 gap-3"></div>
+                <button onclick="nlClearImages()" class="mt-3 text-xs text-gold/40 hover:text-gold/70 transition">
+                    ✕ Effacer toutes les images
                 </button>
             `;
 
@@ -1613,13 +1621,19 @@
                     return;
                 }
 
+                window.nlAllImages = allImages;
                 grid.innerHTML = allImages.map((img, i) => `
-                    <div onclick="nlSelectImage('${img.path}', ${i}, '${img.source}', '${(img.download_url || '').replace(/'/g,"\\'")}', '${(img.filename || '').replace(/'/g,"\\'")}', '${(img.photographer || '').replace(/'/g,"\\'")}' )"
-                        id="nl-img-option-${i}"
+                    <div id="nl-img-option-${i}"
                         class="cursor-pointer rounded-xl overflow-hidden border-2 border-transparent hover:border-gold/50 transition-all duration-200 group relative">
                         <img src="${img.thumb || img.path}" alt="${img.name}"
-                            class="w-full h-24 object-cover group-hover:scale-105 transition-transform duration-300"
+                            onclick="nlPreviewImage(${i})"
+                            class="w-full h-40 object-cover group-hover:scale-105 transition-transform duration-300"
                             onerror="this.closest('div').style.display='none'">
+                        <button onclick="event.stopPropagation(); nlToggleImage(${i})" 
+                            class="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center transition"
+                            id="nl-img-toggle-${i}">
+                            <i class="fas fa-plus text-white text-sm"></i>
+                        </button>
                         <div class="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-2">
                             <span class="text-xs text-white/90 capitalize leading-tight">${img.name.slice(0,20)}</span>
                             <span class="text-xs px-1 rounded mt-0.5 inline-block w-fit
@@ -1638,57 +1652,159 @@
             }
         }
 
-        async function nlSelectImage(path, index, source, downloadUrl, filename, photographer) {
-            nlSelectedImage = path;
-
-            document.querySelectorAll('[id^="nl-img-option-"]').forEach(el => {
-                el.classList.remove('border-gold', 'ring-2', 'ring-gold/40');
-                el.classList.add('border-transparent');
-            });
-            document.getElementById(`nl-img-option-${index}`)?.classList.add('border-gold', 'ring-2', 'ring-gold/40');
-
-            const label = document.getElementById('nl-image-selected-label');
-            label.classList.remove('hidden');
-
-            // Si image Unsplash — sauvegarde automatique dans GitHub
-            if (source === 'unsplash' && downloadUrl && filename) {
-                label.querySelector('span').textContent = 'Sauvegarde en cours...';
-                try {
-                    const saveRes = await fetch('/api/admin/newsletter-images', {
-                        method: 'POST',
-                        credentials: 'include',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ action: 'save', unsplash_url: downloadUrl, filename })
-                    });
-                    const saved = await saveRes.json();
-                    if (saved.success) {
-                        nlSelectedImage = saved.path;
-                        label.querySelector('span').textContent =
-                            `✓ Image sauvegardée dans ta bibliothèque${photographer ? ' · Photo : ' + photographer : ''}`;
-                    } else {
-                        label.querySelector('span').textContent = 'Image Unsplash sélectionnée (non sauvegardée)';
-                    }
-                } catch(e) {
-                    label.querySelector('span').textContent = 'Image Unsplash sélectionnée';
-                }
-            } else {
-                label.querySelector('span').textContent =
-                    'Sélectionnée : ' + path.split('/').pop().replace(/[_\.]/g,' ').replace(/png|jpg|jpeg/,'').trim();
-            }
+        function nlPreviewImage(index) {
+            const img = window.nlAllImages[index];
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/90 backdrop-blur-sm p-4';
+            modal.onclick = () => modal.remove();
+            modal.innerHTML = `
+                <div class="max-w-4xl w-full" onclick="event.stopPropagation()">
+                    <img src="${img.path}" alt="${img.name}" class="w-full rounded-lg shadow-2xl">
+                    <div class="mt-4 text-center">
+                        <p class="text-white text-lg mb-2">${img.name}</p>
+                        <button onclick="nlToggleImage(${index}); this.closest('.fixed').remove()" 
+                            class="px-6 py-2 bg-gold text-night-blue rounded-lg hover:bg-gold/90 transition">
+                            ${nlSelectedImages.some(s => s.index === index) ? 'Retirer' : 'Sélectionner'}
+                        </button>
+                        <button onclick="this.closest('.fixed').remove()" 
+                            class="ml-3 px-6 py-2 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition">
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
         }
 
-        function nlClearImage() {
-            nlSelectedImage = null;
+        async function nlToggleImage(index) {
+            const img = window.nlAllImages[index];
+            const existingIndex = nlSelectedImages.findIndex(s => s.index === index);
+            
+            if (existingIndex >= 0) {
+                // Désélectionner
+                nlSelectedImages.splice(existingIndex, 1);
+                document.getElementById(`nl-img-option-${index}`)?.classList.remove('border-gold', 'ring-2', 'ring-gold/40');
+                document.getElementById(`nl-img-toggle-${index}`).innerHTML = '<i class="fas fa-plus text-white text-sm"></i>';
+            } else {
+                // Sélectionner (max 3)
+                if (nlSelectedImages.length >= 3) {
+                    nlStatus('error', 'Maximum 3 images');
+                    return;
+                }
+                
+                let finalPath = img.path;
+                
+                // Si Unsplash, sauvegarder d'abord
+                if (img.source === 'unsplash' && img.download_url) {
+                    try {
+                        const saveRes = await fetch('/api/admin/newsletter-images', {
+                            method: 'POST',
+                            credentials: 'include',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ action: 'save', unsplash_url: img.download_url, filename: img.filename })
+                        });
+                        const saved = await saveRes.json();
+                        if (saved.success) finalPath = saved.path;
+                    } catch(e) {
+                        console.error('Erreur sauvegarde:', e);
+                    }
+                }
+                
+                nlSelectedImages.push({ index, path: finalPath, name: img.name });
+                document.getElementById(`nl-img-option-${index}`)?.classList.add('border-gold', 'ring-2', 'ring-gold/40');
+                document.getElementById(`nl-img-toggle-${index}`).innerHTML = '<i class="fas fa-check text-white text-sm"></i>';
+            }
+            
+            nlUpdateSelectedPreviews();
+        }
+
+        function nlUpdateSelectedPreviews() {
+            const container = document.getElementById('nl-selected-previews');
+            if (!container) return;
+            
+            if (nlSelectedImages.length === 0) {
+                container.innerHTML = '';
+                return;
+            }
+            
+            container.innerHTML = nlSelectedImages.map((sel, i) => `
+                <div class="relative group">
+                    <img src="${sel.path}" alt="${sel.name}" class="w-full h-24 object-cover rounded-lg">
+                    <button onclick="nlToggleImage(${sel.index})" 
+                        class="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center">
+                        <i class="fas fa-times text-white text-xs"></i>
+                    </button>
+                    <p class="text-xs text-gold/60 mt-1 truncate">${sel.name}</p>
+                </div>
+            `).join('');
+            
+            const label = document.getElementById('nl-image-selected-label');
+            label.classList.remove('hidden');
+            label.querySelector('span').textContent = `${nlSelectedImages.length} image(s) sélectionnée(s)`;
+        }
+
+        function nlClearImages() {
+            nlSelectedImages = [];
             document.querySelectorAll('[id^="nl-img-option-"]').forEach(el => {
                 el.classList.remove('border-gold', 'ring-2', 'ring-gold/40');
-                el.classList.add('border-transparent');
             });
+            document.querySelectorAll('[id^="nl-img-toggle-"]').forEach(btn => {
+                btn.innerHTML = '<i class="fas fa-plus text-white text-sm"></i>';
+            });
+            nlUpdateSelectedPreviews();
             document.getElementById('nl-image-selected-label')?.classList.add('hidden');
         }
 
         function nlCopy() {
             navigator.clipboard.writeText(document.getElementById('nl-content').value);
             nlStatus('success', 'Contenu copié');
+        }
+
+        function nlPreview() {
+            const content = document.getElementById('nl-content').value.trim();
+            const subject = document.getElementById('nl-subject').value.trim();
+            
+            if (!content) {
+                nlStatus('error', 'Aucun contenu à prévisualiser');
+                return;
+            }
+            
+            // Générer HTML des images sélectionnées
+            let imagesHtml = '';
+            if (nlSelectedImages.length > 0) {
+                imagesHtml = '<div class="grid grid-cols-' + Math.min(nlSelectedImages.length, 3) + ' gap-4 mb-6">';
+                nlSelectedImages.forEach(sel => {
+                    imagesHtml += `<img src="${sel.path}" alt="${sel.name}" class="w-full rounded-lg shadow-lg" style="max-height: 300px; object-fit: cover;">`;
+                });
+                imagesHtml += '</div>';
+            }
+            
+            // Créer modal d'aperçu
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4';
+            modal.innerHTML = `
+                <div class="bg-white rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto shadow-2xl">
+                    <div class="sticky top-0 bg-gradient-to-r from-night-blue to-[#051428] p-4 flex justify-between items-center border-b border-gold/20">
+                        <h3 class="cormorant text-xl text-gold">📧 Aperçu Newsletter</h3>
+                        <button onclick="this.closest('.fixed').remove()" class="text-gold/60 hover:text-gold transition">
+                            <i class="fas fa-times text-xl"></i>
+                        </button>
+                    </div>
+                    <div class="p-6">
+                        ${subject ? `<h2 class="text-2xl font-bold text-gray-800 mb-4">${subject}</h2>` : ''}
+                        ${imagesHtml}
+                        <div class="prose prose-lg max-w-none text-gray-700" style="white-space: pre-wrap; line-height: 1.8;">
+                            ${content.replace(/\n/g, '<br>')}
+                        </div>
+                    </div>
+                    <div class="sticky bottom-0 bg-gray-50 p-4 border-t flex justify-end gap-3">
+                        <button onclick="this.closest('.fixed').remove()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition">
+                            Fermer
+                        </button>
+                    </div>
+                </div>
+            `;
+            document.body.appendChild(modal);
         }
 
         async function nlSave() {

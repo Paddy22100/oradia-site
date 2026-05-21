@@ -205,7 +205,7 @@ async function sendWaitlistConfirmationEmail(email) {
                 Avec gratitude,
               </p>
               <p style="margin:0;color:#d8bf72;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;font-weight:600;letter-spacing:1px;">
-                L'équipe ORADIA
+                Rudy Boucheron
               </p>
 
             </td>
@@ -240,7 +240,7 @@ async function sendWaitlistConfirmationEmail(email) {
 </body>
 </html>
         `,
-        textContent: 'Bienvenue dans l\'univers ORADIA ! Ton inscription à la liste d\'attente est confirmée. Tu seras informé(e) en priorité dès l\'ouverture des tirages en ligne. Découvre dès maintenant les offres de précommande sur oradia.fr/precommande-oracle.html - Avec gratitude, L\'équipe ORADIA'
+        textContent: 'Bienvenue dans l\'univers ORADIA ! Ton inscription à la liste d\'attente est confirmée. Tu seras informé(e) en priorité dès l\'ouverture des tirages en ligne. Découvre dès maintenant les offres de précommande sur oradia.fr/precommande-oracle.html - Avec gratitude, Rudy Boucheron'
       })
     });
 

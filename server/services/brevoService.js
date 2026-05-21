@@ -370,7 +370,7 @@ class BrevoService {
                             <!-- Closing -->
                             <p style="color: #f5e7a1; font-size: 14px; line-height: 1.6; margin: 30px 0 0 0; opacity: 0.8;">
                                 À très bientôt,<br>
-                                L'équipe Oradia
+                                Rudy Boucheron
                             </p>
                         </td>
                     </tr>
@@ -424,7 +424,7 @@ En tant qu'inscrit, vous bénéficierez d'un accès prioritaire lors de l'ouvert
 Découvrir l'Oracle : https://oradia.fr/oracle.html
 
 À très bientôt,
-L'équipe Oradia
+Rudy Boucheron
 
 ---
 Vous recevez cet email car vous vous êtes inscrit à la précommande de l'Oracle Oradia.
@@ -510,7 +510,7 @@ oradia.fr
                             
                             <p style="color: #f5e7a1; font-size: 14px; line-height: 1.6; margin: 30px 0 0 0; opacity: 0.8;">
                                 À très bientôt,<br>
-                                L'équipe Oradia
+                                Rudy Boucheron
                             </p>
                         </td>
                     </tr>
@@ -539,7 +539,7 @@ En tant qu'inscrit prioritaire, vous avez maintenant accès à la précommande a
 Précommander maintenant : https://oradia.fr/precommande-oracle.html
 
 À très bientôt,
-L'équipe Oradia
+Rudy Boucheron
         `;
     }
 }
