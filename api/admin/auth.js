@@ -40,11 +40,26 @@ export default async function handler(req, res) {
             if (!valid) return res.status(401).json({ error: 'Identifiants incorrects' });
             const token = jwt.sign({ email: ADMIN_EMAIL, type: 'admin', loginTime: Date.now() },
                 ADMIN_SESSION_SECRET, { expiresIn: '2h' });
-            const cookieValue = serializeCookie('oradia_admin_session', token, {
-                httpOnly: true, secure: process.env.NODE_ENV === 'production',
-                sameSite: 'lax', path: '/', maxAge: 2 * 60 * 60
-            });
-            console.log('✅ LOGIN SUCCESS - Cookie:', cookieValue.substring(0, 100) + '...');
+            const isProduction = process.env.NODE_ENV === 'production';
+            const cookieOptions = {
+                httpOnly: true,
+                secure: isProduction,
+                sameSite: 'lax',
+                path: '/',
+                maxAge: 2 * 60 * 60
+            };
+            
+            // En production, ajouter le domain
+            if (isProduction && req.headers.host) {
+                const domain = req.headers.host.replace(/:\d+$/, '');
+                if (!domain.includes('localhost')) {
+                    cookieOptions.domain = domain.startsWith('.') ? domain : '.' + domain;
+                }
+            }
+            
+            const cookieValue = serializeCookie('oradia_admin_session', token, cookieOptions);
+            console.log('✅ LOGIN SUCCESS - Cookie options:', cookieOptions);
+            console.log('Cookie value:', cookieValue.substring(0, 100) + '...');
             res.setHeader('Set-Cookie', cookieValue);
             return res.status(200).json({ success: true, message: 'Connexion réussie',
                 admin: { email: ADMIN_EMAIL, role: 'admin' } });
