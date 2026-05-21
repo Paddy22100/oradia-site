@@ -920,7 +920,7 @@
                                     <!-- Carrousel container -->
                                     <div id="cartesCarousel" class="relative w-full h-full">
                                         <!-- Slide 1 - Carte Émotion -->
-                                        <div class="carousel-slide absolute inset-0 flex items-center justify-center">
+                                        <div class="carousel-slide absolute inset-0 flex items-center justify-center opacity-100 transition-opacity duration-500">
                                             <img src="/images/emotions/la_joie.png" alt="La Joie - Carte ORADIA" class="w-full h-full object-contain rounded-lg" onerror="this.src='/images/archetypes/le_sage.png'">
                                         </div>
                                         <!-- Slide 2 - Carte Besoin -->
@@ -1764,7 +1764,13 @@ La production est lancée grâce aux premières commandes.</p>
             
             function showSlide(index) {
                 slides.forEach((slide, i) => {
-                    slide.style.opacity = i === index ? '1' : '0';
+                    if (i === index) {
+                        slide.classList.remove('opacity-0');
+                        slide.classList.add('opacity-100');
+                    } else {
+                        slide.classList.remove('opacity-100');
+                        slide.classList.add('opacity-0');
+                    }
                 });
                 dots.forEach((dot, i) => {
                     dot.className = i === index ? 'w-2 h-2 bg-gold rounded-full cursor-pointer' : 'w-2 h-2 bg-gold/50 rounded-full cursor-pointer';
