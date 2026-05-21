@@ -9,19 +9,6 @@ function getSupabaseClient() {
   return createClient(supabaseUrl, supabaseKey);
 }
 
-function validateEnvironment() {
-  const missing = [];
-
-  if (!process.env.SUPABASE_SERVICE_ROLE_KEY) missing.push('SUPABASE_SERVICE_ROLE_KEY');
-  if (!process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
-    missing.push('SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL');
-  }
-
-  if (missing.length > 0) {
-    throw new Error(`Configuration error: Missing ${missing.join(', ')}`);
-  }
-}
-
 function setCORS(req, res) {
   const allowedOrigins = [
     'https://oradia.fr',
@@ -57,36 +44,40 @@ module.exports = async (req, res) => {
       });
     }
 
-    validateEnvironment();
-    const supabase = getSupabaseClient();
-
-    const { data, error } = await supabase
-      .from('preorders')
-      .select('id, items, paid_status')
-      .eq('paid_status', 'completed');
-
-    if (error) {
-      console.error('Progress query failed:', error.message);
-      return res.status(500).json({
-        success: false,
-        error: 'Database error',
-        message: 'Impossible de récupérer la progression'
-      });
-    }
-
+    // Si pas de config Supabase, retourner des valeurs par défaut
+    const hasSupabaseConfig = process.env.SUPABASE_SERVICE_ROLE_KEY && 
+                              (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL);
+    
     let sold = 0;
+    
+    if (hasSupabaseConfig) {
+      try {
+        const supabase = getSupabaseClient();
+        const { data, error } = await supabase
+          .from('preorders')
+          .select('id, items, paid_status')
+          .eq('paid_status', 'completed');
 
-    for (const row of data || []) {
-      if (Array.isArray(row.items) && row.items.length > 0) {
-        const qty = row.items.reduce((sum, item) => {
-          const q = Number(item?.quantity);
-          return sum + (Number.isFinite(q) && q > 0 ? q : 0);
-        }, 0);
-
-        sold += qty > 0 ? qty : 1;
-      } else {
-        sold += 1;
+        if (error) {
+          console.error('Progress query failed:', error.message);
+        } else {
+          for (const row of data || []) {
+            if (Array.isArray(row.items) && row.items.length > 0) {
+              const qty = row.items.reduce((sum, item) => {
+                const q = Number(item?.quantity);
+                return sum + (Number.isFinite(q) && q > 0 ? q : 0);
+              }, 0);
+              sold += qty > 0 ? qty : 1;
+            } else {
+              sold += 1;
+            }
+          }
+        }
+      } catch (dbError) {
+        console.error('Database error:', dbError.message);
       }
+    } else {
+      console.warn('Supabase not configured - returning default values');
     }
 
     const goal = Number(process.env.PREORDER_GOAL || 500);
