@@ -17,3 +17,5 @@ Thumbs.db
 clean-console-logs.js
 generate-hash.js
 
+# Helpers API (ne pas compiler comme fonctions serverless)
+api/lib/
