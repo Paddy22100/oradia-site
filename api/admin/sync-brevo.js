@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-const { verifyAdminAuth } = require('./_auth');
+const { verifyAdminAuth } = require('../lib/admin-auth');
 
 function getSupabaseClient() {
   return createClient(
