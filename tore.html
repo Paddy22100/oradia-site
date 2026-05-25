@@ -244,6 +244,28 @@
       /* Assurer que la modale est BIEN au-dessus du bandeau */
       z-index: 80 !important;
     }
+  }
+
+  /* Ouverture/fermeture douce du message guide */
+  #tore-guide-message {
+    transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  /* Panneau intérieur : transition douce sur transform+opacity */
+  #tore-guide-message > div.bg-gradient-to-br {
+    transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1),
+                opacity   0.55s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  /* État de fermeture */
+  #tore-guide-message.guide-hiding {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+  #tore-guide-message.guide-hiding > div.bg-gradient-to-br {
+    transform: translateY(28px) scale(0.96) !important;
+    opacity: 0 !important;
+  }
+
+  @media (max-width: 767px) and (orientation: landscape) {
     #tore-guide-message > div {
       min-height: unset !important;
       max-height: calc(100dvh - 12px) !important;
@@ -513,13 +535,21 @@
       overflow: hidden; /* coupe tout ce qui dépasse */
     }
 
-    /* Les cartes s'adaptent à la cellule de grille */
+    /* Les cartes s'adaptent à la cellule de grille en gardant leur ratio */
     .tore-card {
       width: 100%;
       max-width: 100%;
       min-width: 0;
-      height: 100%;
+      height: auto;
+      aspect-ratio: 64 / 90;
+      align-self: center;
       overflow: hidden;
+    }
+
+    /* La grille s'aligne sur le contenu des cellules */
+    #tore-immersif .tore-board-7 {
+      grid-template-rows: repeat(3, auto);
+      align-content: center;
     }
 
     .tore-card-inner,
@@ -664,46 +694,9 @@
     }
   }
 
-  /* ── Swap sans flip 3D (mobile < 640px) ── */
+  /* ── Flip scaleX 2D (mobile < 640px) — compatible iOS/Android ── */
   @media (max-width: 639px) {
-    .tore-card-inner {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      transform: none !important;
-      transform-style: flat !important;
-      perspective: none !important;
-    }
-    /* Face dos visible par défaut */
-    .tore-card-back {
-      position: relative;
-      opacity: 1;
-      visibility: visible;
-      transition: opacity 0.2s ease, visibility 0.2s ease;
-    }
-    /* Face avant cachée par défaut */
-    .tore-card-front {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      visibility: hidden;
-      transform: none !important;
-      transition: opacity 0.2s ease, visibility 0.2s ease;
-      pointer-events: none;
-    }
-    /* Après retournement : dos caché */
-    .tore-card.flipped .tore-card-back {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-    /* Après retournement : face visible */
-    .tore-card.flipped .tore-card-front {
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-    }
-    /* Annuler tout contexte 3D sur mobile */
+    /* Annuler tout contexte 3D */
     .tore-card {
       perspective: none !important;
     }
@@ -715,6 +708,51 @@
       -webkit-backface-visibility: visible !important;
       transform-style: flat !important;
       -webkit-transform-style: flat !important;
+    }
+    .tore-card-inner {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      /* Animation flip en deux phases via scaleX */
+      transform-origin: center center;
+      transition: transform 0.22s ease-in;
+    }
+    /* Phase 1 : rétrécissement (déclenché par JS avec .flipping) */
+    .tore-card.flipping .tore-card-inner {
+      transform: scaleX(0);
+    }
+    /* Phase 2 : expansion (déclenché par JS avec .flipped après le scaleX(0)) */
+    .tore-card.flipped .tore-card-inner {
+      transform: scaleX(1);
+      transition: transform 0.22s ease-out;
+    }
+    /* Dos : visible par défaut */
+    .tore-card-back {
+      position: absolute;
+      inset: 0;
+      opacity: 1;
+      visibility: visible;
+    }
+    /* Face avant : cachée par défaut */
+    .tore-card-front {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      visibility: hidden;
+      transform: none !important;
+      pointer-events: none;
+      background: #020817 !important;
+    }
+    /* Après retournement : dos caché, face visible */
+    .tore-card.flipped .tore-card-back {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .tore-card.flipped .tore-card-front {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
     }
   }
 
@@ -1345,7 +1383,7 @@
   @keyframes modalPanelIn {
     from {
       opacity: 0;
-      transform: translateY(28px) scale(0.96);
+      transform: translateY(36px) scale(0.95);
     }
     to {
       opacity: 1;
@@ -1353,10 +1391,21 @@
     }
   }
 
+  @keyframes modalPanelOut {
+    from {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(20px) scale(0.97);
+    }
+  }
+
   @keyframes modalPanelInBottom {
     from {
       opacity: 0;
-      transform: translateY(40px) scale(0.97);
+      transform: translateY(50px) scale(0.97);
     }
     to {
       opacity: 1;
@@ -1377,22 +1426,22 @@
 
   /* Classe utilitaire : fond de modale */
   .modal-anim-overlay {
-    animation: modalOverlayIn 0.35s ease forwards;
+    animation: modalOverlayIn 0.55s ease forwards;
   }
 
   /* Panneau centré (guide carte) */
   .modal-anim-panel {
-    animation: modalPanelIn 0.42s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: modalPanelIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
   /* Panneau bas (polarity) */
   .modal-anim-panel-bottom {
-    animation: modalPanelInBottom 0.4s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+    animation: modalPanelInBottom 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
   /* Panneau gauche (bridge-split gauche) */
   .modal-anim-panel-left {
-    animation: modalPanelInLeft 0.4s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
+    animation: modalPanelInLeft 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.1s both;
   }
 
 
@@ -2492,7 +2541,7 @@
       </div>
 
       <!-- Message de guidage pour l'intégration -->
-      <div id="tore-guide-message" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-6" style="background: radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%); pointer-events: auto; overflow-y: auto;">
+      <div id="tore-guide-message" class="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-6" style="background: radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%); overflow-y: auto; opacity:0; visibility:hidden; pointer-events:none;">
         <div class="bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl border-2 border-gold/40 rounded-3xl w-full max-w-4xl shadow-[0_25px_50px_-12px_rgba(212,175,55,0.25)] relative overflow-hidden my-auto flex flex-col" style="min-height: min(70vh, 520px); max-height: calc(100dvh - 16px);">
           <!-- Effet de lumière subtile -->
           <div class="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-blue-900/20 rounded-3xl pointer-events-none"></div>
@@ -3101,12 +3150,12 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
     // Fond
     overlayEl.style.animation = 'none';
     void overlayEl.offsetWidth;
-    overlayEl.style.animation = 'modalOverlayIn 0.3s ease forwards';
+    overlayEl.style.animation = 'modalOverlayIn 0.55s ease forwards';
     // Panneau
     if (panelEl) {
       panelEl.style.animation = 'none';
       void panelEl.offsetWidth;
-      panelEl.style.animation = (panelClass || 'modalPanelIn') + ' 0.42s cubic-bezier(0.22,1,0.36,1) forwards';
+      panelEl.style.animation = (panelClass || 'modalPanelIn') + ' 0.65s cubic-bezier(0.22,1,0.36,1) forwards';
     }
   }
 
@@ -3182,13 +3231,24 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
       }
     }
     
-    guideMessage.classList.remove('hidden');
+    // Afficher l'overlay via transition CSS (opacity/visibility, pas display)
+    guideMessage.style.visibility = 'visible';
+    guideMessage.style.pointerEvents = 'auto';
+    void guideMessage.offsetWidth; // reflow pour que la transition parte de 0
+    guideMessage.style.opacity = '1';
     // Masquer le bandeau bas pour que le bouton Continuer reste visible (surtout en paysage)
     const stepGuideBandeau = el('tore-step-guide');
     if (stepGuideBandeau) stepGuideBandeau.classList.add('hidden');
-    // Animation d'apparition
-    const guidePanel = guideMessage.querySelector('.bg-gradient-to-br');
-    animateModalIn(guideMessage, guidePanel, 'modalPanelIn');
+    // Animer le panneau intérieur via transition CSS (cohérent avec la fermeture)
+    const guidePanel = guideMessage.querySelector(':scope > div.bg-gradient-to-br');
+    if (guidePanel) {
+      guidePanel.style.animation = 'none';
+      guidePanel.style.transform = 'translateY(28px) scale(0.96)';
+      guidePanel.style.opacity = '0';
+      void guidePanel.offsetWidth; // reflow
+      guidePanel.style.transform = '';
+      guidePanel.style.opacity = '';
+    }
     isGuideMessageShown = true; // Bloquer les clics sur les autres cartes
     isCardFlipping = false; // Le guide prend le relais, on libère ce verrou
 
@@ -3205,47 +3265,48 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
       
       // Ajouter le nouveau listener
       newBtn.addEventListener('click', () => {
-        guideMessage.classList.add('hidden');
-        isGuideMessageShown = false;
-        // Restaurer le bandeau bas
-        const sg = el('tore-step-guide');
-        if (sg) sg.classList.remove('hidden');
-        
-        if (boardHost) {
-          boardHost.style.pointerEvents = 'auto';
-        }
-        
-        // Vérifier si toutes les cartes sont retournées → afficher la pièce
-        // Sinon, passer à la prochaine carte
-        const total = boardHost ? boardHost.querySelectorAll('.tore-card').length : 0;
-        const flipped = boardHost ? boardHost.querySelectorAll('.tore-card.flipped').length : 0;
-        if (total > 0 && flipped === total) {
-          boardHost.classList.remove('has-active-card'); // toutes retournées : lever l'effet
-          setTimeout(() => showCoinAfterAllCards(), 400);
-        } else {
-          setTimeout(() => highlightNextCard(), 400);
-        }
+        // Fermeture avec transition
+        guideMessage.classList.add('guide-hiding');
+        guideMessage.style.opacity = '0';
+        guideMessage.style.pointerEvents = 'none';
+        setTimeout(() => {
+          guideMessage.style.visibility = 'hidden';
+          guideMessage.classList.remove('guide-hiding');
+          isGuideMessageShown = false;
+          const sg = el('tore-step-guide');
+          if (sg) sg.classList.remove('hidden');
+          if (boardHost) boardHost.style.pointerEvents = 'auto';
+          const total = boardHost ? boardHost.querySelectorAll('.tore-card').length : 0;
+          const flipped = boardHost ? boardHost.querySelectorAll('.tore-card.flipped').length : 0;
+          if (total > 0 && flipped === total) {
+            boardHost.classList.remove('has-active-card');
+            setTimeout(() => showCoinAfterAllCards(), 300);
+          } else {
+            setTimeout(() => highlightNextCard(), 300);
+          }
+        }, 680);
       });
     } else if (guideContinueBtn) {
       guideContinueBtn.addEventListener('click', () => {
-        guideMessage.classList.add('hidden');
-        isGuideMessageShown = false;
-        // Restaurer le bandeau bas
-        const sg2 = el('tore-step-guide');
-        if (sg2) sg2.classList.remove('hidden');
-        
-        if (boardHost) {
-          boardHost.style.pointerEvents = 'auto';
-        }
-        
-        const total = boardHost ? boardHost.querySelectorAll('.tore-card').length : 0;
-        const flipped = boardHost ? boardHost.querySelectorAll('.tore-card.flipped').length : 0;
-        if (total > 0 && flipped === total) {
-          boardHost.classList.remove('has-active-card');
-          setTimeout(() => showCoinAfterAllCards(), 400);
-        } else {
-          setTimeout(() => highlightNextCard(), 400);
-        }
+        guideMessage.classList.add('guide-hiding');
+        guideMessage.style.opacity = '0';
+        guideMessage.style.pointerEvents = 'none';
+        setTimeout(() => {
+          guideMessage.style.visibility = 'hidden';
+          guideMessage.classList.remove('guide-hiding');
+          isGuideMessageShown = false;
+          const sg2 = el('tore-step-guide');
+          if (sg2) sg2.classList.remove('hidden');
+          if (boardHost) boardHost.style.pointerEvents = 'auto';
+          const total = boardHost ? boardHost.querySelectorAll('.tore-card').length : 0;
+          const flipped = boardHost ? boardHost.querySelectorAll('.tore-card.flipped').length : 0;
+          if (total > 0 && flipped === total) {
+            boardHost.classList.remove('has-active-card');
+            setTimeout(() => showCoinAfterAllCards(), 300);
+          } else {
+            setTimeout(() => highlightNextCard(), 300);
+          }
+        }, 680);
       });
     }
   }
@@ -4131,20 +4192,20 @@ function closeToreExitModal(){
         front.style.background = 'none';
         front.innerHTML = '';
 
-        isCardFlipping = true; // Verrouiller immédiatement
+        isCardFlipping = true;
         card.classList.remove('next-to-draw');
-        card.classList.add('flipped', 'just-flipped'); // just-flipped = exclue de l'atténuation
+
+        const isMobile = window.matchMedia('(max-width: 639px)').matches;
 
         // Incrémenter l'index de tirage pour passer à la famille suivante
         toreThrowIndex++;
 
-        // Injecter l'image APRÈS le début du flip (évite le flash blanc)
-        // La face avant est invisible pendant les 400ms de rotation → on injecte en milieu d'animation
-        setTimeout(() => {
+        const doFlip = () => {
+          card.classList.add('flipped', 'just-flipped');
+          // Injecter l'image en préchargement (pendant ou après l'animation)
           const img = new Image();
           img.onload = () => {
             front.innerHTML = `<img src="${imgPath}" alt="${data.name || ''}" style="width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.3s ease;" />`;
-            // Fade-in de l'image une fois injectée
             requestAnimationFrame(() => {
               const injectedImg = front.querySelector('img');
               if (injectedImg) {
@@ -4156,7 +4217,20 @@ function closeToreExitModal(){
             front.innerHTML = `<img src="${imgPath}" alt="${data.name || ''}" style="width:100%;height:100%;object-fit:contain;display:block;" />`;
           };
           img.src = imgPath;
-        }, 350);
+        };
+
+        if (isMobile) {
+          // Phase 1 : rétrécissement (scaleX → 0)
+          card.classList.add('flipping');
+          setTimeout(() => {
+            // Au milieu du flip : échange dos/face + démarrage phase 2
+            card.classList.remove('flipping');
+            doFlip();
+          }, 230); // durée transition CSS 0.22s + marge
+        } else {
+          // Desktop : flip 3D CSS géré directement
+          doFlip();
+        }
 
         // Afficher le message de guidage APRÈS l'animation flip complète (1 seconde)
         setTimeout(() => {
