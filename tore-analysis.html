@@ -508,10 +508,10 @@
         <!-- Cartes tirées -->
         <div class="mb-16">
             <div class="text-center mb-10 fade-in-up">
-                <h2 class="section-title mb-2">Vos 7 Cartes</h2>
+                <h2 class="section-title mb-2" id="cardsSectionTitle">Votre tirage</h2>
                 <div class="gold-divider"></div>
             </div>
-            <div id="cardsDisplay" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-7 gap-4 md:gap-5">
+            <div id="cardsDisplay" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 md:gap-5">
                 <!-- Les cartes seront insérées ici dynamiquement -->
             </div>
         </div>
@@ -701,14 +701,13 @@
                         </h2>
 
                         <p style="color:#c8c0a8; font-size:0.95rem; line-height:1.8; margin-bottom:1rem; font-family:'Lora',serif; font-style:italic;">
-                            "Ce tirage n'est qu'un premier éclairage. Si quelque chose a résonné en vous — 
-                            une carte, une phrase, un silence — je serai sincèrement ravi d'aller plus loin avec vous."
+                            "Ce tirage n'est qu'un premier éclairage. Si quelque chose a résonné en vous, une carte, une phrase, un silence, je serai sincèrement ravi d'aller plus loin avec vous."
                         </p>
 
                         <p style="color:#e9e7df; font-size:0.9rem; line-height:1.75; margin-bottom:1.8rem;">
                             En consultation, je prends le temps de lire votre tirage avec vous, 
                             de comprendre ce qui vous a amené ici, et de vous offrir des clés concrètes 
-                            pour avancer. Ce n'est pas une séance générique — c'est une conversation vraie, 
+                            pour avancer. Ce n'est pas une séance générique, c'est une conversation vraie, 
                             à votre rythme.
                         </p>
 
@@ -750,7 +749,7 @@
                         degout: "Votre dégoût vous signale ce qui n'est plus aligné avec votre vérité, vous invitant à faire le ménage dans votre vie.",
                         fierte: "Votre fierté est le reflet de vos accomplissements et de votre valeur personnelle. Elle vous rappelle votre force intérieure.",
                         honte: "Votre honte est une invitation à la compassion envers vous-même et à l'intégration de toutes vos parts.",
-                        confusion: "La confusion que vous traversez n'est pas un échec — c'est souvent le signe qu'un ancien cadre se défait pour laisser place à quelque chose de plus juste.",
+                        confusion: "La confusion que vous traversez n'est pas un échec. C'est souvent le signe qu'un ancien cadre se défait pour laisser place à quelque chose de plus juste.",
                         desespoir: "Votre désespoir touche quelque chose de profond. Il vous invite à ne plus porter seul ce poids et à chercher un soutien véritable.",
                         enthousiasme: "L'enthousiasme qui vous anime est un signal clair : vous êtes sur le bon chemin. Faites confiance à cet élan.",
                         gratitude: "La gratitude que vous portez ouvre les portes de l'abondance. Ce que vous reconnaissez comme précieux se multiplie.",
@@ -769,7 +768,7 @@
                         clarte: "Le besoin de clarté qui se manifeste vous dit que vous êtes prêt à voir les choses telles qu'elles sont vraiment, sans filtre.",
                         connexion: "Votre besoin de connexion authentique est légitime. Cherchez les liens qui vous nourrissent vraiment.",
                         sens: "Le besoin de sens est au cœur de ce que vous traversez. Il vous pousse à aller au-delà des apparences.",
-                        respect: "Le besoin de respect — de vous-même et des autres — se rappelle à vous. Honorez ce que vous valez."
+                        respect: "Le besoin de respect, envers vous-même et envers les autres, se rappelle à vous. Honorez ce que vous valez."
                     },
                     transmutation: {
                         transformation: "La transformation est en cours dans votre vie. Ce qui doit changer se révèle clairement maintenant.",
@@ -780,8 +779,8 @@
                         metamorphose: "La métamorphose vous transforme en profondeur, modifiant votre perception et votre réalité.",
                         transfiguration: "La transfiguration vous élève vers un état de conscience supérieur, illuminant votre chemin.",
                         actualisation: "L'actualisation vous permet de concrétiser vos potentiels et de manifester vos rêves.",
-                        acceptation: "L'acceptation n'est pas la résignation — c'est la porte d'entrée vers un changement véritable et durable.",
-                        lacherprise: "Le lâcher-prise que cette carte évoque n'est pas une perte — c'est une libération qui crée de l'espace pour ce qui vient.",
+                        acceptation: "L'acceptation n'est pas la résignation. C'est la porte d'entrée vers un changement véritable et durable.",
+                        lacherprise: "Le lâcher-prise que cette carte évoque n'est pas une perte. C'est une libération qui crée de l'espace pour ce qui vient.",
                         integration: "L'intégration de vos expériences passées est en cours. Ce que vous avez vécu devient une ressource.",
                         renouveau: "Un renouveau profond s'amorce. Faites confiance au cycle qui se met en place."
                     },
@@ -794,13 +793,13 @@
                         grace: "La grâce circule dans votre vie, apportant des synchronicités et des rencontres signifiantes.",
                         illumination: "La clarté progressive éclaire votre compréhension et élargit votre conscience.",
                         harmonie: "L'harmonie s'installe en vous, alignant toutes les parties de votre être.",
-                        tissage_cosmique: "Cette carte évoque le fil invisible qui relie tous les événements de votre vie. Rien n'est isolé — tout se tisse.",
-                        memoire: "Votre mémoire profonde — celle de l'âme — se réveille. Elle porte des réponses que votre mental n'a pas encore trouvées.",
+                        tissage_cosmique: "Cette carte évoque le fil invisible qui relie tous les événements de votre vie. Rien n'est isolé, tout se tisse.",
+                        memoire: "Votre mémoire profonde, celle de l'âme, se réveille. Elle porte des réponses que votre mental n'a pas encore trouvées.",
                         ancrage: "L'ancrage est le fondement de tout mouvement juste. Plus vous êtes enraciné, plus vous pouvez vous élever.",
                         ouverture: "Une ouverture intérieure se produit. Restez disponible à ce qui cherche à entrer dans votre vie."
                     },
                     revelation: {
-                        recevoir: "Recevoir — vraiment recevoir — est un acte courageux. Cette carte vous invite à cesser de refuser ce qui vous est offert.",
+                        recevoir: "Recevoir, vraiment recevoir, est un acte courageux. Cette carte vous invite à cesser de refuser ce qui vous est offert.",
                         voir: "La capacité à voir clairement se développe en vous. Ce que vous n'osiez pas regarder en face devient maintenant accessible.",
                         comprendre: "Une compréhension plus profonde émerge. Les pièces du puzzle commencent à s'assembler.",
                         reconnaitre: "Reconnaître ce qui est vrai pour vous est un acte de courage. Cette carte vous y invite.",
@@ -808,7 +807,7 @@
                     },
                     archetypes: {
                         le_voyageur: "Le Voyageur en vous est en route vers quelque chose de nouveau. Ce déplacement est nécessaire, même si la destination n'est pas encore claire.",
-                        le_guerisseur: "Le Guérisseur se réveille — en vous d'abord. La guérison que vous cherchez commence par vous accorder de la bienveillance.",
+                        le_guerisseur: "Le Guérisseur se réveille, en vous d'abord. La guérison que vous cherchez commence par vous accorder de la bienveillance.",
                         le_gardien: "Le Gardien vous rappelle vos responsabilités envers ce qui vous est confié. Protégez ce qui a de la valeur pour vous.",
                         le_createur: "Le Créateur en vous réclame de l'espace. Donnez vie à ce qui sommeille en vous depuis trop longtemps.",
                         le_sage: "Le Sage vous invite à prendre du recul. La réponse que vous cherchez nécessite de la distance et de la perspective.",
@@ -817,7 +816,7 @@
                     portail: {
                         porte: "Une porte se présente à vous. Elle représente un passage entre ce que vous étiez et ce que vous devenez. Serez-vous prêt à franchir ce seuil ?",
                         seuil: "Vous êtes au seuil d'un nouveau chapitre. Ce passage peut être inconfortable, mais il est nécessaire à votre évolution.",
-                        passage: "Le passage que vous traversez est temporaire. Gardez foi — il y a une sortie, et elle mène vers quelque chose de meilleur."
+                        passage: "Le passage que vous traversez est temporaire. Gardez foi : il y a une sortie, et elle mène vers quelque chose de meilleur."
                     },
                     // Cartes passerelles (lignes mutantes du Yi King)
                     bridge_cards: {
@@ -950,7 +949,7 @@
 
                 const intros = [
                     `Ce tirage répond à votre intention : "${intention}". Les cartes ont choisi de vous parler clairement. `,
-                    `Votre intention — "${intention}" — a guidé les cartes qui se sont présentées à vous. Voici ce qu'elles révèlent. `,
+                    `Votre intention "${intention}" a guidé les cartes qui se sont présentées à vous. Voici ce qu'elles révèlent. `,
                     `En portant l'intention "${intention}", vous avez appelé ces énergies. Elles ont quelque chose d'important à vous dire. `,
                     `Les cartes ont entendu votre intention : "${intention}". Ce qu'elles vous montrent mérite votre attention. `
                 ];
@@ -960,12 +959,14 @@
                 const hasMutatingLines = mutatingCards.length > 0;
 
                 const n = mutatingCards.length;
-                const bridgeIntros = [
-                    `Ce tirage porte ${n} carte${n > 1 ? 's' : ''} passerelle${n > 1 ? 's' : ''} — un signe que quelque chose est en plein mouvement en vous. `,
-                    `La présence de ${n} passerelle${n > 1 ? 's' : ''} dans ce tirage indique un tournant : ${n > 1 ? 'plusieurs énergies cherchent' : 'une énergie cherche'} à se métamorphoser. `,
-                    `${n > 1 ? `Ces ${n} cartes portent` : 'Cette carte porte'} la marque d'une passerelle — ce qui était figé commence à se libérer. `
-                ];
-                if (hasMutatingLines) message += this._pick(bridgeIntros, seed, 1);
+                if (hasMutatingLines) {
+                    const numWords = { 1: 'une', 2: 'deux', 3: 'trois', 4: 'quatre', 5: 'cinq', 6: 'six' };
+                    const nWord = numWords[n] || String(n);
+                    const bridgeIntro = n === 1
+                        ? `Ce tirage porte une carte passerelle. C'est le signe que quelque chose est en plein mouvement en vous. `
+                        : `Ce tirage porte ${nWord} cartes passerelles. C'est le signe que plusieurs énergies cherchent à se métamorphoser en vous. `;
+                    message += bridgeIntro;
+                }
 
                 const familyNames = { emotions: 'Émotion', besoins: 'Besoin', transmutation: 'Transmutation', memoire_cosmos: 'Mémoire Cosmos', revelation: 'Révélation', portail: 'Portail', archetypes: 'Archétypes', actions: 'Actions' };
                 const cardIntroTemplates = [
@@ -974,8 +975,8 @@
                     (name, family, meaning) => `Dans le registre ${family}, la carte « ${name} » éclaire votre situation : ${meaning}. `
                 ];
                 const bridgeTemplates = [
-                    (name, family, bridge) => `La carte « ${name} » (${family}) est en mouvement — sa passerelle « ${bridge} » annonce une transformation en cours. `,
-                    (name, family, bridge) => `« ${name} » (${family}) se transforme : la passerelle « ${bridge} » signale que quelque chose change en profondeur. `
+                    (name, family, bridge) => `La carte « ${name} » (${family}) est en mouvement. Sa passerelle « ${bridge} » annonce une transformation en cours. `,
+                    (name, family, bridge) => `« ${name} » (${family}) se transforme. La passerelle « ${bridge} » signale que quelque chose change en profondeur. `
                 ];
 
                 const FALLBACK = "cette carte apporte une énergie de transformation et d'éveil à votre tirage";
@@ -998,7 +999,7 @@
                 const closings = [
                     "Ces messages convergent pour vous offrir un éclairage précieux sur ce que vous traversez.",
                     "Ensemble, ces cartes dessinent une direction claire pour vous en ce moment.",
-                    "Ce n'est pas un hasard si ces cartes se sont présentées — elles parlent de vous, pour vous.",
+                    "Ce n'est pas un hasard si ces cartes se sont présentées. Elles parlent de vous, pour vous.",
                     "Laissez ces messages résonner en vous. La compréhension viendra au bon moment."
                 ];
                 const bridgeClosings = [
@@ -1042,7 +1043,7 @@
                 };
 
                 const adviceIntros = [
-                    `À la lumière de votre intention — "${intention}" — voici ce que ce tirage vous invite à explorer : `,
+                    `À la lumière de votre intention "${intention}", voici ce que ce tirage vous invite à explorer : `,
                     `Ce tirage, porté par votre intention "${intention}", vous adresse ces invitations : `,
                     `Pour répondre à "${intention}", vos cartes vous suggèrent ceci : `,
                     `Votre intention "${intention}" ouvre ces pistes concrètes : `
@@ -1063,7 +1064,7 @@
                 });
 
                 const bridgeAdvices = [
-                    'Les cartes passerelles vous invitent à ne pas forcer — laissez le mouvement s\'accomplir à son rythme.',
+                    'Les cartes passerelles vous invitent à ne pas forcer. Laissez le mouvement s\'accomplir à son rythme.',
                     'Là où une passerelle apparaît, il y a une invitation à traverser un seuil. Faites confiance au passage.',
                     'Les passerelles de ce tirage signalent que vous êtes exactement là où vous devez être pour que quelque chose change.'
                 ];
@@ -1187,6 +1188,24 @@
         function displayCards(cards) {
             const container = document.getElementById('cardsDisplay');
             container.innerHTML = '';
+
+            // Titre dynamique : compter uniquement les cartes principales (hors passerelles)
+            const mainCount = cards.length;
+            const bridgeCount = cards.filter(c => c.bridgeCard).length;
+            const titleEl = document.getElementById('cardsSectionTitle');
+            if (titleEl) {
+                const num = mainCount === 7 ? '7' : String(mainCount);
+                const numWords = { 1: 'une', 2: 'deux', 3: 'trois', 4: 'quatre', 5: 'cinq', 6: 'six', 7: 'sept' };
+                const label = bridgeCount > 0
+                    ? `Vos cartes (${bridgeCount} passerelle${bridgeCount > 1 ? 's' : ''})`
+                    : 'Vos cartes';
+                titleEl.textContent = label;
+            }
+
+            // Adapter les colonnes de grille selon le nombre de cartes
+            const colMap = { 1: 'lg:grid-cols-1', 2: 'lg:grid-cols-2', 3: 'lg:grid-cols-3', 4: 'lg:grid-cols-4', 5: 'lg:grid-cols-5', 6: 'lg:grid-cols-6', 7: 'lg:grid-cols-7' };
+            const lgCol = colMap[mainCount] || 'lg:grid-cols-7';
+            container.className = `grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 ${lgCol} gap-4 md:gap-5`;
             
             cards.forEach((card, index) => {
                 const cardElement = document.createElement('div');

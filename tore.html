@@ -239,24 +239,46 @@
 
   /* Modale guide : en paysage mobile, layout horizontal compact */
   @media (max-width: 767px) and (orientation: landscape) {
+    #tore-guide-message {
+      padding: 6px 8px !important;
+      /* Assurer que la modale est BIEN au-dessus du bandeau */
+      z-index: 80 !important;
+    }
     #tore-guide-message > div {
       min-height: unset !important;
-      max-height: 96dvh !important;
+      max-height: calc(100dvh - 12px) !important;
       overflow-y: auto;
+      border-radius: 16px;
     }
     #tore-guide-message .flex-col.sm\:flex-row {
       flex-direction: row !important;
-      gap: 12px !important;
-      padding: 12px 16px !important;
+      gap: 10px !important;
+      padding: 10px 12px !important;
       align-items: flex-start !important;
     }
     #tore-guide-message #guide-card-image {
-      width: clamp(80px, 18vh, 140px) !important;
+      width: clamp(70px, 16vh, 120px) !important;
     }
-    #tore-guide-message .py-6,
+    /* Bouton continuer : toujours visible, padding réduit */
+    #tore-guide-message .py-6 {
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+    }
     #tore-guide-message .sm\:py-8 {
-      padding-top: 10px !important;
-      padding-bottom: 10px !important;
+      padding-top: 8px !important;
+      padding-bottom: 8px !important;
+    }
+    /* Textes plus petits pour gagner de la place */
+    #tore-guide-message #guide-card-name {
+      font-size: 1.1rem !important;
+      line-height: 1.2 !important;
+    }
+    #tore-guide-message #guide-text {
+      font-size: 0.95rem !important;
+    }
+    #tore-guide-message .relative.my-2 {
+      margin-top: 4px !important;
+      margin-bottom: 4px !important;
     }
   }
 
@@ -460,6 +482,8 @@
       padding-left: 0;
       padding-right: 0;
       max-width: 100%;
+      overflow: hidden; /* empêche le débordement horizontal */
+      width: 100%;
     }
 
     /* Le board prend tout l'espace restant */
@@ -479,19 +503,23 @@
       aspect-ratio: auto;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
-      gap: 4px;
-      padding: 4px;
+      gap: 3px;
+      padding: 3px;
       padding-bottom: 80px; /* espace bandeau bas fixe */
       background-image: none;
       width: 100%;
+      max-width: 100%;
       box-sizing: border-box;
+      overflow: hidden; /* coupe tout ce qui dépasse */
     }
 
     /* Les cartes s'adaptent à la cellule de grille */
     .tore-card {
       width: 100%;
-      max-width: none;
+      max-width: 100%;
+      min-width: 0;
       height: 100%;
+      overflow: hidden;
     }
 
     .tore-card-inner,
@@ -2464,8 +2492,8 @@
       </div>
 
       <!-- Message de guidage pour l'intégration -->
-      <div id="tore-guide-message" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6" style="background: radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%); pointer-events: auto; overflow-y: auto;">
-        <div class="bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl border-2 border-gold/40 rounded-3xl w-full max-w-4xl shadow-[0_25px_50px_-12px_rgba(212,175,55,0.25)] relative overflow-hidden my-auto flex flex-col" style="min-height: min(70vh, 520px); max-height: 96dvh;">
+      <div id="tore-guide-message" class="hidden fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-6" style="background: radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%); pointer-events: auto; overflow-y: auto;">
+        <div class="bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl border-2 border-gold/40 rounded-3xl w-full max-w-4xl shadow-[0_25px_50px_-12px_rgba(212,175,55,0.25)] relative overflow-hidden my-auto flex flex-col" style="min-height: min(70vh, 520px); max-height: calc(100dvh - 16px);">
           <!-- Effet de lumière subtile -->
           <div class="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-blue-900/20 rounded-3xl pointer-events-none"></div>
           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
@@ -3155,6 +3183,9 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
     }
     
     guideMessage.classList.remove('hidden');
+    // Masquer le bandeau bas pour que le bouton Continuer reste visible (surtout en paysage)
+    const stepGuideBandeau = el('tore-step-guide');
+    if (stepGuideBandeau) stepGuideBandeau.classList.add('hidden');
     // Animation d'apparition
     const guidePanel = guideMessage.querySelector('.bg-gradient-to-br');
     animateModalIn(guideMessage, guidePanel, 'modalPanelIn');
@@ -3176,6 +3207,9 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
       newBtn.addEventListener('click', () => {
         guideMessage.classList.add('hidden');
         isGuideMessageShown = false;
+        // Restaurer le bandeau bas
+        const sg = el('tore-step-guide');
+        if (sg) sg.classList.remove('hidden');
         
         if (boardHost) {
           boardHost.style.pointerEvents = 'auto';
@@ -3196,6 +3230,9 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
       guideContinueBtn.addEventListener('click', () => {
         guideMessage.classList.add('hidden');
         isGuideMessageShown = false;
+        // Restaurer le bandeau bas
+        const sg2 = el('tore-step-guide');
+        if (sg2) sg2.classList.remove('hidden');
         
         if (boardHost) {
           boardHost.style.pointerEvents = 'auto';
@@ -4089,39 +4126,10 @@ function closeToreExitModal(){
 
 
 
+        // Vider d'abord la face avant (empêche flash du texte par défaut)
         front.style.padding = '0';
-
         front.style.background = 'none';
-
-
-
-      front.innerHTML = `
-
-  <img src="${imgPath}"
-
-       alt="${data.name || ''}"
-
-       style="
-
-         width: 100%;
-
-         height: 100%;
-
-         object-fit: contain;
-
-         display: block;
-
-       " />
-
-`;
-
-
-
-
-
-
-
-
+        front.innerHTML = '';
 
         isCardFlipping = true; // Verrouiller immédiatement
         card.classList.remove('next-to-draw');
@@ -4130,7 +4138,27 @@ function closeToreExitModal(){
         // Incrémenter l'index de tirage pour passer à la famille suivante
         toreThrowIndex++;
 
-        // Afficher le message de guidage APRÈS l'animation flip (1 seconde)
+        // Injecter l'image APRÈS le début du flip (évite le flash blanc)
+        // La face avant est invisible pendant les 400ms de rotation → on injecte en milieu d'animation
+        setTimeout(() => {
+          const img = new Image();
+          img.onload = () => {
+            front.innerHTML = `<img src="${imgPath}" alt="${data.name || ''}" style="width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.3s ease;" />`;
+            // Fade-in de l'image une fois injectée
+            requestAnimationFrame(() => {
+              const injectedImg = front.querySelector('img');
+              if (injectedImg) {
+                requestAnimationFrame(() => { injectedImg.style.opacity = '1'; });
+              }
+            });
+          };
+          img.onerror = () => {
+            front.innerHTML = `<img src="${imgPath}" alt="${data.name || ''}" style="width:100%;height:100%;object-fit:contain;display:block;" />`;
+          };
+          img.src = imgPath;
+        }, 350);
+
+        // Afficher le message de guidage APRÈS l'animation flip complète (1 seconde)
         setTimeout(() => {
           card.classList.remove('just-flipped'); // retirer l'exception
           showGuideMessage(famKey, data);
