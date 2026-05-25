@@ -958,16 +958,6 @@
                 const mutatingCards = themes.filter(theme => theme.isMutating);
                 const hasMutatingLines = mutatingCards.length > 0;
 
-                const n = mutatingCards.length;
-                if (hasMutatingLines) {
-                    const numWords = { 1: 'une', 2: 'deux', 3: 'trois', 4: 'quatre', 5: 'cinq', 6: 'six' };
-                    const nWord = numWords[n] || String(n);
-                    const bridgeIntro = n === 1
-                        ? `Ce tirage porte une carte passerelle. C'est le signe que quelque chose est en plein mouvement en vous. `
-                        : `Ce tirage porte ${nWord} cartes passerelles. C'est le signe que plusieurs énergies cherchent à se métamorphoser en vous. `;
-                    message += bridgeIntro;
-                }
-
                 const familyNames = { emotions: 'Émotion', besoins: 'Besoin', transmutation: 'Transmutation', memoire_cosmos: 'Mémoire Cosmos', revelation: 'Révélation', portail: 'Portail', archetypes: 'Archétypes', actions: 'Actions' };
                 const cardIntroTemplates = [
                     (name, family, meaning) => `La carte « ${name} » (${family}) vous dit : ${meaning}. `,
@@ -1087,10 +1077,10 @@
                 ];
 
                 const middles = [
-                    'Vous traversez une période où plusieurs dimensions de votre vie cherchent à s\'aligner. Ce n\'est pas une coïncidence — c\'est un mouvement naturel vers plus de cohérence. ',
+                    'Vous traversez une période où plusieurs dimensions de votre vie cherchent à s\'aligner. Ce n\'est pas une coïncidence, c\'est un mouvement naturel vers plus de cohérence. ',
                     'Les énergies présentes dans ce tirage indiquent que vous êtes à un endroit charnière. Quelque chose se termine doucement, et quelque chose d\'autre prend forme. ',
-                    'Ce tirage montre que vous n\'êtes pas dans l\'impasse — vous êtes dans un passage. La différence est importante : un passage mène quelque part. ',
-                    'Les cartes parlent d\'un moment de reconfiguration intérieure. Rien ne se perd, tout se transforme — et ce tirage en est le reflet. '
+                    'Ce tirage montre que vous n\'êtes pas dans l\'impasse, vous êtes dans un passage. La différence est importante : un passage mène quelque part. ',
+                    'Les cartes parlent d\'un moment de reconfiguration intérieure. Rien ne se perd, tout se transforme, et ce tirage en est le reflet. '
                 ];
 
                 const familyInsights = {
@@ -1114,13 +1104,13 @@
 
                 const closings = [
                     'La réponse que vous cherchez est déjà en chemin. Ce tirage en est le signe.',
-                    'Ces cartes ne prédisent pas — elles révèlent. Et ce qu\'elles révèlent ici est encourageant.',
+                    'Ces cartes ne prédisent pas, elles révèlent. Et ce qu\'elles révèlent ici est encourageant.',
                     'Faites confiance à ce qui se présente. Le mouvement est déjà en cours.',
                     'Vous avez plus de ressources en vous que vous ne l\'imaginez. Ce tirage le confirme.'
                 ];
 
                 const bridgeClosings = [
-                    ' Les passerelles dans ce tirage sont un signe que le changement n\'est pas à venir — il est déjà là.',
+                    ' Les passerelles dans ce tirage sont un signe que le changement n\'est pas à venir, il est déjà là.',
                     ' Là où une passerelle apparaît, une porte s\'ouvre. Vous n\'avez qu\'à franchir le seuil.'
                 ];
 
