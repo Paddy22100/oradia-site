@@ -7,9 +7,9 @@
   
   <!-- SEO Meta Tags -->
   <title>Oracle Oradia – La Boussole Intérieure</title>
-  <meta name="description" content="Révéler. Transmuter. Relier. Oracle Oradia : un écosystème de transformation intérieure et collective au service du vivant. 64 cartes pour éclairer votre chemin, retrouver la clarté et avancer avec sagesse." />
-  <meta name="keywords" content="oracle, guidance, clarté, introspection, orientation, Oradia, cartes spirituelles" />
-  <meta name="author" content="Sophie Oradia" />
+  <meta name="description" content="Révéler. Transmuter. Relier. Oracle Oradia : un écosystème de transformation intérieure et collective au service du vivant. 64 cartes pour éclairer votre chemin, retrouver la clarté et avancer avec sagesse. Basé à Trévron, Dinan, Bretagne." />
+  <meta name="keywords" content="oracle, guidance, clarté, introspection, orientation, Oradia, cartes spirituelles, oracle Bretagne, accompagnement spirituel Dinan, oracle Côtes-d'Armor, tirage de cartes Bretagne" />
+  <meta name="author" content="Rudy Boucheron — Oradia" />
   <meta name="robots" content="index, follow" />
   <meta name="language" content="fr" />
   
@@ -42,7 +42,7 @@
     "alternateName": "Oracle Oradia",
     "url": "https://oradia.fr/",
     "logo": "https://oradia.fr/images/logo-hd-v2.jpeg",
-    "sameAs": []
+    "sameAs": ["https://www.instagram.com/paddy_oradia.fr"]
   }
   </script>
 
@@ -53,6 +53,55 @@
     "name": "Oracle Oradia",
     "url": "https://oradia.fr/",
     "inLanguage": "fr-FR"
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "LocalBusiness",
+    "name": "Oradia — Oracle & Accompagnement",
+    "description": "Oracle de guidance intérieure, accompagnements spirituels individuels et collectifs. Basé à Trévron, Dinan, Bretagne.",
+    "url": "https://oradia.fr/",
+    "image": "https://oradia.fr/images/logo-hd-v2.jpeg",
+    "email": "contact@oradia.fr",
+    "address": {
+      "@type": "PostalAddress",
+      "streetAddress": "17 Cardevily",
+      "addressLocality": "Trévron",
+      "postalCode": "22100",
+      "addressRegion": "Bretagne",
+      "addressCountry": "FR"
+    },
+    "geo": {
+      "@type": "GeoCoordinates",
+      "latitude": 48.43,
+      "longitude": -2.05
+    },
+    "areaServed": ["Dinan", "Côtes-d'Armor", "Bretagne", "France"],
+    "priceRange": "€"
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Product",
+    "name": "Oracle Oradia — Jeu de 64 cartes",
+    "description": "Jeu de 64 cartes vibratoires avec livret d'accompagnement de 200 pages et conte initiatique. Première édition limitée.",
+    "image": "https://oradia.fr/images/oracle-precommande.jpg",
+    "brand": {
+      "@type": "Brand",
+      "name": "Oradia"
+    },
+    "offers": {
+      "@type": "AggregateOffer",
+      "lowPrice": "38",
+      "highPrice": "52",
+      "priceCurrency": "EUR",
+      "availability": "https://schema.org/PreOrder",
+      "url": "https://oradia.fr/precommande-oracle.html"
+    }
   }
   </script>
   
@@ -481,61 +530,81 @@ backToTopBtn.addEventListener('click', () => {
 </script>
 
 <!-- Pop-up Newsletter -->
-<div id="newsletter-popup" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(5,10,20,0.85);backdrop-filter:blur(6px);align-items:center;justify-content:center;padding:20px;">
-  <div style="position:relative;max-width:480px;width:100%;background:linear-gradient(135deg,#0a1628 0%,#051428 100%);border:1px solid rgba(212,175,55,0.4);box-shadow:0 20px 60px rgba(0,0,0,0.6),0 0 40px rgba(212,175,55,0.08);padding:48px 40px 40px;">
-    
+<div id="newsletter-popup" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(4,14,30,0.88);backdrop-filter:blur(8px);align-items:center;justify-content:center;padding:16px;">
+  <div style="position:relative;max-width:760px;width:100%;border-radius:24px;border:1px solid rgba(212,175,55,0.25);box-shadow:0 25px 60px rgba(0,0,0,0.7),0 0 60px rgba(212,175,55,0.06);overflow:hidden;display:flex;flex-direction:row;">
+
     <!-- Bouton fermer -->
-    <button onclick="closeNewsletterPopup()" style="position:absolute;top:16px;right:16px;background:none;border:none;color:rgba(212,175,55,0.5);font-size:22px;cursor:pointer;line-height:1;padding:4px 8px;transition:color 0.2s;" onmouseover="this.style.color='#d4af37'" onmouseout="this.style.color='rgba(212,175,55,0.5)'">✕</button>
+    <button onclick="closeNewsletterPopup()" style="position:absolute;top:14px;right:16px;z-index:10;background:rgba(5,20,40,0.6);border:1px solid rgba(212,175,55,0.2);border-radius:50%;color:rgba(212,175,55,0.6);font-size:16px;cursor:pointer;width:32px;height:32px;line-height:32px;text-align:center;padding:0;transition:all 0.2s;" onmouseover="this.style.color='#d4af37';this.style.borderColor='rgba(212,175,55,0.6)'" onmouseout="this.style.color='rgba(212,175,55,0.6)';this.style.borderColor='rgba(212,175,55,0.2)'">✕</button>
 
-    <!-- Icône décorative -->
-    <div style="text-align:center;margin-bottom:24px;">
-      <div style="display:inline-block;width:56px;height:56px;border:1px solid rgba(212,175,55,0.3);border-radius:50%;line-height:56px;font-size:24px;">✦</div>
+    <!-- Colonne image (cachée sur mobile) -->
+    <div style="flex:0 0 45%;position:relative;min-height:380px;display:none;" id="popup-img-col">
+      <img src="/images/medias/newsletter_image.png" alt="Newsletter Oradia" style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
+      <!-- Voile dégradé -->
+      <div style="position:absolute;inset:0;background:linear-gradient(to right,transparent 60%,rgba(5,20,40,0.75) 100%);"></div>
     </div>
 
-    <!-- Titre -->
-    <h2 style="margin:0 0 8px;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:300;text-align:center;letter-spacing:2px;text-transform:uppercase;">Rejoindre l'univers</h2>
-    <p style="margin:0 0 24px;color:#d8bf72;font-family:'Lora',Georgia,serif;font-size:14px;font-style:italic;text-align:center;line-height:1.6;">Sois informé(e) en priorité des nouvelles cartes,<br>tirages et de l'ouverture des précommandes.</p>
+    <!-- Colonne contenu -->
+    <div style="flex:1;background:linear-gradient(135deg,#0d1f3c 0%,#051428 100%);padding:44px 36px 36px;display:flex;flex-direction:column;justify-content:center;">
 
-    <!-- Séparateur -->
-    <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:0 auto 28px;"></div>
+      <!-- Filet doré -->
+      <div style="width:36px;height:1px;background:linear-gradient(90deg,#d4af37,transparent);margin-bottom:20px;"></div>
 
-    <!-- Formulaire -->
-    <form id="popup-newsletter-form" onsubmit="submitNewsletterPopup(event)" style="display:flex;flex-direction:column;gap:12px;">
-      <input 
-        type="email" 
-        id="popup-email" 
-        placeholder="ton@email.fr" 
-        required
-        style="background:rgba(255,255,255,0.05);border:1px solid rgba(212,175,55,0.3);color:#e8e9eb;font-family:'Lora',Georgia,serif;font-size:14px;padding:14px 18px;outline:none;transition:border-color 0.2s;"
-        onfocus="this.style.borderColor='rgba(212,175,55,0.7)'"
-        onblur="this.style.borderColor='rgba(212,175,55,0.3)'"
-      />
-      <button 
-        type="submit"
-        style="background:linear-gradient(135deg,#d4af37,#f0c75e);color:#0a1628;font-family:'Lora',Georgia,serif;font-size:14px;font-weight:600;padding:14px;border:none;cursor:pointer;letter-spacing:0.5px;transition:opacity 0.2s;"
-        onmouseover="this.style.opacity='0.9'"
-        onmouseout="this.style.opacity='1'"
-      >
-        Rejoindre la liste d'attente
-      </button>
-    </form>
+      <!-- Titre -->
+      <h2 style="margin:0 0 12px;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:30px;font-weight:600;letter-spacing:0.5px;line-height:1.2;">La newsletter<br>Oradia</h2>
 
-    <!-- Message succès (caché) -->
-    <div id="popup-success" style="display:none;text-align:center;padding:16px 0;">
-      <p style="color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;margin:0 0 8px;">✦ Merci ✦</p>
-      <p style="color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:13px;margin:0;">Tu feras partie des premiers informés.</p>
+      <!-- Description -->
+      <p style="margin:0 0 28px;color:rgba(212,175,55,0.7);font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;line-height:1.7;">Inscrivez-vous et recevez des messages pour nourrir votre chemin intérieur.</p>
+
+      <!-- Formulaire -->
+      <form id="popup-newsletter-form" onsubmit="submitNewsletterPopup(event)" style="display:flex;flex-direction:column;gap:10px;">
+        <input
+          type="email"
+          id="popup-email"
+          placeholder="Votre adresse email"
+          required
+          style="background:rgba(5,20,40,0.7);border:1px solid rgba(212,175,55,0.3);border-radius:12px;color:#e8d9b0;font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;padding:13px 18px;outline:none;transition:border-color 0.2s;width:100%;box-sizing:border-box;"
+          onfocus="this.style.borderColor='rgba(212,175,55,0.7)'"
+          onblur="this.style.borderColor='rgba(212,175,55,0.3)'"
+        />
+        <button
+          type="submit"
+          style="background:linear-gradient(135deg,#d4af37,#f0c75e);color:#051428;font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-weight:700;padding:13px 18px;border:none;border-radius:12px;cursor:pointer;letter-spacing:0.5px;transition:opacity 0.2s;width:100%;"
+          onmouseover="this.style.opacity='0.88'"
+          onmouseout="this.style.opacity='1'"
+        >
+          S'inscrire à la newsletter
+        </button>
+      </form>
+
+      <!-- Message succès (caché) -->
+      <div id="popup-success" style="display:none;text-align:center;padding:16px 0;">
+        <p style="color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;margin:0 0 8px;">✦ Merci ✦</p>
+        <p style="color:rgba(212,175,55,0.7);font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;margin:0;">Vous recevrez bientôt votre première lettre.</p>
+      </div>
+
+      <!-- Réassurance -->
+      <p style="text-align:center;margin:16px 0 0;color:rgba(212,175,55,0.35);font-family:'Cormorant Garamond',Georgia,serif;font-size:12px;">Pas de spam. Désinscription en un clic, à tout moment.</p>
+
+
     </div>
-
-    <!-- Lien fermeture discret -->
-    <p style="text-align:center;margin:20px 0 0;">
-      <button onclick="closeNewsletterPopup()" style="background:none;border:none;color:rgba(156,163,175,0.6);font-family:'Lora',Georgia,serif;font-size:12px;cursor:pointer;text-decoration:underline;">Non merci, continuer sans</button>
-    </p>
   </div>
 </div>
 
 <script>
+  // Afficher la colonne image si écran suffisamment large
+  (function() {
+    function togglePopupImg() {
+      var col = document.getElementById('popup-img-col');
+      if (col) col.style.display = window.innerWidth >= 600 ? 'block' : 'none';
+    }
+    togglePopupImg();
+    window.addEventListener('resize', togglePopupImg);
+  })();
+</script>
+
+<script>
 (function() {
-  const POPUP_KEY = 'oradia_newsletter_popup_shown';
+  const POPUP_KEY = 'oradia_newsletter_popup_v2';
 
   // Ne pas afficher si déjà vu ou déjà inscrit
   if (localStorage.getItem(POPUP_KEY)) return;
@@ -547,8 +616,8 @@ backToTopBtn.addEventListener('click', () => {
     document.body.style.overflow = 'hidden';
   }
 
-  // Déclencheur 1 : après 40 secondes
-  const timer = setTimeout(showPopup, 40000);
+  // Déclencheur 1 : après 15 secondes
+  const timer = setTimeout(showPopup, 15000);
 
   // Déclencheur 2 : exit intent (souris vers le haut de la page)
   document.addEventListener('mouseleave', function(e) {
@@ -563,7 +632,7 @@ function closeNewsletterPopup() {
   const popup = document.getElementById('newsletter-popup');
   popup.style.display = 'none';
   document.body.style.overflow = '';
-  localStorage.setItem('oradia_newsletter_popup_shown', '1');
+  localStorage.setItem('oradia_newsletter_popup_v2', '1');
 }
 
 async function submitNewsletterPopup(e) {
@@ -581,7 +650,7 @@ async function submitNewsletterPopup(e) {
     if (res.ok) {
       document.getElementById('popup-newsletter-form').style.display = 'none';
       document.getElementById('popup-success').style.display = 'block';
-      localStorage.setItem('oradia_newsletter_popup_shown', '1');
+      localStorage.setItem('oradia_newsletter_popup_v2', '1');
       setTimeout(closeNewsletterPopup, 3000);
     }
   } catch (err) {

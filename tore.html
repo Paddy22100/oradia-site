@@ -230,6 +230,53 @@
 
   }
 
+  /* Fix iOS Safari : background-attachment:fixed non supporté → fond statique */
+  @supports (-webkit-touch-callout: none) {
+    #tore-immersif {
+      background-attachment: scroll !important;
+    }
+  }
+
+  /* Modale guide : en paysage mobile, layout horizontal compact */
+  @media (max-width: 767px) and (orientation: landscape) {
+    #tore-guide-message > div {
+      min-height: unset !important;
+      max-height: 96dvh !important;
+      overflow-y: auto;
+    }
+    #tore-guide-message .flex-col.sm\:flex-row {
+      flex-direction: row !important;
+      gap: 12px !important;
+      padding: 12px 16px !important;
+      align-items: flex-start !important;
+    }
+    #tore-guide-message #guide-card-image {
+      width: clamp(80px, 18vh, 140px) !important;
+    }
+    #tore-guide-message .py-6,
+    #tore-guide-message .sm\:py-8 {
+      padding-top: 10px !important;
+      padding-bottom: 10px !important;
+    }
+  }
+
+  /* Modale polarity : scrollable si viewport très court */
+  @media (max-height: 500px) {
+    #tore-polarity-reveal {
+      align-items: center;
+      padding-bottom: 8px;
+      overflow-y: auto;
+    }
+    #tore-polarity-inner {
+      max-height: 92dvh;
+      overflow-y: auto;
+    }
+    #tore-polarity-coin-symbol,
+    #tore-polarity-card-symbol {
+      font-size: 36px !important;
+    }
+  }
+
 
 
 /* ===== PLATEAU DU TIRAGE DU TORE ===== */
@@ -474,7 +521,17 @@
       gap: 4px;
       padding: 4px;
       background-image: none;
-      padding-bottom: 70px;
+      padding-bottom: 80px;
+    }
+
+    /* En paysage mobile, réduire la hauteur min des cellules pour que tout tienne */
+    #tore-immersif .tore-board-7 .tore-card {
+      min-height: clamp(60px, 18vh, 110px);
+    }
+
+    /* Coin wrapper : remonter pour ne pas masquer le bandeau guide */
+    #tore-coin-wrapper {
+      bottom: 86px;
     }
 
     #tore-immersif .tore-board-7 .pos-0,
@@ -499,18 +556,27 @@
       aspect-ratio: 1 / 1;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
-      gap: 10px;
-      padding: 10px;
+      gap: 8px;
+      padding: 8px;
       background-size: contain;
+      width: min(90vw, 90vh);
     }
 
     .tore-card {
-      width: clamp(90px, 22vw, 160px);
+      width: 100%;
+      max-width: none;
     }
 
     .tore-card.pos-1, .tore-card.pos-2,
     .tore-card.pos-3, .tore-card.pos-5 {
       transform: none !important;
+    }
+  }
+
+  /* RESPONSIVE TABLETTE PAYSAGE (768px - 1023px landscape) */
+  @media (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
+    #tore-immersif .tore-board-7 {
+      width: min(90vh, 95vw);
     }
   }
 
@@ -892,10 +958,23 @@
 
 @media (max-width: 639px) {
   .tore-family-label {
-    bottom: -1.6rem;
-    padding: 3px 8px 4px;
-    font-size: 0.6rem;
-    letter-spacing: 0.08em;
+    bottom: -1.4rem;
+    padding: 2px 6px 3px;
+    font-size: 0.55rem;
+    letter-spacing: 0.06em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 90%;
+  }
+}
+
+/* Très petit écran (320px) */
+@media (max-width: 360px) {
+  .tore-family-label {
+    font-size: 0.48rem;
+    bottom: -1.2rem;
+    padding: 1px 4px 2px;
   }
 }
 
@@ -2218,7 +2297,7 @@
 
 
 <section id="tore-immersif" class="relative min-h-screen"
-  style="background: linear-gradient(135deg, #0a192f 0%, #051428 100%); background-image: url('images/oradia-hero-4k.png'); background-size: cover; background-position: center; background-attachment: fixed;">
+  style="background: linear-gradient(135deg, #0a192f 0%, #051428 100%); background-image: url('images/oradia-hero-4k.png'); background-size: cover; background-position: center;">
 
   <!-- Voile comme l'index -->
   <div class="absolute inset-0" style="background: radial-gradient(circle at 20% 80%, rgba(212,175,55,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(212,175,55,0.04) 0%, transparent 50%), linear-gradient(135deg, rgba(10,25,47,0.65) 0%, rgba(5,20,40,0.75) 100%);"></div>
@@ -2385,8 +2464,8 @@
       </div>
 
       <!-- Message de guidage pour l'intégration -->
-      <div id="tore-guide-message" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-4 sm:p-6" style="background: radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%); pointer-events: auto; overflow-y: auto;">
-        <div class="bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl border-2 border-gold/40 rounded-3xl w-full max-w-4xl shadow-[0_25px_50px_-12px_rgba(212,175,55,0.25)] relative overflow-hidden my-auto flex flex-col" style="min-height: min(80vh, 580px);">
+      <div id="tore-guide-message" class="hidden fixed inset-0 z-[60] flex items-center justify-center p-3 sm:p-6" style="background: radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%); pointer-events: auto; overflow-y: auto;">
+        <div class="bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl border-2 border-gold/40 rounded-3xl w-full max-w-4xl shadow-[0_25px_50px_-12px_rgba(212,175,55,0.25)] relative overflow-hidden my-auto flex flex-col" style="min-height: min(70vh, 520px); max-height: 96dvh;">
           <!-- Effet de lumière subtile -->
           <div class="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-blue-900/20 rounded-3xl pointer-events-none"></div>
           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
@@ -2442,7 +2521,7 @@
 
 
       <!-- Modale de révélation pièce ↔ carte -->
-      <div id="tore-polarity-reveal" class="hidden fixed inset-0 z-[65] flex items-end justify-center pb-8 px-4" style="background: linear-gradient(to top, rgba(0,5,15,0.82) 0%, rgba(0,5,15,0.15) 55%, transparent 100%); pointer-events: auto;">
+      <div id="tore-polarity-reveal" class="hidden fixed inset-0 z-[65] flex items-end justify-center pb-4 sm:pb-8 px-3 sm:px-4" style="background: linear-gradient(to top, rgba(0,5,15,0.82) 0%, rgba(0,5,15,0.15) 55%, transparent 100%); pointer-events: auto;">
         <div id="tore-polarity-inner" class="relative w-full max-w-lg rounded-3xl overflow-hidden" style="background: linear-gradient(135deg, #0a1628 0%, #0d1f3c 50%, #0a1628 100%); border: 2px solid rgba(212,175,55,0.4); box-shadow: 0 30px 80px rgba(0,0,0,0.8), 0 0 60px rgba(212,175,55,0.08);">
           <!-- Barre lumineuse haut -->
           <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(212,175,55,0.8), transparent);"></div>
@@ -2451,7 +2530,7 @@
           <!-- Halo de fond -->
           <div id="tore-polarity-halo" class="absolute inset-0 opacity-10 rounded-3xl" style="background: radial-gradient(circle at center, rgba(212,175,55,0.4) 0%, transparent 70%);"></div>
 
-          <div class="relative z-10 flex flex-col items-center px-6 pt-6 pb-5 gap-4">
+          <div class="relative z-10 flex flex-col items-center px-4 sm:px-6 pt-4 sm:pt-6 pb-4 sm:pb-5 gap-3 sm:gap-4">
             <!-- Famille -->
             <p id="tore-polarity-family" class="text-xs uppercase tracking-[0.25em] font-cinzel" style="color: rgba(212,175,55,0.6);"></p>
 
@@ -4980,7 +5059,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
           <ul class="space-y-2">
 
-            <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><span class="text-light-gold">contact@oradia.fr</span></li>
+            <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><a id="tore-contact-link" class="text-light-gold hover:text-gold transition" href="contact.html">Nous contacter</a></li>
+            <script>(function(){var u='contact',d='oradia.fr';var el=document.getElementById('tore-contact-link');if(el){el.href='mailto:'+u+'@'+d;el.textContent=u+'@'+d;}})();</script>
 
             <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><span class="text-light-gold">@paddy_oradia.fr</span></li>
 

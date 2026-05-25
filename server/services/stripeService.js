@@ -230,15 +230,47 @@ class StripeService {
     }
   }
 
+  // Créer une session Stripe pour l'achat d'un pack de crédits
+  async createCreditPackSession({ userId, email, pack, credits, price, label }) {
+    try {
+      const session = await stripe.checkout.sessions.create({
+        customer_email: email,
+        payment_method_types: ['card'],
+        mode: 'payment',
+        line_items: [{
+          price_data: {
+            currency: 'eur',
+            product_data: {
+              name: `Pack de tirages — ${label}`,
+              description: `${credits} tirage(s) supplémentaire(s) sur Oradia`,
+              images: ['https://oradia.fr/images/logo-hd-v2.jpeg']
+            },
+            unit_amount: price
+          },
+          quantity: 1
+        }],
+        success_url: `${process.env.FRONTEND_URL}/success-credits?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${process.env.FRONTEND_URL}/pelerin.html`,
+        metadata: {
+          userId: userId.toString(),
+          productType: 'credit_pack',
+          pack,
+          credits: credits.toString()
+        }
+      });
+      return { success: true, sessionId: session.id, url: session.url };
+    } catch (error) {
+      return { success: false, error: error.message };
+    }
+  }
+
   // Traiter la complétion de session checkout
   async handleCheckoutSessionCompleted(session) {
     const { userId, productType, credits } = session.metadata;
     
-    if (productType === 'traversee') {
-      // Ajouter les crédits de Traversée
+    if (productType === 'traversee' || productType === 'credit_pack') {
       await this.addTraverseeCredits(userId, credits, session.id, session.amount_total / 100);
     } else if (productType === 'tore') {
-      // Créer/mettre à jour l'abonnement Tore
       await this.createToreSubscription(userId, session.customer, session.subscription);
     }
   }

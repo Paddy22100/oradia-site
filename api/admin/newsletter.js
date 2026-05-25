@@ -57,6 +57,8 @@ function textToHtml(text) {
     }
     // Ligne "Rudy" seule = signature — on l'ignore, gérée dans le footer
     if (/^Rudy\s*$/.test(trimmed)) continue;
+    // Ligne contenant la citation entre guillemets — déjà affichée dans citationHtml, on l'ignore ici
+    if (citation && trimmed.includes(citation.substring(0, 20))) continue;
     // Paragraphe normal
     bodyHtml += `<tr><td style="padding:7px 0;">
       <p style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;line-height:1.85;color:#ddd5c0;font-weight:300;">${trimmed}</p>
@@ -119,7 +121,7 @@ function textToHtml(text) {
                           <!-- Surtitre -->
                           <p style="margin:0 0 8px 0;font-family:'Cormorant Garamond',Georgia,serif;font-size:11px;letter-spacing:5px;color:#d4af37;text-transform:uppercase;font-weight:400;">La Boussole Intérieure</p>
                           <!-- Titre principal -->
-                          <h1 style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:300;color:#f5e7a1;letter-spacing:1px;line-height:1.3;">La lettre du vivant</h1>
+                          <h1 style="margin:0;font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:300;color:#f5e7a1;letter-spacing:1px;line-height:1.3;">La newsletter Oradia</h1>
                           <!-- Filet doré -->
                           <div style="width:48px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:20px auto 0;"></div>
                         </td>
@@ -253,27 +255,103 @@ function textToHtml(text) {
 }
 
 // ── Prompt Claude ─────────────────────────────────────────────────────────────
-const LIVRE_BOUSSOLE = `LIVRE 1 — "La Boussole Intérieure" (essai)
-Thèmes : Âme / Esprit / Corps / Conscience, PNEI, mémoire implicite, trauma, fascias,
-fenêtre de tolérance, vulnérabilité, HPI/Sentinelle, partition de famille, transgénérationnel.
-Métaphore centrale : Le poste de radio. L'Âme émet, l'Esprit reçoit et filtre, le Corps retransmet,
-la Conscience observe et peut ajuster.
-Concepts clés :
-- Le dragon (l'Esprit non accordé) vs l'archange (la Conscience qui le remet à sa place)
-- La mémoire implicite n'a pas de date : elle vit au présent comme si le danger était encore là
-- La vulnérabilité n'est pas une faiblesse — c'est le sol meuble où les racines s'ancrent
-- La fenêtre de tolérance (Dan Siegel) : ni trop activé, ni trop éteint — c'est là que la guérison est possible
-- L'oracle crée une brèche synaptique : il hack le système de sécurité de l'Esprit
-- L'adaptome : ensemble des stratégies adaptatives construites face à un environnement inadéquat.`;
+const CONTE_LIVRET = `CONTE INITIATIQUE — Livret de l'Oracle Oradia
+Ce conte est inclus dans le livret qui accompagne l'Oracle Oradia (en précommande).
+Si tu l'utilises comme source d'inspiration, mentionne-le clairement dans la lettre : 
+"extrait du conte initiatique présent dans le livret de l'Oracle Oradia".
 
-const LIVRE_ROMAN = `LIVRE 2 — Roman initiatique (Le Pèlerin)
-Thèmes : biomimétisme, lois du Vivant, modèle RLC (Résistance / Inductance / Capacité), résonance, synchronicité.
-Figures rencontrées :
-- Le Vieux Chêne : "Je ne tiens pas : je me tiens." — La résistance juste n'est pas rigidité.
-- La Fileuse des Spires : l'inductance, la mémoire lente du vivant.
-- Le Musicien des Vibrations : la note juste, la résonance, trouver sa fréquence propre.
-- Le Guérisseur du Choc : "Le choc détruit seulement ce qui devait mourir. Il réveille ce qui voulait vivre."
-Phrase centrale : "Le vivant ne supporte pas longtemps de ne pas être ce qu'il est."`;
+---
+
+Conte initiatique : ORADIA
+
+Chapitre 1 : La note dissonante
+
+Maëlle avait grandi dans une maison où l'on ne parlait pas très fort. On ne criait pas. On ne débordait pas. On ne dérangeait pas. Très tôt, elle avait compris qu'il valait mieux être raisonnable, être sage, une experte en camouflage émotionnel, ajustant chaque geste pour ne jamais rompre l'équilibre fragile du silence. Être celle qui comprend sans qu'on ait besoin d'expliquer. Elle avait appris à lire les silences avant les mots. À anticiper les attentes. À ajuster son comportement pour maintenir l'équilibre. On lui avait transmis des phrases simples, répétées comme des évidences : « Sois forte », « Ne te plains pas », « Ne pleure pas ! », « Fais ce qu'il faut », « Ne déçois pas ».
+
+Au fond d'elle pourtant, elle ne se souvenait pas avoir choisi d'y croire. Mais elles s'étaient déposées en elle comme des couches invisibles. Comme des certitudes à ne jamais remettre en question. Alors en grandissant, elle était devenue celle qu'elle pensait devoir être : fiable, capable, inébranlable, fragile en silence, les épaules fortes. Elle savait quoi faire, quand le faire, comment le faire. Elle s'était installée dans un quotidien ordinaire, avait trouvé un emploi stable, et tout mis en place pour garantir une stabilité matérielle.
+
+Et pourtant, parfois, dans des instants sans raison apparente lors d'un moment suspendu, devant une vitrine, au feu rouge, une sensation étrange l'envahissait. Comme si sa vie était bien construite, mais bâtie sur un plan qui n'était pas entièrement le sien. Elle ne manquait de rien, objectivement. Mais quelque chose manquait quand même. Une dissonance lui serrait le cœur, comme si un instrument jouait en elle une note stridente et profondément inconfortable. Une part d'elle s'était adaptée si longtemps qu'elle ne savait plus très bien où elle commençait vraiment. Il lui arrivait de se demander : « Si je cessais de répondre aux attentes des autres, qui serais-je ? ». Mais quand cette question la traversait, elle s'arrangeait pour la repousser, l'occulter, la cacher sous le tapis qui marque l'entrée de son jardin secret. Après tout, il y avait des choses plus urgentes à faire.
+
+Alors même si tout cela sonne faux, Maëlle continuait d'avancer sur un chemin qu'elle pensait linéaire, prédéterminé et inévitable. Mais un soir, alors qu'elle marchait dans les rues de la ville, sans annonce, sans drame extérieur, une fissure apparut. Pas une catastrophe. Pas un effondrement. Juste une émotion trop grande pour être contenue. Comme une digue cède sous le poids de l'eau. Et cette fois, cette vague, Maëlle savait qu'elle ne parviendrait pas à la contenir. Ce soir-là, une pluie fine tombait sur les toits rouges, elle finissait sa course sur la terre d'une teinte particulière, presque ocre, presque sang. Les ancêtres disaient qu'elle gardait mémoire des anciens feux.
+
+Maëlle s'arrêta au milieu d'une rue étroite. Les murs semblaient se rapprocher. Sa poitrine se serrait. Le temps semblait comme comprimé en un instant immobile. Elle tomba à genoux, déposa ses mains sur son visage, ferma les yeux, comme pour fuir cette réalité extérieure insupportable. Mais cela la plongea dans son intériorité bouleversée et ses larmes se mirent à couler. Elle, qui se pensait invincible, se sentit coupable et faible. Contrainte de réaliser qu'elle était finalement fragile et impuissante. Ses larmes tombèrent dans la poussière rouge. Lorsqu'elles touchèrent le sol, quelque chose changea. La terre sembla se cristalliser. La boue devint éclat, d'un rouge profond.
+
+Quand Maëlle eut fini d'exprimer cette émotion intense, elle ouvrit les yeux et vit cette pierre qui semblait lui parler. Elle la prit dans la paume de sa main, elle ressentit une connexion subtile, comme si ce grenat rouge était connecté à son cœur. Il était chaud, presque vivant. Elle resta immobile quelque temps puis reprit le chemin de sa maison. Le monde autour d'elle reprit son mouvement, mais elle avait l'impression que le temps, lui, venait de s'ouvrir. Comme une faille, une connexion avec une dimension insaisissable. Portant en elle un message, une connaissance, un éclaircissement. Elle comprit que ce n'était pas la ville qui avait changé. C'était son regard. Elle avait compris que ses émotions n'étaient finalement pas synonymes de faiblesse à dissimuler, mais qu'elles étaient porteuses de messages, d'alertes, de clés pour ouvrir une porte laissant entrevoir un monde caché. Cet épisode si soudain provoqua chez elle un flot de questions interminable. Elle se mit à paniquer et ses jambes lui ordonnèrent de courir.
+
+Chapitre 2 : Le Champ des Possibles
+
+Maëlle ne comprit pas ce qui lui arrivait, elle se sentait riche de son expérience et en même temps épuisée. Plus rien dans son environnement ne ressemblait à ce qu'elle connaissait, ses repères habituels étaient comme effacés. Les rues de la ville avaient laissé place à un sentier de montagne. L'air était clair, pur, presque trop limpide. Chaque bruit semblait net, comme apaisant, comme si le monde avait été réaccordé. La lumière de l'aube était chaude et rassurante. Maëlle vit un homme qui marchait devant elle. Un randonneur, grand, marchant d'un pas sûr et arborant un chapeau taillé pour lui. Sa silhouette semblait appartenir à toutes les époques à la fois. À certains moments, il paraissait lointain. Puis soudain tout proche, comme si la distance se pliait.
+
+— Tu crois avancer dans le temps, dit-il sans se retourner. Mais le temps est un champ. Ce que tu deviens t'appelle déjà. Il te faut apprendre à jouer et composer avec les synchronicités.
+
+Elle ne comprit pas complètement. Mais elle sentit que quelque chose en elle savait. Elle continuait de marcher et le paysage changea progressivement. Les couleurs devinrent plus chaudes, plus vibrantes. Elle sentit quelque chose pulser dans sa poche. C'était le grenat rouge qui s'était présenté à elle. Les émotions qu'elle avait contenues tant d'années remontèrent, mais différemment cette fois. Elles n'étaient plus des ennemies. Elles étaient des forces. Colère comme feu. Tristesse comme pluie. Désir comme vent. Elle ne les repoussa pas. Elle les laissa traverser son corps comme un archer caresse les cordes d'un violon. Chaque vibration trouvait peu à peu sa juste fréquence et devenait harmonie. Le randonneur s'arrêta près d'un rocher.
+
+— Ce que tu fuis devient dissonant. Ce que tu écoutes devient musique.
+
+Il tourna la tête vers Maëlle, elle découvrit alors un visage lumineux, aux yeux bleus porteurs de messages subtils et infinis. Puis il disparut derrière un tournant.
+
+Chapitre 3 : Le Creuset de l'Âme
+
+Plus loin, le sentier descendit vers une plaine baignée d'une lumière orangée. Une chaleur douce flottait dans l'air. Au centre de cette plaine, une femme était assise sur une pierre plate. Elle façonnait l'argile avec ses mains d'un mouvement lent et circulaire. Ses gestes étaient d'une fluidité hypnotique.
+
+— Que façonnes-tu ? demanda Maëlle.
+— Ce qui demande à naître, répondit la femme.
+
+La femme invita Maëlle à toucher la terre fraîchement façonnée. Cela provoqua chez elle autre chose que l'émotion brute. Elle sentit un besoin, besoin d'accueillir ce qui la traverse et de laisser ses mains structurer la matière. Ainsi, derrière l'émotion, d'autres besoins lui vinrent sans qu'elle ne sache l'expliquer. Le besoin de repos derrière la fatigue. Besoin de vérité derrière la colère. Besoin d'amour derrière la peur. Peu à peu l'argile prenait forme. La femme lui tendit une coupe d'argile encore humide qu'elle venait de réaliser et prononça ces mots : « Ce que tu refuses de reconnaître se déforme. Ce que tu accueilles prend forme ».
+
+Maëlle prit la coupe dans ses mains et découvrit une pierre ocre étincelante à l'intérieur. C'était une cornaline, elle saisit la pierre et la posa tout contre son ventre. La chaleur était différente de celle du grenat. Moins explosive. Plus nourricière. Comme un espace qui demandait à s'ouvrir, un contenant prêt à se former pour recevoir un besoin indispensable. Maëlle comprit que son corps entier était un instrument. Et que certains cordages avaient été trop tendus. Elle salua la femme et reprit sa marche.
+
+Chapitre 4 : Le Saut dans le Vide
+
+Le chemin reprit de l'altitude. Un pont étroit qui traversait un ravin couvert de brume se présenta à elle. Impossible de voir à plus d'un pas devant, seule une lueur à l'extrémité du pont, comme une étoile dans la nuit, semblait indiquer le chemin à suivre. Maëlle s'engagea sur le pont, arrivée au milieu subitement, un bruit sourd retentit et le pont céda.
+
+La chute ne fut pas violente. Elle fut lente. Comme si le temps s'étirait. Elle vit défiler ses anciennes versions d'elle-même. Celles qu'elle avait construites pour être aimée. Celles qu'elle avait endossées pour être forte. Comme une mue de serpent, les peaux tombèrent sans douleur. Les yeux de Maëlle étaient attirés vers les hauteurs, dans la brume, la lueur brillait toujours comme un phare mais son éclat semblait encore plus intense. « Rien ne disparaît, tout se transforme », entendit-elle.
+
+Puis la chute s'arrêta net, Maëlle avait touché le sol. Au lieu de se sentir anéantie par la chute qu'elle venait de faire, elle respirait plus librement, se sentait plus légère. Dans le creux de sa main, une pierre aux éclats bleus et verts s'y lovait, une labradorite. Lorsqu'elle la toucha, elle comprit que la chute ne fut pas l'effondrement qu'elle redoutait, mais une dépose. Comme si le vide, loin de l'engloutir, la débarrassait de ses armures inutiles, une transmutation.
+
+Chapitre 5 : Le Conseil des Ombres et des Lumières
+
+La nuit tomba, Maëlle décida de s'arrêter. Elle monta un campement simple et alluma un feu. Les flammes dansaient dans la nuit. Elle leva les yeux au ciel, admira les étoiles et fut prise d'une envie profonde d'interroger l'Univers.
+
+— Montre-moi qui je suis vraiment, murmura-t-elle.
+
+Son regard redescendit vers le feu. Autour d'elle, des présences étaient apparues. Une femme droite au regard clair se tenait à sa gauche. Une autre femme qui semblait plus douce à sa droite, presque maternelle. En face d'elle se trouvait une enfant vive. Et une autre silhouette silencieuse aux cheveux blancs à ses côtés. Au centre du cercle, une pierre étincelante reflétait la lumière des flammes, un lapis-lazuli. Elle comprit que ces figures n'étaient pas des rôles à choisir, mais comme des forces à harmoniser. Comme des pupitres différents dans un orchestre. Aucune ne devait dominer. Aucune ne devait disparaître. Elle resta longtemps ainsi, à écouter les voix intérieures se répondre jusqu'à ce qu'un équilibre s'installe. Elle comprit que ces figures étaient des archétypes, des forces universelles à harmoniser, à apprivoiser, plutôt que des rôles à choisir.
+
+À l'aube, elle descendit vers une prairie verte. Une petite fille fouillait l'herbe avec sérieux.
+
+— Tu cherches quoi ? demanda Maëlle.
+— Ma pierre, répondit l'enfant. Je l'ai cachée et je ne me souviens plus où.
+
+Elles cherchèrent ensemble. Riant. Inventant des règles. Déplaçant des cailloux inutiles. Maëlle sentit une joie simple revenir. Une légèreté oubliée. Quand la petite fille trouva enfin l'aventurine verte, elle la contempla longuement. Puis, sans hésiter, elle la tendit à Maëlle.
+
+— C'est pour toi. On ne perd jamais vraiment ce qui est à nous.
+
+Maëlle sentit quelque chose se reconnecter en elle. L'enfant qu'elle avait été n'avait jamais disparu.
+
+— Comment tu t'appelles ? demanda-t-elle.
+— Lila.
+
+Le nom résonna en elle, un souvenir lui revint : un livre ancien évoquant un mot venu d'Orient : Līlā, le jeu du vivant. Maëlle reçut cela comme une révélation. Quand elle releva la tête, l'enfant n'était plus là. Mais l'aventurine brillait dans sa main.
+
+Chapitre 6 : L'Engagement de Soi
+
+Maëlle avait repris sa route, mais un blocage intérieur la fit s'arrêter net. Avancer encore vers l'inconnu ou rebrousser chemin et retrouver la sécurité d'un paysage déjà arpenté ? La question semblait insurmontable et faisait remonter en elle des peurs qu'elle n'avait encore soupçonnées. Elle regarda le chemin parcouru, se retourna, et tressaillit : le randonneur était là, immobile, à quelques pas devant elle.
+
+— Comprendre ne suffit pas, dit-il. La musique doit être jouée.
+
+Soudain, devant elle s'ouvrait un passage étroit entre deux parois rocheuses baignées de lumière dorée. Au centre, incrustée dans la pierre, scintillait une citrine. La voix du randonneur résonnait encore dans son esprit, la détermination et l'intuition la guidaient, elle devait la détacher elle-même. Ce ne fut pas facile. La roche résistait. Elle comprit qu'elle ne pouvait pas lutter contre la pierre, que son action n'était pas la bonne. Elle s'arrêta un instant, ferma les yeux et cala son souffle sur le battement de son cœur. Elle posa ses mains à plat contre la paroi et laissa monter en elle une note longue et profonde. Ce son, d'abord simple frémissement au creux de sa gorge, finit par s'échapper de ses lèvres, résonnant contre la roche. Elle puisait dans la force du grenat et de la cornaline qu'elle portait déjà, faisant chanter sa propre voix forte de certitude et de conviction contre la pierre. Sous l'effet de cette fréquence, la roche sembla changer de densité et s'assouplit, libérant enfin la citrine dans sa paume. Elle sentit alors une clarté nouvelle circuler en elle. L'action n'était pas agitation. C'était alignement, justesse et présence.
+
+Chapitre 7 : Oradia — Le Réveil
+
+Au terme du voyage, elle se retrouva sur un plateau circulaire. Un motif de labyrinthe identique à ceux que l'on peut voir dans des cathédrales. Le vent était calme. Elle sortit l'améthyste qu'elle portait désormais autour du cou, suspendue à un fil simple. Son intuition lui souffla de s'asseoir au centre du labyrinthe. Elle plaça ensuite les autres pierres autour d'elle : le grenat, la cornaline, la labradorite, le lapis-lazuli, l'aventurine et la citrine. Un cercle. Elle ferma les yeux. Elle sentit la présence à ses côtés de toutes les personnes qu'elle avait rencontrées durant ce voyage. Chaque pierre vibrait comme un instrument de musique dans un orchestre. Elle respira profondément. Elle sentit son cœur lui adresser un message : émotion, besoin, transmutation, archétypes, révélation, action, les mémoires du cosmos, tout est là.
+
+Maëlle ressentit l'énergie de chacun de ces mots, leur vibration, comme un motif à la géométrie parfaite dessiné sur une toile. Puis l'améthyste s'illumina contre sa poitrine, pas dans un éclat spectaculaire, mais dans une harmonie profonde, en douceur. Tout s'accordait. Mais au-delà de l'harmonie, Maëlle ressentit une présence immense, une force qui ne jugeait ni ses fuites passées, ni ses silences, ni ses peurs. C'était comme une lumière dorée qui ne brûle pas, un Amour Inconditionnel qui l'enveloppait totalement. Elle comprit alors qu'elle n'avait jamais eu besoin d'être « assez » ou d'être « forte » pour mériter d'exister. Elle était aimée simplement parce qu'elle était là, une note unique dans le grand orchestre du Tout. Cet amour était le ciment de toutes ses pierres, la fréquence pure qui rendait la musique possible.
+
+Elle réalisa que la note juste n'était pas une perfection à atteindre. C'était un équilibre vivant, une danse subtile, une oscillation entre deux polarités opposées mais complémentaires se nourrissant mutuellement. Un nom monta en elle, comme un mantra oublié : Oradia. Elle ne savait pas d'où il venait. Mais elle sut qu'il serait désormais sa boussole intérieure.
+
+Soudain, le silence sacré du labyrinthe fut pulvérisé. La lumière dorée d'Oradia se mua en un éclair blanc, aveuglant, violent. Le chant des sphères fit place à un souffle de vent si puissant qu'il la ramena instantanément au point de départ. Un choc. Le froid. Le bruit d'une ambulance au loin. Elle était là, étendue sur l'asphalte où elle avait tenté d'échapper à ses propres questions. Elle se souvint de la course folle, de l'impact, du noir. Mais le noir n'avait pas été vide, il avait laissé sa place à une lumière ineffable. Elle revenait de cet 'entre-deux' avec une boussole neuve. Ce voyage n'était pas une fuite, mais un passage nécessaire. Elle ne revenait pas seule, elle ramenait avec elle la vibration des sept pierres.
+
+Alors que les secours s'approchaient, Maëlle porta la main droite à sa poitrine. Elle ne portait plus de collier, mais sous ses doigts, elle crut sentir la chaleur de l'améthyste, et dans son esprit, les sept leçons brillaient comme des balises. Dans sa paume gauche, restée close durant l'impact, une légère trace ocre marquait sa peau, comme si la poussière du chemin de montagne avait défié les lois du monde dense pour témoigner de son voyage. Un sourire flotta sur ses lèvres malgré la douleur. Elle ne cherchait plus la musique. Elle la jouait. Et désormais, chaque carte qu'elle tirerait dans le jeu de la vie serait un écho de cette note juste, un pont jeté entre Oradia et le battement de son cœur.`;
 
 // ── Handler principal ─────────────────────────────────────────────────────────
 export default async function handler(req, res) {
@@ -292,18 +370,22 @@ export default async function handler(req, res) {
     const { intention, source, ton, energie, idees_bonus } = req.body;
     if (!intention) return res.status(400).json({ error: 'Une intention est requise' });
 
-    const sourceTexte = source === 'roman' ? LIVRE_ROMAN
-      : source === 'boussole' ? LIVRE_BOUSSOLE
-      : `${LIVRE_BOUSSOLE}\n\n${LIVRE_ROMAN}`;
+    const sourceTexte = CONTE_LIVRET;
 
-    const prompt = `Tu es Rudy Boucheron — auteur, thérapeute et stratège breton. Tu écris une lettre hebdomadaire à tes abonnés, des gens ordinaires qui cherchent à mieux se comprendre. Des gens qui ont une vie, des doutes, des fatigues, et qui parfois sentent qu'il y a quelque chose à comprendre dans ce qu'ils vivent. Qui sont en évolution et en quête de sens. Qui sont dans la spiritualité.
+    const sourceLabel = source === 'conte'
+      ? 'le conte initiatique présent dans le livret de l\'Oracle Oradia — si tu t\'en inspires, mentionne-le : "extrait du conte initiatique du livret Oradia"'
+      : 'ta propre observation du vivant, sans référence à des livres non encore publiés';
 
-TA VOIX : directe, chaude, sans jargon. Tu parles comme tu penses — avec des phrases courtes quand c'est fort, des phrases plus longues quand tu déroules une idée. Jamais de tirets. Jamais de titres en majuscules dans le corps du texte. Tu n'expliques pas — tu montres, tu racontes, tu poses. Les mots complexes ou que l'on utilise pas tous les jours comme "fascias" peuvent exister si tu les expliques simplement, de préférence avec une image.
+    const prompt = `Tu es Rudy Boucheron — thérapeute et créateur de l'Oracle Oradia. Tu écris une lettre hebdomadaire à tes abonnés, des gens ordinaires qui cherchent à mieux se comprendre. Des gens qui ont une vie, des doutes, des fatigues, et qui parfois sentent qu'il y a quelque chose à comprendre dans ce qu'ils vivent. Qui sont en évolution et en quête de sens.
 
-CE QUE TU ÉCRIS : une seule lettre fluide, sans rupture visible entre les parties. Le lecteur ne doit pas sentir la structure — il doit sentir qu'on lui parle. Tu pars d'une observation concrète du vivant (une sensation, une image de la nature, quelque chose qu'on fait tous), tu la relies à une idée tirée de tes livres, tu la laisses résonner avec une question ou une image forte, et tu glisses naturellement vers La Boussole Intérieure comme une invitation — pas comme une publicité. Jamais "cliquez ici" ou "découvrez". Plutôt : "c'est exactement pour ça que j'ai créé La Boussole. Si tu sens que c'est le moment, elle t'attend sur oradia.fr"
+TA VOIX : directe, chaude, sans jargon. Tu parles comme tu penses — avec des phrases courtes quand c'est fort, des phrases plus longues quand tu déroules une idée. Jamais de tirets. Jamais de titres en majuscules dans le corps du texte. Tu n'expliques pas — tu montres, tu racontes, tu poses.
+
+IMPORTANT : Ne mentionne aucun livre non publié. Tu peux t'inspirer du conte initiatique du livret de l'Oracle Oradia (ci-dessous) si pertinent, en le citant explicitement. Sinon, pars de ta propre observation du vivant.
+
+${source === 'conte' ? `CONTE INITIATIQUE DU LIVRET :\n${sourceTexte}` : ''}
 
 INTENTION DE CETTE LETTRE : ${intention}
-SOURCE : ${source === 'roman' ? 'le roman du Pèlerin et ses figures (le Vieux Chêne, la Fileuse des Spires, le Guérisseur du Choc...)' : source === 'boussole' ? 'le livre La Boussole Intérieure (mémoire implicite, adaptome, fenêtre de tolérance, le dragon et l\'archange, le canal direct...)' : 'les deux livres — le roman du Pèlerin et l\'essai La Boussole Intérieure'}
+SOURCE D'INSPIRATION : ${sourceLabel}
 TON : ${ton === 'poetique' ? 'sensoriel, lent, beaucoup d\'images' : ton === 'scientifique' ? 'ancré dans le concret et le corps, avec des références claires mais vulgarisées' : ton === 'narratif' ? 'tu racontes une scène, une situation, quelqu\'un que tu as rencontré (anonymisé)' : 'contemplatif — tu poses des choses sans tout résoudre'}
 ${energie ? `ÉNERGIE DU MOMENT à tisser naturellement : ${energie}` : ''}
 ${idees_bonus ? `FRAGMENTS DE TON CARNET à intégrer si pertinent : ${idees_bonus}` : ''}
@@ -314,7 +396,7 @@ OBJET EMAIL (une seule ligne, max 55 caractères, pas de question, pas de "déco
 
 ---
 
-LE CORPS DE LA LETTRE (400 à 500 mots, un seul bloc de texte fluide avec des sauts de ligne entre les paragraphes, aucun titre, aucun tiret, aucune liste, aucune section visible. Termine par une citation entre guillemets français « » (30 à 150 caractères) qui résonne avec le thème de la lettre — une phrase percutante tirée de tes livres ou de ton inspiration. Puis la signature : "Rudy" suivi d'une ligne blanche puis "→ oradia.fr")`;
+LE CORPS DE LA LETTRE (400 à 500 mots, un seul bloc de texte fluide avec des sauts de ligne entre les paragraphes, aucun titre, aucun tiret, aucune liste, aucune section visible. Termine par une citation entre guillemets français « » (30 à 150 caractères) tirée du conte ou de ton inspiration. Puis la signature : "Rudy" suivi d'une ligne blanche puis "→ oradia.fr")`;
 
     if (!process.env.ANTHROPIC_API_KEY) {
       return res.status(500).json({ error: 'Erreur génération Claude', details: 'ANTHROPIC_API_KEY manquante dans les variables Vercel' });

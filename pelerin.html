@@ -2621,7 +2621,8 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
 
           <ul class="space-y-2">
 
-            <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><span class="text-light-gold">contact@oradia.fr</span></li>
+            <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><a id="pel-contact-link" class="text-light-gold hover:text-gold transition" href="contact.html">Nous contacter</a></li>
+            <script>(function(){var u='contact',d='oradia.fr';var el=document.getElementById('pel-contact-link');if(el){el.href='mailto:'+u+'@'+d;el.textContent=u+'@'+d;}})();</script>
 
             <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><span class="text-light-gold">@paddy_oradia.fr</span></li>
 
@@ -6762,8 +6763,185 @@ document.addEventListener("DOMContentLoaded", () => {
 
 <!-- Scripts -->
 
-
 <script src="components/header-manager.js" defer></script>
+
+<!-- ═══ Quota IP & Code Admin ═══ -->
+<script>
+(function() {
+  const API = '/api/tirages';
+  const ADMIN_CODE_KEY = 'oradia_admin_code';
+
+  // Lire le code admin depuis localStorage (ou URL ?adminCode=XXX)
+  function getAdminCode() {
+    const urlParam = new URLSearchParams(location.search).get('adminCode');
+    if (urlParam) { localStorage.setItem(ADMIN_CODE_KEY, urlParam); }
+    return localStorage.getItem(ADMIN_CODE_KEY) || null;
+  }
+
+  // Construire les headers avec code admin si présent
+  function buildHeaders() {
+    const h = { 'Content-Type': 'application/json' };
+    const code = getAdminCode();
+    if (code) h['x-admin-code'] = code;
+    return h;
+  }
+
+  // Modale de blocage avec options d'achat
+  function showQuotaModal(data) {
+    const existing = document.getElementById('quotaBlockModal');
+    if (existing) existing.remove();
+
+    const isWeekly = data.code === 'WEEKLY_LIMIT_REACHED';
+    const resetDate = data.resetAt ? new Date(data.resetAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long' }) : '';
+
+    const modal = document.createElement('div');
+    modal.id = 'quotaBlockModal';
+    modal.style.cssText = 'position:fixed;inset:0;z-index:9999;display:flex;align-items:center;justify-content:center;background:rgba(5,20,40,0.92);backdrop-filter:blur(8px);padding:16px;';
+    modal.innerHTML = `
+      <div style="max-width:520px;width:100%;background:linear-gradient(135deg,#0a192f,#051428);border:1px solid rgba(212,175,55,0.3);border-radius:20px;padding:40px 32px;text-align:center;">
+        <div style="width:64px;height:64px;margin:0 auto 20px;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.4);border-radius:50%;display:flex;align-items:center;justify-content:center;">
+          <i class="fas fa-hourglass-half" style="color:#d4af37;font-size:24px;"></i>
+        </div>
+        <h3 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;color:#d4af37;margin:0 0 12px;">
+          ${isWeekly ? 'Limite hebdomadaire atteinte' : 'Limite mensuelle atteinte'}
+        </h3>
+        <p style="color:rgba(212,175,55,0.75);font-size:15px;line-height:1.7;margin:0 0 8px;">
+          Vous avez utilisé vos <strong style="color:#d4af37;">${isWeekly ? data.weeklyLimit : data.monthlyLimit} tirages gratuits</strong>
+          ${isWeekly ? 'cette semaine' : 'ce mois-ci'}.
+          ${resetDate ? `Prochain renouvellement le <strong style="color:#d4af37;">${resetDate}</strong>.` : ''}
+        </p>
+        <p style="color:rgba(212,175,55,0.55);font-size:13px;margin:0 0 28px;">
+          Ou déverrouillez des tirages supplémentaires dès maintenant.
+        </p>
+
+        <!-- Packs -->
+        <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:24px;">
+          <div onclick="window.buyCredits('pack-3')" style="cursor:pointer;background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.25);border-radius:12px;padding:16px 8px;transition:border-color .2s;" onmouseover="this.style.borderColor='rgba(212,175,55,0.6)'" onmouseout="this.style.borderColor='rgba(212,175,55,0.25)'">
+            <div style="color:#d4af37;font-size:20px;font-weight:700;font-family:'Cormorant Garamond',Georgia,serif;">3</div>
+            <div style="color:rgba(212,175,55,0.7);font-size:11px;margin:2px 0 8px;">tirages</div>
+            <div style="color:#d4af37;font-weight:700;font-size:14px;">2,90 €</div>
+          </div>
+          <div onclick="window.buyCredits('pack-10')" style="cursor:pointer;background:rgba(212,175,55,0.12);border:2px solid rgba(212,175,55,0.5);border-radius:12px;padding:16px 8px;position:relative;" onmouseover="this.style.borderColor='rgba(212,175,55,0.9)'" onmouseout="this.style.borderColor='rgba(212,175,55,0.5)'">
+            <div style="position:absolute;top:-10px;left:50%;transform:translateX(-50%);background:#d4af37;color:#051428;font-size:9px;font-weight:700;padding:2px 8px;border-radius:20px;white-space:nowrap;">POPULAIRE</div>
+            <div style="color:#d4af37;font-size:20px;font-weight:700;font-family:'Cormorant Garamond',Georgia,serif;">10</div>
+            <div style="color:rgba(212,175,55,0.7);font-size:11px;margin:2px 0 8px;">tirages</div>
+            <div style="color:#d4af37;font-weight:700;font-size:14px;">7,90 €</div>
+          </div>
+          <div onclick="window.buyCredits('pack-25')" style="cursor:pointer;background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.25);border-radius:12px;padding:16px 8px;" onmouseover="this.style.borderColor='rgba(212,175,55,0.6)'" onmouseout="this.style.borderColor='rgba(212,175,55,0.25)'">
+            <div style="color:#d4af37;font-size:20px;font-weight:700;font-family:'Cormorant Garamond',Georgia,serif;">25</div>
+            <div style="color:rgba(212,175,55,0.7);font-size:11px;margin:2px 0 8px;">tirages</div>
+            <div style="color:#d4af37;font-weight:700;font-size:14px;">14,90 €</div>
+          </div>
+        </div>
+
+        <button onclick="document.getElementById('quotaBlockModal').remove()" style="background:none;border:1px solid rgba(212,175,55,0.2);color:rgba(212,175,55,0.5);padding:10px 24px;border-radius:8px;cursor:pointer;font-size:13px;">
+          Revenir plus tard
+        </button>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  // Achat de crédits via Stripe
+  window.buyCredits = async function(pack) {
+    const token = localStorage.getItem('oradiaToken');
+    if (!token) {
+      window.location.href = '/member/login.html?redirect=' + encodeURIComponent(location.pathname);
+      return;
+    }
+    try {
+      const r = await fetch('/api/payments/buy-credits', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + token },
+        body: JSON.stringify({ pack })
+      });
+      const d = await r.json();
+      if (d.success && d.url) { window.location.href = d.url; }
+      else { alert('Erreur lors de la création du paiement. Veuillez réessayer.'); }
+    } catch(e) {
+      alert('Erreur réseau. Veuillez réessayer.');
+    }
+  };
+
+  // Afficher le quota restant dans la page
+  function updateQuotaBadge(data) {
+    let badge = document.getElementById('quotaBadge');
+    if (!badge) {
+      badge = document.createElement('div');
+      badge.id = 'quotaBadge';
+      badge.style.cssText = 'position:fixed;bottom:20px;right:20px;z-index:100;background:rgba(5,20,40,0.9);border:1px solid rgba(212,175,55,0.3);border-radius:12px;padding:10px 14px;font-family:"Cormorant Garamond",Georgia,serif;font-size:13px;color:rgba(212,175,55,0.8);backdrop-filter:blur(8px);';
+      document.body.appendChild(badge);
+    }
+    if (data.adminBypass) {
+      badge.innerHTML = '<i class="fas fa-key" style="color:#d4af37;margin-right:6px;"></i>Mode admin actif';
+      badge.style.borderColor = 'rgba(212,175,55,0.7)';
+    } else if (data.weeklyRemaining !== null) {
+      const r = data.weeklyRemaining;
+      badge.innerHTML = `<i class="fas fa-infinity" style="color:#d4af37;margin-right:6px;"></i>${r} tirage${r !== 1 ? 's' : ''} cette semaine`;
+      if (r <= 1) badge.style.borderColor = 'rgba(212,100,55,0.6)';
+    }
+    setTimeout(() => { if (badge) badge.style.opacity = '0'; badge.style.transition = 'opacity 1s'; setTimeout(() => badge?.remove(), 1000); }, 5000);
+  }
+
+  // Vérifier le quota avant d'autoriser le tirage
+  async function checkQuotaBeforeStart() {
+    try {
+      const r = await fetch(API + '/check-access', { headers: buildHeaders() });
+      const data = await r.json();
+      if (!data.allowed) {
+        showQuotaModal(data);
+        return false;
+      }
+      updateQuotaBadge(data);
+      return true;
+    } catch(e) {
+      return true; // En cas d'erreur réseau, ne pas bloquer
+    }
+  }
+
+  // Incrémenter le quota après un tirage complet
+  async function consumeQuota() {
+    try {
+      await fetch(API + '/consume', { method: 'POST', headers: buildHeaders() });
+    } catch(e) { /* silencieux */ }
+  }
+
+  // Exposer pour usage dans le code existant
+  window.oradiaQuota = { checkBeforeStart: checkQuotaBeforeStart, consume: consumeQuota };
+
+  // Intercepter le clic sur le bouton "Commencer le voyage"
+  document.addEventListener('DOMContentLoaded', () => {
+    const startBtn = document.getElementById('startReading');
+    if (!startBtn) return;
+
+    // Wrapper : vérifier le quota avant de laisser le tirage démarrer
+    const originalHandler = startBtn.onclick;
+    startBtn.addEventListener('click', async function(e) {
+      // Ne bloquer que si la validation de l'intention est passée
+      if (startBtn.disabled) return;
+      const allowed = await checkQuotaBeforeStart();
+      if (!allowed) { e.stopImmediatePropagation(); }
+    }, true); // capture phase pour intercepter avant les autres handlers
+  });
+
+  // Incrémenter quand le tirage est complété (résultats affichés)
+  const observer = new MutationObserver((mutations) => {
+    for (const m of mutations) {
+      if (m.target.id === 'results' && !m.target.classList.contains('hidden')) {
+        consumeQuota();
+        observer.disconnect();
+        break;
+      }
+    }
+  });
+
+  document.addEventListener('DOMContentLoaded', () => {
+    const results = document.getElementById('results');
+    if (results) observer.observe(results, { attributes: true, attributeFilter: ['class'] });
+  });
+
+})();
+</script>
 
 </html>
 

@@ -1,6 +1,11 @@
-const { Credit, Subscription, Device } = require('../models/Freemium');
+const { Credit, Subscription, Device, IpQuota } = require('../models/Freemium');
 const User = require('../models/User');
 const jwt = require('jsonwebtoken');
+
+// Limites configurables
+const WEEKLY_LIMIT = parseInt(process.env.FREE_WEEKLY_LIMIT || '3');
+const MONTHLY_LIMIT = parseInt(process.env.FREE_MONTHLY_LIMIT || '6');
+const ADMIN_BYPASS_CODE = process.env.ADMIN_BYPASS_CODE || null;
 
 // Middleware pour vérifier les accès freemium
 const checkFreemiumAccess = (requiredAccess = 'pelerin') => {
@@ -113,62 +118,76 @@ const checkFreemiumAccess = (requiredAccess = 'pelerin') => {
 // Vérifier les limitations par appareil/IP
 const checkDeviceLimitations = async (req) => {
   try {
+    // --- Bypass code admin ---
+    const adminCode = req.headers['x-admin-code'] || req.query.adminCode || req.body?.adminCode;
+    if (ADMIN_BYPASS_CODE && adminCode === ADMIN_BYPASS_CODE) {
+      return { allowed: true, adminBypass: true };
+    }
+
     const deviceId = getDeviceId(req);
     const fingerprint = getFingerprint(req);
     const ip = getClientIP(req);
 
-    // Vérifier l'appareil
+    // Créer ou mettre à jour l'appareil
     let device = await Device.findOne({ deviceId });
-    
     if (!device) {
-      device = new Device({
-        deviceId,
-        fingerprint,
-        userAgent: req.get('User-Agent'),
-        ip
-      });
+      device = new Device({ deviceId, fingerprint, userAgent: req.get('User-Agent'), ip });
+      await device.save();
     } else {
-      // Mettre à jour les infos si nécessaire
       device.lastSeen = new Date();
-      if (device.ip !== ip) {
-        device.ip = ip;
-      }
+      if (device.ip !== ip) device.ip = ip;
       await device.save();
     }
 
-    // Vérifier si l'appareil est bloqué
+    // Vérifier si l'appareil est bloqué manuellement
     if (device.blocked) {
+      return { allowed: false, message: 'Appareil bloqué', code: 'DEVICE_BLOCKED' };
+    }
+
+    // --- Quota IP hebdomadaire et mensuel ---
+    const quota = await IpQuota.getOrCreate(ip);
+    quota.resetIfNeeded();
+
+    if (quota.weeklyCount >= WEEKLY_LIMIT) {
+      const resetDate = quota.weeklyResetAt;
+      const jours = Math.ceil((resetDate - new Date()) / (1000 * 60 * 60 * 24));
       return {
         allowed: false,
-        message: 'Appareil bloqué',
-        code: 'DEVICE_BLOCKED'
+        message: `Limite hebdomadaire de ${WEEKLY_LIMIT} tirages atteinte. Disponible dans ${jours} jour(s) ou achetez des tirages.`,
+        code: 'WEEKLY_LIMIT_REACHED',
+        resetAt: resetDate,
+        weeklyCount: quota.weeklyCount,
+        weeklyLimit: WEEKLY_LIMIT,
+        monthlyCount: quota.monthlyCount,
+        monthlyLimit: MONTHLY_LIMIT
       };
     }
 
-    // Vérifier la limite de tirages gratuits par appareil
-    if (device.freeReadingsCount >= 5) {
+    if (quota.monthlyCount >= MONTHLY_LIMIT) {
+      const resetDate = quota.monthlyResetAt;
+      const jours = Math.ceil((resetDate - new Date()) / (1000 * 60 * 60 * 24));
       return {
         allowed: false,
-        message: 'Limite de tirages gratuits atteinte. Explorez nos offres pour continuer.',
-        code: 'FREE_LIMIT_REACHED'
+        message: `Limite mensuelle de ${MONTHLY_LIMIT} tirages atteinte. Disponible dans ${jours} jour(s) ou achetez des tirages.`,
+        code: 'MONTHLY_LIMIT_REACHED',
+        resetAt: resetDate,
+        weeklyCount: quota.weeklyCount,
+        weeklyLimit: WEEKLY_LIMIT,
+        monthlyCount: quota.monthlyCount,
+        monthlyLimit: MONTHLY_LIMIT
       };
     }
 
-    // Vérifier le nombre de comptes par IP
-    const devicesFromIP = await Device.find({ ip });
-    const totalAccountsFromIP = devicesFromIP.reduce((sum, d) => sum + d.accountsCreated, 0);
-    
-    if (totalAccountsFromIP >= 3) {
-      return {
-        allowed: false,
-        message: 'Trop de comptes créés depuis cette adresse IP',
-        code: 'IP_LIMIT_REACHED'
-      };
-    }
-
-    return { allowed: true };
+    return {
+      allowed: true,
+      weeklyCount: quota.weeklyCount,
+      weeklyLimit: WEEKLY_LIMIT,
+      weeklyRemaining: WEEKLY_LIMIT - quota.weeklyCount,
+      monthlyCount: quota.monthlyCount,
+      monthlyLimit: MONTHLY_LIMIT,
+      monthlyRemaining: MONTHLY_LIMIT - quota.monthlyCount
+    };
   } catch (error) {
-    // console.error(console.error('Erreur vérification limitations:', error);)
     return { allowed: false, message: 'Erreur de vérification', code: 'CHECK_ERROR' };
   }
 };
@@ -230,19 +249,28 @@ const useTraverseeCredit = async (userId) => {
   }
 };
 
-// Incrémenter le compteur de tirages gratuits
+// Incrémenter le compteur de tirages (device + quota IP)
 const incrementFreeReading = async (req) => {
   try {
-    const deviceId = getDeviceId(req);
-    const device = await Device.findOne({ deviceId });
-    
-    if (device) {
-      await device.incrementFreeReadings();
+    // Bypass admin : ne pas incrémenter
+    const adminCode = req.headers['x-admin-code'] || req.query.adminCode || req.body?.adminCode;
+    if (ADMIN_BYPASS_CODE && adminCode === ADMIN_BYPASS_CODE) {
+      return { success: true, adminBypass: true };
     }
-    
+
+    const deviceId = getDeviceId(req);
+    const ip = getClientIP(req);
+
+    const [device, quota] = await Promise.all([
+      Device.findOne({ deviceId }),
+      IpQuota.getOrCreate(ip)
+    ]);
+
+    if (device) await device.incrementFreeReadings();
+    await quota.increment();
+
     return { success: true };
   } catch (error) {
-    // console.error(console.error('Erreur incrémentation tirage gratuit:', error);)
     return { success: false, error: error.message };
   }
 };

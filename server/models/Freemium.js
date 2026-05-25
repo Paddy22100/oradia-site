@@ -122,6 +122,32 @@ const deviceSchema = new mongoose.Schema({
   timestamps: true
 });
 
+// Schéma pour le quota de tirages gratuits par IP (hebdo/mensuel)
+const ipQuotaSchema = new mongoose.Schema({
+  ip: {
+    type: String,
+    required: true,
+    unique: true
+  },
+  weeklyCount: { type: Number, default: 0 },
+  weeklyResetAt: { type: Date, default: () => {
+    const d = new Date();
+    d.setDate(d.getDate() + 7);
+    return d;
+  }},
+  monthlyCount: { type: Number, default: 0 },
+  monthlyResetAt: { type: Date, default: () => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 1);
+    return d;
+  }},
+  lastSeen: { type: Date, default: Date.now }
+}, { timestamps: true });
+
+ipQuotaSchema.index({ ip: 1 });
+ipQuotaSchema.index({ weeklyResetAt: 1 });
+ipQuotaSchema.index({ monthlyResetAt: 1 });
+
 // Index pour optimiser les requêtes
 creditSchema.index({ userId: 1 });
 subscriptionSchema.index({ userId: 1 });
@@ -183,15 +209,42 @@ deviceSchema.statics.findByIp = function(ip) {
 deviceSchema.methods.incrementFreeReadings = async function() {
   this.freeReadingsCount += 1;
   this.lastSeen = new Date();
-  
-  // Bloquer après 5 tirages gratuits par appareil
-  if (this.freeReadingsCount >= 5) {
-    this.blocked = true;
-    this.blockReason = 'Limite de tirages gratuits atteinte';
-  }
-  
   await this.save();
   return this.freeReadingsCount;
+};
+
+// Méthodes IpQuota
+ipQuotaSchema.methods.resetIfNeeded = function() {
+  const now = new Date();
+  if (now >= this.weeklyResetAt) {
+    this.weeklyCount = 0;
+    this.weeklyResetAt = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000);
+  }
+  if (now >= this.monthlyResetAt) {
+    this.monthlyCount = 0;
+    const d = new Date(now);
+    d.setMonth(d.getMonth() + 1);
+    this.monthlyResetAt = d;
+  }
+};
+
+ipQuotaSchema.methods.increment = async function() {
+  this.resetIfNeeded();
+  this.weeklyCount += 1;
+  this.monthlyCount += 1;
+  this.lastSeen = new Date();
+  await this.save();
+};
+
+ipQuotaSchema.statics.getOrCreate = async function(ip) {
+  let quota = await this.findOne({ ip });
+  if (!quota) {
+    quota = new this({ ip });
+    await quota.save();
+  } else {
+    quota.resetIfNeeded();
+  }
+  return quota;
 };
 
 deviceSchema.methods.incrementAccountsCreated = async function() {
@@ -211,9 +264,11 @@ deviceSchema.methods.incrementAccountsCreated = async function() {
 const Credit = mongoose.model('Credit', creditSchema);
 const Subscription = mongoose.model('Subscription', subscriptionSchema);
 const Device = mongoose.model('Device', deviceSchema);
+const IpQuota = mongoose.model('IpQuota', ipQuotaSchema);
 
 module.exports = {
   Credit,
   Subscription,
-  Device
+  Device,
+  IpQuota
 };

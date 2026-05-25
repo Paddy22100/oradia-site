@@ -1,11 +1,36 @@
 const express = require('express');
 const { authenticate, requireAdmin, logActivity } = require('../middleware/auth');
+const { checkDeviceLimitations, incrementFreeReading } = require('../middleware/freemium');
 const Tirage = require('../models/Tirage');
 const User = require('../models/User');
 const brevoService = require('../services/brevoService');
 const Newsletter = require('../models/Newsletter');
 
 const router = express.Router();
+
+// GET /api/tirages/check-access — Vérifier le quota IP avant tirage
+router.get('/check-access', async (req, res) => {
+  const check = await checkDeviceLimitations(req);
+  return res.json({
+    allowed: check.allowed,
+    adminBypass: check.adminBypass || false,
+    code: check.code || null,
+    message: check.message || null,
+    weeklyCount: check.weeklyCount ?? null,
+    weeklyLimit: check.weeklyLimit ?? null,
+    weeklyRemaining: check.weeklyRemaining ?? null,
+    monthlyCount: check.monthlyCount ?? null,
+    monthlyLimit: check.monthlyLimit ?? null,
+    monthlyRemaining: check.monthlyRemaining ?? null,
+    resetAt: check.resetAt || null
+  });
+});
+
+// POST /api/tirages/consume — Incrémenter le quota après un tirage réalisé
+router.post('/consume', async (req, res) => {
+  const result = await incrementFreeReading(req);
+  return res.json(result);
+});
 
 // GET /api/tirages - Liste des tirages (admin)
 router.get('/', authenticate, requireAdmin, logActivity('tirages_list'), async (req, res) => {

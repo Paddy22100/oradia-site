@@ -3,7 +3,109 @@ const { body, validationResult } = require('express-validator');
 const stripeService = require('../services/stripeService');
 const { checkFreemiumAccess, useTraverseeCredit, associateDeviceToUser } = require('../middleware/freemium');
 const { authenticate } = require('../middleware/auth');
+const { Credit, IpQuota } = require('../models/Freemium');
 const router = express.Router();
+
+// Packs de crédits disponibles (tirages supplémentaires)
+const CREDIT_PACKS = {
+  'pack-3': { credits: 3, price: 290, label: '3 tirages' },  // 0,97€/tirage
+  'pack-10': { credits: 10, price: 790, label: '10 tirages' }, // 0,79€/tirage
+  'pack-25': { credits: 25, price: 1490, label: '25 tirages' } // 0,60€/tirage
+};
+
+// POST /api/payments/buy-credits — Acheter des crédits de tirages
+router.post('/buy-credits', authenticate, async (req, res) => {
+  try {
+    const { pack } = req.body;
+    if (!pack || !CREDIT_PACKS[pack]) {
+      return res.status(400).json({ success: false, message: 'Pack invalide' });
+    }
+
+    const chosen = CREDIT_PACKS[pack];
+    const session = await stripeService.createCreditPackSession({
+      userId: req.user._id,
+      email: req.user.email,
+      pack,
+      credits: chosen.credits,
+      price: chosen.price,
+      label: chosen.label
+    });
+
+    if (!session.success) {
+      return res.status(500).json({ success: false, message: 'Erreur Stripe', details: session.error });
+    }
+
+    res.json({ success: true, sessionId: session.sessionId, url: session.url });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
+
+// POST /api/payments/credits-webhook — Créditer le compte après paiement
+router.post('/credits-webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  try {
+    const sig = req.headers['stripe-signature'];
+    const webhookSecret = process.env.STRIPE_WEBHOOK_CREDITS_SECRET || process.env.STRIPE_WEBHOOK_SECRET;
+    let event;
+    try {
+      const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+      event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
+    } catch (err) {
+      return res.status(400).send(`Webhook Error: ${err.message}`);
+    }
+
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object;
+      const { userId, credits, pack } = session.metadata || {};
+      if (userId && credits) {
+        const qty = parseInt(credits);
+        const ip = session.customer_details?.ip_address || null;
+
+        let credit = await Credit.findOne({ userId });
+        if (!credit) {
+          credit = new Credit({ userId, credits: 0, totalPurchased: 0 });
+        }
+        credit.credits += qty;
+        credit.totalPurchased += qty;
+        credit.lastPurchase = new Date();
+        credit.purchaseHistory.push({ credits: qty, amount: session.amount_total, stripePaymentId: session.payment_intent });
+        await credit.save();
+
+        // Réinitialiser le quota IP si présent
+        if (ip) {
+          const quota = await IpQuota.getOrCreate(ip);
+          quota.weeklyCount = Math.max(0, quota.weeklyCount - qty);
+          quota.monthlyCount = Math.max(0, quota.monthlyCount - qty);
+          await quota.save();
+        }
+      }
+    }
+    res.json({ received: true });
+  } catch (error) {
+    res.status(500).json({ error: 'Erreur webhook' });
+  }
+});
+
+// GET /api/payments/my-credits — Solde de crédits de l'utilisateur
+router.get('/my-credits', authenticate, async (req, res) => {
+  try {
+    const credit = await Credit.findOne({ userId: req.user._id });
+    const ip = req.ip || req.headers['x-forwarded-for']?.split(',')[0]?.trim() || '0.0.0.0';
+    const quota = await IpQuota.getOrCreate(ip);
+    quota.resetIfNeeded();
+    res.json({
+      success: true,
+      credits: credit?.credits || 0,
+      weeklyRemaining: Math.max(0, (parseInt(process.env.FREE_WEEKLY_LIMIT) || 3) - quota.weeklyCount),
+      weeklyLimit: parseInt(process.env.FREE_WEEKLY_LIMIT) || 3,
+      monthlyRemaining: Math.max(0, (parseInt(process.env.FREE_MONTHLY_LIMIT) || 6) - quota.monthlyCount),
+      monthlyLimit: parseInt(process.env.FREE_MONTHLY_LIMIT) || 6,
+      packs: CREDIT_PACKS
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+});
 
 // Configuration des offres
 const OFFERS = {
