@@ -218,16 +218,48 @@
 
 <style>
 
-  /* Mode immersif : on cache le reste quand le tirage est lancé */
-
-  body.hide-immersive-tore > header,
-
+  /* Mode immersif : cacher footer, autres sections et le bouton scroll-top */
   body.hide-immersive-tore > footer,
-
   body.hide-immersive-tore > section:not(#tore-immersif) {
-
     display: none !important;
+  }
+  body.hide-immersive-tore #backToTop {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
 
+  /* Pendant le tirage actif : cacher header/nav, backToTop et verrouiller le scroll */
+  body.tore-playing > header,
+  body.tore-playing > nav,
+  body.tore-playing header,
+  body.tore-playing nav:not(#tore-immersif nav) {
+    display: none !important;
+  }
+  body.tore-playing #backToTop {
+    display: none !important;
+    pointer-events: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+  body.tore-playing {
+    overflow: hidden !important;
+    height: 100dvh !important;
+  }
+
+  body.tore-playing #tore-immersif {
+    position: fixed !important;
+    inset: 0 !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  /* Sécuriser la barre tirage au-dessus de tout */
+  #tore-top-bar {
+    z-index: 9999 !important;
   }
 
   /* Fix iOS Safari : background-attachment:fixed non supporté → fond statique */
@@ -329,7 +361,9 @@
 
   position: relative;
 
-  width: min(1200px, 100%);
+  width: min(calc(100vh - 180px), calc(100vw - 40px));
+
+  max-width: min(calc(100vh - 180px), 660px);
 
   aspect-ratio: 1 / 1;
 
@@ -345,21 +379,13 @@
 
   gap: 0.5rem;
 
-  max-width: 100%;
-
   overflow-x: hidden;
 
 
 
 
 
-  background-image: url("images/plateau.jpeg");
-
-  background-size: contain;
-
-  background-position: center;
-
-  background-repeat: no-repeat;
+  background-image: none;
 
 }
 
@@ -486,13 +512,24 @@
   /* RESPONSIVE MOBILE PORTRAIT (< 640px) : plateau sans scroll */
   @media (max-width: 639px) and (orientation: portrait) {
 
-    /* La section immersive prend exactement la hauteur du viewport */
-    #tore-immersif {
+    /* Pendant le tirage actif : fixer la section au viewport */
+    body.tore-playing #tore-immersif {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
       height: 100dvh;
       min-height: 100dvh;
+      max-height: 100dvh;
       overflow: hidden;
       display: flex;
       flex-direction: column;
+    }
+
+    /* Compenser la barre fixe du haut pendant le tirage */
+    #tore-board {
+      padding-top: 52px;
     }
 
     /* Le conteneur intermédiaire propage la hauteur */
@@ -508,10 +545,10 @@
       width: 100%;
     }
 
-    /* Le board prend tout l'espace restant */
-    #tore-board {
+    /* Le board prend tout l'espace restant (seulement quand visible) */
+    #tore-board:not(.hidden) {
       flex: 1;
-      display: flex !important;
+      display: flex;
       flex-direction: column;
       min-height: 0;
       margin-top: 0 !important;
@@ -558,16 +595,15 @@
       height: 100%;
     }
 
-    /* Annuler les transforms de positionnement circulaire */
+    /* Rapprocher les coins vers l'axe vertical central (X seulement, pas de Y) */
+    #tore-immersif .tore-board-7 .pos-1 { transform: translateX(28px) !important; }
+    #tore-immersif .tore-board-7 .pos-2 { transform: translateX(-28px) !important; }
+    #tore-immersif .tore-board-7 .pos-3 { transform: translateX(28px) !important; }
+    #tore-immersif .tore-board-7 .pos-5 { transform: translateX(-18px) !important; }
+    /* Cartes centrales et du milieu : pas de translation */
     #tore-immersif .tore-board-7 .pos-0,
-    #tore-immersif .tore-board-7 .pos-1,
-    #tore-immersif .tore-board-7 .pos-2,
-    #tore-immersif .tore-board-7 .pos-3,
     #tore-immersif .tore-board-7 .pos-4,
-    #tore-immersif .tore-board-7 .pos-5,
-    #tore-immersif .tore-board-7 .pos-6 {
-      transform: none !important;
-    }
+    #tore-immersif .tore-board-7 .pos-6 { transform: none !important; }
   }
 
   /* RESPONSIVE MOBILE PAYSAGE (< 640px landscape) : grille compacte */
@@ -608,89 +644,102 @@
     }
   }
 
-  /* RESPONSIVE TABLETTE (640px - 767px) */
-  @media (min-width: 640px) and (max-width: 767px) {
+  /* ── TABLETTE & DESKTOP (≥ 640px) ── */
+  @media (min-width: 640px) {
+
+    /* Masquer les labels de famille */
+    .tore-family-label {
+      display: none !important;
+    }
+
+    /* Board : zone exacte entre top-bar et bottom-bar */
+    #tore-board:not(.hidden) {
+      position: fixed;
+      top: 52px;
+      bottom: 100px;
+      left: 0;
+      right: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+      overflow: hidden;
+    }
+
+    /* Plateau : carré qui tient dans la zone du board */
     #tore-immersif .tore-board-7 {
+      /* Prend le min de la hauteur et de la largeur disponibles */
+      width:  min(calc(100vw - 20px), calc(100vh - 172px));
+      height: min(calc(100vw - 20px), calc(100vh - 172px));
+      max-width:  700px;
+      max-height: 700px;
       aspect-ratio: 1 / 1;
       grid-template-columns: repeat(3, 1fr);
       grid-template-rows: repeat(3, 1fr);
-      gap: 8px;
-      padding: 8px;
-      background-size: contain;
-      width: min(90vw, 90vh);
+      gap: 0.5rem;
+      padding: 0.5rem;
+      flex-shrink: 0;
     }
 
+    /* Cartes */
     .tore-card {
       width: 100%;
       max-width: none;
-    }
-
-    .tore-card.pos-1, .tore-card.pos-2,
-    .tore-card.pos-3, .tore-card.pos-5 {
-      transform: none !important;
+      height: auto;
+      aspect-ratio: 64 / 90;
     }
   }
 
-  /* RESPONSIVE TABLETTE PAYSAGE (768px - 1023px landscape) */
-  @media (min-width: 768px) and (max-width: 1023px) and (orientation: landscape) {
-    #tore-immersif .tore-board-7 {
-      width: min(90vh, 95vw);
-    }
-  }
-
-  /* RESPONSIVE DESKTOP (768px - 1023px) : 3 colonnes */
-  @media (min-width: 768px) and (max-width: 1023px) {
-    #tore-immersif .tore-board-7 {
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      gap: 1.25rem;
-      padding: 1.5rem;
-      width: min(1200px, 95vw);
-    }
-
-    .tore-card {
-      width: clamp(130px, 17vw, 210px);
-    }
-  }
-
-  /* RESPONSIVE LARGE DESKTOP (>= 1024px) : Taille optimale */
-  @media (min-width: 1024px) {
-    #tore-immersif .tore-board-7 {
-      grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      gap: 1.5rem;
-      padding: 2rem;
-    }
-
-    .tore-card {
-      width: clamp(170px, 17vw, 230px);
-    }
-  }
-
-  /* ── Flip 3D (desktop ≥ 640px) ── */
+  /* ── Flip scaleX 2D (desktop ≥ 640px) — même animation que mobile ── */
   @media (min-width: 640px) {
     .tore-card {
-      perspective: 1000px;
+      perspective: none !important;
     }
-    .tore-card-inner {
-      transform-style: preserve-3d;
-      -webkit-transform-style: preserve-3d;
-      transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);
-      will-change: transform;
-    }
-    .tore-card.flipped .tore-card-inner {
-      transform: rotateY(180deg);
-    }
+    .tore-card,
+    .tore-card-inner,
     .tore-card-back,
     .tore-card-front {
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
+      backface-visibility: visible !important;
+      -webkit-backface-visibility: visible !important;
+      transform-style: flat !important;
+      -webkit-transform-style: flat !important;
+    }
+    .tore-card-inner {
+      transform-origin: center center;
+      transition: transform 0.22s ease-in;
+    }
+    .tore-card.flipping .tore-card-inner {
+      transform: scaleX(0);
+    }
+    .tore-card.flipped .tore-card-inner {
+      transform: scaleX(1);
+      transition: transform 0.22s ease-out;
+    }
+    .tore-card-back {
+      position: absolute;
+      inset: 0;
+      opacity: 1;
+      visibility: visible;
     }
     .tore-card-front {
-      transform: rotateY(180deg);
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      visibility: hidden;
+      transform: none !important;
+      pointer-events: none;
+      background: #020817 !important;
+    }
+    .tore-card.flipped .tore-card-back {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
     }
     .tore-card.flipped .tore-card-front {
-      transform: rotateY(180deg);
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
     }
   }
 
@@ -897,11 +946,20 @@
   }
 
   /* Retour à la normale quand plus de carte active */
-  #tore-immersif .tore-board-7:not(.has-active-card) .tore-card {
+  #tore-immersif .tore-board-7:not(.has-active-card):not(.tore-dealing) .tore-card {
     opacity: 1;
     filter: none;
     pointer-events: auto;
     transition: opacity 0.35s ease, filter 0.35s ease;
+  }
+
+  /* Pendant la distribution initiale : les cartes masquées restent masquées */
+  #tore-immersif .tore-board-7.tore-dealing .tore-card.card-dealing-hidden {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    filter: none !important;
+    animation: none !important;
   }
 
   .tore-card.flipped .tore-card-front {
@@ -1569,12 +1627,6 @@
 
     border-radius: 999px;
 
-    background-image: url("images/coin-oradia.png");
-
-    background-size: 200% 100%;        /* 2 faces côte à côte */
-
-    background-position: left center;  /* face Yang par défaut */
-
     box-shadow: 0 20px 40px rgba(0,0,0,0.6);
 
     border: 1px solid rgba(212,175,55,0.7);
@@ -1587,7 +1639,7 @@
 
     position: relative;                /* pour les pseudo-éléments */
 
-    overflow: visible;
+    overflow: hidden;                  /* clipper l'image sprite sur la forme ronde */
 
   }
 
@@ -1655,21 +1707,9 @@
 
 
 
-  /* Faces : gauche = Yang (triangle), droite = Yin (cercle) */
-
-  .tore-coin.face-yang {
-
-    background-position: left center;
-
-  }
-
-
-
-  .tore-coin.face-yin {
-
-    background-position: right center;
-
-  }
+  /* Faces : deux images séparées */
+  .tore-coin.face-yang #tore-coin-img { content: url('images/coin_triangle.png'); }
+  .tore-coin.face-yin  #tore-coin-img { content: url('images/coin_cercle.png'); }
 
 
 
@@ -1961,7 +2001,7 @@
 
   inset: 0;
 
-  background: url('images/oradia-hero-4k.png') center/cover no-repeat;
+  background: url('images/oradia-hero-4k.png') 51.5% center/cover no-repeat;
 
   display: flex;
 
@@ -2024,6 +2064,25 @@
 @keyframes bridgePanelSlideIn {
   from { transform: translateX(40px); opacity: 0; }
   to   { transform: translateX(0);    opacity: 1; }
+}
+
+@keyframes bridgeCardReveal {
+  from { transform: scale(0.7) translateY(30px); opacity: 0; }
+  to   { transform: scale(1)   translateY(0);    opacity: 1; }
+}
+
+@keyframes fadeInUp {
+  from { transform: translateY(12px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
+.tore-card.card-intro-hidden {
+  opacity: 0 !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+.tore-card.card-intro-deal {
+  visibility: visible !important;
 }
 
 @media (max-width: 700px) {
@@ -2328,43 +2387,26 @@
 }
 
 #tore-coin-wrapper {
-  position: fixed;
-  bottom: 90px;
-  left: 50%;
-  transform: translateX(-50%);
+  pointer-events: auto;
+}
+
+/* Compteur de lancers et nom famille : styles dans les inline styles du HTML */
+#coin-throw-counter, #coin-family-label {
   pointer-events: none;
-  z-index: 50;
-  flex-direction: column;
-  align-items: center;
-}
-
-#tore-coin-wrapper.hidden {
-  display: none !important;
-}
-
-@media (min-width: 768px) {
-  #tore-coin-wrapper {
-    position: absolute;
-    bottom: auto;
-    top: 75%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-  }
 }
 
 #tore-coin-button {
   pointer-events: auto;
-  margin-top: 20px;
 }
 
 #tore-to-analysis {
   pointer-events: auto;
-  margin-top: 12px;
 }
 
 #tore-coin {
   pointer-events: auto;
-  margin-bottom: 10px;
+  position: relative;
+  z-index: 1;
 }
 
 
@@ -2373,59 +2415,137 @@
 
 
 
-<section id="tore-immersif" class="relative min-h-screen"
-  style="background: linear-gradient(135deg, #0a192f 0%, #051428 100%); background-image: url('images/oradia-hero-4k.png'); background-size: cover; background-position: center;">
+  <!-- Barre fixe du haut pendant le tirage (titre + bouton quitter) -->
+  <!-- Placée HORS de #tore-immersif pour que position:fixed soit relatif au viewport -->
+  <div id="tore-top-bar" class="hidden fixed top-0 left-0 right-0" style="z-index:9999; height:52px; background: linear-gradient(180deg, rgba(5,15,35,0.98) 0%, rgba(8,20,45,0.94) 100%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 1px 0 rgba(212,175,55,0.25), 0 4px 24px rgba(0,0,0,0.6);">
+    <!-- Filet lumineux doré en bas -->
+    <div style="position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.15) 10%, rgba(212,175,55,0.6) 35%, rgba(240,199,94,0.9) 50%, rgba(212,175,55,0.6) 65%, rgba(212,175,55,0.15) 90%, transparent 100%);"></div>
+    <!-- Contenu centré -->
+    <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:3px;">
+      <!-- Surtitre discret -->
+      <span style="font-family:'Lora',Georgia,serif;font-size:9px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(212,175,55,0.4);">Oracle Oradia</span>
+      <!-- Titre principal -->
+      <span style="font-family:'Cormorant Garamond','Cormorant',Georgia,serif;color:#f0c75e;font-size:clamp(14px,3.8vw,18px);font-weight:700;letter-spacing:0.22em;text-transform:uppercase;text-shadow:0 0 24px rgba(212,175,55,0.3);">Tirage du Tore</span>
+    </div>
+  </div>
+
+  <!-- Sous-bandeau fixe : bouton Quitter, juste sous le top-bar -->
+  <div id="tore-exit-strip" class="hidden fixed left-0 right-0" style="top:52px;z-index:9998;padding:5px 16px 6px;background:linear-gradient(to bottom,rgba(2,6,16,0.85) 0%,transparent 100%);pointer-events:none;">
+    <button id="exitToreBtn" type="button"
+      style="display:inline-flex;align-items:center;gap:6px;background:none;border:none;cursor:pointer;padding:4px 8px;border-radius:6px;color:rgba(212,175,55,0.45);font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.1em;text-transform:uppercase;transition:color 0.2s,background 0.2s;pointer-events:auto;"
+      onmouseenter="this.style.color='rgba(212,175,55,0.9)';this.style.background='rgba(212,175,55,0.06)'"
+      onmouseleave="this.style.color='rgba(212,175,55,0.45)';this.style.background='none'">
+      <i class="fas fa-chevron-left" style="font-size:9px;"></i>
+      <span>Quitter</span>
+    </button>
+  </div>
+
+<section id="tore-immersif" class="relative"
+  style="background: linear-gradient(135deg, #0a192f 0%, #051428 100%); background-image: url('images/oradia-hero-4k.png'); background-size: cover; background-position: 51.5% center;">
 
   <!-- Voile comme l'index -->
   <div class="absolute inset-0" style="background: radial-gradient(circle at 20% 80%, rgba(212,175,55,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(212,175,55,0.04) 0%, transparent 50%), linear-gradient(135deg, rgba(10,25,47,0.65) 0%, rgba(5,20,40,0.75) 100%);"></div>
 
-  <!-- Bouton quitter (caché jusqu'au tirage) -->
-  <button id="exitToreBtn" class="fixed top-4 left-4 hidden z-50 bg-gold text-night-blue font-bold px-4 py-2 rounded-lg shadow-lg">
-    <i class="fas fa-arrow-left mr-2"></i>Quitter le tirage
-  </button>
+  <!-- Bandeau bas : guidage cartes OU phase pièce -->
+  <div id="tore-bottom-bar" class="hidden fixed bottom-0 left-0 right-0 z-50"
+    style="background:linear-gradient(to top, rgba(2,6,16,0.99) 0%, rgba(5,15,35,0.97) 100%);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 -12px 40px rgba(0,0,0,0.8), inset 0 1px 0 rgba(212,175,55,0.08);opacity:1;transition:opacity 0.4s ease;">
+    <!-- Ligne dorée supérieure en dégradé -->
+    <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(212,175,55,0.2) 15%,rgba(212,175,55,0.8) 40%,rgba(212,175,55,0.9) 50%,rgba(212,175,55,0.8) 60%,rgba(212,175,55,0.2) 85%,transparent 100%);"></div>
 
-  <!-- Toast de guidage fixe en bas d'écran (visible pendant toute la phase de tirage des cartes) -->
-  <div id="tore-step-guide" class="hidden fixed bottom-0 left-0 right-0 z-50"
-    style="background:linear-gradient(to top, rgba(2,8,20,0.98) 0%, rgba(5,18,40,0.95) 100%);border-top:2px solid rgba(212,175,55,0.7);backdrop-filter:blur(16px);padding:14px 20px 18px;box-shadow:0 -8px 32px rgba(0,0,0,0.7), 0 -1px 0 rgba(212,175,55,0.15);animation:slideUpGuide 0.4s ease forwards;">
-    <div style="max-width:640px;margin:0 auto;display:flex;align-items:center;gap:14px;">
-      <div id="tore-step-dots" style="display:flex;gap:6px;flex-shrink:0;"></div>
-      <div style="flex:1;min-width:0;">
-        <p id="tore-step-label" class="cormorant" style="color:#f0c75e;font-size:clamp(16px,3vw,19px);margin:0 0 3px;font-weight:700;letter-spacing:0.03em;"></p>
-        <p id="tore-step-instruction" style="color:rgba(216,191,114,0.85);font-size:clamp(12px,2.5vw,14px);margin:0;font-family:'Lora',Georgia,serif;font-style:italic;"></p>
+    <!-- Phase cartes : guidage étape -->
+    <div id="tore-step-guide" style="display:none;padding:12px 20px 16px;">
+      <div style="max-width:660px;margin:0 auto;display:flex;align-items:center;gap:0;">
+
+        <!-- Points de progression -->
+        <div style="flex-shrink:0;display:flex;flex-direction:column;align-items:center;gap:5px;padding-right:16px;">
+          <div id="tore-step-dots" style="display:flex;gap:5px;"></div>
+          <span style="font-family:'Lora',Georgia,serif;font-size:9px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.35);">Progression</span>
+        </div>
+
+        <!-- Séparateur vertical -->
+        <div style="width:1px;height:40px;background:linear-gradient(to bottom,transparent,rgba(212,175,55,0.25),transparent);flex-shrink:0;margin-right:16px;"></div>
+
+        <!-- Texte -->
+        <div style="flex:1;min-width:0;">
+          <p id="tore-step-sublabel" style="font-family:'Lora',Georgia,serif;font-size:10px;color:rgba(212,175,55,0.45);letter-spacing:0.18em;text-transform:uppercase;margin:0 0 1px;"></p>
+          <p id="tore-step-label" style="font-family:'Cormorant Garamond','Cormorant',Georgia,serif;color:#f0c75e;font-size:clamp(15px,3.2vw,18px);margin:0 0 2px;font-weight:700;letter-spacing:0.06em;text-transform:uppercase;"></p>
+          <p id="tore-step-instruction" style="color:rgba(212,175,55,0.55);font-size:clamp(11px,2.4vw,13px);margin:0;font-family:'Lora',Georgia,serif;font-style:italic;letter-spacing:0.02em;"></p>
+        </div>
+
+
       </div>
-      <div style="flex-shrink:0;color:rgba(212,175,55,0.5);font-size:20px;line-height:1;">✦</div>
     </div>
+
+    <!-- Phase pièce : compteur + pièce + bouton -->
+    <div id="tore-coin-wrapper" style="display:none;padding:8px 16px 12px;">
+      <div style="max-width:560px;margin:0 auto;display:flex;align-items:center;gap:12px;">
+
+        <!-- Pièce (taille réduite) -->
+        <div id="tore-coin" class="tore-coin face-yang" aria-label="Pièce de tirage Oradia"
+          style="flex-shrink:0;cursor:pointer;width:52px!important;height:52px!important;">
+          <img id="tore-coin-img" src="images/coin_triangle.png" alt="" aria-hidden="true"
+            style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;">
+        </div>
+
+        <!-- Séparateur vertical -->
+        <div style="width:1px;height:36px;background:linear-gradient(to bottom,transparent,rgba(212,175,55,0.3),transparent);flex-shrink:0;"></div>
+
+        <!-- Info : compteur + famille -->
+        <div style="flex:1;min-width:0;">
+          <div id="coin-throw-counter" style="font-family:'Lora',Georgia,serif;font-size:10px;color:rgba(212,175,55,0.5);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:2px;">Lancer 1 / 6</div>
+          <div id="coin-family-label" style="font-family:'Cormorant Garamond','Cormorant',Georgia,serif;font-size:clamp(14px,4vw,17px);color:#f0c75e;font-weight:700;letter-spacing:0.05em;line-height:1.1;"></div>
+        </div>
+
+        <!-- Bouton discret -->
+        <div style="flex-shrink:0;display:flex;flex-direction:column;gap:6px;align-items:flex-end;">
+          <button type="button" id="tore-coin-button"
+            style="white-space:nowrap;background:none;border:1px solid rgba(212,175,55,0.5);color:#d4af37;font-family:'Lora',Georgia,serif;font-size:12px;letter-spacing:0.08em;padding:7px 14px;border-radius:20px;cursor:pointer;transition:all 0.2s;touch-action:manipulation;"
+            onmouseenter="this.style.background='rgba(212,175,55,0.12)';this.style.borderColor='rgba(212,175,55,0.9)'"
+            onmouseleave="this.style.background='none';this.style.borderColor='rgba(212,175,55,0.5)'">
+            ✦ Lancer
+          </button>
+          <button type="button" id="tore-to-analysis"
+            style="display:none;white-space:nowrap;background:none;border:1px solid rgba(212,175,55,0.5);color:#d4af37;font-family:'Lora',Georgia,serif;font-size:12px;letter-spacing:0.08em;padding:7px 14px;border-radius:20px;cursor:pointer;transition:all 0.2s;"
+            onmouseenter="this.style.background='rgba(212,175,55,0.12)'"
+            onmouseleave="this.style.background='none'">
+            Voir mon analyse →
+          </button>
+        </div>
+
+      </div>
+    </div>
+
   </div>
 
-  <div class="relative z-10 container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8">
+  <div class="relative z-10 container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8" style="height:100%;display:flex;flex-direction:column;">
 
     <!-- FORMULAIRE D'INTENTION -->
-    <form id="tore-form" class="flex flex-col items-center justify-center min-h-screen py-20">
+    <form id="tore-form" class="flex flex-col items-center justify-center" style="flex:1;padding:clamp(12px,3vh,40px) 0;overflow:hidden;">
 
       <!-- Titre principal unique -->
-      <div class="text-center mb-10">
-        <h1 class="cormorant text-5xl sm:text-6xl lg:text-7xl font-bold gold-gradient pb-2 leading-tight">
+      <div class="text-center" style="margin-bottom:clamp(8px,2vh,32px);">
+        <h1 class="cormorant font-bold gold-gradient pb-1 leading-tight" style="font-size:clamp(2rem,5vw,4rem);">
           Tirage du TORE
         </h1>
-        <p class="text-light-gold/80 text-lg sm:text-xl mt-3">7 cartes pour une guidance complète</p>
-        <div class="w-24 h-px bg-gradient-to-r from-transparent via-gold to-transparent mx-auto mt-6"></div>
+        <p class="text-light-gold/80" style="font-size:clamp(13px,1.6vw,18px);margin-top:clamp(4px,1vh,12px);">7 cartes pour une guidance complète</p>
+        <div class="w-24 h-px bg-gradient-to-r from-transparent via-gold to-transparent mx-auto" style="margin-top:clamp(6px,1.5vh,20px);"></div>
       </div>
 
       <!-- Bloc formulaire unique sans cadres multiples -->
       <div class="w-full max-w-2xl">
 
         <!-- Sous-titre question -->
-        <div class="text-center mb-6">
-          <h2 class="cormorant text-3xl sm:text-4xl text-gold font-semibold">
+        <div class="text-center" style="margin-bottom:clamp(6px,1.5vh,20px);">
+          <h2 class="cormorant text-gold font-semibold" style="font-size:clamp(1.4rem,3vw,2.2rem);">
             Quelle intention portez-vous ?
           </h2>
-          <p class="text-light-gold/70 text-sm sm:text-base mt-2 leading-relaxed">
+          <p class="text-light-gold/70 leading-relaxed" style="font-size:clamp(12px,1.4vw,15px);margin-top:clamp(4px,0.8vh,10px);">
             Prenez un moment. L’Oracle vous guidera à travers les réponses que vous portez déjà en vous.
           </p>
         </div>
 
         <!-- Conseil discret -->
-        <div class="flex items-start gap-2 mb-5 px-1">
+        <div class="flex items-start gap-2 px-1" style="margin-bottom:clamp(6px,1.2vh,16px);">
           <i class="fas fa-lightbulb text-gold/70 text-sm mt-0.5 flex-shrink-0"></i>
           <p class="text-light-gold/60 text-xs sm:text-sm leading-relaxed italic">
             Formulez une question ouverte : « Comment », « Quelle », « Pourquoi »… et terminez par un ?
@@ -2433,16 +2553,16 @@
         </div>
 
         <!-- Textarea -->
-        <div class="relative mb-6">
+        <div class="relative" style="margin-bottom:clamp(8px,1.5vh,20px);">
           <div class="absolute inset-0 rounded-2xl blur-xl opacity-0 transition-opacity duration-300 focus-within:opacity-100" style="background: radial-gradient(circle, rgba(212,175,55,0.15), transparent 70%);"></div>
           <textarea id="tore-intention-input"
                     name="intention"
-                    class="relative w-full rounded-2xl p-5 sm:p-6
-                           text-light-gold text-base sm:text-lg leading-relaxed
+                    class="relative w-full rounded-2xl
+                           text-light-gold leading-relaxed
                            focus:outline-none transition-all duration-300
                            placeholder:text-light-gold/30 placeholder:italic
                            resize-none"
-                    style="background: rgba(10,25,47,0.7); border: 1px solid rgba(212,175,55,0.35); backdrop-filter: blur(12px); min-height: 160px;"
+                    style="background: rgba(10,25,47,0.7); border: 1px solid rgba(212,175,55,0.35); backdrop-filter: blur(12px); min-height: clamp(80px,15vh,160px); padding: clamp(10px,1.5vh,24px); font-size: clamp(13px,1.4vw,17px);"
                     placeholder="Comment puis-je avancer sur mon chemin ? Quelle est la prochaine étape pour moi ?"
                     required></textarea>
           <div class="absolute bottom-3 right-4 text-gold/40 text-xs">
@@ -2478,7 +2598,7 @@
 
       <!-- PLATEAU – 7 TAS EN MODE SIX-POINTS -->
 
-      <div id="tore-board" class="hidden relative z-10 mt-6 sm:mt-10 pb-28 sm:pb-0">
+      <div id="tore-board" class="hidden relative z-10">
 
         <!-- Bandeau de guidage contextuel (rendu fixed via CSS, positionné ici dans le DOM) -->
 
@@ -2494,33 +2614,6 @@
 
 
 
-       <!-- PIÈCE DE TIRAGE -->
-
-      <div id="tore-coin-wrapper"
-
-     class="hidden flex flex-col-reverse items-center justify-center z-40" style="pointer-events: none;">
-
-
-
-        <button id="tore-coin-button" class="btn-gold touch-target">
-          Lancer la pièce de tirage
-        </button>
-
-        <button id="tore-to-analysis" class="btn-gold touch-target hidden">
-          Voir mon analyse
-        </button>
-
-
-
-        <div id="tore-coin"
-
-             class="tore-coin face-yang"
-
-             aria-label="Pièce de tirage Oradia">
-
-        </div>
-
-      </div>
 
 
 
@@ -2563,6 +2656,9 @@
               
               <!-- Nom de la carte -->
               <div class="text-light-gold text-2xl sm:text-3xl font-cormorant font-semibold leading-tight" id="guide-card-name"></div>
+              
+              <!-- Citation de la carte -->
+              <p id="guide-card-quote" class="hidden font-cormorant italic" style="border-left: 2px solid rgba(212,175,55,0.4); padding-left: 12px; margin: 2px 0; color: rgba(212,175,55,0.75); font-size: clamp(12px, 3vw, 16px); line-height: 1.4; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;"></p>
               
               <!-- Texte de guidage -->
               <p class="text-light-gold/85 text-lg sm:text-xl font-cormorant italic leading-relaxed" id="guide-text"></p>
@@ -2615,7 +2711,7 @@
             <div class="flex items-center justify-center gap-4 w-full">
               <!-- Pièce -->
               <div class="flex flex-col items-center gap-2">
-                <div id="tore-polarity-coin-symbol" class="polarity-symbol-coin" style="font-size:52px;line-height:1;"></div>
+                <div id="tore-polarity-coin-symbol" class="polarity-symbol-coin" style="font-size:52px;line-height:1;width:52px;height:52px;display:flex;align-items:center;justify-content:center;"></div>
                 <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.45);font-family:'Cormorant Garamond',Georgia,serif;">Pièce</span>
               </div>
               <!-- Opérateur de comparaison -->
@@ -2626,7 +2722,7 @@
               </div>
               <!-- Carte -->
               <div class="flex flex-col items-center gap-2">
-                <div id="tore-polarity-card-symbol" class="polarity-symbol-card" style="font-size:52px;line-height:1;"></div>
+                <div id="tore-polarity-card-symbol" class="polarity-symbol-card" style="font-size:52px;line-height:1;width:52px;height:52px;display:flex;align-items:center;justify-content:center;"></div>
                 <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.45);font-family:'Cormorant Garamond',Georgia,serif;">Carte</span>
               </div>
             </div>
@@ -2978,6 +3074,16 @@ window.DATA = {
 
   ];
 
+  const FAMILY_NAMES = {
+    emotions: 'Émotions',
+    besoins: 'Besoins',
+    transmutation: 'Transmutation',
+    archetypes: 'Archétypes',
+    revelations: 'Révélations',
+    actions: 'Actions',
+    memoire_cosmos: 'Mémoire Cosmos'
+  };
+
 
 
   // Configuration des positions des cartes sur le plateau
@@ -3112,8 +3218,10 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
   const results   = el('tore-results');
 
   const exitBtn   = el('exitToreBtn');
+  const topBar    = el('tore-top-bar');
 
   let toreHasStarted = false;
+  let boardReady = false; // Flag : cartes non cliquables avant affichage du bandeau
 
   let isGuideMessageShown = false; // Bloquer les clics pendant le message de guidage
   let isCoinAnimating = false; // Bloquer les clics pendant l'animation de la pièce
@@ -3198,6 +3306,28 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
       guideCardName.textContent = cardData.name;
     }
     
+    // Afficher la citation de la carte
+    const guideCardQuote = el('guide-card-quote');
+    if (guideCardQuote) {
+      if (cardData && cardData.quote) {
+        guideCardQuote.textContent = '\u00AB\u202F' + cardData.quote + '\u202F\u00BB';
+        // Réduire la taille si le texte dépasse
+        guideCardQuote.style.fontSize = '';
+        requestAnimationFrame(() => {
+          let fs = 16;
+          guideCardQuote.style.fontSize = fs + 'px';
+          while (guideCardQuote.scrollWidth > guideCardQuote.clientWidth && fs > 10) {
+            fs -= 0.5;
+            guideCardQuote.style.fontSize = fs + 'px';
+          }
+        });
+        guideCardQuote.classList.remove('hidden');
+      } else {
+        guideCardQuote.textContent = '';
+        guideCardQuote.classList.add('hidden');
+      }
+    }
+    
     guideText.textContent = step.guide;
     
     // Afficher l'image de la carte
@@ -3238,7 +3368,9 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
     guideMessage.style.opacity = '1';
     // Masquer le bandeau bas pour que le bouton Continuer reste visible (surtout en paysage)
     const stepGuideBandeau = el('tore-step-guide');
-    if (stepGuideBandeau) stepGuideBandeau.classList.add('hidden');
+    if (stepGuideBandeau) stepGuideBandeau.style.display = 'none';
+    const bottomBar = el('tore-bottom-bar');
+    if (bottomBar) { bottomBar.style.opacity = '0'; setTimeout(() => bottomBar.classList.add('hidden'), 400); }
     // Animer le panneau intérieur via transition CSS (cohérent avec la fermeture)
     const guidePanel = guideMessage.querySelector(':scope > div.bg-gradient-to-br');
     if (guidePanel) {
@@ -3273,17 +3405,24 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
           guideMessage.style.visibility = 'hidden';
           guideMessage.classList.remove('guide-hiding');
           isGuideMessageShown = false;
-          const sg = el('tore-step-guide');
-          if (sg) sg.classList.remove('hidden');
           if (boardHost) boardHost.style.pointerEvents = 'auto';
           const total = boardHost ? boardHost.querySelectorAll('.tore-card').length : 0;
           const flipped = boardHost ? boardHost.querySelectorAll('.tore-card.flipped').length : 0;
-          if (total > 0 && flipped === total) {
+          // Mettre à jour le contenu du bandeau AVANT de le rendre visible
+          const isCoinPhase = total > 0 && flipped === total;
+          if (isCoinPhase) {
             boardHost.classList.remove('has-active-card');
-            setTimeout(() => showCoinAfterAllCards(), 300);
+            showCoinAfterAllCards();
           } else {
-            setTimeout(() => highlightNextCard(), 300);
+            highlightNextCard();
           }
+          // Afficher le bandeau EN FONDU seulement après la mise à jour
+          const sg = el('tore-step-guide');
+          if (sg) sg.style.display = isCoinPhase ? 'none' : 'block';
+          const bb = el('tore-bottom-bar');
+          if (bb) { bb.classList.remove('hidden'); bb.style.opacity = '0'; requestAnimationFrame(() => { requestAnimationFrame(() => { bb.style.opacity = '1'; }); }); }
+          const es = el('tore-exit-strip');
+          if (es) es.classList.remove('hidden');
         }, 680);
       });
     } else if (guideContinueBtn) {
@@ -3295,17 +3434,24 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
           guideMessage.style.visibility = 'hidden';
           guideMessage.classList.remove('guide-hiding');
           isGuideMessageShown = false;
-          const sg2 = el('tore-step-guide');
-          if (sg2) sg2.classList.remove('hidden');
           if (boardHost) boardHost.style.pointerEvents = 'auto';
           const total = boardHost ? boardHost.querySelectorAll('.tore-card').length : 0;
           const flipped = boardHost ? boardHost.querySelectorAll('.tore-card.flipped').length : 0;
-          if (total > 0 && flipped === total) {
+          // Mettre à jour le contenu du bandeau AVANT de le rendre visible
+          const isCoinPhase2 = total > 0 && flipped === total;
+          if (isCoinPhase2) {
             boardHost.classList.remove('has-active-card');
-            setTimeout(() => showCoinAfterAllCards(), 300);
+            showCoinAfterAllCards();
           } else {
-            setTimeout(() => highlightNextCard(), 300);
+            highlightNextCard();
           }
+          // Afficher le bandeau EN FONDU seulement après la mise à jour
+          const sg2 = el('tore-step-guide');
+          if (sg2) sg2.style.display = isCoinPhase2 ? 'none' : 'block';
+          const bb2 = el('tore-bottom-bar');
+          if (bb2) { bb2.classList.remove('hidden'); bb2.style.opacity = '0'; requestAnimationFrame(() => { requestAnimationFrame(() => { bb2.style.opacity = '1'; }); }); }
+          const es2 = el('tore-exit-strip');
+          if (es2) es2.classList.remove('hidden');
         }, 680);
       });
     }
@@ -3363,15 +3509,7 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
     const dotsContainer = document.getElementById('tore-step-dots');
     if (!label || !instruction || !dotsContainer) return;
 
-    const FAMILY_NAMES = {
-      emotions: 'Émotions',
-      besoins: 'Besoins',
-      transmutation: 'Transmutation',
-      archetypes: 'Archétypes',
-      revelations: 'Révélations',
-      actions: 'Actions',
-      memoire_cosmos: 'Mémoire Cosmos'
-    };
+    // FAMILY_NAMES est défini globalement plus haut
 
     // Mise à jour des points de progression
     dotsContainer.innerHTML = '';
@@ -3396,7 +3534,9 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
     } else {
       const cardNum = flippedCount + 1;
       const famName = FAMILY_NAMES[nextFamily] || nextFamily;
-      label.textContent = `Carte ${cardNum} / ${totalCount} — ${famName}`;
+      const sublabel = document.getElementById('tore-step-sublabel');
+      if (sublabel) sublabel.textContent = `Carte ${cardNum} / ${totalCount}`;
+      label.textContent = famName;
       const tips = {
         emotions: 'Révélez l\'émotion qui anime ce tirage.',
         besoins: 'Qu\'est-ce dont votre âme a besoin en ce moment ? Retournez la carte.',
@@ -3417,15 +3557,18 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
     const flippedCards = boardHost.querySelectorAll('.tore-card.flipped').length;
     
     if (totalCards > 0 && flippedCards === totalCards) {
-      coinWrapper.classList.remove('hidden');
+      // Masquer le guide étape et afficher le wrapper pièce
+      const sg = el('tore-step-guide');
+      if (sg) sg.style.display = 'none';
+      coinWrapper.style.display = 'block';
       if (coin) {
         coin.classList.remove('spin', 'ripple');
         coin.classList.add('glow');
+        coin.dataset.locked = '0';
       }
+      isCoinAnimating = false;
       coinThrowIndex = 0;
-      // Masquer le toast de guidage : la phase pièce prend le relais
-      const sg = el('tore-step-guide');
-      if (sg) sg.classList.add('hidden');
+      // La barre reste visible pour la pièce
     }
   }
 }
@@ -3475,12 +3618,51 @@ function showToreAnalysisCTA() {
   const intention = sessionStorage.getItem('tore_intention') || '';
   sessionStorage.setItem('tore_cards', JSON.stringify(cards));
 
-  // Afficher le bouton d'analyse
+  // Masquer les éléments parasites du bandeau pièce
+  const throwCounter = el('coin-throw-counter');
+  const familyLabel  = el('coin-family-label');
+  if (throwCounter) throwCounter.style.display = 'none';
+  if (familyLabel)  familyLabel.style.display  = 'none';
+  // Masquer aussi le séparateur vertical et la zone info
+  const coinWrapperInner = coinWrapper.querySelector('[style*="max-width:560px"]');
+  if (coinWrapperInner) coinWrapperInner.style.display = 'none';
+
+  // Afficher le bouton d'analyse centré et mis en valeur
   if (toAnalysisBtn) {
-    toAnalysisBtn.classList.remove('hidden');
+    toAnalysisBtn.style.cssText = [
+      'display:inline-flex',
+      'align-items:center',
+      'gap:10px',
+      'background:linear-gradient(135deg,rgba(212,175,55,0.22),rgba(212,175,55,0.10))',
+      'border:1.5px solid rgba(212,175,55,0.85)',
+      'color:#f0c75e',
+      'font-family:\'Cormorant Garamond\',\'Cormorant\',Georgia,serif',
+      'font-size:clamp(16px,4vw,20px)',
+      'font-weight:700',
+      'letter-spacing:0.14em',
+      'text-transform:uppercase',
+      'padding:14px 36px',
+      'border-radius:32px',
+      'cursor:pointer',
+      'box-shadow:0 0 32px rgba(212,175,55,0.25),0 8px 32px rgba(0,0,0,0.4)',
+      'transition:all 0.25s',
+      'white-space:nowrap',
+    ].join(';');
+    toAnalysisBtn.innerHTML = '<i class="fas fa-scroll" style="font-size:18px;"></i> Voir mon analyse';
+    toAnalysisBtn.onmouseenter = () => {
+      toAnalysisBtn.style.background = 'linear-gradient(135deg,rgba(212,175,55,0.38),rgba(212,175,55,0.20))';
+      toAnalysisBtn.style.boxShadow = '0 0 48px rgba(212,175,55,0.45),0 8px 32px rgba(0,0,0,0.4)';
+      toAnalysisBtn.style.transform = 'scale(1.04)';
+    };
+    toAnalysisBtn.onmouseleave = () => {
+      toAnalysisBtn.style.background = 'linear-gradient(135deg,rgba(212,175,55,0.22),rgba(212,175,55,0.10))';
+      toAnalysisBtn.style.boxShadow = '0 0 32px rgba(212,175,55,0.25),0 8px 32px rgba(0,0,0,0.4)';
+      toAnalysisBtn.style.transform = 'scale(1)';
+    };
   }
 
-  coinWrapper.classList.remove('hidden');
+  // Recentrer le wrapper
+  coinWrapper.style.cssText = 'display:block;padding:16px;text-align:center;';
 }
 
 
@@ -3834,19 +4016,38 @@ function showToreAnalysisCTA() {
 
     document.body.classList.add('hide-immersive-tore');
 
-    exitBtn.classList.remove('hidden');
+    if (topBar) topBar.classList.remove('hidden');
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({ top: 0, behavior: 'instant' });
 
   }
 
 
 
+  function fitBoardToViewport() {
+    // Sur desktop (≥640px) le CSS position:fixed gère tout — ne pas toucher au style inline
+    if (window.innerWidth >= 640) return;
+    if (!document.body.classList.contains('tore-playing')) return;
+    const board7 = document.querySelector('#tore-immersif .tore-board-7');
+    if (!board7) return;
+    // Mobile uniquement : laisser le CSS gérer
+    board7.style.width = '';
+    board7.style.maxWidth = '';
+    board7.style.height = '';
+  }
+
+  window.addEventListener('resize', fitBoardToViewport);
+
   function exitImmersiveTore () {
 
     document.body.classList.remove('hide-immersive-tore');
+    document.body.classList.remove('tore-playing');
 
-    exitBtn.classList.add('hidden');
+    // Nettoyer le style inline du plateau
+    const board7 = document.querySelector('#tore-immersif .tore-board-7');
+    if (board7) { board7.style.width = ''; board7.style.maxWidth = ''; board7.style.height = ''; }
+
+    if (topBar) topBar.classList.add('hidden');
 
 
 
@@ -3854,7 +4055,9 @@ function showToreAnalysisCTA() {
 
     boardWrap.classList.add('hidden');
     const stepGuideHide = el('tore-step-guide');
-    if (stepGuideHide) stepGuideHide.classList.add('hidden');
+    if (stepGuideHide) stepGuideHide.style.display = 'none';
+    const bbHide = el('tore-bottom-bar');
+    if (bbHide) bbHide.classList.add('hidden');
 
     if (boardHost) boardHost.innerHTML = '';
 
@@ -4079,8 +4282,20 @@ function closeToreExitModal(){
 
 
     boardWrap.classList.remove('hidden');
+    document.body.classList.add('tore-playing');
+
+    // Rendre les barres visibles en premier pour mesurer leur hauteur réelle
+    boardReady = false;
+    if (boardHost) boardHost.style.pointerEvents = 'none';
     const stepGuide = el('tore-step-guide');
-    if (stepGuide) stepGuide.classList.remove('hidden');
+    if (stepGuide) stepGuide.style.display = 'block';
+    const bbShow = el('tore-bottom-bar');
+    if (bbShow) { bbShow.classList.remove('hidden'); bbShow.style.opacity = '0'; }
+    const exitStrip = el('tore-exit-strip');
+    if (exitStrip) exitStrip.classList.remove('hidden');
+
+    // Calculer la taille du plateau APRÈS que les barres sont dans le DOM
+    setTimeout(fitBoardToViewport, 50);
 
 
 
@@ -4088,7 +4303,7 @@ function closeToreExitModal(){
 
         if (coinWrapper) {
 
-      coinWrapper.classList.add('hidden');
+      coinWrapper.style.display = 'none';
 
     }
 
@@ -4115,6 +4330,9 @@ function closeToreExitModal(){
 
 
       back.addEventListener('click', () => {
+
+        // BLOQUER tant que le bandeau n'est pas prêt
+        if (!boardReady) return;
 
         // BLOQUER si la carte est déjà retournée
         if (card.classList.contains('flipped')) return;
@@ -4219,18 +4437,12 @@ function closeToreExitModal(){
           img.src = imgPath;
         };
 
-        if (isMobile) {
-          // Phase 1 : rétrécissement (scaleX → 0)
-          card.classList.add('flipping');
-          setTimeout(() => {
-            // Au milieu du flip : échange dos/face + démarrage phase 2
-            card.classList.remove('flipping');
-            doFlip();
-          }, 230); // durée transition CSS 0.22s + marge
-        } else {
-          // Desktop : flip 3D CSS géré directement
+        // Animation flip scaleX 2 phases (mobile et desktop)
+        card.classList.add('flipping');
+        setTimeout(() => {
+          card.classList.remove('flipping');
           doFlip();
-        }
+        }, 230);
 
         // Afficher le message de guidage APRÈS l'animation flip complète (1 seconde)
         setTimeout(() => {
@@ -4449,8 +4661,8 @@ if (previewOverlay) {
     const origCoinSym = document.getElementById('tore-polarity-coin-symbol');
     const origCardSym = document.getElementById('tore-polarity-card-symbol');
     const origFamily  = document.getElementById('tore-polarity-family');
-    if (origCoinSym) { const el = overlay.querySelector('#clone-coin-sym'); if(el){el.textContent=origCoinSym.textContent;el.style.color=origCoinSym.style.color;} }
-    if (origCardSym) { const el = overlay.querySelector('#clone-card-sym'); if(el){el.textContent=origCardSym.textContent;el.style.color=origCardSym.style.color;} }
+    if (origCoinSym) { const el = overlay.querySelector('#clone-coin-sym'); if(el){el.innerHTML=origCoinSym.innerHTML;} }
+    if (origCardSym) { const el = overlay.querySelector('#clone-card-sym'); if(el){el.innerHTML=origCardSym.innerHTML;} }
     if (origFamily)  { const el = overlay.querySelector('#clone-polarity-family'); if(el){el.textContent=origFamily.textContent;} }
 
     // Glisser la modale polarity vers la gauche puis la masquer
@@ -4513,14 +4725,78 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
         // Piocher une carte de la famille 'actions' sans doublon
         const dataNext = pickFromData('actions', true);
 
-        if (dataNext) {
-
-          placeBridgeCard(stepIndex, 'actions', dataNext);
-
+        if (!dataNext) {
+          overlay.remove();
+          isBridgeFanOpen = false;
+          return;
         }
 
-        overlay.remove();
-        isBridgeFanOpen = false; // Débloquer les interactions
+        // --- Révélation de la carte tirée avant placement ---
+        const imgPath = buildImagePath('actions', dataNext);
+
+        // Remplacer le contenu de l'overlay par la carte en grand
+        overlay.classList.remove('bridge-split');
+        overlay.innerHTML = `
+          <div id="bridge-reveal-panel" style="
+            display:flex;flex-direction:column;align-items:center;justify-content:center;
+            gap:14px;padding:28px 20px;text-align:center;max-width:420px;width:100%;">
+            <p style="font-family:'Cinzel',serif;font-size:11px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(212,175,55,0.9);margin:0;text-shadow:0 0 12px rgba(212,175,55,0.3);">Carte Passerelle</p>
+            <div style="
+              width:clamp(200px,48vw,260px);
+              aspect-ratio:2/3;
+              border-radius:14px;
+              overflow:hidden;
+              border:2px solid rgba(212,175,55,0.7);
+              box-shadow:0 0 60px rgba(212,175,55,0.25), 0 30px 80px rgba(0,0,0,0.8);
+              animation:bridgeCardReveal 0.5s cubic-bezier(0.34,1.4,0.64,1) forwards;">
+              <img src="${imgPath}" alt="${dataNext.name||''}"
+                style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
+            </div>
+            <p style="font-family:'Cormorant Garamond','Cormorant',Georgia,serif;font-size:clamp(20px,5vw,26px);font-weight:700;color:#f0c75e;letter-spacing:0.06em;margin:0;animation:fadeInUp 0.4s ease 0.3s both;">
+              ${dataNext.name || ''}
+            </p>
+            ${dataNext.quote ? `<p id="bridge-quote-text" style="font-family:'Lora',Georgia,serif;font-size:16px;color:rgba(216,191,114,0.85);font-style:italic;margin:0;line-height:1.4;width:100%;max-width:360px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:fadeInUp 0.4s ease 0.42s both;">\u00AB\u202F${dataNext.quote}\u202F\u00BB</p>` : ''}
+            <p style="font-family:'Lora',Georgia,serif;font-size:12px;color:rgba(216,191,114,0.5);font-style:italic;margin:0;animation:fadeInUp 0.4s ease 0.54s both;">
+              Cette carte relie les deux polarités
+            </p>
+            <button type="button" id="bridge-reveal-continue"
+              style="margin-top:4px;
+              background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08));
+              border:1px solid rgba(212,175,55,0.65);color:#f0c75e;
+              font-family:'Cormorant Garamond','Cormorant',Georgia,serif;font-size:15px;font-weight:600;letter-spacing:0.12em;text-transform:uppercase;
+              padding:10px 28px;border-radius:24px;cursor:pointer;
+              box-shadow:0 0 20px rgba(212,175,55,0.1);
+              animation:fadeInUp 0.4s ease 0.68s both;
+              transition:background 0.2s,box-shadow 0.2s;"
+              onmouseenter="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.32),rgba(212,175,55,0.18))';this.style.boxShadow='0 0 30px rgba(212,175,55,0.25)'"
+              onmouseleave="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))';this.style.boxShadow='0 0 20px rgba(212,175,55,0.1)'">
+              Placer sur le plateau
+            </button>
+          </div>
+        `;
+
+        // Réduire la taille de police de la citation si elle dépasse
+        const bqEl = overlay.querySelector('#bridge-quote-text');
+        if (bqEl) {
+          requestAnimationFrame(() => {
+            let fs = 16;
+            bqEl.style.fontSize = fs + 'px';
+            while (bqEl.scrollWidth > bqEl.clientWidth && fs > 10) {
+              fs -= 0.5;
+              bqEl.style.fontSize = fs + 'px';
+            }
+          });
+        }
+
+        // Clic sur "Placer sur le plateau"
+        const continueReveal = overlay.querySelector('#bridge-reveal-continue');
+        if (continueReveal) {
+          continueReveal.addEventListener('click', () => {
+            placeBridgeCard(stepIndex, 'actions', dataNext);
+            overlay.remove();
+            isBridgeFanOpen = false;
+          });
+        }
 
       });
 
@@ -4602,9 +4878,15 @@ function showArrowForStep(stepIndex, isMatch) {
 
     if (!modal || !coinSymEl || !cardSymEl || !resultEl) return;
 
-    // Symboles visuels : △ Yang (or), ◯ Yin (bleu clair)
-    const coinSym   = coinPolarity === 'yang' ? '△' : '◯';
-    const cardSym   = cardPolarity === 'yang' ? '△' : '◯';
+    // Symboles visuels SVG : taille identique garantie
+    const polaritySVG = (polarity, size = 52) => {
+      const clr = polarity === 'yang' ? 'rgba(212,175,55,0.95)' : 'rgba(140,190,255,0.95)';
+      if (polarity === 'yang') {
+        return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><polygon points="50,8 95,92 5,92" fill="${clr}"/></svg>`;
+      } else {
+        return `<svg width="${size}" height="${size}" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"><circle cx="50" cy="50" r="44" fill="${clr}"/></svg>`;
+      }
+    };
     const coinClr   = coinPolarity === 'yang' ? 'rgba(212,175,55,0.95)' : 'rgba(140,190,255,0.95)';
     const cardClr   = cardPolarity === 'yang' ? 'rgba(212,175,55,0.95)' : 'rgba(140,190,255,0.95)';
     const resultText  = isMatch ? 'Accord' : 'Passerelle';
@@ -4616,11 +4898,11 @@ function showArrowForStep(stepIndex, isMatch) {
     const step = STEPS_TORE.find(s => card.dataset && s.key === card.dataset.family);
     if (familyEl) familyEl.textContent = step ? step.label : '';
 
-    // Symboles
-    coinSymEl.textContent = coinSym;
-    coinSymEl.style.color = coinClr;
-    cardSymEl.textContent = cardSym;
-    cardSymEl.style.color = cardClr;
+    // Symboles SVG
+    coinSymEl.innerHTML = polaritySVG(coinPolarity);
+    coinSymEl.style.color = '';
+    cardSymEl.innerHTML = polaritySVG(cardPolarity);
+    cardSymEl.style.color = '';
 
     // Opérateur de comparaison
     const operatorEl = document.getElementById('tore-polarity-operator');
@@ -4658,6 +4940,9 @@ function showArrowForStep(stepIndex, isMatch) {
     });
 
     modal.classList.remove('hidden');
+    // Cacher le bandeau bas pendant la modale
+    const bbPolarity = el('tore-bottom-bar');
+    if (bbPolarity) bbPolarity.classList.add('hidden');
     // Animation d'apparition
     animateModalIn(modal, document.getElementById('tore-polarity-inner'), 'modalPanelInBottom');
 
@@ -4667,6 +4952,9 @@ function showArrowForStep(stepIndex, isMatch) {
       continueBtn.parentNode.replaceChild(newBtn, continueBtn);
       newBtn.addEventListener('click', () => {
         modal.classList.add('hidden');
+        // Rétablir le bandeau bas
+        const bbRestore = el('tore-bottom-bar');
+        if (bbRestore) bbRestore.classList.remove('hidden');
         // Effacer la ligne SVG
         const arrowSvg = document.getElementById('tore-arrow');
         if (arrowSvg) { arrowSvg.innerHTML = ''; delete arrowSvg.dataset.match; }
@@ -4697,7 +4985,13 @@ function showArrowForStep(stepIndex, isMatch) {
 
     // Récupérer la famille actuelle pour ce lancer de pièce
     const currentFamily = familiesWithCoin[coinThrowIndex];
-    
+
+    // Mettre à jour le compteur et le label de famille
+    const throwCounter = el('coin-throw-counter');
+    const familyLabel = el('coin-family-label');
+    if (throwCounter) throwCounter.textContent = `Lancer ${coinThrowIndex + 1} / ${familiesWithCoin.length}`;
+    if (familyLabel) familyLabel.textContent = FAMILY_NAMES[currentFamily] || currentFamily;
+
     // Verrouiller la pièce et bloquer les interactions
     coin.dataset.locked = '1';
     isCoinAnimating = true;
@@ -4930,10 +5224,105 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   toreHasStarted = true;
   results.classList.add('hidden');
 
-  // Indiquer la première carte à tirer après un court délai
-  setTimeout(() => {
-    highlightNextCard();
-  }, 1000);
+  // Animation "distribution de cartes" via clones position:fixed
+  // (évite overflow:hidden et transform !important du conteneur)
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (!boardHost) return;
+
+    const cards = TIRAGE_ORDER.map(key =>
+      boardHost.querySelector(`.tore-card[data-family="${key}"]`)
+    ).filter(Boolean);
+
+    if (!cards.length) return;
+
+    const humanDelays = [0, 500, 920, 1300, 1750, 2180, 2650];
+    const durations   = [820, 860, 800, 840, 880, 820, 900];
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const originX = vw / 2;
+    const originY = vh + 80;
+
+    // ① Mesurer les positions finales des vraies cartes
+    const rects = cards.map(c => c.getBoundingClientRect());
+
+    // ② Masquer les vraies cartes
+    boardHost.classList.add('tore-dealing');
+    cards.forEach(c => c.classList.add('card-dealing-hidden'));
+
+    // ③ Créer un layer fixed au-dessus de tout
+    const layer = document.createElement('div');
+    layer.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:visible;';
+    document.body.appendChild(layer);
+
+    // ④ Pour chaque carte, créer un clone animé
+    const clones = cards.map((card, i) => {
+      const r = rects[i];
+      const clone = card.cloneNode(true);
+      // Positionner le clone exactement sur la carte réelle
+      clone.style.cssText = `
+        position:fixed;
+        left:${r.left}px;
+        top:${r.top}px;
+        width:${r.width}px;
+        height:${r.height}px;
+        margin:0;
+        opacity:0;
+        pointer-events:none;
+        z-index:9999;
+        transform-origin:center center;
+      `;
+      layer.appendChild(clone);
+
+      const dx = Math.round(originX - (r.left + r.width / 2));
+      const dy = Math.round(originY - (r.top  + r.height / 2));
+      const rot = +(Math.random() * 18 - 9).toFixed(1);
+      const dur = durations[i] || 840;
+
+      return { clone, dx, dy, rot, dur };
+    });
+
+    // ⑤ Injecter les keyframes avec les vraies valeurs
+    const oldSS = document.getElementById('tore-deal-keyframes');
+    if (oldSS) oldSS.remove();
+    const ss = document.createElement('style');
+    ss.id = 'tore-deal-keyframes';
+    clones.forEach(({ dx, dy, rot, dur }, i) => {
+      ss.textContent +=
+        `@keyframes cDeal_${i}{` +
+        `0%{opacity:0;transform:translate(${dx}px,${dy}px) scale(1.75) rotate(${rot}deg);filter:blur(3px)}` +
+        `18%{opacity:1;filter:blur(0)}` +
+        `78%{transform:translate(${Math.round(dx*.05)}px,${Math.round(dy*.05)}px) scale(1.08) rotate(${+(rot*.12).toFixed(1)}deg)}` +
+        `91%{transform:translate(0,0) scale(0.97) rotate(0deg)}` +
+        `100%{opacity:1;transform:translate(0,0) scale(1) rotate(0deg);filter:blur(0)}` +
+        `}`;
+    });
+    document.head.appendChild(ss);
+
+    // ⑥ Lancer l'animation de chaque clone
+    clones.forEach(({ clone, dur }, i) => {
+      setTimeout(() => {
+        clone.style.animation = `cDeal_${i} ${dur}ms cubic-bezier(0.22,1,0.36,1) both`;
+        // Une fois l'animation terminée, révéler la vraie carte et supprimer le clone
+        setTimeout(() => {
+          cards[i].classList.remove('card-dealing-hidden');
+          clone.remove();
+        }, dur + 40);
+      }, humanDelays[i] || 0);
+    });
+
+    // ⑦ Fin → cleanup + highlight + bandeau
+    const totalDelay = (humanDelays[cards.length - 1] || 0) + (durations[cards.length - 1] || 840) + 500;
+    setTimeout(() => {
+      layer.remove();
+      boardHost.classList.remove('tore-dealing');
+      cards.forEach(c => c.classList.remove('card-dealing-hidden'));
+      highlightNextCard();
+      const bbInit = el('tore-bottom-bar');
+      if (bbInit) requestAnimationFrame(() => requestAnimationFrame(() => { bbInit.style.opacity = '1'; }));
+      if (boardHost) boardHost.style.pointerEvents = 'auto';
+      boardReady = true;
+    }, totalDelay);
+  }));
 });
 
 // Compteur de caractères pour le textarea
@@ -5182,33 +5571,13 @@ document.addEventListener("DOMContentLoaded", () => {
   </footer>
 
   <script>
-    // Bouton retour en haut
+    // Bouton retour en haut — désactivé sur la page Tore (expérience immersive)
     const backToTopBtn = document.getElementById('backToTop');
-    
-    window.addEventListener('scroll', () => {
-      if (window.pageYOffset > 300) {
-        backToTopBtn.classList.remove('opacity-0');
-        backToTopBtn.classList.add('opacity-100');
-      } else {
-        backToTopBtn.classList.add('opacity-0');
-        backToTopBtn.classList.remove('opacity-100');
-      }
-    });
-    
-    backToTopBtn.addEventListener('click', () => {
-      window.scrollTo({
-        top: 0,
-        behavior: 'smooth'
-      });
-      
-      // Ensure header is visible by scrolling to top after a brief delay
-      setTimeout(() => {
-        window.scrollTo({
-          top: 0,
-          behavior: 'smooth'
-        });
-      }, 100);
-    });
+    if (backToTopBtn) {
+      backToTopBtn.style.display = 'none';
+      backToTopBtn.style.pointerEvents = 'none';
+      backToTopBtn.style.visibility = 'hidden';
+    }
   </script>
 
 <!-- Aperçu zoom d'une carte retournée - déplacé ici pour échapper au overflow-hidden -->
