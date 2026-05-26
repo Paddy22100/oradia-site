@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="fr">
 
@@ -517,6 +517,11 @@
   /* RESPONSIVE MOBILE PORTRAIT (< 640px) : plateau sans scroll */
   @media (max-width: 639px) and (orientation: portrait) {
 
+    /* Position du fond centrée sur mobile */
+    #tore-immersif {
+      background-position: center center !important;
+    }
+
     /* Pendant le tirage actif : fixer la section au viewport */
     body.tore-playing #tore-immersif {
       position: fixed;
@@ -652,6 +657,11 @@
   /* ── TABLETTE & DESKTOP (≥ 640px) ── */
   @media (min-width: 640px) {
 
+    /* Position du fond décalée vers la gauche sur desktop */
+    #tore-immersif {
+      background-position: 40% center !important;
+    }
+
     /* Masquer les labels de famille */
     .tore-family-label {
       display: none !important;
@@ -674,26 +684,41 @@
 
     /* Plateau : carré qui tient dans la zone du board */
     #tore-immersif .tore-board-7 {
-      /* Prend le min de la hauteur et de la largeur disponibles */
       width:  min(calc(100vw - 20px), calc(100vh - 172px));
       height: min(calc(100vw - 20px), calc(100vh - 172px));
       max-width:  700px;
       max-height: 700px;
       aspect-ratio: 1 / 1;
       grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, 1fr);
+      grid-template-rows: repeat(3, auto);
       gap: 0.5rem;
       padding: 0.5rem;
       flex-shrink: 0;
+      align-content: center;
+      justify-content: center;
     }
 
-    /* Cartes : remplissent leur cellule — écrase les valeurs globales */
+    /* Cartes : hauteur contrainte, largeur calculée automatiquement via ratio */
     #tore-immersif .tore-board-7 .tore-card {
-      width: 100% !important;
-      max-width: none !important;
-      height: 100% !important;
-      aspect-ratio: unset !important;
-      margin: 0 !important;
+      width: auto !important;
+      max-width: 100% !important;
+      height: calc((min(calc(100vw - 20px), calc(100vh - 172px)) - 1rem - 1rem) / 3) !important;
+      aspect-ratio: 64 / 90 !important;
+      margin: 0 auto !important;
+      align-self: center;
+      transform: none !important;
+    }
+
+    /* Décaler Transmutations et Émotions (colonne gauche) vers la droite */
+    #tore-immersif .tore-board-7 .tore-card.pos-1,
+    #tore-immersif .tore-board-7 .tore-card.pos-3 {
+      transform: translateX(60px) !important;
+    }
+
+    /* Décaler Archétypes et Actions (colonne droite) vers la gauche */
+    #tore-immersif .tore-board-7 .tore-card.pos-2,
+    #tore-immersif .tore-board-7 .tore-card.pos-5 {
+      transform: translateX(-60px) !important;
     }
 
     /* Contenu interne suit la taille de la carte */
@@ -848,7 +873,7 @@
 
     background-color: #020817;
 
-    background-size: cover;
+    background-size: 100% 100%;
 
     background-repeat: no-repeat;
 
@@ -1625,6 +1650,7 @@
 
 
 
+
   /* ========================
 
      PIÈCE DE TIRAGE ORADIA
@@ -2015,7 +2041,7 @@
 
   inset: 0;
 
-  background: url('images/oradia-hero-4k.png') 51.5% center/cover no-repeat;
+  background: url('images/oradia-hero-4k.png') 28% center/cover no-repeat;
 
   display: flex;
 
@@ -2525,7 +2551,7 @@
   </div>
 
 <section id="tore-immersif" class="relative"
-  style="background: linear-gradient(135deg, #0a192f 0%, #051428 100%); background-image: url('images/oradia-hero-4k.png'); background-size: cover; background-position: 51.5% center;">
+  style="background-image: url('images/oradia-hero-4k.png'); background-size: cover; background-repeat: no-repeat;">
 
   <!-- Voile comme l'index -->
   <div class="absolute inset-0" style="background: radial-gradient(circle at 20% 80%, rgba(212,175,55,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(212,175,55,0.04) 0%, transparent 50%), linear-gradient(135deg, rgba(10,25,47,0.65) 0%, rgba(5,20,40,0.75) 100%);"></div>
