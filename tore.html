@@ -735,6 +735,57 @@
     }
   }
 
+  /* ── Cartes passerelles desktop : gauche ou droite selon colonne ── */
+  @media (min-width: 640px) {
+    /* Autoriser le débordement sur le plateau pour les passerelles */
+    #tore-immersif .tore-board-7 {
+      overflow: visible !important;
+    }
+    #tore-board {
+      overflow: visible !important;
+    }
+    /* Autoriser le débordement sur les cartes concernées */
+    .tore-card.pos-0,
+    .tore-card.pos-1,
+    .tore-card.pos-2,
+    .tore-card.pos-3,
+    .tore-card.pos-4,
+    .tore-card.pos-5 {
+      overflow: visible !important;
+    }
+    /* Le contenu interne de la carte doit rester clipé (face/dos) */
+    .tore-card.pos-0 .tore-card-inner,
+    .tore-card.pos-1 .tore-card-inner,
+    .tore-card.pos-2 .tore-card-inner,
+    .tore-card.pos-3 .tore-card-inner,
+    .tore-card.pos-4 .tore-card-inner,
+    .tore-card.pos-5 .tore-card-inner {
+      overflow: hidden !important;
+    }
+    /* Colonne gauche (Besoins pos-0, Transmutation pos-1, Émotions pos-3) → passerelle à gauche */
+    .tore-card.pos-0 .tore-card-extra,
+    .tore-card.pos-1 .tore-card-extra,
+    .tore-card.pos-3 .tore-card-extra {
+      bottom: auto !important;
+      top: 50% !important;
+      left: auto !important;
+      right: 105% !important;
+      transform: translateY(-50%) !important;
+      width: 90% !important;
+    }
+    /* Colonne droite (Archétypes pos-2, Révélations pos-4, Actions pos-5) → passerelle à droite */
+    .tore-card.pos-2 .tore-card-extra,
+    .tore-card.pos-4 .tore-card-extra,
+    .tore-card.pos-5 .tore-card-extra {
+      bottom: auto !important;
+      top: 50% !important;
+      left: 105% !important;
+      right: auto !important;
+      transform: translateY(-50%) !important;
+      width: 90% !important;
+    }
+  }
+
   /* ── Flip scaleX 2D (desktop ≥ 640px) — même animation que mobile ── */
   @media (min-width: 640px) {
     .tore-card {
@@ -2363,6 +2414,8 @@
 
 
 
+/* ── Rayon lumineux (toutes tailles) ── */
+
 /* Carte supplémentaire (famille suivante) en cas de passerelle */
 
 .tore-card-extra {
@@ -2381,11 +2434,11 @@
 
   border-radius: 10px;
 
-  overflow: hidden;
+  overflow: visible;
 
   border: 2px solid rgba(212,175,55,0.9);
 
-  box-shadow: 0 8px 24px rgba(0,0,0,0.75), 0 0 12px rgba(212,175,55,0.3);
+  box-shadow: 0 8px 24px rgba(0,0,0,0.75), 0 0 18px rgba(212,175,55,0.5);
 
   opacity: 0;
 
@@ -2397,7 +2450,19 @@
 
 }
 
+.tore-card-extra .extra-img-wrap {
 
+  width: 100%;
+
+  height: 100%;
+
+  border-radius: 9px;
+
+  overflow: hidden;
+
+  position: relative;
+
+}
 
 .tore-card-extra img {
 
@@ -2411,6 +2476,26 @@
 
 }
 
+/* Badge Passerelle */
+.tore-card-extra .bridge-badge {
+  position: absolute;
+  top: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  font-family: 'Cinzel', 'Cormorant Garamond', Georgia, serif;
+  font-size: 9px;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: #f0c75e;
+  background: linear-gradient(135deg, rgba(10,18,35,0.96), rgba(5,12,28,0.98));
+  border: 1px solid rgba(212,175,55,0.7);
+  border-radius: 20px;
+  padding: 3px 10px;
+  text-shadow: 0 0 8px rgba(212,175,55,0.8);
+  box-shadow: 0 0 12px rgba(212,175,55,0.3);
+  z-index: 10;
+}
 
 
 @keyframes tore-extra-appear {
@@ -2648,9 +2733,27 @@
 
         <!-- Bandeau de guidage contextuel (rendu fixed via CSS, positionné ici dans le DOM) -->
 
+        <!-- Rayon lumineux depuis Mémoire Cosmos vers la carte active (hors tore-board-7 pour éviter l'écrasement par innerHTML) -->
+        <svg id="tore-beam-svg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:15;overflow:visible;">
+          <defs>
+            <linearGradient id="beamGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="0">
+              <stop offset="0%" stop-color="rgba(240,199,94,0.7)"/>
+              <stop offset="100%" stop-color="rgba(212,175,55,0)"/>
+            </linearGradient>
+            <filter id="beamBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="5"/>
+            </filter>
+            <filter id="haloBlur" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="10"/>
+            </filter>
+          </defs>
+          <polygon id="tore-beam-poly" points="" fill="url(#beamGrad)" filter="url(#beamBlur)" opacity="0" style="transition:opacity 0.8s ease;"/>
+          <ellipse id="tore-beam-halo" cx="0" cy="0" rx="0" ry="0" fill="rgba(240,199,94,0.22)" filter="url(#haloBlur)" opacity="0" style="transition:opacity 0.8s ease;">
+            <animate attributeName="opacity" values="0.4;0.9;0.4" dur="2s" repeatCount="indefinite"/>
+          </ellipse>
+        </svg>
+
         <div class="tore-board-7">
-
-
 
           <!-- Les cartes sont générées par le script ci-dessous -->
 
@@ -3521,6 +3624,7 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
     boardHost.querySelectorAll('.tore-card').forEach(c => {
       c.classList.remove('next-to-draw');
     });
+
     const toreBoard7 = boardHost; // boardHost est déjà .tore-board-7
     
     // Vérifier si toutes les cartes sont retournées pour afficher la pièce
@@ -3557,6 +3661,72 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
 
     // Mettre à jour le bandeau de guidage
     updateStepGuide(nextFamilyFound, flippedCards, totalCards);
+
+    // ── Rayon lumineux depuis Mémoire Cosmos (pos-6) vers la carte active ──
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      const svg  = document.getElementById('tore-beam-svg');
+      const poly = document.getElementById('tore-beam-poly');
+      const halo = document.getElementById('tore-beam-halo');
+      if (!svg || !poly || !halo) return;
+
+      if (!nextFamilyFound) {
+        poly.setAttribute('opacity', '0');
+        halo.setAttribute('opacity', '0');
+        return;
+      }
+
+      const sourceCard = boardHost.querySelector('.tore-card.pos-6');
+      const targetCard = boardHost.querySelector(`.tore-card[data-family="${nextFamilyFound}"]`);
+
+      if (!sourceCard || !targetCard || sourceCard === targetCard) {
+        poly.setAttribute('opacity', '0');
+        halo.setAttribute('opacity', '0');
+        return;
+      }
+
+      // Coordonnées relatives au SVG (qui couvre exactement le board)
+      const svgRect = svg.getBoundingClientRect();
+      const srcRect = sourceCard.getBoundingClientRect();
+      const tgtRect = targetCard.getBoundingClientRect();
+
+      // SVG est en position:fixed couvrant tout le viewport → coords = coords viewport directes
+      const sx = srcRect.left + srcRect.width  / 2;
+      const sy = srcRect.top  + srcRect.height / 2;
+      const tx = tgtRect.left + tgtRect.width  / 2;
+      const ty = tgtRect.top  + tgtRect.height / 2;
+
+      const dx = tx - sx, dy = ty - sy;
+      const len = Math.sqrt(dx*dx + dy*dy) || 1;
+      const nx = -dy / len, ny = dx / len;
+      const spread = Math.min(srcRect.width, srcRect.height) * 0.22;
+
+      // Base large = Mémoire Cosmos (sx), pointe = carte cible (tx)
+      // Spread calculé sur la cible pour la base, pointe à la source
+      const pts = [
+        `${tx + nx*spread},${ty + ny*spread}`,
+        `${tx - nx*spread},${ty - ny*spread}`,
+        `${sx},${sy}`,
+      ].join(' ');
+      poly.setAttribute('points', pts);
+
+      const grad = svg.querySelector('#beamGrad');
+      if (grad) {
+        // Gradient : opaque à tx (base large = carte cible visuellement la "source" du triangle)
+        // Non — gradient de sx (Mémoire Cosmos, pointe) vers tx (carte, base) opaque
+        grad.setAttribute('x1', tx); grad.setAttribute('y1', ty);
+        grad.setAttribute('x2', sx); grad.setAttribute('y2', sy);
+        grad.querySelector('stop[offset="0%"]').setAttribute('stop-color', 'rgba(240,199,94,0.45)');
+        grad.querySelector('stop[offset="100%"]').setAttribute('stop-color', 'rgba(212,175,55,0)');
+      }
+      poly.setAttribute('opacity', '1');
+
+      halo.setAttribute('cx', tx);
+      halo.setAttribute('cy', ty);
+      halo.setAttribute('rx', tgtRect.width  * 0.52);
+      halo.setAttribute('ry', tgtRect.height * 0.42);
+      halo.setAttribute('opacity', '0.25');
+
+    }));
   }
 
   function updateStepGuide(nextFamily, flippedCount, totalCount) {
@@ -4495,6 +4665,12 @@ function closeToreExitModal(){
 
         const isMobile = window.matchMedia('(max-width: 639px)').matches;
 
+        // Masquer le faisceau lumineux dès le retournement
+        const _bpoly = document.getElementById('tore-beam-poly');
+        const _bhalo = document.getElementById('tore-beam-halo');
+        if (_bpoly) _bpoly.setAttribute('opacity', '0');
+        if (_bhalo) _bhalo.setAttribute('opacity', '0');
+
         // Incrémenter l'index de tirage pour passer à la famille suivante
         toreThrowIndex++;
 
@@ -4603,9 +4779,10 @@ if (previewOverlay) {
     extra.className = 'tore-card-extra';
 
     extra.innerHTML = `
-
-      <img src="${imgPath}" alt="${dataNext.name || ''}">
-
+      <div class="bridge-badge">Passerelle</div>
+      <div class="extra-img-wrap">
+        <img src="${imgPath}" alt="${dataNext.name || ''}">
+      </div>
     `;
 
 
