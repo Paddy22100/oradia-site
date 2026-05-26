@@ -262,6 +262,11 @@
     z-index: 9999 !important;
   }
 
+  /* La bottom-bar ne doit pas être clippée par overflow:hidden du parent */
+  #tore-bottom-bar {
+    overflow: visible !important;
+  }
+
   /* Fix iOS Safari : background-attachment:fixed non supporté → fond statique */
   @supports (-webkit-touch-callout: none) {
     #tore-immersif {
@@ -682,12 +687,21 @@
       flex-shrink: 0;
     }
 
-    /* Cartes */
-    .tore-card {
-      width: 100%;
-      max-width: none;
-      height: auto;
-      aspect-ratio: 64 / 90;
+    /* Cartes : remplissent leur cellule — écrase les valeurs globales */
+    #tore-immersif .tore-board-7 .tore-card {
+      width: 100% !important;
+      max-width: none !important;
+      height: 100% !important;
+      aspect-ratio: unset !important;
+      margin: 0 !important;
+    }
+
+    /* Contenu interne suit la taille de la carte */
+    #tore-immersif .tore-board-7 .tore-card .tore-card-inner,
+    #tore-immersif .tore-board-7 .tore-card .tore-card-front,
+    #tore-immersif .tore-board-7 .tore-card .tore-card-back {
+      width: 100% !important;
+      height: 100% !important;
     }
   }
 
@@ -2440,13 +2454,7 @@
     </button>
   </div>
 
-<section id="tore-immersif" class="relative"
-  style="background: linear-gradient(135deg, #0a192f 0%, #051428 100%); background-image: url('images/oradia-hero-4k.png'); background-size: cover; background-position: 51.5% center;">
-
-  <!-- Voile comme l'index -->
-  <div class="absolute inset-0" style="background: radial-gradient(circle at 20% 80%, rgba(212,175,55,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(212,175,55,0.04) 0%, transparent 50%), linear-gradient(135deg, rgba(10,25,47,0.65) 0%, rgba(5,20,40,0.75) 100%);"></div>
-
-  <!-- Bandeau bas : guidage cartes OU phase pièce -->
+<!-- Bandeau bas : guidage cartes OU phase pièce - HORS de tore-immersif pour éviter le clipping -->
   <div id="tore-bottom-bar" class="hidden fixed bottom-0 left-0 right-0 z-50"
     style="background:linear-gradient(to top, rgba(2,6,16,0.99) 0%, rgba(5,15,35,0.97) 100%);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 -12px 40px rgba(0,0,0,0.8), inset 0 1px 0 rgba(212,175,55,0.08);opacity:1;transition:opacity 0.4s ease;">
     <!-- Ligne dorée supérieure en dégradé -->
@@ -2514,8 +2522,13 @@
 
       </div>
     </div>
-
   </div>
+
+<section id="tore-immersif" class="relative"
+  style="background: linear-gradient(135deg, #0a192f 0%, #051428 100%); background-image: url('images/oradia-hero-4k.png'); background-size: cover; background-position: 51.5% center;">
+
+  <!-- Voile comme l'index -->
+  <div class="absolute inset-0" style="background: radial-gradient(circle at 20% 80%, rgba(212,175,55,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(212,175,55,0.04) 0%, transparent 50%), linear-gradient(135deg, rgba(10,25,47,0.65) 0%, rgba(5,20,40,0.75) 100%);"></div>
 
   <div class="relative z-10 container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8" style="height:100%;display:flex;flex-direction:column;">
 
@@ -3269,6 +3282,9 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
 
   // Affiche la boussole 3 secondes puis navigue vers une URL
   function showCompassThenNavigate(url) {
+    // Cacher le bouton flottant d'analyse s'il existe
+    const fb = document.getElementById('tore-floating-analysis-btn');
+    if (fb) fb.style.display = 'none';
     const overlay = document.getElementById('oradia-compass-overlay');
     if (!overlay) { window.location.href = url; return; }
 
@@ -3282,7 +3298,10 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
 
     setTimeout(() => {
       overlay.style.animation = 'compassFadeOut 0.5s ease forwards';
-      setTimeout(() => { window.location.href = url; }, 500);
+      setTimeout(() => {
+        document.body.style.opacity = '0';
+        window.location.href = url;
+      }, 500);
     }, 3000);
   }
 
@@ -3290,12 +3309,16 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
   function showGuideMessage(familyKey, cardData) {
     if (!guideMessage || !guideFamily || !guideText) {
       isCardFlipping = false;
+      // Fallback : vérifier si toutes les cartes sont retournées
+      setTimeout(showCoinAfterAllCards, 100);
       return;
     }
     
     const step = STEPS_TORE.find(s => s.key === familyKey);
     if (!step || !step.guide) {
       isCardFlipping = false;
+      // Fallback : vérifier si toutes les cartes sont retournées
+      setTimeout(showCoinAfterAllCards, 100);
       return;
     }
     
@@ -3568,7 +3591,9 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
       }
       isCoinAnimating = false;
       coinThrowIndex = 0;
-      // La barre reste visible pour la pièce
+      // S'assurer que la bottom-bar est bien visible
+      const bb = el('tore-bottom-bar');
+      if (bb) { bb.classList.remove('hidden'); bb.style.opacity = '1'; }
     }
   }
 }
@@ -3618,51 +3643,69 @@ function showToreAnalysisCTA() {
   const intention = sessionStorage.getItem('tore_intention') || '';
   sessionStorage.setItem('tore_cards', JSON.stringify(cards));
 
-  // Masquer les éléments parasites du bandeau pièce
-  const throwCounter = el('coin-throw-counter');
-  const familyLabel  = el('coin-family-label');
-  if (throwCounter) throwCounter.style.display = 'none';
-  if (familyLabel)  familyLabel.style.display  = 'none';
-  // Masquer aussi le séparateur vertical et la zone info
-  const coinWrapperInner = coinWrapper.querySelector('[style*="max-width:560px"]');
-  if (coinWrapperInner) coinWrapperInner.style.display = 'none';
+  // Cacher la bottom-bar
+  const bbFinal = el('tore-bottom-bar');
+  if (bbFinal) bbFinal.classList.add('hidden');
 
-  // Afficher le bouton d'analyse centré et mis en valeur
-  if (toAnalysisBtn) {
-    toAnalysisBtn.style.cssText = [
+  // Créer ou afficher un bouton flottant simple en bas de l'écran
+  let floatingBtn = document.getElementById('tore-floating-analysis-btn');
+  if (!floatingBtn) {
+    floatingBtn = document.createElement('button');
+    floatingBtn.id = 'tore-floating-analysis-btn';
+    floatingBtn.type = 'button';
+    floatingBtn.innerHTML = '<i class="fas fa-scroll"></i> Voir mon analyse';
+    floatingBtn.style.cssText = [
+      'position:fixed',
+      'bottom:24px',
+      'left:50%',
+      'transform:translateX(-50%)',
+      'z-index:99999',
       'display:inline-flex',
       'align-items:center',
-      'gap:10px',
-      'background:linear-gradient(135deg,rgba(212,175,55,0.22),rgba(212,175,55,0.10))',
+      'gap:8px',
+      'background:linear-gradient(135deg,rgba(212,175,55,0.25),rgba(212,175,55,0.12))',
       'border:1.5px solid rgba(212,175,55,0.85)',
       'color:#f0c75e',
       'font-family:\'Cormorant Garamond\',\'Cormorant\',Georgia,serif',
-      'font-size:clamp(16px,4vw,20px)',
+      'font-size:clamp(14px,4vw,18px)',
       'font-weight:700',
-      'letter-spacing:0.14em',
+      'letter-spacing:0.10em',
       'text-transform:uppercase',
-      'padding:14px 36px',
+      'padding:12px 28px',
       'border-radius:32px',
       'cursor:pointer',
-      'box-shadow:0 0 32px rgba(212,175,55,0.25),0 8px 32px rgba(0,0,0,0.4)',
-      'transition:all 0.25s',
+      'box-shadow:0 0 32px rgba(212,175,55,0.35),0 8px 24px rgba(0,0,0,0.6)',
+      'backdrop-filter:blur(12px)',
       'white-space:nowrap',
     ].join(';');
-    toAnalysisBtn.innerHTML = '<i class="fas fa-scroll" style="font-size:18px;"></i> Voir mon analyse';
-    toAnalysisBtn.onmouseenter = () => {
-      toAnalysisBtn.style.background = 'linear-gradient(135deg,rgba(212,175,55,0.38),rgba(212,175,55,0.20))';
-      toAnalysisBtn.style.boxShadow = '0 0 48px rgba(212,175,55,0.45),0 8px 32px rgba(0,0,0,0.4)';
-      toAnalysisBtn.style.transform = 'scale(1.04)';
-    };
-    toAnalysisBtn.onmouseleave = () => {
-      toAnalysisBtn.style.background = 'linear-gradient(135deg,rgba(212,175,55,0.22),rgba(212,175,55,0.10))';
-      toAnalysisBtn.style.boxShadow = '0 0 32px rgba(212,175,55,0.25),0 8px 32px rgba(0,0,0,0.4)';
-      toAnalysisBtn.style.transform = 'scale(1)';
-    };
+    floatingBtn.addEventListener('click', () => {
+      floatingBtn.style.display = 'none';
+      const cards = [];
+      if (boardHost) {
+        boardHost.querySelectorAll('.tore-card.flipped').forEach(card => {
+          const family = card.dataset.family;
+          if (!family) return;
+          const fullData = flippedCardData.get(family);
+          const name = (fullData && fullData.name) ? fullData.name : (card.dataset.name || '');
+          const imgSrc = fullData ? buildImagePath(family, fullData) : '';
+          const cardData = { family, name: name || 'unknown', imgSrc };
+          const extraCard = card.querySelector('.tore-card-extra');
+          if (extraCard) {
+            const bridgeImg = extraCard.querySelector('img');
+            if (bridgeImg && bridgeImg.src) {
+              cardData.bridgeCard = { family: 'actions', name: bridgeImg.src.split('/').pop().replace('.png',''), imgSrc: bridgeImg.src };
+              cardData.isMutating = true;
+            }
+          }
+          cards.push(cardData);
+        });
+      }
+      if (cards.length > 0) sessionStorage.setItem('tore_cards', JSON.stringify(cards));
+      showCompassThenNavigate('tore-analysis.html');
+    });
+    document.body.appendChild(floatingBtn);
   }
-
-  // Recentrer le wrapper
-  coinWrapper.style.cssText = 'display:block;padding:16px;text-align:center;';
+  floatingBtn.style.display = 'inline-flex';
 }
 
 
@@ -4290,7 +4333,11 @@ function closeToreExitModal(){
     const stepGuide = el('tore-step-guide');
     if (stepGuide) stepGuide.style.display = 'block';
     const bbShow = el('tore-bottom-bar');
-    if (bbShow) { bbShow.classList.remove('hidden'); bbShow.style.opacity = '0'; }
+    if (bbShow) {
+      bbShow.classList.remove('hidden');
+      bbShow.style.opacity = '0';
+      requestAnimationFrame(() => requestAnimationFrame(() => { bbShow.style.opacity = '1'; }));
+    }
     const exitStrip = el('tore-exit-strip');
     if (exitStrip) exitStrip.classList.remove('hidden');
 
@@ -4450,6 +4497,14 @@ function closeToreExitModal(){
           showGuideMessage(famKey, data);
         }, 1000);
 
+        // Filet de sécurité : si toutes les cartes sont retournées et que la phase pièce
+        // n'a pas démarré 4s après ce flip, la forcer
+        setTimeout(() => {
+          if (!isGuideMessageShown) {
+            showCoinAfterAllCards();
+          }
+        }, 4000);
+
 
 
       });
@@ -4548,7 +4603,7 @@ if (previewOverlay) {
   // Ouvre un overlay avec un éventail de cartes : l'utilisateur choisit sa passerelle
   // Les cartes passerelles proviennent TOUJOURS de la famille 'actions'
 
-  function openBridgeFan(stepIndex, nextFamilyKey) {
+  function openBridgeFan(stepIndex, nextFamilyKey, isLastCoin) {
 
     if (!boardHost) return;
     
@@ -4795,6 +4850,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
             placeBridgeCard(stepIndex, 'actions', dataNext);
             overlay.remove();
             isBridgeFanOpen = false;
+            if (isLastCoin) setTimeout(showToreAnalysisCTA, 400);
           });
         }
 
@@ -4813,7 +4869,8 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
       btnCancel.addEventListener('click', () => {
 
         overlay.remove();
-        isBridgeFanOpen = false; // Débloquer les interactions
+        isBridgeFanOpen = false;
+        if (isLastCoin) setTimeout(showToreAnalysisCTA, 400);
 
       });
 
@@ -5048,46 +5105,47 @@ function showArrowForStep(stepIndex, isMatch) {
         }, 300);
       }
 
-      // Comparaison avec la polarité de la carte
-      if (card) {
-        const cardPolarity = card.dataset.polarity || 'none';
-
-        if (cardPolarity === 'none') {
-          showArrowForStep(stepIndex, null);
-        } else {
-          const isMatch = (cardPolarity === coinPolarity);
-          showArrowForStep(stepIndex, isMatch);
-
-          // Laisser la ligne SVG se dessiner (1.4s) avant d'ouvrir la modale
-          setTimeout(() => {
-            showPolarityBadge(card, coinPolarity, cardPolarity, isMatch, () => {
-              if (!isMatch && nextStep) {
-                openBridgeFan(stepIndex, nextStep.key);
-              }
-            });
-          }, 1600);
-        }
-      }
-
       // Déverrouille le plateau
       boardHost.classList.remove('board-locked');
       isCoinAnimating = false;
 
       // Passer au lancer de pièce suivant
       coinThrowIndex += 1;
+      const isLastCoin = coinThrowIndex >= familiesWithCoin.length;
 
-      // Si on a fini tous les lancers de pièce, on attend avant d'afficher le bouton d'analyse
-      if (coinThrowIndex >= familiesWithCoin.length) {
+      if (isLastCoin) {
         coin.classList.remove('glow');
         coin.dataset.locked = '1';
-        // Attendre 2 secondes pour laisser le temps de voir le résultat de la dernière pièce
-        setTimeout(() => {
-          showToreAnalysisCTA();
-        }, 2000);
+        isToreComplete = true;
       } else {
-        // Sinon, on réactive la pièce pour le lancer suivant
         coin.dataset.locked = '0';
         coin.classList.add('glow');
+      }
+
+      // Comparaison avec la polarité de la carte
+      if (card) {
+        const cardPolarity = card.dataset.polarity || 'none';
+
+        if (cardPolarity === 'none') {
+          showArrowForStep(stepIndex, null);
+          // Pas de modale : si dernier lancer, afficher bouton directement
+          if (isLastCoin) setTimeout(showToreAnalysisCTA, 600);
+        } else {
+          const isMatch = (cardPolarity === coinPolarity);
+          showArrowForStep(stepIndex, isMatch);
+
+          setTimeout(() => {
+            showPolarityBadge(card, coinPolarity, cardPolarity, isMatch, () => {
+              if (!isMatch && nextStep) {
+                // Désaccord → bridge fan s'ouvre ; le bouton apparaîtra à sa fermeture
+                openBridgeFan(stepIndex, nextStep.key, isLastCoin);
+              } else if (isLastCoin) {
+                // Accord ET dernier lancer → bouton maintenant
+                setTimeout(showToreAnalysisCTA, 400);
+              }
+            });
+          }, 1600);
+        }
       }
 
     }, 1000);
@@ -5166,6 +5224,10 @@ function showArrowForStep(stepIndex, isMatch) {
   
   // Exécuter la configuration
   setupIntentionValidation();
+
+  // Exposer showToreAnalysisCTA globalement (debug + fallback)
+  window._showToreAnalysisCTA = showToreAnalysisCTA;
+
 
 
 
