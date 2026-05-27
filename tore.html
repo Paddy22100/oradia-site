@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 
 <html lang="fr">
 
@@ -3623,6 +3623,9 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
     boardHost.querySelectorAll('.tore-card').forEach(c => {
       c.classList.remove('next-to-draw');
     });
+
+    // Pendant la phase pièce : pas de highlight (les cartes passerelles se tirent autrement)
+    if (coinThrowIndex > 0 || (coinWrapper && coinWrapper.style.display !== 'none' && !coinWrapper.classList.contains('hidden'))) return;
 
     const toreBoard7 = boardHost; // boardHost est déjà .tore-board-7
     
