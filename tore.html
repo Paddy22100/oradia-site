@@ -63,7 +63,7 @@
 
   <style>
 
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
 
 
 
@@ -323,14 +323,15 @@
     #tore-guide-message #guide-card-image {
       width: clamp(70px, 16vh, 120px) !important;
     }
-    /* Bouton continuer : toujours visible, padding réduit */
-    #tore-guide-message .py-6 {
-      padding-top: 8px !important;
-      padding-bottom: 8px !important;
-    }
+    /* Bouton continuer : sticky en bas de la modale, toujours visible */
+    #tore-guide-message .py-6,
     #tore-guide-message .sm\:py-8 {
       padding-top: 8px !important;
       padding-bottom: 8px !important;
+      position: sticky;
+      bottom: 0;
+      background: linear-gradient(to top, rgba(15,23,42,0.98) 80%, transparent 100%);
+      z-index: 2;
     }
     /* Textes plus petits pour gagner de la place */
     #tore-guide-message #guide-card-name {
@@ -579,7 +580,7 @@
       grid-template-rows: repeat(3, 1fr);
       gap: 3px;
       padding: 3px;
-      padding-bottom: 80px; /* espace bandeau bas fixe */
+      padding-bottom: calc(80px + env(safe-area-inset-bottom, 0px)); /* espace bandeau bas + notch iOS */
       background-image: none;
       width: 100%;
       max-width: 100%;
@@ -614,7 +615,7 @@
     #tore-immersif .tore-board-7 .pos-1 { transform: translateX(28px) !important; }
     #tore-immersif .tore-board-7 .pos-2 { transform: translateX(-28px) !important; }
     #tore-immersif .tore-board-7 .pos-3 { transform: translateX(28px) !important; }
-    #tore-immersif .tore-board-7 .pos-5 { transform: translateX(-18px) !important; }
+    #tore-immersif .tore-board-7 .pos-5 { transform: translateX(-28px) !important; }
     /* Cartes centrales et du milieu : pas de translation */
     #tore-immersif .tore-board-7 .pos-0,
     #tore-immersif .tore-board-7 .pos-4,
@@ -656,6 +657,24 @@
     .tore-card {
       width: 100%;
       max-width: none;
+    }
+  }
+
+  /* ── TABLETTE PORTRAIT (768px–1023px) : ajustements spécifiques ── */
+  @media (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
+    /* Réduire les décalages latéraux qui peuvent toucher les bords sur 768px */
+    #tore-immersif .tore-board-7 .tore-card.pos-1,
+    #tore-immersif .tore-board-7 .tore-card.pos-3 {
+      transform: translateX(36px) !important;
+    }
+    #tore-immersif .tore-board-7 .tore-card.pos-2,
+    #tore-immersif .tore-board-7 .tore-card.pos-5 {
+      transform: translateX(-36px) !important;
+    }
+    /* Plateau : limiter à 560px sur tablette portrait pour éviter le débordement des passerelles */
+    #tore-immersif .tore-board-7 {
+      max-width: 560px !important;
+      max-height: 560px !important;
     }
   }
 
@@ -769,9 +788,9 @@
       bottom: auto !important;
       top: 50% !important;
       left: auto !important;
-      right: 105% !important;
+      right: 102% !important;
       transform: translateY(-50%) !important;
-      width: 90% !important;
+      width: min(80%, 90px) !important;
     }
     /* Colonne droite (Archétypes pos-2, Révélations pos-4, Actions pos-5) → passerelle à droite */
     .tore-card.pos-2 .tore-card-extra,
@@ -779,10 +798,10 @@
     .tore-card.pos-5 .tore-card-extra {
       bottom: auto !important;
       top: 50% !important;
-      left: 105% !important;
+      left: 102% !important;
       right: auto !important;
       transform: translateY(-50%) !important;
-      width: 90% !important;
+      width: min(80%, 90px) !important;
     }
   }
 
@@ -2152,12 +2171,6 @@
   max-width: 520px;
 }
 
-/* Keyframe : polarity glisse vers la gauche en entrant dans la vue split */
-@keyframes polaritySlideLeft {
-  from { transform: translateX(0); opacity: 1; }
-  to   { transform: translateX(0); opacity: 1; }
-}
-
 @keyframes bridgePanelSlideIn {
   from { transform: translateX(40px); opacity: 0; }
   to   { transform: translateX(0);    opacity: 1; }
@@ -2392,29 +2405,15 @@
 
 
 
-@keyframes tore-arrow-appear {
-
-  0% {
-
-    opacity: 0;
-
-    transform: scaleX(0);
-
-  }
-
-  100% {
-
-    opacity: 1;
-
-    transform: scaleX(1);
-
-  }
-
+/* ── Rayon lumineux : masqué pendant l'overlay passerelle ── */
+body:has(#tore-extra-overlay) #tore-beam-svg {
+  display: none !important;
 }
 
-
-
-/* ── Rayon lumineux (toutes tailles) ── */
+/* Classe JS de fallback (navigateurs sans :has) */
+#tore-beam-svg.beam-hidden {
+  display: none !important;
+}
 
 /* Carte supplémentaire (famille suivante) en cas de passerelle */
 
@@ -2667,7 +2666,7 @@
 
         <!-- Sous-titre question -->
         <div class="text-center" style="margin-bottom:0;">
-          <h2 class="cormorant text-gold font-semibold" style="font-size:clamp(1.1rem,4vw,2.2rem);white-space:nowrap;">
+          <h2 class="cormorant text-gold font-semibold" style="font-size:clamp(1.1rem,4vw,2.2rem);white-space:normal;">
             Quelle intention portez-vous ?
           </h2>
           <p class="text-light-gold/70 leading-relaxed" style="font-size:clamp(12px,1.4vw,15px);margin-top:clamp(4px,0.8vh,10px);">
@@ -4829,6 +4828,10 @@ if (previewOverlay) {
 
     if (existing) existing.remove();
 
+    // Masquer le faisceau lumineux pendant l'overlay passerelle (fallback sans :has CSS)
+    const beamSvg = document.getElementById('tore-beam-svg');
+    if (beamSvg) beamSvg.classList.add('beam-hidden');
+
 
 
     const famLabel = getFamilyLabel(nextFamilyKey);
@@ -4993,6 +4996,8 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
         if (!dataNext) {
           overlay.remove();
           isBridgeFanOpen = false;
+          const bsvg = document.getElementById('tore-beam-svg');
+          if (bsvg) bsvg.classList.remove('beam-hidden');
           return;
         }
 
@@ -5065,6 +5070,8 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
             placeBridgeCard(stepIndex, 'actions', dataNext);
             overlay.remove();
             isBridgeFanOpen = false;
+            const bsvg2 = document.getElementById('tore-beam-svg');
+            if (bsvg2) bsvg2.classList.remove('beam-hidden');
             if (isLastCoin) setTimeout(showToreAnalysisCTA, 400);
           });
         }
