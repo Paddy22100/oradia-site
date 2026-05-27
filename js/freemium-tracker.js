@@ -232,12 +232,23 @@ class FreemiumTracker {
     }
 
     isSubscribed() {
+        // 1. Code validé avec expiry stocké
         const data = localStorage.getItem('oradia_subscription');
-        if (!data) return false;
-        try {
-            const { expiry } = JSON.parse(data);
-            return expiry && new Date(expiry) > new Date();
-        } catch (e) { return false; }
+        if (data) {
+            try {
+                const { expiry } = JSON.parse(data);
+                if (expiry && new Date(expiry) > new Date()) return true;
+            } catch (e) {}
+        }
+        // 2. Session membre active (connecté)
+        const sess = sessionStorage.getItem('oradia_member_session');
+        if (sess) {
+            try {
+                const { email, subscribed } = JSON.parse(sess);
+                if (email && subscribed) return true;
+            } catch (e) {}
+        }
+        return false;
     }
 
     canDrawTore() {
@@ -287,16 +298,28 @@ class FreemiumTracker {
                 <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(28px,5.5vw,42px);font-weight:700;color:#f0c75e;margin-bottom:22px;line-height:1.2;text-shadow:0 2px 32px rgba(212,175,55,0.2);">Vous avez complété votre<br>tirage gratuit du jour</h2>
                 <p style="font-family:'Lora',Georgia,serif;font-size:17px;color:rgba(229,231,235,0.70);line-height:1.8;margin-bottom:36px;max-width:480px;margin-left:auto;margin-right:auto;">Le Tore est une expérience de transformation profonde. Pour explorer sans limite, l'abonnement mensuel vous ouvre un accès illimité.</p>
                 <!-- CTA abonnement -->
-                <a href="member/abonnements.html" style="display:inline-block;background:linear-gradient(135deg,rgba(212,175,55,0.22),rgba(212,175,55,0.10));border:1.5px solid rgba(212,175,55,0.85);color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;padding:18px 48px;border-radius:50px;text-decoration:none;box-shadow:0 0 40px rgba(212,175,55,0.2),0 12px 32px rgba(0,0,0,0.55);" onmouseover="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.35),rgba(212,175,55,0.18))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.22),rgba(212,175,55,0.10))'">✦ Découvrir l'abonnement</a>
-                <!-- Séparateur code -->
+                <a href="tore-abonnement.html" style="display:inline-block;background:linear-gradient(135deg,rgba(212,175,55,0.22),rgba(212,175,55,0.10));border:1.5px solid rgba(212,175,55,0.85);color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;padding:18px 48px;border-radius:50px;text-decoration:none;box-shadow:0 0 40px rgba(212,175,55,0.2),0 12px 32px rgba(0,0,0,0.55);" onmouseover="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.35),rgba(212,175,55,0.18))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.22),rgba(212,175,55,0.10))'">✦ Découvrir l'abonnement</a>
+                <!-- Séparateur -->  
                 <div style="display:flex;align-items:center;gap:14px;margin:36px 0 20px;">
                     <div style="flex:1;height:1px;background:rgba(212,175,55,0.15);"></div>
                     <span style="font-family:'Lora',Georgia,serif;font-size:13px;color:rgba(212,175,55,0.38);letter-spacing:0.12em;">Déjà abonné ?</span>
                     <div style="flex:1;height:1px;background:rgba(212,175,55,0.15);"></div>
                 </div>
+                <!-- Bouton connexion -->
+                <div style="margin-bottom:16px;">
+                    <a href="member/login.html" onclick="sessionStorage.setItem('oradia_login_return', window.location.href)" style="display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#d4af37,#f4e4c1);color:#0a192f;font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:14px 36px;border-radius:50px;text-decoration:none;box-shadow:0 8px 24px rgba(212,175,55,0.35);">
+                        <i class="fas fa-user-circle"></i> Se connecter à mon espace
+                    </a>
+                </div>
+                <!-- Séparateur code -->
+                <div style="display:flex;align-items:center;gap:14px;margin:20px 0 16px;">
+                    <div style="flex:1;height:1px;background:rgba(212,175,55,0.10);"></div>
+                    <span style="font-family:'Lora',Georgia,serif;font-size:12px;color:rgba(212,175,55,0.30);letter-spacing:0.10em;">ou entrer votre code d'accès</span>
+                    <div style="flex:1;height:1px;background:rgba(212,175,55,0.10);"></div>
+                </div>
                 <!-- Champ code -->
                 <div style="display:flex;gap:10px;max-width:440px;margin:0 auto;">
-                    <input id="tore-sub-code" type="password" placeholder="Entrez votre code d'accès" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.3);border-radius:12px;padding:14px 18px;color:#e9e7df;font-family:'Lora',Georgia,serif;font-size:15px;outline:none;" onfocus="this.style.borderColor='rgba(212,175,55,0.7)'" onblur="this.style.borderColor='rgba(212,175,55,0.3)'" />
+                    <input id="tore-sub-code" type="password" placeholder="Votre code d'accès reçu par email" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.3);border-radius:12px;padding:14px 18px;color:#e9e7df;font-family:'Lora',Georgia,serif;font-size:15px;outline:none;" onfocus="this.style.borderColor='rgba(212,175,55,0.7)'" onblur="this.style.borderColor='rgba(212,175,55,0.3)'" />
                     <button id="tore-sub-validate" style="background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.55);color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-weight:700;letter-spacing:0.1em;padding:14px 22px;border-radius:12px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='rgba(212,175,55,0.30)'" onmouseout="this.style.background='rgba(212,175,55,0.15)'">Valider</button>
                 </div>
                 <p id="tore-sub-msg" style="font-family:'Lora',Georgia,serif;font-size:14px;margin-top:14px;min-height:20px;color:rgba(231,76,60,0.85);"></p>

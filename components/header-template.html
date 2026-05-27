@@ -23,6 +23,13 @@
         <a href="a-propos.html" data-page="a-propos" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
         <a href="contact.html" data-page="contact" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-envelope mr-2"></i>Contact</a>
       </nav>
+      <!-- Bouton espace membre -->
+      <div class="hidden lg:flex items-center flex-shrink-0">
+        <a id="header-member-btn" href="member/login.html" style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:50px;border:1.5px solid rgba(212,175,55,0.55);color:#d4af37;font-size:13px;font-weight:600;text-decoration:none;transition:all .2s;white-space:nowrap;" onmouseover="this.style.borderColor='rgba(212,175,55,0.9)';this.style.color='#f0c75e'" onmouseout="this.style.borderColor='rgba(212,175,55,0.55)';this.style.color='#d4af37'">
+          <i class="fas fa-user-circle" style="font-size:15px;"></i>
+          <span id="header-member-label">Mon espace</span>
+        </a>
+      </div>
     </div>
     
     <!-- Menu mobile déroulant -->
@@ -32,6 +39,34 @@
       <a href="precommande-oracle.html" data-page="precommande-oracle" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-shopping-cart mr-2"></i>Précommande</a>
       <a href="a-propos.html" data-page="a-propos" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
       <a href="contact.html" data-page="contact" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
+      <a id="header-member-btn-mobile" href="member/login.html" class="block px-4 py-3 rounded-lg border border-gold/50 text-gold hover:bg-gold/10 transition-colors font-semibold"><i class="fas fa-user-circle mr-2"></i><span id="header-member-label-mobile">Mon espace</span></a>
     </nav>
   </div>
 </header>
+<script>
+(function(){
+  function updateMemberBtn() {
+    var sess = sessionStorage.getItem('oradia_member_session');
+    var label = 'Mon espace';
+    var href  = 'member/login.html';
+    if (sess) {
+      try {
+        var d = JSON.parse(sess);
+        var name = (d.name || d.email || '').split(' ')[0];
+        if (name) label = name;
+        href = 'member/dashboard.html';
+      } catch(e) {}
+    }
+    ['header-member-btn','header-member-btn-mobile'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.href = href;
+    });
+    ['header-member-label','header-member-label-mobile'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (el) el.textContent = label;
+    });
+  }
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', updateMemberBtn);
+  else updateMemberBtn();
+})();
+</script>

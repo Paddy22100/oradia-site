@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5">
+    <title>L'Abonnement Tore — ORADIA</title>
+    <meta name="description" content="Accédez à l'expérience complète du Tore avec l'abonnement mensuel ORADIA. Tirages illimités, analyses approfondies, accès immédiat.">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="responsive.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'night-blue': '#0a192f',
+                        'gold': '#d4af37',
+                        'light-gold': '#f5e7a1',
+                        'dark-blue': '#051428',
+                        'celtic-blue': '#1a365d'
+                    },
+                    fontFamily: {
+                        'cormorant': ['Cormorant Garamond', 'serif'],
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+
+        :root { --dore:#d4af37; --text:#e9e7df; }
+
+        body { margin:0; font-family:'Poppins',sans-serif; background:#0a192f; color:#f5e7a1; }
+
+        .cormorant { font-family:'Cormorant Garamond',serif; }
+
+        .gold-gradient {
+            background:linear-gradient(90deg,#d4af37,#f5e7a1,#d4af37);
+            -webkit-background-clip:text; background-clip:text; color:transparent;
+        }
+
+        /* Nav */
+        .nav-bar {
+            background:rgba(5,20,40,0.85);
+            backdrop-filter:blur(12px);
+            border-bottom:1px solid rgba(212,175,55,0.18);
+            padding:16px 24px;
+            display:flex; align-items:center; justify-content:space-between;
+            position:sticky; top:0; z-index:100;
+        }
+
+        /* Hero section */
+        .hero-section {
+            position:relative;
+            min-height:420px;
+            display:flex; align-items:center; justify-content:center;
+            text-align:center;
+            overflow:hidden;
+            padding:80px 24px;
+        }
+        .hero-bg {
+            position:absolute; inset:0;
+            background:url('images/oradia-hero-4k.png') center/cover no-repeat;
+            z-index:0;
+        }
+        .hero-overlay {
+            position:absolute; inset:0;
+            background:linear-gradient(180deg, rgba(5,10,20,0.65) 0%, rgba(10,25,47,0.92) 100%);
+            z-index:1;
+        }
+        .hero-content { position:relative; z-index:2; max-width:680px; }
+
+        /* Carte tarifaire */
+        .pricing-card {
+            background:linear-gradient(145deg, rgba(26,54,93,0.75), rgba(5,20,40,0.90));
+            border:1.5px solid rgba(212,175,55,0.38);
+            border-radius:24px;
+            position:relative;
+            overflow:hidden;
+            box-shadow:0 0 60px rgba(212,175,55,0.12), 0 24px 64px rgba(0,0,0,0.5);
+        }
+        .pricing-card::before {
+            content:'';
+            position:absolute; top:0; left:0; right:0; height:2px;
+            background:linear-gradient(90deg,transparent,#d4af37,transparent);
+        }
+        .pricing-card:hover {
+            box-shadow:0 0 80px rgba(212,175,55,0.2), 0 28px 72px rgba(0,0,0,0.6);
+            border-color:rgba(212,175,55,0.6);
+            transform:translateY(-2px);
+            transition:all 0.3s ease;
+        }
+
+        /* Feature items */
+        .feature-row {
+            display:flex; align-items:flex-start; gap:16px;
+            padding:16px 0;
+            border-bottom:1px solid rgba(212,175,55,0.1);
+        }
+        .feature-row:last-child { border-bottom:none; }
+        .feature-icon {
+            width:38px; height:38px; border-radius:50%;
+            background:rgba(212,175,55,0.12);
+            border:1px solid rgba(212,175,55,0.3);
+            display:flex; align-items:center; justify-content:center;
+            flex-shrink:0; color:#d4af37; font-size:15px;
+        }
+
+        /* Bouton */
+        .btn-gold {
+            display:inline-flex; align-items:center; justify-content:center; gap:10px;
+            padding:1.1rem 3rem; border-radius:50px;
+            background:linear-gradient(135deg,#d4af37,#f4e4c1);
+            color:#0a192f; font-weight:700; font-size:1.05rem;
+            border:none; cursor:pointer; text-decoration:none;
+            transition:all 0.3s ease; font-family:'Poppins',sans-serif;
+            letter-spacing:0.5px;
+            box-shadow:0 8px 20px rgba(212,175,55,0.4);
+        }
+        .btn-gold:hover {
+            transform:translateY(-2px) scale(1.02);
+            box-shadow:0 12px 36px rgba(212,175,55,0.6);
+        }
+
+        /* Citation */
+        .quote-block {
+            background:rgba(212,175,55,0.05);
+            border-left:3px solid rgba(212,175,55,0.5);
+            border-radius:0 16px 16px 0;
+            padding:28px 32px;
+        }
+
+        /* Séparateur doré */
+        .gold-divider {
+            height:1px;
+            background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent);
+        }
+
+        /* Animations */
+        @keyframes fadeUp { from{opacity:0;transform:translateY(24px);} to{opacity:1;transform:translateY(0);} }
+        .fade-up { animation:fadeUp .6s cubic-bezier(.22,.68,0,1.1) both; }
+        .delay-1 { animation-delay:.12s; }
+        .delay-2 { animation-delay:.24s; }
+        .delay-3 { animation-delay:.36s; }
+
+        @media (max-width:639px) {
+            .btn-gold { width:100%; max-width:340px; font-size:.95rem; padding:.95rem 1.5rem; }
+            .hero-section { min-height:320px; padding:60px 20px; }
+        }
+    </style>
+</head>
+
+<body class="bg-night-blue text-light-gold">
+
+<!-- Navigation -->
+<nav class="nav-bar">
+    <a href="index.html" class="flex items-center gap-3 no-underline">
+        <img src="images/logo-hd-v2.jpeg" alt="ORADIA" class="w-10 h-10 rounded-full" style="border:1.5px solid rgba(212,175,55,0.5);">
+        <span class="cormorant text-2xl font-bold gold-gradient tracking-widest">ORADIA</span>
+    </a>
+    <a href="index.html" style="font-family:'Poppins',sans-serif;font-size:13px;color:rgba(212,175,55,0.55);text-decoration:none;display:flex;align-items:center;gap:7px;transition:color .2s;" onmouseover="this.style.color='rgba(212,175,55,0.95)'" onmouseout="this.style.color='rgba(212,175,55,0.55)'">
+        <i class="fas fa-chevron-left" style="font-size:11px;"></i> Retour au site
+    </a>
+</nav>
+
+<!-- Hero -->
+<section class="hero-section">
+    <div class="hero-bg"></div>
+    <div class="hero-overlay"></div>
+    <div class="hero-content fade-up">
+        <p style="font-family:'Poppins',sans-serif;font-size:14px;letter-spacing:0.5em;text-transform:uppercase;color:rgba(212,175,55,0.65);margin-bottom:22px;">Accès illimité</p>
+        <div style="font-size:80px;color:#d4af37;margin-bottom:4px;line-height:1;text-shadow:0 0 40px rgba(212,175,55,0.35);">∞</div>
+        <h1 class="cormorant gold-gradient" style="font-size:clamp(46px,8vw,72px);font-weight:700;line-height:1.1;margin:0 0 20px;letter-spacing:1px;">
+            L'Abonnement Tore
+        </h1>
+        <div class="gold-divider" style="width:80px;margin:0 auto 24px;"></div>
+        <p style="font-family:'Poppins',sans-serif;font-size:16px;color:rgba(229,231,235,0.75);line-height:1.85;max-width:520px;margin:0 auto;">
+            Une expérience de transformation profonde. L'abonnement mensuel vous ouvre un accès illimité à l'exploration intérieure du Tore.
+        </p>
+    </div>
+</section>
+
+<!-- Contenu principal -->
+<div style="max-width:1000px;margin:0 auto;padding:64px 24px 80px;">
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 items-start">
+
+        <!-- Colonne gauche : Carte tarifaire -->
+        <div class="pricing-card p-10 fade-up delay-1" style="text-align:center;">
+
+            <p style="font-family:'Poppins',sans-serif;font-size:13px;letter-spacing:0.4em;text-transform:uppercase;color:rgba(212,175,55,0.55);margin-bottom:18px;">Formule mensuelle</p>
+
+            <div class="cormorant" style="font-size:80px;font-weight:700;color:#f0c75e;line-height:1;">
+                8<span style="font-size:36px;color:rgba(212,175,55,0.6);">€</span>
+            </div>
+            <p style="font-family:'Poppins',sans-serif;font-size:16px;color:rgba(212,175,55,0.6);margin-bottom:40px;letter-spacing:0.06em;">par mois · sans engagement</p>
+
+            <!-- CTA -->
+            <div style="margin-bottom:16px;">
+                <a id="btn-subscribe" href="member/register.html?plan=tore" class="btn-gold">
+                    <i class="fas fa-infinity"></i>
+                    S'abonner — 8€/mois
+                </a>
+            </div>
+            <p style="font-family:'Poppins',sans-serif;font-size:13px;color:rgba(212,175,55,0.42);font-style:italic;line-height:1.7;">
+                Vous serez invité(e) à créer votre espace membre<br>avant de finaliser le paiement.
+            </p>
+
+            <div class="gold-divider" style="margin:32px 0;"></div>
+
+            <p style="font-family:'Poppins',sans-serif;font-size:14px;color:rgba(212,175,55,0.5);display:flex;align-items:center;justify-content:center;gap:8px;">
+                <i class="fas fa-lock" style="font-size:13px;"></i>
+                Paiement sécurisé par Stripe · Résiliable à tout moment
+            </p>
+        </div>
+
+        <!-- Colonne droite : Features + Citation -->
+        <div class="fade-up delay-2">
+
+            <h2 class="cormorant gold-gradient" style="font-size:clamp(28px,4vw,38px);font-weight:700;margin-bottom:8px;">Ce que comprend<br>l'abonnement</h2>
+            <div class="gold-divider" style="width:56px;margin-bottom:32px;"></div>
+
+            <div style="margin-bottom:40px;">
+                <div class="feature-row">
+                    <div class="feature-icon"><i class="fas fa-infinity"></i></div>
+                    <div>
+                        <p style="font-family:'Poppins',sans-serif;font-size:17px;color:#e9e7df;font-weight:600;margin:0 0 6px;">Tirages Tore illimités</p>
+                        <p style="font-family:'Poppins',sans-serif;font-size:15px;color:rgba(229,231,235,0.55);margin:0;line-height:1.65;">Explorez autant que vous le souhaitez, chaque mois, sans restriction.</p>
+                    </div>
+                </div>
+                <div class="feature-row">
+                    <div class="feature-icon"><i class="fas fa-envelope-open-text"></i></div>
+                    <div>
+                        <p style="font-family:'Poppins',sans-serif;font-size:17px;color:#e9e7df;font-weight:600;margin:0 0 6px;">Code d'accès personnel par email</p>
+                        <p style="font-family:'Poppins',sans-serif;font-size:15px;color:rgba(229,231,235,0.55);margin:0;line-height:1.65;">Reçu immédiatement après souscription, renouvelé automatiquement chaque mois.</p>
+                    </div>
+                </div>
+                <div class="feature-row">
+                    <div class="feature-icon"><i class="fas fa-bolt"></i></div>
+                    <div>
+                        <p style="font-family:'Poppins',sans-serif;font-size:17px;color:#e9e7df;font-weight:600;margin:0 0 6px;">Accès immédiat dès le paiement</p>
+                        <p style="font-family:'Poppins',sans-serif;font-size:15px;color:rgba(229,231,235,0.55);margin:0;line-height:1.65;">Votre code est généré et envoyé automatiquement après confirmation.</p>
+                    </div>
+                </div>
+                <div class="feature-row">
+                    <div class="feature-icon"><i class="fas fa-user-circle"></i></div>
+                    <div>
+                        <p style="font-family:'Poppins',sans-serif;font-size:17px;color:#e9e7df;font-weight:600;margin:0 0 6px;">Espace membre personnel</p>
+                        <p style="font-family:'Poppins',sans-serif;font-size:15px;color:rgba(229,231,235,0.55);margin:0;line-height:1.65;">Gérez votre abonnement, consultez votre historique de tirages.</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Citation pleine largeur -->
+    <div class="fade-up delay-3" style="text-align:center;padding-top:48px;">
+        <p class="cormorant" style="font-size:clamp(14px,1.6vw,22px);font-weight:400;color:rgba(212,175,55,0.7);font-style:italic;margin:0 0 10px;white-space:nowrap;">
+            "ORADIA n'est pas un oracle qui prédit, c'est un miroir qui révèle ce qui cherche à se transformer en vous."
+        </p>
+        <p style="font-family:'Poppins',sans-serif;font-size:14px;color:rgba(212,175,55,0.4);margin:0;letter-spacing:0.08em;">
+            Rudy · Fondateur d'ORADIA
+        </p>
+    </div>
+
+</div>
+
+<!-- Footer du site -->
+<div id="footer-placeholder"></div>
+<script src="components/footer-manager.js" defer></script>
+
+<script>
+    // Si déjà connecté → appel direct Stripe sans passer par register
+    (function() {
+        const sess = sessionStorage.getItem('oradia_member_session');
+        if (!sess) return;
+        try {
+            const { email } = JSON.parse(sess);
+            if (!email) return;
+            const btn = document.getElementById('btn-subscribe');
+            btn.removeAttribute('href');
+            btn.addEventListener('click', async function(e) {
+                e.preventDefault();
+                const orig = btn.innerHTML;
+                btn.disabled = true;
+                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redirection…';
+                try {
+                    const res  = await fetch('/api/create-checkout-session', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'tore-subscription', email, fullName: email.split('@')[0] })
+                    });
+                    const data = await res.json();
+                    if (data.url) { window.location.href = data.url; }
+                    else { btn.disabled = false; btn.innerHTML = orig; alert('Erreur : ' + (data.error || 'Réessayez.')); }
+                } catch(err) {
+                    btn.disabled = false; btn.innerHTML = orig;
+                    alert('Erreur réseau. Veuillez réessayer.');
+                }
+            });
+        } catch(e) {}
+    })();
+</script>
+
+</body>
+</html>

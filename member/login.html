@@ -231,11 +231,25 @@
             setTimeout(() => {
                 if (storedEmail && storedEmail === email) {
                     localStorage.setItem('isLoggedIn', 'true');
+                    // Vérifier si un abonnement actif existe en local
+                    let subscribed = false;
+                    try {
+                        const subData = localStorage.getItem('oradia_subscription');
+                        if (subData) {
+                            const { expiry } = JSON.parse(subData);
+                            if (expiry && new Date(expiry) > new Date()) subscribed = true;
+                        }
+                    } catch(e) {}
                     sessionStorage.setItem('oradia_member_session', JSON.stringify({
-                        email, name: localStorage.getItem('userName') || email.split('@')[0]
+                        email,
+                        name: localStorage.getItem('userName') || email.split('@')[0],
+                        subscribed
                     }));
                     flash('Connexion réussie ! Redirection…', 'success');
-                    setTimeout(() => { window.location.href = 'abonnements.html'; }, 1400);
+                    // Retour à la page d'origine si disponible
+                    const returnTo = sessionStorage.getItem('oradia_login_return');
+                    sessionStorage.removeItem('oradia_login_return');
+                    setTimeout(() => { window.location.href = returnTo || 'dashboard.html'; }, 1400);
                 } else {
                     btn.disabled = false; btn.textContent = 'Se connecter';
                     err.textContent = 'Email ou mot de passe incorrect.';
