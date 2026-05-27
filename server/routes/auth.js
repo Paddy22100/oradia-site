@@ -5,6 +5,7 @@ const { body, validationResult } = require('express-validator');
 const User = require('../models/User');
 const Newsletter = require('../models/Newsletter');
 const { authenticate } = require('../middleware/auth');
+const brevoService = require('../services/brevoService');
 
 const router = express.Router();
 
@@ -526,9 +527,16 @@ router.post('/forgot-password', [
     user.resetPasswordExpires = new Date(Date.now() + 10 * 60 * 1000); // 10 minutes
     await user.save();
 
-    // TODO: Envoyer l'email de réinitialisation
-    // Pour l'instant, on retourne juste le succès
-    // console.log(console.log('Token reset password:', resetToken);)
+    // Construire l'URL de réinitialisation
+    const baseUrl = process.env.SITE_URL || 'https://oradia.fr';
+    const resetUrl = `${baseUrl}/member/reset-password.html?token=${resetToken}&email=${encodeURIComponent(email)}`;
+
+    // Envoyer l'email (non-bloquant sur erreur pour ne pas révéler l'existence du compte)
+    try {
+      await brevoService.sendPasswordReset({ email, resetUrl });
+    } catch (emailError) {
+      console.error('Erreur envoi email reset:', emailError.message);
+    }
 
     res.json({
       success: true,

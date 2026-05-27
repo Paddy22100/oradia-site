@@ -164,6 +164,12 @@
                 <span class="ml-auto text-xs bg-blue-500/20 text-blue-400 rounded-full px-2 py-0.5" id="nav-badge-waitlist"></span>
             </div>
 
+            <div class="nav-item" onclick="showTab('subscriptions')" id="nav-subscriptions">
+                <i class="fas fa-crown w-4 text-center"></i>
+                <span>Abonnements</span>
+                <span class="ml-auto text-xs bg-gold/20 text-gold rounded-full px-2 py-0.5" id="nav-badge-subscriptions"></span>
+            </div>
+
             <p class="text-gold/50 text-xs uppercase tracking-widest px-5 mt-5 mb-2">Contenu</p>
             <div class="nav-item" onclick="showTab('newsletter')" id="nav-newsletter">
                 <i class="fas fa-envelope-open-text w-4 text-center"></i>
@@ -523,6 +529,87 @@
         </section>
         </div><!-- /tab-waitlist -->
 
+        <!-- ══ ONGLET : ABONNEMENTS ══ -->
+        <div id="tab-subscriptions" class="tab-panel">
+        <section class="mb-10">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h3 class="cormorant text-2xl font-bold text-gold">Abonnements Tore</h3>
+                    <p class="text-light-gold/50 text-sm mt-1">Gérez les codes d'accès illimités au Tore</p>
+                </div>
+                <button onclick="document.getElementById('newSubPanel').classList.toggle('hidden')" class="flex items-center gap-2 bg-gradient-to-r from-gold/20 to-gold/10 border border-gold/50 text-gold px-4 py-2 rounded-lg hover:from-gold/30 hover:to-gold/20 transition text-sm font-semibold">
+                    <i class="fas fa-plus"></i> Nouvel abonnement
+                </button>
+            </div>
+
+            <!-- Formulaire création -->
+            <div id="newSubPanel" class="hidden mb-6 bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-xl p-6">
+                <h4 class="text-gold font-semibold mb-4" style="font-family:'Cormorant Garamond',serif;">Créer un accès abonné</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                    <div>
+                        <label class="block text-light-gold/70 text-xs mb-1 uppercase tracking-wider">Email <span class="text-gold">*</span></label>
+                        <input id="newSubEmail" type="email" placeholder="client@email.com" class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                    </div>
+                    <div>
+                        <label class="block text-light-gold/70 text-xs mb-1 uppercase tracking-wider">Prénom / Nom</label>
+                        <input id="newSubName" type="text" placeholder="Jean Dupont" class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                    </div>
+                    <div>
+                        <label class="block text-light-gold/70 text-xs mb-1 uppercase tracking-wider">Code d'accès <span class="text-gold">*</span></label>
+                        <div class="flex gap-2">
+                            <input id="newSubCode" type="text" placeholder="Ex: Oradia2026!" class="flex-1 bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                            <button onclick="generateCode()" title="Générer" class="bg-gold/20 border border-gold/40 text-gold rounded-lg px-3 py-2 hover:bg-gold/30 transition text-sm"><i class="fas fa-dice"></i></button>
+                        </div>
+                    </div>
+                    <div>
+                        <label class="block text-light-gold/70 text-xs mb-1 uppercase tracking-wider">Expiration</label>
+                        <input id="newSubExpiry" type="date" class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                    </div>
+                </div>
+                <div class="flex items-center gap-4">
+                    <button onclick="createSubscription()" class="bg-gold text-night-blue font-semibold px-5 py-2 rounded-lg hover:bg-light-gold transition text-sm">
+                        <i class="fas fa-paper-plane mr-2"></i>Créer et envoyer le code par email
+                    </button>
+                    <span id="newSubMsg" class="text-sm"></span>
+                </div>
+            </div>
+
+            <!-- Filtres -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-4 mb-4">
+                <div class="flex flex-wrap gap-3">
+                    <input id="subSearch" type="search" placeholder="Recherche email ou nom" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold" oninput="loadSubscriptions()">
+                    <select id="subStatusFilter" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold" onchange="loadSubscriptions()">
+                        <option value="all">Tous statuts</option>
+                        <option value="active">Actif</option>
+                        <option value="revoked">Révoqué</option>
+                    </select>
+                    <button onclick="loadSubscriptions()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
+                </div>
+            </div>
+
+            <!-- Tableau -->
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden shadow-2xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="subscriptionsTable">
+                        <thead class="bg-gradient-to-r from-[rgba(5,20,40,0.9)] to-[rgba(5,20,40,0.7)] border-b border-gold/30">
+                            <tr>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Email</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Nom</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Code</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Statut</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Créé le</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Expire le</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="subscriptionsTbody" class="divide-y divide-gold/10"></tbody>
+                    </table>
+                </div>
+                <div id="subscriptionsPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)] border-t border-gold/20"></div>
+            </div>
+        </section>
+        </div><!-- /tab-subscriptions -->
+
         <!-- ══ ONGLET : JOURNAL ══ -->
         <div id="tab-journal" class="tab-panel">
         <section class="mb-10">
@@ -739,8 +826,9 @@
             preorders:   'Précommandes',
             donors:      'Dons',
             waitlist:    'Waitlist',
-            newsletter:  'Newsletter',
-            journal:     'Journal admin'
+            newsletter:     'Newsletter',
+            journal:        'Journal admin',
+            subscriptions:  'Abonnements Tore'
         };
 
         function showTab(name) {
@@ -754,6 +842,7 @@
             if (title) title.textContent = TAB_TITLES[name] || '';
             window.scrollTo({ top: 0, behavior: 'smooth' });
             if (name === 'newsletter') nlLoadDrafts();
+            if (name === 'subscriptions') loadSubscriptions();
         }
 
         // ── État global
@@ -2113,6 +2202,145 @@
             nlShowTab('generate');
             nlStatus('info', 'Fragment ajouté ✓');
         }
+
+        // ── ABONNEMENTS TORE ────────────────────────────────────────────────────
+
+        let subPage = 1;
+
+        async function loadSubscriptions(page = 1) {
+            subPage = page;
+            const q      = document.getElementById('subSearch')?.value || '';
+            const status = document.getElementById('subStatusFilter')?.value || 'all';
+            const tbody  = document.getElementById('subscriptionsTbody');
+            tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gold/40"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</td></tr>';
+            try {
+                const url = `/api/admin/data?section=subscriptions&page=${page}&limit=15&status=${status}&q=${encodeURIComponent(q)}`;
+                const res = await fetch(url, { credentials: 'include' });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.message);
+                renderSubscriptions(json.data || [], json.pagination);
+                const badge = document.getElementById('nav-badge-subscriptions');
+                if (badge && json.pagination) badge.textContent = json.pagination.total || '';
+            } catch(e) {
+                tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-red-400/70">${e.message}</td></tr>`;
+            }
+        }
+
+        function renderSubscriptions(subs, pagination) {
+            const tbody = document.getElementById('subscriptionsTbody');
+            if (!subs.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun abonnement</td></tr>';
+                return;
+            }
+            tbody.innerHTML = subs.map(s => {
+                const isActive  = s.status === 'active';
+                const isExpired = s.expires_at && new Date(s.expires_at) < new Date();
+                const statusBadge = isExpired
+                    ? '<span class="bg-orange-500/20 text-orange-400 text-xs px-2 py-0.5 rounded-full">Expiré</span>'
+                    : isActive
+                        ? '<span class="bg-green-500/20 text-green-400 text-xs px-2 py-0.5 rounded-full">Actif</span>'
+                        : '<span class="bg-red-500/20 text-red-400 text-xs px-2 py-0.5 rounded-full">Révoqué</span>';
+                return `
+                <tr class="hover:bg-gold/5 transition">
+                    <td class="px-5 py-4 text-light-gold text-sm">${s.email || '—'}</td>
+                    <td class="px-5 py-4 text-light-gold/80 text-sm">${s.full_name || '—'}</td>
+                    <td class="px-5 py-4">
+                        <code class="bg-gold/10 text-gold text-xs px-2 py-1 rounded font-mono">${s.access_code || '—'}</code>
+                    </td>
+                    <td class="px-5 py-4">${statusBadge}</td>
+                    <td class="px-5 py-4 text-light-gold/60 text-xs">${s.created_at_fr || '—'}</td>
+                    <td class="px-5 py-4 text-light-gold/60 text-xs ${isExpired ? 'text-orange-400' : ''}">${s.expires_at_fr || '—'}</td>
+                    <td class="px-5 py-4">
+                        <div class="flex gap-2">
+                            <button onclick="resendCode('${s.id}')" title="Renvoyer le code" class="text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 text-xs transition">
+                                <i class="fas fa-envelope mr-1"></i>Renvoyer
+                            </button>
+                            ${isActive ? `<button onclick="revokeSubscription('${s.id}')" title="Révoquer" class="text-red-400/50 hover:text-red-400 border border-red-400/20 hover:border-red-400/40 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-ban"></i></button>` : ''}
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
+
+            // Pagination
+            const pag = document.getElementById('subscriptionsPagination');
+            if (!pagination || pagination.pages <= 1) { pag.innerHTML = ''; return; }
+            let btns = '';
+            for (let i = 1; i <= pagination.pages; i++) {
+                btns += `<button onclick="loadSubscriptions(${i})" class="px-3 py-1 rounded text-sm ${i === pagination.page ? 'bg-gold text-night-blue font-semibold' : 'bg-gold/10 text-gold hover:bg-gold/20'} transition">${i}</button>`;
+            }
+            pag.innerHTML = `<div class="flex items-center gap-2 flex-wrap"><span class="text-light-gold/50 text-xs mr-2">${pagination.total} abonné(s)</span>${btns}</div>`;
+        }
+
+        async function createSubscription() {
+            const email    = document.getElementById('newSubEmail').value.trim();
+            const fullName = document.getElementById('newSubName').value.trim();
+            const code     = document.getElementById('newSubCode').value.trim();
+            const expiry   = document.getElementById('newSubExpiry').value;
+            const msg      = document.getElementById('newSubMsg');
+
+            if (!email || !code) { msg.style.color = '#f87171'; msg.textContent = 'Email et code requis.'; return; }
+            msg.style.color = '#d4af37'; msg.textContent = 'Envoi en cours…';
+
+            try {
+                const res = await fetch('/api/admin/data', {
+                    method: 'POST', credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'create', email, fullName, accessCode: code, expiresAt: expiry || null })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error);
+                msg.style.color = '#4ade80';
+                msg.textContent = json.emailSent ? '✓ Abonnement créé et code envoyé par email.' : '✓ Abonnement créé (email non envoyé).';
+                document.getElementById('newSubEmail').value = '';
+                document.getElementById('newSubName').value = '';
+                document.getElementById('newSubCode').value = '';
+                document.getElementById('newSubExpiry').value = '';
+                await loadSubscriptions();
+            } catch(e) { msg.style.color = '#f87171'; msg.textContent = e.message; }
+        }
+
+        async function resendCode(id) {
+            if (!confirm('Renvoyer le code par email ?')) return;
+            try {
+                const res = await fetch('/api/admin/data', {
+                    method: 'POST', credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'resend_code', subscriptionId: id })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error);
+                alert(json.emailSent ? 'Code renvoyé avec succès.' : 'Abonnement trouvé mais email non envoyé (vérifiez la config Brevo).');
+            } catch(e) { alert('Erreur : ' + e.message); }
+        }
+
+        async function revokeSubscription(id) {
+            if (!confirm('Révoquer cet abonnement ? L\'accès sera immédiatement coupé.')) return;
+            try {
+                const res = await fetch('/api/admin/data', {
+                    method: 'POST', credentials: 'include',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'revoke', subscriptionId: id })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error);
+                await loadSubscriptions(subPage);
+            } catch(e) { alert('Erreur : ' + e.message); }
+        }
+
+        function generateCode() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789';
+            const seg = n => Array.from({length: n}, () => chars[Math.floor(Math.random() * chars.length)]).join('');
+            document.getElementById('newSubCode').value = `Oradia-${seg(4)}-${seg(4)}`;
+        }
+
+        // Pré-remplir la date d'expiration à +30j
+        document.addEventListener('DOMContentLoaded', () => {
+            const expiryInput = document.getElementById('newSubExpiry');
+            if (expiryInput) {
+                const d = new Date(); d.setDate(d.getDate() + 30);
+                expiryInput.value = d.toISOString().split('T')[0];
+            }
+        });
 
         // Charger newsletter au démarrage
         document.addEventListener('DOMContentLoaded', () => {

@@ -2,6 +2,7 @@ const express = require('express');
 const { authenticate, requireAdmin, logActivity } = require('../middleware/auth');
 const Newsletter = require('../models/Newsletter');
 const User = require('../models/User');
+const supabaseService = require('../services/supabaseService');
 
 const router = express.Router();
 
@@ -130,6 +131,13 @@ router.post('/subscribe', logActivity('newsletter_subscribe'), async (req, res) 
     });
 
     await subscriber.save();
+
+    // Sync Supabase (non-bloquant)
+    supabaseService.createNewsletterSubscriber({
+      email,
+      name: req.body.name || null,
+      source: 'user_registration'
+    }).catch(() => {});
 
     res.status(201).json({
       success: true,

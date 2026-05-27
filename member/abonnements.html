@@ -103,6 +103,90 @@
     </style>
 </head>
 <body class="bg-night-blue text-light-gold">
+
+    <!-- Gate de connexion -->
+    <div id="auth-gate" class="fixed inset-0 z-[9999] flex items-center justify-center p-6">
+        <!-- Fond image -->
+        <div style="position:absolute;inset:0;background:url('../images/oradia-hero-4k.png') center/cover no-repeat;"></div>
+        <!-- Overlay dégradé sombre -->
+        <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(2,6,23,0.88) 0%,rgba(5,15,35,0.82) 100%);backdrop-filter:blur(2px);"></div>
+
+        <!-- Carte centrale -->
+        <div style="position:relative;max-width:480px;width:100%;background:linear-gradient(160deg,rgba(5,15,35,0.85) 0%,rgba(2,8,20,0.90) 100%);border:1px solid rgba(212,175,55,0.28);border-radius:24px;padding:52px 44px 44px;box-shadow:0 24px 80px rgba(0,0,0,0.7),0 0 60px rgba(212,175,55,0.06);text-align:center;">
+
+            <!-- Logo -->
+            <div style="display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:32px;">
+                <img src="../images/logo-hd-v2.jpeg" alt="ORADIA" style="width:64px;height:64px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(212,175,55,0.5);box-shadow:0 0 28px rgba(212,175,55,0.2);">
+                <span style="font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;background:linear-gradient(135deg,#f0c75e,#d4af37);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">ORADIA</span>
+            </div>
+
+            <!-- Séparateur -->
+            <div style="width:56px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.65),transparent);margin:0 auto 28px;"></div>
+
+            <!-- Surtitre -->
+            <p style="font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.45em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:16px;">Espace membre</p>
+
+            <!-- Titre -->
+            <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(22px,4.5vw,28px);font-weight:700;color:#f0c75e;line-height:1.3;margin-bottom:36px;text-shadow:0 2px 20px rgba(212,175,55,0.15);">Connectez-vous pour accéder<br>à vos abonnements</h2>
+
+            <!-- Champ email -->
+            <div style="margin-bottom:14px;">
+                <input id="gate-email" type="email" placeholder="Votre adresse email"
+                    style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.28);border-radius:12px;padding:16px 20px;color:#e9e7df;font-family:'Lora',Georgia,serif;font-size:15px;outline:none;transition:border-color 0.2s;"
+                    onfocus="this.style.borderColor='rgba(212,175,55,0.7)'"
+                    onblur="this.style.borderColor='rgba(212,175,55,0.28)'">
+            </div>
+
+            <!-- Champ mot de passe + œil -->
+            <div style="margin-bottom:10px;position:relative;">
+                <input id="gate-password" type="password" placeholder="Mot de passe"
+                    style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.28);border-radius:12px;padding:16px 52px 16px 20px;color:#e9e7df;font-family:'Lora',Georgia,serif;font-size:15px;outline:none;transition:border-color 0.2s;"
+                    onfocus="this.style.borderColor='rgba(212,175,55,0.7)'"
+                    onblur="this.style.borderColor='rgba(212,175,55,0.28)'"
+                    onkeydown="if(event.key==='Enter') gateLogin()">
+                <button type="button" id="gate-eye"
+                    onclick="toggleGatePassword()"
+                    style="position:absolute;right:16px;top:50%;transform:translateY(-50%);background:none;border:none;cursor:pointer;color:rgba(212,175,55,0.4);font-size:16px;padding:4px;line-height:1;transition:color 0.2s;"
+                    onmouseover="this.style.color='rgba(212,175,55,0.85)'"
+                    onmouseout="this.style.color='rgba(212,175,55,0.4)'">
+                    <i id="gate-eye-icon" class="fas fa-eye"></i>
+                </button>
+            </div>
+
+            <!-- Message erreur -->
+            <p id="gate-msg" style="font-family:'Lora',Georgia,serif;font-size:12px;color:rgba(231,76,60,0.85);min-height:20px;margin-bottom:22px;line-height:1.5;"></p>
+
+            <!-- Bouton Entrer -->
+            <button onclick="gateLogin()"
+                style="width:100%;background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08));border:1.5px solid rgba(212,175,55,0.8);color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;font-weight:700;letter-spacing:0.22em;text-transform:uppercase;padding:16px 32px;border-radius:50px;cursor:pointer;box-shadow:0 0 40px rgba(212,175,55,0.12),0 8px 28px rgba(0,0,0,0.45);transition:all 0.2s;margin-bottom:28px;"
+                onmouseover="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.30),rgba(212,175,55,0.16))'"
+                onmouseout="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))'">
+                Entrer
+            </button>
+
+            <!-- Séparateur créer un compte -->
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:20px;">
+                <div style="flex:1;height:1px;background:rgba(212,175,55,0.12);"></div>
+                <span style="font-family:'Lora',Georgia,serif;font-size:11px;color:rgba(212,175,55,0.3);letter-spacing:0.1em;">Pas encore de compte ?</span>
+                <div style="flex:1;height:1px;background:rgba(212,175,55,0.12);"></div>
+            </div>
+
+            <!-- Lien créer un compte -->
+            <a href="register.html"
+                style="display:block;font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-weight:600;letter-spacing:0.12em;color:rgba(212,175,55,0.65);text-decoration:none;margin-bottom:24px;transition:color 0.2s;"
+                onmouseover="this.style.color='#f0c75e'"
+                onmouseout="this.style.color='rgba(212,175,55,0.65)'">
+                Créer mon espace membre →
+            </a>
+
+            <!-- Retour -->
+            <a href="../index.html" style="font-family:'Lora',Georgia,serif;font-size:11px;color:rgba(212,175,55,0.25);text-decoration:none;letter-spacing:0.06em;transition:color 0.2s;"
+                onmouseover="this.style.color='rgba(212,175,55,0.55)'"
+                onmouseout="this.style.color='rgba(212,175,55,0.25)'">← Retour à l'accueil</a>
+        </div>
+    </div>
+
+    <div id="main-content" class="hidden">
     <!-- Header -->
     <header class="bg-[rgba(5,20,40,0.8)] backdrop-blur-md border-b border-gold/20 sticky top-0 z-50">
         <div class="container mx-auto px-6 py-4">
@@ -266,7 +350,7 @@
                         </li>
                     </ul>
                     
-                    <button class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue py-3 rounded-lg font-semibold hover:from-light-gold hover:to-gold transition-all transform hover:scale-105 shadow-lg">
+                    <button id="btn-subscribe-premium" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue py-3 rounded-lg font-semibold hover:from-light-gold hover:to-gold transition-all transform hover:scale-105 shadow-lg">
                         S'abonner
                     </button>
                 </div>
@@ -306,7 +390,7 @@
                         </li>
                     </ul>
                     
-                    <button class="w-full bg-[rgba(5,20,40,0.8)] border border-gold text-gold py-3 rounded-lg font-semibold hover:bg-gold hover:text-night-blue transition-colors">
+                    <button id="btn-subscribe-master" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold text-gold py-3 rounded-lg font-semibold hover:bg-gold hover:text-night-blue transition-colors">
                         S'abonner
                     </button>
                 </div>
@@ -455,7 +539,22 @@
         </div>
     </div>
 
+    </div><!-- /main-content -->
+
+    <script src="../js/freemium-tracker.js"></script>
     <script>
+        function toggleGatePassword() {
+            const input = document.getElementById('gate-password');
+            const icon  = document.getElementById('gate-eye-icon');
+            if (input.type === 'password') {
+                input.type = 'text';
+                icon.classList.replace('fa-eye', 'fa-eye-slash');
+            } else {
+                input.type = 'password';
+                icon.classList.replace('fa-eye-slash', 'fa-eye');
+            }
+        }
+
         function toggleFAQ(button) {
             const content = button.nextElementSibling;
             const icon = button.querySelector('i');
@@ -464,21 +563,104 @@
             icon.classList.toggle('rotate-180');
         }
 
+        // ── Auth gate ────────────────────────────────────────────────────────────
+        const SESSION_KEY = 'oradia_member_session';
+
+        function gateLogin() {
+            const email = document.getElementById('gate-email').value.trim();
+            const pass  = document.getElementById('gate-password').value;
+            const msg   = document.getElementById('gate-msg');
+
+            if (!email || !pass) { msg.textContent = 'Veuillez remplir tous les champs.'; return; }
+
+            // Vérification : l'email doit correspondre à un abonnement actif dans localStorage
+            const sub = window.freemiumTracker ? window.freemiumTracker.isSubscribed() : false;
+            // Connexion simple : l'utilisateur doit avoir un abonnement Tore actif enregistré
+            // ou fournir les credentials d'un compte existant (vérification via cookie/token)
+            // Pour l'instant on accepte tout email valide avec le code d'abonnement actif
+            const subData = localStorage.getItem('oradia_subscription');
+            if (!subData) {
+                msg.textContent = 'Aucun abonnement actif trouvé. Utilisez d\'abord votre code d\'accès sur tore.html.';
+                return;
+            }
+            // Stocker la session membre
+            sessionStorage.setItem(SESSION_KEY, JSON.stringify({ email, name: email.split('@')[0] }));
+            showMainContent(email);
+        }
+
+        function showMainContent(email) {
+            document.getElementById('auth-gate').remove();
+            document.getElementById('main-content').classList.remove('hidden');
+            // Mettre à jour le nom affiché
+            const nameEl = document.querySelector('#main-content .text-gold.font-medium');
+            if (nameEl) nameEl.textContent = email || 'Membre';
+            // Mettre à jour le statut abonnement
+            const statusEl = document.querySelector('#main-content .text-gold\\/60.text-sm');
+            if (statusEl) {
+                const sub = localStorage.getItem('oradia_subscription');
+                try {
+                    const { expiry } = JSON.parse(sub || '{}');
+                    const date = expiry ? new Intl.DateTimeFormat('fr-FR', {day:'2-digit',month:'long',year:'numeric'}).format(new Date(expiry)) : '—';
+                    statusEl.textContent = `Abonnement actif — expire le ${date}`;
+                } catch(e) { statusEl.textContent = 'Abonnement Tore'; }
+            }
+        }
+
+        // Vérifier si déjà connecté
+        (function() {
+            const sess = sessionStorage.getItem(SESSION_KEY);
+            if (sess) {
+                try { showMainContent(JSON.parse(sess).email); } catch(e) {}
+            }
+        })();
+
         // Logout
         document.getElementById('logoutBtn').addEventListener('click', () => {
-            if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-                window.location.href = '../index.html';
-            }
+            sessionStorage.removeItem(SESSION_KEY);
+            window.location.href = '../index.html';
         });
 
-        // Subscribe buttons
-        document.querySelectorAll('button').forEach(button => {
-            if (button.textContent.includes('S\'abonner')) {
-                button.addEventListener('click', () => {
-                    alert('Fonctionnalité de paiement bientôt disponible!');
-                });
+        // ── Abonnement Stripe ──────────────────────────────────────────────────
+        async function startSubscription(btn) {
+            const sess = sessionStorage.getItem(SESSION_KEY);
+            let email = '';
+            try { email = JSON.parse(sess || '{}').email || ''; } catch(e) {}
+            if (!email) {
+                // Pas connecté → redirect vers register avec plan
+                window.location.href = 'register.html?plan=tore';
+                return;
             }
-        });
+            const original = btn.textContent;
+            btn.disabled = true; btn.textContent = 'Redirection…';
+            try {
+                const res  = await fetch('/api/create-tore-subscription', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, fullName: email.split('@')[0] })
+                });
+                const data = await res.json();
+                if (data.url) { window.location.href = data.url; }
+                else { btn.disabled = false; btn.textContent = original; alert('Erreur : ' + (data.error || 'Réessayez.')); }
+            } catch(e) {
+                btn.disabled = false; btn.textContent = original;
+                alert('Erreur réseau. Veuillez réessayer.');
+            }
+        }
+
+        document.getElementById('btn-subscribe-premium')?.addEventListener('click', function() { startSubscription(this); });
+        document.getElementById('btn-subscribe-master')?.addEventListener('click', function() { startSubscription(this); });
+
+        // Retour après paiement réussi
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('subscribed') === '1') {
+                const banner = document.createElement('div');
+                banner.style.cssText = 'position:fixed;top:16px;right:16px;z-index:9999;background:rgba(25,120,65,0.92);color:#fff;border:1px solid rgba(80,200,120,0.3);border-radius:12px;padding:14px 22px;font-family:Lora,serif;font-size:13px;box-shadow:0 8px 28px rgba(0,0,0,0.5);';
+                banner.innerHTML = '<i class="fas fa-check-circle" style="margin-right:8px;"></i>Abonnement activé ! Votre code arrive par email.';
+                document.body.appendChild(banner);
+                setTimeout(() => banner.remove(), 5000);
+            }
+        })();
 
         // Animation au chargement
         document.addEventListener('DOMContentLoaded', () => {

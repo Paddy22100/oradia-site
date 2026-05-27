@@ -148,6 +148,34 @@ class SupabaseService {
     }
 
     /**
+     * Inscrire un abonné à la newsletter
+     */
+    async createNewsletterSubscriber(data) {
+        try {
+            const { data: subscriber, error } = await supabase
+                .from('newsletter_contacts')
+                .upsert([{
+                    email: data.email,
+                    full_name: data.name || null,
+                    source: data.source || 'user_registration',
+                    brevo_synced: false
+                }], { onConflict: 'email', ignoreDuplicates: false })
+                .select()
+                .single();
+
+            if (error) {
+                console.error('Erreur Supabase createNewsletterSubscriber:', error);
+                throw error;
+            }
+
+            return subscriber;
+        } catch (error) {
+            console.error('Erreur createNewsletterSubscriber:', error);
+            throw error;
+        }
+    }
+
+    /**
      * Enregistrer un événement analytics
      */
     async logEvent(eventData) {

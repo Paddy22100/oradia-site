@@ -3815,6 +3815,9 @@ function showToreAnalysisCTA() {
 
   isToreComplete = true;
 
+  // Enregistrer le tirage Tore complété
+  if (window.freemiumTracker) window.freemiumTracker.recordToreDraw();
+
   // Collecter les cartes retournées
   const cards = [];
   if (boardHost) {
@@ -5505,6 +5508,12 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     toreIntentionInput?.setCustomValidity("");
   }
   
+  // Vérifier la limite de tirages gratuits
+  if (window.freemiumTracker && !window.freemiumTracker.canDrawTore()) {
+    window.freemiumTracker.showToreLimitReached();
+    return;
+  }
+
   // Sauvegarder l'intention dans sessionStorage
   sessionStorage.setItem('tore_intention', intentionValue);
 

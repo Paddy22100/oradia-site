@@ -108,6 +108,94 @@ class BrevoService {
         return { success: true, messageId: info.messageId };
     }
 
+    /**
+     * Envoyer l'email de réinitialisation de mot de passe
+     */
+    async sendPasswordReset({ email, resetUrl }) {
+        const html = this.generatePasswordResetHTML(resetUrl);
+        const apiKey = process.env.BREVO_API_KEY;
+        const senderEmail = process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr';
+        const senderName  = process.env.BREVO_SENDER_NAME  || 'ORADIA';
+
+        if (apiKey) {
+            const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
+                body: JSON.stringify({
+                    sender: { email: senderEmail, name: senderName },
+                    to: [{ email }],
+                    replyTo: { email: 'contact@oradia.fr', name: 'Oradia' },
+                    subject: '\u2728 R\u00e9initialisation de votre mot de passe Oradia',
+                    htmlContent: html
+                })
+            });
+            if (!response.ok) throw new Error(`Brevo API error ${response.status}`);
+            const data = await response.json();
+            return { success: true, messageId: data.messageId };
+        }
+
+        const info = await this.transporter.sendMail({
+            from: this.fromEmail,
+            to: email,
+            subject: '\u2728 R\u00e9initialisation de votre mot de passe Oradia',
+            html
+        });
+        return { success: true, messageId: info.messageId };
+    }
+
+    generatePasswordResetHTML(resetUrl) {
+        return `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>R\u00e9initialisation du mot de passe - Oradia</title></head>
+<body style="margin:0;padding:0;background-color:#030a16;font-family:Georgia,'Times New Roman',serif;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background-color:#030a16;">
+  <tr><td align="center" style="padding:32px 16px;">
+    <table width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;">
+
+      <!-- EN-T\u00caTE -->
+      <tr>
+        <td align="center" style="background:linear-gradient(160deg,#0a192f 0%,#030a16 100%);border:1px solid rgba(212,175,55,0.35);border-bottom:none;border-radius:20px 20px 0 0;padding:44px 32px 32px;">
+          <p style="color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;margin:0 0 10px;">Espace membre</p>
+          <h1 style="color:#d4af37;font-size:36px;font-weight:400;letter-spacing:0.08em;margin:0;font-family:Georgia,serif;">ORADIA</h1>
+          <div style="width:48px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.6),transparent);margin:16px auto;"></div>
+          <p style="color:rgba(245,231,161,0.65);font-size:14px;font-style:italic;margin:0;letter-spacing:0.05em;">La Boussole Int\u00e9rieure</p>
+        </td>
+      </tr>
+
+      <!-- CONTENU -->
+      <tr>
+        <td style="background:linear-gradient(160deg,#0a1628 0%,#030a16 100%);border-left:1px solid rgba(212,175,55,0.35);border-right:1px solid rgba(212,175,55,0.35);padding:36px 40px;">
+          <p style="color:rgba(212,175,55,0.55);font-size:10px;text-transform:uppercase;letter-spacing:0.25em;margin:0 0 16px;">R\u00e9initialisation du mot de passe</p>
+          <p style="color:#e9e7df;font-size:15px;line-height:1.8;margin:0 0 24px;">Vous avez demand\u00e9 \u00e0 r\u00e9initialiser votre mot de passe. Cliquez sur le bouton ci-dessous pour choisir un nouveau mot de passe.</p>
+          <p style="color:rgba(215,205,170,0.55);font-size:13px;line-height:1.7;margin:0 0 32px;">Ce lien est valable <strong style="color:rgba(212,175,55,0.75);">10 minutes</strong>. Si vous n'\u00eates pas \u00e0 l'origine de cette demande, ignorez simplement cet email.</p>
+        </td>
+      </tr>
+
+      <!-- CTA -->
+      <tr>
+        <td align="center" style="background:linear-gradient(160deg,#0a1628 0%,#030a16 100%);border-left:1px solid rgba(212,175,55,0.35);border-right:1px solid rgba(212,175,55,0.35);padding:8px 40px 36px;">
+          <a href="${resetUrl}" style="display:inline-block;background:linear-gradient(135deg,#d4af37 0%,#f5e7a1 50%,#d4af37 100%);color:#030a16;text-decoration:none;padding:16px 44px;border-radius:50px;font-family:Georgia,serif;font-weight:bold;font-size:15px;letter-spacing:0.08em;">Choisir un nouveau mot de passe</a>
+          <p style="color:rgba(148,163,184,0.4);font-size:11px;margin:18px 0 0;word-break:break-all;">Ou copiez ce lien : <a href="${resetUrl}" style="color:rgba(212,175,55,0.45);">${resetUrl}</a></p>
+        </td>
+      </tr>
+
+      <!-- PIED DE PAGE -->
+      <tr>
+        <td align="center" style="background:#020710;border:1px solid rgba(212,175,55,0.2);border-top:1px solid rgba(212,175,55,0.15);border-radius:0 0 20px 20px;padding:24px 32px;">
+          <p style="color:rgba(245,231,161,0.35);font-size:11px;line-height:1.7;margin:0;">
+            &copy; Oradia &mdash; La Boussole Int\u00e9rieure<br>
+            Si vous n'avez pas demand\u00e9 cette r\u00e9initialisation, ignorez cet email.<br>
+            <a href="https://oradia.fr" style="color:rgba(212,175,55,0.45);text-decoration:none;">oradia.fr</a>
+          </p>
+        </td>
+      </tr>
+
+    </table>
+  </td></tr>
+</table>
+</body></html>`;
+    }
+
     generateTirageAnalysisHTML({ intention, cards, analysis, synthesis }) {
         const familyLabel = f => ({
             emotions: 'Émotion', besoins: 'Besoin', transmutation: 'Transmutation',
