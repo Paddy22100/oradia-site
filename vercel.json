@@ -51,14 +51,6 @@
     {
       "src": "/api/mondial-relay/pickup-points",
       "dest": "/api/mondial-relay/pickup-points.js"
-    },
-    {
-      "src": "/api/create-tore-subscription",
-      "dest": "/api/create-tore-subscription.js"
-    },
-    {
-      "src": "/api/validate-tore-code",
-      "dest": "/api/validate-tore-code.js"
     }
   ],
   "functions": {
@@ -94,12 +86,6 @@
     },
     "api/mondial-relay/pickup-points.js": {
       "maxDuration": 15
-    },
-    "api/create-tore-subscription.js": {
-      "maxDuration": 15
-    },
-    "api/validate-tore-code.js": {
-      "maxDuration": 10
     }
   },
   "env": {

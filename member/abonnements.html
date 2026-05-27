@@ -246,9 +246,9 @@
         <main class="flex-1 p-6">
             <!-- Header Section -->
             <section class="mb-8 text-center">
-                <h2 class="cormorant text-4xl text-gold mb-4">Choisissez votre chemin spirituel</h2>
+                <h2 class="cormorant text-4xl text-gold mb-4">L'Abonnement Tore</h2>
                 <p class="text-light-gold/80 text-lg max-w-2xl mx-auto">
-                    Découvrez nos formules d'abonnement conçues pour accompagner votre évolution spirituelle à votre rythme
+                    Accédez à l'expérience complète du Tore — tirages illimités, analyses approfondies et accompagnement mensuel.
                 </p>
             </section>
 
@@ -270,186 +270,46 @@
             </section>
 
             <!-- Pricing Cards -->
-            <section class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-                <!-- Free Plan -->
-                <div class="pricing-card rounded-2xl p-8 fade-in">
-                    <div class="text-center mb-6">
-                        <h3 class="cormorant text-2xl text-gold mb-2">Gratuit</h3>
-                        <div class="text-4xl font-bold text-gold mb-2">0€</div>
-                        <p class="text-light-gold/70">Pour commencer votre voyage</p>
-                    </div>
-                    
-                    <ul class="space-y-3 mb-8">
-                        <li class="benefit-item flex items-center gap-3">
-                            <i class="fas fa-check text-gold w-5"></i>
-                            <span>1 tirage gratuit par mois</span>
-                        </li>
-                        <li class="benefit-item flex items-center gap-3">
-                            <i class="fas fa-check text-gold w-5"></i>
-                            <span>Accès à l'historique</span>
-                        </li>
-                        <li class="benefit-item flex items-center gap-3">
-                            <i class="fas fa-check text-gold w-5"></i>
-                            <span>Profil de base</span>
-                        </li>
-                        <li class="benefit-item flex items-center gap-3 text-light-gold/50">
-                            <i class="fas fa-times text-light-gold/30 w-5"></i>
-                            <span>Tirages illimités</span>
-                        </li>
-                        <li class="benefit-item flex items-center gap-3 text-light-gold/50">
-                            <i class="fas fa-times text-light-gold/30 w-5"></i>
-                            <span>Cercles exclusifs</span>
-                        </li>
-                        <li class="benefit-item flex items-center gap-3 text-light-gold/50">
-                            <i class="fas fa-times text-light-gold/30 w-5"></i>
-                            <span>Guidance personnalisée</span>
-                        </li>
-                    </ul>
-                    
-                    <button class="w-full bg-[rgba(5,20,40,0.8)] border border-gold text-gold py-3 rounded-lg font-semibold hover:bg-gold hover:text-night-blue transition-colors">
-                        Actuel
-                    </button>
-                </div>
+            <section class="flex justify-center mb-12">
+                <!-- Tore Plan -->
+                <div class="pricing-card featured rounded-2xl p-10 fade-in relative" style="max-width:420px;width:100%;">
 
-                <!-- Premium Plan -->
-                <div class="pricing-card featured rounded-2xl p-8 fade-in relative">
-                    <div class="absolute top-4 right-4 bg-gold text-night-blue text-sm font-bold px-3 py-1 rounded-full">
-                        Populaire
-                    </div>
-                    
                     <div class="text-center mb-6">
-                        <h3 class="cormorant text-2xl text-gold mb-2">Premium</h3>
-                        <div class="text-4xl font-bold text-gold mb-2">19€<span class="text-lg text-light-gold/70">/mois</span></div>
-                        <p class="text-light-gold/70">Pour les chercheurs spirituels</p>
+                        <div class="text-4xl mb-3">∞</div>
+                        <h3 class="cormorant text-3xl text-gold mb-2">Le Tore</h3>
+                        <div class="text-5xl font-bold text-gold mb-1">8€<span class="text-xl text-light-gold/70">/mois</span></div>
+                        <p class="text-light-gold/70 text-sm">Sans engagement — résiliable à tout moment</p>
                     </div>
                     
                     <ul class="space-y-3 mb-8">
                         <li class="benefit-item flex items-center gap-3">
-                            <i class="fas fa-check text-gold w-5"></i>
-                            <span>Tirages illimités</span>
+                            <i class="fas fa-infinity text-gold w-5"></i>
+                            <span>Tirages illimités chaque mois</span>
                         </li>
                         <li class="benefit-item flex items-center gap-3">
                             <i class="fas fa-check text-gold w-5"></i>
-                            <span>Accès complet à l'historique</span>
+                            <span>Code d'accès personnel reçu par email</span>
                         </li>
                         <li class="benefit-item flex items-center gap-3">
                             <i class="fas fa-check text-gold w-5"></i>
-                            <span>Profil avancé</span>
+                            <span>Analyses approfondies des cartes</span>
                         </li>
                         <li class="benefit-item flex items-center gap-3">
                             <i class="fas fa-check text-gold w-5"></i>
-                            <span>Cercles d'empuissancement</span>
+                            <span>Accès immédiat dès le paiement</span>
                         </li>
                         <li class="benefit-item flex items-center gap-3">
                             <i class="fas fa-check text-gold w-5"></i>
-                            <span>Export des tirages</span>
-                        </li>
-                        <li class="benefit-item flex items-center gap-3">
-                            <i class="fas fa-check text-gold w-5"></i>
-                            <span>Support prioritaire</span>
+                            <span>Résiliable à tout moment</span>
                         </li>
                     </ul>
                     
-                    <button id="btn-subscribe-premium" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue py-3 rounded-lg font-semibold hover:from-light-gold hover:to-gold transition-all transform hover:scale-105 shadow-lg">
-                        S'abonner
-                    </button>
-                </div>
-
-                <!-- Master Plan -->
-                <div class="pricing-card rounded-2xl p-8 fade-in">
-                    <div class="text-center mb-6">
-                        <h3 class="cormorant text-2xl text-gold mb-2">Master</h3>
-                        <div class="text-4xl font-bold text-gold mb-2">49€<span class="text-lg text-light-gold/70">/mois</span></div>
-                        <p class="text-light-gold/70">Pour les maîtres spirituels</p>
-                    </div>
-                    
-                    <ul class="space-y-3 mb-8">
-                        <li class="benefit-item flex items-center gap-3">
-                            <i class="fas fa-check text-gold w-5"></i>
-                            <span>Tout ce que Premium inclut</span>
-                        </li>
-                        <li class="benefit-item flex items-center gap-3">
-                            <i class="fas fa-check text-gold w-5"></i>
-                            <span>Guidance individuelle mensuelle</span>
-                        </li>
-                        <li class="benefit-item flex items-center gap-3">
-                            <i class="fas fa-check text-gold w-5"></i>
-                            <span>Cercles privés exclusifs</span>
-                        </li>
-                        <li class="benefit-item flex items-center gap-3">
-                            <i class="fas fa-check text-gold w-5"></i>
-                            <span>Formation avancée</span>
-                        </li>
-                        <li class="benefit-item flex items-center gap-3">
-                            <i class="fas fa-check text-gold w-5"></i>
-                            <span>Accès mentorat</span>
-                        </li>
-                        <li class="benefit-item flex items-center gap-3">
-                            <i class="fas fa-check text-gold w-5"></i>
-                            <span>Événements exclusifs</span>
-                        </li>
-                    </ul>
-                    
-                    <button id="btn-subscribe-master" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold text-gold py-3 rounded-lg font-semibold hover:bg-gold hover:text-night-blue transition-colors">
-                        S'abonner
+                    <button id="btn-subscribe-tore" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue py-4 rounded-xl font-bold text-lg hover:from-light-gold hover:to-gold transition-all transform hover:scale-105 shadow-lg">
+                        <i class="fas fa-infinity mr-2"></i> S'abonner — 8€/mois
                     </button>
                 </div>
             </section>
 
-            <!-- Comparison Table -->
-            <section class="mb-12">
-                <h3 class="cormorant text-2xl text-gold text-center mb-8">Comparaison des fonctionnalités</h3>
-                <div class="overflow-x-auto">
-                    <table class="w-full bg-[rgba(26,54,93,0.6)] rounded-xl border border-gold/30">
-                        <thead>
-                            <tr class="border-b border-gold/30">
-                                <th class="text-left p-4 text-gold">Fonctionnalité</th>
-                                <th class="text-center p-4 text-gold">Gratuit</th>
-                                <th class="text-center p-4 text-gold">Premium</th>
-                                <th class="text-center p-4 text-gold">Master</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <tr class="border-b border-gold/20">
-                                <td class="p-4 text-light-gold">Tirages par mois</td>
-                                <td class="text-center p-4 text-light-gold">1</td>
-                                <td class="text-center p-4 text-gold">Illimités</td>
-                                <td class="text-center p-4 text-gold">Illimités</td>
-                            </tr>
-                            <tr class="border-b border-gold/20">
-                                <td class="p-4 text-light-gold">Historique complet</td>
-                                <td class="text-center p-4"><i class="fas fa-times text-light-gold/30"></i></td>
-                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
-                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
-                            </tr>
-                            <tr class="border-b border-gold/20">
-                                <td class="p-4 text-light-gold">Cercles d'empuissancement</td>
-                                <td class="text-center p-4"><i class="fas fa-times text-light-gold/30"></i></td>
-                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
-                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
-                            </tr>
-                            <tr class="border-b border-gold/20">
-                                <td class="p-4 text-light-gold">Guidance individuelle</td>
-                                <td class="text-center p-4"><i class="fas fa-times text-light-gold/30"></i></td>
-                                <td class="text-center p-4"><i class="fas fa-times text-light-gold/30"></i></td>
-                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
-                            </tr>
-                            <tr class="border-b border-gold/20">
-                                <td class="p-4 text-light-gold">Export des données</td>
-                                <td class="text-center p-4"><i class="fas fa-times text-light-gold/30"></i></td>
-                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
-                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
-                            </tr>
-                            <tr>
-                                <td class="p-4 text-light-gold">Support prioritaire</td>
-                                <td class="text-center p-4"><i class="fas fa-times text-light-gold/30"></i></td>
-                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
-                                <td class="text-center p-4"><i class="fas fa-check text-gold"></i></td>
-                            </tr>
-                        </tbody>
-                    </table>
-                </div>
-            </section>
 
             <!-- FAQ Section -->
             <section class="mb-12">
@@ -633,10 +493,10 @@
             const original = btn.textContent;
             btn.disabled = true; btn.textContent = 'Redirection…';
             try {
-                const res  = await fetch('/api/create-tore-subscription', {
+                const res  = await fetch('/api/create-checkout-session', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, fullName: email.split('@')[0] })
+                    body: JSON.stringify({ type: 'tore-subscription', email, fullName: email.split('@')[0] })
                 });
                 const data = await res.json();
                 if (data.url) { window.location.href = data.url; }
@@ -647,8 +507,7 @@
             }
         }
 
-        document.getElementById('btn-subscribe-premium')?.addEventListener('click', function() { startSubscription(this); });
-        document.getElementById('btn-subscribe-master')?.addEventListener('click', function() { startSubscription(this); });
+        document.getElementById('btn-subscribe-tore')?.addEventListener('click', function() { startSubscription(this); });
 
         // Retour après paiement réussi
         (function() {

@@ -76,6 +76,43 @@ module.exports = async (req, res) => {
         // Configuration URLs unique
         const frontendUrl = process.env.FRONTEND_URL || 'https://oradia.fr';
         
+        // ── Validation code Tore ─────────────────────────────────────────────
+        if (req.body.type === 'validate-tore-code') {
+            const code = (req.body.code || '').trim().toUpperCase();
+            if (!code || code.length < 4) return res.status(400).json({ valid: false });
+            const { data, error: sbErr } = await supabase
+                .from('tore_subscriptions')
+                .select('email, status, expires_at')
+                .eq('access_code', code)
+                .eq('status', 'active')
+                .maybeSingle();
+            if (sbErr) return res.status(500).json({ valid: false });
+            if (!data) return res.status(200).json({ valid: false });
+            if (new Date(data.expires_at) < new Date()) return res.status(200).json({ valid: false, error: 'Code expiré' });
+            return res.status(200).json({ valid: true, expiresAt: data.expires_at });
+        }
+
+        // ── Création abonnement Tore ──────────────────────────────────────────
+        if (req.body.type === 'tore-subscription') {
+            const email    = (req.body.email || '').trim();
+            const fullName = (req.body.fullName || '').trim();
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
+                return res.status(400).json({ error: 'Email invalide' });
+            const priceId = process.env.STRIPE_TORE_PRICE_ID;
+            if (!priceId) return res.status(500).json({ error: 'STRIPE_TORE_PRICE_ID non configuré' });
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                mode: 'subscription',
+                line_items: [{ price: priceId, quantity: 1 }],
+                customer_email: email,
+                success_url: `${frontendUrl}/member/abonnements.html?subscribed=1`,
+                cancel_url:  `${frontendUrl}/member/abonnements.html?cancelled=1`,
+                metadata: { offer: 'tore-subscription', email, full_name: fullName },
+                subscription_data: { metadata: { email, full_name: fullName, offer: 'tore-subscription' } }
+            });
+            return res.json({ success: true, url: session.url });
+        }
+
         // Handle don-libre case separately
         if (req.body.type === 'don-libre') {
             // Validate minimum amount (20€ = 2000 centimes)

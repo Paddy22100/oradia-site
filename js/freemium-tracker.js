@@ -253,10 +253,10 @@ class FreemiumTracker {
 
     async validateSubscriptionCode(code) {
         try {
-            const res = await fetch('/api/validate-tore-code', {
+            const res = await fetch('/api/create-checkout-session', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ code: code.trim() })
+                body: JSON.stringify({ type: 'validate-tore-code', code: code.trim() })
             });
             if (!res.ok) return false;
             const data = await res.json();
