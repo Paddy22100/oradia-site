@@ -4,7 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5">
     <title>L'Abonnement Tore — ORADIA</title>
-    <meta name="description" content="Accédez à l'expérience complète du Tore avec l'abonnement mensuel ORADIA. Tirages illimités, analyses approfondies, accès immédiat.">
+    <meta name="description" content="Accédez à l'expérience complète du Tore avec l'abonnement mensuel ORADIA. Tirages illimités, accès immédiat, 8€/mois sans engagement.">
+    <meta name="robots" content="index, follow">
+    <link rel="canonical" href="https://oradia.fr/tore-abonnement.html">
+    <!-- Open Graph -->
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="L'Abonnement Tore — ORADIA">
+    <meta property="og:description" content="Tirages Tore illimités, code d'accès personnel, 8€/mois sans engagement. Découvrez l'expérience de transformation profonde ORADIA.">
+    <meta property="og:url" content="https://oradia.fr/tore-abonnement.html">
+    <meta property="og:image" content="https://oradia.fr/images/oradia-hero-4k.png">
+    <meta property="og:locale" content="fr_FR">
+    <meta property="og:site_name" content="ORADIA">
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="L'Abonnement Tore — ORADIA">
+    <meta name="twitter:description" content="Tirages Tore illimités à 8€/mois. Accès immédiat, sans engagement.">
+    <meta name="twitter:image" content="https://oradia.fr/images/oradia-hero-4k.png">
 
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -153,7 +168,46 @@
             .btn-gold { width:100%; max-width:340px; font-size:.95rem; padding:.95rem 1.5rem; }
             .hero-section { min-height:320px; padding:60px 20px; }
         }
+        /* Responsive mobile */
+        @media (max-width:639px) {
+            .pricing-card { padding: 28px 20px !important; }
+            .feature-row { padding: 12px 0; gap: 12px; }
+            .feature-icon { width:32px; height:32px; font-size:13px; }
+        }
+        @media (max-width:480px) {
+            .nav-bar { padding: 12px 16px; }
+            .hero-section { padding: 50px 16px; min-height: 280px; }
+        }
+        /* Paysage mobile : réduire le hero */
+        @media (max-height:500px) and (orientation:landscape) {
+            .hero-section { min-height: 200px; padding: 40px 20px; }
+            .hero-content div[style*="font-size:80px"] { font-size: 52px !important; }
+        }
     </style>
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Offer",
+      "name": "Abonnement Tore ORADIA",
+      "description": "Accès illimité aux tirages Tore, code d'accès personnel par email, espace membre personnel.",
+      "price": "8.00",
+      "priceCurrency": "EUR",
+      "priceSpecification": {
+        "@type": "UnitPriceSpecification",
+        "price": "8.00",
+        "priceCurrency": "EUR",
+        "billingDuration": "P1M"
+      },
+      "url": "https://oradia.fr/tore-abonnement.html",
+      "seller": {
+        "@type": "Organization",
+        "name": "ORADIA",
+        "url": "https://oradia.fr"
+      },
+      "availability": "https://schema.org/InStock"
+    }
+    </script>
 </head>
 
 <body class="bg-night-blue text-light-gold">
@@ -203,8 +257,8 @@
 
             <!-- CTA -->
             <div style="margin-bottom:16px;">
-                <a id="btn-subscribe" href="member/register.html?plan=tore" class="btn-gold">
-                    <i class="fas fa-infinity"></i>
+                <a id="btn-subscribe" href="member/register.html?plan=tore" class="btn-gold" aria-label="S'abonner à l'abonnement Tore — 8 euros par mois">
+                    <i class="fas fa-infinity" aria-hidden="true"></i>
                     S'abonner — 8€/mois
                 </a>
             </div>
@@ -262,7 +316,7 @@
 
     <!-- Citation pleine largeur -->
     <div class="fade-up delay-3" style="text-align:center;padding-top:48px;">
-        <p class="cormorant" style="font-size:clamp(14px,1.6vw,22px);font-weight:400;color:rgba(212,175,55,0.7);font-style:italic;margin:0 0 10px;white-space:nowrap;">
+        <p class="cormorant" style="font-size:clamp(14px,1.6vw,22px);font-weight:400;color:rgba(212,175,55,0.7);font-style:italic;margin:0 0 10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:100%;">
             "ORADIA n'est pas un oracle qui prédit, c'est un miroir qui révèle ce qui cherche à se transformer en vous."
         </p>
         <p style="font-family:'Poppins',sans-serif;font-size:14px;color:rgba(212,175,55,0.4);margin:0;letter-spacing:0.08em;">
