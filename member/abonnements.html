@@ -401,6 +401,7 @@
 
     </div><!-- /main-content -->
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="../js/freemium-tracker.js"></script>
     <script>
         function toggleGatePassword() {
@@ -425,27 +426,55 @@
 
         // ── Auth gate ────────────────────────────────────────────────────────────
         const SESSION_KEY = 'oradia_member_session';
+        
+        // Initialisation Supabase
+        const supabaseUrl = 'https://bwvlpgklnhcwkdpabiwd.supabase.co';
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dmxwZ2tsbmhjd2tkcGFiaXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMDg1MTYsImV4cCI6MjA2MDc4NDUxNn0.QjHlhVPGC7jX6mX6HlFR-oZLkJhnc34aK2uL9xrrv6o';
+        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
 
-        function gateLogin() {
+        async function gateLogin() {
             const email = document.getElementById('gate-email').value.trim();
             const pass  = document.getElementById('gate-password').value;
             const msg   = document.getElementById('gate-msg');
 
             if (!email || !pass) { msg.textContent = 'Veuillez remplir tous les champs.'; return; }
 
-            // Vérification : l'email doit correspondre à un abonnement actif dans localStorage
-            const sub = window.freemiumTracker ? window.freemiumTracker.isSubscribed() : false;
-            // Connexion simple : l'utilisateur doit avoir un abonnement Tore actif enregistré
-            // ou fournir les credentials d'un compte existant (vérification via cookie/token)
-            // Pour l'instant on accepte tout email valide avec le code d'abonnement actif
-            const subData = localStorage.getItem('oradia_subscription');
-            if (!subData) {
-                msg.textContent = 'Aucun abonnement actif trouvé. Utilisez d\'abord votre code d\'accès sur tore.html.';
+            // Connexion avec Supabase Auth
+            try {
+                const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+                    email: email,
+                    password: pass
+                });
+                
+                if (authError || !authData.user) {
+                    msg.textContent = 'Email ou mot de passe incorrect.';
+                    return;
+                }
+                
+                // Vérifier l'abonnement dans la table tore_subscriptions
+                const { data: subData, error: subError } = await supabase
+                    .from('tore_subscriptions')
+                    .select('status, full_name')
+                    .eq('email', email)
+                    .single();
+                
+                if (subError || !subData || subData.status !== 'active') {
+                    msg.textContent = 'Aucun abonnement Tore actif trouvé. Souscrivez à l\'abonnement sur tore-abonnement.html pour accéder à cet espace.';
+                    return;
+                }
+                
+                // Stocker la session
+                sessionStorage.setItem(SESSION_KEY, JSON.stringify({ 
+                    email: email, 
+                    name: subData.full_name || email.split('@')[0] 
+                }));
+                showMainContent(email);
+                
+            } catch (error) {
+                msg.textContent = 'Erreur de connexion. Veuillez réessayer.';
+                console.error('Login error:', error);
                 return;
             }
-            // Stocker la session membre
-            sessionStorage.setItem(SESSION_KEY, JSON.stringify({ email, name: email.split('@')[0] }));
-            showMainContent(email);
         }
 
         function showMainContent(email) {
@@ -457,12 +486,7 @@
             // Mettre à jour le statut abonnement
             const statusEl = document.querySelector('#main-content .text-gold\\/60.text-sm');
             if (statusEl) {
-                const sub = localStorage.getItem('oradia_subscription');
-                try {
-                    const { expiry } = JSON.parse(sub || '{}');
-                    const date = expiry ? new Intl.DateTimeFormat('fr-FR', {day:'2-digit',month:'long',year:'numeric'}).format(new Date(expiry)) : '—';
-                    statusEl.textContent = `Abonnement actif — expire le ${date}`;
-                } catch(e) { statusEl.textContent = 'Abonnement Tore'; }
+                statusEl.textContent = 'Abonnement Tore actif';
             }
         }
 
@@ -475,7 +499,8 @@
         })();
 
         // Logout
-        document.getElementById('logoutBtn').addEventListener('click', () => {
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await supabase.auth.signOut();
             sessionStorage.removeItem(SESSION_KEY);
             window.location.href = '../index.html';
         });

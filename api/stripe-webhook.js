@@ -260,10 +260,34 @@ oradia.fr`
     }
 }
 
-async function sendToreSubscriptionEmail({ toEmail, toName, accessCode, expiresAt }) {
+async function sendToreSubscriptionEmail({ toEmail, toName, tempPassword }) {
     try {
         if (!process.env.BREVO_API_KEY || !process.env.BREVO_SENDER_EMAIL) return false;
-        const expiryFormatted = new Intl.DateTimeFormat('fr-FR', { day:'2-digit', month:'long', year:'numeric' }).format(new Date(expiresAt));
+        
+        // Section mot de passe (uniquement pour nouveaux utilisateurs)
+        const passwordSection = tempPassword ? `
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.12);border:2px solid rgba(212,175,55,0.5);border-radius:4px;margin-bottom:28px;">
+            <tr><td align="center" style="padding:28px;">
+              <p style="margin:0 0 12px;color:rgba(212,175,55,0.7);font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;">Votre mot de passe temporaire</p>
+              <p style="margin:0;color:#f0c75e;font-family:'Courier New',monospace;font-size:28px;font-weight:700;letter-spacing:0.2em;padding:12px 20px;background:rgba(0,0,0,0.3);border-radius:4px;">${tempPassword}</p>
+              <p style="margin:12px 0 0;color:rgba(212,175,55,0.5);font-family:'Lora',Georgia,serif;font-size:12px;">Vous pourrez le modifier dans votre espace membre</p>
+            </td></tr>
+          </table>
+        ` : `
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.08);border:1.5px solid rgba(212,175,55,0.4);border-radius:4px;margin-bottom:28px;">
+            <tr><td align="center" style="padding:28px;">
+              <p style="margin:0 0 10px;color:rgba(212,175,55,0.6);font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;">Vos accès</p>
+              <p style="margin:0;color:#f0c75e;font-family:'Lora',Georgia,serif;font-size:16px;line-height:1.6;">
+                Connectez-vous avec votre email et votre mot de passe
+              </p>
+            </td></tr>
+          </table>
+        `;
+        
+        const textPassword = tempPassword ? 
+            `\nVotre mot de passe temporaire : ${tempPassword}\nVous pourrez le modifier dans votre espace membre.\n` : 
+            `\nConnectez-vous avec votre email et votre mot de passe.\n`;
+        
         const response = await fetch('https://api.brevo.com/v3/smtp/email', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
@@ -271,28 +295,38 @@ async function sendToreSubscriptionEmail({ toEmail, toName, accessCode, expiresA
                 sender:    { email: process.env.BREVO_SENDER_EMAIL, name: process.env.BREVO_SENDER_NAME || 'ORADIA' },
                 to:        [{ email: toEmail, name: toName }],
                 replyTo:   { email: 'contact@oradia.fr', name: 'Oradia' },
-                subject:   '✦ Votre accès au Tore — Code d\'activation',
+                subject:   '✦ Bienvenue dans Le Tore — Votre abonnement est actif',
                 htmlContent: `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#050a14;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#050a14;padding:48px 20px;">
     <tr><td align="center">
       <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background:linear-gradient(135deg,#0a1628,#051428);border:1px solid rgba(212,175,55,0.3);border-radius:4px;">
         <tr><td align="center" style="padding:48px 40px 24px;">
-          <p style="margin:0 0 6px;color:rgba(212,175,55,0.5);font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.45em;text-transform:uppercase;">Accès activé</p>
+          <p style="margin:0 0 6px;color:rgba(212,175,55,0.5);font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.45em;text-transform:uppercase;">Abonnement activé</p>
           <h1 style="margin:0;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:38px;font-weight:300;letter-spacing:2px;">Le Tore</h1>
           <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:20px auto;"></div>
         </td></tr>
         <tr><td style="padding:0 40px 32px;">
           <p style="color:#e8e9eb;font-family:'Lora',Georgia,serif;font-size:16px;line-height:1.8;">${toName ? toName + ',' : 'Bienvenue,'}</p>
-          <p style="color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;margin-bottom:32px;">Votre abonnement au Tore est actif. Voici votre code personnel pour accéder à l'expérience complète.</p>
-          <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.08);border:1.5px solid rgba(212,175,55,0.4);border-radius:4px;margin-bottom:28px;">
-            <tr><td align="center" style="padding:28px;">
-              <p style="margin:0 0 10px;color:rgba(212,175,55,0.6);font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;">Votre code d'accès</p>
-              <p style="margin:0;color:#f0c75e;font-family:'Courier New',monospace;font-size:32px;font-weight:700;letter-spacing:0.3em;">${accessCode}</p>
-              <p style="margin:10px 0 0;color:rgba(212,175,55,0.45);font-family:'Lora',Georgia,serif;font-size:12px;">Valide jusqu'au ${expiryFormatted}</p>
+          <p style="color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;margin-bottom:32px;">Votre abonnement au Tore est maintenant actif. Vous avez accès illimité à l'expérience complète d'Oradia.</p>
+          
+          ${passwordSection}
+          
+          <p style="color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;margin-bottom:24px;">
+            <strong style="color:#f0c75e;">Accès direct :</strong> Rendez-vous sur la page Tore et connectez-vous à votre espace membre pour commencer votre exploration.
+          </p>
+          
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
+            <tr><td align="center">
+              <a href="https://oradia.fr/tore.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a1628;font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-weight:600;text-decoration:none;padding:16px 40px;border-radius:50px;letter-spacing:0.5px;">
+                Accéder au Tore
+              </a>
             </td></tr>
           </table>
-          <p style="color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;">Entrez ce code sur la page Tore lorsqu'on vous le demande. Il se renouvelle automatiquement chaque mois.</p>
+          
+          <p style="color:rgba(212,175,55,0.6);font-family:'Lora',Georgia,serif;font-size:13px;line-height:1.6;margin-top:24px;">
+            Votre abonnement se renouvelle automatiquement chaque mois. Vous pouvez le gérer à tout moment depuis votre espace membre.
+          </p>
         </td></tr>
         <tr><td align="center" style="padding:24px 40px 48px;border-top:1px solid rgba(212,175,55,0.1);">
           <p style="margin:0 0 4px;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;">Rudy</p>
@@ -302,7 +336,7 @@ async function sendToreSubscriptionEmail({ toEmail, toName, accessCode, expiresA
     </td></tr>
   </table>
 </body></html>`,
-                textContent: `Votre accès au Tore est actif.\n\nCode d'accès : ${accessCode}\nValide jusqu'au : ${expiryFormatted}\n\nEntrez ce code sur la page Tore lorsqu'on vous le demande.\n\nOradia — oradia.fr`
+                textContent: `Bienvenue dans Le Tore\n\nVotre abonnement est maintenant actif.${textPassword}\nAccéder au Tore : https://oradia.fr/tore.html\n\nVotre abonnement se renouvelle automatiquement chaque mois.\n\nOradia — oradia.fr`
             })
         });
         return response.ok;
@@ -438,32 +472,58 @@ const handler = async (req, res) => {
 
                 // ── Gestion abonnement Tore ──────────────────────────────────────
                 if (extractedData.offer === 'tore-subscription') {
-                    const crypto  = require('crypto');
                     const supabase = getSupabaseClient();
-                    const accessCode = crypto.randomBytes(5).toString('hex').toUpperCase(); // ex: A3F9C2B1
-                    const expiry = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
 
+                    // 1. Créer ou mettre à jour l'utilisateur dans Supabase Auth
+                    const tempPassword = crypto.randomBytes(8).toString('hex'); // Mot de passe temporaire
+                    
+                    // Vérifier si l'utilisateur existe déjà
+                    const { data: existingUsers } = await supabase
+                        .from('tore_subscriptions')
+                        .select('id')
+                        .eq('email', extractedData.email)
+                        .single();
+
+                    if (!existingUsers) {
+                        // Créer l'utilisateur dans Supabase Auth
+                        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+                            email: extractedData.email,
+                            password: tempPassword,
+                            email_confirm: true,
+                            user_metadata: {
+                                full_name: extractedData.full_name || '',
+                                subscription_type: 'tore',
+                                subscription_active: true
+                            }
+                        });
+
+                        if (authError) {
+                            console.error('Supabase Auth user creation error:', authError.message);
+                        } else {
+                            console.log('Supabase Auth user created:', authUser.user.id);
+                        }
+                    }
+
+                    // 2. Enregistrer l'abonnement dans la table
                     const { error: subError } = await supabase
                         .from('tore_subscriptions')
                         .upsert({
                             email:        extractedData.email,
                             full_name:    extractedData.full_name || '',
-                            access_code:  accessCode,
                             status:       'active',
-                            expires_at:   expiry,
+                            temp_password: existingUsers ? undefined : tempPassword, // Stocker temporairement
                             created_at:   new Date().toISOString(),
                             updated_at:   new Date().toISOString()
                         }, { onConflict: 'email' });
 
                     if (subError) console.error('tore_subscriptions upsert error:', subError.message);
 
-                    // Email Brevo avec le code d'accès
+                    // Email Brevo de confirmation d'abonnement avec mot de passe temporaire
                     if (extractedData.email) {
                         await sendToreSubscriptionEmail({
                             toEmail:    extractedData.email,
                             toName:     extractedData.full_name || '',
-                            accessCode: accessCode,
-                            expiresAt:  expiry
+                            tempPassword: existingUsers ? null : tempPassword // Envoyer le mot de passe si nouvel utilisateur
                         });
                     }
 

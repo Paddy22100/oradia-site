@@ -4128,17 +4128,18 @@ function showToreAnalysisCTA() {
 
     // Couleur selon le contexte (passé via data-match sur le SVG parent)
     const matchState = arrow.dataset.match;
-    const lineColor  = matchState === 'true'  ? 'rgba(46,204,113,0.9)'
-                     : matchState === 'false' ? 'rgba(231,76,60,0.9)'
-                     : 'rgba(212,175,55,0.85)';
-    const glowColor  = matchState === 'true'  ? '46,204,113'
-                     : matchState === 'false' ? '231,76,60'
+    // Couleurs harmonieuses avec l'univers Oradia (doré, bleu doux, violet)
+    const lineColor  = matchState === 'true'  ? 'rgba(125,211,252,0.9)'   // bleu ciel doux
+                     : matchState === 'false' ? 'rgba(192,132,252,0.9)'   // violet orchidée
+                     : 'rgba(212,175,55,0.85)';                          // doré Oradia
+    const glowColor  = matchState === 'true'  ? '125,211,252'
+                     : matchState === 'false' ? '192,132,252'
                      : '212,175,55';
 
-    // Couleurs projectile selon accord/passerelle/neutre
-    const c1 = matchState === 'true'  ? '#a8ff78' : matchState === 'false' ? '#ff6b35' : '#ffd700';
-    const c2 = matchState === 'true'  ? '#78e08f' : matchState === 'false' ? '#ff3d00' : '#ffaa00';
-    const c3 = matchState === 'true'  ? '#20bf6b' : matchState === 'false' ? '#b71c1c' : '#e67e22';
+    // Couleurs projectile harmonieuses (bleu ciel / violet / doré)
+    const c1 = matchState === 'true'  ? '#bae6fd' : matchState === 'false' ? '#e9d5ff' : '#f0c75e';
+    const c2 = matchState === 'true'  ? '#7dd3fc' : matchState === 'false' ? '#c084fc' : '#d4af37';
+    const c3 = matchState === 'true'  ? '#38bdf8' : matchState === 'false' ? '#a855f7' : '#b8860b';
     const glowDev = matchState === 'false' ? '6' : '5';
 
     // Calcul de l'angle pour orienter les particules
