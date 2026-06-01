@@ -324,11 +324,12 @@
         document.getElementById('prevBtn').addEventListener('click', () => setStep(currentStep - 1));
 
         // Initialiser Supabase avec vérification
-        let supabase = null;
+        let supabaseReady = false;
         try {
             const SUPABASE_URL = 'https://bwvlpgklnhcwkdpabiwd.supabase.co';
             const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dmxwZ2tsbmhjd2tkcGFiaXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMDg1MTYsImV4cCI6MjA2MDc4NDUxNn0.ewf4U02F7k4q8lF_VtyxBzimXNKX2nD3JCC-7Bj_Q2w';
             supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            supabaseReady = true;
             console.log('Supabase initialized successfully');
         } catch (e) {
             console.error('Failed to initialize Supabase:', e);
@@ -363,7 +364,7 @@
 
             try {
                 // Vérifier que Supabase est initialisé
-                if (!supabase) {
+                if (!supabaseReady) {
                     throw new Error('Supabase non initialisé');
                 }
 
