@@ -507,21 +507,26 @@
 
         // ── Abonnement Stripe ──────────────────────────────────────────────────
         async function startSubscription(btn) {
-            const sess = sessionStorage.getItem(SESSION_KEY);
-            let email = '';
-            try { email = JSON.parse(sess || '{}').email || ''; } catch(e) {}
-            if (!email) {
-                // Pas connecté → redirect vers register avec plan
-                window.location.href = 'register.html?plan=tore';
+            // Vérifier si l'utilisateur est connecté avec Supabase Auth
+            const { data: { session } } = await supabase.auth.getSession();
+            const user = session?.user;
+            
+            if (!user) {
+                // Pas connecté → redirect vers register pour créer compte puis abonnement
+                window.location.href = 'register.html?subscribe=tore';
                 return;
             }
+            
+            // Utilisateur connecté → redirection Stripe
+            const email = user.email;
+            const fullName = user.user_metadata?.full_name || email.split('@')[0];
             const original = btn.textContent;
             btn.disabled = true; btn.textContent = 'Redirection…';
             try {
                 const res  = await fetch('/api/create-checkout-session', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'tore-subscription', email, fullName: email.split('@')[0] })
+                    body: JSON.stringify({ type: 'tore-subscription', email, fullName })
                 });
                 const data = await res.json();
                 if (data.url) { window.location.href = data.url; }

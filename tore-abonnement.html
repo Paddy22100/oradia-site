@@ -257,7 +257,7 @@
 
             <!-- CTA -->
             <div style="margin-bottom:16px;">
-                <a id="btn-subscribe" href="member/register.html?plan=tore" class="btn-gold" aria-label="S'abonner à l'abonnement Tore — 8 euros par mois">
+                <a id="btn-subscribe" href="member/register.html?subscribe=tore" class="btn-gold" aria-label="S'abonner à l'abonnement Tore — 8 euros par mois">
                     <i class="fas fa-infinity" aria-hidden="true"></i>
                     S'abonner — 8€/mois
                 </a>
@@ -322,37 +322,84 @@
 <!-- Footer du site -->
 <div id="footer-placeholder"></div>
 <script src="components/footer-manager.js" defer></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <script>
-    // Si déjà connecté → appel direct Stripe sans passer par register
-    (function() {
-        const sess = sessionStorage.getItem('oradia_member_session');
-        if (!sess) return;
-        try {
-            const { email } = JSON.parse(sess);
-            if (!email) return;
+    const SUPABASE_URL = 'https://bwvlpgklnhcwkdpabiwd.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dmxwZ2tsbmhjd2tkcGFiaXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMDg1MTYsImV4cCI6MjA2MDc4NDUxNn0.ewf4U02F7k4q8lF_VtyxBzimXNKX2nD3JCC-7Bj_Q2w';
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Vérifier si on arrive de register.html avec un compte créé
+    const urlParams = new URLSearchParams(window.location.search);
+    const justRegistered = urlParams.get('registered') === '1';
+    const registeredEmail = urlParams.get('email');
+
+    // Si vient de register, lancer Stripe automatiquement
+    if (justRegistered && registeredEmail) {
+        (async function() {
             const btn = document.getElementById('btn-subscribe');
-            btn.removeAttribute('href');
-            btn.addEventListener('click', async function(e) {
-                e.preventDefault();
-                const orig = btn.innerHTML;
-                btn.disabled = true;
-                btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redirection…';
-                try {
-                    const res  = await fetch('/api/create-checkout-session', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ type: 'tore-subscription', email, fullName: email.split('@')[0] })
-                    });
-                    const data = await res.json();
-                    if (data.url) { window.location.href = data.url; }
-                    else { btn.disabled = false; btn.innerHTML = orig; alert('Erreur : ' + (data.error || 'Réessayez.')); }
-                } catch(err) {
-                    btn.disabled = false; btn.innerHTML = orig;
-                    alert('Erreur réseau. Veuillez réessayer.');
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Préparation du paiement…';
+            btn.disabled = true;
+            
+            try {
+                const res = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        type: 'tore-subscription', 
+                        email: registeredEmail, 
+                        fullName: registeredEmail.split('@')[0] 
+                    })
+                });
+                const data = await res.json();
+                if (data.url) { 
+                    window.location.href = data.url; 
+                } else { 
+                    btn.disabled = false; 
+                    btn.innerHTML = '<i class="fas fa-infinity"></i> S\'abonner — 8€/mois';
+                    alert('Erreur : ' + (data.error || 'Réessayez.')); 
                 }
-            });
-        } catch(e) {}
+            } catch(err) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-infinity"></i> S\'abonner — 8€/mois';
+                alert('Erreur réseau. Veuillez réessayer.');
+            }
+        })();
+    }
+
+    // Si déjà connecté via Supabase → appel direct Stripe sans passer par register
+    (async function() {
+        const { data: { session } } = await supabase.auth.getSession();
+        const user = session?.user;
+        
+        if (!user) return; // Pas connecté, garder le comportement par défaut (lien vers register)
+        
+        const email = user.email;
+        const btn = document.getElementById('btn-subscribe');
+        btn.removeAttribute('href');
+        btn.addEventListener('click', async function(e) {
+            e.preventDefault();
+            const orig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Redirection…';
+            try {
+                const res = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        type: 'tore-subscription', 
+                        email, 
+                        fullName: user.user_metadata?.full_name || email.split('@')[0] 
+                    })
+                });
+                const data = await res.json();
+                if (data.url) { window.location.href = data.url; }
+                else { btn.disabled = false; btn.innerHTML = orig; alert('Erreur : ' + (data.error || 'Réessayez.')); }
+            } catch(err) {
+                btn.disabled = false; btn.innerHTML = orig;
+                alert('Erreur réseau. Veuillez réessayer.');
+            }
+        });
     })();
 </script>
 

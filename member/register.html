@@ -9,6 +9,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="../security.js"></script>
     
     <style>
@@ -322,8 +323,17 @@
         });
         document.getElementById('prevBtn').addEventListener('click', () => setStep(currentStep - 1));
 
+        // Initialiser Supabase
+        const SUPABASE_URL = 'https://bwvlpgklnhcwkdpabiwd.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dmxwZ2tsbmhjd2tkcGFiaXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMDg1MTYsImV4cCI6MjA2MDc4NDUxNn0.ewf4U02F7k4q8lF_VtyxBzimXNKX2nD3JCC-7Bj_Q2w';
+        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Vérifier si on vient pour un abonnement Tore
+        const urlParams = new URLSearchParams(window.location.search);
+        const subscribeToTore = urlParams.get('subscribe') === 'tore';
+
         // Soumission
-        document.getElementById('registerForm').addEventListener('submit', function(e) {
+        document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             if (!document.getElementById('terms').checked) {
                 flash('Vous devez accepter les conditions d\'utilisation.', 'error'); return;
@@ -332,26 +342,59 @@
             btn.disabled = true; btn.textContent = 'Création en cours…';
 
             const email = document.getElementById('email').value.trim();
+            const password = document.getElementById('password').value;
             const name  = document.getElementById('firstName').value.trim() + ' ' + document.getElementById('lastName').value.trim();
-            localStorage.setItem('userEmail', email);
-            localStorage.setItem('userName', name);
-            sessionStorage.setItem('oradia_member_session', JSON.stringify({ email, name }));
 
-            // Inscription newsletter si case cochée
-            if (document.getElementById('newsletter').checked) {
-                fetch('/api/newsletter/subscribe', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        email,
-                        name,
-                        source: 'user_registration'
-                    })
-                }).catch(() => {}); // non-bloquant
+            try {
+                // Créer le compte dans Supabase Auth
+                const { data: authData, error: authError } = await supabase.auth.signUp({
+                    email: email,
+                    password: password,
+                    options: {
+                        data: {
+                            full_name: name
+                        }
+                    }
+                });
+
+                if (authError) {
+                    throw new Error(authError.message);
+                }
+
+                // Sauvegarder en local pour compatibilité
+                localStorage.setItem('userEmail', email);
+                localStorage.setItem('userName', name);
+                sessionStorage.setItem('oradia_member_session', JSON.stringify({ email, name }));
+
+                // Inscription newsletter si case cochée
+                if (document.getElementById('newsletter').checked) {
+                    fetch('/api/newsletter/subscribe', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            email,
+                            name,
+                            source: 'user_registration'
+                        })
+                    }).catch(() => {}); // non-bloquant
+                }
+
+                flash('Espace créé avec succès ! Bienvenue.', 'success');
+
+                // Redirection
+                setTimeout(() => {
+                    if (subscribeToTore) {
+                        // Rediriger vers Stripe pour l'abonnement Tore
+                        window.location.href = '/tore-abonnement.html?registered=1&email=' + encodeURIComponent(email);
+                    } else {
+                        window.location.href = 'abonnements.html';
+                    }
+                }, 1800);
+
+            } catch (error) {
+                btn.disabled = false; btn.textContent = 'Créer mon espace';
+                flash('Erreur lors de la création : ' + error.message, 'error');
             }
-
-            flash('Espace créé avec succès ! Bienvenue.', 'success');
-            setTimeout(() => { window.location.href = 'abonnements.html'; }, 1800);
         });
 
         // Flash message
