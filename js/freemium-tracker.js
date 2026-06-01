@@ -262,24 +262,6 @@ class FreemiumTracker {
         localStorage.setItem('oradia_tore_draws', JSON.stringify(data));
     }
 
-    async validateSubscriptionCode(code) {
-        try {
-            const res = await fetch('/api/create-checkout-session', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type: 'validate-tore-code', code: code.trim() })
-            });
-            if (!res.ok) return false;
-            const data = await res.json();
-            if (!data.valid || !data.expiresAt) return false;
-            // Stocker l'accès localement jusqu'à expiration réelle
-            localStorage.setItem('oradia_subscription', JSON.stringify({ expiry: data.expiresAt }));
-            return true;
-        } catch(e) {
-            return false;
-        }
-    }
-
     showToreLimitReached() {
         const modal = document.createElement('div');
         modal.id = 'tore-limit-modal';
@@ -311,45 +293,12 @@ class FreemiumTracker {
                         <i class="fas fa-user-circle"></i> Se connecter à mon espace
                     </a>
                 </div>
-                <!-- Séparateur code -->
-                <div style="display:flex;align-items:center;gap:14px;margin:20px 0 16px;">
-                    <div style="flex:1;height:1px;background:rgba(212,175,55,0.10);"></div>
-                    <span style="font-family:'Lora',Georgia,serif;font-size:12px;color:rgba(212,175,55,0.30);letter-spacing:0.10em;">ou entrer votre code d'accès</span>
-                    <div style="flex:1;height:1px;background:rgba(212,175,55,0.10);"></div>
-                </div>
-                <!-- Champ code -->
-                <div style="display:flex;gap:10px;max-width:440px;margin:0 auto;">
-                    <input id="tore-sub-code" type="password" placeholder="Votre code d'accès reçu par email" style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.3);border-radius:12px;padding:14px 18px;color:#e9e7df;font-family:'Lora',Georgia,serif;font-size:15px;outline:none;" onfocus="this.style.borderColor='rgba(212,175,55,0.7)'" onblur="this.style.borderColor='rgba(212,175,55,0.3)'" />
-                    <button id="tore-sub-validate" style="background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.55);color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-weight:700;letter-spacing:0.1em;padding:14px 22px;border-radius:12px;cursor:pointer;white-space:nowrap;" onmouseover="this.style.background='rgba(212,175,55,0.30)'" onmouseout="this.style.background='rgba(212,175,55,0.15)'">Valider</button>
-                </div>
-                <p id="tore-sub-msg" style="font-family:'Lora',Georgia,serif;font-size:14px;margin-top:14px;min-height:20px;color:rgba(231,76,60,0.85);"></p>
                 <!-- Fermer -->
                 <button onclick="document.getElementById('tore-limit-modal').remove()" style="background:none;border:none;color:rgba(212,175,55,0.28);font-family:'Lora',Georgia,serif;font-size:13px;cursor:pointer;letter-spacing:0.08em;margin-top:8px;" onmouseover="this.style.color='rgba(212,175,55,0.6)'" onmouseout="this.style.color='rgba(212,175,55,0.28)'">Fermer</button>
                 <p style="font-family:'Lora',Georgia,serif;font-size:12px;color:rgba(148,163,184,0.32);margin-top:20px;">Votre tirage gratuit se renouvelle chaque jour.</p>
             </div>
         `;
         document.body.appendChild(modal);
-
-        // Gestion validation code
-        document.getElementById('tore-sub-validate').addEventListener('click', async () => {
-            const code = document.getElementById('tore-sub-code').value;
-            const msg  = document.getElementById('tore-sub-msg');
-            if (!code.trim()) { msg.textContent = 'Veuillez entrer votre code.'; return; }
-            const ok = await this.validateSubscriptionCode(code);
-            if (ok) {
-                msg.style.color = 'rgba(46,204,113,0.9)';
-                msg.textContent = '✓ Accès illimité activé. Bienvenue !';
-                setTimeout(() => document.getElementById('tore-limit-modal')?.remove(), 1500);
-            } else {
-                msg.style.color = 'rgba(231,76,60,0.85)';
-                msg.textContent = 'Code invalide. Vérifiez votre email d\'abonnement.';
-            }
-        });
-
-        // Valider aussi avec Entrée
-        document.getElementById('tore-sub-code').addEventListener('keydown', (e) => {
-            if (e.key === 'Enter') document.getElementById('tore-sub-validate').click();
-        });
     }
 }
 

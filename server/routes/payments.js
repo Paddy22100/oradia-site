@@ -262,31 +262,6 @@ const validatePreorder = [
 // Route pour créer une session de précommande Oracle
 router.post('/create-checkout-session', validatePreorder, async (req, res) => {
     try {
-        // Gestion de la validation du code d'accès Tore
-        if (req.body.type === 'validate-tore-code') {
-            const { code } = req.body;
-            const VALID_CODE = 'Oradia2026!';
-            
-            if (code && code.trim() === VALID_CODE) {
-                // Code valide - accès illimité pour 100 ans
-                const expiresAt = new Date();
-                expiresAt.setFullYear(expiresAt.getFullYear() + 100);
-                
-                return res.json({
-                    success: true,
-                    valid: true,
-                    expiresAt: expiresAt.toISOString(),
-                    message: 'Accès illimité activé'
-                });
-            } else {
-                return res.status(400).json({
-                    success: false,
-                    valid: false,
-                    message: 'Code d\'accès invalide'
-                });
-            }
-        }
-
         const errors = validationResult(req);
         if (!errors.isEmpty()) {
             return res.status(400).json({
