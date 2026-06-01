@@ -1,6 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
-const { verifyAdminAuth } = require('../lib/_admin-auth');
-const { loadLocalEnvIfNeeded } = require('../lib/_load-local-env');
+const { verifyAdminAuth } = require('../../server/lib/_admin-auth');
+const { loadLocalEnvIfNeeded } = require('../../server/lib/_load-local-env');
 
 loadLocalEnvIfNeeded();
 

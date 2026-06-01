@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-const { loadLocalEnvIfNeeded } = require('./lib/load-local-env');
+const { loadLocalEnvIfNeeded } = require('../server/lib/_load-local-env');
 
 loadLocalEnvIfNeeded();
 

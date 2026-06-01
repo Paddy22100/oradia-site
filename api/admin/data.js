@@ -1,5 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
-const { verifyAdminAuth } = require('../lib/_admin-auth');
+const { verifyAdminAuth } = require('../../server/lib/_admin-auth');
 
 // Variables d'environnement
 const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
