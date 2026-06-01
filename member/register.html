@@ -323,10 +323,17 @@
         });
         document.getElementById('prevBtn').addEventListener('click', () => setStep(currentStep - 1));
 
-        // Initialiser Supabase
-        const SUPABASE_URL = 'https://bwvlpgklnhcwkdpabiwd.supabase.co';
-        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dmxwZ2tsbmhjd2tkcGFiaXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMDg1MTYsImV4cCI6MjA2MDc4NDUxNn0.ewf4U02F7k4q8lF_VtyxBzimXNKX2nD3JCC-7Bj_Q2w';
-        const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        // Initialiser Supabase avec vérification
+        let supabase = null;
+        try {
+            const SUPABASE_URL = 'https://bwvlpgklnhcwkdpabiwd.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dmxwZ2tsbmhjd2tkcGFiaXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMDg1MTYsImV4cCI6MjA2MDc4NDUxNn0.ewf4U02F7k4q8lF_VtyxBzimXNKX2nD3JCC-7Bj_Q2w';
+            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            console.log('Supabase initialized successfully');
+        } catch (e) {
+            console.error('Failed to initialize Supabase:', e);
+            flash('Erreur de connexion au service. Veuillez réessayer.', 'error');
+        }
 
         // Vérifier si on vient pour un abonnement Tore
         const urlParams = new URLSearchParams(window.location.search);
@@ -335,17 +342,31 @@
         // Soumission
         document.getElementById('registerForm').addEventListener('submit', async function(e) {
             e.preventDefault();
+            console.log('Form submit triggered');
+            
             if (!document.getElementById('terms').checked) {
-                flash('Vous devez accepter les conditions d\'utilisation.', 'error'); return;
+                flash('Vous devez accepter les conditions d\'utilisation.', 'error'); 
+                return;
             }
+            
             const btn = document.getElementById('submitBtn');
-            btn.disabled = true; btn.textContent = 'Création en cours…';
+            btn.disabled = true; 
+            btn.textContent = 'Création en cours…';
 
             const email = document.getElementById('email').value.trim();
             const password = document.getElementById('password').value;
-            const name  = document.getElementById('firstName').value.trim() + ' ' + document.getElementById('lastName').value.trim();
+            const firstName = document.getElementById('firstName').value.trim();
+            const lastName = document.getElementById('lastName').value.trim();
+            const name = firstName + ' ' + lastName;
+
+            console.log('Creating account for:', email);
 
             try {
+                // Vérifier que Supabase est initialisé
+                if (!supabase) {
+                    throw new Error('Supabase non initialisé');
+                }
+
                 // Créer le compte dans Supabase Auth
                 const { data: authData, error: authError } = await supabase.auth.signUp({
                     email: email,
@@ -358,8 +379,11 @@
                 });
 
                 if (authError) {
+                    console.error('Supabase error:', authError);
                     throw new Error(authError.message);
                 }
+
+                console.log('Account created successfully:', authData);
 
                 // Sauvegarder en local pour compatibilité
                 localStorage.setItem('userEmail', email);
@@ -392,7 +416,9 @@
                 }, 1800);
 
             } catch (error) {
-                btn.disabled = false; btn.textContent = 'Créer mon espace';
+                console.error('Error during registration:', error);
+                btn.disabled = false; 
+                btn.textContent = 'Créer mon espace';
                 flash('Erreur lors de la création : ' + error.message, 'error');
             }
         });
