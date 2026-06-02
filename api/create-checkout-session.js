@@ -36,6 +36,7 @@ function setCORS(req, res) {
     const allowedOrigins = [
         'https://oradia.fr', 
         'https://www.oradia.fr',
+        'https://oradia-site.vercel.app',
         'https://oradia-site-trail.vercel.app',
         'https://oradia.vercel.app'
     ];

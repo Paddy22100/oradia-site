@@ -117,15 +117,96 @@ async function handleAuth(req, res) {
 
 // ── DATA ─────────────────────────────────────────────────────────────────
 async function handleData(req, res) {
-  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  if (req.method !== 'GET' && req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
     verifyAdminAuth(req);
-    
+
     const supabase = createClient(
-      process.env.SUPABASE_URL,
+      'https://nxxetkdozynuytlbhxdx.supabase.co',
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
+    // ── POST : actions sur abonnements ──
+    if (req.method === 'POST') {
+      const body = await new Promise((resolve, reject) => {
+        let d = '';
+        req.on('data', c => d += c);
+        req.on('end', () => { try { resolve(d ? JSON.parse(d) : {}); } catch { resolve({}); } });
+        req.on('error', reject);
+      });
+
+      const { action, email, fullName, accessCode, expiresAt, subscriptionId } = body;
+
+      if (action === 'create' && email) {
+        const { error } = await supabase
+          .from('tore_subscriptions')
+          .upsert({
+            email: email.toLowerCase().trim(),
+            full_name: fullName || '',
+            access_code: accessCode || null,
+            expires_at: expiresAt || null,
+            status: 'active',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'email' });
+        if (error) throw error;
+        return res.status(200).json({ success: true, emailSent: false });
+      }
+
+      if (action === 'revoke' && subscriptionId) {
+        const { error } = await supabase
+          .from('tore_subscriptions')
+          .update({ status: 'revoked', updated_at: new Date().toISOString() })
+          .eq('id', subscriptionId);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      if (action === 'resend_code' && subscriptionId) {
+        return res.status(200).json({ success: true, emailSent: false, message: 'Fonction email non configurée' });
+      }
+
+      return res.status(400).json({ error: 'Action invalide' });
+    }
+
+    const section = req.query?.section || 'all';
+
+    // ── Section abonnements Tore ──
+    if (section === 'subscriptions') {
+      const page   = parseInt(req.query?.page  || '1', 10);
+      const limit  = parseInt(req.query?.limit || '15', 10);
+      const status = req.query?.status || 'all';
+      const q      = (req.query?.q || '').trim().toLowerCase();
+      const offset = (page - 1) * limit;
+
+      let query = supabase
+        .from('tore_subscriptions')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (status !== 'all') query = query.eq('status', status);
+      if (q) query = query.or(`email.ilike.%${q}%,full_name.ilike.%${q}%`);
+
+      const { data, count, error } = await query;
+      if (error) throw error;
+
+      const fmt = (iso) => iso ? new Date(iso).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric' }) : null;
+      const rows = (data || []).map(s => ({
+        ...s,
+        created_at_fr: fmt(s.created_at),
+        expires_at_fr: s.expires_at ? fmt(s.expires_at) : 'Illimité'
+      }));
+
+      const totalPages = Math.ceil((count || 0) / limit);
+      return res.status(200).json({
+        success: true,
+        data: rows,
+        pagination: { page, limit, total: count || 0, pages: totalPages }
+      });
+    }
+
+    // ── Section overview / all ──
     const [waitlist, preorders] = await Promise.all([
       supabase.from('waitlist').select('*').order('created_at', { ascending: false }).limit(50),
       supabase.from('preorders').select('*').order('created_at', { ascending: false }).limit(50)
@@ -275,6 +356,70 @@ async function handleSyncBrevo(req, res) {
   }
 }
 
+// ── SUBSCRIPTIONS ──────────────────────────────────────────────────────
+async function handleSubscriptions(req, res) {
+  try {
+    verifyAdminAuth(req);
+
+    const supabase = createClient(
+      'https://nxxetkdozynuytlbhxdx.supabase.co',
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    // GET : liste des abonnements
+    if (req.method === 'GET') {
+      const { data, error } = await supabase
+        .from('tore_subscriptions')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return res.status(200).json({ success: true, data: data || [] });
+    }
+
+    // POST : activer manuellement un abonnement
+    if (req.method === 'POST') {
+      const body = await new Promise((resolve, reject) => {
+        let d = '';
+        req.on('data', c => d += c);
+        req.on('end', () => { try { resolve(d ? JSON.parse(d) : {}); } catch { resolve({}); } });
+        req.on('error', reject);
+      });
+
+      const { action, email, full_name } = body;
+
+      if (action === 'activate' && email) {
+        const { error } = await supabase
+          .from('tore_subscriptions')
+          .upsert({
+            email: email.toLowerCase().trim(),
+            full_name: full_name || '',
+            status: 'active',
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'email' });
+        if (error) throw error;
+        return res.status(200).json({ success: true, message: `Abonnement activé pour ${email}` });
+      }
+
+      if (action === 'revoke' && email) {
+        const { error } = await supabase
+          .from('tore_subscriptions')
+          .update({ status: 'revoked', updated_at: new Date().toISOString() })
+          .eq('email', email.toLowerCase().trim());
+        if (error) throw error;
+        return res.status(200).json({ success: true, message: `Abonnement révoqué pour ${email}` });
+      }
+
+      return res.status(400).json({ error: 'Action invalide. Utilisez action: activate|revoke + email' });
+    }
+
+    return res.status(405).json({ error: 'Method not allowed' });
+  } catch (error) {
+    console.error('Subscriptions error:', error);
+    return res.status(error.statusCode || 500).json({ error: error.message });
+  }
+}
+
 // ============ ROUTEUR PRINCIPAL ============
 module.exports = async (req, res) => {
   setCORS(res);
@@ -309,6 +454,10 @@ module.exports = async (req, res) => {
     
     if (path === '/sync-brevo' || path === '/sync-brevo/') {
       return await handleSyncBrevo(req, res);
+    }
+
+    if (path === '/subscriptions' || path === '/subscriptions/') {
+      return await handleSubscriptions(req, res);
     }
 
     // Route par défaut - liste des routes disponibles
