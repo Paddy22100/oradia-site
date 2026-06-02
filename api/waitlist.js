@@ -491,11 +491,6 @@ module.exports = async (req, res) => {
         });
       }
     }
-          error: error.message,
-          stack: error.stack
-        });
-      }
-    }
     
     // ===== WAITLIST : inscription newsletter (comportement existant) =====
 
