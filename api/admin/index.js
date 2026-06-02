@@ -215,19 +215,119 @@ async function handleData(req, res) {
       });
     }
 
-    // ── Section overview / all ──
-    const [waitlist, preorders] = await Promise.all([
-      supabase.from('waitlist').select('*').order('created_at', { ascending: false }).limit(50),
-      supabase.from('preorders').select('*').order('created_at', { ascending: false }).limit(50)
+    // ── Section preorders ──
+    if (section === 'preorders') {
+      const page   = parseInt(req.query?.page  || '1', 10);
+      const limit  = parseInt(req.query?.limit || '10', 10);
+      const offset = (page - 1) * limit;
+      const { data, count, error } = await supabase
+        .from('preorders')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+      if (error) throw error;
+      return res.status(200).json({
+        success: true,
+        data: data || [],
+        pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) }
+      });
+    }
+
+    // ── Section donors ──
+    if (section === 'donors') {
+      const page   = parseInt(req.query?.page  || '1', 10);
+      const limit  = parseInt(req.query?.limit || '10', 10);
+      const offset = (page - 1) * limit;
+      const { data, count, error } = await supabase
+        .from('donors')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+      if (error) throw error;
+      return res.status(200).json({
+        success: true,
+        data: data || [],
+        pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) }
+      });
+    }
+
+    // ── Section waitlist ──
+    if (section === 'waitlist') {
+      const page   = parseInt(req.query?.page  || '1', 10);
+      const limit  = parseInt(req.query?.limit || '10', 10);
+      const offset = (page - 1) * limit;
+      const { data, count, error } = await supabase
+        .from('waitlist')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+      if (error) throw error;
+      return res.status(200).json({
+        success: true,
+        data: data || [],
+        pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) }
+      });
+    }
+
+    // ── Section overview / all : agrégats KPI ──
+    const [waitlistRes, preordersRes, donorsRes] = await Promise.all([
+      supabase.from('waitlist').select('*'),
+      supabase.from('preorders').select('*'),
+      supabase.from('donors').select('*')
     ]);
+
+    const waitlistRows  = waitlistRes.data  || [];
+    const preorderRows  = preordersRes.data || [];
+    const donorRows     = donorsRes.data    || [];
+
+    const now   = Date.now();
+    const day1  = 24 * 3600 * 1000;
+    const day7  = 7  * day1;
+    const day30 = 30 * day1;
+
+    const sumPreorders = (rows) => rows.reduce((s, r) => s + (parseFloat(r.amount_total) || parseFloat(r.amount) || 0), 0);
+    const sumDonors    = (rows) => rows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+
+    const preordersToday = preorderRows.filter(r => now - new Date(r.created_at).getTime() < day1);
+    const preorders7d    = preorderRows.filter(r => now - new Date(r.created_at).getTime() < day7);
+    const preorders30d   = preorderRows.filter(r => now - new Date(r.created_at).getTime() < day30);
+    const donors7d       = donorRows.filter(r => now - new Date(r.created_at).getTime() < day7);
+    const donors30d      = donorRows.filter(r => now - new Date(r.created_at).getTime() < day30);
+
+    const preordersTotal  = sumPreorders(preorderRows);
+    const donorsTotal     = sumDonors(donorRows);
+    const globalTotal     = preordersTotal + donorsTotal;
+    const totalContacts   = preorderRows.length + donorRows.length + waitlistRows.length;
+    const averageBasket   = preorderRows.length > 0 ? preordersTotal / preorderRows.length : 0;
 
     return res.status(200).json({
       success: true,
       data: {
-        waitlist: waitlist.data || [],
-        preorders: preorders.data || [],
-        waitlistError: waitlist.error?.message,
-        preordersError: preorders.error?.message
+        preorders: {
+          count:        preorderRows.length,
+          total:        preordersTotal,
+          noEmail:      preorderRows.filter(r => !r.email).length,
+          averageBasket
+        },
+        donors: {
+          count:   donorRows.length,
+          total:   donorsTotal,
+          noEmail: donorRows.filter(r => !r.email).length
+        },
+        waitlist: {
+          count:      waitlistRows.length,
+          notSynced:  waitlistRows.filter(r => !r.synced_at).length
+        },
+        global: {
+          total:         globalTotal,
+          totalContacts
+        },
+        performance: {
+          revenueToday:    sumPreorders(preordersToday) + sumDonors(donorRows.filter(r => now - new Date(r.created_at).getTime() < day1)),
+          revenue7d:       sumPreorders(preorders7d)    + sumDonors(donors7d),
+          revenue30d:      sumPreorders(preorders30d)   + sumDonors(donors30d),
+          conversionRate:  totalContacts > 0 ? ((preorderRows.length + donorRows.length) / totalContacts * 100) : 0
+        }
       }
     });
   } catch (error) {
