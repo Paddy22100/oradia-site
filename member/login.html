@@ -287,10 +287,10 @@
             setTimeout(() => el.remove(), 3500);
         }
 
-        // Déjà connecté ?
-        if (localStorage.getItem('isLoggedIn') === 'true') {
-            window.location.href = 'abonnements.html';
-        }
+        // Optionnel : redirection auto si déjà connecté (désactivé pour permettre reconnexion)
+        // if (localStorage.getItem('isLoggedIn') === 'true') {
+        //     window.location.href = 'abonnements.html';
+        // }
     </script>
 </body>
 </html>
