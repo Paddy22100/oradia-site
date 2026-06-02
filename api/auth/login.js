@@ -56,13 +56,81 @@ module.exports = async (req, res) => {
 
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Sign in with email/password
+    // Sign in with email/password (autorise les emails non confirmés)
     const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
       email,
       password
     });
 
     if (authError) {
+      // Si l'erreur est "Email not confirmed", on essaie avec l'admin API pour contourner
+      if (authError.message && authError.message.includes('Email not confirmed')) {
+        console.log('[Login] Email non confirmé, tentative contournement admin pour:', email);
+        
+        // Récupérer l'utilisateur via l'admin API
+        const { data: userData, error: userError } = await supabase.auth.admin.listUsers({
+          filters: { email: email }
+        });
+        
+        if (userError || !userData.users || userData.users.length === 0) {
+          console.log('[Login] Utilisateur non trouvé via admin:', email);
+          res.writeHead(401, { ...corsHeaders, 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ 
+            success: false, 
+            error: 'Email ou mot de passe incorrect' 
+          }));
+        }
+        
+        const user = userData.users[0];
+        
+        // Vérifier le mot de passe avec signInWithPassword sur l'anon key
+        // mais on doit accepter l'email non confirmé
+        // Solution: créer une session manuellement ou forcer la confirmation
+        
+        // Forcer la confirmation de l'email via admin
+        const { error: updateError } = await supabase.auth.admin.updateUserById(
+          user.id,
+          { email_confirm: true }
+        );
+        
+        if (updateError) {
+          console.log('[Login] Erreur confirmation email:', updateError.message);
+        } else {
+          console.log('[Login] Email confirmé automatiquement pour:', email);
+        }
+        
+        // Réessayer le login maintenant que l'email est confirmé
+        const { data: authData2, error: authError2 } = await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
+        
+        if (authError2) {
+          console.log('[Login] Échec après confirmation:', email, authError2.message);
+          res.writeHead(401, { ...corsHeaders, 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ 
+            success: false, 
+            error: 'Email ou mot de passe incorrect' 
+          }));
+        }
+        
+        console.log('[Login] Succès après confirmation auto:', email);
+        res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({
+          success: true,
+          user: {
+            email: authData2.user.email,
+            name: authData2.user.user_metadata?.full_name || email.split('@')[0],
+            id: authData2.user.id
+          },
+          session: {
+            access_token: authData2.session.access_token,
+            refresh_token: authData2.session.refresh_token,
+            expires_at: authData2.session.expires_at
+          }
+        }));
+      }
+      
       console.log('[Login] Échec:', email, authError.message);
       res.writeHead(401, { ...corsHeaders, 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ 
