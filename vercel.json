@@ -37,22 +37,7 @@
     "api/stripe-webhook.js": {
       "maxDuration": 30
     },
-    "api/admin/auth.js": {
-      "maxDuration": 10
-    },
-    "api/admin/data.js": {
-      "maxDuration": 30
-    },
-    "api/admin/contacts-export.js": {
-      "maxDuration": 30
-    },
-    "api/admin/newsletter.js": {
-      "maxDuration": 30
-    },
-    "api/admin/sync-brevo.js": {
-      "maxDuration": 30
-    },
-    "api/admin/newsletter-images.js": {
+    "api/admin/index.js": {
       "maxDuration": 30
     },
     "api/create-checkout-session.js": {
