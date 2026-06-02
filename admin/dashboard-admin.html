@@ -1033,7 +1033,7 @@
 
         // Charger les précommandes
         async function loadPreorders(page = 1, limit = 10) {
-            const response = await fetch(buildPreordersQuery(page, limit), { credentials: 'include' });
+            const response = await adminFetch(buildPreordersQuery(page, limit));
             const data = await response.json();
             
             if (data.success) {
@@ -1044,7 +1044,7 @@
 
         // Charger les dons
         async function loadDonors(page = 1, limit = 10) {
-            const response = await fetch(`/api/admin/data?section=donors&page=${page}&limit=${limit}`, { credentials: 'include' });
+            const response = await adminFetch(`/api/admin/data?section=donors&page=${page}&limit=${limit}`);
             const data = await response.json();
             
             if (data.success) {
@@ -1055,7 +1055,7 @@
 
         // Charger la waitlist
         async function loadWaitlist(page = 1, limit = 10) {
-            const response = await fetch(`/api/admin/data?section=waitlist&page=${page}&limit=${limit}`, { credentials: 'include' });
+            const response = await adminFetch(`/api/admin/data?section=waitlist&page=${page}&limit=${limit}`);
             const data = await response.json();
             
             if (data.success) {
@@ -2137,7 +2137,7 @@
             nlShowTab('generate');
             try {
                 // Récupérer le contenu complet depuis l'API
-                const res = await fetch(`/api/admin/newsletter?action=drafts&id=${id}`, { credentials: 'include' });
+                const res = await adminFetch(`/api/admin/newsletter?action=drafts&id=${id}`);
                 const draft = res.ok ? await res.json() : null;
                 const data = draft || nlDrafts.find(d => d.id === id);
                 if (data) {
@@ -2240,7 +2240,7 @@
             tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gold/40"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</td></tr>';
             try {
                 const url = `/api/admin/data?section=subscriptions&page=${page}&limit=15&status=${status}&q=${encodeURIComponent(q)}`;
-                const res = await fetch(url, { credentials: 'include' });
+                const res = await adminFetch(url);
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.message);
                 renderSubscriptions(json.data || [], json.pagination);
