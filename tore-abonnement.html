@@ -327,7 +327,8 @@
 <script>
     const SUPABASE_URL = 'https://bwvlpgklnhcwkdpabiwd.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dmxwZ2tsbmhjd2tkcGFiaXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMDg1MTYsImV4cCI6MjA2MDc4NDUxNn0.ewf4U02F7k4q8lF_VtyxBzimXNKX2nD3JCC-7Bj_Q2w';
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+    // Utiliser window.supabase (global) au lieu de redeclarer
+    window.supabaseClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
     // Vérifier si on arrive de register.html avec un compte créé
     const urlParams = new URLSearchParams(window.location.search);
@@ -369,7 +370,7 @@
 
     // Si déjà connecté via Supabase → appel direct Stripe sans passer par register
     (async function() {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await window.supabaseClient.auth.getSession();
         const user = session?.user;
         
         if (!user) return; // Pas connecté, garder le comportement par défaut (lien vers register)
