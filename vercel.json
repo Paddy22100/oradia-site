@@ -47,8 +47,7 @@
   ],
   "functions": {
     "api/stripe-webhook.js": {
-      "maxDuration": 30,
-      "bodyParser": false
+      "maxDuration": 30
     },
     "api/admin/index.js": {
       "maxDuration": 30
