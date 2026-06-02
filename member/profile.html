@@ -273,21 +273,41 @@
     </div>
 
     <script>
-        // Charger les données réelles depuis la session
-        (function() {
+        // Charger les données réelles depuis la session + vérification Supabase
+        (async function() {
             try {
-                const sess = JSON.parse(sessionStorage.getItem('oradia_member_session') || '{}');
+                const sessStr = sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session') || '{}';
+                const sess = JSON.parse(sessStr);
                 const email = sess.email || localStorage.getItem('userEmail') || '';
                 const name = sess.name || localStorage.getItem('userName') || email.split('@')[0] || 'Membre';
-                const subscribed = sess.subscribed || false;
+                let subscribed = sess.subscribed || false;
                 const tirages = JSON.parse(localStorage.getItem('oradia_tirages') || '[]');
 
                 document.querySelectorAll('#profileName').forEach(el => { if(el) el.textContent = name; });
                 document.querySelectorAll('#profileEmail, #infoEmail').forEach(el => { if(el) el.textContent = email || '—'; });
                 const subEl = document.getElementById('infoSubscription');
-                if(subEl) subEl.textContent = subscribed ? 'Tore — Actif' : 'Aucun abonnement actif';
+                if(subEl) subEl.textContent = subscribed ? 'Tore — Actif' : 'Vérification…';
                 const tirEl = document.getElementById('infoTirages');
                 if(tirEl) tirEl.textContent = tirages.length;
+
+                // Vérifier le statut réel depuis Supabase si email disponible
+                if (email && !subscribed) {
+                    try {
+                        const resp = await fetch('/api/auth/check-subscription?email=' + encodeURIComponent(email));
+                        if (resp.ok) {
+                            const data = await resp.json();
+                            subscribed = data.subscribed || false;
+                            if (subscribed) {
+                                // Mettre à jour la session locale
+                                sess.subscribed = true;
+                                const updated = JSON.stringify(sess);
+                                sessionStorage.setItem('oradia_member_session', updated);
+                                localStorage.setItem('oradia_member_session', updated);
+                            }
+                        }
+                    } catch(e) {}
+                }
+                if(subEl) subEl.textContent = subscribed ? 'Tore — Actif' : 'Aucun abonnement actif';
             } catch(e) {}
         })();
     </script>

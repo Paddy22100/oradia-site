@@ -986,21 +986,19 @@
                 if (!skipInitialCheck) {
                     const meResponse = await adminFetch('/api/admin/auth?action=me');
 
-                    if (meResponse.status === 401) {
+                    if (!meResponse.ok) {
                         sessionStorage.removeItem('oradia_auth');
                         window.location.replace('login.html');
                         return;
                     }
 
-                    if (meResponse.ok) {
-                        const existing = JSON.parse(authDataStr || '{}');
-                        sessionStorage.setItem('oradia_auth', JSON.stringify({
-                            valid: true,
-                            timestamp: Date.now(),
-                            token: existing.token || null,
-                            email: existing.email || null
-                        }));
-                    }
+                    const existing = JSON.parse(authDataStr || '{}');
+                    sessionStorage.setItem('oradia_auth', JSON.stringify({
+                        valid: true,
+                        timestamp: Date.now(),
+                        token: existing.token || null,
+                        email: existing.email || null
+                    }));
                 }
 
                 // Toujours rendre visible (la redirection éventuelle se fait via 401)
@@ -1022,12 +1020,22 @@
 
         // Charger les KPI overview
         async function loadOverview() {
-            const response = await adminFetch('/api/admin/data?section=overview');
-            const data = await response.json();
-            
-            if (data.success) {
-                currentData.overview = data.data;
-                updateKPIs(data.data);
+            try {
+                const response = await adminFetch('/api/admin/data?section=overview');
+                if (!response.ok) {
+                    if (response.status === 401) { window.location.replace('login.html'); return; }
+                    console.error('Overview API error:', response.status);
+                    return;
+                }
+                const data = await response.json();
+                if (data.success) {
+                    currentData.overview = data.data;
+                    updateKPIs(data.data);
+                } else {
+                    console.error('Overview data error:', data.error);
+                }
+            } catch(e) {
+                console.error('loadOverview exception:', e);
             }
         }
 
