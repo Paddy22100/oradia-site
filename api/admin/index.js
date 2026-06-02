@@ -35,8 +35,17 @@ function parseBody(req) {
 }
 
 function verifyAdminAuth(req) {
+  // Essayer d'abord le cookie httpOnly, puis le header Authorization
   const cookies = parseCookie(req.headers.cookie || '');
-  const token = cookies.oradia_admin_session;
+  let token = cookies.oradia_admin_session;
+
+  if (!token) {
+    const authHeader = req.headers.authorization || '';
+    if (authHeader.startsWith('Bearer ')) {
+      token = authHeader.slice(7);
+    }
+  }
+
   if (!token) { const e = new Error('Session non trouvée'); e.statusCode = 401; throw e; }
   const decoded = jwt.verify(token, process.env.ADMIN_SESSION_SECRET);
   if (decoded.type !== 'admin') { const e = new Error('Type de session invalide'); e.statusCode = 401; throw e; }
@@ -77,12 +86,12 @@ async function handleAuth(req, res) {
       res.setHeader('Set-Cookie', serializeCookie('oradia_admin_session', token, {
         httpOnly: true,
         secure: true,
-        sameSite: 'strict',
+        sameSite: 'lax',
         maxAge: 7200,
         path: '/'
       }));
 
-      return res.status(200).json({ success: true, message: 'Connexion réussie' });
+      return res.status(200).json({ success: true, message: 'Connexion réussie', token });
     } catch (error) {
       console.error('Login error:', error);
       return res.status(500).json({ error: 'Erreur serveur' });
@@ -93,7 +102,7 @@ async function handleAuth(req, res) {
     res.setHeader('Set-Cookie', serializeCookie('oradia_admin_session', '', {
       httpOnly: true,
       secure: true,
-      sameSite: 'strict',
+      sameSite: 'lax',
       maxAge: 0,
       path: '/'
     }));

@@ -310,11 +310,12 @@ async function handleLogin(e) {
             
             showMessage('Connexion réussie! Redirection...', 'success');
             
-            // Marquer session comme valide avec timestamp
+            // Marquer session comme valide avec timestamp et stocker le token
             const authData = {
                 valid: true,
                 timestamp: Date.now(),
-                email: result.admin?.email || email
+                email: result.admin?.email || email,
+                token: result.token || null
             };
             sessionStorage.setItem('oradia_auth', JSON.stringify(authData));
             
