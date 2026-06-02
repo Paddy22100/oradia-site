@@ -32,10 +32,9 @@ function verifyAdminAuth(req) {
 }
 
 function getSupabaseClient() {
-  return createClient(
-    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL,
-    process.env.SUPABASE_SERVICE_ROLE_KEY
-  );
+  // FORCER la bonne URL - l'ancienne URL nxxetkdozynuytlbhxdx traîne dans les env Vercel
+  const supabaseUrl = 'https://bwvlpgklnhcwkdpabiwd.supabase.co';
+  return createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
 }
 
 async function addContactToBrevo(email, listId, apiKey) {

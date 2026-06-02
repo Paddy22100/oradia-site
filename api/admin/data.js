@@ -31,8 +31,8 @@ function verifyAdminAuth(req) {
     }
 }
 
-// Variables d'environnement
-const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+// Variables d'environnement - FORCER la bonne URL
+const supabaseUrl = 'https://bwvlpgklnhcwkdpabiwd.supabase.co';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 // Client Supabase

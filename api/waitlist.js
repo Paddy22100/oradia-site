@@ -51,7 +51,8 @@ function loadLocalEnvIfNeeded() {
 loadLocalEnvIfNeeded();
 
 function getSupabaseClient() {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  // FORCER la bonne URL - l'ancienne URL nxxetkdozynuytlbhxdx traîne dans les env Vercel
+  const supabaseUrl = 'https://bwvlpgklnhcwkdpabiwd.supabase.co';
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   return createClient(supabaseUrl, supabaseKey);
 }
@@ -321,15 +322,32 @@ module.exports = async (req, res) => {
         });
       }
       
-      // TEMPORAIRE : Contournement du problème DNS Supabase Auth
-      // On simule la création de compte et on laisse le webhook Stripe créer 
-      // le compte réel après le paiement
-      console.log(`[TEMP] Simulation création compte pour ${email}`);
+      // Création réelle du compte Supabase Auth
+      console.log(`[Signup] Création compte pour ${email}`);
+      
+      const supabase = getSupabaseClient();
+      
+      const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+        email,
+        password,
+        user_metadata: { full_name: name },
+        email_confirm: true
+      });
+      
+      if (authError) {
+        console.error('[Signup] Erreur création:', authError.message);
+        return res.status(400).json({
+          success: false,
+          error: authError.message
+        });
+      }
+      
+      console.log(`[Signup] Compte créé: ${authUser.user.id}`);
       
       return res.status(200).json({ 
         success: true, 
         user: { email, user_metadata: { full_name: name } },
-        message: 'Compte préparé - finalisation après paiement'
+        message: 'Compte créé avec succès'
       });
     }
     

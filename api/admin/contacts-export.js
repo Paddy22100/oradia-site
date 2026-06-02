@@ -81,7 +81,8 @@ function loadLocalEnvIfNeeded() {
 loadLocalEnvIfNeeded();
 
 function getSupabaseClient() {
-    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    // FORCER la bonne URL - l'ancienne URL nxxetkdozynuytlbhxdx traîne dans les env Vercel
+    const supabaseUrl = 'https://bwvlpgklnhcwkdpabiwd.supabase.co';
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     return createClient(supabaseUrl, supabaseKey);
 }
