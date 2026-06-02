@@ -219,12 +219,20 @@
                     // Vérifier si "Se souvenir de moi" est coché
                     const rememberMe = document.getElementById('remember')?.checked || false;
                     
+                    const sessionData = JSON.stringify({
+                        email,
+                        name: data.user?.name || email.split('@')[0],
+                        subscribed: data.user?.subscribed || false
+                    });
+                    sessionStorage.setItem('oradia_member_session', sessionData);
+
                     if (rememberMe) {
                         // Persistance avec localStorage
                         localStorage.setItem('isLoggedIn', 'true');
                         localStorage.setItem('userEmail', email);
                         localStorage.setItem('userName', data.user?.name || email.split('@')[0]);
                         localStorage.setItem('rememberMe', 'true');
+                        localStorage.setItem('oradia_member_session', sessionData);
                     } else {
                         // Session temporaire avec sessionStorage (se supprime à la fermeture)
                         sessionStorage.setItem('isLoggedIn', 'true');
@@ -232,11 +240,6 @@
                         sessionStorage.setItem('userName', data.user?.name || email.split('@')[0]);
                         sessionStorage.setItem('rememberMe', 'false');
                     }
-                    sessionStorage.setItem('oradia_member_session', JSON.stringify({
-                        email,
-                        name: data.user?.name || email.split('@')[0],
-                        subscribed: data.user?.subscribed || false
-                    }));
                     flash('Connexion réussie ! Redirection…', 'success');
                     const returnTo = sessionStorage.getItem('oradia_login_return');
                     sessionStorage.removeItem('oradia_login_return');

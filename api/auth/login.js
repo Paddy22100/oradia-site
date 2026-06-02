@@ -122,13 +122,30 @@ module.exports = async (req, res) => {
         }
         
         console.log('[Login] Succès après confirmation auto:', email);
+
+        let subscribed2 = false;
+        try {
+          const { data: subData2 } = await supabase
+            .from('tore_subscriptions')
+            .select('status, expires_at')
+            .eq('email', email)
+            .eq('status', 'active')
+            .single();
+          if (subData2) {
+            if (!subData2.expires_at || new Date(subData2.expires_at) > new Date()) {
+              subscribed2 = true;
+            }
+          }
+        } catch (e) {}
+
         res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
         return res.end(JSON.stringify({
           success: true,
           user: {
             email: authData2.user.email,
             name: authData2.user.user_metadata?.full_name || email.split('@')[0],
-            id: authData2.user.id
+            id: authData2.user.id,
+            subscribed: subscribed2
           },
           session: {
             access_token: authData2.session.access_token,
@@ -147,14 +164,31 @@ module.exports = async (req, res) => {
     }
 
     console.log('[Login] Succès:', email);
-    
+
+    // Vérifier si abonnement actif dans tore_subscriptions
+    let subscribed = false;
+    try {
+      const { data: subData } = await supabase
+        .from('tore_subscriptions')
+        .select('status, expires_at')
+        .eq('email', email)
+        .eq('status', 'active')
+        .single();
+      if (subData) {
+        if (!subData.expires_at || new Date(subData.expires_at) > new Date()) {
+          subscribed = true;
+        }
+      }
+    } catch (e) {}
+
     res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({
       success: true,
       user: {
         email: authData.user.email,
         name: authData.user.user_metadata?.full_name || email.split('@')[0],
-        id: authData.user.id
+        id: authData.user.id,
+        subscribed
       },
       session: {
         access_token: authData.session.access_token,

@@ -240,11 +240,19 @@ class FreemiumTracker {
                 if (expiry && new Date(expiry) > new Date()) return true;
             } catch (e) {}
         }
-        // 2. Session membre active (connecté)
+        // 2. Session membre active avec flag subscribed (sessionStorage)
         const sess = sessionStorage.getItem('oradia_member_session');
         if (sess) {
             try {
                 const { email, subscribed } = JSON.parse(sess);
+                if (email && subscribed) return true;
+            } catch (e) {}
+        }
+        // 3. Session persistante localStorage (remember me) avec flag subscribed
+        const lSess = localStorage.getItem('oradia_member_session');
+        if (lSess) {
+            try {
+                const { email, subscribed } = JSON.parse(lSess);
                 if (email && subscribed) return true;
             } catch (e) {}
         }
