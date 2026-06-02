@@ -307,9 +307,12 @@ module.exports = async (req, res) => {
   try {
     setCORS(req, res);
     
+    // Parser le body d'abord
+    const body = getRequestBody(req);
+    
     // ===== SIGNUP : création de compte Supabase =====
-    if (req.body && req.body.action === 'signup') {
-      const { email, password, name } = req.body;
+    if (body && body.action === 'signup') {
+      const { email, password, name } = body;
       
       if (!email || !password || !name) {
         return res.status(400).json({ 
@@ -363,7 +366,7 @@ module.exports = async (req, res) => {
       });
     }
 
-    const body = getRequestBody(req);
+    // body est déjà parsé plus haut
     const email = String(body.email || '').trim().toLowerCase();
 
     if (!isValidEmail(email)) {
