@@ -132,13 +132,12 @@
             if (authDataStr) {
                 try {
                     const authData = JSON.parse(authDataStr);
-                    const age = Date.now() - authData.timestamp;
-                    if (age < 2 * 60 * 1000 && authData.valid) {
-                        return; // Session récente valide, on continue
+                    if (authData.valid && authData.token) {
+                        return; // Token présent = session valide, afficher immédiatement
                     }
                 } catch(e) {}
             }
-            // Pas de session locale valide : masquer le contenu pendant vérification API
+            // Pas de token local : masquer pendant vérification API
             document.documentElement.style.visibility = 'hidden';
         })();
     </script>
@@ -974,8 +973,7 @@
             if (authDataStr) {
                 try {
                     const authData = JSON.parse(authDataStr);
-                    const age = Date.now() - authData.timestamp;
-                    if (age < 120 * 60 * 1000 && authData.valid && authData.token) {
+                    if (authData.valid && authData.token) {
                         skipInitialCheck = true;
                     }
                 } catch (e) {}
