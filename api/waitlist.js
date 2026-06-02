@@ -415,61 +415,82 @@ module.exports = async (req, res) => {
     // ===== SIGNUP : création de compte Supabase =====
     if (body && body.action === 'signup') {
       try {
-        console.log('[Signup] Début création compte');
-        validateEnvironment();
-        console.log('[Signup] Environment validé');
-        
         const { email, password, name } = body;
-        
+
+        console.log('[Signup] Body reçu:', JSON.stringify({
+          hasEmail: !!email,
+          hasPassword: !!password,
+          hasName: !!name,
+          email: email
+        }));
+
         if (!email || !password || !name) {
-          return res.status(400).json({ 
+          return res.status(400).json({
             success: false,
-            error: 'Email, password et name sont requis' 
+            error: 'Email, password et name sont requis'
           });
         }
-        
-        // Création réelle du compte Supabase Auth
-        console.log(`[Signup] Création compte pour ${email}`);
-        
-        const supabase = getSupabaseClient();
-        console.log('[Signup] Client Supabase initialisé');
-        
+
+        const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+        const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+        console.log('[Signup] Config:', JSON.stringify({
+          hasUrl: !!supabaseUrl,
+          hasKey: !!supabaseKey,
+          urlPrefix: supabaseUrl ? supabaseUrl.substring(0, 30) : 'MANQUANTE'
+        }));
+
+        if (!supabaseUrl || !supabaseKey) {
+          return res.status(500).json({
+            success: false,
+            error: 'Configuration Supabase manquante'
+          });
+        }
+
+        const { createClient } = require('@supabase/supabase-js');
+        const supabase = createClient(supabaseUrl, supabaseKey);
+
+        console.log('[Signup] Appel Supabase pour:', email);
+
         const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
           email,
           password,
           user_metadata: { full_name: name },
           email_confirm: false
         });
-        
+
+        console.log('[Signup] Résultat:', JSON.stringify({
+          hasUser: !!authUser?.user,
+          userId: authUser?.user?.id,
+          errorMessage: authError?.message,
+          errorStatus: authError?.status,
+          errorCode: authError?.code
+        }));
+
         if (authError) {
-          console.error('[Signup] Erreur création complète:', JSON.stringify({
-            message: authError.message,
-            status: authError.status,
-            code: authError.code,
-            details: authError
-          }));
           return res.status(400).json({
             success: false,
             error: authError.message,
-            details: authError
+            code: authError.code
           });
         }
-        
-        // Envoi email de confirmation via Brevo
+
         await sendSignupConfirmationEmail(email, name);
-        
-        console.log(`[Signup] Compte créé: ${authUser.user.id}`);
-        
-        return res.status(200).json({ 
-          success: true, 
-          user: { email, user_metadata: { full_name: name } },
+
+        return res.status(200).json({
+          success: true,
+          user: { email, name },
           message: 'Compte créé avec succès'
         });
-      } catch (error) {
-        console.error('[Signup] ERREUR CATCH:', error.message);
-        console.error('[Signup] Stack:', error.stack);
+
+      } catch (signupError) {
+        console.log('[Signup] Exception:', signupError.message);
         return res.status(500).json({
           success: false,
+          error: signupError.message
+        });
+      }
+    }
           error: error.message,
           stack: error.stack
         });
