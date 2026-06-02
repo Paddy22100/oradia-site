@@ -475,7 +475,11 @@ module.exports = async (req, res) => {
           });
         }
 
-        await sendSignupConfirmationEmail(email, name);
+        try {
+          await sendSignupConfirmationEmail(email, name);
+        } catch (emailError) {
+          console.log('[Signup] Email confirmation failed (non-bloquant):', emailError.message);
+        }
 
         return res.status(200).json({
           success: true,
