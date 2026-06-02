@@ -51,8 +51,8 @@ function loadLocalEnvIfNeeded() {
 loadLocalEnvIfNeeded();
 
 function getSupabaseClient() {
-  // FORCER la bonne URL - l'ancienne URL nxxetkdozynuytlbhxdx traîne dans les env Vercel
-  const supabaseUrl = 'https://bwvlpgklnhcwkdpabiwd.supabase.co';
+  // URL Supabase du projet oradia-prod (nxxetkdozynuytlbhxdx)
+  const supabaseUrl = 'https://nxxetkdozynuytlbhxdx.supabase.co';
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   return createClient(supabaseUrl, supabaseKey);
 }
