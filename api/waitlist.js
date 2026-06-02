@@ -437,8 +437,12 @@ module.exports = async (req, res) => {
       });
       
       if (authError) {
-        console.error('[Signup] Erreur création:', authError.message);
-        console.error('[Signup] Erreur détails:', JSON.stringify(authError));
+        console.error('[Signup] Erreur création complète:', JSON.stringify({
+          message: authError.message,
+          status: authError.status,
+          code: authError.code,
+          details: authError
+        }));
         return res.status(400).json({
           success: false,
           error: authError.message,
