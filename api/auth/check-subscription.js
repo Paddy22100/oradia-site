@@ -1,4 +1,4 @@
-const { createClient } = require('@supabase/supabase-js');
+const https = require('https');
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -6,53 +6,74 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type'
 };
 
+function supabaseGet(path, key) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      hostname: 'nxxetkdozynuytlbhxdx.supabase.co',
+      path: '/rest/v1/' + path,
+      method: 'GET',
+      headers: {
+        'apikey': key,
+        'Authorization': 'Bearer ' + key,
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      }
+    };
+    const req = https.request(options, (r) => {
+      let body = '';
+      r.on('data', chunk => body += chunk);
+      r.on('end', () => {
+        try { resolve({ status: r.statusCode, data: JSON.parse(body) }); }
+        catch(e) { resolve({ status: r.statusCode, data: body }); }
+      });
+    });
+    req.on('error', reject);
+    req.end();
+  });
+}
+
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(200, corsHeaders);
     return res.end();
   }
 
-  const email = req.query.email;
+  const email = (req.query.email || '').toLowerCase().trim();
   if (!email) {
     res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ subscribed: false, error: 'Email requis' }));
   }
 
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseKey) {
+    res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ subscribed: false, error: 'Configuration manquante' }));
+  }
+
   try {
-    const supabaseUrl = 'https://nxxetkdozynuytlbhxdx.supabase.co';
-    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    const encodedEmail = encodeURIComponent(email);
+    const path = `tore_subscriptions?email=eq.${encodedEmail}&status=eq.active&select=status,expires_at&limit=1`;
+    const result = await supabaseGet(path, supabaseKey);
 
-    if (!supabaseKey) {
-      res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({ subscribed: false, error: 'Configuration manquante' }));
-    }
-
-    const supabase = createClient(supabaseUrl, supabaseKey);
-
-    const { data, error } = await supabase
-      .from('tore_subscriptions')
-      .select('status, expires_at, email')
-      .eq('email', email.toLowerCase().trim())
-      .eq('status', 'active')
-      .maybeSingle();
-
-    if (error) {
+    if (result.status !== 200) {
       res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({ subscribed: false, debug_error: error.message }));
+      return res.end(JSON.stringify({ subscribed: false, debug_status: result.status, debug_data: result.data }));
     }
 
-    if (!data) {
+    const rows = Array.isArray(result.data) ? result.data : [];
+    if (rows.length === 0) {
       res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({ subscribed: false, debug_info: 'no_row_found', queried_email: email.toLowerCase().trim() }));
+      return res.end(JSON.stringify({ subscribed: false, debug_info: 'no_row_found', queried_email: email }));
     }
 
-    const subscribed = !data.expires_at || new Date(data.expires_at) > new Date();
+    const row = rows[0];
+    const subscribed = !row.expires_at || new Date(row.expires_at) > new Date();
 
     res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ subscribed, expires_at: data.expires_at }));
+    return res.end(JSON.stringify({ subscribed, expires_at: row.expires_at }));
 
-  } catch (error) {
+  } catch (err) {
     res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ subscribed: false, error: 'Erreur serveur' }));
+    return res.end(JSON.stringify({ subscribed: false, error: 'Erreur serveur', debug_catch: err?.message }));
   }
 };
