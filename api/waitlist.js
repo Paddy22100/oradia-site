@@ -321,46 +321,16 @@ module.exports = async (req, res) => {
         });
       }
       
-      try {
-        // Appel direct à l'API Auth Supabase pour contourner le problème DNS
-        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
-        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
-        
-        const authResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${serviceKey}`,
-            'apikey': serviceKey,
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            email,
-            password,
-            email_confirm: true,
-            user_metadata: { full_name: name }
-          })
-        });
-        
-        if (!authResponse.ok) {
-          const errorData = await authResponse.json();
-          console.error('Supabase auth error:', errorData);
-          return res.status(400).json({ success: false, error: errorData.message || 'Erreur création utilisateur' });
-        }
-        
-        const authUser = await authResponse.json();
-        
-        return res.status(200).json({ 
-          success: true, 
-          user: authUser,
-          message: 'Compte créé avec succès' 
-        });
-      } catch (signupError) {
-        console.error('Signup error:', signupError);
-        return res.status(500).json({ 
-          success: false,
-          error: 'Erreur lors de la création du compte' 
-        });
-      }
+      // TEMPORAIRE : Contournement du problème DNS Supabase Auth
+      // On simule la création de compte et on laisse le webhook Stripe créer 
+      // le compte réel après le paiement
+      console.log(`[TEMP] Simulation création compte pour ${email}`);
+      
+      return res.status(200).json({ 
+        success: true, 
+        user: { email, user_metadata: { full_name: name } },
+        message: 'Compte préparé - finalisation après paiement'
+      });
     }
     
     // ===== WAITLIST : inscription newsletter (comportement existant) =====
