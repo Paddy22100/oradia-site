@@ -13,28 +13,8 @@
       "dest": "/api/stripe-webhook.js"
     },
     {
-      "src": "/api/admin/auth",
-      "dest": "/api/admin/auth.js"
-    },
-    {
-      "src": "/api/admin/data",
-      "dest": "/api/admin/data.js"
-    },
-    {
-      "src": "/api/admin/contacts-export",
-      "dest": "/api/admin/contacts-export.js"
-    },
-    {
-      "src": "/api/admin/newsletter",
-      "dest": "/api/admin/newsletter.js"
-    },
-    {
-      "src": "/api/admin/sync-brevo",
-      "dest": "/api/admin/sync-brevo.js"
-    },
-    {
-      "src": "/api/admin/newsletter-images",
-      "dest": "/api/admin/newsletter-images.js"
+      "src": "/api/admin/(.*)",
+      "dest": "/api/admin/index.js"
     },
     {
       "src": "/api/create-checkout-session",
