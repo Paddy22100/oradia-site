@@ -67,13 +67,11 @@ module.exports = async (req, res) => {
       if (authError.message && authError.message.includes('Email not confirmed')) {
         console.log('[Login] Email non confirmé, tentative contournement admin pour:', email);
         
-        // Récupérer l'utilisateur via l'admin API
-        const { data: userData, error: userError } = await supabase.auth.admin.listUsers({
-          filters: { email: email }
-        });
+        // Récupérer tous les utilisateurs et filtrer par email manuellement
+        const { data: userData, error: userError } = await supabase.auth.admin.listUsers();
         
-        if (userError || !userData.users || userData.users.length === 0) {
-          console.log('[Login] Utilisateur non trouvé via admin:', email);
+        if (userError || !userData.users) {
+          console.log('[Login] Erreur listUsers:', userError?.message);
           res.writeHead(401, { ...corsHeaders, 'Content-Type': 'application/json' });
           return res.end(JSON.stringify({ 
             success: false, 
@@ -81,7 +79,16 @@ module.exports = async (req, res) => {
           }));
         }
         
-        const user = userData.users[0];
+        const user = userData.users.find(u => u.email === email);
+        
+        if (!user) {
+          console.log('[Login] Utilisateur non trouvé:', email);
+          res.writeHead(401, { ...corsHeaders, 'Content-Type': 'application/json' });
+          return res.end(JSON.stringify({ 
+            success: false, 
+            error: 'Email ou mot de passe incorrect' 
+          }));
+        }
         
         // Vérifier le mot de passe avec signInWithPassword sur l'anon key
         // mais on doit accepter l'email non confirmé
