@@ -306,6 +306,105 @@ async function sendWaitlistConfirmationEmail(email) {
   }
 }
 
+async function sendSignupConfirmationEmail(email, name) {
+  const apiKey = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.BREVO_SENDER_EMAIL;
+  const senderName = process.env.BREVO_SENDER_NAME || 'ORADIA';
+
+  if (!apiKey || !senderEmail) {
+    console.warn('Brevo config missing for signup confirmation email');
+    return false;
+  }
+
+  try {
+    const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'api-key': apiKey
+      },
+      body: JSON.stringify({
+        sender: { email: senderEmail, name: senderName },
+        to: [{ email, name }],
+        replyTo: { email: 'contact@oradia.fr', name: 'Oradia' },
+        subject: 'Bienvenue dans votre espace ORADIA ✨',
+        htmlContent: `
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+</head>
+<body style="margin:0;padding:0;background:#050a14;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#050a14;">
+    <tr>
+      <td align="center" style="padding:48px 20px;">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:linear-gradient(135deg,#0a1628 0%,#051428 100%);border:1px solid rgba(212,175,55,0.3);box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+          <tr>
+            <td align="center" style="padding:0;">
+              <img src="https://oradia.fr/images/medias/apercu_stripe.jpg" alt="ORADIA" width="600" style="display:block;width:100%;height:240px;object-fit:cover;opacity:0.85;">
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:32px 40px 24px 40px;">
+              <h1 style="margin:0;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:36px;font-weight:300;letter-spacing:2px;text-transform:uppercase;">
+                Votre espace est prêt
+              </h1>
+              <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:20px auto;"></div>
+              <p style="margin:0;color:#d8bf72;font-family:'Lora',Georgia,serif;font-size:15px;font-style:italic;">
+                Bienvenue, ${name}
+              </p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:0 40px 32px 40px;">
+              <p style="margin:0 0 24px 0;color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;">
+                Votre compte ORADIA a été créé avec succès. Vous pouvez dès maintenant accéder à votre espace membre et commencer vos tirages.
+              </p>
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:32px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="https://oradia.fr/member/login.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#0a1628;font-family:'Lora',Georgia,serif;font-size:15px;font-weight:600;text-decoration:none;padding:16px 32px;letter-spacing:0.5px;">
+                      Accéder à mon espace
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <div style="width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);margin:32px 0;"></div>
+              <p style="margin:0 0 8px 0;color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:14px;">Avec gratitude,</p>
+              <p style="margin:0;color:#d8bf72;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;font-weight:600;letter-spacing:1px;">Rudy Boucheron</p>
+            </td>
+          </tr>
+          <tr>
+            <td style="padding:24px 40px;background:rgba(5,10,20,0.6);border-top:1px solid rgba(212,175,55,0.2);">
+              <p style="margin:0;color:#9ca3af;font-family:'Lora',Georgia,serif;font-size:11px;text-align:center;line-height:1.6;">
+                <a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;">oradia.fr</a> · <a href="mailto:contact@oradia.fr" style="color:#d4af37;text-decoration:none;">contact@oradia.fr</a><br>
+                ORADIA – La Boussole Intérieure · Révéler. Transmuter. Relier.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>`,
+        textContent: `Bienvenue ${name}, votre espace ORADIA est prêt. Connectez-vous sur oradia.fr/member/login.html` 
+      })
+    });
+
+    if (!response.ok) {
+      console.error('Brevo signup email failed:', response.status);
+      return false;
+    }
+    return true;
+  } catch (error) {
+    console.error('Brevo signup email error:', error.message);
+    return false;
+  }
+}
+
 module.exports = async (req, res) => {
   try {
     setCORS(req, res);
@@ -334,7 +433,7 @@ module.exports = async (req, res) => {
         email,
         password,
         user_metadata: { full_name: name },
-        email_confirm: true
+        email_confirm: false
       });
       
       if (authError) {
@@ -344,6 +443,9 @@ module.exports = async (req, res) => {
           error: authError.message
         });
       }
+      
+      // Envoi email de confirmation via Brevo
+      await sendSignupConfirmationEmail(email, name);
       
       console.log(`[Signup] Compte créé: ${authUser.user.id}`);
       
