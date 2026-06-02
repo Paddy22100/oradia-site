@@ -31,6 +31,18 @@
     {
       "src": "/api/mondial-relay/pickup-points",
       "dest": "/api/mondial-relay/pickup-points.js"
+    },
+    {
+      "src": "/api/auth/login",
+      "dest": "/api/auth/login.js"
+    },
+    {
+      "src": "/api/auth/forgot-password",
+      "dest": "/api/auth/forgot-password.js"
+    },
+    {
+      "src": "/api/auth/check-subscription",
+      "dest": "/api/auth/check-subscription.js"
     }
   ],
   "functions": {
@@ -51,6 +63,15 @@
     },
     "api/mondial-relay/pickup-points.js": {
       "maxDuration": 15
+    },
+    "api/auth/login.js": {
+      "maxDuration": 15
+    },
+    "api/auth/forgot-password.js": {
+      "maxDuration": 15
+    },
+    "api/auth/check-subscription.js": {
+      "maxDuration": 10
     }
   },
   "env": {

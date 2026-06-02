@@ -5510,7 +5510,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
 
 
 
- form?.addEventListener('submit', (e) => {
+ form?.addEventListener('submit', async (e) => {
   e.preventDefault();
 
   // Vérifier que la question est ouverte
@@ -5522,9 +5522,36 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   } else {
     toreIntentionInput?.setCustomValidity("");
   }
-  
-  // Vérifier la limite de tirages gratuits
-  if (window.freemiumTracker && !window.freemiumTracker.canDrawTore()) {
+
+  // Vérifier l'abonnement : d'abord local, sinon appel API si connecté
+  let isSubscribed = window.freemiumTracker ? window.freemiumTracker.isSubscribed() : false;
+
+  if (!isSubscribed) {
+    // Vérifier via API si l'utilisateur est connecté (email en session ou localStorage)
+    const sessStr = sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session');
+    if (sessStr) {
+      try {
+        const sess = JSON.parse(sessStr);
+        if (sess.email) {
+          const resp = await fetch('/api/auth/check-subscription?email=' + encodeURIComponent(sess.email));
+          if (resp.ok) {
+            const data = await resp.json();
+            if (data.subscribed) {
+              isSubscribed = true;
+              // Mettre à jour la session locale pour les prochains appels
+              sess.subscribed = true;
+              const updated = JSON.stringify(sess);
+              sessionStorage.setItem('oradia_member_session', updated);
+              localStorage.setItem('oradia_member_session', updated);
+            }
+          }
+        }
+      } catch(err) {}
+    }
+  }
+
+  // Vérifier la limite de tirages gratuits seulement si pas abonné
+  if (!isSubscribed && window.freemiumTracker && !window.freemiumTracker.canDrawTore()) {
     window.freemiumTracker.showToreLimitReached();
     return;
   }

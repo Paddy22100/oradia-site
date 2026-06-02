@@ -125,6 +125,23 @@
             .main-content { margin-left: 0; }
         }
     </style>
+    <script>
+        // Vérification session IMMÉDIATE avant affichage - évite le clignotement
+        (function() {
+            const authDataStr = sessionStorage.getItem('oradia_auth');
+            if (authDataStr) {
+                try {
+                    const authData = JSON.parse(authDataStr);
+                    const age = Date.now() - authData.timestamp;
+                    if (age < 2 * 60 * 1000 && authData.valid) {
+                        return; // Session récente valide, on continue
+                    }
+                } catch(e) {}
+            }
+            // Pas de session locale valide : masquer le contenu pendant vérification API
+            document.documentElement.style.visibility = 'hidden';
+        })();
+    </script>
 </head>
 <body class="bg-night-blue text-light-gold">
 
@@ -961,19 +978,19 @@
             try {
                 // Vérifier la session admin (sauf si session très récente)
                 if (!skipInitialCheck) {
-                    console.log('🔍 Vérification session API...');
                     const meResponse = await fetch('/api/admin/auth?action=me', { credentials: 'include' });
                     
                     if (!meResponse.ok) {
-                        // Session invalide, nettoyer et rediriger
-                        console.log('❌ Session invalide (status ' + meResponse.status + '), redirection login');
                         sessionStorage.removeItem('oradia_auth');
-                        window.location.href = 'login.html';
+                        window.location.replace('login.html');
                         return;
                     }
                     
-                    console.log('✅ Session API valide');
+                    // Session valide : mettre à jour le cache et afficher
+                    sessionStorage.setItem('oradia_auth', JSON.stringify({ valid: true, timestamp: Date.now() }));
                 }
+                // Rendre visible maintenant que la session est validée
+                document.documentElement.style.visibility = 'visible';
 
                 // Charger les KPI
                 await Promise.all([
@@ -984,10 +1001,8 @@
                 ]);
 
             } catch (error) {
-                console.error('Erreur chargement dashboard:', error);
                 document.cookie = 'oradia_admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                sessionStorage.setItem('oradia_redirecting', Date.now().toString());
-                window.location.href = 'login.html';
+                window.location.replace('login.html');
             }
         }
 
