@@ -327,10 +327,12 @@ module.exports = async (req, res) => {
           process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
         );
         
-        const { data, error } = await supabase.auth.signUp({
+        // Utiliser admin.createUser car on est côté serveur avec SERVICE_ROLE_KEY
+        const { data: authUser, error } = await supabase.auth.admin.createUser({
           email,
           password,
-          options: { data: { full_name: name } }
+          email_confirm: true,
+          user_metadata: { full_name: name }
         });
         
         if (error) {
@@ -340,7 +342,7 @@ module.exports = async (req, res) => {
         
         return res.status(200).json({ 
           success: true, 
-          user: data.user,
+          user: authUser,
           message: 'Compte créé avec succès' 
         });
       } catch (signupError) {
