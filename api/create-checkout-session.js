@@ -105,8 +105,8 @@ module.exports = async (req, res) => {
                 mode: 'subscription',
                 line_items: [{ price: priceId, quantity: 1 }],
                 customer_email: email,
-                success_url: `${frontendUrl}/member/abonnements.html?subscribed=1`,
-                cancel_url:  `${frontendUrl}/member/abonnements.html?cancelled=1`,
+                success_url: `${frontendUrl}/success-tore.html?session_id={CHECKOUT_SESSION_ID}`,
+                cancel_url:  `${frontendUrl}/tore-abonnement.html?cancelled=1`,
                 metadata: { offer: 'tore-subscription', email, full_name: fullName },
                 subscription_data: { metadata: { email, full_name: fullName, offer: 'tore-subscription' } }
             });
