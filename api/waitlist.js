@@ -52,8 +52,10 @@ loadLocalEnvIfNeeded();
 
 function getSupabaseClient() {
   // URL Supabase du projet oradia-prod (nxxetkdozynuytlbhxdx)
-  const supabaseUrl = 'https://nxxetkdozynuytlbhxdx.supabase.co';
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl) throw new Error('SUPABASE_URL manquante dans les variables d\'environnement');
+  if (!supabaseKey) throw new Error('SUPABASE_SERVICE_ROLE_KEY manquante dans les variables d\'environnement');
   return createClient(supabaseUrl, supabaseKey);
 }
 
@@ -313,6 +315,7 @@ module.exports = async (req, res) => {
     
     // ===== SIGNUP : création de compte Supabase =====
     if (body && body.action === 'signup') {
+      validateEnvironment();
       const { email, password, name } = body;
       
       if (!email || !password || !name) {
