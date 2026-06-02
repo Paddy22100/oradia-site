@@ -322,9 +322,10 @@ module.exports = async (req, res) => {
       }
       
       try {
+        // Utiliser hardcodé la bonne URL (la variable d'environnement contient une mauvaise URL)
         const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://bwvlpgklnhcwkdpabiwd.supabase.co',
-          process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+          'https://bwvlpgklnhcwkdpabiwd.supabase.co',
+          process.env.SUPABASE_SERVICE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dmxwZ2tsbmhjd2tkcGFiaXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMDg1MTYsImV4cCI6MjA2MDc4NDUxNn0.ewf4U02F7k4q8lF_VtyxBzimXNKX2nD3JCC-7Bj_Q2w'
         );
         
         const { data, error } = await supabase.auth.signUp({
