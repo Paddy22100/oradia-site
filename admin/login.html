@@ -246,26 +246,35 @@ async function checkExistingSession() {
     console.log('Vérification session existante...');
     
     try {
+        // Récupérer le token stocké si disponible
+        let existingToken = null;
+        try {
+            const d = sessionStorage.getItem('oradia_auth');
+            if (d) existingToken = JSON.parse(d).token || null;
+        } catch(e) {}
+
+        const headers = {};
+        if (existingToken) headers['Authorization'] = 'Bearer ' + existingToken;
+
         const response = await fetch('/api/admin/auth?action=me', {
-            credentials: 'include'
+            credentials: 'include',
+            headers
         });
         
         if (response.ok) {
-            // Session valide, rediriger vers dashboard
             console.log('✅ Session valide, redirection dashboard');
             const result = await response.json();
             
-            // Stocker info session
             sessionStorage.setItem('oradia_auth', JSON.stringify({
                 valid: true,
                 timestamp: Date.now(),
-                email: result.admin?.email
+                email: result.user?.email,
+                token: existingToken
             }));
             
             window.location.href = 'dashboard-admin.html';
             return true;
         } else {
-            // Session invalide
             console.log('❌ Pas de session valide');
             sessionStorage.removeItem('oradia_auth');
         }
@@ -310,17 +319,17 @@ async function handleLogin(e) {
             
             showMessage('Connexion réussie! Redirection...', 'success');
             
-            // Marquer session comme valide avec timestamp et stocker le token
+            const token = result.token || null;
             const authData = {
                 valid: true,
                 timestamp: Date.now(),
                 email: result.admin?.email || email,
-                token: result.token || null
+                token
             };
             sessionStorage.setItem('oradia_auth', JSON.stringify(authData));
             
-            // Rediriger immédiatement
-            window.location.href = 'dashboard-admin.html';
+            // Passer le token dans le hash pour garantir la disponibilité immédiate
+            window.location.href = 'dashboard-admin.html' + (token ? '#t=' + encodeURIComponent(token) : '');
         } else {
             showMessage(result.message || 'Identifiants incorrects', 'error');
         }

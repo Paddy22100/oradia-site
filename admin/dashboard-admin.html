@@ -128,16 +128,34 @@
     <script>
         // Vérification session IMMÉDIATE avant affichage - évite le clignotement
         (function() {
+            // 1. Lire token depuis hash URL (#t=...) si présent (post-login immédiat)
+            const hash = window.location.hash;
+            if (hash && hash.startsWith('#t=')) {
+                try {
+                    const tokenFromHash = decodeURIComponent(hash.slice(3));
+                    if (tokenFromHash) {
+                        const existing = JSON.parse(sessionStorage.getItem('oradia_auth') || '{}');
+                        existing.token = tokenFromHash;
+                        existing.valid = true;
+                        existing.timestamp = Date.now();
+                        sessionStorage.setItem('oradia_auth', JSON.stringify(existing));
+                        // Nettoyer le hash de l'URL
+                        history.replaceState(null, '', window.location.pathname);
+                        return; // Afficher immédiatement
+                    }
+                } catch(e) {}
+            }
+            // 2. Vérifier sessionStorage
             const authDataStr = sessionStorage.getItem('oradia_auth');
             if (authDataStr) {
                 try {
                     const authData = JSON.parse(authDataStr);
                     if (authData.valid && authData.token) {
-                        return; // Token présent = session valide, afficher immédiatement
+                        return; // Token présent = afficher immédiatement
                     }
                 } catch(e) {}
             }
-            // Pas de token local : masquer pendant vérification API
+            // 3. Pas de token : masquer pendant vérification API
             document.documentElement.style.visibility = 'hidden';
         })();
     </script>
