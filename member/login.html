@@ -214,8 +214,8 @@
             ic.className = inp.type === 'password' ? 'fas fa-eye' : 'fas fa-eye-slash';
         });
 
-        // Soumission connexion
-        document.getElementById('loginForm').addEventListener('submit', function(e) {
+        // Soumission connexion - Appel API réel
+        document.getElementById('loginForm').addEventListener('submit', async function(e) {
             e.preventDefault();
             const email = document.getElementById('email').value.trim();
             const pw    = document.getElementById('password').value;
@@ -227,34 +227,37 @@
             const btn = this.querySelector('button[type=submit]');
             btn.disabled = true; btn.textContent = 'Connexion…';
 
-            const storedEmail = localStorage.getItem('userEmail');
-            setTimeout(() => {
-                if (storedEmail && storedEmail === email) {
+            try {
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password: pw })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
                     localStorage.setItem('isLoggedIn', 'true');
-                    // Vérifier si un abonnement actif existe en local
-                    let subscribed = false;
-                    try {
-                        const subData = localStorage.getItem('oradia_subscription');
-                        if (subData) {
-                            const { expiry } = JSON.parse(subData);
-                            if (expiry && new Date(expiry) > new Date()) subscribed = true;
-                        }
-                    } catch(e) {}
+                    localStorage.setItem('userEmail', email);
+                    localStorage.setItem('userName', data.user?.name || email.split('@')[0]);
                     sessionStorage.setItem('oradia_member_session', JSON.stringify({
                         email,
-                        name: localStorage.getItem('userName') || email.split('@')[0],
-                        subscribed
+                        name: data.user?.name || email.split('@')[0],
+                        subscribed: data.user?.subscribed || false
                     }));
                     flash('Connexion réussie ! Redirection…', 'success');
-                    // Retour à la page d'origine si disponible
                     const returnTo = sessionStorage.getItem('oradia_login_return');
                     sessionStorage.removeItem('oradia_login_return');
                     setTimeout(() => { window.location.href = returnTo || 'dashboard.html'; }, 1400);
                 } else {
                     btn.disabled = false; btn.textContent = 'Se connecter';
-                    err.textContent = 'Email ou mot de passe incorrect.';
+                    err.textContent = data.error || 'Email ou mot de passe incorrect.';
                 }
-            }, 600);
+            } catch (error) {
+                btn.disabled = false; btn.textContent = 'Se connecter';
+                err.textContent = 'Erreur de connexion. Veuillez réessayer.';
+                console.error('Login error:', error);
+            }
         });
 
         // Modal mot de passe oublié
