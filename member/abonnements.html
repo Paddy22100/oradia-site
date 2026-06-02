@@ -486,9 +486,18 @@
 
         // Logout
         document.getElementById('logoutBtn').addEventListener('click', async () => {
-            await supabase.auth.signOut();
-            sessionStorage.removeItem(SESSION_KEY);
-            window.location.href = '../index.html';
+            if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
+                // Nettoyer sessionStorage ET localStorage
+                sessionStorage.removeItem('isLoggedIn');
+                sessionStorage.removeItem('userEmail');
+                sessionStorage.removeItem('userName');
+                sessionStorage.removeItem('rememberMe');
+                localStorage.removeItem('isLoggedIn');
+                localStorage.removeItem('userEmail');
+                localStorage.removeItem('userName');
+                localStorage.removeItem('rememberMe');
+                window.location.href = '../index.html';
+            }
         });
 
         // ── Abonnement Stripe ──────────────────────────────────────────────────
