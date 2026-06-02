@@ -468,9 +468,17 @@
             }
         }
 
-        // Vérifier si déjà connecté
+        // Vérifier si déjà connecté (sessionStorage ou localStorage)
         (function() {
-            const sess = sessionStorage.getItem(SESSION_KEY);
+            let sess = sessionStorage.getItem(SESSION_KEY);
+            if (!sess) {
+                // Vérifier aussi localStorage pour ceux qui ont coché "Se souvenir de moi"
+                const email = localStorage.getItem('userEmail');
+                const name = localStorage.getItem('userName');
+                if (email && localStorage.getItem('isLoggedIn') === 'true') {
+                    sess = JSON.stringify({ email, name });
+                }
+            }
             if (sess) {
                 try { showMainContent(JSON.parse(sess).email); } catch(e) {}
             }

@@ -218,22 +218,9 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    // Vérifier si "Se souvenir de moi" est coché
-                    const rememberMe = document.getElementById('remember')?.checked || false;
-                    
-                    if (rememberMe) {
-                        // Persistance avec localStorage
-                        localStorage.setItem('isLoggedIn', 'true');
-                        localStorage.setItem('userEmail', email);
-                        localStorage.setItem('userName', data.user?.name || email.split('@')[0]);
-                        localStorage.setItem('rememberMe', 'true');
-                    } else {
-                        // Session temporaire avec sessionStorage (se supprime à la fermeture)
-                        sessionStorage.setItem('isLoggedIn', 'true');
-                        sessionStorage.setItem('userEmail', email);
-                        sessionStorage.setItem('userName', data.user?.name || email.split('@')[0]);
-                        sessionStorage.setItem('rememberMe', 'false');
-                    }
+                    localStorage.setItem('isLoggedIn', 'true');
+                    localStorage.setItem('userEmail', email);
+                    localStorage.setItem('userName', data.user?.name || email.split('@')[0]);
                     sessionStorage.setItem('oradia_member_session', JSON.stringify({
                         email,
                         name: data.user?.name || email.split('@')[0],
