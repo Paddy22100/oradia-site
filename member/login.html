@@ -14,23 +14,23 @@
         .bg-scene { position: fixed; inset: 0; background: url('../images/oradia-hero-4k.png') center/cover no-repeat; z-index: 0; }
         .bg-overlay { position: fixed; inset: 0; background: linear-gradient(140deg,rgba(4,10,28,0.78) 0%,rgba(8,18,42,0.72) 100%); backdrop-filter: blur(2px); z-index: 1; }
 
-        /* Wrapper 2 colonnes */
+        /* Wrapper centré */
         .wrapper {
             position: relative; z-index: 2;
-            display: grid; grid-template-columns: 1fr 1px 1fr;
-            width: min(860px, 96vw);
-            background: linear-gradient(155deg, rgba(12,24,58,0.72) 0%, rgba(6,14,36,0.78) 100%);
-            border: 1px solid rgba(212,175,55,0.32);
+            width: min(420px, 90vw);
+            background: linear-gradient(155deg, rgba(12,24,58,0.82) 0%, rgba(6,14,36,0.88) 100%);
+            border: 1px solid rgba(212,175,55,0.35);
             border-radius: 28px;
             overflow: hidden;
-            box-shadow: 0 32px 100px rgba(0,0,0,0.55), 0 0 80px rgba(212,175,55,0.08);
+            box-shadow: 0 32px 100px rgba(0,0,0,0.55), 0 0 80px rgba(212,175,55,0.12), inset 0 0 60px rgba(212,175,55,0.03);
             animation: fadeUp .5s cubic-bezier(.22,.68,0,1.2) both;
+            backdrop-filter: blur(10px);
         }
         @keyframes fadeUp { from { opacity:0; transform:translateY(24px); } to { opacity:1; transform:translateY(0); } }
 
-        .vline { background: linear-gradient(180deg, transparent, rgba(212,175,55,0.25) 20%, rgba(212,175,55,0.25) 80%, transparent); }
+        /* Ligne verticale supprimée - layout unique */
 
-        .col { padding: 52px 44px; display: flex; flex-direction: column; justify-content: center; }
+        .col { padding: 48px 40px; display: flex; flex-direction: column; justify-content: center; }
 
         /* Branding */
         .brand { display: flex; align-items: center; gap: 14px; margin-bottom: 8px; }
@@ -112,10 +112,8 @@
         /* Responsive */
         @media (max-width: 660px) {
             body { overflow-y: auto; align-items: flex-start; padding: 20px 0; }
-            .wrapper { grid-template-columns: 1fr; max-height: none; border-radius: 20px; width: 94vw; }
-            .vline { display: none; }
+            .wrapper { max-height: none; border-radius: 20px; width: 94vw; }
             .col { padding: 36px 24px; }
-            .col-right { border-top: 1px solid rgba(212,175,55,0.14); }
         }
     </style>
 </head>
