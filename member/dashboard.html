@@ -72,9 +72,15 @@
 
         // Fonction de déconnexion
         function logout() {
-            // Nettoyer toutes les données de session
-            sessionStorage.removeItem('adminSession');
-            sessionStorage.removeItem('adminEmail');
+            // Nettoyer toutes les données de session (sessionStorage + localStorage)
+            sessionStorage.removeItem('isLoggedIn');
+            sessionStorage.removeItem('userEmail');
+            sessionStorage.removeItem('userName');
+            sessionStorage.removeItem('rememberMe');
+            localStorage.removeItem('isLoggedIn');
+            localStorage.removeItem('userEmail');
+            localStorage.removeItem('userName');
+            localStorage.removeItem('rememberMe');
             sessionStorage.removeItem('loginAttempts');
             sessionStorage.removeItem('lockoutUntil');
             
@@ -515,7 +521,7 @@
         // Gestion de la déconnexion
         document.getElementById('logoutBtn').addEventListener('click', () => {
             if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-                // Simuler la déconnexion
+                logout(); // Appeler la fonction de déconnexion
                 window.location.href = '../index.html';
             }
         });
