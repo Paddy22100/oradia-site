@@ -325,6 +325,57 @@
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 
 <script>
+    // Fonctions pour le formulaire de connexion (gate)
+    function toggleGatePassword() {
+        const pw = document.getElementById('gate-password');
+        const eye = document.getElementById('gate-eye');
+        if (!pw) return;
+        const isHidden = pw.type === 'password';
+        pw.type = isHidden ? 'text' : 'password';
+        if (eye) eye.innerHTML = isHidden 
+            ? '<i class=\"fas fa-eye-slash\"></i>' 
+            : '<i class=\"fas fa-eye\"></i>';
+    }
+
+    async function gateLogin() {
+        const email = document.getElementById('gate-email')?.value.trim();
+        const pass = document.getElementById('gate-password')?.value;
+        const msg = document.getElementById('gate-msg');
+        
+        if (!email || !pass) {
+            if (msg) msg.textContent = 'Veuillez remplir tous les champs.';
+            return;
+        }
+        if (msg) msg.textContent = '';
+        
+        const btn = document.querySelector('button[onclick="gateLogin()"]');
+        if (btn) { btn.disabled = true; btn.textContent = 'Connexion...'; }
+        
+        try {
+            const response = await fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password: pass })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('userEmail', email);
+                localStorage.setItem('userName', data.user?.name || email.split('@')[0]);
+                window.location.reload(); // Recharger pour afficher le contenu protégé
+            } else {
+                if (msg) msg.textContent = data.error || 'Email ou mot de passe incorrect.';
+                if (btn) { btn.disabled = false; btn.textContent = 'Entrer'; }
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            if (msg) msg.textContent = 'Erreur de connexion. Veuillez réessayer.';
+            if (btn) { btn.disabled = false; btn.textContent = 'Entrer'; }
+        }
+    }
+
     const SUPABASE_URL = 'https://bwvlpgklnhcwkdpabiwd.supabase.co';
     const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dmxwZ2tsbmhjd2tkcGFiaXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMDg1MTYsImV4cCI6MjA2MDc4NDUxNn0.ewf4U02F7k4q8lF_VtyxBzimXNKX2nD3JCC-7Bj_Q2w';
     // Utiliser window.supabase (global) au lieu de redeclarer
