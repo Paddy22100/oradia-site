@@ -350,11 +350,16 @@
             console.log('Creating account for:', email);
 
             try {
-                // Appeler l'API backend pour créer le compte (comme les précommandes)
-                const response = await fetch('/api/auth-signup', {
+                // Appeler l'API backend pour créer le compte (fusionné avec waitlist)
+                const response = await fetch('/api/waitlist', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password, name })
+                    body: JSON.stringify({ 
+                        action: 'signup',
+                        email, 
+                        password, 
+                        name 
+                    })
                 });
 
                 const data = await response.json();

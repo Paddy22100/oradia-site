@@ -306,6 +306,50 @@ async function sendWaitlistConfirmationEmail(email) {
 module.exports = async (req, res) => {
   try {
     setCORS(req, res);
+    
+    // ===== SIGNUP : création de compte Supabase =====
+    if (req.body && req.body.action === 'signup') {
+      const { email, password, name } = req.body;
+      
+      if (!email || !password || !name) {
+        return res.status(400).json({ 
+          success: false,
+          error: 'Email, password et name sont requis' 
+        });
+      }
+      
+      try {
+        const supabase = createClient(
+          process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://bwvlpgklnhcwkdpabiwd.supabase.co',
+          process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+        );
+        
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { data: { full_name: name } }
+        });
+        
+        if (error) {
+          console.error('Supabase signup error:', error);
+          return res.status(400).json({ success: false, error: error.message });
+        }
+        
+        return res.status(200).json({ 
+          success: true, 
+          user: data.user,
+          message: 'Compte créé avec succès' 
+        });
+      } catch (signupError) {
+        console.error('Signup error:', signupError);
+        return res.status(500).json({ 
+          success: false,
+          error: 'Erreur lors de la création du compte' 
+        });
+      }
+    }
+    
+    // ===== WAITLIST : inscription newsletter (comportement existant) =====
 
     if (req.method === 'OPTIONS') {
       return res.status(200).end();
