@@ -10,7 +10,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
     <script src="../security.js"></script>
     
     <style>
@@ -324,19 +323,6 @@
         });
         document.getElementById('prevBtn').addEventListener('click', () => setStep(currentStep - 1));
 
-        // Initialiser Supabase avec vérification
-        let supabaseReady = false;
-        try {
-            const SUPABASE_URL = 'https://bwvlpgklnhcwkdpabiwd.supabase.co';
-            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dmxwZ2tsbmhjd2tkcGFiaXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMDg1MTYsImV4cCI6MjA2MDc4NDUxNn0.ewf4U02F7k4q8lF_VtyxBzimXNKX2nD3JCC-7Bj_Q2w';
-            supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            supabaseReady = true;
-            console.log('Supabase initialized successfully');
-        } catch (e) {
-            console.error('Failed to initialize Supabase:', e);
-            flash('Erreur de connexion au service. Veuillez réessayer.', 'error');
-        }
-
         // Vérifier si on vient pour un abonnement Tore
         const urlParams = new URLSearchParams(window.location.search);
         const subscribeToTore = urlParams.get('subscribe') === 'tore';
@@ -364,28 +350,20 @@
             console.log('Creating account for:', email);
 
             try {
-                // Vérifier que Supabase est initialisé
-                if (!supabaseReady) {
-                    throw new Error('Supabase non initialisé');
-                }
-
-                // Créer le compte dans Supabase Auth
-                const { data: authData, error: authError } = await supabase.auth.signUp({
-                    email: email,
-                    password: password,
-                    options: {
-                        data: {
-                            full_name: name
-                        }
-                    }
+                // Appeler l'API backend pour créer le compte (comme les précommandes)
+                const response = await fetch('/api/auth-signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password, name })
                 });
 
-                if (authError) {
-                    console.error('Supabase error:', authError);
-                    throw new Error(authError.message);
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || 'Erreur lors de la création du compte');
                 }
 
-                console.log('Account created successfully:', authData);
+                console.log('Account created successfully:', data);
 
                 // Sauvegarder en local pour compatibilité
                 localStorage.setItem('userEmail', email);
