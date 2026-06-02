@@ -506,13 +506,14 @@ const handler = async (req, res) => {
                     }
 
                     // 2. Enregistrer l'abonnement dans la table
+                    const accessCode = 'TORE-' + Date.now().toString(36).toUpperCase();
                     const { error: subError } = await supabase
                         .from('tore_subscriptions')
                         .upsert({
                             email:        extractedData.email,
                             full_name:    extractedData.full_name || '',
+                            access_code:  accessCode,
                             status:       'active',
-                            temp_password: existingUsers ? undefined : tempPassword, // Stocker temporairement
                             created_at:   new Date().toISOString(),
                             updated_at:   new Date().toISOString()
                         }, { onConflict: 'email' });

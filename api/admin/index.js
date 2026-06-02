@@ -152,7 +152,7 @@ async function handleData(req, res) {
           .upsert({
             email: email.toLowerCase().trim(),
             full_name: fullName || '',
-            access_code: accessCode || null,
+            access_code: accessCode || ('ADMIN-' + Date.now().toString(36).toUpperCase()),
             expires_at: expiresAt || null,
             status: 'active',
             created_at: new Date().toISOString(),
