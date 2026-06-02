@@ -240,7 +240,8 @@
                     flash('Connexion réussie ! Redirection…', 'success');
                     const returnTo = sessionStorage.getItem('oradia_login_return');
                     sessionStorage.removeItem('oradia_login_return');
-                    setTimeout(() => { window.location.href = returnTo || 'dashboard.html'; }, 1400);
+                    // Rediriger vers la page demandée, ou abonnements par défaut (pas dashboard admin)
+                    setTimeout(() => { window.location.href = returnTo || 'abonnements.html'; }, 1400);
                 } else {
                     btn.disabled = false; btn.textContent = 'Se connecter';
                     err.textContent = data.error || 'Email ou mot de passe incorrect.';
