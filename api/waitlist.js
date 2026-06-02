@@ -322,23 +322,32 @@ module.exports = async (req, res) => {
       }
       
       try {
-        const supabase = createClient(
-          process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL,
-          process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-        );
+        // Appel direct à l'API Auth Supabase pour contourner le problème DNS
+        const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
+        const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY;
         
-        // Utiliser admin.createUser car on est côté serveur avec SERVICE_ROLE_KEY
-        const { data: authUser, error } = await supabase.auth.admin.createUser({
-          email,
-          password,
-          email_confirm: true,
-          user_metadata: { full_name: name }
+        const authResponse = await fetch(`${supabaseUrl}/auth/v1/admin/users`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${serviceKey}`,
+            'apikey': serviceKey,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            email,
+            password,
+            email_confirm: true,
+            user_metadata: { full_name: name }
+          })
         });
         
-        if (error) {
-          console.error('Supabase signup error:', error);
-          return res.status(400).json({ success: false, error: error.message });
+        if (!authResponse.ok) {
+          const errorData = await authResponse.json();
+          console.error('Supabase auth error:', errorData);
+          return res.status(400).json({ success: false, error: errorData.message || 'Erreur création utilisateur' });
         }
+        
+        const authUser = await authResponse.json();
         
         return res.status(200).json({ 
           success: true, 
