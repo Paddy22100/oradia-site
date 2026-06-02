@@ -126,9 +126,8 @@
         }
     </style>
     <script>
-        // Vérification session IMMÉDIATE avant affichage - évite le clignotement
+        // Récupérer le token depuis le hash URL si présent (post-login)
         (function() {
-            // 1. Lire token depuis hash URL (#t=...) si présent (post-login immédiat)
             const hash = window.location.hash;
             if (hash && hash.startsWith('#t=')) {
                 try {
@@ -139,24 +138,10 @@
                         existing.valid = true;
                         existing.timestamp = Date.now();
                         sessionStorage.setItem('oradia_auth', JSON.stringify(existing));
-                        // Nettoyer le hash de l'URL
                         history.replaceState(null, '', window.location.pathname);
-                        return; // Afficher immédiatement
                     }
                 } catch(e) {}
             }
-            // 2. Vérifier sessionStorage
-            const authDataStr = sessionStorage.getItem('oradia_auth');
-            if (authDataStr) {
-                try {
-                    const authData = JSON.parse(authDataStr);
-                    if (authData.valid && authData.token) {
-                        return; // Token présent = afficher immédiatement
-                    }
-                } catch(e) {}
-            }
-            // 3. Pas de token : masquer pendant vérification API
-            document.documentElement.style.visibility = 'hidden';
         })();
     </script>
 </head>
@@ -1001,23 +986,24 @@
                 if (!skipInitialCheck) {
                     const meResponse = await adminFetch('/api/admin/auth?action=me');
 
-                    if (!meResponse.ok) {
+                    if (meResponse.status === 401) {
                         sessionStorage.removeItem('oradia_auth');
                         window.location.replace('login.html');
                         return;
                     }
 
-                    // Conserver le token existant en mettant à jour le timestamp
-                    const existing = JSON.parse(authDataStr || '{}');
-                    sessionStorage.setItem('oradia_auth', JSON.stringify({
-                        valid: true,
-                        timestamp: Date.now(),
-                        token: existing.token || null,
-                        email: existing.email || null
-                    }));
+                    if (meResponse.ok) {
+                        const existing = JSON.parse(authDataStr || '{}');
+                        sessionStorage.setItem('oradia_auth', JSON.stringify({
+                            valid: true,
+                            timestamp: Date.now(),
+                            token: existing.token || null,
+                            email: existing.email || null
+                        }));
+                    }
                 }
 
-                // Rendre la page visible
+                // Toujours rendre visible (la redirection éventuelle se fait via 401)
                 document.documentElement.style.visibility = 'visible';
 
                 await Promise.all([
@@ -1028,8 +1014,9 @@
                 ]);
 
             } catch (error) {
-                document.cookie = 'oradia_admin_session=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-                window.location.replace('login.html');
+                // Erreur réseau ou autre : afficher quand même, ne pas rediriger
+                document.documentElement.style.visibility = 'visible';
+                console.error('Erreur chargement dashboard:', error);
             }
         }
 
