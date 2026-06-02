@@ -3851,6 +3851,20 @@ function showToreAnalysisCTA() {
   const intention = sessionStorage.getItem('tore_intention') || '';
   sessionStorage.setItem('tore_cards', JSON.stringify(cards));
 
+  // Enregistrer dans l'historique localStorage (5 derniers max)
+  try {
+    const tirages = JSON.parse(localStorage.getItem('oradia_tirages') || '[]');
+    tirages.push({
+      type: 'Tirage Tore',
+      date: new Date().toISOString(),
+      intention: intention,
+      cartes: cards.map(c => c.name).filter(Boolean)
+    });
+    // Garder seulement les 20 derniers
+    if (tirages.length > 20) tirages.splice(0, tirages.length - 20);
+    localStorage.setItem('oradia_tirages', JSON.stringify(tirages));
+  } catch(e) {}
+
   // Cacher la bottom-bar
   const bbFinal = el('tore-bottom-bar');
   if (bbFinal) bbFinal.classList.add('hidden');

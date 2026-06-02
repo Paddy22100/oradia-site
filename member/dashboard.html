@@ -234,122 +234,33 @@
         </aside>
 
         <!-- Main Dashboard -->
-        <main class="flex-1 p-6">
-            <!-- Welcome Section -->
+        <main class="flex-1 p-6 pb-24 lg:pb-6">
+
+            <!-- Welcome -->
             <section class="mb-8 fade-in">
                 <div class="bg-gradient-to-r from-[rgba(26,54,93,0.8)] to-[rgba(5,20,40,0.9)] rounded-2xl p-8 border border-gold/30 relative overflow-hidden">
                     <div class="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full -translate-y-16 translate-x-16"></div>
                     <div class="relative z-10">
-                        <h2 class="cormorant text-3xl text-gold mb-4">
-                            Bienvenue dans votre espace ORADIA
-                        </h2>
-                        <p class="text-light-gold/80 mb-6">
-                            Explorez votre historique de tirages et suivez votre évolution spirituelle.
-                        </p>
+                        <h2 class="cormorant text-3xl text-gold mb-2">Bienvenue, <span id="memberName">Membre</span></h2>
+                        <p class="text-light-gold/70 mb-6">Votre espace intérieur ORADIA.</p>
                         <div class="flex flex-wrap gap-4">
-                            <a href="tirages.html" class="bg-gold hover:bg-light-gold text-night-blue font-bold py-3 px-6 rounded-lg transition-colors">
-                                <i class="fas fa-history mr-2"></i>
-                                Voir mon historique
+                            <a href="../tore.html" class="bg-gold hover:bg-light-gold text-night-blue font-bold py-3 px-6 rounded-lg transition-colors">
+                                <i class="fas fa-infinity mr-2"></i>Nouveau tirage
                             </a>
-                            <a href="../pelerin.html" class="border border-gold text-gold hover:bg-gold hover:text-night-blue font-bold py-3 px-6 rounded-lg transition-colors">
-                                <i class="fas fa-plus mr-2"></i>
-                                Nouveau tirage
+                            <a href="abonnements.html" class="border border-gold text-gold hover:bg-gold/10 font-bold py-3 px-6 rounded-lg transition-colors">
+                                <i class="fas fa-crown mr-2"></i>Mon abonnement
                             </a>
                         </div>
                     </div>
                 </div>
             </section>
 
-            <!-- Stats Grid -->
-            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                <div class="stat-card rounded-xl p-6 text-center card-hover">
-                    <div class="text-4xl font-bold text-gold mb-2" id="totalTirages">12</div>
-                    <div class="text-light-gold/80 text-sm">Total des tirages</div>
-                    <i class="fas fa-cards-blank text-gold/30 text-2xl mt-3"></i>
-                </div>
-                
-                <div class="stat-card rounded-xl p-6 text-center card-hover">
-                    <div class="text-4xl font-bold text-gold mb-2" id="creditsLeft">5</div>
-                    <div class="text-light-gold/80 text-sm">Crédits restants</div>
-                    <i class="fas fa-bolt text-gold/30 text-2xl mt-3"></i>
-                </div>
-                
-                <div class="stat-card rounded-xl p-6 text-center card-hover">
-                    <div class="text-4xl font-bold text-gold mb-2" id="subscriptionStatus">Actif</div>
-                    <div class="text-light-gold/80 text-sm">Abonnement</div>
-                    <i class="fas fa-crown text-gold/30 text-2xl mt-3"></i>
-                </div>
-                
-                <div class="stat-card rounded-xl p-6 text-center card-hover">
-                    <div class="text-2xl font-bold text-gold mb-2" id="nextBillingDate">12 mai</div>
-                    <div class="text-light-gold/80 text-sm">Prochaine échéance</div>
-                    <i class="fas fa-calendar-check text-gold/30 text-2xl mt-3"></i>
-                </div>
-            </section>
-
-            <!-- Recent Tirages -->
+            <!-- Derniers tirages -->
             <section class="mb-8">
-                <div class="flex justify-between items-center mb-6">
-                    <h3 class="cormorant text-2xl text-gold">Tirages récents</h3>
-                    <a href="tirages.html" class="text-gold/70 hover:text-gold transition-colors">
-                        Voir tout <i class="fas fa-arrow-right ml-1"></i>
-                    </a>
-                </div>
-                
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6" id="recentTirages">
-                    <!-- Example tirage card -->
-                    <div class="bg-[rgba(26,54,93,0.6)] rounded-xl p-6 border border-gold/20 card-hover">
-                        <div class="flex justify-between items-start mb-4">
-                            <div>
-                                <h4 class="text-gold font-semibold mb-1">Guidance Personnelle</h4>
-                                <p class="text-light-gold/60 text-sm">Il y a 2 jours</p>
-                            </div>
-                            <span class="bg-gold/20 text-gold text-xs px-2 py-1 rounded-full">Complet</span>
-                        </div>
-                        <div class="text-light-gold/80 text-sm mb-3">
-                            <p><strong>Intention:</strong> Clarifier mon chemin professionnel</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <span class="text-xs bg-[rgba(212,175,55,0.2)] text-gold px-2 py-1 rounded">Émotions</span>
-                            <span class="text-xs bg-[rgba(212,175,55,0.2)] text-gold px-2 py-1 rounded">Actions</span>
-                            <span class="text-xs bg-[rgba(212,175,55,0.2)] text-gold px-2 py-1 rounded">Cosmos</span>
-                        </div>
-                    </div>
-                </div>
+                <h3 class="cormorant text-2xl text-gold mb-4">Derniers tirages</h3>
+                <div id="tiragsList"></div>
             </section>
 
-            <!-- Quick Actions -->
-            <section>
-                <h3 class="cormorant text-2xl text-gold mb-6">Actions rapides</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div class="bg-gradient-to-br from-[rgba(26,54,93,0.6)] to-[rgba(5,20,40,0.8)] rounded-xl p-6 border border-gold/20 text-center card-hover">
-                        <i class="fas fa-cards-blank text-3xl text-gold mb-4"></i>
-                        <h4 class="text-gold font-semibold mb-2">Nouveau tirage</h4>
-                        <p class="text-light-gold/70 text-sm mb-4">Commencez une nouvelle consultation</p>
-                        <a href="../pelerin.html" class="inline-block bg-gold text-night-blue px-4 py-2 rounded-lg hover:bg-light-gold transition-colors font-semibold">
-                            Commencer
-                        </a>
-                    </div>
-                    
-                    <div class="bg-gradient-to-br from-[rgba(26,54,93,0.6)] to-[rgba(5,20,40,0.8)] rounded-xl p-6 border border-gold/20 text-center card-hover">
-                        <i class="fas fa-credit-card text-3xl text-gold mb-4"></i>
-                        <h4 class="text-gold font-semibold mb-2">Gérer mes crédits</h4>
-                        <p class="text-light-gold/70 text-sm mb-4">Achetez ou consultez vos crédits disponibles</p>
-                        <a href="abonnements.html" class="inline-block bg-gold text-night-blue px-4 py-2 rounded-lg hover:bg-light-gold transition-colors font-semibold">
-                            Gérer
-                        </a>
-                    </div>
-                    
-                    <div class="bg-gradient-to-br from-[rgba(26,54,93,0.6)] to-[rgba(5,20,40,0.8)] rounded-xl p-6 border border-gold/20 text-center card-hover">
-                        <i class="fas fa-crown text-3xl text-gold mb-4"></i>
-                        <h4 class="text-gold font-semibold mb-2">Mon abonnement</h4>
-                        <p class="text-light-gold/70 text-sm mb-4">Voir le statut et la date de renouvellement</p>
-                        <a href="abonnements.html" class="inline-block bg-gold text-night-blue px-4 py-2 rounded-lg hover:bg-light-gold transition-colors font-semibold">
-                            Voir
-                        </a>
-                    </div>
-                </div>
-            </section>
         </main>
     </div>
 
@@ -376,91 +287,49 @@
     </div>
 
     <script>
-        // Simuler les données du membre
-        const memberData = {
-            name: "Jean Dupont",
-            memberSince: "Janvier 2024",
-            totalTirages: 12,
-            creditsLeft: 5,
-            subscriptionStatus: "Actif",
-            nextBillingDate: "12 mai",
-            recentTirages: [
-                {
-                    type: "Guidance Personnelle",
-                    date: "Il y a 2 jours",
-                    intention: "Clarifier mon chemin professionnel",
-                    categories: ["Émotions", "Actions", "Cosmos"],
-                    status: "Complet"
-                },
-                {
-                    type: "Cercle d'Empuissancement",
-                    date: "Il y a 5 jours",
-                    intention: "Trouver ma place dans le groupe",
-                    categories: ["Actions", "Cosmos"],
-                    status: "Partiel"
-                },
-                {
-                    type: "Consultation Rapide",
-                    date: "Il y a 1 semaine",
-                    intention: "Question sur une décision importante",
-                    categories: ["Émotions"],
-                    status: "Complet"
-                }
-            ]
-        };
+        // Afficher le nom depuis la session
+        (function() {
+            try {
+                const sess = JSON.parse(sessionStorage.getItem('oradia_member_session') || '{}');
+                const name = sess.name || localStorage.getItem('userName') || sess.email?.split('@')[0] || 'Membre';
+                document.querySelectorAll('#memberName, #memberNameMobile').forEach(el => { if(el) el.textContent = name; });
+            } catch(e) {}
+        })();
 
-        // Mettre à jour les données affichées
-        document.getElementById('memberName').textContent = memberData.name;
-        document.getElementById('memberSince').textContent = memberData.memberSince.split(' ')[0];
-        document.getElementById('totalTirages').textContent = memberData.totalTirages;
-        document.getElementById('creditsLeft').textContent = memberData.creditsLeft;
-        document.getElementById('subscriptionStatus').textContent = memberData.subscriptionStatus;
-        document.getElementById('nextBillingDate').textContent = memberData.nextBillingDate;
+        // Afficher les tirages depuis localStorage
+        (function() {
+            const container = document.getElementById('tiragsList');
+            const tirages = JSON.parse(localStorage.getItem('oradia_tirages') || '[]');
+            const recent = tirages.slice(-5).reverse();
 
-        // Afficher les tirages récents
-        const recentTiragesContainer = document.getElementById('recentTirages');
-        memberData.recentTirages.forEach(tirage => {
-            const card = document.createElement('div');
-            card.className = 'bg-[rgba(26,54,93,0.6)] rounded-xl p-6 border border-gold/20 card-hover fade-in';
-            card.innerHTML = `
-                <div class="flex justify-between items-start mb-4">
-                    <div>
-                        <h4 class="text-gold font-semibold mb-1">${tirage.type}</h4>
-                        <p class="text-light-gold/60 text-sm">${tirage.date}</p>
-                    </div>
-                    <span class="bg-gold/20 text-gold text-xs px-2 py-1 rounded-full">${tirage.status}</span>
-                </div>
-                <div class="text-light-gold/80 text-sm mb-3">
-                    <p><strong>Intention:</strong> ${tirage.intention}</p>
-                </div>
-                <div class="flex gap-2 flex-wrap">
-                    ${tirage.categories.map(cat => `<span class="text-xs bg-[rgba(212,175,55,0.2)] text-gold px-2 py-1 rounded">${cat}</span>`).join('')}
-                </div>
-            `;
-            recentTiragesContainer.appendChild(card);
-        });
+            if (recent.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-[rgba(26,54,93,0.4)] rounded-xl p-8 border border-gold/20 text-center">
+                        <i class="fas fa-infinity text-3xl text-gold/40 mb-3 block"></i>
+                        <p class="text-light-gold/60 mb-4">Aucun tirage enregistré pour l'instant.</p>
+                        <a href="../tore.html" class="inline-block bg-gold text-night-blue font-bold px-6 py-2 rounded-lg hover:bg-light-gold transition-colors">
+                            Commencer un tirage
+                        </a>
+                    </div>`;
+                return;
+            }
 
-        // Afficher les vrais données depuis la session
-        const sessData = JSON.parse(sessionStorage.getItem('oradia_member_session') || localStorage.getItem('userEmail') && JSON.stringify({name: localStorage.getItem('userName'), email: localStorage.getItem('userEmail')}) || '{}');
-        if (sessData.name || sessData.email) {
-            const name = sessData.name || sessData.email?.split('@')[0];
-            document.querySelectorAll('#memberName, #memberNameMobile').forEach(el => { if(el) el.textContent = name; });
-        }
+            container.innerHTML = recent.map(t => {
+                const date = new Date(t.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+                return `
+                    <div class="bg-[rgba(26,54,93,0.5)] rounded-xl p-5 border border-gold/20 mb-3 card-hover">
+                        <div class="flex justify-between items-start mb-2">
+                            <p class="text-gold font-semibold">${t.type || 'Tirage Tore'}</p>
+                            <span class="text-light-gold/50 text-xs">${date}</span>
+                        </div>
+                        ${t.intention ? `<p class="text-light-gold/70 text-sm"><span class="text-gold/60">Intention :</span> ${t.intention}</p>` : ''}
+                    </div>`;
+            }).join('');
+        })();
 
-        // Gestion de la déconnexion
+        // Déconnexion
         document.querySelectorAll('#logoutBtn, #logoutBtnMobile').forEach(btn => {
             if(btn) btn.addEventListener('click', () => { logout(); });
-        });
-
-        // Animation au chargement
-        document.addEventListener('DOMContentLoaded', () => {
-            const elements = document.querySelectorAll('.fade-in');
-            elements.forEach((el, index) => {
-                setTimeout(() => {
-                    el.style.opacity = '1';
-                    el.style.transform = 'translateY(0)';
-                }, index * 100);
-            });
         });
     </script>
 </body>
