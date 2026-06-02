@@ -265,6 +265,7 @@ class FreemiumTracker {
     }
 
     recordToreDraw() {
+        if (this.isSubscribed()) return;
         const data = this.getToreDrawData();
         data.count += 1;
         localStorage.setItem('oradia_tore_draws', JSON.stringify(data));

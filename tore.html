@@ -5924,4 +5924,26 @@ document.addEventListener("DOMContentLoaded", () => {
 
 <script src="components/header-manager.js" defer></script>
 
+<script>
+// Vérifier le statut d'abonnement Supabase au chargement pour synchroniser la session locale
+(async function syncSubscriptionStatus() {
+  try {
+    const sessStr = sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session');
+    if (!sessStr) return;
+    const sess = JSON.parse(sessStr);
+    if (!sess.email) return;
+    if (sess.subscribed === true) return; // déjà synchro
+    const resp = await fetch('/api/auth/check-subscription?email=' + encodeURIComponent(sess.email));
+    if (!resp.ok) return;
+    const data = await resp.json();
+    if (data.subscribed) {
+      sess.subscribed = true;
+      const updated = JSON.stringify(sess);
+      sessionStorage.setItem('oradia_member_session', updated);
+      localStorage.setItem('oradia_member_session', updated);
+    }
+  } catch (e) {}
+})();
+</script>
+
 </html>
