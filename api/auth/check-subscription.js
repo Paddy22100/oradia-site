@@ -31,20 +31,25 @@ module.exports = async (req, res) => {
 
     const { data, error } = await supabase
       .from('tore_subscriptions')
-      .select('status, expires_at')
-      .eq('email', email.toLowerCase())
+      .select('status, expires_at, email')
+      .eq('email', email.toLowerCase().trim())
       .eq('status', 'active')
-      .single();
+      .maybeSingle();
 
-    if (error || !data) {
+    if (error) {
       res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({ subscribed: false }));
+      return res.end(JSON.stringify({ subscribed: false, debug_error: error.message }));
+    }
+
+    if (!data) {
+      res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ subscribed: false, debug_info: 'no_row_found', queried_email: email.toLowerCase().trim() }));
     }
 
     const subscribed = !data.expires_at || new Date(data.expires_at) > new Date();
 
     res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ subscribed }));
+    return res.end(JSON.stringify({ subscribed, expires_at: data.expires_at }));
 
   } catch (error) {
     res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
