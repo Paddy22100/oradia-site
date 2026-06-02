@@ -414,52 +414,66 @@ module.exports = async (req, res) => {
     
     // ===== SIGNUP : création de compte Supabase =====
     if (body && body.action === 'signup') {
-      validateEnvironment();
-      const { email, password, name } = body;
-      
-      if (!email || !password || !name) {
-        return res.status(400).json({ 
+      try {
+        console.log('[Signup] Début création compte');
+        validateEnvironment();
+        console.log('[Signup] Environment validé');
+        
+        const { email, password, name } = body;
+        
+        if (!email || !password || !name) {
+          return res.status(400).json({ 
+            success: false,
+            error: 'Email, password et name sont requis' 
+          });
+        }
+        
+        // Création réelle du compte Supabase Auth
+        console.log(`[Signup] Création compte pour ${email}`);
+        
+        const supabase = getSupabaseClient();
+        console.log('[Signup] Client Supabase initialisé');
+        
+        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
+          email,
+          password,
+          user_metadata: { full_name: name },
+          email_confirm: false
+        });
+        
+        if (authError) {
+          console.error('[Signup] Erreur création complète:', JSON.stringify({
+            message: authError.message,
+            status: authError.status,
+            code: authError.code,
+            details: authError
+          }));
+          return res.status(400).json({
+            success: false,
+            error: authError.message,
+            details: authError
+          });
+        }
+        
+        // Envoi email de confirmation via Brevo
+        await sendSignupConfirmationEmail(email, name);
+        
+        console.log(`[Signup] Compte créé: ${authUser.user.id}`);
+        
+        return res.status(200).json({ 
+          success: true, 
+          user: { email, user_metadata: { full_name: name } },
+          message: 'Compte créé avec succès'
+        });
+      } catch (error) {
+        console.error('[Signup] ERREUR CATCH:', error.message);
+        console.error('[Signup] Stack:', error.stack);
+        return res.status(500).json({
           success: false,
-          error: 'Email, password et name sont requis' 
+          error: error.message,
+          stack: error.stack
         });
       }
-      
-      // Création réelle du compte Supabase Auth
-      console.log(`[Signup] Création compte pour ${email}`);
-      
-      const supabase = getSupabaseClient();
-      
-      const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-        email,
-        password,
-        user_metadata: { full_name: name },
-        email_confirm: false
-      });
-      
-      if (authError) {
-        console.error('[Signup] Erreur création complète:', JSON.stringify({
-          message: authError.message,
-          status: authError.status,
-          code: authError.code,
-          details: authError
-        }));
-        return res.status(400).json({
-          success: false,
-          error: authError.message,
-          details: authError
-        });
-      }
-      
-      // Envoi email de confirmation via Brevo
-      await sendSignupConfirmationEmail(email, name);
-      
-      console.log(`[Signup] Compte créé: ${authUser.user.id}`);
-      
-      return res.status(200).json({ 
-        success: true, 
-        user: { email, user_metadata: { full_name: name } },
-        message: 'Compte créé avec succès'
-      });
     }
     
     // ===== WAITLIST : inscription newsletter (comportement existant) =====
