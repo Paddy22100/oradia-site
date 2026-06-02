@@ -10,28 +10,48 @@
     <link rel="stylesheet" href="../responsive.css">
     <script src="../security.js"></script>
     <script>
-        // Vérifier l'authentification au chargement
+        // Vérifier la session membre
+        const SESSION_KEY = 'oradia_member_session';
         document.addEventListener('DOMContentLoaded', function() {
-            if (localStorage.getItem('oradiaAuth') !== 'true') {
-                // Rediriger vers la page de connexion si non connecté
-                window.location.href = '../auth/login-simple.html';
+            let sess = sessionStorage.getItem(SESSION_KEY);
+            if (!sess) {
+                const email = localStorage.getItem('userEmail');
+                if (email && localStorage.getItem('isLoggedIn') === 'true') {
+                    sess = JSON.stringify({ email, name: localStorage.getItem('userName') || email.split('@')[0] });
+                }
+            }
+            if (!sess) {
+                window.location.href = 'login.html';
                 return;
             }
+            // Afficher le nom
+            try {
+                const data = JSON.parse(sess);
+                const name = data.name || data.email?.split('@')[0] || 'Membre';
+                document.querySelectorAll('#memberName, #profileName').forEach(el => { if(el) el.textContent = name; });
+                document.querySelectorAll('#profileEmail').forEach(el => { if(el) el.textContent = data.email || ''; });
+            } catch(e) {}
 
             // Gérer la déconnexion
             const logoutBtn = document.getElementById('logoutBtn');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', function(e) {
                     e.preventDefault();
-                    if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-                        // Supprimer les données d'authentification
-                        localStorage.removeItem('oradiaAuth');
-                        localStorage.removeItem('oradiaUserEmail');
-                        localStorage.removeItem('oradiaUserName');
-                        
-                        // Rediriger vers la page de connexion
-                        window.location.href = '../auth/login-simple.html';
-                    }
+                    // Supprimer les données d'authentification
+                    sessionStorage.removeItem(SESSION_KEY);
+                    sessionStorage.removeItem('isLoggedIn');
+                    sessionStorage.removeItem('userEmail');
+                    sessionStorage.removeItem('userName');
+                    sessionStorage.removeItem('rememberMe');
+                    localStorage.removeItem('isLoggedIn');
+                    localStorage.removeItem('userEmail');
+                    localStorage.removeItem('userName');
+                    localStorage.removeItem('rememberMe');
+                    // ANCIEN CODE (garde pour compat)
+                    localStorage.removeItem('oradiaAuth');
+                    localStorage.removeItem('oradiaUserEmail');
+                    localStorage.removeItem('oradiaUserName');
+                    window.location.href = '../index.html';
                 });
             }
         });
