@@ -430,7 +430,8 @@
         // Initialisation Supabase
         const supabaseUrl = 'https://bwvlpgklnhcwkdpabiwd.supabase.co';
         const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dmxwZ2tsbmhjd2tkcGFiaXdkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDUyMDg1MTYsImV4cCI6MjA2MDc4NDUxNn0.QjHlhVPGC7jX6mX6HlFR-oZLkJhnc34aK2uL9xrrv6o';
-        const supabase = supabase.createClient(supabaseUrl, supabaseKey);
+        // Utiliser window.supabase (global) au lieu de redeclarer
+        window.supabaseClient = window.supabase.createClient(supabaseUrl, supabaseKey);
 
         async function gateLogin() {
             const email = document.getElementById('gate-email').value.trim();
@@ -439,34 +440,25 @@
 
             if (!email || !pass) { msg.textContent = 'Veuillez remplir tous les champs.'; return; }
 
-            // Connexion avec Supabase Auth
+            // Connexion via API backend
             try {
-                const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
-                    email: email,
-                    password: pass
+                const response = await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password: pass })
                 });
                 
-                if (authError || !authData.user) {
-                    msg.textContent = 'Email ou mot de passe incorrect.';
-                    return;
-                }
+                const data = await response.json();
                 
-                // Vérifier l'abonnement dans la table tore_subscriptions
-                const { data: subData, error: subError } = await supabase
-                    .from('tore_subscriptions')
-                    .select('status, full_name')
-                    .eq('email', email)
-                    .single();
-                
-                if (subError || !subData || subData.status !== 'active') {
-                    msg.textContent = 'Aucun abonnement Tore actif trouvé. Souscrivez à l\'abonnement sur tore-abonnement.html pour accéder à cet espace.';
+                if (!data.success) {
+                    msg.textContent = data.error || 'Email ou mot de passe incorrect.';
                     return;
                 }
                 
                 // Stocker la session
                 sessionStorage.setItem(SESSION_KEY, JSON.stringify({ 
                     email: email, 
-                    name: subData.full_name || email.split('@')[0] 
+                    name: data.user?.name || email.split('@')[0] 
                 }));
                 showMainContent(email);
                 
