@@ -282,7 +282,7 @@ async function checkExistingSession() {
                 token: existingToken
             }));
             
-            window.location.href = 'dashboard-admin.html';
+            window.location.href = 'https://oradia.fr/admin/dashboard-admin.html';
             return true;
         } else {
             console.log('❌ Pas de session valide');
@@ -339,7 +339,7 @@ async function handleLogin(e) {
             sessionStorage.setItem('oradia_auth', JSON.stringify(authData));
             
             // Passer le token dans le hash pour garantir la disponibilité immédiate
-            window.location.href = 'dashboard-admin.html' + (token ? '#t=' + encodeURIComponent(token) : '');
+            window.location.href = 'https://oradia.fr/admin/dashboard-admin.html' + (token ? '#t=' + encodeURIComponent(token) : '');
         } else {
             showMessage(result.message || 'Identifiants incorrects', 'error');
         }
