@@ -46,24 +46,41 @@
 <script>
 (function(){
   function updateMemberBtn() {
-    var sess = sessionStorage.getItem('oradia_member_session');
-    var label = 'Mon espace';
-    var href  = 'member/login.html';
+    var sess = sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session');
+    var isConnected = false;
+    var firstName = '';
+    var href = 'member/login.html';
+
     if (sess) {
       try {
         var d = JSON.parse(sess);
-        var name = (d.name || d.email || '').split(' ')[0];
-        if (name) label = name;
-        href = 'member/dashboard.html';
+        firstName = (d.name || d.email || '').split(' ')[0];
+        if (firstName) { isConnected = true; href = 'member/dashboard.html'; }
       } catch(e) {}
     }
+
     ['header-member-btn','header-member-btn-mobile'].forEach(function(id){
       var el = document.getElementById(id);
       if (el) el.href = href;
     });
+
     ['header-member-label','header-member-label-mobile'].forEach(function(id){
       var el = document.getElementById(id);
-      if (el) el.textContent = label;
+      if (!el) return;
+      if (isConnected) {
+        el.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ade80;margin-right:5px;vertical-align:middle;"></span>Bonjour\u00a0' + firstName;
+      } else {
+        el.textContent = 'Connexion';
+      }
+    });
+
+    // Icône : user-check si connecté, user sinon
+    ['header-member-btn','header-member-btn-mobile'].forEach(function(id){
+      var el = document.getElementById(id);
+      if (!el) return;
+      var icon = el.querySelector('i');
+      if (icon) icon.className = isConnected ? 'fas fa-user-check' : 'fas fa-user-circle';
+      if (icon) icon.style.fontSize = '15px';
     });
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', updateMemberBtn);
