@@ -6,8 +6,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type'
 };
 
-const SUPABASE_URL = 'https://nxxetkdozynuytlbhxdx.supabase.co';
-
 module.exports = async (req, res) => {
   if (req.method === 'OPTIONS') {
     res.writeHead(200, corsHeaders);
@@ -23,32 +21,29 @@ module.exports = async (req, res) => {
   const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
   if (!supabaseKey) {
     res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ subscribed: false, error: 'Configuration manquante: SUPABASE_SERVICE_ROLE_KEY absent' }));
+    return res.end(JSON.stringify({ subscribed: false, error: 'SUPABASE_SERVICE_ROLE_KEY absent' }));
   }
 
   try {
-    const encodedEmail = encodeURIComponent(email);
-    const url = `${SUPABASE_URL}/rest/v1/tore_subscriptions?email=eq.${encodedEmail}&status=eq.active&select=status,expires_at&limit=1`;
+    const supabase = createClient(
+      'https://nxxetkdozynuytlbhxdx.supabase.co',
+      supabaseKey
+    );
 
-    const resp = await globalThis.fetch(url, {
-      method: 'GET',
-      headers: {
-        'apikey': supabaseKey,
-        'Authorization': 'Bearer ' + supabaseKey,
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      }
-    });
+    const { data, error } = await supabase
+      .from('tore_subscriptions')
+      .select('status, expires_at')
+      .eq('email', email)
+      .eq('status', 'active')
+      .limit(1);
 
-    if (!resp.ok) {
-      const body = await resp.text();
+    if (error) {
       res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-      return res.end(JSON.stringify({ subscribed: false, debug_status: resp.status, debug_body: body.slice(0, 200) }));
+      return res.end(JSON.stringify({ subscribed: false, debug_error: error.message }));
     }
 
-    const rows = await resp.json();
-
-    if (!Array.isArray(rows) || rows.length === 0) {
+    const rows = data || [];
+    if (rows.length === 0) {
       res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ subscribed: false, debug_info: 'no_row_found', queried_email: email }));
     }
@@ -61,6 +56,6 @@ module.exports = async (req, res) => {
 
   } catch (err) {
     res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ subscribed: false, error: 'Erreur serveur', debug_catch: err?.message, debug_cause: String(err?.cause || '') }));
+    return res.end(JSON.stringify({ subscribed: false, error: 'Erreur serveur', debug_catch: err?.message }));
   }
 };
