@@ -119,6 +119,11 @@
     .quantum-source strong{font-size:.88rem;}
     .quantum-source span{font-size:.75rem;opacity:.6;}
     .quantum-source p{margin:.5rem 0 0;font-size:.84rem;line-height:1.65;opacity:.85;}
+    .quantum-guillemant{border-left:2px solid rgba(200,169,110,.4);padding-left:1.1rem;margin-bottom:.75rem;}
+    .quantum-guillemant blockquote{margin:0 0 .65rem;}
+    .quantum-guillemant blockquote p{font-size:.9rem;line-height:1.7;font-style:italic;opacity:.9;margin:0 0 .5rem;}
+    .quantum-guillemant blockquote footer{font-size:.75rem;opacity:.6;line-height:1.5;}
+    .quantum-guillemant blockquote footer a{color:#c8a96e;text-decoration:underline;text-underline-offset:2px;}
     .quantum-nuance{font-size:.78rem;line-height:1.65;opacity:.55;margin:.65rem 0 0;font-style:italic;}
 
     /* Mode immersif */
@@ -434,34 +439,40 @@
                   <span class="quantum-label">Tirage quantique</span>
                   <span class="quantum-sublabel">Vraie indétermination · ANU Lab, Australie</span>
                 </div>
-                <button class="quantum-learn-more" onclick="document.getElementById('quantum-explication-trav').classList.toggle('open')">En savoir plus</button>
+                <button type="button" class="quantum-learn-more" onclick="document.getElementById('quantum-explication-trav').classList.toggle('open')">En savoir plus</button>
               </div>
             </div>
             <div class="quantum-explication" id="quantum-explication-trav" style="max-width:600px;margin:0 auto;">
               <div class="quantum-explication-inner text-left">
                 <h3>Pourquoi un tirage quantique ?</h3>
-                <p class="quantum-intro">La plupart des oracles numériques utilisent un générateur de nombres <em>pseudo-aléatoires</em> : un algorithme qui <strong>simule</strong> le hasard, mais dont le résultat est déjà déterminé. C'est comme un dé truqué dont quelqu'un connaîtrait déjà le résultat.</p>
+                <p class="quantum-intro">La plupart des oracles numériques utilisent un générateur de nombres <em>pseudo-aléatoires</em> : un algorithme mathématique qui <strong>simule</strong> le hasard, mais dont le résultat est en réalité entièrement déterminé à l'avance. C'est comme lancer un dé truqué dont quelqu'un connaîtrait déjà le résultat.</p>
                 <div class="quantum-comparison">
                   <div class="quantum-col quantum-col-before">
                     <div class="quantum-col-icon">🎲</div>
                     <strong>Aléatoire classique</strong>
-                    <p>Un algorithme calcule un résultat "au hasard" — mais avec les mêmes paramètres, il produirait exactement le même résultat. Ce hasard est une illusion mathématique.</p>
+                    <p>Un algorithme calcule un nombre "au hasard". Mais avec les mêmes paramètres de départ, il produirait exactement le même résultat. Ce hasard est une illusion mathématique.</p>
                   </div>
                   <div class="quantum-col quantum-col-after">
                     <div class="quantum-col-icon">⚛️</div>
                     <strong>Aléatoire quantique</strong>
-                    <p>Le hasard vient du comportement réel de particules subatomiques — fondamentalement imprévisible. Personne ne peut en connaître le résultat à l'avance.</p>
+                    <p>Le hasard vient du comportement réel de particules subatomiques, un phénomène que la physique elle-même considère comme fondamentalement imprévisible. Personne, aucune machine, ne peut en connaître le résultat à l'avance.</p>
                   </div>
                 </div>
                 <div class="quantum-source">
                   <div class="quantum-source-logo">🔬</div>
                   <div>
-                    <strong>Source : Laboratoire ANU</strong><br>
-                    <span>Australian National University, Canberra</span>
-                    <p>Ces nombres naissent de la mesure des <em>fluctuations du vide quantique</em> — l'énergie minimale de l'univers, là où des particules apparaissent et disparaissent spontanément.</p>
+                    <strong>Source : Laboratoire de Physique Quantique de l'ANU</strong><br>
+                    <span>Australian National University, Canberra, Australie</span>
+                    <p>Nos tirages utilisent en temps réel les nombres générés par le laboratoire d'optique quantique de l'ANU. Ces nombres naissent de la mesure des <em>fluctuations du vide quantique</em>, l'énergie minimale irréductible de l'univers, là où des particules apparaissent et disparaissent spontanément, sans aucune cause antérieure mesurable.</p>
                   </div>
                 </div>
-                <p class="quantum-nuance">Nous ne prétendons pas que cela <em>prouve</em> quoi que ce soit. Nous choisissons simplement de laisser le moment du tirage aussi ouvert que possible.</p>
+                <div class="quantum-guillemant">
+                  <blockquote>
+                    <p>"Si la conscience peut influencer le cours des événements, comme le suggère la physique quantique dans certaines de ses interprétations, encore faut-il que le tirage soit <em>vraiment ouvert</em>, non fermé par un algorithme dont la réponse est déjà écrite."</p>
+                    <footer>Dans la lignée des travaux du physicien <strong>Philippe Guillemant</strong> (CNRS/INRIA), auteur de <em>La Physique de la Conscience</em>, et cofondateur de <a href="https://6naps.net" target="_blank" rel="noopener">6naps.net</a> qui applique ce même protocole à l'exploration des synchronicités.</footer>
+                  </blockquote>
+                  <p class="quantum-nuance">Nous ne prétendons pas que le tirage quantique <em>prouve</em> quoi que ce soit. Nous choisissons simplement de ne pas fermer la porte, de laisser le moment du tirage aussi ouvert que possible. Ce que vous en ferez appartient à votre propre intelligence intérieure.</p>
+                </div>
               </div>
             </div>
 

@@ -2304,34 +2304,40 @@ header { position: relative; overflow: visible; }        /* garantit que le drop
               <span class="quantum-label">Tirage quantique</span>
               <span class="quantum-sublabel">Vraie indétermination · ANU Lab, Australie</span>
             </div>
-            <button class="quantum-learn-more" onclick="document.getElementById('quantum-explication-pel').classList.toggle('open')">En savoir plus</button>
+            <button type="button" class="quantum-learn-more" onclick="document.getElementById('quantum-explication-pel').classList.toggle('open')">En savoir plus</button>
           </div>
         </div>
         <div class="quantum-explication px-4" id="quantum-explication-pel" style="max-width:600px;margin:0 auto;">
           <div class="quantum-explication-inner text-left">
             <h3>Pourquoi un tirage quantique ?</h3>
-            <p class="quantum-intro">La plupart des oracles numériques utilisent un générateur de nombres <em>pseudo-aléatoires</em> : un algorithme qui <strong>simule</strong> le hasard, mais dont le résultat est déjà déterminé. C'est comme un dé truqué dont quelqu'un connaîtrait déjà le résultat.</p>
+            <p class="quantum-intro">La plupart des oracles numériques utilisent un générateur de nombres <em>pseudo-aléatoires</em> : un algorithme mathématique qui <strong>simule</strong> le hasard, mais dont le résultat est en réalité entièrement déterminé à l'avance. C'est comme lancer un dé truqué dont quelqu'un connaîtrait déjà le résultat.</p>
             <div class="quantum-comparison">
               <div class="quantum-col quantum-col-before">
                 <div class="quantum-col-icon">🎲</div>
                 <strong>Aléatoire classique</strong>
-                <p>Un algorithme calcule un résultat "au hasard" — mais avec les mêmes paramètres, il produirait exactement le même résultat. Ce hasard est une illusion mathématique.</p>
+                <p>Un algorithme calcule un nombre "au hasard". Mais avec les mêmes paramètres de départ, il produirait exactement le même résultat. Ce hasard est une illusion mathématique.</p>
               </div>
               <div class="quantum-col quantum-col-after">
                 <div class="quantum-col-icon">⚛️</div>
                 <strong>Aléatoire quantique</strong>
-                <p>Le hasard vient du comportement réel de particules subatomiques — fondamentalement imprévisible selon la physique elle-même. Personne ne peut en connaître le résultat à l'avance.</p>
+                <p>Le hasard vient du comportement réel de particules subatomiques, un phénomène que la physique elle-même considère comme fondamentalement imprévisible. Personne, aucune machine, ne peut en connaître le résultat à l'avance.</p>
               </div>
             </div>
             <div class="quantum-source">
               <div class="quantum-source-logo">🔬</div>
               <div>
-                <strong>Source : Laboratoire ANU</strong><br>
-                <span>Australian National University, Canberra</span>
-                <p>Les nombres naissent de la mesure des <em>fluctuations du vide quantique</em> — l'énergie minimale de l'univers, là où des particules apparaissent et disparaissent spontanément.</p>
+                <strong>Source : Laboratoire de Physique Quantique de l'ANU</strong><br>
+                <span>Australian National University, Canberra, Australie</span>
+                <p>Nos tirages utilisent en temps réel les nombres générés par le laboratoire d'optique quantique de l'ANU. Ces nombres naissent de la mesure des <em>fluctuations du vide quantique</em>, l'énergie minimale irréductible de l'univers, là où des particules apparaissent et disparaissent spontanément, sans aucune cause antérieure mesurable.</p>
               </div>
             </div>
-            <p class="quantum-nuance">Nous ne prétendons pas que cela <em>prouve</em> quoi que ce soit. Nous choisissons simplement de laisser le moment du tirage aussi ouvert que possible.</p>
+            <div class="quantum-guillemant">
+              <blockquote>
+                <p>"Si la conscience peut influencer le cours des événements, comme le suggère la physique quantique dans certaines de ses interprétations, encore faut-il que le tirage soit <em>vraiment ouvert</em>, non fermé par un algorithme dont la réponse est déjà écrite."</p>
+                <footer>Dans la lignée des travaux du physicien <strong>Philippe Guillemant</strong> (CNRS/INRIA), auteur de <em>La Physique de la Conscience</em>, et cofondateur de <a href="https://6naps.net" target="_blank" rel="noopener">6naps.net</a> qui applique ce même protocole à l'exploration des synchronicités.</footer>
+              </blockquote>
+              <p class="quantum-nuance">Nous ne prétendons pas que le tirage quantique <em>prouve</em> quoi que ce soit. Nous choisissons simplement de ne pas fermer la porte, de laisser le moment du tirage aussi ouvert que possible. Ce que vous en ferez appartient à votre propre intelligence intérieure.</p>
+            </div>
           </div>
         </div>
 
@@ -5048,7 +5054,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-    const runFlip = () => {
+    const runFlip = async () => {
 
       try {
 
@@ -5088,7 +5094,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-        const data = pick(pool);
+        const data = await pick(pool);
 
         LOG('Flip carte', family, '→', data);
 
@@ -5208,7 +5214,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
 
 
-function generateAnalysis({ em, be, ac, co, intention }) {
+async function generateAnalysis({ em, be, ac, co, intention }) {
 
   const clean = s => (s || '').toString().replace(/\s+/g, ' ').trim();
 
@@ -5346,7 +5352,7 @@ function generateAnalysis({ em, be, ac, co, intention }) {
 
     ];
 
-    texte += pick(ouvertures);
+    texte += await pick(ouvertures);
 
 // ...
 
@@ -5360,7 +5366,7 @@ function generateAnalysis({ em, be, ac, co, intention }) {
 
   ];
 
-  texte += pick(interpretationsEmotion);
+  texte += await pick(interpretationsEmotion);
 
 // ...
 
@@ -5374,7 +5380,7 @@ function generateAnalysis({ em, be, ac, co, intention }) {
 
   ];
 
-  texte += pick(interpretationsBesoin);
+  texte += await pick(interpretationsBesoin);
 
 // ...
 
@@ -5388,7 +5394,7 @@ function generateAnalysis({ em, be, ac, co, intention }) {
 
   ];
 
-  texte += pick(interpretationsTransmutation);
+  texte += await pick(interpretationsTransmutation);
 
 // ...
 
@@ -5402,7 +5408,7 @@ function generateAnalysis({ em, be, ac, co, intention }) {
 
   ];
 
-  texte += pick(interpretationsCosmos);
+  texte += await pick(interpretationsCosmos);
 
 // ...
 
@@ -5420,7 +5426,7 @@ function generateAnalysis({ em, be, ac, co, intention }) {
 
   ];
 
-  texte += pick(fins);
+  texte += await pick(fins);
 
 
 
@@ -5539,7 +5545,7 @@ function generateAnalysis({ em, be, ac, co, intention }) {
       `;
 
       resultsEl.classList.remove('hidden');
-      const analysis = generateAnalysis({ em, be, ac, co, intention: outInt.textContent });
+      const analysis = await generateAnalysis({ em, be, ac, co, intention: outInt.textContent });
       synthEl.innerHTML = analysis.html;
 
     } finally {

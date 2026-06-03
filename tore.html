@@ -2785,7 +2785,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
                 <span class="quantum-label">Tirage quantique</span>
                 <span class="quantum-sublabel">Vraie indétermination · ANU Lab, Australie</span>
               </div>
-              <button class="quantum-learn-more" onclick="document.getElementById('quantum-explication').classList.toggle('open')">
+              <button type="button" class="quantum-learn-more" onclick="document.getElementById('quantum-explication').classList.toggle('open')">
                 En savoir plus
               </button>
             </div>
@@ -2794,35 +2794,88 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
           <!-- Explication dépliable -->
           <div class="quantum-explication" id="quantum-explication" style="max-width:640px;margin:0 auto;">
             <div class="quantum-explication-inner">
+
               <h3>Pourquoi un tirage quantique ?</h3>
-              <p class="quantum-intro">La plupart des oracles numériques utilisent un générateur de nombres <em>pseudo-aléatoires</em> : un algorithme mathématique qui <strong>simule</strong> le hasard, mais dont le résultat est en réalité entièrement déterminé à l'avance. C'est comme lancer un dé truqué dont quelqu'un connaîtrait déjà le résultat.</p>
+
+              <p class="quantum-intro">
+                La plupart des oracles numériques tirent les cartes avec un algorithme mathématique.
+                Ce n'est pas vraiment du hasard : avec les mêmes paramètres de départ, la séquence
+                serait identique. Le résultat est écrit avant même que vous cliquiez.
+                Un générateur quantique fonctionne différemment : le hasard y est physique, pas calculé.
+              </p>
+
               <div class="quantum-comparison">
                 <div class="quantum-col quantum-col-before">
                   <div class="quantum-col-icon">🎲</div>
                   <strong>Aléatoire classique</strong>
-                  <p>Un algorithme calcule un nombre "au hasard". Mais avec les mêmes paramètres de départ, il produirait exactement le même résultat. Ce hasard est une illusion mathématique.</p>
+                  <p>Un algorithme simule le hasard par des calculs. En théorie, quelqu'un qui
+                  connaîtrait tous les paramètres initiaux pourrait prédire le résultat.
+                  Ce hasard est une illusion mathématique utile, mais fermée.</p>
                 </div>
                 <div class="quantum-col quantum-col-after">
                   <div class="quantum-col-icon">⚛️</div>
                   <strong>Aléatoire quantique</strong>
-                  <p>Le hasard vient du comportement réel de particules subatomiques — un phénomène que la physique elle-même considère comme fondamentalement imprévisible. Personne, aucune machine, ne peut en connaître le résultat à l'avance.</p>
+                  <p>Le hasard vient du comportement réel de particules subatomiques.
+                  La physique elle-même affirme que ce résultat n'existe pas avant d'être mesuré :
+                  pas "difficile à prédire", fondamentalement indéterminé.</p>
                 </div>
               </div>
+
               <div class="quantum-source">
                 <div class="quantum-source-logo">🔬</div>
                 <div>
                   <strong>Source : Laboratoire de Physique Quantique de l'ANU</strong><br>
                   <span>Australian National University, Canberra, Australie</span>
-                  <p>Nos tirages utilisent en temps réel les nombres générés par le laboratoire d'optique quantique de l'ANU. Ces nombres naissent de la mesure des <em>fluctuations du vide quantique</em> — l'énergie minimale irréductible de l'univers, là où des particules apparaissent et disparaissent spontanément, sans aucune cause antérieure mesurable.</p>
+                  <p>
+                    Chaque tirage utilise des nombres générés en temps réel par ce laboratoire,
+                    à partir de la mesure des <em>fluctuations du vide quantique</em> : l'énergie
+                    minimale irréductible de l'univers, là où des particules apparaissent et
+                    disparaissent spontanément, sans cause antérieure mesurable.
+                  </p>
                 </div>
               </div>
+
+              <div style="margin-bottom:1.25rem;padding:1rem;border-radius:10px;background:rgba(200,169,110,0.04);border:1px solid rgba(200,169,110,0.15);">
+                <p style="font-size:.87rem;line-height:1.75;margin:0 0 .6rem;color:rgba(245,231,161,0.88);">
+                  <strong style="color:#c8a96e;">Et la conscience dans tout ça ?</strong><br>
+                  C'est la vraie question, et elle reste ouverte. La mécanique quantique établit
+                  que l'acte de mesure joue un rôle dans la détermination du résultat. Mais le rôle
+                  exact de la conscience dans cet acte de mesure est l'un des débats les plus profonds
+                  de la physique depuis un siècle. Certaines interprétations (Von Neumann, Wigner)
+                  lui accordent un rôle central. D'autres non. Les physiciens eux-mêmes ne s'accordent pas.
+                </p>
+                <p style="font-size:.87rem;line-height:1.75;margin:0;color:rgba(245,231,161,0.75);">
+                  Ce que l'on peut dire : un algorithme déterministe <em>ferme</em> cette question.
+                  Un tirage quantique la laisse <em>ouverte</em>.
+                  C'est ce choix-là que nous faisons.
+                </p>
+              </div>
+
               <div class="quantum-guillemant">
                 <blockquote>
-                  <p>"Si la conscience peut influencer le cours des événements — comme le suggère la physique quantique dans certaines de ses interprétations — encore faut-il que le tirage soit <em>vraiment ouvert</em>, non fermé par un algorithme dont la réponse est déjà écrite."</p>
-                  <footer>— Dans la lignée des travaux du physicien <strong>Philippe Guillemant</strong> (CNRS/INRIA), auteur de <em>La Physique de la Conscience</em>, et cofondateur de <a href="https://6naps.net" target="_blank" rel="noopener">6naps.net</a> qui applique ce même protocole à l'exploration des synchronicités.</footer>
+                  <p>
+                    "Si quelque chose comme une synchronicité existe, si une intention peut
+                    rencontrer un événement, encore faut-il que cet événement soit
+                    <em>réellement ouvert</em>, non écrit d'avance par un algorithme."
+                  </p>
+                  <footer>
+                    Dans la lignée des travaux du physicien <strong>Philippe Guillemant</strong>
+                    (chercheur CNRS/INRIA), auteur de <em>La Physique de la Conscience</em>.
+                    Guillemant travaille sur la <em>double rétrocausalité</em> : l'hypothèse que
+                    le futur peut influencer le présent via des boucles causales quantiques,
+                    et que les synchronicités en seraient un effet. Il cofonde
+                    <a href="https://6naps.net" target="_blank" rel="noopener">6naps.net</a>,
+                    un outil d'exploration des synchronicités utilisant des tirages quantiques.
+                  </footer>
                 </blockquote>
-                <p class="quantum-nuance">Nous ne prétendons pas que le tirage quantique <em>prouve</em> quoi que ce soit. Nous choisissons simplement de ne pas fermer la porte — de laisser le moment du tirage aussi ouvert que possible. Ce que vous en ferez appartient à votre propre intelligence intérieure.</p>
+                <p class="quantum-nuance">
+                  Nous ne prétendons pas que le tirage quantique prouve quoi que ce soit,
+                  ni que votre conscience "guide" le résultat. Nous choisissons simplement
+                  de ne pas fermer la porte. Ce que vous ferez de ce qui émerge appartient
+                  à votre propre intelligence intérieure.
+                </p>
               </div>
+
             </div>
           </div>
 
@@ -4145,7 +4198,7 @@ function showToreAnalysisCTA() {
 
 
 
-  function addExtraCardForFamily(familyKey) {
+  async function addExtraCardForFamily(familyKey) {
 
     if (!boardHost) return;
 
@@ -4165,7 +4218,7 @@ function showToreAnalysisCTA() {
 
 
 
-    const data = pickFromData(nextFamilyKey);
+    const data = await pickFromData(nextFamilyKey);
 
     if (!data) return;
 
@@ -4698,7 +4751,7 @@ function closeToreExitModal(){
 
 
 
-      back.addEventListener('click', () => {
+      back.addEventListener('click', async () => {
 
         // BLOQUER tant que le bandeau n'est pas prêt
         if (!boardReady) return;
@@ -4734,7 +4787,7 @@ function closeToreExitModal(){
 
         // Continuer normalement si c'est la bonne famille
 
-        const data   = pickFromData(famKey);
+        const data   = await pickFromData(famKey);
 
         const front  = card.querySelector('.tore-card-front');
 
@@ -5108,10 +5161,10 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
 
     overlay.querySelectorAll('.tore-fan-card').forEach(cardEl => {
 
-      cardEl.addEventListener('click', () => {
+      cardEl.addEventListener('click', async () => {
 
         // Piocher une carte de la famille 'actions' sans doublon
-        const dataNext = pickFromData('actions', true);
+        const dataNext = await pickFromData('actions', true);
 
         if (!dataNext) {
           overlay.remove();
