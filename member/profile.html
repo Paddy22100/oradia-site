@@ -219,7 +219,7 @@
             </section>
 
             <!-- Informations du compte -->
-            <section class="mb-8">
+            <section class="mb-6">
                 <div class="profile-section rounded-xl p-6">
                     <h3 class="cormorant text-xl text-gold mb-4">Mon compte</h3>
                     <div class="space-y-3">
@@ -234,6 +234,79 @@
                         <div class="flex justify-between py-2">
                             <span class="text-light-gold/70">Tirages enregistrés</span>
                             <span class="text-light-gold" id="infoTirages">0</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Modifier l'e-mail -->
+            <section class="mb-6">
+                <div class="profile-section rounded-xl p-6">
+                    <button onclick="toggleSection('emailSection')" class="w-full flex justify-between items-center text-left">
+                        <h3 class="cormorant text-xl text-gold">Modifier mon adresse e-mail</h3>
+                        <i id="emailSection-icon" class="fas fa-chevron-down text-gold/60 transition-transform duration-300"></i>
+                    </button>
+                    <div id="emailSection" class="hidden mt-5">
+                        <div id="emailMsg" class="hidden mb-4 text-sm px-3 py-2 rounded"></div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-light-gold/70 text-sm mb-1">Nouvel e-mail</label>
+                                <input id="newEmail" type="email" placeholder="nouveau@email.com"
+                                    style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.3);border-radius:8px;padding:12px 16px;color:#f5e7a1;outline:none;transition:border-color .2s;"
+                                    onfocus="this.style.borderColor='rgba(212,175,55,0.7)'" onblur="this.style.borderColor='rgba(212,175,55,0.3)'">
+                            </div>
+                            <div>
+                                <label class="block text-light-gold/70 text-sm mb-1">Confirmer le nouvel e-mail</label>
+                                <input id="confirmEmail" type="email" placeholder="nouveau@email.com"
+                                    style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.3);border-radius:8px;padding:12px 16px;color:#f5e7a1;outline:none;transition:border-color .2s;"
+                                    onfocus="this.style.borderColor='rgba(212,175,55,0.7)'" onblur="this.style.borderColor='rgba(212,175,55,0.3)'">
+                            </div>
+                            <div>
+                                <label class="block text-light-gold/70 text-sm mb-1">Mot de passe actuel <span class="text-gold/50">(requis pour confirmer)</span></label>
+                                <input id="emailCurrentPwd" type="password" placeholder="••••••••"
+                                    style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.3);border-radius:8px;padding:12px 16px;color:#f5e7a1;outline:none;transition:border-color .2s;"
+                                    onfocus="this.style.borderColor='rgba(212,175,55,0.7)'" onblur="this.style.borderColor='rgba(212,175,55,0.3)'">
+                            </div>
+                            <button onclick="updateEmail()" class="bg-gold hover:bg-light-gold text-night-blue font-semibold py-2.5 px-6 rounded-lg transition-colors text-sm">
+                                <i class="fas fa-envelope mr-2"></i>Mettre à jour l'e-mail
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Changer le mot de passe -->
+            <section class="mb-8">
+                <div class="profile-section rounded-xl p-6">
+                    <button onclick="toggleSection('pwdSection')" class="w-full flex justify-between items-center text-left">
+                        <h3 class="cormorant text-xl text-gold">Changer mon mot de passe</h3>
+                        <i id="pwdSection-icon" class="fas fa-chevron-down text-gold/60 transition-transform duration-300"></i>
+                    </button>
+                    <div id="pwdSection" class="hidden mt-5">
+                        <div id="pwdMsg" class="hidden mb-4 text-sm px-3 py-2 rounded"></div>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-light-gold/70 text-sm mb-1">Mot de passe actuel</label>
+                                <input id="currentPwd" type="password" placeholder="••••••••"
+                                    style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.3);border-radius:8px;padding:12px 16px;color:#f5e7a1;outline:none;transition:border-color .2s;"
+                                    onfocus="this.style.borderColor='rgba(212,175,55,0.7)'" onblur="this.style.borderColor='rgba(212,175,55,0.3)'">
+                            </div>
+                            <div>
+                                <label class="block text-light-gold/70 text-sm mb-1">Nouveau mot de passe</label>
+                                <input id="newPwd" type="password" placeholder="••••••••"
+                                    style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.3);border-radius:8px;padding:12px 16px;color:#f5e7a1;outline:none;transition:border-color .2s;"
+                                    onfocus="this.style.borderColor='rgba(212,175,55,0.7)'" onblur="this.style.borderColor='rgba(212,175,55,0.3)'">
+                                <p class="text-light-gold/40 text-xs mt-1">8 caractères minimum</p>
+                            </div>
+                            <div>
+                                <label class="block text-light-gold/70 text-sm mb-1">Confirmer le nouveau mot de passe</label>
+                                <input id="confirmPwd" type="password" placeholder="••••••••"
+                                    style="width:100%;box-sizing:border-box;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.3);border-radius:8px;padding:12px 16px;color:#f5e7a1;outline:none;transition:border-color .2s;"
+                                    onfocus="this.style.borderColor='rgba(212,175,55,0.7)'" onblur="this.style.borderColor='rgba(212,175,55,0.3)'">
+                            </div>
+                            <button onclick="updatePassword()" class="bg-gold hover:bg-light-gold text-night-blue font-semibold py-2.5 px-6 rounded-lg transition-colors text-sm">
+                                <i class="fas fa-lock mr-2"></i>Changer le mot de passe
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -273,6 +346,98 @@
     </div>
 
     <script>
+        // Accordéon sections
+        function toggleSection(id) {
+            const el = document.getElementById(id);
+            const icon = document.getElementById(id + '-icon');
+            const isHidden = el.classList.contains('hidden');
+            el.classList.toggle('hidden', !isHidden);
+            if (icon) icon.style.transform = isHidden ? 'rotate(180deg)' : 'rotate(0deg)';
+        }
+
+        // Mise à jour e-mail
+        async function updateEmail() {
+            const newEmail = document.getElementById('newEmail').value.trim();
+            const confirmEmail = document.getElementById('confirmEmail').value.trim();
+            const pwd = document.getElementById('emailCurrentPwd').value;
+            const msg = document.getElementById('emailMsg');
+
+            const showMsg = (text, ok) => {
+                msg.textContent = text;
+                msg.className = 'mb-4 text-sm px-3 py-2 rounded ' + (ok
+                    ? 'bg-green-900/40 text-green-300 border border-green-700/40'
+                    : 'bg-red-900/40 text-red-300 border border-red-700/40');
+                msg.classList.remove('hidden');
+            };
+
+            if (!newEmail || !confirmEmail || !pwd) { showMsg('Veuillez remplir tous les champs.', false); return; }
+            if (newEmail !== confirmEmail) { showMsg('Les deux adresses e-mail ne correspondent pas.', false); return; }
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) { showMsg('Adresse e-mail invalide.', false); return; }
+
+            try {
+                const res = await fetch('/api/auth/update-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ newEmail, currentPassword: pwd })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showMsg('E-mail mis à jour avec succès. Un e-mail de confirmation a été envoyé.', true);
+                    // Mettre à jour la session locale
+                    const sess = JSON.parse(sessionStorage.getItem('oradia_member_session') || '{}');
+                    sess.email = newEmail;
+                    sessionStorage.setItem('oradia_member_session', JSON.stringify(sess));
+                    document.querySelectorAll('#profileEmail, #infoEmail').forEach(el => { if(el) el.textContent = newEmail; });
+                    document.getElementById('newEmail').value = '';
+                    document.getElementById('confirmEmail').value = '';
+                    document.getElementById('emailCurrentPwd').value = '';
+                } else {
+                    showMsg(data.error || 'Erreur lors de la mise à jour.', false);
+                }
+            } catch(e) {
+                showMsg('Erreur réseau. Veuillez réessayer.', false);
+            }
+        }
+
+        // Changement de mot de passe
+        async function updatePassword() {
+            const current = document.getElementById('currentPwd').value;
+            const newPwd = document.getElementById('newPwd').value;
+            const confirm = document.getElementById('confirmPwd').value;
+            const msg = document.getElementById('pwdMsg');
+
+            const showMsg = (text, ok) => {
+                msg.textContent = text;
+                msg.className = 'mb-4 text-sm px-3 py-2 rounded ' + (ok
+                    ? 'bg-green-900/40 text-green-300 border border-green-700/40'
+                    : 'bg-red-900/40 text-red-300 border border-red-700/40');
+                msg.classList.remove('hidden');
+            };
+
+            if (!current || !newPwd || !confirm) { showMsg('Veuillez remplir tous les champs.', false); return; }
+            if (newPwd.length < 8) { showMsg('Le nouveau mot de passe doit contenir au moins 8 caractères.', false); return; }
+            if (newPwd !== confirm) { showMsg('Les mots de passe ne correspondent pas.', false); return; }
+
+            try {
+                const res = await fetch('/api/auth/update-password', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ currentPassword: current, newPassword: newPwd })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    showMsg('Mot de passe modifié avec succès.', true);
+                    document.getElementById('currentPwd').value = '';
+                    document.getElementById('newPwd').value = '';
+                    document.getElementById('confirmPwd').value = '';
+                } else {
+                    showMsg(data.error || 'Mot de passe actuel incorrect.', false);
+                }
+            } catch(e) {
+                showMsg('Erreur réseau. Veuillez réessayer.', false);
+            }
+        }
+
         // Charger les données réelles depuis la session + vérification Supabase
         (async function() {
             try {
