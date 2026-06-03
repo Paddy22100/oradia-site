@@ -2,7 +2,7 @@
 
 ## Robots.txt pour ORADIA - La Boussole Intérieureatoire moderne qui puise dans la sagesse des cartes pour offrir guidance et introspection. Conçu comme un pont entre la tradition des oracles et nos quêtes contemporaines de sens.
 
-### 🎯 Missions
+### 🎯 Mission
 
 * « L'oracle ne dicte pas votre avenir, il illumine votre présent. La véritable magie réside dans votre capacité à écouter votre propre sagesse. »
 
