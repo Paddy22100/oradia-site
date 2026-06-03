@@ -275,12 +275,16 @@ module.exports = async (req, res) => {
     return res.end();
   }
 
-  // Déterminer l'action selon l'URL
-  const path = req.url?.split('?')[0] || '';
+  // Déterminer l'action selon l'URL (req.url ou req.path)
+  const fullUrl = (req.url || '') + (req.path || '');
+  const path = (req.url?.split('?')[0] || '');
+
+  // Log pour debug
+  console.log('[Auth] Request:', req.method, 'url:', req.url, 'path:', path, 'full:', fullUrl);
 
   try {
-    // GET /check-subscription
-    if ((path === '/check-subscription' || path === '/check-subscription/') && req.method === 'GET') {
+    // GET /check-subscription - vérifie si l'URL contient "check-subscription"
+    if (req.method === 'GET' && (path.includes('check-subscription') || fullUrl.includes('check-subscription'))) {
       return await handleCheckSubscription(req, res);
     }
 
@@ -290,15 +294,18 @@ module.exports = async (req, res) => {
       return res.end(JSON.stringify({ success: false, error: 'Method not allowed' }));
     }
 
-    if (path === '/login' || path === '/login/') {
+    // POST /login - vérifie si l'URL contient "login"
+    if (path.includes('login') || fullUrl.includes('login')) {
       return await handleLogin(req, res);
     }
 
-    if (path === '/forgot-password' || path === '/forgot-password/') {
+    // POST /forgot-password - vérifie si l'URL contient "forgot-password"
+    if (path.includes('forgot-password') || fullUrl.includes('forgot-password')) {
       return await handleForgotPassword(req, res);
     }
 
     // Route non reconnue
+    console.log('[Auth] 404 - No matching route for:', path);
     res.writeHead(404, { ...corsHeaders, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ success: false, error: 'Route non trouvée' }));
 

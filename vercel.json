@@ -39,7 +39,7 @@
       "dest": "/api/mondial-relay/pickup-points.js"
     },
     {
-      "src": "/api/auth/(.*)",
+      "src": "/api/auth/(login|forgot-password|check-subscription)(.*)",
       "dest": "/api/auth/index.js"
     },
     {
