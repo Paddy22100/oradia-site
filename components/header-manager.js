@@ -30,16 +30,11 @@ class HeaderManager {
   
   async init() {
     try {
-      console.log('HeaderManager: Initialisation...');
       await this.loadTemplate();
-      console.log('HeaderManager: Template chargé');
       this.injectHeader();
-      console.log('HeaderManager: Header injecté');
       this.setActiveState();
-      console.log('HeaderManager: État actif défini');
-      // Attendre un peu que le DOM soit prêt avant d'initialiser le menu mobile
+      this.updateMemberHeader();
       setTimeout(() => {
-        console.log('HeaderManager: Initialisation menu mobile...');
         this.initMobileMenu();
       }, 100);
     } catch (error) {
@@ -108,6 +103,59 @@ class HeaderManager {
     }
   }
   
+  updateMemberHeader() {
+    var sess = sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session');
+    var isConnected = false;
+    var firstName = '';
+
+    if (sess) {
+      try {
+        var d = JSON.parse(sess);
+        firstName = (d.name || d.email || '').split(' ')[0];
+        if (firstName) isConnected = true;
+      } catch(e) {}
+    }
+
+    var loginBtn    = document.getElementById('header-login-btn');
+    var dropWrap    = document.getElementById('header-member-dropdown-wrap');
+    var label       = document.getElementById('header-member-label');
+    var loginMobile = document.getElementById('header-login-btn-mobile');
+    var memberMob   = document.getElementById('header-member-mobile');
+    var labelMob    = document.getElementById('header-member-label-mobile');
+
+    if (loginBtn)    loginBtn.style.display    = isConnected ? 'none' : 'inline-flex';
+    if (dropWrap)    dropWrap.style.display     = isConnected ? 'block' : 'none';
+    if (label && isConnected) label.textContent = 'Bonjour\u00a0' + firstName;
+    if (loginMobile) loginMobile.style.display  = isConnected ? 'none' : 'block';
+    if (memberMob)   memberMob.style.display    = isConnected ? 'block' : 'none';
+    if (labelMob && isConnected) labelMob.textContent = 'Bonjour\u00a0' + firstName;
+
+    // Dropdown toggle
+    var dropBtn  = document.getElementById('header-member-dropdown-btn');
+    var dropMenu = document.getElementById('header-member-menu');
+    if (dropBtn && dropMenu) {
+      dropBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        dropMenu.style.display = dropMenu.style.display === 'block' ? 'none' : 'block';
+      });
+      document.addEventListener('click', function() { dropMenu.style.display = 'none'; });
+    }
+
+    // Boutons déconnexion
+    var self = this;
+    ['header-logout-btn', 'header-logout-btn-mobile'].forEach(function(id) {
+      var btn = document.getElementById(id);
+      if (btn) btn.addEventListener('click', function() { self.logout(); });
+    });
+  }
+
+  logout() {
+    ['oradia_member_session','isLoggedIn','userEmail','userName','rememberMe'].forEach(function(k) {
+      sessionStorage.removeItem(k); localStorage.removeItem(k);
+    });
+    window.location.href = '/';
+  }
+
   showFallback() {
     // Fallback simple : afficher un header minimal
     const placeholder = document.getElementById('header-placeholder');
