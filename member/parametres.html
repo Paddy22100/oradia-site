@@ -175,262 +175,94 @@
         </aside>
 
         <!-- Main Content -->
-        <main class="flex-1 p-6">
+        <main class="flex-1 p-6 pb-24 lg:pb-6">
             <!-- Header Section -->
             <section class="mb-8">
-                <h2 class="cormorant text-3xl text-gold mb-2">Paramètres du compte</h2>
-                <p class="text-light-gold/80">Gérez vos préférences et la sécurité de votre compte</p>
+                <h2 class="cormorant text-3xl text-gold mb-2">Paramètres</h2>
+                <p class="text-light-gold/60 text-sm">Gérez vos préférences de communication et d'affichage.</p>
             </section>
 
-            <!-- Account Settings -->
-            <section class="mb-8">
-                <h3 class="cormorant text-xl text-gold mb-4 flex items-center gap-3">
-                    <i class="fas fa-user"></i>
-                    Informations du compte
-                </h3>
-                <div class="settings-section rounded-xl p-6 space-y-4">
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
-                            <label class="block text-light-gold/70 text-sm mb-2">Nom</label>
-                            <input type="text" value="Jean Dupont" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors">
-                        </div>
-                        <div>
-                            <label class="block text-light-gold/70 text-sm mb-2">Email</label>
-                            <input type="email" value="jean.dupont@email.com" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors">
-                        </div>
-                        <div>
-                            <label class="block text-light-gold/70 text-sm mb-2">Téléphone</label>
-                            <input type="tel" value="06 12 34 56 78" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors">
-                        </div>
-                        <div>
-                            <label class="block text-light-gold/70 text-sm mb-2">Date de naissance</label>
-                            <input type="date" value="1985-03-15" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors">
-                        </div>
-                    </div>
-                    <div class="flex justify-end gap-3">
-                        <button class="border border-gold text-gold hover:bg-gold hover:text-night-blue font-bold py-2 px-4 rounded-lg transition-colors">
-                            Annuler
-                        </button>
-                        <button class="bg-gold hover:bg-light-gold text-night-blue font-bold py-2 px-4 rounded-lg transition-colors">
-                            Sauvegarder
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Notification Settings -->
+            <!-- Notifications -->
             <section class="mb-8">
                 <h3 class="cormorant text-xl text-gold mb-4 flex items-center gap-3">
                     <i class="fas fa-bell"></i>
                     Notifications
                 </h3>
-                <div class="settings-section rounded-xl p-6 space-y-4">
-                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
-                        <div>
-                            <p class="text-gold font-medium">Email notifications</p>
-                            <p class="text-light-gold/60 text-sm">Recevoir des notifications par email</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    
-                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
-                        <div>
-                            <p class="text-gold font-medium">Rappels de tirage</p>
-                            <p class="text-light-gold/60 text-sm">Rappels pour vos tirages réguliers</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    
-                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
-                        <div>
-                            <p class="text-gold font-medium">Nouveaux cercles</p>
-                            <p class="text-light-gold/60 text-sm">Être informé des nouveaux cercles</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    
-                    <div class="flex justify-between items-center py-3">
+                <div class="settings-section rounded-xl p-6 space-y-1">
+                    <div class="flex justify-between items-center py-4 border-b border-gold/20">
                         <div>
                             <p class="text-gold font-medium">Newsletter</p>
-                            <p class="text-light-gold/60 text-sm">Actualités et conseils spirituels</p>
+                            <p class="text-light-gold/60 text-sm">Actualités, inspirations et nouveautés Oradia</p>
                         </div>
                         <label class="toggle-switch">
-                            <input type="checkbox">
+                            <input type="checkbox" id="toggleNewsletter">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="flex justify-between items-center py-4">
+                        <div>
+                            <p class="text-gold font-medium">Lettres Synchronicités</p>
+                            <p class="text-light-gold/60 text-sm">Quelques jours après un tirage, un e-mail pour noter les événements de votre quotidien en lien avec les cartes tirées.</p>
+                        </div>
+                        <label class="toggle-switch">
+                            <input type="checkbox" id="toggleSynchronicites">
                             <span class="slider"></span>
                         </label>
                     </div>
                 </div>
             </section>
 
-            <!-- Privacy Settings -->
+            <!-- Préférences d'affichage -->
             <section class="mb-8">
                 <h3 class="cormorant text-xl text-gold mb-4 flex items-center gap-3">
-                    <i class="fas fa-lock"></i>
-                    Confidentialité et sécurité
-                </h3>
-                <div class="settings-section rounded-xl p-6 space-y-4">
-                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
-                        <div>
-                            <p class="text-gold font-medium">Profil public</p>
-                            <p class="text-light-gold/60 text-sm">Rendre votre profil visible</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    
-                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
-                        <div>
-                            <p class="text-gold font-medium">Partager les réalisations</p>
-                            <p class="text-light-gold/60 text-sm">Afficher vos badges</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    
-                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
-                        <div>
-                            <p class="text-gold font-medium">Authentification à deux facteurs</p>
-                            <p class="text-light-gold/60 text-sm">Ajouter une couche de sécurité</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    
-                    <div class="space-y-3">
-                        <p class="text-gold font-medium">Changer le mot de passe</p>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            <input type="password" placeholder="Mot de passe actuel" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors">
-                            <input type="password" placeholder="Nouveau mot de passe" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors">
-                        </div>
-                        <button class="bg-gold/20 text-gold px-4 py-2 rounded-lg hover:bg-gold/30 transition-colors">
-                            Mettre à jour le mot de passe
-                        </button>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Display Settings -->
-            <section class="mb-8">
-                <h3 class="cormorant text-xl text-gold mb-4 flex items-center gap-3">
-                    <i class="fas fa-palette"></i>
+                    <i class="fas fa-sliders-h"></i>
                     Préférences d'affichage
                 </h3>
-                <div class="settings-section rounded-xl p-6 space-y-4">
-                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
-                        <div>
-                            <p class="text-gold font-medium">Mode sombre</p>
-                            <p class="text-light-gold/60 text-sm">Utiliser le thème sombre</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    
-                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
-                        <div>
-                            <p class="text-gold font-medium">Animations</p>
-                            <p class="text-light-gold/60 text-sm">Activer les animations</p>
-                        </div>
-                        <label class="toggle-switch">
-                            <input type="checkbox" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    
-                    <div class="space-y-3">
-                        <p class="text-gold font-medium">Langue</p>
-                        <select class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors">
+                <div class="settings-section rounded-xl p-6 space-y-5">
+                    <div class="space-y-2">
+                        <label class="block text-gold font-medium">Langue</label>
+                        <select id="selectLangue" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2.5 text-light-gold focus:border-gold transition-colors">
                             <option value="fr" selected>Français</option>
                             <option value="en">English</option>
                             <option value="es">Español</option>
                         </select>
                     </div>
-                    
-                    <div class="space-y-3">
-                        <p class="text-gold font-medium">Fuseau horaire</p>
-                        <select class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2 text-light-gold focus:border-gold focus:ring-2 focus:ring-gold/20 transition-colors">
+
+                    <div class="space-y-2">
+                        <label class="block text-gold font-medium">Fuseau horaire</label>
+                        <select id="selectFuseau" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2.5 text-light-gold focus:border-gold transition-colors">
                             <option value="Europe/Paris" selected>Europe/Paris (GMT+1)</option>
+                            <option value="Europe/London">Europe/London (GMT+0)</option>
                             <option value="America/New_York">America/New_York (GMT-5)</option>
+                            <option value="America/Los_Angeles">America/Los_Angeles (GMT-8)</option>
                             <option value="Asia/Tokyo">Asia/Tokyo (GMT+9)</option>
                         </select>
                     </div>
-                </div>
-            </section>
 
-            <!-- Data Management -->
-            <section class="mb-8">
-                <h3 class="cormorant text-xl text-gold mb-4 flex items-center gap-3">
-                    <i class="fas fa-database"></i>
-                    Gestion des données
-                </h3>
-                <div class="settings-section rounded-xl p-6 space-y-4">
-                    <div class="flex justify-between items-center py-3 border-b border-gold/20">
-                        <div>
-                            <p class="text-gold font-medium">Export des données</p>
-                            <p class="text-light-gold/60 text-sm">Télécharger toutes vos données</p>
-                        </div>
-                        <button class="bg-gold/20 text-gold px-4 py-2 rounded-lg hover:bg-gold/30 transition-colors">
-                            <i class="fas fa-download mr-2"></i>
-                            Exporter
-                        </button>
-                    </div>
-                    
-                    <div class="flex justify-between items-center py-3">
-                        <div>
-                            <p class="text-gold font-medium">Supprimer le compte</p>
-                            <p class="text-light-gold/60 text-sm">Supprimer définitivement votre compte</p>
-                        </div>
-                        <button class="bg-red-600/20 text-red-400 px-4 py-2 rounded-lg hover:bg-red-600/30 transition-colors">
-                            <i class="fas fa-trash mr-2"></i>
-                            Supprimer
+                    <div class="flex justify-end">
+                        <button onclick="savePreferences()" class="bg-gold hover:bg-light-gold text-night-blue font-semibold py-2 px-6 rounded-lg transition-colors text-sm">
+                            <i class="fas fa-save mr-2"></i>Sauvegarder
                         </button>
                     </div>
                 </div>
             </section>
 
-            <!-- Danger Zone -->
+            <!-- Suppression de compte -->
             <section class="mb-8">
                 <h3 class="cormorant text-xl text-red-400 mb-4 flex items-center gap-3">
                     <i class="fas fa-exclamation-triangle"></i>
                     Zone de danger
                 </h3>
                 <div class="danger-zone rounded-xl p-6 border border-red-600/30 bg-red-600/5">
-                    <div class="space-y-4">
-                        <div>
-                            <p class="text-red-400 font-semibold mb-2">Suppression du compte</p>
-                            <p class="text-light-gold/70 text-sm mb-4">
-                                Cette action est irréversible. Toutes vos données seront définitivement supprimées.
-                            </p>
-                            <button class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 transition-colors" onclick="confirmDelete()">
-                                Supprimer mon compte
-                            </button>
-                        </div>
-                    </div>
+                    <p class="text-red-400 font-semibold mb-1">Supprimer mon compte</p>
+                    <p class="text-light-gold/70 text-sm mb-4">
+                        Cette action est irréversible. Tous vos tirages, préférences et données personnelles seront définitivement supprimés.
+                    </p>
+                    <button class="bg-red-600 text-white px-5 py-2.5 rounded-lg hover:bg-red-700 transition-colors text-sm font-semibold" onclick="confirmDelete()">
+                        <i class="fas fa-trash mr-2"></i>Supprimer mon compte
+                    </button>
                 </div>
-            </section>
-
-            <!-- Save Settings -->
-            <section class="text-center">
-                <button class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-8 rounded-lg hover:from-light-gold hover:to-gold transition-all transform hover:scale-105 shadow-lg">
-                    <i class="fas fa-save mr-2"></i>
-                    Sauvegarder tous les paramètres
-                </button>
             </section>
         </main>
     </div>
@@ -458,41 +290,86 @@
     </div>
 
     <script>
+        // ── Session check ─────────────────────────────────────────────────────
+        const SESSION_KEY = 'oradia_member_session';
+        (function() {
+            let sess = sessionStorage.getItem(SESSION_KEY);
+            if (!sess) {
+                const email = localStorage.getItem('userEmail');
+                if (email && localStorage.getItem('isLoggedIn') === 'true') {
+                    sess = JSON.stringify({ email, name: localStorage.getItem('userName') || email.split('@')[0] });
+                }
+            }
+            if (!sess) { window.location.href = 'login.html'; return; }
+        })();
+
+        // ── Logout ────────────────────────────────────────────────────────────
+        document.getElementById('logoutBtn').addEventListener('click', () => {
+            sessionStorage.removeItem(SESSION_KEY);
+            ['isLoggedIn','userEmail','userName','rememberMe'].forEach(k => {
+                sessionStorage.removeItem(k); localStorage.removeItem(k);
+            });
+            window.location.href = '../index.html';
+        });
+
+        // ── Persistance toggles ───────────────────────────────────────────────
+        const PREFS_KEY = 'oradia_prefs';
+        function loadPrefs() {
+            try { return JSON.parse(localStorage.getItem(PREFS_KEY) || '{}'); } catch(e) { return {}; }
+        }
+        function savePrefs(obj) {
+            localStorage.setItem(PREFS_KEY, JSON.stringify(obj));
+        }
+
+        (function initUI() {
+            const prefs = loadPrefs();
+            const nlToggle = document.getElementById('toggleNewsletter');
+            const syncToggle = document.getElementById('toggleSynchronicites');
+            const langSel = document.getElementById('selectLangue');
+            const tzSel = document.getElementById('selectFuseau');
+
+            if (nlToggle)   nlToggle.checked   = prefs.newsletter    !== false;
+            if (syncToggle) syncToggle.checked = prefs.synchronicites === true;
+            if (langSel  && prefs.langue)  langSel.value  = prefs.langue;
+            if (tzSel    && prefs.fuseau)  tzSel.value    = prefs.fuseau;
+
+            // Auto-save les toggles
+            [nlToggle, syncToggle].forEach(el => {
+                if (!el) return;
+                el.addEventListener('change', () => {
+                    const p = loadPrefs();
+                    p.newsletter     = document.getElementById('toggleNewsletter')?.checked ?? true;
+                    p.synchronicites = document.getElementById('toggleSynchronicites')?.checked ?? false;
+                    savePrefs(p);
+                });
+            });
+        })();
+
+        function savePreferences() {
+            const prefs = loadPrefs();
+            prefs.newsletter     = document.getElementById('toggleNewsletter')?.checked ?? true;
+            prefs.synchronicites = document.getElementById('toggleSynchronicites')?.checked ?? false;
+            prefs.langue  = document.getElementById('selectLangue')?.value  || 'fr';
+            prefs.fuseau  = document.getElementById('selectFuseau')?.value  || 'Europe/Paris';
+            savePrefs(prefs);
+
+            const btn = event.currentTarget;
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check mr-2"></i>Sauvegardé';
+            btn.disabled = true;
+            setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2000);
+        }
+
+        // ── Suppression de compte ─────────────────────────────────────────────
         function confirmDelete() {
-            const confirmed = confirm('Êtes-vous absolument sûr de vouloir supprimer votre compte ?\n\nCette action est irréversible et toutes vos données seront perdues.');
-            
+            const confirmed = confirm('Êtes-vous absolument sûr de vouloir supprimer votre compte ?\n\nCette action est irréversible. Toutes vos données seront définitivement supprimées.');
             if (confirmed) {
-                const password = prompt('Veuillez confirmer avec votre mot de passe:');
+                const password = prompt('Confirmez avec votre mot de passe :');
                 if (password) {
-                    alert('Fonctionnalité de suppression bientôt disponible.');
+                    alert('La suppression de compte sera disponible prochainement. Contactez le support si nécessaire.');
                 }
             }
         }
-
-        // Logout
-        document.getElementById('logoutBtn').addEventListener('click', () => {
-            if (confirm('Êtes-vous sûr de vouloir vous déconnecter ?')) {
-                window.location.href = '../index.html';
-            }
-        });
-
-        // Save buttons
-        document.querySelectorAll('button').forEach(button => {
-            if (button.textContent.includes('Sauvegarder')) {
-                button.addEventListener('click', () => {
-                    alert('Paramètres sauvegardés avec succès!');
-                });
-            }
-        });
-
-        // Export data
-        document.querySelectorAll('button').forEach(button => {
-            if (button.textContent.includes('Exporter')) {
-                button.addEventListener('click', () => {
-                    alert('Fonctionnalité d\'export bientôt disponible!');
-                });
-            }
-        });
     </script>
 </body>
 </html>

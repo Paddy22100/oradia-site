@@ -275,8 +275,8 @@
                 </div>
             </section>
 
-            <!-- Pricing Cards -->
-            <section class="flex justify-center mb-12">
+            <!-- Pricing Cards — visible uniquement si non abonné ou ancien abonné -->
+            <section id="pricingSection" class="flex justify-center mb-12">
                 <!-- Tore Plan -->
                 <div class="pricing-card featured rounded-2xl p-10 fade-in relative" style="max-width:420px;width:100%;">
 
@@ -322,26 +322,16 @@
 
 
             <!-- FAQ Section -->
-            <section class="mb-12">
-                <h3 class="cormorant text-2xl text-gold text-center mb-8">Questions fréquentes</h3>
+            <section class="mb-8">
+                <h3 class="cormorant text-2xl text-gold text-center mb-6">Questions fréquentes</h3>
                 <div class="max-w-3xl mx-auto space-y-4">
-                    <div class="bg-[rgba(26,54,93,0.6)] rounded-xl p-6 border border-gold/20">
-                        <button class="w-full text-left flex justify-between items-center" onclick="toggleFAQ(this)">
-                            <span class="text-gold font-semibold">Puis-je changer d'abonnement à tout moment ?</span>
-                            <i class="fas fa-chevron-down text-gold transition-transform"></i>
-                        </button>
-                        <div class="hidden mt-4 text-light-gold/80">
-                            Oui, vous pouvez mettre à niveau ou rétrograder votre abonnement à tout moment. Les changements prennent effet au début du prochain cycle de facturation.
-                        </div>
-                    </div>
-                    
                     <div class="bg-[rgba(26,54,93,0.6)] rounded-xl p-6 border border-gold/20">
                         <button class="w-full text-left flex justify-between items-center" onclick="toggleFAQ(this)">
                             <span class="text-gold font-semibold">Quelles méthodes de paiement sont acceptées ?</span>
                             <i class="fas fa-chevron-down text-gold transition-transform"></i>
                         </button>
                         <div class="hidden mt-4 text-light-gold/80">
-                            Nous acceptons les cartes bancaires (Visa, MasterCard), PayPal et les virements bancaires. Tous les paiements sont sécurisés via mon partenaire Stripe.
+                            Nous acceptons les cartes bancaires (Visa, MasterCard). Tous les paiements sont sécurisés via notre partenaire Stripe.
                         </div>
                     </div>
                     
@@ -351,36 +341,8 @@
                             <i class="fas fa-chevron-down text-gold transition-transform"></i>
                         </button>
                         <div class="hidden mt-4 text-light-gold/80">
-                            Oui, vous pouvez annuler votre abonnement à tout moment sans frais. Vous continuerez à bénéficier des avantages jusqu'à la fin de la période facturée.
+                            Oui, vous pouvez annuler à tout moment sans frais depuis cette page en désactivant le renouvellement automatique. Vous conservez l’accès jusqu’à la fin de la période en cours.
                         </div>
-                    </div>
-                    
-                    <div class="bg-[rgba(26,54,93,0.6)] rounded-xl p-6 border border-gold/20">
-                        <button class="w-full text-left flex justify-between items-center" onclick="toggleFAQ(this)">
-                            <span class="text-gold font-semibold">Y a-t-il un essai gratuit ?</span>
-                            <i class="fas fa-chevron-down text-gold transition-transform"></i>
-                        </button>
-                        <div class="hidden mt-4 text-light-gold/80">
-                            Oui ! J'offre 14 jours d'essai gratuit sur mes formules Premium et Master. Aucun engagement, vous pouvez annuler avant la fin de l'essai.
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- CTA Section -->
-            <section class="text-center">
-                <div class="bg-gradient-to-r from-[rgba(26,54,93,0.8)] to-[rgba(5,20,40,0.9)] rounded-2xl p-8 border border-gold/30">
-                    <h3 class="cormorant text-2xl text-gold mb-4">Prêt à approfondir votre pratique ?</h3>
-                    <p class="text-light-gold/80 mb-6 max-w-2xl mx-auto">
-                        Rejoignez des milliers de chercheurs spirituels qui ont déjà transformé leur vie avec ORADIA
-                    </p>
-                    <div class="flex flex-col sm:flex-row gap-4 justify-center">
-                        <button class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-6 rounded-lg hover:from-light-gold hover:to-gold transition-all transform hover:scale-105">
-                            Commencer l'essai gratuit
-                        </button>
-                        <button class="border border-gold text-gold hover:bg-gold hover:text-night-blue font-bold py-3 px-6 rounded-lg transition-colors">
-                            Contacter le support
-                        </button>
                     </div>
                 </div>
             </section>
@@ -675,21 +637,43 @@
             }
         }
 
-        document.getElementById('btn-subscribe-tore')?.addEventListener('click', function() { startSubscription(this); });
-
         // ── Gestion renouvellement automatique ───────────────────────────────
         (function initSubscriptionUI() {
             const sess = JSON.parse(sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session') || '{}');
             const subscribed = sess.subscribed || false;
-            const autoRenew = localStorage.getItem('oradia_auto_renew') !== 'false'; // true par défaut
+            const wasSubscribed = sess.wasSubscribed || localStorage.getItem('oradia_was_subscribed') === 'true';
+            const autoRenew = localStorage.getItem('oradia_auto_renew') !== 'false';
+            const pricingSection = document.getElementById('pricingSection');
 
             if (subscribed) {
+                // Abonné actif : masquer la carte d'abonnement, afficher gestion renouvellement
+                if (pricingSection) pricingSection.style.display = 'none';
                 document.getElementById('autoRenewSection').style.display = 'block';
                 document.getElementById('currentPlanLabel').innerHTML = 'Formule <span class="text-gold font-medium">Le Tore — Actif</span>';
                 document.getElementById('currentPlanDesc').textContent = 'Accès illimité aux tirages et fonctionnalités premium';
                 document.getElementById('nextBillingDate').textContent = autoRenew ? 'Automatique (mensuel)' : 'Non renouvelé';
                 updateToggleUI(autoRenew);
+            } else if (wasSubscribed) {
+                // Ancien abonné : afficher une pub de réabonnement à la place de la carte standard
+                if (pricingSection) {
+                    pricingSection.innerHTML = `
+                        <div class="rounded-2xl p-8 border border-gold/40 text-center fade-in" style="max-width:480px;width:100%;background:linear-gradient(145deg,rgba(26,54,93,0.7),rgba(5,20,40,0.9));">
+                            <div class="text-5xl mb-4">∞</div>
+                            <h3 class="cormorant text-2xl text-gold mb-3">L'Oracle vous attend</h3>
+                            <p class="text-light-gold/80 text-sm mb-2">Votre abonnement Tore est terminé. Retrouvez vos tirages illimités et reprenez votre chemin intérieur.</p>
+                            <p class="text-gold/70 text-xs mb-6 italic">« Ce qui s'est transmué ne disparaît pas — il attend que vous reveniez. »</p>
+                            <button id="btn-subscribe-tore" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue py-3 rounded-xl font-bold text-base hover:from-light-gold hover:to-gold transition-all transform hover:scale-105 shadow-lg mb-3">
+                                <i class="fas fa-infinity mr-2"></i>Se réabonner — 8€/mois
+                            </button>
+                            <p class="text-light-gold/50 text-xs">Renouvellement automatique — annulable à tout moment</p>
+                        </div>`;
+                }
             }
+            // Nouvel utilisateur sans historique : la pricing section reste visible telle quelle
+
+            // Brancher le listener sur le bouton (qu'il soit statique ou injecté)
+            const btnTore = document.getElementById('btn-subscribe-tore');
+            if (btnTore) btnTore.addEventListener('click', function() { startSubscription(this); });
         })();
 
         function updateToggleUI(active) {

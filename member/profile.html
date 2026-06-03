@@ -206,14 +206,9 @@
             <section class="mb-8">
                 <div class="bg-gradient-to-r from-[rgba(26,54,93,0.8)] to-[rgba(5,20,40,0.9)] rounded-2xl p-8 border border-gold/30 relative overflow-hidden">
                     <div class="absolute top-0 right-0 w-32 h-32 bg-gold/5 rounded-full -translate-y-16 translate-x-16"></div>
-                    <div class="relative z-10 flex items-center gap-6">
-                        <div class="w-20 h-20 rounded-full bg-gradient-to-br from-gold/30 to-gold/10 flex items-center justify-center flex-shrink-0">
-                            <i class="fas fa-user text-3xl text-gold"></i>
-                        </div>
-                        <div>
-                            <h2 class="cormorant text-3xl text-gold mb-1" id="profileName">Membre</h2>
-                            <p class="text-light-gold/60 text-sm" id="profileEmail">—</p>
-                        </div>
+                    <div class="relative z-10">
+                        <h2 class="cormorant text-3xl text-gold mb-1" id="profileName">Membre</h2>
+                        <p class="text-light-gold/60 text-sm" id="profileEmail">—</p>
                     </div>
                 </div>
             </section>
@@ -228,8 +223,8 @@
                             <span class="text-light-gold" id="infoEmail">—</span>
                         </div>
                         <div class="flex justify-between py-2 border-b border-gold/10">
-                            <span class="text-light-gold/70">Abonnement</span>
-                            <span class="text-gold font-medium" id="infoSubscription">—</span>
+                            <span class="text-light-gold/70">Date de naissance</span>
+                            <span class="text-light-gold" id="infoBirthdate">—</span>
                         </div>
                         <div class="flex justify-between py-2">
                             <span class="text-light-gold/70">Tirages enregistrés</span>
@@ -270,6 +265,34 @@
                             <button onclick="updateEmail()" class="bg-gold hover:bg-light-gold text-night-blue font-semibold py-2.5 px-6 rounded-lg transition-colors text-sm">
                                 <i class="fas fa-envelope mr-2"></i>Mettre à jour l'e-mail
                             </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Authentification à deux facteurs -->
+            <section class="mb-6">
+                <div class="profile-section rounded-xl p-6">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <h3 class="cormorant text-xl text-gold mb-1">Authentification à deux facteurs (2FA)</h3>
+                            <p class="text-light-gold/60 text-sm mb-3">Ajoutez une couche de sécurité supplémentaire. À chaque connexion, un code vous sera demandé en plus de votre mot de passe.</p>
+                            <div id="twoFAStatus" class="inline-flex items-center gap-2 text-sm px-3 py-1 rounded-full bg-[rgba(100,100,120,0.3)] text-light-gold/60 border border-gold/20">
+                                <i class="fas fa-shield-alt"></i> Non activée
+                            </div>
+                        </div>
+                        <button onclick="toggleSection('twoFASection')" class="flex-shrink-0 ml-4 bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold text-sm font-semibold py-2 px-4 rounded-lg transition-colors">
+                            <i class="fas fa-cog mr-1"></i>Configurer
+                        </button>
+                    </div>
+                    <div id="twoFASection" class="hidden mt-5">
+                        <div id="twoFAMsg" class="hidden mb-4 text-sm px-3 py-2 rounded"></div>
+                        <p class="text-light-gold/70 text-sm mb-4">La configuration 2FA par application (TOTP) sera disponible prochainement. Vous serez notifié par e-mail lors de son activation.</p>
+                        <div class="flex gap-3">
+                            <button disabled class="bg-gold/20 text-gold/50 cursor-not-allowed font-semibold py-2 px-5 rounded-lg text-sm border border-gold/20">
+                                <i class="fas fa-mobile-alt mr-2"></i>Activer via application
+                            </button>
+                            <span class="text-light-gold/40 text-xs self-center">Bientôt disponible</span>
                         </div>
                     </div>
                 </div>
@@ -450,10 +473,13 @@
 
                 document.querySelectorAll('#profileName').forEach(el => { if(el) el.textContent = name; });
                 document.querySelectorAll('#profileEmail, #infoEmail').forEach(el => { if(el) el.textContent = email || '—'; });
-                const subEl = document.getElementById('infoSubscription');
-                if(subEl) subEl.textContent = subscribed ? 'Tore — Actif' : 'Vérification…';
                 const tirEl = document.getElementById('infoTirages');
                 if(tirEl) tirEl.textContent = tirages.length;
+                const bdEl = document.getElementById('infoBirthdate');
+                if(bdEl) {
+                    const bd = sess.birthdate || localStorage.getItem('userBirthdate') || '';
+                    bdEl.textContent = bd ? new Date(bd).toLocaleDateString('fr-FR') : '—';
+                }
 
                 // Vérifier le statut réel depuis Supabase si email disponible
                 if (email && !subscribed) {
@@ -472,7 +498,6 @@
                         }
                     } catch(e) {}
                 }
-                if(subEl) subEl.textContent = subscribed ? 'Tore — Actif' : 'Aucun abonnement actif';
             } catch(e) {}
         })();
     </script>
