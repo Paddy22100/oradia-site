@@ -1,6 +1,6 @@
 const { createClient } = require('@supabase/supabase-js');
 
-const SUPABASE_URL = 'https://nxxetkdozynuytlbhxdx.supabase.co';
+const SUPABASE_URL = process.env.SUPABASE_URL || 'https://nxzetkdozynuytlbhxdx.supabase.co';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
