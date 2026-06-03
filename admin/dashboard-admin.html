@@ -973,6 +973,19 @@
             if (dashboardLoaded) return;
             dashboardLoaded = true;
 
+            // Protection contre les boucles de redirection sur domaines non-autorisés
+            const allowedDomains = ['oradia.fr', 'localhost', '127.0.0.1'];
+            const currentDomain = window.location.hostname;
+            if (!allowedDomains.some(d => currentDomain.includes(d))) {
+                document.documentElement.style.visibility = 'visible';
+                document.getElementById('mainContent').innerHTML =
+                    '<div style="color:#d4af37;text-align:center;padding:4rem;font-family:serif;">' +
+                    '<p style="font-size:1.5rem;">⚠️ Accès admin uniquement via oradia.fr</p>' +
+                    '<a href="https://oradia.fr/admin/login.html" ' +
+                    'style="color:#d4af37;text-decoration:underline;">→ Aller sur oradia.fr</a></div>';
+                return;
+            }
+
             function redirectToLogin() {
                 sessionStorage.removeItem('oradia_auth');
                 window.location.replace('login.html');

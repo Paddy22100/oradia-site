@@ -242,7 +242,17 @@ let sessionCheckDone = false;
 async function checkExistingSession() {
     if (sessionCheckDone) return false;
     sessionCheckDone = true;
-    
+
+    // Protection contre les boucles de redirection sur domaines non-autorisés
+    const allowedDomains = ['oradia.fr', 'localhost', '127.0.0.1'];
+    const currentDomain = window.location.hostname;
+    const isAllowedDomain = allowedDomains.some(d => currentDomain.includes(d));
+    if (!isAllowedDomain) {
+        console.warn('[Admin] Domaine non autorisé pour l\'admin:', currentDomain);
+        sessionStorage.removeItem('oradia_auth');
+        return false;
+    }
+
     console.log('Vérification session existante...');
     
     try {
