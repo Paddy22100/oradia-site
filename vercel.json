@@ -3,7 +3,7 @@
   "crons": [
     {
       "path": "/api/fenetre-close",
-      "schedule": "0 * * * *"
+      "schedule": "0 8 * * *"
     }
   ],
   "redirects": [
