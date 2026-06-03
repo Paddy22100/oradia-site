@@ -993,35 +993,34 @@
             }
 
             try {
-                if (!skipInitialCheck) {
-                    // Pas de session locale → vérifier auprès de l'API
-                    let meResponse;
-                    try {
-                        meResponse = await adminFetch('/api/admin/auth?action=me');
-                    } catch (networkErr) {
-                        // Erreur réseau (CORS, timeout, etc.) → rediriger
-                        console.warn('[Admin] Network error during auth check:', networkErr.message);
-                        redirectToLogin();
-                        return;
-                    }
-
-                    if (!meResponse.ok) {
-                        // 401, 403 ou autre erreur → rediriger
-                        redirectToLogin();
-                        return;
-                    }
-
-                    // Session validée par l'API → stocker
-                    const existing = JSON.parse(authDataStr || '{}');
-                    sessionStorage.setItem('oradia_auth', JSON.stringify({
-                        valid: true,
-                        timestamp: Date.now(),
-                        token: existing.token || null,
-                        email: existing.email || null
-                    }));
+                // TOUJOURS valider la session auprès de l'API avant de rendre la page visible
+                // Même avec une session locale récente, on fait un appel silencieux pour éviter le clignotement
+                let meResponse;
+                try {
+                    meResponse = await adminFetch('/api/admin/auth?action=me');
+                } catch (networkErr) {
+                    // Erreur réseau (CORS, timeout, etc.) → rediriger
+                    console.warn('[Admin] Network error during auth check:', networkErr.message);
+                    redirectToLogin();
+                    return;
                 }
 
-                // Auth OK → rendre la page visible
+                if (!meResponse.ok) {
+                    // 401, 403 ou autre erreur → rediriger sans jamais rendre la page visible
+                    redirectToLogin();
+                    return;
+                }
+
+                // Session validée par l'API → mettre à jour le stockage local
+                const existing = JSON.parse(authDataStr || '{}');
+                sessionStorage.setItem('oradia_auth', JSON.stringify({
+                    valid: true,
+                    timestamp: Date.now(),
+                    token: existing.token || null,
+                    email: existing.email || null
+                }));
+
+                // Auth OK → rendre la page visible UNIQUEMENT après validation API
                 document.documentElement.style.visibility = 'visible';
 
                 // Charger les données
