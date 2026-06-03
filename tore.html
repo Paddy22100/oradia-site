@@ -3848,7 +3848,8 @@ function showToreAnalysisCTA() {
       type: 'Tirage Tore',
       date: new Date().toISOString(),
       intention: intention,
-      cartes: cards.map(c => c.name).filter(Boolean)
+      cartes: cards.map(c => c.name).filter(Boolean),
+      passerelles: cards.filter(c => c.bridgeCard).map(c => ({ carte: c.name, passerelle: c.bridgeCard.name }))
     });
     // Garder seulement les 20 derniers
     if (tirages.length > 20) tirages.splice(0, tirages.length - 20);

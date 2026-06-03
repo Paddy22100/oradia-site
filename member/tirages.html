@@ -79,6 +79,39 @@
             backdrop-filter: blur(8px);
         }
         
+        .passerelle-badge {
+            background: linear-gradient(135deg, rgba(212,175,55,0.2), rgba(212,175,55,0.08));
+            border: 1px solid rgba(212,175,55,0.4);
+            border-radius: 6px;
+            padding: 4px 10px;
+            font-size: 11px;
+            color: #f5e7a1;
+            display: inline-flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        @media print {
+            body { background: white !important; color: #1a1a2e !important; }
+            .no-print { display: none !important; }
+            aside, header, .lg\:hidden { display: none !important; }
+            main { padding: 0 !important; }
+            .tirage-card {
+                background: white !important;
+                border: 1px solid #d4af37 !important;
+                box-shadow: none !important;
+                break-inside: avoid;
+                page-break-inside: avoid;
+                margin-bottom: 20px;
+            }
+            .tirage-card p, .tirage-card span { color: #1a1a2e !important; }
+            .tirage-card .text-gold { color: #b8860b !important; }
+            .tirage-card .text-light-gold { color: #2c2c2c !important; }
+            .passerelle-badge { border: 1px solid #b8860b !important; color: #2c2c2c !important; background: #fff9e6 !important; }
+            .print-header { display: block !important; }
+        }
+        .print-header { display: none; }
+        
         @keyframes slideIn {
             from { opacity: 0; transform: translateX(-20px); }
             to { opacity: 1; transform: translateX(0); }
@@ -221,21 +254,69 @@
             }
 
             // Afficher du plus récent au plus ancien
-            container.innerHTML = tirages.slice().reverse().map((t, i) => {
+            container.innerHTML = tirages.slice().reverse().map((t, idx) => {
                 const date = t.date ? new Date(t.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
                 const cartes = t.cartes ? t.cartes.map(c => `<span class="text-xs bg-[rgba(212,175,55,0.15)] text-gold px-2 py-1 rounded">${c}</span>`).join('') : '';
+                
+                // Cartes passerelles
+                let passerellesHtml = '';
+                if (t.passerelles && t.passerelles.length > 0) {
+                    const items = t.passerelles.map(p =>
+                        `<span class="passerelle-badge"><i class="fas fa-link" style="font-size:9px;color:#d4af37;"></i>${p.carte} → <span style="color:#d4af37;font-weight:600;">${p.passerelle}</span></span>`
+                    ).join('');
+                    passerellesHtml = `
+                        <div class="mt-3">
+                            <p class="text-gold/60 text-xs uppercase tracking-wider mb-1"><i class="fas fa-link mr-1"></i>Cartes passerelles</p>
+                            <div class="flex flex-wrap gap-2">${items}</div>
+                        </div>`;
+                }
+
+                const tirageId = 'tirage-' + idx;
                 return `
-                    <div class="tirage-card rounded-xl p-6 mb-4">
+                    <div class="tirage-card rounded-xl p-6 mb-4" id="${tirageId}">
+                        <div class="print-header" style="margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #d4af37;">
+                            <strong style="font-size:16px;">Oracle Oradia — Historique des tirages</strong>
+                        </div>
                         <div class="flex justify-between items-start mb-2">
                             <p class="text-gold font-semibold">${t.type || 'Tirage Tore'}</p>
-                            <span class="text-light-gold/50 text-xs">${date}</span>
+                            <div class="flex items-center gap-3">
+                                <span class="text-light-gold/50 text-xs">${date}</span>
+                                <button onclick="downloadPDF('${tirageId}')" class="no-print" title="Télécharger en PDF"
+                                    style="background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.4);color:#d4af37;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;transition:all .2s;"
+                                    onmouseover="this.style.background='rgba(212,175,55,0.25)'" onmouseout="this.style.background='rgba(212,175,55,0.12)'">
+                                    <i class="fas fa-file-pdf mr-1"></i>PDF
+                                </button>
+                            </div>
                         </div>
                         ${t.intention ? `<p class="text-light-gold/70 text-sm mb-3"><span class="text-gold/60">Intention :</span> ${t.intention}</p>` : ''}
                         ${cartes ? `<div class="flex flex-wrap gap-2">${cartes}</div>` : ''}
+                        ${passerellesHtml}
                         ${t.synthese ? `<p class="text-light-gold/80 text-sm mt-3 italic border-l-2 border-gold/30 pl-3">${t.synthese}</p>` : ''}
                     </div>`;
             }).join('');
         })();
+
+        // Téléchargement PDF d'un tirage
+        function downloadPDF(cardId) {
+            const el = document.getElementById(cardId);
+            if (!el) return;
+            // Masquer tous les autres tirages temporairement
+            const all = document.querySelectorAll('.tirage-card');
+            all.forEach(c => { if (c.id !== cardId) c.style.display = 'none'; });
+            document.querySelector('aside')?.style.setProperty('display','none');
+            document.querySelector('header')?.style.setProperty('display','none');
+            document.querySelector('.lg\\:hidden')?.style.setProperty('display','none');
+            const pageTitle = document.title;
+            const sess = JSON.parse(sessionStorage.getItem('oradia_member_session') || '{}');
+            const name = sess.name || localStorage.getItem('userName') || 'Membre';
+            document.title = 'Oradia - Analyse tirage - ' + name;
+            window.print();
+            document.title = pageTitle;
+            all.forEach(c => { c.style.display = ''; });
+            document.querySelector('aside')?.style.removeProperty('display');
+            document.querySelector('header')?.style.removeProperty('display');
+            document.querySelector('.lg\\:hidden')?.style.removeProperty('display');
+        }
 
         // Déconnexion
         const logoutBtn = document.getElementById('logoutBtn');
