@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 
 <html lang="fr">
 
@@ -189,10 +189,60 @@
 
     }
 
+  /* === QUANTUM BADGE === */
+  .quantum-badge {
+    display:flex;align-items:center;gap:.75rem;padding:.65rem 1rem;
+    border:1px solid rgba(160,130,90,.35);border-radius:40px;
+    background:rgba(255,250,240,.05);backdrop-filter:blur(6px);
+    width:fit-content;max-width:100%;
+  }
+  .quantum-icon { position:relative;display:flex;align-items:center;justify-content:center;color:#c8a96e;flex-shrink:0; }
+  .quantum-pulse {
+    position:absolute;width:34px;height:34px;border-radius:50%;
+    background:rgba(200,169,110,.15);
+    animation:pulse-ring 2.5s ease-out infinite;
+  }
+  @keyframes pulse-ring { 0%{transform:scale(.6);opacity:.8} 100%{transform:scale(1.5);opacity:0} }
+  .quantum-badge-text { display:flex;flex-direction:column;gap:.1rem; }
+  .quantum-label { font-size:.82rem;font-weight:600;letter-spacing:.04em;color:#c8a96e;text-transform:uppercase; }
+  .quantum-sublabel { font-size:.7rem;color:rgba(200,169,110,.6);letter-spacing:.02em; }
+  .quantum-learn-more {
+    margin-left:auto;padding:.28rem .75rem;border:1px solid rgba(200,169,110,.4);
+    border-radius:20px;background:transparent;color:#c8a96e;font-size:.72rem;
+    cursor:pointer;transition:background .2s;white-space:nowrap;flex-shrink:0;
+  }
+  .quantum-learn-more:hover { background:rgba(200,169,110,.12); }
+  .quantum-explication { max-height:0;overflow:hidden;transition:max-height .5s ease,opacity .4s ease;opacity:0; }
+  .quantum-explication.open { max-height:1400px;opacity:1; }
+  .quantum-explication-inner { padding:1.5rem 0 .5rem;text-align:left; }
+  .quantum-explication h3 { font-size:1.1rem;font-weight:600;margin-bottom:.9rem;color:#c8a96e;letter-spacing:.03em; }
+  .quantum-intro { font-size:.9rem;line-height:1.7;margin-bottom:1.25rem;opacity:.9; }
+  .quantum-comparison { display:grid;grid-template-columns:1fr 1fr;gap:.875rem;margin-bottom:1.5rem; }
+  @media(max-width:560px){ .quantum-comparison{grid-template-columns:1fr;} }
+  .quantum-col { padding:1rem;border-radius:10px;font-size:.84rem;line-height:1.6; }
+  .quantum-col-icon { font-size:1.4rem;margin-bottom:.35rem; }
+  .quantum-col strong { display:block;margin-bottom:.35rem;font-size:.88rem; }
+  .quantum-col p { margin:0;opacity:.8; }
+  .quantum-col-before { background:rgba(120,120,120,.08);border:1px solid rgba(120,120,120,.18); }
+  .quantum-col-after  { background:rgba(200,169,110,.07);border:1px solid rgba(200,169,110,.25); }
+  .quantum-source { display:flex;gap:.875rem;align-items:flex-start;padding:1rem;border-radius:10px;background:rgba(200,169,110,.05);border:1px solid rgba(200,169,110,.2);margin-bottom:1.25rem; }
+  .quantum-source-logo { font-size:1.6rem;flex-shrink:0;padding-top:.1rem; }
+  .quantum-source strong { font-size:.88rem; }
+  .quantum-source span { font-size:.75rem;opacity:.6; }
+  .quantum-source p { margin:.5rem 0 0;font-size:.84rem;line-height:1.65;opacity:.85; }
+  .quantum-guillemant { border-left:2px solid rgba(200,169,110,.4);padding-left:1.1rem;margin-bottom:.75rem; }
+  .quantum-guillemant blockquote { margin:0 0 .65rem; }
+  .quantum-guillemant blockquote p { font-size:.9rem;line-height:1.7;font-style:italic;opacity:.9;margin:0 0 .5rem; }
+  .quantum-guillemant blockquote footer { font-size:.75rem;opacity:.6;line-height:1.5; }
+  .quantum-guillemant blockquote footer a { color:#c8a96e;text-decoration:underline;text-underline-offset:2px; }
+  .quantum-nuance { font-size:.78rem;line-height:1.65;opacity:.55;margin:.65rem 0 0;font-style:italic; }
+
   </style>
 
   <!-- Script Freemium Tracker -->
   <script src="js/freemium-tracker.js"></script>
+  <!-- Client QRNG — tirage quantique via ANU -->
+  <script src="js/qrng-client.js" defer></script>
 
 </head>
 
@@ -2718,6 +2768,64 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
           <p class="text-light-gold/40 text-xs mt-3">
             <i class="fas fa-lock mr-1"></i>Votre intention reste confidentielle
           </p>
+
+          <!-- Quantum Badge -->
+          <div class="mt-5 flex justify-center" id="quantum-section">
+            <div class="quantum-badge">
+              <div class="quantum-icon">
+                <svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                  <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
+                  <circle cx="14" cy="14" r="7" stroke="currentColor" stroke-width="1.5" opacity="0.7"/>
+                  <circle cx="14" cy="14" r="2.5" fill="currentColor"/>
+                  <ellipse cx="14" cy="14" rx="12" ry="5" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2" opacity="0.5" transform="rotate(30 14 14)"/>
+                </svg>
+                <span class="quantum-pulse"></span>
+              </div>
+              <div class="quantum-badge-text">
+                <span class="quantum-label">Tirage quantique</span>
+                <span class="quantum-sublabel">Vraie indétermination · ANU Lab, Australie</span>
+              </div>
+              <button class="quantum-learn-more" onclick="document.getElementById('quantum-explication').classList.toggle('open')">
+                En savoir plus
+              </button>
+            </div>
+          </div>
+
+          <!-- Explication dépliable -->
+          <div class="quantum-explication" id="quantum-explication" style="max-width:640px;margin:0 auto;">
+            <div class="quantum-explication-inner">
+              <h3>Pourquoi un tirage quantique ?</h3>
+              <p class="quantum-intro">La plupart des oracles numériques utilisent un générateur de nombres <em>pseudo-aléatoires</em> : un algorithme mathématique qui <strong>simule</strong> le hasard, mais dont le résultat est en réalité entièrement déterminé à l'avance. C'est comme lancer un dé truqué dont quelqu'un connaîtrait déjà le résultat.</p>
+              <div class="quantum-comparison">
+                <div class="quantum-col quantum-col-before">
+                  <div class="quantum-col-icon">🎲</div>
+                  <strong>Aléatoire classique</strong>
+                  <p>Un algorithme calcule un nombre "au hasard". Mais avec les mêmes paramètres de départ, il produirait exactement le même résultat. Ce hasard est une illusion mathématique.</p>
+                </div>
+                <div class="quantum-col quantum-col-after">
+                  <div class="quantum-col-icon">⚛️</div>
+                  <strong>Aléatoire quantique</strong>
+                  <p>Le hasard vient du comportement réel de particules subatomiques — un phénomène que la physique elle-même considère comme fondamentalement imprévisible. Personne, aucune machine, ne peut en connaître le résultat à l'avance.</p>
+                </div>
+              </div>
+              <div class="quantum-source">
+                <div class="quantum-source-logo">🔬</div>
+                <div>
+                  <strong>Source : Laboratoire de Physique Quantique de l'ANU</strong><br>
+                  <span>Australian National University, Canberra, Australie</span>
+                  <p>Nos tirages utilisent en temps réel les nombres générés par le laboratoire d'optique quantique de l'ANU. Ces nombres naissent de la mesure des <em>fluctuations du vide quantique</em> — l'énergie minimale irréductible de l'univers, là où des particules apparaissent et disparaissent spontanément, sans aucune cause antérieure mesurable.</p>
+                </div>
+              </div>
+              <div class="quantum-guillemant">
+                <blockquote>
+                  <p>"Si la conscience peut influencer le cours des événements — comme le suggère la physique quantique dans certaines de ses interprétations — encore faut-il que le tirage soit <em>vraiment ouvert</em>, non fermé par un algorithme dont la réponse est déjà écrite."</p>
+                  <footer>— Dans la lignée des travaux du physicien <strong>Philippe Guillemant</strong> (CNRS/INRIA), auteur de <em>La Physique de la Conscience</em>, et cofondateur de <a href="https://6naps.net" target="_blank" rel="noopener">6naps.net</a> qui applique ce même protocole à l'exploration des synchronicités.</footer>
+                </blockquote>
+                <p class="quantum-nuance">Nous ne prétendons pas que le tirage quantique <em>prouve</em> quoi que ce soit. Nous choisissons simplement de ne pas fermer la porte — de laisser le moment du tirage aussi ouvert que possible. Ce que vous en ferez appartient à votre propre intelligence intérieure.</p>
+              </div>
+            </div>
+          </div>
+
         </div>
 
       </div>
@@ -3923,7 +4031,7 @@ function showToreAnalysisCTA() {
 
 
 
-  function pickFromData(familyKey, avoidDuplicates = true) {
+  async function pickFromData(familyKey, avoidDuplicates = true) {
 
     const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : [];
 
@@ -3940,23 +4048,23 @@ function showToreAnalysisCTA() {
       // Si toutes les cartes ont été tirées, on réinitialise
       if (availableCards.length === 0) {
         drawnCards.clear();
-        const idx = Math.floor(Math.random() * pool.length);
+        const idx = await QRNG.getInt(0, pool.length);
         const selectedCard = pool[idx];
         const cardId = selectedCard.name || selectedCard.file || JSON.stringify(selectedCard);
         drawnCards.add(cardId);
         return selectedCard;
       }
 
-      // Piocher parmi les cartes disponibles
-      const idx = Math.floor(Math.random() * availableCards.length);
+      // Piocher parmi les cartes disponibles (quantique)
+      const idx = await QRNG.getInt(0, availableCards.length);
       const selectedCard = availableCards[idx];
       const cardId = selectedCard.name || selectedCard.file || JSON.stringify(selectedCard);
       drawnCards.add(cardId);
       return selectedCard;
     }
 
-    // Sinon, pioche aléatoire classique
-    const idx = Math.floor(Math.random() * pool.length);
+    // Pioche aléatoire quantique
+    const idx = await QRNG.getInt(0, pool.length);
     return pool[idx] || null;
 
   }
@@ -5321,10 +5429,11 @@ function showArrowForStep(stepIndex, isMatch) {
     coin.classList.add('spin');
 
     // Fin de l'animation (1s)
-    setTimeout(() => {
+    setTimeout(async () => {
       coin.classList.remove('spin');
 
-      const isYang = Math.random() < 0.5;
+      const _qBit = await QRNG.getInt(0, 2);
+      const isYang = _qBit === 1;
       const coinPolarity = isYang ? 'yang' : 'yin';
 
       coin.classList.add(isYang ? 'face-yang' : 'face-yin');

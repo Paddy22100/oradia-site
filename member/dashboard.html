@@ -134,11 +134,15 @@
                 </div>
             </a>
 
-            <!-- Droite : nom + déconnexion -->
-            <div class="flex items-center gap-4">
+            <!-- Droite : retour site + nom + déconnexion -->
+            <div class="flex items-center gap-3">
+                <a href="../index.html" class="hidden lg:flex items-center gap-2 text-gold/60 hover:text-gold transition-colors text-sm border border-gold/20 hover:border-gold/50 px-3 py-1.5 rounded-lg">
+                    <i class="fas fa-arrow-left text-xs"></i> Retour au site
+                </a>
                 <p class="hidden lg:block text-gold/70 text-sm" id="memberName">Cher Membre</p>
-                <button id="logoutBtn" class="text-gold/70 hover:text-gold transition-colors" title="Déconnexion">
+                <button id="logoutBtn" class="flex items-center gap-2 text-gold/70 hover:text-red-400 transition-colors text-sm border border-gold/20 hover:border-red-400/50 px-3 py-1.5 rounded-lg">
                     <i class="fas fa-sign-out-alt"></i>
+                    <span class="hidden sm:inline">Déconnexion</span>
                 </button>
             </div>
         </div>
@@ -169,6 +173,24 @@
                     <i class="fas fa-cog w-5"></i>
                     <span>Paramètres</span>
                 </a>
+                <a href="support.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-headset w-5"></i>
+                    <span>Support &amp; Retours</span>
+                </a>
+                <div class="border-t border-gold/10 my-2"></div>
+                <a href="../tore.html" class="sidebar-link flex items-center gap-3 p-3 rounded-lg bg-gold/5 border border-gold/20 text-gold hover:bg-gold/15 transition-all">
+                    <i class="fas fa-infinity w-5"></i>
+                    <span class="font-semibold">Faire un tirage Tore</span>
+                </a>
+                <a href="../pelerin.html" class="sidebar-link flex items-center gap-3 p-3 rounded-lg text-light-gold/70 hover:text-gold">
+                    <i class="fas fa-compass w-5"></i>
+                    <span>Tirage Pèlerin</span>
+                </a>
+                <div class="border-t border-gold/10 my-2"></div>
+                <a href="../index.html" class="sidebar-link flex items-center gap-3 text-light-gold/50 hover:text-gold p-3 rounded-lg text-sm">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Retour au site</span>
+                </a>
             </nav>
         </aside>
 
@@ -183,15 +205,32 @@
                     <div class="relative z-10 p-8">
                         <h2 class="cormorant text-3xl text-gold mb-2">Bienvenue, <span id="memberNameHero">Membre</span></h2>
                         <p class="text-light-gold/80 mb-6">Votre espace intérieur ORADIA.</p>
-                        <div class="flex flex-wrap gap-4">
+                        <div class="flex flex-wrap gap-3">
                             <a href="../tore.html" class="bg-gold hover:bg-light-gold text-night-blue font-bold py-3 px-6 rounded-lg transition-colors">
-                                <i class="fas fa-infinity mr-2"></i>Nouveau tirage
+                                <i class="fas fa-infinity mr-2"></i>Tirage Tore
                             </a>
-                            <a href="abonnements.html" class="border border-gold text-gold hover:bg-gold/10 font-bold py-3 px-6 rounded-lg transition-colors backdrop-blur-sm">
+                            <a href="../pelerin.html" class="border border-gold/60 text-gold hover:bg-gold/10 font-semibold py-3 px-5 rounded-lg transition-colors backdrop-blur-sm">
+                                <i class="fas fa-compass mr-2"></i>Tirage Pèlerin
+                            </a>
+                            <a href="abonnements.html" class="border border-gold/40 text-gold/70 hover:text-gold hover:bg-gold/10 font-semibold py-3 px-5 rounded-lg transition-colors backdrop-blur-sm">
                                 <i class="fas fa-crown mr-2"></i>Mon abonnement
                             </a>
                         </div>
                     </div>
+                </div>
+            </section>
+
+            <!-- Pub précommandes -->
+            <section class="mb-6 fade-in">
+                <div class="rounded-xl p-5 border border-gold/25 flex flex-col sm:flex-row items-center gap-4 bg-gradient-to-r from-[rgba(26,54,93,0.5)] to-[rgba(5,20,40,0.7)]">
+                    <div class="text-3xl flex-shrink-0">🃏</div>
+                    <div class="flex-1 text-center sm:text-left">
+                        <p class="text-gold font-semibold cormorant text-lg">L'Oracle Oradia en version physique</p>
+                        <p class="text-light-gold/70 text-sm">Précommandez le jeu de cartes et soutenez la naissance de cet outil de transformation.</p>
+                    </div>
+                    <a href="../precommande-oracle.html" class="flex-shrink-0 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-2.5 px-5 rounded-lg text-sm hover:from-light-gold hover:to-gold transition-all whitespace-nowrap">
+                        Précommander
+                    </a>
                 </div>
             </section>
 

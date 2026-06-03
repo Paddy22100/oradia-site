@@ -234,7 +234,7 @@
             <section class="mb-8 text-center">
                 <h2 class="cormorant text-4xl text-gold mb-4">L'Abonnement Tore</h2>
                 <p class="text-light-gold/80 text-lg max-w-2xl mx-auto">
-                    Accédez à l'expérience complète du Tore — tirages illimités, analyses approfondies et accompagnement mensuel.
+                    Accédez à l'expérience complète du Tore — tirages illimités et analyses approfondies.
                 </p>
             </section>
 
@@ -247,9 +247,9 @@
                             <p class="text-light-gold/80" id="currentPlanLabel">Formule <span class="text-gold font-medium">Gratuite</span></p>
                             <p class="text-light-gold/60 text-sm" id="currentPlanDesc">Accès limité aux fonctionnalités de base</p>
                         </div>
-                        <div class="text-center">
+                        <div class="text-center" id="nextBillingBlock">
                             <p class="text-light-gold/60 text-sm mb-2">Prochaine facturation</p>
-                            <p class="text-gold font-semibold" id="nextBillingDate">Jamais</p>
+                            <p class="text-gold font-semibold" id="nextBillingDate">—</p>
                         </div>
                     </div>
                 </div>
@@ -342,6 +342,23 @@
                         </button>
                         <div class="hidden mt-4 text-light-gold/80">
                             Oui, vous pouvez annuler à tout moment sans frais depuis cette page en désactivant le renouvellement automatique. Vous conservez l’accès jusqu’à la fin de la période en cours.
+                        </div>
+                    </div>
+
+                    <div class="bg-[rgba(26,54,93,0.6)] rounded-xl p-6 border border-gold/20">
+                        <button class="w-full text-left flex justify-between items-center" onclick="toggleFAQ(this)">
+                            <span class="text-gold font-semibold">Comment annuler mon abonnement étape par étape ?</span>
+                            <i class="fas fa-chevron-down text-gold transition-transform"></i>
+                        </button>
+                        <div class="hidden mt-4 text-light-gold/80 space-y-2">
+                            <p>Pour annuler, suivez ces étapes simples :</p>
+                            <ol class="list-decimal list-inside space-y-1 text-sm">
+                                <li>Connectez-vous à votre espace membre.</li>
+                                <li>Rendez-vous dans la section <strong class="text-gold">Abonnements</strong>.</li>
+                                <li>Dans le bloc <em>Renouvellement automatique</em>, désactivez le toggle.</li>
+                                <li>Confirmez la désactivation dans la fenêtre qui s’ouvre.</li>
+                            </ol>
+                            <p class="text-sm mt-2">Votre accès reste actif jusqu’à la fin de la période déjà payée. Aucun remboursement au prorata n’est effectué. Si vous rencontrez un problème, contactez le support via <a href="support.html" class="text-gold underline">cette page</a>.</p>
                         </div>
                     </div>
                 </div>
@@ -651,7 +668,26 @@
                 document.getElementById('autoRenewSection').style.display = 'block';
                 document.getElementById('currentPlanLabel').innerHTML = 'Formule <span class="text-gold font-medium">Le Tore — Actif</span>';
                 document.getElementById('currentPlanDesc').textContent = 'Accès illimité aux tirages et fonctionnalités premium';
-                document.getElementById('nextBillingDate').textContent = autoRenew ? 'Automatique (mensuel)' : 'Non renouvelé';
+
+                // Calcul de la prochaine date de facturation
+                let nextBilling = '—';
+                if (autoRenew) {
+                    const subStart = sess.subscriptionStart || sess.subscription_start || localStorage.getItem('oradia_sub_start');
+                    if (subStart) {
+                        const start = new Date(subStart);
+                        const now = new Date();
+                        // Trouver le prochain anniversaire mensuel
+                        const next = new Date(start);
+                        next.setMonth(start.getMonth() + Math.ceil((now - start) / (1000 * 60 * 60 * 24 * 30.44)));
+                        if (next <= now) next.setMonth(next.getMonth() + 1);
+                        nextBilling = next.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+                    } else {
+                        nextBilling = 'Mensuel automatique';
+                    }
+                } else {
+                    nextBilling = 'Non renouvelé';
+                }
+                document.getElementById('nextBillingDate').textContent = nextBilling;
                 updateToggleUI(autoRenew);
             } else if (wasSubscribed) {
                 // Ancien abonné : afficher une pub de réabonnement à la place de la carte standard

@@ -221,15 +221,6 @@
                 </h3>
                 <div class="settings-section rounded-xl p-6 space-y-5">
                     <div class="space-y-2">
-                        <label class="block text-gold font-medium">Langue</label>
-                        <select id="selectLangue" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2.5 text-light-gold focus:border-gold transition-colors">
-                            <option value="fr" selected>Français</option>
-                            <option value="en">English</option>
-                            <option value="es">Español</option>
-                        </select>
-                    </div>
-
-                    <div class="space-y-2">
                         <label class="block text-gold font-medium">Fuseau horaire</label>
                         <select id="selectFuseau" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-4 py-2.5 text-light-gold focus:border-gold transition-colors">
                             <option value="Europe/Paris" selected>Europe/Paris (GMT+1)</option>
@@ -325,12 +316,10 @@
             const prefs = loadPrefs();
             const nlToggle = document.getElementById('toggleNewsletter');
             const syncToggle = document.getElementById('toggleSynchronicites');
-            const langSel = document.getElementById('selectLangue');
             const tzSel = document.getElementById('selectFuseau');
 
             if (nlToggle)   nlToggle.checked   = prefs.newsletter    !== false;
             if (syncToggle) syncToggle.checked = prefs.synchronicites === true;
-            if (langSel  && prefs.langue)  langSel.value  = prefs.langue;
             if (tzSel    && prefs.fuseau)  tzSel.value    = prefs.fuseau;
 
             // Auto-save les toggles
@@ -349,7 +338,6 @@
             const prefs = loadPrefs();
             prefs.newsletter     = document.getElementById('toggleNewsletter')?.checked ?? true;
             prefs.synchronicites = document.getElementById('toggleSynchronicites')?.checked ?? false;
-            prefs.langue  = document.getElementById('selectLangue')?.value  || 'fr';
             prefs.fuseau  = document.getElementById('selectFuseau')?.value  || 'Europe/Paris';
             savePrefs(prefs);
 

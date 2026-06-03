@@ -91,6 +91,36 @@
       margin: 0 auto;
     }
 
+    /* === QUANTUM BADGE === */
+    .quantum-badge{display:flex;align-items:center;gap:.75rem;padding:.65rem 1rem;border:1px solid rgba(160,130,90,.35);border-radius:40px;background:rgba(255,250,240,.05);backdrop-filter:blur(6px);width:fit-content;max-width:100%;}
+    .quantum-icon{position:relative;display:flex;align-items:center;justify-content:center;color:#c8a96e;flex-shrink:0;}
+    .quantum-pulse{position:absolute;width:34px;height:34px;border-radius:50%;background:rgba(200,169,110,.15);animation:pulse-ring 2.5s ease-out infinite;}
+    @keyframes pulse-ring{0%{transform:scale(.6);opacity:.8}100%{transform:scale(1.5);opacity:0}}
+    .quantum-badge-text{display:flex;flex-direction:column;gap:.1rem;}
+    .quantum-label{font-size:.82rem;font-weight:600;letter-spacing:.04em;color:#c8a96e;text-transform:uppercase;}
+    .quantum-sublabel{font-size:.7rem;color:rgba(200,169,110,.6);letter-spacing:.02em;}
+    .quantum-learn-more{margin-left:auto;padding:.28rem .75rem;border:1px solid rgba(200,169,110,.4);border-radius:20px;background:transparent;color:#c8a96e;font-size:.72rem;cursor:pointer;transition:background .2s;white-space:nowrap;flex-shrink:0;}
+    .quantum-learn-more:hover{background:rgba(200,169,110,.12);}
+    .quantum-explication{max-height:0;overflow:hidden;transition:max-height .5s ease,opacity .4s ease;opacity:0;}
+    .quantum-explication.open{max-height:1200px;opacity:1;}
+    .quantum-explication-inner{padding:1.5rem 0 .5rem;}
+    .quantum-explication h3{font-size:1.1rem;font-weight:600;margin-bottom:.9rem;color:#c8a96e;letter-spacing:.03em;}
+    .quantum-intro{font-size:.9rem;line-height:1.7;margin-bottom:1.25rem;opacity:.9;}
+    .quantum-comparison{display:grid;grid-template-columns:1fr 1fr;gap:.875rem;margin-bottom:1.5rem;}
+    @media(max-width:560px){.quantum-comparison{grid-template-columns:1fr;}}
+    .quantum-col{padding:1rem;border-radius:10px;font-size:.84rem;line-height:1.6;}
+    .quantum-col-icon{font-size:1.4rem;margin-bottom:.35rem;}
+    .quantum-col strong{display:block;margin-bottom:.35rem;font-size:.88rem;}
+    .quantum-col p{margin:0;opacity:.8;}
+    .quantum-col-before{background:rgba(120,120,120,.08);border:1px solid rgba(120,120,120,.18);}
+    .quantum-col-after{background:rgba(200,169,110,.07);border:1px solid rgba(200,169,110,.25);}
+    .quantum-source{display:flex;gap:.875rem;align-items:flex-start;padding:1rem;border-radius:10px;background:rgba(200,169,110,.05);border:1px solid rgba(200,169,110,.2);margin-bottom:1.25rem;}
+    .quantum-source-logo{font-size:1.6rem;flex-shrink:0;padding-top:.1rem;}
+    .quantum-source strong{font-size:.88rem;}
+    .quantum-source span{font-size:.75rem;opacity:.6;}
+    .quantum-source p{margin:.5rem 0 0;font-size:.84rem;line-height:1.65;opacity:.85;}
+    .quantum-nuance{font-size:.78rem;line-height:1.65;opacity:.55;margin:.65rem 0 0;font-style:italic;}
+
     /* Mode immersif */
     body.hide-immersive > header,
     body.hide-immersive > footer,
@@ -387,6 +417,54 @@
               <i class="fas fa-compass mr-2"></i>
               Commencer la Traversée
             </button>
+
+            <!-- Quantum Badge Traversée -->
+            <div class="mt-5 flex justify-center">
+              <div class="quantum-badge">
+                <div class="quantum-icon">
+                  <svg width="22" height="22" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <circle cx="14" cy="14" r="12" stroke="currentColor" stroke-width="1.5" opacity="0.4"/>
+                    <circle cx="14" cy="14" r="7" stroke="currentColor" stroke-width="1.5" opacity="0.7"/>
+                    <circle cx="14" cy="14" r="2.5" fill="currentColor"/>
+                    <ellipse cx="14" cy="14" rx="12" ry="5" stroke="currentColor" stroke-width="1" stroke-dasharray="2 2" opacity="0.5" transform="rotate(30 14 14)"/>
+                  </svg>
+                  <span class="quantum-pulse"></span>
+                </div>
+                <div class="quantum-badge-text">
+                  <span class="quantum-label">Tirage quantique</span>
+                  <span class="quantum-sublabel">Vraie indétermination · ANU Lab, Australie</span>
+                </div>
+                <button class="quantum-learn-more" onclick="document.getElementById('quantum-explication-trav').classList.toggle('open')">En savoir plus</button>
+              </div>
+            </div>
+            <div class="quantum-explication" id="quantum-explication-trav" style="max-width:600px;margin:0 auto;">
+              <div class="quantum-explication-inner text-left">
+                <h3>Pourquoi un tirage quantique ?</h3>
+                <p class="quantum-intro">La plupart des oracles numériques utilisent un générateur de nombres <em>pseudo-aléatoires</em> : un algorithme qui <strong>simule</strong> le hasard, mais dont le résultat est déjà déterminé. C'est comme un dé truqué dont quelqu'un connaîtrait déjà le résultat.</p>
+                <div class="quantum-comparison">
+                  <div class="quantum-col quantum-col-before">
+                    <div class="quantum-col-icon">🎲</div>
+                    <strong>Aléatoire classique</strong>
+                    <p>Un algorithme calcule un résultat "au hasard" — mais avec les mêmes paramètres, il produirait exactement le même résultat. Ce hasard est une illusion mathématique.</p>
+                  </div>
+                  <div class="quantum-col quantum-col-after">
+                    <div class="quantum-col-icon">⚛️</div>
+                    <strong>Aléatoire quantique</strong>
+                    <p>Le hasard vient du comportement réel de particules subatomiques — fondamentalement imprévisible. Personne ne peut en connaître le résultat à l'avance.</p>
+                  </div>
+                </div>
+                <div class="quantum-source">
+                  <div class="quantum-source-logo">🔬</div>
+                  <div>
+                    <strong>Source : Laboratoire ANU</strong><br>
+                    <span>Australian National University, Canberra</span>
+                    <p>Ces nombres naissent de la mesure des <em>fluctuations du vide quantique</em> — l'énergie minimale de l'univers, là où des particules apparaissent et disparaissent spontanément.</p>
+                  </div>
+                </div>
+                <p class="quantum-nuance">Nous ne prétendons pas que cela <em>prouve</em> quoi que ce soit. Nous choisissons simplement de laisser le moment du tirage aussi ouvert que possible.</p>
+              </div>
+            </div>
+
           </form>
         </div>
       </div>
@@ -711,7 +789,8 @@
         };
 
         const cards = mockCards[family] || [];
-        return cards[Math.floor(Math.random() * cards.length)];
+        const idx = await QRNG.getInt(0, cards.length);
+        return cards[idx];
       }
 
       updateCardContent(card, cardData) {
@@ -832,6 +911,8 @@
 <!-- Scripts -->
 
 
+<!-- Client QRNG — tirage quantique via ANU -->
+<script src="js/qrng-client.js"></script>
 <script src="components/header-manager.js" defer></script>
 
 </html>

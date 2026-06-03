@@ -137,13 +137,14 @@
                     </a>
                 </div>
                 
-                <div class="flex items-center gap-4">
-                    <div class="text-right">
-                        <p class="text-gold font-medium" id="memberName">Cher Membre</p>
-                        <p class="text-gold/60 text-sm">12 tirages au total</p>
-                    </div>
-                    <button id="logoutBtn" class="text-gold/70 hover:text-gold transition-colors">
+                <div class="flex items-center gap-3">
+                    <a href="../index.html" class="hidden lg:flex items-center gap-2 text-gold/60 hover:text-gold transition-colors text-sm border border-gold/20 hover:border-gold/50 px-3 py-1.5 rounded-lg">
+                        <i class="fas fa-arrow-left text-xs"></i> Retour au site
+                    </a>
+                    <p class="hidden lg:block text-gold/70 text-sm" id="memberName">Cher Membre</p>
+                    <button id="logoutBtn" class="flex items-center gap-2 text-gold/70 hover:text-red-400 transition-colors text-sm border border-gold/20 hover:border-red-400/50 px-3 py-1.5 rounded-lg">
                         <i class="fas fa-sign-out-alt"></i>
+                        <span class="hidden sm:inline">Déconnexion</span>
                     </button>
                 </div>
             </div>
@@ -174,6 +175,20 @@
                 <a href="parametres.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
                     <i class="fas fa-cog w-5"></i>
                     <span>Paramètres</span>
+                </a>
+                <a href="support.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-headset w-5"></i>
+                    <span>Support &amp; Retours</span>
+                </a>
+                <div class="border-t border-gold/10 my-2"></div>
+                <a href="../tore.html" class="sidebar-link flex items-center gap-3 p-3 rounded-lg bg-gold/5 border border-gold/20 text-gold hover:bg-gold/15 transition-all">
+                    <i class="fas fa-infinity w-5"></i>
+                    <span class="font-semibold">Faire un tirage Tore</span>
+                </a>
+                <div class="border-t border-gold/10 my-2"></div>
+                <a href="../index.html" class="sidebar-link flex items-center gap-3 text-light-gold/50 hover:text-gold p-3 rounded-lg text-sm">
+                    <i class="fas fa-home w-5"></i>
+                    <span>Retour au site</span>
                 </a>
             </nav>
         </aside>
@@ -255,67 +270,187 @@
 
             // Afficher du plus récent au plus ancien
             container.innerHTML = tirages.slice().reverse().map((t, idx) => {
-                const date = t.date ? new Date(t.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
-                const cartes = t.cartes ? t.cartes.map(c => `<span class="text-xs bg-[rgba(212,175,55,0.15)] text-gold px-2 py-1 rounded">${c}</span>`).join('') : '';
-                
-                // Cartes passerelles
+                const date = t.date ? new Date(t.date).toLocaleDateString('fr-FR', { weekday:'long', day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+
+                const cartesBadges = t.cartes ? t.cartes.map(c =>
+                    `<span style="display:inline-block;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.35);color:#d4af37;border-radius:6px;padding:4px 10px;font-size:12px;font-family:'Cormorant Garamond',serif;">${c}</span>`
+                ).join('') : '';
+
+                let interpretationsHtml = '';
+                if (t.interpretations && t.interpretations.length > 0) {
+                    interpretationsHtml = `<div style="margin-top:16px;border-top:1px solid rgba(212,175,55,0.15);padding-top:16px;">`;
+                    interpretationsHtml += t.interpretations.map(interp => `
+                        <div style="margin-bottom:14px;padding-left:12px;border-left:2px solid rgba(212,175,55,0.4);">
+                            <p style="color:#d4af37;font-size:13px;font-weight:600;margin-bottom:3px;">${interp.position || ''} — ${interp.carte || ''}</p>
+                            <p style="color:rgba(245,231,161,0.8);font-size:13px;line-height:1.6;">${interp.texte || ''}</p>
+                        </div>`).join('');
+                    interpretationsHtml += `</div>`;
+                }
+
                 let passerellesHtml = '';
                 if (t.passerelles && t.passerelles.length > 0) {
                     const items = t.passerelles.map(p =>
-                        `<span class="passerelle-badge"><i class="fas fa-link" style="font-size:9px;color:#d4af37;"></i>${p.carte} → <span style="color:#d4af37;font-weight:600;">${p.passerelle}</span></span>`
+                        `<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);border-radius:6px;padding:4px 10px;font-size:12px;">
+                            <span style="color:rgba(245,231,161,0.6);">${p.carte}</span>
+                            <span style="color:rgba(212,175,55,0.5);">→</span>
+                            <span style="color:#d4af37;font-weight:600;">${p.passerelle}</span>
+                        </div>`
                     ).join('');
                     passerellesHtml = `
-                        <div class="mt-3">
-                            <p class="text-gold/60 text-xs uppercase tracking-wider mb-1"><i class="fas fa-link mr-1"></i>Cartes passerelles</p>
-                            <div class="flex flex-wrap gap-2">${items}</div>
+                        <div style="margin-top:14px;">
+                            <p style="color:rgba(212,175,55,0.55);font-size:11px;text-transform:uppercase;letter-spacing:.08em;margin-bottom:8px;">Cartes passerelles</p>
+                            <div style="display:flex;flex-wrap:wrap;gap:8px;">${items}</div>
                         </div>`;
                 }
 
                 const tirageId = 'tirage-' + idx;
                 return `
-                    <div class="tirage-card rounded-xl p-6 mb-4" id="${tirageId}">
-                        <div class="print-header" style="margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid #d4af37;">
-                            <strong style="font-size:16px;">Oracle Oradia — Historique des tirages</strong>
-                        </div>
-                        <div class="flex justify-between items-start mb-2">
-                            <p class="text-gold font-semibold">${t.type || 'Tirage Tore'}</p>
-                            <div class="flex items-center gap-3">
-                                <span class="text-light-gold/50 text-xs">${date}</span>
-                                <button onclick="downloadPDF('${tirageId}')" class="no-print" title="Télécharger en PDF"
-                                    style="background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.4);color:#d4af37;border-radius:6px;padding:4px 10px;font-size:11px;cursor:pointer;transition:all .2s;"
-                                    onmouseover="this.style.background='rgba(212,175,55,0.25)'" onmouseout="this.style.background='rgba(212,175,55,0.12)'">
-                                    <i class="fas fa-file-pdf mr-1"></i>PDF
-                                </button>
+                    <div class="tirage-card" id="${tirageId}" style="
+                        background:linear-gradient(145deg,rgba(26,54,93,0.65),rgba(5,20,40,0.85));
+                        border:1px solid rgba(212,175,55,0.28);
+                        border-radius:16px;
+                        overflow:hidden;
+                        margin-bottom:20px;
+                    ">
+                        <div style="background:rgba(5,20,40,0.6);padding:18px 24px;border-bottom:1px solid rgba(212,175,55,0.2);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;">
+                            <div>
+                                <p style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;background:linear-gradient(135deg,#d4af37,#f4e4c1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:0 0 2px;">${t.type || 'Tirage Tore'}</p>
+                                <p style="color:rgba(245,231,161,0.45);font-size:12px;margin:0;text-transform:capitalize;">${date}</p>
                             </div>
+                            <button onclick="downloadPDF(${idx})" title="Télécharger ce tirage en PDF"
+                                style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.4);color:#d4af37;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;"
+                                onmouseover="this.style.background='rgba(212,175,55,0.22)'" onmouseout="this.style.background='rgba(212,175,55,0.1)'">
+                                <i class="fas fa-file-pdf"></i> Télécharger PDF
+                            </button>
                         </div>
-                        ${t.intention ? `<p class="text-light-gold/70 text-sm mb-3"><span class="text-gold/60">Intention :</span> ${t.intention}</p>` : ''}
-                        ${cartes ? `<div class="flex flex-wrap gap-2">${cartes}</div>` : ''}
-                        ${passerellesHtml}
-                        ${t.synthese ? `<p class="text-light-gold/80 text-sm mt-3 italic border-l-2 border-gold/30 pl-3">${t.synthese}</p>` : ''}
+                        <div style="padding:20px 24px;">
+                            ${t.intention ? `
+                            <div style="margin-bottom:16px;padding:12px 16px;background:rgba(212,175,55,0.06);border-radius:0 8px 8px 0;border-left:3px solid rgba(212,175,55,0.5);">
+                                <p style="color:rgba(212,175,55,0.6);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:4px;">Intention</p>
+                                <p style="color:rgba(245,231,161,0.9);font-size:14px;font-style:italic;">${t.intention}</p>
+                            </div>` : ''}
+                            ${cartesBadges ? `
+                            <div style="margin-bottom:14px;">
+                                <p style="color:rgba(212,175,55,0.55);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Cartes tirées</p>
+                                <div style="display:flex;flex-wrap:wrap;gap:8px;">${cartesBadges}</div>
+                            </div>` : ''}
+                            ${interpretationsHtml}
+                            ${passerellesHtml}
+                            ${t.synthese ? `
+                            <div style="margin-top:18px;padding:14px 18px;background:rgba(212,175,55,0.05);border-radius:10px;border:1px solid rgba(212,175,55,0.2);">
+                                <p style="color:rgba(212,175,55,0.6);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Synthèse</p>
+                                <p style="color:rgba(245,231,161,0.85);font-size:14px;line-height:1.8;font-style:italic;">${t.synthese}</p>
+                            </div>` : ''}
+                        </div>
                     </div>`;
             }).join('');
         })();
 
-        // Téléchargement PDF d'un tirage
-        function downloadPDF(cardId) {
-            const el = document.getElementById(cardId);
-            if (!el) return;
-            // Masquer tous les autres tirages temporairement
-            const all = document.querySelectorAll('.tirage-card');
-            all.forEach(c => { if (c.id !== cardId) c.style.display = 'none'; });
-            document.querySelector('aside')?.style.setProperty('display','none');
-            document.querySelector('header')?.style.setProperty('display','none');
-            document.querySelector('.lg\\:hidden')?.style.setProperty('display','none');
-            const pageTitle = document.title;
+        // Téléchargement PDF élégant — fenêtre dédiée style synthèse/mail
+        function downloadPDF(tirageIdx) {
+            const tirages = JSON.parse(localStorage.getItem('oradia_tirages') || '[]');
+            const all = tirages.slice().reverse();
+            const t = all[tirageIdx];
+            if (!t) return;
+
             const sess = JSON.parse(sessionStorage.getItem('oradia_member_session') || '{}');
             const name = sess.name || localStorage.getItem('userName') || 'Membre';
-            document.title = 'Oradia - Analyse tirage - ' + name;
-            window.print();
-            document.title = pageTitle;
-            all.forEach(c => { c.style.display = ''; });
-            document.querySelector('aside')?.style.removeProperty('display');
-            document.querySelector('header')?.style.removeProperty('display');
-            document.querySelector('.lg\\:hidden')?.style.removeProperty('display');
+            const date = t.date ? new Date(t.date).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) : '—';
+
+            const cartesBadgesHtml = t.cartes ? t.cartes.map(c =>
+                `<span style="display:inline-block;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.5);color:#b8922e;border-radius:5px;padding:4px 11px;font-size:13px;margin:3px;">${c}</span>`
+            ).join('') : '';
+
+            const interpretationsSection = t.interpretations && t.interpretations.length ? `
+                <div style="margin-top:20px;">
+                    <p style="font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#b8922e;margin-bottom:12px;">Interprétations</p>
+                    ${t.interpretations.map(i => `
+                        <div style="margin-bottom:14px;padding-left:14px;border-left:2px solid #d4af37;">
+                            <p style="color:#8b6914;font-size:12px;font-weight:700;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em;">${i.position || ''} — ${i.carte || ''}</p>
+                            <p style="color:#2d2a1e;font-size:13.5px;line-height:1.7;">${i.texte || ''}</p>
+                        </div>`).join('')}
+                </div>` : '';
+
+            const passerellesSection = t.passerelles && t.passerelles.length ? `
+                <div style="margin-top:18px;">
+                    <p style="font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#b8922e;margin-bottom:10px;">Cartes passerelles</p>
+                    <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                        ${t.passerelles.map(p =>
+                            `<span style="background:#f5e7a1;border:1px solid #d4af37;border-radius:5px;padding:4px 10px;font-size:12px;color:#5a4010;">${p.carte} → <strong style="color:#8b6914;">${p.passerelle}</strong></span>`
+                        ).join('')}
+                    </div>
+                </div>` : '';
+
+            const syntheseSection = t.synthese ? `
+                <div style="margin-top:22px;padding:16px 20px;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(212,175,55,0.03));border:1px solid rgba(212,175,55,0.3);border-radius:10px;">
+                    <p style="font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#b8922e;margin-bottom:10px;">Synthèse</p>
+                    <p style="color:#2d2a1e;font-size:14px;line-height:1.85;font-style:italic;">${t.synthese}</p>
+                </div>` : '';
+
+            const html = `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="UTF-8">
+<title>Oracle Oradia — ${t.type || 'Tirage'}</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:'Cormorant Garamond',Georgia,serif;background:#f7f3ec;color:#2d2a1e;padding:32px 20px;}
+  .page{max-width:620px;margin:0 auto;}
+  .card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 32px rgba(180,140,40,0.13);border:1px solid rgba(212,175,55,0.25);}
+  .card-header{background:linear-gradient(160deg,#0a192f 0%,#1a365d 100%);padding:28px 30px 22px;text-align:center;}
+  .logo-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:16px;}
+  .logo-row img{width:52px;height:52px;border-radius:50%;border:2px solid rgba(212,175,55,0.55);}
+  .brand{font-size:26px;font-weight:700;letter-spacing:.3em;background:linear-gradient(135deg,#f0c75e,#d4af37);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
+  .oracle-label{font-size:10px;color:rgba(212,175,55,0.4);letter-spacing:.4em;text-transform:uppercase;margin-top:2px;}
+  .divider{width:50px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:14px auto 0;}
+  .tirage-meta{background:rgba(2,10,24,0.92);padding:14px 30px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(212,175,55,0.2);}
+  .tirage-type{font-size:18px;font-weight:700;color:#f0c75e;}
+  .tirage-date{font-size:11.5px;color:rgba(212,175,55,0.45);text-transform:capitalize;}
+  .tirage-member{font-size:11.5px;color:rgba(212,175,55,0.5);}
+  .card-body{padding:26px 30px;}
+  .section-label{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#b8922e;margin-bottom:8px;}
+  .intention-box{padding:12px 16px;background:#fffbf0;border-left:3px solid #d4af37;border-radius:0 8px 8px 0;margin-bottom:18px;}
+  .intention-text{font-size:14px;font-style:italic;color:#3d3520;line-height:1.65;}
+  .hr{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.25),transparent);margin:18px 0;}
+  .card-footer{background:#f0ebe0;padding:16px 30px;text-align:center;border-top:1px solid rgba(212,175,55,0.15);}
+  .card-footer p{font-size:11px;color:rgba(120,100,50,0.55);letter-spacing:.06em;}
+  @media print{
+    body{background:#fff;padding:0;}
+    .card{box-shadow:none;border-radius:0;}
+    *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important;}
+  }
+</style></head><body>
+<div class="page">
+  <div class="card">
+    <div class="card-header">
+      <div class="logo-row">
+        <img src="../images/logo-hd-v2.jpeg" alt="Oradia" onerror="this.style.display='none'">
+        <div><div class="brand">ORADIA</div><div class="oracle-label">Oracle intérieur</div></div>
+      </div>
+      <div class="divider"></div>
+    </div>
+    <div class="tirage-meta">
+      <div>
+        <div class="tirage-type">${t.type || 'Tirage Tore'}</div>
+        <div class="tirage-date">${date}</div>
+      </div>
+      <div class="tirage-member">${name}</div>
+    </div>
+    <div class="card-body">
+      ${t.intention ? `<div class="intention-box"><p class="section-label">Intention posée</p><p class="intention-text">${t.intention}</p></div>` : ''}
+      ${cartesBadgesHtml ? `<div style="margin-bottom:16px;"><p class="section-label">Cartes tirées</p><div style="display:flex;flex-wrap:wrap;gap:6px;">${cartesBadgesHtml}</div></div>` : ''}
+      ${interpretationsSection}
+      ${passerellesSection}
+      ${syntheseSection}
+    </div>
+    <div class="card-footer"><p>Oradia — Oracle de transformation intérieure · oradia.fr · ${new Date().getFullYear()}</p></div>
+  </div>
+</div>
+<script>window.onload = function(){ window.print(); }<\/script>
+</body></html>`;
+
+            const w = window.open('', '_blank', 'width=750,height=900');
+            w.document.write(html);
+            w.document.close();
         }
 
         // Déconnexion
