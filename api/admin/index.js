@@ -7,16 +7,25 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { parse: parseCookie, serialize: serializeCookie } = require('cookie');
 
-// CORS
-const corsHeaders = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
-  'Access-Control-Allow-Headers': 'Content-Type, Authorization'
-};
+// ============ CORS ============
+// Origines autorisées (dev + prod)
+const allowedOrigins = [
+  'https://oradia.fr',
+  'https://oradia-site.vercel.app',
+  'https://www.oradia.fr',
+  process.env.FRONTEND_URL,
+].filter(Boolean);
 
-// ============ UTILITAIRES ============
-function setCORS(res) {
-  Object.entries(corsHeaders).forEach(([k, v]) => res.setHeader(k, v));
+function setCORS(res, req) {
+  const origin = req?.headers?.origin;
+  if (origin && allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  } else {
+    res.setHeader('Access-Control-Allow-Origin', 'https://oradia.fr');
+  }
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
 }
 
 function parseBody(req) {
@@ -531,7 +540,7 @@ async function handleSubscriptions(req, res) {
 
 // ============ ROUTEUR PRINCIPAL ============
 module.exports = async (req, res) => {
-  setCORS(res);
+  setCORS(res, req);
 
   if (req.method === 'OPTIONS') {
     return res.status(200).end();

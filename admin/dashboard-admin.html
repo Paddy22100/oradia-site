@@ -29,6 +29,9 @@
     </script>
 
     <style>
+        /* Auth guard : page invisible jusqu'à validation */
+        html { visibility: hidden; }
+
         .gold-gradient {
             background: linear-gradient(135deg, #d4af37, #f4e4c1);
             -webkit-background-clip: text;
@@ -969,14 +972,21 @@
             if (dashboardLoaded) return;
             dashboardLoaded = true;
 
-            // Vérifier si on a une session locale valide
+            function redirectToLogin() {
+                sessionStorage.removeItem('oradia_auth');
+                window.location.replace('login.html');
+            }
+
+            // Vérifier si on a une session locale valide et récente (< 2h)
             const authDataStr = sessionStorage.getItem('oradia_auth');
             let skipInitialCheck = false;
 
             if (authDataStr) {
                 try {
                     const authData = JSON.parse(authDataStr);
-                    if (authData.valid && authData.token) {
+                    const age = Date.now() - (authData.timestamp || 0);
+                    const TWO_HOURS = 2 * 60 * 60 * 1000;
+                    if (authData.valid && authData.token && age < TWO_HOURS) {
                         skipInitialCheck = true;
                     }
                 } catch (e) {}
@@ -984,14 +994,24 @@
 
             try {
                 if (!skipInitialCheck) {
-                    const meResponse = await adminFetch('/api/admin/auth?action=me');
-
-                    if (!meResponse.ok) {
-                        sessionStorage.removeItem('oradia_auth');
-                        window.location.replace('login.html');
+                    // Pas de session locale → vérifier auprès de l'API
+                    let meResponse;
+                    try {
+                        meResponse = await adminFetch('/api/admin/auth?action=me');
+                    } catch (networkErr) {
+                        // Erreur réseau (CORS, timeout, etc.) → rediriger
+                        console.warn('[Admin] Network error during auth check:', networkErr.message);
+                        redirectToLogin();
                         return;
                     }
 
+                    if (!meResponse.ok) {
+                        // 401, 403 ou autre erreur → rediriger
+                        redirectToLogin();
+                        return;
+                    }
+
+                    // Session validée par l'API → stocker
                     const existing = JSON.parse(authDataStr || '{}');
                     sessionStorage.setItem('oradia_auth', JSON.stringify({
                         valid: true,
@@ -1001,9 +1021,10 @@
                     }));
                 }
 
-                // Toujours rendre visible (la redirection éventuelle se fait via 401)
+                // Auth OK → rendre la page visible
                 document.documentElement.style.visibility = 'visible';
 
+                // Charger les données
                 await Promise.all([
                     loadOverview(),
                     loadPreorders(),
@@ -1012,9 +1033,9 @@
                 ]);
 
             } catch (error) {
-                // Erreur réseau ou autre : afficher quand même, ne pas rediriger
-                document.documentElement.style.visibility = 'visible';
-                console.error('Erreur chargement dashboard:', error);
+                // Erreur inattendue → rediriger plutôt qu'afficher vide
+                console.error('[Admin] Unexpected error during dashboard load:', error);
+                redirectToLogin();
             }
         }
 
