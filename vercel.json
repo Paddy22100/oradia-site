@@ -49,6 +49,10 @@
     {
       "src": "/api/fenetre/(.*)",
       "dest": "/api/fenetre/index.js"
+    },
+    {
+      "src": "/api/support",
+      "dest": "/api/support.js"
     }
   ],
   "functions": {
@@ -78,6 +82,9 @@
     },
     "api/fenetre/index.js": {
       "maxDuration": 15
+    },
+    "api/support.js": {
+      "maxDuration": 10
     }
   },
   "env": {

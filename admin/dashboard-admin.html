@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
+    <style>html{visibility:hidden!important}</style>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dashboard Admin - ORADIA</title>
@@ -29,8 +30,8 @@
     </script>
 
     <style>
-        /* Auth guard : page invisible jusqu'à validation */
-        html { visibility: hidden; }
+        /* Auth guard : page invisible jusqu'à validation avec transition douce */
+        html { visibility: hidden; opacity: 0; transition: opacity 0.3s ease; }
 
         .gold-gradient {
             background: linear-gradient(135deg, #d4af37, #f4e4c1);
@@ -1022,6 +1023,7 @@
 
                 // Auth OK → rendre la page visible UNIQUEMENT après validation API
                 document.documentElement.style.visibility = 'visible';
+                document.documentElement.style.opacity = '1';
 
                 // Charger les données
                 await Promise.all([
