@@ -23,12 +23,34 @@
         <a href="a-propos.html" data-page="a-propos" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
         <a href="contact.html" data-page="contact" class="text-gold hover:text-light-gold transition font-medium"><i class="fas fa-envelope mr-2"></i>Contact</a>
       </nav>
-      <!-- Bouton espace membre -->
-      <div class="hidden lg:flex items-center flex-shrink-0">
-        <a id="header-member-btn" href="member/login.html" style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:50px;border:1.5px solid rgba(212,175,55,0.55);color:#d4af37;font-size:13px;font-weight:600;text-decoration:none;transition:all .2s;white-space:nowrap;" onmouseover="this.style.borderColor='rgba(212,175,55,0.9)';this.style.color='#f0c75e'" onmouseout="this.style.borderColor='rgba(212,175,55,0.55)';this.style.color='#d4af37'">
+      <!-- Espace membre desktop -->
+      <div class="hidden lg:flex items-center flex-shrink-0 relative" id="member-zone-desktop">
+        <!-- Non connecté : lien simple -->
+        <a id="header-login-btn" href="member/login.html" style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:50px;border:1.5px solid rgba(212,175,55,0.55);color:#d4af37;font-size:13px;font-weight:600;text-decoration:none;transition:all .2s;white-space:nowrap;" onmouseover="this.style.borderColor='rgba(212,175,55,0.9)';this.style.color='#f0c75e'" onmouseout="this.style.borderColor='rgba(212,175,55,0.55)';this.style.color='#d4af37'">
           <i class="fas fa-user-circle" style="font-size:15px;"></i>
-          <span id="header-member-label">Mon espace</span>
+          Connexion
         </a>
+        <!-- Connecté : dropdown -->
+        <div id="header-member-dropdown-wrap" style="display:none;position:relative;">
+          <button id="header-member-dropdown-btn" type="button" style="display:inline-flex;align-items:center;gap:8px;padding:8px 18px;border-radius:50px;border:1.5px solid rgba(212,175,55,0.55);color:#d4af37;font-size:13px;font-weight:600;background:none;cursor:pointer;transition:all .2s;white-space:nowrap;" onmouseover="this.style.borderColor='rgba(212,175,55,0.9)';this.style.color='#f0c75e'" onmouseout="this.style.borderColor='rgba(212,175,55,0.55)';this.style.color='#d4af37'">
+            <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ade80;flex-shrink:0;"></span>
+            <i class="fas fa-user-check" style="font-size:15px;"></i>
+            <span id="header-member-label">Bonjour</span>
+            <i class="fas fa-chevron-down" style="font-size:10px;opacity:0.7;"></i>
+          </button>
+          <div id="header-member-menu" style="display:none;position:absolute;right:0;top:calc(100% + 8px);min-width:190px;background:rgba(5,18,38,0.97);border:1px solid rgba(212,175,55,0.3);border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,0.5);backdrop-filter:blur(12px);z-index:200;overflow:hidden;">
+            <a href="member/dashboard.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#d4af37;text-decoration:none;font-size:13px;transition:background .15s;" onmouseover="this.style.background='rgba(212,175,55,0.1)'" onmouseout="this.style.background='transparent'">
+              <i class="fas fa-th-large" style="width:16px;text-align:center;"></i> Tableau de bord
+            </a>
+            <a href="member/profile.html" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#d4af37;text-decoration:none;font-size:13px;transition:background .15s;" onmouseover="this.style.background='rgba(212,175,55,0.1)'" onmouseout="this.style.background='transparent'">
+              <i class="fas fa-user" style="width:16px;text-align:center;"></i> Mon profil
+            </a>
+            <div style="height:1px;background:rgba(212,175,55,0.15);margin:4px 0;"></div>
+            <button id="header-logout-btn" type="button" style="display:flex;align-items:center;gap:10px;padding:12px 16px;color:#f87171;font-size:13px;width:100%;background:none;border:none;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(248,113,113,0.08)'" onmouseout="this.style.background='transparent'">
+              <i class="fas fa-sign-out-alt" style="width:16px;text-align:center;"></i> Déconnexion
+            </button>
+          </div>
+        </div>
       </div>
     </div>
     
@@ -39,51 +61,77 @@
       <a href="precommande-oracle.html" data-page="precommande-oracle" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-shopping-cart mr-2"></i>Précommande</a>
       <a href="a-propos.html" data-page="a-propos" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-info-circle mr-2"></i>À Propos</a>
       <a href="contact.html" data-page="contact" class="block px-4 py-3 rounded-lg border border-gold/30 text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-envelope mr-2"></i>Contact</a>
-      <a id="header-member-btn-mobile" href="member/login.html" class="block px-4 py-3 rounded-lg border border-gold/50 text-gold hover:bg-gold/10 transition-colors font-semibold"><i class="fas fa-user-circle mr-2"></i><span id="header-member-label-mobile">Mon espace</span></a>
+      <!-- Mobile : non connecté -->
+      <a id="header-login-btn-mobile" href="member/login.html" class="block px-4 py-3 rounded-lg border border-gold/50 text-gold hover:bg-gold/10 transition-colors font-semibold"><i class="fas fa-user-circle mr-2"></i>Connexion</a>
+      <!-- Mobile : connecté -->
+      <div id="header-member-mobile" style="display:none;">
+        <div class="px-4 py-2 text-gold font-semibold text-sm" style="border-bottom:1px solid rgba(212,175,55,0.2);">
+          <span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ade80;margin-right:6px;vertical-align:middle;"></span>
+          <span id="header-member-label-mobile">Bonjour</span>
+        </div>
+        <a href="member/dashboard.html" class="block px-4 py-3 rounded-lg text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-th-large mr-2"></i>Tableau de bord</a>
+        <a href="member/profile.html" class="block px-4 py-3 rounded-lg text-gold hover:bg-gold/10 transition-colors"><i class="fas fa-user mr-2"></i>Mon profil</a>
+        <button id="header-logout-btn-mobile" type="button" class="block w-full text-left px-4 py-3 rounded-lg transition-colors font-semibold" style="color:#f87171;background:none;border:none;cursor:pointer;"><i class="fas fa-sign-out-alt mr-2"></i>Déconnexion</button>
+      </div>
     </nav>
   </div>
 </header>
 <script>
 (function(){
-  function updateMemberBtn() {
+  function logout() {
+    ['oradia_member_session','isLoggedIn','userEmail','userName','rememberMe','oradia_tirages'].forEach(function(k){
+      sessionStorage.removeItem(k); localStorage.removeItem(k);
+    });
+    window.location.href = '/';
+  }
+
+  function updateMemberHeader() {
     var sess = sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session');
     var isConnected = false;
     var firstName = '';
-    var href = 'member/login.html';
 
     if (sess) {
       try {
         var d = JSON.parse(sess);
         firstName = (d.name || d.email || '').split(' ')[0];
-        if (firstName) { isConnected = true; href = 'member/dashboard.html'; }
+        if (firstName) isConnected = true;
       } catch(e) {}
     }
 
-    ['header-member-btn','header-member-btn-mobile'].forEach(function(id){
-      var el = document.getElementById(id);
-      if (el) el.href = href;
-    });
+    // Desktop
+    var loginBtn = document.getElementById('header-login-btn');
+    var dropWrap = document.getElementById('header-member-dropdown-wrap');
+    var label    = document.getElementById('header-member-label');
+    if (loginBtn) loginBtn.style.display = isConnected ? 'none' : 'inline-flex';
+    if (dropWrap) dropWrap.style.display  = isConnected ? 'block' : 'none';
+    if (label && isConnected) label.textContent = 'Bonjour\u00a0' + firstName;
 
-    ['header-member-label','header-member-label-mobile'].forEach(function(id){
-      var el = document.getElementById(id);
-      if (!el) return;
-      if (isConnected) {
-        el.innerHTML = '<span style="display:inline-block;width:8px;height:8px;border-radius:50%;background:#4ade80;margin-right:5px;vertical-align:middle;"></span>Bonjour\u00a0' + firstName;
-      } else {
-        el.textContent = 'Connexion';
-      }
-    });
+    // Mobile
+    var loginMobile  = document.getElementById('header-login-btn-mobile');
+    var memberMobile = document.getElementById('header-member-mobile');
+    var labelMobile  = document.getElementById('header-member-label-mobile');
+    if (loginMobile)  loginMobile.style.display  = isConnected ? 'none' : 'block';
+    if (memberMobile) memberMobile.style.display  = isConnected ? 'block' : 'none';
+    if (labelMobile && isConnected) labelMobile.textContent = 'Bonjour\u00a0' + firstName;
 
-    // Icône : user-check si connecté, user sinon
-    ['header-member-btn','header-member-btn-mobile'].forEach(function(id){
-      var el = document.getElementById(id);
-      if (!el) return;
-      var icon = el.querySelector('i');
-      if (icon) icon.className = isConnected ? 'fas fa-user-check' : 'fas fa-user-circle';
-      if (icon) icon.style.fontSize = '15px';
-    });
+    // Dropdown toggle
+    var dropBtn  = document.getElementById('header-member-dropdown-btn');
+    var dropMenu = document.getElementById('header-member-menu');
+    if (dropBtn && dropMenu) {
+      dropBtn.addEventListener('click', function(e){
+        e.stopPropagation();
+        var open = dropMenu.style.display === 'block';
+        dropMenu.style.display = open ? 'none' : 'block';
+      });
+      document.addEventListener('click', function(){ dropMenu.style.display = 'none'; });
+    }
+
+    // Logout buttons
+    var logoutBtns = [document.getElementById('header-logout-btn'), document.getElementById('header-logout-btn-mobile')];
+    logoutBtns.forEach(function(btn){ if (btn) btn.addEventListener('click', logout); });
   }
-  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', updateMemberBtn);
-  else updateMemberBtn();
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', updateMemberHeader);
+  else updateMemberHeader();
 })();
 </script>
