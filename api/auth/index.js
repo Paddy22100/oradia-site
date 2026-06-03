@@ -3,7 +3,7 @@ const { createClient } = require('@supabase/supabase-js');
 // CORS headers
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type'
 };
 
@@ -183,6 +183,46 @@ async function handleLogin(req, res) {
   }));
 }
 
+// ============ CHECK SUBSCRIPTION ============
+async function handleCheckSubscription(req, res) {
+  const email = (req.query?.email || '').toLowerCase().trim();
+  if (!email) {
+    res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ subscribed: false, error: 'Email requis' }));
+  }
+
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ subscribed: false, error: 'Configuration serveur manquante' }));
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  try {
+    const { data: subData } = await supabase
+      .from('tore_subscriptions')
+      .select('status, expires_at')
+      .eq('email', email)
+      .eq('status', 'active')
+      .single();
+
+    let subscribed = false;
+    if (subData) {
+      subscribed = !subData.expires_at || new Date(subData.expires_at) > new Date();
+    }
+
+    res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ subscribed, expires_at: subData?.expires_at }));
+
+  } catch (err) {
+    res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ subscribed: false }));
+  }
+}
+
 // ============ FORGOT PASSWORD ============
 async function handleForgotPassword(req, res) {
   const body = await new Promise((resolve, reject) => {
@@ -235,19 +275,25 @@ module.exports = async (req, res) => {
     return res.end();
   }
 
-  if (req.method !== 'POST') {
-    res.writeHead(405, { ...corsHeaders, 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ success: false, error: 'Method not allowed' }));
-  }
-
   // Déterminer l'action selon l'URL
   const path = req.url?.split('?')[0] || '';
-  
+
   try {
+    // GET /check-subscription
+    if ((path === '/check-subscription' || path === '/check-subscription/') && req.method === 'GET') {
+      return await handleCheckSubscription(req, res);
+    }
+
+    // POST routes
+    if (req.method !== 'POST') {
+      res.writeHead(405, { ...corsHeaders, 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ success: false, error: 'Method not allowed' }));
+    }
+
     if (path === '/login' || path === '/login/') {
       return await handleLogin(req, res);
     }
-    
+
     if (path === '/forgot-password' || path === '/forgot-password/') {
       return await handleForgotPassword(req, res);
     }
@@ -255,7 +301,7 @@ module.exports = async (req, res) => {
     // Route non reconnue
     res.writeHead(404, { ...corsHeaders, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ success: false, error: 'Route non trouvée' }));
-    
+
   } catch (error) {
     console.error('[Auth] Erreur:', error.message);
     res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });

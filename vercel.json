@@ -2,7 +2,7 @@
   "version": 2,
   "crons": [
     {
-      "path": "/api/fenetre-close",
+      "path": "/api/fenetre/close",
       "schedule": "0 8 * * *"
     }
   ],
@@ -43,20 +43,12 @@
       "dest": "/api/auth/index.js"
     },
     {
-      "src": "/api/auth/check-subscription",
-      "dest": "/api/auth/check-subscription.js"
-    },
-    {
       "src": "/api/analyse-tirage",
       "dest": "/api/analyse-tirage.js"
     },
     {
-      "src": "/api/fenetre-observation",
-      "dest": "/api/fenetre-observation.js"
-    },
-    {
-      "src": "/api/fenetre-close",
-      "dest": "/api/fenetre-close.js"
+      "src": "/api/fenetre/(.*)",
+      "dest": "/api/fenetre/index.js"
     }
   ],
   "functions": {
@@ -81,16 +73,10 @@
     "api/auth/index.js": {
       "maxDuration": 15
     },
-    "api/auth/check-subscription.js": {
-      "maxDuration": 10
-    },
     "api/analyse-tirage.js": {
       "maxDuration": 30
     },
-    "api/fenetre-observation.js": {
-      "maxDuration": 15
-    },
-    "api/fenetre-close.js": {
+    "api/fenetre/index.js": {
       "maxDuration": 15
     }
   },
