@@ -1011,7 +1011,7 @@
                 // Même avec une session locale récente, on fait un appel silencieux pour éviter le clignotement
                 let meResponse;
                 try {
-                    meResponse = await adminFetch('/api/admin/auth?action=me');
+                    meResponse = await adminFetch('/api/admin/auth?action=me&_=' + Date.now());
                 } catch (networkErr) {
                     // Erreur réseau (CORS, timeout, etc.) → rediriger
                     console.warn('[Admin] Network error during auth check:', networkErr.message);

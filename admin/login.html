@@ -266,9 +266,9 @@ async function checkExistingSession() {
         const headers = {};
         if (existingToken) headers['Authorization'] = 'Bearer ' + existingToken;
 
-        const response = await fetch('/api/admin/auth?action=me', {
+        const response = await fetch('/api/admin/auth?action=me&_=' + Date.now(), {
             credentials: 'include',
-            headers
+            headers: { ...headers, 'Cache-Control': 'no-cache' }
         });
         
         if (response.ok) {
