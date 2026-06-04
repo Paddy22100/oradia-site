@@ -3576,7 +3576,7 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
     }
   }
 
-  // Affiche la boussole 3 secondes puis navigue vers une URL
+  // Affiche la boussole 5 secondes puis navigue vers une URL
   function showCompassThenNavigate(url) {
     // Cacher le bouton flottant d'analyse s'il existe
     const fb = document.getElementById('tore-floating-analysis-btn');
@@ -3598,7 +3598,7 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
         document.body.style.opacity = '0';
         window.location.href = url;
       }, 500);
-    }, 3000);
+    }, 5000);
   }
 
   // Afficher le message de guidage après avoir tiré une carte
