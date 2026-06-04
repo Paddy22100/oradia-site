@@ -610,6 +610,14 @@ backToTopBtn.addEventListener('click', () => {
   // Ne pas afficher si déjà vu ou déjà inscrit
   if (localStorage.getItem(POPUP_KEY)) return;
 
+  // Ne pas afficher si l'utilisateur est déjà connecté (membre)
+  const isLoggedIn = (
+    localStorage.getItem('oradia_user_token') !== null ||
+    localStorage.getItem('isLoggedIn') === 'true' ||
+    sessionStorage.getItem('isLoggedIn') === 'true'
+  );
+  if (isLoggedIn) return;
+
   function showPopup() {
     const popup = document.getElementById('newsletter-popup');
     if (!popup) return;
