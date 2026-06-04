@@ -68,41 +68,8 @@ async function handleActivation(req, res) {
     return res.status(500).json({ success: false, message: 'Erreur de stockage' });
   }
 
-  // 2. Email de confirmation immédiat via Brevo
-  const closesAtFR = closesAt.toLocaleDateString('fr-FR', {
-    weekday: 'long', day: 'numeric', month: 'long',
-    ...(durationDays >= 3 ? { hour: '2-digit', minute: '2-digit' } : {})
-  });
-
-  const attentionHTML = (attentionPoints || [])
-    .map(p => `<li style="margin-bottom:10px;color:#e9e7df;line-height:1.7;">${escapeHtml(p)}</li>`)
-    .join('');
-
-  const emailHTML = buildActivationEmail({ email, intention, observationText, attentionPoints, durationDays, closesAtFR, attentionHTML });
-
-  try {
-    await fetch('https://api.brevo.com/v3/smtp/email', {
-      method: 'POST',
-      headers: {
-        'api-key': BREVO_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        sender: { name: FROM_NAME, email: FROM_EMAIL },
-        to: [{ email }],
-        subject: `Votre fenêtre d'observation est ouverte — ${durationDays} jour${durationDays > 1 ? 's' : ''}`,
-        htmlContent: emailHTML,
-      }),
-    });
-
-    await supabase
-      .from('observation_windows')
-      .update({ email_sent_at: new Date().toISOString() })
-      .eq('id', row.id);
-
-  } catch (emailErr) {
-    console.error('[fenetre] Brevo error:', emailErr);
-  }
+  // 2. Plus d'email séparé - les données seront envoyées avec l'email du tirage
+  // La fenêtre d'observation est maintenant incluse dans l'email complet du tirage
 
   return res.status(200).json({ success: true, closesAt: closesAt.toISOString() });
 }
@@ -169,44 +136,7 @@ async function handleClose(req, res) {
 }
 
 // ============ EMAIL TEMPLATES ============
-function buildActivationEmail({ intention, observationText, attentionPoints, durationDays, closesAtFR, attentionHTML }) {
-  return `<!DOCTYPE html>
-<html lang="fr">
-<head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#0a192f;font-family:'Georgia',serif;">
-  <div style="max-width:560px;margin:0 auto;padding:40px 24px;">
-    <div style="text-align:center;margin-bottom:32px;">
-      <img src="https://oradia.fr/images/logo-hd-v2.jpeg"
-           alt="Oradia" style="width:64px;height:64px;border-radius:50%;border:2px solid rgba(212,175,55,0.4);">
-      <p style="color:rgba(212,175,55,0.6);font-size:11px;letter-spacing:0.2em;text-transform:uppercase;margin:12px 0 0;">Oracle Oradia</p>
-    </div>
-    <h1 style="font-family:'Georgia',serif;font-size:26px;color:#d4af37;text-align:center;margin:0 0 8px;font-weight:normal;">Votre fenêtre d'observation</h1>
-    <p style="text-align:center;color:rgba(212,175,55,0.5);font-size:13px;margin:0 0 28px;">est ouverte pour ${durationDays} jour${durationDays > 1 ? 's' : ''}</p>
-    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent);margin-bottom:28px;"></div>
-    ${intention ? `
-    <div style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:16px 20px;margin-bottom:24px;">
-      <p style="color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 8px;">Votre intention</p>
-      <p style="color:#f5e7a1;font-style:italic;font-size:15px;line-height:1.6;margin:0;">"${escapeHtml(intention)}"</p>
-    </div>` : ''}
-    ${observationText ? `
-    <div style="margin-bottom:24px;">
-      <p style="color:#e9e7df;font-size:14px;line-height:1.8;">${escapeHtml(observationText).replace(/\n/g, '<br>')}</p>
-    </div>` : ''}
-    ${attentionPoints && attentionPoints.length > 0 ? `
-    <div style="background:rgba(5,20,40,0.8);border:1px solid rgba(212,175,55,0.25);border-radius:12px;padding:20px 24px;margin-bottom:24px;">
-      <p style="color:#d4af37;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;margin:0 0 14px;">Points d'attention pour ces ${durationDays} jour${durationDays > 1 ? 's' : ''}</p>
-      <ul style="margin:0;padding-left:18px;">${attentionHTML}</ul>
-    </div>` : ''}
-    <div style="text-align:center;margin-bottom:28px;">
-      <p style="color:rgba(212,175,55,0.6);font-size:13px;margin:0;">Vous recevrez un message de clôture le</p>
-      <p style="color:#d4af37;font-size:15px;font-weight:bold;margin:4px 0 0;">${closesAtFR}</p>
-    </div>
-    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.2),transparent);margin-bottom:24px;"></div>
-    <p style="color:rgba(212,175,55,0.35);font-size:11px;text-align:center;line-height:1.6;margin:0;">Ce message vous a été envoyé par Oracle Oradia suite à votre tirage.<br><a href="https://oradia.fr" style="color:rgba(212,175,55,0.5);">oradia.fr</a></p>
-  </div>
-</body>
-</html>`;
-}
+// Plus d'email d'activation - les données sont incluses dans l'email du tirage
 
 function buildClosingEmail(win) {
   const attentionHTML = (win.attention_points || [])

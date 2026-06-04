@@ -1841,6 +1841,18 @@
             const analysis = document.getElementById('analysisContent')?.innerText || '';
             const synthesis = document.getElementById('synthesisContent')?.innerText || '';
 
+            // Récupérer les données de la fenêtre d'observation si activée
+            let observationWindow = null;
+            if (window._obsWindowText && window._obsAttentionPoints && window._obsSuggestedDays) {
+                const closesAt = new Date(Date.now() + window._obsSuggestedDays * 24 * 60 * 60 * 1000);
+                observationWindow = {
+                    observationText: window._obsWindowText,
+                    attentionPoints: window._obsAttentionPoints,
+                    durationDays: window._obsSuggestedDays,
+                    closesAt: closesAt.toISOString()
+                };
+            }
+
             const btn = document.getElementById('emailSubmitBtn');
             const errEl = document.getElementById('emailError');
             btn.disabled = true;
@@ -1852,7 +1864,7 @@
                 const resp = await fetch('/api/tirages/send-email', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, intention, cards, analysis, synthesis, subscribeNewsletter })
+                    body: JSON.stringify({ email, intention, cards, analysis, synthesis, subscribeNewsletter, observationWindow })
                 });
                 const data = await resp.json();
 

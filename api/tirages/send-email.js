@@ -7,7 +7,7 @@ export default async function handler(req, res) {
   }
 
   try {
-    const { email, intention, cards, analysis, synthesis, subscribeNewsletter } = req.body;
+    const { email, intention, cards, analysis, synthesis, subscribeNewsletter, observationWindow } = req.body;
 
     if (!email || !cards || cards.length === 0) {
       return res.status(400).json({ error: 'Email et cartes requis' });
@@ -126,6 +126,37 @@ export default async function handler(req, res) {
               </h2>
               <div style="background: rgba(212,175,55,0.05); border-left: 3px solid #d4af37; padding: 20px; border-radius: 8px;">
                 <p style="color: #c8c0a8; line-height: 1.8; margin: 0; white-space: pre-wrap;">${synthesis}</p>
+              </div>
+            </td>
+          </tr>
+          ` : ''}
+
+          <!-- Fenêtre d'observation -->
+          ${observationWindow ? `
+          <tr>
+            <td style="padding: 0 40px 40px;">
+              <div style="background: linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(212,175,55,0.03) 100%); border: 1px solid rgba(212,175,55,0.2); border-radius: 16px; padding: 32px 28px; margin-bottom: 20px;">
+                <h2 style="color: #d4af37; font-family: 'Cinzel', serif; font-size: 24px; text-align: center; margin: 0 0 24px; font-weight: 600;">
+                  <i class="fas fa-eye" style="margin-right: 12px; opacity: 0.8;"></i>Votre Fenêtre d'Observation
+                </h2>
+                ${observationWindow.observationText ? `
+                <div style="margin-bottom: 24px;">
+                  <p style="color: #e9e7df; font-size: 15px; line-height: 1.8; margin: 0; font-style: italic;">${observationWindow.observationText.replace(/\n/g, '<br>')}</p>
+                </div>` : ''}
+                ${observationWindow.attentionPoints && observationWindow.attentionPoints.length > 0 ? `
+                <div style="background: rgba(5,20,40,0.6); border: 1px solid rgba(212,175,55,0.25); border-radius: 12px; padding: 20px 24px; margin-bottom: 24px;">
+                  <p style="color: #d4af37; font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; margin: 0 0 16px; font-weight: 600;">
+                    Points d'attention pour ${observationWindow.durationDays} jour${observationWindow.durationDays > 1 ? 's' : ''}
+                  </p>
+                  <ul style="margin: 0; padding-left: 20px; color: #c8c0a8; line-height: 1.7; font-size: 14px;">
+                    ${observationWindow.attentionPoints.map(p => `<li style="margin-bottom: 8px;">${p}</li>`).join('')}
+                  </ul>
+                </div>` : ''}
+                ${observationWindow.closesAt ? `
+                <div style="text-align: center; padding-top: 16px; border-top: 1px solid rgba(212,175,55,0.15);">
+                  <p style="color: rgba(212,175,55,0.6); font-size: 13px; margin: 0 0 4px;">Vous recevrez un message de clôture le</p>
+                  <p style="color: #d4af37; font-size: 15px; font-weight: 600; margin: 0;">${new Date(observationWindow.closesAt).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', ...(observationWindow.durationDays >= 3 ? { hour: '2-digit', minute: '2-digit' } : {}) })}</p>
+                </div>` : ''}
               </div>
             </td>
           </tr>
