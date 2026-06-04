@@ -1416,6 +1416,7 @@
         window._obsWindowText = '';
         window._obsAttentionPoints = [];
         window._obsSuggestedDays = 3;
+        window._emailSent = false;
 
         function parseObservationSection(fullText) {
             const lower = fullText.toLowerCase();
@@ -1761,6 +1762,28 @@
         }
 
         function openEmailModal() {
+            // Vérifier si l'email a déjà été envoyé
+            if (window._emailSent) {
+                // Afficher un message indiquant que l'email a déjà été envoyé
+                const modal = document.getElementById('emailModal');
+                modal.style.display = 'flex';
+                document.getElementById('emailForm').style.display = 'none';
+                document.getElementById('emailSuccess').style.display = 'block';
+                // Modifier le message de succès pour indiquer que c'est déjà envoyé
+                const successContent = document.querySelector('#emailSuccess > div');
+                if (successContent) {
+                    successContent.innerHTML = `
+                        <div style="width:52px; height:52px; border-radius:50%; background:rgba(52,175,84,0.1); border:1px solid rgba(52,175,84,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">
+                            <i class="fas fa-check" style="color:#34af54; font-size:1.4rem;"></i>
+                        </div>
+                        <h3 style="font-family:'Cinzel',serif; color:#34af54; font-size:1.15rem; font-weight:700; margin:0 0 0.5rem; letter-spacing:0.06em;">Déjà envoyé</h3>
+                        <p style="color:rgba(200,192,168,0.7); font-size:0.85rem; margin:0; line-height:1.5;">Votre analyse complète a déjà été envoyée à votre adresse email.</p>
+                    `;
+                }
+                setTimeout(closeEmailModal, 2000);
+                return;
+            }
+            
             const modal = document.getElementById('emailModal');
             modal.style.display = 'flex';
             document.getElementById('emailSuccess').style.display = 'none';
@@ -1913,6 +1936,15 @@
                 const data = await resp.json();
 
                 if (data.success) {
+                    window._emailSent = true;
+                    // Désactiver le bouton principal
+                    const mainEmailBtn = document.querySelector('button[onclick="openEmailModal()"]');
+                    if (mainEmailBtn) {
+                        mainEmailBtn.disabled = true;
+                        mainEmailBtn.style.opacity = '0.5';
+                        mainEmailBtn.style.cursor = 'not-allowed';
+                        mainEmailBtn.innerHTML = '<i class="fas fa-check"></i> <span class="text-sm sm:text-base">Envoyé</span>';
+                    }
                     document.getElementById('emailForm').style.display = 'none';
                     document.getElementById('emailSuccess').style.display = 'block';
                     setTimeout(closeEmailModal, 3000);
