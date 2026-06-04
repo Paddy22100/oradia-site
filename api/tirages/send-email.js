@@ -30,13 +30,13 @@ export default async function handler(req, res) {
       const finalImgPath = isFullUrl ? imgPath : `https://oradia.fr/${imgPath.replace(/^\//, '')}`;
       
       allCardsHtml += `
-        <td style="width: 33%; padding: 10px; vertical-align: top; text-align: center;">
-          <div style="width: 160px; height: 240px; margin: 0 auto; position: relative;">
+        <td style="width: 33%; padding: 8px; vertical-align: top; text-align: center;">
+          <div style="width: 140px; height: 210px; margin: 0 auto; position: relative;">
             <img src="${finalImgPath}" alt="${card.name}" 
               style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); border: 1px solid rgba(212,175,55,0.3);">
           </div>
-          <h3 style="color: #d4af37; font-family: Georgia, serif; margin: 12px 0 4px; font-size: 15px; font-weight: 600;">${card.name.replace(/_/g, ' ')}</h3>
-          <p style="color: #c8c0a8; font-size: 12px; margin: 0; font-style: italic; text-transform: capitalize;">${card.family.replace(/_/g, ' ')}</p>
+          <h3 style="color: #d4af37; font-family: Georgia, serif; margin: 10px 0 4px; font-size: 14px; font-weight: 600;">${card.name.replace(/_/g, ' ')}</h3>
+          <p style="color: #c8c0a8; font-size: 11px; margin: 0; font-style: italic; text-transform: capitalize;">${card.family.replace(/_/g, ' ')}</p>
         </td>
       `;
       
@@ -47,16 +47,16 @@ export default async function handler(req, res) {
         const finalBridgeImgPath = isBridgeFullUrl ? bridgeImgPath : `https://oradia.fr/${bridgeImgPath.replace(/^\//, '')}`;
         
         allCardsHtml += `
-          <td style="width: 33%; padding: 10px; vertical-align: top; text-align: center;">
-            <div style="position: relative; width: 160px; height: 240px; margin: 0 auto;">
-              <div style="position: absolute; top: -8px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #d4af37, #f5e7a1); color: #0a192f; font-size: 10px; font-weight: 700; padding: 4px 12px; border-radius: 12px; text-transform: uppercase; letter-spacing: 1px; z-index: 1;">
-                <i class="fas fa-exchange-alt" style="margin-right: 4px;"></i>Passerelle
+          <td style="width: 33%; padding: 8px; vertical-align: top; text-align: center;">
+            <div style="position: relative; width: 140px; height: 210px; margin: 0 auto;">
+              <div style="position: absolute; top: -8px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #d4af37, #f5e7a1); color: #0a192f; font-size: 9px; font-weight: 700; padding: 3px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 1px; z-index: 1;">
+                <i class="fas fa-exchange-alt" style="margin-right: 3px;"></i>Passerelle
               </div>
               <img src="${finalBridgeImgPath}" alt="${card.bridgeCard.name}" 
                 style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); border: 2px solid #d4af37;">
             </div>
-            <h3 style="color: #d4af37; font-family: Georgia, serif; margin: 12px 0 4px; font-size: 15px; font-weight: 600;">${card.bridgeCard.name.replace(/_/g, ' ')}</h3>
-            <p style="color: #c8c0a8; font-size: 12px; margin: 0; font-style: italic; text-transform: capitalize;">${card.bridgeCard.family.replace(/_/g, ' ')}</p>
+            <h3 style="color: #d4af37; font-family: Georgia, serif; margin: 10px 0 4px; font-size: 14px; font-weight: 600;">${card.bridgeCard.name.replace(/_/g, ' ')}</h3>
+            <p style="color: #c8c0a8; font-size: 11px; margin: 0; font-style: italic; text-transform: capitalize;">${card.bridgeCard.family.replace(/_/g, ' ')}</p>
           </td>
         `;
       }
@@ -115,7 +115,7 @@ export default async function handler(req, res) {
                 Message de l'Oracle
               </h2>
               <div style="background: rgba(212,175,55,0.05); border-left: 3px solid #d4af37; padding: 20px; border-radius: 8px;">
-                <p style="color: #c8c0a8; line-height: 1.8; margin: 0; white-space: pre-wrap;">${analysis}</p>
+                <p style="color: #c8c0a8; line-height: 1.8; margin: 0; white-space: pre-wrap; text-align: justify; text-justify: inter-word;">${analysis}</p>
               </div>
             </td>
           </tr>
@@ -129,7 +129,7 @@ export default async function handler(req, res) {
                 Synthèse
               </h2>
               <div style="background: rgba(212,175,55,0.05); border-left: 3px solid #d4af37; padding: 20px; border-radius: 8px;">
-                <p style="color: #c8c0a8; line-height: 1.8; margin: 0; white-space: pre-wrap;">${synthesis}</p>
+                <p style="color: #c8c0a8; line-height: 1.8; margin: 0; white-space: pre-wrap; text-align: justify; text-justify: inter-word;">${synthesis}</p>
               </div>
             </td>
           </tr>
