@@ -547,7 +547,13 @@ module.exports = async (req, res) => {
   }
 
   // Route selon le path
-  const path = req.url?.split('?')[0] || '';
+  const fullPath = req.url?.split('?')[0] || '';
+  const path = fullPath.replace(/^\/api\/admin/, '') || '/';
+  
+  // Ajouter req.query depuis l'URL si absent
+  const urlParams = new URLSearchParams(req.url?.split('?')[1] || '');
+  if (!req.query) req.query = {};
+  if (!req.query.action) req.query.action = urlParams.get('action') || '';
   
   try {
     if (path === '/auth' || path === '/auth/') {
