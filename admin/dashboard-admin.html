@@ -1055,9 +1055,9 @@
                 ]);
 
             } catch (error) {
-                // Erreur inattendue → rediriger plutôt qu'afficher vide
                 console.error('[Admin] Unexpected error during dashboard load:', error);
-                redirectToLogin();
+                // Ne pas rediriger sur erreur de chargement des données
+                // La page est déjà visible, laisser l'utilisateur voir ce qui a chargé
             }
         }
 
