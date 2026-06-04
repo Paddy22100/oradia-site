@@ -518,7 +518,7 @@ const handler = async (req, res) => {
                             full_name:    extractedData.full_name || '',
                             access_code:  accessCode,
                             status:       'active',
-                            expire_at:    expireAt.toISOString(), // Date d'expiration
+                            expires_at:   expireAt.toISOString(), // Date d'expiration
                             created_at:   new Date().toISOString(),
                             updated_at:   new Date().toISOString()
                         }, { onConflict: 'email' });

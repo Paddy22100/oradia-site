@@ -488,6 +488,28 @@
                     if (planDesc) planDesc.textContent = 'Accès illimité aux tirages et analyses approfondies';
                     if (pricingSection) pricingSection.style.display = 'none'; // Cacher la pub
                     if (autoRenewSection) autoRenewSection.style.display = 'block'; // Afficher gestion renouvellement
+
+                    // Mémoriser l'état abonné dans la session
+                    try {
+                        const sessObj = JSON.parse(sessionStorage.getItem(SESSION_KEY) || '{}');
+                        sessObj.subscribed = true;
+                        sessionStorage.setItem(SESSION_KEY, JSON.stringify(sessObj));
+                        localStorage.setItem('oradia_was_subscribed', 'true');
+                    } catch(e) {}
+
+                    // Date de prochaine facturation = date d'expiration de l'abonnement
+                    const autoRenew = localStorage.getItem('oradia_auto_renew') !== 'false';
+                    const billingEl = document.getElementById('nextBillingDate');
+                    if (billingEl) {
+                        if (autoRenew && data.expires_at) {
+                            billingEl.textContent = new Date(data.expires_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+                        } else if (!autoRenew) {
+                            billingEl.textContent = 'Non renouvelé';
+                        } else {
+                            billingEl.textContent = 'Mensuel automatique';
+                        }
+                    }
+                    if (typeof updateToggleUI === 'function') updateToggleUI(autoRenew);
                 } else {
                     // Pas d'abonnement
                     if (statusEl) statusEl.textContent = 'Abonnement: Gratuit';
@@ -700,9 +722,11 @@
                 document.getElementById('currentPlanDesc').textContent = 'Accès illimité aux tirages et fonctionnalités premium';
 
                 // Calcul de la prochaine date de facturation
+                // Note : showMainContent() remplit déjà cette date depuis l'API (expires_at).
+                // Ce bloc sert de fallback basé sur la session locale.
                 let nextBilling = '—';
                 if (autoRenew) {
-                    const subStart = data.subscription_start; // Utiliser la date de l'API
+                    const subStart = sess.subscription_start || localStorage.getItem('oradia_sub_start');
                     if (subStart) {
                         const start = new Date(subStart);
                         const now = new Date();
