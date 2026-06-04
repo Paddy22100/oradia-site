@@ -2279,20 +2279,13 @@
 
 /* Animation progressive d'entrée des cartes pour optimiser les performances */
 @keyframes cardEntrance {
-  0% { 
-    transform: scale(0.6) rotateZ(-8deg) translateY(20px); 
+  from { 
+    transform: scale(0.8) rotateZ(-5deg); 
     opacity: 0; 
-    filter: blur(2px);
   }
-  50% {
-    transform: scale(0.95) rotateZ(-2deg) translateY(5px); 
-    opacity: 0.7;
-    filter: blur(0.5px);
-  }
-  100% { 
-    transform: scale(1) rotateZ(0deg) translateY(0); 
+  to { 
+    transform: scale(1) rotateZ(0deg); 
     opacity: 1; 
-    filter: blur(0);
   }
 }
 
@@ -2300,13 +2293,11 @@
 .tore-card {
   opacity: 0;
   transform-origin: center center;
-  visibility: hidden; /* Cacher complètement avant animation */
 }
 
 /* Animation progressive d'entrée des cartes */
 .tore-card[class*="card-entrance-delay-"] {
-  visibility: visible; /* Rendre visible pendant animation */
-  animation: cardEntrance 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+  animation: cardEntrance 0.6s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
 }
 
 /* Optimisation pour connexions lentes : réduire les animations */
@@ -2996,9 +2987,9 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
         <svg id="tore-beam-svg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:15;overflow:visible;">
           <defs>
             <linearGradient id="beamGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="0">
-              <stop offset="0%" stop-color="rgba(212,175,55,0.9)"/>
-              <stop offset="30%" stop-color="rgba(212,175,55,0.7)"/>
-              <stop offset="70%" stop-color="rgba(212,175,55,0.3)"/>
+              <stop offset="0%" stop-color="rgba(212,175,55,0.6)"/>
+              <stop offset="50%" stop-color="rgba(212,175,55,0.4)"/>
+              <stop offset="85%" stop-color="rgba(212,175,55,0.1)"/>
               <stop offset="100%" stop-color="rgba(212,175,55,0)"/>
             </linearGradient>
             <filter id="beamBlur" x="-50%" y="-50%" width="200%" height="200%">
@@ -3744,7 +3735,21 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
 
     // Forcer le redémarrage des animations CSS enfants
     const img = overlay.querySelector('.compass-logo-img');
-    if (img) { img.style.animation = 'none'; void img.offsetWidth; img.style.animation = ''; }
+    const rings = overlay.querySelectorAll('.compass-ring, .compass-ring-outer, .compass-ring-inner');
+    
+    // Réinitialiser les anneaux
+    rings.forEach(ring => {
+      ring.style.animation = 'none';
+      void ring.offsetWidth; // Force reflow
+      ring.style.animation = '';
+    });
+    
+    // Réinitialiser le logo
+    if (img) { 
+      img.style.animation = 'none'; 
+      void img.offsetWidth; 
+      img.style.animation = ''; 
+    }
 
     // Lancer l'appel API Claude en arrière-plan pendant l'animation
     preloadClaudeAnalysis();
@@ -4886,7 +4891,7 @@ function closeToreExitModal(){
                data-family="${s.key}"
 
                aria-label="Carte ${s.label}"
-               style="animation-delay: ${index * 0.15}s;">
+               style="animation-delay: ${index * 0.1}s;">
 
         <div class="tore-card-inner">
 
