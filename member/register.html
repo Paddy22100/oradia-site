@@ -354,6 +354,9 @@
 
             try {
                 // Appeler l'API backend pour créer le compte (fusionné avec waitlist)
+                // Récupérer la date de naissance si fournie
+                const birthdate = document.getElementById('birthdate')?.value || null;
+                
                 const response = await fetch('/api/waitlist', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -361,7 +364,8 @@
                         action: 'signup',
                         email, 
                         password, 
-                        name 
+                        name,
+                        birthdate
                     })
                 });
 

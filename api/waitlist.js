@@ -415,7 +415,7 @@ module.exports = async (req, res) => {
     // ===== SIGNUP : création de compte Supabase =====
     if (body && body.action === 'signup') {
       try {
-        const { email, password, name } = body;
+        const { email, password, name, birthdate } = body;
 
         console.log('[Signup] Body reçu:', JSON.stringify({
           hasEmail: !!email,
@@ -473,6 +473,29 @@ module.exports = async (req, res) => {
             error: authError.message,
             code: authError.code
           });
+        }
+
+        // Créer l'entrée dans tore_subscriptions
+        try {
+          const { error: subError } = await supabase
+            .from('tore_subscriptions')
+            .insert({
+              email: email,
+              full_name: name,
+              birthdate: birthdate || null,
+              status: 'active', // Les comptes créés manuellement sont actifs par défaut
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            });
+          
+          if (subError) {
+            console.error('[Signup] tore_subscriptions insert error:', subError.message);
+            // Ne pas bloquer la création du compte pour cette erreur
+          } else {
+            console.log('[Signup] tore_subscriptions entry created for:', email);
+          }
+        } catch (subError) {
+          console.error('[Signup] tore_subscriptions exception:', subError.message);
         }
 
         try {

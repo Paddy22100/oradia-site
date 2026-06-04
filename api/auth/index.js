@@ -112,12 +112,12 @@ async function handleLogin(req, res) {
       try {
         const { data: subData2 } = await supabase
           .from('tore_subscriptions')
-          .select('status, expires_at')
+          .select('status, expire_at')
           .eq('email', email)
           .eq('status', 'active')
           .single();
         if (subData2) {
-          if (!subData2.expires_at || new Date(subData2.expires_at) > new Date()) {
+          if (!subData2.expire_at || new Date(subData2.expire_at) > new Date()) {
             subscribed2 = true;
           }
         }
@@ -155,12 +155,12 @@ async function handleLogin(req, res) {
   try {
     const { data: subData } = await supabase
       .from('tore_subscriptions')
-      .select('status, expires_at')
+      .select('status, expire_at')
       .eq('email', email)
       .eq('status', 'active')
       .single();
     if (subData) {
-      if (!subData.expires_at || new Date(subData.expires_at) > new Date()) {
+      if (!subData.expire_at || new Date(subData.expire_at) > new Date()) {
         subscribed = true;
       }
     }
@@ -204,7 +204,7 @@ async function handleCheckSubscription(req, res) {
   try {
     const { data: subData } = await supabase
       .from('tore_subscriptions')
-      .select('status, expires_at, created_at')
+      .select('status, expire_at, created_at')
       .eq('email', email)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
@@ -213,13 +213,13 @@ async function handleCheckSubscription(req, res) {
 
     let subscribed = false;
     if (subData) {
-      subscribed = !subData.expires_at || new Date(subData.expires_at) > new Date();
+      subscribed = !subData.expire_at || new Date(subData.expire_at) > new Date();
     }
 
     res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ 
       subscribed, 
-      expires_at: subData?.expires_at,
+      expires_at: subData?.expire_at,
       subscription_start: subData?.created_at 
     }));
 

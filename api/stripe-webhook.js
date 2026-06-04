@@ -507,6 +507,10 @@ const handler = async (req, res) => {
 
                     // 2. Enregistrer l'abonnement dans la table
                     const accessCode = 'TORE-' + Date.now().toString(36).toUpperCase();
+                    // Calculer la date d'expiration (1 mois après aujourd'hui)
+                    const expireAt = new Date();
+                    expireAt.setMonth(expireAt.getMonth() + 1);
+                    
                     const { error: subError } = await supabase
                         .from('tore_subscriptions')
                         .upsert({
@@ -514,6 +518,7 @@ const handler = async (req, res) => {
                             full_name:    extractedData.full_name || '',
                             access_code:  accessCode,
                             status:       'active',
+                            expire_at:    expireAt.toISOString(), // Date d'expiration
                             created_at:   new Date().toISOString(),
                             updated_at:   new Date().toISOString()
                         }, { onConflict: 'email' });
