@@ -5098,14 +5098,17 @@ function closeToreExitModal(){
 
         card.classList.remove('next-to-draw');
 
-        // Masquer le faisceau lumineux dès le retournement
-        const _bpoly = document.getElementById('tore-beam-poly');
-        const _bhalo = document.getElementById('tore-beam-halo');
-        if (_bpoly) _bpoly.setAttribute('opacity', '0');
-        if (_bhalo) _bhalo.setAttribute('opacity', '0');
+        // Garder le faisceau lumineux visible et le déplacer vers la carte suivante
+        // pour créer un effet de rotation continue autour du plateau
 
         // Incrémenter l'index de tirage pour passer à la famille suivante
         toreThrowIndex++;
+
+        // Déplacer immédiatement le faisceau vers la carte suivante
+        // pour créer un effet de rotation continue
+        setTimeout(() => {
+          highlightNextCard();
+        }, 200); // Petit délai pour la transition visuelle
 
         const imgEl = new Image();
         let flipDone = false;
