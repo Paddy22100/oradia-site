@@ -12,6 +12,7 @@
   <meta name="description" content="Tirage Le Tore avec l'Oracle Oradia. Expérience spirituelle complète avec tirages illimités, interprétations approfondies, historique et guidance continue. Abonnement mensuel.">
   <meta name="keywords" content="tirage tore, oracle complet, expérience spirituelle, tirages illimités, développement personnel, guidance, abonnement, transformation, Oradia">
   <meta name="robots" content="index, follow">
+  <meta name="theme-color" content="#0a192f">
   <!-- Canonical URL -->
   <link rel="canonical" href="https://oradia.fr/tore.html" />
 
@@ -565,8 +566,6 @@
   height: 170px;
 
   aspect-ratio: 64 / 90;
-
-  height: auto;
 
   perspective: 1000px;
 
@@ -1821,13 +1820,12 @@
 
     cursor: pointer;
 
-    transform-style: preserve-3d;
-
     transition: transform 0.3s ease;
 
     position: relative;                /* pour les pseudo-éléments */
 
-    overflow: hidden;                  /* clipper l'image sprite sur la forme ronde */
+    clip-path: circle(50%);
+    -webkit-clip-path: circle(50%);
 
   }
 
@@ -2303,12 +2301,17 @@
 
 /* Optimisation pour connexions lentes : réduire les animations */
 @media (prefers-reduced-motion: reduce) {
-  .tore-card {
-    opacity: 1;
-  }
-  .tore-card[class*="card-entrance-delay-"] {
-    animation: none;
-  }
+  .tore-card { opacity: 1; }
+  .tore-card[class*="card-entrance-delay-"] { animation: none; }
+  .tore-card-inner { transition: none !important; }
+  .tore-card.flipping .tore-card-inner,
+  .tore-card.flipped .tore-card-inner { transform: none !important; transition: none !important; }
+  .tore-coin,
+  .tore-coin.spin,
+  .tore-coin.glow,
+  .tore-coin.ripple { animation: none !important; }
+  #tore-beam-svg { display: none !important; }
+  .quantum-pulse { animation: none !important; }
 }
 
 @keyframes fadeInUp {
@@ -5018,7 +5021,7 @@ function closeToreExitModal(){
           flipDone = true;
           isCardFlipping = false;
           // Remplir le contenu de la face avant ici
-          front.innerHTML = `<img src="${imgPath}" alt="${data.name || ''}" style="width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.3s ease;" />`;
+          front.innerHTML = `<img src="${imgPath}" alt="${data.name || ''}" loading="eager" fetchpriority="high" style="width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.3s ease;" />`;
           // Rendre la carte visible seulement après l'injection de l'image
           front.style.visibility = 'visible';
           void card.offsetWidth;
