@@ -377,7 +377,7 @@
     #tore-guide-message .py-6,
     #tore-guide-message .sm\:py-8 {
       padding-top: 8px !important;
-      padding-bottom: 8px !important;
+      padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px)) !important;
       position: sticky;
       bottom: 0;
       background: linear-gradient(to top, rgba(15,23,42,0.98) 80%, transparent 100%);
@@ -3636,10 +3636,18 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
   
   // Précharger toutes les images de cartes au démarrage
   function preloadAllCardImages() {
-    const cardFamilies = ['emotions', 'besoins', 'transmutation', 'memoire_cosmos', 'sagesse', 'actions', 'revelation'];
-    cardFamilies.forEach(family => {
-      for (let i = 1; i <= 7; i++) {
-        preloadImage(`/images/cartes/${family}/${i}.png`);
+    const folders = {
+      emotions: 'emotions',
+      besoins: 'besoins',
+      transmutation: 'transmutations',
+      actions: 'actions',
+      archetypes: 'archetypes',
+      revelations: 'revelations',
+      memoire_cosmos: 'memoire_cosmos'
+    };
+    Object.values(folders).forEach(folder => {
+      for (let i = 1; i <= 10; i++) {
+        preloadImage(`/images/cartes/${folder}/${i}.png`);
       }
     });
   }
@@ -3687,13 +3695,25 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     // Lancer l'appel API Claude en arrière-plan pendant l'animation
     preloadClaudeAnalysis();
 
-    setTimeout(() => {
-      overlay.style.animation = 'compassFadeOut 0.5s ease forwards';
-      setTimeout(() => {
-        document.body.style.opacity = '0';
-        window.location.href = url;
-      }, 500);
-    }, 5000);
+    const NAV_DELAY = 5000;
+    const MAX_EXTRA_WAIT = 7000;
+    const startTs = Date.now();
+
+    const tryNavigate = () => {
+      const ready = sessionStorage.getItem('preloaded_analysis');
+      const elapsed = Date.now() - startTs;
+      if (ready || elapsed >= NAV_DELAY + MAX_EXTRA_WAIT) {
+        overlay.style.animation = 'compassFadeOut 0.5s ease forwards';
+        setTimeout(() => {
+          document.body.style.opacity = '0';
+          window.location.href = url;
+        }, 500);
+      } else {
+        setTimeout(tryNavigate, 300);
+      }
+    };
+
+    setTimeout(tryNavigate, NAV_DELAY);
   }
 
   // Précharge l'analyse Claude en arrière-plan
@@ -3857,35 +3877,6 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
           if (bb) { bb.classList.remove('hidden'); bb.style.opacity = '0'; requestAnimationFrame(() => { requestAnimationFrame(() => { bb.style.opacity = '1'; }); }); }
           const es = el('tore-exit-strip');
           if (es) es.classList.remove('hidden');
-        }, 680);
-      });
-    } else if (guideContinueBtn) {
-      guideContinueBtn.addEventListener('click', () => {
-        guideMessage.classList.add('guide-hiding');
-        guideMessage.style.opacity = '0';
-        guideMessage.style.pointerEvents = 'none';
-        setTimeout(() => {
-          guideMessage.style.visibility = 'hidden';
-          guideMessage.classList.remove('guide-hiding');
-          isGuideMessageShown = false;
-          if (boardHost) boardHost.style.pointerEvents = 'auto';
-          const total = boardHost ? boardHost.querySelectorAll('.tore-card').length : 0;
-          const flipped = boardHost ? boardHost.querySelectorAll('.tore-card.flipped').length : 0;
-          // Mettre à jour le contenu du bandeau AVANT de le rendre visible
-          const isCoinPhase2 = total > 0 && flipped === total;
-          if (isCoinPhase2) {
-            boardHost.classList.remove('has-active-card');
-            showCoinAfterAllCards();
-          } else {
-            highlightNextCard();
-          }
-          // Afficher le bandeau EN FONDU seulement après la mise à jour
-          const sg2 = el('tore-step-guide');
-          if (sg2) sg2.style.display = isCoinPhase2 ? 'none' : 'block';
-          const bb2 = el('tore-bottom-bar');
-          if (bb2) { bb2.classList.remove('hidden'); bb2.style.opacity = '0'; requestAnimationFrame(() => { requestAnimationFrame(() => { bb2.style.opacity = '1'; }); }); }
-          const es2 = el('tore-exit-strip');
-          if (es2) es2.classList.remove('hidden');
         }, 680);
       });
     }
@@ -4829,6 +4820,7 @@ function closeToreExitModal(){
     // Rendre les barres visibles en premier pour mesurer leur hauteur réelle
     boardReady = false;
     if (boardHost) boardHost.style.pointerEvents = 'none';
+    if (coinWrapper) coinWrapper.style.pointerEvents = 'none';
     const stepGuide = el('tore-step-guide');
     if (stepGuide) stepGuide.style.display = 'block';
     const bbShow = el('tore-bottom-bar');
@@ -4841,7 +4833,22 @@ function closeToreExitModal(){
     if (exitStrip) exitStrip.classList.remove('hidden');
 
     // Calculer la taille du plateau APRÈS que les barres sont dans le DOM
-    setTimeout(fitBoardToViewport, 50);
+    (function() {
+      const bbEl = document.getElementById('tore-bottom-bar');
+      if (!bbEl) { fitBoardToViewport(); return; }
+      const ro = new ResizeObserver(entries => {
+        for (const entry of entries) {
+          if (entry.contentRect.height > 0) {
+            ro.disconnect();
+            fitBoardToViewport();
+            break;
+          }
+        }
+      });
+      ro.observe(bbEl);
+      // Sécurité : si la barre ne se redimensionne jamais en 500 ms
+      setTimeout(() => { ro.disconnect(); fitBoardToViewport(); }, 500);
+    })();
 
 
 
@@ -4973,39 +4980,38 @@ function closeToreExitModal(){
         // Incrémenter l'index de tirage pour passer à la famille suivante
         toreThrowIndex++;
 
+        const imgEl = new Image();
+        let flipDone = false;
+        const FLIP_TIMEOUT = 1500;
+
+        isCardFlipping = true;
+        card.classList.add('flipping');
+
         const doFlip = () => {
+          if (flipDone) return;
+          flipDone = true;
+          // Remplir le contenu de la face avant ici
           card.classList.add('flipped', 'just-flipped');
-          // Injecter l'image en préchargement (pendant ou après l'animation)
-          const img = new Image();
-          img.onload = () => {
-            front.innerHTML = `<img src="${imgPath}" alt="${data.name || ''}" style="width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.3s ease;" />`;
-            // Rendre la carte visible seulement après l'injection de l'image
-            front.style.visibility = 'visible';
-            requestAnimationFrame(() => {
-              const injectedImg = front.querySelector('img');
-              if (injectedImg) {
-                requestAnimationFrame(() => { injectedImg.style.opacity = '1'; });
-              }
-            });
-          };
-          img.onerror = () => {
-            front.innerHTML = `<img src="${imgPath}" alt="${data.name || ''}" style="width:100%;height:100%;object-fit:contain;display:block;" />`;
-          };
-          img.src = imgPath;
+          front.innerHTML = `<img src="${imgPath}" alt="${data.name || ''}" style="width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.3s ease;" />`;
+          // Rendre la carte visible seulement après l'injection de l'image
+          front.style.visibility = 'visible';
+          requestAnimationFrame(() => {
+            const injectedImg = front.querySelector('img');
+            if (injectedImg) {
+              requestAnimationFrame(() => { injectedImg.style.opacity = '1'; });
+            }
+          });
+          
+          setTimeout(() => {
+            card.classList.remove('just-flipped'); // retirer l'exception
+            showGuideMessage(famKey, data);
+          }, 1000);
         };
 
-        // Animation flip scaleX 2 phases (mobile et desktop)
-        card.classList.add('flipping');
-        setTimeout(() => {
-          card.classList.remove('flipping');
-          doFlip();
-        }, 230);
-
-        // Afficher le message de guidage APRÈS l'animation flip complète (1 seconde)
-        setTimeout(() => {
-          card.classList.remove('just-flipped'); // retirer l'exception
-          showGuideMessage(famKey, data);
-        }, 1000);
+        imgEl.onload = doFlip;
+        imgEl.onerror = doFlip;
+        setTimeout(doFlip, FLIP_TIMEOUT);
+        imgEl.src = imgPath;
 
         // Filet de sécurité : si toutes les cartes sont retournées et que la phase pièce
         // n'a pas démarré 4s après ce flip, la forcer
@@ -5977,7 +5983,19 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
       const bbInit = el('tore-bottom-bar');
       if (bbInit) requestAnimationFrame(() => requestAnimationFrame(() => { bbInit.style.opacity = '1'; }));
       if (boardHost) boardHost.style.pointerEvents = 'auto';
+      if (coinWrapper) coinWrapper.style.pointerEvents = 'auto';
       boardReady = true;
+
+      if (!window._toreBeamResizeListener) {
+        window._toreBeamResizeListener = true;
+        const recalcBeam = () => {
+          if (document.body.classList.contains('tore-playing')) {
+            requestAnimationFrame(() => requestAnimationFrame(highlightNextCard));
+          }
+        };
+        window.addEventListener('resize', recalcBeam, { passive: true });
+        window.addEventListener('orientationchange', () => setTimeout(recalcBeam, 350), { passive: true });
+      }
     }, totalDelay);
   }));
 });
@@ -6059,26 +6077,7 @@ if (toreIntentionInput && charCountEl) {
 
 </footer>
 
-  <script>
-
-  const mobileBtn = document.getElementById("mobileMenuBtn");
-
-  const mobileMenu = document.getElementById("mobileMenu");
-
-
-
-  if (mobileBtn && mobileMenu) {
-
-    mobileBtn.addEventListener("click", () => {
-
-      mobileMenu.classList.toggle("hidden");
-
-    });
-
-  }
-
-</script>
-
+  
 <script>
 
 document.addEventListener("DOMContentLoaded", () => {
