@@ -1891,6 +1891,30 @@
 
   }
 
+  /* Animation de mise en évidence pour attirer l'attention */
+  .tore-coin.pulse-highlight {
+    animation: coin-pulse-highlight 2s ease-in-out;
+  }
+
+  @keyframes coin-pulse-highlight {
+    0%, 100% {
+      transform: scale(1);
+      filter: brightness(1);
+    }
+    25% {
+      transform: scale(1.08);
+      filter: brightness(1.2);
+    }
+    50% {
+      transform: scale(1.05);
+      filter: brightness(1.1);
+    }
+    75% {
+      transform: scale(1.08);
+      filter: brightness(1.2);
+    }
+  }
+
 
 
   @keyframes coin-spin {
@@ -5314,6 +5338,12 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
             isBridgeFanOpen = false;
             const bsvg2 = document.getElementById('tore-beam-svg');
             if (bsvg2) bsvg2.classList.remove('beam-hidden');
+            
+            // Attirer l'attention vers la pièce pour le prochain lancer
+            if (!isLastCoin) {
+              setTimeout(() => highlightCoinForNextThrow(), 300);
+            }
+            
             if (isLastCoin) setTimeout(showToreAnalysisCTA, 400);
           });
         }
@@ -5483,9 +5513,30 @@ function showArrowForStep(stepIndex, isMatch) {
         const arrowSvg = document.getElementById('tore-arrow');
         if (arrowSvg) { arrowSvg.innerHTML = ''; delete arrowSvg.dataset.match; }
         if (arrowHideTimer) { clearTimeout(arrowHideTimer); arrowHideTimer = null; }
+        
+        // Attirer l'attention vers la pièce pour le prochain lancer
+        highlightCoinForNextThrow();
+        
         if (typeof onContinue === 'function') onContinue();
       });
     }
+  }
+
+  // Fonction pour attirer l'attention vers la pièce pour le prochain lancer
+  function highlightCoinForNextThrow() {
+    if (!coin) return;
+    
+    // Vérifier si la pièce est encore disponible pour un lancer
+    const familiesWithCoin = TIRAGE_ORDER.filter(f => f !== 'memoire_cosmos');
+    if (coinThrowIndex >= familiesWithCoin.length) return;
+    
+    // Ajouter une animation de pulsation subtile
+    coin.classList.add('pulse-highlight');
+    
+    // Retirer l'animation après 2 secondes
+    setTimeout(() => {
+      coin.classList.remove('pulse-highlight');
+    }, 2000);
   }
 
       // Lancer la pièce de tirage : 6 lancers successifs pour les 6 familles avec polarité
