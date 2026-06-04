@@ -447,14 +447,16 @@ async function handleSyncBrevo(req, res) {
 
     const { data: contacts, error } = await supabase
       .from('newsletter_contacts')
-      .select('email, created_at')
-      .order('created_at', { ascending: false });
+      .select('id, email, created_at')
+      .eq('brevo_synced', false)
+      .order('created_at', { ascending: false })
+      .limit(100);
 
     if (error) throw error;
 
     // Sync vers Brevo
     let synced = 0;
-    for (const contact of contacts.slice(0, 100)) {
+    for (const contact of contacts) {
       try {
         const response = await fetch('https://api.brevo.com/v3/contacts', {
           method: 'POST',
@@ -467,7 +469,23 @@ async function handleSyncBrevo(req, res) {
             attributes: { ORADIA_INSCRIPTION: contact.created_at }
           })
         });
-        if (response.ok || response.status === 409) synced++;
+        
+        // Si l'envoi réussit (200, 201 ou 409 = déjà existant), mettre à jour brevo_synced
+        if (response.ok || response.status === 409) {
+          const { error: updateError } = await supabase
+            .from('newsletter_contacts')
+            .update({ 
+              brevo_synced: true,
+              brevo_synced_at: new Date().toISOString()
+            })
+            .eq('id', contact.id);
+          
+          if (!updateError) {
+            synced++;
+          } else {
+            console.error('Failed to update brevo_synced for', contact.email, updateError.message);
+          }
+        }
       } catch (e) {
         console.error('Brevo sync error for', contact.email, e.message);
       }

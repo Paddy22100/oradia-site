@@ -184,9 +184,6 @@
                 </div>
             </a>
             <div class="flex items-center gap-4">
-                <a href="../index.html" class="hidden lg:flex items-center gap-2 text-gold/70 hover:text-gold transition-all text-sm px-4 py-2 rounded-full border border-gold/20 hover:border-gold/40 hover:bg-gold/5">
-                    <i class="fas fa-arrow-left text-xs"></i> Retour au site
-                </a>
                 <div class="hidden lg:flex items-center gap-2 text-gold/80">
                     <i class="fas fa-user-circle text-gold/50"></i>
                     <span class="text-sm font-medium" id="memberName">Cher Membre</span>
@@ -223,6 +220,15 @@
                 <a href="parametres.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
                     <i class="fas fa-cog w-5"></i>
                     <span>Paramètres</span>
+                </a>
+                <a href="support.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
+                    <i class="fas fa-heart w-5"></i>
+                    <span>Votre avis & Contact</span>
+                </a>
+                <div class="border-t border-gold/10 my-2"></div>
+                <a href="../tore.html" class="sidebar-link flex items-center gap-3 p-3 rounded-lg bg-gold/5 border border-gold/20 text-gold hover:bg-gold/15 transition-all">
+                    <i class="fas fa-infinity w-5"></i>
+                    <span class="font-semibold">Faire un tirage Tore</span>
                 </a>
             </nav>
         </aside>
@@ -696,7 +702,7 @@
                 // Calcul de la prochaine date de facturation
                 let nextBilling = '—';
                 if (autoRenew) {
-                    const subStart = sess.subscriptionStart || sess.subscription_start || localStorage.getItem('oradia_sub_start');
+                    const subStart = data.subscription_start; // Utiliser la date de l'API
                     if (subStart) {
                         const start = new Date(subStart);
                         const now = new Date();

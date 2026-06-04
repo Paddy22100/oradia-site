@@ -204,9 +204,11 @@ async function handleCheckSubscription(req, res) {
   try {
     const { data: subData } = await supabase
       .from('tore_subscriptions')
-      .select('status, expires_at')
+      .select('status, expires_at, created_at')
       .eq('email', email)
       .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
       .single();
 
     let subscribed = false;
@@ -215,7 +217,11 @@ async function handleCheckSubscription(req, res) {
     }
 
     res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ subscribed, expires_at: subData?.expires_at }));
+    return res.end(JSON.stringify({ 
+      subscribed, 
+      expires_at: subData?.expires_at,
+      subscription_start: subData?.created_at 
+    }));
 
   } catch (err) {
     res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
