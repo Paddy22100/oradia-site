@@ -2999,8 +2999,8 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
             </filter>
           </defs>
           <polygon id="tore-beam-poly" points="" fill="url(#beamGrad)" filter="url(#beamBlur)" opacity="0" style="transition:opacity 0.8s ease;"/>
-          <ellipse id="tore-beam-halo" cx="0" cy="0" rx="0" ry="0" fill="rgba(212,175,55,0.15)" filter="url(#haloBlur)" opacity="0" style="transition:opacity 0.8s ease;">
-            <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite"/>
+          <ellipse id="tore-beam-halo" cx="0" cy="0" rx="0" ry="0" fill="rgba(212,175,55,0.35)" filter="url(#haloBlur)" opacity="0" style="transition:opacity 0.8s ease;">
+            <animate attributeName="opacity" values="0.5;0.9;0.5" dur="2s" repeatCount="indefinite"/>
           </ellipse>
         </svg>
 
@@ -4034,8 +4034,8 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
         // Non — gradient de sx (Mémoire Cosmos, pointe) vers tx (carte, base) opaque
         grad.setAttribute('x1', tx); grad.setAttribute('y1', ty);
         grad.setAttribute('x2', sx); grad.setAttribute('y2', sy);
-        grad.querySelector('stop[offset="0%"]').setAttribute('stop-color', 'rgba(240,199,94,0.45)');
-        grad.querySelector('stop[offset="100%"]').setAttribute('stop-color', 'rgba(212,175,55,0)');
+        grad.querySelector('stop[offset="0%"]').setAttribute('stop-color', 'rgba(240,199,94,0.85)');
+        grad.querySelector('stop[offset="100%"]').setAttribute('stop-color', 'rgba(212,175,55,0.3)');
       }
       poly.setAttribute('opacity', '1');
 
@@ -4043,7 +4043,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       halo.setAttribute('cy', ty);
       halo.setAttribute('rx', tgtRect.width  * 0.52);
       halo.setAttribute('ry', tgtRect.height * 0.42);
-      halo.setAttribute('opacity', '0.25');
+      halo.setAttribute('opacity', '0.45');
 
     }));
   }
@@ -5742,27 +5742,29 @@ function showArrowForStep(stepIndex, isMatch) {
     // Récupérer la famille actuelle pour ce lancer de pièce
     const currentFamily = familiesWithCoin[coinThrowIndex];
 
-    // Mettre à jour le compteur et le label de famille
-    const throwCounter = el('coin-throw-counter');
-    const familyLabel = el('coin-family-label');
-    if (throwCounter) throwCounter.textContent = `Lancer ${coinThrowIndex + 1} / ${familiesWithCoin.length}`;
-    if (familyLabel) familyLabel.textContent = FAMILY_NAMES[currentFamily] || currentFamily;
-
-    // Verrouiller la pièce et bloquer les interactions
-    coin.dataset.locked = '1';
-    isCoinAnimating = true;
-
     // Trouver la configuration de l'étape actuelle
     const step = STEPS_TORE.find(s => s.key === currentFamily);
     if (!step) {
+      showCardError('Configuration de famille non trouvée, réessayez.', 2000);
       return;
     }
     
     // Récupérer l'index de l'étape actuelle dans STEPS_TORE
     const stepIndex = STEPS_TORE.findIndex(s => s.key === currentFamily);
     if (stepIndex === -1) {
+      showCardError('Index de famille invalide, réessayez.', 2000);
       return;
     }
+
+    // Mettre à jour le compteur et le label de famille
+    const throwCounter = el('coin-throw-counter');
+    const familyLabel = el('coin-family-label');
+    if (throwCounter) throwCounter.textContent = `Lancer ${coinThrowIndex + 1} / ${familiesWithCoin.length}`;
+    if (familyLabel) familyLabel.textContent = FAMILY_NAMES[currentFamily] || currentFamily;
+
+    // Verrouiller la pièce et bloquer les interactions (après vérifications)
+    coin.dataset.locked = '1';
+    isCoinAnimating = true;
     
     const card = boardHost.querySelector(`.tore-card[data-family="${step.key}"]`);
     
