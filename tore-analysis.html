@@ -1466,7 +1466,9 @@
             window._obsSuggestedDays = days;
 
             // Récupérer l'email de l'utilisateur connecté
-            const sessionData = sessionStorage.getItem('oradia_session') 
+            const sessionData = sessionStorage.getItem('oradia_member_session')
+                || localStorage.getItem('oradia_member_session')
+                || sessionStorage.getItem('oradia_session') 
                 || sessionStorage.getItem('userData')
                 || localStorage.getItem('userEmail');
             let userEmail = null;
@@ -1561,7 +1563,9 @@
             
             // Si pas de champ email, essayer de récupérer depuis la session
             if (!email) {
-                const sessionData = sessionStorage.getItem('oradia_session') 
+                const sessionData = sessionStorage.getItem('oradia_member_session')
+                    || localStorage.getItem('oradia_member_session')
+                    || sessionStorage.getItem('oradia_session') 
                     || sessionStorage.getItem('userData')
                     || localStorage.getItem('userEmail');
                 try {
@@ -1592,7 +1596,7 @@
             const cards = cardsRaw ? JSON.parse(cardsRaw) : [];
 
             try {
-                const resp = await fetch('/api/fenetre-observation', {
+                const resp = await fetch('/api/fenetre/activation', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -1747,7 +1751,9 @@
             document.getElementById('emailForm').style.display = 'block';
             
             // Récupérer l'email de l'utilisateur connecté
-            const sessionData = sessionStorage.getItem('oradia_session') 
+            const sessionData = sessionStorage.getItem('oradia_member_session')
+                || localStorage.getItem('oradia_member_session')
+                || sessionStorage.getItem('oradia_session') 
                 || sessionStorage.getItem('userData')
                 || localStorage.getItem('userEmail');
             let userEmail = null;

@@ -28,7 +28,15 @@ function setCORS(res) {
 async function handleActivation(req, res) {
   let body;
   try {
-    body = typeof req.json === 'function' ? await req.json() : JSON.parse(await streamToString(req));
+    if (req.body && typeof req.body === 'object') {
+      body = req.body;
+    } else if (req.body && typeof req.body === 'string') {
+      body = JSON.parse(req.body);
+    } else if (typeof req.json === 'function') {
+      body = await req.json();
+    } else {
+      body = JSON.parse(await streamToString(req));
+    }
   } catch {
     return res.status(400).json({ success: false, message: 'Invalid JSON' });
   }
@@ -264,12 +272,12 @@ export default async function handler(req, res) {
   const path = req.url?.split('?')[0] || '';
 
   try {
-    if (path === '/activation' || path === '/activation/') {
+    if (path.includes('activation')) {
       if (req.method !== 'POST') return res.status(405).json({ success: false });
       return await handleActivation(req, res);
     }
 
-    if (path === '/close' || path === '/close/') {
+    if (path.includes('close')) {
       if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
       return await handleClose(req, res);
     }
