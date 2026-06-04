@@ -116,6 +116,12 @@ ${cardsDescription}
 
 Rédige une analyse en 3 sections, avec ce ton : chaleureux, précis, jamais générique.
 
+IMPORTANT : Style d'écriture
+- N'utilise JAMAIS de tirets (—) ou de points (•) dans ton texte
+- Écris en phrases complètes et fluides
+- Pas de listes à puces, pas de tirets narratifs
+- Style narratif continu et élégant
+
 ## Ce que disent vos cartes
 En 4-5 phrases maximum, raconte ce que ces cartes révèlent ensemble pour cette intention spécifique. 
 Sois concret : nomme les cartes, évoque leurs énergies, montre la connexion entre elles.
@@ -130,13 +136,13 @@ Un paragraphe court (3-4 phrases) qui noue le tout avec une phrase de fermeture 
 
 ## Fenêtre d'observation
 En 3 à 5 lignes maximum :
-- Propose une durée en jours (1, 3 ou 5) adaptée à l'intention et aux cartes.
-  1 jour = question urgente ou concrète. 3 jours = question relationnelle ou professionnelle. 5 jours = question de fond, transformation profonde.
-- Donne 2 points d'attention spécifiques à CE tirage (pas des généralités) :
-  des registres précis où porter l'attention (corps, relations, rêves, résistances, synchronicités, etc.)
-  en lien direct avec les cartes tirées.
-- Termine par une phrase courte qui dit comment savoir si la fenêtre a été fructueuse.
-Format : texte narratif court, pas de liste à puces.`;
+Propose une durée en jours (1, 3 ou 5) adaptée à l'intention et aux cartes.
+1 jour = question urgente ou concrète. 3 jours = question relationnelle ou professionnelle. 5 jours = question de fond, transformation profonde.
+Donne 2 points d'attention spécifiques à CE tirage (pas des généralités) :
+des registres précis où porter l'attention (corps, relations, rêves, résistances, synchronicités, etc.)
+en lien direct avec les cartes tirées.
+Termine par une phrase courte qui dit comment savoir si la fenêtre a été fructueuse.
+Format : texte narratif court, pas de liste à puces, pas de tirets.`;
 
   try {
     const anthropicResponse = await callAnthropicWithFallback({
@@ -152,7 +158,18 @@ Format : texte narratif court, pas de liste à puces.`;
     }
 
     const data = await anthropicResponse.json();
-    const analysis = data.content?.[0]?.text || '';
+    let analysis = data.content?.[0]?.text || '';
+
+    // Nettoyage post-API pour supprimer les tirets narratifs indésirables
+    analysis = analysis
+      .replace(/—/g, '') // Supprimer tous les tirets demi-cadratin
+      .replace(/–/g, '-') // Convertir tirets cadratin en tirets normaux
+      .replace(/•/g, '')  // Supprimer les points
+      .replace(/\s*—\s*/g, ' ') // Remplacer les tirets avec espaces par des espaces
+      .replace(/\s*•\s*/g, ' ') // Remplacer les points avec espaces par des espaces
+      .replace(/\n\s*—\s*/g, '\n') // Supprimer les tirets en début de ligne
+      .replace(/\n\s*•\s*/g, '\n') // Supprimer les points en début de ligne
+      .trim();
 
     return res.status(200).json({ 
       success: true, 
