@@ -1047,7 +1047,7 @@
                 document.documentElement.style.opacity = '1';
 
                 // Charger les données
-                await Promise.all([
+                await Promise.allSettled([
                     loadOverview(),
                     loadPreorders(),
                     loadDonors(),
@@ -1106,12 +1106,16 @@
 
         // Charger la waitlist
         async function loadWaitlist(page = 1, limit = 10) {
-            const response = await adminFetch(`/api/admin/data?section=waitlist&page=${page}&limit=${limit}`);
-            const data = await response.json();
-            
-            if (data.success) {
-                currentData.waitlist = data.data;
-                updateWaitlistTable(data.data, data.pagination);
+            try {
+                const response = await adminFetch(`/api/admin/data?section=waitlist&page=${page}&limit=${limit}`);
+                const data = await response.json();
+                
+                if (data.success) {
+                    currentData.waitlist = data.data;
+                    updateWaitlistTable(data.data, data.pagination);
+                }
+            } catch (error) {
+                console.error('[Admin] Error loading waitlist:', error);
             }
         }
 
@@ -2115,6 +2119,7 @@
             try {
                 const res = await adminFetch('/api/admin/newsletter?action=drafts');
                 nlDrafts = await res.json();
+                if (!Array.isArray(nlDrafts)) nlDrafts = [];
                 nlRenderDrafts();
                 const envoyes = nlDrafts.filter(d => d.statut === 'envoyé').length;
                 document.getElementById('nl-kpi-total').textContent = nlDrafts.length;
