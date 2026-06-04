@@ -295,6 +295,7 @@
   }
   body.tore-playing {
     overflow: hidden !important;
+    height: 100vh !important;
     height: 100dvh !important;
   }
 
@@ -319,6 +320,7 @@
 
   /* Toujours couvrir tout l'écran pour éviter la bande grise en bas */
   #tore-immersif {
+    min-height: 100vh;
     min-height: 100dvh;
   }
 
@@ -360,6 +362,7 @@
   @media (max-width: 767px) and (orientation: landscape) {
     #tore-guide-message > div {
       min-height: unset !important;
+      max-height: calc(100vh - 12px) !important;
       max-height: calc(100dvh - 12px) !important;
       overflow-y: auto;
       border-radius: 16px;
@@ -405,6 +408,7 @@
       overflow-y: auto;
     }
     #tore-polarity-inner {
+      max-height: 92vh;
       max-height: 92dvh;
       overflow-y: auto;
     }
@@ -585,8 +589,11 @@
       left: 0;
       right: 0;
       bottom: 0;
+      height: 100vh;
       height: 100dvh;
+      min-height: 100vh;
       min-height: 100dvh;
+      max-height: 100vh;
       max-height: 100dvh;
       overflow: hidden;
       display: flex;
@@ -997,6 +1004,7 @@
    .tore-card-back {
 
     background-color: #020817;
+    touch-action: manipulation;
 
     background-size: 100% 100%;
 
@@ -2762,7 +2770,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
   <div class="relative z-10 container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8" style="height:100%;display:flex;flex-direction:column;">
 
     <!-- FORMULAIRE D'INTENTION -->
-    <form id="tore-form" class="flex flex-col items-center justify-start" style="flex:1;min-height:100dvh;padding:clamp(16px,3vh,40px) 0 clamp(20px,5vh,60px);overflow:hidden;gap:clamp(24px,4vh,48px);">
+    <form id="tore-form" class="flex flex-col items-center justify-start" style="flex:1;min-height:100vh;min-height:100dvh;padding:clamp(16px,3vh,40px) 0 clamp(20px,5vh,60px);overflow:hidden;gap:clamp(24px,4vh,48px);">
 
       <!-- Titre principal unique -->
       <div class="text-center" style="margin-bottom:0;width:100%;max-width:42rem;">
@@ -3007,7 +3015,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
       <!-- Message de guidage pour l'intégration -->
       <div id="tore-guide-message" class="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-6" style="background: radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%); overflow-y: auto; opacity:0; visibility:hidden; pointer-events:none;">
-        <div class="bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl border-2 border-gold/40 rounded-3xl w-full max-w-4xl shadow-[0_25px_50px_-12px_rgba(212,175,55,0.25)] relative overflow-hidden my-auto flex flex-col" style="min-height: min(70vh, 520px); max-height: calc(100dvh - 16px);">
+        <div class="bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl border-2 border-gold/40 rounded-3xl w-full max-w-4xl shadow-[0_25px_50px_-12px_rgba(212,175,55,0.25)] relative overflow-hidden my-auto flex flex-col" style="min-height: min(70vh, 520px); max-height: calc(100vh - 16px); max-height: calc(100dvh - 16px);">
           <!-- Effet de lumière subtile -->
           <div class="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-blue-900/20 rounded-3xl pointer-events-none"></div>
           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
@@ -4834,20 +4842,24 @@ function closeToreExitModal(){
 
     // Calculer la taille du plateau APRÈS que les barres sont dans le DOM
     (function() {
-      const bbEl = document.getElementById('tore-bottom-bar');
-      if (!bbEl) { fitBoardToViewport(); return; }
-      const ro = new ResizeObserver(entries => {
-        for (const entry of entries) {
-          if (entry.contentRect.height > 0) {
-            ro.disconnect();
-            fitBoardToViewport();
-            break;
+      if (typeof ResizeObserver !== 'undefined') {
+        const bbEl = document.getElementById('tore-bottom-bar');
+        if (!bbEl) { fitBoardToViewport(); return; }
+        const ro = new ResizeObserver(entries => {
+          for (const entry of entries) {
+            if (entry.contentRect.height > 0) {
+              ro.disconnect();
+              fitBoardToViewport();
+              break;
+            }
           }
-        }
-      });
-      ro.observe(bbEl);
-      // Sécurité : si la barre ne se redimensionne jamais en 500 ms
-      setTimeout(() => { ro.disconnect(); fitBoardToViewport(); }, 500);
+        });
+        ro.observe(bbEl);
+        // Sécurité : si la barre ne se redimensionne jamais en 500 ms
+        setTimeout(() => { ro.disconnect(); fitBoardToViewport(); }, 500);
+      } else {
+        setTimeout(fitBoardToViewport, 150);
+      }
     })();
 
 
@@ -4966,10 +4978,7 @@ function closeToreExitModal(){
         front.style.visibility = 'hidden';
         front.innerHTML = '';
 
-        isCardFlipping = true;
         card.classList.remove('next-to-draw');
-
-        const isMobile = window.matchMedia('(max-width: 639px)').matches;
 
         // Masquer le faisceau lumineux dès le retournement
         const _bpoly = document.getElementById('tore-beam-poly');
@@ -4990,6 +4999,7 @@ function closeToreExitModal(){
         const doFlip = () => {
           if (flipDone) return;
           flipDone = true;
+          isCardFlipping = false;
           // Remplir le contenu de la face avant ici
           card.classList.add('flipped', 'just-flipped');
           front.innerHTML = `<img src="${imgPath}" alt="${data.name || ''}" style="width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.3s ease;" />`;
@@ -5016,8 +5026,12 @@ function closeToreExitModal(){
         // Filet de sécurité : si toutes les cartes sont retournées et que la phase pièce
         // n'a pas démarré 4s après ce flip, la forcer
         setTimeout(() => {
-          if (!isGuideMessageShown) {
-            showCoinAfterAllCards();
+          if (!isGuideMessageShown && boardHost) {
+            const total = boardHost.querySelectorAll('.tore-card').length;
+            const flipped = boardHost.querySelectorAll('.tore-card.flipped').length;
+            if (total > 0 && flipped === total) {
+              showCoinAfterAllCards();
+            }
           }
         }, 4000);
 
@@ -5088,10 +5102,12 @@ if (previewOverlay) {
 
     extra.className = 'tore-card-extra';
 
+    const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+
     extra.innerHTML = `
       <div class="bridge-badge">Passerelle</div>
       <div class="extra-img-wrap">
-        <img src="${imgPath}" alt="${dataNext.name || ''}">
+        <img src="${imgPath}" alt="${esc(dataNext.name)}">
       </div>
     `;
 
@@ -5320,6 +5336,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
         const preloadImg = new Image();
         preloadImg.src = imgPath;
         const showReveal = () => {
+        const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
         // Remplacer le contenu de l'overlay par la carte en grand
         overlay.classList.remove('bridge-split');
         overlay.innerHTML = `
@@ -5336,13 +5353,13 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
               box-shadow:0 0 60px rgba(212,175,55,0.25), 0 30px 80px rgba(0,0,0,0.8);
               background:#020817;
               animation:bridgeCardReveal 0.5s cubic-bezier(0.34,1.4,0.64,1) forwards;">
-              <img src="${imgPath}" alt="${dataNext.name||''}"
+              <img src="${imgPath}" alt="${esc(dataNext.name)}"
                 style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
             </div>
             <p style="font-family:'Cormorant Garamond','Cormorant',Georgia,serif;font-size:clamp(24px,5vw,32px);font-weight:700;color:#ffffff;letter-spacing:0.06em;margin:0;text-shadow:0 0 20px rgba(255,255,255,0.3);animation:fadeInUp 0.4s ease 0.3s both;">
-              ${dataNext.name || ''}
+              ${esc(dataNext.name)}
             </p>
-            ${dataNext.quote ? `<p id="bridge-quote-text" style="font-family:'Lora',Georgia,serif;font-size:16px;color:rgba(216,191,114,0.85);font-style:italic;margin:0;line-height:1.4;width:100%;max-width:360px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:fadeInUp 0.4s ease 0.42s both;">\u00AB\u202F${dataNext.quote}\u202F\u00BB</p>` : ''}
+            ${dataNext.quote ? `<p id="bridge-quote-text" style="font-family:'Lora',Georgia,serif;font-size:16px;color:rgba(216,191,114,0.85);font-style:italic;margin:0;line-height:1.4;width:100%;max-width:360px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:fadeInUp 0.4s ease 0.42s both;">\u00AB\u202F${esc(dataNext.quote)}\u202F\u00BB</p>` : ''}
             <p style="font-family:'Lora',Georgia,serif;font-size:16px;color:rgba(216,191,114,0.75);font-style:italic;margin:0;animation:fadeInUp 0.4s ease 0.54s both;">
               Cette carte relie les deux polarités
             </p>
@@ -5793,9 +5810,7 @@ function showArrowForStep(stepIndex, isMatch) {
   // Exécuter la configuration
   setupIntentionValidation();
 
-  // Exposer showToreAnalysisCTA globalement (debug + fallback)
-  window._showToreAnalysisCTA = showToreAnalysisCTA;
-
+  
 
 
 
