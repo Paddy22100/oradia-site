@@ -1824,8 +1824,7 @@
 
     position: relative;                /* pour les pseudo-éléments */
 
-    clip-path: circle(50%);
-    -webkit-clip-path: circle(50%);
+    overflow: hidden;
 
   }
 
@@ -5013,15 +5012,19 @@ function closeToreExitModal(){
         let flipDone = false;
         const FLIP_TIMEOUT = 1500;
 
-        isCardFlipping = true;
-        card.classList.add('flipping');
+        const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!prefersReduced) {
+          isCardFlipping = true;
+          card.classList.add('flipping');
+        }
 
         const doFlip = () => {
           if (flipDone) return;
           flipDone = true;
           isCardFlipping = false;
           // Remplir le contenu de la face avant ici
-          front.innerHTML = `<img src="${imgPath}" alt="${data.name || ''}" loading="eager" fetchpriority="high" style="width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.3s ease;" />`;
+          const escName = (data.name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+          front.innerHTML = `<img src="${imgPath}" alt="${escName}" loading="eager" fetchpriority="high" style="width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.3s ease;" />`;
           // Rendre la carte visible seulement après l'injection de l'image
           front.style.visibility = 'visible';
           void card.offsetWidth;
@@ -5042,7 +5045,7 @@ function closeToreExitModal(){
 
         imgEl.onload = doFlip;
         imgEl.onerror = doFlip;
-        setTimeout(doFlip, FLIP_TIMEOUT);
+        setTimeout(doFlip, prefersReduced ? 300 : FLIP_TIMEOUT);
         imgEl.src = imgPath;
 
         // Filet de sécurité : si toutes les cartes sont retournées et que la phase pièce
