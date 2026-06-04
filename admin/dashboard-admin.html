@@ -1058,7 +1058,7 @@
             try {
                 const response = await adminFetch('/api/admin/data?section=overview');
                 if (!response.ok) {
-                    if (response.status === 401) { window.location.replace('login.html'); return; }
+                    if (response.status === 401) { window.location.replace('https://oradia.fr/admin/login.html'); return; }
                     console.error('Overview API error:', response.status);
                     return;
                 }
