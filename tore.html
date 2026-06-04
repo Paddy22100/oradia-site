@@ -2987,21 +2987,20 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
         <svg id="tore-beam-svg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:15;overflow:visible;">
           <defs>
             <linearGradient id="beamGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="0">
-              <stop offset="0%" stop-color="rgba(212,175,55,0.6)"/>
-              <stop offset="50%" stop-color="rgba(212,175,55,0.4)"/>
-              <stop offset="85%" stop-color="rgba(212,175,55,0.1)"/>
+              <stop offset="0%" stop-color="rgba(212,175,55,0.7)"/>
+              <stop offset="50%" stop-color="rgba(10,25,47,0.5)"/>
               <stop offset="100%" stop-color="rgba(212,175,55,0)"/>
             </linearGradient>
             <filter id="beamBlur" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="1.5"/>
+              <feGaussianBlur stdDeviation="5"/>
             </filter>
             <filter id="haloBlur" x="-60%" y="-60%" width="220%" height="220%">
               <feGaussianBlur stdDeviation="10"/>
             </filter>
           </defs>
           <polygon id="tore-beam-poly" points="" fill="url(#beamGrad)" filter="url(#beamBlur)" opacity="0" style="transition:opacity 0.8s ease;"/>
-          <ellipse id="tore-beam-halo" cx="0" cy="0" rx="0" ry="0" fill="rgba(212,175,55,0.35)" filter="url(#haloBlur)" opacity="0" style="transition:opacity 0.8s ease;">
-            <animate attributeName="opacity" values="0.5;0.9;0.5" dur="2s" repeatCount="indefinite"/>
+          <ellipse id="tore-beam-halo" cx="0" cy="0" rx="0" ry="0" fill="rgba(212,175,55,0.15)" filter="url(#haloBlur)" opacity="0" style="transition:opacity 0.8s ease;">
+            <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite"/>
           </ellipse>
         </svg>
 
@@ -5098,17 +5097,14 @@ function closeToreExitModal(){
 
         card.classList.remove('next-to-draw');
 
-        // Garder le faisceau lumineux visible et le déplacer vers la carte suivante
-        // pour créer un effet de rotation continue autour du plateau
+        // Masquer le faisceau lumineux dès le retournement
+        const _bpoly = document.getElementById('tore-beam-poly');
+        const _bhalo = document.getElementById('tore-beam-halo');
+        if (_bpoly) _bpoly.setAttribute('opacity', '0');
+        if (_bhalo) _bhalo.setAttribute('opacity', '0');
 
         // Incrémenter l'index de tirage pour passer à la famille suivante
         toreThrowIndex++;
-
-        // Déplacer immédiatement le faisceau vers la carte suivante
-        // pour créer un effet de rotation continue
-        setTimeout(() => {
-          highlightNextCard();
-        }, 200); // Petit délai pour la transition visuelle
 
         const imgEl = new Image();
         let flipDone = false;
