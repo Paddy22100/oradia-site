@@ -705,7 +705,7 @@
             </a>
             <button onclick="openEmailModal()" class="border-2 border-gold/50 text-gold font-semibold py-4 px-6 sm:px-8 rounded-full hover:bg-gold/10 hover:border-gold transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
                 <i class="fas fa-envelope"></i>
-                <span class="text-sm sm:text-base">Recevoir par mail</span>
+                <span class="text-sm sm:text-base">Recevoir l'analyse complète par mail</span>
             </button>
         </div>
         
@@ -1534,14 +1534,15 @@
                         `}
                         <p class="obs-error" id="obs-error"></p>
                         <p style="color:rgba(212,175,55,0.35);font-size:0.72rem;margin:0.5rem 0 0;font-style:italic;">
-                            Vous recevrez un email maintenant et un rappel à l'échéance.
+                            Votre fenêtre sera activée pour la durée choisie.
                         </p>
                     </div>
 
                     <div class="obs-success" id="obs-success">
                         <div class="obs-success-icon">✦</div>
-                        <p>Fenêtre activée.<br>
-                           Un email vous a été envoyé avec vos points d'attention.</p>
+                        <p>Fenêtre d'observation activée.<br>
+                           Vos points d'attention sont prêts.<br>
+                           Vous recevrez un email de suivi à la fin de la période.</p>
                     </div>
                 </div>`;
 
@@ -1776,10 +1777,16 @@
                 document.getElementById('newsletterCheckVisual').style.borderColor = 'rgba(212,175,55,0.3)';
                 document.getElementById('newsletterCheck').style.opacity = '0';
                 
-                // Afficher un message indiquant l'email de destination
+                // Afficher un message indiquant l'email de destination et l'accès depuis l'espace membre
                 const emailLabel = document.querySelector('label[for="tirageEmail"]');
                 if (emailLabel) {
-                    emailLabel.innerHTML = `Votre analyse sera envoyée à <strong style="color:#d4af37">${escapeClientHtml(userEmail)}</strong>`;
+                    emailLabel.innerHTML = `
+                        Votre analyse complète sera envoyée à <strong style="color:#d4af37">${escapeClientHtml(userEmail)}</strong><br>
+                        <span style="font-size:0.85rem;color:rgba(212,175,55,0.6);font-style:italic;">
+                            <i class="fas fa-info-circle" style="margin-right:4px;"></i>
+                            Vous pourrez également retrouver ce tirage dans votre espace membre
+                        </span>
+                    `;
                     emailLabel.style.marginBottom = '1.2rem';
                 }
                 
