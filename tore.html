@@ -2272,17 +2272,24 @@
   }
 }
 
+/* Animation gérée par les classes spécifiques pour éviter les conflits */
 .tore-card {
-  animation: cardEntrance 0.6s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
   opacity: 0;
   transform-origin: center center;
+}
+
+/* Animation progressive d'entrée des cartes */
+.tore-card[class*="card-entrance-delay-"] {
+  animation: cardEntrance 0.6s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
 }
 
 /* Optimisation pour connexions lentes : réduire les animations */
 @media (prefers-reduced-motion: reduce) {
   .tore-card {
-    animation: none;
     opacity: 1;
+  }
+  .tore-card[class*="card-entrance-delay-"] {
+    animation: none;
   }
 }
 
