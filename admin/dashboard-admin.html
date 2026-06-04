@@ -985,7 +985,8 @@
             const allowedDomains = ['oradia.fr', 'localhost', '127.0.0.1'];
             const currentDomain = window.location.hostname;
             if (!allowedDomains.some(d => currentDomain.includes(d))) {
-                document.documentElement.style.visibility = 'visible';
+                document.documentElement.style.setProperty('visibility', 'visible', 'important');
+                document.documentElement.style.setProperty('opacity', '1', 'important');
                 document.getElementById('mainContent').innerHTML =
                     '<div style="color:#d4af37;text-align:center;padding:4rem;font-family:serif;">' +
                     '<p style="font-size:1.5rem;">⚠️ Accès admin uniquement via oradia.fr</p>' +
@@ -1043,8 +1044,9 @@
                 }));
 
                 // Auth OK → rendre la page visible UNIQUEMENT après validation API
-                document.documentElement.style.visibility = 'visible';
-                document.documentElement.style.opacity = '1';
+                // setProperty avec 'important' pour surpasser la règle html{visibility:hidden!important}
+                document.documentElement.style.setProperty('visibility', 'visible', 'important');
+                document.documentElement.style.setProperty('opacity', '1', 'important');
 
                 // Charger les données
                 await Promise.allSettled([

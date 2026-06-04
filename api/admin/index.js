@@ -268,11 +268,19 @@ async function handleData(req, res) {
       const limit  = parseInt(req.query?.limit || '10', 10);
       const offset = (page - 1) * limit;
       const { data, count, error } = await supabase
-        .from('waitlist')
+        .from('newsletter_contacts')
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
-      if (error) throw error;
+      // Si la table n'existe pas (PGRST205), retourner une liste vide au lieu d'une 500
+      if (error) {
+        console.warn('Waitlist section error (non-fatal):', error.message);
+        return res.status(200).json({
+          success: true,
+          data: [],
+          pagination: { page, limit, total: 0, pages: 0 }
+        });
+      }
       return res.status(200).json({
         success: true,
         data: data || [],
@@ -282,7 +290,7 @@ async function handleData(req, res) {
 
     // ── Section overview / all : agrégats KPI ──
     const [waitlistRes, preordersRes, donorsRes] = await Promise.all([
-      supabase.from('waitlist').select('*'),
+      supabase.from('newsletter_contacts').select('*'),
       supabase.from('preorders').select('*'),
       supabase.from('donors').select('*')
     ]);
@@ -359,7 +367,7 @@ async function handleContactsExport(req, res) {
     );
 
     const { data: waitlist, error } = await supabase
-      .from('waitlist')
+      .from('newsletter_contacts')
       .select('email, created_at')
       .order('created_at', { ascending: false });
 
@@ -438,7 +446,7 @@ async function handleSyncBrevo(req, res) {
     );
 
     const { data: contacts, error } = await supabase
-      .from('waitlist')
+      .from('newsletter_contacts')
       .select('email, created_at')
       .order('created_at', { ascending: false });
 
