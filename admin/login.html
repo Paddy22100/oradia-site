@@ -332,13 +332,14 @@ async function handleLogin(e) {
             const authData = {
                 valid: true,
                 timestamp: Date.now(),
-                email: result.admin?.email || email,
+                email: result.email || email,
                 token: result.token || null
             };
             sessionStorage.setItem('oradia_auth', JSON.stringify(authData));
-            
-            // Passer le token dans le hash pour garantir la disponibilité immédiate
-            window.location.href = 'https://oradia.fr/admin/dashboard-admin.html' + (authData.token ? '#t=' + encodeURIComponent(authData.token) : '');
+
+            // Attendre 300ms que le cookie httpOnly soit bien enregistré
+            await new Promise(resolve => setTimeout(resolve, 300));
+            window.location.href = 'https://oradia.fr/admin/dashboard-admin.html';
         } else {
             showMessage(result.message || 'Identifiants incorrects', 'error');
         }
