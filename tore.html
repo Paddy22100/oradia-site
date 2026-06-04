@@ -3684,6 +3684,9 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     const img = overlay.querySelector('.compass-logo-img');
     if (img) { img.style.animation = 'none'; void img.offsetWidth; img.style.animation = ''; }
 
+    // Lancer l'appel API Claude en arrière-plan pendant l'animation
+    preloadClaudeAnalysis();
+
     setTimeout(() => {
       overlay.style.animation = 'compassFadeOut 0.5s ease forwards';
       setTimeout(() => {
@@ -3691,6 +3694,36 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
         window.location.href = url;
       }, 500);
     }, 5000);
+  }
+
+  // Précharge l'analyse Claude en arrière-plan
+  function preloadClaudeAnalysis() {
+    try {
+      const cards = JSON.parse(sessionStorage.getItem('tore_cards') || '[]');
+      const intention = sessionStorage.getItem('tore_intention') || 'question personnelle';
+      
+      if (!Array.isArray(cards) || cards.length === 0) return;
+
+      // Stocker le résultat préchargé
+      fetch('/api/analyse-tirage', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ intention, cards })
+      })
+      .then(resp => resp.json())
+      .then(data => {
+        if (data.success && data.analysis) {
+          // Stocker l'analyse préchargée pour utilisation immédiate
+          sessionStorage.setItem('preloaded_analysis', JSON.stringify(data));
+        }
+      })
+      .catch(err => {
+        // Silencieux en cas d'erreur, l'analyse sera faite normalement
+        console.warn('Préchargement analyse échoué:', err.message);
+      });
+    } catch (e) {
+      // Silencieux en cas d'erreur
+    }
   }
 
   // Afficher le message de guidage après avoir tiré une carte

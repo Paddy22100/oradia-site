@@ -1362,13 +1362,35 @@
             `;
 
             try {
-                const resp = await fetch('/api/analyse-tirage', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ intention, cards })
-                });
-                const data = await resp.json();
-                if (!resp.ok || !data.success || !data.analysis) throw new Error(data.error || 'Analyse indisponible');
+                // Vérifier d'abord si une analyse a été préchargée
+                const preloadedData = sessionStorage.getItem('preloaded_analysis');
+                let data;
+
+                if (preloadedData) {
+                    try {
+                        data = JSON.parse(preloadedData);
+                        // Nettoyer le préchargement pour éviter les réutilisations
+                        sessionStorage.removeItem('preloaded_analysis');
+                        
+                        if (!data.success || !data.analysis) {
+                            throw new Error('Données préchargées invalides');
+                        }
+                    } catch (e) {
+                        // Si les données préchargées sont invalides, faire un appel normal
+                        data = null;
+                    }
+                }
+
+                // Si pas de données préchargées valides, faire l'appel API
+                if (!data) {
+                    const resp = await fetch('/api/analyse-tirage', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ intention, cards })
+                    });
+                    data = await resp.json();
+                    if (!resp.ok || !data.success || !data.analysis) throw new Error(data.error || 'Analyse indisponible');
+                }
 
                 const fullText = data.analysis;
                 const obsData = parseObservationSection(fullText);
