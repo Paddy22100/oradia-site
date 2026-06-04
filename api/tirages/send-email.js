@@ -31,8 +31,10 @@ export default async function handler(req, res) {
       
       allCardsHtml += `
         <td style="width: 33%; padding: 10px; vertical-align: top; text-align: center;">
-          <img src="${finalImgPath}" alt="${card.name}" 
-            style="width: 100%; max-width: 160px; height: auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); border: 1px solid rgba(212,175,55,0.3);">
+          <div style="width: 160px; height: 240px; margin: 0 auto; position: relative;">
+            <img src="${finalImgPath}" alt="${card.name}" 
+              style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); border: 1px solid rgba(212,175,55,0.3);">
+          </div>
           <h3 style="color: #d4af37; font-family: Georgia, serif; margin: 12px 0 4px; font-size: 15px; font-weight: 600;">${card.name.replace(/_/g, ' ')}</h3>
           <p style="color: #c8c0a8; font-size: 12px; margin: 0; font-style: italic; text-transform: capitalize;">${card.family.replace(/_/g, ' ')}</p>
         </td>
@@ -46,12 +48,12 @@ export default async function handler(req, res) {
         
         allCardsHtml += `
           <td style="width: 33%; padding: 10px; vertical-align: top; text-align: center;">
-            <div style="position: relative;">
+            <div style="position: relative; width: 160px; height: 240px; margin: 0 auto;">
               <div style="position: absolute; top: -8px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #d4af37, #f5e7a1); color: #0a192f; font-size: 10px; font-weight: 700; padding: 4px 12px; border-radius: 12px; text-transform: uppercase; letter-spacing: 1px; z-index: 1;">
                 <i class="fas fa-exchange-alt" style="margin-right: 4px;"></i>Passerelle
               </div>
               <img src="${finalBridgeImgPath}" alt="${card.bridgeCard.name}" 
-                style="width: 100%; max-width: 160px; height: auto; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); border: 2px solid #d4af37; margin-top: 8px;">
+                style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); border: 2px solid #d4af37;">
             </div>
             <h3 style="color: #d4af37; font-family: Georgia, serif; margin: 12px 0 4px; font-size: 15px; font-weight: 600;">${card.bridgeCard.name.replace(/_/g, ' ')}</h3>
             <p style="color: #c8c0a8; font-size: 12px; margin: 0; font-style: italic; text-transform: capitalize;">${card.bridgeCard.family.replace(/_/g, ' ')}</p>
@@ -77,7 +79,9 @@ export default async function handler(req, res) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 </head>
-<body style="margin: 0; padding: 0; background: linear-gradient(135deg, #0a192f 0%, #051428 100%); font-family: 'Lora', Georgia, serif;">
+<body style="margin: 0; padding: 0; background: linear-gradient(135deg, #0a192f 0%, #051428 100%); font-family: 'Lora', Georgia, serif; position: relative;">
+  <!-- Fond d'image en transparence -->
+  <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: url('https://oradia.fr/images/oradia-hero-4k.png') center/cover no-repeat; opacity: 0.08; pointer-events: none; z-index: 0;"></div>
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
     <tr>
       <td align="center" style="padding: 40px 20px;">
@@ -193,7 +197,7 @@ export default async function handler(req, res) {
                     </a>
                   </td>
                   <td style="padding: 20px 16px 20px 0; vertical-align: middle; width: 45%; text-align: right;">
-                    <img src="https://oradia.fr/images/medias/apercu_stripe.jpeg" alt="Oracle Oradia - Aperçu" 
+                    <img src="https://oradia.fr/images/apercu_stripe.jpg" alt="Oracle Oradia - Aperçu" 
                       style="display: block; width: 100%; max-width: 200px; margin-left: auto; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); border: 2px solid rgba(212,175,55,0.3);">
                   </td>
                 </tr>
@@ -208,10 +212,12 @@ export default async function handler(req, res) {
                 Avec gratitude,<br>
                 <strong style="color: #d4af37;">Rudy Boucheron</strong>
               </p>
-              <p style="margin: 20px 0 0; color: #c8c0a8; font-size: 12px; opacity: 0.6;">
-                <a href="https://oradia.fr" style="color: #d4af37; text-decoration: none;">oradia.fr</a> · 
-                <a href="https://oradia.fr/precommande-oracle.html" style="color: #d4af37; text-decoration: none;">Précommander l'Oracle</a>
-              </p>
+              <div style="margin: 20px 0 0; display: flex; align-items: center; justify-content: center; gap: 16px;">
+                <a href="https://oradia.fr" style="display: flex; align-items: center; gap: 8px; color: #d4af37; text-decoration: none; font-size: 13px; opacity: 0.8; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
+                  <img src="https://oradia.fr/images/logo-hd-v2.jpeg" alt="Oradia" style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(212,175,55,0.3);">
+                  <span style="font-family: Georgia, serif;">oradia.fr</span>
+                </a>
+              </div>
             </td>
           </tr>
 

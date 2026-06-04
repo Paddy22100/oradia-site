@@ -730,6 +730,7 @@
 
                 <!-- Formulaire -->
                 <div id="emailForm" style="padding:1.8rem 2rem 2rem;">
+                    <div id="obsStatus" style="display:none;"></div>
                     <form onsubmit="sendTirageEmail(event)">
                         <label style="display:block; color:rgba(212,175,55,0.6); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.2em; margin-bottom:0.5rem;">Votre adresse e-mail</label>
                         <input type="email" id="tirageEmail" placeholder="votre@email.com" required
@@ -1441,12 +1442,26 @@
 
             if (explicit.length) return explicit;
 
-            return text
+            let points = text
                 .split(/(?<=[.!?])\s+/)
                 .map(s => s.trim())
                 .filter(s => /(corps|relation|rêve|resistance|résistance|synchronicité|émotion|besoin|signe|conversation|décision|silence|tension|élan)/i.test(s))
-                .filter(s => s.length > 25)
-                .slice(0, 3);
+                .filter(s => s.length > 25);
+
+            // Éliminer les doublons et phrases similaires
+            points = points.filter((point, index) => {
+                const pointLower = point.toLowerCase();
+                return !points.slice(0, index).some(prevPoint => {
+                    const prevLower = prevPoint.toLowerCase();
+                    // Si plus de 70% des mots sont identiques, considérer comme doublon
+                    const pointWords = pointLower.split(' ').filter(w => w.length > 3);
+                    const prevWords = prevLower.split(' ').filter(w => w.length > 3);
+                    const commonWords = pointWords.filter(w => prevWords.includes(w));
+                    return commonWords.length > Math.min(pointWords.length, prevWords.length) * 0.7;
+                });
+            });
+
+            return points.slice(0, 3);
         }
 
         function renderMarkdown(text) {
@@ -1750,6 +1765,28 @@
             modal.style.display = 'flex';
             document.getElementById('emailSuccess').style.display = 'none';
             document.getElementById('emailForm').style.display = 'block';
+            
+            // Vérifier si la fenêtre d'observation est activée
+            const obsStatus = document.getElementById('obsStatus');
+            if (obsStatus) {
+                if (window._obsWindowText && window._obsAttentionPoints && window._obsSuggestedDays) {
+                    obsStatus.innerHTML = `
+                        <div style="background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 0.85rem; color: #d4af37; text-align: center;">
+                            <i class="fas fa-eye" style="margin-right: 6px;"></i>
+                            Votre fenêtre d'observation (${window._obsSuggestedDays} jours) sera incluse dans l'email
+                        </div>
+                    `;
+                    obsStatus.style.display = 'block';
+                } else {
+                    obsStatus.innerHTML = `
+                        <div style="background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.2); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 0.85rem; color: rgba(212,175,55,0.6); text-align: center;">
+                            <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
+                            Activez votre fenêtre d'observation pour enrichir votre analyse
+                        </div>
+                    `;
+                    obsStatus.style.display = 'block';
+                }
+            }
             
             // Récupérer l'email de l'utilisateur connecté
             const sessionData = sessionStorage.getItem('oradia_member_session')
