@@ -62,11 +62,13 @@
   <link rel="stylesheet" href="style.css">
 
   <link rel="stylesheet" href="responsive.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap">
 
   <style>
 
-    @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
-
+    
 
 
     :root {
@@ -242,7 +244,7 @@
   </style>
 
   <!-- Script Freemium Tracker -->
-  <script src="js/freemium-tracker.js"></script>
+  <script src="js/freemium-tracker.js" defer></script>
   <!-- Client QRNG — tirage quantique via ANU -->
   <script src="js/qrng-client.js" defer></script>
 
@@ -3032,7 +3034,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
       </div>
 
       <!-- Message de guidage pour l'intégration -->
-      <div id="tore-guide-message" class="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-6" style="background: radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%); overflow-y: auto; opacity:0; visibility:hidden; pointer-events:none;">
+      <div id="tore-guide-message" role="dialog" aria-modal="true" aria-labelledby="guide-card-name" class="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-6" style="background: radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%); overflow-y: auto; opacity:0; visibility:hidden; pointer-events:none;">
         <div class="bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl border-2 border-gold/40 rounded-3xl w-full max-w-4xl shadow-[0_25px_50px_-12px_rgba(212,175,55,0.25)] relative overflow-hidden my-auto flex flex-col" style="min-height: min(70vh, 520px); max-height: calc(100vh - 16px); max-height: calc(100dvh - 16px);">
           <!-- Effet de lumière subtile -->
           <div class="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-blue-900/20 rounded-3xl pointer-events-none"></div>
@@ -3092,7 +3094,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
 
       <!-- Modale de révélation pièce ↔ carte -->
-      <div id="tore-polarity-reveal" class="hidden fixed inset-0 z-[65] flex items-end justify-center pb-4 sm:pb-8 px-3 sm:px-4" style="background: linear-gradient(to top, rgba(0,5,15,0.82) 0%, rgba(0,5,15,0.15) 55%, transparent 100%); pointer-events: auto;">
+      <div id="tore-polarity-reveal" role="dialog" aria-modal="true" aria-labelledby="tore-polarity-family" class="hidden fixed inset-0 z-[65] flex items-end justify-center pb-4 sm:pb-8 px-3 sm:px-4" style="background: linear-gradient(to top, rgba(0,5,15,0.82) 0%, rgba(0,5,15,0.15) 55%, transparent 100%); pointer-events: auto;">
         <div id="tore-polarity-inner" class="relative w-full max-w-lg rounded-3xl overflow-hidden" style="background: linear-gradient(135deg, #0a1628 0%, #0d1f3c 50%, #0a1628 100%); border: 2px solid rgba(212,175,55,0.4); box-shadow: 0 30px 80px rgba(0,0,0,0.8), 0 0 60px rgba(212,175,55,0.08);">
           <!-- Barre lumineuse haut -->
           <div class="absolute top-0 left-0 right-0 h-px" style="background: linear-gradient(90deg, transparent, rgba(212,175,55,0.8), transparent);"></div>
@@ -5064,6 +5066,13 @@ function closeToreExitModal(){
 
       });
 
+      back.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          back.click();
+        }
+      });
+
     });
 
     
@@ -5701,6 +5710,10 @@ function showArrowForStep(stepIndex, isMatch) {
       const coinPolarity = isYang ? 'yang' : 'yin';
 
       coin.classList.add(isYang ? 'face-yang' : 'face-yin');
+      const coinImg = document.getElementById('tore-coin-img');
+      if (coinImg) {
+        coinImg.src = isYang ? 'images/coin_triangle.png' : 'images/coin_cercle.png';
+      }
 
       // Onde circulaire dorée
       coin.classList.remove('ripple');
