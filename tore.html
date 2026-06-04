@@ -57,7 +57,7 @@
 
   </script>
 
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer">
 
   <link rel="stylesheet" href="style.css">
 
@@ -3585,6 +3585,22 @@ const BACK_IMAGES = {
 
   const el = id => document.getElementById(id);
 
+  function showCardError(message, durationMs) {
+    const instruction = document.getElementById('tore-step-instruction');
+    if (!instruction) return;
+    const prev = instruction.textContent;
+    const prevColor = instruction.style.color;
+    const prevStyle = instruction.style.fontStyle;
+    instruction.textContent = message || 'Impossible de charger la carte, réessayez.';
+    instruction.style.color = 'rgba(231,76,60,0.9)';
+    instruction.style.fontStyle = 'italic';
+    setTimeout(() => {
+      instruction.textContent = prev;
+      instruction.style.color = prevColor;
+      instruction.style.fontStyle = prevStyle;
+    }, durationMs || 2500);
+  }
+
 
 
 // État du tirage de la pièce : 1 lancer par famille SAUF memoire_cosmos (pas de polarité, pas de lancer)
@@ -3869,7 +3885,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     // Auto-focus sur bouton Continuer pour accessibilité
     setTimeout(() => {
       const focusBtn = document.getElementById('guide-continue-btn');
-      if (focusBtn) focusBtn.focus();
+      if (focusBtn) focusBtn.focus({ preventScroll: true });
     }, 650);
 
     // Bloquer les interactions avec le plateau
@@ -4090,6 +4106,18 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       const sg = el('tore-step-guide');
       if (sg) sg.style.display = 'none';
       coinWrapper.style.display = 'block';
+
+      // Initialiser les dots pour la phase pièce (6 lancers)
+      const dotsContainer = document.getElementById('tore-step-dots');
+      if (dotsContainer) {
+        dotsContainer.innerHTML = '';
+        for (let i = 0; i < 6; i++) {
+          const dot = document.createElement('div');
+          dot.dataset.coinDot = i;
+          dot.style.cssText = 'width:8px;height:8px;border-radius:50%;transition:all 0.3s ease;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.2);';
+          dotsContainer.appendChild(dot);
+        }
+      }
       if (coin) {
         coin.classList.remove('spin', 'ripple');
         coin.classList.add('glow');
@@ -4240,6 +4268,33 @@ function showToreAnalysisCTA() {
 
     if (!pool.length) return null;
 
+    // Indicateur de chargement si QRNG est lent
+    let qrngLoadingShown = false;
+    const qrngLoadingTimer = setTimeout(() => {
+      qrngLoadingShown = true;
+      const instruction = document.getElementById('tore-step-instruction');
+      if (instruction) {
+        instruction.dataset.previousText = instruction.textContent;
+        instruction.textContent = 'Connexion lente, patientez…';
+        instruction.style.color = 'rgba(212,175,55,0.9)';
+        instruction.style.fontStyle = 'italic';
+      }
+    }, 800);
+
+    const hideQrngLoading = () => {
+      clearTimeout(qrngLoadingTimer);
+      if (qrngLoadingShown) {
+        const instruction = document.getElementById('tore-step-instruction');
+        if (instruction && instruction.dataset.previousText !== undefined) {
+          instruction.textContent = instruction.dataset.previousText;
+          instruction.style.color = '';
+          instruction.style.fontStyle = '';
+          delete instruction.dataset.previousText;
+        }
+        qrngLoadingShown = false;
+      }
+    };
+
     // Si on veut éviter les doublons
     if (avoidDuplicates) {
       // Filtrer les cartes déjà tirées
@@ -4251,24 +4306,45 @@ function showToreAnalysisCTA() {
       // Si toutes les cartes ont été tirées, on réinitialise
       if (availableCards.length === 0) {
         drawnCards.clear();
-        const idx = await QRNG.getInt(0, pool.length);
-        const selectedCard = pool[idx];
-        const cardId = selectedCard.name || selectedCard.file || JSON.stringify(selectedCard);
-        drawnCards.add(cardId);
-        return selectedCard;
+        try {
+          const idx = await QRNG.getInt(0, pool.length);
+          const selectedCard = pool[idx];
+          const cardId = selectedCard.name || selectedCard.file || JSON.stringify(selectedCard);
+          drawnCards.add(cardId);
+          hideQrngLoading(); return selectedCard;
+        } catch(e) {
+          hideQrngLoading();
+          const idx = Math.floor(Math.random() * pool.length);
+          return pool[idx] || null;
+        }
       }
 
       // Piocher parmi les cartes disponibles (quantique)
-      const idx = await QRNG.getInt(0, availableCards.length);
-      const selectedCard = availableCards[idx];
-      const cardId = selectedCard.name || selectedCard.file || JSON.stringify(selectedCard);
-      drawnCards.add(cardId);
-      return selectedCard;
+      try {
+        const idx = await QRNG.getInt(0, availableCards.length);
+        const selectedCard = availableCards[idx];
+        const cardId = selectedCard.name || selectedCard.file || JSON.stringify(selectedCard);
+        drawnCards.add(cardId);
+        hideQrngLoading(); return selectedCard;
+      } catch(e) {
+        hideQrngLoading();
+        const idx = Math.floor(Math.random() * availableCards.length);
+        const selectedCard = availableCards[idx];
+        const cardId = selectedCard.name || selectedCard.file || JSON.stringify(selectedCard);
+        drawnCards.add(cardId);
+        return selectedCard || null;
+      }
     }
 
     // Pioche aléatoire quantique
-    const idx = await QRNG.getInt(0, pool.length);
-    return pool[idx] || null;
+    try {
+      const idx = await QRNG.getInt(0, pool.length);
+      hideQrngLoading(); return pool[idx] || null;
+    } catch(e) {
+      hideQrngLoading();
+      const idx = Math.floor(Math.random() * pool.length);
+      return pool[idx] || null;
+    }
 
   }
 
@@ -4983,8 +5059,8 @@ function closeToreExitModal(){
         if (!data || !front) {
 
           isCardFlipping = false;
-          card.classList.add('flipped');
           toreThrowIndex--;
+          showCardError('Impossible de charger la carte, réessayez.', 2500);
           return;
 
         }
@@ -5743,6 +5819,29 @@ function showArrowForStep(stepIndex, isMatch) {
       // Passer au lancer de pièce suivant
       coinThrowIndex += 1;
       const isLastCoin = coinThrowIndex >= familiesWithCoin.length;
+
+      // Mettre à jour les dots phase pièce dans le bandeau principal
+      const dotsContainer2 = document.getElementById('tore-step-dots');
+      if (dotsContainer2) {
+        dotsContainer2.querySelectorAll('[data-coin-dot]').forEach((dot, idx) => {
+          if (idx < coinThrowIndex) {
+            dot.style.background = '#d4af37';
+            dot.style.boxShadow = '0 0 4px rgba(212,175,55,0.6)';
+            dot.style.border = 'none';
+            dot.style.transform = '';
+          } else if (idx === coinThrowIndex) {
+            dot.style.background = 'rgba(212,175,55,0.5)';
+            dot.style.border = '1px solid #d4af37';
+            dot.style.transform = 'scale(1.3)';
+            dot.style.boxShadow = '';
+          } else {
+            dot.style.background = 'rgba(212,175,55,0.15)';
+            dot.style.border = '1px solid rgba(212,175,55,0.2)';
+            dot.style.transform = '';
+            dot.style.boxShadow = '';
+          }
+        });
+      }
 
       if (isLastCoin) {
         coin.classList.remove('glow');
