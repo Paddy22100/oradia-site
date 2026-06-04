@@ -955,8 +955,16 @@
         function getAdminToken() {
             try {
                 const d = sessionStorage.getItem('oradia_auth');
-                if (d) return JSON.parse(d).token || null;
+                if (d) {
+                    const parsed = JSON.parse(d);
+                    return parsed.token || null;
+                }
             } catch(e) {}
+            // Fallback : lire depuis le hash URL
+            const hash = window.location.hash;
+            if (hash.startsWith('#t=')) {
+                return decodeURIComponent(hash.slice(3));
+            }
             return null;
         }
 

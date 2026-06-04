@@ -329,12 +329,14 @@ async function handleLogin(e) {
             
             showMessage('Connexion réussie! Redirection...', 'success');
             
+            console.log('Token reçu:', result.token);
             const authData = {
                 valid: true,
                 timestamp: Date.now(),
                 email: result.email || email,
-                token: result.token || null
+                token: result.token
             };
+            console.log('Auth data stocké:', authData);
             sessionStorage.setItem('oradia_auth', JSON.stringify(authData));
 
             // Attendre 300ms que le cookie httpOnly soit bien enregistré
