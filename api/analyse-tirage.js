@@ -142,7 +142,8 @@ Donne 2 points d'attention spécifiques à CE tirage (pas des généralités) :
 des registres précis où porter l'attention (corps, relations, rêves, résistances, synchronicités, etc.)
 en lien direct avec les cartes tirées.
 Termine par une phrase courte qui dit comment savoir si la fenêtre a été fructueuse.
-Format : texte narratif court, pas de liste à puces, pas de tirets.`;
+Format : texte narratif court, pas de liste à puces, pas de tirets.
+IMPORTANT : Utilise une formulation comme "Une fenêtre de 3 jours est recommandée" plutôt que "accordée vous 3 jours".`
 
   try {
     const anthropicResponse = await callAnthropicWithFallback({
