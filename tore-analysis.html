@@ -1523,6 +1523,10 @@
             section.className = 'obs-window-wrap fade-in-up';
 
             section.innerHTML = `
+                <div style="background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.15); border-radius: 8px; padding: 12px 16px; margin-bottom: 1rem; font-size: 0.8rem; color: rgba(200,192,168,0.6); text-align: center; font-style: italic;">
+                    <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
+                    La fenêtre d'observation est une période durant laquelle vous restez attentif aux résonances de votre tirage dans votre quotidien
+                </div>
                 <p class="obs-window-title"><i class="fas fa-eye"></i>Fenêtre d'observation</p>
                 <div class="obs-window-text">${renderMarkdown(text)}</div>
 
