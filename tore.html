@@ -3866,6 +3866,12 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     isGuideMessageShown = true; // Bloquer les clics sur les autres cartes
     isCardFlipping = false; // Le guide prend le relais, on libère ce verrou
 
+    // Auto-focus sur bouton Continuer pour accessibilité
+    setTimeout(() => {
+      const focusBtn = document.getElementById('guide-continue-btn');
+      if (focusBtn) focusBtn.focus();
+    }, 650);
+
     // Bloquer les interactions avec le plateau
     if (boardHost) {
       boardHost.style.pointerEvents = 'none';
@@ -5026,23 +5032,25 @@ function closeToreExitModal(){
           isCardFlipping = false;
           // Remplir le contenu de la face avant ici
           const escName = (data.name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-          front.innerHTML = `<img src="${imgPath}" alt="${escName}" loading="eager" fetchpriority="high" style="width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.3s ease;" />`;
+          const imgEl2 = document.createElement('img');
+          imgEl2.src = imgPath;
+          imgEl2.alt = escName;
+          imgEl2.setAttribute('loading', 'eager');
+          imgEl2.setAttribute('fetchpriority', 'high');
+          imgEl2.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.3s ease;';
+          front.innerHTML = '';
+          front.appendChild(imgEl2);
           // Rendre la carte visible seulement après l'injection de l'image
           front.style.visibility = 'visible';
           void card.offsetWidth;
           card.classList.remove('flipping');
           card.classList.add('flipped', 'just-flipped');
-          requestAnimationFrame(() => {
-            const injectedImg = front.querySelector('img');
-            if (injectedImg) {
-              requestAnimationFrame(() => { injectedImg.style.opacity = '1'; });
-            }
-          });
+          requestAnimationFrame(() => { requestAnimationFrame(() => { imgEl2.style.opacity = '1'; }); });
           
           setTimeout(() => {
             card.classList.remove('just-flipped'); // retirer l'exception
             showGuideMessage(famKey, data);
-          }, 1000);
+          }, prefersReduced ? 100 : 1000);
         };
 
         imgEl.onload = doFlip;
@@ -5899,7 +5907,12 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   }
 
   // Vérifier l'abonnement : d'abord local, sinon appel API si connecté
-  let isSubscribed = window.freemiumTracker ? window.freemiumTracker.isSubscribed() : false;
+  if (!window.freemiumTracker) {
+    // Tracker pas encore chargé (script defer) - bloquer et réessayer dans 500ms
+    setTimeout(() => form?.dispatchEvent(new Event('submit', {bubbles: true, cancelable: true})), 500);
+    return;
+  }
+  let isSubscribed = window.freemiumTracker.isSubscribed();
 
   if (!isSubscribed) {
     // Vérifier via API si l'utilisateur est connecté (email en session ou localStorage)
