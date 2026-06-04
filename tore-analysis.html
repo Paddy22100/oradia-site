@@ -1528,7 +1528,7 @@
                         ${userEmail ? `
                             <div class="obs-email-row">
                                 <div style="flex:1;color:rgba(212,175,55,0.8);font-size:0.85rem;padding:0.5rem 0;">
-                                    Un email sera envoyé à <strong>${escapeClientHtml(userEmail)}</strong>
+                                    Activation pour <strong>${escapeClientHtml(userEmail)}</strong>
                                 </div>
                                 <button class="obs-submit-btn" id="obs-submit-btn"
                                         onclick="activateObsWindow()">
@@ -1548,7 +1548,7 @@
                             </div>
                         `}
                         <p class="obs-error" id="obs-error"></p>
-                        <p style="color:rgba(212,175,55,0.35);font-size:0.72rem;margin:0.5rem 0 0;font-style:italic;">
+                        <p style="color:rgba(212,175,55,0.6);font-size:0.82rem;margin:0.8rem 0 0;font-style:italic;font-weight:500;">
                             Votre fenêtre sera activée pour la durée choisie.
                         </p>
                     </div>
@@ -1773,7 +1773,7 @@
                     obsStatus.innerHTML = `
                         <div style="background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 0.85rem; color: #d4af37; text-align: center;">
                             <i class="fas fa-eye" style="margin-right: 6px;"></i>
-                            Votre fenêtre d'observation (${window._obsSuggestedDays} jours) sera incluse dans l'email
+                            Votre fenêtre d'observation (durée préconisée) sera incluse dans l'email
                         </div>
                     `;
                     obsStatus.style.display = 'block';
