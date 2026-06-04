@@ -1395,6 +1395,13 @@
                 .slice(0, 3);
         }
 
+        function renderMarkdown(text) {
+            return text
+                .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+                .replace(/\*(.+?)\*/g, '<em>$1</em>')
+                .replace(/\n/g, '<br>');
+        }
+
         function injectObservationWindow(text, days, points) {
             if (document.getElementById('obs-window-section')) return;
 
@@ -1402,13 +1409,26 @@
             window._obsAttentionPoints = points;
             window._obsSuggestedDays = days;
 
+            // Récupérer l'email de l'utilisateur connecté
+            const sessionData = sessionStorage.getItem('oradia_session') 
+                || sessionStorage.getItem('userData')
+                || localStorage.getItem('userEmail');
+            let userEmail = null;
+            try {
+                if (sessionData && sessionData.startsWith('{')) {
+                    userEmail = JSON.parse(sessionData).email || null;
+                } else if (sessionData) {
+                    userEmail = sessionData;
+                }
+            } catch(e) {}
+
             const section = document.createElement('div');
             section.id = 'obs-window-section';
             section.className = 'obs-window-wrap fade-in-up';
 
             section.innerHTML = `
                 <p class="obs-window-title"><i class="fas fa-eye"></i>Fenêtre d'observation</p>
-                <div class="obs-window-text">${escapeClientHtml(text).replace(/\n/g, '<br>')}</div>
+                <div class="obs-window-text">${escapeClientHtml(renderMarkdown(text))}</div>
 
                 <div style="border-top:1px solid rgba(212,175,55,0.15);padding-top:1.25rem;">
                     <p style="font-family:'Cinzel',serif;font-size:0.7rem;color:rgba(212,175,55,0.6);
@@ -1432,16 +1452,28 @@
                     </div>
 
                     <div id="obs-form-wrap">
-                        <div class="obs-email-row">
-                            <input type="email" id="obs-email-input"
-                                   class="obs-email-input"
-                                   placeholder="Votre adresse email"
-                                   autocomplete="email" />
-                            <button class="obs-submit-btn" id="obs-submit-btn"
-                                    onclick="activateObsWindow()">
-                                <i class="fas fa-bell"></i> Activer
-                            </button>
-                        </div>
+                        ${userEmail ? `
+                            <div class="obs-email-row">
+                                <div style="flex:1;color:rgba(212,175,55,0.8);font-size:0.85rem;padding:0.5rem 0;">
+                                    Un email sera envoyé à <strong>${escapeClientHtml(userEmail)}</strong>
+                                </div>
+                                <button class="obs-submit-btn" id="obs-submit-btn"
+                                        onclick="activateObsWindow()">
+                                    <i class="fas fa-bell"></i> Activer
+                                </button>
+                            </div>
+                        ` : `
+                            <div class="obs-email-row">
+                                <input type="email" id="obs-email-input"
+                                       class="obs-email-input"
+                                       placeholder="Votre adresse email"
+                                       autocomplete="email" />
+                                <button class="obs-submit-btn" id="obs-submit-btn"
+                                        onclick="activateObsWindow()">
+                                    <i class="fas fa-bell"></i> Activer
+                                </button>
+                            </div>
+                        `}
                         <p class="obs-error" id="obs-error"></p>
                         <p style="color:rgba(212,175,55,0.35);font-size:0.72rem;margin:0.5rem 0 0;font-style:italic;">
                             Vous recevrez un email maintenant et un rappel à l'échéance.
@@ -1468,7 +1500,23 @@
         }
 
         async function activateObsWindow() {
-            const email = document.getElementById('obs-email-input')?.value?.trim();
+            // Récupérer l'email depuis le champ ou la session
+            let email = document.getElementById('obs-email-input')?.value?.trim();
+            
+            // Si pas de champ email, essayer de récupérer depuis la session
+            if (!email) {
+                const sessionData = sessionStorage.getItem('oradia_session') 
+                    || sessionStorage.getItem('userData')
+                    || localStorage.getItem('userEmail');
+                try {
+                    if (sessionData && sessionData.startsWith('{')) {
+                        email = JSON.parse(sessionData).email || null;
+                    } else if (sessionData) {
+                        email = sessionData;
+                    }
+                } catch(e) {}
+            }
+            
             const errEl = document.getElementById('obs-error');
             const btn = document.getElementById('obs-submit-btn');
 
@@ -1641,12 +1689,60 @@
             modal.style.display = 'flex';
             document.getElementById('emailSuccess').style.display = 'none';
             document.getElementById('emailForm').style.display = 'block';
-            document.getElementById('tirageEmail').value = '';
-            const cb = document.getElementById('newsletterConsent');
-            cb.checked = true;
-            document.getElementById('newsletterCheckVisual').style.background = '#d4af37';
-            document.getElementById('newsletterCheckVisual').style.borderColor = '#d4af37';
-            document.getElementById('newsletterCheck').style.opacity = '1';
+            
+            // Récupérer l'email de l'utilisateur connecté
+            const sessionData = sessionStorage.getItem('oradia_session') 
+                || sessionStorage.getItem('userData')
+                || localStorage.getItem('userEmail');
+            let userEmail = null;
+            try {
+                if (sessionData && sessionData.startsWith('{')) {
+                    userEmail = JSON.parse(sessionData).email || null;
+                } else if (sessionData) {
+                    userEmail = sessionData;
+                }
+            } catch(e) {}
+
+            if (userEmail) {
+                // Utilisateur connecté : masquer le champ email et la newsletter
+                document.getElementById('tirageEmail').value = userEmail;
+                document.getElementById('tirageEmail').style.display = 'none';
+                document.getElementById('newsletterLabel').style.display = 'none';
+                const cb = document.getElementById('newsletterConsent');
+                cb.checked = false;
+                document.getElementById('newsletterCheckVisual').style.background = 'rgba(212,175,55,0.2)';
+                document.getElementById('newsletterCheckVisual').style.borderColor = 'rgba(212,175,55,0.3)';
+                document.getElementById('newsletterCheck').style.opacity = '0';
+                
+                // Afficher un message indiquant l'email de destination
+                const emailLabel = document.querySelector('label[for="tirageEmail"]');
+                if (emailLabel) {
+                    emailLabel.innerHTML = `Votre analyse sera envoyée à <strong style="color:#d4af37">${escapeClientHtml(userEmail)}</strong>`;
+                    emailLabel.style.marginBottom = '1.2rem';
+                }
+                
+                // Soumettre automatiquement après un court délai
+                setTimeout(() => {
+                    document.getElementById('emailSubmitBtn').click();
+                }, 500);
+            } else {
+                // Utilisateur non connecté : afficher le formulaire complet
+                document.getElementById('tirageEmail').value = '';
+                document.getElementById('tirageEmail').style.display = 'block';
+                document.getElementById('newsletterLabel').style.display = 'block';
+                const cb = document.getElementById('newsletterConsent');
+                cb.checked = true;
+                document.getElementById('newsletterCheckVisual').style.background = '#d4af37';
+                document.getElementById('newsletterCheckVisual').style.borderColor = '#d4af37';
+                document.getElementById('newsletterCheck').style.opacity = '1';
+                
+                // Rétablir le label normal
+                const emailLabel = document.querySelector('label[for="tirageEmail"]');
+                if (emailLabel) {
+                    emailLabel.innerHTML = 'Votre adresse e-mail';
+                    emailLabel.style.marginBottom = '0.5rem';
+                }
+            }
         }
 
         function closeEmailModal() {
