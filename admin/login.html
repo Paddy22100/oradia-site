@@ -329,17 +329,16 @@ async function handleLogin(e) {
             
             showMessage('Connexion réussie! Redirection...', 'success');
             
-            const token = result.token || null;
             const authData = {
                 valid: true,
                 timestamp: Date.now(),
                 email: result.admin?.email || email,
-                token
+                token: result.token || null
             };
             sessionStorage.setItem('oradia_auth', JSON.stringify(authData));
             
             // Passer le token dans le hash pour garantir la disponibilité immédiate
-            window.location.href = 'https://oradia.fr/admin/dashboard-admin.html' + (token ? '#t=' + encodeURIComponent(token) : '');
+            window.location.href = 'https://oradia.fr/admin/dashboard-admin.html' + (authData.token ? '#t=' + encodeURIComponent(authData.token) : '');
         } else {
             showMessage(result.message || 'Identifiants incorrects', 'error');
         }
