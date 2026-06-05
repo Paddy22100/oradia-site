@@ -5259,7 +5259,10 @@ function closeToreExitModal(){
       back.addEventListener('click', async () => {
 
         // BLOQUER tant que le bandeau n'est pas prêt
-        if (!boardReady) return;
+        if (!boardReady) {
+          console.warn('[tore] Click ignoré : boardReady=false');
+          return;
+        }
 
         // BLOQUER si la carte est déjà retournée
         if (card.classList.contains('flipped')) return;
@@ -6648,7 +6651,18 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     const done = (DELAYS[allCards.length - 1] || 0) + DUR + 300;
     setTimeout(() => {
       boardHost.classList.remove('tore-dealing');
-      allCards.forEach(c => { c.style.cssText = ''; });
+      allCards.forEach(c => {
+        c.style.animation = 'none';
+        // Forcer un reflow pour que l'animation soit bien terminée
+        void c.offsetWidth;
+        c.style.animation = '';
+        c.style.opacity = '';
+        c.style.transform = '';
+        c.style.filter = '';
+      });
+      allCards.forEach(c => {
+        c.classList.remove('card-dealing-hidden');
+      });
       highlightNextCard();
       const bb = el('tore-bottom-bar');
       if (bb) requestAnimationFrame(() => requestAnimationFrame(() => {
