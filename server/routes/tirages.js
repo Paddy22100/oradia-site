@@ -216,12 +216,14 @@ router.post('/send-email', logActivity('tirage_email_sent'), async (req, res) =>
   try {
     const { email, intention, cards, analysis, synthesis, subscribeNewsletter, observationDays, observationText } = req.body;
 
-    if (!email || !cards || !Array.isArray(cards)) {
-      return res.status(400).json({ success: false, message: 'Email et cartes requis' });
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email requis' });
     }
+    // cards peut être vide si l'analyse est textuelle seulement
+    const safeCards = Array.isArray(cards) ? cards : [];
 
     // Envoyer l'email d'analyse
-    await brevoService.sendTirageAnalysis({ email, intention, cards, analysis, synthesis, observationDays, observationText });
+    await brevoService.sendTirageAnalysis({ email, intention, cards: safeCards, analysis, synthesis, observationDays, observationText });
 
     // Inscrire à la newsletter si demandé
     if (subscribeNewsletter) {

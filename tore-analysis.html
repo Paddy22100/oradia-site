@@ -1797,14 +1797,46 @@
                 );
                 const intention = sessionStorage.getItem('tore_intention') || '';
 
+                // DEBUG temporaire
+                console.log('[email] email:', email);
+                console.log('[email] analysisData keys:', Object.keys(analysisData));
+                console.log('[email] cards type:', typeof analysisData.cards,
+                    Array.isArray(analysisData.cards), analysisData.cards?.length);
+                console.log('[email] ALL sessionStorage keys:',
+                    Object.keys(sessionStorage));
+
+                // Chercher les cartes dans toutes les clés possibles
+                let cards = analysisData.cards;
+                if (!Array.isArray(cards) || cards.length === 0) {
+                    // Essayer d'autres clés de sessionStorage
+                    const altKeys = ['tore_cards', 'tore_analysis', 'cards_data',
+                                     'tirage_cards', 'tore_tirage'];
+                    for (const key of altKeys) {
+                        const val = sessionStorage.getItem(key);
+                        if (val) {
+                            try {
+                                const parsed = JSON.parse(val);
+                                if (Array.isArray(parsed)) { cards = parsed; break; }
+                                if (parsed.cards && Array.isArray(parsed.cards)) {
+                                    cards = parsed.cards; break;
+                                }
+                            } catch(_) {}
+                        }
+                    }
+                }
+
+                // Si toujours pas de cartes, envoyer quand même avec tableau vide
+                // pour que l'email parte avec au moins l'analyse textuelle
+                if (!Array.isArray(cards)) cards = [];
+
                 const resp = await fetch('/api/tirages/send-email', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         email,
                         intention,
-                        cards: analysisData.cards || [],
-                        analysis: analysisData.analysis || '',
+                        cards,
+                        analysis: analysisData.analysis || analysisData.message || '',
                         synthesis: analysisData.synthesis || '',
                         observationDays: analysisData.observationDays || null,
                         observationText: analysisData.observationText || null,
