@@ -1236,6 +1236,21 @@
 
   }
 
+  .tore-card[data-family="memoire_cosmos"] .tore-card-back::after {
+    content: '';
+    position: absolute;
+    inset: -5%;
+    border-radius: 50%;
+    background: radial-gradient(circle, rgba(212,175,55,0.45) 0%, rgba(212,175,55,0.1) 50%, transparent 70%);
+    opacity: 0;
+    pointer-events: none;
+    z-index: 2;
+  }
+  .tore-card[data-family="memoire_cosmos"].cosmos-active .tore-card-back::after {
+    animation: cosmosHaloPulse 1.6s ease-out forwards,
+               cosmosHaloPulse 1.6s ease-out 1.6s forwards;
+  }
+
 
 
   /* Label de famille sous chaque tas */
@@ -2319,21 +2334,13 @@
 
   /* Halo pulsant sur Mémoire Cosmos pendant l'orbite */
   @keyframes cosmosHaloPulse {
-    0%   { box-shadow: 0 0 0 0 rgba(212,175,55,0); }
-    40%  { box-shadow: 0 0 0 18px rgba(212,175,55,0.35), 0 0 40px rgba(212,175,55,0.2); }
-    100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); }
+    0%   { transform: scale(0.8); opacity: 0; }
+    30%  { opacity: 1; }
+    60%  { transform: scale(2.2); opacity: 0.5; }
+    100% { transform: scale(3.2); opacity: 0; }
   }
 
-  /* Cartes périphériques : partent du centre, orbitent sur un arc, atterrissent */
-  @keyframes orbitLand {
-    0%   { opacity: 0; transform: translate(var(--ox), var(--oy)) scale(0.6) rotate(var(--orot)); filter: blur(4px); }
-    20%  { opacity: 1; filter: blur(0); }
-    70%  { transform: translate(calc(var(--ox) * 0.08), calc(var(--oy) * 0.08)) scale(1.05) rotate(calc(var(--orot) * 0.1)); }
-    88%  { transform: translate(0, 0) scale(0.97) rotate(0deg); }
-    100% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; filter: blur(0); }
-  }
-
-/* Animation gérée par les classes spécifiques pour éviter les conflits */
+  /* Animation gérée par les classes spécifiques pour éviter les conflits */
 .tore-card {
   opacity: 0;
   transform-origin: center center;
@@ -6277,7 +6284,13 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
       void cosmosCard.offsetWidth;
       cosmosCard.classList.remove('card-dealing-hidden');
       cosmosCard.style.opacity = '1';
-      cosmosCard.style.animation = 'cosmosReveal 0.9s cubic-bezier(0.34,1.4,0.64,1) forwards, cosmosHaloPulse 1.8s ease-out 0.4s 2';
+      cosmosCard.style.animation = 'cosmosReveal 0.9s cubic-bezier(0.34,1.4,0.64,1) forwards';
+      setTimeout(() => {
+        if (cosmosCard) cosmosCard.classList.add('cosmos-active');
+        setTimeout(() => {
+          if (cosmosCard) cosmosCard.classList.remove('cosmos-active');
+        }, 3600);
+      }, 500);
     }
 
     // ③ Calculer les offsets de chaque carte orbitale par rapport au centre du plateau
@@ -6288,41 +6301,79 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     const boardCy = boardRect.height / 2;
 
     // ④ Lancer l'animation de chaque carte orbitale avec délai progressif
-    const orbitalDelays = [480, 680, 880, 1080, 1280, 1480];
-    const orbitalDurations = [820, 840, 800, 860, 820, 840];
+    const orbitalDelays = [380, 540, 700, 860, 1020, 1180];
+    const orbitalDurations = [950, 970, 940, 980, 950, 960];
 
     orbitalCards.forEach((card, i) => {
-      const cardRect = card.getBoundingClientRect();
-      // Offset de la carte par rapport au centre du plateau (en px, dans le viewport)
-      const boardAbsRect = boardHost.getBoundingClientRect();
-      const cardCx = cardRect.left + cardRect.width / 2 - boardAbsRect.left;
-      const cardCy = cardRect.top + cardRect.height / 2 - boardAbsRect.top;
-      const ox = boardCx - cardCx; // déplacement depuis la position finale vers le centre
-      const oy = boardCy - cardCy;
-      const orot = +(Math.random() * 24 - 12).toFixed(1);
       const dur = orbitalDurations[i] || 840;
       const delay = orbitalDelays[i] || 400;
 
+      // Calculer position finale de la carte par rapport au centre du plateau
+      const boardAbsRect = boardHost.getBoundingClientRect();
+      const cardRect = card.getBoundingClientRect();
+      const finalX = cardRect.left + cardRect.width  / 2 - boardAbsRect.left - boardAbsRect.width  / 2;
+      const finalY = cardRect.top  + cardRect.height / 2 - boardAbsRect.top  - boardAbsRect.height / 2;
+
+      // Angle de départ de la spirale : chaque carte part avec un angle décalé
+      // pour créer l'effet de déploiement en éventail depuis le centre
+      const spiralStartAngle = -180 + (i * 60); // -180° à +120° pour 6 cartes
+      const spiralRadius = Math.sqrt(finalX*finalX + finalY*finalY);
+      const finalAngle = Math.atan2(finalY, finalX) * 180 / Math.PI;
+
       setTimeout(() => {
-        card.style.setProperty('--ox', ox + 'px');
-        card.style.setProperty('--oy', oy + 'px');
-        card.style.setProperty('--orot', orot + 'deg');
-        card.style.animation = 'none';
-        void card.offsetWidth;
+        // Rendre la carte visible au départ (depuis le centre, invisible)
+        card.style.opacity = '0';
+        card.style.transform = `translate(0px, 0px) scale(0.5)`;
         card.classList.remove('card-dealing-hidden');
-        card.style.opacity = '1';
-        card.style.animation = `orbitLand ${dur}ms cubic-bezier(0.22,1,0.36,1) both`;
+        void card.offsetWidth;
 
-        // Nettoyer les CSS vars et l'animation après atterrissage
-        setTimeout(() => {
-          card.style.animation = 'none';
-          card.style.transform = '';
-          card.style.removeProperty('--ox');
-          card.style.removeProperty('--oy');
-          card.style.removeProperty('--orot');
-          requestAnimationFrame(() => { card.style.animation = ''; });
-        }, dur + 60);
+        const startTime = performance.now();
+        const startAngle = finalAngle + spiralStartAngle;
 
+        const animateSpiral = (now) => {
+          const elapsed = now - startTime;
+          const t = Math.min(elapsed / dur, 1);
+          // Easing : accélère au début, décélère à la fin (ease-out cubic)
+          const e = 1 - Math.pow(1 - t, 3);
+          // Easing pour l'opacité : fade-in rapide
+          const eo = Math.min(t * 5, 1);
+
+          // Interpoler l'angle de rotation (spirale)
+          const currentAngle = startAngle + (finalAngle - startAngle) * e;
+          const currentAngleRad = currentAngle * Math.PI / 180;
+
+          // Interpoler le rayon (distance au centre) : commence à 0, finit à spiralRadius
+          // Légère sur-extension à 80% du temps pour l'effet rebond
+          const radiusEase = t < 0.8
+            ? e * 1.08 * spiralRadius
+            : spiralRadius + (spiralRadius * 0.08) * (1 - (t - 0.8) / 0.2);
+          const currentRadius = t < 0.8 ? radiusEase : radiusEase;
+
+          // Calculer la position cartésienne depuis l'angle et le rayon
+          const cx = Math.cos(currentAngleRad) * spiralRadius * e;
+          const cy = Math.sin(currentAngleRad) * spiralRadius * e;
+
+          // Scale : démarre petit, rebondit légèrement à 88%
+          const scaleVal = t < 0.88
+            ? 0.5 + e * 0.55
+            : 1.05 - (t - 0.88) / 0.12 * 0.05;
+
+          card.style.opacity = String(Math.min(eo, 1));
+          card.style.transform = `translate(${cx - finalX * e + finalX * e}px, ${cy - finalY * e + finalY * e}px) scale(${scaleVal})`;
+
+          if (t < 1) {
+            requestAnimationFrame(animateSpiral);
+          } else {
+            card.style.opacity = '1';
+            card.style.transform = 'translate(0px, 0px) scale(1)';
+            requestAnimationFrame(() => {
+              card.style.transform = '';
+              card.style.opacity = '';
+            });
+          }
+        };
+
+        requestAnimationFrame(animateSpiral);
       }, delay);
     });
 
