@@ -4175,8 +4175,8 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       }
     }
 
-    // S'assurer que la carte action n'a pas de style résiduel qui clignote
-    allFlippedCards.forEach(fc => {
+    // S'assurer qu'aucune carte retournée n'a de style résiduel qui clignote
+    boardHost.querySelectorAll('.tore-card.flipped').forEach(fc => {
       fc.style.animation = '';
     });
 
@@ -5740,6 +5740,11 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
         if (!dataNext) {
           overlay.remove();
           isBridgeFanOpen = false;
+          // Déverrouiller la pièce après fermeture du bridge fan
+          if (coin && !isLastCoin) {
+            coin.dataset.locked = '0';
+            isCoinAnimating = false;
+          }
           if (coinWrapper) coinWrapper.style.pointerEvents = 'auto';
           const bsvg = document.getElementById('tore-beam-svg');
           if (bsvg) bsvg.classList.remove('beam-hidden');
@@ -5816,6 +5821,11 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
             placeBridgeCard(stepIndex, 'actions', dataNext);
             overlay.remove();
             isBridgeFanOpen = false;
+            // Déverrouiller la pièce après fermeture du bridge fan
+            if (coin && !isLastCoin) {
+              coin.dataset.locked = '0';
+              isCoinAnimating = false;
+            }
             if (coinWrapper) coinWrapper.style.pointerEvents = 'auto';
             const bsvg2 = document.getElementById('tore-beam-svg');
             if (bsvg2) bsvg2.classList.remove('beam-hidden');
@@ -5848,6 +5858,11 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
 
         overlay.remove();
         isBridgeFanOpen = false;
+        // Déverrouiller la pièce après fermeture du bridge fan
+        if (coin && !isLastCoin) {
+          coin.dataset.locked = '0';
+          isCoinAnimating = false;
+        }
         if (coinWrapper) coinWrapper.style.pointerEvents = 'auto';
         if (isLastCoin) setTimeout(showToreAnalysisCTA, 400);
 
@@ -6176,7 +6191,9 @@ function showArrowForStep(stepIndex, isMatch) {
         coin.dataset.locked = '1';
         isToreComplete = true;
       } else {
-        coin.dataset.locked = '0';
+        // Ne pas déverrouiller ici — la pièce sera déverrouillée
+        // après fermeture de la modale de polarité ou du bridge fan
+        coin.dataset.locked = '1';
         coin.classList.add('glow');
       }
 
@@ -6186,8 +6203,13 @@ function showArrowForStep(stepIndex, isMatch) {
 
         if (cardPolarity === 'none') {
           showArrowForStep(stepIndex, null);
-          // Pas de modale : si dernier lancer, afficher bouton directement
-          if (isLastCoin) setTimeout(showToreAnalysisCTA, 600);
+          if (isLastCoin) {
+            setTimeout(showToreAnalysisCTA, 600);
+          } else {
+            // Pas de modale → déverrouiller immédiatement
+            coin.dataset.locked = '0';
+            isCoinAnimating = false;
+          }
         } else {
           const isMatch = (cardPolarity === coinPolarity);
           showArrowForStep(stepIndex, isMatch);
@@ -6195,11 +6217,18 @@ function showArrowForStep(stepIndex, isMatch) {
           setTimeout(() => {
             showPolarityBadge(card, coinPolarity, cardPolarity, isMatch, () => {
               if (!isMatch && nextStep) {
-                // Désaccord → bridge fan s'ouvre ; le bouton apparaîtra à sa fermeture
+                // Bridge fan s'ouvre — la pièce restera verrouillée
+                // jusqu'à la fermeture du fan (isBridgeFanOpen redevient false)
                 openBridgeFan(stepIndex, nextStep.key, isLastCoin);
+                // Déverrouiller la pièce après la fermeture du bridge fan
+                // openBridgeFan appelle son callback quand il se ferme
+                // → la pièce sera déverrouillée dans ce callback (voir ÉTAPE 3)
               } else if (isLastCoin) {
-                // Accord ET dernier lancer → bouton maintenant
                 setTimeout(showToreAnalysisCTA, 400);
+              } else {
+                // Accord et pas dernier lancer → déverrouiller maintenant
+                coin.dataset.locked = '0';
+                isCoinAnimating = false;
               }
             });
           }, 1600);
