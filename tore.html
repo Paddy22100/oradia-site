@@ -6069,6 +6069,7 @@ function showArrowForStep(stepIndex, isMatch) {
     if (input && btn) {
       // Initialiser l'état du bouton
       btn.disabled = !isOpenQuestion(input.value);
+      btn.dataset.validationBound = '1';
       
       // Ajouter l'écouteur d'événement
       input.addEventListener('input', () => {
@@ -6083,8 +6084,24 @@ function showArrowForStep(stepIndex, isMatch) {
     }
   }
   
-  // Exécuter la configuration
-  setupIntentionValidation();
+  // S'assurer que le DOM est prêt avant d'attacher la validation
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupIntentionValidation);
+  } else {
+    setupIntentionValidation();
+  }
+  // Filet de sécurité : réessayer après 300ms si btn était null
+  setTimeout(() => {
+    const btn = el('tore-submit-btn');
+    const input = el('tore-intention-input');
+    if (btn && input && !btn.dataset.validationBound) {
+      btn.dataset.validationBound = '1';
+      btn.disabled = !isOpenQuestion(input.value);
+      input.addEventListener('input', () => {
+        btn.disabled = !isOpenQuestion(input.value);
+      });
+    }
+  }, 300);
 
   
 
