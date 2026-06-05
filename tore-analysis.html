@@ -1791,43 +1791,97 @@
             }
 
             try {
-                // Récupérer les données du tirage depuis sessionStorage
-                const analysisData = JSON.parse(
-                    sessionStorage.getItem('tore_analysis_data') || '{}'
-                );
+                // Lire toutes les clés possibles pour reconstituer les données
                 const intention = sessionStorage.getItem('tore_intention') || '';
 
-                // DEBUG temporaire
-                console.log('[email] email:', email);
-                console.log('[email] analysisData keys:', Object.keys(analysisData));
-                console.log('[email] cards type:', typeof analysisData.cards,
-                    Array.isArray(analysisData.cards), analysisData.cards?.length);
-                console.log('[email] ALL sessionStorage keys:',
-                    Object.keys(sessionStorage));
+                // Chercher l'analyse dans toutes les clés connues
+                let analysis = '';
+                let synthesis = '';
+                let observationDays = null;
+                let observationText = '';
+                let cards = [];
 
-                // Chercher les cartes dans toutes les clés possibles
-                let cards = analysisData.cards;
-                if (!Array.isArray(cards) || cards.length === 0) {
-                    // Essayer d'autres clés de sessionStorage
-                    const altKeys = ['tore_cards', 'tore_analysis', 'cards_data',
-                                     'tirage_cards', 'tore_tirage'];
-                    for (const key of altKeys) {
-                        const val = sessionStorage.getItem(key);
-                        if (val) {
+                // Essayer tore_analysis_data en premier
+                const rawData = sessionStorage.getItem('tore_analysis_data');
+                if (rawData) {
+                    try {
+                        const d = JSON.parse(rawData);
+                        analysis = d.analysis || d.message || '';
+                        synthesis = d.synthesis || '';
+                        observationDays = d.observationDays || null;
+                        observationText = d.observationText || '';
+                        cards = d.cards || [];
+                    } catch(_) {}
+                }
+
+                // Si pas trouvé, chercher dans tore_last_analysis ou analyse_result
+                if (!analysis) {
+                    const altKeys = ['tore_last_analysis', 'analyse_result', 'tore_analysis',
+                                     'analysis_result', 'tirage_analysis', 'oradia_analysis'];
+                    for (const k of altKeys) {
+                        const v = sessionStorage.getItem(k);
+                        if (v) {
                             try {
-                                const parsed = JSON.parse(val);
-                                if (Array.isArray(parsed)) { cards = parsed; break; }
-                                if (parsed.cards && Array.isArray(parsed.cards)) {
-                                    cards = parsed.cards; break;
-                                }
+                                const d = JSON.parse(v);
+                                if (typeof d === 'string') { analysis = d; break; }
+                                analysis = d.analysis || d.message || d.text || '';
+                                synthesis = d.synthesis || synthesis;
+                                observationDays = d.observationDays || observationDays;
+                                observationText = d.observationText || observationText;
+                                if (Array.isArray(d.cards)) cards = d.cards;
+                                if (analysis) break;
+                            } catch(_) {
+                                // Si c'est directement du texte
+                                if (typeof v === 'string' && v.length > 50) { analysis = v; break; }
+                            }
+                        }
+                    }
+                }
+
+                // Chercher les cartes séparément si toujours vide
+                if (!cards.length) {
+                    const cardKeys = ['tore_cards', 'tirage_cards', 'cards_data', 'tore_tirage_cards'];
+                    for (const k of cardKeys) {
+                        const v = sessionStorage.getItem(k);
+                        if (v) {
+                            try {
+                                const d = JSON.parse(v);
+                                if (Array.isArray(d)) { cards = d; break; }
+                                if (Array.isArray(d.cards)) { cards = d.cards; break; }
                             } catch(_) {}
                         }
                     }
                 }
 
-                // Si toujours pas de cartes, envoyer quand même avec tableau vide
-                // pour que l'email parte avec au moins l'analyse textuelle
-                if (!Array.isArray(cards)) cards = [];
+                // Chercher observationDays dans les clés de fenêtre
+                if (!observationDays) {
+                    const obsKeys = ['tore_observation', 'fenetre_observation', 'observation_window',
+                                     'tore_fenetre', 'observation_days'];
+                    for (const k of obsKeys) {
+                        const v = sessionStorage.getItem(k);
+                        if (v) {
+                            try {
+                                const d = JSON.parse(v);
+                                observationDays = d.days || d.duration || d.observationDays || parseInt(v) || null;
+                                observationText = d.text || d.observationText || observationText;
+                                if (observationDays) break;
+                            } catch(_) {
+                                observationDays = parseInt(v) || null;
+                                if (observationDays) break;
+                            }
+                        }
+                    }
+                }
+
+                // LOG pour debug (à retirer après confirmation)
+                console.log('[doSendEmail] Keys found:', {
+                    intention: !!intention,
+                    analysis: analysis.length,
+                    synthesis: synthesis.length,
+                    cards: cards.length,
+                    observationDays,
+                    allKeys: Object.keys(sessionStorage)
+                });
 
                 const resp = await fetch('/api/tirages/send-email', {
                     method: 'POST',
@@ -1836,10 +1890,10 @@
                         email,
                         intention,
                         cards,
-                        analysis: analysisData.analysis || analysisData.message || '',
-                        synthesis: analysisData.synthesis || '',
-                        observationDays: analysisData.observationDays || null,
-                        observationText: analysisData.observationText || null,
+                        analysis,
+                        synthesis,
+                        observationDays,
+                        observationText,
                     }),
                 });
 
