@@ -6183,40 +6183,106 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   toreHasStarted = true;
   results.classList.add('hidden');
 
-  // Verrouiller le plateau immédiatement pour que les cartes soient invisibles
-  if (boardHost) {
+  // Animation "distribution de cartes" via clones position:fixed
+  // (évite overflow:hidden et transform !important du conteneur)
+  requestAnimationFrame(() => requestAnimationFrame(() => {
+    if (!boardHost) return;
+
+    const cards = TIRAGE_ORDER.map(key =>
+      boardHost.querySelector(`.tore-card[data-family="${key}"]`)
+    ).filter(Boolean);
+
+    if (!cards.length) return;
+
+    const humanDelays = [0, 500, 920, 1300, 1750, 2180, 2650];
+    const durations   = [820, 860, 800, 840, 880, 820, 900];
+    const vw = window.innerWidth;
+    const vh = window.innerHeight;
+    const originX = vw / 2;
+    const originY = vh + 80;
+
+    // ① Mesurer les positions finales des vraies cartes
+    const rects = cards.map(c => c.getBoundingClientRect());
+
+    // ② Masquer les vraies cartes
     boardHost.classList.add('tore-dealing');
-  }
+    cards.forEach(c => c.classList.add('card-dealing-hidden'));
 
-  // Précharger les images de dos en mémoire GPU avant l'animation
-  // pour éviter le décodage progressif (bandeau blanc descendant)
-  const _dosImages = [
-    'images/dos/dos_emotion.png',
-    'images/dos/dos_besoin.png',
-    'images/dos/dos_transmutation.png',
-    'images/dos/dos_action.png',
-    'images/dos/dos_archetype.png',
-    'images/dos/dos_revelation.png',
-    'images/dos/dos_memoire_cosmos.png'
-  ];
-  let _dosLoaded = 0;
-  const _dosTotalToLoad = _dosImages.length;
+    // ③ Créer un layer fixed au-dessus de tout
+    const layer = document.createElement('div');
+    layer.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:visible;';
+    document.body.appendChild(layer);
 
-  const _onDosLoad = () => {
-    _dosLoaded++;
-    if (_dosLoaded >= _dosTotalToLoad) {
-      // Toutes les images de dos sont en cache — lancer la distribution
-      clearTimeout(window._dealFallbackTimer);
-      setTimeout(_runDeal, 100);
-    }
-  };
+    // ④ Pour chaque carte, créer un clone animé
+    const clones = cards.map((card, i) => {
+      const r = rects[i];
+      const clone = card.cloneNode(true);
+      // Positionner le clone exactement sur la carte réelle
+      clone.style.cssText = `
+        position:fixed;
+        left:${r.left}px;
+        top:${r.top}px;
+        width:${r.width}px;
+        height:${r.height}px;
+        margin:0;
+        opacity:0;
+        pointer-events:none;
+        z-index:9999;
+        transform-origin:center center;
+      `;
+      layer.appendChild(clone);
 
-  _dosImages.forEach(src => {
-    const img = new Image();
-    img.onload = _onDosLoad;
-    img.onerror = _onDosLoad; // ne pas bloquer si une image manque
-    img.src = src;
-  });
+      const dx = Math.round(originX - (r.left + r.width / 2));
+      const dy = Math.round(originY - (r.top  + r.height / 2));
+      const rot = +(Math.random() * 18 - 9).toFixed(1);
+      const dur = durations[i] || 840;
+
+      return { clone, dx, dy, rot, dur };
+    });
+
+    // ⑤ Injecter les keyframes avec les vraies valeurs
+    const oldSS = document.getElementById('tore-deal-keyframes');
+    if (oldSS) oldSS.remove();
+    const ss = document.createElement('style');
+    ss.id = 'tore-deal-keyframes';
+    clones.forEach(({ dx, dy, rot, dur }, i) => {
+      ss.textContent +=
+        `@keyframes cDeal_${i}{` +
+        `0%{opacity:0;transform:translate(${dx}px,${dy}px) scale(1.75) rotate(${rot}deg);filter:blur(3px)}` +
+        `18%{opacity:1;filter:blur(0)}` +
+        `78%{transform:translate(${Math.round(dx*.05)}px,${Math.round(dy*.05)}px) scale(1.08) rotate(${+(rot*.12).toFixed(1)}deg)}` +
+        `91%{transform:translate(0,0) scale(0.97) rotate(0deg)}` +
+        `100%{opacity:1;transform:translate(0,0) scale(1) rotate(0deg);filter:blur(0)}` +
+        `}`;
+    });
+    document.head.appendChild(ss);
+
+    // ⑥ Lancer l'animation de chaque clone
+    clones.forEach(({ clone, dur }, i) => {
+      setTimeout(() => {
+        clone.style.animation = `cDeal_${i} ${dur}ms cubic-bezier(0.22,1,0.36,1) both`;
+        // Une fois l'animation terminée, révéler la vraie carte et supprimer le clone
+        setTimeout(() => {
+          cards[i].classList.remove('card-dealing-hidden');
+          clone.remove();
+        }, dur + 40);
+      }, humanDelays[i] || 0);
+    });
+
+    // ⑦ Fin → cleanup + highlight + bandeau
+    const totalDelay = (humanDelays[cards.length - 1] || 0) + (durations[cards.length - 1] || 840) + 500;
+    setTimeout(() => {
+      layer.remove();
+      boardHost.classList.remove('tore-dealing');
+      cards.forEach(c => c.classList.remove('card-dealing-hidden'));
+      highlightNextCard();
+      const bbInit = el('tore-bottom-bar');
+      if (bbInit) requestAnimationFrame(() => requestAnimationFrame(() => { bbInit.style.opacity = '1'; }));
+      if (boardHost) boardHost.style.pointerEvents = 'auto';
+      boardReady = true;
+    }, totalDelay);
+  }));
+});
 
   // Filet de sécurité : lancer quand même après 1s si le chargement traîne
   window._dealFallbackTimer = setTimeout(() => {
