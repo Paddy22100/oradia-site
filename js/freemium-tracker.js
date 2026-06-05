@@ -280,13 +280,30 @@ class FreemiumTracker {
 
     canDrawTore() {
         if (this.isSubscribed()) return true;
+        // Vérifier les crédits ponctuels achetés
+        const credits = parseInt(
+            localStorage.getItem('oradia_single_draw_credits') || '0', 10
+        );
+        if (credits > 0) return true;
+        // Vérifier le quota lifetime gratuit
         const used = parseInt(localStorage.getItem('oradia_tore_lifetime_draws') || '0', 10);
         return used < 2;
     }
 
     recordToreDraw() {
         if (this.isSubscribed()) return;
-        const used = parseInt(localStorage.getItem('oradia_tore_lifetime_draws') || '0', 10);
+        // Si l'utilisateur a des crédits ponctuels, les consommer en priorité
+        const credits = parseInt(
+            localStorage.getItem('oradia_single_draw_credits') || '0', 10
+        );
+        if (credits > 0) {
+            localStorage.setItem('oradia_single_draw_credits', String(credits - 1));
+            return; // Ne pas incrémenter le compteur lifetime
+        }
+        // Sinon incrémenter le compteur lifetime gratuit
+        const used = parseInt(
+            localStorage.getItem('oradia_tore_lifetime_draws') || '0', 10
+        );
         localStorage.setItem('oradia_tore_lifetime_draws', String(used + 1));
     }
 

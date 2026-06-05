@@ -351,6 +351,18 @@ const handler = async (req, res) => {
         const sig = req.headers['stripe-signature'];
         const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
 
+        // Lire le body brut pour les logs
+        const chunks = [];
+        for await (const chunk of req) {
+            chunks.push(chunk);
+        }
+        const rawBody = Buffer.concat(chunks);
+
+        // Logs de diagnostic
+        console.log('[webhook] Event received:', req.headers['stripe-signature'] ? 'sig present' : 'NO SIG');
+        console.log('[webhook] Secret defined:', !!process.env.STRIPE_WEBHOOK_SECRET);
+        console.log('[webhook] Body length:', rawBody?.length);
+
         if (!sig || !webhookSecret) {
             return res.status(400).json({
                 success: false,
@@ -365,13 +377,6 @@ const handler = async (req, res) => {
 
         let event;
         try {
-            // Lire le body brut depuis la requête
-            const chunks = [];
-            for await (const chunk of req) {
-                chunks.push(chunk);
-            }
-            const rawBody = Buffer.concat(chunks);
-            
             // Construire l'événement Stripe avec le raw body réel
             event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
 
@@ -386,8 +391,27 @@ const handler = async (req, res) => {
 
         console.log(`Webhook event: ${event.type}`);
         
-        switch (event.type) {
-            case 'checkout.session.completed': {
+        // Répondre immédiatement à Stripe
+        res.status(200).json({ received: true });
+
+        // Traitement asynchrone ensuite (fire and forget)
+        processEvent(event).catch(err => {
+            console.error('[webhook] Processing error:', err);
+        });
+    } catch (error) {
+        console.error('Webhook processing error:', error.message);
+        return res.status(500).json({ 
+            success: false,
+            error: 'Internal server error', 
+            message: 'Une erreur est survenue lors du traitement'
+        });
+    }
+};
+
+// Fonction séparée pour le traitement asynchrone
+async function processEvent(event) {
+    switch (event.type) {
+        case 'checkout.session.completed': {
                 const session = event.data.object;
                 const sessionId = session.id;
                 
@@ -768,25 +792,14 @@ const handler = async (req, res) => {
             
             default:
                 console.log(`Event not handled: ${event.type}`);
-                return res.status(200).json({ 
-                    success: true,
-                    message: 'Event received but not handled' 
-                });
+                break;
         }
-    } catch (error) {
-        console.error('Webhook processing error:', error.message);
-        return res.status(500).json({ 
-            success: false,
-            error: 'Internal server error', 
-            message: 'Une erreur est survenue lors du traitement'
-        });
     }
-};
 
-module.exports = handler;
+export default handler;
 
-module.exports.config = {
-    api: {
-        bodyParser: false
-    }
+export const config = {
+  api: { 
+    bodyParser: false 
+  }
 };

@@ -218,16 +218,28 @@
   }
   .quantum-learn-more:hover { background:rgba(200,169,110,.12); }
   .quantum-explication {
-    max-height: 0;
-    overflow: hidden;
-    transition: max-height 0.45s ease, opacity 0.35s ease;
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 50%;
+    transform: translateX(-50%) translateZ(0);
+    width: min(640px, 90vw);
     opacity: 0;
-    transform: translateZ(0);
+    pointer-events: none;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0s linear 0.3s;
+    z-index: 10;
+    background: rgba(5, 15, 35, 0.95);
+    border: 1px solid rgba(212,175,55,0.2);
+    border-radius: 12px;
+    padding: 0 16px;
+    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
     will-change: opacity;
   }
   .quantum-explication.open {
-    max-height: 1400px;
     opacity: 1;
+    pointer-events: auto;
+    visibility: visible;
+    transition: opacity 0.3s ease, visibility 0s linear 0s;
   }
   .quantum-explication-inner { padding:1.5rem 0 .5rem;text-align:left; }
   .quantum-explication h3 { font-size:1.1rem;font-weight:600;margin-bottom:.9rem;color:#c8a96e;letter-spacing:.03em; }
@@ -3036,7 +3048,8 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
           </div>
 
           <!-- Explication dépliable -->
-          <div class="quantum-explication" id="quantum-explication" style="max-width:640px;margin:0 auto;">
+          <div style="position:relative;">
+            <div class="quantum-explication" id="quantum-explication">
             <div class="quantum-explication-inner">
 
               <h3>Pourquoi un tirage quantique ?</h3>
@@ -3122,7 +3135,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
             </div>
           </div>
-
+          </div>
         </div>
 
       </div>
@@ -6313,6 +6326,12 @@ function showArrowForStep(stepIndex, isMatch) {
     if (singleDraw === 'success') {
       // Nettoyer l'URL sans recharger
       window.history.replaceState({}, '', '/tore.html');
+      // Créditer 1 tirage ponctuel dans localStorage
+      const _curCredits = parseInt(
+        localStorage.getItem('oradia_single_draw_credits') || '0', 10
+      );
+      localStorage.setItem('oradia_single_draw_credits',
+        String(_curCredits + 1));
       // Afficher un message de confirmation
       const msgEl = document.createElement('div');
       msgEl.style.cssText =
@@ -6434,50 +6453,55 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   }
 
   if (!isSubscribed) {
-    let serverAllows = true;
-    const sessStr = sessionStorage.getItem('oradia_member_session')
-                  || localStorage.getItem('oradia_member_session');
-    if (sessStr) {
-      try {
-        const sess = JSON.parse(sessStr);
-        if (sess.email) {
-          try {
-            const quotaResp = await fetch('/api/qrng', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ email: sess.email })
-            });
-            if (quotaResp.ok) {
-              const quotaData = await quotaResp.json();
-              serverAllows = quotaData.canDraw === true;
-            }
-          } catch(_) {
-            serverAllows = window.freemiumTracker
-              ? window.freemiumTracker.canDrawTore()
-              : true;
-          }
-        }
-      } catch(_) {}
-    } else {
-      serverAllows = window.freemiumTracker
-        ? window.freemiumTracker.canDrawTore()
-        : true;
-    }
+    // Vérification quota uniquement si non abonné
+    // Utiliser localStorage en priorité (fiable pour les non-connectés)
+    const localCanDraw = window.freemiumTracker
+      ? window.freemiumTracker.canDrawTore()
+      : true;
 
-    if (!serverAllows) {
-      if (submitBtn) {
-        submitBtn.disabled = false;
-        submitBtn.dataset.submitting = '0';
-        const _slr = submitBtn.querySelector('.font-cinzel');
-        if (_slr) _slr.textContent = 'Commencer le Tirage';
+    if (!localCanDraw) {
+      // Tenter une vérification serveur si email disponible
+      let serverAllows = false;
+      const sessStr = sessionStorage.getItem('oradia_member_session')
+                    || localStorage.getItem('oradia_member_session');
+      if (sessStr) {
+        try {
+          const sess = JSON.parse(sessStr);
+          if (sess.email) {
+            try {
+              const quotaResp = await fetch('/api/check-tore-quota', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email: sess.email })
+              });
+              if (quotaResp.ok) {
+                const quotaData = await quotaResp.json();
+                // Si le serveur dit OK (abonné, crédits ponctuels, etc.)
+                serverAllows = quotaData.canDraw === true;
+              }
+            } catch(_) {
+              // API indisponible : bloquer (sécurité par défaut)
+              serverAllows = false;
+            }
+          }
+        } catch(_) {}
       }
-      if (window.gtag) window.gtag('event', 'tore_limit_reached', {
-        event_category: 'freemium',
-        event_label: 'server_verified',
-        value: window.freemiumTracker?.getRemainingToreDraws?.() ?? 0
-      });
-      window.freemiumTracker?.showToreLimitReached?.();
-      return;
+
+      if (!serverAllows) {
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.dataset.submitting = '0';
+          const _slr = submitBtn.querySelector('.font-cinzel');
+          if (_slr) _slr.textContent = 'Commencer le Tirage';
+        }
+        if (window.gtag) window.gtag('event', 'tore_limit_reached', {
+          event_category: 'freemium',
+          event_label: 'limit_reached',
+          value: window.freemiumTracker?.getRemainingToreDraws?.() ?? 0
+        });
+        window.freemiumTracker?.showToreLimitReached?.();
+        return;
+      }
     }
   }
 
@@ -6489,6 +6513,29 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   enterImmersiveTore();
   toreHasStarted = true;
   results.classList.add('hidden');
+
+  // Enregistrer le tirage (localStorage)
+  if (window.freemiumTracker && !window.freemiumTracker.isSubscribed()) {
+    window.freemiumTracker.recordToreDraw();
+  }
+
+  // Décrémenter le crédit serveur si disponible (sans bloquer le tirage)
+  (async () => {
+    const sessStr = sessionStorage.getItem('oradia_member_session')
+                  || localStorage.getItem('oradia_member_session');
+    if (sessStr) {
+      try {
+        const sess = JSON.parse(sessStr);
+        if (sess.email) {
+          await fetch('/api/consume-tore-draw', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: sess.email })
+          }).catch(() => {}); // silencieux si API indisponible
+        }
+      } catch(_) {}
+    }
+  })();
 
   // Verrouiller le plateau immédiatement pour que les cartes soient invisibles
   if (boardHost) {
@@ -6705,6 +6752,16 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Masquer footer et autres sections dès le chargement de la page
   document.body.classList.add('hide-immersive-tore');
+
+  // Fermer le panneau quantum au clic en dehors
+  document.addEventListener('click', (e) => {
+    const qPanel = document.getElementById('quantum-explication');
+    const qBtn = document.querySelector('.quantum-learn-more');
+    if (!qPanel || !qPanel.classList.contains('open')) return;
+    if (!qPanel.contains(e.target) && !qBtn?.contains(e.target)) {
+      qPanel.classList.remove('open');
+    }
+  }, { passive: true });
 
   // MENU MOBILE
 
