@@ -1153,6 +1153,10 @@
     animation: none !important;
   }
 
+  #tore-immersif .tore-board-7.tore-dealing .tore-card:not(.card-dealing-hidden) {
+    transition: opacity 0.15s ease-out;
+  }
+
   .tore-card.flipped .tore-card-front {
     cursor: default;
   }
@@ -1567,7 +1571,8 @@
     height: 110px;
     border-radius: 50%;
     object-fit: cover;
-    animation: compassLogoSpin 3s cubic-bezier(0.4,0,0.2,1) forwards;
+    animation: compassLogoSpin 3s cubic-bezier(0.4,0,0.2,1) 1,
+             compassLogoContinue 4s linear 3s infinite;
     box-shadow: 0 0 40px rgba(212,175,55,0.45);
   }
 
@@ -1600,6 +1605,11 @@
     70%  { transform: rotate(320deg); }
     85%  { transform: rotate(355deg); }
     92%  { transform: rotate(348deg); }
+    100% { transform: rotate(360deg); }
+  }
+
+  @keyframes compassLogoContinue {
+    0%   { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
 
@@ -3757,10 +3767,10 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     });
     
     // Réinitialiser le logo
-    if (img) { 
-      img.style.animation = 'none'; 
-      void img.offsetWidth; 
-      img.style.animation = ''; 
+    if (img) {
+      img.style.animation = 'none';
+      void img.offsetWidth;
+      img.style.animation = "compassLogoSpin 3s cubic-bezier(0.4,0,0.2,1) 1, compassLogoContinue 4s linear 3s infinite";
     }
 
     // Lancer l'appel API Claude en arrière-plan pendant l'animation
@@ -3770,10 +3780,32 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     const MAX_EXTRA_WAIT = 7000;
     const startTs = Date.now();
 
+    // Messages rotatifs pendant le chargement
+    const loadingMessages = [
+      'Lecture des vibrations…',
+      'Mise en résonance…',
+      'Consultation des archétypes…',
+      'Alignement des polarités…',
+      'Synthèse en cours…',
+      'Finalisation de l\'analyse…'
+    ];
+    const compassText = overlay.querySelector('.compass-text');
+    if (compassText) {
+      let msgIdx = 0;
+      window._compassMsgInterval = setInterval(() => {
+        msgIdx = (msgIdx + 1) % loadingMessages.length;
+        compassText.childNodes[0].textContent = loadingMessages[msgIdx];
+      }, 2200);
+    }
+
     const tryNavigate = () => {
       const ready = sessionStorage.getItem('preloaded_analysis');
       const elapsed = Date.now() - startTs;
       if (ready || elapsed >= NAV_DELAY + MAX_EXTRA_WAIT) {
+        if (window._compassMsgInterval) {
+          clearInterval(window._compassMsgInterval);
+          window._compassMsgInterval = null;
+        }
         overlay.style.animation = 'compassFadeOut 0.5s ease forwards';
         setTimeout(() => {
           document.body.style.opacity = '0';
@@ -6231,8 +6263,20 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
         clone.style.animation = `cDeal_${i} ${dur}ms cubic-bezier(0.22,1,0.36,1) both`;
         // Une fois l'animation terminée, révéler la vraie carte et supprimer le clone
         setTimeout(() => {
-          cards[i].classList.remove('card-dealing-hidden');
-          clone.remove();
+          const realCard = cards[i];
+          // Rendre la vraie carte visible immédiatement avant de supprimer le clone
+          realCard.classList.remove('card-dealing-hidden');
+          realCard.style.opacity = '1';
+          realCard.style.animation = 'none';
+          // Supprimer le clone APRÈS un frame pour éviter le flash
+          requestAnimationFrame(() => {
+            clone.remove();
+            // Nettoyer les styles inline après installation
+            requestAnimationFrame(() => {
+              realCard.style.animation = '';
+              // Ne pas effacer opacity ici — laissé au cleanup final
+            });
+          });
         }, dur + 40);
       }, humanDelays[i] || 0);
     });
