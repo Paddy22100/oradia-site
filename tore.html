@@ -6285,27 +6285,50 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
       cosmosCard.classList.remove('card-dealing-hidden');
       cosmosCard.style.opacity = '1';
       cosmosCard.style.animation = 'cosmosReveal 0.9s cubic-bezier(0.34,1.4,0.64,1) forwards';
+      // Attendre la fin de cosmosReveal (900ms) avant d'activer le halo
       setTimeout(() => {
-        if (cosmosCard) cosmosCard.classList.add('cosmos-active');
-        setTimeout(() => {
-          if (cosmosCard) cosmosCard.classList.remove('cosmos-active');
-        }, 3600);
-      }, 500);
+        if (cosmosCard) {
+          cosmosCard.classList.add('cosmos-active');
+          // Retirer cosmos-active APRES la fin de toutes les animations (lastDelay)
+          // On utilise une valeur fixe large pour ne pas avoir à référencer lastDelay ici
+          setTimeout(() => {
+            if (cosmosCard) cosmosCard.classList.remove('cosmos-active');
+          }, 2800);
+        }
+      }, 950);
     }
 
     // ③ Les positions seront calculées dans le forEach avec getBoundingClientRect
     // (le plateau est visible et le layout est stable à ce stade)
 
     // ④ Lancer l'animation de chaque carte orbitale avec délai progressif
-    const orbitalDelays = [380, 540, 700, 860, 1020, 1180];
-    const orbitalDurations = [950, 970, 940, 980, 950, 960];
+    const orbitalDelays    = [380, 540, 700, 860, 1020, 1180];
+    const orbitalDurations = [950, 970, 940, 980, 950,  960];
 
-    // Mesurer une seule fois le rect du plateau (stable à ce stade)
+    // Mesurer le rect du plateau une seule fois
     const boardAbsRect = boardHost.getBoundingClientRect();
     const boardCx = boardAbsRect.left + boardAbsRect.width  / 2;
     const boardCy = boardAbsRect.top  + boardAbsRect.height / 2;
 
-    orbitalCards.forEach((card, i) => {
+    // Trier les cartes orbitales dans le sens clockwise en fonction de leur angle
+    // par rapport au centre du plateau (12h = -90° = en haut)
+    const orbitalCardsSorted = [...orbitalCards].sort((a, b) => {
+      const ra = a.getBoundingClientRect();
+      const rb = b.getBoundingClientRect();
+      const angleA = Math.atan2(
+        (ra.top  + ra.height  / 2) - boardCy,
+        (ra.left + ra.width   / 2) - boardCx
+      );
+      const angleB = Math.atan2(
+        (rb.top  + rb.height  / 2) - boardCy,
+        (rb.left + rb.width   / 2) - boardCx
+      );
+      // Normaliser pour que 12h (haut) soit le point de départ (-PI/2)
+      const norm = a => ((a + Math.PI * 2.5) % (Math.PI * 2));
+      return norm(angleA) - norm(angleB);
+    });
+
+    orbitalCardsSorted.forEach((card, i) => {
       const dur    = orbitalDurations[i] || 960;
       const delay  = orbitalDelays[i]    || 400;
 
@@ -6375,16 +6398,20 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     });
 
     // ⑤ Fin → cleanup + highlight + boardReady
-    const lastDelay = (orbitalDelays[orbitalCards.length - 1] || 1480)
-                    + (orbitalDurations[orbitalCards.length - 1] || 840) + 400;
+    const lastDelay = (orbitalDelays[orbitalCards.length - 1] || 1180)
+                    + (orbitalDurations[orbitalCards.length - 1] || 960) + 600;
 
     setTimeout(() => {
       boardHost.classList.remove('tore-dealing');
       allCards.forEach(c => {
         c.classList.remove('card-dealing-hidden');
-        c.style.opacity = '1';
+        // Ne forcer opacity/transform QUE si la carte n'est pas déjà visible
+        // (évite d'écraser une animation rAF encore en cours)
+        if (!c.style.opacity || c.style.opacity === '0') {
+          c.style.opacity = '1';
+        }
         c.style.animation = '';
-        c.style.transform = '';
+        // Ne pas toucher transform ici — les rAF le nettoient eux-mêmes
       });
       highlightNextCard();
       const bbInit = el('tore-bottom-bar');
