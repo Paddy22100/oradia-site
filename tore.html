@@ -5074,6 +5074,7 @@ function closeToreExitModal(){
 
           isCardFlipping = false;
           toreThrowIndex--;
+          if (boardHost) boardHost.style.pointerEvents = 'auto';
           showCardError('Impossible de charger la carte, réessayez.', 2500);
           return;
 
@@ -5132,9 +5133,18 @@ function closeToreExitModal(){
           front.appendChild(imgEl2);
           // Rendre la carte visible seulement après l'injection de l'image
           front.style.visibility = 'visible';
+          // Retour haptique discret sur mobile
+          if (navigator.vibrate) navigator.vibrate(18);
           void card.offsetWidth;
           card.classList.remove('flipping');
           card.classList.add('flipped', 'just-flipped');
+          // Mettre à jour aria-pressed pour les lecteurs d'écran
+          const backEl = card.querySelector('.tore-card-back');
+          if (backEl) {
+            backEl.setAttribute('aria-pressed', 'true');
+            backEl.setAttribute('aria-label', 'Carte retournée');
+            backEl.setAttribute('tabindex', '-1'); // sortir du tabindex maintenant que la carte est retournée
+          }
           requestAnimationFrame(() => { requestAnimationFrame(() => { imgEl2.style.opacity = '1'; }); });
           
           setTimeout(() => {
@@ -5828,6 +5838,27 @@ function showArrowForStep(stepIndex, isMatch) {
       const coinImg = document.getElementById('tore-coin-img');
       if (coinImg) {
         coinImg.src = isYang ? 'images/coin_triangle.png' : 'images/coin_cercle.png';
+      }
+      // Mise à jour aria-label pour les lecteurs d'écran
+      if (coin) {
+        coin.setAttribute('aria-label',
+          isYang
+            ? 'Pièce de tirage — résultat Yang (triangle)'
+            : 'Pièce de tirage — résultat Yin (cercle)'
+        );
+        // Annoncer le résultat aux lecteurs d'écran via un live region
+        let liveRegion = document.getElementById('tore-coin-live');
+        if (!liveRegion) {
+          liveRegion = document.createElement('div');
+          liveRegion.id = 'tore-coin-live';
+          liveRegion.setAttribute('aria-live', 'polite');
+          liveRegion.setAttribute('aria-atomic', 'true');
+          liveRegion.style.cssText = 'position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;';
+          document.body.appendChild(liveRegion);
+        }
+        liveRegion.textContent = isYang
+          ? `Lancer ${coinThrowIndex + 1} sur ${familiesWithCoin.length} : Yang` 
+          : `Lancer ${coinThrowIndex + 1} sur ${familiesWithCoin.length} : Yin`;
       }
 
       // Onde circulaire dorée
