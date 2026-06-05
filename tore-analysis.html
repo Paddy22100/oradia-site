@@ -1301,6 +1301,16 @@
                         if (!data.success || !data.analysis) {
                             throw new Error('Données préchargées invalides');
                         }
+
+                        // Stocker les données préchargées dans tore_analysis_data pour l'email
+                        const analysisData = {
+                            analysis: data.analysis,
+                            synthesis: data.synthesis || '',
+                            advice: data.advice || '',
+                            timestamp: Date.now()
+                        };
+                        sessionStorage.setItem('tore_analysis_data', JSON.stringify(analysisData));
+                        console.log('[Préchargement] Données stockées dans tore_analysis_data');
                     } catch (e) {
                         // Si les données préchargées sont invalides, faire un appel normal
                         data = null;
@@ -1709,6 +1719,20 @@
                 </div>
             `;
             container.appendChild(oracleCard);
+
+            // Stocker les données d'analyse pour l'email
+            try {
+                const analysisData = {
+                    analysis: analysis.message,
+                    synthesis: analysis.synthesis,
+                    advice: analysis.advice,
+                    timestamp: Date.now()
+                };
+                sessionStorage.setItem('tore_analysis_data', JSON.stringify(analysisData));
+                console.log('[displayDetailedAnalysis] Données stockées dans tore_analysis_data');
+            } catch(e) {
+                console.error('[displayDetailedAnalysis] Erreur stockage:', e);
+            }
         }
 
         function displaySynthesis(synthesis) {
