@@ -3997,7 +3997,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     if (!guideMessage || !guideFamily || !guideText) {
       isCardFlipping = false;
       // Fallback : vérifier si toutes les cartes sont retournées
-      setTimeout(showCoinAfterAllCards, 100);
+      if (!isGuideMessageShown) setTimeout(showCoinAfterAllCards, 100);
       return;
     }
     
@@ -4005,7 +4005,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     if (!step || !step.guide) {
       isCardFlipping = false;
       // Fallback : vérifier si toutes les cartes sont retournées
-      setTimeout(showCoinAfterAllCards, 100);
+      if (!isGuideMessageShown) setTimeout(showCoinAfterAllCards, 100);
       return;
     }
     
@@ -4358,6 +4358,9 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
 
  function showCoinAfterAllCards() {
   // Afficher la pièce après que toutes les 7 cartes soient tirées
+  // Ne pas afficher la pièce si le guide est encore ouvert
+  if (isGuideMessageShown) return;
+  
   if (coinWrapper && boardHost) {
     const totalCards = boardHost.querySelectorAll('.tore-card').length;
     const flippedCards = boardHost.querySelectorAll('.tore-card.flipped').length;
@@ -5733,6 +5736,19 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
     overlay.querySelectorAll('.tore-fan-card').forEach(cardEl => {
 
       cardEl.addEventListener('click', async () => {
+        // Bloquer immédiatement tout autre clic sur l'éventail
+        if (isBridgeCardProcessing) return;
+        isBridgeCardProcessing = true;
+        // Désactiver visuellement toutes les cartes de l'éventail
+        overlay.querySelectorAll('.tore-fan-card').forEach(c => {
+          c.style.pointerEvents = 'none';
+          c.style.opacity = '0.4';
+          c.style.cursor = 'default';
+        });
+        // Mettre en valeur la carte cliquée
+        cardEl.style.opacity = '1';
+        cardEl.style.transform = 'scale(1.08)';
+        cardEl.style.transition = 'transform 0.15s ease, opacity 0.15s ease';
 
         // Piocher une carte de la famille 'actions' sans doublon
         const dataNext = await pickFromData('actions', true);
