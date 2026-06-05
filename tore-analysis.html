@@ -19,7 +19,7 @@
   <meta property="og:url" content="https://oradia.fr/tore-analysis.html" />
   <meta property="og:title" content="Analyse de votre tirage - Oracle Oradia" />
   <meta property="og:description" content="Analyse personnalisée de votre tirage avec l'Oracle Oradia." />
-  <meta property="og:image" content="https://oradia.fr/images/logo-hd-v2.jpeg" />
+  <meta property="og:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:site_name" content="Oradia" />
@@ -30,12 +30,12 @@
   <meta property="twitter:url" content="https://oradia.fr/tore-analysis.html" />
   <meta property="twitter:title" content="Analyse de votre tirage - Oracle Oradia" />
   <meta property="twitter:description" content="Analyse personnalisée de votre tirage avec l'Oracle Oradia." />
-  <meta property="twitter:image" content="https://oradia.fr/images/logo-hd-v2.jpeg" />
+  <meta property="twitter:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg" />
   
   <!-- Canonical URL -->
   <link rel="canonical" href="https://oradia.fr/tore-analysis.html" />
 
-  <link rel="stylesheet" href="tailwind-production.css">
+  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="responsive.css">
@@ -43,16 +43,31 @@
   <script src="security.js"></script>
 
   
-  <style>
-    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
-    
-    .font-cormorant {
-      font-family: 'Cormorant Garamond', serif;
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#0a192f',
+            'gold': '#d4af37',
+            'light-gold': '#f5e7a1',
+            'dark-blue': '#051428',
+            'celtic-blue': '#1a365d'
+          },
+          fontFamily: {
+            'cormorant': ['Cormorant Garamond', 'serif'],
+            'cinzel': ['Cinzel', 'serif'],
+            'lora': ['Lora', 'serif']
+          },
+          animation: {
+            'float': 'float 6s ease-in-out infinite',
+            'pulse-slow': 'pulse 4s ease-in-out infinite',
+            'shimmer': 'shimmer 3s ease-in-out infinite',
+          }
+        }
+      }
     }
-    
-    .font-lora {
-      font-family: 'Lora', serif;
-    }
+  </script>
     
     .gold-gradient {
       background: linear-gradient(135deg, #d4af37 0%, #f5e7a1 50%, #d4af37 100%);

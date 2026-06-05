@@ -321,7 +321,7 @@ const htmlContent = `<!DOCTYPE html>
     <tr>
       <td style="background:rgba(5,15,35,0.9);padding:32px 24px;text-align:center;
                  border-bottom:1px solid rgba(212,175,55,0.2);">
-        <img src="https://oradia.fr/images/logo-hd-v2.jpeg"
+        <img src="https://oradia.fr/images/medias/apercu_stripe.jpg"
              alt="Oradia" width="56" height="56"
              style="border-radius:50%;display:block;margin:0 auto 16px;
                     border:2px solid rgba(212,175,55,0.4);">
