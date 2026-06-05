@@ -2299,6 +2299,11 @@
 .tore-card[class*="card-entrance-delay-"] {
   animation: cardEntrance 0.6s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
 }
+  .tore-board-7.tore-dealing .tore-card[class*="card-entrance-delay-"] {
+    animation: none !important;
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
 
 /* Optimisation pour connexions lentes : réduire les animations */
 @media (prefers-reduced-motion: reduce) {
@@ -2984,11 +2989,10 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
         <!-- Bandeau de guidage contextuel (rendu fixed via CSS, positionné ici dans le DOM) -->
 
         <!-- Rayon lumineux depuis Mémoire Cosmos vers la carte active (hors tore-board-7 pour éviter l'écrasement par innerHTML) -->
-        <svg id="tore-beam-svg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:15;overflow:visible;">
+        <svg id="tore-beam-svg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:5;overflow:visible;">
           <defs>
             <linearGradient id="beamGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="0">
-              <stop offset="0%" stop-color="rgba(212,175,55,0.7)"/>
-              <stop offset="50%" stop-color="rgba(10,25,47,0.5)"/>
+              <stop offset="0%" stop-color="rgba(240,199,94,0.45)"/>
               <stop offset="100%" stop-color="rgba(212,175,55,0)"/>
             </linearGradient>
             <filter id="beamBlur" x="-50%" y="-50%" width="200%" height="200%">
@@ -2999,7 +3003,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
             </filter>
           </defs>
           <polygon id="tore-beam-poly" points="" fill="url(#beamGrad)" filter="url(#beamBlur)" opacity="0" style="transition:opacity 0.8s ease;"/>
-          <ellipse id="tore-beam-halo" cx="0" cy="0" rx="0" ry="0" fill="rgba(212,175,55,0.15)" filter="url(#haloBlur)" opacity="0" style="transition:opacity 0.8s ease;">
+          <ellipse id="tore-beam-halo" cx="0" cy="0" rx="0" ry="0" fill="rgba(240,199,94,0.2)" filter="url(#haloBlur)" opacity="0" style="transition:opacity 0.8s ease;">
             <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite"/>
           </ellipse>
         </svg>
@@ -4040,7 +4044,30 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
         `${tx - nx*spread},${ty - ny*spread}`,
         `${sx},${sy}`,
       ].join(' ');
-      poly.setAttribute('points', pts);
+      // Interpolation fluide pour simuler la rotation du faisceau
+  const _prevPts = poly.getAttribute('points');
+  if (!_prevPts || _prevPts === '' || poly.getAttribute('opacity') === '0') {
+    poly.setAttribute('points', pts);
+  } else {
+    const _parsePts = s => s.trim().split(' ').map(p => p.split(',').map(Number));
+    const _tgt = _parsePts(pts);
+    const _src = _parsePts(_prevPts);
+    const _t0 = performance.now();
+    const _dur = 900;
+    if (window._beamRaf) cancelAnimationFrame(window._beamRaf);
+    const _animBeam = (now) => {
+      const t = Math.min((now - _t0) / _dur, 1);
+      const e = t < 0.5 ? 2*t*t : -1+(4-2*t)*t;
+      const ip = _src.map((sp, i) => {
+        const tp = _tgt[i] || sp;
+        return [(sp[0]+(tp[0]-sp[0])*e).toFixed(2),(sp[1]+(tp[1]-sp[1])*e).toFixed(2)];
+      });
+      poly.setAttribute('points', ip.map(p=>p.join(',')).join(' '));
+      if (t < 1) { window._beamRaf = requestAnimationFrame(_animBeam); }
+      else { window._beamRaf = null; poly.setAttribute('points', pts); }
+    };
+    window._beamRaf = requestAnimationFrame(_animBeam);
+  }
 
       const grad = svg.querySelector('#beamGrad');
       if (grad) {
@@ -4048,8 +4075,8 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
         // Non — gradient de sx (Mémoire Cosmos, pointe) vers tx (carte, base) opaque
         grad.setAttribute('x1', tx); grad.setAttribute('y1', ty);
         grad.setAttribute('x2', sx); grad.setAttribute('y2', sy);
-        grad.querySelector('stop[offset="0%"]').setAttribute('stop-color', 'rgba(240,199,94,0.85)');
-        grad.querySelector('stop[offset="100%"]').setAttribute('stop-color', 'rgba(212,175,55,0.3)');
+        grad.querySelector('stop[offset="0%"]').setAttribute('stop-color', 'rgba(240,199,94,0.45)');
+        grad.querySelector('stop[offset="100%"]').setAttribute('stop-color', 'rgba(212,175,55,0)');
       }
       poly.setAttribute('opacity', '1');
 
@@ -4057,7 +4084,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       halo.setAttribute('cy', ty);
       halo.setAttribute('rx', tgtRect.width  * 0.52);
       halo.setAttribute('ry', tgtRect.height * 0.42);
-      halo.setAttribute('opacity', '0.45');
+      halo.setAttribute('opacity', '0.25');
 
     }));
   }
@@ -5747,31 +5774,20 @@ function showArrowForStep(stepIndex, isMatch) {
       // Lancer la pièce de tirage : 6 lancers successifs pour les 6 familles avec polarité
   function launchCoin() {
 
-    console.log('launchCoin appelé');
-    console.log('coin:', coin);
-    console.log('boardHost:', boardHost);
-    console.log('coin.dataset.locked:', coin?.dataset.locked);
-    console.log('isCoinAnimating:', isCoinAnimating);
-    console.log('coinThrowIndex:', coinThrowIndex);
 
     if (!coin || !boardHost) {
-      console.log('Pièce ou plateau non trouvé');
       return;
     }
 
     // Empêche plusieurs lancers simultanés
     if (coin.dataset.locked === '1' || isCoinAnimating) {
-      console.log('Pièce verrouillée ou en animation');
       return;
     }
 
     // Vérifier si on a fini tous les lancers de pièce (6 familles avec polarité)
     const familiesWithCoin = TIRAGE_ORDER.filter(f => f !== 'memoire_cosmos');
-    console.log('familiesWithCoin.length:', familiesWithCoin.length);
-    console.log('coinThrowIndex >= familiesWithCoin.length:', coinThrowIndex >= familiesWithCoin.length);
     
     if (coinThrowIndex >= familiesWithCoin.length) {
-      console.log('Tous les lancers terminés');
       coin.classList.remove('glow');
       coin.dataset.locked = '1';
       showToreAnalysisCTA();
@@ -6116,7 +6132,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
 
   // Animation "distribution de cartes" via clones position:fixed
   // (évite overflow:hidden et transform !important du conteneur)
-  requestAnimationFrame(() => requestAnimationFrame(() => {
+  const _runDeal = () => {
     if (!boardHost) return;
 
     const cards = TIRAGE_ORDER.map(key =>
@@ -6135,7 +6151,10 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     // ① Mesurer les positions finales des vraies cartes
     const rects = cards.map(c => c.getBoundingClientRect());
 
-    // ② Masquer les vraies cartes
+    // Retirer les classes d'animation AVANT de masquer pour éviter les flash
+    cards.forEach(c => {
+      for (let _d = 0; _d <= 6; _d++) c.classList.remove('card-entrance-delay-' + _d);
+    });
     boardHost.classList.add('tore-dealing');
     cards.forEach(c => c.classList.add('card-dealing-hidden'));
 
@@ -6205,7 +6224,15 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     setTimeout(() => {
       layer.remove();
       boardHost.classList.remove('tore-dealing');
-      cards.forEach(c => c.classList.remove('card-dealing-hidden'));
+      cards.forEach(c => {
+        c.classList.remove('card-dealing-hidden');
+        c.style.opacity = '1';
+        c.style.animation = 'none';
+        requestAnimationFrame(() => {
+          c.style.animation = '';
+          c.style.opacity = '';
+        });
+      });
       highlightNextCard();
       const bbInit = el('tore-bottom-bar');
       if (bbInit) requestAnimationFrame(() => requestAnimationFrame(() => { bbInit.style.opacity = '1'; }));
@@ -6224,7 +6251,8 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
         window.addEventListener('orientationchange', () => setTimeout(recalcBeam, 350), { passive: true });
       }
     }, totalDelay);
-  }));
+  };
+  setTimeout(_runDeal, 600);
 });
 
 // Compteur de caractères pour le textarea
@@ -6239,20 +6267,16 @@ if (toreIntentionInput && charCountEl) {
 
 
   if (coinButton) {
-    console.log('coinButton trouvé, ajout du listener');
     coinButton.addEventListener('click', launchCoin);
   } else {
-    console.log('coinButton NON trouvé');
   }
 
 
 
   if (coin) {
-    console.log('coin trouvé, ajout du listener');
     // Optionnel : clic direct sur la pièce = même effet
     coin.addEventListener('click', launchCoin);
   } else {
-    console.log('coin NON trouvé');
   }
 
 
