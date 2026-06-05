@@ -6225,8 +6225,34 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
 
   // Animation "distribution de cartes" via clones position:fixed
   // (évite overflow:hidden et transform !important du conteneur)
-  if (!boardHost) return;
+  const _runDeal = async () => {
+    if (!boardHost) return;
     clearTimeout(window._dealFallbackTimer);
+
+    // Forcer le pré-rendu GPU de chaque image de dos via des éléments hidden
+    // positionnés hors écran — le navigateur les décode et les met en cache GPU
+    const _gpuPrerender = document.createElement('div');
+    _gpuPrerender.style.cssText = 'position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;pointer-events:none;';
+    const _dosUrls = [
+      'images/dos/dos_emotion.png',
+      'images/dos/dos_besoin.png',
+      'images/dos/dos_transmutation.png',
+      'images/dos/dos_action.png',
+      'images/dos/dos_archetype.png',
+      'images/dos/dos_revelation.png',
+      'images/dos/dos_memoire_cosmos.png'
+    ];
+    _dosUrls.forEach(url => {
+      const d = document.createElement('div');
+      d.style.cssText = `width:80px;height:112px;background-image:url('${url}');background-size:cover;will-change:transform;`;
+      _gpuPrerender.appendChild(d);
+    });
+    document.body.appendChild(_gpuPrerender);
+    // Laisser 2 frames au navigateur pour décoder et envoyer en GPU
+    // avant de lancer les animations
+    await new Promise(r => { requestAnimationFrame(() => requestAnimationFrame(r)); });
+    // Nettoyer après usage
+    setTimeout(() => _gpuPrerender.remove(), 3000);
 
     const allCards = TIRAGE_ORDER.map(key =>
       boardHost.querySelector(`.tore-card[data-family="${key}"]`)
@@ -6298,7 +6324,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
           () => setTimeout(recalcBeam, 350), { passive: true });
       }
     }, totalDuration);
-});
+  };
 
 // Compteur de caractères pour le textarea
 const charCountEl = document.getElementById('char-count');
