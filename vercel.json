@@ -19,6 +19,10 @@
       "dest": "/api/stripe-webhook.js"
     },
     {
+      "src": "/api/payments/webhook",
+      "dest": "/server/app.js"
+    },
+    {
       "src": "/api/admin/(.*)",
       "dest": "/api/admin/index.js"
     },
@@ -56,6 +60,9 @@
     }
   ],
   "functions": {
+    "server/app.js": {
+      "maxDuration": 30
+    },
     "api/stripe-webhook.js": {
       "maxDuration": 30
     },

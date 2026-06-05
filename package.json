@@ -5,11 +5,12 @@
   "main": "api/lib/supabase.js",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.97.1",
-    "@supabase/supabase-js": "^2.38.4",
+    "@supabase/supabase-js": "^2.107.0",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.3",
     "cookie": "^0.6.0",
     "jsonwebtoken": "^9.0.2",
+    "sib-api-v3-sdk": "^8.5.0",
     "stripe": "^14.9.0",
     "xml2js": "^0.6.2"
   },

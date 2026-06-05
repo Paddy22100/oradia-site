@@ -362,51 +362,20 @@ router.post('/create-checkout-session', validatePreorder, async (req, res) => {
     }
 });
 
-// Route webhook pour Stripe
+// Route webhook unifiée pour Stripe
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
     try {
         const sig = req.headers['stripe-signature'];
-        const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET;
-
-        if (!webhookSecret) {
-            console.error('STRIPE_WEBHOOK_SECRET non configuré');
-            return res.status(500).json({ error: 'Configuration webhook manquante' });
+        const result = await stripeService.handleWebhook(sig, req.body);
+        
+        if (!result.success) {
+            console.error('Erreur webhook:', result.error);
+            return res.status(400).json({ 
+                success: false, 
+                error: result.error 
+            });
         }
-
-        let event;
-
-        try {
-            event = stripe.webhooks.constructEvent(req.body, sig, webhookSecret);
-        } catch (err) {
-            console.error('Erreur webhook Stripe:', err.message);
-            return res.status(400).send(`Webhook Error: ${err.message}`);
-        }
-
-        // Traiter les événements
-        switch (event.type) {
-            case 'checkout.session.completed':
-                const session = event.data.object;
-                console.log('Session complétée:', session.id);
-                
-                // Ici vous pouvez :
-                // - Envoyer un email de confirmation
-                // - Mettre à jour votre base de données
-                // - Traiter la commande
-                
-                break;
-                
-            case 'payment_intent.succeeded':
-                console.log('Paiement réussi:', event.data.object.id);
-                break;
-                
-            case 'payment_intent.payment_failed':
-                console.log('Paiement échoué:', event.data.object.id);
-                break;
-                
-            default:
-                console.log(`Événement non traité: ${event.type}`);
-        }
-
+        
         res.json({ received: true });
     } catch (error) {
         console.error('Erreur webhook:', error);
