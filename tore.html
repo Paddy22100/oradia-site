@@ -1018,6 +1018,7 @@
    .tore-card-back {
 
     background-color: #020817;
+    background-image: none;
     touch-action: manipulation;
 
     background-size: 100% 100%;
@@ -2307,6 +2308,30 @@
     opacity: 1; 
   }
 }
+
+  /* Animation orbitale : Mémoire Cosmos apparaît en premier */
+  @keyframes cosmosReveal {
+    0%   { opacity: 0; transform: scale(0.5); filter: blur(8px); }
+    60%  { opacity: 1; filter: blur(0); }
+    80%  { transform: scale(1.08); }
+    100% { transform: scale(1); opacity: 1; filter: blur(0); }
+  }
+
+  /* Halo pulsant sur Mémoire Cosmos pendant l'orbite */
+  @keyframes cosmosHaloPulse {
+    0%   { box-shadow: 0 0 0 0 rgba(212,175,55,0); }
+    40%  { box-shadow: 0 0 0 18px rgba(212,175,55,0.35), 0 0 40px rgba(212,175,55,0.2); }
+    100% { box-shadow: 0 0 0 0 rgba(212,175,55,0); }
+  }
+
+  /* Cartes périphériques : partent du centre, orbitent sur un arc, atterrissent */
+  @keyframes orbitLand {
+    0%   { opacity: 0; transform: translate(var(--ox), var(--oy)) scale(0.6) rotate(var(--orot)); filter: blur(4px); }
+    20%  { opacity: 1; filter: blur(0); }
+    70%  { transform: translate(calc(var(--ox) * 0.08), calc(var(--oy) * 0.08)) scale(1.05) rotate(calc(var(--orot) * 0.1)); }
+    88%  { transform: translate(0, 0) scale(0.97) rotate(0deg); }
+    100% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; filter: blur(0); }
+  }
 
 /* Animation gérée par les classes spécifiques pour éviter les conflits */
 .tore-card {
@@ -4958,12 +4983,12 @@ function closeToreExitModal(){
 
 // Construction des 7 tas avec animation progressive
         boardHost.innerHTML = STEPS_TORE.map((s, index) => `
-      <article class="tore-card pos-${s.pos} card-entrance-delay-${index}"
+      <article class="tore-card pos-${s.pos} card-dealing-hidden"
 
                data-family="${s.key}"
 
                aria-label="Carte ${s.label}"
-               style="animation-delay: ${index * 0.1}s;">
+               style="">
 
         <div class="tore-card-inner">
 
@@ -6180,120 +6205,138 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   toreHasStarted = true;
   results.classList.add('hidden');
 
+  // Verrouiller le plateau immédiatement pour que les cartes soient invisibles
+  if (boardHost) {
+    boardHost.classList.add('tore-dealing');
+  }
+
+  // Précharger les images de dos en mémoire GPU avant l'animation
+  // pour éviter le décodage progressif (bandeau blanc descendant)
+  const _dosImages = [
+    'images/dos/dos_emotion.png',
+    'images/dos/dos_besoin.png',
+    'images/dos/dos_transmutation.png',
+    'images/dos/dos_action.png',
+    'images/dos/dos_archetype.png',
+    'images/dos/dos_revelation.png',
+    'images/dos/dos_memoire_cosmos.png'
+  ];
+  let _dosLoaded = 0;
+  const _dosTotalToLoad = _dosImages.length;
+
+  const _onDosLoad = () => {
+    _dosLoaded++;
+    if (_dosLoaded >= _dosTotalToLoad) {
+      // Toutes les images de dos sont en cache — lancer la distribution
+      clearTimeout(window._dealFallbackTimer);
+      setTimeout(_runDeal, 100);
+    }
+  };
+
+  _dosImages.forEach(src => {
+    const img = new Image();
+    img.onload = _onDosLoad;
+    img.onerror = _onDosLoad; // ne pas bloquer si une image manque
+    img.src = src;
+  });
+
+  // Filet de sécurité : lancer quand même après 1s si le chargement traîne
+  window._dealFallbackTimer = setTimeout(() => {
+    if (_dosLoaded < _dosTotalToLoad) _runDeal();
+  }, 1000);
+
   // Animation "distribution de cartes" via clones position:fixed
   // (évite overflow:hidden et transform !important du conteneur)
   const _runDeal = () => {
+    clearTimeout(window._dealFallbackTimer);
     if (!boardHost) return;
 
-    const cards = TIRAGE_ORDER.map(key =>
+    // Récupérer toutes les cartes dans l'ordre du tirage
+    const allCards = TIRAGE_ORDER.map(key =>
       boardHost.querySelector(`.tore-card[data-family="${key}"]`)
     ).filter(Boolean);
 
-    if (!cards.length) return;
+    if (!allCards.length) return;
 
-    const humanDelays = [0, 500, 920, 1300, 1750, 2180, 2650];
-    const durations   = [820, 860, 800, 840, 880, 820, 900];
-    const vw = window.innerWidth;
-    const vh = window.innerHeight;
-    const originX = vw / 2;
-    const originY = vh + 80;
+    // Séparer Mémoire Cosmos (pos-6, dernière dans TIRAGE_ORDER) des cartes orbitales
+    const cosmosCard = boardHost.querySelector('.tore-card[data-family="memoire_cosmos"]');
+    const orbitalCards = allCards.filter(c => c !== cosmosCard);
 
-    // ① Mesurer les positions finales des vraies cartes
-    const rects = cards.map(c => c.getBoundingClientRect());
-
-    // Retirer les classes d'animation AVANT de masquer pour éviter les flash
-    cards.forEach(c => {
-      for (let _d = 0; _d <= 6; _d++) c.classList.remove('card-entrance-delay-' + _d);
-    });
-    boardHost.classList.add('tore-dealing');
-    cards.forEach(c => c.classList.add('card-dealing-hidden'));
-
-    // ③ Créer un layer fixed au-dessus de tout
-    const layer = document.createElement('div');
-    layer.style.cssText = 'position:fixed;inset:0;pointer-events:none;z-index:9999;overflow:visible;';
-    document.body.appendChild(layer);
-
-    // ④ Pour chaque carte, créer un clone animé
-    const clones = cards.map((card, i) => {
-      const r = rects[i];
-      const clone = card.cloneNode(true);
-      // Positionner le clone exactement sur la carte réelle
-      clone.style.cssText = `
-        position:fixed;
-        left:${r.left}px;
-        top:${r.top}px;
-        width:${r.width}px;
-        height:${r.height}px;
-        margin:0;
-        opacity:0;
-        pointer-events:none;
-        z-index:9999;
-        transform-origin:center center;
-      `;
-      layer.appendChild(clone);
-
-      const dx = Math.round(originX - (r.left + r.width / 2));
-      const dy = Math.round(originY - (r.top  + r.height / 2));
-      const rot = +(Math.random() * 18 - 9).toFixed(1);
-      const dur = durations[i] || 840;
-
-      return { clone, dx, dy, rot, dur };
+    // ① S'assurer que toutes les cartes sont invisibles au départ
+    allCards.forEach(c => {
+      c.classList.add('card-dealing-hidden');
+      c.style.opacity = '0';
+      c.style.transform = '';
+      c.style.animation = 'none';
+      void c.offsetWidth; // flush
     });
 
-    // ⑤ Injecter les keyframes avec les vraies valeurs
-    const oldSS = document.getElementById('tore-deal-keyframes');
-    if (oldSS) oldSS.remove();
-    const ss = document.createElement('style');
-    ss.id = 'tore-deal-keyframes';
-    clones.forEach(({ dx, dy, rot, dur }, i) => {
-      ss.textContent +=
-        `@keyframes cDeal_${i}{` +
-        `0%{opacity:0;transform:translate(${dx}px,${dy}px) scale(1.75) rotate(${rot}deg);filter:blur(3px)}` +
-        `18%{opacity:1;filter:blur(0)}` +
-        `78%{transform:translate(${Math.round(dx*.05)}px,${Math.round(dy*.05)}px) scale(1.08) rotate(${+(rot*.12).toFixed(1)}deg)}` +
-        `91%{transform:translate(0,0) scale(0.97) rotate(0deg)}` +
-        `100%{opacity:1;transform:translate(0,0) scale(1) rotate(0deg);filter:blur(0)}` +
-        `}`;
-    });
-    document.head.appendChild(ss);
+    // ② Révéler Mémoire Cosmos en premier avec animation cosmosReveal
+    if (cosmosCard) {
+      cosmosCard.style.animation = 'none';
+      void cosmosCard.offsetWidth;
+      cosmosCard.classList.remove('card-dealing-hidden');
+      cosmosCard.style.opacity = '1';
+      cosmosCard.style.animation = 'cosmosReveal 0.9s cubic-bezier(0.34,1.4,0.64,1) forwards, cosmosHaloPulse 1.8s ease-out 0.4s 2';
+    }
 
-    // ⑥ Lancer l'animation de chaque clone
-    clones.forEach(({ clone, dur }, i) => {
+    // ③ Calculer les offsets de chaque carte orbitale par rapport au centre du plateau
+    // (coordonnées relatives dans le grid — pas besoin de getBoundingClientRect)
+    // On lit les positions après que le layout est stable (board est visible depuis ÉTAPE 1B)
+    const boardRect = boardHost.getBoundingClientRect();
+    const boardCx = boardRect.width / 2;
+    const boardCy = boardRect.height / 2;
+
+    // ④ Lancer l'animation de chaque carte orbitale avec délai progressif
+    const orbitalDelays = [480, 680, 880, 1080, 1280, 1480];
+    const orbitalDurations = [820, 840, 800, 860, 820, 840];
+
+    orbitalCards.forEach((card, i) => {
+      const cardRect = card.getBoundingClientRect();
+      // Offset de la carte par rapport au centre du plateau (en px, dans le viewport)
+      const boardAbsRect = boardHost.getBoundingClientRect();
+      const cardCx = cardRect.left + cardRect.width / 2 - boardAbsRect.left;
+      const cardCy = cardRect.top + cardRect.height / 2 - boardAbsRect.top;
+      const ox = boardCx - cardCx; // déplacement depuis la position finale vers le centre
+      const oy = boardCy - cardCy;
+      const orot = +(Math.random() * 24 - 12).toFixed(1);
+      const dur = orbitalDurations[i] || 840;
+      const delay = orbitalDelays[i] || 400;
+
       setTimeout(() => {
-        clone.style.animation = `cDeal_${i} ${dur}ms cubic-bezier(0.22,1,0.36,1) both`;
-        // Une fois l'animation terminée, révéler la vraie carte et supprimer le clone
+        card.style.setProperty('--ox', ox + 'px');
+        card.style.setProperty('--oy', oy + 'px');
+        card.style.setProperty('--orot', orot + 'deg');
+        card.style.animation = 'none';
+        void card.offsetWidth;
+        card.classList.remove('card-dealing-hidden');
+        card.style.opacity = '1';
+        card.style.animation = `orbitLand ${dur}ms cubic-bezier(0.22,1,0.36,1) both`;
+
+        // Nettoyer les CSS vars et l'animation après atterrissage
         setTimeout(() => {
-          const realCard = cards[i];
-          // Rendre la vraie carte visible immédiatement avant de supprimer le clone
-          realCard.classList.remove('card-dealing-hidden');
-          realCard.style.opacity = '1';
-          realCard.style.animation = 'none';
-          // Supprimer le clone APRÈS un frame pour éviter le flash
-          requestAnimationFrame(() => {
-            clone.remove();
-            // Nettoyer les styles inline après installation
-            requestAnimationFrame(() => {
-              realCard.style.animation = '';
-              // Ne pas effacer opacity ici — laissé au cleanup final
-            });
-          });
-        }, dur + 40);
-      }, humanDelays[i] || 0);
+          card.style.animation = 'none';
+          card.style.transform = '';
+          card.style.removeProperty('--ox');
+          card.style.removeProperty('--oy');
+          card.style.removeProperty('--orot');
+          requestAnimationFrame(() => { card.style.animation = ''; });
+        }, dur + 60);
+
+      }, delay);
     });
 
-    // ⑦ Fin → cleanup + highlight + bandeau
-    const totalDelay = (humanDelays[cards.length - 1] || 0) + (durations[cards.length - 1] || 840) + 500;
+    // ⑤ Fin → cleanup + highlight + boardReady
+    const lastDelay = (orbitalDelays[orbitalCards.length - 1] || 1480)
+                    + (orbitalDurations[orbitalCards.length - 1] || 840) + 400;
+
     setTimeout(() => {
-      layer.remove();
       boardHost.classList.remove('tore-dealing');
-      cards.forEach(c => {
+      allCards.forEach(c => {
         c.classList.remove('card-dealing-hidden');
         c.style.opacity = '1';
-        c.style.animation = 'none';
-        requestAnimationFrame(() => {
-          c.style.animation = '';
-          c.style.opacity = '';
-        });
+        c.style.animation = '';
+        c.style.transform = '';
       });
       highlightNextCard();
       const bbInit = el('tore-bottom-bar');
@@ -6312,9 +6355,8 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
         window.addEventListener('resize', recalcBeam, { passive: true });
         window.addEventListener('orientationchange', () => setTimeout(recalcBeam, 350), { passive: true });
       }
-    }, totalDelay);
+    }, lastDelay);
   };
-  setTimeout(_runDeal, 600);
 });
 
 // Compteur de caractères pour le textarea
