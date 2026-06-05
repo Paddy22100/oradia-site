@@ -6442,7 +6442,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
         const sess = JSON.parse(sessStr);
         if (sess.email) {
           try {
-            const quotaResp = await fetch('/api/check-tore-quota', {
+            const quotaResp = await fetch('/api/qrng', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ email: sess.email })
@@ -6768,10 +6768,10 @@ document.addEventListener("DOMContentLoaded", () => {
                       || localStorage.getItem('oradia_member_session');
         const email = sessStr ? JSON.parse(sessStr).email : undefined;
 
-        const resp = await fetch('/api/create-single-draw-session', {
+        const resp = await fetch('/api/create-checkout-session', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ email })
+          body: JSON.stringify({ type: 'single-draw', email })
         });
         const data = await resp.json();
 

@@ -115,6 +115,23 @@ module.exports = async (req, res) => {
             return res.json({ success: true, url: session.url });
         }
 
+        // ── Achat ponctuel tirage Tore ───────────────────────────────────────────
+        if (req.body.type === 'single-draw') {
+            const email = (req.body.email || '').trim();
+            const priceId = process.env.STRIPE_SINGLE_DRAW_PRICE_ID;
+            if (!priceId) return res.status(500).json({ error: 'STRIPE_SINGLE_DRAW_PRICE_ID non configuré' });
+            const session = await stripe.checkout.sessions.create({
+                payment_method_types: ['card'],
+                mode: 'payment',
+                line_items: [{ price: priceId, quantity: 1 }],
+                customer_email: email || undefined,
+                success_url: `${frontendUrl}/tore.html?single_draw=success&session_id={CHECKOUT_SESSION_ID}`,
+                cancel_url:  `${frontendUrl}/tore.html?single_draw=cancel`,
+                metadata: { type: 'single_tore_draw' },
+            });
+            return res.json({ success: true, url: session.url });
+        }
+
         // Handle don-libre case separately
         if (req.body.type === 'don-libre') {
             // Validate minimum amount (20€ = 2000 centimes)
