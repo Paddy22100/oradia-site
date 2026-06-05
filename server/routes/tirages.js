@@ -214,14 +214,14 @@ router.post('/:id/feedback', authenticate, requireAdmin, logActivity('admin_feed
 // POST /api/tirages/send-email - Envoyer l'analyse par email
 router.post('/send-email', logActivity('tirage_email_sent'), async (req, res) => {
   try {
-    const { email, intention, cards, analysis, synthesis, subscribeNewsletter } = req.body;
+    const { email, intention, cards, analysis, synthesis, subscribeNewsletter, observationDays, observationText } = req.body;
 
     if (!email || !cards || !Array.isArray(cards)) {
       return res.status(400).json({ success: false, message: 'Email et cartes requis' });
     }
 
     // Envoyer l'email d'analyse
-    await brevoService.sendTirageAnalysis({ email, intention, cards, analysis, synthesis });
+    await brevoService.sendTirageAnalysis({ email, intention, cards, analysis, synthesis, observationDays, observationText });
 
     // Inscrire à la newsletter si demandé
     if (subscribeNewsletter) {

@@ -703,86 +703,12 @@
                 <i class="fas fa-redo"></i>
                 <span>Nouveau Tirage</span>
             </a>
-            <button id="mainEmailBtn" onclick="openEmailModal()" class="border-2 border-gold/50 text-gold font-semibold py-4 px-6 sm:px-8 rounded-full hover:bg-gold/10 hover:border-gold transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
+            <button id="mainEmailBtn" onclick="sendAnalysisByEmail(this)" class="border-2 border-gold/50 text-gold font-semibold py-4 px-6 sm:px-8 rounded-full hover:bg-gold/10 hover:border-gold transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
                 <i class="fas fa-envelope"></i>
                 <span class="text-sm sm:text-base">Recevoir l'analyse complète par mail</span>
             </button>
         </div>
         
-        <!-- Modale email tirage -->
-        <div id="emailModal" style="display:none; position:fixed; inset:0; z-index:9999; background:url('images/oradia-hero-4k.png') center/cover no-repeat; align-items:center; justify-content:center; padding:16px;">
-            <!-- Voile sombre léger -->
-            <div style="position:absolute; inset:0; background:rgba(3,10,22,0.45);"></div>
-            <div style="background:linear-gradient(145deg,rgba(10,22,40,0.55),rgba(3,10,22,0.6)); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); border:1px solid rgba(212,175,55,0.4); border-radius:24px; padding:0; max-width:460px; width:100%; box-shadow:0 32px 80px rgba(0,0,0,0.5), 0 0 60px rgba(212,175,55,0.1); position:relative; overflow:hidden;">
-                <!-- Barre lumineuse haut -->
-                <div style="position:absolute; top:0; left:0; right:0; height:1px; background:linear-gradient(90deg,transparent,rgba(212,175,55,0.7),transparent);"></div>
-                <!-- Bouton fermer -->
-                <button onclick="closeEmailModal()" style="position:absolute; top:1rem; right:1.2rem; background:none; border:none; color:rgba(212,175,55,0.4); font-size:1.3rem; cursor:pointer; line-height:1; z-index:1; transition:color .2s;" onmouseover="this.style.color='rgba(212,175,55,0.9)'" onmouseout="this.style.color='rgba(212,175,55,0.4)'">&times;</button>
-
-                <!-- En-tête -->
-                <div style="text-align:center; padding:2.2rem 2rem 1.4rem; border-bottom:1px solid rgba(212,175,55,0.12);">
-                    <div style="width:52px; height:52px; border-radius:50%; background:rgba(212,175,55,0.1); border:1px solid rgba(212,175,55,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">
-                        <i class="fas fa-envelope-open-text" style="color:#d4af37; font-size:1.4rem;"></i>
-                    </div>
-                    <h3 style="font-family:'Cinzel',serif; color:#d4af37; font-size:1.15rem; font-weight:700; margin:0 0 0.5rem; letter-spacing:0.06em;">Recevoir mon analyse</h3>
-                    <p style="color:rgba(200,192,168,0.7); font-size:0.85rem; margin:0; line-height:1.5;">Vos cartes, le message de l'oracle<br>et la synthèse par email.</p>
-                </div>
-
-                <!-- Formulaire -->
-                <div id="emailForm" style="padding:1.8rem 2rem 2rem;">
-                    <div id="obsStatus" style="display:none;"></div>
-                    <form onsubmit="sendTirageEmail(event)">
-                        <label style="display:block; color:rgba(212,175,55,0.6); font-size:0.75rem; text-transform:uppercase; letter-spacing:0.2em; margin-bottom:0.5rem;">Votre adresse e-mail</label>
-                        <input type="email" id="tirageEmail" placeholder="votre@email.com" required
-                            style="width:100%; box-sizing:border-box; padding:0.85rem 1.1rem; border-radius:50px; border:1px solid rgba(212,175,55,0.35); background:rgba(255,255,255,0.04); color:#f5e7a1; font-size:0.9rem; outline:none; margin-bottom:1.2rem; font-family:Georgia,serif;"
-                            onfocus="this.style.borderColor='rgba(212,175,55,0.75)'" onblur="this.style.borderColor='rgba(212,175,55,0.35)'">
-
-                        <!-- Case newsletter -->
-                        <label id="newsletterLabel" style="display:block; cursor:pointer; margin-bottom:1.5rem; border-radius:14px; background:rgba(212,175,55,0.04); border:1px solid rgba(212,175,55,0.15); overflow:hidden; transition:border-color .2s, background .2s;" onmouseover="this.style.borderColor='rgba(212,175,55,0.35)';this.style.background='rgba(212,175,55,0.07)'" onmouseout="this.style.borderColor='rgba(212,175,55,0.15)';this.style.background='rgba(212,175,55,0.04)'">
-                            <input type="checkbox" id="newsletterConsent" style="display:none;" checked>
-                            <!-- Motif boussole Oradia (statique) -->
-                            <div style="text-align:center; padding:18px 16px 14px; border-bottom:1px solid rgba(212,175,55,0.1);">
-                                <div style="position:relative; width:80px; height:80px; margin:0 auto 10px; display:flex; align-items:center; justify-content:center;">
-                                    <!-- Anneau extérieur -->
-                                    <div style="position:absolute; inset:-6px; border-radius:50%; border:1.5px solid transparent; border-top-color:rgba(140,190,255,0.45); border-bottom-color:rgba(140,190,255,0.2); transform:rotate(-30deg);"></div>
-                                    <!-- Anneau principal -->
-                                    <div style="position:absolute; inset:0; border-radius:50%; border:2px solid transparent; border-top-color:rgba(212,175,55,0.9); border-right-color:rgba(212,175,55,0.3);"></div>
-                                    <!-- Anneau intérieur -->
-                                    <div style="position:absolute; inset:12px; border-radius:50%; border:1.5px solid transparent; border-top-color:rgba(212,175,55,0.6); border-left-color:rgba(212,175,55,0.2); transform:rotate(45deg);"></div>
-                                    <!-- Logo central -->
-                                    <img src="images/logo-hd-v2.jpeg" alt="Oradia" style="width:44px; height:44px; border-radius:50%; object-fit:cover; box-shadow:0 0 16px rgba(212,175,55,0.4); position:relative; z-index:1;">
-                                </div>
-                                <p style="color:#d4af37; font-family:'Cinzel',serif; font-size:0.72rem; letter-spacing:0.18em; text-transform:uppercase; margin:0;">Rester dans la lumière</p>
-                            </div>
-                            <!-- Texte + checkbox -->
-                            <div style="display:flex; align-items:center; gap:12px; padding:12px 16px 14px;">
-                                <div id="newsletterCheckVisual" style="width:20px; height:20px; border-radius:6px; border:1.5px solid #d4af37; background:#d4af37; flex-shrink:0; display:flex; align-items:center; justify-content:center; transition:all .2s;">
-                                    <svg id="newsletterCheck" width="11" height="9" viewBox="0 0 11 9" fill="none" style="opacity:1; transition:opacity .2s;"><path d="M1 4L4 7.5L10 1" stroke="#030a16" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
-                                </div>
-                                <div>
-                                    <p style="color:rgba(225,215,190,0.9); font-size:0.83rem; line-height:1.55; margin:0 0 3px;">Recevoir les nouvelles d'Oradia</p>
-                                    <p style="color:rgba(212,175,55,0.45); font-size:0.72rem; margin:0;">Tirages, inspirations et actualités de l'oracle. Désabonnement libre.</p>
-                                </div>
-                            </div>
-                        </label>
-
-                        <button type="submit" id="emailSubmitBtn" style="width:100%; padding:0.9rem; border-radius:50px; background:linear-gradient(135deg,#d4af37,#f5e7a1,#d4af37); background-size:200%; color:#030a16; font-family:'Cinzel',serif; font-weight:700; font-size:0.9rem; border:none; cursor:pointer; letter-spacing:0.06em; transition:opacity .2s;">
-                            <i class="fas fa-paper-plane" style="margin-right:8px;"></i>Envoyer mon analyse
-                        </button>
-                        <p id="emailError" style="display:none; text-align:center; color:rgba(231,76,60,0.8); font-size:0.82rem; margin:0.8rem 0 0;"></p>
-                    </form>
-                </div>
-
-                <!-- Succès -->
-                <div id="emailSuccess" style="display:none; text-align:center; padding:2rem 1.5rem;">
-                    <div style="width:50px; height:50px; border-radius:50%; background:rgba(46,204,113,0.12); border:1px solid rgba(46,204,113,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">
-                        <i class="fas fa-check" style="color:#2ecc71; font-size:1.2rem;"></i>
-                    </div>
-                    <h4 style="font-family:'Cinzel',serif; color:#d4af37; font-size:0.95rem; font-weight:700; margin:0;">Envoyé !</h4>
-                    <p style="color:rgba(200,192,168,0.7); font-size:0.8rem; margin:0.3rem 0 0;">Consultez votre email</p>
-                </div>
-            </div>
-        </div>
 
         <!-- Message de conversion - Oracle Physique - VERSION PREMIUM -->
         <div class="mb-16 fade-in-up" style="animation-delay: 0.3s">
@@ -1790,203 +1716,135 @@
             if (el) el.innerHTML = synthesis;
         }
 
-        function openEmailModal() {
-            // Vérifier si l'email a déjà été envoyé
-            if (window._emailSent) {
-                // Ne rien faire, le bouton affiche déjà "Envoyé"
-                return;
-            }
-            
-            const modal = document.getElementById('emailModal');
-            modal.style.display = 'flex';
-            document.getElementById('emailSuccess').style.display = 'none';
-            document.getElementById('emailForm').style.display = 'block';
-            
-            // Vérifier si la fenêtre d'observation est activée
-            const obsStatus = document.getElementById('obsStatus');
-            if (obsStatus) {
-                if (window._obsWindowText && window._obsAttentionPoints && window._obsSuggestedDays) {
-                    obsStatus.innerHTML = `
-                        <div style="background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 0.85rem; color: #d4af37; text-align: center;">
-                            <i class="fas fa-eye" style="margin-right: 6px;"></i>
-                            Votre fenêtre d'observation (durée préconisée) sera incluse dans l'email
-                        </div>
-                    `;
-                    obsStatus.style.display = 'block';
-                } else {
-                    obsStatus.innerHTML = `
-                        <div style="background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.2); border-radius: 8px; padding: 8px 12px; margin-bottom: 12px; font-size: 0.85rem; color: rgba(212,175,55,0.6); text-align: center;">
-                            <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
-                            Activez votre fenêtre d'observation pour enrichir votre analyse
-                        </div>
-                    `;
-                    obsStatus.style.display = 'block';
-                }
-            }
-            
-            // Récupérer l'email de l'utilisateur connecté
-            const sessionData = sessionStorage.getItem('oradia_member_session')
-                || localStorage.getItem('oradia_member_session')
-                || sessionStorage.getItem('oradia_session') 
-                || sessionStorage.getItem('userData')
-                || localStorage.getItem('userEmail');
+        async function sendAnalysisByEmail(btn) {
+            // Empêcher les double-clics
+            if (btn.dataset.sending === '1') return;
+
+            // Récupérer l'email depuis la session
             let userEmail = null;
             try {
-                if (sessionData && sessionData.startsWith('{')) {
-                    userEmail = JSON.parse(sessionData).email || null;
-                } else if (sessionData) {
-                    userEmail = sessionData;
+                const sessStr = sessionStorage.getItem('oradia_member_session')
+                            || localStorage.getItem('oradia_member_session');
+                if (sessStr) {
+                    const sess = JSON.parse(sessStr);
+                    userEmail = sess.email || null;
                 }
-            } catch(e) {}
+            } catch(_) {}
 
-            if (userEmail) {
-                // Utilisateur connecté : masquer le champ email et la newsletter
-                document.getElementById('tirageEmail').value = userEmail;
-                document.getElementById('tirageEmail').style.display = 'none';
-                document.getElementById('newsletterLabel').style.display = 'none';
-                const cb = document.getElementById('newsletterConsent');
-                cb.checked = false;
-                document.getElementById('newsletterCheckVisual').style.background = 'rgba(212,175,55,0.2)';
-                document.getElementById('newsletterCheckVisual').style.borderColor = 'rgba(212,175,55,0.3)';
-                document.getElementById('newsletterCheck').style.opacity = '0';
-                
-                // Afficher un message indiquant l'email de destination et l'accès depuis l'espace membre
-                const emailLabel = document.querySelector('label[for="tirageEmail"]');
-                if (emailLabel) {
-                    emailLabel.innerHTML = `
-                        Votre analyse complète sera envoyée à <strong style="color:#d4af37">${escapeClientHtml(userEmail)}</strong><br>
-                        <span style="font-size:0.85rem;color:rgba(212,175,55,0.6);font-style:italic;">
-                            <i class="fas fa-info-circle" style="margin-right:4px;"></i>
-                            Vous pourrez également retrouver ce tirage dans votre espace membre
-                        </span>
-                    `;
-                    emailLabel.style.marginBottom = '1.2rem';
+            // Si pas d'email disponible, afficher un champ inline
+            if (!userEmail) {
+                // Créer un champ email inline sous le bouton
+                const container = btn.parentElement;
+                let emailInput = container.querySelector('#inline-email-input');
+                if (!emailInput) {
+                    const wrapper = document.createElement('div');
+                    wrapper.style.cssText =
+                        'margin-top:10px;display:flex;gap:8px;align-items:center;' +
+                        'animation:fadeInUp 0.3s ease both;';
+                    wrapper.innerHTML =
+                        '<input id="inline-email-input" type="email" placeholder="votre@email.fr"' +
+                        ' style="flex:1;background:rgba(5,15,35,0.8);border:1px solid rgba(212,175,55,0.4);' +
+                        'border-radius:8px;padding:10px 14px;color:#e8dfc8;font-size:14px;outline:none;">' +
+                        '<button id="inline-email-confirm" style="background:linear-gradient(135deg,#d4af37,#b8962e);' +
+                        'color:#06101f;border:none;border-radius:8px;padding:10px 16px;' +
+                        'cursor:pointer;font-size:13px;white-space:nowrap;">Envoyer</button>';
+                    container.appendChild(wrapper);
+
+                    const confirmBtn = wrapper.querySelector('#inline-email-confirm');
+                    confirmBtn.addEventListener('click', () => {
+                        const val = wrapper.querySelector('#inline-email-input').value.trim();
+                        if (!val || !val.includes('@')) {
+                            wrapper.querySelector('#inline-email-input').style.borderColor = 'rgba(231,76,60,0.6)';
+                            return;
+                        }
+                        wrapper.remove();
+                        doSendEmail(btn, val);
+                    });
+                    wrapper.querySelector('#inline-email-input').focus();
                 }
-                
-                // Soumettre automatiquement après un court délai
-                setTimeout(() => {
-                    document.getElementById('emailSubmitBtn').click();
-                }, 500);
-            } else {
-                // Utilisateur non connecté : afficher le formulaire complet
-                document.getElementById('tirageEmail').value = '';
-                document.getElementById('tirageEmail').style.display = 'block';
-                document.getElementById('newsletterLabel').style.display = 'block';
-                const cb = document.getElementById('newsletterConsent');
-                cb.checked = true;
-                document.getElementById('newsletterCheckVisual').style.background = '#d4af37';
-                document.getElementById('newsletterCheckVisual').style.borderColor = '#d4af37';
-                document.getElementById('newsletterCheck').style.opacity = '1';
-                
-                // Rétablir le label normal
-                const emailLabel = document.querySelector('label[for="tirageEmail"]');
-                if (emailLabel) {
-                    emailLabel.innerHTML = 'Votre adresse e-mail';
-                    emailLabel.style.marginBottom = '0.5rem';
-                }
+                return;
             }
+
+            doSendEmail(btn, userEmail);
         }
 
-        function closeEmailModal() {
-            document.getElementById('emailModal').style.display = 'none';
-        }
+        async function doSendEmail(btn, email) {
+            // Verrouiller et afficher le spinner
+            btn.dataset.sending = '1';
+            const originalHTML = btn.innerHTML;
+            btn.style.pointerEvents = 'none';
+            btn.style.opacity = '0.85';
+            btn.innerHTML =
+                '<span style="display:inline-flex;align-items:center;gap:8px;">' +
+                '<svg width="16" height="16" viewBox="0 0 16 16" fill="none"' +
+                ' style="animation:spin 0.8s linear infinite;">' +
+                '<circle cx="8" cy="8" r="6" stroke="currentColor" stroke-width="2"' +
+                ' stroke-dasharray="28" stroke-dashoffset="10" stroke-linecap="round"/>' +
+                '</svg>Envoi en cours…</span>';
 
-        document.getElementById('newsletterLabel').addEventListener('click', function(){
-            const cb = document.getElementById('newsletterConsent');
-            const vis = document.getElementById('newsletterCheckVisual');
-            const chk = document.getElementById('newsletterCheck');
-            cb.checked = !cb.checked;
-            if (cb.checked) {
-                vis.style.background = '#d4af37';
-                vis.style.borderColor = '#d4af37';
-                chk.style.opacity = '1';
-            } else {
-                vis.style.background = 'transparent';
-                vis.style.borderColor = 'rgba(212,175,55,0.4)';
-                chk.style.opacity = '0';
+            // Ajouter le keyframe spin si absent
+            if (!document.getElementById('_spin_kf')) {
+                const s = document.createElement('style');
+                s.id = '_spin_kf';
+                s.textContent = '@keyframes spin{to{transform:rotate(360deg)}}';
+                document.head.appendChild(s);
             }
-        });
-
-        document.getElementById('emailModal').addEventListener('click', function(e) {
-            if (e.target === this) closeEmailModal();
-        });
-
-        async function sendTirageEmail(e) {
-            e.preventDefault();
-            const email = document.getElementById('tirageEmail').value;
-            const subscribeNewsletter = document.getElementById('newsletterConsent').checked;
-            const intention = sessionStorage.getItem('tore_intention') || '';
-            const cardsRaw = sessionStorage.getItem('tore_cards');
-            const cards = cardsRaw ? JSON.parse(cardsRaw) : [];
-            const analysis = document.getElementById('analysisContent')?.innerText || '';
-            const synthesis = document.getElementById('synthesisContent')?.innerText || '';
-
-            // Récupérer les données de la fenêtre d'observation si activée
-            let observationWindow = null;
-            if (window._obsWindowText && window._obsAttentionPoints && window._obsSuggestedDays) {
-                const closesAt = new Date(Date.now() + window._obsSuggestedDays * 24 * 60 * 60 * 1000);
-                observationWindow = {
-                    observationText: window._obsWindowText,
-                    attentionPoints: window._obsAttentionPoints,
-                    durationDays: window._obsSuggestedDays,
-                    closesAt: closesAt.toISOString()
-                };
-            }
-
-            const btn = document.getElementById('emailSubmitBtn');
-            const mainBtn = document.getElementById('mainEmailBtn');
-            const errEl = document.getElementById('emailError');
-            
-            // Désactiver et animer les deux boutons
-            btn.disabled = true;
-            btn.style.opacity = '0.6';
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i>Envoi en cours...';
-            
-            mainBtn.disabled = true;
-            mainBtn.style.opacity = '0.7';
-            mainBtn.innerHTML = '<div class="w-5 h-5 border-2 border-gold border-t-transparent rounded-full animate-spin mr-2"></div>Envoi en cours...';
-            mainBtn.style.cursor = 'not-allowed';
-            
-            errEl.style.display = 'none';
 
             try {
+                // Récupérer les données du tirage depuis sessionStorage
+                const analysisData = JSON.parse(
+                    sessionStorage.getItem('tore_analysis_data') || '{}'
+                );
+                const intention = sessionStorage.getItem('tore_intention') || '';
+
                 const resp = await fetch('/api/tirages/send-email', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, intention, cards, analysis, synthesis, subscribeNewsletter, observationWindow })
+                    body: JSON.stringify({
+                        email,
+                        intention,
+                        cards: analysisData.cards || [],
+                        analysis: analysisData.analysis || '',
+                        synthesis: analysisData.synthesis || '',
+                        observationDays: analysisData.observationDays || null,
+                        observationText: analysisData.observationText || null,
+                    }),
                 });
-                const data = await resp.json();
 
-                if (data.success) {
-                    window._emailSent = true;
-                    
-                    // Mettre à jour le bouton principal avec "Envoyé"
-                    mainBtn.innerHTML = '<i class="fas fa-check-circle text-green-400"></i> <span class="text-sm sm:text-base">Envoyé</span>';
-                    mainBtn.style.opacity = '0.8';
-                    mainBtn.classList.remove('border-gold/50', 'text-gold', 'hover:bg-gold/10', 'hover:border-gold');
-                    mainBtn.classList.add('border-green-400/50', 'text-green-400');
-                    
-                    document.getElementById('emailForm').style.display = 'none';
-                    document.getElementById('emailSuccess').style.display = 'block';
-                    setTimeout(closeEmailModal, 3000);
+                if (resp.ok) {
+                    // Succès : état final non-cliquable
+                    btn.innerHTML =
+                        '<span style="display:inline-flex;align-items:center;gap:6px;">' +
+                        '<svg width="16" height="16" viewBox="0 0 16 16" fill="none">' +
+                        '<path d="M3 8l4 4 6-6" stroke="currentColor" stroke-width="2"' +
+                        ' stroke-linecap="round" stroke-linejoin="round"/>' +
+                        '</svg>Mail envoyé ✓</span>';
+                    btn.style.background = 'linear-gradient(135deg,rgba(46,125,50,0.8),rgba(27,94,32,0.9))';
+                    btn.style.opacity = '1';
+                    btn.style.cursor = 'default';
+                    btn.style.pointerEvents = 'none';
                 } else {
-                    throw new Error(data.message || 'Erreur inconnue');
+                    throw new Error('Erreur serveur');
                 }
-            } catch (err) {
-                errEl.textContent = err.message && err.message !== 'Erreur inconnue'
-                    ? err.message
-                    : "L'envoi a échoué. Vérifiez votre adresse et réessayez.";
-                errEl.style.display = 'block';
-                
-                // Réactiver les deux boutons en cas d'erreur
-                btn.disabled = false;
+            } catch(err) {
+                // Erreur : restaurer le bouton
+                btn.innerHTML = originalHTML;
+                btn.style.pointerEvents = 'auto';
                 btn.style.opacity = '1';
-                btn.innerHTML = '<i class="fas fa-paper-plane" style="margin-right:8px;"></i>Envoyer mon analyse';
-                
-                mainBtn.disabled = false;
-                mainBtn.style.opacity = '1';
-                mainBtn.innerHTML = '<i class="fas fa-envelope"></i><span class="text-sm sm:text-base">Recevoir l\'analyse complète par mail</span>';
-                mainBtn.style.cursor = 'pointer';
+                btn.dataset.sending = '0';
+
+                // Message d'erreur discret sous le bouton
+                const container = btn.parentElement;
+                let errMsg = container.querySelector('#email-error-msg');
+                if (!errMsg) {
+                    errMsg = document.createElement('p');
+                    errMsg.id = 'email-error-msg';
+                    errMsg.style.cssText =
+                        'margin:6px 0 0;font-size:12px;color:rgba(231,76,60,0.8);text-align:center;';
+                    container.appendChild(errMsg);
+                }
+                errMsg.textContent = 'Erreur lors de l\'envoi. Réessayez.';
+                setTimeout(() => errMsg?.remove(), 3000);
             }
         }
     </script>
