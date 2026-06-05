@@ -19,7 +19,7 @@
   <meta property="og:url" content="https://oradia.fr/tore-analysis.html" />
   <meta property="og:title" content="Analyse de votre tirage - Oracle Oradia" />
   <meta property="og:description" content="Analyse personnalisée de votre tirage avec l'Oracle Oradia." />
-  <meta property="og:image" content="https://oradia.fr/images/oracle-precommande.jpg" />
+  <meta property="og:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg" />
   <meta property="og:image:width" content="1200" />
   <meta property="og:image:height" content="630" />
   <meta property="og:site_name" content="Oradia" />
@@ -30,7 +30,7 @@
   <meta property="twitter:url" content="https://oradia.fr/tore-analysis.html" />
   <meta property="twitter:title" content="Analyse de votre tirage - Oracle Oradia" />
   <meta property="twitter:description" content="Analyse personnalisée de votre tirage avec l'Oracle Oradia." />
-  <meta property="twitter:image" content="https://oradia.fr/images/oracle-precommande.jpg" />
+  <meta property="twitter:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg" />
   
   <!-- Canonical URL -->
   <link rel="canonical" href="https://oradia.fr/tore-analysis.html" />
@@ -1437,7 +1437,24 @@
 
             window._obsWindowText = text;
             window._obsAttentionPoints = points;
-            window._obsSuggestedDays = days;
+            // Garder la durée choisie par l'utilisateur (déjà dans window._obsSuggestedDays)
+            // au lieu de la durée préconisée par l'analyse (days)
+
+            // Stocker les données d'observation dans tore_analysis_data
+            try {
+                const existingData = JSON.parse(sessionStorage.getItem('tore_analysis_data') || '{}');
+                existingData.observationDays = window._obsSuggestedDays; // Utiliser la durée choisie
+                existingData.observationText = text;
+                existingData.attentionPoints = points;
+                sessionStorage.setItem('tore_analysis_data', JSON.stringify(existingData));
+                console.log('[injectObservationWindow] Données d\'observation stockées:', { 
+                    suggestedDays: days, 
+                    chosenDays: window._obsSuggestedDays, 
+                    textLength: text.length 
+                });
+            } catch(e) {
+                console.error('[injectObservationWindow] Erreur stockage:', e);
+            }
 
             // Récupérer l'email de l'utilisateur connecté
             const sessionData = sessionStorage.getItem('oradia_member_session')
@@ -1515,7 +1532,7 @@
                         `}
                         <p class="obs-error" id="obs-error"></p>
                         <p style="color:rgba(212,175,55,0.6);font-size:0.82rem;margin:0.8rem 0 0;font-style:italic;font-weight:500;">
-                            Votre fenêtre sera activée pour la durée choisie.
+                            Votre fenêtre sera activée pour <span id="obs-duration-display">3</span> jours.
                         </p>
                     </div>
 
@@ -1537,6 +1554,12 @@
             window._obsSuggestedDays = days;
             document.querySelectorAll('.obs-duration-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            
+            // Mettre à jour l'affichage de la durée dans le message
+            const durationDisplay = document.getElementById('obs-duration-display');
+            if (durationDisplay) {
+                durationDisplay.textContent = days;
+            }
         }
 
         async function activateObsWindow() {
