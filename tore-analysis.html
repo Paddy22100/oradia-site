@@ -42,7 +42,6 @@
   <link rel="stylesheet" href="production-mode.css">
   <script src="security.js"></script>
 
-  
   <script>
     tailwind.config = {
       theme: {
@@ -68,6 +67,17 @@
       }
     }
   </script>
+
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600;700&family=Lora:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
+    
+    .font-cormorant {
+      font-family: 'Cormorant Garamond', serif;
+    }
+    
+    .font-lora {
+      font-family: 'Lora', serif;
+    }
     
     .gold-gradient {
       background: linear-gradient(135deg, #d4af37 0%, #f5e7a1 50%, #d4af37 100%);
@@ -1910,26 +1920,15 @@
                     }
                 }
 
-                // Si toujours pas de données d'observation, utiliser les variables globales
-                if (!observationDays && window._obsSuggestedDays) {
-                    observationDays = window._obsSuggestedDays;
-                    observationText = window._obsWindowText || 'Fenêtre d\'observation activée';
-                    console.log('[doSendEmail] Utilisation des variables globales:', observationDays);
-                }
-
                 // LOG pour debug (à retirer après confirmation)
-                const payload = {
-                    email,
-                    intention,
-                    cards,
-                    analysis,
-                    synthesis,
+                console.log('[doSendEmail] Keys found:', {
+                    intention: !!intention,
+                    analysis: analysis.length,
+                    synthesis: synthesis.length,
+                    cards: cards.length,
                     observationDays,
-                    observationText,
-                };
-                console.log('[doSendEmail] Payload envoyé:', payload);
-                console.log('[doSendEmail] observationDays:', observationDays, 'type:', typeof observationDays);
-                console.log('[doSendEmail] observationText:', observationText, 'length:', observationText?.length);
+                    allKeys: Object.keys(sessionStorage)
+                });
 
                 const resp = await fetch('/api/tirages/send-email', {
                     method: 'POST',
