@@ -6293,87 +6293,84 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
       }, 500);
     }
 
-    // ③ Calculer les offsets de chaque carte orbitale par rapport au centre du plateau
-    // (coordonnées relatives dans le grid — pas besoin de getBoundingClientRect)
-    // On lit les positions après que le layout est stable (board est visible depuis ÉTAPE 1B)
-    const boardRect = boardHost.getBoundingClientRect();
-    const boardCx = boardRect.width / 2;
-    const boardCy = boardRect.height / 2;
+    // ③ Les positions seront calculées dans le forEach avec getBoundingClientRect
+    // (le plateau est visible et le layout est stable à ce stade)
 
     // ④ Lancer l'animation de chaque carte orbitale avec délai progressif
     const orbitalDelays = [380, 540, 700, 860, 1020, 1180];
     const orbitalDurations = [950, 970, 940, 980, 950, 960];
 
+    // Mesurer une seule fois le rect du plateau (stable à ce stade)
+    const boardAbsRect = boardHost.getBoundingClientRect();
+    const boardCx = boardAbsRect.left + boardAbsRect.width  / 2;
+    const boardCy = boardAbsRect.top  + boardAbsRect.height / 2;
+
     orbitalCards.forEach((card, i) => {
-      const dur = orbitalDurations[i] || 840;
-      const delay = orbitalDelays[i] || 400;
+      const dur    = orbitalDurations[i] || 960;
+      const delay  = orbitalDelays[i]    || 400;
 
-      // Calculer position finale de la carte par rapport au centre du plateau
-      const boardAbsRect = boardHost.getBoundingClientRect();
+      // Position finale de la carte dans le viewport
       const cardRect = card.getBoundingClientRect();
-      const finalX = cardRect.left + cardRect.width  / 2 - boardAbsRect.left - boardAbsRect.width  / 2;
-      const finalY = cardRect.top  + cardRect.height / 2 - boardAbsRect.top  - boardAbsRect.height / 2;
+      const cardCx = cardRect.left + cardRect.width  / 2;
+      const cardCy = cardRect.top  + cardRect.height / 2;
 
-      // Angle de départ de la spirale : chaque carte part avec un angle décalé
-      // pour créer l'effet de déploiement en éventail depuis le centre
-      const spiralStartAngle = -180 + (i * 60); // -180° à +120° pour 6 cartes
-      const spiralRadius = Math.sqrt(finalX*finalX + finalY*finalY);
-      const finalAngle = Math.atan2(finalY, finalX) * 180 / Math.PI;
+      // Vecteur du centre du plateau vers la carte (= offset à parcourir)
+      const dx = cardCx - boardCx;
+      const dy = cardCy - boardCy;
+
+      // Vecteur perpendiculaire normalisé (pour créer l'arc)
+      const len = Math.sqrt(dx*dx + dy*dy) || 1;
+      const px = -dy / len;  // perpendiculaire
+      const py =  dx / len;
+
+      // Amplitude de l'arc : chaque carte courbe dans une direction différente
+      // en alternant le signe pour créer un déploiement en spirale
+      const arcSign   = (i % 2 === 0) ? 1 : -1;
+      const arcAmount = len * 0.55 * arcSign;
 
       setTimeout(() => {
-        // Rendre la carte visible au départ (depuis le centre, invisible)
-        card.style.opacity = '0';
-        card.style.transform = `translate(0px, 0px) scale(0.5)`;
         card.classList.remove('card-dealing-hidden');
-        void card.offsetWidth;
+        card.style.willChange = 'transform, opacity';
 
-        const startTime = performance.now();
-        const startAngle = finalAngle + spiralStartAngle;
+        const t0 = performance.now();
 
-        const animateSpiral = (now) => {
-          const elapsed = now - startTime;
-          const t = Math.min(elapsed / dur, 1);
-          // Easing : accélère au début, décélère à la fin (ease-out cubic)
-          const e = 1 - Math.pow(1 - t, 3);
-          // Easing pour l'opacité : fade-in rapide
-          const eo = Math.min(t * 5, 1);
+        const step = (now) => {
+          const raw = Math.min((now - t0) / dur, 1);
+          // easeOutExpo — décélère fortement en fin d'animation
+          const e  = raw === 1 ? 1 : 1 - Math.pow(2, -10 * raw);
+          // Arc : composante perpendiculaire forte au début, nulle à la fin
+          const arc = arcAmount * Math.sin(raw * Math.PI);
 
-          // Interpoler l'angle de rotation (spirale)
-          const currentAngle = startAngle + (finalAngle - startAngle) * e;
-          const currentAngleRad = currentAngle * Math.PI / 180;
+          // Position courante = position finale × e + arc perpendiculaire
+          const cx = dx * e + px * arc;
+          const cy = dy * e + py * arc;
 
-          // Interpoler le rayon (distance au centre) : commence à 0, finit à spiralRadius
-          // Légère sur-extension à 80% du temps pour l'effet rebond
-          const radiusEase = t < 0.8
-            ? e * 1.08 * spiralRadius
-            : spiralRadius + (spiralRadius * 0.08) * (1 - (t - 0.8) / 0.2);
-          const currentRadius = t < 0.8 ? radiusEase : radiusEase;
+          // La carte démarre au centre (translate inverse de son offset final)
+          // et converge vers translate(0,0) qui est sa position dans le grid
+          const tx = cx - dx;  // = dx*(e-1) + arc*px → part de -dx, arrive à 0
+          const ty = cy - dy;  // idem
 
-          // Calculer la position cartésienne depuis l'angle et le rayon
-          const cx = Math.cos(currentAngleRad) * spiralRadius * e;
-          const cy = Math.sin(currentAngleRad) * spiralRadius * e;
+          // Opacité : fade-in sur les 20% premiers
+          const opacity = Math.min(raw * 5, 1);
 
-          // Scale : démarre petit, rebondit légèrement à 88%
-          const scaleVal = t < 0.88
-            ? 0.5 + e * 0.55
-            : 1.05 - (t - 0.88) / 0.12 * 0.05;
+          // Scale : 0.55 → 1.04 → 1.0
+          const scale = raw < 0.85
+            ? 0.55 + e * 0.52
+            : 1.07 - (raw - 0.85) / 0.15 * 0.07;
 
-          card.style.opacity = String(Math.min(eo, 1));
-          card.style.transform = `translate(${cx - finalX * e + finalX * e}px, ${cy - finalY * e + finalY * e}px) scale(${scaleVal})`;
+          card.style.transform = `translate(${tx.toFixed(2)}px, ${ty.toFixed(2)}px) scale(${scale.toFixed(4)})`;
+          card.style.opacity   = opacity.toFixed(3);
 
-          if (t < 1) {
-            requestAnimationFrame(animateSpiral);
+          if (raw < 1) {
+            requestAnimationFrame(step);
           } else {
-            card.style.opacity = '1';
-            card.style.transform = 'translate(0px, 0px) scale(1)';
-            requestAnimationFrame(() => {
-              card.style.transform = '';
-              card.style.opacity = '';
-            });
+            card.style.transform = '';
+            card.style.opacity   = '';
+            card.style.willChange = 'auto';
           }
         };
 
-        requestAnimationFrame(animateSpiral);
+        requestAnimationFrame(step);
       }, delay);
     });
 
