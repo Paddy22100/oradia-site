@@ -703,7 +703,7 @@
                 <i class="fas fa-redo"></i>
                 <span>Nouveau Tirage</span>
             </a>
-            <button onclick="openEmailModal()" class="border-2 border-gold/50 text-gold font-semibold py-4 px-6 sm:px-8 rounded-full hover:bg-gold/10 hover:border-gold transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
+            <button id="mainEmailBtn" onclick="openEmailModal()" class="border-2 border-gold/50 text-gold font-semibold py-4 px-6 sm:px-8 rounded-full hover:bg-gold/10 hover:border-gold transition-all duration-300 text-center flex items-center justify-center gap-2 group hover:scale-105 touch-target">
                 <i class="fas fa-envelope"></i>
                 <span class="text-sm sm:text-base">Recevoir l'analyse complète par mail</span>
             </button>
@@ -1793,23 +1793,7 @@
         function openEmailModal() {
             // Vérifier si l'email a déjà été envoyé
             if (window._emailSent) {
-                // Afficher un message indiquant que l'email a déjà été envoyé
-                const modal = document.getElementById('emailModal');
-                modal.style.display = 'flex';
-                document.getElementById('emailForm').style.display = 'none';
-                document.getElementById('emailSuccess').style.display = 'block';
-                // Modifier le message de succès pour indiquer que c'est déjà envoyé
-                const successContent = document.querySelector('#emailSuccess > div');
-                if (successContent) {
-                    successContent.innerHTML = `
-                        <div style="width:52px; height:52px; border-radius:50%; background:rgba(52,175,84,0.1); border:1px solid rgba(52,175,84,0.3); display:flex; align-items:center; justify-content:center; margin:0 auto 1rem;">
-                            <i class="fas fa-check" style="color:#34af54; font-size:1.4rem;"></i>
-                        </div>
-                        <h3 style="font-family:'Cinzel',serif; color:#34af54; font-size:1.15rem; font-weight:700; margin:0 0 0.5rem; letter-spacing:0.06em;">Déjà envoyé</h3>
-                        <p style="color:rgba(200,192,168,0.7); font-size:0.85rem; margin:0; line-height:1.5;">Votre analyse complète a déjà été envoyée à votre adresse email.</p>
-                    `;
-                }
-                setTimeout(closeEmailModal, 2000);
+                // Ne rien faire, le bouton affiche déjà "Envoyé"
                 return;
             }
             
@@ -1950,10 +1934,19 @@
             }
 
             const btn = document.getElementById('emailSubmitBtn');
+            const mainBtn = document.getElementById('mainEmailBtn');
             const errEl = document.getElementById('emailError');
+            
+            // Désactiver et animer les deux boutons
             btn.disabled = true;
             btn.style.opacity = '0.6';
             btn.innerHTML = '<i class="fas fa-spinner fa-spin" style="margin-right:8px;"></i>Envoi en cours...';
+            
+            mainBtn.disabled = true;
+            mainBtn.style.opacity = '0.7';
+            mainBtn.innerHTML = '<div class="w-5 h-5 border-2 border-gold border-t-transparent rounded-full animate-spin mr-2"></div>Envoi en cours...';
+            mainBtn.style.cursor = 'not-allowed';
+            
             errEl.style.display = 'none';
 
             try {
@@ -1966,14 +1959,13 @@
 
                 if (data.success) {
                     window._emailSent = true;
-                    // Désactiver le bouton principal
-                    const mainEmailBtn = document.querySelector('button[onclick="openEmailModal()"]');
-                    if (mainEmailBtn) {
-                        mainEmailBtn.disabled = true;
-                        mainEmailBtn.style.opacity = '0.5';
-                        mainEmailBtn.style.cursor = 'not-allowed';
-                        mainEmailBtn.innerHTML = '<i class="fas fa-check"></i> <span class="text-sm sm:text-base">Envoyé</span>';
-                    }
+                    
+                    // Mettre à jour le bouton principal avec "Envoyé"
+                    mainBtn.innerHTML = '<i class="fas fa-check-circle text-green-400"></i> <span class="text-sm sm:text-base">Envoyé</span>';
+                    mainBtn.style.opacity = '0.8';
+                    mainBtn.classList.remove('border-gold/50', 'text-gold', 'hover:bg-gold/10', 'hover:border-gold');
+                    mainBtn.classList.add('border-green-400/50', 'text-green-400');
+                    
                     document.getElementById('emailForm').style.display = 'none';
                     document.getElementById('emailSuccess').style.display = 'block';
                     setTimeout(closeEmailModal, 3000);
@@ -1985,9 +1977,16 @@
                     ? err.message
                     : "L'envoi a échoué. Vérifiez votre adresse et réessayez.";
                 errEl.style.display = 'block';
+                
+                // Réactiver les deux boutons en cas d'erreur
                 btn.disabled = false;
                 btn.style.opacity = '1';
                 btn.innerHTML = '<i class="fas fa-paper-plane" style="margin-right:8px;"></i>Envoyer mon analyse';
+                
+                mainBtn.disabled = false;
+                mainBtn.style.opacity = '1';
+                mainBtn.innerHTML = '<i class="fas fa-envelope"></i><span class="text-sm sm:text-base">Recevoir l\'analyse complète par mail</span>';
+                mainBtn.style.cursor = 'pointer';
             }
         }
     </script>

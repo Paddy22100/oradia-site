@@ -12,6 +12,25 @@ class FreemiumTracker {
 
     init() {
         this.checkAndResetMonthly();
+        
+        // Migration : si une ancienne clé de limite existe, la convertir
+        const OLD_KEYS = [
+            'oradia_tore_draws', 'tore_daily_draws', 'tore_draws_today',
+            'oradia_tore_daily', 'tore_monthly_draws'
+        ];
+        const alreadyMigrated = localStorage.getItem('oradia_tore_lifetime_draws');
+        if (!alreadyMigrated) {
+            let legacyCount = 0;
+            OLD_KEYS.forEach(k => {
+                const v = localStorage.getItem(k);
+                if (v && !isNaN(parseInt(v, 10))) {
+                    legacyCount = Math.max(legacyCount, parseInt(v, 10));
+                }
+            });
+            // Plafonner à 2 pour ne pas bloquer d'emblée les gros utilisateurs
+            localStorage.setItem('oradia_tore_lifetime_draws',
+              String(Math.min(legacyCount, 2)));
+        }
     }
 
     /**
@@ -261,53 +280,85 @@ class FreemiumTracker {
 
     canDrawTore() {
         if (this.isSubscribed()) return true;
-        return this.getToreDrawData().count < 1;
+        const used = parseInt(localStorage.getItem('oradia_tore_lifetime_draws') || '0', 10);
+        return used < 2;
     }
 
     recordToreDraw() {
         if (this.isSubscribed()) return;
-        const data = this.getToreDrawData();
-        data.count += 1;
-        localStorage.setItem('oradia_tore_draws', JSON.stringify(data));
+        const used = parseInt(localStorage.getItem('oradia_tore_lifetime_draws') || '0', 10);
+        localStorage.setItem('oradia_tore_lifetime_draws', String(used + 1));
+    }
+
+    getRemainingToreDraws() {
+        const used = parseInt(
+            localStorage.getItem('oradia_tore_lifetime_draws') || '0', 10
+        );
+        return Math.max(0, 2 - used);
     }
 
     showToreLimitReached() {
         const modal = document.createElement('div');
         modal.id = 'tore-limit-modal';
-        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(2,6,23,0.85);backdrop-filter:blur(4px);';
         modal.innerHTML = `
-            <div style="position:absolute;inset:0;background:url('images/oradia-hero-4k.png') center/cover no-repeat;"></div>
-            <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(2,6,23,0.92) 0%,rgba(5,20,40,0.88) 100%);backdrop-filter:blur(4px);"></div>
-            <div style="position:relative;max-width:640px;width:100%;text-align:center;">
-                <!-- Logo -->
-                <div style="display:flex;align-items:center;justify-content:center;gap:16px;margin-bottom:36px;">
-                    <img src="images/logo-hd-v2.jpeg" alt="Oradia" style="width:72px;height:72px;border-radius:50%;object-fit:cover;border:1.5px solid rgba(212,175,55,0.5);box-shadow:0 0 32px rgba(212,175,55,0.25);" />
-                    <span style="font-family:'Cormorant Garamond',Georgia,serif;font-size:36px;font-weight:700;letter-spacing:0.25em;text-transform:uppercase;background:linear-gradient(135deg,#f0c75e,#d4af37);-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;">ORADIA</span>
-                </div>
-                <div style="width:72px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.65),transparent);margin:0 auto 32px;"></div>
-                <p style="font-family:'Lora',Georgia,serif;font-size:12px;letter-spacing:0.48em;text-transform:uppercase;color:rgba(212,175,55,0.5);margin-bottom:18px;">Votre chemin continue</p>
-                <h2 style="font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(28px,5.5vw,42px);font-weight:700;color:#f0c75e;margin-bottom:22px;line-height:1.2;text-shadow:0 2px 32px rgba(212,175,55,0.2);">Vous avez complété votre<br>tirage gratuit du jour</h2>
-                <p style="font-family:'Lora',Georgia,serif;font-size:17px;color:rgba(229,231,235,0.70);line-height:1.8;margin-bottom:36px;max-width:480px;margin-left:auto;margin-right:auto;">Le Tore est une expérience de transformation profonde.<br>L'abonnement mensuel vous ouvre un accès illimité à l'exploration intérieure.</p>
-                <!-- CTA abonnement -->
-                <a href="tore-abonnement.html" style="display:inline-block;background:linear-gradient(135deg,rgba(212,175,55,0.22),rgba(212,175,55,0.10));border:1.5px solid rgba(212,175,55,0.85);color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;font-weight:700;letter-spacing:0.16em;text-transform:uppercase;padding:18px 48px;border-radius:50px;text-decoration:none;box-shadow:0 0 40px rgba(212,175,55,0.2),0 12px 32px rgba(0,0,0,0.55);" onmouseover="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.35),rgba(212,175,55,0.18))'" onmouseout="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.22),rgba(212,175,55,0.10))'">✦ Découvrir l'abonnement</a>
-                <!-- Séparateur -->  
-                <div style="display:flex;align-items:center;gap:14px;margin:36px 0 20px;">
-                    <div style="flex:1;height:1px;background:rgba(212,175,55,0.15);"></div>
-                    <span style="font-family:'Lora',Georgia,serif;font-size:13px;color:rgba(212,175,55,0.38);letter-spacing:0.12em;">Déjà abonné ?</span>
-                    <div style="flex:1;height:1px;background:rgba(212,175,55,0.15);"></div>
-                </div>
-                <!-- Bouton connexion -->
-                <div style="margin-bottom:16px;">
-                    <a href="member/login.html" onclick="sessionStorage.setItem('oradia_login_return', window.location.href)" style="display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#d4af37,#f4e4c1);color:#0a192f;font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-weight:700;letter-spacing:0.14em;text-transform:uppercase;padding:14px 36px;border-radius:50px;text-decoration:none;box-shadow:0 8px 24px rgba(212,175,55,0.35);">
-                        <i class="fas fa-user-circle"></i> Se connecter à mon espace
-                    </a>
-                </div>
-                <!-- Fermer -->
-                <button onclick="document.getElementById('tore-limit-modal').remove()" style="background:none;border:none;color:rgba(212,175,55,0.28);font-family:'Lora',Georgia,serif;font-size:13px;cursor:pointer;letter-spacing:0.08em;margin-top:8px;" onmouseover="this.style.color='rgba(212,175,55,0.6)'" onmouseout="this.style.color='rgba(212,175,55,0.28)'">Fermer</button>
-                <p style="font-family:'Lora',Georgia,serif;font-size:12px;color:rgba(148,163,184,0.32);margin-top:20px;">Votre tirage gratuit se renouvelle chaque jour.</p>
+            <div style="text-align:center;padding:8px 0 4px;max-width:400px;width:100%;">
+                <div style="font-size:1.6rem;margin-bottom:12px;">✦</div>
+                <h3 style="font-family:'Cinzel',serif;font-size:1.1rem;
+                           color:#d4af37;margin-bottom:12px;letter-spacing:0.05em;">
+                  Vos 2 tirages gratuits ont été utilisés
+                </h3>
+                <p style="color:rgba(233,231,223,0.75);font-size:0.88rem;
+                          line-height:1.6;margin-bottom:20px;">
+                  Vous avez exploré La Boussole Intérieure à travers 2 tirages complets.
+                  Pour continuer à recevoir une guidance approfondie à tout moment,
+                  découvrez l'abonnement Oradia.
+                </p>
+
+                <!-- CTA principal : abonnement -->
+                <a href="/abonnement"
+                   style="display:inline-block;background:linear-gradient(135deg,#d4af37,#b8962e);
+                          color:#020817;font-family:'Cinzel',serif;font-size:0.9rem;
+                          font-weight:700;padding:12px 28px;border-radius:999px;
+                          text-decoration:none;letter-spacing:0.04em;
+                          box-shadow:0 4px 20px rgba(212,175,55,0.35);">
+                  Accéder aux tirages illimités →
+                </a>
+                <p style="color:rgba(212,175,55,0.5);font-size:0.75rem;margin-top:8px;">
+                  8€ / mois · Sans engagement
+                </p>
+
+                <!-- Séparateur -->
+                <div style="margin:16px auto;width:60px;height:1px;
+                            background:rgba(212,175,55,0.2);"></div>
+
+                <!-- CTA secondaire : tirage ponctuel -->
+                <a href="#" id="btn-single-draw-purchase"
+                     data-todo="create-single-draw-page"
+                    style="color:rgba(212,175,55,0.6);font-size:0.82rem;
+                           text-decoration:underline;cursor:pointer;display:block;">
+                  Ou acheter un tirage unique (3,90€)
+                </a>
+                <span style="color:rgba(212,175,55,0.35);font-size:0.7rem;
+                             display:block;margin-top:4px;">
+                  L'abonnement est rentable dès le 3ème tirage
+                </span>
+
+                <!-- Fermeture discrète -->
+                <button data-close-limit-modal
+                        style="display:block;margin:20px auto 0;background:none;border:none;
+                               color:rgba(233,231,223,0.3);font-size:0.75rem;
+                               cursor:pointer;text-decoration:underline;">
+                  Peut-être plus tard
+                </button>
             </div>
         `;
         document.body.appendChild(modal);
+        
+        // Gestionnaire de fermeture
+        modal.querySelector('[data-close-limit-modal]')?.addEventListener('click', () => {
+            modal.remove();
+        });
     }
 }
 

@@ -537,6 +537,38 @@ const handler = async (req, res) => {
                     return res.status(200).json({ success: true, message: 'Tore subscription processed', sessionId });
                 }
 
+                // ── Achat ponctuel tirage Tore ──
+                if (session.metadata?.type === 'single_tore_draw') {
+                  const email = session.customer_email;
+                  if (email) {
+                    const { data: sub, error: subErr } = await supabase
+                      .from('tore_subscriptions')
+                      .select('id, single_draw_credits')
+                      .eq('email', email)
+                      .single();
+
+                    if (sub && !subErr) {
+                      await supabase
+                        .from('tore_subscriptions')
+                        .update({
+                          single_draw_credits: (sub.single_draw_credits || 0) + 1
+                        })
+                        .eq('id', sub.id);
+                    } else {
+                      // L'email n'existe pas encore dans tore_subscriptions :
+                      // créer une ligne avec 1 crédit
+                      await supabase
+                        .from('tore_subscriptions')
+                        .insert({
+                          email: email,
+                          single_draw_credits: 1,
+                          status: 'single_draw',
+                          access_code: 'SINGLE-' + Date.now()
+                        });
+                    }
+                  }
+                }
+
                 // Gestion spéciale pour les contributions libres
                 if (extractedData.offer === 'contribution-libre') {
                     const amountInEuros = extractedData.amount_total / 100;

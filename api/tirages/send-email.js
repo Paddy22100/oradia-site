@@ -21,53 +21,67 @@ export default async function handler(req, res) {
     };
     
     // Générer le HTML des cartes - incluant les cartes passerelles
+    // Créer un tableau avec gestion des retours à la ligne (3 cartes max par ligne)
     let allCardsHtml = '';
+    let currentRow = '<tr>';
+    let cardsInCurrentRow = 0;
     
-    cards.forEach((card, index) => {
-      // Carte principale
+    // Fonction pour ajouter une carte HTML
+    const addCardHtml = (card, isBridge = false) => {
       const imgPath = getImagePath(card);
       const isFullUrl = imgPath.startsWith('http');
       const finalImgPath = isFullUrl ? imgPath : `https://oradia.fr/${imgPath.replace(/^\//, '')}`;
       
-      allCardsHtml += `
+      const cardHtml = `
         <td style="width: 33%; padding: 8px; vertical-align: top; text-align: center;">
-          <div style="width: 140px; height: 210px; margin: 0 auto; position: relative;">
+          <div style="position: relative; width: 140px; height: 210px; margin: 0 auto;">
+            ${isBridge ? `
+              <div style="position: absolute; top: -8px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #d4af37, #f5e7a1); color: #0a192f; font-size: 9px; font-weight: 700; padding: 3px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 1px; z-index: 1;">
+                <i class="fas fa-exchange-alt" style="margin-right: 3px;"></i>Passerelle
+              </div>
+            ` : ''}
             <img src="${finalImgPath}" alt="${card.name}" 
-              style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); border: 1px solid rgba(212,175,55,0.3);">
+              style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); border: ${isBridge ? '2px solid #d4af37;' : '1px solid rgba(212,175,55,0.3);'}">
           </div>
           <h3 style="color: #d4af37; font-family: Georgia, serif; margin: 10px 0 4px; font-size: 14px; font-weight: 600;">${card.name.replace(/_/g, ' ')}</h3>
           <p style="color: #c8c0a8; font-size: 11px; margin: 0; font-style: italic; text-transform: capitalize;">${card.family.replace(/_/g, ' ')}</p>
         </td>
       `;
       
-      // Carte passerelle si présente
+      return cardHtml;
+    };
+    
+    // Traiter toutes les cartes (principales + passerelles)
+    cards.forEach((card, index) => {
+      // Ajouter la carte principale
+      currentRow += addCardHtml(card, false);
+      cardsInCurrentRow++;
+      
+      // Ajouter la carte passerelle si présente
       if (card.bridgeCard) {
-        const bridgeImgPath = getImagePath(card.bridgeCard);
-        const isBridgeFullUrl = bridgeImgPath.startsWith('http');
-        const finalBridgeImgPath = isBridgeFullUrl ? bridgeImgPath : `https://oradia.fr/${bridgeImgPath.replace(/^\//, '')}`;
-        
-        allCardsHtml += `
-          <td style="width: 33%; padding: 8px; vertical-align: top; text-align: center;">
-            <div style="position: relative; width: 140px; height: 210px; margin: 0 auto;">
-              <div style="position: absolute; top: -8px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #d4af37, #f5e7a1); color: #0a192f; font-size: 9px; font-weight: 700; padding: 3px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 1px; z-index: 1;">
-                <i class="fas fa-exchange-alt" style="margin-right: 3px;"></i>Passerelle
-              </div>
-              <img src="${finalBridgeImgPath}" alt="${card.bridgeCard.name}" 
-                style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); border: 2px solid #d4af37;">
-            </div>
-            <h3 style="color: #d4af37; font-family: Georgia, serif; margin: 10px 0 4px; font-size: 14px; font-weight: 600;">${card.bridgeCard.name.replace(/_/g, ' ')}</h3>
-            <p style="color: #c8c0a8; font-size: 11px; margin: 0; font-style: italic; text-transform: capitalize;">${card.bridgeCard.family.replace(/_/g, ' ')}</p>
-          </td>
-        `;
+        currentRow += addCardHtml(card.bridgeCard, true);
+        cardsInCurrentRow++;
+      }
+      
+      // Si on a 3 cartes dans la ligne, passer à la ligne suivante
+      if (cardsInCurrentRow >= 3) {
+        currentRow += '</tr>';
+        allCardsHtml += currentRow;
+        currentRow = '<tr>';
+        cardsInCurrentRow = 0;
       }
     });
     
-    // Tableau des cartes - 3 colonnes max par ligne
+    // Ajouter la dernière ligne si elle contient des cartes
+    if (cardsInCurrentRow > 0) {
+      currentRow += '</tr>';
+      allCardsHtml += currentRow;
+    }
+    
+    // Tableau des cartes - avec gestion correcte des lignes
     const cardsTable = `
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-        <tr>
-          ${allCardsHtml}
-        </tr>
+        ${allCardsHtml}
       </table>
     `;
 

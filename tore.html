@@ -64,6 +64,7 @@
   <link rel="stylesheet" href="responsive.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preload" as="image" href="images/oradia-hero-4k.png" fetchpriority="high">
   <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700&family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap">
 
   <style>
@@ -216,8 +217,18 @@
     cursor:pointer;transition:background .2s;white-space:nowrap;flex-shrink:0;
   }
   .quantum-learn-more:hover { background:rgba(200,169,110,.12); }
-  .quantum-explication { max-height:0;overflow:hidden;transition:max-height .5s ease,opacity .4s ease;opacity:0; }
-  .quantum-explication.open { max-height:1400px;opacity:1; }
+  .quantum-explication {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.45s ease, opacity 0.35s ease;
+    opacity: 0;
+    transform: translateZ(0);
+    will-change: opacity;
+  }
+  .quantum-explication.open {
+    max-height: 1400px;
+    opacity: 1;
+  }
   .quantum-explication-inner { padding:1.5rem 0 .5rem;text-align:left; }
   .quantum-explication h3 { font-size:1.1rem;font-weight:600;margin-bottom:.9rem;color:#c8a96e;letter-spacing:.03em; }
   .quantum-intro { font-size:.9rem;line-height:1.7;margin-bottom:1.25rem;opacity:.9; }
@@ -913,7 +924,8 @@
       visibility: hidden;
       transform: none !important;
       pointer-events: none;
-      background: #020817 !important;
+      background: transparent;
+      transition: opacity 0.18s ease;
     }
     .tore-card.flipped .tore-card-back {
       opacity: 0;
@@ -924,6 +936,7 @@
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
+      transition: opacity 0.18s ease 0.05s;
     }
   }
 
@@ -974,7 +987,8 @@
       visibility: hidden;
       transform: none !important;
       pointer-events: none;
-      background: #020817 !important;
+      background: transparent;
+      transition: opacity 0.18s ease;
     }
     /* Après retournement : dos caché, face visible */
     .tore-card.flipped .tore-card-back {
@@ -986,6 +1000,57 @@
       opacity: 1;
       visibility: visible;
       pointer-events: auto;
+      transition: opacity 0.18s ease 0.05s;
+    }
+  }
+
+  /* Tablette : même comportement que mobile pour le flip */
+  @media (min-width: 640px) and (max-width: 1023px) {
+    .tore-card {
+      perspective: none !important;
+    }
+    .tore-card,
+    .tore-card-inner,
+    .tore-card-back,
+    .tore-card-front {
+      backface-visibility: visible !important;
+      -webkit-backface-visibility: visible !important;
+      transform-style: flat !important;
+      -webkit-transform-style: flat !important;
+    }
+    .tore-card-inner {
+      transform-origin: center center;
+      transition: transform 0.22s ease-in;
+    }
+    .tore-card.flipping .tore-card-inner {
+      transform: scaleX(0);
+    }
+    .tore-card.flipped .tore-card-inner {
+      transform: scaleX(1);
+      transition: transform 0.22s ease-out;
+    }
+    .tore-card-back {
+      opacity: 1;
+      visibility: visible;
+    }
+    .tore-card-front {
+      opacity: 0;
+      visibility: hidden;
+      transform: none !important;
+      pointer-events: none;
+      background: transparent;
+      transition: opacity 0.18s ease;
+    }
+    .tore-card.flipped .tore-card-back {
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+    }
+    .tore-card.flipped .tore-card-front {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: auto;
+      transition: opacity 0.18s ease 0.05s;
     }
   }
 
@@ -2309,55 +2374,7 @@
   }
 }
 
-  /* Animation orbitale : Mémoire Cosmos apparaît en premier */
-  @keyframes cosmosReveal {
-    0%   { opacity: 0; transform: scale(0.5); filter: blur(8px); }
-    60%  { opacity: 1; filter: blur(0); }
-    80%  { transform: scale(1.08); }
-    100% { transform: scale(1); opacity: 1; filter: blur(0); }
-  }
-
-  /* Halo pulsant sur Mémoire Cosmos pendant l'orbite */
-  @keyframes cosmosHaloPulse {
-    0%   { 
-      box-shadow: 
-        0 0 0 0 rgba(212,175,55,0),
-        0 0 0 0 rgba(212,175,55,0),
-        0 0 0 0 rgba(212,175,55,0);
-      filter: brightness(1);
-    }
-    30%  { 
-      box-shadow: 
-        0 0 20px 8px rgba(212,175,55,0.4),
-        0 0 35px 15px rgba(212,175,55,0.25),
-        0 0 50px 25px rgba(212,175,55,0.15);
-      filter: brightness(1.1);
-    }
-    60%  { 
-      box-shadow: 
-        0 0 25px 12px rgba(212,175,55,0.5),
-        0 0 45px 20px rgba(212,175,55,0.3),
-        0 0 65px 35px rgba(212,175,55,0.18);
-      filter: brightness(1.15);
-    }
-    100% { 
-      box-shadow: 
-        0 0 0 0 rgba(212,175,55,0),
-        0 0 0 0 rgba(212,175,55,0),
-        0 0 0 0 rgba(212,175,55,0);
-      filter: brightness(1);
-    }
-  }
-
-  /* Cartes périphériques : partent du centre, orbitent sur un arc, atterrissent */
-  @keyframes orbitLand {
-    0%   { opacity: 0; transform: translate(var(--ox), var(--oy)) scale(0.6) rotate(var(--orot)); filter: blur(4px); }
-    20%  { opacity: 1; filter: blur(0); }
-    70%  { transform: translate(calc(var(--ox) * 0.08), calc(var(--oy) * 0.08)) scale(1.05) rotate(calc(var(--orot) * 0.1)); }
-    88%  { transform: translate(0, 0) scale(0.97) rotate(0deg); }
-    100% { transform: translate(0, 0) scale(1) rotate(0deg); opacity: 1; filter: blur(0); }
-  }
-
+  
 /* Responsive pour la barre de progression */
 @media (max-width: 768px) {
   #tore-step-guide {
@@ -2441,6 +2458,14 @@
 @keyframes fadeInUp {
   from { transform: translateY(12px); opacity: 0; }
   to   { transform: translateY(0);    opacity: 1; }
+}
+
+@keyframes stepPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.55; }
+}
+#tore-step-instruction.step-active {
+  animation: stepPulse 2.5s ease-in-out infinite;
 }
 
 .tore-card.card-intro-hidden {
@@ -2907,7 +2932,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
   </div>
 
 <section id="tore-immersif" class="relative"
-  style="background-image: url('images/oradia-hero-4k.png'); background-size: cover; background-repeat: no-repeat;">
+  style="background-image: url('images/oradia-hero-4k.png'); background-size: cover; background-repeat: no-repeat; isolation: isolate;">
 
   <!-- Voile comme l'index -->
   <div class="absolute inset-0" style="background: radial-gradient(circle at 20% 80%, rgba(212,175,55,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(212,175,55,0.04) 0%, transparent 50%), linear-gradient(135deg, rgba(10,25,47,0.65) 0%, rgba(5,20,40,0.75) 100%);"></div>
@@ -2915,7 +2940,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
   <div class="relative z-10 container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8" style="height:100%;display:flex;flex-direction:column;">
 
     <!-- FORMULAIRE D'INTENTION -->
-    <form id="tore-form" class="flex flex-col items-center justify-start" style="flex:1;min-height:100vh;min-height:100dvh;padding:clamp(16px,3vh,40px) 0 clamp(20px,5vh,60px);overflow:hidden;gap:clamp(24px,4vh,48px);">
+    <form id="tore-form" class="flex flex-col items-center justify-start" style="flex:1;min-height:100vh;min-height:100dvh;padding:clamp(16px,3vh,40px) 0 clamp(20px,5vh,60px);overflow:hidden;overflow-anchor:none;gap:clamp(24px,4vh,48px);">
 
       <!-- Titre principal unique -->
       <div class="text-center" style="margin-bottom:0;width:100%;max-width:42rem;">
@@ -2980,6 +3005,10 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
               <i class="fas fa-arrow-right"></i>
             </span>
           </button>
+          <p id="tore-draws-remaining"
+             style="display:none;color:rgba(212,175,55,0.5);font-size:0.75rem;
+                    margin-top:4px;text-align:center;">
+          </p>
           <p class="text-light-gold/40 text-xs mt-3">
             <i class="fas fa-lock mr-1"></i>Votre intention reste confidentielle
           </p>
@@ -4045,8 +4074,10 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     // Auto-focus sur bouton Continuer pour accessibilité
     setTimeout(() => {
       const focusBtn = document.getElementById('guide-continue-btn');
-      if (focusBtn) focusBtn.focus({ preventScroll: true });
-    }, 650);
+      if (focusBtn && document.activeElement !== focusBtn) {
+        focusBtn.focus({ preventScroll: true });
+      }
+    }, 700);
 
     // Bloquer les interactions avec le plateau
     if (boardHost) {
@@ -4122,12 +4153,19 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     let nextFamilyFound = null;
     for (const familyKey of TIRAGE_ORDER) {
       const card = boardHost.querySelector(`.tore-card[data-family="${familyKey}"]`);
-      if (card && !card.classList.contains('flipped')) {
+      if (card
+        && !card.classList.contains('flipped')
+        && !card.classList.contains('just-flipped')) {
         card.classList.add('next-to-draw');
         nextFamilyFound = familyKey;
         break;
       }
     }
+
+    // S'assurer que la carte action n'a pas de style résiduel qui clignote
+    allFlippedCards.forEach(fc => {
+      fc.style.animation = '';
+    });
 
     // Activer/désactiver le focus visuel sur le plateau
     if (toreBoard7) {
@@ -4295,6 +4333,14 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       };
       instruction.textContent = tips[nextFamily] || 'Retournez la carte pour la révéler.';
     }
+    
+    // Animation pulsation sur l'instruction de guidage
+    const _stepInstr = document.getElementById('tore-step-instruction');
+    if (_stepInstr) {
+      _stepInstr.classList.remove('step-active');
+      void _stepInstr.offsetWidth;
+      if (nextFamily) _stepInstr.classList.add('step-active');
+    }
   }
 
  function showCoinAfterAllCards() {
@@ -4308,6 +4354,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       const sg = el('tore-step-guide');
       if (sg) sg.style.display = 'none';
       coinWrapper.style.display = 'block';
+      if (boardHost) boardHost.style.pointerEvents = 'none';
 
       // Initialiser les dots pour la phase pièce (6 lancers)
       const dotsContainer = document.getElementById('tore-step-dots');
@@ -4345,6 +4392,7 @@ function showToreAnalysisCTA() {
   coinButton?.classList.add('hidden');
 
   isToreComplete = true;
+  if (boardHost) boardHost.style.pointerEvents = 'auto';
 
   // Enregistrer le tirage Tore complété
   if (window.freemiumTracker) window.freemiumTracker.recordToreDraw();
@@ -5169,6 +5217,7 @@ function closeToreExitModal(){
         if (coinWrapper) {
 
       coinWrapper.style.display = 'none';
+      if (boardHost) boardHost.style.pointerEvents = 'auto';
 
     }
 
@@ -5277,8 +5326,9 @@ function closeToreExitModal(){
         // Vider d'abord la face avant et masquer complètement (empêche flash de l'image précédente)
         front.style.padding = '0';
         front.style.background = 'none';
-        front.style.visibility = 'hidden';
-        front.innerHTML = '';
+        front.style.visibility = 'visible';
+        // Placeholder doré pendant le chargement de l'image
+        front.innerHTML = '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1200,#2a1f00,#1a1200);border-radius:10px;"></div>';
 
         card.classList.remove('next-to-draw');
 
@@ -5293,18 +5343,25 @@ function closeToreExitModal(){
 
         const imgEl = new Image();
         let flipDone = false;
-        const FLIP_TIMEOUT = 1500;
+        // Réduire le timeout si la connexion est rapide (navigator.connection API)
+        const _conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
+        const _fast = _conn && (_conn.effectiveType === '4g' || _conn.downlink > 2);
+        const FLIP_TIMEOUT = _fast ? 600 : 1500;
 
         const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
         if (!prefersReduced) {
           isCardFlipping = true;
           card.classList.add('flipping');
+          if (coinWrapper) coinWrapper.style.pointerEvents = 'none';
         }
 
         const doFlip = () => {
           if (flipDone) return;
           flipDone = true;
           isCardFlipping = false;
+          if (coinWrapper && coinWrapper.style.display !== 'none') {
+            coinWrapper.style.pointerEvents = 'auto';
+          }
           // Remplir le contenu de la face avant ici
           const escName = (data.name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
           const imgEl2 = document.createElement('img');
@@ -5312,11 +5369,13 @@ function closeToreExitModal(){
           imgEl2.alt = escName;
           imgEl2.setAttribute('loading', 'eager');
           imgEl2.setAttribute('fetchpriority', 'high');
-          imgEl2.style.cssText = 'width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.3s ease;';
-          front.innerHTML = '';
+          // Garder le placeholder visible pendant le fade-in de l'image
+          // imgEl2 est placé AU-DESSUS du placeholder via position:absolute
+          front.style.position = 'relative';
+          imgEl2.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.35s ease;';
+          // Vider le placeholder seulement après que l'image est visible
+          front.innerHTML = '<div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a1200,#2a1f00,#1a1200);border-radius:10px;z-index:0;"></div>';
           front.appendChild(imgEl2);
-          // Rendre la carte visible seulement après l'injection de l'image
-          front.style.visibility = 'visible';
           // Retour haptique discret sur mobile
           if (navigator.vibrate) navigator.vibrate(18);
           void card.offsetWidth;
@@ -5333,7 +5392,17 @@ function closeToreExitModal(){
             backEl.setAttribute('aria-label', 'Carte retournée');
             backEl.setAttribute('tabindex', '-1'); // sortir du tabindex maintenant que la carte est retournée
           }
-          requestAnimationFrame(() => { requestAnimationFrame(() => { imgEl2.style.opacity = '1'; }); });
+          requestAnimationFrame(() => {
+            requestAnimationFrame(() => {
+              imgEl2.style.opacity = '1';
+              // Supprimer le placeholder sombre une fois l'image visible
+              setTimeout(() => {
+                const placeholder = front.querySelector('div');
+                if (placeholder) placeholder.remove();
+                front.style.position = '';
+              }, 400);
+            });
+          });
           
           setTimeout(() => {
             card.classList.remove('just-flipped'); // retirer l'exception
@@ -5476,6 +5545,7 @@ if (previewOverlay) {
     
     // Marquer que l'éventail est ouvert
     isBridgeFanOpen = true;
+    if (coinWrapper) coinWrapper.style.pointerEvents = 'none';
 
     // FORCER la famille 'actions' pour toutes les passerelles
     nextFamilyKey = 'actions';
@@ -5654,6 +5724,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
         if (!dataNext) {
           overlay.remove();
           isBridgeFanOpen = false;
+          if (coinWrapper) coinWrapper.style.pointerEvents = 'auto';
           const bsvg = document.getElementById('tore-beam-svg');
           if (bsvg) bsvg.classList.remove('beam-hidden');
           return;
@@ -5729,6 +5800,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
             placeBridgeCard(stepIndex, 'actions', dataNext);
             overlay.remove();
             isBridgeFanOpen = false;
+            if (coinWrapper) coinWrapper.style.pointerEvents = 'auto';
             const bsvg2 = document.getElementById('tore-beam-svg');
             if (bsvg2) bsvg2.classList.remove('beam-hidden');
             
@@ -5760,6 +5832,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
 
         overlay.remove();
         isBridgeFanOpen = false;
+        if (coinWrapper) coinWrapper.style.pointerEvents = 'auto';
         if (isLastCoin) setTimeout(showToreAnalysisCTA, 400);
 
       });
@@ -5936,14 +6009,14 @@ function showArrowForStep(stepIndex, isMatch) {
   function launchCoin() {
 
 
-    if (!coin || !boardHost) {
-      return;
-    }
-
-    // Empêche plusieurs lancers simultanés
-    if (coin.dataset.locked === '1' || isCoinAnimating) {
-      return;
-    }
+    if (!coin || !boardHost) return;
+    if (coin.dataset.locked === '1' || isCoinAnimating) return;
+    // Bloquer si le guide de carte précédent est encore affiché
+    if (isGuideMessageShown) return;
+    if (isBridgeFanOpen) return;
+    if (isBridgeCardProcessing) return;
+    if (isCardFlipping) return;
+    if (!boardReady) return;
 
     // Vérifier si on a fini tous les lancers de pièce (6 familles avec polarité)
     const familiesWithCoin = TIRAGE_ORDER.filter(f => f !== 'memoire_cosmos');
@@ -6188,11 +6261,74 @@ function showArrowForStep(stepIndex, isMatch) {
         }
       });
       
+      // iOS Safari : listener keyup pour meilleure réactivité
+      input.addEventListener('keyup', () => {
+        const isValid = isOpenQuestion(input.value);
+        btn.disabled = !isValid;
+        if (isValid) input.setCustomValidity('');
+      });
+      
+      // Listener paste (collage depuis presse-papier)
+      input.addEventListener('paste', () => {
+        setTimeout(() => {
+          const isValid = isOpenQuestion(input.value);
+          btn.disabled = !isValid;
+          if (isValid) input.setCustomValidity('');
+        }, 0);
+      });
+      
     }
   }
   
   // Exécuter la configuration
   setupIntentionValidation();
+
+  // Compteur de tirages gratuits restants
+  (function() {
+    if (!window.freemiumTracker) return;
+    const isSubscribed = window.freemiumTracker.isSubscribed();
+    if (isSubscribed) return;
+    const remaining = window.freemiumTracker.getRemainingToreDraws?.() ?? null;
+    if (remaining === null) return;
+    const counterEl = document.getElementById('tore-draws-remaining');
+    if (!counterEl) return;
+    if (remaining === 0) {
+      counterEl.style.display = 'block';
+      counterEl.innerHTML =
+        '<i class="fas fa-info-circle" style="margin-right:4px;"></i>' +
+        'Vos 2 tirages gratuits ont été utilisés. ' +
+        '<a href="/abonnement" style="text-decoration:underline;' +
+        'color:rgba(212,175,55,0.7);">Découvrir l\'abonnement</a>';
+    } else if (remaining === 1) {
+      counterEl.style.display = 'block';
+      counterEl.textContent = '✦ Il vous reste 1 tirage gratuit';
+    }
+    // remaining === 2 : rien afficher
+  })();
+
+  // Détecter le retour après achat ponctuel réussi
+  (function() {
+    const urlParams = new URLSearchParams(window.location.search);
+    const singleDraw = urlParams.get('single_draw');
+    if (singleDraw === 'success') {
+      // Nettoyer l'URL sans recharger
+      window.history.replaceState({}, '', '/tore.html');
+      // Afficher un message de confirmation
+      const msgEl = document.createElement('div');
+      msgEl.style.cssText =
+        'position:fixed;top:20px;left:50%;transform:translateX(-50%);' +
+        'background:linear-gradient(135deg,#1a1f00,#2a2f00);' +
+        'color:#d4af37;padding:14px 28px;border-radius:999px;' +
+        'font-family:Cinzel,serif;font-size:0.9rem;z-index:99999;' +
+        'box-shadow:0 4px 20px rgba(212,175,55,0.4);' +
+        'border:1px solid rgba(212,175,55,0.3);text-align:center;';
+      msgEl.textContent = '✦ Tirage crédité — vous pouvez commencer';
+      document.body.appendChild(msgEl);
+      setTimeout(() => msgEl.remove(), 4000);
+    } else if (singleDraw === 'cancel') {
+      window.history.replaceState({}, '', '/tore.html');
+    }
+  })();
 
   
 
@@ -6233,10 +6369,25 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
 
  form?.addEventListener('submit', async (e) => {
   e.preventDefault();
+  // Empêcher le double-submit
+  const submitBtn = el('tore-submit-btn');
+  if (submitBtn && submitBtn.dataset.submitting === '1') return;
+  if (submitBtn) submitBtn.dataset.submitting = '1';
+  if (submitBtn) {
+    submitBtn.disabled = true;
+    const btnSpan = submitBtn.querySelector('.font-cinzel');
+    if (btnSpan) btnSpan.textContent = 'Chargement…';
+  }
 
   // Vérifier que la question est ouverte
   const intentionValue = toreIntentionInput?.value || '';
   if (!isOpenQuestion(intentionValue)) {
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.dataset.submitting = '0';
+      const _s = submitBtn.querySelector('.font-cinzel');
+      if (_s) _s.textContent = 'Commencer le Tirage';
+    }
     toreIntentionInput?.setCustomValidity("Formulez une question ouverte (ex. « Comment… ? », « Pourquoi… ? ») et terminez par « ? »" );
     toreIntentionInput?.reportValidity();
     return;
@@ -6247,6 +6398,12 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   // Vérifier l'abonnement : d'abord local, sinon appel API si connecté
   if (!window.freemiumTracker) {
     // Tracker pas encore chargé (script defer) - bloquer et réessayer dans 500ms
+    if (submitBtn) {
+      submitBtn.disabled = false;
+      submitBtn.dataset.submitting = '0';
+      const btnSpanRestore = submitBtn.querySelector('.font-cinzel');
+      if (btnSpanRestore) btnSpanRestore.textContent = 'Commencer le Tirage';
+    }
     setTimeout(() => form?.dispatchEvent(new Event('submit', {bubbles: true, cancelable: true})), 500);
     return;
   }
@@ -6276,10 +6433,52 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     }
   }
 
-  // Vérifier la limite de tirages gratuits seulement si pas abonné
-  if (!isSubscribed && window.freemiumTracker && !window.freemiumTracker.canDrawTore()) {
-    window.freemiumTracker.showToreLimitReached();
-    return;
+  if (!isSubscribed) {
+    let serverAllows = true;
+    const sessStr = sessionStorage.getItem('oradia_member_session')
+                  || localStorage.getItem('oradia_member_session');
+    if (sessStr) {
+      try {
+        const sess = JSON.parse(sessStr);
+        if (sess.email) {
+          try {
+            const quotaResp = await fetch('/api/check-tore-quota', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ email: sess.email })
+            });
+            if (quotaResp.ok) {
+              const quotaData = await quotaResp.json();
+              serverAllows = quotaData.canDraw === true;
+            }
+          } catch(_) {
+            serverAllows = window.freemiumTracker
+              ? window.freemiumTracker.canDrawTore()
+              : true;
+          }
+        }
+      } catch(_) {}
+    } else {
+      serverAllows = window.freemiumTracker
+        ? window.freemiumTracker.canDrawTore()
+        : true;
+    }
+
+    if (!serverAllows) {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.dataset.submitting = '0';
+        const _slr = submitBtn.querySelector('.font-cinzel');
+        if (_slr) _slr.textContent = 'Commencer le Tirage';
+      }
+      if (window.gtag) window.gtag('event', 'tore_limit_reached', {
+        event_category: 'freemium',
+        event_label: 'server_verified',
+        value: window.freemiumTracker?.getRemainingToreDraws?.() ?? 0
+      });
+      window.freemiumTracker?.showToreLimitReached?.();
+      return;
+    }
   }
 
   // Sauvegarder l'intention dans sessionStorage
@@ -6295,6 +6494,32 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   if (boardHost) {
     boardHost.classList.add('tore-dealing');
   }
+
+  // Pré-rendu GPU des images de dos pour éviter le rideau blanc
+  (function() {
+    const preEl = document.createElement('div');
+    preEl.style.cssText =
+      'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;pointer-events:none;z-index:-1;';
+    [
+      'images/dos/dos_emotion.png',
+      'images/dos/dos_besoin.png',
+      'images/dos/dos_transmutation.png',
+      'images/dos/dos_action.png',
+      'images/dos/dos_archetype.png',
+      'images/dos/dos_revelation.png',
+      'images/dos/dos_memoire_cosmos.png'
+    ].forEach(src => {
+      const d = document.createElement('div');
+      d.style.cssText =
+        `width:80px;height:112px;background:url('${src}') center/cover no-repeat;`;
+      preEl.appendChild(d);
+    });
+    document.body.appendChild(preEl);
+    setTimeout(() => preEl.remove(), 5000);
+  })();
+  
+  // Débloquer le bouton submit
+  if (submitBtn) submitBtn.dataset.submitting = '0';
 
   // Précharger les images de dos en mémoire GPU avant l'animation
   // pour éviter le décodage progressif (bandeau blanc descendant)
@@ -6337,111 +6562,65 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     clearTimeout(window._dealFallbackTimer);
     if (!boardHost) return;
 
-    // Récupérer toutes les cartes dans l'ordre du tirage
     const allCards = TIRAGE_ORDER.map(key =>
       boardHost.querySelector(`.tore-card[data-family="${key}"]`)
     ).filter(Boolean);
-
     if (!allCards.length) return;
 
-    // Séparer Mémoire Cosmos (pos-6, dernière dans TIRAGE_ORDER) des cartes orbitales
-    const cosmosCard = boardHost.querySelector('.tore-card[data-family="memoire_cosmos"]');
-    const orbitalCards = allCards.filter(c => c !== cosmosCard);
-
-    // ① S'assurer que toutes les cartes sont invisibles au départ
+    // Toutes les cartes invisibles et sans animation au départ
     allCards.forEach(c => {
-      c.classList.add('card-dealing-hidden');
-      c.style.opacity = '0';
-      c.style.transform = '';
-      c.style.animation = 'none';
-      void c.offsetWidth; // flush
+      c.classList.remove('card-dealing-hidden');
+      c.style.cssText = 'opacity:0;transform:scale(0.6) translateY(6px);animation:none;';
     });
 
-    // ② Révéler Mémoire Cosmos en premier avec animation cosmosReveal
-    if (cosmosCard) {
-      cosmosCard.style.animation = 'none';
-      void cosmosCard.offsetWidth;
-      cosmosCard.classList.remove('card-dealing-hidden');
-      cosmosCard.style.opacity = '1';
-      cosmosCard.style.animation = 'cosmosReveal 0.9s cubic-bezier(0.34,1.4,0.64,1) forwards';
+    // Injecter le keyframe une seule fois
+    if (!document.getElementById('_tore_emerge_ss')) {
+      const ss = document.createElement('style');
+      ss.id = '_tore_emerge_ss';
+      ss.textContent = '@keyframes _tEmerge{' +
+        '0%{opacity:0;transform:scale(0.6) translateY(6px);filter:blur(2px)}' +
+        '60%{opacity:1;filter:blur(0)}' +
+        '82%{transform:scale(1.04) translateY(-2px)}' +
+        '100%{opacity:1;transform:scale(1) translateY(0);filter:blur(0)}}';
+      document.head.appendChild(ss);
     }
 
-    // ③ Calculer les offsets de chaque carte orbitale par rapport au centre du plateau
-    // (coordonnées relatives dans le grid — pas besoin de getBoundingClientRect)
-    // On lit les positions après que le layout est stable (board est visible depuis ÉTAPE 1B)
-    const boardRect = boardHost.getBoundingClientRect();
-    const boardCx = boardRect.width / 2;
-    const boardCy = boardRect.height / 2;
+    // Apparition une à une avec délai humain
+    const DELAYS = [0, 280, 530, 760, 970, 1160, 1330];
+    const DUR = 620;
 
-    // ④ Lancer l'animation de chaque carte orbitale avec délai progressif
-    const orbitalDelays = [480, 680, 880, 1080, 1280, 1480];
-    const orbitalDurations = [820, 840, 800, 860, 820, 840];
-
-    orbitalCards.forEach((card, i) => {
-      const cardRect = card.getBoundingClientRect();
-      // Offset de la carte par rapport au centre du plateau (en px, dans le viewport)
-      const boardAbsRect = boardHost.getBoundingClientRect();
-      const cardCx = cardRect.left + cardRect.width / 2 - boardAbsRect.left;
-      const cardCy = cardRect.top + cardRect.height / 2 - boardAbsRect.top;
-      const ox = boardCx - cardCx; // déplacement depuis la position finale vers le centre
-      const oy = boardCy - cardCy;
-      const orot = +(Math.random() * 24 - 12).toFixed(1);
-      const dur = orbitalDurations[i] || 840;
-      const delay = orbitalDelays[i] || 400;
-
+    allCards.forEach((card, i) => {
       setTimeout(() => {
-        card.style.setProperty('--ox', ox + 'px');
-        card.style.setProperty('--oy', oy + 'px');
-        card.style.setProperty('--orot', orot + 'deg');
-        card.style.animation = 'none';
         void card.offsetWidth;
-        card.classList.remove('card-dealing-hidden');
-        card.style.opacity = '1';
-        card.style.animation = `orbitLand ${dur}ms cubic-bezier(0.22,1,0.36,1) both`;
-
-        // Nettoyer les CSS vars et l'animation après atterrissage
-        setTimeout(() => {
-          card.style.animation = 'none';
-          card.style.transform = '';
-          card.style.removeProperty('--ox');
-          card.style.removeProperty('--oy');
-          card.style.removeProperty('--orot');
-          requestAnimationFrame(() => { card.style.animation = ''; });
-        }, dur + 60);
-
-      }, delay);
+        card.style.cssText =
+          `opacity:1;animation:_tEmerge ${DUR}ms cubic-bezier(0.34,1.4,0.64,1) both;`;
+      }, DELAYS[i] || 0);
     });
 
-    // ⑤ Fin → cleanup + highlight + boardReady
-    const lastDelay = (orbitalDelays[orbitalCards.length - 1] || 1480)
-                    + (orbitalDurations[orbitalCards.length - 1] || 840) + 400;
-
+    // Cleanup : remettre les cartes dans leur état naturel
+    const done = (DELAYS[allCards.length - 1] || 0) + DUR + 300;
     setTimeout(() => {
       boardHost.classList.remove('tore-dealing');
-      allCards.forEach(c => {
-        c.classList.remove('card-dealing-hidden');
-        c.style.opacity = '1';
-        c.style.animation = '';
-        c.style.transform = '';
-      });
+      allCards.forEach(c => { c.style.cssText = ''; });
       highlightNextCard();
-      const bbInit = el('tore-bottom-bar');
-      if (bbInit) requestAnimationFrame(() => requestAnimationFrame(() => { bbInit.style.opacity = '1'; }));
+      const bb = el('tore-bottom-bar');
+      if (bb) requestAnimationFrame(() => requestAnimationFrame(() => {
+        bb.style.opacity = '1';
+      }));
       if (boardHost) boardHost.style.pointerEvents = 'auto';
       if (coinWrapper) coinWrapper.style.pointerEvents = 'auto';
       boardReady = true;
-
       if (!window._toreBeamResizeListener) {
         window._toreBeamResizeListener = true;
-        const recalcBeam = () => {
-          if (document.body.classList.contains('tore-playing')) {
+        const rb = () => {
+          if (document.body.classList.contains('tore-playing'))
             requestAnimationFrame(() => requestAnimationFrame(highlightNextCard));
-          }
         };
-        window.addEventListener('resize', recalcBeam, { passive: true });
-        window.addEventListener('orientationchange', () => setTimeout(recalcBeam, 350), { passive: true });
+        window.addEventListener('resize', rb, { passive: true });
+        window.addEventListener('orientationchange',
+          () => setTimeout(rb, 350), { passive: true });
       }
-    }, lastDelay);
+    }, done);
   };
 });
 
@@ -6577,7 +6756,36 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
+  document.getElementById('btn-single-draw-purchase')
+    ?.addEventListener('click', async (e) => {
+      e.preventDefault();
+      const btn = e.currentTarget;
+      btn.textContent = 'Redirection…';
+      btn.style.pointerEvents = 'none';
 
+      try {
+        const sessStr = sessionStorage.getItem('oradia_member_session')
+                      || localStorage.getItem('oradia_member_session');
+        const email = sessStr ? JSON.parse(sessStr).email : undefined;
+
+        const resp = await fetch('/api/create-single-draw-session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email })
+        });
+        const data = await resp.json();
+
+        if (data.url) {
+          window.location.href = data.url;
+        } else {
+          throw new Error('No URL returned');
+        }
+      } catch(err) {
+        btn.textContent = 'Ou acheter un tirage unique (3,90€)';
+        btn.style.pointerEvents = 'auto';
+        alert('Une erreur est survenue. Réessayez.');
+      }
+    });
 
 });
 
