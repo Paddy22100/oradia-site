@@ -315,66 +315,146 @@ class FreemiumTracker {
     }
 
     showToreLimitReached() {
+        // Éviter les doublons
+        if (document.getElementById('tore-limit-modal')) return;
+
+        // Injecter les animations une seule fois
+        if (!document.getElementById('tore-limit-modal-styles')) {
+            const style = document.createElement('style');
+            style.id = 'tore-limit-modal-styles';
+            style.textContent = `
+                @keyframes toreModalFadeIn { from { opacity:0; } to { opacity:1; } }
+                @keyframes toreModalCardIn { from { opacity:0; transform:translateY(16px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
+                @keyframes toreStarPulse { 0%,100% { transform:scale(1); opacity:0.9; } 50% { transform:scale(1.15); opacity:1; } }
+                #tore-limit-modal .tlm-card { animation: toreModalCardIn 0.45s cubic-bezier(0.22,1,0.36,1); }
+                #tore-limit-modal .tlm-star { animation: toreStarPulse 2.6s ease-in-out infinite; }
+                #tore-limit-modal .tlm-cta:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(212,175,55,0.5); }
+                #tore-limit-modal .tlm-cta { transition:transform 0.25s ease, box-shadow 0.25s ease; }
+                #tore-limit-modal .tlm-link:hover { color:#d4af37; }
+                #tore-limit-modal .tlm-link { transition:color 0.2s ease; }
+                #tore-limit-modal .tlm-close:hover { color:rgba(233,231,223,0.7); }
+                #tore-limit-modal .tlm-close { transition:color 0.2s ease; }
+            `;
+            document.head.appendChild(style);
+        }
+
         const modal = document.createElement('div');
         modal.id = 'tore-limit-modal';
-        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(2,6,23,0.85);backdrop-filter:blur(4px);';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(2,6,23,0.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:toreModalFadeIn 0.3s ease;';
         modal.innerHTML = `
-            <div style="text-align:center;padding:8px 0 4px;max-width:400px;width:100%;">
-                <div style="font-size:1.6rem;margin-bottom:12px;">✦</div>
-                <h3 style="font-family:'Cinzel',serif;font-size:1.1rem;
-                           color:#d4af37;margin-bottom:12px;letter-spacing:0.05em;">
-                  Vos 2 tirages gratuits ont été utilisés
+            <div class="tlm-card" role="dialog" aria-modal="true" aria-label="Tirages gratuits utilisés"
+                 style="position:relative;text-align:center;max-width:420px;width:100%;
+                        padding:38px 30px 30px;border-radius:20px;
+                        background:linear-gradient(160deg,#0c1730 0%,#0a1224 100%);
+                        border:1px solid rgba(212,175,55,0.28);
+                        box-shadow:0 24px 70px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,175,55,0.06) inset, 0 0 60px rgba(212,175,55,0.08);">
+
+                <button data-close-limit-modal aria-label="Fermer"
+                        style="position:absolute;top:14px;right:16px;background:none;border:none;
+                               color:rgba(233,231,223,0.4);font-size:1.3rem;line-height:1;
+                               cursor:pointer;padding:4px;">&times;</button>
+
+                <div class="tlm-star" style="font-size:2rem;color:#d4af37;margin-bottom:14px;
+                            text-shadow:0 0 20px rgba(212,175,55,0.5);">✦</div>
+
+                <h3 style="font-family:'Cinzel',serif;font-size:1.25rem;
+                           color:#d4af37;margin:0 0 14px;letter-spacing:0.05em;line-height:1.4;">
+                  Vos 2 tirages gratuits<br>ont été utilisés
                 </h3>
-                <p style="color:rgba(233,231,223,0.75);font-size:0.88rem;
-                          line-height:1.6;margin-bottom:20px;">
+
+                <p style="color:rgba(233,231,223,0.78);font-size:0.9rem;
+                          line-height:1.65;margin:0 auto 26px;max-width:340px;">
                   Vous avez exploré La Boussole Intérieure à travers 2 tirages complets.
                   Pour continuer à recevoir une guidance approfondie à tout moment,
                   découvrez l'abonnement Oradia.
                 </p>
 
                 <!-- CTA principal : abonnement -->
-                <a href="/abonnement"
-                   style="display:inline-block;background:linear-gradient(135deg,#d4af37,#b8962e);
-                          color:#020817;font-family:'Cinzel',serif;font-size:0.9rem;
-                          font-weight:700;padding:12px 28px;border-radius:999px;
+                <a href="/tore-abonnement.html" class="tlm-cta"
+                   style="display:inline-flex;align-items:center;gap:8px;
+                          background:linear-gradient(135deg,#e6c456,#c79b2f);
+                          color:#0a1224;font-family:'Cinzel',serif;font-size:0.92rem;
+                          font-weight:700;padding:14px 30px;border-radius:999px;
                           text-decoration:none;letter-spacing:0.04em;
-                          box-shadow:0 4px 20px rgba(212,175,55,0.35);">
+                          box-shadow:0 4px 24px rgba(212,175,55,0.4);">
                   Accéder aux tirages illimités →
                 </a>
-                <p style="color:rgba(212,175,55,0.5);font-size:0.75rem;margin-top:8px;">
+                <p style="color:rgba(212,175,55,0.55);font-size:0.76rem;margin:10px 0 0;
+                          letter-spacing:0.02em;">
                   8€ / mois · Sans engagement
                 </p>
 
                 <!-- Séparateur -->
-                <div style="margin:16px auto;width:60px;height:1px;
-                            background:rgba(212,175,55,0.2);"></div>
+                <div style="display:flex;align-items:center;gap:12px;margin:22px auto 18px;max-width:280px;">
+                  <span style="flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.25));"></span>
+                  <span style="color:rgba(212,175,55,0.4);font-size:0.7rem;letter-spacing:0.08em;">OU</span>
+                  <span style="flex:1;height:1px;background:linear-gradient(90deg,rgba(212,175,55,0.25),transparent);"></span>
+                </div>
 
                 <!-- CTA secondaire : tirage ponctuel -->
-                <a href="#" id="btn-single-draw-purchase"
-                     data-todo="create-single-draw-page"
-                    style="color:rgba(212,175,55,0.6);font-size:0.82rem;
-                           text-decoration:underline;cursor:pointer;display:block;">
-                  Ou acheter un tirage unique (3,90€)
+                <a href="#" id="btn-single-draw-purchase" class="tlm-link"
+                    style="color:rgba(212,175,55,0.7);font-size:0.85rem;
+                           text-decoration:underline;cursor:pointer;display:inline-block;">
+                  Acheter un tirage unique (3,90€)
                 </a>
-                <span style="color:rgba(212,175,55,0.35);font-size:0.7rem;
-                             display:block;margin-top:4px;">
+                <span style="color:rgba(233,231,223,0.4);font-size:0.72rem;
+                             display:block;margin-top:6px;">
                   L'abonnement est rentable dès le 3ème tirage
                 </span>
 
                 <!-- Fermeture discrète -->
-                <button data-close-limit-modal
-                        style="display:block;margin:20px auto 0;background:none;border:none;
-                               color:rgba(233,231,223,0.3);font-size:0.75rem;
+                <button data-close-limit-modal class="tlm-close"
+                        style="display:block;margin:24px auto 0;background:none;border:none;
+                               color:rgba(233,231,223,0.4);font-size:0.78rem;
                                cursor:pointer;text-decoration:underline;">
                   Peut-être plus tard
                 </button>
             </div>
         `;
         document.body.appendChild(modal);
-        
-        // Gestionnaire de fermeture
-        modal.querySelector('[data-close-limit-modal]')?.addEventListener('click', () => {
-            modal.remove();
+
+        const closeModal = () => modal.remove();
+
+        // Fermeture : boutons + clic sur l'arrière-plan + touche Échap
+        modal.querySelectorAll('[data-close-limit-modal]').forEach(btn => {
+            btn.addEventListener('click', closeModal);
+        });
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) closeModal();
+        });
+        const onKey = (e) => {
+            if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', onKey); }
+        };
+        document.addEventListener('keydown', onKey);
+
+        // Handler du tirage unique (lié à l'élément réel du pop-up)
+        modal.querySelector('#btn-single-draw-purchase')?.addEventListener('click', async (e) => {
+            e.preventDefault();
+            const btn = e.currentTarget;
+            const originalText = btn.textContent;
+            btn.textContent = 'Redirection…';
+            btn.style.pointerEvents = 'none';
+            try {
+                const sessStr = sessionStorage.getItem('oradia_member_session')
+                              || localStorage.getItem('oradia_member_session');
+                const email = sessStr ? JSON.parse(sessStr).email : undefined;
+
+                const resp = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'single-draw', email })
+                });
+                const data = await resp.json();
+                if (data.url) {
+                    window.location.href = data.url;
+                } else {
+                    throw new Error('No URL returned');
+                }
+            } catch (err) {
+                btn.textContent = originalText;
+                btn.style.pointerEvents = 'auto';
+                alert('Une erreur est survenue. Réessayez.');
+            }
         });
     }
 }
