@@ -344,6 +344,166 @@ async function sendToreSubscriptionEmail({ toEmail, toName, tempPassword }) {
     } catch(e) { console.error('sendToreSubscriptionEmail error:', e.message); return false; }
 }
 
+// Email de confirmation d'achat d'un tirage ponctuel (même charte que l'analyse Oradia)
+async function sendSingleDrawConfirmationEmail({ toEmail, toName, amountTotal }) {
+    try {
+        if (!process.env.BREVO_API_KEY || !process.env.BREVO_SENDER_EMAIL) {
+            console.error('Configuration Brevo manquante (single draw)');
+            return false;
+        }
+
+        const amount = (Number(amountTotal || 0) / 100).toFixed(2).replace('.', ',');
+        const greeting = toName ? toName + ',' : 'Cher(e) ami(e),';
+
+        const htmlContent = `<!DOCTYPE html>
+<html lang="fr">
+<head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#08122a;font-family:Georgia,'Times New Roman',serif;color:#e8dfc8;">
+<table width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#08122a;">
+<tr><td align="center" style="padding:32px 16px;">
+  <table width="600" cellpadding="0" cellspacing="0" border="0"
+    style="max-width:600px;width:100%;background:linear-gradient(145deg,#0d1f3c,#06101f);
+           border:1px solid rgba(212,175,55,0.3);border-radius:16px;overflow:hidden;">
+
+    <!-- HEADER -->
+    <tr>
+      <td style="background:rgba(5,15,35,0.9);padding:32px 24px;text-align:center;
+                 border-bottom:1px solid rgba(212,175,55,0.2);">
+        <img src="https://oradia.fr/images/medias/apercu_stripe.jpg" alt="Oradia" width="56" height="56"
+             style="border-radius:50%;display:block;margin:0 auto 16px;border:2px solid rgba(212,175,55,0.4);">
+        <p style="margin:0 0 4px;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;
+                  color:rgba(212,175,55,0.5);">Oracle Oradia</p>
+        <h1 style="margin:0;font-size:26px;color:#d4af37;letter-spacing:0.1em;font-weight:normal;">
+          TIRAGE CONFIRMÉ
+        </h1>
+        <p style="margin:12px 0 0;font-size:15px;color:rgba(232,223,200,0.6);font-style:italic;">
+          Votre tirage du Tore est crédité
+        </p>
+      </td>
+    </tr>
+
+    <!-- CORPS -->
+    <tr>
+      <td style="padding:32px 24px 8px;">
+        <p style="margin:0 0 18px;font-size:15px;color:#e8dfc8;">${greeting}</p>
+        <p style="margin:0 0 24px;font-size:14px;line-height:1.85;color:rgba(232,223,200,0.85);">
+          Votre paiement est bien confirmé. Un <strong style="color:#d4af37;">tirage du Tore</strong> a été
+          ajouté à votre compte, <strong style="color:#d4af37;">accessible immédiatement</strong> — aucun code
+          n'est nécessaire. Rendez-vous simplement sur la page du Tore pour formuler votre intention.
+        </p>
+      </td>
+    </tr>
+
+    <!-- ENCADRÉ DÉTAIL -->
+    <tr>
+      <td style="padding:0 24px 24px;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+          style="background:rgba(5,15,35,0.6);border-left:3px solid #d4af37;border-radius:0 8px 8px 0;">
+          <tr>
+            <td style="padding:20px 22px;">
+              <p style="margin:0 0 8px;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;
+                        color:rgba(212,175,55,0.6);">Votre achat</p>
+              <p style="margin:0 0 6px;font-size:18px;color:#d4af37;font-weight:bold;">
+                1 tirage du Tore
+              </p>
+              <p style="margin:0;font-size:15px;color:rgba(232,223,200,0.85);">${amount} €</p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- CTA -->
+    <tr>
+      <td style="padding:0 24px 28px;text-align:center;">
+        <a href="https://oradia.fr/tore.html"
+           style="display:inline-block;background:linear-gradient(135deg,#d4af37,#b8962e);
+                  color:#06101f;padding:14px 34px;border-radius:99px;text-decoration:none;
+                  font-size:13px;letter-spacing:0.1em;text-transform:uppercase;font-weight:bold;">
+          Accéder à mon tirage
+        </a>
+      </td>
+    </tr>
+
+    <!-- RAPPEL ANALYSE -->
+    <tr>
+      <td style="padding:0 24px 32px;">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0"
+          style="background:rgba(212,175,55,0.06);border:1px solid rgba(212,175,55,0.2);border-radius:8px;">
+          <tr>
+            <td style="padding:20px;text-align:center;">
+              <p style="margin:0 0 8px;font-size:14px;font-weight:bold;color:#d4af37;">
+                À la fin de votre tirage
+              </p>
+              <p style="margin:0;font-size:13px;line-height:1.7;color:rgba(232,223,200,0.75);">
+                Vous pourrez recevoir votre <em>analyse complète par email</em> : le détail de vos cartes,
+                le message de l'Oracle et votre fenêtre d'observation, pour prolonger la guidance.
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+
+    <!-- FOOTER -->
+    <tr>
+      <td style="background:rgba(5,15,35,0.9);padding:24px;text-align:center;
+                 border-top:1px solid rgba(212,175,55,0.15);">
+        <p style="margin:0 0 8px;font-size:13px;color:rgba(232,223,200,0.5);">Avec gratitude,</p>
+        <p style="margin:0 0 16px;font-size:14px;color:#d4af37;">Rudy Boucheron</p>
+        <a href="https://oradia.fr" style="font-size:12px;color:rgba(212,175,55,0.5);
+           text-decoration:none;letter-spacing:0.1em;">oradia.fr</a>
+        <p style="margin:16px 0 0;font-size:11px;color:rgba(232,223,200,0.3);">
+          © 2026 Oradia · Tous droits réservés
+        </p>
+      </td>
+    </tr>
+
+  </table>
+</td></tr>
+</table>
+</body>
+</html>`;
+
+        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+            body: JSON.stringify({
+                sender:  { email: process.env.BREVO_SENDER_EMAIL, name: process.env.BREVO_SENDER_NAME || 'ORADIA' },
+                to:      [{ email: toEmail, name: toName || '' }],
+                replyTo: { email: 'contact@oradia.fr', name: 'Oradia' },
+                subject: '✦ Votre tirage du Tore est crédité',
+                htmlContent,
+                textContent: `Votre tirage du Tore est crédité
+
+${greeting}
+
+Votre paiement est bien confirmé. Un tirage du Tore a été ajouté à votre compte, accessible immédiatement — aucun code n'est nécessaire.
+
+Votre achat : 1 tirage du Tore — ${amount} €
+
+Accéder à votre tirage : https://oradia.fr/tore.html
+
+À la fin de votre tirage, vous pourrez recevoir votre analyse complète par email : le détail de vos cartes, le message de l'Oracle et votre fenêtre d'observation.
+
+Avec gratitude,
+Rudy Boucheron
+oradia.fr`
+            })
+        });
+
+        if (!response.ok) {
+            console.error(`Brevo API error (single draw): ${response.status}`);
+            return false;
+        }
+        console.log('Single draw confirmation email sent via Brevo');
+        return true;
+    } catch (error) {
+        console.error('Failed to send single draw confirmation email:', error.message);
+        return false;
+    }
+}
+
 const handler = async (req, res) => {
     try {
         validateEnvironment();
@@ -563,7 +723,10 @@ async function processEvent(event) {
 
                 // ── Achat ponctuel tirage Tore ──
                 if (session.metadata?.type === 'single_tore_draw') {
-                  const email = session.customer_email;
+                  // Email fiable : customer_details (saisi au checkout) puis fallbacks
+                  const email = session.customer_details?.email
+                              || session.customer_email
+                              || extractedData.email;
                   if (email) {
                     const { data: sub, error: subErr } = await supabase
                       .from('tore_subscriptions')
@@ -590,7 +753,17 @@ async function processEvent(event) {
                           access_code: 'SINGLE-' + Date.now()
                         });
                     }
+
+                    // Email de confirmation (même charte que l'analyse Oradia)
+                    await sendSingleDrawConfirmationEmail({
+                      toEmail:     email,
+                      toName:      session.customer_details?.name || extractedData.full_name || '',
+                      amountTotal: session.amount_total || 0
+                    });
                   }
+                  // Traitement terminé pour le tirage ponctuel : ne pas tomber
+                  // dans la logique précommande (qui exige un "offer")
+                  return;
                 }
 
                 // Gestion spéciale pour les contributions libres

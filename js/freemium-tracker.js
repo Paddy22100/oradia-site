@@ -330,10 +330,10 @@ class FreemiumTracker {
                 #tore-limit-modal .tlm-star { animation: toreStarPulse 2.6s ease-in-out infinite; }
                 #tore-limit-modal .tlm-cta:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(212,175,55,0.5); }
                 #tore-limit-modal .tlm-cta { transition:transform 0.25s ease, box-shadow 0.25s ease; }
-                #tore-limit-modal .tlm-link:hover { color:#d4af37; }
-                #tore-limit-modal .tlm-link { transition:color 0.2s ease; }
-                #tore-limit-modal .tlm-close:hover { color:rgba(233,231,223,0.7); }
-                #tore-limit-modal .tlm-close { transition:color 0.2s ease; }
+                #tore-limit-modal .tlm-secondary { transition:background 0.25s ease, border-color 0.25s ease, transform 0.2s ease; }
+                #tore-limit-modal .tlm-secondary:hover { background:rgba(212,175,55,0.1); border-color:rgba(212,175,55,0.55); transform:translateY(-1px); }
+                #tore-limit-modal .tlm-close:hover { color:rgba(233,231,223,0.85); border-color:rgba(233,231,223,0.35); }
+                #tore-limit-modal .tlm-close { transition:color 0.2s ease, border-color 0.2s ease; }
             `;
             document.head.appendChild(style);
         }
@@ -392,21 +392,29 @@ class FreemiumTracker {
                 </div>
 
                 <!-- CTA secondaire : tirage ponctuel -->
-                <a href="#" id="btn-single-draw-purchase" class="tlm-link"
-                    style="color:rgba(212,175,55,0.7);font-size:0.85rem;
-                           text-decoration:underline;cursor:pointer;display:inline-block;">
-                  Acheter un tirage unique (3,90€)
+                <a href="#" id="btn-single-draw-purchase" class="tlm-secondary"
+                    style="display:flex;align-items:center;justify-content:center;gap:8px;
+                           max-width:300px;margin:0 auto;
+                           padding:11px 22px;border-radius:999px;
+                           border:1px solid rgba(212,175,55,0.3);
+                           background:rgba(212,175,55,0.04);
+                           color:#d4af37;font-size:0.85rem;font-weight:600;
+                           text-decoration:none;cursor:pointer;letter-spacing:0.02em;">
+                  <span style="font-size:0.95rem;">✧</span>
+                  Acheter un tirage unique · 3,90€
                 </a>
-                <span style="color:rgba(233,231,223,0.4);font-size:0.72rem;
-                             display:block;margin-top:6px;">
+                <span style="color:rgba(233,231,223,0.42);font-size:0.72rem;
+                             display:block;margin-top:9px;font-style:italic;">
                   L'abonnement est rentable dès le 3ème tirage
                 </span>
 
                 <!-- Fermeture discrète -->
                 <button data-close-limit-modal class="tlm-close"
-                        style="display:block;margin:24px auto 0;background:none;border:none;
-                               color:rgba(233,231,223,0.4);font-size:0.78rem;
-                               cursor:pointer;text-decoration:underline;">
+                        style="display:inline-block;margin:24px auto 0;
+                               padding:7px 18px;border-radius:999px;
+                               background:none;border:1px solid rgba(233,231,223,0.12);
+                               color:rgba(233,231,223,0.45);font-size:0.78rem;
+                               cursor:pointer;">
                   Peut-être plus tard
                 </button>
             </div>
