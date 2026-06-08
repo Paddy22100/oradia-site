@@ -33,18 +33,14 @@ export default async function handler(req, res) {
       const finalImgPath = isFullUrl ? imgPath : `https://oradia.fr/${imgPath.replace(/^\//, '')}`;
       
       const cardHtml = `
-        <td style="width: 33%; padding: 8px; vertical-align: top; text-align: center;">
-          <div style="position: relative; width: 140px; height: 210px; margin: 0 auto;">
-            ${isBridge ? `
-              <div style="position: absolute; top: -8px; left: 50%; transform: translateX(-50%); background: linear-gradient(135deg, #d4af37, #f5e7a1); color: #0a192f; font-size: 9px; font-weight: 700; padding: 3px 10px; border-radius: 12px; text-transform: uppercase; letter-spacing: 1px; z-index: 1;">
-                <i class="fas fa-exchange-alt" style="margin-right: 3px;"></i>Passerelle
-              </div>
-            ` : ''}
-            <img src="${finalImgPath}" alt="${card.name}" 
-              style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.4); border: ${isBridge ? '2px solid #d4af37;' : '1px solid rgba(212,175,55,0.3);'}">
+        <td style="width:33%;padding:6px;text-align:center;vertical-align:top;">
+          <div style="background:#071828;border:1px solid ${isBridge ? '#d4af37' : '#1e3a5a'};border-radius:12px;padding:14px 10px;">
+            ${isBridge ? `<p style="margin:0 0 6px;color:#d4af37;font-size:9px;letter-spacing:2px;text-transform:uppercase;">Passerelle</p>` : ''}
+            <img src="${finalImgPath}" alt="${card.name}"
+              style="display:block;width:80px;height:120px;object-fit:cover;border-radius:8px;margin:0 auto 10px;border:1px solid #1e3a5a;">
+            <p style="margin:0 0 3px;color:#d4af37;font-size:12px;font-weight:700;">${card.name.replace(/_/g, ' ')}</p>
+            <p style="margin:0;color:#4a5a6a;font-size:10px;font-style:italic;text-transform:capitalize;">${card.family.replace(/_/g, ' ')}</p>
           </div>
-          <h3 style="color: #d4af37; font-family: Georgia, serif; margin: 10px 0 4px; font-size: 14px; font-weight: 600;">${card.name.replace(/_/g, ' ')}</h3>
-          <p style="color: #c8c0a8; font-size: 11px; margin: 0; font-style: italic; text-transform: capitalize;">${card.family.replace(/_/g, ' ')}</p>
         </td>
       `;
       
@@ -85,163 +81,161 @@ export default async function handler(req, res) {
       </table>
     `;
 
-    const htmlContent = `
-<!DOCTYPE html>
+    // Formatage de l'analyse en paragraphes HTML
+    const formatAnalysis = (text) => {
+      if (!text) return '';
+      return text
+        .replace(/## [^\n]+\n?/g, '') // retirer les titres markdown
+        .split('\n\n')
+        .filter(p => p.trim())
+        .map(p => `<p style="margin:0 0 14px;color:#e9e7df;font-size:14px;line-height:1.85;text-align:justify;">${p.trim().replace(/\n/g, ' ')}</p>`)
+        .join('');
+    };
+
+    const htmlContent = `<!DOCTYPE html>
 <html>
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 </head>
-<body style="margin: 0; padding: 0; background: linear-gradient(135deg, #0a192f 0%, #051428 100%); font-family: 'Lora', Georgia, serif; position: relative;">
-  <!-- Fond d'image en transparence -->
-  <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: url('https://oradia.fr/images/oradia-hero-4k.png') center/cover no-repeat; opacity: 0.08; pointer-events: none; z-index: 0;"></div>
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-    <tr>
-      <td align="center" style="padding: 40px 20px;">
-        <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width: 600px; background: rgba(5,20,40,0.9); border-radius: 24px; border: 1px solid rgba(212,175,55,0.2); overflow: hidden;">
-          
-          <!-- Header -->
-          <tr>
-            <td style="padding: 40px; text-align: center; background: linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.95) 100%);">
-              <h1 style="margin: 0; color: #d4af37; font-family: 'Cinzel', serif; font-size: 32px; font-weight: 700; letter-spacing: 0.1em;">
-                VOTRE TIRAGE DU TORE
-              </h1>
-              ${intention ? `<p style="margin: 15px 0 0; color: #f5e7a1; font-size: 16px; font-style: italic;">« ${intention} »</p>` : ''}
-            </td>
-          </tr>
+<body style="margin:0;padding:0;background:#1a1a2e;font-family:Georgia,'Times New Roman',serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#111827;padding:40px 20px;">
+  <tr>
+    <td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#050f23;border-radius:20px;overflow:hidden;border:1px solid #1e2d47;">
 
-          <!-- Cartes -->
-          <tr>
-            <td style="padding: 40px;">
-              <h2 style="color: #d4af37; font-family: Georgia, serif; font-size: 24px; text-align: center; margin: 0 0 30px; letter-spacing: 1px;">
-                Vos Cartes
-              </h2>
-              ${cardsTable}
-            </td>
-          </tr>
+        <!-- HEADER -->
+        <tr>
+          <td style="background:#07142a;padding:44px 40px 36px;text-align:center;border-bottom:1px solid #1e2d47;">
+            <!-- Logo formant le O de ORADIA -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 28px;">
+              <tr>
+                <td style="vertical-align:middle;">
+                  <img src="https://oradia.fr/images/logo-hd-v2.jpeg" alt="O" style="display:block;width:44px;height:44px;border-radius:50%;border:1px solid #2a4a6a;margin-right:2px;">
+                </td>
+                <td style="vertical-align:middle;padding-left:6px;">
+                  <p style="margin:0;color:#d4af37;font-family:Georgia,serif;font-size:32px;font-weight:700;letter-spacing:8px;text-transform:uppercase;line-height:1;">RADIA</p>
+                </td>
+              </tr>
+            </table>
+            <h1 style="margin:0 0 6px;color:#d4af37;font-family:Georgia,serif;font-size:26px;font-weight:700;letter-spacing:3px;text-transform:uppercase;line-height:1.2;">Votre Tirage du Tore</h1>
+            <p style="margin:6px 0 0;color:#4a5a6a;font-size:11px;letter-spacing:2px;text-transform:uppercase;">La Boussole Int&#233;rieure</p>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;">
+              <tr><td style="height:1px;background:#1e3a5a;"></td></tr>
+            </table>
+            ${intention ? `
+            <div style="margin-top:24px;background:#071828;border:1px solid #1e3a5a;border-radius:12px;padding:16px 24px;">
+              <p style="margin:0 0 6px;color:#4a6a5a;font-size:10px;letter-spacing:3px;text-transform:uppercase;">Votre intention</p>
+              <p style="margin:0;color:#f5e7a1;font-size:15px;font-style:italic;line-height:1.5;">&#8220; ${intention} &#8221;</p>
+            </div>` : ''}
+          </td>
+        </tr>
 
-          <!-- Analyse -->
-          ${analysis ? `
-          <tr>
-            <td style="padding: 0 40px 40px;">
-              <h2 style="color: #d4af37; font-family: 'Cinzel', serif; font-size: 24px; text-align: center; margin: 0 0 20px;">
-                Message de l'Oracle
-              </h2>
-              <div style="background: rgba(212,175,55,0.05); border-left: 3px solid #d4af37; padding: 20px; border-radius: 8px;">
-                <p style="color: #c8c0a8; line-height: 1.8; margin: 0; white-space: pre-wrap; text-align: justify; text-justify: inter-word;">${analysis}</p>
-              </div>
-            </td>
-          </tr>
-          ` : ''}
+        <!-- CARTES -->
+        <tr>
+          <td style="padding:36px 40px 28px;">
+            <p style="margin:0 0 24px;color:#d4af37;font-size:10px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; Vos Cartes &#10022;</p>
+            ${cardsTable}
+          </td>
+        </tr>
 
-          <!-- Synthèse -->
-          ${synthesis ? `
-          <tr>
-            <td style="padding: 0 40px 40px;">
-              <h2 style="color: #d4af37; font-family: 'Cinzel', serif; font-size: 24px; text-align: center; margin: 0 0 20px;">
-                Synthèse
-              </h2>
-              <div style="background: rgba(212,175,55,0.05); border-left: 3px solid #d4af37; padding: 20px; border-radius: 8px;">
-                <p style="color: #c8c0a8; line-height: 1.8; margin: 0; white-space: pre-wrap; text-align: justify; text-justify: inter-word;">${synthesis}</p>
-              </div>
-            </td>
-          </tr>
-          ` : ''}
+        <!-- SÉPARATEUR -->
+        <tr><td style="padding:0 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="height:1px;background:#1e2d47;"></td></tr></table></td></tr>
 
-          <!-- Fenêtre d'observation -->
-          ${observationWindow ? `
-          <tr>
-            <td style="padding: 0 40px 40px;">
-              <div style="background: linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(212,175,55,0.03) 100%); border: 1px solid rgba(212,175,55,0.2); border-radius: 16px; padding: 32px 28px; margin-bottom: 20px;">
-                <h2 style="color: #d4af37; font-family: 'Cinzel', serif; font-size: 24px; text-align: center; margin: 0 0 24px; font-weight: 600;">
-                  <i class="fas fa-eye" style="margin-right: 12px; opacity: 0.8;"></i>Votre Fenêtre d'Observation
-                </h2>
-                ${observationWindow.observationText ? `
-                <div style="margin-bottom: 24px;">
-                  <p style="color: #e9e7df; font-size: 15px; line-height: 1.8; margin: 0; font-style: italic;">${observationWindow.observationText.replace(/\n/g, '<br>')}</p>
-                </div>` : ''}
-                ${observationWindow.attentionPoints && observationWindow.attentionPoints.length > 0 ? `
-                <div style="background: rgba(5,20,40,0.6); border: 1px solid rgba(212,175,55,0.25); border-radius: 12px; padding: 20px 24px; margin-bottom: 24px;">
-                  <p style="color: #d4af37; font-size: 12px; letter-spacing: 0.15em; text-transform: uppercase; margin: 0 0 16px; font-weight: 600;">
-                    Points d'attention pour ${observationWindow.durationDays} jour${observationWindow.durationDays > 1 ? 's' : ''}
-                  </p>
-                  <ul style="margin: 0; padding-left: 20px; color: #c8c0a8; line-height: 1.7; font-size: 14px;">
-                    ${observationWindow.attentionPoints.map(p => `<li style="margin-bottom: 8px;">${p}</li>`).join('')}
-                  </ul>
-                </div>` : ''}
-                ${observationWindow.closesAt ? `
-                <div style="text-align: center; padding-top: 16px; border-top: 1px solid rgba(212,175,55,0.15);">
-                  <p style="color: rgba(212,175,55,0.6); font-size: 13px; margin: 0 0 4px;">Vous recevrez un message de clôture le</p>
-                  <p style="color: #d4af37; font-size: 15px; font-weight: 600; margin: 0;">${new Date(observationWindow.closesAt).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', ...(observationWindow.durationDays >= 3 ? { hour: '2-digit', minute: '2-digit' } : {}) })}</p>
-                </div>` : ''}
-              </div>
-            </td>
-          </tr>
-          ` : ''}
+        <!-- ANALYSE -->
+        ${analysis ? `
+        <tr>
+          <td style="padding:32px 40px 28px;">
+            <p style="margin:0 0 20px;color:#d4af37;font-size:10px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; Message de l'Oracle &#10022;</p>
+            <div style="background:#071828;border-left:2px solid #d4af37;padding:20px 20px 6px 22px;border-radius:0 10px 10px 0;">
+              ${formatAnalysis(analysis)}
+            </div>
+          </td>
+        </tr>` : ''}
 
-          <!-- CTA -->
-          <tr>
-            <td style="padding: 0 40px 40px; text-align: center;">
-              <a href="https://oradia.fr/tore.html" style="display: inline-block; background: linear-gradient(135deg, #d4af37, #f5e7a1); color: #0a192f; text-decoration: none; padding: 16px 40px; border-radius: 50px; font-family: Georgia, serif; font-weight: 700; font-size: 16px; letter-spacing: 0.05em;">
-                Faire un nouveau tirage
-              </a>
-            </td>
-          </tr>
+        <!-- SÉPARATEUR -->
+        <tr><td style="padding:0 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="height:1px;background:#1e2d47;"></td></tr></table></td></tr>
 
-          <!-- BANDEAU PRÉCOMMANDE ORACLE -->
-          <tr>
-            <td style="padding: 0 40px 40px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
-                style="background: linear-gradient(135deg, rgba(212,175,55,0.15) 0%, rgba(212,175,55,0.05) 100%); border: 1px solid rgba(212,175,55,0.35); border-radius: 12px; overflow: hidden;">
-                <tr>
-                  <td style="padding: 24px 20px; vertical-align: middle; width: 55%;">
-                    <p style="margin: 0 0 6px 0; font-family: Georgia, serif; font-size: 11px; letter-spacing: 3px; color: #d4af37; text-transform: uppercase; font-weight: 600;">
-                      <i class="fas fa-star" style="margin-right: 6px;"></i>Précommandes ouvertes
-                    </p>
-                    <h3 style="margin: 0 0 10px 0; font-family: Georgia, serif; font-size: 22px; font-weight: 600; color: #f5e7a1; line-height: 1.3;">
-                      L'Oracle Oradia vous attend
-                    </h3>
-                    <p style="margin: 0 0 16px 0; font-family: Georgia, serif; font-size: 14px; color: rgba(212,175,55,0.8); line-height: 1.6;">
-                      64 cartes, un livret d'accompagnement, un conte initiatique et une pièce de tirage artisanale dans un coffret de protection.
-                    </p>
-                    <a href="https://oradia.fr/precommande-oracle.html"
-                      style="display: inline-block; background: linear-gradient(135deg, #d4af37, #f5e7a1); color: #0a192f; font-family: Georgia, serif; font-size: 13px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; text-decoration: none; padding: 12px 24px; border-radius: 50px;">
-                      <i class="fas fa-shopping-cart" style="margin-right: 8px;"></i>Précommander maintenant
-                    </a>
-                  </td>
-                  <td style="padding: 20px 16px 20px 0; vertical-align: middle; width: 45%; text-align: right;">
-                    <img src="https://oradia.fr/images/apercu_stripe.jpg" alt="Oracle Oradia - Aperçu" 
-                      style="display: block; width: 100%; max-width: 200px; margin-left: auto; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.4); border: 2px solid rgba(212,175,55,0.3);">
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
+        <!-- SYNTHÈSE -->
+        ${synthesis ? `
+        <tr>
+          <td style="padding:28px 40px;">
+            <p style="margin:0 0 16px;color:#d4af37;font-size:10px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; Synth&#232;se &#10022;</p>
+            <div style="background:#071828;border:1px solid #1e3a5a;border-radius:12px;padding:22px 24px;">
+              <p style="margin:0;color:#f5e7a1;font-size:15px;line-height:1.85;font-style:italic;text-align:center;">${synthesis.replace(/\n/g, ' ')}</p>
+            </div>
+          </td>
+        </tr>` : ''}
 
-          <!-- Footer -->
-          <tr>
-            <td style="padding: 30px 40px; border-top: 1px solid rgba(212,175,55,0.2); text-align: center;">
-              <p style="margin: 0 0 10px; color: #f5e7a1; font-size: 14px; opacity: 0.8; font-family: Georgia, serif;">
-                Avec gratitude,<br>
-                <strong style="color: #d4af37;">Rudy Boucheron</strong>
-              </p>
-              <div style="margin: 20px 0 0; display: flex; align-items: center; justify-content: center; gap: 16px;">
-                <a href="https://oradia.fr" style="display: flex; align-items: center; gap: 8px; color: #d4af37; text-decoration: none; font-size: 13px; opacity: 0.8; transition: opacity 0.2s;" onmouseover="this.style.opacity='1'" onmouseout="this.style.opacity='0.8'">
-                  <img src="https://oradia.fr/images/logo-hd-v2.jpeg" alt="Oradia" style="width: 24px; height: 24px; border-radius: 50%; border: 1px solid rgba(212,175,55,0.3);">
-                  <span style="font-family: Georgia, serif;">oradia.fr</span>
-                </a>
-              </div>
-            </td>
-          </tr>
+        <!-- FENÊTRE D'OBSERVATION -->
+        ${observationWindow ? `
+        <tr>
+          <td style="padding:0 40px 28px;">
+            <div style="background:#071828;border:1px solid #1e3a5a;border-radius:14px;padding:24px;">
+              <p style="margin:0 0 4px;color:#d4af37;font-size:10px;letter-spacing:3px;text-transform:uppercase;text-align:center;">Fen&#234;tre d'observation</p>
+              <p style="margin:0 0 16px;color:#4a6a5a;font-size:11px;text-align:center;letter-spacing:1px;">${observationWindow.durationDays} jour${observationWindow.durationDays > 1 ? 's' : ''}</p>
+              ${observationWindow.observationText ? `<p style="margin:0 0 14px;color:#e9e7df;font-size:13px;line-height:1.8;">${observationWindow.observationText.replace(/\n/g, '<br>')}</p>` : ''}
+              ${observationWindow.attentionPoints && observationWindow.attentionPoints.length > 0 ? `
+              <div style="background:#050f23;border-radius:8px;padding:14px 16px;margin-top:4px;">
+                <p style="margin:0 0 10px;color:#4a6a5a;font-size:10px;letter-spacing:2px;text-transform:uppercase;">Points d'attention</p>
+                ${observationWindow.attentionPoints.map(p => `<p style="margin:0 0 6px;color:#c8c0a8;font-size:13px;line-height:1.6;">&#8250; ${p}</p>`).join('')}
+              </div>` : ''}
+              ${observationWindow.closesAt ? `
+              <p style="margin:14px 0 0;color:#4a5a6a;font-size:11px;text-align:center;font-style:italic;">Cl&#244;ture le ${new Date(observationWindow.closesAt).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>` : ''}
+            </div>
+          </td>
+        </tr>` : ''}
 
-        </table>
-      </td>
-    </tr>
-  </table>
+        <!-- SÉPARATEUR -->
+        <tr><td style="padding:0 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="height:1px;background:#1e2d47;"></td></tr></table></td></tr>
+
+        <!-- CTA -->
+        <tr>
+          <td style="padding:32px 40px;text-align:center;">
+            <p style="margin:0 0 20px;color:#4a5a6a;font-size:13px;font-style:italic;">L'Oracle est l&#224; quand vous en avez besoin.</p>
+            <a href="https://oradia.fr/tore.html" style="display:inline-block;background:#d4af37;color:#050f23;text-decoration:none;padding:15px 40px;border-radius:50px;font-family:Georgia,serif;font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;">
+              Nouveau tirage
+            </a>
+          </td>
+        </tr>
+
+        <!-- BANDEAU ORACLE PHYSIQUE -->
+        <tr>
+          <td style="padding:0 40px 32px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#071828;border:1px solid #1e3a5a;border-radius:14px;overflow:hidden;">
+              <tr>
+                <td style="padding:22px 20px;vertical-align:middle;width:60%;">
+                  <p style="margin:0 0 4px;color:#4a6a5a;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Pr&#233;commandes ouvertes</p>
+                  <p style="margin:0 0 8px;color:#f5e7a1;font-size:17px;font-weight:700;line-height:1.3;">L'Oracle Oradia<br>entre vos mains</p>
+                  <p style="margin:0 0 14px;color:#4a5a6a;font-size:12px;line-height:1.65;">64 cartes &#183; Livret &#183; Conte initiatique &#183; Pi&#232;ce de tirage artisanale</p>
+                  <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:#d4af37;color:#050f23;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:10px 20px;border-radius:50px;">
+                    Pr&#233;commander
+                  </a>
+                </td>
+                <td style="padding:16px 16px 16px 0;vertical-align:middle;width:40%;text-align:right;">
+                  <img src="https://oradia.fr/images/medias/apercu_stripe.png" alt="Oracle Oradia" style="display:block;width:100%;max-width:160px;margin-left:auto;border-radius:8px;border:1px solid #1e3a5a;">
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- FOOTER -->
+        <tr>
+          <td style="padding:24px 40px 32px;border-top:1px solid #1e2d47;text-align:center;">
+            <p style="margin:0 0 4px;color:#4a5a6a;font-size:13px;">Avec gratitude,</p>
+            <p style="margin:0 0 16px;color:#d4af37;font-size:14px;font-weight:700;">Rudy Boucheron</p>
+            <p style="margin:0 0 16px;"><a href="https://oradia.fr" style="color:#4a5a6a;text-decoration:none;font-size:11px;letter-spacing:2px;">oradia.fr</a></p>
+            <p style="margin:0;color:#2a3a4a;font-size:10px;line-height:1.6;">Vous recevez cet email car vous avez demand&#233; &#224; recevoir votre tirage.<br>Cet email ne constitue pas un abonnement &#224; notre newsletter.</p>
+          </td>
+        </tr>
+
+      </table>
+    </td>
+  </tr>
+</table>
 </body>
-</html>
-    `;
+</html>`;
 
     const textContent = `
 VOTRE TIRAGE DU TORE
@@ -298,7 +292,7 @@ oradia.fr
           },
           body: JSON.stringify({
             email,
-            listIds: [parseInt(process.env.BREVO_NEWSLETTER_LIST_ID || '2')],
+            listIds: [parseInt(process.env.BREVO_NEWSLETTER_LIST_ID || '5')],
             updateEnabled: true
           })
         });

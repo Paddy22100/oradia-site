@@ -218,30 +218,22 @@
   }
   .quantum-learn-more:hover { background:rgba(200,169,110,.12); }
   .quantum-explication {
-    position: absolute;
-    top: calc(100% + 8px);
-    left: 50%;
-    transform: translateX(-50%) translateZ(0);
-    width: min(640px, 90vw);
+    max-height: 0;
+    overflow: hidden;
     opacity: 0;
-    pointer-events: none;
-    visibility: hidden;
-    transition: opacity 0.3s ease, visibility 0s linear 0.3s;
-    z-index: 10;
-    background: rgba(5, 15, 35, 0.95);
-    border: 1px solid rgba(212,175,55,0.2);
-    border-radius: 12px;
-    padding: 0 16px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.4);
-    will-change: opacity;
+    transition: max-height 0.4s ease, opacity 0.3s ease;
+    background: linear-gradient(135deg, rgba(5,15,35,0.97) 0%, rgba(10,25,47,0.97) 100%);
+    border: 1px solid rgba(212,175,55,0.25);
+    border-radius: 16px;
+    margin-top: 10px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.5), inset 0 1px 0 rgba(212,175,55,0.08);
   }
   .quantum-explication.open {
+    max-height: 2000px;
     opacity: 1;
-    pointer-events: auto;
-    visibility: visible;
-    transition: opacity 0.3s ease, visibility 0s linear 0s;
+    overflow: visible;
   }
-  .quantum-explication-inner { padding:1.5rem 0 .5rem;text-align:left; }
+  .quantum-explication-inner { padding: 1.75rem 1.75rem 1.25rem; text-align:left; }
   .quantum-explication h3 { font-size:1.1rem;font-weight:600;margin-bottom:.9rem;color:#c8a96e;letter-spacing:.03em; }
   .quantum-intro { font-size:.9rem;line-height:1.7;margin-bottom:1.25rem;opacity:.9; }
   .quantum-comparison { display:grid;grid-template-columns:1fr 1fr;gap:.875rem;margin-bottom:1.5rem; }

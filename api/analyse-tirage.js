@@ -51,6 +51,7 @@ async function callAnthropicWithFallback(payload) {
                     'anthropic-beta': 'messages-2023-12-15',
                 },
                 body: JSON.stringify({ ...payload, model }),
+                signal: AbortSignal.timeout(25000),
             });
 
             if (response.ok) {

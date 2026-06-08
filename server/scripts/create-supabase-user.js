@@ -10,7 +10,11 @@ const { createClient } = require('@supabase/supabase-js');
 
 // Configuration Supabase
 const SUPABASE_URL = 'https://bwvlpgklnhcwkdpabiwd.supabase.co';
-const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dmxwZ2tsbmhjd2tkcGFiaXdkIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc0NTIwODUxNiwiZXhwIjoyMDYwNzg0NTE2fQ.EI1y5w6qBj3wF3f4xTl-8K10mPqRnR1z2S_9wXyZ123'; // Remplace par ta vraie service_role key
+const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+if (!SUPABASE_SERVICE_ROLE_KEY) {
+  console.error('❌ SUPABASE_SERVICE_ROLE_KEY manquante. Définir la variable d\'environnement avant d\'exécuter ce script.');
+  process.exit(1);
+}
 
 const USER_DATA = {
   email: 'contact@oradia.fr',

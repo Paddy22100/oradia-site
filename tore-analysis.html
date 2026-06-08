@@ -697,9 +697,32 @@
             </div>
         </div>
 
+        <!-- Bandeau "1 tirage restant" — affiché AVANT les boutons pour visibilité maximale -->
+        <div id="tore-conv-last" class="mb-8 fade-in-up" style="display:none; animation-delay:0.1s">
+            <div class="relative overflow-hidden rounded-2xl" style="background:linear-gradient(135deg,rgba(5,20,40,0.95),rgba(10,25,47,0.95));border:1px solid rgba(212,175,55,0.25)">
+              <div class="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl" style="background:radial-gradient(circle,rgba(212,175,55,0.07) 0%,transparent 70%)"></div>
+              <div class="relative z-10 p-6 md:p-8 flex flex-col md:flex-row items-center gap-5">
+                <div class="flex-shrink-0 flex items-center justify-center w-12 h-12 rounded-full" style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.25)">
+                  <i class="fas fa-hourglass-half text-gold text-lg"></i>
+                </div>
+                <div class="flex-1 text-center md:text-left">
+                  <p class="font-cinzel font-bold text-xs mb-1" style="color:rgba(212,175,55,0.7);letter-spacing:0.08em">IL VOUS RESTE 1 TIRAGE GRATUIT</p>
+                  <h4 class="font-cormorant font-bold text-xl md:text-2xl mb-0.5" style="color:#f5e7a1">Continuez sans interruption avec l'abonnement Tore</h4>
+                  <p class="font-lora text-sm" style="color:rgba(245,231,161,0.5)">8€ / mois · Tirages illimités · Annulable à tout moment</p>
+                </div>
+                <div class="flex-shrink-0">
+                  <a href="/tore-abonnement.html" class="inline-flex items-center gap-2 font-bold rounded-full px-6 py-3 transition-all duration-300 hover:scale-105 hover:shadow-lg whitespace-nowrap" style="background:linear-gradient(135deg,#d4af37,#b8962e);color:#020817;font-family:'Cinzel',serif;font-size:0.82rem;letter-spacing:0.05em;box-shadow:0 4px 16px rgba(212,175,55,0.2)">
+                    <i class="fas fa-moon text-sm"></i>
+                    Découvrir l'abonnement
+                  </a>
+                </div>
+              </div>
+            </div>
+        </div>
+
         <!-- Boutons d'action après la synthèse -->
         <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-16 fade-in-up">
-            <a href="tore.html" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-8 rounded-full hover:shadow-lg hover:shadow-gold/50 transition-all duration-300 text-center flex items-center justify-center gap-3 hover:scale-105 touch-target font-cinzel">
+            <a id="btn-nouveau-tirage" href="tore.html" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-8 rounded-full hover:shadow-lg hover:shadow-gold/50 transition-all duration-300 text-center flex items-center justify-center gap-3 hover:scale-105 touch-target font-cinzel">
                 <i class="fas fa-redo"></i>
                 <span>Nouveau Tirage</span>
             </a>
@@ -708,7 +731,104 @@
                 <span class="text-sm sm:text-base">Recevoir l'analyse complète par mail</span>
             </button>
         </div>
-        
+
+        <!-- Bloc conversion Tore "tirages épuisés" — affiché dynamiquement -->
+        <div id="tore-conversion-block" class="mb-16 fade-in-up" style="display:none; animation-delay:0.15s">
+
+          <!-- ── Version : tirages épuisés ── -->
+          <div id="tore-conv-empty" style="display:none">
+            <div class="relative overflow-hidden rounded-3xl">
+              <!-- Fond et lumières -->
+              <div class="absolute inset-0" style="background:linear-gradient(135deg,rgba(5,20,40,0.97) 0%,rgba(10,25,47,0.97) 100%)"></div>
+              <div class="absolute top-0 left-1/4 w-96 h-96 rounded-full blur-3xl" style="background:radial-gradient(circle,rgba(212,175,55,0.12) 0%,transparent 70%)"></div>
+              <div class="absolute bottom-0 right-1/4 w-64 h-64 rounded-full blur-3xl" style="background:radial-gradient(circle,rgba(120,80,200,0.08) 0%,transparent 70%)"></div>
+
+              <div class="relative z-10 border border-gold/30 rounded-3xl p-8 md:p-12" style="backdrop-filter:blur(8px)">
+
+                <!-- Icône et titre -->
+                <div class="text-center mb-8">
+                  <div class="inline-flex items-center justify-center w-16 h-16 rounded-full mb-5" style="background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.05));border:1px solid rgba(212,175,55,0.4)">
+                    <i class="fas fa-infinity text-gold text-2xl"></i>
+                  </div>
+                  <div class="inline-flex items-center gap-2 rounded-full px-4 py-1.5 mb-5 text-xs font-bold tracking-widest" style="background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.3);color:#d4af37;font-family:'Cinzel',serif">
+                    VOS TIRAGES GRATUITS SONT ÉPUISÉS
+                  </div>
+                  <h3 class="font-cormorant text-3xl md:text-4xl font-bold mb-3 leading-tight" style="background:linear-gradient(135deg,#d4af37,#f5e7a1,#d4af37);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text">
+                    Ce tirage vous a touché.<br>La guidance continue.
+                  </h3>
+                  <p class="font-lora text-base md:text-lg leading-relaxed max-w-xl mx-auto" style="color:rgba(245,231,161,0.75)">
+                    Pour revenir à l'Oracle quand vous en avez besoin, choisissez ce qui vous correspond.
+                  </p>
+                </div>
+
+                <!-- Séparateur doré -->
+                <div class="w-24 h-px mx-auto mb-8" style="background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent)"></div>
+
+                <!-- Deux offres côte à côte -->
+                <div class="grid md:grid-cols-2 gap-5 max-w-2xl mx-auto mb-6">
+
+                  <!-- Offre 1 : Abonnement (primary) -->
+                  <div class="relative overflow-hidden rounded-2xl flex flex-col" style="background:linear-gradient(135deg,rgba(212,175,55,0.15),rgba(212,175,55,0.05));border:1px solid rgba(212,175,55,0.45)">
+                    <!-- Badge populaire -->
+                    <div class="absolute top-0 inset-x-0 flex justify-center">
+                      <span class="rounded-b-xl px-4 py-1 text-xs font-bold tracking-wider" style="background:linear-gradient(135deg,#d4af37,#b8962e);color:#020817;font-family:'Cinzel',serif">RECOMMANDÉ</span>
+                    </div>
+                    <div class="pt-8 p-6 flex flex-col flex-1 text-center">
+                      <div class="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3" style="background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.3)">
+                        <i class="fas fa-moon text-gold text-lg"></i>
+                      </div>
+                      <p class="font-cinzel font-bold text-gold text-sm mb-1 tracking-wide">ABONNEMENT TORE</p>
+                      <div class="flex items-baseline justify-center gap-1 mb-3">
+                        <span class="font-cormorant font-bold text-4xl" style="color:#f5e7a1">8</span>
+                        <span class="text-gold font-semibold text-lg">€</span>
+                        <span class="text-xs ml-1" style="color:rgba(245,231,161,0.5)">/mois</span>
+                      </div>
+                      <ul class="text-left space-y-2 mb-5 flex-1">
+                        <li class="flex items-center gap-2 text-sm" style="color:rgba(245,231,161,0.8)"><i class="fas fa-check-circle text-gold text-xs flex-shrink-0"></i>Tirages illimités chaque mois</li>
+                        <li class="flex items-center gap-2 text-sm" style="color:rgba(245,231,161,0.8)"><i class="fas fa-check-circle text-gold text-xs flex-shrink-0"></i>Analyse IA personnalisée</li>
+                        <li class="flex items-center gap-2 text-sm" style="color:rgba(245,231,161,0.8)"><i class="fas fa-check-circle text-gold text-xs flex-shrink-0"></i>Fenêtre d'observation active</li>
+                        <li class="flex items-center gap-2 text-sm" style="color:rgba(245,231,161,0.5)"><i class="fas fa-check-circle text-xs flex-shrink-0" style="color:rgba(212,175,55,0.4)"></i>Annulable à tout moment</li>
+                      </ul>
+                      <a href="/tore-abonnement.html" class="block w-full text-center font-bold rounded-full py-3 transition-all duration-300 hover:shadow-lg hover:scale-105" style="background:linear-gradient(135deg,#d4af37,#b8962e);color:#020817;font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.05em;box-shadow:0 4px 20px rgba(212,175,55,0.25)">
+                        Commencer l'abonnement →
+                      </a>
+                    </div>
+                  </div>
+
+                  <!-- Offre 2 : Tirage ponctuel (secondary) -->
+                  <div class="relative overflow-hidden rounded-2xl flex flex-col" style="background:rgba(5,20,40,0.6);border:1px solid rgba(212,175,55,0.2)">
+                    <div class="p-6 flex flex-col flex-1 text-center">
+                      <div class="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3" style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2)">
+                        <i class="fas fa-star text-gold text-base" style="opacity:0.8"></i>
+                      </div>
+                      <p class="font-cinzel font-bold text-sm mb-1 tracking-wide" style="color:rgba(212,175,55,0.8)">TIRAGE PONCTUEL</p>
+                      <div class="flex items-baseline justify-center gap-1 mb-3">
+                        <span class="font-cormorant font-bold" style="font-size:2.2rem;color:#f5e7a1;letter-spacing:-0.01em">3,90</span>
+                        <span class="font-cormorant font-bold text-2xl text-gold">€</span>
+                      </div>
+                      <ul class="text-left space-y-2 mb-5 flex-1">
+                        <li class="flex items-center gap-2 text-sm" style="color:rgba(245,231,161,0.7)"><i class="fas fa-check text-xs flex-shrink-0" style="color:rgba(212,175,55,0.6)"></i>1 tirage complet avec analyse IA</li>
+                        <li class="flex items-center gap-2 text-sm" style="color:rgba(245,231,161,0.7)"><i class="fas fa-check text-xs flex-shrink-0" style="color:rgba(212,175,55,0.6)"></i>Accès immédiat</li>
+                      </ul>
+                      <button id="tore-single-draw-btn" class="block w-full text-center font-semibold rounded-full py-3 transition-all duration-300 hover:scale-105" style="background:transparent;border:1px solid rgba(212,175,55,0.35);color:rgba(212,175,55,0.85);font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:0.04em;cursor:pointer">
+                        Acheter ce tirage
+                      </button>
+                    </div>
+                  </div>
+
+                </div>
+
+                <!-- Note discrète -->
+                <p class="text-center text-xs" style="color:rgba(245,231,161,0.3);font-family:'Lora',serif;font-style:italic">
+                  Paiement sécurisé via Stripe · Vos données restent privées
+                </p>
+
+              </div>
+            </div>
+          </div>
+
+        </div>
+        <!-- /Bloc conversion Tore -->
 
         <!-- Message de conversion - Oracle Physique - VERSION PREMIUM -->
         <div class="mb-16 fade-in-up" style="animation-delay: 0.3s">
@@ -1437,8 +1557,8 @@
 
             window._obsWindowText = text;
             window._obsAttentionPoints = points;
-            // Garder la durée choisie par l'utilisateur (déjà dans window._obsSuggestedDays)
-            // au lieu de la durée préconisée par l'analyse (days)
+            // Initialiser avec la durée préconisée par l'IA — l'utilisateur peut encore la modifier
+            window._obsSuggestedDays = days || window._obsSuggestedDays;
 
             // Stocker les données d'observation dans tore_analysis_data
             try {
@@ -2017,5 +2137,83 @@
         });
     </script>
 <script>document.addEventListener('DOMContentLoaded', () => { requestAnimationFrame(() => { document.body.classList.add('page-ready'); }); });</script>
+
+<script>
+// ── Bloc conversion Tore ──────────────────────────────────────────────────
+(function initToreConversionBlock() {
+  const block   = document.getElementById('tore-conversion-block');
+  const vEmpty  = document.getElementById('tore-conv-empty');
+  const vLast   = document.getElementById('tore-conv-last'); // bandeau au-dessus des boutons
+  if (!block || !vEmpty) return;
+
+  // Attendre que freemiumTracker soit chargé (script defer)
+  function isSubscribed() {
+    try {
+      const sub = localStorage.getItem('oradia_subscription');
+      if (sub) { const { expiry } = JSON.parse(sub); if (expiry && new Date(expiry) > new Date()) return true; }
+      const sess = sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session');
+      if (sess) { const { email, subscribed } = JSON.parse(sess); if (email && subscribed) return true; }
+    } catch (e) {}
+    return false;
+  }
+
+  function getRemainingToreDraws() {
+    const used = parseInt(localStorage.getItem('oradia_tore_lifetime_draws') || '0', 10);
+    return Math.max(0, 2 - used);
+  }
+
+  function run() {
+    if (isSubscribed()) return;
+    const remaining = getRemainingToreDraws();
+    if (remaining === 0) {
+      block.style.display  = 'block';
+      vEmpty.style.display = 'block';
+      // Masquer "Nouveau Tirage" — inutile et mène à une modale moins soignée
+      const btnNouveau = document.getElementById('btn-nouveau-tirage');
+      if (btnNouveau) btnNouveau.style.display = 'none';
+    } else if (remaining === 1 && vLast) {
+      vLast.style.display = 'block';
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', run);
+  } else {
+    run();
+  }
+
+  // ── Bouton achat tirage ponctuel ────────────────────────────────────────
+  document.getElementById('tore-single-draw-btn')?.addEventListener('click', async () => {
+    const btn = document.getElementById('tore-single-draw-btn');
+
+    // Demander l'email
+    const email = window.prompt('Entrez votre adresse email pour recevoir votre tirage :');
+    if (!email || !email.includes('@')) return;
+
+    const originalText = btn.textContent;
+    btn.disabled = true;
+    btn.textContent = 'Redirection…';
+
+    try {
+      const res = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'single-draw', email }),
+      });
+      const data = await res.json();
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error(data.error || 'Erreur inconnue');
+      }
+    } catch (e) {
+      console.error('[tore-conversion] single-draw error:', e);
+      btn.disabled = false;
+      btn.textContent = originalText;
+      alert('Une erreur est survenue. Veuillez réessayer.');
+    }
+  });
+})();
+</script>
 </body>
 </html>
