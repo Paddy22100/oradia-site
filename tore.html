@@ -4382,6 +4382,8 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       }
       isCoinAnimating = false;
       coinThrowIndex = 0;
+      // Initialiser le label de famille sur le 1er lancer dès l'apparition de la pièce
+      updateCoinFamilyLabel();
       // S'assurer que la bottom-bar est bien visible
       const bb = el('tore-bottom-bar');
       if (bb) { bb.classList.remove('hidden'); bb.style.opacity = '1'; }
@@ -6019,12 +6021,32 @@ function showArrowForStep(stepIndex, isMatch) {
         if (arrowSvg) { arrowSvg.innerHTML = ''; delete arrowSvg.dataset.match; }
         if (arrowHideTimer) { clearTimeout(arrowHideTimer); arrowHideTimer = null; }
         
+        // Mettre à jour le label de famille pour le prochain lancer dès la
+        // fermeture de la fenêtre (coinThrowIndex a déjà été incrémenté)
+        updateCoinFamilyLabel();
+
         // Attirer l'attention vers la pièce pour le prochain lancer
         highlightCoinForNextThrow();
         
         if (typeof onContinue === 'function') onContinue();
       });
     }
+  }
+
+  // Met à jour le compteur et le nom de la famille du PROCHAIN lancer de pièce.
+  // Appelée dès la fermeture de la fenêtre de carte/polarité, pour que le label
+  // reflète immédiatement la famille à venir (sans attendre le clic sur la pièce).
+  function updateCoinFamilyLabel() {
+    const familiesWithCoin = TIRAGE_ORDER.filter(f => f !== 'memoire_cosmos');
+    const throwCounter = el('coin-throw-counter');
+    const familyLabel = el('coin-family-label');
+    if (coinThrowIndex >= familiesWithCoin.length) {
+      if (throwCounter) throwCounter.textContent = `Lancer ${familiesWithCoin.length} / ${familiesWithCoin.length}`;
+      return;
+    }
+    const currentFamily = familiesWithCoin[coinThrowIndex];
+    if (throwCounter) throwCounter.textContent = `Lancer ${coinThrowIndex + 1} / ${familiesWithCoin.length}`;
+    if (familyLabel) familyLabel.textContent = FAMILY_NAMES[currentFamily] || currentFamily;
   }
 
   // Fonction pour attirer l'attention vers la pièce pour le prochain lancer
