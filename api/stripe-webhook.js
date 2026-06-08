@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const crypto = require('crypto');
 
 // Fonctions pour créer les clients après validation environnement
 function getStripeClient() {

@@ -20,7 +20,7 @@
     },
     {
       "src": "/api/payments/webhook",
-      "dest": "/api/payments-webhook.js"
+      "dest": "/api/stripe-webhook.js"
     },
     {
       "src": "/api/admin/(.*)",
@@ -60,9 +60,6 @@
     }
   ],
   "functions": {
-    "api/payments-webhook.js": {
-      "maxDuration": 30
-    },
     "api/stripe-webhook.js": {
       "maxDuration": 30
     },
