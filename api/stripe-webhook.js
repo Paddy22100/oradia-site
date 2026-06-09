@@ -93,10 +93,10 @@ async function sendBrevoEmail({ toEmail, toName, offer, amountTotal, invoiceUrl 
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 </head>
-<body style="margin:0;padding:0;background:#050a14;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#050a14;margin:0;padding:0;">
+<body style="margin:0;padding:0;width:100%;background:#050a14;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;min-width:100%;background:#050a14;margin:0;padding:0;">
     <tr>
-      <td align="center" style="padding:48px 20px;">
+      <td align="center" style="width:100%;padding:48px 20px;">
         
         <!-- Container principal -->
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:linear-gradient(135deg, #0a1628 0%, #051428 100%);border:1px solid rgba(212,175,55,0.3);border-radius:0;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
@@ -569,9 +569,174 @@ const handler = async (req, res) => {
     }
 };
 
+// Résout l'email associé à une facture/abonnement Stripe (pour corréler avec
+// `tore_subscriptions.email`, qui est la seule clé de correspondance disponible
+// côté Supabase pour le moment — la table ne stocke pas encore l'ID client Stripe).
+async function resolveCustomerEmail(stripe, object) {
+    if (object?.customer_email) return object.customer_email;
+    if (object?.customer_details?.email) return object.customer_details.email;
+    if (object?.customer) {
+        try {
+            const customer = await stripe.customers.retrieve(
+                typeof object.customer === 'string' ? object.customer : object.customer.id
+            );
+            if (customer && !customer.deleted) return customer.email || null;
+        } catch (e) {
+            console.error('[webhook] Échec récupération customer Stripe:', e.message);
+        }
+    }
+    return null;
+}
+
+// Retrouve la ligne `tore_subscriptions` correspondant à un événement Stripe
+// d'abonnement/facture. Priorité aux identifiants Stripe stables
+// (`stripe_subscription_id`, puis `stripe_customer_id`), stockés depuis la
+// création de l'abonnement — bien plus fiables qu'une recherche par email
+// (qui peut échouer si le client modifie son adresse côté Stripe). On garde
+// la recherche par email en dernier recours pour les abonnements créés avant
+// l'ajout de ces colonnes.
+async function findToreSubscriptionRow(stripe, supabase, object) {
+    const subscriptionId =
+        object?.subscription ||
+        (object?.object === 'subscription' ? object.id : null) ||
+        null;
+    const customerId = object?.customer
+        ? (typeof object.customer === 'string' ? object.customer : object.customer.id)
+        : null;
+
+    if (subscriptionId) {
+        const { data } = await supabase
+            .from('tore_subscriptions')
+            .select('id, email')
+            .eq('stripe_subscription_id', subscriptionId)
+            .maybeSingle();
+        if (data) return data;
+    }
+
+    if (customerId) {
+        const { data } = await supabase
+            .from('tore_subscriptions')
+            .select('id, email')
+            .eq('stripe_customer_id', customerId)
+            .maybeSingle();
+        if (data) return data;
+    }
+
+    const email = await resolveCustomerEmail(stripe, object);
+    if (email) {
+        const { data } = await supabase
+            .from('tore_subscriptions')
+            .select('id, email')
+            .eq('email', email)
+            .maybeSingle();
+        if (data) return data;
+        // Pas de ligne existante mais un email résolu : on peut quand même
+        // cibler la mise à jour par email (utile si la ligne est créée entre-temps).
+        return { id: null, email };
+    }
+
+    return null;
+}
+
 // Fonction séparée pour le traitement asynchrone
 async function processEvent(event) {
     switch (event.type) {
+        // ── Renouvellement d'abonnement Tore (paiement périodique réussi) ───
+        // Stripe ne renvoie PAS de `checkout.session.completed` aux renouvellements
+        // d'un abonnement récurrent : il faut écouter `invoice.payment_succeeded`
+        // (ou `invoice.paid`) pour prolonger `expires_at`, sinon l'accès du client
+        // est coupé après un mois alors qu'il continue d'être prélevé.
+        case 'invoice.payment_succeeded':
+        case 'invoice.paid': {
+            const stripe = getStripeClient();
+            const supabase = getSupabaseClient();
+            const invoice = event.data.object;
+
+            // Ne traiter que les factures de renouvellement d'abonnement
+            // (la toute première facture est déjà gérée via checkout.session.completed)
+            const isSubscriptionInvoice = !!invoice.subscription;
+            if (!isSubscriptionInvoice) break;
+            if (invoice.billing_reason === 'subscription_create') break;
+
+            const row = await findToreSubscriptionRow(stripe, supabase, invoice);
+            if (!row || !row.email) {
+                console.error('[webhook] invoice.payment_succeeded : abonnement introuvable, sub:', invoice.subscription);
+                break;
+            }
+
+            const newExpireAt = new Date();
+            newExpireAt.setMonth(newExpireAt.getMonth() + 1);
+
+            const { error: renewError } = await supabase
+                .from('tore_subscriptions')
+                .update({
+                    status: 'active',
+                    expires_at: newExpireAt.toISOString(),
+                    stripe_subscription_id: invoice.subscription || null,
+                    stripe_customer_id: invoice.customer || null,
+                    updated_at: new Date().toISOString()
+                })
+                .eq('email', row.email);
+
+            if (renewError) {
+                console.error('[webhook] Échec prolongation abonnement Tore:', renewError.message);
+            } else {
+                console.log(`[webhook] Abonnement Tore prolongé jusqu'au ${newExpireAt.toISOString()} pour ${row.email}`);
+            }
+            break;
+        }
+
+        // ── Échec de prélèvement lors d'un renouvellement ───────────────────
+        case 'invoice.payment_failed': {
+            const stripe = getStripeClient();
+            const supabase = getSupabaseClient();
+            const invoice = event.data.object;
+            if (!invoice.subscription) break;
+
+            const row = await findToreSubscriptionRow(stripe, supabase, invoice);
+            if (!row || !row.email) break;
+
+            const { error: failError } = await supabase
+                .from('tore_subscriptions')
+                .update({
+                    status: 'payment_failed',
+                    updated_at: new Date().toISOString()
+                })
+                .eq('email', row.email);
+
+            if (failError) {
+                console.error('[webhook] Échec mise à jour statut payment_failed:', failError.message);
+            } else {
+                console.log(`[webhook] Échec de paiement signalé pour l'abonnement Tore de ${row.email}`);
+            }
+            break;
+        }
+
+        // ── Annulation d'abonnement ──────────────────────────────────────────
+        case 'customer.subscription.deleted': {
+            const stripe = getStripeClient();
+            const supabase = getSupabaseClient();
+            const subscription = event.data.object;
+
+            const row = await findToreSubscriptionRow(stripe, supabase, subscription);
+            if (!row || !row.email) break;
+
+            const { error: cancelError } = await supabase
+                .from('tore_subscriptions')
+                .update({
+                    status: 'cancelled',
+                    updated_at: new Date().toISOString()
+                })
+                .eq('email', row.email);
+
+            if (cancelError) {
+                console.error('[webhook] Échec mise à jour statut cancelled:', cancelError.message);
+            } else {
+                console.log(`[webhook] Abonnement Tore annulé pour ${row.email}`);
+            }
+            break;
+        }
+
         case 'checkout.session.completed': {
                 const session = event.data.object;
                 const sessionId = session.id;
@@ -704,6 +869,11 @@ async function processEvent(event) {
                             access_code:  accessCode,
                             status:       'active',
                             expires_at:   expireAt.toISOString(), // Date d'expiration
+                            // Identifiants Stripe stockés pour fiabiliser la corrélation lors
+                            // des renouvellements/annulations (plus robuste qu'une recherche
+                            // par email, qui peut échouer si le client change d'adresse côté Stripe)
+                            stripe_customer_id:     session.customer || null,
+                            stripe_subscription_id: session.subscription || null,
                             created_at:   new Date().toISOString(),
                             updated_at:   new Date().toISOString()
                         }, { onConflict: 'email' });
@@ -719,7 +889,8 @@ async function processEvent(event) {
                         });
                     }
 
-                    return res.status(200).json({ success: true, message: 'Tore subscription processed', sessionId });
+                    console.log(`[webhook] Tore subscription traitée: ${sessionId}`);
+                    return;
                 }
 
                 // ── Achat ponctuel tirage Tore ──
@@ -794,12 +965,11 @@ async function processEvent(event) {
                         .single();
                     
                     if (donorError) {
-                        console.error('Insertion donors échouée:', donorError.message);
-                        return res.status(500).json({
-                            success: false,
-                            error: 'Database error',
-                            message: 'Une erreur est survenue lors du traitement'
-                        });
+                        // La réponse HTTP a déjà été envoyée à Stripe (200 immédiat,
+                        // traitement en fire-and-forget) : on ne peut plus renvoyer
+                        // d'erreur HTTP ici. On journalise et on arrête ce traitement.
+                        console.error('[webhook] Insertion donors échouée:', donorError.message);
+                        return;
                     }
                     
                     // Vérifier si email déjà envoyé
@@ -820,23 +990,14 @@ async function processEvent(event) {
                         }
                     }
                     
-                    return res.status(200).json({
-                        success: true,
-                        message: 'Don processed successfully',
-                        sessionId: sessionId,
-                        destination: 'donors',
-                        emailStatus: emailSent ? 'sent' : 'skipped'
-                    });
+                    console.log(`[webhook] Don traité: ${sessionId} | Email:${emailSent ? 'OK' : 'Skipped'}`);
+                    return;
                 }
 
                 // Validation des champs obligatoires pour précommandes
                 if (!extractedData.offer) {
-                    console.error('Offer manquant - impossible de continuer');
-                    return res.status(400).json({ 
-                        success: false,
-                        error: 'Invalid request',
-                        message: 'Offre requise pour le traitement'
-                    });
+                    console.error('[webhook] Offer manquant - impossible de continuer:', sessionId);
+                    return;
                 }
 
                 // Lire la commande existante pour fusionner avec les données Stripe
@@ -847,12 +1008,8 @@ async function processEvent(event) {
                     .maybeSingle();
 
                 if (existingOrderError) {
-                    console.error('Lecture preorders échouée:', existingOrderError.message);
-                    return res.status(500).json({
-                        success: false,
-                        error: 'Database error',
-                        message: 'Une erreur est survenue lors du traitement'
-                    });
+                    console.error('[webhook] Lecture preorders échouée:', existingOrderError.message);
+                    return;
                 }
 
                 // Fusion intelligente du mode de livraison
@@ -913,12 +1070,8 @@ async function processEvent(event) {
                     .single();
                 
                 if (upsertError) {
-                    console.error('Upsert Supabase échoué:', upsertError.message);
-                    return res.status(500).json({
-                        success: false,
-                        error: 'Database error',
-                        message: 'Une erreur est survenue lors du traitement'
-                    });
+                    console.error('[webhook] Upsert Supabase échoué:', upsertError.message);
+                    return;
                 }
 
                 // Vérifier si email déjà envoyé
@@ -954,14 +1107,8 @@ async function processEvent(event) {
                     }
                 }
                 
-                console.log(`Webhook traité: ${sessionId} | DB:OK | Email:${emailSent ? 'OK' : 'Skipped'}`);
-                
-                return res.status(200).json({ 
-                    success: true,
-                    message: 'Order processed successfully',
-                    sessionId: sessionId,
-                    emailStatus: emailSent ? 'sent' : 'skipped'
-                });
+                console.log(`[webhook] Précommande traitée: ${sessionId} | DB:OK | Email:${emailSent ? 'OK' : 'Skipped'}`);
+                return;
             }
             
             default:

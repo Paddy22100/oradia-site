@@ -1,7 +1,141 @@
 // api/tirages/send-email.js
-// Envoyer le tirage du Tore par email
+// Point d'entrée unique pour les opérations liées aux tirages :
+//   - POST /api/tirages/send-email?action=send-email  (ou sans action) → envoi de l'email du tirage
+//   - POST /api/tirages/send-email?action=save        → sauvegarde du tirage dans l'historique (Supabase, RLS par user_id)
+//   - GET  /api/tirages/send-email?action=list        → récupération de l'historique de l'utilisateur connecté
+//
+// Regroupé dans un seul fichier pour rester sous la limite Vercel de 12 fonctions serverless (Hobby plan).
 
-export default async function handler(req, res) {
+const { createClient } = require('@supabase/supabase-js');
+
+// Crée un client Supabase authentifié AVEC LE TOKEN DE L'UTILISATEUR (pas la clé service-role).
+// Cela garantit que les policies RLS (auth.uid() = user_id) s'appliquent réellement :
+// chaque personne ne peut lire/écrire QUE ses propres tirages, vérifié au niveau base de données.
+function getUserSupabaseClient(req) {
+  const authHeader = req.headers.authorization || '';
+  if (!authHeader.startsWith('Bearer ')) return null;
+  const accessToken = authHeader.slice(7).trim();
+  if (!accessToken) return null;
+
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const anonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || process.env.SUPABASE_ANON_KEY;
+  if (!supabaseUrl || !anonKey) return null;
+
+  return createClient(supabaseUrl, anonKey, {
+    global: { headers: { Authorization: `Bearer ${accessToken}` } },
+    auth: { persistSession: false, autoRefreshToken: false }
+  });
+}
+
+function parseJsonBody(req) {
+  return new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', chunk => data += chunk);
+    req.on('end', () => {
+      try { resolve(data ? JSON.parse(data) : {}); }
+      catch { resolve({}); }
+    });
+    req.on('error', reject);
+  });
+}
+
+// ============ ACTION : sauvegarder un tirage dans l'historique (Supabase, RLS) ============
+async function handleSaveTirage(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const supabase = getUserSupabaseClient(req);
+  if (!supabase) {
+    return res.status(401).json({ success: false, message: 'Authentification requise pour enregistrer ce tirage.' });
+  }
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) {
+    return res.status(401).json({ success: false, message: 'Session invalide ou expirée.' });
+  }
+
+  const body = await parseJsonBody(req);
+  const { type, intention, cards, cartes, passerelles, synthesis, observationWindow, interpretations } = body;
+
+  // Accepte deux formats : cartes "brutes" (avec bridgeCard imbriqué, format tore.html)
+  // ou déjà aplaties (cartes / passerelles, format historique pré-calculé)
+  let cartesNames, passerellesArr;
+  if (Array.isArray(cards) && cards.length > 0) {
+    cartesNames = cards.map(c => (typeof c === 'string' ? c : c.name)).filter(Boolean);
+    passerellesArr = cards.filter(c => c && c.bridgeCard).map(c => ({ carte: c.name, passerelle: c.bridgeCard.name }));
+  } else {
+    cartesNames = Array.isArray(cartes) ? cartes : [];
+    passerellesArr = Array.isArray(passerelles) ? passerelles : [];
+  }
+
+  if (cartesNames.length === 0) {
+    return res.status(400).json({ success: false, message: 'Cartes requises pour enregistrer le tirage.' });
+  }
+
+  const row = {
+    user_id: userData.user.id,
+    type: type || 'Tirage Tore',
+    intention: intention || null,
+    cartes: cartesNames,
+    passerelles: passerellesArr,
+    interpretations: interpretations || [],
+    synthese: synthesis || null,
+    observation_window: observationWindow || null
+  };
+
+  const { data, error } = await supabase.from('tirages').insert(row).select().single();
+  if (error) {
+    console.error('Save tirage error:', error);
+    return res.status(500).json({ success: false, message: 'Impossible d\'enregistrer le tirage.' });
+  }
+
+  return res.status(200).json({ success: true, tirage: data });
+}
+
+// ============ ACTION : lister l'historique des tirages de l'utilisateur connecté ============
+async function handleListTirages(req, res) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+
+  const supabase = getUserSupabaseClient(req);
+  if (!supabase) {
+    return res.status(401).json({ success: false, message: 'Authentification requise.' });
+  }
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) {
+    return res.status(401).json({ success: false, message: 'Session invalide ou expirée.' });
+  }
+
+  // RLS garantit déjà l'isolation par utilisateur, mais on filtre explicitement par sécurité défensive
+  const { data, error } = await supabase
+    .from('tirages')
+    .select('*')
+    .eq('user_id', userData.user.id)
+    .order('created_at', { ascending: false })
+    .limit(20);
+
+  if (error) {
+    console.error('List tirages error:', error);
+    return res.status(500).json({ success: false, message: 'Impossible de récupérer l\'historique.' });
+  }
+
+  // Adapter le format pour rester compatible avec le rendu front existant (qui attend `cartes`, `passerelles`, `synthese`, `date`...)
+  const tirages = (data || []).map(t => ({
+    id: t.id,
+    type: t.type,
+    date: t.created_at,
+    intention: t.intention,
+    cartes: t.cartes || [],
+    passerelles: t.passerelles || [],
+    interpretations: t.interpretations || [],
+    synthese: t.synthese,
+    observationWindow: t.observation_window
+  }));
+
+  return res.status(200).json({ success: true, tirages });
+}
+
+// ============ ACTION : envoyer l'email du tirage (comportement existant, inchangé) ============
+async function handleSendEmail(req, res) {
   if (req.method !== 'POST') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
@@ -21,59 +155,82 @@ export default async function handler(req, res) {
     };
     
     // Générer le HTML des cartes - incluant les cartes passerelles
-    // Créer un tableau avec gestion des retours à la ligne (3 cartes max par ligne)
-    let allCardsHtml = '';
-    let currentRow = '<tr>';
-    let cardsInCurrentRow = 0;
-    
-    // Fonction pour ajouter une carte HTML
-    const addCardHtml = (card, isBridge = false) => {
+    // Chaque carte (et sa passerelle éventuelle) forme une "unité" indivisible,
+    // affichée dans une seule cellule, reliée visuellement par un connecteur.
+    // Dimensions réduites + attributs width/height HTML (et non seulement CSS)
+    // pour que les clients mail réservent l'espace immédiatement et limitent le "jank".
+    const CARD_W = 64;
+    const CARD_H = 96;
+
+    // Fonction pour générer le bloc <img> d'une carte (avec attributs HTML width/height)
+    const cardImg = (card, small = false) => {
       const imgPath = getImagePath(card);
       const isFullUrl = imgPath.startsWith('http');
       const finalImgPath = isFullUrl ? imgPath : `https://oradia.fr/${imgPath.replace(/^\//, '')}`;
-      
-      const cardHtml = `
-        <td style="width:33%;padding:6px;text-align:center;vertical-align:top;">
-          <div style="background:#071828;border:1px solid ${isBridge ? '#d4af37' : '#1e3a5a'};border-radius:12px;padding:14px 10px;">
-            ${isBridge ? `<p style="margin:0 0 6px;color:#d4af37;font-size:9px;letter-spacing:2px;text-transform:uppercase;">Passerelle</p>` : ''}
-            <img src="${finalImgPath}" alt="${card.name}"
-              style="display:block;width:80px;height:120px;object-fit:cover;border-radius:8px;margin:0 auto 10px;border:1px solid #1e3a5a;">
-            <p style="margin:0 0 3px;color:#d4af37;font-size:12px;font-weight:700;">${card.name.replace(/_/g, ' ')}</p>
+      const w = small ? Math.round(CARD_W * 0.8) : CARD_W;
+      const h = small ? Math.round(CARD_H * 0.8) : CARD_H;
+      return `<img src="${finalImgPath}" alt="${card.name}" width="${w}" height="${h}" loading="eager"
+              style="display:block;width:${w}px;height:${h}px;object-fit:cover;border-radius:8px;margin:0 auto;border:1px solid #1e3a5a;">`;
+    };
+
+    // Fonction pour générer l'unité complète : carte principale + (éventuelle) passerelle reliée
+    const addCardUnitHtml = (card) => {
+      const bridge = card.bridgeCard;
+      const bridgeBlock = bridge ? `
+            <!-- Connecteur visuel vers la carte passerelle -->
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px auto;">
+              <tr>
+                <td style="text-align:center;">
+                  <div style="width:1px;height:10px;background:#d4af37;margin:0 auto;"></div>
+                  <p style="margin:2px 0;color:#d4af37;font-size:9px;letter-spacing:2px;text-transform:uppercase;">&#9660; Passerelle</p>
+                  <div style="width:1px;height:10px;background:#d4af37;margin:0 auto;"></div>
+                </td>
+              </tr>
+            </table>
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;background:#0c1f33;border:1px solid #d4af37;border-radius:10px;">
+              <tr>
+                <td style="padding:10px 8px;text-align:center;">
+                  ${cardImg(bridge, true)}
+                  <p style="margin:8px 0 2px;color:#d4af37;font-size:11px;font-weight:700;">${bridge.name.replace(/_/g, ' ')}</p>
+                  <p style="margin:0;color:#4a5a6a;font-size:9px;font-style:italic;text-transform:capitalize;">${bridge.family.replace(/_/g, ' ')}</p>
+                </td>
+              </tr>
+            </table>` : '';
+
+      return `
+        <td style="width:50%;padding:8px;text-align:center;vertical-align:top;">
+          <div style="background:#071828;border:1px solid #1e3a5a;border-radius:12px;padding:16px 12px;">
+            ${cardImg(card, false)}
+            <p style="margin:10px 0 3px;color:#d4af37;font-size:13px;font-weight:700;">${card.name.replace(/_/g, ' ')}</p>
             <p style="margin:0;color:#4a5a6a;font-size:10px;font-style:italic;text-transform:capitalize;">${card.family.replace(/_/g, ' ')}</p>
+            ${bridgeBlock}
           </div>
         </td>
       `;
-      
-      return cardHtml;
     };
-    
-    // Traiter toutes les cartes (principales + passerelles)
-    cards.forEach((card, index) => {
-      // Ajouter la carte principale
-      currentRow += addCardHtml(card, false);
-      cardsInCurrentRow++;
-      
-      // Ajouter la carte passerelle si présente
-      if (card.bridgeCard) {
-        currentRow += addCardHtml(card.bridgeCard, true);
-        cardsInCurrentRow++;
-      }
-      
-      // Si on a 3 cartes dans la ligne, passer à la ligne suivante
-      if (cardsInCurrentRow >= 3) {
+
+    // Construire le tableau, 2 unités par ligne, jamais scindées
+    let allCardsHtml = '';
+    let currentRow = '<tr>';
+    let unitsInCurrentRow = 0;
+
+    cards.forEach((card) => {
+      currentRow += addCardUnitHtml(card);
+      unitsInCurrentRow++;
+      if (unitsInCurrentRow >= 2) {
         currentRow += '</tr>';
         allCardsHtml += currentRow;
         currentRow = '<tr>';
-        cardsInCurrentRow = 0;
+        unitsInCurrentRow = 0;
       }
     });
-    
-    // Ajouter la dernière ligne si elle contient des cartes
-    if (cardsInCurrentRow > 0) {
-      currentRow += '</tr>';
+
+    if (unitsInCurrentRow > 0) {
+      // Compléter la ligne avec une cellule vide pour préserver la mise en page
+      currentRow += `<td style="width:50%;padding:8px;"></td></tr>`;
       allCardsHtml += currentRow;
     }
-    
+
     // Tableau des cartes - avec gestion correcte des lignes
     const cardsTable = `
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -98,10 +255,15 @@ export default async function handler(req, res) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin:0;padding:0;background:#1a1a2e;font-family:Georgia,'Times New Roman',serif;">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#111827;padding:40px 20px;">
+<body style="margin:0;padding:0;width:100%;background:#1a1a2e;font-family:Georgia,'Times New Roman',serif;">
+<!-- Tableau "fond" pleine largeur : certains clients (Outlook.com, certaines
+     apps mobiles) ignorent l'attribut HTML width="100%" sur les <table> et
+     n'honorent que le CSS — d'où un fond qui ne couvrait pas toute la largeur
+     de la fenêtre de visualisation (Palier 3 #16). On renforce avec
+     `style="width:100%"` + `min-width:100%` côté CSS, en plus de l'attribut. -->
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;min-width:100%;background:#111827;padding:40px 20px;">
   <tr>
-    <td align="center">
+    <td align="center" style="width:100%;">
       <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#050f23;border-radius:20px;overflow:hidden;border:1px solid #1e2d47;">
 
         <!-- HEADER -->
@@ -167,21 +329,57 @@ export default async function handler(req, res) {
           </td>
         </tr>` : ''}
 
-        <!-- FENÊTRE D'OBSERVATION -->
+        <!-- FENÊTRE D'OBSERVATION — Palier 3 #18 : durée + fonction + attentes -->
         ${observationWindow ? `
         <tr>
           <td style="padding:0 40px 28px;">
-            <div style="background:#071828;border:1px solid #1e3a5a;border-radius:14px;padding:24px;">
-              <p style="margin:0 0 4px;color:#d4af37;font-size:10px;letter-spacing:3px;text-transform:uppercase;text-align:center;">Fen&#234;tre d'observation</p>
-              <p style="margin:0 0 16px;color:#4a6a5a;font-size:11px;text-align:center;letter-spacing:1px;">${observationWindow.durationDays} jour${observationWindow.durationDays > 1 ? 's' : ''}</p>
-              ${observationWindow.observationText ? `<p style="margin:0 0 14px;color:#e9e7df;font-size:13px;line-height:1.8;">${observationWindow.observationText.replace(/\n/g, '<br>')}</p>` : ''}
+            <div style="background:#071828;border:1px solid #d4af37;border-radius:14px;padding:28px 24px;">
+
+              <!-- En-tête avec icône et titre -->
+              <div style="text-align:center;margin-bottom:20px;">
+                <p style="margin:0 0 6px;font-size:22px;">&#127758;</p>
+                <p style="margin:0 0 4px;color:#d4af37;font-size:10px;letter-spacing:3px;text-transform:uppercase;">Fen&#234;tre d'observation</p>
+                <p style="margin:6px 0 0;color:#f5e7a1;font-size:20px;font-weight:700;font-family:Georgia,serif;">
+                  ${observationWindow.durationDays} jour${observationWindow.durationDays > 1 ? 's' : ''}
+                </p>
+              </div>
+
+              <!-- Séparateur -->
+              <div style="width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);margin:0 0 20px;"></div>
+
+              <!-- Fonction : à quoi ça sert -->
+              <div style="background:#050f23;border-radius:8px;padding:14px 16px;margin-bottom:16px;">
+                <p style="margin:0 0 8px;color:#d4af37;font-size:10px;letter-spacing:2px;text-transform:uppercase;">&#10024; &Agrave; quoi sert cette fen&#234;tre&nbsp;?</p>
+                <p style="margin:0;color:#c8c0a8;font-size:13px;line-height:1.75;">
+                  Le tirage du Tore ne s'arr&#234;te pas &#224; l'analyse — il continue de r&#233;sonner dans votre quotidien. La fen&#234;tre d'observation vous invite &#224; rester attentif(ve) aux &#233;chos, synchronicit&#233;s et mouvements int&#233;rieurs qui &#233;mergent dans les jours qui suivent votre tirage.
+                </p>
+              </div>
+
+              <!-- Texte personnalisé de la fenêtre -->
+              ${observationWindow.observationText ? `<p style="margin:0 0 16px;color:#e9e7df;font-size:13px;line-height:1.85;">${observationWindow.observationText.replace(/\n/g, '<br>')}</p>` : ''}
+
+              <!-- Attentes : ce à quoi prêter attention -->
               ${observationWindow.attentionPoints && observationWindow.attentionPoints.length > 0 ? `
-              <div style="background:#050f23;border-radius:8px;padding:14px 16px;margin-top:4px;">
-                <p style="margin:0 0 10px;color:#4a6a5a;font-size:10px;letter-spacing:2px;text-transform:uppercase;">Points d'attention</p>
-                ${observationWindow.attentionPoints.map(p => `<p style="margin:0 0 6px;color:#c8c0a8;font-size:13px;line-height:1.6;">&#8250; ${p}</p>`).join('')}
+              <div style="background:#050f23;border-radius:8px;padding:14px 16px;margin-bottom:16px;">
+                <p style="margin:0 0 10px;color:#d4af37;font-size:10px;letter-spacing:2px;text-transform:uppercase;">&#128065; Ce &#224; quoi pr&#234;ter attention</p>
+                ${observationWindow.attentionPoints.map(p => `<p style="margin:0 0 8px;color:#c8c0a8;font-size:13px;line-height:1.6;">&#8250;&nbsp; ${p}</p>`).join('')}
               </div>` : ''}
+
+              <!-- Ce qu'on N'attend PAS -->
+              <div style="background:#050f23;border-radius:8px;padding:14px 16px;margin-bottom:16px;">
+                <p style="margin:0 0 8px;color:#d4af37;font-size:10px;letter-spacing:2px;text-transform:uppercase;">&#129309; Ce qu'on n'attend pas de vous</p>
+                <p style="margin:0;color:#c8c0a8;font-size:13px;line-height:1.75;">
+                  Il n'y a rien &#224; "faire". Pas de journal obligatoire, pas de performance. Simplement un regard un peu plus attentif pos&#233; sur votre semaine — et une curiosit&#233; bienveillante envers ce qui remonte.
+                </p>
+              </div>
+
+              <!-- Date de clôture -->
               ${observationWindow.closesAt ? `
-              <p style="margin:14px 0 0;color:#4a5a6a;font-size:11px;text-align:center;font-style:italic;">Cl&#244;ture le ${new Date(observationWindow.closesAt).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>` : ''}
+              <p style="margin:16px 0 0;color:#4a5a6a;font-size:11px;text-align:center;font-style:italic;">
+                &#128337; Vous recevrez un email de cl&#244;ture le&nbsp;
+                <strong style="color:#6a7a8a;">${new Date(observationWindow.closesAt).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</strong>
+              </p>` : ''}
+
             </div>
           </td>
         </tr>` : ''}
@@ -306,9 +504,24 @@ oradia.fr
 
   } catch (error) {
     console.error('Send tirage email error:', error);
-    return res.status(500).json({ 
-      success: false, 
-      message: error.message || 'Erreur lors de l\'envoi de l\'email' 
+    return res.status(500).json({
+      success: false,
+      message: error.message || 'Erreur lors de l\'envoi de l\'email'
     });
+  }
+}
+
+// ============ DISPATCH PRINCIPAL ============
+export default async function handler(req, res) {
+  const action = req.query.action || 'send-email';
+
+  switch (action) {
+    case 'save':
+      return handleSaveTirage(req, res);
+    case 'list':
+      return handleListTirages(req, res);
+    case 'send-email':
+    default:
+      return handleSendEmail(req, res);
   }
 }

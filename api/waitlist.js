@@ -50,6 +50,31 @@ function loadLocalEnvIfNeeded() {
 
 loadLocalEnvIfNeeded();
 
+// ── Rate limiting en mémoire (newsletter uniquement) ──────────────────────
+// Best-effort : par instance Vercel. Suffit à bloquer les scripts de masse.
+// Fenêtre : 15 min, max 5 inscriptions newsletter par IP.
+const _rlMap = new Map();
+const RL_WINDOW_MS = 15 * 60 * 1000;
+const RL_MAX       = 5;
+
+function getClientIp(req) {
+  const fwd = req.headers?.['x-forwarded-for'];
+  if (fwd) return String(fwd).split(',')[0].trim();
+  return req.socket?.remoteAddress || 'unknown';
+}
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const entry = _rlMap.get(ip);
+  if (!entry || now - entry.start > RL_WINDOW_MS) {
+    _rlMap.set(ip, { start: now, count: 1 });
+    return false;
+  }
+  entry.count += 1;
+  if (entry.count > RL_MAX) return true;
+  return false;
+}
+
 function getSupabaseClient() {
   // URL Supabase du projet oradia-prod (nxxetkdozynuytlbhxdx)
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -189,14 +214,14 @@ async function sendWaitlistConfirmationEmail(email) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 </head>
-<body style="margin:0;padding:0;background:#050a14;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#050a14;margin:0;padding:0;">
+<body style="margin:0;padding:0;width:100%;background:#050a14;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;min-width:100%;background:#050a14;margin:0;padding:0;">
     <tr>
-      <td align="center" style="padding:48px 20px;">
-        
+      <td align="center" style="width:100%;padding:48px 20px;">
+
         <!-- Container principal -->
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:linear-gradient(135deg, #0a1628 0%, #051428 100%);border:1px solid rgba(212,175,55,0.3);border-radius:0;box-shadow:0 8px 32px rgba(0,0,0,0.4);">
-          
+
           <!-- Header avec image -->
           <tr>
             <td align="center" style="padding:0;position:relative;">
@@ -336,10 +361,10 @@ async function sendSignupConfirmationEmail(email, name) {
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
 </head>
-<body style="margin:0;padding:0;background:#050a14;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#050a14;">
+<body style="margin:0;padding:0;width:100%;background:#050a14;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;min-width:100%;background:#050a14;">
     <tr>
-      <td align="center" style="padding:48px 20px;">
+      <td align="center" style="width:100%;padding:48px 20px;">
         <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:linear-gradient(135deg,#0a1628 0%,#051428 100%);border:1px solid rgba(212,175,55,0.3);box-shadow:0 8px 32px rgba(0,0,0,0.4);">
           <tr>
             <td align="center" style="padding:0;">
@@ -415,7 +440,14 @@ module.exports = async (req, res) => {
     // ===== SIGNUP : création de compte Supabase =====
     if (body && body.action === 'signup') {
       try {
-        const { email, password, name, birthdate } = body;
+        const { email, password, name, birthdate, _hp } = body;
+
+        // ── Honeypot : si le champ caché est rempli → bot silencieux ──
+        if (_hp && String(_hp).trim().length > 0) {
+          console.warn('[Signup] Honeypot déclenché — bot probable, IP:', getClientIp(req));
+          // Répondre 200 pour ne pas trahir la détection
+          return res.status(200).json({ success: true, user: { email, name }, message: 'Compte créé avec succès' });
+        }
 
         console.log('[Signup] Body reçu:', JSON.stringify({
           hasEmail: !!email,
@@ -520,6 +552,14 @@ module.exports = async (req, res) => {
     }
     
     // ===== WAITLIST : inscription newsletter (comportement existant) =====
+
+    // ── Rate limiting newsletter ──
+    const ip = getClientIp(req);
+    if (isRateLimited(ip)) {
+      console.warn('[Waitlist] Rate limit atteint — IP:', ip);
+      // Répondre 200 pour ne pas faciliter l'énumération des limites
+      return res.status(200).json({ success: true, message: 'Vous êtes inscrit à la liste d\'attente.' });
+    }
 
     if (req.method === 'OPTIONS') {
       return res.status(200).end();

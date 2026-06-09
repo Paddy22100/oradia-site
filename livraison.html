@@ -510,8 +510,20 @@
                                 </div>
                             </div>
 
+                            <!-- Opt-in newsletter (non obligatoire) -->
+                            <div class="mt-6 pt-4 border-t border-gold/15">
+                                <label for="newsletterOptin" class="inline-flex items-start gap-3 cursor-pointer group">
+                                    <input type="checkbox" id="newsletterOptin" name="newsletterOptin"
+                                           class="w-4 h-4 mt-0.5 flex-shrink-0 accent-gold cursor-pointer">
+                                    <span class="text-sm text-light-gold/75 group-hover:text-light-gold/90 transition-colors leading-snug">
+                                        Je souhaite recevoir la <strong class="text-light-gold/90">newsletter Oradia</strong> — inspirations, actualités de l'Oracle et avant-premières.
+                                        <span class="text-light-gold/40 text-xs block mt-0.5">Pas de spam. Désinscription en un clic, à tout moment.</span>
+                                    </span>
+                                </label>
+                            </div>
+
                             <!-- CTA Principal -->
-                            <div class="mt-8">
+                            <div class="mt-6">
                                 <button id="proceedToPayment" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-5 px-8 rounded-full hover:shadow-2xl hover:shadow-gold/50 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 touch-target relative overflow-hidden group transform hover:scale-105">
                                     <div class="absolute inset-0 bg-gradient-to-r from-gold/30 to-light-gold/30 transform translate-y-full group-hover:translate-y-0 transition-transform duration-300"></div>
                                     <i class="fas fa-lock mr-3 relative z-10 text-lg"></i>
@@ -1223,6 +1235,17 @@
                     Traitement en cours...
                 </div>
             `;
+
+            // Inscription newsletter non-bloquante si opt-in coché
+            const newsletterOptin = document.getElementById('newsletterOptin');
+            const newsletterEmail = formData.get('email')?.trim() || '';
+            if (newsletterOptin?.checked && newsletterEmail) {
+                fetch('/api/waitlist', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: newsletterEmail })
+                }).catch(() => { /* non-bloquant */ });
+            }
 
             try {
                 // Préparer les données

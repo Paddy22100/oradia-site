@@ -75,6 +75,53 @@ function verifyAdminAuth(req) {
 
 // ============ HANDLERS ============
 
+// ── PROTECTION ANTI-BRUTE-FORCE (login admin) ───────────────────────────
+// Stockage en mémoire (best-effort, par instance serverless). Les instances
+// Vercel restent "chaudes" plusieurs minutes en cas d'appels rapprochés, ce qui
+// suffit à freiner un script de brute-force classique. Clé = IP + email ciblé.
+const LOGIN_ATTEMPT_MAX = 5;
+const LOGIN_ATTEMPT_WINDOW_MS = 15 * 60 * 1000;   // fenêtre de comptage : 15 min
+const LOGIN_LOCKOUT_MS = 15 * 60 * 1000;          // blocage : 15 min après 5 échecs
+const loginAttempts = new Map();
+
+function getClientIp(req) {
+  const fwd = req.headers['x-forwarded-for'];
+  if (fwd) return String(fwd).split(',')[0].trim();
+  return req.socket?.remoteAddress || 'unknown';
+}
+
+function getLoginAttemptState(key) {
+  const now = Date.now();
+  const entry = loginAttempts.get(key);
+  if (!entry) return { count: 0, lockedUntil: 0 };
+  // Réinitialiser si la fenêtre de comptage est dépassée et qu'on n'est plus bloqué
+  if (entry.lockedUntil && now > entry.lockedUntil) {
+    loginAttempts.delete(key);
+    return { count: 0, lockedUntil: 0 };
+  }
+  if (!entry.lockedUntil && now - entry.firstAttempt > LOGIN_ATTEMPT_WINDOW_MS) {
+    loginAttempts.delete(key);
+    return { count: 0, lockedUntil: 0 };
+  }
+  return entry;
+}
+
+function registerFailedLogin(key) {
+  const now = Date.now();
+  const entry = loginAttempts.get(key) || { count: 0, firstAttempt: now, lockedUntil: 0 };
+  entry.count += 1;
+  if (!entry.firstAttempt) entry.firstAttempt = now;
+  if (entry.count >= LOGIN_ATTEMPT_MAX) {
+    entry.lockedUntil = now + LOGIN_LOCKOUT_MS;
+  }
+  loginAttempts.set(key, entry);
+  return entry;
+}
+
+function clearLoginAttempts(key) {
+  loginAttempts.delete(key);
+}
+
 // ── AUTH ────────────────────────────────────────────────────────────────
 async function handleAuth(req, res) {
   const action = req.query.action;
@@ -85,7 +132,19 @@ async function handleAuth(req, res) {
       const body = await parseBody(req);
       const { email, password } = body;
       if (!email || !password) return res.status(400).json({ error: 'Email et mot de passe requis' });
-      
+
+      // Vérification anti-brute-force AVANT toute comparaison de mot de passe
+      const ip = getClientIp(req);
+      const attemptKey = `${ip}|${String(email).toLowerCase()}`;
+      const state = getLoginAttemptState(attemptKey);
+      if (state.lockedUntil && Date.now() < state.lockedUntil) {
+        const retryAfterSec = Math.ceil((state.lockedUntil - Date.now()) / 1000);
+        res.setHeader('Retry-After', String(retryAfterSec));
+        return res.status(429).json({
+          error: `Trop de tentatives. Réessayez dans ${Math.ceil(retryAfterSec / 60)} minute(s).`
+        });
+      }
+
       const { ADMIN_EMAIL, ADMIN_PASSWORD_HASH, ADMIN_SESSION_SECRET } = process.env;
       if (!ADMIN_EMAIL || !ADMIN_PASSWORD_HASH || !ADMIN_SESSION_SECRET) {
         return res.status(500).json({ error: 'Configuration admin manquante' });
@@ -93,8 +152,12 @@ async function handleAuth(req, res) {
 
       const isMatch = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
       if (email !== ADMIN_EMAIL || !isMatch) {
+        registerFailedLogin(attemptKey);
         return res.status(401).json({ error: 'Email ou mot de passe incorrect' });
       }
+
+      // Connexion réussie : on remet le compteur à zéro pour cette clé IP+email
+      clearLoginAttempts(attemptKey);
 
       const token = jwt.sign({ 
         email, 
@@ -150,7 +213,7 @@ async function handleData(req, res) {
     verifyAdminAuth(req);
 
     const supabase = createClient(
-      process.env.SUPABASE_URL || 'https://nxzetkdozynuytlbhxdx.supabase.co',
+      process.env.SUPABASE_URL || 'https://nxxetkdozynuytlbhxdx.supabase.co',
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
@@ -214,7 +277,14 @@ async function handleData(req, res) {
         .range(offset, offset + limit - 1);
 
       if (status !== 'all') query = query.eq('status', status);
-      if (q) query = query.or(`email.ilike.%${q}%,full_name.ilike.%${q}%`);
+      if (q) {
+        // Échapper les caractères spéciaux du mini-langage de filtre PostgREST
+        // (`,` sépare les conditions du `.or()`, `)` peut clore une condition
+        // prématurément, `%`/`_` sont des jokers ILIKE) pour éviter qu'une
+        // recherche ne modifie la logique du filtre construit côté serveur.
+        const safeQ = q.replace(/[,()%_\\]/g, '\\$&');
+        query = query.or(`email.ilike.%${safeQ}%,full_name.ilike.%${safeQ}%`);
+      }
 
       const { data, count, error } = await query;
       if (error) throw error;
@@ -270,6 +340,142 @@ async function handleData(req, res) {
       });
     }
 
+    // ── Section tirages ponctuels (single draws 3,90€) ──
+    if (section === 'single-draws') {
+      const page  = parseInt(req.query?.page  || '1', 10);
+      const limit = parseInt(req.query?.limit || '20', 10);
+      const offset = (page - 1) * limit;
+
+      const { data, count, error } = await supabase
+        .from('tore_subscriptions')
+        .select('id, email, full_name, single_draw_credits, status, created_at', { count: 'exact' })
+        .or('status.eq.single_draw,single_draw_credits.gt.0')
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (error) throw error;
+
+      const fmt = (iso) => iso ? new Date(iso).toLocaleDateString('fr-FR') : '—';
+      const rows = (data || []).map(r => ({
+        ...r,
+        created_at_fr: fmt(r.created_at),
+        single_draw_credits: r.single_draw_credits || 0,
+        total_spent_eur: ((r.single_draw_credits || 0) * 3.90).toFixed(2).replace('.', ',') + ' €'
+      }));
+
+      return res.status(200).json({
+        success: true,
+        data: rows,
+        pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) }
+      });
+    }
+
+    // ── Section support / témoignages / suggestions ──
+    if (section === 'support') {
+      const page   = parseInt(req.query?.page   || '1',  10);
+      const limit  = parseInt(req.query?.limit  || '20', 10);
+      const type   = req.query?.type   || 'all';
+      const status = req.query?.status || 'all';
+      const offset = (page - 1) * limit;
+
+      let query = supabase
+        .from('support_messages')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false })
+        .range(offset, offset + limit - 1);
+
+      if (type   !== 'all') query = query.eq('type',   type);
+      if (status !== 'all') query = query.eq('status', status);
+
+      const { data, count, error } = await query;
+      if (error) {
+        // La table peut ne pas encore exister — renvoyer vide plutôt qu'une 500
+        console.warn('support_messages query error (table may not exist):', error.message);
+        return res.status(200).json({
+          success: true, data: [],
+          pagination: { page, limit, total: 0, pages: 0 }
+        });
+      }
+
+      const fmt = (iso) => iso ? new Date(iso).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+      return res.status(200).json({
+        success: true,
+        data: (data || []).map(r => ({ ...r, created_at_fr: fmt(r.created_at) })),
+        pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) }
+      });
+    }
+
+    // ── PATCH : marquer un message support comme lu / archivé ──
+    if (section === 'support-update') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
+      const body = await parseBody(req);
+      const { id, status: newStatus, admin_note } = body;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+
+      const updates = { status: newStatus || 'read' };
+      if (newStatus === 'read' || newStatus === 'replied') updates.read_at = new Date().toISOString();
+      if (admin_note !== undefined) updates.admin_note = admin_note;
+
+      const { error } = await supabase.from('support_messages').update(updates).eq('id', id);
+      if (error) throw error;
+      return res.status(200).json({ success: true });
+    }
+
+    // ── Section synchronicité — stats d'étude (#31) ──
+    if (section === 'synchronicity') {
+      const { data: responses, error: syncErr } = await supabase
+        .from('synchronicity_responses')
+        .select('score_synchronicites, types_synchronicites, resonance_tirage, etat_interieur, temoignage, created_at')
+        .order('created_at', { ascending: false });
+
+      if (syncErr) throw syncErr;
+      const rows = responses || [];
+
+      // Moyenne des scores
+      const avgScore = rows.length > 0
+        ? (rows.reduce((s, r) => s + (r.score_synchronicites || 0), 0) / rows.length).toFixed(1)
+        : null;
+
+      // Distribution des scores (1-10)
+      const scoreDistrib = Array.from({ length: 10 }, (_, i) => ({
+        score: i + 1,
+        count: rows.filter(r => r.score_synchronicites === i + 1).length
+      }));
+
+      // Fréquence des types
+      const typeCounts = {};
+      rows.forEach(r => (r.types_synchronicites || []).forEach(t => {
+        typeCounts[t] = (typeCounts[t] || 0) + 1;
+      }));
+
+      // Répartition résonance
+      const resonanceCounts = { fort: 0, plutot_oui: 0, peu: 0, non: 0, null: 0 };
+      rows.forEach(r => { resonanceCounts[r.resonance_tirage || 'null']++; });
+
+      // Répartition état intérieur
+      const etatCounts = { calme: 0, alerte: 0, neutre: 0, perturbe: 0, null: 0 };
+      rows.forEach(r => { etatCounts[r.etat_interieur || 'null']++; });
+
+      // Témoignages récents (10 derniers, non nuls)
+      const temoignages = rows
+        .filter(r => r.temoignage && r.temoignage.trim())
+        .slice(0, 10)
+        .map(r => ({ temoignage: r.temoignage, created_at: r.created_at }));
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          total: rows.length,
+          avgScore,
+          scoreDistrib,
+          typeCounts,
+          resonanceCounts,
+          etatCounts,
+          temoignages
+        }
+      });
+    }
+
     // ── Section waitlist ──
     if (section === 'waitlist') {
       const page   = parseInt(req.query?.page  || '1', 10);
@@ -297,15 +503,28 @@ async function handleData(req, res) {
     }
 
     // ── Section overview / all : agrégats KPI ──
-    const [waitlistRes, preordersRes, donorsRes] = await Promise.all([
+    const [waitlistRes, preordersRes, donorsRes, singleDrawsRes, supportRes, syncRes] = await Promise.all([
       supabase.from('newsletter_contacts').select('*'),
       supabase.from('preorders').select('*'),
-      supabase.from('donors').select('*')
+      supabase.from('donors').select('*'),
+      supabase.from('tore_subscriptions').select('email, single_draw_credits, status').or('status.eq.single_draw,single_draw_credits.gt.0'),
+      supabase.from('support_messages').select('id, type, status, created_at').order('created_at', { ascending: false }).limit(5),
+      supabase.from('synchronicity_responses').select('score_synchronicites', { count: 'exact', head: false })
     ]);
 
-    const waitlistRows  = waitlistRes.data  || [];
-    const preorderRows  = preordersRes.data || [];
-    const donorRows     = donorsRes.data    || [];
+    const waitlistRows    = waitlistRes.data    || [];
+    const preorderRows    = preordersRes.data   || [];
+    const donorRows       = donorsRes.data      || [];
+    const singleDrawRows  = singleDrawsRes.data || [];
+    const recentMessages  = supportRes.data     || [];
+    const syncRows        = syncRes.data        || [];
+    const syncAvg         = syncRows.length > 0
+      ? (syncRows.reduce((s, r) => s + (r.score_synchronicites || 0), 0) / syncRows.length).toFixed(1)
+      : null;
+
+    // Calcul tirages ponctuels
+    const singleDrawCount  = singleDrawRows.reduce((s, r) => s + (r.single_draw_credits || 0), 0);
+    const singleDrawTotal  = singleDrawCount * 3.90;
 
     const now   = Date.now();
     const day1  = 24 * 3600 * 1000;
@@ -323,7 +542,7 @@ async function handleData(req, res) {
 
     const preordersTotal  = sumPreorders(preorderRows);
     const donorsTotal     = sumDonors(donorRows);
-    const globalTotal     = preordersTotal + donorsTotal;
+    const globalTotal     = preordersTotal + donorsTotal + singleDrawTotal;
     const totalContacts   = preorderRows.length + donorRows.length + waitlistRows.length;
     const averageBasket   = preorderRows.length > 0 ? preordersTotal / preorderRows.length : 0;
 
@@ -345,9 +564,28 @@ async function handleData(req, res) {
           count:      waitlistRows.length,
           notSynced:  waitlistRows.filter(r => !r.synced_at).length
         },
+        singleDraws: {
+          count:      singleDrawCount,
+          total:      singleDrawTotal,
+          customers:  singleDrawRows.length
+        },
+        support: {
+          recent:     recentMessages,
+          newCount:   recentMessages.filter(m => m.status === 'new').length
+        },
+        synchronicity: {
+          total:    syncRows.length,
+          avgScore: syncAvg
+        },
         global: {
           total:         globalTotal,
-          totalContacts
+          totalContacts,
+          // Répartition pour camembert (#29)
+          breakdown: {
+            preorders:   preordersTotal,
+            donors:      donorsTotal,
+            singleDraws: singleDrawTotal
+          }
         },
         performance: {
           revenueToday:    sumPreorders(preordersToday) + sumDonors(donorRows.filter(r => now - new Date(r.created_at).getTime() < day1)),
@@ -368,25 +606,68 @@ async function handleContactsExport(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
   try {
     verifyAdminAuth(req);
-    
+
     const supabase = createClient(
       process.env.SUPABASE_URL,
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
+    // Format mondial-relay : export des commandes à livrer en point relais
+    const urlParams = new URLSearchParams(req.url?.split('?')[1] || '');
+    const format = urlParams.get('format') || req.query?.format || 'standard';
+
+    if (format === 'mondial-relay') {
+      const { data: orders, error } = await supabase
+        .from('preorders')
+        .select('email, full_name, relay_id, relay_name, relay_address1, relay_address2, relay_postal_code, relay_city, relay_country, shipping_status, created_at')
+        .eq('shipping_method', 'relay')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Échapper les valeurs pour CSV : guillemets doubles autour de chaque champ,
+      // guillemets internes doublés — évite la troncature sur virgule/espace dans les adresses
+      const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+
+      const header = ['Email', 'Nom', 'ID Point Relais', 'Nom Point Relais',
+        'Adresse 1', 'Adresse 2', 'Code Postal', 'Ville', 'Pays',
+        'Statut expédition', 'Date commande'].map(esc).join(',');
+
+      const rows = (orders || []).map(r => [
+        r.email, r.full_name,
+        r.relay_id, r.relay_name,
+        r.relay_address1, r.relay_address2 || '',
+        r.relay_postal_code, r.relay_city, r.relay_country || 'FR',
+        r.shipping_status || 'pending',
+        r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : ''
+      ].map(esc).join(','));
+
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', 'attachment; filename=mondial-relay-export.csv');
+      // BOM UTF-8 pour Excel (évite les problèmes d'encodage sur les noms accentués)
+      return res.status(200).send('﻿' + header + '\n' + rows.join('\n'));
+    }
+
+    // Format standard : export de la liste newsletter
     const { data: waitlist, error } = await supabase
       .from('newsletter_contacts')
-      .select('email, created_at')
+      .select('email, created_at, source, status')
       .order('created_at', { ascending: false });
 
     if (error) throw error;
 
-    const csv = waitlist.map(row => `${row.email},${row.created_at}`).join('\n');
-    const header = 'Email,Date inscription\n';
-    
-    res.setHeader('Content-Type', 'text/csv');
+    const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const header = ['Email', 'Date inscription', 'Source', 'Statut'].map(esc).join(',');
+    const rows = (waitlist || []).map(row => [
+      row.email,
+      row.created_at ? new Date(row.created_at).toLocaleDateString('fr-FR') : '',
+      row.source || '',
+      row.status || ''
+    ].map(esc).join(','));
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', 'attachment; filename=contacts-oradia.csv');
-    return res.status(200).send(header + csv);
+    return res.status(200).send('﻿' + header + '\n' + rows.join('\n'));
   } catch (error) {
     console.error('Export error:', error);
     return res.status(error.statusCode || 500).json({ error: error.message });
@@ -474,10 +755,12 @@ async function handleSyncBrevo(req, res) {
           },
           body: JSON.stringify({
             email: contact.email,
+            listIds: [5],          // List ID 5 = newsletter Oradia (CLAUDE.md)
+            updateEnabled: true,   // Met à jour si contact déjà existant dans Brevo
             attributes: { ORADIA_INSCRIPTION: contact.created_at }
           })
         });
-        
+
         // Si l'envoi réussit (200, 201 ou 409 = déjà existant), mettre à jour brevo_synced
         if (response.ok || response.status === 409) {
           const { error: updateError } = await supabase
@@ -516,7 +799,7 @@ async function handleSubscriptions(req, res) {
     verifyAdminAuth(req);
 
     const supabase = createClient(
-      process.env.SUPABASE_URL || 'https://nxzetkdozynuytlbhxdx.supabase.co',
+      process.env.SUPABASE_URL || 'https://nxxetkdozynuytlbhxdx.supabase.co',
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
@@ -620,7 +903,20 @@ module.exports = async (req, res) => {
       return await handleSubscriptions(req, res);
     }
 
-    if (path === '/mondial-relay-pickup-points' || path === '/mondial-relay-pickup-points/') {
+    if (path === '/support-update' || path === '/support-update/') {
+      // Marquer message comme lu/archivé/répondu — délégué à handleData avec section=support-update
+      if (!req.query) req.query = {};
+      req.query.section = 'support-update';
+      return await handleData(req, res);
+    }
+
+    if (
+      path === '/mondial-relay-pickup-points' || path === '/mondial-relay-pickup-points/' ||
+      // vercel.json réécrit /api/mondial-relay/pickup-points (route PUBLIQUE utilisée par livraison.html)
+      // vers ce fichier — mais req.url conserve le chemin d'origine, qui ne commence pas par /api/admin
+      // et n'est donc pas raccourci par le .replace ci-dessus. On le détecte donc explicitement ici.
+      fullPath === '/api/mondial-relay/pickup-points' || fullPath === '/api/mondial-relay/pickup-points/'
+    ) {
       return await handleMondialRelayPickupPoints(req, res);
     }
 

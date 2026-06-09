@@ -1,7 +1,9 @@
 // api/support.js
 // Endpoint pour envoyer les messages de support, témoignages et suggestions
 // Utilise Brevo pour envoyer les emails à contact@oradia.fr
+// + stockage dans Supabase (table support_messages) pour le dashboard admin
 
+const { createClient } = require('@supabase/supabase-js');
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const TO_EMAIL = 'contact@oradia.fr';
 const FROM_EMAIL = 'oracle@oradia.fr';
@@ -118,7 +120,32 @@ function escapeHtml(text) {
     .replace(/'/g, '&#039;');
 }
 
-export default async function handler(req, res) {
+// Stockage Supabase non-bloquant — indépendant de l'envoi email
+async function saveToSupabase({ type, email, name, sujet, categorie, publication, message }) {
+  try {
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !supabaseKey) return;
+
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { error } = await supabase.from('support_messages').insert({
+      type: type || 'support',
+      email,
+      name: name || null,
+      sujet: sujet || null,
+      categorie: categorie || null,
+      publication: publication || null,
+      message,
+      status: 'new'
+    });
+    if (error) console.error('[Support] Supabase insert error:', error.message);
+    else console.log('[Support] Message sauvegardé en BDD:', type, 'de', email);
+  } catch (err) {
+    console.error('[Support] Supabase exception:', err.message);
+  }
+}
+
+module.exports = async function handler(req, res) {
   setCORS(res);
 
   if (req.method === 'OPTIONS') {
@@ -142,9 +169,13 @@ export default async function handler(req, res) {
     return res.status(400).json({ success: false, error: 'Message et email requis' });
   }
 
+  // Stocker en BDD (non-bloquant — ne fait pas échouer la requête si ça plante)
+  saveToSupabase({ type, email, name, sujet, categorie, publication, message });
+
   if (!BREVO_API_KEY) {
-    console.error('[Support] BREVO_API_KEY manquante');
-    return res.status(500).json({ success: false, error: 'Configuration serveur manquante' });
+    // Pas d'email possible mais le message est déjà en BDD
+    console.warn('[Support] BREVO_API_KEY manquante — message stocké en BDD uniquement');
+    return res.status(200).json({ success: true, emailSent: false });
   }
 
   const { subject } = getSubjectAndTitle(type, { sujet, categorie });
@@ -169,15 +200,16 @@ export default async function handler(req, res) {
     if (!response.ok) {
       const error = await response.text();
       console.error('[Support] Brevo error:', error);
-      throw new Error('Brevo API error');
+      // Message déjà en BDD — on répond quand même OK
+      return res.status(200).json({ success: true, emailSent: false });
     }
 
     console.log('[Support] Email envoyé:', type, 'de', email);
-    return res.status(200).json({ success: true });
+    return res.status(200).json({ success: true, emailSent: true });
 
   } catch (err) {
     console.error('[Support] Erreur envoi:', err.message);
-    return res.status(500).json({ success: false, error: 'Erreur envoi email' });
+    return res.status(200).json({ success: true, emailSent: false });
   }
 }
 

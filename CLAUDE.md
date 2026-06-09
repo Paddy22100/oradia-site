@@ -29,6 +29,42 @@ Il décrit l'architecture du projet, les règles à respecter, et les audits à 
 
 ---
 
+## Base de données — Tables actives et politique de rétention
+
+### Tables actives (état vérifié en production — juin 2026)
+
+| Table | Rôle | Notes |
+|---|---|---|
+| `preorders` | Précommandes physiques (Stripe) | colonnes relay ajoutées par `mondial-relay-migration.sql` |
+| `donors` | Dons libres (contribution-libre) | — |
+| `newsletter_contacts` | Inscriptions newsletter/waitlist → Brevo list 5 | migration : `supabase-migration-missing-tables.sql` |
+| `tore_subscriptions` | Membres actifs pour tirages en ligne | migration : `supabase-migration-missing-tables.sql` |
+| `tirages` | Historique des tirages par user (RLS stricte) | purge auto : 20 max par user |
+| `newsletter_drafts` | Brouillons de newsletter (5 lignes) | géré par le dashboard admin |
+| `newsletter_ideas` | Idées de newsletter (0 ligne) | table feature, à garder |
+| `observation_windows` | Fenêtres d'observation actives (20 lignes) | liée aux tirages |
+| `users` | Profils membres (0 ligne — auth gérée par Supabase Auth) | table publique miroir de auth.users |
+| `support_messages` | Messages support / témoignages / suggestions | migration : `supabase-migration-support-messages.sql` |
+
+### Politique de rétention — table `tirages`
+
+- **Maximum 20 tirages par utilisateur** (purge automatique via trigger `trg_trim_tirages_history`)
+- Le trigger s'exécute après chaque INSERT — les plus anciens sont supprimés automatiquement
+- Durée de conservation : indéfinie tant que l'utilisateur conserve son compte
+- En cas de suppression de compte (`ON DELETE CASCADE`), tous les tirages sont supprimés
+- **Confidentialité** : chaque utilisateur ne peut lire QUE ses propres tirages (RLS `auth.uid() = user_id`)
+- Le service_role (fonctions serverless) garde un accès complet pour les besoins d'audit admin
+
+### Tables supprimées (ménage juin 2026)
+
+- `credits` (0 ligne) — concept "crédits Traversée" abandonné — **supprimée**
+- `subscriptions` (0 ligne) — doublon de `tore_subscriptions` — **supprimée**
+- `waitlist_tirages` — n'existait pas en production
+- `precommande_subscribers` — n'existait pas en production
+- `analytics_events` — n'existait pas en production
+
+---
+
 ## Audit pré-production — à exécuter à chaque session
 
 Quand je te demande de faire un audit ou de "tout vérifier", exécute les vérifications suivantes dans l'ordre :

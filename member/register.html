@@ -159,6 +159,12 @@
 
             <form id="registerForm" novalidate style="flex:1;">
 
+                <!-- Honeypot anti-bot : invisible pour les humains, rempli par les bots -->
+                <div style="position:absolute;left:-9999px;top:-9999px;width:1px;height:1px;overflow:hidden;" aria-hidden="true">
+                    <label for="website_url">Website</label>
+                    <input type="text" id="website_url" name="website_url" tabindex="-1" autocomplete="off" value="">
+                </div>
+
                 <!-- Étape 1 -->
                 <div id="step1">
                     <div class="g2">
@@ -360,12 +366,13 @@
                 const response = await fetch('/api/waitlist', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ 
+                    body: JSON.stringify({
                         action: 'signup',
-                        email, 
-                        password, 
+                        email,
+                        password,
                         name,
-                        birthdate
+                        birthdate,
+                        _hp: document.getElementById('website_url')?.value || ''
                     })
                 });
 

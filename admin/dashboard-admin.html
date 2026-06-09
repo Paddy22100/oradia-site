@@ -129,25 +129,6 @@
             .main-content { margin-left: 0; }
         }
     </style>
-    <script>
-        // Récupérer le token depuis le hash URL si présent (post-login)
-        (function() {
-            const hash = window.location.hash;
-            if (hash && hash.startsWith('#t=')) {
-                try {
-                    const tokenFromHash = decodeURIComponent(hash.slice(3));
-                    if (tokenFromHash) {
-                        const existing = JSON.parse(sessionStorage.getItem('oradia_auth') || '{}');
-                        existing.token = tokenFromHash;
-                        existing.valid = true;
-                        existing.timestamp = Date.now();
-                        sessionStorage.setItem('oradia_auth', JSON.stringify(existing));
-                        history.replaceState(null, '', window.location.pathname);
-                    }
-                } catch(e) {}
-            }
-        })();
-    </script>
 </head>
 <body class="bg-night-blue text-light-gold">
 
@@ -192,6 +173,11 @@
                 <span>Abonnements</span>
                 <span class="ml-auto text-xs bg-gold/20 text-gold rounded-full px-2 py-0.5" id="nav-badge-subscriptions"></span>
             </div>
+            <div class="nav-item" onclick="showTab('single-draws')" id="nav-single-draws">
+                <i class="fas fa-magic w-4 text-center"></i>
+                <span>Tirages ponctuels</span>
+                <span class="ml-auto text-xs bg-purple-500/20 text-purple-300 rounded-full px-2 py-0.5" id="nav-badge-single-draws"></span>
+            </div>
 
             <p class="text-gold/50 text-xs uppercase tracking-widest px-5 mt-5 mb-2">Contenu</p>
             <div class="nav-item" onclick="showTab('newsletter')" id="nav-newsletter">
@@ -200,6 +186,16 @@
             </div>
 
             <p class="text-gold/50 text-xs uppercase tracking-widest px-5 mt-5 mb-2">Système</p>
+            <div class="nav-item" onclick="showTab('synchronicity')" id="nav-synchronicity">
+                <i class="fas fa-atom w-4 text-center"></i>
+                <span>Synchronicités</span>
+                <span class="ml-auto text-xs bg-teal-500/20 text-teal-300 rounded-full px-2 py-0.5" id="nav-badge-synchronicity"></span>
+            </div>
+            <div class="nav-item" onclick="showTab('support')" id="nav-support">
+                <i class="fas fa-inbox w-4 text-center"></i>
+                <span>Support / Témoignages</span>
+                <span class="ml-auto text-xs bg-orange-500/20 text-orange-300 rounded-full px-2 py-0.5" id="nav-badge-support"></span>
+            </div>
             <div class="nav-item" onclick="showTab('journal')" id="nav-journal">
                 <i class="fas fa-history w-4 text-center"></i>
                 <span>Journal</span>
@@ -416,6 +412,74 @@
                     <p class="text-light-gold/70 text-xs uppercase tracking-wider">Conversion waitlist</p>
                     <p class="text-gold text-xl font-bold" id="conversionRate">-</p>
                 </div>
+            </div>
+
+            <!-- ── Répartition revenus + KPI tirages ponctuels (#28 / #29) ── -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+
+                <!-- Camembert revenus -->
+                <div class="stat-card rounded-2xl p-6">
+                    <h3 class="text-gold font-semibold mb-1" style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;">Répartition des revenus</h3>
+                    <p class="text-light-gold/50 text-xs mb-5">Précommandes · Dons · Tirages ponctuels</p>
+                    <div class="flex items-center gap-6">
+                        <!-- Donut SVG généré dynamiquement -->
+                        <div class="relative flex-shrink-0" style="width:120px;height:120px;">
+                            <svg id="revenuePie" viewBox="0 0 36 36" style="transform:rotate(-90deg);width:120px;height:120px;">
+                                <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(212,175,55,0.08)" stroke-width="3.8"/>
+                                <circle id="pie-preorders"   cx="18" cy="18" r="15.9" fill="none" stroke="#d4af37"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
+                                <circle id="pie-donors"      cx="18" cy="18" r="15.9" fill="none" stroke="#ef4444"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
+                                <circle id="pie-singledraws" cx="18" cy="18" r="15.9" fill="none" stroke="#a855f7"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
+                            </svg>
+                            <div class="absolute inset-0 flex flex-col items-center justify-center">
+                                <span class="text-gold font-bold text-sm" id="pie-center-total">—</span>
+                                <span class="text-light-gold/40 text-xs">total</span>
+                            </div>
+                        </div>
+                        <!-- Légende -->
+                        <div class="space-y-2 text-sm flex-1">
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#d4af37] inline-block"></span><span class="text-light-gold">Précommandes</span></span>
+                                <span class="text-gold font-semibold" id="pie-label-preorders">—</span>
+                            </div>
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span><span class="text-light-gold">Dons</span></span>
+                                <span class="text-gold font-semibold" id="pie-label-donors">—</span>
+                            </div>
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-purple-500 inline-block"></span><span class="text-light-gold">Tirages (3,90€)</span></span>
+                                <span class="text-gold font-semibold" id="pie-label-singledraws">—</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- KPI tirages ponctuels -->
+                <div class="stat-card rounded-2xl p-6">
+                    <h3 class="text-gold font-semibold mb-4" style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;">Tirages ponctuels (3,90€)</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="bg-[rgba(168,85,247,0.08)] border border-purple-500/20 rounded-xl p-4">
+                            <div class="text-2xl font-bold text-purple-300 mb-1" id="singleDrawsCount">—</div>
+                            <p class="text-light-gold/60 text-xs uppercase tracking-wider">Tirages vendus</p>
+                        </div>
+                        <div class="bg-[rgba(168,85,247,0.08)] border border-purple-500/20 rounded-xl p-4">
+                            <div class="text-2xl font-bold text-purple-300 mb-1" id="singleDrawsTotal">—</div>
+                            <p class="text-light-gold/60 text-xs uppercase tracking-wider">Revenus tirages</p>
+                        </div>
+                        <div class="bg-[rgba(168,85,247,0.08)] border border-purple-500/20 rounded-xl p-4 col-span-2">
+                            <div class="text-xl font-bold text-purple-300 mb-1" id="singleDrawsCustomers">—</div>
+                            <p class="text-light-gold/60 text-xs uppercase tracking-wider">Clients distincts</p>
+                        </div>
+                    </div>
+                    <button onclick="showTab('single-draws')" class="mt-4 text-xs text-purple-300 hover:text-purple-200 transition underline underline-offset-2">
+                        Voir le détail →
+                    </button>
+                </div>
+            </div>
+
+            <!-- ── Messages support récents ── -->
+            <div id="supportAlertBanner" class="hidden mb-4 p-4 bg-orange-500/10 border border-orange-500/30 rounded-xl flex items-center justify-between">
+                <span class="text-orange-300 text-sm"><i class="fas fa-inbox mr-2"></i><span id="supportAlertText"></span></span>
+                <button onclick="showTab('support')" class="text-xs bg-orange-500/20 text-orange-200 border border-orange-500/30 rounded-lg px-3 py-1 hover:bg-orange-500/30 transition">Voir les messages</button>
             </div>
 
             <div id="adminAlerts" class="space-y-3 mb-4"></div>
@@ -839,19 +903,179 @@
         </section>
         </div><!-- /tab-newsletter -->
 
+        <!-- ══ ONGLET : TIRAGES PONCTUELS (#28) ══ -->
+        <div id="tab-single-draws" class="tab-panel">
+        <section class="mb-10">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="cormorant text-2xl font-bold text-gold">Tirages ponctuels</h3>
+                    <p class="text-light-gold/50 text-sm mt-1">Achats à 3,90€ — crédits tirage one-shot</p>
+                </div>
+                <button onclick="loadSingleDraws()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
+            </div>
+
+            <!-- KPI résumé -->
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="stat-card rounded-xl p-4 border border-purple-500/20">
+                    <div class="text-2xl font-bold text-purple-300" id="sd-total-credits">—</div>
+                    <p class="text-light-gold/60 text-xs mt-1">Crédits vendus</p>
+                </div>
+                <div class="stat-card rounded-xl p-4 border border-purple-500/20">
+                    <div class="text-2xl font-bold text-purple-300" id="sd-total-revenue">—</div>
+                    <p class="text-light-gold/60 text-xs mt-1">Revenus générés</p>
+                </div>
+                <div class="stat-card rounded-xl p-4 border border-purple-500/20">
+                    <div class="text-2xl font-bold text-purple-300" id="sd-total-customers">—</div>
+                    <p class="text-light-gold/60 text-xs mt-1">Clients distincts</p>
+                </div>
+            </div>
+
+            <!-- Tableau -->
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden shadow-2xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-gradient-to-r from-[rgba(5,20,40,0.9)] to-[rgba(5,20,40,0.7)] border-b border-gold/30">
+                            <tr>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Email</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Nom</th>
+                                <th class="px-5 py-4 text-center text-gold font-semibold text-xs uppercase tracking-wider">Crédits restants</th>
+                                <th class="px-5 py-4 text-right text-gold font-semibold text-xs uppercase tracking-wider">Total payé</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Date</th>
+                            </tr>
+                        </thead>
+                        <tbody id="singleDrawsTbody" class="divide-y divide-gold/10">
+                            <tr><td colspan="5" class="px-5 py-8 text-center text-light-gold/40 text-sm">Chargement…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div id="singleDrawsPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)] border-t border-gold/20 text-light-gold/50 text-sm"></div>
+            </div>
+        </section>
+        </div><!-- /tab-single-draws -->
+
+        <!-- ══ ONGLET : SUPPORT / TÉMOIGNAGES (#30) ══ -->
+        <div id="tab-support" class="tab-panel">
+        <section class="mb-10">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="cormorant text-2xl font-bold text-gold">Support · Témoignages · Suggestions</h3>
+                    <p class="text-light-gold/50 text-sm mt-1">Messages reçus depuis l'espace membre</p>
+                </div>
+                <button onclick="loadSupportMessages()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
+            </div>
+
+            <!-- Filtres -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-4 mb-4 flex flex-wrap gap-3">
+                <select id="supportTypeFilter" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold" onchange="loadSupportMessages()">
+                    <option value="all">Tous les types</option>
+                    <option value="support">Support</option>
+                    <option value="temoignage">Témoignages</option>
+                    <option value="suggestion">Suggestions</option>
+                </select>
+                <select id="supportStatusFilter" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold" onchange="loadSupportMessages()">
+                    <option value="all">Tous statuts</option>
+                    <option value="new">Nouveaux</option>
+                    <option value="read">Lus</option>
+                    <option value="replied">Répondus</option>
+                    <option value="archived">Archivés</option>
+                </select>
+            </div>
+
+            <!-- Liste des messages -->
+            <div id="supportMessagesList" class="space-y-3">
+                <p class="text-light-gold/40 text-sm text-center py-8">Chargement…</p>
+            </div>
+            <div id="supportPagination" class="mt-4 text-light-gold/50 text-sm text-center"></div>
+        </section>
+        </div><!-- /tab-support -->
+
+        <!-- ══ ONGLET : SYNCHRONICITÉS (#31) ══ -->
+        <div id="tab-synchronicity" class="tab-panel">
+        <section class="mb-10">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="cormorant text-2xl font-bold text-gold">Étude — Synchronicités</h3>
+                    <p class="text-light-gold/50 text-sm mt-1">Réponses anonymes au questionnaire post-fenêtre d'observation</p>
+                </div>
+                <button onclick="loadSynchronicity()" class="bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-lg px-4 py-2 text-sm hover:bg-teal-500/30 transition">
+                    <i class="fas fa-sync-alt mr-1"></i>Actualiser
+                </button>
+            </div>
+
+            <!-- KPIs -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="syncKpiRow">
+                <div class="stat-card rounded-xl p-5">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Réponses</div>
+                    <div class="text-2xl font-bold text-teal-300" id="syncTotal">—</div>
+                </div>
+                <div class="stat-card rounded-xl p-5">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Score moyen</div>
+                    <div class="text-2xl font-bold text-gold" id="syncAvgScore">—</div>
+                    <div class="text-light-gold/40 text-xs">/ 10</div>
+                </div>
+                <div class="stat-card rounded-xl p-5 col-span-2">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Distribution des scores</div>
+                    <div id="syncScoreBar" class="flex items-end gap-1 mt-2" style="height:48px;">
+                        <!-- Barres générées en JS -->
+                    </div>
+                    <div class="flex justify-between text-light-gold/30 text-xs mt-1">
+                        <span>1</span><span>5</span><span>10</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grille de stats qualitatives -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+
+                <!-- Types de synchronicités -->
+                <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5">
+                    <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider">Types de synchronicités</h4>
+                    <div id="syncTypes" class="space-y-2 text-sm text-light-gold/70">—</div>
+                </div>
+
+                <!-- Résonance avec le tirage -->
+                <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5">
+                    <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider">Résonance avec le tirage</h4>
+                    <div id="syncResonance" class="space-y-2 text-sm text-light-gold/70">—</div>
+                </div>
+
+                <!-- État intérieur -->
+                <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5">
+                    <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider">État intérieur</h4>
+                    <div id="syncEtat" class="space-y-2 text-sm text-light-gold/70">—</div>
+                </div>
+
+                <!-- Taux de réponse qualitative -->
+                <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5">
+                    <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider">Qualité des réponses</h4>
+                    <div id="syncQuality" class="space-y-3 text-sm text-light-gold/70">—</div>
+                </div>
+            </div>
+
+            <!-- Témoignages récents -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5">
+                <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider">Témoignages récents</h4>
+                <div id="syncTemoignages" class="space-y-3">—</div>
+            </div>
+        </section>
+        </div><!-- /tab-synchronicity -->
+
     </main>
     </div><!-- /main-content -->
 
     <script>
         // ── Navigation sidebar ─────────────────────────────────────────────────────
         const TAB_TITLES = {
-            overview:    'Tableau de bord',
-            preorders:   'Précommandes',
-            donors:      'Dons',
-            waitlist:    'Waitlist',
+            overview:       'Tableau de bord',
+            preorders:      'Précommandes',
+            donors:         'Dons',
+            waitlist:       'Waitlist',
             newsletter:     'Newsletter',
             journal:        'Journal admin',
-            subscriptions:  'Abonnements Tore'
+            subscriptions:  'Abonnements Tore',
+            'single-draws':  'Tirages ponctuels',
+            support:         'Support · Témoignages · Suggestions',
+            synchronicity:   'Étude — Synchronicités'
         };
 
         function showTab(name) {
@@ -864,8 +1088,11 @@
             const title = document.getElementById('topbar-title');
             if (title) title.textContent = TAB_TITLES[name] || '';
             window.scrollTo({ top: 0, behavior: 'smooth' });
-            if (name === 'newsletter') nlLoadDrafts();
+            if (name === 'newsletter')    nlLoadDrafts();
             if (name === 'subscriptions') loadSubscriptions();
+            if (name === 'single-draws')   loadSingleDraws();
+            if (name === 'support')        loadSupportMessages();
+            if (name === 'synchronicity')  loadSynchronicity();
         }
 
         // ── État global
@@ -960,11 +1187,6 @@
                     return parsed.token || null;
                 }
             } catch(e) {}
-            // Fallback : lire depuis le hash URL
-            const hash = window.location.hash;
-            if (hash.startsWith('#t=')) {
-                return decodeURIComponent(hash.slice(3));
-            }
             return null;
         }
 
@@ -1160,6 +1382,69 @@
             animateProgress('preordersTotalProgress', Math.min((data.preorders.total / 1000) * 100, 100));
             animateProgress('donorsProgress', Math.min((data.donors.count / 50) * 100, 100));
             animateProgress('waitlistProgress', Math.min((data.waitlist.count / 200) * 100, 100));
+
+            // ── Tirages ponctuels (#28) ──
+            const sd = data.singleDraws || {};
+            updateElement('singleDrawsCount',     sd.count     || 0);
+            updateElement('singleDrawsTotal',     formatCurrency(sd.total     || 0));
+            updateElement('singleDrawsCustomers', sd.customers || 0);
+            const sdBadge = document.getElementById('nav-badge-single-draws');
+            if (sdBadge) sdBadge.textContent = sd.count || '';
+
+            // ── Support badge (#30) ──
+            const sup = data.support || {};
+            const supBadge = document.getElementById('nav-badge-support');
+            if (supBadge && sup.newCount) supBadge.textContent = sup.newCount;
+            const supBanner = document.getElementById('supportAlertBanner');
+            const supText   = document.getElementById('supportAlertText');
+            if (supBanner && sup.newCount > 0) {
+                supBanner.classList.remove('hidden');
+                if (supText) supText.textContent = `${sup.newCount} nouveau${sup.newCount > 1 ? 'x' : ''} message${sup.newCount > 1 ? 's' : ''} de support en attente`;
+            }
+
+            // ── Synchronicités — badge overview (#31) ──
+            const sync = data.synchronicity || {};
+            const syncNavBadge = document.getElementById('nav-badge-synchronicity');
+            if (syncNavBadge && sync.total) syncNavBadge.textContent = sync.total;
+
+            // ── Camembert revenus (#29) ──
+            updatePieChart(data.global?.breakdown || {});
+        }
+
+        // Dessine le donut SVG — technique stroke-dasharray sur cercle r=15.9 (circonf≈99.9)
+        function updatePieChart(breakdown) {
+            const total = (breakdown.preorders || 0) + (breakdown.donors || 0) + (breakdown.singleDraws || 0);
+            if (total <= 0) return;
+
+            const fmtEur = v => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(v);
+            updateElement('pie-center-total',        fmtEur(total));
+            updateElement('pie-label-preorders',     fmtEur(breakdown.preorders   || 0));
+            updateElement('pie-label-donors',        fmtEur(breakdown.donors      || 0));
+            updateElement('pie-label-singledraws',   fmtEur(breakdown.singleDraws || 0));
+
+            // Circonf SVG ≈ 99.9 (2πr = 2π×15.9)
+            const C = 99.9;
+            const pctPre = (breakdown.preorders   || 0) / total;
+            const pctDon = (breakdown.donors      || 0) / total;
+            const pctSd  = (breakdown.singleDraws || 0) / total;
+
+            const lenPre = pctPre * C;
+            const lenDon = pctDon * C;
+            const lenSd  = pctSd  * C;
+
+            const offPre = 0;
+            const offDon = offPre + lenPre;
+            const offSd  = offDon + lenDon;
+
+            const setArc = (id, len, offset) => {
+                const el = document.getElementById(id);
+                if (!el) return;
+                el.setAttribute('stroke-dasharray', `${len.toFixed(2)} ${(C - len).toFixed(2)}`);
+                el.setAttribute('stroke-dashoffset', (-offset).toFixed(2));
+            };
+            setArc('pie-preorders',   lenPre, offPre);
+            setArc('pie-donors',      lenDon, offDon);
+            setArc('pie-singledraws', lenSd,  offSd);
         }
         
         // Animer les barres de progression
@@ -2430,6 +2715,283 @@
             nlLoadDrafts();
             nlLoadIdeas();
         });
+
+        // ══ TIRAGES PONCTUELS (#28) ══════════════════════════════════════════════
+        let sdPage = 1;
+
+        async function loadSingleDraws(page = 1) {
+            sdPage = page;
+            const tbody = document.getElementById('singleDrawsTbody');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-8 text-center text-light-gold/40 text-sm">Chargement…</td></tr>';
+
+            try {
+                const res  = await adminFetch(`/api/admin/data?section=single-draws&page=${page}&limit=20`);
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+
+                const rows = data.data || [];
+                const pg   = data.pagination || {};
+
+                // KPI résumé
+                const totalCredits  = rows.reduce((s, r) => s + (r.single_draw_credits || 0), 0);
+                const totalRevenue  = (totalCredits * 3.90).toFixed(2).replace('.', ',') + ' €';
+                updateElement('sd-total-credits',   totalCredits);
+                updateElement('sd-total-revenue',   totalRevenue);
+                updateElement('sd-total-customers', pg.total || rows.length);
+
+                if (rows.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-8 text-center text-light-gold/40 text-sm">Aucun achat ponctuel enregistré.</td></tr>';
+                    return;
+                }
+
+                const typeLabel = { single_draw: 'Ponctuel', active: 'Abonné' };
+                tbody.innerHTML = rows.map(r => `
+                    <tr class="hover:bg-gold/5 transition-colors">
+                        <td class="px-5 py-3 text-sm text-light-gold">${r.email || '—'}</td>
+                        <td class="px-5 py-3 text-sm text-light-gold/70">${r.full_name || '—'}</td>
+                        <td class="px-5 py-3 text-center">
+                            <span class="inline-block bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-full px-3 py-0.5 text-sm font-semibold">${r.single_draw_credits || 0}</span>
+                        </td>
+                        <td class="px-5 py-3 text-right text-sm font-semibold text-gold">${r.total_spent_eur}</td>
+                        <td class="px-5 py-3 text-sm text-light-gold/50">${r.created_at_fr || '—'}</td>
+                    </tr>`).join('');
+
+                // Pagination
+                const pgEl = document.getElementById('singleDrawsPagination');
+                if (pgEl && pg.pages > 1) {
+                    let btns = '';
+                    for (let i = 1; i <= pg.pages; i++) {
+                        btns += `<button onclick="loadSingleDraws(${i})" class="px-3 py-1 rounded text-sm mx-0.5 ${i === pg.page ? 'bg-gold text-night-blue font-semibold' : 'bg-gold/10 text-gold hover:bg-gold/20'} transition">${i}</button>`;
+                    }
+                    pgEl.innerHTML = `<span class="mr-2 text-light-gold/50">Page ${pg.page}/${pg.pages} · ${pg.total} clients</span>${btns}`;
+                } else if (pgEl) {
+                    pgEl.innerHTML = `<span class="text-light-gold/40">${pg.total || rows.length} client${(pg.total || rows.length) > 1 ? 's' : ''}</span>`;
+                }
+            } catch (e) {
+                console.error('[Admin] loadSingleDraws error:', e);
+                if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-8 text-center text-red-400 text-sm">Erreur de chargement.</td></tr>';
+            }
+        }
+
+        // ══ SUPPORT / TÉMOIGNAGES (#30) ══════════════════════════════════════════
+        let supPage = 1;
+
+        async function loadSupportMessages(page = 1) {
+            supPage = page;
+            const list = document.getElementById('supportMessagesList');
+            if (!list) return;
+            list.innerHTML = '<p class="text-light-gold/40 text-sm text-center py-8">Chargement…</p>';
+
+            const type   = document.getElementById('supportTypeFilter')?.value   || 'all';
+            const status = document.getElementById('supportStatusFilter')?.value || 'all';
+
+            try {
+                const res  = await adminFetch(`/api/admin/data?section=support&page=${page}&limit=20&type=${type}&status=${status}`);
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+
+                const rows = data.data || [];
+                const pg   = data.pagination || {};
+
+                if (rows.length === 0) {
+                    list.innerHTML = '<p class="text-light-gold/40 text-sm text-center py-8">Aucun message pour ces filtres.</p>';
+                    return;
+                }
+
+                const typeColors = {
+                    support:    'bg-blue-500/20 text-blue-300 border-blue-500/30',
+                    temoignage: 'bg-green-500/20 text-green-300 border-green-500/30',
+                    suggestion: 'bg-yellow-500/20 text-yellow-300 border-yellow-500/30'
+                };
+                const typeLabels = { support:'Support', temoignage:'Témoignage', suggestion:'Suggestion' };
+                const statusColors = {
+                    new:      'bg-orange-500/20 text-orange-300',
+                    read:     'bg-gold/10 text-gold/70',
+                    replied:  'bg-green-500/20 text-green-300',
+                    archived: 'bg-light-gold/10 text-light-gold/30'
+                };
+                const statusLabels = { new:'Nouveau', read:'Lu', replied:'Répondu', archived:'Archivé' };
+
+                list.innerHTML = rows.map(r => `
+                    <div class="bg-[rgba(5,20,40,0.6)] border ${r.status==='new' ? 'border-orange-500/40' : 'border-gold/20'} rounded-xl p-5">
+                        <div class="flex flex-wrap items-center gap-2 mb-3">
+                            <span class="text-xs px-2 py-0.5 rounded-full border ${typeColors[r.type] || 'bg-gold/10 text-gold border-gold/20'}">${typeLabels[r.type] || r.type}</span>
+                            <span class="text-xs px-2 py-0.5 rounded-full ${statusColors[r.status] || ''}">${statusLabels[r.status] || r.status}</span>
+                            <span class="text-xs text-light-gold/40 ml-auto">${r.created_at_fr}</span>
+                        </div>
+                        <div class="flex flex-wrap items-baseline gap-2 mb-2">
+                            <span class="text-light-gold font-semibold text-sm">${escapeHtmlFront(r.name || 'Anonyme')}</span>
+                            <span class="text-light-gold/50 text-xs">${escapeHtmlFront(r.email)}</span>
+                            ${r.sujet    ? `<span class="text-light-gold/60 text-xs">· Sujet : ${escapeHtmlFront(r.sujet)}</span>` : ''}
+                            ${r.categorie? `<span class="text-light-gold/60 text-xs">· Catégorie : ${escapeHtmlFront(r.categorie)}</span>` : ''}
+                        </div>
+                        <p class="text-light-gold/80 text-sm leading-relaxed whitespace-pre-wrap mb-3">${escapeHtmlFront(r.message)}</p>
+                        <div class="flex flex-wrap gap-2">
+                            ${r.status !== 'read'     ? `<button onclick="updateSupportMsg('${r.id}','read')"     class="text-xs bg-gold/10 text-gold border border-gold/20 rounded-lg px-3 py-1 hover:bg-gold/20 transition">Marquer lu</button>` : ''}
+                            ${r.status !== 'replied'  ? `<button onclick="updateSupportMsg('${r.id}','replied')"  class="text-xs bg-green-500/10 text-green-300 border border-green-500/20 rounded-lg px-3 py-1 hover:bg-green-500/20 transition">Répondu</button>` : ''}
+                            ${r.status !== 'archived' ? `<button onclick="updateSupportMsg('${r.id}','archived')" class="text-xs bg-light-gold/10 text-light-gold/50 border border-light-gold/10 rounded-lg px-3 py-1 hover:bg-light-gold/20 transition">Archiver</button>` : ''}
+                            <a href="mailto:${escapeHtmlFront(r.email)}?subject=Re: Oradia" class="text-xs bg-blue-500/10 text-blue-300 border border-blue-500/20 rounded-lg px-3 py-1 hover:bg-blue-500/20 transition"><i class="fas fa-reply mr-1"></i>Répondre par email</a>
+                        </div>
+                        ${r.admin_note ? `<p class="mt-3 text-xs text-light-gold/40 italic border-t border-gold/10 pt-2">Note admin : ${escapeHtmlFront(r.admin_note)}</p>` : ''}
+                    </div>`).join('');
+
+                // Pagination
+                const pgEl = document.getElementById('supportPagination');
+                if (pgEl && pg.pages > 1) {
+                    let btns = '';
+                    for (let i = 1; i <= pg.pages; i++) {
+                        btns += `<button onclick="loadSupportMessages(${i})" class="px-3 py-1 rounded text-sm mx-0.5 ${i === pg.page ? 'bg-gold text-night-blue font-semibold' : 'bg-gold/10 text-gold hover:bg-gold/20'} transition">${i}</button>`;
+                    }
+                    pgEl.innerHTML = btns;
+                } else if (pgEl) {
+                    pgEl.innerHTML = '';
+                }
+            } catch (e) {
+                console.error('[Admin] loadSupportMessages error:', e);
+                list.innerHTML = '<p class="text-red-400 text-sm text-center py-8">Erreur de chargement.</p>';
+            }
+        }
+
+        async function updateSupportMsg(id, status) {
+            try {
+                const res = await adminFetch('/api/admin/support-update', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, status })
+                });
+                const data = await res.json();
+                if (data.success) loadSupportMessages(supPage);
+            } catch (e) {
+                console.error('[Admin] updateSupportMsg error:', e);
+            }
+        }
+
+        function escapeHtmlFront(text) {
+            if (!text) return '';
+            return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // ── SYNCHRONICITÉS (#31) ──────────────────────────────────────────────────
+        async function loadSynchronicity() {
+            const setEl = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+            setEl('syncTotal',    '<span class="animate-pulse">…</span>');
+            setEl('syncAvgScore', '<span class="animate-pulse">…</span>');
+
+            try {
+                const res  = await adminFetch('/api/admin/data?section=synchronicity');
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+
+                const d = data.data;
+
+                // KPIs simples
+                setEl('syncTotal',    d.total > 0 ? d.total : '0');
+                setEl('syncAvgScore', d.avgScore !== null ? d.avgScore : '—');
+
+                // Badge nav
+                const badge = document.getElementById('nav-badge-synchronicity');
+                if (badge) badge.textContent = d.total > 0 ? d.total : '';
+
+                // Distribution scores — barres verticales proportionnelles
+                const maxCount = Math.max(...d.scoreDistrib.map(s => s.count), 1);
+                const barHtml = d.scoreDistrib.map(s => {
+                    const pct = Math.round((s.count / maxCount) * 100);
+                    const colorClass = s.score <= 3 ? '#6b7280' : s.score <= 6 ? '#d4af37' : '#5eead4';
+                    return `<div style="flex:1;display:flex;flex-direction:column;align-items:center;gap:2px;">
+                        <span style="font-size:9px;color:rgba(212,175,55,0.5);">${s.count > 0 ? s.count : ''}</span>
+                        <div style="width:100%;height:${Math.max(pct * 0.4, s.count > 0 ? 4 : 1)}px;background:${colorClass};border-radius:2px 2px 0 0;opacity:${s.count > 0 ? 1 : 0.2};transition:height 0.4s;"></div>
+                    </div>`;
+                }).join('');
+                setEl('syncScoreBar', barHtml);
+
+                // Types de synchronicités
+                const typeLabels = {
+                    rencontres: 'Rencontres inattendues',
+                    intuitions: 'Pensées/intuitions réalisées',
+                    timing:     'Coïncidences de timing',
+                    reves:      'Rêves en lien',
+                    signes:     'Signes environnement',
+                    aucune:     'Aucune en particulier'
+                };
+                const typeSorted = Object.entries(d.typeCounts).sort((a, b) => b[1] - a[1]);
+                const maxType = typeSorted[0]?.[1] || 1;
+                setEl('syncTypes', d.total === 0 ? '<span class="text-light-gold/30 italic">Pas encore de données</span>' :
+                    typeSorted.map(([k, v]) => `
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span>${typeLabels[k] || k}</span>
+                                <span class="text-teal-300">${v}</span>
+                            </div>
+                            <div style="height:4px;background:rgba(212,175,55,0.1);border-radius:2px;">
+                                <div style="height:4px;width:${Math.round(v/maxType*100)}%;background:#5eead4;border-radius:2px;transition:width 0.4s;"></div>
+                            </div>
+                        </div>`).join('') || '<span class="text-light-gold/30 italic">Pas de données types</span>');
+
+                // Résonance
+                const resonanceLabels = { fort: 'Fortement', plutot_oui: 'Plutôt oui', peu: 'Peu', non: 'Pas du tout', null: 'Non renseigné' };
+                const resonanceColors = { fort: '#d4af37', plutot_oui: '#86efac', peu: '#fb923c', non: '#f87171', null: '#9ca3af' };
+                const resonanceEntries = Object.entries(d.resonanceCounts).filter(([k, v]) => k !== 'null' || v > 0);
+                const maxRes = Math.max(...resonanceEntries.map(e => e[1]), 1);
+                setEl('syncResonance', d.total === 0 ? '<span class="text-light-gold/30 italic">Pas encore de données</span>' :
+                    resonanceEntries.map(([k, v]) => `
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span>${resonanceLabels[k] || k}</span>
+                                <span style="color:${resonanceColors[k] || '#9ca3af'}">${v}</span>
+                            </div>
+                            <div style="height:4px;background:rgba(212,175,55,0.1);border-radius:2px;">
+                                <div style="height:4px;width:${Math.round(v/maxRes*100)}%;background:${resonanceColors[k] || '#9ca3af'};border-radius:2px;transition:width 0.4s;"></div>
+                            </div>
+                        </div>`).join(''));
+
+                // État intérieur
+                const etatLabels  = { calme: 'Plus calme / centré', alerte: 'Plus alerte / attentif', neutre: 'Neutre', perturbe: 'Perturbé / agité', null: 'Non renseigné' };
+                const etatColors  = { calme: '#5eead4', alerte: '#93c5fd', neutre: '#d4af37', perturbe: '#f87171', null: '#9ca3af' };
+                const etatEntries = Object.entries(d.etatCounts).filter(([k, v]) => k !== 'null' || v > 0);
+                const maxEtat = Math.max(...etatEntries.map(e => e[1]), 1);
+                setEl('syncEtat', d.total === 0 ? '<span class="text-light-gold/30 italic">Pas encore de données</span>' :
+                    etatEntries.map(([k, v]) => `
+                        <div>
+                            <div class="flex justify-between mb-1">
+                                <span>${etatLabels[k] || k}</span>
+                                <span style="color:${etatColors[k] || '#9ca3af'}">${v}</span>
+                            </div>
+                            <div style="height:4px;background:rgba(212,175,55,0.1);border-radius:2px;">
+                                <div style="height:4px;width:${Math.round(v/maxEtat*100)}%;background:${etatColors[k] || '#9ca3af'};border-radius:2px;transition:width 0.4s;"></div>
+                            </div>
+                        </div>`).join(''));
+
+                // Qualité des réponses
+                const withType = Object.values(d.typeCounts).reduce((s, v) => s + v, 0);
+                const withResonance = Object.entries(d.resonanceCounts).filter(([k]) => k !== 'null').reduce((s, [, v]) => s + v, 0);
+                const withEtat = Object.entries(d.etatCounts).filter(([k]) => k !== 'null').reduce((s, [, v]) => s + v, 0);
+                const withTemoignage = d.temoignages.length;
+                const pct = (n) => d.total > 0 ? Math.round(n / d.total * 100) : 0;
+                setEl('syncQuality', d.total === 0 ? '<span class="text-light-gold/30 italic">Pas encore de données</span>' : `
+                    <div class="flex justify-between"><span>Types renseignés</span><span class="text-teal-300">${pct(withType)}%</span></div>
+                    <div class="flex justify-between"><span>Résonance renseignée</span><span class="text-teal-300">${pct(withResonance)}%</span></div>
+                    <div class="flex justify-between"><span>État renseigné</span><span class="text-teal-300">${pct(withEtat)}%</span></div>
+                    <div class="flex justify-between"><span>Témoignage écrit</span><span class="text-teal-300">${pct(withTemoignage)}%</span></div>`);
+
+                // Témoignages
+                setEl('syncTemoignages', d.temoignages.length === 0
+                    ? '<p class="text-light-gold/30 text-sm italic">Aucun témoignage pour l\'instant.</p>'
+                    : d.temoignages.map(t => `
+                        <div class="bg-[rgba(5,20,40,0.6)] border border-gold/15 rounded-xl p-4">
+                            <p class="text-light-gold/80 text-sm leading-relaxed italic">"${escapeHtmlFront(t.temoignage)}"</p>
+                            <p class="text-light-gold/30 text-xs mt-2">${new Date(t.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' })}</p>
+                        </div>`).join(''));
+
+            } catch (e) {
+                console.error('[Admin] loadSynchronicity error:', e);
+                document.getElementById('syncTotal')?.closest('section')?.querySelectorAll('[id^=sync]').forEach(el => {
+                    if (el.tagName !== 'DIV' || el.id === 'syncKpiRow') return;
+                    el.innerHTML = '<span class="text-red-400 text-xs">Erreur</span>';
+                });
+            }
+        }
+
     </script>
 </body>
 </html>

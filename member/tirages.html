@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Historique des Tirages - ORADIA</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="../js/tirages-storage.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../style.css">
     
@@ -244,9 +245,13 @@
             } catch(e) {}
         })();
 
-        // Afficher les tirages depuis localStorage
-        (function() {
-            const tirages = JSON.parse(localStorage.getItem('oradia_tirages') || '[]');
+        // Afficher les tirages — Supabase (RLS par user_id) si connecté, sinon historique local "invité"
+        let _tiragesCache = [];
+        (async function() {
+            const tirages = window.OradiaTirageStorage
+                ? await window.OradiaTirageStorage.loadTirages()
+                : JSON.parse(localStorage.getItem('oradia_tirages_invite') || '[]');
+            _tiragesCache = tirages;
             const container = document.getElementById('tiragesList');
             const info = document.getElementById('totalInfo');
 
@@ -343,10 +348,12 @@
             }).join('');
         })();
 
-        // Téléchargement PDF élégant — fenêtre dédiée style synthèse/mail
+        // Téléchargement PDF élégant — Palier 3 #22 : design aligné sur le mail d'analyse,
+        // ajout de la fenêtre d'observation et amélioration visuelle globale.
         function downloadPDF(tirageIdx) {
-            const tirages = JSON.parse(localStorage.getItem('oradia_tirages') || '[]');
-            const all = tirages.slice().reverse();
+            // Réutilise les données déjà chargées (et sécurisées via RLS) au rendu de la liste —
+            // évite un aller-retour réseau et reste cohérent avec ce qui est affiché à l'écran.
+            const all = _tiragesCache.slice().reverse();
             const t = all[tirageIdx];
             if (!t) return;
 
@@ -355,76 +362,110 @@
             const date = t.date ? new Date(t.date).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) : '—';
 
             const cartesBadgesHtml = t.cartes ? t.cartes.map(c =>
-                `<span style="display:inline-block;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.5);color:#b8922e;border-radius:5px;padding:4px 11px;font-size:13px;margin:3px;">${c}</span>`
+                `<span style="display:inline-block;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.45);color:#8b6914;border-radius:6px;padding:5px 13px;font-size:13px;font-family:'Cormorant Garamond',serif;margin:3px;">${c}</span>`
             ).join('') : '';
 
             const interpretationsSection = t.interpretations && t.interpretations.length ? `
-                <div style="margin-top:20px;">
-                    <p style="font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#b8922e;margin-bottom:12px;">Interprétations</p>
+                <div style="margin-top:24px;">
+                    <p class="sl">Interprétations des cartes</p>
                     ${t.interpretations.map(i => `
-                        <div style="margin-bottom:14px;padding-left:14px;border-left:2px solid #d4af37;">
-                            <p style="color:#8b6914;font-size:12px;font-weight:700;margin-bottom:3px;text-transform:uppercase;letter-spacing:.06em;">${i.position || ''} — ${i.carte || ''}</p>
-                            <p style="color:#2d2a1e;font-size:13.5px;line-height:1.7;">${i.texte || ''}</p>
+                        <div style="margin-bottom:16px;padding:14px 16px 12px;border-left:3px solid #d4af37;background:#fffbf0;border-radius:0 8px 8px 0;">
+                            <p style="color:#8b6914;font-size:11px;font-weight:700;margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em;">${i.position || ''} — ${i.carte || ''}</p>
+                            <p style="color:#2d2a1e;font-size:13.5px;line-height:1.75;">${i.texte || ''}</p>
                         </div>`).join('')}
                 </div>` : '';
 
             const passerellesSection = t.passerelles && t.passerelles.length ? `
-                <div style="margin-top:18px;">
-                    <p style="font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#b8922e;margin-bottom:10px;">Cartes passerelles</p>
+                <div style="margin-top:20px;">
+                    <p class="sl">Cartes passerelles</p>
                     <div style="display:flex;flex-wrap:wrap;gap:6px;">
                         ${t.passerelles.map(p =>
-                            `<span style="background:#f5e7a1;border:1px solid #d4af37;border-radius:5px;padding:4px 10px;font-size:12px;color:#5a4010;">${p.carte} → <strong style="color:#8b6914;">${p.passerelle}</strong></span>`
+                            `<span style="background:#fffbef;border:1px solid #d4af37;border-radius:6px;padding:5px 12px;font-size:13px;color:#5a4010;">${p.carte} → <strong style="color:#8b6914;">${p.passerelle}</strong></span>`
                         ).join('')}
                     </div>
                 </div>` : '';
 
             const syntheseSection = t.synthese ? `
-                <div style="margin-top:22px;padding:16px 20px;background:linear-gradient(135deg,rgba(212,175,55,0.08),rgba(212,175,55,0.03));border:1px solid rgba(212,175,55,0.3);border-radius:10px;">
-                    <p style="font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#b8922e;margin-bottom:10px;">Synthèse</p>
-                    <p style="color:#2d2a1e;font-size:14px;line-height:1.85;font-style:italic;">${t.synthese}</p>
+                <div class="hr"></div>
+                <div style="padding:18px 20px;background:linear-gradient(135deg,rgba(212,175,55,0.07),rgba(212,175,55,0.02));border:1px solid rgba(212,175,55,0.28);border-radius:12px;">
+                    <p class="sl">Synthèse de l'Oracle</p>
+                    <p style="color:#2d2a1e;font-size:14.5px;line-height:1.9;font-style:italic;">${t.synthese}</p>
+                </div>` : '';
+
+            // Fenêtre d'observation — nouvelle section (Palier 3 #22)
+            const obsWin = t.observation_window || t.observationWindow || null;
+            const observationSection = obsWin ? `
+                <div class="hr"></div>
+                <div style="padding:18px 20px;background:#f0f8ff;border:1px solid #b0c4de;border-radius:12px;">
+                    <p class="sl" style="color:#1e3a5f;">🌍 Fenêtre d'observation — ${obsWin.durationDays || '?'} jour${(obsWin.durationDays || 1) > 1 ? 's' : ''}</p>
+                    ${obsWin.closesAt ? `<p style="color:#4a6a8a;font-size:12px;margin-bottom:10px;">Clôture le ${new Date(obsWin.closesAt).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' })}</p>` : ''}
+                    ${obsWin.observationText ? `<p style="color:#2d4a6a;font-size:13.5px;line-height:1.8;margin-bottom:12px;">${obsWin.observationText}</p>` : ''}
+                    ${obsWin.attentionPoints && obsWin.attentionPoints.length ? `
+                    <div style="background:#e8f0f8;border-radius:8px;padding:12px 14px;margin-top:6px;">
+                        <p style="color:#1e3a5f;font-size:11px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Points d'attention</p>
+                        ${obsWin.attentionPoints.map(pt => `<p style="color:#2d4a6a;font-size:13px;line-height:1.65;margin-bottom:6px;">› ${pt}</p>`).join('')}
+                    </div>` : ''}
                 </div>` : '';
 
             const html = `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="UTF-8">
 <title>Oracle Oradia — ${t.type || 'Tirage'}</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:'Cormorant Garamond',Georgia,serif;background:#f7f3ec;color:#2d2a1e;padding:32px 20px;}
-  .page{max-width:620px;margin:0 auto;}
-  .card{background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 4px 32px rgba(180,140,40,0.13);border:1px solid rgba(212,175,55,0.25);}
-  .card-header{background:linear-gradient(160deg,#0a192f 0%,#1a365d 100%);padding:28px 30px 22px;text-align:center;}
-  .logo-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:16px;}
-  .logo-row img{width:52px;height:52px;border-radius:50%;border:2px solid rgba(212,175,55,0.55);}
-  .brand{font-size:26px;font-weight:700;letter-spacing:.3em;background:linear-gradient(135deg,#f0c75e,#d4af37);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;}
-  .oracle-label{font-size:10px;color:rgba(212,175,55,0.4);letter-spacing:.4em;text-transform:uppercase;margin-top:2px;}
-  .divider{width:50px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:14px auto 0;}
-  .tirage-meta{background:rgba(2,10,24,0.92);padding:14px 30px;display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid rgba(212,175,55,0.2);}
-  .tirage-type{font-size:18px;font-weight:700;color:#f0c75e;}
-  .tirage-date{font-size:11.5px;color:rgba(212,175,55,0.45);text-transform:capitalize;}
-  .tirage-member{font-size:11.5px;color:rgba(212,175,55,0.5);}
-  .card-body{padding:26px 30px;}
-  .section-label{font-size:10px;text-transform:uppercase;letter-spacing:.12em;color:#b8922e;margin-bottom:8px;}
-  .intention-box{padding:12px 16px;background:#fffbf0;border-left:3px solid #d4af37;border-radius:0 8px 8px 0;margin-bottom:18px;}
-  .intention-text{font-size:14px;font-style:italic;color:#3d3520;line-height:1.65;}
-  .hr{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.25),transparent);margin:18px 0;}
-  .card-footer{background:#f0ebe0;padding:16px 30px;text-align:center;border-top:1px solid rgba(212,175,55,0.15);}
-  .card-footer p{font-size:11px;color:rgba(120,100,50,0.55);letter-spacing:.06em;}
+  body{font-family:'Lora',Georgia,serif;background:#f4f0e8;color:#2d2a1e;padding:28px 16px;}
+  .page{max-width:640px;margin:0 auto;}
+  .card{background:#fff;border-radius:0;overflow:hidden;box-shadow:0 6px 40px rgba(150,110,20,0.14);border:1px solid rgba(212,175,55,0.3);}
+
+  /* En-tête sombre — calqué sur le mail d'analyse */
+  .card-header{background:linear-gradient(150deg,#07142a 0%,#0a192f 60%,#112240 100%);padding:32px 36px 24px;text-align:center;}
+  .logo-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:18px;}
+  .logo-row img{width:50px;height:50px;border-radius:50%;border:1.5px solid rgba(212,175,55,0.5);}
+  .brand{font-size:28px;font-weight:700;letter-spacing:.32em;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;}
+  .oracle-label{font-size:9.5px;color:rgba(212,175,55,0.45);letter-spacing:.45em;text-transform:uppercase;margin-top:3px;}
+  .header-divider{width:56px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:14px auto 16px;}
+  .header-tagline{font-size:12px;color:rgba(212,175,55,0.5);font-style:italic;letter-spacing:.04em;}
+
+  /* Bandeau méta — date, type, membre */
+  .tirage-meta{background:#02061a;padding:14px 36px;display:flex;justify-content:space-between;align-items:center;}
+  .tirage-type{font-size:17px;font-weight:700;color:#f0c75e;font-family:'Cormorant Garamond',serif;letter-spacing:.04em;}
+  .tirage-date{font-size:11px;color:rgba(212,175,55,0.42);text-transform:capitalize;margin-top:2px;}
+  .tirage-member{font-size:11.5px;color:rgba(212,175,55,0.48);}
+
+  /* Corps */
+  .card-body{padding:28px 36px;}
+  .sl{font-family:'Cormorant Garamond',serif;font-size:10.5px;text-transform:uppercase;letter-spacing:.16em;color:#b8922e;margin-bottom:10px;font-weight:700;}
+  .hr{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.22),transparent);margin:22px 0;}
+  .intention-box{padding:14px 18px;background:#fffbf0;border-left:3px solid #d4af37;border-radius:0 8px 8px 0;margin-bottom:20px;}
+  .intention-text{font-size:14.5px;font-style:italic;color:#3d3520;line-height:1.7;}
+
+  /* Pied de page */
+  .card-footer{background:#07142a;padding:18px 36px;text-align:center;border-top:1px solid rgba(212,175,55,0.18);}
+  .card-footer p{font-size:10.5px;color:rgba(212,175,55,0.35);letter-spacing:.06em;}
+
   @media print{
     body{background:#fff;padding:0;}
-    .card{box-shadow:none;border-radius:0;}
+    .card{box-shadow:none;}
     *{-webkit-print-color-adjust:exact!important;print-color-adjust:exact!important;color-adjust:exact!important;}
   }
 </style></head><body>
 <div class="page">
   <div class="card">
+
+    <!-- En-tête — calqué sur mail d'analyse -->
     <div class="card-header">
       <div class="logo-row">
         <img src="../images/logo-hd-v2.jpeg" alt="Oradia" onerror="this.style.display='none'">
-        <div><div class="brand">ORADIA</div><div class="oracle-label">Oracle intérieur</div></div>
+        <div>
+          <div class="brand">ORADIA</div>
+          <div class="oracle-label">Oracle intérieur</div>
+        </div>
       </div>
-      <div class="divider"></div>
+      <div class="header-divider"></div>
+      <p class="header-tagline">Révéler · Transmuter · Relier</p>
     </div>
+
+    <!-- Bandeau méta -->
     <div class="tirage-meta">
       <div>
         <div class="tirage-type">${t.type || 'Tirage Tore'}</div>
@@ -432,20 +473,40 @@
       </div>
       <div class="tirage-member">${name}</div>
     </div>
+
+    <!-- Corps -->
     <div class="card-body">
-      ${t.intention ? `<div class="intention-box"><p class="section-label">Intention posée</p><p class="intention-text">${t.intention}</p></div>` : ''}
-      ${cartesBadgesHtml ? `<div style="margin-bottom:16px;"><p class="section-label">Cartes tirées</p><div style="display:flex;flex-wrap:wrap;gap:6px;">${cartesBadgesHtml}</div></div>` : ''}
+
+      ${t.intention ? `
+        <div class="intention-box">
+          <p class="sl">Intention posée</p>
+          <p class="intention-text">« ${t.intention} »</p>
+        </div>` : ''}
+
+      ${cartesBadgesHtml ? `
+        <div style="margin-bottom:20px;">
+          <p class="sl">Cartes tirées</p>
+          <div style="display:flex;flex-wrap:wrap;gap:5px;">${cartesBadgesHtml}</div>
+        </div>` : ''}
+
       ${interpretationsSection}
       ${passerellesSection}
       ${syntheseSection}
+      ${observationSection}
+
     </div>
-    <div class="card-footer"><p>Oradia — Oracle de transformation intérieure · oradia.fr · ${new Date().getFullYear()}</p></div>
+
+    <!-- Pied de page -->
+    <div class="card-footer">
+      <p>Oracle Oradia · oradia.fr · contact@oradia.fr · ${new Date().getFullYear()}</p>
+    </div>
+
   </div>
 </div>
 <script>window.onload = function(){ window.print(); }<\/script>
 </body></html>`;
 
-            const w = window.open('', '_blank', 'width=750,height=900');
+            const w = window.open('', '_blank', 'width=780,height=960');
             w.document.write(html);
             w.document.close();
         }

@@ -78,23 +78,9 @@ module.exports = async (req, res) => {
         // Configuration URLs unique
         const frontendUrl = process.env.FRONTEND_URL || 'https://oradia.fr';
         
-        // ── Validation code Tore ─────────────────────────────────────────────
-        if (req.body.type === 'validate-tore-code') {
-            const code = (req.body.code || '').trim().toUpperCase();
-            if (!code || code.length < 4) return res.status(400).json({ valid: false });
-            const { data, error: sbErr } = await supabase
-                .from('tore_subscriptions')
-                .select('email, status, expires_at')
-                .eq('access_code', code)
-                .eq('status', 'active')
-                .maybeSingle();
-            if (sbErr) return res.status(500).json({ valid: false });
-            if (!data) return res.status(200).json({ valid: false });
-            if (new Date(data.expires_at) < new Date()) return res.status(200).json({ valid: false, error: 'Code expiré' });
-            return res.status(200).json({ valid: true, expiresAt: data.expires_at });
-        }
-
         // ── Création abonnement Tore ──────────────────────────────────────────
+        // Note : l'ancien système validate-tore-code (accès par code saisi) a été
+        // supprimé — l'accès est désormais géré par status='active' ou single_draw_credits > 0.
         if (req.body.type === 'tore-subscription') {
             const email    = (req.body.email || '').trim();
             const fullName = (req.body.fullName || '').trim();
