@@ -1684,6 +1684,12 @@
             window._obsSuggestedDays = days;
             document.querySelectorAll('.obs-duration-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
+            // Mettre à jour sessionStorage pour que doSendEmail récupère la bonne durée
+            try {
+                const d = JSON.parse(sessionStorage.getItem('tore_analysis_data') || '{}');
+                d.observationDays = days;
+                sessionStorage.setItem('tore_analysis_data', JSON.stringify(d));
+            } catch(_) {}
             
             // Mettre à jour l'affichage de la durée dans le message
             const durationDisplay = document.getElementById('obs-duration-display');
@@ -2051,6 +2057,11 @@
                             }
                         }
                     }
+                }
+
+                // Toujours utiliser la durée choisie par l'utilisateur (mise à jour par selectObsDuration)
+                if (typeof window._obsSuggestedDays === 'number' && window._obsSuggestedDays > 0) {
+                    observationDays = window._obsSuggestedDays;
                 }
 
                 // LOG pour debug (à retirer après confirmation)
