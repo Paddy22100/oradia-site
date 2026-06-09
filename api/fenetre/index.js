@@ -62,7 +62,7 @@ async function handleActivation(req, res) {
       closes_at: closesAt.toISOString(),
       // response_token généré automatiquement par la DB (DEFAULT gen_random_uuid())
     })
-    .select('id, response_token')
+    .select('id')
     .single();
 
   if (error) {
@@ -72,6 +72,7 @@ async function handleActivation(req, res) {
 
   // 2. Plus d'email séparé - les données seront envoyées avec l'email du tirage
   // La fenêtre d'observation est maintenant incluse dans l'email complet du tirage
+  // Note : response_token disponible après migration supabase-migration-synchronicity.sql
 
   return res.status(200).json({ success: true, closesAt: closesAt.toISOString() });
 }
@@ -107,7 +108,8 @@ async function handleClose(req, res) {
   let sent = 0;
   for (const win of windows) {
     try {
-      const emailHTML = buildClosingEmail(win, win.response_token);
+      // response_token disponible seulement après migration synchronicity
+      const emailHTML = buildClosingEmail(win, win.response_token || null);
 
       await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
