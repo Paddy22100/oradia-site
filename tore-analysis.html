@@ -1624,11 +1624,16 @@
             section.className = 'obs-window-wrap fade-in-up';
 
             section.innerHTML = `
-                <div style="background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.15); border-radius: 8px; padding: 12px 16px; margin-bottom: 1rem; font-size: 0.8rem; color: rgba(200,192,168,0.6); text-align: center; font-style: italic;">
-                    <i class="fas fa-info-circle" style="margin-right: 6px;"></i>
-                    La fenêtre d'observation est une période durant laquelle vous restez attentif aux résonances de votre tirage dans votre quotidien
-                </div>
-                <p class="obs-window-title"><i class="fas fa-eye"></i>Fenêtre d'observation</p>
+                <p class="obs-window-title">
+                    <i class="fas fa-eye"></i>Fenêtre d'observation
+                    <button onclick="const t=this.nextElementSibling;t.style.display=t.style.display==='none'?'block':'none';" title="En savoir plus"
+                            style="background:none;border:none;cursor:pointer;color:rgba(212,175,55,0.5);font-size:0.75rem;margin-left:6px;padding:0;vertical-align:middle;">
+                        <i class="fas fa-info-circle"></i>
+                    </button>
+                    <span style="display:none;background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.15);border-radius:8px;padding:10px 14px;margin-top:0.6rem;font-size:0.78rem;color:rgba(200,192,168,0.6);font-style:italic;font-weight:normal;font-family:inherit;letter-spacing:normal;text-transform:none;">
+                        La fenêtre d'observation est une période durant laquelle vous restez attentif aux résonances de votre tirage dans votre quotidien.
+                    </span>
+                </p>
                 <div class="obs-window-text">${renderMarkdown(text)}</div>
 
                 <div style="border-top:1px solid rgba(212,175,55,0.15);padding-top:1.25rem;">
@@ -1679,9 +1684,6 @@
                             </div>
                         `}
                         <p class="obs-error" id="obs-error"></p>
-                        <p style="color:rgba(212,175,55,0.6);font-size:0.82rem;margin:0.8rem 0 0;font-style:italic;font-weight:500;">
-                            Votre fenêtre sera activée pour <span id="obs-duration-display">7</span> jours.
-                        </p>
                     </div>
 
                     <div class="obs-success" id="obs-success">
@@ -1800,6 +1802,14 @@
             const container = document.getElementById('cardsDisplay');
             container.innerHTML = '';
 
+            // Trier les cartes selon l'ordre canonique du Tore
+            const FAMILY_ORDER = ['emotions', 'besoins', 'transmutation', 'archetypes', 'revelation', 'actions', 'memoire_cosmos'];
+            cards = [...cards].sort((a, b) => {
+                const ia = FAMILY_ORDER.indexOf(a.family);
+                const ib = FAMILY_ORDER.indexOf(b.family);
+                return (ia === -1 ? 99 : ia) - (ib === -1 ? 99 : ib);
+            });
+
             // Titre dynamique : compter uniquement les cartes principales (hors passerelles)
             const mainCount = cards.length;
             const bridgeCount = cards.filter(c => c.bridgeCard).length;
@@ -1865,7 +1875,7 @@
                             </div>
                             <div class="bridge-badge"><i class="fas fa-rotate"></i> Passerelle</div>
                             <div class="card-grid-label bridge-label">Actions</div>
-                            <div class="card-grid-name bridge-name">${card.bridgeCard.name.replace(/_/g, ' ')}</div>
+                            <div class="card-grid-name bridge-name">${card.bridgeCard.name.replace(/_/g, ' ').toUpperCase()}</div>
                         </div>
                         ` : ''}
 
