@@ -1976,6 +1976,7 @@
                 let synthesis = '';
                 let observationDays = null;
                 let observationText = '';
+                let attentionPoints = [];
                 let cards = [];
 
                 // Essayer tore_analysis_data en premier
@@ -1987,6 +1988,7 @@
                         synthesis = d.synthesis || '';
                         observationDays = d.observationDays || null;
                         observationText = d.observationText || '';
+                        attentionPoints = Array.isArray(d.attentionPoints) ? d.attentionPoints : [];
                         cards = d.cards || [];
                     } catch(_) {}
                 }
@@ -2005,6 +2007,7 @@
                                 synthesis = d.synthesis || synthesis;
                                 observationDays = d.observationDays || observationDays;
                                 observationText = d.observationText || observationText;
+                                if (Array.isArray(d.attentionPoints) && d.attentionPoints.length) attentionPoints = d.attentionPoints;
                                 if (Array.isArray(d.cards)) cards = d.cards;
                                 if (analysis) break;
                             } catch(_) {
@@ -2071,6 +2074,7 @@
                         synthesis,
                         observationDays,
                         observationText,
+                        attentionPoints,
                     }),
                 });
 

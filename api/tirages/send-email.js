@@ -141,7 +141,16 @@ async function handleSendEmail(req, res) {
   }
 
   try {
-    const { email, intention, cards, analysis, synthesis, subscribeNewsletter, observationWindow } = req.body;
+    const { email, intention, cards, analysis, synthesis, subscribeNewsletter,
+            observationWindow: obsWinRaw, observationDays, observationText, attentionPoints } = req.body;
+
+    // Normaliser la fenêtre d'observation : accepte l'ancien format objet OU les champs séparés
+    const observationWindow = obsWinRaw || (observationDays ? {
+      durationDays:    observationDays,
+      observationText: observationText || '',
+      attentionPoints: Array.isArray(attentionPoints) ? attentionPoints : [],
+      closesAt:        new Date(Date.now() + observationDays * 86400000).toISOString()
+    } : null);
 
     if (!email || !cards || cards.length === 0) {
       return res.status(400).json({ error: 'Email et cartes requis' });
@@ -177,66 +186,29 @@ async function handleSendEmail(req, res) {
     const addCardUnitHtml = (card) => {
       const bridge = card.bridgeCard;
       const bridgeBlock = bridge ? `
-            <!-- Connecteur visuel vers la carte passerelle -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:8px auto;">
-              <tr>
-                <td style="text-align:center;">
-                  <div style="width:1px;height:10px;background:#d4af37;margin:0 auto;"></div>
-                  <p style="margin:2px 0;color:#d4af37;font-size:9px;letter-spacing:2px;text-transform:uppercase;">&#9660; Passerelle</p>
-                  <div style="width:1px;height:10px;background:#d4af37;margin:0 auto;"></div>
-                </td>
-              </tr>
-            </table>
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;background:#0c1f33;border:1px solid #d4af37;border-radius:10px;">
-              <tr>
-                <td style="padding:10px 8px;text-align:center;">
-                  ${cardImg(bridge, true)}
-                  <p style="margin:8px 0 2px;color:#d4af37;font-size:11px;font-weight:700;">${bridge.name.replace(/_/g, ' ')}</p>
-                  <p style="margin:0;color:#4a5a6a;font-size:9px;font-style:italic;text-transform:capitalize;">${bridge.family.replace(/_/g, ' ')}</p>
-                </td>
-              </tr>
-            </table>` : '';
+          <div style="margin-top:8px;text-align:center;">
+            <div style="width:1px;height:8px;background:#d4af37;margin:0 auto;"></div>
+            <p style="margin:2px 0;color:#d4af37;font-size:8px;letter-spacing:2px;text-transform:uppercase;">&#9660; Passerelle</p>
+            <div style="width:1px;height:8px;background:#d4af37;margin:0 auto;"></div>
+          </div>
+          <div style="background:#0c1f33;border:1px solid #d4af37;border-radius:10px;padding:10px 8px;text-align:center;">
+            ${cardImg(bridge, true)}
+            <p style="margin:6px 0 2px;color:#d4af37;font-size:10px;font-weight:700;">${bridge.name.replace(/_/g, ' ')}</p>
+            <p style="margin:0;color:#4a5a6a;font-size:8px;font-style:italic;text-transform:capitalize;">${bridge.family.replace(/_/g, ' ')}</p>
+          </div>` : '';
 
       return `
-        <td style="width:50%;padding:8px;text-align:center;vertical-align:top;">
-          <div style="background:#071828;border:1px solid #1e3a5a;border-radius:12px;padding:16px 12px;">
-            ${cardImg(card, false)}
-            <p style="margin:10px 0 3px;color:#d4af37;font-size:13px;font-weight:700;">${card.name.replace(/_/g, ' ')}</p>
-            <p style="margin:0;color:#4a5a6a;font-size:10px;font-style:italic;text-transform:capitalize;">${card.family.replace(/_/g, ' ')}</p>
-            ${bridgeBlock}
-          </div>
-        </td>
+        <div style="background:#071828;border:1px solid #1e3a5a;border-radius:12px;padding:14px 10px;margin-bottom:10px;text-align:center;">
+          ${cardImg(card, false)}
+          <p style="margin:8px 0 2px;color:#d4af37;font-size:11px;font-weight:700;line-height:1.3;">${card.name.replace(/_/g, ' ')}</p>
+          <p style="margin:0;color:#4a5a6a;font-size:9px;font-style:italic;text-transform:capitalize;">${card.family.replace(/_/g, ' ')}</p>
+          ${bridgeBlock}
+        </div>
       `;
     };
 
-    // Construire le tableau, 2 unités par ligne, jamais scindées
-    let allCardsHtml = '';
-    let currentRow = '<tr>';
-    let unitsInCurrentRow = 0;
-
-    cards.forEach((card) => {
-      currentRow += addCardUnitHtml(card);
-      unitsInCurrentRow++;
-      if (unitsInCurrentRow >= 2) {
-        currentRow += '</tr>';
-        allCardsHtml += currentRow;
-        currentRow = '<tr>';
-        unitsInCurrentRow = 0;
-      }
-    });
-
-    if (unitsInCurrentRow > 0) {
-      // Compléter la ligne avec une cellule vide pour préserver la mise en page
-      currentRow += `<td style="width:50%;padding:8px;"></td></tr>`;
-      allCardsHtml += currentRow;
-    }
-
-    // Tableau des cartes - avec gestion correcte des lignes
-    const cardsTable = `
-      <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-        ${allCardsHtml}
-      </table>
-    `;
+    // Cartes empilées verticalement (colonne gauche)
+    const allCardsHtml = cards.map(card => addCardUnitHtml(card)).join('');
 
     // Formatage de l'analyse en paragraphes HTML
     const formatAnalysis = (text) => {
@@ -250,180 +222,160 @@ async function handleSendEmail(req, res) {
     };
 
     const htmlContent = `<!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin:0;padding:0;width:100%;background:#1a1a2e;font-family:Georgia,'Times New Roman',serif;">
-<!-- Tableau "fond" pleine largeur : certains clients (Outlook.com, certaines
-     apps mobiles) ignorent l'attribut HTML width="100%" sur les <table> et
-     n'honorent que le CSS. On renforce avec style="width:100%" + min-width:100%
-     cote CSS, en plus de l'attribut. -->
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;min-width:100%;background:#111827;padding:40px 20px;">
+<body style="margin:0;padding:0;width:100%;background:#07112a;font-family:Georgia,'Times New Roman',serif;">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;min-width:100%;background:#07112a;padding:32px 16px;">
   <tr>
-    <td align="center" style="width:100%;">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;width:100%;background:#050f23;border-radius:20px;overflow:hidden;border:1px solid #1e2d47;">
+    <td align="center">
+      <table role="presentation" width="640" cellpadding="0" cellspacing="0" border="0" style="max-width:640px;width:100%;background:#050f23;border-radius:18px;overflow:hidden;border:1px solid #1e2d47;">
 
-        <!-- HEADER -->
+        <!-- ═══ HEADER ═══ -->
         <tr>
-          <td style="background:#07142a;padding:44px 40px 36px;text-align:center;border-bottom:1px solid #1e2d47;">
-            <!-- Logo formant le O de ORADIA -->
-            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 28px;">
+          <td style="background:linear-gradient(160deg,#07142a 0%,#0a1f3a 100%);padding:36px 36px 28px;text-align:center;border-bottom:1px solid #1a2d47;">
+            <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto 20px;">
               <tr>
                 <td style="vertical-align:middle;">
-                  <img src="https://oradia.fr/images/logo-hd-v2.jpeg" alt="O" style="display:block;width:44px;height:44px;border-radius:50%;border:1px solid #2a4a6a;margin-right:2px;">
+                  <img src="https://oradia.fr/images/logo-hd-v2.jpeg" alt="O" style="display:block;width:40px;height:40px;border-radius:50%;border:1px solid rgba(212,175,55,0.4);">
                 </td>
-                <td style="vertical-align:middle;padding-left:6px;">
-                  <p style="margin:0;color:#d4af37;font-family:Georgia,serif;font-size:32px;font-weight:700;letter-spacing:8px;text-transform:uppercase;line-height:1;">RADIA</p>
+                <td style="vertical-align:middle;padding-left:8px;">
+                  <p style="margin:0;color:#d4af37;font-family:Georgia,serif;font-size:28px;font-weight:700;letter-spacing:7px;text-transform:uppercase;line-height:1;">RADIA</p>
                 </td>
               </tr>
             </table>
-            <h1 style="margin:0 0 6px;color:#d4af37;font-family:Georgia,serif;font-size:26px;font-weight:700;letter-spacing:3px;text-transform:uppercase;line-height:1.2;">Votre Tirage du Tore</h1>
-            <p style="margin:6px 0 0;color:#4a5a6a;font-size:11px;letter-spacing:2px;text-transform:uppercase;">La Boussole Int&#233;rieure</p>
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin-top:24px;">
-              <tr><td style="height:1px;background:#1e3a5a;"></td></tr>
-            </table>
+            <h1 style="margin:0 0 5px;color:#f0c75e;font-family:Georgia,serif;font-size:22px;font-weight:700;letter-spacing:3px;text-transform:uppercase;line-height:1.2;">Votre Tirage du Tore</h1>
+            <p style="margin:0;color:rgba(212,175,55,0.45);font-size:10px;letter-spacing:2px;text-transform:uppercase;">La Boussole Int&#233;rieure</p>
             ${intention ? `
-            <div style="margin-top:24px;background:#071828;border:1px solid #1e3a5a;border-radius:12px;padding:16px 24px;">
-              <p style="margin:0 0 6px;color:#4a6a5a;font-size:10px;letter-spacing:3px;text-transform:uppercase;">Votre intention</p>
-              <p style="margin:0;color:#f5e7a1;font-size:15px;font-style:italic;line-height:1.5;">&#8220; ${intention} &#8221;</p>
+            <div style="margin-top:20px;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.2);border-radius:10px;padding:14px 20px;">
+              <p style="margin:0 0 4px;color:rgba(212,175,55,0.55);font-size:9px;letter-spacing:3px;text-transform:uppercase;">Votre intention</p>
+              <p style="margin:0;color:#f5e7a1;font-size:14px;font-style:italic;line-height:1.5;">&#8220; ${intention} &#8221;</p>
             </div>` : ''}
           </td>
         </tr>
 
-        <!-- CARTES -->
+        <!-- ═══ CORPS : cartes (gauche) + analyse (droite) ═══ -->
         <tr>
-          <td style="padding:36px 40px 28px;">
-            <p style="margin:0 0 24px;color:#d4af37;font-size:10px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; Vos Cartes &#10022;</p>
-            ${cardsTable}
+          <td style="padding:0;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+              <tr>
+
+                <!-- Colonne gauche : cartes empilées -->
+                <td width="150" style="vertical-align:top;padding:24px 12px 24px 24px;background:rgba(7,20,42,0.5);border-right:1px solid #1a2d47;">
+                  <p style="margin:0 0 14px;color:rgba(212,175,55,0.6);font-size:8px;letter-spacing:3px;text-transform:uppercase;text-align:center;">&#10022; Vos cartes &#10022;</p>
+                  ${allCardsHtml}
+                </td>
+
+                <!-- Colonne droite : analyse -->
+                <td style="vertical-align:top;padding:24px 24px 24px 20px;">
+                  ${analysis ? `
+                  <p style="margin:0 0 14px;color:rgba(212,175,55,0.6);font-size:8px;letter-spacing:3px;text-transform:uppercase;">&#10022; Message de l'Oracle &#10022;</p>
+                  ${formatAnalysis(analysis)}` : ''}
+                  ${synthesis ? `
+                  <div style="margin-top:16px;background:rgba(255,255,255,0.04);border-left:2px solid #d4af37;padding:14px 16px;border-radius:0 8px 8px 0;">
+                    <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-size:8px;letter-spacing:3px;text-transform:uppercase;">Synth&#232;se</p>
+                    <p style="margin:0;color:#f5e7a1;font-size:13px;line-height:1.8;font-style:italic;">${synthesis.replace(/\n/g, ' ')}</p>
+                  </div>` : ''}
+                </td>
+
+              </tr>
+            </table>
           </td>
         </tr>
 
-        <!-- SÉPARATEUR -->
-        <tr><td style="padding:0 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="height:1px;background:#1e2d47;"></td></tr></table></td></tr>
-
-        <!-- ANALYSE -->
-        ${analysis ? `
-        <tr>
-          <td style="padding:32px 40px 28px;">
-            <p style="margin:0 0 20px;color:#d4af37;font-size:10px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; Message de l'Oracle &#10022;</p>
-            <div style="background:#071828;border-left:2px solid #d4af37;padding:20px 20px 6px 22px;border-radius:0 10px 10px 0;">
-              ${formatAnalysis(analysis)}
-            </div>
-          </td>
-        </tr>` : ''}
-
-        <!-- SÉPARATEUR -->
-        <tr><td style="padding:0 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="height:1px;background:#1e2d47;"></td></tr></table></td></tr>
-
-        <!-- SYNTHÈSE -->
-        ${synthesis ? `
-        <tr>
-          <td style="padding:28px 40px;">
-            <p style="margin:0 0 16px;color:#d4af37;font-size:10px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; Synth&#232;se &#10022;</p>
-            <div style="background:#071828;border:1px solid #1e3a5a;border-radius:12px;padding:22px 24px;">
-              <p style="margin:0;color:#f5e7a1;font-size:15px;line-height:1.85;font-style:italic;text-align:center;">${synthesis.replace(/\n/g, ' ')}</p>
-            </div>
-          </td>
-        </tr>` : ''}
-
-        <!-- FENÊTRE D'OBSERVATION — Palier 3 #18 : durée + fonction + attentes -->
+        <!-- ═══ FENÊTRE D'OBSERVATION ═══ -->
         ${observationWindow ? `
         <tr>
-          <td style="padding:0 40px 28px;">
-            <div style="background:#071828;border:1px solid #d4af37;border-radius:14px;padding:28px 24px;">
-
-              <!-- En-tête avec icône et titre -->
-              <div style="text-align:center;margin-bottom:20px;">
-                <p style="margin:0 0 6px;font-size:22px;">&#127758;</p>
-                <p style="margin:0 0 4px;color:#d4af37;font-size:10px;letter-spacing:3px;text-transform:uppercase;">Fen&#234;tre d'observation</p>
-                <p style="margin:6px 0 0;color:#f5e7a1;font-size:20px;font-weight:700;font-family:Georgia,serif;">
-                  ${observationWindow.durationDays} jour${observationWindow.durationDays > 1 ? 's' : ''}
-                </p>
-              </div>
-
-              <!-- Séparateur -->
-              <div style="width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);margin:0 0 20px;"></div>
-
-              <!-- Fonction : à quoi ça sert -->
-              <div style="background:#050f23;border-radius:8px;padding:14px 16px;margin-bottom:16px;">
-                <p style="margin:0 0 8px;color:#d4af37;font-size:10px;letter-spacing:2px;text-transform:uppercase;">&#10024; &Agrave; quoi sert cette fen&#234;tre&nbsp;?</p>
-                <p style="margin:0;color:#c8c0a8;font-size:13px;line-height:1.75;">
-                  Le tirage du Tore ne s'arr&#234;te pas &#224; l'analyse — il continue de r&#233;sonner dans votre quotidien. La fen&#234;tre d'observation vous invite &#224; rester attentif(ve) aux &#233;chos, synchronicit&#233;s et mouvements int&#233;rieurs qui &#233;mergent dans les jours qui suivent votre tirage.
-                </p>
-              </div>
-
-              <!-- Texte personnalisé de la fenêtre -->
-              ${observationWindow.observationText ? `<p style="margin:0 0 16px;color:#e9e7df;font-size:13px;line-height:1.85;">${observationWindow.observationText.replace(/\n/g, '<br>')}</p>` : ''}
-
-              <!-- Attentes : ce à quoi prêter attention -->
+          <td style="padding:0 24px 24px;">
+            <div style="background:linear-gradient(135deg,rgba(10,26,52,0.9),rgba(5,16,36,0.95));border:1px solid rgba(212,175,55,0.35);border-radius:14px;padding:24px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
+                <tr>
+                  <td style="text-align:center;padding-bottom:16px;">
+                    <p style="margin:0 0 4px;font-size:20px;">&#127758;</p>
+                    <p style="margin:0 0 2px;color:#d4af37;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Fen&#234;tre d'observation</p>
+                    <p style="margin:4px 0 0;color:#f5e7a1;font-size:18px;font-weight:700;">
+                      ${observationWindow.durationDays} jour${observationWindow.durationDays > 1 ? 's' : ''}
+                    </p>
+                  </td>
+                </tr>
+                <tr><td style="height:1px;background:rgba(212,175,55,0.15);margin-bottom:16px;display:block;"></td></tr>
+              </table>
+              <p style="margin:16px 0 10px;color:rgba(212,175,55,0.6);font-size:9px;letter-spacing:2px;text-transform:uppercase;">&#10024; &#192; quoi sert cette fen&#234;tre&nbsp;?</p>
+              <p style="margin:0 0 16px;color:#c8c0a8;font-size:13px;line-height:1.75;">
+                Le tirage ne s'arr&#234;te pas &#224; l'analyse — il continue de r&#233;sonner. Cette fen&#234;tre vous invite &#224; rester attentif(ve) aux &#233;chos, synchronicit&#233;s et mouvements int&#233;rieurs qui &#233;mergent dans les jours qui viennent.
+              </p>
+              ${observationWindow.observationText ? `<p style="margin:0 0 16px;color:#e9e7df;font-size:13px;line-height:1.85;font-style:italic;">${observationWindow.observationText.replace(/\n/g, '<br>')}</p>` : ''}
               ${observationWindow.attentionPoints && observationWindow.attentionPoints.length > 0 ? `
-              <div style="background:#050f23;border-radius:8px;padding:14px 16px;margin-bottom:16px;">
-                <p style="margin:0 0 10px;color:#d4af37;font-size:10px;letter-spacing:2px;text-transform:uppercase;">&#128065; Ce &#224; quoi pr&#234;ter attention</p>
-                ${observationWindow.attentionPoints.map(p => `<p style="margin:0 0 8px;color:#c8c0a8;font-size:13px;line-height:1.6;">&#8250;&nbsp; ${p}</p>`).join('')}
-              </div>` : ''}
-
-              <!-- Ce qu'on N'attend PAS -->
-              <div style="background:#050f23;border-radius:8px;padding:14px 16px;margin-bottom:16px;">
-                <p style="margin:0 0 8px;color:#d4af37;font-size:10px;letter-spacing:2px;text-transform:uppercase;">&#129309; Ce qu'on n'attend pas de vous</p>
-                <p style="margin:0;color:#c8c0a8;font-size:13px;line-height:1.75;">
-                  Il n'y a rien &#224; "faire". Pas de journal obligatoire, pas de performance. Simplement un regard un peu plus attentif pos&#233; sur votre semaine — et une curiosit&#233; bienveillante envers ce qui remonte.
-                </p>
-              </div>
-
-              <!-- Date de clôture -->
-              ${observationWindow.closesAt ? `
-              <p style="margin:16px 0 0;color:#4a5a6a;font-size:11px;text-align:center;font-style:italic;">
-                &#128337; Vous recevrez un email de cl&#244;ture le&nbsp;
-                <strong style="color:#6a7a8a;">${new Date(observationWindow.closesAt).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</strong>
-              </p>` : ''}
-
+              <p style="margin:0 0 10px;color:rgba(212,175,55,0.6);font-size:9px;letter-spacing:2px;text-transform:uppercase;">&#128065; Ce &#224; quoi pr&#234;ter attention</p>
+              ${observationWindow.attentionPoints.map(p => `<p style="margin:0 0 8px;color:#c8c0a8;font-size:13px;line-height:1.6;">&#8250;&#160; ${p}</p>`).join('')}` : ''}
+              <p style="margin:16px 0 0;color:rgba(212,175,55,0.4);font-size:11px;text-align:center;font-style:italic;">
+                &#129309; Rien &#224; "faire" — juste un regard plus attentif.
+                ${observationWindow.closesAt ? `<br>&#128337; Email de cl&#244;ture pr&#233;vu le <strong style="color:rgba(212,175,55,0.6);">${new Date(observationWindow.closesAt).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}</strong>.` : ''}
+              </p>
             </div>
           </td>
         </tr>` : ''}
 
-        <!-- SÉPARATEUR -->
-        <tr><td style="padding:0 40px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="height:1px;background:#1e2d47;"></td></tr></table></td></tr>
-
-        <!-- CTA -->
+        <!-- ═══ CTA TIRAGE ═══ -->
         <tr>
-          <td style="padding:32px 40px;text-align:center;">
-            <p style="margin:0 0 20px;color:#4a5a6a;font-size:13px;font-style:italic;">L'Oracle est l&#224; quand vous en avez besoin.</p>
-            <a href="https://oradia.fr/tore.html" style="display:inline-block;background:#d4af37;color:#050f23;text-decoration:none;padding:15px 40px;border-radius:50px;font-family:Georgia,serif;font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;">
+          <td style="padding:20px 24px;text-align:center;">
+            <a href="https://oradia.fr/tore.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#050f23;text-decoration:none;padding:13px 36px;border-radius:50px;font-family:Georgia,serif;font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;">
               Nouveau tirage
             </a>
           </td>
         </tr>
 
-        <!-- BANDEAU ORACLE PHYSIQUE -->
+        <!-- ═══ BANDEAU ORACLE PHYSIQUE ═══ -->
         <tr>
-          <td style="padding:0 40px 32px;">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#071828;border:1px solid #1e3a5a;border-radius:14px;overflow:hidden;">
+          <td style="padding:0 24px 20px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:#071828;border:1px solid #1e3a5a;border-radius:12px;overflow:hidden;">
               <tr>
-                <td style="padding:22px 20px;vertical-align:middle;width:60%;">
-                  <p style="margin:0 0 4px;color:#4a6a5a;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Pr&#233;commandes ouvertes</p>
-                  <p style="margin:0 0 8px;color:#f5e7a1;font-size:17px;font-weight:700;line-height:1.3;">L'Oracle Oradia<br>entre vos mains</p>
-                  <p style="margin:0 0 14px;color:#4a5a6a;font-size:12px;line-height:1.65;">64 cartes &#183; Livret &#183; Conte initiatique &#183; Pi&#232;ce de tirage artisanale</p>
-                  <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:#d4af37;color:#050f23;font-size:11px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:10px 20px;border-radius:50px;">
+                <td style="padding:20px 18px;vertical-align:middle;">
+                  <p style="margin:0 0 3px;color:rgba(74,106,90,0.9);font-size:9px;letter-spacing:3px;text-transform:uppercase;">Pr&#233;commandes ouvertes</p>
+                  <p style="margin:0 0 6px;color:#f5e7a1;font-size:16px;font-weight:700;line-height:1.3;">L'Oracle Oradia<br>entre vos mains</p>
+                  <p style="margin:0 0 12px;color:#4a5a6a;font-size:11px;line-height:1.6;">64 cartes &#183; Livret &#183; Conte initiatique &#183; Pi&#232;ce artisanale</p>
+                  <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:#d4af37;color:#050f23;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:9px 18px;border-radius:50px;">
                     Pr&#233;commander
                   </a>
                 </td>
-                <td style="padding:16px 16px 16px 0;vertical-align:middle;width:40%;text-align:right;">
-                  <img src="https://oradia.fr/images/medias/apercu_stripe.png" alt="Oracle Oradia" style="display:block;width:100%;max-width:160px;margin-left:auto;border-radius:8px;border:1px solid #1e3a5a;">
+                <td style="padding:12px 14px 12px 0;vertical-align:middle;width:130px;text-align:right;">
+                  <img src="https://oradia.fr/images/medias/apercu_stripe.png" alt="Oracle Oradia" style="display:block;width:120px;border-radius:8px;border:1px solid #1e3a5a;">
                 </td>
               </tr>
             </table>
           </td>
         </tr>
 
-        <!-- FOOTER -->
+        <!-- ═══ NEWSLETTER ═══ -->
         <tr>
-          <td style="padding:24px 40px 32px;border-top:1px solid #1e2d47;text-align:center;">
-            <p style="margin:0 0 4px;color:#4a5a6a;font-size:13px;">Avec gratitude,</p>
-            <p style="margin:0 0 16px;color:#d4af37;font-size:14px;font-weight:700;">Rudy Boucheron</p>
-            <p style="margin:0 0 16px;"><a href="https://oradia.fr" style="color:#4a5a6a;text-decoration:none;font-size:11px;letter-spacing:2px;">oradia.fr</a></p>
-            <p style="margin:0;color:#2a3a4a;font-size:10px;line-height:1.6;">Vous recevez cet email car vous avez demand&#233; &#224; recevoir votre tirage.<br>Cet email ne constitue pas un abonnement &#224; notre newsletter.</p>
+          <td style="padding:0 24px 20px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.15);border-radius:12px;">
+              <tr>
+                <td style="padding:18px 20px;text-align:center;">
+                  <p style="margin:0 0 6px;color:rgba(212,175,55,0.7);font-size:9px;letter-spacing:3px;text-transform:uppercase;">La lettre d'Oradia</p>
+                  <p style="margin:0 0 12px;color:#c8c0a8;font-size:12px;line-height:1.65;">Transmissions sur la symbolique du Tore, l'int&#233;riorit&#233; et les pratiques d'observation.</p>
+                  <a href="https://oradia.fr/#newsletter" style="display:inline-block;background:transparent;color:#d4af37;border:1px solid rgba(212,175,55,0.4);text-decoration:none;padding:9px 22px;border-radius:50px;font-size:11px;font-weight:700;letter-spacing:1px;">
+                    S'inscrire &#8594;
+                  </a>
+                </td>
+              </tr>
+            </table>
+          </td>
+        </tr>
+
+        <!-- ═══ FOOTER ═══ -->
+        <tr>
+          <td style="padding:20px 24px 28px;border-top:1px solid #1a2d47;text-align:center;">
+            <p style="margin:0 0 3px;color:#4a5a6a;font-size:12px;">Avec gratitude,</p>
+            <p style="margin:0 0 14px;color:#d4af37;font-size:13px;font-weight:700;">Rudy Boucheron</p>
+            <p style="margin:0 0 14px;">
+              <a href="https://oradia.fr" style="color:#4a5a6a;text-decoration:none;font-size:10px;letter-spacing:2px;">oradia.fr</a>
+              &#160;&#183;&#160;
+              <a href="mailto:contact@oradia.fr" style="color:#4a5a6a;text-decoration:none;font-size:10px;">contact@oradia.fr</a>
+            </p>
+            <p style="margin:0;color:#2a3a4a;font-size:10px;line-height:1.6;">Vous recevez cet email car vous avez demand&#233; &#224; recevoir votre tirage.<br>Il ne constitue pas un abonnement &#224; notre newsletter.</p>
           </td>
         </tr>
 
