@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 
 <html lang="fr">
 
@@ -1248,7 +1248,7 @@
 
   .tore-card[data-family="emotions"] .tore-card-back {
 
-    background-image: url("images/dos/dos_emotion.png");
+    background-image: url("images/dos/dos_emotion.webp");
 
     background-size: contain;
 
@@ -1258,7 +1258,7 @@
 
   .tore-card[data-family="besoins"] .tore-card-back {
 
-    background-image: url("images/dos/dos_besoin.png");
+    background-image: url("images/dos/dos_besoin.webp");
 
     background-size: contain;
 
@@ -1268,7 +1268,7 @@
 
   .tore-card[data-family="transmutation"] .tore-card-back {
 
-    background-image: url("images/dos/dos_transmutation.png");
+    background-image: url("images/dos/dos_transmutation.webp");
 
     background-size: contain;
 
@@ -1278,7 +1278,7 @@
 
   .tore-card[data-family="actions"] .tore-card-back {
 
-    background-image: url("images/dos/dos_action.png");
+    background-image: url("images/dos/dos_action.webp");
 
     background-size: contain;
 
@@ -1288,7 +1288,7 @@
 
   .tore-card[data-family="archetypes"] .tore-card-back {
 
-    background-image: url("images/dos/dos_archetype.png");
+    background-image: url("images/dos/dos_archetype.webp");
 
     background-size: contain;
 
@@ -1298,7 +1298,7 @@
 
   .tore-card[data-family="revelations"] .tore-card-back {
 
-    background-image: url("images/dos/dos_revelation.png");
+    background-image: url("images/dos/dos_revelation.webp");
 
     background-size: contain;
 
@@ -1308,7 +1308,7 @@
 
   .tore-card[data-family="memoire_cosmos"] .tore-card-back {
 
-    background-image: url("images/dos/dos_memoire_cosmos.png");
+    background-image: url("images/dos/dos_memoire_cosmos.webp");
 
     background-size: contain;
 
@@ -3764,19 +3764,19 @@ window.DATA = {
 
 const BACK_IMAGES = {
 
-  emotions: 'images/dos/dos_emotion.png',
+  emotions: 'images/dos/dos_emotion.webp',
 
-  besoins: 'images/dos/dos_besoin.png',
+  besoins: 'images/dos/dos_besoin.webp',
 
-  transmutation: 'images/dos/dos_transmutation.png',
+  transmutation: 'images/dos/dos_transmutation.webp',
 
-  actions: 'images/dos/dos_action.png',
+  actions: 'images/dos/dos_action.webp',
 
-  archetypes: 'images/dos/dos_archetype.png',
+  archetypes: 'images/dos/dos_archetype.webp',
 
-  revelations: 'images/dos/dos_revelation.png',
+  revelations: 'images/dos/dos_revelation.webp',
 
-  memoire_cosmos: 'images/dos/dos_memoire_cosmos.png',
+  memoire_cosmos: 'images/dos/dos_memoire_cosmos.webp',
 
 };
 
@@ -3879,40 +3879,20 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
 
 
 // --- Préchargement des images pour optimiser les performances ---
-  const preloadedImages = new Set();
-  
-  function preloadImage(src) {
-    if (!preloadedImages.has(src)) {
-      const img = new Image();
-      img.src = src;
-      preloadedImages.add(src);
-    }
-  }
-  
-  // Précharger toutes les images de cartes au démarrage
-  function preloadAllCardImages() {
-    const folders = {
-      emotions: 'emotions',
-      besoins: 'besoins',
-      transmutation: 'transmutations',
-      actions: 'actions',
-      archetypes: 'archetypes',
-      revelations: 'revelations',
-      memoire_cosmos: 'memoire_cosmos'
-    };
-    Object.values(folders).forEach(folder => {
-      for (let i = 1; i <= 10; i++) {
-        preloadImage(`/images/cartes/${folder}/${i}.png`);
-      }
-    });
-  }
-  
-  // Lancer le préchargement dès que possible
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', preloadAllCardImages);
-  } else {
-    preloadAllCardImages();
-  }
+  // Précharger les dos de cartes (WebP) dès le chargement de la page
+  // → en cache avant même que l'utilisateur lance son tirage
+  (function() {
+    const dosImages = [
+      'images/dos/dos_emotion.webp',
+      'images/dos/dos_besoin.webp',
+      'images/dos/dos_transmutation.webp',
+      'images/dos/dos_action.webp',
+      'images/dos/dos_archetype.webp',
+      'images/dos/dos_revelation.webp',
+      'images/dos/dos_memoire_cosmos.webp'
+    ];
+    dosImages.forEach(src => { const img = new Image(); img.src = src; });
+  })();
 
 // --- helpers ---
 
@@ -5303,7 +5283,9 @@ function closeToreExitModal(){
 
     `).join('');
 
-
+    // ⚠️ Ajouter tore-dealing AVANT de rendre le plateau visible
+    // pour que les cartes soient masquées par CSS dès l'affichage (pas de flash)
+    if (boardHost) boardHost.classList.add('tore-dealing');
 
     boardWrap.classList.remove('hidden');
     document.body.classList.add('tore-playing');
@@ -6727,47 +6709,20 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     }
   })();
 
-  // Verrouiller le plateau immédiatement pour que les cartes soient invisibles
-  if (boardHost) {
-    boardHost.classList.add('tore-dealing');
-  }
+  // tore-dealing déjà ajouté dans buildBoardTore() avant l'affichage du plateau
 
-  // Pré-rendu GPU des images de dos pour éviter le rideau blanc
-  (function() {
-    const preEl = document.createElement('div');
-    preEl.style.cssText =
-      'position:fixed;left:-9999px;top:0;width:1px;height:1px;overflow:hidden;pointer-events:none;z-index:-1;';
-    [
-      'images/dos/dos_emotion.png',
-      'images/dos/dos_besoin.png',
-      'images/dos/dos_transmutation.png',
-      'images/dos/dos_action.png',
-      'images/dos/dos_archetype.png',
-      'images/dos/dos_revelation.png',
-      'images/dos/dos_memoire_cosmos.png'
-    ].forEach(src => {
-      const d = document.createElement('div');
-      d.style.cssText =
-        `width:80px;height:112px;background:url('${src}') center/cover no-repeat;`;
-      preEl.appendChild(d);
-    });
-    document.body.appendChild(preEl);
-    setTimeout(() => preEl.remove(), 5000);
-  })();
-  
   // Débloquer le bouton submit
   if (submitBtn) submitBtn.dataset.submitting = '0';
 
-  // Précharger les images de dos en mémoire GPU avant l'animation
-  // pour éviter le décodage progressif (bandeau blanc descendant)
+  // Précharger les images de dos (WebP) avant l'animation
   const _dosImages = [
-    'images/dos/dos_emotion.png',
-    'images/dos/dos_besoin.png',
-    'images/dos/dos_transmutation.png',
-    'images/dos/dos_action.png',
-    'images/dos/dos_archetype.png',
-    'images/dos/dos_revelation.png',
-    'images/dos/dos_memoire_cosmos.png'
+    'images/dos/dos_emotion.webp',
+    'images/dos/dos_besoin.webp',
+    'images/dos/dos_transmutation.webp',
+    'images/dos/dos_action.webp',
+    'images/dos/dos_archetype.webp',
+    'images/dos/dos_revelation.webp',
+    'images/dos/dos_memoire_cosmos.webp'
   ];
   let _dosLoaded = 0;
   const _dosTotalToLoad = _dosImages.length;
