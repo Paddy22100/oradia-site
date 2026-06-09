@@ -430,7 +430,7 @@ async function handleData(req, res) {
         .select('score_synchronicites, types_synchronicites, resonance_tirage, etat_interieur, temoignage, created_at, qrng_source')
         .order('created_at', { ascending: false }));
 
-      // Si la colonne n'existe pas encore (migration non exécutée), on réessaie sans
+      // Fallback 1 : colonne qrng_source manquante (migration non exécutée)
       const qrngMissing = syncErr && syncErr.message && syncErr.message.includes('qrng_source');
       if (qrngMissing) {
         ({ data: responses, error: syncErr } = await supabase
@@ -438,6 +438,18 @@ async function handleData(req, res) {
           .select('score_synchronicites, types_synchronicites, resonance_tirage, etat_interieur, temoignage, created_at')
           .order('created_at', { ascending: false }));
       }
+
+      // Fallback 2 : vue ou table inexistante (migrations non exécutées) → retourner 0 réponse
+      const tablesMissing = syncErr && syncErr.message && (
+        syncErr.message.includes('does not exist') ||
+        syncErr.message.includes('n\'existe pas') ||
+        syncErr.message.includes('relation')
+      );
+      if (tablesMissing) {
+        responses = [];
+        syncErr = null;
+      }
+
       if (syncErr) throw syncErr;
       const rows = (responses || []).map(r => ({
         ...r,
