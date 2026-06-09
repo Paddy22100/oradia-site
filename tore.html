@@ -3816,17 +3816,7 @@ const BACK_IMAGES = {
 
 let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
 
-// Protection rechargement accidentel en cours de tirage
-window.addEventListener('beforeunload', (e) => {
-  const drawInProgress = toreThrowIndex > 0 && toreThrowIndex < 6;
-  const boardVisible = document.getElementById('tore-immersif')?.style.display !== 'none'
-                    && document.getElementById('tore-immersif') !== null;
-  if (drawInProgress || (boardVisible && toreThrowIndex >= 0 && document.getElementById('tore-board-7'))) {
-    e.preventDefault();
-    e.returnValue = 'Votre tirage en cours sera perdu si vous quittez cette page.';
-    return e.returnValue;
-  }
-});
+// Protection rechargement : gérée par le modal custom #abandon-tirage-modal (en bas de page)
 
 
 
@@ -7176,6 +7166,141 @@ document.addEventListener("DOMContentLoaded", () => {
 <div id="card-preview-overlay">
   <div id="card-preview-img" alt="Aperçu de la carte"></div>
 </div>
+
+<!-- Modal confirmation abandon tirage -->
+<div id="abandon-tirage-modal" role="dialog" aria-modal="true" aria-labelledby="abandon-tirage-title"
+  style="display:none; position:fixed; inset:0; z-index:9999; align-items:center; justify-content:center; padding:1.5rem;
+         background:radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%);">
+  <div style="background:linear-gradient(135deg, rgba(15,25,50,0.98) 0%, rgba(20,30,60,0.95) 100%);
+              border:1.5px solid rgba(212,175,55,0.45); border-radius:1.5rem; max-width:480px; width:100%;
+              box-shadow:0 25px 50px -12px rgba(0,0,0,0.7), 0 0 40px rgba(212,175,55,0.08);
+              position:relative; overflow:hidden; padding:2.5rem 2rem 2rem;">
+    <!-- Ligne dorée haut -->
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.7),transparent);"></div>
+    <!-- Icône -->
+    <div style="text-align:center; margin-bottom:1.25rem;">
+      <div style="display:inline-flex; align-items:center; justify-content:center; width:56px; height:56px;
+                  border-radius:50%; border:1.5px solid rgba(212,175,55,0.4); background:rgba(212,175,55,0.08);">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="rgba(212,175,55,0.9)" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/>
+          <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/>
+        </svg>
+      </div>
+    </div>
+    <!-- Titre -->
+    <h2 id="abandon-tirage-title" style="font-family:'Cinzel',serif; color:rgba(212,175,55,0.95); font-size:1.15rem;
+       text-align:center; letter-spacing:0.08em; margin-bottom:0.75rem;">Quitter le tirage ?</h2>
+    <!-- Message -->
+    <p style="color:rgba(200,210,230,0.82); font-size:0.9rem; text-align:center; line-height:1.65; margin-bottom:2rem;">
+      Votre tirage en cours <strong style="color:rgba(212,175,55,0.85);">sera perdu</strong> si vous quittez maintenant.<br>
+      Les cartes tirées ne pourront pas être récupérées.
+    </p>
+    <!-- Boutons -->
+    <div style="display:flex; flex-direction:column; gap:0.75rem;">
+      <button id="abandon-modal-stay" onclick="closeAbandonModal()"
+        style="width:100%; padding:0.85rem 1.5rem; border-radius:0.85rem; border:1.5px solid rgba(212,175,55,0.6);
+               background:linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08));
+               color:rgba(212,175,55,0.95); font-family:'Cinzel',serif; font-size:0.88rem;
+               letter-spacing:0.08em; cursor:pointer; transition:all 0.2s;
+               box-shadow:0 4px 15px rgba(212,175,55,0.1);"
+        onmouseover="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.28),rgba(212,175,55,0.14))'"
+        onmouseout="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.18),rgba(212,175,55,0.08))'">
+        Continuer mon tirage
+      </button>
+      <button id="abandon-modal-quit" onclick="confirmAbandonTirage()"
+        style="width:100%; padding:0.75rem 1.5rem; border-radius:0.85rem; border:1px solid rgba(255,255,255,0.1);
+               background:rgba(255,255,255,0.04); color:rgba(180,190,210,0.65); font-size:0.82rem;
+               cursor:pointer; transition:all 0.2s; letter-spacing:0.04em;"
+        onmouseover="this.style.color='rgba(220,100,100,0.8)';this.style.borderColor='rgba(220,100,100,0.25)'"
+        onmouseout="this.style.color='rgba(180,190,210,0.65)';this.style.borderColor='rgba(255,255,255,0.1)'">
+        Quitter — perdre mon tirage
+      </button>
+    </div>
+    <!-- Ligne dorée bas -->
+    <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent);"></div>
+  </div>
+</div>
+
+<script>
+(function() {
+  // ── Destination de redirection après abandon ──────────────────────
+  let _abandonDestination = 'index.html';
+
+  // ── Détecter si un tirage est en cours ───────────────────────────
+  function drawInProgress() {
+    // toreThrowIndex est déclaré dans le scope global de tore.html
+    if (typeof toreThrowIndex === 'undefined') return false;
+    const immersif = document.getElementById('tore-immersif');
+    const visible = immersif && immersif.style.display !== 'none';
+    return visible && toreThrowIndex > 0;
+  }
+
+  // ── Ouvrir / fermer le modal ──────────────────────────────────────
+  window.openAbandonModal = function(destination) {
+    _abandonDestination = destination || 'index.html';
+    const modal = document.getElementById('abandon-tirage-modal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    // Focus sur "Continuer" par défaut
+    setTimeout(() => { document.getElementById('abandon-modal-stay')?.focus(); }, 50);
+  };
+
+  window.closeAbandonModal = function() {
+    const modal = document.getElementById('abandon-tirage-modal');
+    if (modal) modal.style.display = 'none';
+    _abandonDestination = 'index.html';
+  };
+
+  window.confirmAbandonTirage = function() {
+    const modal = document.getElementById('abandon-tirage-modal');
+    if (modal) modal.style.display = 'none';
+    window.location.href = _abandonDestination;
+  };
+
+  // Fermer sur clic fond
+  document.addEventListener('click', function(e) {
+    const modal = document.getElementById('abandon-tirage-modal');
+    if (modal && modal.style.display === 'flex' && e.target === modal) {
+      closeAbandonModal();
+    }
+  });
+
+  // Fermer sur Échap
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape') {
+      const modal = document.getElementById('abandon-tirage-modal');
+      if (modal && modal.style.display === 'flex') { closeAbandonModal(); return; }
+    }
+    // Intercepter F5 / Ctrl+R / Cmd+R pendant un tirage
+    const isRefresh = e.key === 'F5' || ((e.ctrlKey || e.metaKey) && e.key === 'r');
+    if (isRefresh && drawInProgress()) {
+      e.preventDefault();
+      openAbandonModal('tore.html');
+    }
+  });
+
+  // Intercepter les clics sur liens <a> pendant un tirage
+  document.addEventListener('click', function(e) {
+    if (!drawInProgress()) return;
+    const link = e.target.closest('a[href]');
+    if (!link) return;
+    const href = link.getAttribute('href');
+    if (!href || href.startsWith('#') || href.startsWith('javascript')) return;
+    e.preventDefault();
+    e.stopPropagation();
+    openAbandonModal(href);
+  }, true);
+
+  // Intercepter bouton retour navigateur
+  history.pushState(null, '', location.href);
+  window.addEventListener('popstate', function() {
+    if (drawInProgress()) {
+      history.pushState(null, '', location.href); // re-push pour rester
+      openAbandonModal('index.html');
+    }
+  });
+})();
+</script>
 
 </body>
 
