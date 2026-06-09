@@ -1427,7 +1427,23 @@
                         data = JSON.parse(preloadedData);
                         // Nettoyer le préchargement pour éviter les réutilisations
                         sessionStorage.removeItem('preloaded_analysis');
-                        
+
+                        // Cas : rate limit abonné atteint
+                        if (data.rateLimited) {
+                            analysisContent.innerHTML = `
+                              <div style="text-align:center;padding:2.5rem 1.5rem;color:#d4af37;">
+                                <p style="font-size:2rem;margin-bottom:1rem;">&#9790;</p>
+                                <p style="font-size:1.1rem;font-weight:600;margin-bottom:0.75rem;color:#f5e7a1;">Votre espace de tirage marque une pause</p>
+                                <p style="color:rgba(212,175,55,0.75);font-size:0.9rem;line-height:1.7;max-width:420px;margin:0 auto;">
+                                  ${data.message || 'Vous avez atteint le seuil mensuel de tirages. Votre compteur se renouvellera automatiquement le mois prochain.'}
+                                </p>
+                                ${data.resetsAt ? '<p style="margin-top:1rem;color:rgba(212,175,55,0.45);font-size:0.8rem;font-style:italic;">Renouvellement automatique le ' + new Date(data.resetsAt).toLocaleDateString('fr-FR',{day:'numeric',month:'long'}) + '</p>' : ''}
+                              </div>`;
+                            spinner.classList.add('hidden');
+                            analysisContent.classList.remove('hidden');
+                            return;
+                        }
+
                         if (!data.success || !data.analysis) {
                             throw new Error('Données préchargées invalides');
                         }

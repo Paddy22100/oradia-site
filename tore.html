@@ -4003,14 +4003,36 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       
       if (!Array.isArray(cards) || cards.length === 0) return;
 
+      // Récupérer l'email utilisateur pour le rate limiting abonnés
+      let userEmail = null;
+      try {
+        const sessStr = sessionStorage.getItem('oradia_session') || localStorage.getItem('oradia_session');
+        if (sessStr) { const s = JSON.parse(sessStr); userEmail = s.email || null; }
+      } catch(_) {}
+
       // Stocker le résultat préchargé
       fetch('/api/analyse-tirage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ intention, cards })
+        body: JSON.stringify({ intention, cards, userEmail })
       })
-      .then(resp => resp.json())
+      .then(resp => {
+        if (resp.status === 429) {
+          // Rate limit abonné atteint — stocker le message pour affichage dans tore-analysis
+          return resp.json().then(d => {
+            sessionStorage.setItem('preloaded_analysis', JSON.stringify({
+              success: false,
+              rateLimited: true,
+              message: d.message || 'Votre espace de tirage marque une pause ce mois-ci.',
+              resetsAt: d.resetsAt,
+            }));
+            return null;
+          });
+        }
+        return resp.json();
+      })
       .then(data => {
+        if (!data) return; // rate limited, déjà géré
         if (data.success && data.analysis) {
           // Stocker l'analyse préchargée pour utilisation immédiate
           sessionStorage.setItem('preloaded_analysis', JSON.stringify(data));

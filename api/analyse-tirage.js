@@ -76,6 +76,70 @@ async function callAnthropicWithFallback(payload) {
     throw new Error('Aucun modèle Anthropic disponible');
 }
 
+// ── Rate limiting : 300 tirages/mois par abonné actif ──────────────────────
+const MONTHLY_DRAW_LIMIT = 300;
+
+async function checkAndIncrementDrawCount(email) {
+  if (!email) return { allowed: true }; // utilisateur anonyme/freemium : géré par localStorage
+
+  const { createClient } = require('@supabase/supabase-js');
+  const supabase = createClient(
+    process.env.SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_KEY
+  );
+
+  try {
+    const { data: sub, error } = await supabase
+      .from('tore_subscriptions')
+      .select('status, expires_at, monthly_draws_count, monthly_draws_reset_at')
+      .eq('email', email)
+      .maybeSingle();
+
+    if (error || !sub) return { allowed: true }; // pas d'abonnement → freemium, pas de limite serveur
+
+    // Vérifier si l'abonnement est actif
+    const isActive = sub.status === 'active' && new Date(sub.expires_at) > new Date();
+    if (!isActive) return { allowed: true }; // abonnement expiré → freemium
+
+    // Besoin de reset du compteur mensuel ?
+    const now = new Date();
+    const resetAt = sub.monthly_draws_reset_at ? new Date(sub.monthly_draws_reset_at) : new Date(0);
+    const needsReset = now.getFullYear() !== resetAt.getFullYear()
+                    || now.getMonth()    !== resetAt.getMonth();
+
+    let currentCount = needsReset ? 0 : (sub.monthly_draws_count || 0);
+
+    // Limite atteinte ?
+    if (currentCount >= MONTHLY_DRAW_LIMIT) {
+      const nextReset = new Date(now.getFullYear(), now.getMonth() + 1, 1);
+      return {
+        allowed: false,
+        reason: 'monthly_limit_reached',
+        resetsAt: nextReset.toISOString(),
+        count: currentCount,
+      };
+    }
+
+    // Incrémenter le compteur (et reset si nécessaire)
+    const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+                           .toISOString().split('T')[0];
+    await supabase
+      .from('tore_subscriptions')
+      .update({
+        monthly_draws_count:    currentCount + 1,
+        monthly_draws_reset_at: needsReset ? firstOfMonth : sub.monthly_draws_reset_at,
+      })
+      .eq('email', email);
+
+    return { allowed: true, count: currentCount + 1 };
+
+  } catch (err) {
+    // En cas d'erreur Supabase : ne pas bloquer (fail-open pour expérience utilisateur)
+    console.warn('[analyse-tirage] rate-limit check failed (fail-open):', err.message);
+    return { allowed: true };
+  }
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', process.env.FRONTEND_URL || 'https://oradia.fr');
   res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
@@ -91,7 +155,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid JSON' });
   }
 
-  const { intention, cards } = body;
+  const { intention, cards, userEmail } = body;
   if (!Array.isArray(cards) || cards.length === 0) {
     return res.status(400).json({ error: 'Cards array required' });
   }
@@ -99,6 +163,19 @@ export default async function handler(req, res) {
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   if (!ANTHROPIC_API_KEY) {
     return res.status(500).json({ error: 'Configuration error' });
+  }
+
+  // ── Gate rate limiting abonnés ───────────────────────────────────────────
+  const rateCheck = await checkAndIncrementDrawCount(userEmail || null);
+  if (!rateCheck.allowed) {
+    const resetDate = new Date(rateCheck.resetsAt).toLocaleDateString('fr-FR', {
+      day: 'numeric', month: 'long'
+    });
+    return res.status(429).json({
+      error: 'monthly_limit_reached',
+      message: `Votre espace de tirage marque une pause ce mois-ci (${MONTHLY_DRAW_LIMIT} tirages atteints). Il se renouvellera le ${resetDate}.`,
+      resetsAt: rateCheck.resetsAt,
+    });
   }
 
   // Construction du prompt
@@ -137,8 +214,8 @@ Un paragraphe court (3-4 phrases) qui noue le tout avec une phrase de fermeture 
 
 ## Fenêtre d'observation
 En 3 à 5 lignes maximum :
-Propose une durée en jours (1, 3 ou 5) adaptée à l'intention et aux cartes.
-1 jour = question urgente ou concrète. 3 jours = question relationnelle ou professionnelle. 5 jours = question de fond, transformation profonde.
+Propose une durée en jours (7, 14 ou 28) adaptée à l'intention et aux cartes.
+7 jours = question concrète ou relationnelle. 14 jours = question professionnelle ou de transition. 28 jours (cycle lunaire) = question de fond, transformation profonde.
 Donne 2 points d'attention spécifiques à CE tirage (pas des généralités) :
 des registres précis où porter l'attention (corps, relations, rêves, résistances, synchronicités, etc.)
 en lien direct avec les cartes tirées.
