@@ -260,6 +260,7 @@
 
   <!-- Script Freemium Tracker -->
   <script src="js/freemium-tracker.js" defer></script>
+  <script src="js/tirages-storage.js"></script>
   <!-- Client QRNG — tirage quantique via ANU -->
   <script src="js/qrng-client.js" defer></script>
 
@@ -342,6 +343,14 @@
     min-height: 100vh;
     min-height: 100dvh;
     background-color: #0a192f;
+    /* Ancrer le fond au viewport (et non à la hauteur de la section) :
+       sans cela, l'ouverture du panneau "panneau quantique" agrandit la
+       section (min-height auto-expansive) et `background-size: cover`
+       recalcule sa mise à l'échelle → effet de "zoom" intempestif du fond
+       (Palier 2 #10). `background-attachment: fixed` fige la référence de
+       calcul sur le viewport. Repassé en `scroll` sur iOS Safari ci-dessous
+       (règle @supports déjà existante, qui ne le supporte pas correctement). */
+    background-attachment: fixed;
   }
 
   /* Fix iOS Safari : background-attachment:fixed non supporté → fond statique */
@@ -1919,6 +1928,18 @@
     will-change: points, opacity;
   }
 
+  /* Pulsation du halo du rayon lumineux : pilotée par classe (et non plus par
+     un <animate> SVG en boucle infinie) afin de pouvoir l'arrêter proprement
+     dès que le rayon est masqué — sinon le halo continuait de clignoter,
+     figé sur la dernière carte ciblée (ex. "Action"), pendant le tirage de la pièce. */
+  #tore-beam-halo.beam-pulsing {
+    animation: beamHaloPulse 2s ease-in-out infinite;
+  }
+  @keyframes beamHaloPulse {
+    0%, 100% { opacity: 0.15; }
+    50%      { opacity: 0.35; }
+  }
+
 
 
   /* halo + onde autour de la pièce */
@@ -1993,7 +2014,9 @@
 
   .tore-coin.spin {
 
-    animation: coin-spin 1s ease-in-out;
+    /* Durée de référence du tirage de pièce : 1,5s (Palier 2 #11 — alignée
+       avec le setTimeout JS qui orchestre la suite de la séquence) */
+    animation: coin-spin 1.5s ease-in-out;
 
   }
 
@@ -2637,6 +2660,26 @@
 
 .tore-fan-card:nth-child(8) { transform: rotate(28deg) translateX(100px); }
 
+/* Sur smartphone, les translations fixes (±100px) débordaient du panneau et
+   les cartes des extrémités de l'éventail étaient coupées par le bord de
+   l'écran (Palier 2 #8 — "cartes coupées sur smartphone lors du tirage de
+   la carte passerelle"). On resserre l'éventail proportionnellement. */
+@media (max-width: 480px) {
+  .tore-fan-card {
+    width: clamp(52px, 15vw, 78px);
+    height: clamp(82px, 24vw, 124px);
+    margin-left: clamp(-39px, -7.5vw, -28px);
+  }
+  .tore-fan-card:nth-child(1) { transform: rotate(-22deg) translateX(-56px); }
+  .tore-fan-card:nth-child(2) { transform: rotate(-16deg) translateX(-40px); }
+  .tore-fan-card:nth-child(3) { transform: rotate(-9deg)  translateX(-23px); }
+  .tore-fan-card:nth-child(4) { transform: rotate(-3deg)  translateX(-6px); }
+  .tore-fan-card:nth-child(5) { transform: rotate(3deg)   translateX(6px); }
+  .tore-fan-card:nth-child(6) { transform: rotate(9deg)   translateX(23px); }
+  .tore-fan-card:nth-child(7) { transform: rotate(16deg)  translateX(40px); }
+  .tore-fan-card:nth-child(8) { transform: rotate(22deg)  translateX(56px); }
+}
+
 
 
 /* bouton annuler (optionnel) */
@@ -3017,6 +3060,81 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
             <i class="fas fa-lock mr-1"></i>Votre intention reste confidentielle
           </p>
 
+          <!-- Bouton ⓘ Fenêtre d'observation — Palier 3 #20
+               Petit déclencheur discret + panneau rétractable expliquant ce qu'est
+               la "fenêtre d'observation" : durée, fonction, attentes. -->
+          <div class="mt-4 flex justify-center">
+            <div style="position:relative;display:inline-block;">
+              <button type="button" id="obs-info-toggle"
+                      aria-expanded="false" aria-controls="obs-info-panel"
+                      style="display:inline-flex;align-items:center;gap:6px;
+                             background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);
+                             border-radius:50px;padding:5px 14px;cursor:pointer;
+                             color:rgba(212,175,55,0.65);font-family:'Lora',Georgia,serif;
+                             font-size:12px;letter-spacing:0.03em;
+                             transition:background 0.2s,border-color 0.2s;"
+                      onmouseenter="this.style.background='rgba(212,175,55,0.14)';this.style.borderColor='rgba(212,175,55,0.45)'"
+                      onmouseleave="this.style.background='rgba(212,175,55,0.08)';this.style.borderColor='rgba(212,175,55,0.25)'"
+                      onclick="(function(btn){
+                        const panel=document.getElementById('obs-info-panel');
+                        const open=btn.getAttribute('aria-expanded')==='true';
+                        btn.setAttribute('aria-expanded',String(!open));
+                        panel.style.maxHeight=open?'0':'500px';
+                        panel.style.opacity=open?'0':'1';
+                        panel.style.marginTop=open?'0':'10px';
+                      })(this)">
+                <span style="display:inline-flex;align-items:center;justify-content:center;
+                              width:16px;height:16px;border-radius:50%;
+                              background:rgba(212,175,55,0.2);font-weight:700;font-size:11px;">i</span>
+                <span>Fenêtre d'observation — qu'est-ce que c'est&nbsp;?</span>
+                <i id="obs-info-chevron" class="fas fa-chevron-down"
+                   style="font-size:10px;transition:transform 0.3s;"></i>
+              </button>
+
+              <!-- Panneau rétractable -->
+              <div id="obs-info-panel" role="region"
+                   style="max-height:0;overflow:hidden;opacity:0;margin-top:0;
+                          transition:max-height 0.4s ease,opacity 0.3s ease,margin-top 0.3s ease;
+                          text-align:left;">
+                <div style="background:rgba(8,18,35,0.92);border:1px solid rgba(212,175,55,0.25);
+                             border-radius:16px;padding:18px 20px;">
+
+                  <p style="margin:0 0 12px;color:#d4af37;font-family:'Cinzel',sans-serif;
+                             font-size:10px;letter-spacing:0.18em;text-transform:uppercase;">
+                    &#127758; Fenêtre d'observation
+                  </p>
+
+                  <p style="margin:0 0 12px;color:rgba(200,192,168,0.85);font-family:'Lora',Georgia,serif;
+                             font-size:13px;line-height:1.75;">
+                    Après votre tirage et votre analyse, l'Oracle vous propose d'ouvrir une <strong style="color:#f5e7a1;">fenêtre d'observation</strong> — une période (1, 3 ou 5&nbsp;jours) pendant laquelle vous restez attentif(ve) aux résonances du tirage dans votre quotidien.
+                  </p>
+
+                  <div style="background:rgba(212,175,55,0.06);border-left:2px solid rgba(212,175,55,0.4);
+                               border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:12px;">
+                    <p style="margin:0 0 6px;color:rgba(212,175,55,0.7);font-size:11px;
+                               letter-spacing:0.12em;text-transform:uppercase;">À quoi ça sert</p>
+                    <p style="margin:0;color:rgba(200,192,168,0.75);font-size:13px;line-height:1.7;">
+                      Le tirage continue de résonner après la séance. La fenêtre vous invite à noter synchronicités, conversations ou images qui font écho à votre intention.
+                    </p>
+                  </div>
+
+                  <div style="background:rgba(212,175,55,0.06);border-left:2px solid rgba(212,175,55,0.4);
+                               border-radius:0 8px 8px 0;padding:10px 14px;margin-bottom:12px;">
+                    <p style="margin:0 0 6px;color:rgba(212,175,55,0.7);font-size:11px;
+                               letter-spacing:0.12em;text-transform:uppercase;">Ce qu'on attend de vous</p>
+                    <p style="margin:0;color:rgba(200,192,168,0.75);font-size:13px;line-height:1.7;">
+                      Rien d'obligatoire — juste un regard légèrement plus attentif. Vous recevrez un email de clôture avec quelques questions de conscience.
+                    </p>
+                  </div>
+
+                  <p style="margin:0;color:rgba(212,175,55,0.4);font-size:11px;font-style:italic;text-align:center;">
+                    Disponible après votre analyse complète.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <!-- Quantum Badge -->
           <div class="mt-5 flex justify-center" id="quantum-section">
             <div class="quantum-badge">
@@ -3157,9 +3275,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
             </filter>
           </defs>
           <polygon id="tore-beam-poly" points="" fill="url(#beamGrad)" filter="url(#beamBlur)" opacity="0" style="transition:opacity 0.8s ease;"/>
-          <ellipse id="tore-beam-halo" cx="0" cy="0" rx="0" ry="0" fill="rgba(240,199,94,0.2)" filter="url(#haloBlur)" opacity="0" style="transition:opacity 0.8s ease;">
-            <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2s" repeatCount="indefinite"/>
-          </ellipse>
+          <ellipse id="tore-beam-halo" cx="0" cy="0" rx="0" ry="0" fill="rgba(240,199,94,0.2)" filter="url(#haloBlur)" opacity="0" style="transition:opacity 0.8s ease;"></ellipse>
         </svg>
 
         <div class="tore-board-7">
@@ -4023,10 +4139,28 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     guideText.textContent = step.guide;
     
     // Afficher l'image de la carte
+    // Sur mobile, le changement de src pouvait laisser apparaître brièvement
+    // l'image de la carte précédente pendant le chargement de la nouvelle —
+    // donnant l'impression que la carte "montrée" dans l'explication ne
+    // correspondait pas (ou arrivait en retard) à la carte réellement
+    // "tirée" sur le plateau (Palier 2 #9). On masque l'image le temps du
+    // chargement puis on la révèle une fois la nouvelle image prête.
     if (guideCardImage && cardData) {
       const imgPath = buildImagePath(familyKey, cardData);
-      guideCardImage.src = imgPath;
-      guideCardImage.alt = cardData.name || step.label;
+      if (guideCardImage.src !== imgPath) {
+        guideCardImage.style.transition = guideCardImage.style.transition || 'opacity 0.18s ease';
+        guideCardImage.style.opacity = '0';
+        const _preloadGuideImg = new Image();
+        _preloadGuideImg.onload = _preloadGuideImg.onerror = () => {
+          guideCardImage.src = imgPath;
+          guideCardImage.alt = cardData.name || step.label;
+          requestAnimationFrame(() => { guideCardImage.style.opacity = '1'; });
+        };
+        _preloadGuideImg.src = imgPath;
+      } else {
+        guideCardImage.alt = cardData.name || step.label;
+        guideCardImage.style.opacity = '1';
+      }
     }
     
     // Afficher le nombre de cartes restantes dans la famille Actions
@@ -4194,6 +4328,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       if (!nextFamilyFound) {
         poly.setAttribute('opacity', '0');
         halo.setAttribute('opacity', '0');
+        halo.classList.remove('beam-pulsing');
         return;
       }
 
@@ -4203,6 +4338,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       if (!sourceCard || !targetCard || sourceCard === targetCard) {
         poly.setAttribute('opacity', '0');
         halo.setAttribute('opacity', '0');
+        halo.classList.remove('beam-pulsing');
         return;
       }
 
@@ -4275,6 +4411,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       halo.setAttribute('rx', tgtRect.width  * 0.52);
       halo.setAttribute('ry', tgtRect.height * 0.42);
       halo.setAttribute('opacity', '0.25');
+      halo.classList.add('beam-pulsing');
 
     }));
   }
@@ -4364,6 +4501,17 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       coinWrapper.style.display = 'block';
       if (boardHost) boardHost.style.pointerEvents = 'none';
 
+      // Éteindre complètement le rayon lumineux (et son halo pulsant) : sinon
+      // il restait figé — et clignotant — sur la dernière carte ciblée
+      // (ex. "Action") pendant toute la phase de tirage de la pièce.
+      const beamSvgEl  = document.getElementById('tore-beam-svg');
+      const beamPolyEl = document.getElementById('tore-beam-poly');
+      const beamHaloEl = document.getElementById('tore-beam-halo');
+      if (window._beamRaf) { cancelAnimationFrame(window._beamRaf); window._beamRaf = null; }
+      if (beamPolyEl) beamPolyEl.setAttribute('opacity', '0');
+      if (beamHaloEl) { beamHaloEl.setAttribute('opacity', '0'); beamHaloEl.classList.remove('beam-pulsing'); }
+      if (beamSvgEl)  beamSvgEl.classList.add('beam-hidden');
+
       // Initialiser les dots pour la phase pièce (6 lancers)
       const dotsContainer = document.getElementById('tore-step-dots');
       if (dotsContainer) {
@@ -4440,20 +4588,29 @@ function showToreAnalysisCTA() {
   const intention = sessionStorage.getItem('tore_intention') || '';
   sessionStorage.setItem('tore_cards', JSON.stringify(cards));
 
-  // Enregistrer dans l'historique localStorage (5 derniers max)
-  try {
-    const tirages = JSON.parse(localStorage.getItem('oradia_tirages') || '[]');
-    tirages.push({
-      type: 'Tirage Tore',
-      date: new Date().toISOString(),
-      intention: intention,
-      cartes: cards.map(c => c.name).filter(Boolean),
-      passerelles: cards.filter(c => c.bridgeCard).map(c => ({ carte: c.name, passerelle: c.bridgeCard.name }))
-    });
-    // Garder seulement les 20 derniers
-    if (tirages.length > 20) tirages.splice(0, tirages.length - 20);
-    localStorage.setItem('oradia_tirages', JSON.stringify(tirages));
-  } catch(e) {}
+  // Enregistrer dans l'historique — Supabase (RLS par user_id) si connecté, sinon stockage local "invité"
+  (async () => {
+    try {
+      const entry = {
+        type: 'Tirage Tore',
+        date: new Date().toISOString(),
+        intention: intention,
+        cards: cards, // format brut (avec bridgeCard) — l'API en dérive cartes/passerelles
+        cartes: cards.map(c => c.name).filter(Boolean),
+        passerelles: cards.filter(c => c.bridgeCard).map(c => ({ carte: c.name, passerelle: c.bridgeCard.name }))
+      };
+      if (window.OradiaTirageStorage) {
+        // Sauvegarde sécurisée côté Supabase pour les membres connectés (RLS : chacun ne voit que ses tirages),
+        // ou stockage local namespacé "invité" pour les visiteurs anonymes — jamais sous une clé globale partagée.
+        await window.OradiaTirageStorage.addTirage(entry, 20);
+      } else {
+        const tirages = JSON.parse(localStorage.getItem('oradia_tirages_invite') || '[]');
+        tirages.push(entry);
+        if (tirages.length > 20) tirages.splice(0, tirages.length - 20);
+        localStorage.setItem('oradia_tirages_invite', JSON.stringify(tirages));
+      }
+    } catch(e) {}
+  })();
 
   // Cacher la bottom-bar
   const bbFinal = el('tore-bottom-bar');
@@ -5778,7 +5935,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
             <p style="font-family:'Cinzel',serif;font-size:17px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(212,175,55,1);margin:0 0 4px;text-shadow:0 0 18px rgba(212,175,55,0.5);">Carte Passerelle</p>
             <div style="
               width:clamp(200px,48vw,260px);
-              aspect-ratio:2/3;
+              aspect-ratio:64/90;
               border-radius:14px;
               overflow:hidden;
               border:2px solid rgba(212,175,55,0.7);
@@ -5786,7 +5943,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
               background:#020817;
               animation:bridgeCardReveal 0.5s cubic-bezier(0.34,1.4,0.64,1) forwards;">
               <img src="${imgPath}" alt="${esc(dataNext.name)}"
-                style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
+                style="width:100%;height:100%;object-fit:contain;object-position:center;display:block;">
             </div>
             <p style="font-family:'Cormorant Garamond','Cormorant',Georgia,serif;font-size:clamp(24px,5vw,32px);font-weight:700;color:#ffffff;letter-spacing:0.06em;margin:0;text-shadow:0 0 20px rgba(255,255,255,0.3);animation:fadeInUp 0.4s ease 0.3s both;">
               ${esc(dataNext.name)}
@@ -6137,7 +6294,7 @@ function showArrowForStep(stepIndex, isMatch) {
     // Lancer d'animation de rotation
     coin.classList.add('spin');
 
-    // Fin de l'animation (1s)
+    // Fin de l'animation (1,5s — alignée avec `coin-spin` ; Palier 2 #11)
     setTimeout(async () => {
       coin.classList.remove('spin');
 
@@ -6265,7 +6422,7 @@ function showArrowForStep(stepIndex, isMatch) {
         }
       }
 
-    }, 1000);
+    }, 1500);
   }
 
   // Afficher un message pour la carte passerelle
@@ -6660,10 +6817,12 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     img.src = src;
   });
 
-  // Filet de sécurité : lancer quand même après 1s si le chargement traîne
+  // Filet de sécurité : lancer quand même si le chargement traîne
+  // (délai réduit sur mobile pour éviter une latence perçue avant le tirage — Palier 2 #7)
+  const _dealFallbackDelay = (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) ? 500 : 1000;
   window._dealFallbackTimer = setTimeout(() => {
     if (_dosLoaded < _dosTotalToLoad) _runDeal();
-  }, 1000);
+  }, _dealFallbackDelay);
 
   // Animation "distribution de cartes" via clones position:fixed
   // (évite overflow:hidden et transform !important du conteneur)
@@ -6695,8 +6854,14 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     }
 
     // Apparition une à une avec délai humain
-    const DELAYS = [0, 280, 530, 760, 970, 1160, 1330];
-    const DUR = 620;
+    // Sur mobile, on resserre la cadence : la version desktop (jusqu'à 1330ms
+    // + 620ms + 300ms ≈ 2,25s avant interaction) était perçue comme lente/figée
+    // sur smartphone (item Palier 2 #7 — "latence à l'étape du tirage de surface").
+    const _isMobileDeal = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
+    const DELAYS = _isMobileDeal
+      ? [0, 130, 250, 360, 460, 550, 630]
+      : [0, 280, 530, 760, 970, 1160, 1330];
+    const DUR = _isMobileDeal ? 380 : 620;
 
     allCards.forEach((card, i) => {
       setTimeout(() => {

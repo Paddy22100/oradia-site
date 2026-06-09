@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="../responsive.css">
     <script src="../security.js"></script>
+    <script src="../js/tirages-storage.js"></script>
     <script>
         // Vérifier la session utilisateur membre (pas admin)
         const SESSION_KEY = 'oradia_member_session';
@@ -270,10 +271,12 @@
             } catch(e) {}
         })();
 
-        // Afficher les tirages depuis localStorage
-        (function() {
+        // Afficher les tirages — Supabase (RLS) si connecté, sinon historique local "invité"
+        (async function() {
             const container = document.getElementById('tiragsList');
-            const tirages = JSON.parse(localStorage.getItem('oradia_tirages') || '[]');
+            const tirages = window.OradiaTirageStorage
+                ? await window.OradiaTirageStorage.loadTirages()
+                : JSON.parse(localStorage.getItem('oradia_tirages_invite') || '[]');
             const recent = tirages.slice(-5).reverse();
 
             if (recent.length === 0) {

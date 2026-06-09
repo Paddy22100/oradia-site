@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="../style.css">
     <link rel="stylesheet" href="../responsive.css">
     <script src="../security.js"></script>
+    <script src="../js/tirages-storage.js"></script>
     <script>
         // Vérifier la session membre
         const SESSION_KEY = 'oradia_member_session';
@@ -485,7 +486,9 @@
                 const email = sess.email || localStorage.getItem('userEmail') || '';
                 const name = sess.name || localStorage.getItem('userName') || email.split('@')[0] || 'Membre';
                 let subscribed = sess.subscribed || false;
-                const tirages = JSON.parse(localStorage.getItem('oradia_tirages') || '[]');
+                const tirages = window.OradiaTirageStorage
+                    ? await window.OradiaTirageStorage.loadTirages()
+                    : JSON.parse(localStorage.getItem('oradia_tirages_invite') || '[]');
 
                 document.querySelectorAll('#profileName').forEach(el => { if(el) el.textContent = name; });
                 document.querySelectorAll('#profileEmail, #infoEmail').forEach(el => { if(el) el.textContent = email || '—'; });

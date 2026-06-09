@@ -325,18 +325,16 @@ async function handleLogin(e) {
         const result = await response.json();
 
         if (result.success) {
-            console.log('Login réussi');
-            
             showMessage('Connexion réussie! Redirection...', 'success');
-            
-            console.log('Token reçu:', result.token);
+
+            // Note sécurité : ne jamais logger le token de session admin en console
+            // (exposition possible via outils de dev, extensions, captures d'écran/support)
             const authData = {
                 valid: true,
                 timestamp: Date.now(),
                 email: result.email || email,
                 token: result.token
             };
-            console.log('Auth data stocké:', authData);
             sessionStorage.setItem('oradia_auth', JSON.stringify(authData));
 
             // Attendre 300ms que le cookie httpOnly soit bien enregistré

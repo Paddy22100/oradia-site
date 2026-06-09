@@ -222,7 +222,10 @@
                     const sessionData = JSON.stringify({
                         email,
                         name: data.user?.name || email.split('@')[0],
-                        subscribed: data.user?.subscribed || false
+                        subscribed: data.user?.subscribed || false,
+                        id: data.user?.id || null,
+                        access_token: data.session?.access_token || null,
+                        refresh_token: data.session?.refresh_token || null
                     });
                     sessionStorage.setItem('oradia_member_session', sessionData);
 

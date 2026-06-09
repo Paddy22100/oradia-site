@@ -697,6 +697,16 @@
             </div>
         </div>
 
+        <!-- Pastille "N tirages gratuits restants" — Palier 3 #19
+             Affichée quand remaining >= 2, pour que l'utilisateur sache combien
+             de tirages gratuits il lui reste sans attendre d'en être au dernier. -->
+        <div id="tore-free-remaining" class="mb-6 fade-in-up" style="display:none;text-align:center;animation-delay:0.05s">
+          <span style="display:inline-flex;align-items:center;gap:8px;background:rgba(10,25,47,0.8);border:1px solid rgba(212,175,55,0.3);border-radius:50px;padding:8px 18px;">
+            <i class="fas fa-gift" style="color:rgba(212,175,55,0.75);font-size:13px;"></i>
+            <span id="tore-free-remaining-text" style="color:rgba(245,231,161,0.85);font-family:'Lora',Georgia,serif;font-size:13px;letter-spacing:0.02em;"></span>
+          </span>
+        </div>
+
         <!-- Bandeau "1 tirage restant" — affiché AVANT les boutons pour visibilité maximale -->
         <div id="tore-conv-last" class="mb-8 fade-in-up" style="display:none; animation-delay:0.1s">
             <div class="relative overflow-hidden rounded-2xl" style="background:linear-gradient(135deg,rgba(5,20,40,0.95),rgba(10,25,47,0.95));border:1px solid rgba(212,175,55,0.25)">
@@ -2173,6 +2183,14 @@
       if (btnNouveau) btnNouveau.style.display = 'none';
     } else if (remaining === 1 && vLast) {
       vLast.style.display = 'block';
+    } else if (remaining >= 2) {
+      // Palier 3 #19 — afficher le compteur de tirages gratuits restants
+      const pill = document.getElementById('tore-free-remaining');
+      const txt  = document.getElementById('tore-free-remaining-text');
+      if (pill && txt) {
+        txt.textContent = `Il vous reste ${remaining} tirage${remaining > 1 ? 's' : ''} gratuit${remaining > 1 ? 's' : ''}`;
+        pill.style.display = 'block';
+      }
     }
   }
 

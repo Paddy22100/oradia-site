@@ -157,208 +157,48 @@
   <!-- Header -->
 <div id="header-placeholder"></div>
 
-  <!-- Hero Section -->
-  <section class="hero-section min-h-[60vh] flex items-center justify-center relative">
+  <!-- Page "Bientôt disponible" — Palier 3 #21 -->
+  <section class="hero-section min-h-screen flex items-center justify-center relative">
     <div class="hero-overlay"></div>
     <div class="container mx-auto px-6 relative z-10">
-      <div class="text-center max-w-4xl mx-auto">
-        <h1 class="cormorant text-5xl md:text-6xl font-bold gold-gradient mb-6 floating">
-          Consultation Spirituelle Personnalisée
+      <div class="text-center max-w-2xl mx-auto">
+
+        <!-- Icône -->
+        <div class="inline-flex items-center justify-center w-20 h-20 rounded-full mb-8"
+             style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);">
+          <i class="fas fa-moon text-gold text-3xl"></i>
+        </div>
+
+        <!-- Badge -->
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full mb-6"
+             style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);">
+          <span class="text-gold text-xs font-cinzel tracking-widest uppercase">Bientôt disponible</span>
+        </div>
+
+        <h1 class="cormorant text-5xl md:text-6xl font-bold gold-gradient mb-6">
+          Prise de rendez-vous
         </h1>
-        <p class="text-xl md:text-2xl text-light-gold mb-8 leading-relaxed">
-          Après votre tirage Tore, approfondissez votre compréhension avec une guidance individuelle
+        <p class="text-xl text-light-gold/80 mb-4 leading-relaxed" style="font-family:'Lora',Georgia,serif;">
+          Les séances de guidance individuelle avec l'Oracle Oradia seront bientôt accessibles ici.
         </p>
-        <div class="flex flex-col sm:flex-row gap-4 justify-center items-center">
-          <div class="flex items-center gap-2 text-light-gold">
-            <i class="fas fa-clock"></i>
-            <span>60 minutes</span>
-          </div>
-          <div class="flex items-center gap-2 text-light-gold">
-            <i class="fas fa-video"></i>
-            <span>En ligne ou présentiel</span>
-          </div>
-          <div class="flex items-center gap-2 text-light-gold">
-            <i class="fas fa-star"></i>
-            <span>100% personnalisé</span>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- Section spéciale Tore -->
-  <section class="section-padding py-16 bg-gradient-to-b from-transparent to-night-blue/50">
-    <div class="container mx-auto max-w-4xl">
-      <div class="text-center mb-8">
-        <div class="inline-flex items-center justify-center w-16 h-16 rounded-full gold-gradient mb-4">
-          <i class="fas fa-infinity text-white text-2xl"></i>
-        </div>
-        <h2 class="cormorant text-3xl md:text-4xl font-bold gold-gradient mb-4">
-          Votre tirage Tore vous a parlé ?
-        </h2>
-        <p class="text-light-gold text-lg max-w-3xl mx-auto">
-          Les cartes révèlent des messages profonds. Ensemble, nous allons décoder leur signification 
-          et créer un plan d'action spirituel pour votre chemin de vie.
+        <p class="text-light-gold/55 mb-10 leading-relaxed" style="font-family:'Lora',Georgia,serif;font-size:0.95rem;font-style:italic;">
+          En attendant, l'Oracle est déjà disponible — votre tirage du Tore vous attend.
         </p>
-      </div>
-      
-      <div class="grid md:grid-cols-3 gap-6 mb-8">
-        <div class="text-center p-6 rounded-xl border border-gold/30 bg-night-blue/50">
-          <div class="text-3xl font-bold gold-gradient mb-2">Avant</div>
-          <p class="text-gray-300 text-sm">Questions, incertitudes, blocages</p>
-        </div>
-        <div class="text-center p-6 rounded-xl border border-gold/30 bg-night-blue/50">
-          <div class="text-3xl font-bold gold-gradient mb-2">Pendant</div>
-          <p class="text-gray-300 text-sm">Analyse profonde, guidance spirituelle, clarté</p>
-        </div>
-        <div class="text-center p-6 rounded-xl border border-gold/30 bg-night-blue/50">
-          <div class="text-3xl font-bold gold-gradient mb-2">Après</div>
-          <p class="text-gray-300 text-sm">Paix intérieure, direction, énergie renouvelée</p>
-        </div>
-      </div>
-    </div>
-  </section>
 
-  <!-- Booking Section -->
-  <section class="section-padding py-20">
-    <div class="container mx-auto max-w-6xl">
-      <div class="text-center mb-12">
-        <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-4">
-          Choisissez votre créneau
-        </h2>
-        <p class="text-light-gold text-lg max-w-3xl mx-auto">
-          Sélectionnez directement dans l'agenda ci-dessous la date et l'heure qui vous conviennent
+        <!-- CTA principal -->
+        <a href="/tore.html"
+           class="inline-flex items-center gap-3 px-10 py-4 rounded-full font-bold text-night-blue transition-all duration-300 hover:scale-105 hover:shadow-lg font-cinzel"
+           style="background:linear-gradient(135deg,#d4af37,#f0c75e);box-shadow:0 4px 20px rgba(212,175,55,0.3);">
+          <i class="fas fa-compass"></i>
+          Faire un tirage du Tore
+        </a>
+
+        <!-- Contact en attendant -->
+        <p class="mt-8 text-light-gold/40 text-sm" style="font-family:'Lora',Georgia,serif;">
+          Une question urgente ?
+          <a href="mailto:contact@oradia.fr" class="text-gold/70 hover:text-gold transition-colors">contact@oradia.fr</a>
         </p>
-      </div>
 
-      <!-- Type de séance selector -->
-      <div class="text-center mb-8">
-        <h3 class="cormorant text-3xl font-bold gold-gradient mb-6">
-          Choisissez votre type de séance
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 max-w-6xl mx-auto">
-          <div class="session-type-card active" data-type="guidance-personnelle">
-            <div class="session-icon">
-              <i class="fas fa-user-circle"></i>
-            </div>
-            <h4 class="session-title">Guidance Personnelle</h4>
-            <p class="session-description">Session individuelle de 60min</p>
-            <div class="session-price">60€</div>
-            <div class="session-duration">1h</div>
-          </div>
-          
-          <div class="session-type-card" data-type="guidance-approfondie">
-            <div class="session-icon">
-              <i class="fas fa-microscope"></i>
-            </div>
-            <h4 class="session-title">Guidance Approfondie</h4>
-            <p class="session-description">Session de 90min pour exploration en profondeur</p>
-            <div class="session-price">90€</div>
-            <div class="session-duration">1h30</div>
-          </div>
-          
-          <div class="session-type-card" data-type="accompagnement-cercle">
-            <div class="session-icon">
-              <i class="fas fa-users"></i>
-            </div>
-            <h4 class="session-title">Accompagnement Cercle</h4>
-            <p class="session-description">Participation à un cercle de parole en groupe</p>
-            <div class="session-price">30€</div>
-            <div class="session-duration">2h</div>
-          </div>
-          
-          <div class="session-type-card" data-type="consultation-rapide">
-            <div class="session-icon">
-              <i class="fas fa-bolt"></i>
-            </div>
-            <h4 class="session-title">Consultation Rapide</h4>
-            <p class="session-description">Session de 30min pour question ciblée</p>
-            <div class="session-price">30€</div>
-            <div class="session-duration">30min</div>
-          </div>
-        </div>
-      </div>
-
-      <!-- Cal.com Iframe -->
-      <div class="bg-[rgba(5,20,40,0.6)] backdrop-blur-md rounded-2xl p-8 border border-gold/30 shadow-2xl shadow-gold/20">
-        <!-- Message d'information -->
-        <div id="selectionMessage" class="text-center mb-4 text-gold/80">
-          <i class="fas fa-info-circle mr-2"></i>
-          Sélectionnez un type de séance ci-dessus, puis réservez via l'agenda
-        </div>
-        
-        <div class="cal-iframe-container" id="calContainer" style="width:100%;height:750px;position:relative;overflow:hidden;border-radius:12px;">
-          <iframe
-            id="calIframe"
-            src="https://cal.com/boucheron-rudy/guidance-oradia-approfondie?embedDomain=oradia.fr&backgroundColor=020817&textColor=f4e4c1&primaryColor=d4af37&borderColor=d4af37&borderWidth=2"
-            width="100%"
-            height="100%"
-            frameborder="0"
-            style="border-radius:12px;"
-            allowtransparency="true">
-          </iframe>
-        </div>
-        
-        <!-- Lien direct principal -->
-        <div class="text-center mt-6">
-          <p class="text-gold/70 mb-3">Pour réserver votre rendez-vous :</p>
-          <a href="https://cal.com/boucheron-rudy/guidance-oradia-approfondie" 
-             target="_blank" 
-             class="inline-flex items-center gap-2 bg-gold hover:bg-light-gold text-night-blue px-8 py-4 rounded-lg font-bold text-lg transition-all duration-300 transform hover:scale-105 shadow-lg hover:shadow-gold/40">
-            <i class="fas fa-calendar-check"></i>
-            Réserver mon rendez-vous
-          </a>
-          <p class="text-gold/60 text-sm mt-3">
-            <i class="fas fa-info-circle mr-1"></i>
-            Le lien s'ouvrira dans un nouvel onglet pour une meilleure expérience
-          </p>
-        </div>
-      </div>
-
-      <!-- Informations importantes -->
-      <div class="mt-12 bg-gold/10 rounded-2xl p-8 border border-gold/30">
-        <h3 class="cormorant text-2xl text-gold mb-6 text-center">
-          <i class="fas fa-info-circle mr-3"></i>
-          Informations importantes
-        </h3>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h4 class="text-gold font-semibold mb-2">
-              <i class="fas fa-video mr-2"></i>
-              Visioconférence
-            </h4>
-            <p class="text-light-gold text-sm">
-              Le lien de visioconférence vous sera envoyé automatiquement par email après confirmation de votre réservation.
-            </p>
-          </div>
-          <div>
-            <h4 class="text-gold font-semibold mb-2">
-              <i class="fas fa-clock mr-2"></i>
-              Ponctualité
-            </h4>
-            <p class="text-light-gold text-sm">
-              Merci de vous connecter 5 minutes avant l'heure prévue pour vérifier votre équipement technique.
-            </p>
-          </div>
-          <div>
-            <h4 class="text-gold font-semibold mb-2">
-              <i class="fas fa-exchange-alt mr-2"></i>
-              Annulation
-            </h4>
-            <p class="text-light-gold text-sm">
-              Annulation possible jusqu'à 24h avant le rendez-vous sans frais.
-            </p>
-          </div>
-          <div>
-            <h4 class="text-gold font-semibold mb-2">
-              <i class="fas fa-laptop mr-2"></i>
-              Équipement requis
-            </h4>
-            <p class="text-light-gold text-sm">
-              Un ordinateur ou smartphone avec webcam, micro et connexion internet stable.
-            </p>
-          </div>
-        </div>
       </div>
     </div>
   </section>
