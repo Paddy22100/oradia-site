@@ -3,7 +3,7 @@
 // Utilise Brevo pour envoyer les emails à contact@oradia.fr
 // + stockage dans Supabase (table support_messages) pour le dashboard admin
 
-const { createClient } = require('@supabase/supabase-js');
+import { createClient } from '@supabase/supabase-js';
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const TO_EMAIL = 'contact@oradia.fr';
 const FROM_EMAIL = 'oracle@oradia.fr';
@@ -145,7 +145,7 @@ async function saveToSupabase({ type, email, name, sujet, categorie, publication
   }
 }
 
-module.exports = async function handler(req, res) {
+export default async function handler(req, res) {
   setCORS(res);
 
   if (req.method === 'OPTIONS') {
