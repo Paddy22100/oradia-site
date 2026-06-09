@@ -23,12 +23,12 @@
             padding: 40px 20px 60px;
         }
 
-        /* Overlay sombre global */
+        /* Overlay sombre global — léger pour laisser transparaître l'image */
         body::before {
             content: '';
             position: fixed;
             inset: 0;
-            background: rgba(5, 10, 25, 0.78);
+            background: rgba(5, 10, 25, 0.52);
             z-index: 0;
         }
 
@@ -36,7 +36,7 @@
             position: relative;
             z-index: 1;
             width: 100%;
-            max-width: 660px;
+            max-width: 780px;
         }
 
         /* Header */
@@ -75,12 +75,12 @@
 
         /* Card principale */
         .card {
-            background: rgba(7, 20, 42, 0.88);
-            border: 1px solid rgba(212,175,55,0.2);
+            background: rgba(7, 20, 42, 0.72);
+            border: 1px solid rgba(212,175,55,0.22);
             border-radius: 18px;
             padding: 40px 40px 36px;
-            box-shadow: 0 24px 64px rgba(0,0,0,0.55);
-            backdrop-filter: blur(6px);
+            box-shadow: 0 24px 64px rgba(0,0,0,0.4);
+            backdrop-filter: blur(10px);
         }
         @media (max-width: 520px) {
             .card { padding: 26px 20px 24px; }
