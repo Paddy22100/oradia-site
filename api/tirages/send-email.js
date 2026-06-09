@@ -258,9 +258,8 @@ async function handleSendEmail(req, res) {
 <body style="margin:0;padding:0;width:100%;background:#1a1a2e;font-family:Georgia,'Times New Roman',serif;">
 <!-- Tableau "fond" pleine largeur : certains clients (Outlook.com, certaines
      apps mobiles) ignorent l'attribut HTML width="100%" sur les <table> et
-     n'honorent que le CSS — d'où un fond qui ne couvrait pas toute la largeur
-     de la fenêtre de visualisation (Palier 3 #16). On renforce avec
-     `style="width:100%"` + `min-width:100%` côté CSS, en plus de l'attribut. -->
+     n'honorent que le CSS. On renforce avec style="width:100%" + min-width:100%
+     cote CSS, en plus de l'attribut. -->
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;min-width:100%;background:#111827;padding:40px 20px;">
   <tr>
     <td align="center" style="width:100%;">
