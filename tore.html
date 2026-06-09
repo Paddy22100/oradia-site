@@ -261,7 +261,7 @@
   <!-- Script Freemium Tracker -->
   <script src="js/freemium-tracker.js" defer></script>
   <script src="js/tirages-storage.js"></script>
-  <!-- Client QRNG â€” tirage quantique via ANU -->
+  <!-- Client QRNG — tirage quantique via ANU -->
   <script src="js/qrng-client.js" defer></script>
 
 </head>
@@ -282,7 +282,7 @@
 
 
 
-<!-- ================== TIRAGE DU TORE â€“ PAGE IMMERSIVE ================== -->
+<!-- ================== TIRAGE DU TORE – PAGE IMMERSIVE ================== -->
 
 
 
@@ -346,14 +346,14 @@
     /* Ancrer le fond au viewport (et non à la hauteur de la section) :
        sans cela, l'ouverture du panneau "panneau quantique" agrandit la
        section (min-height auto-expansive) et `background-size: cover`
-       recalcule sa mise à l'échelle â†’ effet de "zoom" intempestif du fond
+       recalcule sa mise à l'échelle → effet de "zoom" intempestif du fond
        (Palier 2 #10). `background-attachment: fixed` fige la référence de
        calcul sur le viewport. Repassé en `scroll` sur iOS Safari ci-dessous
        (règle @supports déjà existante, qui ne le supporte pas correctement). */
     background-attachment: fixed;
   }
 
-  /* Fix iOS Safari : background-attachment:fixed non supporté â†’ fond statique */
+  /* Fix iOS Safari : background-attachment:fixed non supporté → fond statique */
   @supports (-webkit-touch-callout: none) {
     #tore-immersif {
       background-attachment: scroll !important;
@@ -380,7 +380,7 @@
     transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1),
                 opacity   0.55s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  /* Ã‰tat de fermeture */
+  /* État de fermeture */
   #tore-guide-message.guide-hiding {
     opacity: 0 !important;
     pointer-events: none !important;
@@ -523,7 +523,7 @@
   transform: translate(-40px, 15px);
 }
 
-/* Ã‰motions (bas gauche) - descendre encore davantage et rapprocher du centre */
+/* Émotions (bas gauche) - descendre encore davantage et rapprocher du centre */
 .tore-card.pos-3 {
   transform: translate(40px, -15px);
 }
@@ -553,7 +553,7 @@
 
                Révélations (droite)        [pos-4]
 
-     Ligne 3 : Ã‰motions (gauche)           [pos-3]
+     Ligne 3 : Émotions (gauche)           [pos-3]
 
                (rien au centre)
 
@@ -754,7 +754,7 @@
     }
   }
 
-  /* â”€â”€ TABLETTE PORTRAIT (768pxâ€“1023px) : ajustements spécifiques â”€â”€ */
+  /* ── TABLETTE PORTRAIT (768px–1023px) : ajustements spécifiques ── */
   @media (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
     /* Réduire les décalages latéraux qui peuvent toucher les bords sur 768px */
     #tore-immersif .tore-board-7 .tore-card.pos-1,
@@ -772,7 +772,7 @@
     }
   }
 
-  /* â”€â”€ TABLETTE & DESKTOP (â‰¥ 640px) â”€â”€ */
+  /* ── TABLETTE & DESKTOP (≥ 640px) ── */
   @media (min-width: 640px) {
 
     /* Position du fond décalée vers la gauche sur desktop */
@@ -827,7 +827,7 @@
       transform: none !important;
     }
 
-    /* Décaler Transmutations et Ã‰motions (colonne gauche) vers la droite */
+    /* Décaler Transmutations et Émotions (colonne gauche) vers la droite */
     #tore-immersif .tore-board-7 .tore-card.pos-1,
     #tore-immersif .tore-board-7 .tore-card.pos-3 {
       transform: translateX(60px) !important;
@@ -848,7 +848,7 @@
     }
   }
 
-  /* â”€â”€ Cartes passerelles desktop : gauche ou droite selon colonne â”€â”€ */
+  /* ── Cartes passerelles desktop : gauche ou droite selon colonne ── */
   @media (min-width: 640px) {
     /* Autoriser le débordement sur le plateau pour les passerelles */
     #tore-immersif .tore-board-7 {
@@ -875,7 +875,7 @@
     .tore-card.pos-5 .tore-card-inner {
       overflow: hidden !important;
     }
-    /* Colonne gauche (Besoins pos-0, Transmutation pos-1, Ã‰motions pos-3) â†’ passerelle à gauche */
+    /* Colonne gauche (Besoins pos-0, Transmutation pos-1, Émotions pos-3) → passerelle à gauche */
     .tore-card.pos-0 .tore-card-extra,
     .tore-card.pos-1 .tore-card-extra,
     .tore-card.pos-3 .tore-card-extra {
@@ -886,7 +886,7 @@
       transform: translateY(-50%) !important;
       width: min(80%, 90px) !important;
     }
-    /* Colonne droite (Archétypes pos-2, Révélations pos-4, Actions pos-5) â†’ passerelle à droite */
+    /* Colonne droite (Archétypes pos-2, Révélations pos-4, Actions pos-5) → passerelle à droite */
     .tore-card.pos-2 .tore-card-extra,
     .tore-card.pos-4 .tore-card-extra,
     .tore-card.pos-5 .tore-card-extra {
@@ -899,7 +899,7 @@
     }
   }
 
-  /* â”€â”€ Flip scaleX 2D (desktop â‰¥ 640px) â€” même animation que mobile â”€â”€ */
+  /* ── Flip scaleX 2D (desktop ≥ 640px) — même animation que mobile ── */
   @media (min-width: 640px) {
     .tore-card {
       perspective: none !important;
@@ -953,7 +953,7 @@
     }
   }
 
-  /* â”€â”€ Flip scaleX 2D (mobile < 640px) â€” compatible iOS/Android â”€â”€ */
+  /* ── Flip scaleX 2D (mobile < 640px) — compatible iOS/Android ── */
   @media (max-width: 639px) {
     /* Annuler tout contexte 3D */
     .tore-card {
@@ -1067,12 +1067,12 @@
     }
   }
 
-  /* â”€â”€ Masquer le logo-circle global dans les cartes du tore â”€â”€ */
+  /* ── Masquer le logo-circle global dans les cartes du tore ── */
   .tore-card-back .logo-circle {
     display: none !important;
   }
 
-  /* â”€â”€ Styles communs back/front â”€â”€ */
+  /* ── Styles communs back/front ── */
   .tore-card-inner {
     position: relative;
     width: 100%;
@@ -1514,7 +1514,7 @@
     100% { transform: scale(1); box-shadow: 0 0 0 3px rgba(231,76,60,0.95); }
   }
 
-  /* Badge de comparaison pièce â†” carte */
+  /* Badge de comparaison pièce ↔ carte */
   .polarity-reveal-badge {
     position: absolute;
     top: 50%;
@@ -1594,7 +1594,7 @@
     100% { transform: translate(-50%, -50%) scale(0.85); opacity: 0; }
   }
 
-  /* â”€â”€ Boussole Oradia (écran de chargement analyse) â”€â”€ */
+  /* ── Boussole Oradia (écran de chargement analyse) ── */
   #oradia-compass-overlay {
     position: fixed;
     inset: 0;
@@ -1711,7 +1711,7 @@
     to   { opacity: 0; }
   }
 
-  /* â”€â”€ Animations d'apparition des modales â”€â”€ */
+  /* ── Animations d'apparition des modales ── */
 
   @keyframes modalOverlayIn {
     from { opacity: 0; }
@@ -1842,7 +1842,7 @@
 
 
 
-  /* Ligne lumineuse coin â†’ carte â€” position:absolute pour ignorer le scroll */
+  /* Ligne lumineuse coin → carte — position:absolute pour ignorer le scroll */
 
   #tore-arrow {
     position: absolute;
@@ -1894,7 +1894,7 @@
 
   /* ========================
 
-     PIÃˆCE DE TIRAGE ORADIA
+     PIÈCE DE TIRAGE ORADIA
 
      ======================== */
 
@@ -1930,7 +1930,7 @@
 
   /* Pulsation du halo du rayon lumineux : pilotée par classe (et non plus par
      un <animate> SVG en boucle infinie) afin de pouvoir l'arrêter proprement
-     dès que le rayon est masqué â€” sinon le halo continuait de clignoter,
+     dès que le rayon est masqué — sinon le halo continuait de clignoter,
      figé sur la dernière carte ciblée (ex. "Action"), pendant le tirage de la pièce. */
   #tore-beam-halo.beam-pulsing {
     animation: beamHaloPulse 2s ease-in-out infinite;
@@ -2014,7 +2014,7 @@
 
   .tore-coin.spin {
 
-    /* Durée de référence du tirage de pièce : 1,5s (Palier 2 #11 â€” alignée
+    /* Durée de référence du tirage de pièce : 1,5s (Palier 2 #11 — alignée
        avec le setTimeout JS qui orchestre la suite de la séquence) */
     animation: coin-spin 1.5s ease-in-out;
 
@@ -2124,7 +2124,7 @@
 
 
 
-  /* Aperçu zoom des cartes retournées â€“ version douce */
+  /* Aperçu zoom des cartes retournées – version douce */
 
   #card-preview-overlay {
 
@@ -2662,7 +2662,7 @@
 
 /* Sur smartphone, les translations fixes (±100px) débordaient du panneau et
    les cartes des extrémités de l'éventail étaient coupées par le bord de
-   l'écran (Palier 2 #8 â€” "cartes coupées sur smartphone lors du tirage de
+   l'écran (Palier 2 #8 — "cartes coupées sur smartphone lors du tirage de
    la carte passerelle"). On resserre l'éventail proportionnellement. */
 @media (max-width: 480px) {
   .tore-fan-card {
@@ -2740,7 +2740,7 @@
 
 
 
-/* â”€â”€ Rayon lumineux : masqué pendant l'overlay passerelle â”€â”€ */
+/* ── Rayon lumineux : masqué pendant l'overlay passerelle ── */
 body:has(#tore-extra-overlay) #tore-beam-svg {
   display: none !important;
 }
@@ -2964,13 +2964,13 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
             style="white-space:nowrap;background:none;border:1px solid rgba(212,175,55,0.5);color:#d4af37;font-family:'Lora',Georgia,serif;font-size:12px;letter-spacing:0.08em;padding:7px 14px;border-radius:20px;cursor:pointer;transition:all 0.2s;touch-action:manipulation;"
             onmouseenter="this.style.background='rgba(212,175,55,0.12)';this.style.borderColor='rgba(212,175,55,0.9)'"
             onmouseleave="this.style.background='none';this.style.borderColor='rgba(212,175,55,0.5)'">
-            âœ¦ Lancer
+            ✦ Lancer
           </button>
           <button type="button" id="tore-to-analysis"
             style="display:none;white-space:nowrap;background:none;border:1px solid rgba(212,175,55,0.5);color:#d4af37;font-family:'Lora',Georgia,serif;font-size:12px;letter-spacing:0.08em;padding:7px 14px;border-radius:20px;cursor:pointer;transition:all 0.2s;"
             onmouseenter="this.style.background='rgba(212,175,55,0.12)'"
             onmouseleave="this.style.background='none'">
-            Voir mon analyse â†’
+            Voir mon analyse →
           </button>
         </div>
 
@@ -3007,7 +3007,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
             Quelle intention portez-vous ?
           </h2>
           <p class="text-light-gold/70 leading-relaxed" style="font-size:clamp(12px,1.4vw,15px);margin-top:clamp(4px,0.8vh,10px);">
-            Prenez un moment. Lâ€™Oracle vous guidera à travers les réponses que vous portez déjà en vous.
+            Prenez un moment. L’Oracle vous guidera à travers les réponses que vous portez déjà en vous.
           </p>
         </div>
 
@@ -3015,7 +3015,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
         <div class="flex items-start gap-2 px-1" style="margin-bottom:0;">
           <i class="fas fa-lightbulb text-gold/70 text-sm mt-0.5 flex-shrink-0"></i>
           <p class="text-light-gold/60 text-xs sm:text-sm leading-relaxed italic">
-            Formulez une question ouverte : « Comment », « Quelle », « Pourquoi »â€¦ et terminez par un ?
+            Formulez une question ouverte : « Comment », « Quelle », « Pourquoi »… et terminez par un ?
           </p>
         </div>
 
@@ -3098,14 +3098,14 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
               <div class="quantum-comparison">
                 <div class="quantum-col quantum-col-before">
-                  <div class="quantum-col-icon">ðŸŽ²</div>
+                  <div class="quantum-col-icon">🎲</div>
                   <strong>Aléatoire classique</strong>
                   <p>Un algorithme simule le hasard par des calculs. En théorie, quelqu'un qui
                   connaîtrait tous les paramètres initiaux pourrait prédire le résultat.
                   Ce hasard est une illusion mathématique utile, mais fermée.</p>
                 </div>
                 <div class="quantum-col quantum-col-after">
-                  <div class="quantum-col-icon">âš›ï¸</div>
+                  <div class="quantum-col-icon">⚛️</div>
                   <strong>Aléatoire quantique</strong>
                   <p>Le hasard vient du comportement réel de particules subatomiques.
                   La physique elle-même affirme que ce résultat n'existe pas avant d'être mesuré :
@@ -3114,7 +3114,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
               </div>
 
               <div class="quantum-source">
-                <div class="quantum-source-logo">ðŸ”¬</div>
+                <div class="quantum-source-logo">🔬</div>
                 <div>
                   <strong>Source : Laboratoire de Physique Quantique de l'ANU</strong><br>
                   <span>Australian National University, Canberra, Australie</span>
@@ -3179,7 +3179,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
 
 
-      <!-- PLATEAU â€“ 7 TAS EN MODE SIX-POINTS -->
+      <!-- PLATEAU – 7 TAS EN MODE SIX-POINTS -->
 
       <div id="tore-board" class="hidden relative z-10">
 
@@ -3216,7 +3216,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
 
 
-      <!-- Flèche coin â†’ carte (SVG) - recréé dynamiquement en position:absolute -->
+      <!-- Flèche coin → carte (SVG) - recréé dynamiquement en position:absolute -->
       <svg id="tore-arrow"></svg>
 
 
@@ -3292,7 +3292,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
 
 
-      <!-- Modale de révélation pièce â†” carte -->
+      <!-- Modale de révélation pièce ↔ carte -->
       <div id="tore-polarity-reveal" role="dialog" aria-modal="true" aria-labelledby="tore-polarity-family" class="hidden fixed inset-0 z-[65] flex items-end justify-center pb-4 sm:pb-8 px-3 sm:px-4" style="background: linear-gradient(to top, rgba(0,5,15,0.82) 0%, rgba(0,5,15,0.15) 55%, transparent 100%); pointer-events: auto;">
         <div id="tore-polarity-inner" class="relative w-full max-w-4xl rounded-3xl overflow-hidden" style="background: linear-gradient(135deg, #0a1628 0%, #0d1f3c 50%, #0a1628 100%); border: 2px solid rgba(212,175,55,0.4); box-shadow: 0 30px 80px rgba(0,0,0,0.8), 0 0 60px rgba(212,175,55,0.08);">
           <!-- Barre lumineuse haut -->
@@ -3341,7 +3341,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
         </div>
       </div>
 
-      <!-- RÃ‰SULTATS TEXTE -->
+      <!-- RÉSULTATS TEXTE -->
 
       <div id="tore-results" class="hidden relative z-10 mt-10">
 
@@ -3363,47 +3363,47 @@ window.DATA = {
 
 
 
-  // â–² = yang (triangle) â€¢ â— = yin (cercle)
+  // ▲ = yang (triangle) • ● = yin (cercle)
 
 
 
   emotions: [
 
-    {name:"JOIE",           quote:"Lâ€™onde éclate, la lumière danse dans ton cÅ“ur.", polarity:"yang"},
+    {name:"JOIE",           quote:"L’onde éclate, la lumière danse dans ton cœur.", polarity:"yang"},
 
     {name:"TRISTESSE",      quote:"La pluie descend, lavant la mémoire des pierres.", polarity:"yin"},
 
     {name:"AMOUR",          quote:"Le souffle relie, un fil invisible circule.", polarity:"yang"},
 
-    {name:"SOLITUDE",       quote:"Le silence sâ€™installe comme une montagne.", polarity:"yin"},
+    {name:"SOLITUDE",       quote:"Le silence s’installe comme une montagne.", polarity:"yin"},
 
-    {name:"Ã‰MERVEILLEMENT", quote:"Lâ€™enfant intérieur ouvre grand ses yeux.", polarity:"yang"},
+    {name:"ÉMERVEILLEMENT", quote:"L’enfant intérieur ouvre grand ses yeux.", polarity:"yang"},
 
-    {name:"DÃ‰GOÃ›T",         quote:"Le corps rejette ce qui empoisonne.", polarity:"yin"},
+    {name:"DÉGOÛT",         quote:"Le corps rejette ce qui empoisonne.", polarity:"yin"},
 
-    {name:"SÃ‰RÃ‰NITÃ‰",       quote:"L'eau se pose, le monde se reflète sans bruit.", polarity:"yang"},
+    {name:"SÉRÉNITÉ",       quote:"L'eau se pose, le monde se reflète sans bruit.", polarity:"yang"},
 
     {name:"CONFUSION",      quote:"La brume monte, les repères se perdent.", polarity:"yin"},
 
-    {name:"COLÃˆRE",         quote:"Le feu jaillit, brisant les chaînes.", polarity:"yang"},
+    {name:"COLÈRE",         quote:"Le feu jaillit, brisant les chaînes.", polarity:"yang"},
 
     {name:"IMPUISSANCE",    quote:"Le geste se suspend, la force ne trouve plus son passage.", polarity:"yin"},
 
     {name:"COURAGE",        quote:"Le pas tremblant franchit la ligne.", polarity:"yang"},
 
-    {name:"PEUR",           quote:"Le mouvement se fige à lâ€™approche de lâ€™inconnu.", polarity:"yin"},
+    {name:"PEUR",           quote:"Le mouvement se fige à l’approche de l’inconnu.", polarity:"yin"},
 
-    {name:"CONFIANCE",      quote:"Lâ€™arbre se dresse, enraciné vers la lumière.", polarity:"yang"},
+    {name:"CONFIANCE",      quote:"L’arbre se dresse, enraciné vers la lumière.", polarity:"yang"},
 
     {name:"HONTE",          quote:"Le visage se cache sous le voile.", polarity:"yin"},
 
-    {name:"FIERTÃ‰",         quote:"Ce que vous avez traversé vous rend stable, solide et vrai.", polarity:"yang"},
+    {name:"FIERTÉ",         quote:"Ce que vous avez traversé vous rend stable, solide et vrai.", polarity:"yang"},
 
-    {name:"CULPABILITÃ‰",    quote:"Une lourdeur s'installe, née d'un pas mal posé.", polarity:"yin"},
+    {name:"CULPABILITÉ",    quote:"Une lourdeur s'installe, née d'un pas mal posé.", polarity:"yin"},
 
-    {name:"IMPATIENCE",     quote:"Le cheval piaffe avant lâ€™aube.", polarity:"yang"},
+    {name:"IMPATIENCE",     quote:"Le cheval piaffe avant l’aube.", polarity:"yang"},
 
-    {name:"PATIENCE",       quote:"Le fruit mûrit dans lâ€™ombre.", polarity:"yin"},
+    {name:"PATIENCE",       quote:"Le fruit mûrit dans l’ombre.", polarity:"yin"},
 
   ],
 
@@ -3413,37 +3413,37 @@ window.DATA = {
 
     {name:"RECONNAISSANCE", quote:"Le bourgeon éclot quand il est vu.", polarity:"yang"},
 
-    {name:"SÃ‰CURITÃ‰",       quote:"Le foyer veille, ton être appaisé se repose.", polarity:"yin"},
+    {name:"SÉCURITÉ",       quote:"Le foyer veille, ton être appaisé se repose.", polarity:"yin"},
 
-    {name:"LIBERTÃ‰",        quote:"Le vent brise les clôtures invisibles.", polarity:"yang"},
+    {name:"LIBERTÉ",        quote:"Le vent brise les clôtures invisibles.", polarity:"yang"},
 
-    {name:"SOUTIEN",        quote:"Deux troncs sâ€™appuient et forment un arc.", polarity:"yin"},
+    {name:"SOUTIEN",        quote:"Deux troncs s’appuient et forment un arc.", polarity:"yin"},
 
-    {name:"REPOS",          quote:"Le corps se dépose, la rivière sâ€™apaise.", polarity:"yin"},
+    {name:"REPOS",          quote:"Le corps se dépose, la rivière s’apaise.", polarity:"yin"},
 
-    {name:"CLARTÃ‰",        quote:"Le soleil perce la brume.", polarity:"yang"},
+    {name:"CLARTÉ",        quote:"Le soleil perce la brume.", polarity:"yang"},
 
-    {name:"APPARTENANCE",   quote:"Le cercle sâ€™ouvre pour accueillir.", polarity:"yin"},
+    {name:"APPARTENANCE",   quote:"Le cercle s’ouvre pour accueillir.", polarity:"yin"},
 
     {name:"AUTONOMIE",      quote:"Le pas n'attend plus d'autorisation pour avancer.", polarity:"yang"},
 
-    {name:"STIMULATION",    quote:"Lâ€™étincelle jaillit et anime la marche.", polarity:"yang"},
+    {name:"STIMULATION",    quote:"L’étincelle jaillit et anime la marche.", polarity:"yang"},
 
     {name:"HARMONIE",       quote:"La lyre vibre cordes accordées.", polarity:"yin"},
 
-    {name:"AMOUR REÃ‡U",     quote:"Lorsque la douceur entre, le monde sâ€™apaise.", polarity:"yang"},
+    {name:"AMOUR REÇU",     quote:"Lorsque la douceur entre, le monde s’apaise.", polarity:"yang"},
 
     {name:"LE SENS",        quote:"La lanterne éclaire le chemin.", polarity:"yin"},
 
     {name:"PROTECTION",     quote:"Le manteau couvre de chaleur.", polarity:"yin"},
 
-    {name:"EXPANSION",      quote:"Lâ€™horizon sâ€™élargit et appelle.", polarity:"yang"},
+    {name:"EXPANSION",      quote:"L’horizon s’élargit et appelle.", polarity:"yang"},
 
-    {name:"INTIMITÃ‰",       quote:"Lâ€™alcôve garde le secret des âmes.", polarity:"yin"},
+    {name:"INTIMITÉ",       quote:"L’alcôve garde le secret des âmes.", polarity:"yin"},
 
-    {name:"CRÃ‰ATIVITÃ‰",     quote:"L'étincelle façonne une forme neuve.", polarity:"yang"},
+    {name:"CRÉATIVITÉ",     quote:"L'étincelle façonne une forme neuve.", polarity:"yang"},
 
-    {name:"AUTHENTICITÃ‰",   quote:"Le masque tombe, le visage demeure.", polarity:"yin"},
+    {name:"AUTHENTICITÉ",   quote:"Le masque tombe, le visage demeure.", polarity:"yin"},
 
     {name:"GUIDANCE",       quote:"L'étoile brille au-dessus du chemin.", polarity:"yang"},
 
@@ -3457,23 +3457,23 @@ window.DATA = {
 
     {name:"TRANSFORMATION",quote:"Le bois brûle et devient flamme.", polarity:"yang"},
 
-    {name:"LÃ‚CHER-PRISE",  quote:"La feuille tombe et nourrit la terre.", polarity:"yin"},
+    {name:"LÂCHER-PRISE",  quote:"La feuille tombe et nourrit la terre.", polarity:"yin"},
 
-    {name:"LIBÃ‰RATION",    quote:"La digue cède, la vie circule à nouveau.", polarity:"yang"},
+    {name:"LIBÉRATION",    quote:"La digue cède, la vie circule à nouveau.", polarity:"yang"},
 
     {name:"PARDON",        quote:"Les chaînes brisées rouillent au sol.", polarity:"yin"},
 
-    {name:"ALIGNEMENT",    quote:"Les astres sâ€™alignent sur un axe commun.", polarity:"yang"},
+    {name:"ALIGNEMENT",    quote:"Les astres s’alignent sur un axe commun.", polarity:"yang"},
 
-    {name:"DÃ‰TACHEMENT",   quote:"Lâ€™oiseau sâ€™élève sans sâ€™accrocher aux branches.", polarity:"yin"},
+    {name:"DÉTACHEMENT",   quote:"L’oiseau s’élève sans s’accrocher aux branches.", polarity:"yin"},
 
-    {name:"PURIFICATION",  quote:"Lâ€™eau claire traverse la roche.", polarity:"yang"},
+    {name:"PURIFICATION",  quote:"L’eau claire traverse la roche.", polarity:"yang"},
 
     {name:"ANCRAGE",       quote:"Les racines plongent dans le sol fertile.", polarity:"yin"},
 
-    {name:"OUVERTURE",     quote:"La porte sâ€™entrouvre, la lumière jaillit.", polarity:"yang"},
+    {name:"OUVERTURE",     quote:"La porte s’entrouvre, la lumière jaillit.", polarity:"yang"},
 
-    {name:"FLUIDITÃ‰",      quote:"La rivière contourne lâ€™obstacle sans effort.", polarity:"yin"},
+    {name:"FLUIDITÉ",      quote:"La rivière contourne l’obstacle sans effort.", polarity:"yin"},
 
     {name:"CLARIFICATION", quote:"L'essentiel apparait dans la lumière retrouvée.", polarity:"yang"},
 
@@ -3483,11 +3483,11 @@ window.DATA = {
 
     {name:"VIDE",          quote:"La coupe vide attend d'être remplie.", polarity:"yin"},
 
-    {name:"PLÃ‰NITUDE",     quote:"Le vase déborde de miel et d'offrandes.", polarity:"yang"},
+    {name:"PLÉNITUDE",     quote:"Le vase déborde de miel et d'offrandes.", polarity:"yang"},
 
     {name:"INCARNATION",   quote:"Le pas touche la terre lourde.", polarity:"yin"},
 
-    {name:"TRANSCENDANCE", quote:"En prenant de la hauteur, la route sâ€™éclaire autrement.", polarity:"yang"},
+    {name:"TRANSCENDANCE", quote:"En prenant de la hauteur, la route s’éclaire autrement.", polarity:"yang"},
 
   ],
 
@@ -3497,21 +3497,21 @@ window.DATA = {
 
     {name:"L'ALCHIMISTE",   quote:"Le plomb rêve de devenir or.", polarity:"yin"},
 
-    {name:"LE BÃ‚TISSEUR",   quote:"La structure s'élève quand le geste est clair.", polarity:"yang"},
+    {name:"LE BÂTISSEUR",   quote:"La structure s'élève quand le geste est clair.", polarity:"yang"},
 
-    {name:"LA PRÃŠTRESSE",   quote:"Le voile se soulève dans l'espace intérieur.", polarity:"yin"},
+    {name:"LA PRÊTRESSE",   quote:"Le voile se soulève dans l'espace intérieur.", polarity:"yin"},
 
     {name:"LE VOYAGEUR",    quote:"Chaque pas transforme celui qui marche.", polarity:"yang"},
 
     {name:"LE NOMADE",      quote:"Le pas demeure, même quand l'horizon recule.", polarity:"yang"},
 
-    {name:"LE RÃŠVEUR",      quote:"L'Å“il fermé voit ce que le monde tait.", polarity:"yin"},
+    {name:"LE RÊVEUR",      quote:"L'œil fermé voit ce que le monde tait.", polarity:"yin"},
 
     {name:"LE VISIONNAIRE", quote:"Le regard perce les âges à venir.", polarity:"yang"},
 
     {name:"LA TISSEUSE",    quote:"Le fil relie ce que la vie a séparé.", polarity:"yin"},
 
-    {name:"LE GUERRIER",    quote:"Le cÅ“ur frappe avec droiture.", polarity:"yang"},
+    {name:"LE GUERRIER",    quote:"Le cœur frappe avec droiture.", polarity:"yang"},
 
     {name:"LE SAGE",        quote:"Le silence enseigne plus que mille mots.", polarity:"yin"},
 
@@ -3537,37 +3537,37 @@ window.DATA = {
 
   revelations: [
 
-    {name:"CLÃ‰",          quote:"Lâ€™objet caché ouvre la chambre secrète.", polarity:"yang"},
+    {name:"CLÉ",          quote:"L’objet caché ouvre la chambre secrète.", polarity:"yang"},
 
-    {name:"PORTE",        quote:"Lâ€™ouverture se dessine dans le mur.", polarity:"yin"},
+    {name:"PORTE",        quote:"L’ouverture se dessine dans le mur.", polarity:"yin"},
 
     {name:"MESSAGE",      quote:"Un murmure s'élève, porteur d'un sens à écouter.", polarity:"yang"},
 
-    {name:"SYNCHRONICITÃ‰",quote:"Quand deux instants se touchent, le sens apparaît.", polarity:"yin"},
+    {name:"SYNCHRONICITÉ",quote:"Quand deux instants se touchent, le sens apparaît.", polarity:"yin"},
 
-    {name:"SIGNE",        quote:"Un indice modeste attire l'Å“il attentif.", polarity:"yin"},
+    {name:"SIGNE",        quote:"Un indice modeste attire l'œil attentif.", polarity:"yin"},
 
-    {name:"VISION",       quote:"Lâ€™Å“il perce au-delà des voiles.", polarity:"yang"},
+    {name:"VISION",       quote:"L’œil perce au-delà des voiles.", polarity:"yang"},
 
-    {name:"PRÃ‰SAGE",      quote:"Un souffle dâ€™avenir traverse le présent.", polarity:"yin"},
+    {name:"PRÉSAGE",      quote:"Un souffle d’avenir traverse le présent.", polarity:"yin"},
 
-    {name:"Ã‰VEIL",        quote:"La conscience sâ€™ouvre et tout sâ€™éclaire autrement.", polarity:"yang"},
+    {name:"ÉVEIL",        quote:"La conscience s’ouvre et tout s’éclaire autrement.", polarity:"yang"},
 
-    {name:"LUMIÃˆRE",      quote:"Un rayon fend lâ€™ombre.", polarity:"yang"},
+    {name:"LUMIÈRE",      quote:"Un rayon fend l’ombre.", polarity:"yang"},
 
-    {name:"DÃ‰VOILEMENT",  quote:"Le rideau sâ€™écarte, la scène surgit.", polarity:"yin"},
+    {name:"DÉVOILEMENT",  quote:"Le rideau s’écarte, la scène surgit.", polarity:"yin"},
 
-    {name:"VÃ‰RITÃ‰",       quote:"Le voile tombe, lâ€™essence apparaît.", polarity:"yang"},
+    {name:"VÉRITÉ",       quote:"Le voile tombe, l’essence apparaît.", polarity:"yang"},
 
-    {name:"ILLUSION",     quote:"Lâ€™image trompe et captive.", polarity:"yin"},
+    {name:"ILLUSION",     quote:"L’image trompe et captive.", polarity:"yin"},
 
-    {name:"Ã‰TINCELLE",    quote:"Le feu naît dâ€™une poussière de pierre.", polarity:"yang"},
+    {name:"ÉTINCELLE",    quote:"Le feu naît d’une poussière de pierre.", polarity:"yang"},
 
-    {name:"SILENCE",      quote:"Lâ€™absence de bruit révèle lâ€™essentiel.", polarity:"yin"},
+    {name:"SILENCE",      quote:"L’absence de bruit révèle l’essentiel.", polarity:"yin"},
 
-    {name:"CHIFFRE",      quote:"Le nombre ordonne lâ€™univers caché.", polarity:"yang"},
+    {name:"CHIFFRE",      quote:"Le nombre ordonne l’univers caché.", polarity:"yang"},
 
-    {name:"SYMBOLE",      quote:"Lâ€™image muette parle au cÅ“ur.", polarity:"yin"},
+    {name:"SYMBOLE",      quote:"L’image muette parle au cœur.", polarity:"yin"},
 
     {name:"ORIGINE",      quote:"La source coule en amont de tout.", polarity:"yin"},
 
@@ -3581,19 +3581,19 @@ window.DATA = {
 
     {name:"AGIR",        quote:"La graine pousse en sortant de terre.", polarity:"yang"},
 
-    {name:"Ã‰COUTER",     quote:"Lâ€™oreille se penche sur le murmure.", polarity:"yin"},
+    {name:"ÉCOUTER",     quote:"L’oreille se penche sur le murmure.", polarity:"yin"},
 
     {name:"DIRE",        quote:"La parole tranche comme un souffle clair.", polarity:"yang"},
 
-    {name:"RECEVOIR",    quote:"Le cÅ“ur ouvert accueille le don.", polarity:"yin"},
+    {name:"RECEVOIR",    quote:"Le cœur ouvert accueille le don.", polarity:"yin"},
 
-    {name:"CRÃ‰ER",       quote:"Le geste façonne ce qui nâ€™était pas.", polarity:"yang"},
+    {name:"CRÉER",       quote:"Le geste façonne ce qui n’était pas.", polarity:"yang"},
 
-    {name:"ACCUEILLIR",  quote:"La porte sâ€™ouvre à lâ€™inattendu.", polarity:"yin"},
+    {name:"ACCUEILLIR",  quote:"La porte s’ouvre à l’inattendu.", polarity:"yin"},
 
     {name:"PARTAGER",    quote:"La coupe passe de main en main.", polarity:"yang"},
 
-    {name:"PROTÃ‰GER",    quote:"Lâ€™abri se dresse autour du fragile.", polarity:"yin"},
+    {name:"PROTÉGER",    quote:"L’abri se dresse autour du fragile.", polarity:"yin"},
 
     {name:"ALLER VERS",  quote:"Le pas cherche la rencontre.", polarity:"yang"},
 
@@ -3605,15 +3605,15 @@ window.DATA = {
 
     {name:"EXPRIMER",    quote:"Ce que tu portes prend forme en parole claire.", polarity:"yang"},
 
-    {name:"OBSERVER",    quote:"Lâ€™Å“il contemple sans agir.", polarity:"yin"},
+    {name:"OBSERVER",    quote:"L’œil contemple sans agir.", polarity:"yin"},
 
-    {name:"ORDONNER",    quote:"La main trace lâ€™alignement des pierres.", polarity:"yang"},
+    {name:"ORDONNER",    quote:"La main trace l’alignement des pierres.", polarity:"yang"},
 
-    {name:"RÃ‰CONCILIER", quote:"Les mains se rejoignent après la discorde.", polarity:"yin"},
+    {name:"RÉCONCILIER", quote:"Les mains se rejoignent après la discorde.", polarity:"yin"},
 
     {name:"MANIFESTER",  quote:"La parole devient chair.", polarity:"yang"},
 
-    {name:"ARRÃŠTER",     quote:"Le pas s'interrompt, la poussière retombe.", polarity:"yin"},
+    {name:"ARRÊTER",     quote:"Le pas s'interrompt, la poussière retombe.", polarity:"yin"},
 
   ],
 
@@ -3623,21 +3623,21 @@ window.DATA = {
 
     {name:"LE TORE", quote:"Le tore relie l'ombre et la lumière. De son centre pulse la danse éternelle des cycles.", polarity:"yang"},
 
-    {name:"MÃ‰MOIRE CELLULAIRE", quote:"Chaque cellule conserve la trace du vivant. Le corps est une bibliothèque où rien ne se perd.", polarity:"yin"},
+    {name:"MÉMOIRE CELLULAIRE", quote:"Chaque cellule conserve la trace du vivant. Le corps est une bibliothèque où rien ne se perd.", polarity:"yin"},
 
-    {name:"MÃ‰MOIRE COLLECTIVE", quote:"Le groupe rêve à travers l'individu. Dans la conscience partagée se tisse un monde commun.", polarity:"yang"},
+    {name:"MÉMOIRE COLLECTIVE", quote:"Le groupe rêve à travers l'individu. Dans la conscience partagée se tisse un monde commun.", polarity:"yang"},
 
     {name:"ARCHIVE DU VIVANT", quote:"Les racines prolongent une histoire plus vaste que l'individu. Chaque être est à la fois héritage du Vivant et commencement nouveau.", polarity:"yin"},
 
-    {name:"SOUVENIR D'Ã‚ME", quote:"Les résonances anciennes émergent sans prévenir. Ce qui revient cherche moins à expliquer qu'à révéler.", polarity:"yang"},
+    {name:"SOUVENIR D'ÂME", quote:"Les résonances anciennes émergent sans prévenir. Ce qui revient cherche moins à expliquer qu'à révéler.", polarity:"yang"},
 
     {name:"LE SOUFFLE DU VIVANT", quote:"Une respiration secrète traverse le monde. Dans son rythme silencieux naît l'impulsion du vivant.", polarity:"yin"},
 
-    {name:"TEMPS INTÃ‰RIEUR", quote:"Tout converge dans un instant silencieux. C'est là que s'ouvre la porte des rythmes profonds.", polarity:"yang"},
+    {name:"TEMPS INTÉRIEUR", quote:"Tout converge dans un instant silencieux. C'est là que s'ouvre la porte des rythmes profonds.", polarity:"yang"},
 
     {name:"LIGNES DE VIE", quote:"La graine porte en silence des chemins multiples. Chaque choix trace une direction qui attend d'être vécue.", polarity:"yin"},
 
-    {name:"POINT ZÃ‰RO", quote:"Au centre, tout se suspend dans un silence dense. C'est là que s'esquisse la naissance d'un monde nouveau.", polarity:"yang"},
+    {name:"POINT ZÉRO", quote:"Au centre, tout se suspend dans un silence dense. C'est là que s'esquisse la naissance d'un monde nouveau.", polarity:"yang"},
 
     {name:"TISSAGE COSMIQUE", quote:"Des fils invisibles se cherchent dans l'ombre. Dans leur rencontre se révèle une cohérence secrète.", polarity:"yin"},
 
@@ -3653,7 +3653,7 @@ window.DATA = {
 (function () {
 
   // L'ordre des familles pour le tirage de la pièce
-  // Ã‰motion â†’ Besoin â†’ Transmutation â†’ Archétypes â†’ Révélation â†’ Action â†’ Mémoire Cosmos
+  // Émotion → Besoin → Transmutation → Archétypes → Révélation → Action → Mémoire Cosmos
 
   const TIRAGE_ORDER = [
 
@@ -3674,7 +3674,7 @@ window.DATA = {
   ];
 
   const FAMILY_NAMES = {
-    emotions: 'Ã‰motions',
+    emotions: 'Émotions',
     besoins: 'Besoins',
     transmutation: 'Transmutation',
     archetypes: 'Archétypes',
@@ -3686,12 +3686,12 @@ window.DATA = {
 
 
   // Configuration des positions des cartes sur le plateau
-  // Ordre horaire depuis Ã‰motion (bas gauche) : Ã‰motion â†’ Action â†’ Révélation â†’ Archétypes â†’ Transmutation â†’ Besoin â†’ Mémoire Cosmos (centre)
-  // Disposition selon schéma : Transmutations-Archétypes (haut) | Besoins-Mémoires-Révélations (milieu) | Ã‰motions-Actions (bas)
+  // Ordre horaire depuis Émotion (bas gauche) : Émotion → Action → Révélation → Archétypes → Transmutation → Besoin → Mémoire Cosmos (centre)
+  // Disposition selon schéma : Transmutations-Archétypes (haut) | Besoins-Mémoires-Révélations (milieu) | Émotions-Actions (bas)
 
   const STEPS_TORE = [
 
-    { key: 'emotions',      label: 'Ã‰MOTIONS',       chip: 'Ã‰motion',         pos: 3, guide: "Accueillez l'émotion qui se révèle..." },
+    { key: 'emotions',      label: 'ÉMOTIONS',       chip: 'Émotion',         pos: 3, guide: "Accueillez l'émotion qui se révèle..." },
 
     { key: 'besoins',       label: 'BESOINS',        chip: 'Besoin',          pos: 0, guide: "Reconnaissez le besoin profond qui émerge..." },
 
@@ -3699,11 +3699,11 @@ window.DATA = {
 
     { key: 'actions',       label: 'ACTIONS',        chip: 'Action',          pos: 5, guide: "Intégrez l'action juste à poser..." },
 
-    { key: 'archetypes',    label: 'ARCHÃ‰TYPE',      chip: 'Archétype',       pos: 2, guide: "Laissez l'archétype vous guider..." },
+    { key: 'archetypes',    label: 'ARCHÉTYPE',      chip: 'Archétype',       pos: 2, guide: "Laissez l'archétype vous guider..." },
 
-    { key: 'revelations',   label: 'RÃ‰VÃ‰LATION',     chip: 'Révélation',      pos: 4, guide: "Accueillez la révélation qui se dévoile..." },
+    { key: 'revelations',   label: 'RÉVÉLATION',     chip: 'Révélation',      pos: 4, guide: "Accueillez la révélation qui se dévoile..." },
 
-    { key: 'memoire_cosmos',label: 'MÃ‰MOIRE COSMOS', chip: 'Mémoire Cosmos',  pos: 6, guide: "Recevez la mémoire qui vous accompagne..." },
+    { key: 'memoire_cosmos',label: 'MÉMOIRE COSMOS', chip: 'Mémoire Cosmos',  pos: 6, guide: "Recevez la mémoire qui vous accompagne..." },
 
   ];
 
@@ -3714,17 +3714,17 @@ window.DATA = {
 
   const BRIDGE_TARGET = {
 
-    emotions: 'actions',           // émotion â†’ action
+    emotions: 'actions',           // émotion → action
 
-    transmutation: 'actions',      // transmutation â†’ action
+    transmutation: 'actions',      // transmutation → action
 
-    revelations: 'actions',        // révélation â†’ action
+    revelations: 'actions',        // révélation → action
 
-    actions: 'actions',            // action â†’ action
+    actions: 'actions',            // action → action
 
-    archetypes: 'actions',         // archétype â†’ action
+    archetypes: 'actions',         // archétype → action
 
-    besoins: 'actions'             // besoin â†’ action
+    besoins: 'actions'             // besoin → action
 
     // memoire_cosmos: pas de passerelle
 
@@ -3802,9 +3802,9 @@ const BACK_IMAGES = {
 
 
 
-// Ã‰tat du tirage de la pièce : 1 lancer par famille SAUF memoire_cosmos (pas de polarité, pas de lancer)
+// État du tirage de la pièce : 1 lancer par famille SAUF memoire_cosmos (pas de polarité, pas de lancer)
 
-let toreThrowIndex = 0;                       // 0 â†’ 5 (6 lancers)
+let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
 
 
 
@@ -3813,7 +3813,7 @@ let toreThrowIndex = 0;                       // 0 â†’ 5 (6 lancers)
   // Tableau pour stocker toutes les cartes déjà tirées (éviter les doublons)
   const drawnCards = new Set();
 
-  // Map famille â†’ donnée complète de la carte tirée (pour l'analyse)
+  // Map famille → donnée complète de la carte tirée (pour l'analyse)
   const flippedCardData = new Map();
 
 
@@ -3958,12 +3958,12 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
 
     // Messages rotatifs pendant le chargement
     const loadingMessages = [
-      'Lecture des vibrationsâ€¦',
-      'Mise en résonanceâ€¦',
-      'Consultation des archétypesâ€¦',
-      'Alignement des polaritésâ€¦',
-      'Synthèse en coursâ€¦',
-      'Finalisation de l\'analyseâ€¦'
+      'Lecture des vibrations…',
+      'Mise en résonance…',
+      'Consultation des archétypes…',
+      'Alignement des polarités…',
+      'Synthèse en cours…',
+      'Finalisation de l\'analyse…'
     ];
     const compassText = overlay.querySelector('.compass-text');
     if (compassText) {
@@ -4018,7 +4018,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       })
       .then(resp => {
         if (resp.status === 429) {
-          // Rate limit abonné atteint â€” stocker le message pour affichage dans tore-analysis
+          // Rate limit abonné atteint — stocker le message pour affichage dans tore-analysis
           return resp.json().then(d => {
             sessionStorage.setItem('preloaded_analysis', JSON.stringify({
               success: false,
@@ -4087,7 +4087,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     
     // Afficher l'image de la carte
     // Sur mobile, le changement de src pouvait laisser apparaître brièvement
-    // l'image de la carte précédente pendant le chargement de la nouvelle â€”
+    // l'image de la carte précédente pendant le chargement de la nouvelle —
     // donnant l'impression que la carte "montrée" dans l'explication ne
     // correspondait pas (ou arrivait en retard) à la carte réellement
     // "tirée" sur le plateau (Palier 2 #9). On masque l'image le temps du
@@ -4265,7 +4265,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     // Mettre à jour le bandeau de guidage
     updateStepGuide(nextFamilyFound, flippedCards, totalCards);
 
-    // â”€â”€ Rayon lumineux depuis Mémoire Cosmos (pos-6) vers la carte active â”€â”€
+    // ── Rayon lumineux depuis Mémoire Cosmos (pos-6) vers la carte active ──
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const svg  = document.getElementById('tore-beam-svg');
       const poly = document.getElementById('tore-beam-poly');
@@ -4294,7 +4294,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       const srcRect = sourceCard.getBoundingClientRect();
       const tgtRect = targetCard.getBoundingClientRect();
 
-      // SVG est en position:fixed couvrant tout le viewport â†’ coords = coords viewport directes
+      // SVG est en position:fixed couvrant tout le viewport → coords = coords viewport directes
       const sx = srcRect.left + srcRect.width  / 2;
       const sy = srcRect.top  + srcRect.height / 2;
       const tx = tgtRect.left + tgtRect.width  / 2;
@@ -4345,7 +4345,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       const grad = svg.querySelector('#beamGrad');
       if (grad) {
         // Gradient : opaque à tx (base large = carte cible visuellement la "source" du triangle)
-        // Non â€” gradient de sx (Mémoire Cosmos, pointe) vers tx (carte, base) opaque
+        // Non — gradient de sx (Mémoire Cosmos, pointe) vers tx (carte, base) opaque
         grad.setAttribute('x1', tx); grad.setAttribute('y1', ty);
         grad.setAttribute('x2', sx); grad.setAttribute('y2', sy);
         grad.querySelector('stop[offset="0%"]').setAttribute('stop-color', 'rgba(240,199,94,0.45)');
@@ -4376,13 +4376,13 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     
     // Palette de couleurs pour chaque famille de cartes
     const familyColors = {
-      emotions: { main: '#B72326', glow: '183,35,38', light: 'rgba(183,35,38,0.15)', border: 'rgba(183,35,38,0.2)' },      // Ã‰MOTIONS R:183 V:35 B:38
+      emotions: { main: '#B72326', glow: '183,35,38', light: 'rgba(183,35,38,0.15)', border: 'rgba(183,35,38,0.2)' },      // ÉMOTIONS R:183 V:35 B:38
       besoins: { main: '#F29C1A', glow: '242,156,26', light: 'rgba(242,156,26,0.15)', border: 'rgba(242,156,26,0.2)' },      // BESOINS R:242 V:156 B:26
       transmutation: { main: '#D7A43A', glow: '215,164,58', light: 'rgba(215,164,58,0.15)', border: 'rgba(215,164,58,0.2)' },  // TRANSMUTATION R:215 V:164 B:58
       actions: { main: '#F9D849', glow: '249,216,73', light: 'rgba(249,216,73,0.15)', border: 'rgba(249,216,73,0.2)' },        // ACTIONS R:249 V:216 B:73
-      archetypes: { main: '#5E2E8A', glow: '94,46,138', light: 'rgba(94,46,138,0.15)', border: 'rgba(94,46,138,0.2)' },      // ARCHÃ‰TYPES R:94 V:46 B:138
-      revelations: { main: '#3FAA4D', glow: '63,170,77', light: 'rgba(63,170,77,0.15)', border: 'rgba(63,170,77,0.2)' },    // RÃ‰VÃ‰LATIONS R:63 V:170 B:77
-      memoire_cosmos: { main: '#0E2A57', glow: '14,42,87', light: 'rgba(14,42,87,0.15)', border: 'rgba(14,42,87,0.2)' }  // MÃ‰MOIRE COSMOS R:14 V:42 B:87
+      archetypes: { main: '#5E2E8A', glow: '94,46,138', light: 'rgba(94,46,138,0.15)', border: 'rgba(94,46,138,0.2)' },      // ARCHÉTYPES R:94 V:46 B:138
+      revelations: { main: '#3FAA4D', glow: '63,170,77', light: 'rgba(63,170,77,0.15)', border: 'rgba(63,170,77,0.2)' },    // RÉVÉLATIONS R:63 V:170 B:77
+      memoire_cosmos: { main: '#0E2A57', glow: '14,42,87', light: 'rgba(14,42,87,0.15)', border: 'rgba(14,42,87,0.2)' }  // MÉMOIRE COSMOS R:14 V:42 B:87
     };
     
     TIRAGE_ORDER.forEach((fam, i) => {
@@ -4402,8 +4402,8 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     });
 
     if (!nextFamily) {
-      // Toutes les cartes retournées â†’ phase pièce
-      label.textContent = 'Toutes les cartes sont révélées âœ¦';
+      // Toutes les cartes retournées → phase pièce
+      label.textContent = 'Toutes les cartes sont révélées ✦';
       instruction.textContent = 'Lancez maintenant la pièce de tirage pour chaque famille.';
     } else {
       const cardNum = flippedCount + 1;
@@ -4448,8 +4448,8 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       coinWrapper.style.display = 'block';
       if (boardHost) boardHost.style.pointerEvents = 'none';
 
-      // Ã‰teindre complètement le rayon lumineux (et son halo pulsant) : sinon
-      // il restait figé â€” et clignotant â€” sur la dernière carte ciblée
+      // Éteindre complètement le rayon lumineux (et son halo pulsant) : sinon
+      // il restait figé — et clignotant — sur la dernière carte ciblée
       // (ex. "Action") pendant toute la phase de tirage de la pièce.
       const beamSvgEl  = document.getElementById('tore-beam-svg');
       const beamPolyEl = document.getElementById('tore-beam-poly');
@@ -4541,20 +4541,20 @@ function showToreAnalysisCTA() {
   const qrngSource = (window.QRNG && QRNG.endDraw) ? QRNG.endDraw() : 'unknown';
   sessionStorage.setItem('tore_qrng_source', qrngSource);
 
-  // Enregistrer dans l'historique â€” Supabase (RLS par user_id) si connecté, sinon stockage local "invité"
+  // Enregistrer dans l'historique — Supabase (RLS par user_id) si connecté, sinon stockage local "invité"
   (async () => {
     try {
       const entry = {
         type: 'Tirage Tore',
         date: new Date().toISOString(),
         intention: intention,
-        cards: cards, // format brut (avec bridgeCard) â€” l'API en dérive cartes/passerelles
+        cards: cards, // format brut (avec bridgeCard) — l'API en dérive cartes/passerelles
         cartes: cards.map(c => c.name).filter(Boolean),
         passerelles: cards.filter(c => c.bridgeCard).map(c => ({ carte: c.name, passerelle: c.bridgeCard.name }))
       };
       if (window.OradiaTirageStorage) {
         // Sauvegarde sécurisée côté Supabase pour les membres connectés (RLS : chacun ne voit que ses tirages),
-        // ou stockage local namespacé "invité" pour les visiteurs anonymes â€” jamais sous une clé globale partagée.
+        // ou stockage local namespacé "invité" pour les visiteurs anonymes — jamais sous une clé globale partagée.
         await window.OradiaTirageStorage.addTirage(entry, 20);
       } else {
         const tirages = JSON.parse(localStorage.getItem('oradia_tirages_invite') || '[]');
@@ -4645,7 +4645,7 @@ function showToreAnalysisCTA() {
       const instruction = document.getElementById('tore-step-instruction');
       if (instruction) {
         instruction.dataset.previousText = instruction.textContent;
-        instruction.textContent = 'Connexion lente, patientezâ€¦';
+        instruction.textContent = 'Connexion lente, patientez…';
         instruction.style.color = 'rgba(212,175,55,0.9)';
         instruction.style.fontStyle = 'italic';
       }
@@ -4731,7 +4731,7 @@ function showToreAnalysisCTA() {
 
       .toLowerCase()
 
-      .replace(/[^a-z0-9]+/g, '_')                     // TOUT ce qui nâ€™est pas lettre/chiffre devient "_"
+      .replace(/[^a-z0-9]+/g, '_')                     // TOUT ce qui n’est pas lettre/chiffre devient "_"
 
       .replace(/^_+|_+$/g, '');                        // enlève les "_" en trop au début/fin
 
@@ -4870,7 +4870,7 @@ function showToreAnalysisCTA() {
     const targetEl  = card.querySelector('.tore-card-inner') || card;
     const targetRect = targetEl.getBoundingClientRect();
 
-    // getBoundingClientRect â†’ coords viewport â†’ ajouter scroll pour coords document
+    // getBoundingClientRect → coords viewport → ajouter scroll pour coords document
     const sx = window.scrollX || window.pageXOffset || 0;
     const sy = window.scrollY || window.pageYOffset || 0;
     const startX = coinRect.left  + coinRect.width  / 2 + sx;
@@ -5038,7 +5038,7 @@ function showToreAnalysisCTA() {
 
 
   function fitBoardToViewport() {
-    // Sur desktop (â‰¥640px) le CSS position:fixed gère tout â€” ne pas toucher au style inline
+    // Sur desktop (≥640px) le CSS position:fixed gère tout — ne pas toucher au style inline
     if (window.innerWidth >= 640) return;
     if (!document.body.classList.contains('tore-playing')) return;
     const board7 = document.querySelector('#tore-immersif .tore-board-7');
@@ -5114,7 +5114,7 @@ function ensureToreExitModal(){
 
         </div>
 
-        <button id="toreExitClose" class="text-gold text-2xl leading-none" aria-label="Fermer">Ã—</button>
+        <button id="toreExitClose" class="text-gold text-2xl leading-none" aria-label="Fermer">×</button>
 
       </div>
 
@@ -5263,9 +5263,9 @@ function closeToreExitModal(){
 
               <div>
 
-                <h3 data-name>â€”</h3>
+                <h3 data-name>—</h3>
 
-                <p data-quote>â€”</p>
+                <p data-quote>—</p>
 
               </div>
 
@@ -5311,7 +5311,7 @@ function closeToreExitModal(){
     const exitStrip = el('tore-exit-strip');
     if (exitStrip) exitStrip.classList.remove('hidden');
 
-    // Calculer la taille du plateau APRÃˆS que les barres sont dans le DOM
+    // Calculer la taille du plateau APRÈS que les barres sont dans le DOM
     (function() {
       if (typeof ResizeObserver !== 'undefined') {
         const bbEl = document.getElementById('tore-bottom-bar');
@@ -5748,7 +5748,7 @@ if (previewOverlay) {
               <div id="clone-coin-sym" style="font-size:72px;line-height:1;"></div>
               <span style="font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.45);font-family:'Cormorant Garamond',Georgia,serif;display:block;margin-top:8px;">Pièce</span>
             </div>
-            <div id="clone-operator" style="font-size:44px;font-weight:700;color:rgba(231,76,60,0.9);text-shadow:0 0 12px rgba(231,76,60,0.6);">â‰ </div>
+            <div id="clone-operator" style="font-size:44px;font-weight:700;color:rgba(231,76,60,0.9);text-shadow:0 0 12px rgba(231,76,60,0.6);">≠</div>
             <div style="text-align:center;">
               <div id="clone-card-sym" style="font-size:72px;line-height:1;"></div>
               <span style="font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.45);font-family:'Cormorant Garamond',Georgia,serif;display:block;margin-top:8px;">Carte</span>
@@ -5999,7 +5999,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
 
 
 
-  // Affichage d'UNE seule flèche (la famille en cours) : pièce â†’ carte
+  // Affichage d'UNE seule flèche (la famille en cours) : pièce → carte
 
 function showArrowForStep(stepIndex, isMatch) {
 
@@ -6086,8 +6086,8 @@ function showArrowForStep(stepIndex, isMatch) {
         operatorEl.style.color = 'rgba(80,200,120,0.9)';
         operatorEl.style.textShadow = '0 0 12px rgba(80,200,120,0.6)';
       } else {
-        // Signe â‰  (non-égal) avec style visuel fort
-        operatorEl.innerHTML = '<span style="position:relative;display:inline-block;">â‰ </span>';
+        // Signe ≠ (non-égal) avec style visuel fort
+        operatorEl.innerHTML = '<span style="position:relative;display:inline-block;">≠</span>';
         operatorEl.style.color = 'rgba(231,76,60,0.9)';
         operatorEl.style.textShadow = '0 0 12px rgba(231,76,60,0.6)';
       }
@@ -6253,7 +6253,7 @@ function showArrowForStep(stepIndex, isMatch) {
     // Lancer d'animation de rotation
     coin.classList.add('spin');
 
-    // Fin de l'animation (1,5s â€” alignée avec `coin-spin` ; Palier 2 #11)
+    // Fin de l'animation (1,5s — alignée avec `coin-spin` ; Palier 2 #11)
     setTimeout(async () => {
       coin.classList.remove('spin');
 
@@ -6270,8 +6270,8 @@ function showArrowForStep(stepIndex, isMatch) {
       if (coin) {
         coin.setAttribute('aria-label',
           isYang
-            ? 'Pièce de tirage â€” résultat Yang (triangle)'
-            : 'Pièce de tirage â€” résultat Yin (cercle)'
+            ? 'Pièce de tirage — résultat Yang (triangle)'
+            : 'Pièce de tirage — résultat Yin (cercle)'
         );
         // Annoncer le résultat aux lecteurs d'écran via un live region
         let liveRegion = document.getElementById('tore-coin-live');
@@ -6337,7 +6337,7 @@ function showArrowForStep(stepIndex, isMatch) {
         coin.dataset.locked = '1';
         isToreComplete = true;
       } else {
-        // Ne pas déverrouiller ici â€” la pièce sera déverrouillée
+        // Ne pas déverrouiller ici — la pièce sera déverrouillée
         // après fermeture de la modale de polarité ou du bridge fan
         coin.dataset.locked = '1';
         coin.classList.add('glow');
@@ -6352,7 +6352,7 @@ function showArrowForStep(stepIndex, isMatch) {
           if (isLastCoin) {
             setTimeout(showToreAnalysisCTA, 600);
           } else {
-            // Pas de modale â†’ déverrouiller immédiatement
+            // Pas de modale → déverrouiller immédiatement
             coin.dataset.locked = '0';
             isCoinAnimating = false;
           }
@@ -6363,16 +6363,16 @@ function showArrowForStep(stepIndex, isMatch) {
           setTimeout(() => {
             showPolarityBadge(card, coinPolarity, cardPolarity, isMatch, () => {
               if (!isMatch && nextStep) {
-                // Bridge fan s'ouvre â€” la pièce restera verrouillée
+                // Bridge fan s'ouvre — la pièce restera verrouillée
                 // jusqu'à la fermeture du fan (isBridgeFanOpen redevient false)
                 openBridgeFan(stepIndex, nextStep.key, isLastCoin);
                 // Déverrouiller la pièce après la fermeture du bridge fan
                 // openBridgeFan appelle son callback quand il se ferme
-                // â†’ la pièce sera déverrouillée dans ce callback (voir Ã‰TAPE 3)
+                // → la pièce sera déverrouillée dans ce callback (voir ÉTAPE 3)
               } else if (isLastCoin) {
                 setTimeout(showToreAnalysisCTA, 400);
               } else {
-                // Accord et pas dernier lancer â†’ déverrouiller maintenant
+                // Accord et pas dernier lancer → déverrouiller maintenant
                 coin.dataset.locked = '0';
                 isCoinAnimating = false;
               }
@@ -6414,14 +6414,14 @@ function showArrowForStep(stepIndex, isMatch) {
 
     const lower = s.toLowerCase();
 
-    // Formulations fermées (oui/non) â†’ refuser
+    // Formulations fermées (oui/non) → refuser
     const closedStarters = [
       'est-ce que', 'peux-tu', 'puis-je', 'as-tu', 'avez-vous',
       'es-tu', 'êtes-vous', 'dois-je', 'peut-on', 'sera-t-il', 'serait-il'
     ];
     if (closedStarters.some(p => lower.startsWith(p))) return false;
 
-    // Formulations ouvertes â†’ accepter
+    // Formulations ouvertes → accepter
     const openStarters = [
       'comment', 'pourquoi', 'quel ', 'quelle ', 'quels ', 'quelles ',
       'quoi', 'de quelle manière', 'dans quelle mesure', 'à quoi', 'vers quoi'
@@ -6492,7 +6492,7 @@ function showArrowForStep(stepIndex, isMatch) {
         'color:rgba(212,175,55,0.7);">Découvrir l\'abonnement</a>';
     } else if (remaining === 1) {
       counterEl.style.display = 'block';
-      counterEl.textContent = 'âœ¦ Il vous reste 1 tirage gratuit';
+      counterEl.textContent = '✦ Il vous reste 1 tirage gratuit';
     }
     // remaining === 2 : rien afficher
   })();
@@ -6519,7 +6519,7 @@ function showArrowForStep(stepIndex, isMatch) {
         'font-family:Cinzel,serif;font-size:0.9rem;z-index:99999;' +
         'box-shadow:0 4px 20px rgba(212,175,55,0.4);' +
         'border:1px solid rgba(212,175,55,0.3);text-align:center;';
-      msgEl.textContent = 'âœ¦ Tirage crédité â€” vous pouvez commencer';
+      msgEl.textContent = '✦ Tirage crédité — vous pouvez commencer';
       document.body.appendChild(msgEl);
       setTimeout(() => msgEl.remove(), 4000);
     } else if (singleDraw === 'cancel') {
@@ -6573,7 +6573,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   if (submitBtn) {
     submitBtn.disabled = true;
     const btnSpan = submitBtn.querySelector('.font-cinzel');
-    if (btnSpan) btnSpan.textContent = 'Chargementâ€¦';
+    if (btnSpan) btnSpan.textContent = 'Chargement…';
   }
 
   // Vérifier que la question est ouverte
@@ -6585,7 +6585,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
       const _s = submitBtn.querySelector('.font-cinzel');
       if (_s) _s.textContent = 'Commencer le Tirage';
     }
-    toreIntentionInput?.setCustomValidity("Formulez une question ouverte (ex. « Commentâ€¦ ? », « Pourquoiâ€¦ ? ») et terminez par « ? »" );
+    toreIntentionInput?.setCustomValidity("Formulez une question ouverte (ex. « Comment… ? », « Pourquoi… ? ») et terminez par « ? »" );
     toreIntentionInput?.reportValidity();
     return;
   } else {
@@ -6763,7 +6763,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   const _onDosLoad = () => {
     _dosLoaded++;
     if (_dosLoaded >= _dosTotalToLoad) {
-      // Toutes les images de dos sont en cache â€” lancer la distribution
+      // Toutes les images de dos sont en cache — lancer la distribution
       clearTimeout(window._dealFallbackTimer);
       setTimeout(_runDeal, 100);
     }
@@ -6777,7 +6777,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   });
 
   // Filet de sécurité : lancer quand même si le chargement traîne
-  // (délai réduit sur mobile pour éviter une latence perçue avant le tirage â€” Palier 2 #7)
+  // (délai réduit sur mobile pour éviter une latence perçue avant le tirage — Palier 2 #7)
   const _dealFallbackDelay = (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) ? 500 : 1000;
   window._dealFallbackTimer = setTimeout(() => {
     if (_dosLoaded < _dosTotalToLoad) _runDeal();
@@ -6814,8 +6814,8 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
 
     // Apparition une à une avec délai humain
     // Sur mobile, on resserre la cadence : la version desktop (jusqu'à 1330ms
-    // + 620ms + 300ms â‰ˆ 2,25s avant interaction) était perçue comme lente/figée
-    // sur smartphone (item Palier 2 #7 â€” "latence à l'étape du tirage de surface").
+    // + 620ms + 300ms ≈ 2,25s avant interaction) était perçue comme lente/figée
+    // sur smartphone (item Palier 2 #7 — "latence à l'étape du tirage de surface").
     const _isMobileDeal = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
     const DELAYS = _isMobileDeal
       ? [0, 130, 250, 360, 460, 550, 630]
@@ -6902,7 +6902,7 @@ if (toreIntentionInput && charCountEl) {
 
   exitBtn.addEventListener('click', () => {
 
-    // Si un tirage a commencé â†’ modale Oradia
+    // Si un tirage a commencé → modale Oradia
 
     if (toreHasStarted) {
 
@@ -7014,7 +7014,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener('click', async (e) => {
       e.preventDefault();
       const btn = e.currentTarget;
-      btn.textContent = 'Redirectionâ€¦';
+      btn.textContent = 'Redirection…';
       btn.style.pointerEvents = 'none';
 
       try {
@@ -7035,7 +7035,7 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error('No URL returned');
         }
       } catch(err) {
-        btn.textContent = 'Ou acheter un tirage unique (3,90â‚¬)';
+        btn.textContent = 'Ou acheter un tirage unique (3,90€)';
         btn.style.pointerEvents = 'auto';
         alert('Une erreur est survenue. Réessayez.');
       }
@@ -7079,7 +7079,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
             <li><a href="precommande-oracle.html" class="text-light-gold/70 hover:text-gold transition">Précommande</a></li>
 
-            <li><a href="a-propos.html" class="text-light-gold/70 hover:text-gold transition">Ã€ propos</a></li>
+            <li><a href="a-propos.html" class="text-light-gold/70 hover:text-gold transition">À propos</a></li>
 
             <li><a href="contact.html" class="text-light-gold/70 hover:text-gold transition">Contact</a></li>
 
@@ -7132,7 +7132,7 @@ document.addEventListener("DOMContentLoaded", () => {
   </footer>
 
   <script>
-    // Bouton retour en haut â€” désactivé sur la page Tore (expérience immersive)
+    // Bouton retour en haut — désactivé sur la page Tore (expérience immersive)
     const backToTopBtn = document.getElementById('backToTop');
     if (backToTopBtn) {
       backToTopBtn.style.display = 'none';
