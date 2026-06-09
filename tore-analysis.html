@@ -1850,9 +1850,9 @@
 
                         <!-- Carte principale -->
                         <div class="card-grid-item">
-                            <img src="${card.imgSrc || ('images/' + card.family + '/' + card.name + '.png')}"
+                            <img src="${(card.imgSrc || ('images/' + card.family + '/' + card.name + '.png')).replace(/\.png$/i,'.webp')}"
                                  alt="${card.name}"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                                 onerror="if(this.src.endsWith('.webp')){this.src=this.src.replace('.webp','.png')}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
                             <div style="display:none; aspect-ratio:64/90; background:rgba(5,20,40,0.9); align-items:center; justify-content:center; padding:8px;">
                                 <span style="color:#d4af37; font-size:0.6rem; text-align:center; font-family:'Cinzel',serif;">${card.name}</span>
                             </div>
@@ -1868,9 +1868,9 @@
 
                         <!-- Carte passerelle -->
                         <div class="card-grid-item bridge">
-                            <img src="${card.bridgeCard.imgSrc || ('images/' + card.bridgeCard.family + '/' + card.bridgeCard.name + '.png')}"
+                            <img src="${(card.bridgeCard.imgSrc || ('images/' + card.bridgeCard.family + '/' + card.bridgeCard.name + '.png')).replace(/\.png$/i,'.webp')}"
                                  alt="${card.bridgeCard.name}"
-                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex'">
+                                 onerror="if(this.src.endsWith('.webp')){this.src=this.src.replace('.webp','.png')}else{this.style.display='none';this.nextElementSibling.style.display='flex'}">
                             <div style="display:none; aspect-ratio:64/90; background:rgba(5,20,40,0.9); align-items:center; justify-content:center; padding:8px;">
                                 <span style="color:#c4b5fd; font-size:0.6rem; text-align:center; font-family:'Cinzel',serif;">${card.bridgeCard.name}</span>
                             </div>

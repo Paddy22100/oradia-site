@@ -385,6 +385,30 @@
                     </div>
                 </div>` : '';
 
+            // Analyse IA complète (texte brut de l'API Claude)
+            const analyseIaSection = t.analyseIa ? (() => {
+                // Convertir les titres Markdown ## en sections visuelles
+                const sections = t.analyseIa.split(/\n#{1,3}\s+/).filter(Boolean);
+                if (sections.length <= 1) {
+                    // Pas de structure markdown — bloc simple
+                    return `<div class="hr"></div>
+                    <div style="padding:18px 20px;background:#fffdf6;border:1px solid rgba(212,175,55,0.25);border-radius:12px;">
+                        <p class="sl">Analyse de l'Oracle</p>
+                        <p style="color:#2d2a1e;font-size:14px;line-height:1.85;white-space:pre-line;">${t.analyseIa.trim()}</p>
+                    </div>`;
+                }
+                // Structure avec sections
+                return `<div class="hr"></div>` + sections.map((s, i) => {
+                    const lines = s.split('\n');
+                    const title = i === 0 ? 'Analyse de l\'Oracle' : lines[0].trim();
+                    const body = (i === 0 ? lines.join('\n') : lines.slice(1).join('\n')).trim();
+                    return `<div style="margin-bottom:18px;padding:16px 20px;background:${i%2===0?'#fffdf6':'#f9f7f0'};border-left:3px solid #d4af37;border-radius:0 10px 10px 0;">
+                        <p class="sl">${title}</p>
+                        <p style="color:#2d2a1e;font-size:14px;line-height:1.85;">${body}</p>
+                    </div>`;
+                }).join('');
+            })() : '';
+
             const syntheseSection = t.synthese ? `
                 <div class="hr"></div>
                 <div style="padding:18px 20px;background:linear-gradient(135deg,rgba(212,175,55,0.07),rgba(212,175,55,0.02));border:1px solid rgba(212,175,55,0.28);border-radius:12px;">
@@ -489,6 +513,7 @@
           <div style="display:flex;flex-wrap:wrap;gap:5px;">${cartesBadgesHtml}</div>
         </div>` : ''}
 
+      ${analyseIaSection}
       ${interpretationsSection}
       ${passerellesSection}
       ${syntheseSection}

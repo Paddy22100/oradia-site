@@ -4791,9 +4791,9 @@ function showToreAnalysisCTA() {
 
     }
 
-
-
-    return `images/${folder}/${file}`;
+    // Servir WebP en priorité (96-98% plus léger) avec fallback PNG automatique
+    const pngPath = `images/${folder}/${file}`;
+    return pngPath.replace(/\.png$/i, '.webp');
 
   }
 
@@ -6966,6 +6966,15 @@ if (toreIntentionInput && charCountEl) {
 
   
 <script>
+
+// Fallback global WebP → PNG pour tous les navigateurs (Safari < 14, etc.)
+document.addEventListener('error', (e) => {
+  const img = e.target;
+  if (img.tagName === 'IMG' && img.src && img.src.endsWith('.webp') && !img.dataset.webpFallback) {
+    img.dataset.webpFallback = '1';
+    img.src = img.src.replace('.webp', '.png');
+  }
+}, true);
 
 document.addEventListener("DOMContentLoaded", () => {
 

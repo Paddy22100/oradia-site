@@ -54,7 +54,7 @@ async function handleSaveTirage(req, res) {
   }
 
   const body = await parseJsonBody(req);
-  const { type, intention, cards, cartes, passerelles, synthesis, observationWindow, interpretations } = body;
+  const { type, intention, cards, cartes, passerelles, synthesis, observationWindow, interpretations, analysis } = body;
 
   // Accepte deux formats : cartes "brutes" (avec bridgeCard imbriqué, format tore.html)
   // ou déjà aplaties (cartes / passerelles, format historique pré-calculé)
@@ -79,7 +79,8 @@ async function handleSaveTirage(req, res) {
     passerelles: passerellesArr,
     interpretations: interpretations || [],
     synthese: synthesis || null,
-    observation_window: observationWindow || null
+    observation_window: observationWindow || null,
+    analyse_ia: analysis || null
   };
 
   const { data, error } = await supabase.from('tirages').insert(row).select().single();
@@ -128,7 +129,8 @@ async function handleListTirages(req, res) {
     passerelles: t.passerelles || [],
     interpretations: t.interpretations || [],
     synthese: t.synthese,
-    observationWindow: t.observation_window
+    observationWindow: t.observation_window,
+    analyseIa: t.analyse_ia || null
   }));
 
   return res.status(200).json({ success: true, tirages });
