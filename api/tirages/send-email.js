@@ -169,9 +169,9 @@ async function handleSendEmail(req, res) {
     // Dimensions réduites + attributs width/height HTML (et non seulement CSS)
     // pour que les clients mail réservent l'espace immédiatement et limitent le "jank".
     // Dimensions des cartes
-    const COSMOS_W = 90; const COSMOS_H = 135; // carte cosmos, plus grande
-    const CARD_W   = 68; const CARD_H   = 102; // cartes de la roue
-    const BRIDGE_W = 54; const BRIDGE_H =  81; // cartes passerelle
+    const COSMOS_W = 110; const COSMOS_H = 165; // carte cosmos, plus grande
+    const CARD_W   =  88; const CARD_H   = 132; // cartes de la roue
+    const BRIDGE_W =  66; const BRIDGE_H =  99; // cartes passerelle
 
     const cardImg = (card, w, h) => {
       const imgPath = getImagePath(card);
@@ -199,40 +199,66 @@ async function handleSendEmail(req, res) {
     const cosmosCard   = cards.find(c => c.family === 'memoire_cosmos') || null;
     const wheelCards   = cards.filter(c => c.family !== 'memoire_cosmos');
 
-    // Construire la cellule d'une carte de roue
+    // Construire la cellule d'une carte de roue — taille uniforme imposée
     const wheelCellHtml = (card) => card ? `
-      <td style="width:33%;padding:6px;vertical-align:top;">
+      <td width="33%" style="width:33%;padding:6px;vertical-align:top;">
         <div style="background:rgba(7,24,40,0.85);border:1px solid rgba(30,58,90,0.8);border-radius:10px;padding:12px 8px;text-align:center;">
           ${cardImg(card, CARD_W, CARD_H)}
           ${cardLabel(card)}
           ${bridgeHtml(card.bridgeCard)}
         </div>
-      </td>` : `<td style="width:33%;padding:6px;"></td>`;
+      </td>` : `<td width="33%" style="width:33%;padding:6px;"></td>`;
 
-    // Grille roue : rangée haute, rangée milieu (avec cosmos), rangée basse
+    // Grille roue : rangée haute (3), rangée milieu cosmos (2+cosmos), rangée basse centrée
     const topRow    = wheelCards.slice(0, 3);
     const midRow    = wheelCards.slice(3, 5); // max 2 autour du cosmos
-    const bottomRow = wheelCards.slice(5, 8);
+    const bottomRow = wheelCards.slice(5);    // cartes restantes, centrées
 
     const cosmosCell = cosmosCard ? `
-      <td style="width:33%;padding:6px;vertical-align:middle;text-align:center;">
-        <div style="background:linear-gradient(145deg,rgba(12,31,51,0.95),rgba(7,20,42,0.9));border:1px solid rgba(212,175,55,0.5);border-radius:12px;padding:16px 10px;box-shadow:0 0 20px rgba(212,175,55,0.12);">
+      <td width="34%" style="width:34%;padding:6px;vertical-align:middle;text-align:center;">
+        <div style="background:linear-gradient(145deg,rgba(12,31,51,0.95),rgba(7,20,42,0.9));border:2px solid rgba(212,175,55,0.55);border-radius:12px;padding:16px 10px;box-shadow:0 0 24px rgba(212,175,55,0.18);">
           ${cardImg(cosmosCard, COSMOS_W, COSMOS_H)}
           ${cardLabel(cosmosCard, '#f0c75e', 11)}
-          <p style="margin:4px 0 0;color:rgba(212,175,55,0.5);font-size:7px;letter-spacing:2px;text-transform:uppercase;">Centre du Tore</p>
+          <p style="margin:5px 0 0;color:rgba(212,175,55,0.5);font-size:7px;letter-spacing:2px;text-transform:uppercase;">Centre du Tore</p>
         </div>
-      </td>` : `<td style="width:33%;"></td>`;
+      </td>` : `<td width="34%" style="width:34%;padding:6px;"></td>`;
 
-    const buildRow = (left, right) => `<tr>
-      ${wheelCellHtml(left || null)}
+    // Rangée haute : toujours 3 cellules
+    const topRowHtml = () => {
+      const cells = topRow.map(c => wheelCellHtml(c));
+      while (cells.length < 3) cells.push(`<td width="33%" style="width:33%;padding:6px;"></td>`);
+      return `<tr>${cells.join('')}</tr>`;
+    };
+
+    // Rangée milieu : gauche (33%) + cosmos (34%) + droite (33%)
+    const midRowHtml = () => `<tr>
+      ${wheelCellHtml(midRow[0] || null)}
       ${cosmosCell}
-      ${wheelCellHtml(right || null)}
+      ${wheelCellHtml(midRow[1] || null)}
     </tr>`;
 
+    // Rangée basse : cartes restantes centrées (1 carte → colonne centrale, 2 → côte-à-côte centrées, 3 → pleine)
+    const bottomRowHtml = () => {
+      if (!bottomRow.length) return '';
+      if (bottomRow.length === 1) {
+        return `<tr>
+          <td width="33%" style="width:33%;padding:6px;"></td>
+          ${wheelCellHtml(bottomRow[0])}
+          <td width="33%" style="width:33%;padding:6px;"></td>
+        </tr>`;
+      }
+      if (bottomRow.length === 2) {
+        return `<tr>
+          ${wheelCellHtml(bottomRow[0])}
+          <td width="34%" style="width:34%;padding:6px;"></td>
+          ${wheelCellHtml(bottomRow[1])}
+        </tr>`;
+      }
+      return `<tr>${bottomRow.slice(0,3).map(c => wheelCellHtml(c)).join('')}</tr>`;
+    };
+
     const wheelRows = cosmosCard
-      ? `<tr>${topRow.map(c => wheelCellHtml(c)).join('')}${topRow.length < 3 ? `<td style="width:${33*(3-topRow.length)}%;"></td>` : ''}</tr>
-         ${buildRow(midRow[0], midRow[1])}
-         <tr>${bottomRow.map(c => wheelCellHtml(c)).join('')}${bottomRow.length < 3 ? `<td style="width:${33*(3-bottomRow.length)}%;"></td>` : ''}</tr>`
+      ? `${topRowHtml()}${midRowHtml()}${bottomRowHtml()}`
       : `<tr>${cards.slice(0,3).map(c => wheelCellHtml(c)).join('')}</tr>
          <tr>${cards.slice(3,6).map(c => wheelCellHtml(c)).join('')}</tr>
          ${cards.length > 6 ? `<tr>${cards.slice(6).map(c => wheelCellHtml(c)).join('')}</tr>` : ''}`;
@@ -259,10 +285,10 @@ async function handleSendEmail(req, res) {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin:0;padding:0;width:100%;background:#07112a;font-family:Georgia,'Times New Roman',serif;">
+<body style="margin:0;padding:0;width:100%;background:#07112a url('https://oradia.fr/images/oradia-hero-4k.png') center top/cover no-repeat;font-family:Georgia,'Times New Roman',serif;">
 <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"
   background="https://oradia.fr/images/oradia-hero-4k.png"
-  style="width:100%;min-width:100%;background:#07112a url('https://oradia.fr/images/oradia-hero-4k.png') center center/cover no-repeat;padding:36px 16px;">
+  style="width:100%;min-width:100%;background:transparent;padding:36px 0;">
   <tr>
     <td align="center">
       <!-- Overlay sombre pour lisibilité -->
@@ -337,13 +363,23 @@ async function handleSendEmail(req, res) {
                     <p style="margin:0;font-size:22px;line-height:1;">&#127758;</p>
                   </td>
                   <td style="vertical-align:top;">
-                    <p style="margin:0 0 4px;color:#d4af37;font-size:9px;letter-spacing:2px;text-transform:uppercase;">Fen&#234;tre d'observation &mdash; ${observationWindow.durationDays} jour${observationWindow.durationDays > 1 ? 's' : ''}</p>
-                    ${observationWindow.observationText ? `<p style="margin:6px 0 0;color:#c8c0a8;font-size:13px;line-height:1.75;">${observationWindow.observationText.replace(/\n/g, ' ')}</p>` : ''}
+                    ${(() => {
+                      const dur = observationWindow.durationDays;
+                      // Extraire la durée suggérée par l'IA depuis le texte (ex: "Une fenêtre de 3 jours est recommandée")
+                      const aiMatch = observationWindow.observationText
+                        ? observationWindow.observationText.match(/(\d+)\s*jour/i) : null;
+                      const suggested = aiMatch ? parseInt(aiMatch[1]) : null;
+                      const durLabel = dur > 1 ? `${dur} jours` : `${dur} jour`;
+                      const oracleNote = (suggested && suggested !== dur)
+                        ? ` (recommandation de l'oracle : ${suggested} jours)` : '';
+                      return `<p style="margin:0 0 4px;color:#d4af37;font-size:9px;letter-spacing:2px;text-transform:uppercase;">Fen&#234;tre d'observation</p>
+                    <p style="margin:0 0 8px;color:#f5e7a1;font-size:13px;line-height:1.6;">Vous avez choisi une fen&#234;tre d'observation de ${durLabel} pour votre tirage${oracleNote}.</p>`;
+                    })()}
                     ${observationWindow.attentionPoints && observationWindow.attentionPoints.length > 0 ? `
-                    <ul style="margin:10px 0 0;padding-left:16px;">
+                    <ul style="margin:6px 0 0;padding-left:16px;">
                       ${observationWindow.attentionPoints.map(p => `<li style="color:#c8c0a8;font-size:12px;line-height:1.65;margin-bottom:4px;">${p}</li>`).join('')}
                     </ul>` : ''}
-                    ${observationWindow.closesAt ? `<p style="margin:10px 0 0;color:rgba(212,175,55,0.45);font-size:11px;font-style:italic;">Email de cl&#244;ture le ${new Date(observationWindow.closesAt).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}.</p>` : ''}
+                    ${observationWindow.closesAt ? `<p style="margin:10px 0 0;color:rgba(212,175,55,0.45);font-size:11px;font-style:italic;">Un email de cl&#244;ture vous sera envoy&#233; le ${new Date(observationWindow.closesAt).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} pour recueillir vos retours d'exp&#233;rience.</p>` : ''}
                   </td>
                 </tr>
               </table>
