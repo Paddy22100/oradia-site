@@ -424,12 +424,25 @@ async function handleData(req, res) {
     // ── Section synchronicité — stats d'étude (#31) ──
     if (section === 'synchronicity') {
       const { data: responses, error: syncErr } = await supabase
-        .from('synchronicity_responses')
-        .select('score_synchronicites, types_synchronicites, resonance_tirage, etat_interieur, temoignage, created_at')
+        .from('synchronicity_stats')
+        .select('score_synchronicites, types_synchronicites, resonance_tirage, etat_interieur, temoignage, created_at, qrng_source')
         .order('created_at', { ascending: false });
 
       if (syncErr) throw syncErr;
       const rows = responses || [];
+
+      // Répartition de la source du tirage (validité scientifique)
+      // Seuls les 'anu' (100% quantique) sont valides pour l'étude.
+      const qrngBreakdown = {
+        anu:      rows.filter(r => r.qrng_source === 'anu').length,
+        fallback: rows.filter(r => r.qrng_source === 'fallback').length,
+        unknown:  rows.filter(r => !r.qrng_source || r.qrng_source === 'unknown').length,
+      };
+      // Score moyen calculé UNIQUEMENT sur les tirages quantiques purs
+      const anuRows = rows.filter(r => r.qrng_source === 'anu');
+      const avgScoreAnu = anuRows.length > 0
+        ? (anuRows.reduce((s, r) => s + (r.score_synchronicites || 0), 0) / anuRows.length).toFixed(1)
+        : null;
 
       // Moyenne des scores
       const avgScore = rows.length > 0
@@ -467,6 +480,8 @@ async function handleData(req, res) {
         data: {
           total: rows.length,
           avgScore,
+          avgScoreAnu,
+          qrngBreakdown,
           scoreDistrib,
           typeCounts,
           resonanceCounts,

@@ -1765,6 +1765,9 @@
                         attentionPoints: window._obsAttentionPoints,
                         durationDays: window._obsSuggestedDays,
                         observationText: window._obsWindowText,
+                        // Source du tirage : 'anu' (quantique pur) ou 'fallback'.
+                        // Seuls les tirages 'anu' comptent pour l'étude scientifique.
+                        qrngSource: sessionStorage.getItem('tore_qrng_source') || 'unknown',
                     }),
                 });
 

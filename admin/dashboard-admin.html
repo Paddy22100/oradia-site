@@ -1024,6 +1024,40 @@
                 </div>
             </div>
 
+            <!-- Validité scientifique : source du tirage (QRNG) -->
+            <div id="syncQrngBanner" class="rounded-xl p-5 mb-6 border" style="border-color:rgba(212,175,55,0.25);background:rgba(5,20,40,0.5);">
+                <div class="flex items-center justify-between flex-wrap gap-3">
+                    <div>
+                        <div class="text-gold text-sm font-semibold uppercase tracking-wider mb-1">
+                            <i class="fas fa-atom mr-1"></i> Source du tirage — validité scientifique
+                        </div>
+                        <div class="text-light-gold/50 text-xs">Seuls les tirages 100 % quantiques (ANU) sont valides pour l'étude.</div>
+                    </div>
+                    <div class="flex gap-5 text-center">
+                        <div>
+                            <div class="text-2xl font-bold text-teal-300" id="syncQrngAnu">—</div>
+                            <div class="text-light-gold/40 text-xs uppercase">ANU (valides)</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-red-400" id="syncQrngFallback">—</div>
+                            <div class="text-light-gold/40 text-xs uppercase">Fallback (exclus)</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-light-gold/50" id="syncQrngUnknown">—</div>
+                            <div class="text-light-gold/40 text-xs uppercase">Inconnus</div>
+                        </div>
+                        <div>
+                            <div class="text-2xl font-bold text-gold" id="syncAvgScoreAnu">—</div>
+                            <div class="text-light-gold/40 text-xs uppercase">Score moyen ANU</div>
+                        </div>
+                    </div>
+                </div>
+                <div id="syncQrngWarning" class="hidden mt-3 text-sm text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2">
+                    <i class="fas fa-triangle-exclamation mr-1"></i>
+                    <span id="syncQrngWarningText"></span>
+                </div>
+            </div>
+
             <!-- Grille de stats qualitatives -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
 
@@ -2888,6 +2922,26 @@
                 // KPIs simples
                 setEl('syncTotal',    d.total > 0 ? d.total : '0');
                 setEl('syncAvgScore', d.avgScore !== null ? d.avgScore : '—');
+
+                // Validité scientifique : source du tirage (QRNG)
+                const qb = d.qrngBreakdown || { anu: 0, fallback: 0, unknown: 0 };
+                setEl('syncQrngAnu',      qb.anu);
+                setEl('syncQrngFallback', qb.fallback);
+                setEl('syncQrngUnknown',  qb.unknown);
+                setEl('syncAvgScoreAnu',  d.avgScoreAnu !== null && d.avgScoreAnu !== undefined ? d.avgScoreAnu : '—');
+
+                const warnBox  = document.getElementById('syncQrngWarning');
+                const warnText = document.getElementById('syncQrngWarningText');
+                const polluted = (qb.fallback || 0) + (qb.unknown || 0);
+                if (warnBox && warnText) {
+                    if (polluted > 0) {
+                        warnText.textContent =
+                            `${polluted} réponse(s) reposent sur un tirage non quantique (${qb.fallback} fallback, ${qb.unknown} inconnu) et sont exclues des statistiques scientifiques.`;
+                        warnBox.classList.remove('hidden');
+                    } else {
+                        warnBox.classList.add('hidden');
+                    }
+                }
 
                 // Badge nav
                 const badge = document.getElementById('nav-badge-synchronicity');

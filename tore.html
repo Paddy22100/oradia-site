@@ -4535,6 +4535,12 @@ function showToreAnalysisCTA() {
   const intention = sessionStorage.getItem('tore_intention') || '';
   sessionStorage.setItem('tore_cards', JSON.stringify(cards));
 
+  // Clore le suivi de pureté QRNG : 'anu' (100% quantique) ou 'fallback'.
+  // Stocké pour transmission à l'activation de la fenêtre d'observation
+  // (les statistiques scientifiques n'utilisent QUE les tirages 'anu').
+  const qrngSource = (window.QRNG && QRNG.endDraw) ? QRNG.endDraw() : 'unknown';
+  sessionStorage.setItem('tore_qrng_source', qrngSource);
+
   // Enregistrer dans l'historique — Supabase (RLS par user_id) si connecté, sinon stockage local "invité"
   (async () => {
     try {
@@ -4678,6 +4684,7 @@ function showToreAnalysisCTA() {
           hideQrngLoading(); return selectedCard;
         } catch(e) {
           hideQrngLoading();
+          QRNG.markFallback();
           const idx = Math.floor(Math.random() * pool.length);
           return pool[idx] || null;
         }
@@ -4692,6 +4699,7 @@ function showToreAnalysisCTA() {
         hideQrngLoading(); return selectedCard;
       } catch(e) {
         hideQrngLoading();
+        QRNG.markFallback();
         const idx = Math.floor(Math.random() * availableCards.length);
         const selectedCard = availableCards[idx];
         const cardId = selectedCard.name || selectedCard.file || JSON.stringify(selectedCard);
@@ -4706,6 +4714,7 @@ function showToreAnalysisCTA() {
       hideQrngLoading(); return pool[idx] || null;
     } catch(e) {
       hideQrngLoading();
+      QRNG.markFallback();
       const idx = Math.floor(Math.random() * pool.length);
       return pool[idx] || null;
     }
@@ -6195,6 +6204,9 @@ function showArrowForStep(stepIndex, isMatch) {
 
     // Récupérer la famille actuelle pour ce lancer de pièce
     const currentFamily = familiesWithCoin[coinThrowIndex];
+
+    // Marquer le début du tirage (suivi de pureté QRNG) au tout premier lancer
+    if (coinThrowIndex === 0 && window.QRNG && QRNG.beginDraw) QRNG.beginDraw();
 
     // Trouver la configuration de l'étape actuelle
     const step = STEPS_TORE.find(s => s.key === currentFamily);

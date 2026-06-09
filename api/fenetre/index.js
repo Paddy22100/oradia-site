@@ -42,11 +42,15 @@ async function handleActivation(req, res) {
     return res.status(400).json({ success: false, message: 'Invalid JSON' });
   }
 
-  const { email, intention, cards, attentionPoints, durationDays, observationText } = body;
+  const { email, intention, cards, attentionPoints, durationDays, observationText, qrngSource } = body;
 
   if (!email || !durationDays) {
     return res.status(400).json({ success: false, message: 'email et durationDays requis' });
   }
+
+  // Normaliser la source du tirage : 'anu' (quantique pur) sinon 'fallback'.
+  // Seuls les tirages 'anu' sont valides pour l'étude scientifique.
+  const normalizedQrngSource = qrngSource === 'anu' ? 'anu' : 'fallback';
 
   const closesAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
 
@@ -60,6 +64,7 @@ async function handleActivation(req, res) {
       attention_points: attentionPoints || [],
       duration_days: durationDays,
       closes_at: closesAt.toISOString(),
+      qrng_source: normalizedQrngSource,
       // response_token généré automatiquement par la DB (DEFAULT gen_random_uuid())
     })
     .select('id')
