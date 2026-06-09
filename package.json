@@ -37,5 +37,8 @@
   "bugs": {
     "url": "https://github.com/Paddy22100/oradia-site/issues"
   },
-  "homepage": "https://github.com/Paddy22100/oradia-site#readme"
+  "homepage": "https://github.com/Paddy22100/oradia-site#readme",
+  "devDependencies": {
+    "sharp": "^0.34.5"
+  }
 }
