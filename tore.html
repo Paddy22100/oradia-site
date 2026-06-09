@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 
 <html lang="fr">
 
@@ -8,15 +8,15 @@
 
   <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
 
-  <title>Tirage Le Tore - Oradia | Expérience Spirituelle Ultime</title>
-  <meta name="description" content="Tirage Le Tore avec l'Oracle Oradia. Expérience spirituelle complète avec tirages illimités, interprétations approfondies, historique et guidance continue. Abonnement mensuel.">
-  <meta name="keywords" content="tirage tore, oracle complet, expérience spirituelle, tirages illimités, développement personnel, guidance, abonnement, transformation, Oradia">
+  <title>Tirage Le Tore - Oradia | ExpÃ©rience Spirituelle Ultime</title>
+  <meta name="description" content="Tirage Le Tore avec l'Oracle Oradia. ExpÃ©rience spirituelle complÃ¨te avec tirages illimitÃ©s, interprÃ©tations approfondies, historique et guidance continue. Abonnement mensuel.">
+  <meta name="keywords" content="tirage tore, oracle complet, expÃ©rience spirituelle, tirages illimitÃ©s, dÃ©veloppement personnel, guidance, abonnement, transformation, Oradia">
   <meta name="robots" content="index, follow">
   <meta name="theme-color" content="#0a192f">
   <!-- Canonical URL -->
   <link rel="canonical" href="https://oradia.fr/tore.html" />
 
-  <!-- TODO production : remplacer par build Tailwind local pour éliminer la dépendance CDN -->
+  <!-- TODO production : remplacer par build Tailwind local pour Ã©liminer la dÃ©pendance CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
 
   <script>
@@ -261,7 +261,7 @@
   <!-- Script Freemium Tracker -->
   <script src="js/freemium-tracker.js" defer></script>
   <script src="js/tirages-storage.js"></script>
-  <!-- Client QRNG — tirage quantique via ANU -->
+  <!-- Client QRNG â€” tirage quantique via ANU -->
   <script src="js/qrng-client.js" defer></script>
 
 </head>
@@ -282,7 +282,7 @@
 
 
 
-<!-- ================== TIRAGE DU TORE – PAGE IMMERSIVE ================== -->
+<!-- ================== TIRAGE DU TORE â€“ PAGE IMMERSIVE ================== -->
 
 
 
@@ -328,32 +328,32 @@
     align-items: center !important;
     justify-content: center !important;
   }
-  /* Sécuriser la barre tirage au-dessus de tout */
+  /* SÃ©curiser la barre tirage au-dessus de tout */
   #tore-top-bar {
     z-index: 9999 !important;
   }
 
-  /* La bottom-bar ne doit pas être clippée par overflow:hidden du parent */
+  /* La bottom-bar ne doit pas Ãªtre clippÃ©e par overflow:hidden du parent */
   #tore-bottom-bar {
     overflow: visible !important;
   }
 
-  /* Toujours couvrir tout l'écran pour éviter la bande grise en bas */
+  /* Toujours couvrir tout l'Ã©cran pour Ã©viter la bande grise en bas */
   #tore-immersif {
     min-height: 100vh;
     min-height: 100dvh;
     background-color: #0a192f;
-    /* Ancrer le fond au viewport (et non à la hauteur de la section) :
+    /* Ancrer le fond au viewport (et non Ã  la hauteur de la section) :
        sans cela, l'ouverture du panneau "panneau quantique" agrandit la
        section (min-height auto-expansive) et `background-size: cover`
-       recalcule sa mise à l'échelle → effet de "zoom" intempestif du fond
-       (Palier 2 #10). `background-attachment: fixed` fige la référence de
-       calcul sur le viewport. Repassé en `scroll` sur iOS Safari ci-dessous
-       (règle @supports déjà existante, qui ne le supporte pas correctement). */
+       recalcule sa mise Ã  l'Ã©chelle â†’ effet de "zoom" intempestif du fond
+       (Palier 2 #10). `background-attachment: fixed` fige la rÃ©fÃ©rence de
+       calcul sur le viewport. RepassÃ© en `scroll` sur iOS Safari ci-dessous
+       (rÃ¨gle @supports dÃ©jÃ  existante, qui ne le supporte pas correctement). */
     background-attachment: fixed;
   }
 
-  /* Fix iOS Safari : background-attachment:fixed non supporté → fond statique */
+  /* Fix iOS Safari : background-attachment:fixed non supportÃ© â†’ fond statique */
   @supports (-webkit-touch-callout: none) {
     #tore-immersif {
       background-attachment: scroll !important;
@@ -375,12 +375,12 @@
   #tore-guide-message {
     transition: opacity 0.6s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  /* Panneau intérieur : transition douce sur transform+opacity */
+  /* Panneau intÃ©rieur : transition douce sur transform+opacity */
   #tore-guide-message > div.bg-gradient-to-br {
     transition: transform 0.55s cubic-bezier(0.4, 0, 0.2, 1),
                 opacity   0.55s cubic-bezier(0.4, 0, 0.2, 1);
   }
-  /* État de fermeture */
+  /* Ã‰tat de fermeture */
   #tore-guide-message.guide-hiding {
     opacity: 0 !important;
     pointer-events: none !important;
@@ -431,7 +431,7 @@
     }
   }
 
-  /* Modale polarity : scrollable si viewport très court */
+  /* Modale polarity : scrollable si viewport trÃ¨s court */
   @media (max-height: 500px) {
     #tore-polarity-reveal {
       align-items: center;
@@ -511,19 +511,19 @@
 
 
 
-/* Ajustements pour créer une impression de cercle autour de Mémoire Cosmos */
+/* Ajustements pour crÃ©er une impression de cercle autour de MÃ©moire Cosmos */
 
-/* Transmutations (haut gauche) - remonter légèrement et rapprocher du centre */
+/* Transmutations (haut gauche) - remonter lÃ©gÃ¨rement et rapprocher du centre */
 .tore-card.pos-1 {
   transform: translate(40px, 15px);
 }
 
-/* Archétypes (haut droite) - remonter légèrement et rapprocher du centre */
+/* ArchÃ©types (haut droite) - remonter lÃ©gÃ¨rement et rapprocher du centre */
 .tore-card.pos-2 {
   transform: translate(-40px, 15px);
 }
 
-/* Émotions (bas gauche) - descendre encore davantage et rapprocher du centre */
+/* Ã‰motions (bas gauche) - descendre encore davantage et rapprocher du centre */
 .tore-card.pos-3 {
   transform: translate(40px, -15px);
 }
@@ -533,27 +533,27 @@
   transform: translate(-40px, -15px);
 }
 
-/* Besoins et Révélations restent alignés horizontalement avec Mémoire Cosmos */
+/* Besoins et RÃ©vÃ©lations restent alignÃ©s horizontalement avec MÃ©moire Cosmos */
 
 
 
 
 
-  /* Disposition des piles selon schéma :
+  /* Disposition des piles selon schÃ©ma :
 
      Ligne 1 : Transmutations (gauche)     [pos-1]
 
                (rien au centre)
 
-               Archétypes (droite)         [pos-2]
+               ArchÃ©types (droite)         [pos-2]
 
      Ligne 2 : Besoins (gauche)            [pos-0]
 
-               Mémoire Cosmos (centre)     [pos-6]
+               MÃ©moire Cosmos (centre)     [pos-6]
 
-               Révélations (droite)        [pos-4]
+               RÃ©vÃ©lations (droite)        [pos-4]
 
-     Ligne 3 : Émotions (gauche)           [pos-3]
+     Ligne 3 : Ã‰motions (gauche)           [pos-3]
 
                (rien au centre)
 
@@ -614,7 +614,7 @@
   /* RESPONSIVE MOBILE PORTRAIT (< 640px) : plateau sans scroll */
   @media (max-width: 639px) and (orientation: portrait) {
 
-    /* Position du fond centrée sur mobile */
+    /* Position du fond centrÃ©e sur mobile */
     #tore-immersif {
       background-position: center center !important;
     }
@@ -642,7 +642,7 @@
       padding-top: 52px;
     }
 
-    /* Le conteneur intermédiaire propage la hauteur */
+    /* Le conteneur intermÃ©diaire propage la hauteur */
     #tore-immersif > .relative.z-10 {
       flex: 1;
       display: flex;
@@ -651,7 +651,7 @@
       padding-left: 0;
       padding-right: 0;
       max-width: 100%;
-      overflow: hidden; /* empêche le débordement horizontal */
+      overflow: hidden; /* empÃªche le dÃ©bordement horizontal */
       width: 100%;
     }
 
@@ -679,10 +679,10 @@
       width: 100%;
       max-width: 100%;
       box-sizing: border-box;
-      overflow: hidden; /* coupe tout ce qui dépasse */
+      overflow: hidden; /* coupe tout ce qui dÃ©passe */
     }
 
-    /* Les cartes s'adaptent à la cellule de grille en gardant leur ratio */
+    /* Les cartes s'adaptent Ã  la cellule de grille en gardant leur ratio */
     .tore-card {
       width: 100%;
       max-width: 100%;
@@ -728,7 +728,7 @@
       padding-bottom: 80px;
     }
 
-    /* En paysage mobile, réduire la hauteur min des cellules pour que tout tienne */
+    /* En paysage mobile, rÃ©duire la hauteur min des cellules pour que tout tienne */
     #tore-immersif .tore-board-7 .tore-card {
       min-height: clamp(60px, 18vh, 110px);
     }
@@ -754,9 +754,9 @@
     }
   }
 
-  /* ── TABLETTE PORTRAIT (768px–1023px) : ajustements spécifiques ── */
+  /* â”€â”€ TABLETTE PORTRAIT (768pxâ€“1023px) : ajustements spÃ©cifiques â”€â”€ */
   @media (min-width: 768px) and (max-width: 1023px) and (orientation: portrait) {
-    /* Réduire les décalages latéraux qui peuvent toucher les bords sur 768px */
+    /* RÃ©duire les dÃ©calages latÃ©raux qui peuvent toucher les bords sur 768px */
     #tore-immersif .tore-board-7 .tore-card.pos-1,
     #tore-immersif .tore-board-7 .tore-card.pos-3 {
       transform: translateX(36px) !important;
@@ -765,17 +765,17 @@
     #tore-immersif .tore-board-7 .tore-card.pos-5 {
       transform: translateX(-36px) !important;
     }
-    /* Plateau : limiter à 560px sur tablette portrait pour éviter le débordement des passerelles */
+    /* Plateau : limiter Ã  560px sur tablette portrait pour Ã©viter le dÃ©bordement des passerelles */
     #tore-immersif .tore-board-7 {
       max-width: 560px !important;
       max-height: 560px !important;
     }
   }
 
-  /* ── TABLETTE & DESKTOP (≥ 640px) ── */
+  /* â”€â”€ TABLETTE & DESKTOP (â‰¥ 640px) â”€â”€ */
   @media (min-width: 640px) {
 
-    /* Position du fond décalée vers la gauche sur desktop */
+    /* Position du fond dÃ©calÃ©e vers la gauche sur desktop */
     #tore-immersif {
       background-position: 40% center !important;
     }
@@ -800,7 +800,7 @@
       overflow: hidden;
     }
 
-    /* Plateau : carré qui tient dans la zone du board */
+    /* Plateau : carrÃ© qui tient dans la zone du board */
     #tore-immersif .tore-board-7 {
       width:  min(calc(100vw - 20px), calc(100vh - 172px));
       height: min(calc(100vw - 20px), calc(100vh - 172px));
@@ -816,7 +816,7 @@
       justify-content: center;
     }
 
-    /* Cartes : hauteur contrainte, largeur calculée automatiquement via ratio */
+    /* Cartes : hauteur contrainte, largeur calculÃ©e automatiquement via ratio */
     #tore-immersif .tore-board-7 .tore-card {
       width: auto !important;
       max-width: 100% !important;
@@ -827,13 +827,13 @@
       transform: none !important;
     }
 
-    /* Décaler Transmutations et Émotions (colonne gauche) vers la droite */
+    /* DÃ©caler Transmutations et Ã‰motions (colonne gauche) vers la droite */
     #tore-immersif .tore-board-7 .tore-card.pos-1,
     #tore-immersif .tore-board-7 .tore-card.pos-3 {
       transform: translateX(60px) !important;
     }
 
-    /* Décaler Archétypes et Actions (colonne droite) vers la gauche */
+    /* DÃ©caler ArchÃ©types et Actions (colonne droite) vers la gauche */
     #tore-immersif .tore-board-7 .tore-card.pos-2,
     #tore-immersif .tore-board-7 .tore-card.pos-5 {
       transform: translateX(-60px) !important;
@@ -848,16 +848,16 @@
     }
   }
 
-  /* ── Cartes passerelles desktop : gauche ou droite selon colonne ── */
+  /* â”€â”€ Cartes passerelles desktop : gauche ou droite selon colonne â”€â”€ */
   @media (min-width: 640px) {
-    /* Autoriser le débordement sur le plateau pour les passerelles */
+    /* Autoriser le dÃ©bordement sur le plateau pour les passerelles */
     #tore-immersif .tore-board-7 {
       overflow: visible !important;
     }
     #tore-board {
       overflow: visible !important;
     }
-    /* Autoriser le débordement sur les cartes concernées */
+    /* Autoriser le dÃ©bordement sur les cartes concernÃ©es */
     .tore-card.pos-0,
     .tore-card.pos-1,
     .tore-card.pos-2,
@@ -866,7 +866,7 @@
     .tore-card.pos-5 {
       overflow: visible !important;
     }
-    /* Le contenu interne de la carte doit rester clipé (face/dos) */
+    /* Le contenu interne de la carte doit rester clipÃ© (face/dos) */
     .tore-card.pos-0 .tore-card-inner,
     .tore-card.pos-1 .tore-card-inner,
     .tore-card.pos-2 .tore-card-inner,
@@ -875,7 +875,7 @@
     .tore-card.pos-5 .tore-card-inner {
       overflow: hidden !important;
     }
-    /* Colonne gauche (Besoins pos-0, Transmutation pos-1, Émotions pos-3) → passerelle à gauche */
+    /* Colonne gauche (Besoins pos-0, Transmutation pos-1, Ã‰motions pos-3) â†’ passerelle Ã  gauche */
     .tore-card.pos-0 .tore-card-extra,
     .tore-card.pos-1 .tore-card-extra,
     .tore-card.pos-3 .tore-card-extra {
@@ -886,7 +886,7 @@
       transform: translateY(-50%) !important;
       width: min(80%, 90px) !important;
     }
-    /* Colonne droite (Archétypes pos-2, Révélations pos-4, Actions pos-5) → passerelle à droite */
+    /* Colonne droite (ArchÃ©types pos-2, RÃ©vÃ©lations pos-4, Actions pos-5) â†’ passerelle Ã  droite */
     .tore-card.pos-2 .tore-card-extra,
     .tore-card.pos-4 .tore-card-extra,
     .tore-card.pos-5 .tore-card-extra {
@@ -899,7 +899,7 @@
     }
   }
 
-  /* ── Flip scaleX 2D (desktop ≥ 640px) — même animation que mobile ── */
+  /* â”€â”€ Flip scaleX 2D (desktop â‰¥ 640px) â€” mÃªme animation que mobile â”€â”€ */
   @media (min-width: 640px) {
     .tore-card {
       perspective: none !important;
@@ -953,7 +953,7 @@
     }
   }
 
-  /* ── Flip scaleX 2D (mobile < 640px) — compatible iOS/Android ── */
+  /* â”€â”€ Flip scaleX 2D (mobile < 640px) â€” compatible iOS/Android â”€â”€ */
   @media (max-width: 639px) {
     /* Annuler tout contexte 3D */
     .tore-card {
@@ -976,23 +976,23 @@
       transform-origin: center center;
       transition: transform 0.22s ease-in;
     }
-    /* Phase 1 : rétrécissement (déclenché par JS avec .flipping) */
+    /* Phase 1 : rÃ©trÃ©cissement (dÃ©clenchÃ© par JS avec .flipping) */
     .tore-card.flipping .tore-card-inner {
       transform: scaleX(0);
     }
-    /* Phase 2 : expansion (déclenché par JS avec .flipped après le scaleX(0)) */
+    /* Phase 2 : expansion (dÃ©clenchÃ© par JS avec .flipped aprÃ¨s le scaleX(0)) */
     .tore-card.flipped .tore-card-inner {
       transform: scaleX(1);
       transition: transform 0.22s ease-out;
     }
-    /* Dos : visible par défaut */
+    /* Dos : visible par dÃ©faut */
     .tore-card-back {
       position: absolute;
       inset: 0;
       opacity: 1;
       visibility: visible;
     }
-    /* Face avant : cachée par défaut */
+    /* Face avant : cachÃ©e par dÃ©faut */
     .tore-card-front {
       position: absolute;
       inset: 0;
@@ -1003,7 +1003,7 @@
       background: transparent;
       transition: opacity 0.18s ease;
     }
-    /* Après retournement : dos caché, face visible */
+    /* AprÃ¨s retournement : dos cachÃ©, face visible */
     .tore-card.flipped .tore-card-back {
       opacity: 0;
       visibility: hidden;
@@ -1017,7 +1017,7 @@
     }
   }
 
-  /* Tablette : même comportement que mobile pour le flip */
+  /* Tablette : mÃªme comportement que mobile pour le flip */
   @media (min-width: 640px) and (max-width: 1023px) {
     .tore-card {
       perspective: none !important;
@@ -1067,12 +1067,12 @@
     }
   }
 
-  /* ── Masquer le logo-circle global dans les cartes du tore ── */
+  /* â”€â”€ Masquer le logo-circle global dans les cartes du tore â”€â”€ */
   .tore-card-back .logo-circle {
     display: none !important;
   }
 
-  /* ── Styles communs back/front ── */
+  /* â”€â”€ Styles communs back/front â”€â”€ */
   .tore-card-inner {
     position: relative;
     width: 100%;
@@ -1117,12 +1117,12 @@
 
   }
 
-  /* Indication visuelle de la prochaine carte à tirer */
+  /* Indication visuelle de la prochaine carte Ã  tirer */
   .tore-card.next-to-draw .tore-card-back {
     box-shadow: 0 0 0 3px rgba(212,175,55,0.6), 0 0 20px rgba(212,175,55,0.4);
   }
 
-  /* Mise en valeur spéciale pour la carte Mémoire Cosmos */
+  /* Mise en valeur spÃ©ciale pour la carte MÃ©moire Cosmos */
   .tore-card[data-family="memoire_cosmos"].next-to-draw .tore-card-back {
     box-shadow: 0 0 0 4px rgba(212,175,55,0.8), 0 0 30px rgba(212,175,55,0.6), 0 0 50px rgba(212,175,55,0.3);
     border: 2px solid rgba(212,175,55,0.4);
@@ -1133,7 +1133,7 @@
     to   { transform: translateY(0);    opacity: 1; }
   }
 
-  /* Modale polarité */
+  /* Modale polaritÃ© */
   #tore-polarity-reveal:not(.hidden) #tore-polarity-inner {
     animation: polarityModalIn 0.5s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
   }
@@ -1183,13 +1183,13 @@
     }
   }
 
-  /* Carte en cours de flip : toujours pleine luminosité */
+  /* Carte en cours de flip : toujours pleine luminositÃ© */
   #tore-immersif .tore-board-7.has-active-card .tore-card.just-flipped {
     opacity: 1 !important;
     filter: none !important;
   }
 
-  /* Cartes inactives : atténuées mais encore visibles */
+  /* Cartes inactives : attÃ©nuÃ©es mais encore visibles */
   #tore-immersif .tore-board-7.has-active-card .tore-card:not(.next-to-draw):not(.flipped):not(.just-flipped) {
     opacity: 0.45;
     filter: brightness(0.6) saturate(0.4);
@@ -1198,7 +1198,7 @@
     transition: opacity 0.35s ease, filter 0.35s ease;
   }
 
-  /* Carte active : pleine luminosité */
+  /* Carte active : pleine luminositÃ© */
   #tore-immersif .tore-board-7.has-active-card .tore-card.next-to-draw {
     opacity: 1;
     filter: none;
@@ -1207,7 +1207,7 @@
     transition: opacity 0.35s ease, filter 0.35s ease;
   }
 
-  /* Cartes déjà retournées : légèrement atténuées */
+  /* Cartes dÃ©jÃ  retournÃ©es : lÃ©gÃ¨rement attÃ©nuÃ©es */
   #tore-immersif .tore-board-7.has-active-card .tore-card.flipped {
     opacity: 0.6;
     filter: brightness(0.7) saturate(0.5);
@@ -1215,7 +1215,7 @@
     transition: opacity 0.35s ease, filter 0.35s ease;
   }
 
-  /* Retour à la normale quand plus de carte active */
+  /* Retour Ã  la normale quand plus de carte active */
   #tore-immersif .tore-board-7:not(.has-active-card):not(.tore-dealing) .tore-card {
     opacity: 1;
     filter: none;
@@ -1223,7 +1223,7 @@
     transition: opacity 0.35s ease, filter 0.35s ease;
   }
 
-  /* Pendant la distribution initiale : les cartes masquées restent masquées */
+  /* Pendant la distribution initiale : les cartes masquÃ©es restent masquÃ©es */
   #tore-immersif .tore-board-7.tore-dealing .tore-card.card-dealing-hidden {
     opacity: 0 !important;
     visibility: hidden !important;
@@ -1350,7 +1350,7 @@
 
   text-shadow: 0 0 8px rgba(0,0,0,0.8);
 
-  pointer-events: none;        /* on ne gêne pas les clics sur la carte */
+  pointer-events: none;        /* on ne gÃªne pas les clics sur la carte */
 
 }
 
@@ -1367,7 +1367,7 @@
   }
 }
 
-/* Très petit écran (320px) */
+/* TrÃ¨s petit Ã©cran (320px) */
 @media (max-width: 360px) {
   .tore-family-label {
     font-size: 0.48rem;
@@ -1514,7 +1514,7 @@
     100% { transform: scale(1); box-shadow: 0 0 0 3px rgba(231,76,60,0.95); }
   }
 
-  /* Badge de comparaison pièce ↔ carte */
+  /* Badge de comparaison piÃ¨ce â†” carte */
   .polarity-reveal-badge {
     position: absolute;
     top: 50%;
@@ -1594,7 +1594,7 @@
     100% { transform: translate(-50%, -50%) scale(0.85); opacity: 0; }
   }
 
-  /* ── Boussole Oradia (écran de chargement analyse) ── */
+  /* â”€â”€ Boussole Oradia (Ã©cran de chargement analyse) â”€â”€ */
   #oradia-compass-overlay {
     position: fixed;
     inset: 0;
@@ -1711,7 +1711,7 @@
     to   { opacity: 0; }
   }
 
-  /* ── Animations d'apparition des modales ── */
+  /* â”€â”€ Animations d'apparition des modales â”€â”€ */
 
   @keyframes modalOverlayIn {
     from { opacity: 0; }
@@ -1767,7 +1767,7 @@
     animation: modalOverlayIn 0.55s ease forwards;
   }
 
-  /* Panneau centré (guide carte) */
+  /* Panneau centrÃ© (guide carte) */
   .modal-anim-panel {
     animation: modalPanelIn 0.65s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
@@ -1784,7 +1784,7 @@
 
 
 
-  /* Cartes supplémentaires (famille suivante) */
+  /* Cartes supplÃ©mentaires (famille suivante) */
 
   .tore-extra-cards {
 
@@ -1842,7 +1842,7 @@
 
 
 
-  /* Ligne lumineuse coin → carte — position:absolute pour ignorer le scroll */
+  /* Ligne lumineuse coin â†’ carte â€” position:absolute pour ignorer le scroll */
 
   #tore-arrow {
     position: absolute;
@@ -1894,7 +1894,7 @@
 
   /* ========================
 
-     PIÈCE DE TIRAGE ORADIA
+     PIÃˆCE DE TIRAGE ORADIA
 
      ======================== */
 
@@ -1916,7 +1916,7 @@
 
     transition: transform 0.3s ease;
 
-    position: relative;                /* pour les pseudo-éléments */
+    position: relative;                /* pour les pseudo-Ã©lÃ©ments */
 
     overflow: hidden;
 
@@ -1928,10 +1928,10 @@
     will-change: points, opacity;
   }
 
-  /* Pulsation du halo du rayon lumineux : pilotée par classe (et non plus par
-     un <animate> SVG en boucle infinie) afin de pouvoir l'arrêter proprement
-     dès que le rayon est masqué — sinon le halo continuait de clignoter,
-     figé sur la dernière carte ciblée (ex. "Action"), pendant le tirage de la pièce. */
+  /* Pulsation du halo du rayon lumineux : pilotÃ©e par classe (et non plus par
+     un <animate> SVG en boucle infinie) afin de pouvoir l'arrÃªter proprement
+     dÃ¨s que le rayon est masquÃ© â€” sinon le halo continuait de clignoter,
+     figÃ© sur la derniÃ¨re carte ciblÃ©e (ex. "Action"), pendant le tirage de la piÃ¨ce. */
   #tore-beam-halo.beam-pulsing {
     animation: beamHaloPulse 2s ease-in-out infinite;
   }
@@ -1942,7 +1942,7 @@
 
 
 
-  /* halo + onde autour de la pièce */
+  /* halo + onde autour de la piÃ¨ce */
 
   .tore-coin::before,
 
@@ -1962,7 +1962,7 @@
 
 
 
-  /* halo pulsant (actif quand .glow est présent) */
+  /* halo pulsant (actif quand .glow est prÃ©sent) */
 
   .tore-coin::before {
 
@@ -1982,7 +1982,7 @@
 
 
 
-  /* onde circulaire (actif quand .ripple est présent) */
+  /* onde circulaire (actif quand .ripple est prÃ©sent) */
 
   .tore-coin::after {
 
@@ -2004,7 +2004,7 @@
 
 
 
-  /* Faces : deux images séparées */
+  /* Faces : deux images sÃ©parÃ©es */
   .tore-coin.face-yang #tore-coin-img { content: url('images/coin_triangle.png'); }
   .tore-coin.face-yin  #tore-coin-img { content: url('images/coin_cercle.png'); }
 
@@ -2014,13 +2014,13 @@
 
   .tore-coin.spin {
 
-    /* Durée de référence du tirage de pièce : 1,5s (Palier 2 #11 — alignée
-       avec le setTimeout JS qui orchestre la suite de la séquence) */
+    /* DurÃ©e de rÃ©fÃ©rence du tirage de piÃ¨ce : 1,5s (Palier 2 #11 â€” alignÃ©e
+       avec le setTimeout JS qui orchestre la suite de la sÃ©quence) */
     animation: coin-spin 1.5s ease-in-out;
 
   }
 
-  /* Animation de mise en évidence pour attirer l'attention */
+  /* Animation de mise en Ã©vidence pour attirer l'attention */
   .tore-coin.pulse-highlight {
     animation: coin-pulse-highlight 2s ease-in-out;
   }
@@ -2124,7 +2124,7 @@
 
 
 
-  /* Aperçu zoom des cartes retournées – version douce */
+  /* AperÃ§u zoom des cartes retournÃ©es â€“ version douce */
 
   #card-preview-overlay {
 
@@ -2206,7 +2206,7 @@
 
 
 
-  /* Plateau verrouillé pendant que la pièce tourne */
+  /* Plateau verrouillÃ© pendant que la piÃ¨ce tourne */
 
   #tore-immersif .tore-board-7.board-locked,
 
@@ -2244,7 +2244,7 @@
 
 }
 
-/* Flèche entre carte et pièce */
+/* FlÃ¨che entre carte et piÃ¨ce */
 
 .tore-arrow {
 
@@ -2349,7 +2349,7 @@
   z-index: 1;
 }
 
-/* Layout côte à côte : modale polarity gauche + éventail droite */
+/* Layout cÃ´te Ã  cÃ´te : modale polarity gauche + Ã©ventail droite */
 #tore-extra-overlay.bridge-split {
   flex-direction: row;
   align-items: stretch;
@@ -2389,7 +2389,7 @@
   to   { transform: scale(1)   translateY(0);    opacity: 1; }
 }
 
-/* Animation progressive d'entrée des cartes pour optimiser les performances */
+/* Animation progressive d'entrÃ©e des cartes pour optimiser les performances */
 @keyframes cardEntrance {
   from { 
     transform: scale(0.8) rotateZ(-5deg); 
@@ -2451,13 +2451,13 @@
   }
 }
 
-/* Animation gérée par les classes spécifiques pour éviter les conflits */
+/* Animation gÃ©rÃ©e par les classes spÃ©cifiques pour Ã©viter les conflits */
 .tore-card {
   opacity: 0;
   transform-origin: center center;
 }
 
-/* Animation progressive d'entrée des cartes */
+/* Animation progressive d'entrÃ©e des cartes */
 .tore-card[class*="card-entrance-delay-"] {
   animation: cardEntrance 0.6s cubic-bezier(0.34, 1.4, 0.64, 1) forwards;
 }
@@ -2467,7 +2467,7 @@
     visibility: hidden !important;
   }
 
-/* Optimisation pour connexions lentes : réduire les animations */
+/* Optimisation pour connexions lentes : rÃ©duire les animations */
 @media (prefers-reduced-motion: reduce) {
   .tore-card { opacity: 1; }
   .tore-card[class*="card-entrance-delay-"] { animation: none; }
@@ -2582,7 +2582,7 @@
 
 
 
-/* éventail */
+/* Ã©ventail */
 
 
 
@@ -2642,7 +2642,7 @@
 
 
 
-/* 8 cartes en éventail homogène */
+/* 8 cartes en Ã©ventail homogÃ¨ne */
 
 .tore-fan-card:nth-child(1) { transform: rotate(-28deg) translateX(-100px); }
 
@@ -2660,10 +2660,10 @@
 
 .tore-fan-card:nth-child(8) { transform: rotate(28deg) translateX(100px); }
 
-/* Sur smartphone, les translations fixes (±100px) débordaient du panneau et
-   les cartes des extrémités de l'éventail étaient coupées par le bord de
-   l'écran (Palier 2 #8 — "cartes coupées sur smartphone lors du tirage de
-   la carte passerelle"). On resserre l'éventail proportionnellement. */
+/* Sur smartphone, les translations fixes (Â±100px) dÃ©bordaient du panneau et
+   les cartes des extrÃ©mitÃ©s de l'Ã©ventail Ã©taient coupÃ©es par le bord de
+   l'Ã©cran (Palier 2 #8 â€” "cartes coupÃ©es sur smartphone lors du tirage de
+   la carte passerelle"). On resserre l'Ã©ventail proportionnellement. */
 @media (max-width: 480px) {
   .tore-fan-card {
     width: clamp(52px, 15vw, 78px);
@@ -2718,7 +2718,7 @@
 
 
 
-/* vert si même polarité, rouge si différent */
+/* vert si mÃªme polaritÃ©, rouge si diffÃ©rent */
 
 .tore-arrow.match {
 
@@ -2740,7 +2740,7 @@
 
 
 
-/* ── Rayon lumineux : masqué pendant l'overlay passerelle ── */
+/* â”€â”€ Rayon lumineux : masquÃ© pendant l'overlay passerelle â”€â”€ */
 body:has(#tore-extra-overlay) #tore-beam-svg {
   display: none !important;
 }
@@ -2750,7 +2750,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
   display: none !important;
 }
 
-/* Carte supplémentaire (famille suivante) en cas de passerelle */
+/* Carte supplÃ©mentaire (famille suivante) en cas de passerelle */
 
 .tore-card-extra {
 
@@ -2882,11 +2882,11 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
 
   <!-- Barre fixe du haut pendant le tirage (titre + bouton quitter) -->
-  <!-- Placée HORS de #tore-immersif pour que position:fixed soit relatif au viewport -->
+  <!-- PlacÃ©e HORS de #tore-immersif pour que position:fixed soit relatif au viewport -->
   <div id="tore-top-bar" class="hidden fixed top-0 left-0 right-0" style="z-index:9999; height:52px; background: linear-gradient(180deg, rgba(5,15,35,0.98) 0%, rgba(8,20,45,0.94) 100%); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); box-shadow: 0 1px 0 rgba(212,175,55,0.25), 0 4px 24px rgba(0,0,0,0.6);">
-    <!-- Filet lumineux doré en bas -->
+    <!-- Filet lumineux dorÃ© en bas -->
     <div style="position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.15) 10%, rgba(212,175,55,0.6) 35%, rgba(240,199,94,0.9) 50%, rgba(212,175,55,0.6) 65%, rgba(212,175,55,0.15) 90%, transparent 100%);"></div>
-    <!-- Contenu centré -->
+    <!-- Contenu centrÃ© -->
     <div style="display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;gap:3px;">
       <!-- Surtitre discret -->
       <span style="font-family:'Lora',Georgia,serif;font-size:9px;letter-spacing:0.35em;text-transform:uppercase;color:rgba(212,175,55,0.4);">Oracle Oradia</span>
@@ -2906,13 +2906,13 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
     </button>
   </div>
 
-<!-- Bandeau bas : guidage cartes OU phase pièce - HORS de tore-immersif pour éviter le clipping -->
+<!-- Bandeau bas : guidage cartes OU phase piÃ¨ce - HORS de tore-immersif pour Ã©viter le clipping -->
   <div id="tore-bottom-bar" class="hidden fixed bottom-0 left-0 right-0 z-50"
     style="background:linear-gradient(to top, rgba(2,6,16,0.99) 0%, rgba(5,15,35,0.97) 100%);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);box-shadow:0 -12px 40px rgba(0,0,0,0.8), inset 0 1px 0 rgba(212,175,55,0.08);opacity:1;transition:opacity 0.4s ease;">
-    <!-- Ligne dorée supérieure en dégradé -->
+    <!-- Ligne dorÃ©e supÃ©rieure en dÃ©gradÃ© -->
     <div style="position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent 0%,rgba(212,175,55,0.2) 15%,rgba(212,175,55,0.8) 40%,rgba(212,175,55,0.9) 50%,rgba(212,175,55,0.8) 60%,rgba(212,175,55,0.2) 85%,transparent 100%);"></div>
 
-    <!-- Phase cartes : guidage étape -->
+    <!-- Phase cartes : guidage Ã©tape -->
     <div id="tore-step-guide" style="display:none;padding:12px 20px 16px;">
       <div style="max-width:660px;margin:0 auto;display:flex;align-items:center;gap:0;">
 
@@ -2922,7 +2922,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
           <span style="font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.45);font-weight:500;">Progression</span>
         </div>
 
-        <!-- Séparateur vertical -->
+        <!-- SÃ©parateur vertical -->
         <div style="width:1px;height:40px;background:linear-gradient(to bottom,transparent,rgba(212,175,55,0.25),transparent);flex-shrink:0;margin-right:16px;"></div>
 
         <!-- Texte -->
@@ -2938,18 +2938,18 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
       </div>
     </div>
 
-    <!-- Phase pièce : compteur + pièce + bouton -->
+    <!-- Phase piÃ¨ce : compteur + piÃ¨ce + bouton -->
     <div id="tore-coin-wrapper" style="display:none;padding:8px 16px 12px;">
       <div style="max-width:560px;margin:0 auto;display:flex;align-items:center;gap:12px;">
 
-        <!-- Pièce (taille réduite) -->
-        <div id="tore-coin" class="tore-coin face-yang" aria-label="Pièce de tirage Oradia"
+        <!-- PiÃ¨ce (taille rÃ©duite) -->
+        <div id="tore-coin" class="tore-coin face-yang" aria-label="PiÃ¨ce de tirage Oradia"
           style="flex-shrink:0;cursor:pointer;width:52px!important;height:52px!important;">
           <img id="tore-coin-img" src="images/coin_triangle.png" alt="" aria-hidden="true"
             style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;pointer-events:none;">
         </div>
 
-        <!-- Séparateur vertical -->
+        <!-- SÃ©parateur vertical -->
         <div style="width:1px;height:36px;background:linear-gradient(to bottom,transparent,rgba(212,175,55,0.3),transparent);flex-shrink:0;"></div>
 
         <!-- Info : compteur + famille -->
@@ -2964,13 +2964,13 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
             style="white-space:nowrap;background:none;border:1px solid rgba(212,175,55,0.5);color:#d4af37;font-family:'Lora',Georgia,serif;font-size:12px;letter-spacing:0.08em;padding:7px 14px;border-radius:20px;cursor:pointer;transition:all 0.2s;touch-action:manipulation;"
             onmouseenter="this.style.background='rgba(212,175,55,0.12)';this.style.borderColor='rgba(212,175,55,0.9)'"
             onmouseleave="this.style.background='none';this.style.borderColor='rgba(212,175,55,0.5)'">
-            ✦ Lancer
+            âœ¦ Lancer
           </button>
           <button type="button" id="tore-to-analysis"
             style="display:none;white-space:nowrap;background:none;border:1px solid rgba(212,175,55,0.5);color:#d4af37;font-family:'Lora',Georgia,serif;font-size:12px;letter-spacing:0.08em;padding:7px 14px;border-radius:20px;cursor:pointer;transition:all 0.2s;"
             onmouseenter="this.style.background='rgba(212,175,55,0.12)'"
             onmouseleave="this.style.background='none'">
-            Voir mon analyse →
+            Voir mon analyse â†’
           </button>
         </div>
 
@@ -2994,7 +2994,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
         <h1 class="cormorant font-bold gold-gradient pb-1 leading-tight" style="font-size:clamp(2rem,5vw,4rem);">
           Tirage du TORE
         </h1>
-        <p class="text-light-gold/80" style="font-size:clamp(13px,1.6vw,18px);margin-top:clamp(4px,1vh,12px);">7 cartes pour une guidance complète</p>
+        <p class="text-light-gold/80" style="font-size:clamp(13px,1.6vw,18px);margin-top:clamp(4px,1vh,12px);">7 cartes pour une guidance complÃ¨te</p>
         <div class="w-24 h-px bg-gradient-to-r from-transparent via-gold to-transparent mx-auto" style="margin-top:clamp(6px,1.5vh,20px);"></div>
       </div>
 
@@ -3004,10 +3004,10 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
         <!-- Sous-titre question -->
         <div class="text-center" style="margin-bottom:0;">
           <h2 class="cormorant text-gold font-semibold" style="font-size:clamp(1.1rem,4vw,2.2rem);white-space:normal;">
-            Quelle intention portez-vous ?
+            Quelle intention portez-vousÂ ?
           </h2>
           <p class="text-light-gold/70 leading-relaxed" style="font-size:clamp(12px,1.4vw,15px);margin-top:clamp(4px,0.8vh,10px);">
-            Prenez un moment. L’Oracle vous guidera à travers les réponses que vous portez déjà en vous.
+            Prenez un moment. Lâ€™Oracle vous guidera Ã  travers les rÃ©ponses que vous portez dÃ©jÃ  en vous.
           </p>
         </div>
 
@@ -3015,7 +3015,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
         <div class="flex items-start gap-2 px-1" style="margin-bottom:0;">
           <i class="fas fa-lightbulb text-gold/70 text-sm mt-0.5 flex-shrink-0"></i>
           <p class="text-light-gold/60 text-xs sm:text-sm leading-relaxed italic">
-            Formulez une question ouverte : « Comment », « Quelle », « Pourquoi »… et terminez par un ?
+            Formulez une question ouverte : Â«Â CommentÂ Â», Â«Â QuelleÂ Â», Â«Â PourquoiÂ Â»â€¦ et terminez par unÂ ?
           </p>
         </div>
 
@@ -3030,10 +3030,10 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
                            placeholder:text-light-gold/30 placeholder:italic
                            resize-none"
                     style="background: rgba(10,25,47,0.7); border: 1px solid rgba(212,175,55,0.35); backdrop-filter: blur(12px); min-height: clamp(80px,15vh,160px); padding: clamp(10px,1.5vh,24px); font-size: clamp(13px,1.4vw,17px);"
-                    placeholder="Comment puis-je avancer sur mon chemin ? Quelle est la prochaine étape pour moi ?"
+                    placeholder="Comment puis-je avancer sur mon cheminÂ ? Quelle est la prochaine Ã©tape pour moiÂ ?"
                     required></textarea>
           <div class="absolute bottom-3 right-4 text-gold/40 text-xs">
-            <span id="char-count">0</span> caractères
+            <span id="char-count">0</span> caractÃ¨res
           </div>
         </div>
 
@@ -3074,7 +3074,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
               </div>
               <div class="quantum-badge-text">
                 <span class="quantum-label">Tirage quantique</span>
-                <span class="quantum-sublabel">Vraie indétermination · ANU Lab, Australie</span>
+                <span class="quantum-sublabel">Vraie indÃ©termination Â· ANU Lab, Australie</span>
               </div>
               <button type="button" class="quantum-learn-more" onclick="document.getElementById('quantum-explication').classList.toggle('open')">
                 En savoir plus
@@ -3082,7 +3082,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
             </div>
           </div>
 
-          <!-- Explication dépliable -->
+          <!-- Explication dÃ©pliable -->
           <div style="position:relative;">
             <div class="quantum-explication" id="quantum-explication">
             <div class="quantum-explication-inner">
@@ -3090,81 +3090,81 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
               <h3>Pourquoi un tirage quantique ?</h3>
 
               <p class="quantum-intro">
-                La plupart des oracles numériques tirent les cartes avec un algorithme mathématique.
-                Ce n'est pas vraiment du hasard : avec les mêmes paramètres de départ, la séquence
-                serait identique. Le résultat est écrit avant même que vous cliquiez.
-                Un générateur quantique fonctionne différemment : le hasard y est physique, pas calculé.
+                La plupart des oracles numÃ©riques tirent les cartes avec un algorithme mathÃ©matique.
+                Ce n'est pas vraiment du hasard : avec les mÃªmes paramÃ¨tres de dÃ©part, la sÃ©quence
+                serait identique. Le rÃ©sultat est Ã©crit avant mÃªme que vous cliquiez.
+                Un gÃ©nÃ©rateur quantique fonctionne diffÃ©remment : le hasard y est physique, pas calculÃ©.
               </p>
 
               <div class="quantum-comparison">
                 <div class="quantum-col quantum-col-before">
-                  <div class="quantum-col-icon">🎲</div>
-                  <strong>Aléatoire classique</strong>
-                  <p>Un algorithme simule le hasard par des calculs. En théorie, quelqu'un qui
-                  connaîtrait tous les paramètres initiaux pourrait prédire le résultat.
-                  Ce hasard est une illusion mathématique utile, mais fermée.</p>
+                  <div class="quantum-col-icon">ðŸŽ²</div>
+                  <strong>AlÃ©atoire classique</strong>
+                  <p>Un algorithme simule le hasard par des calculs. En thÃ©orie, quelqu'un qui
+                  connaÃ®trait tous les paramÃ¨tres initiaux pourrait prÃ©dire le rÃ©sultat.
+                  Ce hasard est une illusion mathÃ©matique utile, mais fermÃ©e.</p>
                 </div>
                 <div class="quantum-col quantum-col-after">
-                  <div class="quantum-col-icon">⚛️</div>
-                  <strong>Aléatoire quantique</strong>
-                  <p>Le hasard vient du comportement réel de particules subatomiques.
-                  La physique elle-même affirme que ce résultat n'existe pas avant d'être mesuré :
-                  pas "difficile à prédire", fondamentalement indéterminé.</p>
+                  <div class="quantum-col-icon">âš›ï¸</div>
+                  <strong>AlÃ©atoire quantique</strong>
+                  <p>Le hasard vient du comportement rÃ©el de particules subatomiques.
+                  La physique elle-mÃªme affirme que ce rÃ©sultat n'existe pas avant d'Ãªtre mesurÃ© :
+                  pas "difficile Ã  prÃ©dire", fondamentalement indÃ©terminÃ©.</p>
                 </div>
               </div>
 
               <div class="quantum-source">
-                <div class="quantum-source-logo">🔬</div>
+                <div class="quantum-source-logo">ðŸ”¬</div>
                 <div>
                   <strong>Source : Laboratoire de Physique Quantique de l'ANU</strong><br>
                   <span>Australian National University, Canberra, Australie</span>
                   <p>
-                    Chaque tirage utilise des nombres générés en temps réel par ce laboratoire,
-                    à partir de la mesure des <em>fluctuations du vide quantique</em> : l'énergie
-                    minimale irréductible de l'univers, là où des particules apparaissent et
-                    disparaissent spontanément, sans cause antérieure mesurable.
+                    Chaque tirage utilise des nombres gÃ©nÃ©rÃ©s en temps rÃ©el par ce laboratoire,
+                    Ã  partir de la mesure des <em>fluctuations du vide quantique</em> : l'Ã©nergie
+                    minimale irrÃ©ductible de l'univers, lÃ  oÃ¹ des particules apparaissent et
+                    disparaissent spontanÃ©ment, sans cause antÃ©rieure mesurable.
                   </p>
                 </div>
               </div>
 
               <div style="margin-bottom:1.25rem;padding:1rem;border-radius:10px;background:rgba(200,169,110,0.04);border:1px solid rgba(200,169,110,0.15);">
                 <p style="font-size:.87rem;line-height:1.75;margin:0 0 .6rem;color:rgba(245,231,161,0.88);">
-                  <strong style="color:#c8a96e;">Et la conscience dans tout ça ?</strong><br>
-                  C'est la vraie question, et elle reste ouverte. La mécanique quantique établit
-                  que l'acte de mesure joue un rôle dans la détermination du résultat. Mais le rôle
-                  exact de la conscience dans cet acte de mesure est l'un des débats les plus profonds
-                  de la physique depuis un siècle. Certaines interprétations (Von Neumann, Wigner)
-                  lui accordent un rôle central. D'autres non. Les physiciens eux-mêmes ne s'accordent pas.
+                  <strong style="color:#c8a96e;">Et la conscience dans tout Ã§a ?</strong><br>
+                  C'est la vraie question, et elle reste ouverte. La mÃ©canique quantique Ã©tablit
+                  que l'acte de mesure joue un rÃ´le dans la dÃ©termination du rÃ©sultat. Mais le rÃ´le
+                  exact de la conscience dans cet acte de mesure est l'un des dÃ©bats les plus profonds
+                  de la physique depuis un siÃ¨cle. Certaines interprÃ©tations (Von Neumann, Wigner)
+                  lui accordent un rÃ´le central. D'autres non. Les physiciens eux-mÃªmes ne s'accordent pas.
                 </p>
                 <p style="font-size:.87rem;line-height:1.75;margin:0;color:rgba(245,231,161,0.75);">
-                  Ce que l'on peut dire : un algorithme déterministe <em>ferme</em> cette question.
+                  Ce que l'on peut dire : un algorithme dÃ©terministe <em>ferme</em> cette question.
                   Un tirage quantique la laisse <em>ouverte</em>.
-                  C'est ce choix-là que nous faisons.
+                  C'est ce choix-lÃ  que nous faisons.
                 </p>
               </div>
 
               <div class="quantum-guillemant">
                 <blockquote>
                   <p>
-                    "Si quelque chose comme une synchronicité existe, si une intention peut
-                    rencontrer un événement, encore faut-il que cet événement soit
-                    <em>réellement ouvert</em>, non écrit d'avance par un algorithme."
+                    "Si quelque chose comme une synchronicitÃ© existe, si une intention peut
+                    rencontrer un Ã©vÃ©nement, encore faut-il que cet Ã©vÃ©nement soit
+                    <em>rÃ©ellement ouvert</em>, non Ã©crit d'avance par un algorithme."
                   </p>
                   <footer>
-                    Dans la lignée des travaux du physicien <strong>Philippe Guillemant</strong>
+                    Dans la lignÃ©e des travaux du physicien <strong>Philippe Guillemant</strong>
                     (chercheur CNRS/INRIA), auteur de <em>La Physique de la Conscience</em>.
-                    Guillemant travaille sur la <em>double rétrocausalité</em> : l'hypothèse que
-                    le futur peut influencer le présent via des boucles causales quantiques,
-                    et que les synchronicités en seraient un effet. Il cofonde
+                    Guillemant travaille sur la <em>double rÃ©trocausalitÃ©</em> : l'hypothÃ¨se que
+                    le futur peut influencer le prÃ©sent via des boucles causales quantiques,
+                    et que les synchronicitÃ©s en seraient un effet. Il cofonde
                     <a href="https://6naps.net" target="_blank" rel="noopener">6naps.net</a>,
-                    un outil d'exploration des synchronicités utilisant des tirages quantiques.
+                    un outil d'exploration des synchronicitÃ©s utilisant des tirages quantiques.
                   </footer>
                 </blockquote>
                 <p class="quantum-nuance">
-                  Nous ne prétendons pas que le tirage quantique prouve quoi que ce soit,
-                  ni que votre conscience "guide" le résultat. Nous choisissons simplement
-                  de ne pas fermer la porte. Ce que vous ferez de ce qui émerge appartient
-                  à votre propre intelligence intérieure.
+                  Nous ne prÃ©tendons pas que le tirage quantique prouve quoi que ce soit,
+                  ni que votre conscience "guide" le rÃ©sultat. Nous choisissons simplement
+                  de ne pas fermer la porte. Ce que vous ferez de ce qui Ã©merge appartient
+                  Ã  votre propre intelligence intÃ©rieure.
                 </p>
               </div>
 
@@ -3179,13 +3179,13 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
 
 
-      <!-- PLATEAU – 7 TAS EN MODE SIX-POINTS -->
+      <!-- PLATEAU â€“ 7 TAS EN MODE SIX-POINTS -->
 
       <div id="tore-board" class="hidden relative z-10">
 
-        <!-- Bandeau de guidage contextuel (rendu fixed via CSS, positionné ici dans le DOM) -->
+        <!-- Bandeau de guidage contextuel (rendu fixed via CSS, positionnÃ© ici dans le DOM) -->
 
-        <!-- Rayon lumineux depuis Mémoire Cosmos vers la carte active (hors tore-board-7 pour éviter l'écrasement par innerHTML) -->
+        <!-- Rayon lumineux depuis MÃ©moire Cosmos vers la carte active (hors tore-board-7 pour Ã©viter l'Ã©crasement par innerHTML) -->
         <svg id="tore-beam-svg" style="position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:5;overflow:visible;">
           <defs>
             <linearGradient id="beamGrad" gradientUnits="userSpaceOnUse" x1="0" y1="0" x2="0" y2="0">
@@ -3205,7 +3205,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
         <div class="tore-board-7">
 
-          <!-- Les cartes sont générées par le script ci-dessous -->
+          <!-- Les cartes sont gÃ©nÃ©rÃ©es par le script ci-dessous -->
 
         </div>
 
@@ -3216,7 +3216,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
 
 
-      <!-- Flèche coin → carte (SVG) - recréé dynamiquement en position:absolute -->
+      <!-- FlÃ¨che coin â†’ carte (SVG) - recrÃ©Ã© dynamiquement en position:absolute -->
       <svg id="tore-arrow"></svg>
 
 
@@ -3232,10 +3232,10 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
         <p class="compass-text">Analyse du tirage en cours<span class="compass-dots">...</span></p>
       </div>
 
-      <!-- Message de guidage pour l'intégration -->
+      <!-- Message de guidage pour l'intÃ©gration -->
       <div id="tore-guide-message" role="dialog" aria-modal="true" aria-labelledby="guide-card-name" class="fixed inset-0 z-[80] flex items-center justify-center p-3 sm:p-6" style="background: radial-gradient(circle at center, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.95) 100%); overflow-y: auto; opacity:0; visibility:hidden; pointer-events:none;">
         <div class="bg-gradient-to-br from-slate-900/95 via-slate-800/90 to-slate-900/95 backdrop-blur-xl border-2 border-gold/40 rounded-3xl w-full max-w-6xl shadow-[0_25px_50px_-12px_rgba(212,175,55,0.25)] relative overflow-hidden my-auto flex flex-col" style="min-height: min(75vh, 600px); max-height: calc(100vh - 20px); max-height: calc(100dvh - 20px);">
-          <!-- Effet de lumière subtile -->
+          <!-- Effet de lumiÃ¨re subtile -->
           <div class="absolute inset-0 bg-gradient-to-br from-gold/5 via-transparent to-blue-900/20 rounded-3xl pointer-events-none"></div>
           <div class="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
           <div class="absolute bottom-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
@@ -3245,7 +3245,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
             <!-- Image de la carte -->
             <div class="flex-shrink-0 relative">
               <div class="absolute inset-0 bg-gradient-to-br from-gold/20 to-transparent rounded-2xl blur-xl scale-110"></div>
-              <img id="guide-card-image" src="" alt="Carte tirée" class="relative rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.4),0_0_20px_rgba(212,175,55,0.2)]" style="width: clamp(150px, 28vw, 260px); height: auto; object-fit: contain;" />
+              <img id="guide-card-image" src="" alt="Carte tirÃ©e" class="relative rounded-2xl shadow-[0_20px_40px_rgba(0,0,0,0.4),0_0_20px_rgba(212,175,55,0.2)]" style="width: clamp(150px, 28vw, 260px); height: auto; object-fit: contain;" />
             </div>
             
             <!-- Texte -->
@@ -3262,14 +3262,14 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
               <!-- Texte de guidage -->
               <p class="text-light-gold/85 text-lg sm:text-xl font-cormorant italic leading-relaxed" id="guide-text"></p>
               
-              <!-- Séparateur -->
+              <!-- SÃ©parateur -->
               <div class="relative my-2">
                 <div class="w-full h-px bg-gradient-to-r from-transparent via-gold/60 to-transparent"></div>
                 <div class="absolute left-1/2 top-1/2 transform -translate-x-1/2 -translate-y-1/2 w-2 h-2 bg-gold rounded-full"></div>
               </div>
               
-              <!-- Message d'intégration -->
-              <p class="text-gray-300/80 text-sm sm:text-base font-light">Prenez un instant pour intégrer cette carte...</p>
+              <!-- Message d'intÃ©gration -->
+              <p class="text-gray-300/80 text-sm sm:text-base font-light">Prenez un instant pour intÃ©grer cette carte...</p>
               
               <!-- Nombre de cartes restantes dans Actions -->
               <div id="guide-actions-count" class="text-gray-400/80 text-sm font-light hidden">
@@ -3279,7 +3279,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
             </div>
           </div>
           
-          <!-- Bouton Continuer : centré, espacement égal avec le texte au-dessus et le bas du cadre -->
+          <!-- Bouton Continuer : centrÃ©, espacement Ã©gal avec le texte au-dessus et le bas du cadre -->
           <div class="relative flex justify-center items-center py-6 sm:py-8" style="border-top: 1px solid rgba(212,175,55,0.15);">
             <button id="guide-continue-btn" class="btn-gold px-10 py-3.5 text-base sm:text-lg touch-target">
               <i class="fas fa-arrow-right mr-2"></i>Continuer
@@ -3292,7 +3292,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
 
 
-      <!-- Modale de révélation pièce ↔ carte -->
+      <!-- Modale de rÃ©vÃ©lation piÃ¨ce â†” carte -->
       <div id="tore-polarity-reveal" role="dialog" aria-modal="true" aria-labelledby="tore-polarity-family" class="hidden fixed inset-0 z-[65] flex items-end justify-center pb-4 sm:pb-8 px-3 sm:px-4" style="background: linear-gradient(to top, rgba(0,5,15,0.82) 0%, rgba(0,5,15,0.15) 55%, transparent 100%); pointer-events: auto;">
         <div id="tore-polarity-inner" class="relative w-full max-w-4xl rounded-3xl overflow-hidden" style="background: linear-gradient(135deg, #0a1628 0%, #0d1f3c 50%, #0a1628 100%); border: 2px solid rgba(212,175,55,0.4); box-shadow: 0 30px 80px rgba(0,0,0,0.8), 0 0 60px rgba(212,175,55,0.08);">
           <!-- Barre lumineuse haut -->
@@ -3306,14 +3306,14 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
             <!-- Famille -->
             <p id="tore-polarity-family" class="text-xs uppercase tracking-[0.25em] font-cinzel" style="color: rgba(212,175,55,0.6);"></p>
 
-            <!-- Comparaison : Pièce OP Carte -->
+            <!-- Comparaison : PiÃ¨ce OP Carte -->
             <div class="flex items-center justify-center gap-4 w-full">
-              <!-- Pièce -->
+              <!-- PiÃ¨ce -->
               <div class="flex flex-col items-center gap-2">
                 <div id="tore-polarity-coin-symbol" class="polarity-symbol-coin" style="font-size:52px;line-height:1;width:52px;height:52px;display:flex;align-items:center;justify-content:center;"></div>
-                <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.45);font-family:'Cormorant Garamond',Georgia,serif;">Pièce</span>
+                <span style="font-size:10px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.45);font-family:'Cormorant Garamond',Georgia,serif;">PiÃ¨ce</span>
               </div>
-              <!-- Opérateur de comparaison -->
+              <!-- OpÃ©rateur de comparaison -->
               <div class="flex flex-col items-center" style="gap:2px;">
                 <div style="width:1px;height:16px;background:linear-gradient(to bottom,transparent,rgba(212,175,55,0.3));"></div>
                 <div id="tore-polarity-operator" style="font-size:28px;line-height:1;font-weight:700;"></div>
@@ -3326,7 +3326,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
               </div>
             </div>
 
-            <!-- Résultat -->
+            <!-- RÃ©sultat -->
             <div class="flex flex-col items-center gap-1 w-full">
               <div class="w-full h-px" style="background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);"></div>
               <div id="tore-polarity-result" class="font-cinzel text-xl tracking-[0.2em] uppercase mt-1"></div>
@@ -3341,11 +3341,11 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
         </div>
       </div>
 
-      <!-- RÉSULTATS TEXTE -->
+      <!-- RÃ‰SULTATS TEXTE -->
 
       <div id="tore-results" class="hidden relative z-10 mt-10">
 
-        <!-- DeepSite peut injecter ici le rendu détaillé (texte, synthèse, etc.) -->
+        <!-- DeepSite peut injecter ici le rendu dÃ©taillÃ© (texte, synthÃ¨se, etc.) -->
 
       </div>
 
@@ -3357,53 +3357,53 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
 <script>
 
-// --------- Données cartes ----------
+// --------- DonnÃ©es cartes ----------
 
 window.DATA = {
 
 
 
-  // ▲ = yang (triangle) • ● = yin (cercle)
+  // â–² = yang (triangle) â€¢ â— = yin (cercle)
 
 
 
   emotions: [
 
-    {name:"JOIE",           quote:"L’onde éclate, la lumière danse dans ton cœur.", polarity:"yang"},
+    {name:"JOIE",           quote:"Lâ€™onde Ã©clate, la lumiÃ¨re danse dans ton cÅ“ur.", polarity:"yang"},
 
-    {name:"TRISTESSE",      quote:"La pluie descend, lavant la mémoire des pierres.", polarity:"yin"},
+    {name:"TRISTESSE",      quote:"La pluie descend, lavant la mÃ©moire des pierres.", polarity:"yin"},
 
     {name:"AMOUR",          quote:"Le souffle relie, un fil invisible circule.", polarity:"yang"},
 
-    {name:"SOLITUDE",       quote:"Le silence s’installe comme une montagne.", polarity:"yin"},
+    {name:"SOLITUDE",       quote:"Le silence sâ€™installe comme une montagne.", polarity:"yin"},
 
-    {name:"ÉMERVEILLEMENT", quote:"L’enfant intérieur ouvre grand ses yeux.", polarity:"yang"},
+    {name:"Ã‰MERVEILLEMENT", quote:"Lâ€™enfant intÃ©rieur ouvre grand ses yeux.", polarity:"yang"},
 
-    {name:"DÉGOÛT",         quote:"Le corps rejette ce qui empoisonne.", polarity:"yin"},
+    {name:"DÃ‰GOÃ›T",         quote:"Le corps rejette ce qui empoisonne.", polarity:"yin"},
 
-    {name:"SÉRÉNITÉ",       quote:"L'eau se pose, le monde se reflète sans bruit.", polarity:"yang"},
+    {name:"SÃ‰RÃ‰NITÃ‰",       quote:"L'eau se pose, le monde se reflÃ¨te sans bruit.", polarity:"yang"},
 
-    {name:"CONFUSION",      quote:"La brume monte, les repères se perdent.", polarity:"yin"},
+    {name:"CONFUSION",      quote:"La brume monte, les repÃ¨res se perdent.", polarity:"yin"},
 
-    {name:"COLÈRE",         quote:"Le feu jaillit, brisant les chaînes.", polarity:"yang"},
+    {name:"COLÃˆRE",         quote:"Le feu jaillit, brisant les chaÃ®nes.", polarity:"yang"},
 
     {name:"IMPUISSANCE",    quote:"Le geste se suspend, la force ne trouve plus son passage.", polarity:"yin"},
 
     {name:"COURAGE",        quote:"Le pas tremblant franchit la ligne.", polarity:"yang"},
 
-    {name:"PEUR",           quote:"Le mouvement se fige à l’approche de l’inconnu.", polarity:"yin"},
+    {name:"PEUR",           quote:"Le mouvement se fige Ã  lâ€™approche de lâ€™inconnu.", polarity:"yin"},
 
-    {name:"CONFIANCE",      quote:"L’arbre se dresse, enraciné vers la lumière.", polarity:"yang"},
+    {name:"CONFIANCE",      quote:"Lâ€™arbre se dresse, enracinÃ© vers la lumiÃ¨re.", polarity:"yang"},
 
     {name:"HONTE",          quote:"Le visage se cache sous le voile.", polarity:"yin"},
 
-    {name:"FIERTÉ",         quote:"Ce que vous avez traversé vous rend stable, solide et vrai.", polarity:"yang"},
+    {name:"FIERTÃ‰",         quote:"Ce que vous avez traversÃ© vous rend stable, solide et vrai.", polarity:"yang"},
 
-    {name:"CULPABILITÉ",    quote:"Une lourdeur s'installe, née d'un pas mal posé.", polarity:"yin"},
+    {name:"CULPABILITÃ‰",    quote:"Une lourdeur s'installe, nÃ©e d'un pas mal posÃ©.", polarity:"yin"},
 
-    {name:"IMPATIENCE",     quote:"Le cheval piaffe avant l’aube.", polarity:"yang"},
+    {name:"IMPATIENCE",     quote:"Le cheval piaffe avant lâ€™aube.", polarity:"yang"},
 
-    {name:"PATIENCE",       quote:"Le fruit mûrit dans l’ombre.", polarity:"yin"},
+    {name:"PATIENCE",       quote:"Le fruit mÃ»rit dans lâ€™ombre.", polarity:"yin"},
 
   ],
 
@@ -3411,41 +3411,41 @@ window.DATA = {
 
   besoins: [
 
-    {name:"RECONNAISSANCE", quote:"Le bourgeon éclot quand il est vu.", polarity:"yang"},
+    {name:"RECONNAISSANCE", quote:"Le bourgeon Ã©clot quand il est vu.", polarity:"yang"},
 
-    {name:"SÉCURITÉ",       quote:"Le foyer veille, ton être appaisé se repose.", polarity:"yin"},
+    {name:"SÃ‰CURITÃ‰",       quote:"Le foyer veille, ton Ãªtre appaisÃ© se repose.", polarity:"yin"},
 
-    {name:"LIBERTÉ",        quote:"Le vent brise les clôtures invisibles.", polarity:"yang"},
+    {name:"LIBERTÃ‰",        quote:"Le vent brise les clÃ´tures invisibles.", polarity:"yang"},
 
-    {name:"SOUTIEN",        quote:"Deux troncs s’appuient et forment un arc.", polarity:"yin"},
+    {name:"SOUTIEN",        quote:"Deux troncs sâ€™appuient et forment un arc.", polarity:"yin"},
 
-    {name:"REPOS",          quote:"Le corps se dépose, la rivière s’apaise.", polarity:"yin"},
+    {name:"REPOS",          quote:"Le corps se dÃ©pose, la riviÃ¨re sâ€™apaise.", polarity:"yin"},
 
-    {name:"CLARTÉ",        quote:"Le soleil perce la brume.", polarity:"yang"},
+    {name:"CLARTÃ‰",        quote:"Le soleil perce la brume.", polarity:"yang"},
 
-    {name:"APPARTENANCE",   quote:"Le cercle s’ouvre pour accueillir.", polarity:"yin"},
+    {name:"APPARTENANCE",   quote:"Le cercle sâ€™ouvre pour accueillir.", polarity:"yin"},
 
     {name:"AUTONOMIE",      quote:"Le pas n'attend plus d'autorisation pour avancer.", polarity:"yang"},
 
-    {name:"STIMULATION",    quote:"L’étincelle jaillit et anime la marche.", polarity:"yang"},
+    {name:"STIMULATION",    quote:"Lâ€™Ã©tincelle jaillit et anime la marche.", polarity:"yang"},
 
-    {name:"HARMONIE",       quote:"La lyre vibre cordes accordées.", polarity:"yin"},
+    {name:"HARMONIE",       quote:"La lyre vibre cordes accordÃ©es.", polarity:"yin"},
 
-    {name:"AMOUR REÇU",     quote:"Lorsque la douceur entre, le monde s’apaise.", polarity:"yang"},
+    {name:"AMOUR REÃ‡U",     quote:"Lorsque la douceur entre, le monde sâ€™apaise.", polarity:"yang"},
 
-    {name:"LE SENS",        quote:"La lanterne éclaire le chemin.", polarity:"yin"},
+    {name:"LE SENS",        quote:"La lanterne Ã©claire le chemin.", polarity:"yin"},
 
     {name:"PROTECTION",     quote:"Le manteau couvre de chaleur.", polarity:"yin"},
 
-    {name:"EXPANSION",      quote:"L’horizon s’élargit et appelle.", polarity:"yang"},
+    {name:"EXPANSION",      quote:"Lâ€™horizon sâ€™Ã©largit et appelle.", polarity:"yang"},
 
-    {name:"INTIMITÉ",       quote:"L’alcôve garde le secret des âmes.", polarity:"yin"},
+    {name:"INTIMITÃ‰",       quote:"Lâ€™alcÃ´ve garde le secret des Ã¢mes.", polarity:"yin"},
 
-    {name:"CRÉATIVITÉ",     quote:"L'étincelle façonne une forme neuve.", polarity:"yang"},
+    {name:"CRÃ‰ATIVITÃ‰",     quote:"L'Ã©tincelle faÃ§onne une forme neuve.", polarity:"yang"},
 
-    {name:"AUTHENTICITÉ",   quote:"Le masque tombe, le visage demeure.", polarity:"yin"},
+    {name:"AUTHENTICITÃ‰",   quote:"Le masque tombe, le visage demeure.", polarity:"yin"},
 
-    {name:"GUIDANCE",       quote:"L'étoile brille au-dessus du chemin.", polarity:"yang"},
+    {name:"GUIDANCE",       quote:"L'Ã©toile brille au-dessus du chemin.", polarity:"yang"},
 
   ],
 
@@ -3453,41 +3453,41 @@ window.DATA = {
 
   transmutation: [
 
-    {name:"ACCEPTATION",   quote:"La pierre immobile se laisse sculpter par la rivière.", polarity:"yin"},
+    {name:"ACCEPTATION",   quote:"La pierre immobile se laisse sculpter par la riviÃ¨re.", polarity:"yin"},
 
-    {name:"TRANSFORMATION",quote:"Le bois brûle et devient flamme.", polarity:"yang"},
+    {name:"TRANSFORMATION",quote:"Le bois brÃ»le et devient flamme.", polarity:"yang"},
 
-    {name:"LÂCHER-PRISE",  quote:"La feuille tombe et nourrit la terre.", polarity:"yin"},
+    {name:"LÃ‚CHER-PRISE",  quote:"La feuille tombe et nourrit la terre.", polarity:"yin"},
 
-    {name:"LIBÉRATION",    quote:"La digue cède, la vie circule à nouveau.", polarity:"yang"},
+    {name:"LIBÃ‰RATION",    quote:"La digue cÃ¨de, la vie circule Ã  nouveau.", polarity:"yang"},
 
-    {name:"PARDON",        quote:"Les chaînes brisées rouillent au sol.", polarity:"yin"},
+    {name:"PARDON",        quote:"Les chaÃ®nes brisÃ©es rouillent au sol.", polarity:"yin"},
 
-    {name:"ALIGNEMENT",    quote:"Les astres s’alignent sur un axe commun.", polarity:"yang"},
+    {name:"ALIGNEMENT",    quote:"Les astres sâ€™alignent sur un axe commun.", polarity:"yang"},
 
-    {name:"DÉTACHEMENT",   quote:"L’oiseau s’élève sans s’accrocher aux branches.", polarity:"yin"},
+    {name:"DÃ‰TACHEMENT",   quote:"Lâ€™oiseau sâ€™Ã©lÃ¨ve sans sâ€™accrocher aux branches.", polarity:"yin"},
 
-    {name:"PURIFICATION",  quote:"L’eau claire traverse la roche.", polarity:"yang"},
+    {name:"PURIFICATION",  quote:"Lâ€™eau claire traverse la roche.", polarity:"yang"},
 
     {name:"ANCRAGE",       quote:"Les racines plongent dans le sol fertile.", polarity:"yin"},
 
-    {name:"OUVERTURE",     quote:"La porte s’entrouvre, la lumière jaillit.", polarity:"yang"},
+    {name:"OUVERTURE",     quote:"La porte sâ€™entrouvre, la lumiÃ¨re jaillit.", polarity:"yang"},
 
-    {name:"FLUIDITÉ",      quote:"La rivière contourne l’obstacle sans effort.", polarity:"yin"},
+    {name:"FLUIDITÃ‰",      quote:"La riviÃ¨re contourne lâ€™obstacle sans effort.", polarity:"yin"},
 
-    {name:"CLARIFICATION", quote:"L'essentiel apparait dans la lumière retrouvée.", polarity:"yang"},
+    {name:"CLARIFICATION", quote:"L'essentiel apparait dans la lumiÃ¨re retrouvÃ©e.", polarity:"yang"},
 
-    {name:"PRISON MENTALE",quote:"La pensée tourne et referme l'horizon.", polarity:"yin"},
+    {name:"PRISON MENTALE",quote:"La pensÃ©e tourne et referme l'horizon.", polarity:"yin"},
 
-    {name:"ESPRIT LIBRE",  quote:"Le passage s'ouvre, la lumière intérieure circule librement.", polarity:"yang"},
+    {name:"ESPRIT LIBRE",  quote:"Le passage s'ouvre, la lumiÃ¨re intÃ©rieure circule librement.", polarity:"yang"},
 
-    {name:"VIDE",          quote:"La coupe vide attend d'être remplie.", polarity:"yin"},
+    {name:"VIDE",          quote:"La coupe vide attend d'Ãªtre remplie.", polarity:"yin"},
 
-    {name:"PLÉNITUDE",     quote:"Le vase déborde de miel et d'offrandes.", polarity:"yang"},
+    {name:"PLÃ‰NITUDE",     quote:"Le vase dÃ©borde de miel et d'offrandes.", polarity:"yang"},
 
     {name:"INCARNATION",   quote:"Le pas touche la terre lourde.", polarity:"yin"},
 
-    {name:"TRANSCENDANCE", quote:"En prenant de la hauteur, la route s’éclaire autrement.", polarity:"yang"},
+    {name:"TRANSCENDANCE", quote:"En prenant de la hauteur, la route sâ€™Ã©claire autrement.", polarity:"yang"},
 
   ],
 
@@ -3495,41 +3495,41 @@ window.DATA = {
 
   archetypes: [
 
-    {name:"L'ALCHIMISTE",   quote:"Le plomb rêve de devenir or.", polarity:"yin"},
+    {name:"L'ALCHIMISTE",   quote:"Le plomb rÃªve de devenir or.", polarity:"yin"},
 
-    {name:"LE BÂTISSEUR",   quote:"La structure s'élève quand le geste est clair.", polarity:"yang"},
+    {name:"LE BÃ‚TISSEUR",   quote:"La structure s'Ã©lÃ¨ve quand le geste est clair.", polarity:"yang"},
 
-    {name:"LA PRÊTRESSE",   quote:"Le voile se soulève dans l'espace intérieur.", polarity:"yin"},
+    {name:"LA PRÃŠTRESSE",   quote:"Le voile se soulÃ¨ve dans l'espace intÃ©rieur.", polarity:"yin"},
 
     {name:"LE VOYAGEUR",    quote:"Chaque pas transforme celui qui marche.", polarity:"yang"},
 
-    {name:"LE NOMADE",      quote:"Le pas demeure, même quand l'horizon recule.", polarity:"yang"},
+    {name:"LE NOMADE",      quote:"Le pas demeure, mÃªme quand l'horizon recule.", polarity:"yang"},
 
-    {name:"LE RÊVEUR",      quote:"L'œil fermé voit ce que le monde tait.", polarity:"yin"},
+    {name:"LE RÃŠVEUR",      quote:"L'Å“il fermÃ© voit ce que le monde tait.", polarity:"yin"},
 
-    {name:"LE VISIONNAIRE", quote:"Le regard perce les âges à venir.", polarity:"yang"},
+    {name:"LE VISIONNAIRE", quote:"Le regard perce les Ã¢ges Ã  venir.", polarity:"yang"},
 
-    {name:"LA TISSEUSE",    quote:"Le fil relie ce que la vie a séparé.", polarity:"yin"},
+    {name:"LA TISSEUSE",    quote:"Le fil relie ce que la vie a sÃ©parÃ©.", polarity:"yin"},
 
-    {name:"LE GUERRIER",    quote:"Le cœur frappe avec droiture.", polarity:"yang"},
+    {name:"LE GUERRIER",    quote:"Le cÅ“ur frappe avec droiture.", polarity:"yang"},
 
     {name:"LE SAGE",        quote:"Le silence enseigne plus que mille mots.", polarity:"yin"},
 
-    {name:"LE MAGE",        quote:"L'invisible répond à celui qui sait écouter.", polarity:"yang"},
+    {name:"LE MAGE",        quote:"L'invisible rÃ©pond Ã  celui qui sait Ã©couter.", polarity:"yang"},
 
-    {name:"L'ENFANT",       quote:"Le premier pas s'avance sans mémoire du chemin.", polarity:"yin"},
+    {name:"L'ENFANT",       quote:"Le premier pas s'avance sans mÃ©moire du chemin.", polarity:"yin"},
 
-    {name:"LE JUSTE",       quote:"Il tranche en paix et rétablit l'équilibre.", polarity:"yang"},
+    {name:"LE JUSTE",       quote:"Il tranche en paix et rÃ©tablit l'Ã©quilibre.", polarity:"yang"},
 
-    {name:"LE VEILLEUR",    quote:"La conscience ne fuit pas ce qui dérange.", polarity:"yin"},
+    {name:"LE VEILLEUR",    quote:"La conscience ne fuit pas ce qui dÃ©range.", polarity:"yin"},
 
     {name:"LE PASSEUR",     quote:"Il traverse et relie sans s'attarder.", polarity:"yang"},
 
     {name:"LE PORTEUR",     quote:"Il soutient ce qui doit grandir et lui offre un appui solide.", polarity:"yin"},
 
-    {name:"L'INITIATEUR",   quote:"Le geste ouvre un seuil irréversible.", polarity:"yang"},
+    {name:"L'INITIATEUR",   quote:"Le geste ouvre un seuil irrÃ©versible.", polarity:"yang"},
 
-    {name:"L'OBSERVATEUR",  quote:"Le retrait éclaire ce que l'agitation masque.", polarity:"yin"},
+    {name:"L'OBSERVATEUR",  quote:"Le retrait Ã©claire ce que l'agitation masque.", polarity:"yin"},
 
   ],
 
@@ -3537,41 +3537,41 @@ window.DATA = {
 
   revelations: [
 
-    {name:"CLÉ",          quote:"L’objet caché ouvre la chambre secrète.", polarity:"yang"},
+    {name:"CLÃ‰",          quote:"Lâ€™objet cachÃ© ouvre la chambre secrÃ¨te.", polarity:"yang"},
 
-    {name:"PORTE",        quote:"L’ouverture se dessine dans le mur.", polarity:"yin"},
+    {name:"PORTE",        quote:"Lâ€™ouverture se dessine dans le mur.", polarity:"yin"},
 
-    {name:"MESSAGE",      quote:"Un murmure s'élève, porteur d'un sens à écouter.", polarity:"yang"},
+    {name:"MESSAGE",      quote:"Un murmure s'Ã©lÃ¨ve, porteur d'un sens Ã  Ã©couter.", polarity:"yang"},
 
-    {name:"SYNCHRONICITÉ",quote:"Quand deux instants se touchent, le sens apparaît.", polarity:"yin"},
+    {name:"SYNCHRONICITÃ‰",quote:"Quand deux instants se touchent, le sens apparaÃ®t.", polarity:"yin"},
 
-    {name:"SIGNE",        quote:"Un indice modeste attire l'œil attentif.", polarity:"yin"},
+    {name:"SIGNE",        quote:"Un indice modeste attire l'Å“il attentif.", polarity:"yin"},
 
-    {name:"VISION",       quote:"L’œil perce au-delà des voiles.", polarity:"yang"},
+    {name:"VISION",       quote:"Lâ€™Å“il perce au-delÃ  des voiles.", polarity:"yang"},
 
-    {name:"PRÉSAGE",      quote:"Un souffle d’avenir traverse le présent.", polarity:"yin"},
+    {name:"PRÃ‰SAGE",      quote:"Un souffle dâ€™avenir traverse le prÃ©sent.", polarity:"yin"},
 
-    {name:"ÉVEIL",        quote:"La conscience s’ouvre et tout s’éclaire autrement.", polarity:"yang"},
+    {name:"Ã‰VEIL",        quote:"La conscience sâ€™ouvre et tout sâ€™Ã©claire autrement.", polarity:"yang"},
 
-    {name:"LUMIÈRE",      quote:"Un rayon fend l’ombre.", polarity:"yang"},
+    {name:"LUMIÃˆRE",      quote:"Un rayon fend lâ€™ombre.", polarity:"yang"},
 
-    {name:"DÉVOILEMENT",  quote:"Le rideau s’écarte, la scène surgit.", polarity:"yin"},
+    {name:"DÃ‰VOILEMENT",  quote:"Le rideau sâ€™Ã©carte, la scÃ¨ne surgit.", polarity:"yin"},
 
-    {name:"VÉRITÉ",       quote:"Le voile tombe, l’essence apparaît.", polarity:"yang"},
+    {name:"VÃ‰RITÃ‰",       quote:"Le voile tombe, lâ€™essence apparaÃ®t.", polarity:"yang"},
 
-    {name:"ILLUSION",     quote:"L’image trompe et captive.", polarity:"yin"},
+    {name:"ILLUSION",     quote:"Lâ€™image trompe et captive.", polarity:"yin"},
 
-    {name:"ÉTINCELLE",    quote:"Le feu naît d’une poussière de pierre.", polarity:"yang"},
+    {name:"Ã‰TINCELLE",    quote:"Le feu naÃ®t dâ€™une poussiÃ¨re de pierre.", polarity:"yang"},
 
-    {name:"SILENCE",      quote:"L’absence de bruit révèle l’essentiel.", polarity:"yin"},
+    {name:"SILENCE",      quote:"Lâ€™absence de bruit rÃ©vÃ¨le lâ€™essentiel.", polarity:"yin"},
 
-    {name:"CHIFFRE",      quote:"Le nombre ordonne l’univers caché.", polarity:"yang"},
+    {name:"CHIFFRE",      quote:"Le nombre ordonne lâ€™univers cachÃ©.", polarity:"yang"},
 
-    {name:"SYMBOLE",      quote:"L’image muette parle au cœur.", polarity:"yin"},
+    {name:"SYMBOLE",      quote:"Lâ€™image muette parle au cÅ“ur.", polarity:"yin"},
 
     {name:"ORIGINE",      quote:"La source coule en amont de tout.", polarity:"yin"},
 
-    {name:"DESTIN",       quote:"La flèche vole vers son but.", polarity:"yang"},
+    {name:"DESTIN",       quote:"La flÃ¨che vole vers son but.", polarity:"yang"},
 
   ],
 
@@ -3581,39 +3581,39 @@ window.DATA = {
 
     {name:"AGIR",        quote:"La graine pousse en sortant de terre.", polarity:"yang"},
 
-    {name:"ÉCOUTER",     quote:"L’oreille se penche sur le murmure.", polarity:"yin"},
+    {name:"Ã‰COUTER",     quote:"Lâ€™oreille se penche sur le murmure.", polarity:"yin"},
 
     {name:"DIRE",        quote:"La parole tranche comme un souffle clair.", polarity:"yang"},
 
-    {name:"RECEVOIR",    quote:"Le cœur ouvert accueille le don.", polarity:"yin"},
+    {name:"RECEVOIR",    quote:"Le cÅ“ur ouvert accueille le don.", polarity:"yin"},
 
-    {name:"CRÉER",       quote:"Le geste façonne ce qui n’était pas.", polarity:"yang"},
+    {name:"CRÃ‰ER",       quote:"Le geste faÃ§onne ce qui nâ€™Ã©tait pas.", polarity:"yang"},
 
-    {name:"ACCUEILLIR",  quote:"La porte s’ouvre à l’inattendu.", polarity:"yin"},
+    {name:"ACCUEILLIR",  quote:"La porte sâ€™ouvre Ã  lâ€™inattendu.", polarity:"yin"},
 
     {name:"PARTAGER",    quote:"La coupe passe de main en main.", polarity:"yang"},
 
-    {name:"PROTÉGER",    quote:"L’abri se dresse autour du fragile.", polarity:"yin"},
+    {name:"PROTÃ‰GER",    quote:"Lâ€™abri se dresse autour du fragile.", polarity:"yin"},
 
     {name:"ALLER VERS",  quote:"Le pas cherche la rencontre.", polarity:"yang"},
 
     {name:"SE RETIRER",  quote:"Le sage quitte la foule.", polarity:"yin"},
 
-    {name:"CHOISIR",     quote:"Le carrefour appelle la décision.", polarity:"yang"},
+    {name:"CHOISIR",     quote:"Le carrefour appelle la dÃ©cision.", polarity:"yang"},
 
-    {name:"PATIENTER",   quote:"Le fruit mûrit lentement.", polarity:"yin"},
+    {name:"PATIENTER",   quote:"Le fruit mÃ»rit lentement.", polarity:"yin"},
 
     {name:"EXPRIMER",    quote:"Ce que tu portes prend forme en parole claire.", polarity:"yang"},
 
-    {name:"OBSERVER",    quote:"L’œil contemple sans agir.", polarity:"yin"},
+    {name:"OBSERVER",    quote:"Lâ€™Å“il contemple sans agir.", polarity:"yin"},
 
-    {name:"ORDONNER",    quote:"La main trace l’alignement des pierres.", polarity:"yang"},
+    {name:"ORDONNER",    quote:"La main trace lâ€™alignement des pierres.", polarity:"yang"},
 
-    {name:"RÉCONCILIER", quote:"Les mains se rejoignent après la discorde.", polarity:"yin"},
+    {name:"RÃ‰CONCILIER", quote:"Les mains se rejoignent aprÃ¨s la discorde.", polarity:"yin"},
 
     {name:"MANIFESTER",  quote:"La parole devient chair.", polarity:"yang"},
 
-    {name:"ARRÊTER",     quote:"Le pas s'interrompt, la poussière retombe.", polarity:"yin"},
+    {name:"ARRÃŠTER",     quote:"Le pas s'interrompt, la poussiÃ¨re retombe.", polarity:"yin"},
 
   ],
 
@@ -3621,25 +3621,25 @@ window.DATA = {
 
   memoire_cosmos: [
 
-    {name:"LE TORE", quote:"Le tore relie l'ombre et la lumière. De son centre pulse la danse éternelle des cycles.", polarity:"yang"},
+    {name:"LE TORE", quote:"Le tore relie l'ombre et la lumiÃ¨re. De son centre pulse la danse Ã©ternelle des cycles.", polarity:"yang"},
 
-    {name:"MÉMOIRE CELLULAIRE", quote:"Chaque cellule conserve la trace du vivant. Le corps est une bibliothèque où rien ne se perd.", polarity:"yin"},
+    {name:"MÃ‰MOIRE CELLULAIRE", quote:"Chaque cellule conserve la trace du vivant. Le corps est une bibliothÃ¨que oÃ¹ rien ne se perd.", polarity:"yin"},
 
-    {name:"MÉMOIRE COLLECTIVE", quote:"Le groupe rêve à travers l'individu. Dans la conscience partagée se tisse un monde commun.", polarity:"yang"},
+    {name:"MÃ‰MOIRE COLLECTIVE", quote:"Le groupe rÃªve Ã  travers l'individu. Dans la conscience partagÃ©e se tisse un monde commun.", polarity:"yang"},
 
-    {name:"ARCHIVE DU VIVANT", quote:"Les racines prolongent une histoire plus vaste que l'individu. Chaque être est à la fois héritage du Vivant et commencement nouveau.", polarity:"yin"},
+    {name:"ARCHIVE DU VIVANT", quote:"Les racines prolongent une histoire plus vaste que l'individu. Chaque Ãªtre est Ã  la fois hÃ©ritage du Vivant et commencement nouveau.", polarity:"yin"},
 
-    {name:"SOUVENIR D'ÂME", quote:"Les résonances anciennes émergent sans prévenir. Ce qui revient cherche moins à expliquer qu'à révéler.", polarity:"yang"},
+    {name:"SOUVENIR D'Ã‚ME", quote:"Les rÃ©sonances anciennes Ã©mergent sans prÃ©venir. Ce qui revient cherche moins Ã  expliquer qu'Ã  rÃ©vÃ©ler.", polarity:"yang"},
 
-    {name:"LE SOUFFLE DU VIVANT", quote:"Une respiration secrète traverse le monde. Dans son rythme silencieux naît l'impulsion du vivant.", polarity:"yin"},
+    {name:"LE SOUFFLE DU VIVANT", quote:"Une respiration secrÃ¨te traverse le monde. Dans son rythme silencieux naÃ®t l'impulsion du vivant.", polarity:"yin"},
 
-    {name:"TEMPS INTÉRIEUR", quote:"Tout converge dans un instant silencieux. C'est là que s'ouvre la porte des rythmes profonds.", polarity:"yang"},
+    {name:"TEMPS INTÃ‰RIEUR", quote:"Tout converge dans un instant silencieux. C'est lÃ  que s'ouvre la porte des rythmes profonds.", polarity:"yang"},
 
-    {name:"LIGNES DE VIE", quote:"La graine porte en silence des chemins multiples. Chaque choix trace une direction qui attend d'être vécue.", polarity:"yin"},
+    {name:"LIGNES DE VIE", quote:"La graine porte en silence des chemins multiples. Chaque choix trace une direction qui attend d'Ãªtre vÃ©cue.", polarity:"yin"},
 
-    {name:"POINT ZÉRO", quote:"Au centre, tout se suspend dans un silence dense. C'est là que s'esquisse la naissance d'un monde nouveau.", polarity:"yang"},
+    {name:"POINT ZÃ‰RO", quote:"Au centre, tout se suspend dans un silence dense. C'est lÃ  que s'esquisse la naissance d'un monde nouveau.", polarity:"yang"},
 
-    {name:"TISSAGE COSMIQUE", quote:"Des fils invisibles se cherchent dans l'ombre. Dans leur rencontre se révèle une cohérence secrète.", polarity:"yin"},
+    {name:"TISSAGE COSMIQUE", quote:"Des fils invisibles se cherchent dans l'ombre. Dans leur rencontre se rÃ©vÃ¨le une cohÃ©rence secrÃ¨te.", polarity:"yin"},
 
    ]
 
@@ -3652,8 +3652,8 @@ window.DATA = {
 
 (function () {
 
-  // L'ordre des familles pour le tirage de la pièce
-  // Émotion → Besoin → Transmutation → Archétypes → Révélation → Action → Mémoire Cosmos
+  // L'ordre des familles pour le tirage de la piÃ¨ce
+  // Ã‰motion â†’ Besoin â†’ Transmutation â†’ ArchÃ©types â†’ RÃ©vÃ©lation â†’ Action â†’ MÃ©moire Cosmos
 
   const TIRAGE_ORDER = [
 
@@ -3674,57 +3674,57 @@ window.DATA = {
   ];
 
   const FAMILY_NAMES = {
-    emotions: 'Émotions',
+    emotions: 'Ã‰motions',
     besoins: 'Besoins',
     transmutation: 'Transmutation',
-    archetypes: 'Archétypes',
-    revelations: 'Révélations',
+    archetypes: 'ArchÃ©types',
+    revelations: 'RÃ©vÃ©lations',
     actions: 'Actions',
-    memoire_cosmos: 'Mémoire Cosmos'
+    memoire_cosmos: 'MÃ©moire Cosmos'
   };
 
 
 
   // Configuration des positions des cartes sur le plateau
-  // Ordre horaire depuis Émotion (bas gauche) : Émotion → Action → Révélation → Archétypes → Transmutation → Besoin → Mémoire Cosmos (centre)
-  // Disposition selon schéma : Transmutations-Archétypes (haut) | Besoins-Mémoires-Révélations (milieu) | Émotions-Actions (bas)
+  // Ordre horaire depuis Ã‰motion (bas gauche) : Ã‰motion â†’ Action â†’ RÃ©vÃ©lation â†’ ArchÃ©types â†’ Transmutation â†’ Besoin â†’ MÃ©moire Cosmos (centre)
+  // Disposition selon schÃ©ma : Transmutations-ArchÃ©types (haut) | Besoins-MÃ©moires-RÃ©vÃ©lations (milieu) | Ã‰motions-Actions (bas)
 
   const STEPS_TORE = [
 
-    { key: 'emotions',      label: 'ÉMOTIONS',       chip: 'Émotion',         pos: 3, guide: "Accueillez l'émotion qui se révèle..." },
+    { key: 'emotions',      label: 'Ã‰MOTIONS',       chip: 'Ã‰motion',         pos: 3, guide: "Accueillez l'Ã©motion qui se rÃ©vÃ¨le..." },
 
-    { key: 'besoins',       label: 'BESOINS',        chip: 'Besoin',          pos: 0, guide: "Reconnaissez le besoin profond qui émerge..." },
+    { key: 'besoins',       label: 'BESOINS',        chip: 'Besoin',          pos: 0, guide: "Reconnaissez le besoin profond qui Ã©merge..." },
 
-    { key: 'transmutation', label: 'TRANSMUTATION',  chip: 'Transmutation',   pos: 1, guide: "Observez ce qui cherche à se transformer..." },
+    { key: 'transmutation', label: 'TRANSMUTATION',  chip: 'Transmutation',   pos: 1, guide: "Observez ce qui cherche Ã  se transformer..." },
 
-    { key: 'actions',       label: 'ACTIONS',        chip: 'Action',          pos: 5, guide: "Intégrez l'action juste à poser..." },
+    { key: 'actions',       label: 'ACTIONS',        chip: 'Action',          pos: 5, guide: "IntÃ©grez l'action juste Ã  poser..." },
 
-    { key: 'archetypes',    label: 'ARCHÉTYPE',      chip: 'Archétype',       pos: 2, guide: "Laissez l'archétype vous guider..." },
+    { key: 'archetypes',    label: 'ARCHÃ‰TYPE',      chip: 'ArchÃ©type',       pos: 2, guide: "Laissez l'archÃ©type vous guider..." },
 
-    { key: 'revelations',   label: 'RÉVÉLATION',     chip: 'Révélation',      pos: 4, guide: "Accueillez la révélation qui se dévoile..." },
+    { key: 'revelations',   label: 'RÃ‰VÃ‰LATION',     chip: 'RÃ©vÃ©lation',      pos: 4, guide: "Accueillez la rÃ©vÃ©lation qui se dÃ©voile..." },
 
-    { key: 'memoire_cosmos',label: 'MÉMOIRE COSMOS', chip: 'Mémoire Cosmos',  pos: 6, guide: "Recevez la mémoire qui vous accompagne..." },
+    { key: 'memoire_cosmos',label: 'MÃ‰MOIRE COSMOS', chip: 'MÃ©moire Cosmos',  pos: 6, guide: "Recevez la mÃ©moire qui vous accompagne..." },
 
   ];
 
 
 
-  // Famille de passerelle en cas de différence carte / pièce
+  // Famille de passerelle en cas de diffÃ©rence carte / piÃ¨ce
   // TOUTES les passerelles proviennent de la famille 'actions'
 
   const BRIDGE_TARGET = {
 
-    emotions: 'actions',           // émotion → action
+    emotions: 'actions',           // Ã©motion â†’ action
 
-    transmutation: 'actions',      // transmutation → action
+    transmutation: 'actions',      // transmutation â†’ action
 
-    revelations: 'actions',        // révélation → action
+    revelations: 'actions',        // rÃ©vÃ©lation â†’ action
 
-    actions: 'actions',            // action → action
+    actions: 'actions',            // action â†’ action
 
-    archetypes: 'actions',         // archétype → action
+    archetypes: 'actions',         // archÃ©type â†’ action
 
-    besoins: 'actions'             // besoin → action
+    besoins: 'actions'             // besoin â†’ action
 
     // memoire_cosmos: pas de passerelle
 
@@ -3790,7 +3790,7 @@ const BACK_IMAGES = {
     const prev = instruction.textContent;
     const prevColor = instruction.style.color;
     const prevStyle = instruction.style.fontStyle;
-    instruction.textContent = message || 'Impossible de charger la carte, réessayez.';
+    instruction.textContent = message || 'Impossible de charger la carte, rÃ©essayez.';
     instruction.style.color = 'rgba(231,76,60,0.9)';
     instruction.style.fontStyle = 'italic';
     setTimeout(() => {
@@ -3802,18 +3802,18 @@ const BACK_IMAGES = {
 
 
 
-// État du tirage de la pièce : 1 lancer par famille SAUF memoire_cosmos (pas de polarité, pas de lancer)
+// Ã‰tat du tirage de la piÃ¨ce : 1 lancer par famille SAUF memoire_cosmos (pas de polaritÃ©, pas de lancer)
 
-let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
+let toreThrowIndex = 0;                       // 0 â†’ 5 (6 lancers)
 
 
 
   const toreBridgeAdded = new Array(STEPS_TORE.length).fill(false);
 
-  // Tableau pour stocker toutes les cartes déjà tirées (éviter les doublons)
+  // Tableau pour stocker toutes les cartes dÃ©jÃ  tirÃ©es (Ã©viter les doublons)
   const drawnCards = new Set();
 
-  // Map famille → donnée complète de la carte tirée (pour l'analyse)
+  // Map famille â†’ donnÃ©e complÃ¨te de la carte tirÃ©e (pour l'analyse)
   const flippedCardData = new Map();
 
 
@@ -3839,12 +3839,12 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
   let boardReady = false; // Flag : cartes non cliquables avant affichage du bandeau
 
   let isGuideMessageShown = false; // Bloquer les clics pendant le message de guidage
-  let isCoinAnimating = false; // Bloquer les clics pendant l'animation de la pièce
-  let isBridgeFanOpen = false; // Bloquer les clics pendant l'éventail de cartes passerelles
+  let isCoinAnimating = false; // Bloquer les clics pendant l'animation de la piÃ¨ce
+  let isBridgeFanOpen = false; // Bloquer les clics pendant l'Ã©ventail de cartes passerelles
   let isCardFlipping = false; // Bloquer les clics pendant l'animation de retournement
 let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement des cartes passerelles
 
-  let coinThrowIndex = 0; // Index pour les lancers de pièce (0-5 pour les 6 familles)
+  let coinThrowIndex = 0; // Index pour les lancers de piÃ¨ce (0-5 pour les 6 familles)
 
   const previewOverlay = el('card-preview-overlay');
 
@@ -3866,7 +3866,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
 
 
 
-// --- Préchargement des images pour optimiser les performances ---
+// --- PrÃ©chargement des images pour optimiser les performances ---
   const preloadedImages = new Set();
   
   function preloadImage(src) {
@@ -3877,7 +3877,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     }
   }
   
-  // Précharger toutes les images de cartes au démarrage
+  // PrÃ©charger toutes les images de cartes au dÃ©marrage
   function preloadAllCardImages() {
     const folders = {
       emotions: 'emotions',
@@ -3895,7 +3895,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     });
   }
   
-  // Lancer le préchargement dès que possible
+  // Lancer le prÃ©chargement dÃ¨s que possible
   if (document.readyState === 'loading') {
     document.addEventListener('DOMContentLoaded', preloadAllCardImages);
   } else {
@@ -3904,7 +3904,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
 
 // --- helpers ---
 
-  // Anime l'apparition d'un overlay (fond) et son panneau intérieur
+  // Anime l'apparition d'un overlay (fond) et son panneau intÃ©rieur
   function animateModalIn(overlayEl, panelEl, panelClass) {
     if (!overlayEl) return;
     // Fond
@@ -3931,25 +3931,25 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     overlay.style.animation = '';
     overlay.style.opacity = '1';
 
-    // Forcer le redémarrage des animations CSS enfants
+    // Forcer le redÃ©marrage des animations CSS enfants
     const img = overlay.querySelector('.compass-logo-img');
     const rings = overlay.querySelectorAll('.compass-ring, .compass-ring-outer, .compass-ring-inner');
     
-    // Réinitialiser les anneaux
+    // RÃ©initialiser les anneaux
     rings.forEach(ring => {
       ring.style.animation = 'none';
       void ring.offsetWidth; // Force reflow
       ring.style.animation = '';
     });
     
-    // Réinitialiser le logo
+    // RÃ©initialiser le logo
     if (img) {
       img.style.animation = 'none';
       void img.offsetWidth;
       img.style.animation = "compassLogoSpin 3s cubic-bezier(0.4,0,0.2,1) 1, compassLogoContinue 4s linear 3s infinite";
     }
 
-    // Lancer l'appel API Claude en arrière-plan pendant l'animation
+    // Lancer l'appel API Claude en arriÃ¨re-plan pendant l'animation
     preloadClaudeAnalysis();
 
     const NAV_DELAY = 5000;
@@ -3958,12 +3958,12 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
 
     // Messages rotatifs pendant le chargement
     const loadingMessages = [
-      'Lecture des vibrations…',
-      'Mise en résonance…',
-      'Consultation des archétypes…',
-      'Alignement des polarités…',
-      'Synthèse en cours…',
-      'Finalisation de l\'analyse…'
+      'Lecture des vibrationsâ€¦',
+      'Mise en rÃ©sonanceâ€¦',
+      'Consultation des archÃ©typesâ€¦',
+      'Alignement des polaritÃ©sâ€¦',
+      'SynthÃ¨se en coursâ€¦',
+      'Finalisation de l\'analyseâ€¦'
     ];
     const compassText = overlay.querySelector('.compass-text');
     if (compassText) {
@@ -3995,7 +3995,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     setTimeout(tryNavigate, NAV_DELAY);
   }
 
-  // Précharge l'analyse Claude en arrière-plan
+  // PrÃ©charge l'analyse Claude en arriÃ¨re-plan
   function preloadClaudeAnalysis() {
     try {
       const cards = JSON.parse(sessionStorage.getItem('tore_cards') || '[]');
@@ -4003,14 +4003,14 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       
       if (!Array.isArray(cards) || cards.length === 0) return;
 
-      // Récupérer l'email utilisateur pour le rate limiting abonnés
+      // RÃ©cupÃ©rer l'email utilisateur pour le rate limiting abonnÃ©s
       let userEmail = null;
       try {
         const sessStr = sessionStorage.getItem('oradia_session') || localStorage.getItem('oradia_session');
         if (sessStr) { const s = JSON.parse(sessStr); userEmail = s.email || null; }
       } catch(_) {}
 
-      // Stocker le résultat préchargé
+      // Stocker le rÃ©sultat prÃ©chargÃ©
       fetch('/api/analyse-tirage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -4018,7 +4018,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       })
       .then(resp => {
         if (resp.status === 429) {
-          // Rate limit abonné atteint — stocker le message pour affichage dans tore-analysis
+          // Rate limit abonnÃ© atteint â€” stocker le message pour affichage dans tore-analysis
           return resp.json().then(d => {
             sessionStorage.setItem('preloaded_analysis', JSON.stringify({
               success: false,
@@ -4032,26 +4032,26 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
         return resp.json();
       })
       .then(data => {
-        if (!data) return; // rate limited, déjà géré
+        if (!data) return; // rate limited, dÃ©jÃ  gÃ©rÃ©
         if (data.success && data.analysis) {
-          // Stocker l'analyse préchargée pour utilisation immédiate
+          // Stocker l'analyse prÃ©chargÃ©e pour utilisation immÃ©diate
           sessionStorage.setItem('preloaded_analysis', JSON.stringify(data));
         }
       })
       .catch(err => {
         // Silencieux en cas d'erreur, l'analyse sera faite normalement
-        console.warn('Préchargement analyse échoué:', err.message);
+        console.warn('PrÃ©chargement analyse Ã©chouÃ©:', err.message);
       });
     } catch (e) {
       // Silencieux en cas d'erreur
     }
   }
 
-  // Afficher le message de guidage après avoir tiré une carte
+  // Afficher le message de guidage aprÃ¨s avoir tirÃ© une carte
   function showGuideMessage(familyKey, cardData) {
     if (!guideMessage || !guideFamily || !guideText) {
       isCardFlipping = false;
-      // Fallback : vérifier si toutes les cartes sont retournées
+      // Fallback : vÃ©rifier si toutes les cartes sont retournÃ©es
       if (!isGuideMessageShown) setTimeout(showCoinAfterAllCards, 100);
       return;
     }
@@ -4059,7 +4059,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     const step = STEPS_TORE.find(s => s.key === familyKey);
     if (!step || !step.guide) {
       isCardFlipping = false;
-      // Fallback : vérifier si toutes les cartes sont retournées
+      // Fallback : vÃ©rifier si toutes les cartes sont retournÃ©es
       if (!isGuideMessageShown) setTimeout(showCoinAfterAllCards, 100);
       return;
     }
@@ -4086,12 +4086,12 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     guideText.textContent = step.guide;
     
     // Afficher l'image de la carte
-    // Sur mobile, le changement de src pouvait laisser apparaître brièvement
-    // l'image de la carte précédente pendant le chargement de la nouvelle —
-    // donnant l'impression que la carte "montrée" dans l'explication ne
-    // correspondait pas (ou arrivait en retard) à la carte réellement
-    // "tirée" sur le plateau (Palier 2 #9). On masque l'image le temps du
-    // chargement puis on la révèle une fois la nouvelle image prête.
+    // Sur mobile, le changement de src pouvait laisser apparaÃ®tre briÃ¨vement
+    // l'image de la carte prÃ©cÃ©dente pendant le chargement de la nouvelle â€”
+    // donnant l'impression que la carte "montrÃ©e" dans l'explication ne
+    // correspondait pas (ou arrivait en retard) Ã  la carte rÃ©ellement
+    // "tirÃ©e" sur le plateau (Palier 2 #9). On masque l'image le temps du
+    // chargement puis on la rÃ©vÃ¨le une fois la nouvelle image prÃªte.
     if (guideCardImage && cardData) {
       const imgPath = buildImagePath(familyKey, cardData);
       if (guideCardImage.src !== imgPath) {
@@ -4144,7 +4144,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     if (stepGuideBandeau) stepGuideBandeau.style.display = 'none';
     const bottomBar = el('tore-bottom-bar');
     if (bottomBar) { bottomBar.style.opacity = '0'; setTimeout(() => bottomBar.classList.add('hidden'), 400); }
-    // Animer le panneau intérieur via transition CSS (cohérent avec la fermeture)
+    // Animer le panneau intÃ©rieur via transition CSS (cohÃ©rent avec la fermeture)
     const guidePanel = guideMessage.querySelector(':scope > div.bg-gradient-to-br');
     if (guidePanel) {
       guidePanel.style.animation = 'none';
@@ -4155,9 +4155,9 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       guidePanel.style.opacity = '';
     }
     isGuideMessageShown = true; // Bloquer les clics sur les autres cartes
-    isCardFlipping = false; // Le guide prend le relais, on libère ce verrou
+    isCardFlipping = false; // Le guide prend le relais, on libÃ¨re ce verrou
 
-    // Auto-focus sur bouton Continuer pour accessibilité
+    // Auto-focus sur bouton Continuer pour accessibilitÃ©
     setTimeout(() => {
       const focusBtn = document.getElementById('guide-continue-btn');
       if (focusBtn && document.activeElement !== focusBtn) {
@@ -4170,9 +4170,9 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       boardHost.style.pointerEvents = 'none';
     }
     
-    // Gérer le bouton Continuer (au lieu du timeout automatique)
+    // GÃ©rer le bouton Continuer (au lieu du timeout automatique)
     if (guideContinueBtn && guideContinueBtn.parentNode) {
-      // Retirer les anciens listeners pour éviter les doublons
+      // Retirer les anciens listeners pour Ã©viter les doublons
       const newBtn = guideContinueBtn.cloneNode(true);
       guideContinueBtn.parentNode.replaceChild(newBtn, guideContinueBtn);
       
@@ -4189,7 +4189,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
           if (boardHost) boardHost.style.pointerEvents = 'auto';
           const total = boardHost ? boardHost.querySelectorAll('.tore-card').length : 0;
           const flipped = boardHost ? boardHost.querySelectorAll('.tore-card.flipped').length : 0;
-          // Mettre à jour le contenu du bandeau AVANT de le rendre visible
+          // Mettre Ã  jour le contenu du bandeau AVANT de le rendre visible
           const isCoinPhase = total > 0 && flipped === total;
           if (isCoinPhase) {
             boardHost.classList.remove('has-active-card');
@@ -4197,7 +4197,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
           } else {
             highlightNextCard();
           }
-          // Afficher le bandeau EN FONDU seulement après la mise à jour
+          // Afficher le bandeau EN FONDU seulement aprÃ¨s la mise Ã  jour
           const sg = el('tore-step-guide');
           if (sg) sg.style.display = isCoinPhase ? 'none' : 'block';
           const bb = el('tore-bottom-bar');
@@ -4209,7 +4209,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     }
   }
 
-  // Mettre en évidence la prochaine carte à tirer selon l'ordre
+  // Mettre en Ã©vidence la prochaine carte Ã  tirer selon l'ordre
   function highlightNextCard() {
     if (!boardHost) return;
     
@@ -4218,24 +4218,24 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       c.classList.remove('next-to-draw');
     });
 
-    // Pendant la phase pièce : pas de highlight (les cartes passerelles se tirent autrement)
+    // Pendant la phase piÃ¨ce : pas de highlight (les cartes passerelles se tirent autrement)
     if (coinThrowIndex > 0 || (coinWrapper && coinWrapper.style.display !== 'none' && !coinWrapper.classList.contains('hidden'))) return;
 
-    const toreBoard7 = boardHost; // boardHost est déjà .tore-board-7
+    const toreBoard7 = boardHost; // boardHost est dÃ©jÃ  .tore-board-7
     
-    // Vérifier si toutes les cartes sont retournées pour afficher la pièce
+    // VÃ©rifier si toutes les cartes sont retournÃ©es pour afficher la piÃ¨ce
     const totalCards = boardHost.querySelectorAll('.tore-card').length;
     const flippedCards = boardHost.querySelectorAll('.tore-card.flipped').length;
     
     if (totalCards > 0 && flippedCards === totalCards) {
-      // Toutes les cartes sont retournées
-      // La pièce sera affichée UNIQUEMENT via le bouton Continuer du guide Mémoire Cosmos
+      // Toutes les cartes sont retournÃ©es
+      // La piÃ¨ce sera affichÃ©e UNIQUEMENT via le bouton Continuer du guide MÃ©moire Cosmos
       if (toreBoard7) toreBoard7.classList.remove('has-active-card');
       updateStepGuide(null, flippedCards, totalCards);
       return;
     }
     
-    // Trouver la prochaine carte non retournée selon TIRAGE_ORDER
+    // Trouver la prochaine carte non retournÃ©e selon TIRAGE_ORDER
     let nextFamilyFound = null;
     for (const familyKey of TIRAGE_ORDER) {
       const card = boardHost.querySelector(`.tore-card[data-family="${familyKey}"]`);
@@ -4248,12 +4248,12 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       }
     }
 
-    // S'assurer qu'aucune carte retournée n'a de style résiduel qui clignote
+    // S'assurer qu'aucune carte retournÃ©e n'a de style rÃ©siduel qui clignote
     boardHost.querySelectorAll('.tore-card.flipped').forEach(fc => {
       fc.style.animation = '';
     });
 
-    // Activer/désactiver le focus visuel sur le plateau
+    // Activer/dÃ©sactiver le focus visuel sur le plateau
     if (toreBoard7) {
       if (nextFamilyFound) {
         toreBoard7.classList.add('has-active-card');
@@ -4262,10 +4262,10 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       }
     }
 
-    // Mettre à jour le bandeau de guidage
+    // Mettre Ã  jour le bandeau de guidage
     updateStepGuide(nextFamilyFound, flippedCards, totalCards);
 
-    // ── Rayon lumineux depuis Mémoire Cosmos (pos-6) vers la carte active ──
+    // â”€â”€ Rayon lumineux depuis MÃ©moire Cosmos (pos-6) vers la carte active â”€â”€
     requestAnimationFrame(() => requestAnimationFrame(() => {
       const svg  = document.getElementById('tore-beam-svg');
       const poly = document.getElementById('tore-beam-poly');
@@ -4289,12 +4289,12 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
         return;
       }
 
-      // Coordonnées relatives au SVG (qui couvre exactement le board)
+      // CoordonnÃ©es relatives au SVG (qui couvre exactement le board)
       const svgRect = svg.getBoundingClientRect();
       const srcRect = sourceCard.getBoundingClientRect();
       const tgtRect = targetCard.getBoundingClientRect();
 
-      // SVG est en position:fixed couvrant tout le viewport → coords = coords viewport directes
+      // SVG est en position:fixed couvrant tout le viewport â†’ coords = coords viewport directes
       const sx = srcRect.left + srcRect.width  / 2;
       const sy = srcRect.top  + srcRect.height / 2;
       const tx = tgtRect.left + tgtRect.width  / 2;
@@ -4305,8 +4305,8 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       const nx = -dy / len, ny = dx / len;
       const spread = Math.min(srcRect.width, srcRect.height) * 0.22;
 
-      // Base large = Mémoire Cosmos (sx), pointe = carte cible (tx)
-      // Spread calculé sur la cible pour la base, pointe à la source
+      // Base large = MÃ©moire Cosmos (sx), pointe = carte cible (tx)
+      // Spread calculÃ© sur la cible pour la base, pointe Ã  la source
       const pts = [
         `${tx + nx*spread},${ty + ny*spread}`,
         `${tx - nx*spread},${ty - ny*spread}`,
@@ -4323,7 +4323,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     const _src = _parsePts(_prevPts);
     const _t0 = performance.now();
     const _dur = 900;
-    // Capturer la position cible réelle en cas d'interruption d'interpolation précédente
+    // Capturer la position cible rÃ©elle en cas d'interruption d'interpolation prÃ©cÃ©dente
     if (window._beamRaf) {
       cancelAnimationFrame(window._beamRaf);
       window._beamRaf = null;
@@ -4344,8 +4344,8 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
 
       const grad = svg.querySelector('#beamGrad');
       if (grad) {
-        // Gradient : opaque à tx (base large = carte cible visuellement la "source" du triangle)
-        // Non — gradient de sx (Mémoire Cosmos, pointe) vers tx (carte, base) opaque
+        // Gradient : opaque Ã  tx (base large = carte cible visuellement la "source" du triangle)
+        // Non â€” gradient de sx (MÃ©moire Cosmos, pointe) vers tx (carte, base) opaque
         grad.setAttribute('x1', tx); grad.setAttribute('y1', ty);
         grad.setAttribute('x2', sx); grad.setAttribute('y2', sy);
         grad.querySelector('stop[offset="0%"]').setAttribute('stop-color', 'rgba(240,199,94,0.45)');
@@ -4369,20 +4369,20 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     const dotsContainer = document.getElementById('tore-step-dots');
     if (!label || !instruction || !dotsContainer) return;
 
-    // FAMILY_NAMES est défini globalement plus haut
+    // FAMILY_NAMES est dÃ©fini globalement plus haut
 
-    // Mise à jour des points de progression avec couleurs spécifiques aux familles
+    // Mise Ã  jour des points de progression avec couleurs spÃ©cifiques aux familles
     dotsContainer.innerHTML = '';
     
     // Palette de couleurs pour chaque famille de cartes
     const familyColors = {
-      emotions: { main: '#B72326', glow: '183,35,38', light: 'rgba(183,35,38,0.15)', border: 'rgba(183,35,38,0.2)' },      // ÉMOTIONS R:183 V:35 B:38
+      emotions: { main: '#B72326', glow: '183,35,38', light: 'rgba(183,35,38,0.15)', border: 'rgba(183,35,38,0.2)' },      // Ã‰MOTIONS R:183 V:35 B:38
       besoins: { main: '#F29C1A', glow: '242,156,26', light: 'rgba(242,156,26,0.15)', border: 'rgba(242,156,26,0.2)' },      // BESOINS R:242 V:156 B:26
       transmutation: { main: '#D7A43A', glow: '215,164,58', light: 'rgba(215,164,58,0.15)', border: 'rgba(215,164,58,0.2)' },  // TRANSMUTATION R:215 V:164 B:58
       actions: { main: '#F9D849', glow: '249,216,73', light: 'rgba(249,216,73,0.15)', border: 'rgba(249,216,73,0.2)' },        // ACTIONS R:249 V:216 B:73
-      archetypes: { main: '#5E2E8A', glow: '94,46,138', light: 'rgba(94,46,138,0.15)', border: 'rgba(94,46,138,0.2)' },      // ARCHÉTYPES R:94 V:46 B:138
-      revelations: { main: '#3FAA4D', glow: '63,170,77', light: 'rgba(63,170,77,0.15)', border: 'rgba(63,170,77,0.2)' },    // RÉVÉLATIONS R:63 V:170 B:77
-      memoire_cosmos: { main: '#0E2A57', glow: '14,42,87', light: 'rgba(14,42,87,0.15)', border: 'rgba(14,42,87,0.2)' }  // MÉMOIRE COSMOS R:14 V:42 B:87
+      archetypes: { main: '#5E2E8A', glow: '94,46,138', light: 'rgba(94,46,138,0.15)', border: 'rgba(94,46,138,0.2)' },      // ARCHÃ‰TYPES R:94 V:46 B:138
+      revelations: { main: '#3FAA4D', glow: '63,170,77', light: 'rgba(63,170,77,0.15)', border: 'rgba(63,170,77,0.2)' },    // RÃ‰VÃ‰LATIONS R:63 V:170 B:77
+      memoire_cosmos: { main: '#0E2A57', glow: '14,42,87', light: 'rgba(14,42,87,0.15)', border: 'rgba(14,42,87,0.2)' }  // MÃ‰MOIRE COSMOS R:14 V:42 B:87
     };
     
     TIRAGE_ORDER.forEach((fam, i) => {
@@ -4402,9 +4402,9 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     });
 
     if (!nextFamily) {
-      // Toutes les cartes retournées → phase pièce
-      label.textContent = 'Toutes les cartes sont révélées ✦';
-      instruction.textContent = 'Lancez maintenant la pièce de tirage pour chaque famille.';
+      // Toutes les cartes retournÃ©es â†’ phase piÃ¨ce
+      label.textContent = 'Toutes les cartes sont rÃ©vÃ©lÃ©es âœ¦';
+      instruction.textContent = 'Lancez maintenant la piÃ¨ce de tirage pour chaque famille.';
     } else {
       const cardNum = flippedCount + 1;
       const famName = FAMILY_NAMES[nextFamily] || nextFamily;
@@ -4412,15 +4412,15 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       if (sublabel) sublabel.textContent = `Carte ${cardNum} / ${totalCount}`;
       label.textContent = famName;
       const tips = {
-        emotions: 'Révélez l\'émotion qui anime ce tirage.',
-        besoins: 'Qu\'est-ce dont votre âme a besoin en ce moment ? Retournez la carte.',
-        transmutation: 'Ce qui cherche à se transformer en vous. Cliquez pour le voir.',
-        archetypes: 'Quelle énergie vous traverse ? Retournez la carte.',
-        revelations: 'Ce qui se révèle maintenant. Cliquez pour découvrir.',
-        actions: 'Quelle action s\'offre à vous ? Retournez la carte.',
-        memoire_cosmos: 'La mémoire qui relie tout. Recevez-la.'
+        emotions: 'RÃ©vÃ©lez l\'Ã©motion qui anime ce tirage.',
+        besoins: 'Qu\'est-ce dont votre Ã¢me a besoin en ce moment ? Retournez la carte.',
+        transmutation: 'Ce qui cherche Ã  se transformer en vous. Cliquez pour le voir.',
+        archetypes: 'Quelle Ã©nergie vous traverse ? Retournez la carte.',
+        revelations: 'Ce qui se rÃ©vÃ¨le maintenant. Cliquez pour dÃ©couvrir.',
+        actions: 'Quelle action s\'offre Ã  vous ? Retournez la carte.',
+        memoire_cosmos: 'La mÃ©moire qui relie tout. Recevez-la.'
       };
-      instruction.textContent = tips[nextFamily] || 'Retournez la carte pour la révéler.';
+      instruction.textContent = tips[nextFamily] || 'Retournez la carte pour la rÃ©vÃ©ler.';
     }
     
     // Animation pulsation sur l'instruction de guidage
@@ -4433,8 +4433,8 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
   }
 
  function showCoinAfterAllCards() {
-  // Afficher la pièce après que toutes les 7 cartes soient tirées
-  // Ne pas afficher la pièce si le guide est encore ouvert
+  // Afficher la piÃ¨ce aprÃ¨s que toutes les 7 cartes soient tirÃ©es
+  // Ne pas afficher la piÃ¨ce si le guide est encore ouvert
   if (isGuideMessageShown) return;
   
   if (coinWrapper && boardHost) {
@@ -4442,15 +4442,15 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
     const flippedCards = boardHost.querySelectorAll('.tore-card.flipped').length;
     
     if (totalCards > 0 && flippedCards === totalCards) {
-      // Masquer le guide étape et afficher le wrapper pièce
+      // Masquer le guide Ã©tape et afficher le wrapper piÃ¨ce
       const sg = el('tore-step-guide');
       if (sg) sg.style.display = 'none';
       coinWrapper.style.display = 'block';
       if (boardHost) boardHost.style.pointerEvents = 'none';
 
-      // Éteindre complètement le rayon lumineux (et son halo pulsant) : sinon
-      // il restait figé — et clignotant — sur la dernière carte ciblée
-      // (ex. "Action") pendant toute la phase de tirage de la pièce.
+      // Ã‰teindre complÃ¨tement le rayon lumineux (et son halo pulsant) : sinon
+      // il restait figÃ© â€” et clignotant â€” sur la derniÃ¨re carte ciblÃ©e
+      // (ex. "Action") pendant toute la phase de tirage de la piÃ¨ce.
       const beamSvgEl  = document.getElementById('tore-beam-svg');
       const beamPolyEl = document.getElementById('tore-beam-poly');
       const beamHaloEl = document.getElementById('tore-beam-halo');
@@ -4459,7 +4459,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       if (beamHaloEl) { beamHaloEl.setAttribute('opacity', '0'); beamHaloEl.classList.remove('beam-pulsing'); }
       if (beamSvgEl)  beamSvgEl.classList.add('beam-hidden');
 
-      // Initialiser les dots pour la phase pièce (6 lancers)
+      // Initialiser les dots pour la phase piÃ¨ce (6 lancers)
       const dotsContainer = document.getElementById('tore-step-dots');
       if (dotsContainer) {
         dotsContainer.innerHTML = '';
@@ -4477,7 +4477,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       }
       isCoinAnimating = false;
       coinThrowIndex = 0;
-      // Initialiser le label de famille sur le 1er lancer dès l'apparition de la pièce
+      // Initialiser le label de famille sur le 1er lancer dÃ¨s l'apparition de la piÃ¨ce
       updateCoinFamilyLabel();
       // S'assurer que la bottom-bar est bien visible
       const bb = el('tore-bottom-bar');
@@ -4486,33 +4486,33 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
   }
 }
 
-// Variable globale pour suivre l'état du tirage
+// Variable globale pour suivre l'Ã©tat du tirage
 let isToreComplete = false;
 
 function showToreAnalysisCTA() {
   if (!coinWrapper) return;
 
-  // Cacher pièce + bouton lancer
+  // Cacher piÃ¨ce + bouton lancer
   coin?.classList.add('hidden');
   coinButton?.classList.add('hidden');
 
   isToreComplete = true;
   if (boardHost) boardHost.style.pointerEvents = 'auto';
 
-  // Enregistrer le tirage Tore complété
+  // Enregistrer le tirage Tore complÃ©tÃ©
   if (window.freemiumTracker) window.freemiumTracker.recordToreDraw();
 
-  // Collecter les cartes retournées
+  // Collecter les cartes retournÃ©es
   const cards = [];
   if (boardHost) {
     boardHost.querySelectorAll('.tore-card.flipped').forEach(card => {
       const family = card.dataset.family;
       if (!family) return;
 
-      // Récupérer la donnée complète depuis la Map (stockée au flip)
+      // RÃ©cupÃ©rer la donnÃ©e complÃ¨te depuis la Map (stockÃ©e au flip)
       const fullData = flippedCardData.get(family);
       const name = (fullData && fullData.name) ? fullData.name : (card.dataset.name || '');
-      // Construire le chemin image réel via buildImagePath
+      // Construire le chemin image rÃ©el via buildImagePath
       const imgSrc = fullData ? buildImagePath(family, fullData) : '';
 
       const cardData = { family, name: name || 'unknown', imgSrc };
@@ -4531,30 +4531,30 @@ function showToreAnalysisCTA() {
     });
   }
 
-  // Sauvegarder les données dans sessionStorage pour tore-analysis.html
+  // Sauvegarder les donnÃ©es dans sessionStorage pour tore-analysis.html
   const intention = sessionStorage.getItem('tore_intention') || '';
   sessionStorage.setItem('tore_cards', JSON.stringify(cards));
 
-  // Clore le suivi de pureté QRNG : 'anu' (100% quantique) ou 'fallback'.
-  // Stocké pour transmission à l'activation de la fenêtre d'observation
+  // Clore le suivi de puretÃ© QRNG : 'anu' (100% quantique) ou 'fallback'.
+  // StockÃ© pour transmission Ã  l'activation de la fenÃªtre d'observation
   // (les statistiques scientifiques n'utilisent QUE les tirages 'anu').
   const qrngSource = (window.QRNG && QRNG.endDraw) ? QRNG.endDraw() : 'unknown';
   sessionStorage.setItem('tore_qrng_source', qrngSource);
 
-  // Enregistrer dans l'historique — Supabase (RLS par user_id) si connecté, sinon stockage local "invité"
+  // Enregistrer dans l'historique â€” Supabase (RLS par user_id) si connectÃ©, sinon stockage local "invitÃ©"
   (async () => {
     try {
       const entry = {
         type: 'Tirage Tore',
         date: new Date().toISOString(),
         intention: intention,
-        cards: cards, // format brut (avec bridgeCard) — l'API en dérive cartes/passerelles
+        cards: cards, // format brut (avec bridgeCard) â€” l'API en dÃ©rive cartes/passerelles
         cartes: cards.map(c => c.name).filter(Boolean),
         passerelles: cards.filter(c => c.bridgeCard).map(c => ({ carte: c.name, passerelle: c.bridgeCard.name }))
       };
       if (window.OradiaTirageStorage) {
-        // Sauvegarde sécurisée côté Supabase pour les membres connectés (RLS : chacun ne voit que ses tirages),
-        // ou stockage local namespacé "invité" pour les visiteurs anonymes — jamais sous une clé globale partagée.
+        // Sauvegarde sÃ©curisÃ©e cÃ´tÃ© Supabase pour les membres connectÃ©s (RLS : chacun ne voit que ses tirages),
+        // ou stockage local namespacÃ© "invitÃ©" pour les visiteurs anonymes â€” jamais sous une clÃ© globale partagÃ©e.
         await window.OradiaTirageStorage.addTirage(entry, 20);
       } else {
         const tirages = JSON.parse(localStorage.getItem('oradia_tirages_invite') || '[]');
@@ -4569,7 +4569,7 @@ function showToreAnalysisCTA() {
   const bbFinal = el('tore-bottom-bar');
   if (bbFinal) bbFinal.classList.add('hidden');
 
-  // Créer ou afficher un bouton flottant simple en bas de l'écran
+  // CrÃ©er ou afficher un bouton flottant simple en bas de l'Ã©cran
   let floatingBtn = document.getElementById('tore-floating-analysis-btn');
   if (!floatingBtn) {
     floatingBtn = document.createElement('button');
@@ -4645,7 +4645,7 @@ function showToreAnalysisCTA() {
       const instruction = document.getElementById('tore-step-instruction');
       if (instruction) {
         instruction.dataset.previousText = instruction.textContent;
-        instruction.textContent = 'Connexion lente, patientez…';
+        instruction.textContent = 'Connexion lente, patientezâ€¦';
         instruction.style.color = 'rgba(212,175,55,0.9)';
         instruction.style.fontStyle = 'italic';
       }
@@ -4665,15 +4665,15 @@ function showToreAnalysisCTA() {
       }
     };
 
-    // Si on veut éviter les doublons
+    // Si on veut Ã©viter les doublons
     if (avoidDuplicates) {
-      // Filtrer les cartes déjà tirées
+      // Filtrer les cartes dÃ©jÃ  tirÃ©es
       const availableCards = pool.filter(card => {
         const cardId = card.name || card.file || JSON.stringify(card);
         return !drawnCards.has(cardId);
       });
 
-      // Si toutes les cartes ont été tirées, on réinitialise
+      // Si toutes les cartes ont Ã©tÃ© tirÃ©es, on rÃ©initialise
       if (availableCards.length === 0) {
         drawnCards.clear();
         try {
@@ -4708,7 +4708,7 @@ function showToreAnalysisCTA() {
       }
     }
 
-    // Pioche aléatoire quantique
+    // Pioche alÃ©atoire quantique
     try {
       const idx = await QRNG.getInt(0, pool.length);
       hideQrngLoading(); return pool[idx] || null;
@@ -4731,9 +4731,9 @@ function showToreAnalysisCTA() {
 
       .toLowerCase()
 
-      .replace(/[^a-z0-9]+/g, '_')                     // TOUT ce qui n’est pas lettre/chiffre devient "_"
+      .replace(/[^a-z0-9]+/g, '_')                     // TOUT ce qui nâ€™est pas lettre/chiffre devient "_"
 
-      .replace(/^_+|_+$/g, '');                        // enlève les "_" en trop au début/fin
+      .replace(/^_+|_+$/g, '');                        // enlÃ¨ve les "_" en trop au dÃ©but/fin
 
   }
 
@@ -4759,7 +4759,7 @@ function showToreAnalysisCTA() {
 
 
 
-// Sinon on déduit le nom du fichier à partir du nom de la carte
+// Sinon on dÃ©duit le nom du fichier Ã  partir du nom de la carte
 
     if (!file) {
 
@@ -4870,7 +4870,7 @@ function showToreAnalysisCTA() {
     const targetEl  = card.querySelector('.tore-card-inner') || card;
     const targetRect = targetEl.getBoundingClientRect();
 
-    // getBoundingClientRect → coords viewport → ajouter scroll pour coords document
+    // getBoundingClientRect â†’ coords viewport â†’ ajouter scroll pour coords document
     const sx = window.scrollX || window.pageXOffset || 0;
     const sy = window.scrollY || window.pageYOffset || 0;
     const startX = coinRect.left  + coinRect.width  / 2 + sx;
@@ -4879,7 +4879,7 @@ function showToreAnalysisCTA() {
     const endY   = targetRect.top  + targetRect.height / 2 + sy;
     const dist   = Math.sqrt((endX-startX)**2 + (endY-startY)**2);
 
-    // Récupérer le SVG (ou le recréer si ce n'est pas un SVG)
+    // RÃ©cupÃ©rer le SVG (ou le recrÃ©er si ce n'est pas un SVG)
     let arrow = document.getElementById('tore-arrow');
     if (!arrow || arrow.tagName.toLowerCase() !== 'svg') {
       if (arrow) arrow.remove();
@@ -4891,13 +4891,13 @@ function showToreAnalysisCTA() {
     if (document.body.style.position !== 'relative') document.body.style.position = 'relative';
     if (arrow.parentElement !== document.body) document.body.appendChild(arrow);
 
-    // Couleur selon le contexte (passé via data-match sur le SVG parent)
+    // Couleur selon le contexte (passÃ© via data-match sur le SVG parent)
     const matchState = arrow.dataset.match;
-    // Couleur doré Oradia pour tous les rayons
-    const lineColor  = 'rgba(212,175,55,0.85)'; // doré Oradia
+    // Couleur dorÃ© Oradia pour tous les rayons
+    const lineColor  = 'rgba(212,175,55,0.85)'; // dorÃ© Oradia
     const glowColor  = '212,175,55';
 
-    // Couleurs projectile dorées
+    // Couleurs projectile dorÃ©es
     const c1 = '#f0c75e';
     const c2 = '#d4af37';
     const c3 = '#b8860b';
@@ -4954,7 +4954,7 @@ function showToreAnalysisCTA() {
 
     arrowEl = arrow;
     if (arrowHideTimer) clearTimeout(arrowHideTimer);
-    // Disparaît rapidement juste avant l'ouverture de la modale (1.6s)
+    // DisparaÃ®t rapidement juste avant l'ouverture de la modale (1.6s)
     arrowHideTimer = setTimeout(() => {
       arrow.style.animation = 'arrowFadeOut 0.4s ease forwards';
       setTimeout(() => { arrow.innerHTML = ''; arrow.style.animation = ''; delete arrow.dataset.match; }, 400);
@@ -4977,7 +4977,7 @@ function showToreAnalysisCTA() {
 
 
 
-    // reset visuel précédent
+    // reset visuel prÃ©cÃ©dent
 
     cards.forEach(card => card.classList.remove('match', 'mismatch'));
 
@@ -5038,12 +5038,12 @@ function showToreAnalysisCTA() {
 
 
   function fitBoardToViewport() {
-    // Sur desktop (≥640px) le CSS position:fixed gère tout — ne pas toucher au style inline
+    // Sur desktop (â‰¥640px) le CSS position:fixed gÃ¨re tout â€” ne pas toucher au style inline
     if (window.innerWidth >= 640) return;
     if (!document.body.classList.contains('tore-playing')) return;
     const board7 = document.querySelector('#tore-immersif .tore-board-7');
     if (!board7) return;
-    // Mobile uniquement : laisser le CSS gérer
+    // Mobile uniquement : laisser le CSS gÃ©rer
     board7.style.width = '';
     board7.style.maxWidth = '';
     board7.style.height = '';
@@ -5080,7 +5080,7 @@ function showToreAnalysisCTA() {
 
   }
 
-// --- MODALE ORADIA : confirmation quitter (comme Pèlerin) ---
+// --- MODALE ORADIA : confirmation quitter (comme PÃ¨lerin) ---
 
 function ensureToreExitModal(){
 
@@ -5114,7 +5114,7 @@ function ensureToreExitModal(){
 
         </div>
 
-        <button id="toreExitClose" class="text-gold text-2xl leading-none" aria-label="Fermer">×</button>
+        <button id="toreExitClose" class="text-gold text-2xl leading-none" aria-label="Fermer">Ã—</button>
 
       </div>
 
@@ -5226,7 +5226,7 @@ function closeToreExitModal(){
 
     
 
-    // Reset de l'état du tirage de pièce
+    // Reset de l'Ã©tat du tirage de piÃ¨ce
 
     toreThrowIndex = 0;
 
@@ -5263,9 +5263,9 @@ function closeToreExitModal(){
 
               <div>
 
-                <h3 data-name>—</h3>
+                <h3 data-name>â€”</h3>
 
-                <p data-quote>—</p>
+                <p data-quote>â€”</p>
 
               </div>
 
@@ -5296,7 +5296,7 @@ function closeToreExitModal(){
     boardWrap.classList.remove('hidden');
     document.body.classList.add('tore-playing');
 
-    // Rendre les barres visibles en premier pour mesurer leur hauteur réelle
+    // Rendre les barres visibles en premier pour mesurer leur hauteur rÃ©elle
     boardReady = false;
     if (boardHost) boardHost.style.pointerEvents = 'none';
     if (coinWrapper) coinWrapper.style.pointerEvents = 'none';
@@ -5311,7 +5311,7 @@ function closeToreExitModal(){
     const exitStrip = el('tore-exit-strip');
     if (exitStrip) exitStrip.classList.remove('hidden');
 
-    // Calculer la taille du plateau APRÈS que les barres sont dans le DOM
+    // Calculer la taille du plateau APRÃˆS que les barres sont dans le DOM
     (function() {
       if (typeof ResizeObserver !== 'undefined') {
         const bbEl = document.getElementById('tore-bottom-bar');
@@ -5326,7 +5326,7 @@ function closeToreExitModal(){
           }
         });
         ro.observe(bbEl);
-        // Sécurité : si la barre ne se redimensionne jamais en 500 ms
+        // SÃ©curitÃ© : si la barre ne se redimensionne jamais en 500 ms
         setTimeout(() => { ro.disconnect(); fitBoardToViewport(); }, 500);
       } else {
         setTimeout(fitBoardToViewport, 150);
@@ -5335,7 +5335,7 @@ function closeToreExitModal(){
 
 
 
-// On cache la pièce au moment où on (re)lance un tirage
+// On cache la piÃ¨ce au moment oÃ¹ on (re)lance un tirage
 
         if (coinWrapper) {
 
@@ -5368,20 +5368,20 @@ function closeToreExitModal(){
 
       back.addEventListener('click', async () => {
 
-        // BLOQUER tant que le bandeau n'est pas prêt
+        // BLOQUER tant que le bandeau n'est pas prÃªt
         if (!boardReady) {
-          console.warn('[tore] Click ignoré : boardReady=false');
+          console.warn('[tore] Click ignorÃ© : boardReady=false');
           return;
         }
 
-        // BLOQUER si la carte est déjà retournée
+        // BLOQUER si la carte est dÃ©jÃ  retournÃ©e
         if (card.classList.contains('flipped')) return;
 
-        // BLOQUER les clics si le message de guidage est affiché
+        // BLOQUER les clics si le message de guidage est affichÃ©
         if (isGuideMessageShown) return;
-        // BLOQUER les clics si l'éventail de cartes passerelles est ouvert
+        // BLOQUER les clics si l'Ã©ventail de cartes passerelles est ouvert
         if (isBridgeFanOpen) return;
-        // BLOQUER les clics si la pièce est en train d'être lancée
+        // BLOQUER les clics si la piÃ¨ce est en train d'Ãªtre lancÃ©e
         if (isCoinAnimating) return;
         // BLOQUER les clics si une carte est en cours de retournement
         if (isCardFlipping) return;
@@ -5395,7 +5395,7 @@ function closeToreExitModal(){
         
 
         // BLOQUER le tirage si ce n'est pas la bonne famille selon l'ordre
-        // (sécurité JS en complément du pointer-events CSS)
+        // (sÃ©curitÃ© JS en complÃ©ment du pointer-events CSS)
 
         const expectedFamily = TIRAGE_ORDER[toreThrowIndex];
 
@@ -5413,7 +5413,7 @@ function closeToreExitModal(){
 
 
 
-        // On garde la polarité de la carte (yang / yin / none)
+        // On garde la polaritÃ© de la carte (yang / yin / none)
 
         const pol = (data && (data.polarity === 'yang' || data.polarity === 'yin'))
 
@@ -5425,7 +5425,7 @@ function closeToreExitModal(){
 
         if (data && data.name) {
           card.dataset.name = data.name;
-          // Stocker la donnée complète pour l'analyse
+          // Stocker la donnÃ©e complÃ¨te pour l'analyse
           flippedCardData.set(famKey, data);
         }
 
@@ -5434,7 +5434,7 @@ function closeToreExitModal(){
           isCardFlipping = false;
           toreThrowIndex--;
           if (boardHost) boardHost.style.pointerEvents = 'auto';
-          showCardError('Impossible de charger la carte, réessayez.', 2500);
+          showCardError('Impossible de charger la carte, rÃ©essayez.', 2500);
           return;
 
         }
@@ -5443,33 +5443,33 @@ function closeToreExitModal(){
 
 
 
-        // on mémorise la polarité pour la comparaison avec la pièce
+        // on mÃ©morise la polaritÃ© pour la comparaison avec la piÃ¨ce
 
     
 
 
 
-        // Vider d'abord la face avant et masquer complètement (empêche flash de l'image précédente)
+        // Vider d'abord la face avant et masquer complÃ¨tement (empÃªche flash de l'image prÃ©cÃ©dente)
         front.style.padding = '0';
         front.style.background = 'none';
         front.style.visibility = 'visible';
-        // Placeholder doré pendant le chargement de l'image
+        // Placeholder dorÃ© pendant le chargement de l'image
         front.innerHTML = '<div style="width:100%;height:100%;background:linear-gradient(135deg,#1a1200,#2a1f00,#1a1200);border-radius:10px;"></div>';
 
         card.classList.remove('next-to-draw');
 
-        // Masquer le faisceau lumineux dès le retournement
+        // Masquer le faisceau lumineux dÃ¨s le retournement
         const _bpoly = document.getElementById('tore-beam-poly');
         const _bhalo = document.getElementById('tore-beam-halo');
         if (_bpoly) _bpoly.setAttribute('opacity', '0');
         if (_bhalo) _bhalo.setAttribute('opacity', '0');
 
-        // Incrémenter l'index de tirage pour passer à la famille suivante
+        // IncrÃ©menter l'index de tirage pour passer Ã  la famille suivante
         toreThrowIndex++;
 
         const imgEl = new Image();
         let flipDone = false;
-        // Réduire le timeout si la connexion est rapide (navigator.connection API)
+        // RÃ©duire le timeout si la connexion est rapide (navigator.connection API)
         const _conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
         const _fast = _conn && (_conn.effectiveType === '4g' || _conn.downlink > 2);
         const FLIP_TIMEOUT = _fast ? 600 : 1500;
@@ -5496,10 +5496,10 @@ function closeToreExitModal(){
           imgEl2.setAttribute('loading', 'eager');
           imgEl2.setAttribute('fetchpriority', 'high');
           // Garder le placeholder visible pendant le fade-in de l'image
-          // imgEl2 est placé AU-DESSUS du placeholder via position:absolute
+          // imgEl2 est placÃ© AU-DESSUS du placeholder via position:absolute
           front.style.position = 'relative';
           imgEl2.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.35s ease;';
-          // Vider le placeholder seulement après que l'image est visible
+          // Vider le placeholder seulement aprÃ¨s que l'image est visible
           front.innerHTML = '<div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a1200,#2a1f00,#1a1200);border-radius:10px;z-index:0;"></div>';
           front.appendChild(imgEl2);
           // Retour haptique discret sur mobile
@@ -5511,12 +5511,12 @@ function closeToreExitModal(){
             const inner = card.querySelector('.tore-card-inner');
             if (inner) inner.style.willChange = 'auto';
           }, 1200);
-          // Mettre à jour aria-pressed pour les lecteurs d'écran
+          // Mettre Ã  jour aria-pressed pour les lecteurs d'Ã©cran
           const backEl = card.querySelector('.tore-card-back');
           if (backEl) {
             backEl.setAttribute('aria-pressed', 'true');
-            backEl.setAttribute('aria-label', 'Carte retournée');
-            backEl.setAttribute('tabindex', '-1'); // sortir du tabindex maintenant que la carte est retournée
+            backEl.setAttribute('aria-label', 'Carte retournÃ©e');
+            backEl.setAttribute('tabindex', '-1'); // sortir du tabindex maintenant que la carte est retournÃ©e
           }
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
@@ -5541,8 +5541,8 @@ function closeToreExitModal(){
         setTimeout(doFlip, prefersReduced ? 300 : FLIP_TIMEOUT);
         imgEl.src = imgPath;
 
-        // Filet de sécurité : si toutes les cartes sont retournées et que la phase pièce
-        // n'a pas démarré 4s après ce flip, la forcer
+        // Filet de sÃ©curitÃ© : si toutes les cartes sont retournÃ©es et que la phase piÃ¨ce
+        // n'a pas dÃ©marrÃ© 4s aprÃ¨s ce flip, la forcer
         setTimeout(() => {
           if (!isGuideMessageShown && boardHost) {
             const total = boardHost.querySelectorAll('.tore-card').length;
@@ -5578,7 +5578,7 @@ if (previewOverlay) {
 
   }
 
-      // Pose réellement la carte passerelle (famille suivante) sur la pile concernée
+      // Pose rÃ©ellement la carte passerelle (famille suivante) sur la pile concernÃ©e
 
   // Ajouter le zoom aux cartes passerelles aussi
   function addZoomToBridgeCard(bridgeCard) {
@@ -5640,12 +5640,12 @@ if (previewOverlay) {
 
     baseCard.appendChild(extra);
 
-    // Ajouter le zoom à la carte passerelle
+    // Ajouter le zoom Ã  la carte passerelle
     addZoomToBridgeCard(extra);
 
     toreBridgeAdded[stepIndex] = true;
 
-    // Libérer les clics après le traitement de la carte passerelle
+    // LibÃ©rer les clics aprÃ¨s le traitement de la carte passerelle
     isBridgeCardProcessing = false;
 
   }
@@ -5662,21 +5662,21 @@ if (previewOverlay) {
 
 
 
-  // Ouvre un overlay avec un éventail de cartes : l'utilisateur choisit sa passerelle
+  // Ouvre un overlay avec un Ã©ventail de cartes : l'utilisateur choisit sa passerelle
   // Les cartes passerelles proviennent TOUJOURS de la famille 'actions'
 
   function openBridgeFan(stepIndex, nextFamilyKey, isLastCoin) {
 
     if (!boardHost) return;
     
-    // Marquer que l'éventail est ouvert
+    // Marquer que l'Ã©ventail est ouvert
     isBridgeFanOpen = true;
     if (coinWrapper) coinWrapper.style.pointerEvents = 'none';
 
     // FORCER la famille 'actions' pour toutes les passerelles
     nextFamilyKey = 'actions';
 
-    // on évite les doublons d'overlay
+    // on Ã©vite les doublons d'overlay
 
     const existing = document.getElementById('tore-extra-overlay');
 
@@ -5696,13 +5696,13 @@ if (previewOverlay) {
 
     overlay.id = 'tore-extra-overlay';
 
-    // Calculer le nombre de cartes restantes pour l'éventail
+    // Calculer le nombre de cartes restantes pour l'Ã©ventail
     const totalPhysicalActionsCards = 9; // 9 cartes physiques Actions
     
-    // Compter les cartes Actions déjà tirées sur le plateau
+    // Compter les cartes Actions dÃ©jÃ  tirÃ©es sur le plateau
     const drawnActionsCards = boardHost.querySelectorAll('.tore-card[data-family="actions"].flipped').length;
     
-    // Compter les cartes passerelles déjà ajoutées pour toutes les familles
+    // Compter les cartes passerelles dÃ©jÃ  ajoutÃ©es pour toutes les familles
     let totalBridgeCount = 0;
     for (let i = 0; i < toreBridgeAdded.length; i++) {
       if (toreBridgeAdded[i]) {
@@ -5710,12 +5710,12 @@ if (previewOverlay) {
       }
     }
     
-    // Total des cartes Actions utilisées
+    // Total des cartes Actions utilisÃ©es
     const totalUsedActionsCards = drawnActionsCards + totalBridgeCount;
     const remainingPhysicalCards = totalPhysicalActionsCards - totalUsedActionsCards;
     
     
-    // Générer l'éventail avec le nombre de cartes restantes
+    // GÃ©nÃ©rer l'Ã©ventail avec le nombre de cartes restantes
     let fanCardsHTML = '';
     const fanCardCount = Math.max(1, remainingPhysicalCards); // Au moins 1 carte
     
@@ -5723,7 +5723,7 @@ if (previewOverlay) {
       fanCardsHTML += `<div class="tore-fan-card" data-slot="${i}"></div>`;
     }
 
-    // Récupérer le contenu actuel de la modale polarity pour l'afficher à gauche
+    // RÃ©cupÃ©rer le contenu actuel de la modale polarity pour l'afficher Ã  gauche
     const polarityModal = document.getElementById('tore-polarity-reveal');
     const polarityInner = document.getElementById('tore-polarity-inner');
     const polarityCloneHTML = polarityInner ? polarityInner.outerHTML.replace(/id="/g, 'id="clone-') : '';
@@ -5731,7 +5731,7 @@ if (previewOverlay) {
     overlay.classList.add('bridge-split');
 
     overlay.innerHTML = `
-      <!-- Gauche : résumé comparaison polarité -->
+      <!-- Gauche : rÃ©sumÃ© comparaison polaritÃ© -->
       <div class="bridge-polarity-side">
         <div style="width:100%;border-radius:24px;padding:28px 24px;position:relative;overflow:hidden;
           background:linear-gradient(145deg,rgba(10,22,40,0.55),rgba(3,10,22,0.62));
@@ -5746,27 +5746,27 @@ if (previewOverlay) {
           <div style="display:flex;align-items:center;justify-content:center;gap:20px;margin-bottom:20px;">
             <div style="text-align:center;">
               <div id="clone-coin-sym" style="font-size:72px;line-height:1;"></div>
-              <span style="font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.45);font-family:'Cormorant Garamond',Georgia,serif;display:block;margin-top:8px;">Pièce</span>
+              <span style="font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.45);font-family:'Cormorant Garamond',Georgia,serif;display:block;margin-top:8px;">PiÃ¨ce</span>
             </div>
-            <div id="clone-operator" style="font-size:44px;font-weight:700;color:rgba(231,76,60,0.9);text-shadow:0 0 12px rgba(231,76,60,0.6);">≠</div>
+            <div id="clone-operator" style="font-size:44px;font-weight:700;color:rgba(231,76,60,0.9);text-shadow:0 0 12px rgba(231,76,60,0.6);">â‰ </div>
             <div style="text-align:center;">
               <div id="clone-card-sym" style="font-size:72px;line-height:1;"></div>
               <span style="font-size:12px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(212,175,55,0.45);font-family:'Cormorant Garamond',Georgia,serif;display:block;margin-top:8px;">Carte</span>
             </div>
           </div>
-          <!-- Séparateur -->
+          <!-- SÃ©parateur -->
           <div style="width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);margin-bottom:20px;"></div>
-          <!-- Résultat -->
+          <!-- RÃ©sultat -->
           <div style="text-align:center;">
             <div style="font-family:'Cinzel',serif;font-size:20px;letter-spacing:0.2em;text-transform:uppercase;color:rgba(231,76,60,0.9);margin-bottom:12px;">Passerelle</div>
-            <p style="font-size:15px;color:rgba(216,191,114,0.6);font-family:'Lora',Georgia,serif;font-style:italic;line-height:1.6;margin:0;">Une carte passerelle viendra<br>relier ces deux polarités.</p>
+            <p style="font-size:15px;color:rgba(216,191,114,0.6);font-family:'Lora',Georgia,serif;font-style:italic;line-height:1.6;margin:0;">Une carte passerelle viendra<br>relier ces deux polaritÃ©s.</p>
           </div>
           <!-- Barre bas -->
           <div style="position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.7),transparent);"></div>
         </div>
       </div>
 
-      <!-- Droite : éventail -->
+      <!-- Droite : Ã©ventail -->
       <div class="tore-extra-panel">
         <h3>Carte passerelle</h3>
         <p>Choisis une carte dans la famille&nbsp;<strong>${famLabel}</strong>.</p>
@@ -5779,7 +5779,7 @@ if (previewOverlay) {
       </div>
     `;
 
-    // Alimenter les clones avec les valeurs réelles de la modale polarity
+    // Alimenter les clones avec les valeurs rÃ©elles de la modale polarity
     const origCoinSym = document.getElementById('tore-polarity-coin-symbol');
     const origCardSym = document.getElementById('tore-polarity-card-symbol');
     const origFamily  = document.getElementById('tore-polarity-family');
@@ -5812,14 +5812,14 @@ if (previewOverlay) {
     if (polSide) { polSide.style.animation = 'none'; void polSide.offsetWidth; polSide.style.animation = 'modalPanelInLeft 0.4s cubic-bezier(0.22,1,0.36,1) 0.06s both'; }
     if (fanPanel) { fanPanel.style.animation = 'none'; void fanPanel.offsetWidth; fanPanel.style.animation = 'modalPanelIn 0.44s cubic-bezier(0.22,1,0.36,1) 0.14s both'; }
 
-// afficher les dos Oradia dans l'éventail
+// afficher les dos Oradia dans l'Ã©ventail
 
 const back = BACK_IMAGES[nextFamilyKey];
 
 overlay.querySelectorAll('.tore-fan-card').forEach(el => {
 
   if (back) {
-    // Précharger l'image pour éviter l'effet de balayage
+    // PrÃ©charger l'image pour Ã©viter l'effet de balayage
     const img = new Image();
     img.onload = () => {
       el.style.backgroundImage = `url("${back}")`;
@@ -5838,21 +5838,21 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
 
 
 
-    // clic sur une des cartes de l'éventail
+    // clic sur une des cartes de l'Ã©ventail
 
     overlay.querySelectorAll('.tore-fan-card').forEach(cardEl => {
 
       cardEl.addEventListener('click', async () => {
-        // Bloquer immédiatement tout autre clic sur l'éventail
+        // Bloquer immÃ©diatement tout autre clic sur l'Ã©ventail
         if (isBridgeCardProcessing) return;
         isBridgeCardProcessing = true;
-        // Désactiver visuellement toutes les cartes de l'éventail
+        // DÃ©sactiver visuellement toutes les cartes de l'Ã©ventail
         overlay.querySelectorAll('.tore-fan-card').forEach(c => {
           c.style.pointerEvents = 'none';
           c.style.opacity = '0.4';
           c.style.cursor = 'default';
         });
-        // Mettre en valeur la carte cliquée
+        // Mettre en valeur la carte cliquÃ©e
         cardEl.style.opacity = '1';
         cardEl.style.transform = 'scale(1.08)';
         cardEl.style.transition = 'transform 0.15s ease, opacity 0.15s ease';
@@ -5863,7 +5863,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
         if (!dataNext) {
           overlay.remove();
           isBridgeFanOpen = false;
-          // Déverrouiller la pièce après fermeture du bridge fan
+          // DÃ©verrouiller la piÃ¨ce aprÃ¨s fermeture du bridge fan
           if (coin && !isLastCoin) {
             coin.dataset.locked = '0';
             isCoinAnimating = false;
@@ -5874,10 +5874,10 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
           return;
         }
 
-        // --- Révélation de la carte tirée avant placement ---
+        // --- RÃ©vÃ©lation de la carte tirÃ©e avant placement ---
         const imgPath = buildImagePath('actions', dataNext);
 
-        // Précharger l'image avant d'afficher l'overlay pour éviter le flash blanc
+        // PrÃ©charger l'image avant d'afficher l'overlay pour Ã©viter le flash blanc
         const preloadImg = new Image();
         preloadImg.src = imgPath;
         const showReveal = () => {
@@ -5906,7 +5906,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
             </p>
             ${dataNext.quote ? `<p id="bridge-quote-text" style="font-family:'Lora',Georgia,serif;font-size:16px;color:rgba(216,191,114,0.85);font-style:italic;margin:0;line-height:1.4;width:100%;max-width:360px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;animation:fadeInUp 0.4s ease 0.42s both;">\u00AB\u202F${esc(dataNext.quote)}\u202F\u00BB</p>` : ''}
             <p style="font-family:'Lora',Georgia,serif;font-size:16px;color:rgba(216,191,114,0.75);font-style:italic;margin:0;animation:fadeInUp 0.4s ease 0.54s both;">
-              Cette carte relie les deux polarités
+              Cette carte relie les deux polaritÃ©s
             </p>
             <button type="button" id="bridge-reveal-continue"
               style="margin-top:4px;
@@ -5924,7 +5924,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
           </div>
         `;
 
-        // Réduire la taille de police de la citation si elle dépasse
+        // RÃ©duire la taille de police de la citation si elle dÃ©passe
         const bqEl = overlay.querySelector('#bridge-quote-text');
         if (bqEl) {
           requestAnimationFrame(() => {
@@ -5944,7 +5944,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
             placeBridgeCard(stepIndex, 'actions', dataNext);
             overlay.remove();
             isBridgeFanOpen = false;
-            // Déverrouiller la pièce après fermeture du bridge fan
+            // DÃ©verrouiller la piÃ¨ce aprÃ¨s fermeture du bridge fan
             if (coin && !isLastCoin) {
               coin.dataset.locked = '0';
               isCoinAnimating = false;
@@ -5953,7 +5953,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
             const bsvg2 = document.getElementById('tore-beam-svg');
             if (bsvg2) bsvg2.classList.remove('beam-hidden');
             
-            // Attirer l'attention vers la pièce pour le prochain lancer
+            // Attirer l'attention vers la piÃ¨ce pour le prochain lancer
             if (!isLastCoin) {
               setTimeout(() => highlightCoinForNextThrow(), 300);
             }
@@ -5971,7 +5971,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
 
 
 
-    // bouton "Fermer" (au cas où)
+    // bouton "Fermer" (au cas oÃ¹)
 
     const btnCancel = overlay.querySelector('.tore-extra-cancel');
 
@@ -5981,7 +5981,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
 
         overlay.remove();
         isBridgeFanOpen = false;
-        // Déverrouiller la pièce après fermeture du bridge fan
+        // DÃ©verrouiller la piÃ¨ce aprÃ¨s fermeture du bridge fan
         if (coin && !isLastCoin) {
           coin.dataset.locked = '0';
           isCoinAnimating = false;
@@ -5999,7 +5999,7 @@ overlay.querySelectorAll('.tore-fan-card').forEach(el => {
 
 
 
-  // Affichage d'UNE seule flèche (la famille en cours) : pièce → carte
+  // Affichage d'UNE seule flÃ¨che (la famille en cours) : piÃ¨ce â†’ carte
 
 function showArrowForStep(stepIndex, isMatch) {
 
@@ -6023,7 +6023,7 @@ function showArrowForStep(stepIndex, isMatch) {
 
 
 
-  // Couleur de la flèche : stocker dans dataset avant de redessiner
+  // Couleur de la flÃ¨che : stocker dans dataset avant de redessiner
   if (isMatch === true) arrow.dataset.match = 'true';
   else if (isMatch === false) arrow.dataset.match = 'false';
   else delete arrow.dataset.match;
@@ -6038,7 +6038,7 @@ function showArrowForStep(stepIndex, isMatch) {
 
 
 
-  // Ouvre la modale immersive comparant la polarité de la pièce à celle de la carte
+  // Ouvre la modale immersive comparant la polaritÃ© de la piÃ¨ce Ã  celle de la carte
   function showPolarityBadge(card, coinPolarity, cardPolarity, isMatch, onContinue) {
     const modal      = document.getElementById('tore-polarity-reveal');
     const inner      = document.getElementById('tore-polarity-inner');
@@ -6065,8 +6065,8 @@ function showArrowForStep(stepIndex, isMatch) {
     const cardClr   = cardPolarity === 'yang' ? 'rgba(212,175,55,0.95)' : 'rgba(140,190,255,0.95)';
     const resultText  = isMatch ? 'Accord' : 'Passerelle';
     const subtext     = isMatch
-      ? 'La pièce et la carte résonnent dans le même souffle.'
-      : 'Une carte passerelle viendra relier ces deux polarités.';
+      ? 'La piÃ¨ce et la carte rÃ©sonnent dans le mÃªme souffle.'
+      : 'Une carte passerelle viendra relier ces deux polaritÃ©s.';
 
     // Famille
     const step = STEPS_TORE.find(s => card.dataset && s.key === card.dataset.family);
@@ -6078,7 +6078,7 @@ function showArrowForStep(stepIndex, isMatch) {
     cardSymEl.innerHTML = polaritySVG(cardPolarity);
     cardSymEl.style.color = '';
 
-    // Opérateur de comparaison
+    // OpÃ©rateur de comparaison
     const operatorEl = document.getElementById('tore-polarity-operator');
     if (operatorEl) {
       if (isMatch) {
@@ -6086,14 +6086,14 @@ function showArrowForStep(stepIndex, isMatch) {
         operatorEl.style.color = 'rgba(80,200,120,0.9)';
         operatorEl.style.textShadow = '0 0 12px rgba(80,200,120,0.6)';
       } else {
-        // Signe ≠ (non-égal) avec style visuel fort
-        operatorEl.innerHTML = '<span style="position:relative;display:inline-block;">≠</span>';
+        // Signe â‰  (non-Ã©gal) avec style visuel fort
+        operatorEl.innerHTML = '<span style="position:relative;display:inline-block;">â‰ </span>';
         operatorEl.style.color = 'rgba(231,76,60,0.9)';
         operatorEl.style.textShadow = '0 0 12px rgba(231,76,60,0.6)';
       }
     }
 
-    // Résultat
+    // RÃ©sultat
     resultEl.textContent = resultText;
     resultEl.className = isMatch ? 'font-cinzel text-xl tracking-[0.2em] uppercase mt-1 match-result'
                                  : 'font-cinzel text-xl tracking-[0.2em] uppercase mt-1 mismatch-result';
@@ -6105,7 +6105,7 @@ function showArrowForStep(stepIndex, isMatch) {
     halo.className  = halo.className.replace(/match-halo|mismatch-halo/g, '').trim();
     halo.classList.add(isMatch ? 'match-halo' : 'mismatch-halo');
 
-    // Réinitialiser les animations des symboles en les retirant/remettant
+    // RÃ©initialiser les animations des symboles en les retirant/remettant
     coinSymEl.style.animation = 'none';
     cardSymEl.style.animation = 'none';
     requestAnimationFrame(() => {
@@ -6126,7 +6126,7 @@ function showArrowForStep(stepIndex, isMatch) {
       continueBtn.parentNode.replaceChild(newBtn, continueBtn);
       newBtn.addEventListener('click', () => {
         modal.classList.add('hidden');
-        // Rétablir le bandeau bas
+        // RÃ©tablir le bandeau bas
         const bbRestore = el('tore-bottom-bar');
         if (bbRestore) bbRestore.classList.remove('hidden');
         // Effacer la ligne SVG
@@ -6134,11 +6134,11 @@ function showArrowForStep(stepIndex, isMatch) {
         if (arrowSvg) { arrowSvg.innerHTML = ''; delete arrowSvg.dataset.match; }
         if (arrowHideTimer) { clearTimeout(arrowHideTimer); arrowHideTimer = null; }
         
-        // Mettre à jour le label de famille pour le prochain lancer dès la
-        // fermeture de la fenêtre (coinThrowIndex a déjà été incrémenté)
+        // Mettre Ã  jour le label de famille pour le prochain lancer dÃ¨s la
+        // fermeture de la fenÃªtre (coinThrowIndex a dÃ©jÃ  Ã©tÃ© incrÃ©mentÃ©)
         updateCoinFamilyLabel();
 
-        // Attirer l'attention vers la pièce pour le prochain lancer
+        // Attirer l'attention vers la piÃ¨ce pour le prochain lancer
         highlightCoinForNextThrow();
         
         if (typeof onContinue === 'function') onContinue();
@@ -6146,9 +6146,9 @@ function showArrowForStep(stepIndex, isMatch) {
     }
   }
 
-  // Met à jour le compteur et le nom de la famille du PROCHAIN lancer de pièce.
-  // Appelée dès la fermeture de la fenêtre de carte/polarité, pour que le label
-  // reflète immédiatement la famille à venir (sans attendre le clic sur la pièce).
+  // Met Ã  jour le compteur et le nom de la famille du PROCHAIN lancer de piÃ¨ce.
+  // AppelÃ©e dÃ¨s la fermeture de la fenÃªtre de carte/polaritÃ©, pour que le label
+  // reflÃ¨te immÃ©diatement la famille Ã  venir (sans attendre le clic sur la piÃ¨ce).
   function updateCoinFamilyLabel() {
     const familiesWithCoin = TIRAGE_ORDER.filter(f => f !== 'memoire_cosmos');
     const throwCounter = el('coin-throw-counter');
@@ -6162,37 +6162,37 @@ function showArrowForStep(stepIndex, isMatch) {
     if (familyLabel) familyLabel.textContent = FAMILY_NAMES[currentFamily] || currentFamily;
   }
 
-  // Fonction pour attirer l'attention vers la pièce pour le prochain lancer
+  // Fonction pour attirer l'attention vers la piÃ¨ce pour le prochain lancer
   function highlightCoinForNextThrow() {
     if (!coin) return;
     
-    // Vérifier si la pièce est encore disponible pour un lancer
+    // VÃ©rifier si la piÃ¨ce est encore disponible pour un lancer
     const familiesWithCoin = TIRAGE_ORDER.filter(f => f !== 'memoire_cosmos');
     if (coinThrowIndex >= familiesWithCoin.length) return;
     
     // Ajouter une animation de pulsation subtile
     coin.classList.add('pulse-highlight');
     
-    // Retirer l'animation après 2 secondes
+    // Retirer l'animation aprÃ¨s 2 secondes
     setTimeout(() => {
       coin.classList.remove('pulse-highlight');
     }, 2000);
   }
 
-      // Lancer la pièce de tirage : 6 lancers successifs pour les 6 familles avec polarité
+      // Lancer la piÃ¨ce de tirage : 6 lancers successifs pour les 6 familles avec polaritÃ©
   function launchCoin() {
 
 
     if (!coin || !boardHost) return;
     if (coin.dataset.locked === '1' || isCoinAnimating) return;
-    // Bloquer si le guide de carte précédent est encore affiché
+    // Bloquer si le guide de carte prÃ©cÃ©dent est encore affichÃ©
     if (isGuideMessageShown) return;
     if (isBridgeFanOpen) return;
     if (isBridgeCardProcessing) return;
     if (isCardFlipping) return;
     if (!boardReady) return;
 
-    // Vérifier si on a fini tous les lancers de pièce (6 familles avec polarité)
+    // VÃ©rifier si on a fini tous les lancers de piÃ¨ce (6 familles avec polaritÃ©)
     const familiesWithCoin = TIRAGE_ORDER.filter(f => f !== 'memoire_cosmos');
     
     if (coinThrowIndex >= familiesWithCoin.length) {
@@ -6202,33 +6202,33 @@ function showArrowForStep(stepIndex, isMatch) {
       return;
     }
 
-    // Récupérer la famille actuelle pour ce lancer de pièce
+    // RÃ©cupÃ©rer la famille actuelle pour ce lancer de piÃ¨ce
     const currentFamily = familiesWithCoin[coinThrowIndex];
 
-    // Marquer le début du tirage (suivi de pureté QRNG) au tout premier lancer
+    // Marquer le dÃ©but du tirage (suivi de puretÃ© QRNG) au tout premier lancer
     if (coinThrowIndex === 0 && window.QRNG && QRNG.beginDraw) QRNG.beginDraw();
 
-    // Trouver la configuration de l'étape actuelle
+    // Trouver la configuration de l'Ã©tape actuelle
     const step = STEPS_TORE.find(s => s.key === currentFamily);
     if (!step) {
-      showCardError('Configuration de famille non trouvée, réessayez.', 2000);
+      showCardError('Configuration de famille non trouvÃ©e, rÃ©essayez.', 2000);
       return;
     }
     
-    // Récupérer l'index de l'étape actuelle dans STEPS_TORE
+    // RÃ©cupÃ©rer l'index de l'Ã©tape actuelle dans STEPS_TORE
     const stepIndex = STEPS_TORE.findIndex(s => s.key === currentFamily);
     if (stepIndex === -1) {
-      showCardError('Index de famille invalide, réessayez.', 2000);
+      showCardError('Index de famille invalide, rÃ©essayez.', 2000);
       return;
     }
 
-    // Mettre à jour le compteur et le label de famille
+    // Mettre Ã  jour le compteur et le label de famille
     const throwCounter = el('coin-throw-counter');
     const familyLabel = el('coin-family-label');
     if (throwCounter) throwCounter.textContent = `Lancer ${coinThrowIndex + 1} / ${familiesWithCoin.length}`;
     if (familyLabel) familyLabel.textContent = FAMILY_NAMES[currentFamily] || currentFamily;
 
-    // Verrouiller la pièce et bloquer les interactions (après vérifications)
+    // Verrouiller la piÃ¨ce et bloquer les interactions (aprÃ¨s vÃ©rifications)
     coin.dataset.locked = '1';
     isCoinAnimating = true;
     
@@ -6238,10 +6238,10 @@ function showArrowForStep(stepIndex, isMatch) {
     const nextFamily = TIRAGE_ORDER[(toreThrowIndex + 1) % TIRAGE_ORDER.length];
     const nextStep = STEPS_TORE.find(s => s.key === nextFamily);
     
-    // Plateau verrouillé pendant l'animation
+    // Plateau verrouillÃ© pendant l'animation
     boardHost.classList.add('board-locked');
 
-    // On enlève halo et onde précédents
+    // On enlÃ¨ve halo et onde prÃ©cÃ©dents
     coin.classList.remove('glow', 'ripple', 'face-yang', 'face-yin');
 
     // Reset animation ripple
@@ -6253,7 +6253,7 @@ function showArrowForStep(stepIndex, isMatch) {
     // Lancer d'animation de rotation
     coin.classList.add('spin');
 
-    // Fin de l'animation (1,5s — alignée avec `coin-spin` ; Palier 2 #11)
+    // Fin de l'animation (1,5s â€” alignÃ©e avec `coin-spin` ; Palier 2 #11)
     setTimeout(async () => {
       coin.classList.remove('spin');
 
@@ -6266,14 +6266,14 @@ function showArrowForStep(stepIndex, isMatch) {
       if (coinImg) {
         coinImg.src = isYang ? 'images/coin_triangle.png' : 'images/coin_cercle.png';
       }
-      // Mise à jour aria-label pour les lecteurs d'écran
+      // Mise Ã  jour aria-label pour les lecteurs d'Ã©cran
       if (coin) {
         coin.setAttribute('aria-label',
           isYang
-            ? 'Pièce de tirage — résultat Yang (triangle)'
-            : 'Pièce de tirage — résultat Yin (cercle)'
+            ? 'PiÃ¨ce de tirage â€” rÃ©sultat Yang (triangle)'
+            : 'PiÃ¨ce de tirage â€” rÃ©sultat Yin (cercle)'
         );
-        // Annoncer le résultat aux lecteurs d'écran via un live region
+        // Annoncer le rÃ©sultat aux lecteurs d'Ã©cran via un live region
         let liveRegion = document.getElementById('tore-coin-live');
         if (!liveRegion) {
           liveRegion = document.createElement('div');
@@ -6288,7 +6288,7 @@ function showArrowForStep(stepIndex, isMatch) {
           : `Lancer ${coinThrowIndex + 1} sur ${familiesWithCoin.length} : Yin`;
       }
 
-      // Onde circulaire dorée
+      // Onde circulaire dorÃ©e
       coin.classList.remove('ripple');
       void coin.offsetWidth;
       coin.classList.add('ripple');
@@ -6301,15 +6301,15 @@ function showArrowForStep(stepIndex, isMatch) {
         }, 300);
       }
 
-      // Déverrouille le plateau
+      // DÃ©verrouille le plateau
       boardHost.classList.remove('board-locked');
       isCoinAnimating = false;
 
-      // Passer au lancer de pièce suivant
+      // Passer au lancer de piÃ¨ce suivant
       coinThrowIndex += 1;
       const isLastCoin = coinThrowIndex >= familiesWithCoin.length;
 
-      // Mettre à jour les dots phase pièce dans le bandeau principal
+      // Mettre Ã  jour les dots phase piÃ¨ce dans le bandeau principal
       const dotsContainer2 = document.getElementById('tore-step-dots');
       if (dotsContainer2) {
         dotsContainer2.querySelectorAll('[data-coin-dot]').forEach((dot, idx) => {
@@ -6337,13 +6337,13 @@ function showArrowForStep(stepIndex, isMatch) {
         coin.dataset.locked = '1';
         isToreComplete = true;
       } else {
-        // Ne pas déverrouiller ici — la pièce sera déverrouillée
-        // après fermeture de la modale de polarité ou du bridge fan
+        // Ne pas dÃ©verrouiller ici â€” la piÃ¨ce sera dÃ©verrouillÃ©e
+        // aprÃ¨s fermeture de la modale de polaritÃ© ou du bridge fan
         coin.dataset.locked = '1';
         coin.classList.add('glow');
       }
 
-      // Comparaison avec la polarité de la carte
+      // Comparaison avec la polaritÃ© de la carte
       if (card) {
         const cardPolarity = card.dataset.polarity || 'none';
 
@@ -6352,7 +6352,7 @@ function showArrowForStep(stepIndex, isMatch) {
           if (isLastCoin) {
             setTimeout(showToreAnalysisCTA, 600);
           } else {
-            // Pas de modale → déverrouiller immédiatement
+            // Pas de modale â†’ dÃ©verrouiller immÃ©diatement
             coin.dataset.locked = '0';
             isCoinAnimating = false;
           }
@@ -6363,16 +6363,16 @@ function showArrowForStep(stepIndex, isMatch) {
           setTimeout(() => {
             showPolarityBadge(card, coinPolarity, cardPolarity, isMatch, () => {
               if (!isMatch && nextStep) {
-                // Bridge fan s'ouvre — la pièce restera verrouillée
-                // jusqu'à la fermeture du fan (isBridgeFanOpen redevient false)
+                // Bridge fan s'ouvre â€” la piÃ¨ce restera verrouillÃ©e
+                // jusqu'Ã  la fermeture du fan (isBridgeFanOpen redevient false)
                 openBridgeFan(stepIndex, nextStep.key, isLastCoin);
-                // Déverrouiller la pièce après la fermeture du bridge fan
+                // DÃ©verrouiller la piÃ¨ce aprÃ¨s la fermeture du bridge fan
                 // openBridgeFan appelle son callback quand il se ferme
-                // → la pièce sera déverrouillée dans ce callback (voir ÉTAPE 3)
+                // â†’ la piÃ¨ce sera dÃ©verrouillÃ©e dans ce callback (voir Ã‰TAPE 3)
               } else if (isLastCoin) {
                 setTimeout(showToreAnalysisCTA, 400);
               } else {
-                // Accord et pas dernier lancer → déverrouiller maintenant
+                // Accord et pas dernier lancer â†’ dÃ©verrouiller maintenant
                 coin.dataset.locked = '0';
                 isCoinAnimating = false;
               }
@@ -6386,7 +6386,7 @@ function showArrowForStep(stepIndex, isMatch) {
 
   // Afficher un message pour la carte passerelle
   function showBridgeCardMessage(stepIndex, familyKey) {
-    // Mettre en évidence la carte de la famille Actions (passerelle)
+    // Mettre en Ã©vidence la carte de la famille Actions (passerelle)
     const bridgeCard = boardHost.querySelector(`.tore-card[data-family="actions"]`);
     if (bridgeCard) {
       // Ajouter un effet visuel pour indiquer la carte passerelle
@@ -6402,7 +6402,7 @@ function showArrowForStep(stepIndex, isMatch) {
 
 
 
-  // Le formulaire est maintenant affiché directement, pas besoin de bouton start
+  // Le formulaire est maintenant affichÃ© directement, pas besoin de bouton start
 
   // Validation des questions ouvertes
   const toreIntentionInput = el('tore-intention-input');
@@ -6414,35 +6414,35 @@ function showArrowForStep(stepIndex, isMatch) {
 
     const lower = s.toLowerCase();
 
-    // Formulations fermées (oui/non) → refuser
+    // Formulations fermÃ©es (oui/non) â†’ refuser
     const closedStarters = [
       'est-ce que', 'peux-tu', 'puis-je', 'as-tu', 'avez-vous',
-      'es-tu', 'êtes-vous', 'dois-je', 'peut-on', 'sera-t-il', 'serait-il'
+      'es-tu', 'Ãªtes-vous', 'dois-je', 'peut-on', 'sera-t-il', 'serait-il'
     ];
     if (closedStarters.some(p => lower.startsWith(p))) return false;
 
-    // Formulations ouvertes → accepter
+    // Formulations ouvertes â†’ accepter
     const openStarters = [
       'comment', 'pourquoi', 'quel ', 'quelle ', 'quels ', 'quelles ',
-      'quoi', 'de quelle manière', 'dans quelle mesure', 'à quoi', 'vers quoi'
+      'quoi', 'de quelle maniÃ¨re', 'dans quelle mesure', 'Ã  quoi', 'vers quoi'
     ];
     if (openStarters.some(p => lower.startsWith(p))) return true;
 
-    // Filet de sécurité : assez de mots + « ? »
+    // Filet de sÃ©curitÃ© : assez de mots + Â« ? Â»
     return s.split(/\s+/).length >= 3;
   }
 
-  // Vérifier la question à chaque saisie
-  // Utiliser une vérification plus robuste
+  // VÃ©rifier la question Ã  chaque saisie
+  // Utiliser une vÃ©rification plus robuste
   function setupIntentionValidation() {
     const input = el('tore-intention-input');
     const btn = el('tore-submit-btn');
     
     if (input && btn) {
-      // Initialiser l'état du bouton
+      // Initialiser l'Ã©tat du bouton
       btn.disabled = !isOpenQuestion(input.value);
       
-      // Ajouter l'écouteur d'événement
+      // Ajouter l'Ã©couteur d'Ã©vÃ©nement
       input.addEventListener('input', () => {
         const isValid = isOpenQuestion(input.value);
         btn.disabled = !isValid;
@@ -6452,7 +6452,7 @@ function showArrowForStep(stepIndex, isMatch) {
         }
       });
       
-      // iOS Safari : listener keyup pour meilleure réactivité
+      // iOS Safari : listener keyup pour meilleure rÃ©activitÃ©
       input.addEventListener('keyup', () => {
         const isValid = isOpenQuestion(input.value);
         btn.disabled = !isValid;
@@ -6471,7 +6471,7 @@ function showArrowForStep(stepIndex, isMatch) {
     }
   }
   
-  // Exécuter la configuration
+  // ExÃ©cuter la configuration
   setupIntentionValidation();
 
   // Compteur de tirages gratuits restants
@@ -6487,24 +6487,24 @@ function showArrowForStep(stepIndex, isMatch) {
       counterEl.style.display = 'block';
       counterEl.innerHTML =
         '<i class="fas fa-info-circle" style="margin-right:4px;"></i>' +
-        'Vos 2 tirages gratuits ont été utilisés. ' +
+        'Vos 2 tirages gratuits ont Ã©tÃ© utilisÃ©s. ' +
         '<a href="/tore-abonnement.html" style="text-decoration:underline;' +
-        'color:rgba(212,175,55,0.7);">Découvrir l\'abonnement</a>';
+        'color:rgba(212,175,55,0.7);">DÃ©couvrir l\'abonnement</a>';
     } else if (remaining === 1) {
       counterEl.style.display = 'block';
-      counterEl.textContent = '✦ Il vous reste 1 tirage gratuit';
+      counterEl.textContent = 'âœ¦ Il vous reste 1 tirage gratuit';
     }
     // remaining === 2 : rien afficher
   })();
 
-  // Détecter le retour après achat ponctuel réussi
+  // DÃ©tecter le retour aprÃ¨s achat ponctuel rÃ©ussi
   (function() {
     const urlParams = new URLSearchParams(window.location.search);
     const singleDraw = urlParams.get('single_draw');
     if (singleDraw === 'success') {
       // Nettoyer l'URL sans recharger
       window.history.replaceState({}, '', '/tore.html');
-      // Créditer 1 tirage ponctuel dans localStorage
+      // CrÃ©diter 1 tirage ponctuel dans localStorage
       const _curCredits = parseInt(
         localStorage.getItem('oradia_single_draw_credits') || '0', 10
       );
@@ -6519,7 +6519,7 @@ function showArrowForStep(stepIndex, isMatch) {
         'font-family:Cinzel,serif;font-size:0.9rem;z-index:99999;' +
         'box-shadow:0 4px 20px rgba(212,175,55,0.4);' +
         'border:1px solid rgba(212,175,55,0.3);text-align:center;';
-      msgEl.textContent = '✦ Tirage crédité — vous pouvez commencer';
+      msgEl.textContent = 'âœ¦ Tirage crÃ©ditÃ© â€” vous pouvez commencer';
       document.body.appendChild(msgEl);
       setTimeout(() => msgEl.remove(), 4000);
     } else if (singleDraw === 'cancel') {
@@ -6532,7 +6532,7 @@ function showArrowForStep(stepIndex, isMatch) {
 
 
 document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
-  // Re-collecter les cartes au moment du clic pour garantir les données dans sessionStorage
+  // Re-collecter les cartes au moment du clic pour garantir les donnÃ©es dans sessionStorage
   const cards = [];
   if (boardHost) {
     boardHost.querySelectorAll('.tore-card.flipped').forEach(card => {
@@ -6566,17 +6566,17 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
 
  form?.addEventListener('submit', async (e) => {
   e.preventDefault();
-  // Empêcher le double-submit
+  // EmpÃªcher le double-submit
   const submitBtn = el('tore-submit-btn');
   if (submitBtn && submitBtn.dataset.submitting === '1') return;
   if (submitBtn) submitBtn.dataset.submitting = '1';
   if (submitBtn) {
     submitBtn.disabled = true;
     const btnSpan = submitBtn.querySelector('.font-cinzel');
-    if (btnSpan) btnSpan.textContent = 'Chargement…';
+    if (btnSpan) btnSpan.textContent = 'Chargementâ€¦';
   }
 
-  // Vérifier que la question est ouverte
+  // VÃ©rifier que la question est ouverte
   const intentionValue = toreIntentionInput?.value || '';
   if (!isOpenQuestion(intentionValue)) {
     if (submitBtn) {
@@ -6585,16 +6585,16 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
       const _s = submitBtn.querySelector('.font-cinzel');
       if (_s) _s.textContent = 'Commencer le Tirage';
     }
-    toreIntentionInput?.setCustomValidity("Formulez une question ouverte (ex. « Comment… ? », « Pourquoi… ? ») et terminez par « ? »" );
+    toreIntentionInput?.setCustomValidity("Formulez une question ouverte (ex. Â« Commentâ€¦ ? Â», Â« Pourquoiâ€¦ ? Â») et terminez par Â« ? Â»" );
     toreIntentionInput?.reportValidity();
     return;
   } else {
     toreIntentionInput?.setCustomValidity("");
   }
 
-  // Vérifier l'abonnement : d'abord local, sinon appel API si connecté
+  // VÃ©rifier l'abonnement : d'abord local, sinon appel API si connectÃ©
   if (!window.freemiumTracker) {
-    // Tracker pas encore chargé (script defer) - bloquer et réessayer dans 500ms
+    // Tracker pas encore chargÃ© (script defer) - bloquer et rÃ©essayer dans 500ms
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.dataset.submitting = '0';
@@ -6607,7 +6607,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   let isSubscribed = window.freemiumTracker.isSubscribed();
 
   if (!isSubscribed) {
-    // Vérifier via API si l'utilisateur est connecté (email en session ou localStorage)
+    // VÃ©rifier via API si l'utilisateur est connectÃ© (email en session ou localStorage)
     const sessStr = sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session');
     if (sessStr) {
       try {
@@ -6618,7 +6618,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
             const data = await resp.json();
             if (data.subscribed) {
               isSubscribed = true;
-              // Mettre à jour la session locale pour les prochains appels
+              // Mettre Ã  jour la session locale pour les prochains appels
               sess.subscribed = true;
               const updated = JSON.stringify(sess);
               sessionStorage.setItem('oradia_member_session', updated);
@@ -6631,14 +6631,14 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   }
 
   if (!isSubscribed) {
-    // Vérification quota uniquement si non abonné
-    // Utiliser localStorage en priorité (fiable pour les non-connectés)
+    // VÃ©rification quota uniquement si non abonnÃ©
+    // Utiliser localStorage en prioritÃ© (fiable pour les non-connectÃ©s)
     const localCanDraw = window.freemiumTracker
       ? window.freemiumTracker.canDrawTore()
       : true;
 
     if (!localCanDraw) {
-      // Tenter une vérification serveur si email disponible
+      // Tenter une vÃ©rification serveur si email disponible
       let serverAllows = false;
       const sessStr = sessionStorage.getItem('oradia_member_session')
                     || localStorage.getItem('oradia_member_session');
@@ -6654,11 +6654,11 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
               });
               if (quotaResp.ok) {
                 const quotaData = await quotaResp.json();
-                // Si le serveur dit OK (abonné, crédits ponctuels, etc.)
+                // Si le serveur dit OK (abonnÃ©, crÃ©dits ponctuels, etc.)
                 serverAllows = quotaData.canDraw === true;
               }
             } catch(_) {
-              // API indisponible : bloquer (sécurité par défaut)
+              // API indisponible : bloquer (sÃ©curitÃ© par dÃ©faut)
               serverAllows = false;
             }
           }
@@ -6697,7 +6697,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     window.freemiumTracker.recordToreDraw();
   }
 
-  // Décrémenter le crédit serveur si disponible (sans bloquer le tirage)
+  // DÃ©crÃ©menter le crÃ©dit serveur si disponible (sans bloquer le tirage)
   (async () => {
     const sessStr = sessionStorage.getItem('oradia_member_session')
                   || localStorage.getItem('oradia_member_session');
@@ -6715,12 +6715,12 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     }
   })();
 
-  // Verrouiller le plateau immédiatement pour que les cartes soient invisibles
+  // Verrouiller le plateau immÃ©diatement pour que les cartes soient invisibles
   if (boardHost) {
     boardHost.classList.add('tore-dealing');
   }
 
-  // Pré-rendu GPU des images de dos pour éviter le rideau blanc
+  // PrÃ©-rendu GPU des images de dos pour Ã©viter le rideau blanc
   (function() {
     const preEl = document.createElement('div');
     preEl.style.cssText =
@@ -6743,11 +6743,11 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     setTimeout(() => preEl.remove(), 5000);
   })();
   
-  // Débloquer le bouton submit
+  // DÃ©bloquer le bouton submit
   if (submitBtn) submitBtn.dataset.submitting = '0';
 
-  // Précharger les images de dos en mémoire GPU avant l'animation
-  // pour éviter le décodage progressif (bandeau blanc descendant)
+  // PrÃ©charger les images de dos en mÃ©moire GPU avant l'animation
+  // pour Ã©viter le dÃ©codage progressif (bandeau blanc descendant)
   const _dosImages = [
     'images/dos/dos_emotion.png',
     'images/dos/dos_besoin.png',
@@ -6763,7 +6763,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   const _onDosLoad = () => {
     _dosLoaded++;
     if (_dosLoaded >= _dosTotalToLoad) {
-      // Toutes les images de dos sont en cache — lancer la distribution
+      // Toutes les images de dos sont en cache â€” lancer la distribution
       clearTimeout(window._dealFallbackTimer);
       setTimeout(_runDeal, 100);
     }
@@ -6776,15 +6776,15 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     img.src = src;
   });
 
-  // Filet de sécurité : lancer quand même si le chargement traîne
-  // (délai réduit sur mobile pour éviter une latence perçue avant le tirage — Palier 2 #7)
+  // Filet de sÃ©curitÃ© : lancer quand mÃªme si le chargement traÃ®ne
+  // (dÃ©lai rÃ©duit sur mobile pour Ã©viter une latence perÃ§ue avant le tirage â€” Palier 2 #7)
   const _dealFallbackDelay = (window.matchMedia && window.matchMedia('(max-width: 768px)').matches) ? 500 : 1000;
   window._dealFallbackTimer = setTimeout(() => {
     if (_dosLoaded < _dosTotalToLoad) _runDeal();
   }, _dealFallbackDelay);
 
   // Animation "distribution de cartes" via clones position:fixed
-  // (évite overflow:hidden et transform !important du conteneur)
+  // (Ã©vite overflow:hidden et transform !important du conteneur)
   const _runDeal = () => {
     clearTimeout(window._dealFallbackTimer);
     if (!boardHost) return;
@@ -6794,7 +6794,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     ).filter(Boolean);
     if (!allCards.length) return;
 
-    // Toutes les cartes invisibles et sans animation au départ
+    // Toutes les cartes invisibles et sans animation au dÃ©part
     allCards.forEach(c => {
       c.classList.remove('card-dealing-hidden');
       c.style.cssText = 'opacity:0;transform:scale(0.6) translateY(6px);animation:none;';
@@ -6812,10 +6812,10 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
       document.head.appendChild(ss);
     }
 
-    // Apparition une à une avec délai humain
-    // Sur mobile, on resserre la cadence : la version desktop (jusqu'à 1330ms
-    // + 620ms + 300ms ≈ 2,25s avant interaction) était perçue comme lente/figée
-    // sur smartphone (item Palier 2 #7 — "latence à l'étape du tirage de surface").
+    // Apparition une Ã  une avec dÃ©lai humain
+    // Sur mobile, on resserre la cadence : la version desktop (jusqu'Ã  1330ms
+    // + 620ms + 300ms â‰ˆ 2,25s avant interaction) Ã©tait perÃ§ue comme lente/figÃ©e
+    // sur smartphone (item Palier 2 #7 â€” "latence Ã  l'Ã©tape du tirage de surface").
     const _isMobileDeal = window.matchMedia && window.matchMedia('(max-width: 768px)').matches;
     const DELAYS = _isMobileDeal
       ? [0, 130, 250, 360, 460, 550, 630]
@@ -6830,13 +6830,13 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
       }, DELAYS[i] || 0);
     });
 
-    // Cleanup : remettre les cartes dans leur état naturel
+    // Cleanup : remettre les cartes dans leur Ã©tat naturel
     const done = (DELAYS[allCards.length - 1] || 0) + DUR + 300;
     setTimeout(() => {
       boardHost.classList.remove('tore-dealing');
       allCards.forEach(c => {
         c.style.animation = 'none';
-        // Forcer un reflow pour que l'animation soit bien terminée
+        // Forcer un reflow pour que l'animation soit bien terminÃ©e
         void c.offsetWidth;
         c.style.animation = '';
         c.style.opacity = '';
@@ -6868,7 +6868,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   };
 });
 
-// Compteur de caractères pour le textarea
+// Compteur de caractÃ¨res pour le textarea
 const charCountEl = document.getElementById('char-count');
 if (toreIntentionInput && charCountEl) {
   toreIntentionInput.addEventListener('input', () => {
@@ -6887,7 +6887,7 @@ if (toreIntentionInput && charCountEl) {
 
 
   if (coin) {
-    // Optionnel : clic direct sur la pièce = même effet
+    // Optionnel : clic direct sur la piÃ¨ce = mÃªme effet
     coin.addEventListener('click', launchCoin);
   } else {
   }
@@ -6902,7 +6902,7 @@ if (toreIntentionInput && charCountEl) {
 
   exitBtn.addEventListener('click', () => {
 
-    // Si un tirage a commencé → modale Oradia
+    // Si un tirage a commencÃ© â†’ modale Oradia
 
     if (toreHasStarted) {
 
@@ -6947,7 +6947,7 @@ if (toreIntentionInput && charCountEl) {
 
 document.addEventListener("DOMContentLoaded", () => {
 
-  // Masquer footer et autres sections dès le chargement de la page
+  // Masquer footer et autres sections dÃ¨s le chargement de la page
   document.body.classList.add('hide-immersive-tore');
 
   // Fermer le panneau quantum au clic en dehors
@@ -7014,7 +7014,7 @@ document.addEventListener("DOMContentLoaded", () => {
     ?.addEventListener('click', async (e) => {
       e.preventDefault();
       const btn = e.currentTarget;
-      btn.textContent = 'Redirection…';
+      btn.textContent = 'Redirectionâ€¦';
       btn.style.pointerEvents = 'none';
 
       try {
@@ -7035,9 +7035,9 @@ document.addEventListener("DOMContentLoaded", () => {
           throw new Error('No URL returned');
         }
       } catch(err) {
-        btn.textContent = 'Ou acheter un tirage unique (3,90€)';
+        btn.textContent = 'Ou acheter un tirage unique (3,90â‚¬)';
         btn.style.pointerEvents = 'auto';
-        alert('Une erreur est survenue. Réessayez.');
+        alert('Une erreur est survenue. RÃ©essayez.');
       }
     });
 
@@ -7063,7 +7063,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           </div>
 
-          <p class="text-light-gold text-sm">L'oracle qui vous accompagne sur votre chemin personnel et révèle votre essence.</p>
+          <p class="text-light-gold text-sm">L'oracle qui vous accompagne sur votre chemin personnel et rÃ©vÃ¨le votre essence.</p>
 
         </div>
 
@@ -7077,9 +7077,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
             <li><a href="oracle.html" class="text-light-gold/70 hover:text-gold transition">Oracle</a></li>
 
-            <li><a href="precommande-oracle.html" class="text-light-gold/70 hover:text-gold transition">Précommande</a></li>
+            <li><a href="precommande-oracle.html" class="text-light-gold/70 hover:text-gold transition">PrÃ©commande</a></li>
 
-            <li><a href="a-propos.html" class="text-light-gold/70 hover:text-gold transition">À propos</a></li>
+            <li><a href="a-propos.html" class="text-light-gold/70 hover:text-gold transition">Ã€ propos</a></li>
 
             <li><a href="contact.html" class="text-light-gold/70 hover:text-gold transition">Contact</a></li>
 
@@ -7089,17 +7089,17 @@ document.addEventListener("DOMContentLoaded", () => {
 
         <div>
 
-          <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
+          <h4 class="cormorant text-xl text-gold mb-4">LÃ©gal</h4>
 
           <ul class="space-y-2">
 
-            <li><a href="cgu.html" class="text-light-gold hover:text-gold transition">Conditions Générales d'Utilisation</a></li>
+            <li><a href="cgu.html" class="text-light-gold hover:text-gold transition">Conditions GÃ©nÃ©rales d'Utilisation</a></li>
 
-            <li><a href="cgv.html" class="text-light-gold hover:text-gold transition">Conditions Générales de Vente</a></li>
+            <li><a href="cgv.html" class="text-light-gold hover:text-gold transition">Conditions GÃ©nÃ©rales de Vente</a></li>
 
-            <li><a href="mentions-legales.html" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
+            <li><a href="mentions-legales.html" class="text-light-gold hover:text-gold transition">Mentions LÃ©gales</a></li>
 
-            <li><a href="politique-confidentialite.html" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
+            <li><a href="politique-confidentialite.html" class="text-light-gold hover:text-gold transition">Politique de ConfidentialitÃ©</a></li>
 
           </ul>
 
@@ -7111,7 +7111,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
           <ul class="space-y-2">
 
-            <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><a id="tore-contact-link" class="text-light-gold hover:text-gold transition" href="contact.html">Nous contacter</a></li>
+            <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><a id="tore-contact-link" class="text-light-gold hover:text-gold transition" href="contact.html">Contact</a></li>
             <script>(function(){var u='contact',d='oradia.fr';var el=document.getElementById('tore-contact-link');if(el){el.href='mailto:'+u+'@'+d;el.textContent=u+'@'+d;}})();</script>
 
             <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><span class="text-light-gold">@paddy_oradia.fr</span></li>
@@ -7124,7 +7124,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       <div class="pt-8 border-t border-gold/10 text-center">
 
-        <p class="text-light-gold text-sm">&copy; 2026 Oradia. Tous droits réservés.</p>
+        <p class="text-light-gold text-sm">&copy; 2026 Oradia. Tous droits rÃ©servÃ©s.</p>
       </div>
 
     </div>
@@ -7132,7 +7132,7 @@ document.addEventListener("DOMContentLoaded", () => {
   </footer>
 
   <script>
-    // Bouton retour en haut — désactivé sur la page Tore (expérience immersive)
+    // Bouton retour en haut â€” dÃ©sactivÃ© sur la page Tore (expÃ©rience immersive)
     const backToTopBtn = document.getElementById('backToTop');
     if (backToTopBtn) {
       backToTopBtn.style.display = 'none';
@@ -7141,9 +7141,9 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   </script>
 
-<!-- Aperçu zoom d'une carte retournée - déplacé ici pour échapper au overflow-hidden -->
+<!-- AperÃ§u zoom d'une carte retournÃ©e - dÃ©placÃ© ici pour Ã©chapper au overflow-hidden -->
 <div id="card-preview-overlay">
-  <div id="card-preview-img" alt="Aperçu de la carte"></div>
+  <div id="card-preview-img" alt="AperÃ§u de la carte"></div>
 </div>
 
 </body>
@@ -7154,14 +7154,14 @@ document.addEventListener("DOMContentLoaded", () => {
 <script src="components/header-manager.js" defer></script>
 
 <script>
-// Vérifier le statut d'abonnement Supabase au chargement pour synchroniser la session locale
+// VÃ©rifier le statut d'abonnement Supabase au chargement pour synchroniser la session locale
 (async function syncSubscriptionStatus() {
   try {
     const sessStr = sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session');
     if (!sessStr) return;
     const sess = JSON.parse(sessStr);
     if (!sess.email) return;
-    if (sess.subscribed === true) return; // déjà synchro
+    if (sess.subscribed === true) return; // dÃ©jÃ  synchro
     const resp = await fetch('/api/auth/check-subscription?email=' + encodeURIComponent(sess.email));
     if (!resp.ok) return;
     const data = await resp.json();
