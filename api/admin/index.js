@@ -213,7 +213,7 @@ async function handleData(req, res) {
     verifyAdminAuth(req);
 
     const supabase = createClient(
-      process.env.SUPABASE_URL || 'https://nxxetkdozynuytlbhxdx.supabase.co',
+      process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
@@ -799,7 +799,7 @@ async function handleSubscriptions(req, res) {
     verifyAdminAuth(req);
 
     const supabase = createClient(
-      process.env.SUPABASE_URL || 'https://nxxetkdozynuytlbhxdx.supabase.co',
+      process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 

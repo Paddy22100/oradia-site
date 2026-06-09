@@ -5,6 +5,8 @@
 .env.test.local
 .env.production.local
 .env.precommandes
+.env.vercel
+# (les vrais .env sont ignorés ; seuls les *.example sont versionnés comme modèles)
 
 # Logs
 npm-debug.log*

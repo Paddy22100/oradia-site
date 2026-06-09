@@ -7,8 +7,8 @@ function getStripeClient() {
 }
 
 function getSupabaseClient() {
-    // URL Supabase du projet oradia-prod (nxxetkdozynuytlbhxdx)
-    const supabaseUrl = 'https://nxxetkdozynuytlbhxdx.supabase.co';
+    // URL Supabase du projet oradia-prod (nxzetkdozynyutlbhxdx)
+    const supabaseUrl = process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co';
     const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
     return createClient(supabaseUrl, supabaseKey);
 }
