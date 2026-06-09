@@ -1503,7 +1503,7 @@
 
         window._obsWindowText = '';
         window._obsAttentionPoints = [];
-        window._obsSuggestedDays = 3;
+        window._obsSuggestedDays = 7;
         window._emailSent = false;
 
         function parseObservationSection(fullText) {
@@ -1567,8 +1567,10 @@
 
             window._obsWindowText = text;
             window._obsAttentionPoints = points;
-            // Initialiser avec la durée préconisée par l'IA — l'utilisateur peut encore la modifier
-            window._obsSuggestedDays = days || window._obsSuggestedDays;
+            // Initialiser avec la durée préconisée par l'IA, ramenée à l'option la plus proche parmi 7/14/28
+            // (les boutons ne proposent plus de durées inférieures à 7 jours)
+            const roundedDays = !days ? 7 : days <= 7 ? 7 : days <= 14 ? 14 : 28;
+            window._obsSuggestedDays = roundedDays;
 
             // Stocker les données d'observation dans tore_analysis_data
             try {
@@ -1623,17 +1625,17 @@
                     </p>
 
                     <div class="obs-duration-group" id="obs-duration-group">
-                        <button class="obs-duration-btn ${days === 1 ? 'active' : ''}"
-                                onclick="selectObsDuration(1, this)">
-                            <span class="obs-days">1</span>jour
+                        <button class="obs-duration-btn ${(!days || days <= 7) ? 'active' : ''}"
+                                onclick="selectObsDuration(7, this)">
+                            <span class="obs-days">7</span>jours
                         </button>
-                        <button class="obs-duration-btn ${days === 3 ? 'active' : ''}"
-                                onclick="selectObsDuration(3, this)">
-                            <span class="obs-days">3</span>jours
+                        <button class="obs-duration-btn ${(days > 7 && days <= 14) ? 'active' : ''}"
+                                onclick="selectObsDuration(14, this)">
+                            <span class="obs-days">14</span>jours
                         </button>
-                        <button class="obs-duration-btn ${days === 5 ? 'active' : ''}"
-                                onclick="selectObsDuration(5, this)">
-                            <span class="obs-days">5</span>jours
+                        <button class="obs-duration-btn ${days > 14 ? 'active' : ''}"
+                                onclick="selectObsDuration(28, this)">
+                            <span class="obs-days">28</span><span style="font-size:0.7rem;display:block;margin-top:-2px;opacity:0.7;">cycle lunaire</span>
                         </button>
                     </div>
 
@@ -1662,7 +1664,7 @@
                         `}
                         <p class="obs-error" id="obs-error"></p>
                         <p style="color:rgba(212,175,55,0.6);font-size:0.82rem;margin:0.8rem 0 0;font-style:italic;font-weight:500;">
-                            Votre fenêtre sera activée pour <span id="obs-duration-display">3</span> jours.
+                            Votre fenêtre sera activée pour <span id="obs-duration-display">7</span> jours.
                         </p>
                     </div>
 

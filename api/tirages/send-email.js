@@ -268,6 +268,43 @@ async function handleSendEmail(req, res) {
         ${wheelRows}
       </table>`;
 
+    // --- Section fenêtre d'observation (pré-calculée hors template literal) ---
+    let obsWindowHtml = '';
+    if (observationWindow) {
+      const dur = observationWindow.durationDays || 1;
+      const aiMatch = observationWindow.observationText
+        ? observationWindow.observationText.match(/(\d+)\s*jour/i) : null;
+      const suggested = aiMatch ? parseInt(aiMatch[1]) : null;
+      const durLabel = dur > 1 ? (dur + ' jours') : (dur + ' jour');
+      const oracleNote = (suggested && suggested !== dur)
+        ? ' (recommandation de l\'oracle : ' + suggested + ' jours)' : '';
+
+      const attentionHtml = (observationWindow.attentionPoints && observationWindow.attentionPoints.length > 0)
+        ? '<ul style="margin:6px 0 0;padding-left:16px;">'
+          + observationWindow.attentionPoints.map(function(p) {
+              return '<li style="color:#c8c0a8;font-size:12px;line-height:1.65;margin-bottom:4px;">' + p + '</li>';
+            }).join('')
+          + '</ul>'
+        : '';
+
+      const closingHtml = observationWindow.closesAt
+        ? '<p style="margin:10px 0 0;color:rgba(212,175,55,0.45);font-size:11px;font-style:italic;">Un email de clôture vous sera envoyé le '
+          + new Date(observationWindow.closesAt).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })
+          + ' pour recueillir vos retours d\'expérience.</p>'
+        : '';
+
+      obsWindowHtml = '<tr><td style="padding:0 32px 24px;">'
+        + '<div style="background:rgba(10,26,52,0.7);border:1px solid rgba(212,175,55,0.3);border-radius:12px;padding:20px 22px;">'
+        + '<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr>'
+        + '<td style="vertical-align:top;width:50px;padding-right:14px;text-align:center;"><p style="margin:0;font-size:22px;line-height:1;">&#127758;</p></td>'
+        + '<td style="vertical-align:top;">'
+        + '<p style="margin:0 0 4px;color:#d4af37;font-size:9px;letter-spacing:2px;text-transform:uppercase;">Fen&ecirc;tre d\'observation</p>'
+        + '<p style="margin:0 0 8px;color:#f5e7a1;font-size:13px;line-height:1.6;">Vous avez choisi une fen&ecirc;tre d\'observation de ' + durLabel + ' pour votre tirage' + oracleNote + '.</p>'
+        + attentionHtml
+        + closingHtml
+        + '</td></tr></table></div></td></tr>';
+    }
+
     // Formatage de l'analyse en paragraphes HTML
     const formatAnalysis = (text) => {
       if (!text) return '';
@@ -353,39 +390,7 @@ async function handleSendEmail(req, res) {
         </tr>` : ''}
 
         <!-- ═══ FENÊTRE D'OBSERVATION ═══ -->
-        ${observationWindow ? `
-        <tr>
-          <td style="padding:0 32px 24px;">
-            <div style="background:rgba(10,26,52,0.7);border:1px solid rgba(212,175,55,0.3);border-radius:12px;padding:20px 22px;">
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-                <tr>
-                  <td style="vertical-align:top;width:50px;padding-right:14px;text-align:center;">
-                    <p style="margin:0;font-size:22px;line-height:1;">&#127758;</p>
-                  </td>
-                  <td style="vertical-align:top;">
-                    ${(() => {
-                      const dur = observationWindow.durationDays;
-                      // Extraire la durée suggérée par l'IA depuis le texte (ex: "Une fenêtre de 3 jours est recommandée")
-                      const aiMatch = observationWindow.observationText
-                        ? observationWindow.observationText.match(/(\d+)\s*jour/i) : null;
-                      const suggested = aiMatch ? parseInt(aiMatch[1]) : null;
-                      const durLabel = dur > 1 ? `${dur} jours` : `${dur} jour`;
-                      const oracleNote = (suggested && suggested !== dur)
-                        ? ` (recommandation de l'oracle : ${suggested} jours)` : '';
-                      return `<p style="margin:0 0 4px;color:#d4af37;font-size:9px;letter-spacing:2px;text-transform:uppercase;">Fen&#234;tre d'observation</p>
-                    <p style="margin:0 0 8px;color:#f5e7a1;font-size:13px;line-height:1.6;">Vous avez choisi une fen&#234;tre d'observation de ${durLabel} pour votre tirage${oracleNote}.</p>`;
-                    })()}
-                    ${observationWindow.attentionPoints && observationWindow.attentionPoints.length > 0 ? `
-                    <ul style="margin:6px 0 0;padding-left:16px;">
-                      ${observationWindow.attentionPoints.map(p => `<li style="color:#c8c0a8;font-size:12px;line-height:1.65;margin-bottom:4px;">${p}</li>`).join('')}
-                    </ul>` : ''}
-                    ${observationWindow.closesAt ? `<p style="margin:10px 0 0;color:rgba(212,175,55,0.45);font-size:11px;font-style:italic;">Un email de cl&#244;ture vous sera envoy&#233; le ${new Date(observationWindow.closesAt).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} pour recueillir vos retours d'exp&#233;rience.</p>` : ''}
-                  </td>
-                </tr>
-              </table>
-            </div>
-          </td>
-        </tr>` : ''}
+        ${obsWindowHtml}
 
         <!-- ═══ CTA TIRAGE ═══ -->
         <tr>
