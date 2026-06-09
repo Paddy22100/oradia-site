@@ -2508,12 +2508,22 @@
   #tore-extra-overlay.bridge-split {
     flex-direction: column;
     overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
     gap: 14px;
-    padding: 16px 12px;
-    padding-top: calc(52px + 16px);
+    padding: 16px 10px;
+    padding-top: calc(52px + 10px);
+    box-sizing: border-box;
   }
   #tore-extra-overlay.bridge-split .bridge-polarity-side {
     width: 100%;
+    box-sizing: border-box;
+    max-width: 100%;
+  }
+  #tore-extra-overlay.bridge-split .tore-extra-panel {
+    width: 100%;
+    box-sizing: border-box;
+    max-width: 100%;
+    overflow: hidden;
   }
 }
 
@@ -2954,7 +2964,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
         <!-- Info : compteur + famille -->
         <div style="flex:1;min-width:0;">
-          <div id="coin-throw-counter" style="font-family:'Lora',Georgia,serif;font-size:10px;color:rgba(212,175,55,0.5);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:2px;">Lancer 1 / 6</div>
+          <div id="coin-throw-counter" style="font-family:'Lora',Georgia,serif;font-size:10px;color:rgba(212,175,55,0.5);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:2px;white-space:nowrap;">Lancer 1 / 6</div>
           <div id="coin-family-label" style="font-family:'Cormorant Garamond','Cormorant',Georgia,serif;font-size:clamp(14px,4vw,17px);color:#f0c75e;font-weight:700;letter-spacing:0.05em;line-height:1.1;"></div>
         </div>
 
@@ -3805,6 +3815,18 @@ const BACK_IMAGES = {
 // État du tirage de la pièce : 1 lancer par famille SAUF memoire_cosmos (pas de polarité, pas de lancer)
 
 let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
+
+// Protection rechargement accidentel en cours de tirage
+window.addEventListener('beforeunload', (e) => {
+  const drawInProgress = toreThrowIndex > 0 && toreThrowIndex < 6;
+  const boardVisible = document.getElementById('tore-immersif')?.style.display !== 'none'
+                    && document.getElementById('tore-immersif') !== null;
+  if (drawInProgress || (boardVisible && toreThrowIndex >= 0 && document.getElementById('tore-board-7'))) {
+    e.preventDefault();
+    e.returnValue = 'Votre tirage en cours sera perdu si vous quittez cette page.';
+    return e.returnValue;
+  }
+});
 
 
 
