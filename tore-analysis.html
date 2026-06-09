@@ -2195,6 +2195,58 @@
     </script>
 <script>document.addEventListener('DOMContentLoaded', () => { requestAnimationFrame(() => { document.body.classList.add('page-ready'); }); });</script>
 
+<!-- Modal email — achat tirage ponctuel (doit être dans le DOM avant le script qui attache les listeners) -->
+<div id="_sdraw-modal" role="dialog" aria-modal="true" aria-labelledby="_sdraw-title"
+  style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;
+         padding:1.5rem;background:radial-gradient(circle at center,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.96) 100%);">
+  <div style="background:linear-gradient(135deg,rgba(15,25,50,0.98) 0%,rgba(20,30,60,0.95) 100%);
+              border:1.5px solid rgba(212,175,55,0.45);border-radius:1.5rem;max-width:420px;width:100%;
+              box-shadow:0 25px 50px -12px rgba(0,0,0,0.7),0 0 40px rgba(212,175,55,0.08);
+              position:relative;padding:2.25rem 1.75rem 1.75rem;overflow:hidden;">
+    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.7),transparent);"></div>
+    <div style="text-align:center;margin-bottom:1rem;">
+      <div style="display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;
+                  border-radius:50%;border:1.5px solid rgba(212,175,55,0.4);background:rgba(212,175,55,0.08);">
+        <i class="fas fa-lock" style="color:rgba(212,175,55,0.85);font-size:1.1rem;"></i>
+      </div>
+    </div>
+    <h2 id="_sdraw-title" style="font-family:'Cinzel',serif;color:rgba(212,175,55,0.95);font-size:1.05rem;
+       text-align:center;letter-spacing:0.07em;margin-bottom:0.4rem;">Finaliser votre achat</h2>
+    <p style="color:rgba(200,210,230,0.65);font-size:0.82rem;text-align:center;line-height:1.6;margin-bottom:1.5rem;">
+      Votre analyse complète · <strong style="color:rgba(212,175,55,0.8);">3,90 €</strong><br>
+      <span style="font-size:0.75rem;opacity:0.7;">Paiement sécurisé via Stripe</span>
+    </p>
+    <form id="_sdraw-form" novalidate>
+      <label for="_sdraw-email" style="display:block;font-family:'Lora',serif;font-size:0.78rem;
+             color:rgba(212,175,55,0.7);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.5rem;">
+        Adresse email
+      </label>
+      <input id="_sdraw-email" type="email" autocomplete="email" placeholder="votre@email.fr"
+        style="width:100%;padding:0.8rem 1rem;border-radius:0.75rem;border:1px solid rgba(212,175,55,0.35);
+               background:rgba(255,255,255,0.04);color:#f0e8d0;font-size:0.9rem;font-family:'Lora',serif;
+               outline:none;box-sizing:border-box;margin-bottom:0.5rem;transition:border-color 0.2s;"
+        onfocus="this.style.borderColor='rgba(212,175,55,0.7)'"
+        onblur="this.style.borderColor='rgba(212,175,55,0.35)'">
+      <p id="_sdraw-error" style="color:rgba(255,120,100,0.85);font-size:0.78rem;min-height:1.2em;margin-bottom:0.75rem;"></p>
+      <button type="submit"
+        style="width:100%;padding:0.9rem;border-radius:0.85rem;border:1.5px solid rgba(212,175,55,0.6);
+               background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.1));
+               color:rgba(212,175,55,0.95);font-family:'Cinzel',serif;font-size:0.85rem;
+               letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;margin-bottom:0.6rem;"
+        onmouseover="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.3),rgba(212,175,55,0.18))'"
+        onmouseout="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.1))'">
+        Payer 3,90 € →
+      </button>
+      <button type="button" id="_sdraw-cancel"
+        style="width:100%;padding:0.6rem;border:none;background:none;
+               color:rgba(180,190,210,0.45);font-size:0.78rem;cursor:pointer;letter-spacing:0.03em;">
+        Annuler
+      </button>
+    </form>
+    <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);"></div>
+  </div>
+</div>
+
 <script>
 // ── Bloc conversion Tore ──────────────────────────────────────────────────
 (function initToreConversionBlock() {
@@ -2325,59 +2377,6 @@
   });
 })();
 </script>
-
-<!-- Modal email — achat tirage ponctuel -->
-<div id="_sdraw-modal" role="dialog" aria-modal="true" aria-labelledby="_sdraw-title"
-  style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;
-         padding:1.5rem;background:radial-gradient(circle at center,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.96) 100%);">
-  <div style="background:linear-gradient(135deg,rgba(15,25,50,0.98) 0%,rgba(20,30,60,0.95) 100%);
-              border:1.5px solid rgba(212,175,55,0.45);border-radius:1.5rem;max-width:420px;width:100%;
-              box-shadow:0 25px 50px -12px rgba(0,0,0,0.7),0 0 40px rgba(212,175,55,0.08);
-              position:relative;padding:2.25rem 1.75rem 1.75rem;overflow:hidden;">
-    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.7),transparent);"></div>
-    <!-- Icône -->
-    <div style="text-align:center;margin-bottom:1rem;">
-      <div style="display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;
-                  border-radius:50%;border:1.5px solid rgba(212,175,55,0.4);background:rgba(212,175,55,0.08);">
-        <i class="fas fa-lock" style="color:rgba(212,175,55,0.85);font-size:1.1rem;"></i>
-      </div>
-    </div>
-    <h2 id="_sdraw-title" style="font-family:'Cinzel',serif;color:rgba(212,175,55,0.95);font-size:1.05rem;
-       text-align:center;letter-spacing:0.07em;margin-bottom:0.4rem;">Finaliser votre achat</h2>
-    <p style="color:rgba(200,210,230,0.65);font-size:0.82rem;text-align:center;line-height:1.6;margin-bottom:1.5rem;">
-      Votre analyse complète · <strong style="color:rgba(212,175,55,0.8);">3,90 €</strong><br>
-      <span style="font-size:0.75rem;opacity:0.7;">Paiement sécurisé via Stripe</span>
-    </p>
-    <form id="_sdraw-form" novalidate>
-      <label for="_sdraw-email" style="display:block;font-family:'Lora',serif;font-size:0.78rem;
-             color:rgba(212,175,55,0.7);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.5rem;">
-        Adresse email
-      </label>
-      <input id="_sdraw-email" type="email" autocomplete="email" placeholder="votre@email.fr"
-        style="width:100%;padding:0.8rem 1rem;border-radius:0.75rem;border:1px solid rgba(212,175,55,0.35);
-               background:rgba(255,255,255,0.04);color:#f0e8d0;font-size:0.9rem;font-family:'Lora',serif;
-               outline:none;box-sizing:border-box;margin-bottom:0.5rem;transition:border-color 0.2s;"
-        onfocus="this.style.borderColor='rgba(212,175,55,0.7)'"
-        onblur="this.style.borderColor='rgba(212,175,55,0.35)'">
-      <p id="_sdraw-error" style="color:rgba(255,120,100,0.85);font-size:0.78rem;min-height:1.2em;margin-bottom:0.75rem;"></p>
-      <button type="submit"
-        style="width:100%;padding:0.9rem;border-radius:0.85rem;border:1.5px solid rgba(212,175,55,0.6);
-               background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.1));
-               color:rgba(212,175,55,0.95);font-family:'Cinzel',serif;font-size:0.85rem;
-               letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;margin-bottom:0.6rem;"
-        onmouseover="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.3),rgba(212,175,55,0.18))'"
-        onmouseout="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.1))'">
-        Payer 3,90 € →
-      </button>
-      <button type="button" id="_sdraw-cancel"
-        style="width:100%;padding:0.6rem;border:none;background:none;
-               color:rgba(180,190,210,0.45);font-size:0.78rem;cursor:pointer;letter-spacing:0.03em;">
-        Annuler
-      </button>
-    </form>
-    <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);"></div>
-  </div>
-</div>
 
 </body>
 </html>
