@@ -423,13 +423,26 @@ async function handleData(req, res) {
 
     // ── Section synchronicité — stats d'étude (#31) ──
     if (section === 'synchronicity') {
-      const { data: responses, error: syncErr } = await supabase
+      // Tente d'abord avec qrng_source (après migration), sinon sans (fallback gracieux)
+      let responses, syncErr;
+      ({ data: responses, error: syncErr } = await supabase
         .from('synchronicity_stats')
         .select('score_synchronicites, types_synchronicites, resonance_tirage, etat_interieur, temoignage, created_at, qrng_source')
-        .order('created_at', { ascending: false });
+        .order('created_at', { ascending: false }));
 
+      // Si la colonne n'existe pas encore (migration non exécutée), on réessaie sans
+      const qrngMissing = syncErr && syncErr.message && syncErr.message.includes('qrng_source');
+      if (qrngMissing) {
+        ({ data: responses, error: syncErr } = await supabase
+          .from('synchronicity_stats')
+          .select('score_synchronicites, types_synchronicites, resonance_tirage, etat_interieur, temoignage, created_at')
+          .order('created_at', { ascending: false }));
+      }
       if (syncErr) throw syncErr;
-      const rows = responses || [];
+      const rows = (responses || []).map(r => ({
+        ...r,
+        qrng_source: r.qrng_source || (qrngMissing ? 'unknown' : 'unknown')
+      }));
 
       // Répartition de la source du tirage (validité scientifique)
       // Seuls les 'anu' (100% quantique) sont valides pour l'étude.
@@ -437,6 +450,7 @@ async function handleData(req, res) {
         anu:      rows.filter(r => r.qrng_source === 'anu').length,
         fallback: rows.filter(r => r.qrng_source === 'fallback').length,
         unknown:  rows.filter(r => !r.qrng_source || r.qrng_source === 'unknown').length,
+        migrationPending: qrngMissing  // avertit le dashboard
       };
       // Score moyen calculé UNIQUEMENT sur les tirages quantiques purs
       const anuRows = rows.filter(r => r.qrng_source === 'anu');
@@ -469,11 +483,11 @@ async function handleData(req, res) {
       const etatCounts = { calme: 0, alerte: 0, neutre: 0, perturbe: 0, null: 0 };
       rows.forEach(r => { etatCounts[r.etat_interieur || 'null']++; });
 
-      // Témoignages récents (10 derniers, non nuls)
+      // Témoignages récents (10 derniers, non nuls) — inclut qrng_source pour badge
       const temoignages = rows
         .filter(r => r.temoignage && r.temoignage.trim())
         .slice(0, 10)
-        .map(r => ({ temoignage: r.temoignage, created_at: r.created_at }));
+        .map(r => ({ temoignage: r.temoignage, created_at: r.created_at, qrng_source: r.qrng_source }));
 
       return res.status(200).json({
         success: true,

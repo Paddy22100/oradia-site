@@ -2934,7 +2934,10 @@
                 const warnText = document.getElementById('syncQrngWarningText');
                 const polluted = (qb.fallback || 0) + (qb.unknown || 0);
                 if (warnBox && warnText) {
-                    if (polluted > 0) {
+                    if (qb.migrationPending) {
+                        warnBox.classList.remove('hidden');
+                        warnText.textContent = '⚠️ Migration Supabase non exécutée — la colonne qrng_source n\'existe pas encore. Exécutez supabase-migration-qrng-source.sql pour activer le suivi de la source quantique.';
+                    } else if (polluted > 0) {
                         warnText.textContent =
                             `${polluted} réponse(s) reposent sur un tirage non quantique (${qb.fallback} fallback, ${qb.unknown} inconnu) et sont exclues des statistiques scientifiques.`;
                         warnBox.classList.remove('hidden');
@@ -3028,13 +3031,21 @@
                     <div class="flex justify-between"><span>État renseigné</span><span class="text-teal-300">${pct(withEtat)}%</span></div>
                     <div class="flex justify-between"><span>Témoignage écrit</span><span class="text-teal-300">${pct(withTemoignage)}%</span></div>`);
 
-                // Témoignages
+                // Témoignages — avec badge source quantique par réponse
+                const qrngBadge = (src) => {
+                    if (src === 'anu')      return '<span title="Tirage 100% quantique ANU — valide pour l\'étude" style="font-size:10px;padding:2px 7px;border-radius:99px;background:rgba(94,234,212,0.15);color:#5eead4;border:1px solid rgba(94,234,212,0.35);">⚛ ANU</span>';
+                    if (src === 'fallback') return '<span title="Tirage avec fallback crypto — exclu des stats scientifiques" style="font-size:10px;padding:2px 7px;border-radius:99px;background:rgba(248,113,113,0.15);color:#f87171;border:1px solid rgba(248,113,113,0.35);">⚠ Fallback</span>';
+                    return '<span title="Source inconnue (tirage antérieur à la migration)" style="font-size:10px;padding:2px 7px;border-radius:99px;background:rgba(156,163,175,0.15);color:#9ca3af;border:1px solid rgba(156,163,175,0.25);">? Inconnu</span>';
+                };
                 setEl('syncTemoignages', d.temoignages.length === 0
                     ? '<p class="text-light-gold/30 text-sm italic">Aucun témoignage pour l\'instant.</p>'
                     : d.temoignages.map(t => `
                         <div class="bg-[rgba(5,20,40,0.6)] border border-gold/15 rounded-xl p-4">
+                            <div class="flex items-center justify-between mb-2">
+                                <span class="text-light-gold/30 text-xs">${new Date(t.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' })}</span>
+                                ${qrngBadge(t.qrng_source)}
+                            </div>
                             <p class="text-light-gold/80 text-sm leading-relaxed italic">"${escapeHtmlFront(t.temoignage)}"</p>
-                            <p class="text-light-gold/30 text-xs mt-2">${new Date(t.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' })}</p>
                         </div>`).join(''));
 
             } catch (e) {
