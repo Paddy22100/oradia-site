@@ -17,7 +17,7 @@ const FROM_NAME = 'Oracle Oradia';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': process.env.FRONTEND_URL || 'https://oradia.fr',
-  'Access-Control-Allow-Methods': 'POST, OPTIONS',
+  'Access-Control-Allow-Methods': 'GET, POST, OPTIONS',
   'Access-Control-Allow-Headers': 'Content-Type'
 };
 
@@ -374,6 +374,20 @@ export default async function handler(req, res) {
     if (path.includes('survey')) {
       if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
       return await handleSurvey(req, res);
+    }
+
+    // GET /api/fenetre/window?token=<uuid>
+    // Retourne les données publiques de la fenêtre (cards, intention, duration_days) sans email
+    if (path.includes('window') && req.method === 'GET') {
+      const token = new URL(req.url, 'https://oradia.fr').searchParams.get('token');
+      if (!token) return res.status(400).json({ error: 'Token requis' });
+      const { data: win, error } = await supabase
+        .from('observation_windows')
+        .select('cards, intention, duration_days, closes_at, attention_points')
+        .eq('response_token', token)
+        .maybeSingle();
+      if (error || !win) return res.status(404).json({ error: 'Fenêtre introuvable' });
+      return res.status(200).json({ success: true, window: win });
     }
 
     return res.status(404).json({ success: false, error: 'Route non trouvée' });
