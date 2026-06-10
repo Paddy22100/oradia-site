@@ -1,0 +1,81 @@
+name: Audit oradia.fr
+
+on:
+  # Automatique : lundi et jeudi à 7h00 heure de Paris (UTC+2 en été)
+  schedule:
+    - cron: '0 5 * * 1'   # Lundi    05:00 UTC = 07:00 Paris
+    - cron: '0 5 * * 4'   # Jeudi    05:00 UTC = 07:00 Paris
+
+  # Manuel : depuis l'onglet Actions sur GitHub
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: 'URL cible (laisser vide pour oradia.fr)'
+        required: false
+        default: 'https://oradia.fr'
+
+jobs:
+  audit:
+    name: Audit complet oradia.fr
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # ─── 1. Récupération du code ───────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ─── 2. Node.js ───────────────────────────────────────
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: audit/package-lock.json
+
+      # ─── 3. Dépendances ───────────────────────────────────
+      - name: Install dependencies
+        working-directory: ./audit
+        run: npm ci
+
+      # ─── 4. Playwright browsers ───────────────────────────
+      - name: Install Playwright browsers
+        working-directory: ./audit
+        run: npx playwright install chromium --with-deps
+
+      # ─── 5. Création du .env.audit depuis les secrets ─────
+      - name: Create .env.audit from secrets
+        working-directory: ./audit
+        run: |
+          cat > .env.audit << EOF
+          AUDIT_TARGET_URL=${{ inputs.target_url || 'https://oradia.fr' }}
+          AUDIT_EMAIL_TO=${{ secrets.AUDIT_EMAIL_TO }}
+          AUDIT_SMTP_HOST=${{ secrets.AUDIT_SMTP_HOST }}
+          AUDIT_SMTP_PORT=${{ secrets.AUDIT_SMTP_PORT }}
+          AUDIT_SMTP_SECURE=${{ secrets.AUDIT_SMTP_SECURE }}
+          AUDIT_SMTP_USER=${{ secrets.AUDIT_SMTP_USER }}
+          AUDIT_SMTP_PASS=${{ secrets.AUDIT_SMTP_PASS }}
+          EOF
+
+      # ─── 6. Lancement de l'audit ──────────────────────────
+      - name: Run audit
+        working-directory: ./audit
+        run: node audit-oradia.js
+
+      # ─── 7. Upload du rapport comme artifact GitHub ────────
+      - name: Upload audit report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: audit-report-${{ github.run_number }}
+          path: audit/audit-reports/
+          retention-days: 90
+
+      # ─── 8. Résumé dans le workflow GitHub ────────────────
+      - name: Show summary
+        if: always()
+        working-directory: ./audit
+        run: |
+          echo "## Audit oradia.fr terminé" >> $GITHUB_STEP_SUMMARY
+          echo "Rapport disponible dans les Artifacts de ce run." >> $GITHUB_STEP_SUMMARY
+          ls -lh audit-reports/*.html 2>/dev/null || echo "Aucun rapport généré"
