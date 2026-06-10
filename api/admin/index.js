@@ -603,7 +603,7 @@ async function handleData(req, res) {
         },
         waitlist: {
           count:      waitlistRows.length,
-          notSynced:  waitlistRows.filter(r => !r.synced_at).length
+          notSynced:  waitlistRows.filter(r => !r.brevo_synced).length
         },
         singleDraws: {
           count:      singleDrawCount,
