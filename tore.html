@@ -4516,7 +4516,7 @@ function showToreAnalysisCTA() {
         const bridgeImg = extraCard.querySelector('img');
         if (bridgeImg && bridgeImg.src) {
           const bridgeSrc = bridgeImg.src;
-          const bridgeName = bridgeSrc.split('/').pop().replace('.png', '');
+          const bridgeName = bridgeSrc.split('/').pop().replace(/\.(png|webp)$/i, '');
           cardData.bridgeCard = { family: 'actions', name: bridgeName, imgSrc: bridgeSrc };
           cardData.isMutating = true;
         }
@@ -4609,7 +4609,7 @@ function showToreAnalysisCTA() {
           if (extraCard) {
             const bridgeImg = extraCard.querySelector('img');
             if (bridgeImg && bridgeImg.src) {
-              cardData.bridgeCard = { family: 'actions', name: bridgeImg.src.split('/').pop().replace('.png',''), imgSrc: bridgeImg.src };
+              cardData.bridgeCard = { family: 'actions', name: bridgeImg.src.split('/').pop().replace(/\.(png|webp)$/i, ''), imgSrc: bridgeImg.src };
               cardData.isMutating = true;
             }
           }
@@ -6227,6 +6227,10 @@ function showArrowForStep(stepIndex, isMatch) {
     // Verrouiller la pièce et bloquer les interactions (après vérifications)
     coin.dataset.locked = '1';
     isCoinAnimating = true;
+    if (coinButton) {
+      coinButton.disabled = true;
+      coinButton.style.pointerEvents = 'none';
+    }
     
     const card = boardHost.querySelector(`.tore-card[data-family="${step.key}"]`);
     
@@ -6300,6 +6304,10 @@ function showArrowForStep(stepIndex, isMatch) {
       // Déverrouille le plateau
       boardHost.classList.remove('board-locked');
       isCoinAnimating = false;
+      if (coinButton) {
+        coinButton.disabled = false;
+        coinButton.style.pointerEvents = '';
+      }
 
       // Passer au lancer de pièce suivant
       coinThrowIndex += 1;
@@ -6543,7 +6551,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
         const bridgeImg = extraCard.querySelector('img');
         if (bridgeImg && bridgeImg.src) {
           const bridgeSrc = bridgeImg.src;
-          const bridgeName = bridgeSrc.split('/').pop().replace('.png', '');
+          const bridgeName = bridgeSrc.split('/').pop().replace(/\.(png|webp)$/i, '');
           cardData.bridgeCard = { family: 'actions', name: bridgeName, imgSrc: bridgeSrc };
           cardData.isMutating = true;
         }
