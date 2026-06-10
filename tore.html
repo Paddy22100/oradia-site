@@ -92,6 +92,10 @@
 
       color:#f5e7a1;
 
+      /* Empêche le pull-to-refresh natif (mobile) de recharger la page
+         sans passer par le modal d'abandon de tirage */
+      overscroll-behavior-y: contain;
+
     }
 
 
@@ -7255,6 +7259,16 @@ document.addEventListener("DOMContentLoaded", () => {
     e.stopPropagation();
     openAbandonModal(href);
   }, true);
+
+  // Filet de sécurité : clic sur le bouton "actualiser" du navigateur
+  // (non intercepté par keydown) — affiche la confirmation native du navigateur
+  window.addEventListener('beforeunload', function(e) {
+    if (drawInProgress()) {
+      e.preventDefault();
+      e.returnValue = '';
+      return '';
+    }
+  });
 
   // Intercepter bouton retour navigateur
   history.pushState(null, '', location.href);
