@@ -283,9 +283,9 @@
             <!-- CTA Principal -->
             <div class="flex flex-col sm:flex-row gap-4 sm:gap-6 justify-center items-center mb-8">
                 <!-- CTA Primaire - Essai Gratuit -->
-                <a href="tore.html" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 sm:px-10 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-3 group hover:scale-105 touch-target">
+                <a href="tore.html" id="cta-essai-oracle" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 sm:px-10 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 text-center flex items-center justify-center gap-3 group hover:scale-105 touch-target">
                     <i class="fas fa-sparkles text-xl"></i>
-                    <span class="text-base sm:text-lg">Essayer l'Oracle Gratuitement</span>
+                    <span id="cta-essai-oracle-label" class="text-base sm:text-lg">Essayer l'Oracle Gratuitement</span>
                 </a>
                 
                 <!-- CTA Secondaire - Précommande -->
@@ -488,8 +488,26 @@
 <div id="footer-placeholder"></div>
 
 <!-- Scripts -->
+<script src="js/freemium-tracker.js"></script>
 <script src="components/header-manager.js" defer></script>
 <script src="components/footer-manager.js" defer></script>
+
+<script>
+// Adapter le CTA principal selon l'éligibilité de l'utilisateur (#3)
+(function() {
+    try {
+        const ft = window.freemiumTracker;
+        if (!ft) return;
+        const remainingFree = ft.getRemainingToreDraws();
+        const credits = parseInt(localStorage.getItem('oradia_single_draw_credits') || '0', 10);
+        const eligible = (ft.isSubscribed() || credits > 0) && remainingFree <= 0;
+        if (eligible) {
+            const label = document.getElementById('cta-essai-oracle-label');
+            if (label) label.textContent = 'Faire un tirage du Tore';
+        }
+    } catch (e) {}
+})();
+</script>
 
 <script>
 // Banner close functionality
