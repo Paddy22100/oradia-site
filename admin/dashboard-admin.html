@@ -1347,6 +1347,7 @@
             
             if (data.success) {
                 currentData.preorders = data.data;
+                currentData.preordersPagination = data.pagination;
                 updatePreordersTable(data.data, data.pagination);
             }
         }
@@ -1572,10 +1573,8 @@
                     <td class="px-6 py-4">
                         <div class="flex gap-2 flex-wrap">
                             ${getShippingActionButtons(preorder)}
-                            <button onclick="markOrderProcessed('${preorder.id || preorder.session_id || ''}')" class="px-3 py-1 bg-green-500/20 text-green-300 rounded hover:bg-green-500/30 transition text-xs">
-                                <i class="fas fa-check mr-1"></i>Traité
-                            </button>
-                            ${preorder.email ? `<button onclick="resendOrderEmail('${preorder.email}')" class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded hover:bg-blue-500/30 transition text-xs"><i class='fas fa-envelope mr-1'></i>Email</button>` : ''}
+                            ${getProcessedButton(preorder)}
+                            ${preorder.email ? getEmailButton(preorder) : ''}
                         </div>
                     </td>
                 </tr>
@@ -1899,12 +1898,68 @@
             `).join('');
         }
 
+        // États locaux "traité" / "email envoyé" persistés (pas de colonne dédiée en base)
+        function getProcessedOrders() {
+            try {
+                const raw = localStorage.getItem('oradia-admin-processed-orders');
+                return raw ? JSON.parse(raw) : {};
+            } catch {
+                return {};
+            }
+        }
+
+        function getEmailLog() {
+            try {
+                const raw = localStorage.getItem('oradia-admin-email-log');
+                return raw ? JSON.parse(raw) : {};
+            } catch {
+                return {};
+            }
+        }
+
+        function getProcessedButton(preorder) {
+            const orderId = String(preorder.id || preorder.session_id || '');
+            const processedAt = getProcessedOrders()[orderId];
+            if (processedAt) {
+                return `<span class="px-3 py-1 bg-green-500/10 text-green-400 rounded text-xs inline-flex items-center" title="Traité le ${formatDate(processedAt)}"><i class="fas fa-check-circle mr-1"></i>Traité le ${formatDate(processedAt)}</span>`;
+            }
+            return `<button onclick="markOrderProcessed('${orderId}')" class="px-3 py-1 bg-green-500/20 text-green-300 rounded hover:bg-green-500/30 transition text-xs">
+                                <i class="fas fa-check mr-1"></i>Traité
+                            </button>`;
+        }
+
+        function getEmailButton(preorder) {
+            const orderId = String(preorder.id || preorder.session_id || '');
+            const sentAt = getEmailLog()[orderId];
+            if (sentAt) {
+                return `<span class="px-3 py-1 bg-blue-500/10 text-blue-400 rounded text-xs inline-flex items-center" title="Email envoyé le ${formatDate(sentAt)}"><i class="fas fa-check-circle mr-1"></i>Envoyé le ${formatDate(sentAt)}</span>`;
+            }
+            return `<button onclick="resendOrderEmail('${orderId}', '${preorder.email}')" class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded hover:bg-blue-500/30 transition text-xs"><i class='fas fa-envelope mr-1'></i>Email</button>`;
+        }
+
+        function refreshPreordersTable() {
+            updatePreordersTable(currentData.preorders || [], currentData.preordersPagination);
+        }
+
         window.markOrderProcessed = function markOrderProcessed(orderId) {
-            pushAuditLog('Commande marquée traitée', `Commande: ${orderId || 'N/A'}`);
+            const key = String(orderId || '');
+            if (!key) return;
+            const processed = getProcessedOrders();
+            processed[key] = new Date().toISOString();
+            localStorage.setItem('oradia-admin-processed-orders', JSON.stringify(processed));
+            pushAuditLog('Commande marquée traitée', `Commande: ${key || 'N/A'}`);
+            refreshPreordersTable();
         };
 
-        window.resendOrderEmail = function resendOrderEmail(email) {
+        window.resendOrderEmail = function resendOrderEmail(orderId, email) {
+            const key = String(orderId || '');
+            if (key) {
+                const emailLog = getEmailLog();
+                emailLog[key] = new Date().toISOString();
+                localStorage.setItem('oradia-admin-email-log', JSON.stringify(emailLog));
+            }
             pushAuditLog('Relance email client', `Email: ${email}`);
+            refreshPreordersTable();
         };
 
         // Initialisation
