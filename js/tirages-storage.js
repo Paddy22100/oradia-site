@@ -34,6 +34,44 @@
     return !!getAccessToken();
   }
 
+  // Met à jour l'access_token (et refresh_token) dans les deux emplacements
+  // où la session peut être stockée (sessionStorage et/ou localStorage).
+  function updateStoredTokens(newSession) {
+    ['sessionStorage', 'localStorage'].forEach((storageName) => {
+      try {
+        const storage = global[storageName];
+        const raw = storage.getItem('oradia_member_session');
+        if (!raw) return;
+        const sess = JSON.parse(raw);
+        sess.access_token = newSession.access_token;
+        if (newSession.refresh_token) sess.refresh_token = newSession.refresh_token;
+        storage.setItem('oradia_member_session', JSON.stringify(sess));
+      } catch (e) {}
+    });
+  }
+
+  // Le access_token Supabase expire après ~1h. Pour un membre connecté depuis
+  // longtemps (ex. arrivé sur tore.html via "Essayer l'oracle" sans s'être
+  // reconnecté), on le renouvelle via le refresh_token avant d'abandonner
+  // la sauvegarde du tirage en historique "invité".
+  async function refreshAccessToken() {
+    const sess = getSession();
+    if (!sess || !sess.refresh_token) return null;
+    try {
+      const resp = await fetch('/api/auth/refresh-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ refresh_token: sess.refresh_token })
+      });
+      const data = await resp.json();
+      if (data && data.success && data.session) {
+        updateStoredTokens(data.session);
+        return data.session.access_token;
+      }
+    } catch (e) {}
+    return null;
+  }
+
   // ---- Stockage local (invités uniquement) ----
   function loadGuestTirages() {
     try { return JSON.parse(localStorage.getItem(GUEST_KEY) || '[]'); }
@@ -52,12 +90,19 @@
 
   // ---- API distante (membres connectés — Supabase + RLS) ----
   async function apiList() {
-    const token = getAccessToken();
+    let token = getAccessToken();
     if (!token) return [];
     try {
-      const resp = await fetch(`${API_BASE}?action=list`, {
+      let resp = await fetch(`${API_BASE}?action=list`, {
         headers: { Authorization: `Bearer ${token}` }
       });
+      if (resp.status === 401) {
+        token = await refreshAccessToken();
+        if (!token) return [];
+        resp = await fetch(`${API_BASE}?action=list`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+      }
       const data = await resp.json();
       // L'API renvoie du plus récent au plus ancien ; on inverse pour rester
       // compatible avec la convention historique localStorage (ordre chronologique
@@ -68,14 +113,25 @@
   }
 
   async function apiSave(entry) {
-    const token = getAccessToken();
+    let token = getAccessToken();
     if (!token) return false;
     try {
-      const resp = await fetch(`${API_BASE}?action=save`, {
+      let resp = await fetch(`${API_BASE}?action=save`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
         body: JSON.stringify(entry)
       });
+      if (resp.status === 401) {
+        // access_token expiré (session > 1h) : on tente un renouvellement
+        // silencieux via le refresh_token avant de renoncer.
+        token = await refreshAccessToken();
+        if (!token) return false;
+        resp = await fetch(`${API_BASE}?action=save`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body: JSON.stringify(entry)
+        });
+      }
       const data = await resp.json();
       return !!(data && data.success);
     } catch (e) {

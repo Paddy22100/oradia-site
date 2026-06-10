@@ -229,6 +229,54 @@ async function handleCheckSubscription(req, res) {
   }
 }
 
+// ============ REFRESH SESSION ============
+// Renouvelle un access_token expiré à partir du refresh_token (Supabase Auth).
+// Permet aux membres connectés de longue date (session > 1h) de continuer à
+// enregistrer leurs tirages dans l'historique sans se reconnecter.
+async function handleRefreshSession(req, res) {
+  const body = await new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', chunk => data += chunk);
+    req.on('end', () => {
+      try { resolve(JSON.parse(data)); }
+      catch (e) { reject(new Error('Invalid JSON')); }
+    });
+    req.on('error', reject);
+  });
+
+  const { refresh_token } = body;
+  if (!refresh_token) {
+    res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, error: 'refresh_token requis' }));
+  }
+
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, error: 'Configuration serveur manquante' }));
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
+  const { data, error } = await supabase.auth.refreshSession({ refresh_token });
+
+  if (error || !data?.session) {
+    res.writeHead(401, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, error: 'Session expirée, reconnexion requise' }));
+  }
+
+  res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+  return res.end(JSON.stringify({
+    success: true,
+    session: {
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+      expires_at: data.session.expires_at
+    }
+  }));
+}
+
 // ============ CONSUME TORE DRAW ============
 async function handleConsumeToreDraw(req, res) {
   const body = await new Promise((resolve, reject) => {
@@ -371,6 +419,11 @@ module.exports = async (req, res) => {
     // POST /forgot-password - vérifie si l'URL contient "forgot-password"
     if (path.includes('forgot-password') || fullUrl.includes('forgot-password')) {
       return await handleForgotPassword(req, res);
+    }
+
+    // POST /refresh-session - vérifie si l'URL contient "refresh-session"
+    if (path.includes('refresh-session') || fullUrl.includes('refresh-session')) {
+      return await handleRefreshSession(req, res);
     }
 
     // POST /consume-tore-draw - vérifie si l'URL contient "consume-tore-draw"
