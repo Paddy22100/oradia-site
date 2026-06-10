@@ -117,3 +117,7 @@ Thumbs.db
 
 .vercel
 .env*.local
+
+audit/.env.audit
+audit/audit-reports/
+audit/node_modules/
