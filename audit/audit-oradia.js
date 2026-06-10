@@ -15,7 +15,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 const fs = require('fs');
 const path = require('path');
-const nodemailer = require('nodemailer').default || require('nodemailer');
+const nodemailer = require('nodemailer/lib/nodemailer');
 
 // ─── CONFIG ─────────────────────────────────────────────────
 const BASE_URL = process.env.AUDIT_TARGET_URL || 'https://oradia.fr';
