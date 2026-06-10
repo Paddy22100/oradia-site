@@ -1139,7 +1139,9 @@ async function parseMondialRelayResponse(xmlResponse) {
       id: point.Num || '',
       name: point.LgAdr1 || '',
       address1: point.LgAdr1 || '',
-      address2: point.LgAdr2 || point.LgAdr3 || point.LgAdr4 || '',
+      // LgAdr2/3/4 sont chacune une ligne distincte (max 32 car.) : on les concatène
+      // pour ne pas perdre d'information quand l'adresse du point relais tient sur plusieurs lignes
+      address2: [point.LgAdr2, point.LgAdr3, point.LgAdr4].filter(Boolean).join(', '),
       postalCode: point.CP || '',
       city: point.Ville || '',
       country: point.Pays || 'FR',
