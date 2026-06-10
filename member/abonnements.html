@@ -239,7 +239,7 @@
             <section class="mb-8 text-center">
                 <h2 class="cormorant text-4xl text-gold mb-4">L'Abonnement Tore</h2>
                 <p class="text-light-gold/80 text-lg max-w-2xl mx-auto">
-                    Accédez à l'expérience complète du Tore — tirages illimités et analyses approfondies.
+                    Accédez à l'expérience complète du Tore — accès complet aux tirages et analyses approfondies.
                 </p>
             </section>
 
@@ -299,7 +299,7 @@
                     <ul class="space-y-3 mb-8">
                         <li class="benefit-item flex items-center gap-3">
                             <i class="fas fa-infinity text-gold w-5"></i>
-                            <span>Tirages illimités chaque mois</span>
+                            <span>Accès complet à l'expérience chaque mois</span>
                         </li>
                         <li class="benefit-item flex items-center gap-3">
                             <i class="fas fa-check text-gold w-5"></i>
@@ -485,7 +485,7 @@
                     // Abonnement actif
                     if (statusEl) statusEl.textContent = 'Abonnement Tore actif';
                     if (planLabel) planLabel.innerHTML = 'Formule <span class="text-gold font-medium">Tore Premium</span>';
-                    if (planDesc) planDesc.textContent = 'Accès illimité aux tirages et analyses approfondies';
+                    if (planDesc) planDesc.textContent = 'Accès complet aux tirages et analyses approfondies';
                     if (pricingSection) pricingSection.style.display = 'none'; // Cacher la pub
                     if (autoRenewSection) autoRenewSection.style.display = 'block'; // Afficher gestion renouvellement
 
@@ -719,7 +719,7 @@
                 if (pricingSection) pricingSection.style.display = 'none';
                 document.getElementById('autoRenewSection').style.display = 'block';
                 document.getElementById('currentPlanLabel').innerHTML = 'Formule <span class="text-gold font-medium">Le Tore — Actif</span>';
-                document.getElementById('currentPlanDesc').textContent = 'Accès illimité aux tirages et fonctionnalités premium';
+                document.getElementById('currentPlanDesc').textContent = 'Accès complet aux tirages et fonctionnalités premium';
 
                 // Calcul de la prochaine date de facturation
                 // Note : showMainContent() remplit déjà cette date depuis l'API (expires_at).
@@ -750,7 +750,7 @@
                         <div class="rounded-2xl p-8 border border-gold/40 text-center fade-in" style="max-width:480px;width:100%;background:linear-gradient(145deg,rgba(26,54,93,0.7),rgba(5,20,40,0.9));">
                             <div class="text-5xl mb-4">∞</div>
                             <h3 class="cormorant text-2xl text-gold mb-3">L'Oracle vous attend</h3>
-                            <p class="text-light-gold/80 text-sm mb-2">Votre abonnement Tore est terminé. Retrouvez vos tirages illimités et reprenez votre chemin intérieur.</p>
+                            <p class="text-light-gold/80 text-sm mb-2">Votre abonnement Tore est terminé. Retrouvez votre accès complet à l'expérience et reprenez votre chemin intérieur.</p>
                             <p class="text-gold/70 text-xs mb-6 italic">« Ce qui s'est transmué ne disparaît pas — il attend que vous reveniez. »</p>
                             <button id="btn-subscribe-tore" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue py-3 rounded-xl font-bold text-base hover:from-light-gold hover:to-gold transition-all transform hover:scale-105 shadow-lg mb-3">
                                 <i class="fas fa-infinity mr-2"></i>Se réabonner — 8€/mois
