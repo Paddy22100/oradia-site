@@ -1005,11 +1005,12 @@
             <!-- KPIs -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="syncKpiRow">
                 <div class="stat-card rounded-xl p-5">
-                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Réponses</div>
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Réponses valides</div>
                     <div class="text-2xl font-bold text-teal-300" id="syncTotal">—</div>
+                    <div class="text-light-gold/40 text-xs" id="syncTotalAll"></div>
                 </div>
                 <div class="stat-card rounded-xl p-5">
-                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Score moyen</div>
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Score moyen (ANU)</div>
                     <div class="text-2xl font-bold text-gold" id="syncAvgScore">—</div>
                     <div class="text-light-gold/40 text-xs">/ 10</div>
                 </div>
@@ -2977,6 +2978,12 @@
                 // KPIs simples
                 setEl('syncTotal',    d.total > 0 ? d.total : '0');
                 setEl('syncAvgScore', d.avgScore !== null ? d.avgScore : '—');
+
+                // Sous-ligne : total brut (réponses exclues car non quantiques)
+                const excluded = (d.totalAll || 0) - (d.total || 0);
+                setEl('syncTotalAll', excluded > 0
+                    ? `sur ${d.totalAll} reçues · ${excluded} exclue(s)`
+                    : (d.totalAll ? `${d.totalAll} reçue(s)` : ''));
 
                 // Validité scientifique : source du tirage (QRNG)
                 const qb = d.qrngBreakdown || { anu: 0, fallback: 0, unknown: 0 };

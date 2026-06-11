@@ -464,39 +464,42 @@ async function handleData(req, res) {
         unknown:  rows.filter(r => !r.qrng_source || r.qrng_source === 'unknown').length,
         migrationPending: qrngMissing  // avertit le dashboard
       };
-      // Score moyen calculé UNIQUEMENT sur les tirages quantiques purs
+      // VALIDITÉ SCIENTIFIQUE : toutes les statistiques ci-dessous sont calculées
+      // UNIQUEMENT sur les tirages 100% quantiques (ANU). Les réponses 'fallback'
+      // et 'unknown' sont exclues car elles ne sont pas valides pour l'étude.
+      // qrngBreakdown (ci-dessus) conserve le décompte complet pour la bannière.
       const anuRows = rows.filter(r => r.qrng_source === 'anu');
+
+      // Score moyen calculé UNIQUEMENT sur les tirages quantiques purs
       const avgScoreAnu = anuRows.length > 0
         ? (anuRows.reduce((s, r) => s + (r.score_synchronicites || 0), 0) / anuRows.length).toFixed(1)
         : null;
 
-      // Moyenne des scores
-      const avgScore = rows.length > 0
-        ? (rows.reduce((s, r) => s + (r.score_synchronicites || 0), 0) / rows.length).toFixed(1)
-        : null;
+      // Moyenne des scores (quantiques purs uniquement)
+      const avgScore = avgScoreAnu;
 
-      // Distribution des scores (1-10)
+      // Distribution des scores (1-10) — quantiques purs uniquement
       const scoreDistrib = Array.from({ length: 10 }, (_, i) => ({
         score: i + 1,
-        count: rows.filter(r => r.score_synchronicites === i + 1).length
+        count: anuRows.filter(r => r.score_synchronicites === i + 1).length
       }));
 
-      // Fréquence des types
+      // Fréquence des types — quantiques purs uniquement
       const typeCounts = {};
-      rows.forEach(r => (r.types_synchronicites || []).forEach(t => {
+      anuRows.forEach(r => (r.types_synchronicites || []).forEach(t => {
         typeCounts[t] = (typeCounts[t] || 0) + 1;
       }));
 
-      // Répartition résonance
+      // Répartition résonance — quantiques purs uniquement
       const resonanceCounts = { fort: 0, plutot_oui: 0, peu: 0, non: 0, null: 0 };
-      rows.forEach(r => { resonanceCounts[r.resonance_tirage || 'null']++; });
+      anuRows.forEach(r => { resonanceCounts[r.resonance_tirage || 'null']++; });
 
-      // Répartition état intérieur
+      // Répartition état intérieur — quantiques purs uniquement
       const etatCounts = { calme: 0, alerte: 0, neutre: 0, perturbe: 0, null: 0 };
-      rows.forEach(r => { etatCounts[r.etat_interieur || 'null']++; });
+      anuRows.forEach(r => { etatCounts[r.etat_interieur || 'null']++; });
 
-      // Témoignages récents (10 derniers, non nuls) — inclut qrng_source pour badge
-      const temoignages = rows
+      // Témoignages récents (10 derniers, non nuls) — quantiques purs uniquement
+      const temoignages = anuRows
         .filter(r => r.temoignage && r.temoignage.trim())
         .slice(0, 10)
         .map(r => ({ temoignage: r.temoignage, created_at: r.created_at, qrng_source: r.qrng_source }));
@@ -504,7 +507,8 @@ async function handleData(req, res) {
       return res.status(200).json({
         success: true,
         data: {
-          total: rows.length,
+          total: anuRows.length,   // réponses valides (quantiques pures) uniquement
+          totalAll: rows.length,   // total brut tous tirages confondus (info)
           avgScore,
           avgScoreAnu,
           qrngBreakdown,
