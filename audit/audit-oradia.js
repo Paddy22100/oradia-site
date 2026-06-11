@@ -818,7 +818,7 @@ async function sendReportByEmail(reportPath) {
 
   try {
     await transporter.sendMail({
-      from: `"Audit Oradia" <${process.env.AUDIT_SMTP_USER}>`,
+      from: `"Audit Oradia" <contact@oradia.fr>`,
       to: process.env.AUDIT_EMAIL_TO,
       subject: `[Audit oradia.fr] ${now.toLocaleDateString('fr-FR')} — Score ${globalScore}/100 | 🔴${summary.critical} 🟠${summary.important} 🟡${summary.minor}`,
       html: `
