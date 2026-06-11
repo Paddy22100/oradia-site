@@ -853,6 +853,38 @@ async function sendReportByEmail(reportPath) {
   }
 }
 
+// ─── NETTOYAGE ANCIENS AUDITS ─────────────────────────────────────
+async function cleanupOldReports() {
+  log('🧹 Nettoyage des anciens rapports...');
+  const reportsDir = 'audit-reports';
+  if (!fs.existsSync(reportsDir)) return;
+
+  const files = fs.readdirSync(reportsDir);
+  const oneMonthAgo = new Date(Date.now() - (30 * 24 * 60 * 60 * 1000));
+  let deletedCount = 0;
+
+  for (const file of files) {
+    const filePath = path.join(reportsDir, file);
+    const stats = fs.statSync(filePath);
+    
+    if (stats.mtime < oneMonthAgo) {
+      try {
+        fs.unlinkSync(filePath);
+        deletedCount++;
+        log(`   🗑️  Supprimé : ${file}`);
+      } catch (e) {
+        log(`   ❌ Erreur suppression ${file} : ${e.message}`);
+      }
+    }
+  }
+
+  if (deletedCount > 0) {
+    log(`   ✅ ${deletedCount} ancien(s) rapport(s) supprimé(s)`);
+  } else {
+    log(`   ℹ️  Aucun rapport à supprimer`);
+  }
+}
+
 // ─── MAIN ────────────────────────────────────────────────────
 async function main() {
   console.log('\n' + '═'.repeat(60));
@@ -862,6 +894,9 @@ async function main() {
 
   const reportsDir = 'audit-reports';
   if (!fs.existsSync(reportsDir)) fs.mkdirSync(reportsDir, { recursive: true });
+
+  // Nettoyage des anciens rapports
+  await cleanupOldReports();
 
   const browser = await chromium.launch({ headless: true, args: ['--no-sandbox'] });
 
