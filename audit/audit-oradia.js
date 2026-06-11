@@ -817,6 +817,16 @@ async function sendReportByEmail(reportPath) {
   );
 
   try {
+    // Génération du PDF
+    const puppeteer = require('puppeteer');
+    const pdfPath = reportPath.replace('.html', '.pdf');
+    const pdfBrowser = await puppeteer.launch({ headless: true, args: ['--no-sandbox'] });
+    const pdfPage = await pdfBrowser.newPage();
+    await pdfPage.goto(`file:///${path.resolve(reportPath).replace(/\\/g, '/')}`, { waitUntil: 'networkidle0' });
+    await pdfPage.pdf({ path: pdfPath, format: 'A4', printBackground: true, margin: { top: '1cm', bottom: '1cm', left: '1cm', right: '1cm' } });
+    await pdfBrowser.close();
+    log('   ✅ PDF généré');
+
     await transporter.sendMail({
       from: `"Audit Oradia" <contact@oradia.fr>`,
       to: process.env.AUDIT_EMAIL_TO,
@@ -834,7 +844,7 @@ async function sendReportByEmail(reportPath) {
         <p>Le rapport complet est joint à cet email.</p>
       `,
       attachments: [
-        { filename: path.basename(reportPath), path: reportPath },
+        { filename: path.basename(reportPath).replace('.html', '.pdf'), path: reportPath.replace('.html', '.pdf') },
       ],
     });
     log('   ✅ Email envoyé');
