@@ -25,10 +25,6 @@
       "dest": "/api/create-checkout-session.js"
     },
     {
-      "src": "/api/preorders/progress",
-      "dest": "/api/admin/index.js"
-    },
-    {
       "src": "/api/mondial-relay/pickup-points",
       "dest": "/api/admin/index.js"
     },
@@ -42,11 +38,15 @@
     },
     {
       "src": "/api/fenetre/(.*)",
-      "dest": "/api/admin/index.js"
+      "dest": "/api/fenetre/index.js"
     },
     {
-      "src": "/api/(support|health|waitlist|qrng)",
-      "dest": "/api/index.js"
+      "src": "/api/preorders/progress",
+      "dest": "/api/preorders/progress.js"
+    },
+    {
+      "src": "/api/tirages/send-email",
+      "dest": "/api/tirages/send-email.js"
     },
     { "src": "/oracle",                        "dest": "/oracle.html" },
     { "src": "/precommande-oracle",            "dest": "/precommande-oracle.html" },
@@ -83,7 +83,25 @@
     "api/analyse-tirage.js": {
       "maxDuration": 30
     },
-    "api/index.js": {
+    "api/fenetre/index.js": {
+      "maxDuration": 30
+    },
+    "api/tirages/send-email.js": {
+      "maxDuration": 30
+    },
+    "api/preorders/progress.js": {
+      "maxDuration": 15
+    },
+    "api/health.js": {
+      "maxDuration": 15
+    },
+    "api/support.js": {
+      "maxDuration": 15
+    },
+    "api/waitlist.js": {
+      "maxDuration": 15
+    },
+    "api/qrng.js": {
       "maxDuration": 15
     }
   },

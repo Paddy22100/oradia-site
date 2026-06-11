@@ -428,7 +428,7 @@ async function handleData(req, res) {
       const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
 
       // Importer le tracker d'utilisation API
-      const { getUsageStats } = require('./api-usage-tracker.js');
+      const { getUsageStats } = require('../../lib/api-usage-tracker.js');
 
       // Récupérer les statistiques d'utilisation API réelles
       let apiStats = {
