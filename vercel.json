@@ -57,7 +57,29 @@
     {
       "src": "/api/support",
       "dest": "/api/support.js"
-    }
+    },
+    {
+      "src": "/api/health",
+      "dest": "/api/health.js"
+    },
+    { "src": "/oracle",                        "dest": "/oracle.html" },
+    { "src": "/precommande-oracle",            "dest": "/precommande-oracle.html" },
+    { "src": "/precommande",                   "dest": "/precommande-oracle.html" },
+    { "src": "/accompagnements",               "dest": "/accompagnements.html" },
+    { "src": "/a-propos",                       "dest": "/a-propos.html" },
+    { "src": "/contact",                        "dest": "/contact.html" },
+    { "src": "/synchronicite",                 "dest": "/synchronicite.html" },
+    { "src": "/rendez-vous",                    "dest": "/rendez-vous.html" },
+    { "src": "/partenariats",                   "dest": "/partenariats.html" },
+    { "src": "/livraison",                      "dest": "/livraison.html" },
+    { "src": "/cgu",                            "dest": "/cgu.html" },
+    { "src": "/cgv",                            "dest": "/cgv.html" },
+    { "src": "/mentions-legales",              "dest": "/mentions-legales.html" },
+    { "src": "/politique-de-confidentialite",  "dest": "/politique-confidentialite.html" },
+    { "src": "/politique-confidentialite",     "dest": "/politique-confidentialite.html" },
+    { "src": "/connexion",                      "dest": "/member/login.html" },
+    { "src": "/inscription",                    "dest": "/member/register.html" },
+    { "src": "/mon-compte",                     "dest": "/member/dashboard.html" }
   ],
   "functions": {
     "api/stripe-webhook.js": {

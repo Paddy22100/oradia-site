@@ -1,0 +1,25 @@
+{
+  "name": "Oracle Oradia – La Boussole Intérieure",
+  "short_name": "Oradia",
+  "description": "Oracle Oradia : un écosystème de transformation intérieure au service du vivant.",
+  "lang": "fr",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0a1628",
+  "theme_color": "#0a1628",
+  "icons": [
+    {
+      "src": "/favicon.ico",
+      "sizes": "256x256",
+      "type": "image/x-icon"
+    },
+    {
+      "src": "/images/logo-hd-v2.webp",
+      "sizes": "512x512",
+      "type": "image/webp",
+      "purpose": "any"
+    }
+  ]
+}

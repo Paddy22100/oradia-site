@@ -30,21 +30,22 @@ const VIEWPORTS = [
 ];
 
 // Pages à auditer (le script en découvre aussi automatiquement)
+// URLs propres réelles d'Oradia (mappées vers les .html via vercel.json)
 const KNOWN_PAGES = [
   '/',
-  '/tirage',
-  '/offre',
-  '/tarifs',
-  '/mentions-legales',
-  '/cgv',
-  '/politique-de-confidentialite',
+  '/oracle',
+  '/precommande-oracle',
+  '/accompagnements',
+  '/a-propos',
   '/contact',
+  '/synchronicite',
+  '/rendez-vous',
+  '/cgu',
+  '/cgv',
+  '/mentions-legales',
+  '/politique-de-confidentialite',
   '/connexion',
   '/inscription',
-  '/mon-compte',
-  '/paiement',
-  '/confirmation',
-  '/404',
 ];
 
 // Headers HTTP de sécurité attendus
@@ -130,7 +131,6 @@ async function auditPages(pages) {
     const url = `${BASE_URL}${p}`;
     const res = await safeGet(url, { maxRedirects: 5, validateStatus: () => true });
     const status = res.status;
-    const entry = { path: p, status };
 
     if (status === 0) {
       addIssue('pages', 'critical', `Page inaccessible : ${p}`, res.error);
@@ -146,7 +146,6 @@ async function auditPages(pages) {
       addIssue('pages', 'ok', `${p} — ${status}`);
     }
 
-    report.sections.pages.push(entry);
   }
 }
 
@@ -212,7 +211,7 @@ async function auditResponsive(browser, pages) {
   if (!fs.existsSync(screenshotsDir)) fs.mkdirSync(screenshotsDir, { recursive: true });
 
   // On teste les pages principales seulement pour les screenshots
-  const pagesToScreenshot = ['/', '/tirage', '/offre', '/mentions-legales'].filter(p =>
+  const pagesToScreenshot = ['/', '/oracle', '/precommande-oracle', '/mentions-legales'].filter(p =>
     pages.includes(p)
   );
 
@@ -414,11 +413,11 @@ async function auditAPI(browser) {
 
   // Test endpoint API Oradia (tirage)
   const endpoints = [
-    { path: '/api/tirage',        label: 'API Tirage'          },
-    { path: '/api/health',        label: 'API Health check'    },
-    { path: '/api/stripe-webhook',label: 'Stripe Webhook'      },
-    { path: '/api/send-email',    label: 'API Email (Brevo)'   },
-    { path: '/api/auth',          label: 'API Auth'            },
+    { path: '/api/health',             label: 'API Health check'   },
+    { path: '/api/preorders/progress', label: 'API Précommandes'    },
+    { path: '/api/analyse-tirage',     label: 'API Analyse tirage' },
+    { path: '/api/auth/login',         label: 'API Auth'           },
+    { path: '/api/support',            label: 'API Support'        },
   ];
 
   for (const ep of endpoints) {
@@ -444,13 +443,13 @@ async function auditAPI(browser) {
   // Test interactif de la page tirage avec Playwright
   const page = await browser.newPage();
   try {
-    await page.goto(`${BASE_URL}/tirage`, { waitUntil: 'networkidle', timeout: 20000 });
+    await page.goto(`${BASE_URL}/oracle`, { waitUntil: 'networkidle', timeout: 20000 });
     await page.waitForTimeout(2000);
 
     // Chercher un bouton de tirage
     const tirageBtn = await page.$('[data-testid="tirage-btn"], button:has-text("Tirer"), button:has-text("tirage"), button:has-text("Révéler"), button:has-text("Consulter")');
     if (tirageBtn) {
-      addIssue('api', 'ok', 'Bouton de tirage trouvé sur /tirage');
+      addIssue('api', 'ok', 'Bouton de tirage trouvé sur /oracle');
       // Tenter de cliquer et observer
       const [response] = await Promise.all([
         page.waitForResponse(r => r.url().includes('/api/') && r.request().method() !== 'OPTIONS', { timeout: 10000 }).catch(() => null),
@@ -467,7 +466,7 @@ async function auditAPI(browser) {
         addIssue('api', 'minor', 'Aucun appel API détecté après clic tirage (ou timeout)');
       }
     } else {
-      addIssue('api', 'minor', 'Bouton de tirage non trouvé sur /tirage (sélecteur à ajuster)');
+      addIssue('api', 'minor', 'Bouton de tirage non trouvé sur /oracle (sélecteur à ajuster)');
     }
   } catch (e) {
     addIssue('api', 'minor', 'Erreur test interactif tirage', e.message);
@@ -478,13 +477,13 @@ async function auditAPI(browser) {
   const stripePage = await browser.newPage();
   try {
     // Chercher une page d'offre/tarif
-    const offrePage = `${BASE_URL}/offre`;
+    const offrePage = `${BASE_URL}/precommande-oracle`;
     await stripePage.goto(offrePage, { waitUntil: 'networkidle', timeout: 20000 });
-    const stripeEl = await stripePage.$('[data-testid*="stripe"], button:has-text("Abonner"), button:has-text("Acheter"), button:has-text("Payer"), button:has-text("Commander")');
+    const stripeEl = await stripePage.$('[data-testid*="stripe"], button:has-text("Abonner"), button:has-text("Acheter"), button:has-text("Payer"), button:has-text("Commander"), button:has-text("Précommander")');
     if (stripeEl) {
-      addIssue('api', 'ok', 'Bouton de paiement Stripe trouvé sur /offre');
+      addIssue('api', 'ok', 'Bouton de paiement Stripe trouvé sur /precommande-oracle');
     } else {
-      addIssue('api', 'minor', 'Bouton Stripe non trouvé sur /offre (sélecteur à ajuster)');
+      addIssue('api', 'minor', 'Bouton Stripe non trouvé sur /precommande-oracle (sélecteur à ajuster)');
     }
   } catch (e) {
     addIssue('api', 'minor', 'Erreur test bouton Stripe', e.message);
