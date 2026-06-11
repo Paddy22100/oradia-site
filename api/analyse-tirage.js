@@ -10,7 +10,7 @@ const MODELS_FALLBACK = [
 ];
 
 // Importer le tracker d'utilisation (en ESM)
-import { logApiUsage } from '../admin/api-usage-tracker.js';
+import { logApiUsage } from '../lib/api-usage-tracker.js';
 
 async function sendModelAlert(failedModel, usedModel) {
     try {
