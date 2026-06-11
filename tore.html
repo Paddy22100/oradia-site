@@ -3829,6 +3829,12 @@ let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
   // Tableau pour stocker toutes les cartes déjà tirées (éviter les doublons)
   const drawnCards = new Set();
 
+  // Pré-sélection spéculative : dès qu'une carte devient "à tirer", on choisit
+  // sa donnée (QRNG) et on lance le préchargement de son image en arrière-plan,
+  // pendant que l'utilisateur lit le message précédent. Évite l'attente
+  // (QRNG + téléchargement image) au moment du clic, surtout sur mobile.
+  const preselectedCards = new Map(); // familyKey -> { data, imgPath, imgEl }
+
   // Map famille → donnée complète de la carte tirée (pour l'analyse)
   const flippedCardData = new Map();
 
@@ -4242,6 +4248,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
         && !card.classList.contains('just-flipped')) {
         card.classList.add('next-to-draw');
         nextFamilyFound = familyKey;
+        preselectCard(familyKey);
         break;
       }
     }
@@ -4736,6 +4743,23 @@ function showToreAnalysisCTA() {
   }
 
 
+
+  // Choisit (QRNG) la prochaine carte d'une famille et précharge son image,
+  // sans rien afficher : à appeler dès que cette famille devient "à tirer".
+  async function preselectCard(familyKey) {
+    if (preselectedCards.has(familyKey)) return;
+    preselectedCards.set(familyKey, null); // verrou anti double-déclenchement
+    try {
+      const data = await pickFromData(familyKey);
+      if (!data) { preselectedCards.delete(familyKey); return; }
+      const imgPath = buildImagePath(familyKey, data);
+      const imgEl = new Image();
+      imgEl.src = imgPath;
+      preselectedCards.set(familyKey, { data, imgPath, imgEl });
+    } catch (e) {
+      preselectedCards.delete(familyKey);
+    }
+  }
 
   function buildImagePath(familyKey, data) {
 
@@ -5407,7 +5431,11 @@ function closeToreExitModal(){
 
         // Continuer normalement si c'est la bonne famille
 
-        const data   = await pickFromData(famKey);
+        // Réutiliser la pré-sélection (données + image en cours/déjà préchargée)
+        // si elle est disponible, pour éviter d'attendre QRNG + téléchargement.
+        const pre = preselectedCards.get(famKey);
+        preselectedCards.delete(famKey);
+        const data = (pre && pre.data) ? pre.data : await pickFromData(famKey);
 
         const front  = card.querySelector('.tore-card-front');
 
@@ -5439,7 +5467,7 @@ function closeToreExitModal(){
 
         }
 
-                const imgPath = buildImagePath(famKey, data);
+                const imgPath = (pre && pre.imgPath) ? pre.imgPath : buildImagePath(famKey, data);
 
 
 
@@ -5467,7 +5495,9 @@ function closeToreExitModal(){
         // Incrémenter l'index de tirage pour passer à la famille suivante
         toreThrowIndex++;
 
-        const imgEl = new Image();
+        // Réutiliser l'image déjà en cours de préchargement (pré-sélection)
+        // si elle existe et correspond bien au chemin retenu.
+        const imgEl = (pre && pre.imgEl && pre.imgEl.src && pre.imgEl.src.endsWith(imgPath)) ? pre.imgEl : new Image();
         let flipDone = false;
         // Réduire le timeout si la connexion est rapide (navigator.connection API)
         const _conn = navigator.connection || navigator.mozConnection || navigator.webkitConnection;
@@ -5536,10 +5566,15 @@ function closeToreExitModal(){
           }, prefersReduced ? 100 : 1000);
         };
 
-        imgEl.onload = doFlip;
-        imgEl.onerror = doFlip;
-        setTimeout(doFlip, prefersReduced ? 300 : FLIP_TIMEOUT);
-        imgEl.src = imgPath;
+        if (imgEl.complete && imgEl.naturalWidth > 0) {
+          // Image déjà entièrement préchargée (pré-sélection) : on retourne aussitôt.
+          doFlip();
+        } else {
+          imgEl.onload = doFlip;
+          imgEl.onerror = doFlip;
+          setTimeout(doFlip, prefersReduced ? 300 : FLIP_TIMEOUT);
+          imgEl.src = imgPath;
+        }
 
         // Filet de sécurité : si toutes les cartes sont retournées et que la phase pièce
         // n'a pas démarré 4s après ce flip, la forcer
