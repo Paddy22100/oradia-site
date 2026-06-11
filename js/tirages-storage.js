@@ -112,9 +112,10 @@
     return [];
   }
 
+  // Retourne l'id du tirage enregistré (Supabase) en cas de succès, ou null sinon.
   async function apiSave(entry) {
     let token = getAccessToken();
-    if (!token) return false;
+    if (!token) return null;
     try {
       let resp = await fetch(`${API_BASE}?action=save`, {
         method: 'POST',
@@ -125,7 +126,7 @@
         // access_token expiré (session > 1h) : on tente un renouvellement
         // silencieux via le refresh_token avant de renoncer.
         token = await refreshAccessToken();
-        if (!token) return false;
+        if (!token) return null;
         resp = await fetch(`${API_BASE}?action=save`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
@@ -133,9 +134,38 @@
         });
       }
       const data = await resp.json();
-      return !!(data && data.success);
+      return (data && data.success && data.tirage) ? data.tirage.id : null;
     } catch (e) {
       console.warn('Tirages: échec sauvegarde distante', e);
+      return null;
+    }
+  }
+
+  // Complète un tirage déjà enregistré (analyse IA, synthèse, fenêtre d'observation)
+  // une fois ces données disponibles sur tore-analysis.html.
+  async function apiUpdate(id, fields) {
+    let token = getAccessToken();
+    if (!token) return false;
+    const body = JSON.stringify(Object.assign({ id }, fields));
+    try {
+      let resp = await fetch(`${API_BASE}?action=update`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+        body
+      });
+      if (resp.status === 401) {
+        token = await refreshAccessToken();
+        if (!token) return false;
+        resp = await fetch(`${API_BASE}?action=update`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+          body
+        });
+      }
+      const data = await resp.json();
+      return !!(data && data.success);
+    } catch (e) {
+      console.warn('Tirages: échec mise à jour distante', e);
       return false;
     }
   }
@@ -150,13 +180,15 @@
 
   // `addTirage` enregistre côté Supabase si connecté (sécurisé par RLS),
   // sinon en local sous la clé "invité" (jamais sous l'ancienne clé globale partagée).
+  // Retourne { id, tirages } : `id` (id Supabase du tirage créé, pour `updateTirage`
+  // une fois l'analyse IA disponible) est `null` pour les invités.
   async function addTirage(entry, maxEntries = 20) {
     if (isAuthenticated()) {
-      const ok = await apiSave(entry);
-      if (ok) return apiList();
+      const id = await apiSave(entry);
+      if (id) return { id, tirages: await apiList() };
       // En cas d'échec réseau, on ne perd pas le tirage : repli local "invité"
     }
-    return addGuestTirage(entry, maxEntries);
+    return { id: null, tirages: addGuestTirage(entry, maxEntries) };
   }
 
   // Nettoyage : supprime l'ancienne clé globale partagée (ne recopie PAS son
@@ -175,6 +207,7 @@
     isAuthenticated,
     loadTirages,
     addTirage,
+    updateTirage: apiUpdate,
     purgeLegacyGlobalHistory,
     // Exposés pour debug/tests uniquement
     _loadGuestTirages: loadGuestTirages,

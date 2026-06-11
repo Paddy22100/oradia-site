@@ -41,6 +41,7 @@
   <link rel="stylesheet" href="responsive.css">
   <link rel="stylesheet" href="production-mode.css">
   <script src="security.js"></script>
+  <script src="js/tirages-storage.js"></script>
 
   <script>
     tailwind.config = {
@@ -1597,14 +1598,16 @@
                 existingData.observationText = text;
                 existingData.attentionPoints = points;
                 sessionStorage.setItem('tore_analysis_data', JSON.stringify(existingData));
-                console.log('[injectObservationWindow] Données d\'observation stockées:', { 
-                    suggestedDays: days, 
-                    chosenDays: window._obsSuggestedDays, 
-                    textLength: text.length 
+                console.log('[injectObservationWindow] Données d\'observation stockées:', {
+                    suggestedDays: days,
+                    chosenDays: window._obsSuggestedDays,
+                    textLength: text.length
                 });
             } catch(e) {
                 console.error('[injectObservationWindow] Erreur stockage:', e);
             }
+
+            syncObservationWindowToHistory();
 
             // Récupérer l'email de l'utilisateur connecté
             const sessionData = sessionStorage.getItem('oradia_member_session')
@@ -1722,6 +1725,23 @@
             if (durationDisplay) {
                 durationDisplay.textContent = days;
             }
+
+            syncObservationWindowToHistory();
+        }
+
+        // Construit l'objet fenêtre d'observation (durée choisie, texte, points d'attention,
+        // date de clôture) et le synchronise avec le tirage déjà enregistré dans l'historique.
+        function syncObservationWindowToHistory() {
+            const days = window._obsSuggestedDays;
+            if (!days) return;
+            syncTirageToHistory({
+                observationWindow: {
+                    durationDays: days,
+                    observationText: window._obsWindowText || '',
+                    attentionPoints: window._obsAttentionPoints || [],
+                    closesAt: new Date(Date.now() + days * 86400000).toISOString()
+                }
+            });
         }
 
         async function activateObsWindow() {
@@ -1929,6 +1949,19 @@
             } catch(e) {
                 console.error('[displayDetailedAnalysis] Erreur stockage:', e);
             }
+
+            // Compléter le tirage enregistré dans l'historique avec l'analyse et la synthèse
+            syncTirageToHistory({ analysis: analysis.message, synthesis: analysis.synthesis });
+        }
+
+        // Complète le tirage déjà enregistré dans l'historique (Supabase, membre connecté)
+        // avec l'analyse IA / synthèse / fenêtre d'observation, dès qu'elles sont disponibles.
+        function syncTirageToHistory(fields) {
+            try {
+                const id = sessionStorage.getItem('tore_tirage_id');
+                if (!id || !window.OradiaTirageStorage || !window.OradiaTirageStorage.isAuthenticated()) return;
+                window.OradiaTirageStorage.updateTirage(id, fields).catch(() => {});
+            } catch (e) {}
         }
 
         function displaySynthesis(synthesis) {

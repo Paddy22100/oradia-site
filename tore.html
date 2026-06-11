@@ -4560,7 +4560,14 @@ function showToreAnalysisCTA() {
       if (window.OradiaTirageStorage) {
         // Sauvegarde sécurisée côté Supabase pour les membres connectés (RLS : chacun ne voit que ses tirages),
         // ou stockage local namespacé "invité" pour les visiteurs anonymes — jamais sous une clé globale partagée.
-        await window.OradiaTirageStorage.addTirage(entry, 20);
+        const result = await window.OradiaTirageStorage.addTirage(entry, 20);
+        // Mémoriser l'id du tirage pour que tore-analysis.html puisse le compléter
+        // avec l'analyse IA, la synthèse et la fenêtre d'observation une fois disponibles.
+        if (result && result.id) {
+          sessionStorage.setItem('tore_tirage_id', String(result.id));
+        } else {
+          sessionStorage.removeItem('tore_tirage_id');
+        }
       } else {
         const tirages = JSON.parse(localStorage.getItem('oradia_tirages_invite') || '[]');
         tirages.push(entry);

@@ -3,6 +3,7 @@
 //   - POST /api/tirages/send-email?action=send-email  (ou sans action) → envoi de l'email du tirage
 //   - POST /api/tirages/send-email?action=save        → sauvegarde du tirage dans l'historique (Supabase, RLS par user_id)
 //   - GET  /api/tirages/send-email?action=list        → récupération de l'historique de l'utilisateur connecté
+//   - POST /api/tirages/send-email?action=update      → complète un tirage déjà enregistré (analyse IA, synthèse, fenêtre d'observation)
 //
 // Regroupé dans un seul fichier pour rester sous la limite Vercel de 12 fonctions serverless (Hobby plan).
 
@@ -87,6 +88,51 @@ async function handleSaveTirage(req, res) {
   if (error) {
     console.error('Save tirage error:', error);
     return res.status(500).json({ success: false, message: 'Impossible d\'enregistrer le tirage.' });
+  }
+
+  return res.status(200).json({ success: true, tirage: data });
+}
+
+// ============ ACTION : compléter un tirage déjà enregistré (analyse IA, synthèse, fenêtre d'observation) ============
+async function handleUpdateTirage(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const supabase = getUserSupabaseClient(req);
+  if (!supabase) {
+    return res.status(401).json({ success: false, message: 'Authentification requise pour mettre à jour ce tirage.' });
+  }
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) {
+    return res.status(401).json({ success: false, message: 'Session invalide ou expirée.' });
+  }
+
+  const body = await parseJsonBody(req);
+  const { id, synthesis, observationWindow, interpretations, analysis } = body;
+
+  if (!id) {
+    return res.status(400).json({ success: false, message: 'Identifiant du tirage requis.' });
+  }
+
+  const updates = {};
+  if (synthesis !== undefined) updates.synthese = synthesis;
+  if (analysis !== undefined) updates.analyse_ia = analysis;
+  if (interpretations !== undefined) updates.interpretations = interpretations;
+  if (observationWindow !== undefined) updates.observation_window = observationWindow;
+
+  // RLS garantit déjà que seul le propriétaire peut modifier sa ligne, mais on filtre
+  // explicitement par user_id par sécurité défensive.
+  const { data, error } = await supabase
+    .from('tirages')
+    .update(updates)
+    .eq('id', id)
+    .eq('user_id', userData.user.id)
+    .select()
+    .single();
+
+  if (error) {
+    console.error('Update tirage error:', error);
+    return res.status(500).json({ success: false, message: 'Impossible de mettre à jour le tirage.' });
   }
 
   return res.status(200).json({ success: true, tirage: data });
@@ -552,6 +598,8 @@ export default async function handler(req, res) {
   switch (action) {
     case 'save':
       return handleSaveTirage(req, res);
+    case 'update':
+      return handleUpdateTirage(req, res);
     case 'list':
       return handleListTirages(req, res);
     case 'send-email':

@@ -69,7 +69,10 @@ const report = {
     responsive: [],
     seo: [],
     rgpd: [],
+    auth: [],
     api: [],
+    links: [],
+    accessibility: [],
     performance: [],
     misc: [],
   },
@@ -77,10 +80,17 @@ const report = {
   summary: { critical: 0, important: 0, minor: 0, ok: 0 },
 };
 
+// ─── CREDENTIALS TEST ────────────────────────────────────────
+const TEST_EMAIL = process.env.AUDIT_TEST_EMAIL || '';
+const TEST_PASS  = process.env.AUDIT_TEST_PASSWORD || '';
+const LOGIN_URL  = `${BASE_URL}/connexion`;
+const TIRAGE_URL = `${BASE_URL}/oracle`;
+
 // ─── UTILITAIRES ────────────────────────────────────────────
 const severity = { critical: '🔴', important: '🟠', minor: '🟡', ok: '🟢', info: 'ℹ️' };
 
 function addIssue(section, level, title, detail = '') {
+  if (!report.sections[section]) report.sections[section] = [];
   report.sections[section].push({ level, title, detail });
   if (level in report.summary) report.summary[level]++;
 }
@@ -202,6 +212,26 @@ async function auditSecurity() {
   } else {
     addIssue('security', 'minor', 'robots.txt absent');
   }
+
+  // Rate limiting sur les endpoints sensibles
+  const sensitiveEps = ['/api/auth/login', '/api/analyse-tirage'];
+  for (const ep of sensitiveEps) {
+    const results = await Promise.all(
+      Array(5).fill(null).map(() => safeGet(`${BASE_URL}${ep}`, { validateStatus: () => true }))
+    );
+    const has429 = results.some(r => r.status === 429);
+    if (has429) addIssue('security', 'ok', `Rate limiting actif sur ${ep}`);
+    else addIssue('security', 'minor', `Rate limiting non détecté sur ${ep}`, '5 requêtes simultanées sans blocage 429');
+  }
+
+  // Mixed content
+  try {
+    const htmlRes = await safeGet(BASE_URL);
+    const body = typeof htmlRes.data === 'string' ? htmlRes.data : '';
+    const httpRefs = (body.match(/src="http:\/\//g) || []).length + (body.match(/href="http:\/\//g) || []).length;
+    if (httpRefs > 0) addIssue('security', 'important', `${httpRefs} ressource(s) HTTP détectée(s) sur page HTTPS (mixed content)`);
+    else addIssue('security', 'ok', 'Aucun mixed content détecté');
+  } catch (_) {}
 }
 
 // ─── 4. RESPONSIVE & AFFICHAGE ──────────────────────────────
@@ -495,6 +525,162 @@ async function auditAPI(browser) {
   await stripePage.close();
 }
 
+// ─── 7b. AUTHENTIFICATION ────────────────────────────────────
+async function auditAuth(browser) {
+  log('🔐 Audit authentification...');
+
+  if (!TEST_EMAIL || !TEST_PASS) {
+    addIssue('auth', 'info', 'Test connexion ignoré (AUDIT_TEST_EMAIL / AUDIT_TEST_PASSWORD non configurés dans .env.audit)');
+    return;
+  }
+
+  const page = await browser.newPage();
+  try {
+    await page.goto(LOGIN_URL, { waitUntil: 'networkidle', timeout: 20000 });
+    await page.waitForTimeout(1000);
+
+    const emailField = await page.$('input[type="email"], input[placeholder*="email"], input[name="email"]');
+    const passField  = await page.$('input[type="password"]');
+    const submitBtn  = await page.$('button:has-text("SE CONNECTER"), button[type="submit"]');
+
+    if (!emailField || !passField || !submitBtn) {
+      addIssue('auth', 'important', 'Formulaire de connexion incomplet ou non trouvé sur ' + LOGIN_URL);
+      await page.close();
+      return;
+    }
+    addIssue('auth', 'ok', 'Formulaire de connexion présent (email + mot de passe + bouton)');
+
+    await emailField.fill(TEST_EMAIL);
+    await passField.fill(TEST_PASS);
+    await Promise.all([
+      page.waitForNavigation({ timeout: 15000 }).catch(() => null),
+      submitBtn.click(),
+    ]);
+    await page.waitForTimeout(3000);
+
+    const currentUrl = page.url();
+    if (currentUrl.includes('connexion') || currentUrl.includes('login')) {
+      const errEl = await page.$('[class*="error"], [class*="alert"], [id*="error"]');
+      const errTxt = errEl ? await errEl.textContent().catch(() => '') : '';
+      addIssue('auth', 'critical', 'Connexion échouée avec le compte test', errTxt || `Toujours sur ${currentUrl}`);
+    } else {
+      addIssue('auth', 'ok', `Connexion réussie → ${currentUrl}`);
+
+      // Test tirage connecté
+      await page.goto(TIRAGE_URL, { waitUntil: 'networkidle', timeout: 20000 });
+      await page.waitForTimeout(2000);
+      const btnConnecte = await page.$('button:has-text("Faire un tirage"), button:has-text("tirage")');
+      if (btnConnecte) {
+        addIssue('auth', 'ok', 'Bouton "Faire un tirage" présent (utilisateur connecté)');
+        const apiCall = page.waitForResponse(
+          r => r.url().includes('/api/') && r.request().method() !== 'OPTIONS',
+          { timeout: 12000 }
+        ).catch(() => null);
+        await btnConnecte.click();
+        const resp = await apiCall;
+        if (resp) {
+          addIssue('auth', resp.status() === 200 ? 'ok' : 'important',
+            `API tirage connecté → ${resp.status()}`, resp.url());
+        } else {
+          addIssue('auth', 'minor', 'Aucun appel API détecté après clic tirage connecté');
+        }
+      } else {
+        addIssue('auth', 'minor', 'Bouton "Faire un tirage" non trouvé (connecté) — sélecteur à ajuster');
+      }
+
+      // Test déconnexion
+      const logoutBtn = await page.$('button:has-text("Déconnexion"), a:has-text("Déconnexion"), [class*="logout"]');
+      if (logoutBtn) {
+        await logoutBtn.click();
+        await page.waitForTimeout(2000);
+        addIssue('auth', 'ok', 'Déconnexion fonctionnelle');
+      } else {
+        addIssue('auth', 'minor', 'Bouton déconnexion non trouvé');
+      }
+    }
+  } catch (e) {
+    addIssue('auth', 'important', 'Erreur test authentification', e.message);
+  }
+  await page.close();
+}
+
+// ─── 7c. LIENS BRISÉS ────────────────────────────────────────
+async function auditBrokenLinks(browser) {
+  log('🔗 Audit liens brisés...');
+  const page = await browser.newPage();
+  const checked = new Set();
+  let broken = 0;
+
+  try {
+    await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 20000 });
+    const links = await page.$$eval('a[href]', els =>
+      els.map(e => e.href).filter(h => h && !h.startsWith('mailto:') && !h.startsWith('tel:') && !h.startsWith('javascript:'))
+    );
+    const internalLinks = links.filter(l => l.startsWith(BASE_URL) || l.startsWith('/'));
+
+    for (const link of internalLinks.slice(0, 50)) {
+      const url = link.startsWith('/') ? `${BASE_URL}${link}` : link;
+      if (checked.has(url)) continue;
+      checked.add(url);
+      const res = await safeGet(url, { validateStatus: () => true });
+      if (res.status === 404 || res.status === 0) {
+        broken++;
+        addIssue('links', 'important', `Lien brisé : ${url}`, `Status: ${res.status}`);
+      } else if (res.status >= 500) {
+        addIssue('links', 'critical', `Erreur serveur sur lien : ${url}`, `Status: ${res.status}`);
+      }
+    }
+
+    if (broken === 0) addIssue('links', 'ok', `Aucun lien brisé (${checked.size} liens vérifiés)`);
+    else addIssue('links', 'important', `${broken} lien(s) brisé(s) sur ${checked.size} vérifiés`);
+  } catch (e) {
+    addIssue('links', 'minor', 'Erreur audit liens', e.message);
+  }
+  await page.close();
+}
+
+// ─── 7d. ACCESSIBILITÉ WCAG ──────────────────────────────────
+async function auditAccessibility(browser) {
+  log('♿ Audit accessibilité WCAG...');
+  const page = await browser.newPage();
+  try {
+    await page.goto(BASE_URL, { waitUntil: 'networkidle', timeout: 20000 });
+
+    const imgsNoAlt = await page.$$eval('img:not([alt])', els => els.length);
+    if (imgsNoAlt > 0) addIssue('accessibility', 'important', `${imgsNoAlt} image(s) sans attribut alt`);
+    else addIssue('accessibility', 'ok', 'Toutes les images ont un attribut alt');
+
+    const btnsNoText = await page.$$eval('button', els =>
+      els.filter(b => !b.textContent.trim() && !b.getAttribute('aria-label') && !b.getAttribute('title')).length
+    );
+    if (btnsNoText > 0) addIssue('accessibility', 'important', `${btnsNoText} bouton(s) sans texte accessible`);
+    else addIssue('accessibility', 'ok', 'Tous les boutons ont un texte accessible');
+
+    const linksNoText = await page.$$eval('a', els =>
+      els.filter(a => !a.textContent.trim() && !a.getAttribute('aria-label')).length
+    );
+    if (linksNoText > 0) addIssue('accessibility', 'minor', `${linksNoText} lien(s) sans texte`);
+
+    const lang = await page.$eval('html', el => el.lang).catch(() => '');
+    if (lang) addIssue('accessibility', 'ok', `Langue <html> déclarée : ${lang}`);
+    else addIssue('accessibility', 'important', 'Attribut lang manquant sur <html>');
+
+    const skipLink = await page.$('a[href="#main"], a[href="#content"], a:has-text("Aller au contenu")');
+    if (skipLink) addIssue('accessibility', 'ok', 'Lien "skip to content" présent');
+    else addIssue('accessibility', 'minor', 'Lien "skip to content" absent (navigation clavier)');
+
+    const inputsNoLabel = await page.$$eval('input:not([type="hidden"]):not([type="submit"])', els =>
+      els.filter(i => { const id = i.id; return !id || !document.querySelector(`label[for="${id}"]`); }).length
+    );
+    if (inputsNoLabel > 0) addIssue('accessibility', 'minor', `${inputsNoLabel} champ(s) sans label associé`);
+    else addIssue('accessibility', 'ok', 'Tous les champs ont un label');
+
+  } catch (e) {
+    addIssue('accessibility', 'minor', 'Erreur audit accessibilité', e.message);
+  }
+  await page.close();
+}
+
 // ─── 8. PERFORMANCE (Lighthouse lite via métriques Playwright) ──
 async function auditPerformance(browser) {
   log('🚀 Audit performance...');
@@ -541,8 +727,29 @@ async function auditPerformance(browser) {
 
     if (lcp > 0) {
       if (lcp < 2500) addIssue('performance', 'ok', `LCP : ${Math.round(lcp)}ms (bon)`);
-      else if (lcp < 4000) addIssue('performance', 'minor', `LCP : ${Math.round(lcp)}ms (à améliorer)`);
-      else addIssue('performance', 'important', `LCP : ${Math.round(lcp)}ms (mauvais)`);
+      else if (lcp < 4000) addIssue('performance', 'minor', `LCP : ${Math.round(lcp)}ms (à améliorer, seuil 2500ms)`);
+      else addIssue('performance', 'important', `LCP : ${Math.round(lcp)}ms (mauvais, seuil 2500ms)`);
+    }
+
+    // FCP
+    const fcp = await page.evaluate(() => {
+      const e = performance.getEntriesByName('first-contentful-paint')[0];
+      return e ? e.startTime : 0;
+    });
+    if (fcp > 0) {
+      if (fcp < 1800) addIssue('performance', 'ok', `FCP : ${Math.round(fcp)}ms (bon)`);
+      else if (fcp < 3000) addIssue('performance', 'minor', `FCP : ${Math.round(fcp)}ms (à améliorer)`);
+      else addIssue('performance', 'important', `FCP : ${Math.round(fcp)}ms (mauvais)`);
+    }
+
+    // TTFB
+    const ttfb = await page.evaluate(() => {
+      const nav = performance.getEntriesByType('navigation')[0];
+      return nav ? nav.responseStart - nav.requestStart : 0;
+    });
+    if (ttfb > 0) {
+      if (ttfb < 800) addIssue('performance', 'ok', `TTFB : ${Math.round(ttfb)}ms (bon)`);
+      else addIssue('performance', 'minor', `TTFB : ${Math.round(ttfb)}ms (serveur lent)`);
     }
 
     const totalKB = Math.round(resourceSizes.total / 1024);
@@ -613,14 +820,17 @@ async function auditMisc(browser) {
 // ─── 10. CALCUL DES SCORES ──────────────────────────────────
 function computeScores() {
   const categories = {
-    'Pages':       'pages',
-    'Sécurité':    'security',
-    'Responsive':  'responsive',
-    'SEO':         'seo',
-    'RGPD':        'rgpd',
-    'API':         'api',
-    'Performance': 'performance',
-    'Divers':      'misc',
+    'Pages':           'pages',
+    'Sécurité':        'security',
+    'Responsive':      'responsive',
+    'SEO':             'seo',
+    'RGPD':            'rgpd',
+    'Authentification':'auth',
+    'API':             'api',
+    'Liens':           'links',
+    'Accessibilité':   'accessibility',
+    'Performance':     'performance',
+    'Divers':          'misc',
   };
 
   for (const [label, key] of Object.entries(categories)) {
@@ -668,8 +878,9 @@ function generateHTML() {
     .map(([key, items]) => {
       const title = {
         pages: '📄 Pages', security: '🔒 Sécurité', responsive: '📱 Responsive',
-        seo: '🔎 SEO', rgpd: '⚖️ RGPD & Légalité', api: '⚡ API & Fonctionnel',
-        performance: '🚀 Performance', misc: '🔧 Divers',
+        seo: '🔎 SEO', rgpd: '⚖️ RGPD & Légalité', auth: '🔐 Authentification',
+        api: '⚡ API & Fonctionnel', links: '🔗 Liens brisés',
+        accessibility: '♿ Accessibilité', performance: '🚀 Performance', misc: '🔧 Divers',
       }[key] || key;
       const rows = items.map(i => `
         <tr class="${levelClass(i.level)}">
@@ -911,6 +1122,9 @@ async function main() {
     await auditSEO(pages);
     await auditRGPD(browser, pages);
     await auditAPI(browser);
+    await auditAuth(browser);
+    await auditBrokenLinks(browser);
+    await auditAccessibility(browser);
     await auditPerformance(browser);
     await auditMisc(browser);
   } finally {
