@@ -1,10 +1,10 @@
 name: Audit oradia.fr
 
 on:
-  # Automatique : lundi et jeudi à 7h00 heure de Paris (UTC+2 en été)
+  # Automatique : lundi et jeudi à 8h55 heure de Paris (UTC+2 en été)
   schedule:
-    - cron: '0 5 * * 1'   # Lundi    05:00 UTC = 07:00 Paris
-    - cron: '0 5 * * 4'   # Jeudi    05:00 UTC = 07:00 Paris
+    - cron: '55 6 * * 1'   # Lundi    06:55 UTC = 08:55 Paris
+    - cron: '55 6 * * 4'   # Jeudi    06:55 UTC = 08:55 Paris
 
   # Manuel : depuis l'onglet Actions sur GitHub
   workflow_dispatch:
