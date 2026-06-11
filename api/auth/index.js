@@ -7,8 +7,45 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'Content-Type'
 };
 
+// Simple in-memory rate limiter
+const rateLimitStore = new Map();
+
+function checkRateLimit(ip, limit = 5, windowMs = 60000) { // 5 requests per minute
+  const now = Date.now();
+  const key = `login:${ip}`;
+  
+  if (!rateLimitStore.has(key)) {
+    rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
+    return true;
+  }
+  
+  const record = rateLimitStore.get(key);
+  
+  if (now > record.resetTime) {
+    record.count = 1;
+    record.resetTime = now + windowMs;
+    return true;
+  }
+  
+  if (record.count >= limit) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
 // ============ LOGIN ============
 async function handleLogin(req, res) {
+  // Rate limiting check
+  const clientIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || 'unknown';
+  if (!checkRateLimit(clientIP, 5, 60000)) { // 5 attempts per minute
+    res.writeHead(429, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ 
+      success: false, 
+      error: 'Trop de tentatives de connexion. Veuillez réessayer dans une minute.' 
+    }));
+  }
   const body = await new Promise((resolve, reject) => {
     let data = '';
     req.on('data', chunk => data += chunk);

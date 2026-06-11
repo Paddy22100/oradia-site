@@ -76,6 +76,34 @@ async function callAnthropicWithFallback(payload) {
     throw new Error('Aucun modèle Anthropic disponible');
 }
 
+// Simple in-memory rate limiter for IP-based protection
+const rateLimitStore = new Map();
+
+function checkRateLimit(ip, limit = 20, windowMs = 60000) { // 20 requests per minute per IP
+  const now = Date.now();
+  const key = `analyse:${ip}`;
+  
+  if (!rateLimitStore.has(key)) {
+    rateLimitStore.set(key, { count: 1, resetTime: now + windowMs });
+    return true;
+  }
+  
+  const record = rateLimitStore.get(key);
+  
+  if (now > record.resetTime) {
+    record.count = 1;
+    record.resetTime = now + windowMs;
+    return true;
+  }
+  
+  if (record.count >= limit) {
+    return false;
+  }
+  
+  record.count++;
+  return true;
+}
+
 // ── Rate limiting : 300 tirages/mois par abonné actif ──────────────────────
 const MONTHLY_DRAW_LIMIT = 300;
 
@@ -147,6 +175,14 @@ export default async function handler(req, res) {
 
   if (req.method === 'OPTIONS') return res.status(200).end();
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  // Rate limiting check
+  const clientIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.connection.remoteAddress || 'unknown';
+  if (!checkRateLimit(clientIP, 20, 60000)) { // 20 requests per minute per IP
+    return res.status(429).json({ 
+      error: 'Trop de requêtes. Veuillez réessayer dans une minute.' 
+    });
+  }
 
   let body;
   try {

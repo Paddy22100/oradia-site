@@ -201,6 +201,11 @@
 </head>
 
 <body class="relative">
+  <!-- Skip to content link for accessibility -->
+  <a href="#accueil" class="sr-only focus:not-sr-only focus:absolute focus:top-4 focus:left-4 bg-gold text-night-blue px-4 py-2 rounded-md z-50 focus:outline-none focus:ring-2 focus:ring-white">
+    Aller au contenu principal
+  </a>
+  
   <!-- Scroll to top button -->
   <button id="backToTop" class="fixed bottom-6 right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-50 backdrop-blur-sm" aria-label="Remonter en haut">
     <i class="fas fa-arrow-up text-sm"></i>
@@ -579,6 +584,7 @@ backToTopBtn.addEventListener('click', () => {
 
       <!-- Formulaire -->
       <form id="popup-newsletter-form" onsubmit="submitNewsletterPopup(event)" style="display:flex;flex-direction:column;gap:10px;">
+        <label for="popup-email" style="color:rgba(212,175,55,0.7);font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;margin-bottom:4px;">Votre adresse email</label>
         <input
           type="email"
           id="popup-email"
