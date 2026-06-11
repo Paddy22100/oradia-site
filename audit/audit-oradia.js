@@ -799,7 +799,7 @@ async function sendReportByEmail(reportPath) {
   }
 
   log('📧 Envoi du rapport par email...');
-  const transporter = nodemailer.createTransporter({
+  const transporter = nodemailer.createTransport({
     host: process.env.AUDIT_SMTP_HOST,
     port: parseInt(process.env.AUDIT_SMTP_PORT || '587'),
     secure: process.env.AUDIT_SMTP_SECURE === 'true',
