@@ -801,13 +801,113 @@ async function handleNewsletter(req, res) {
   try {
     verifyAdminAuth(req);
     
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const action = url.searchParams.get('action');
+    
     if (req.method === 'GET') {
-      // Liste des newsletters
+      if (action === 'drafts') {
+        // Récupérer les brouillons depuis newsletter_drafts
+        const supabase = createClient(
+          process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+          process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+        
+        const { data: drafts, error } = await supabase
+          .from('newsletter_drafts')
+          .select('*')
+          .order('created_at', { ascending: false });
+          
+        if (error) {
+          console.error('Error fetching drafts:', error);
+          return res.status(500).json({ error: 'Erreur lors de la récupération des brouillons' });
+        }
+        
+        return res.status(200).json(drafts || []);
+      }
+      
+      // Liste des newsletters (autre logique si nécessaire)
       return res.status(200).json({ success: true, newsletters: [] });
     }
     
     if (req.method === 'POST') {
       const body = await parseBody(req);
+      
+      if (action === 'save') {
+        // Sauvegarder un brouillon
+        const supabase = createClient(
+          process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+          process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+        
+        const { id, subject, content, html_content } = body;
+        
+        if (id) {
+          // Mettre à jour un brouillon existant
+          const { error } = await supabase
+            .from('newsletter_drafts')
+            .update({
+              subject,
+              content,
+              html_content,
+              updated_at: new Date().toISOString()
+            })
+            .eq('id', id);
+            
+          if (error) {
+            console.error('Error updating draft:', error);
+            return res.status(500).json({ error: 'Erreur lors de la mise à jour du brouillon' });
+          }
+          
+          return res.status(200).json({ success: true, message: 'Brouillon mis à jour', id });
+        } else {
+          // Créer un nouveau brouillon
+          const { data, error } = await supabase
+            .from('newsletter_drafts')
+            .insert({
+              subject,
+              content,
+              html_content,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString()
+            })
+            .select()
+            .single();
+            
+          if (error) {
+            console.error('Error creating draft:', error);
+            return res.status(500).json({ error: 'Erreur lors de la création du brouillon' });
+          }
+          
+          return res.status(200).json({ success: true, message: 'Brouillon créé', id: data.id });
+        }
+      }
+      
+      if (action === 'delete') {
+        // Supprimer un brouillon
+        const supabase = createClient(
+          process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+          process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+        
+        const { id } = body;
+        
+        if (!id) {
+          return res.status(400).json({ error: 'ID du brouillon requis' });
+        }
+        
+        const { error } = await supabase
+          .from('newsletter_drafts')
+          .delete()
+          .eq('id', id);
+          
+        if (error) {
+          console.error('Error deleting draft:', error);
+          return res.status(500).json({ error: 'Erreur lors de la suppression du brouillon' });
+        }
+        
+        return res.status(200).json({ success: true, message: 'Brouillon supprimé' });
+      }
+      
       // Logique d'envoi newsletter
       return res.status(200).json({ success: true, message: 'Newsletter envoyée' });
     }
