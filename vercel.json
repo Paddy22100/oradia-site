@@ -1,12 +1,6 @@
 {
   "version": 2,
-  "crons": [
-    {
-      "path": "/api/fenetre/close",
-      "schedule": "0 8 * * *"
-    }
-  ],
-  "redirects": [
+    "redirects": [
     {
       "source": "/index.html",
       "destination": "/",
@@ -32,11 +26,7 @@
     },
     {
       "src": "/api/preorders/progress",
-      "dest": "/api/preorders/progress.js"
-    },
-    {
-      "src": "/api/waitlist",
-      "dest": "/api/waitlist.js"
+      "dest": "/api/admin/index.js"
     },
     {
       "src": "/api/mondial-relay/pickup-points",
@@ -52,7 +42,7 @@
     },
     {
       "src": "/api/fenetre/(.*)",
-      "dest": "/api/fenetre/index.js"
+      "dest": "/api/admin/index.js"
     },
     {
       "src": "/api/(support|health|waitlist|qrng)",
@@ -87,17 +77,11 @@
     "api/create-checkout-session.js": {
       "maxDuration": 30
     },
-    "api/preorders/progress.js": {
-      "maxDuration": 10
-    },
     "api/auth/index.js": {
       "maxDuration": 15
     },
     "api/analyse-tirage.js": {
       "maxDuration": 30
-    },
-    "api/fenetre/index.js": {
-      "maxDuration": 15
     },
     "api/index.js": {
       "maxDuration": 15
