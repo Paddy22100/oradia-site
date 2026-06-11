@@ -200,6 +200,10 @@
                 <i class="fas fa-history w-4 text-center"></i>
                 <span>Journal</span>
             </div>
+            <div class="nav-item" onclick="showTab('costs')" id="nav-costs">
+                <i class="fas fa-coins w-4 text-center"></i>
+                <span>Coûts du site</span>
+            </div>
         </nav>
 
         <!-- Footer sidebar -->
@@ -1095,6 +1099,54 @@
         </section>
         </div><!-- /tab-synchronicity -->
 
+        <!-- ══ ONGLET : COÛTS DU SITE ══ -->
+        <div id="tab-costs" class="tab-panel">
+        <section class="mb-10">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="cormorant text-2xl font-bold text-gold">Coûts du site</h3>
+                    <p class="text-light-gold/50 text-sm mt-1" id="costsPeriodLabel">Estimation du mois en cours</p>
+                </div>
+                <button onclick="loadCosts()" class="bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-lg px-4 py-2 text-sm hover:bg-teal-500/30 transition">
+                    <i class="fas fa-sync-alt mr-1"></i>Actualiser
+                </button>
+            </div>
+
+            <!-- Total estimé -->
+            <div class="rounded-xl p-5 mb-6 border" style="border-color:rgba(212,175,55,0.25);background:rgba(5,20,40,0.5);">
+                <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Estimation totale mensuelle</div>
+                <div class="text-3xl font-bold text-gold" id="costsTotalMonthly">—</div>
+            </div>
+
+            <!-- Usage API -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="costsUsageRow">
+                <div class="stat-card rounded-xl p-5">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Tirages ce mois</div>
+                    <div class="text-2xl font-bold text-teal-300" id="costsTirages">—</div>
+                </div>
+                <div class="stat-card rounded-xl p-5">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Appels Anthropic (Claude)</div>
+                    <div class="text-2xl font-bold text-teal-300" id="costsClaudeCalls">—</div>
+                </div>
+                <div class="stat-card rounded-xl p-5">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Coût Claude (estimé)</div>
+                    <div class="text-2xl font-bold text-gold" id="costsClaudeCost">—</div>
+                </div>
+                <div class="stat-card rounded-xl p-5">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Appels QRNG (ANU)</div>
+                    <div class="text-2xl font-bold text-teal-300" id="costsQrngAnu">—</div>
+                    <div class="text-light-gold/40 text-xs" id="costsQrngFallback"></div>
+                </div>
+            </div>
+
+            <!-- Abonnements fixes -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5">
+                <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider">Abonnements & frais fixes</h4>
+                <div id="costsSubscriptions" class="space-y-3 text-sm text-light-gold/70">—</div>
+            </div>
+        </section>
+        </div><!-- /tab-costs -->
+
     </main>
     </div><!-- /main-content -->
 
@@ -1110,7 +1162,8 @@
             subscriptions:  'Abonnements Tore',
             'single-draws':  'Tirages ponctuels',
             support:         'Support · Témoignages · Suggestions',
-            synchronicity:   'Étude — Synchronicités'
+            synchronicity:   'Étude — Synchronicités',
+            costs:           'Coûts du site'
         };
 
         function showTab(name) {
@@ -1128,6 +1181,7 @@
             if (name === 'single-draws')   loadSingleDraws();
             if (name === 'support')        loadSupportMessages();
             if (name === 'synchronicity')  loadSynchronicity();
+            if (name === 'costs')          loadCosts();
         }
 
         // ── État global
@@ -3116,6 +3170,55 @@
                     if (el.tagName !== 'DIV' || el.id === 'syncKpiRow') return;
                     el.innerHTML = '<span class="text-red-400 text-xs">Erreur</span>';
                 });
+            }
+        }
+
+        async function loadCosts() {
+            const setEl = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+            setEl('costsTotalMonthly', '<span class="animate-pulse">…</span>');
+            setEl('costsTirages',      '<span class="animate-pulse">…</span>');
+            setEl('costsClaudeCalls',  '<span class="animate-pulse">…</span>');
+            setEl('costsClaudeCost',   '<span class="animate-pulse">…</span>');
+            setEl('costsQrngAnu',      '<span class="animate-pulse">…</span>');
+
+            const eur = (n) => `${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
+
+            try {
+                const res  = await adminFetch('/api/admin/data?section=costs');
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+
+                const d = data.data;
+
+                const periodLabel = document.getElementById('costsPeriodLabel');
+                if (periodLabel) periodLabel.textContent = `Estimation pour ${d.period.label}`;
+
+                setEl('costsTotalMonthly', eur(d.totalMonthlyEstimateEur));
+                setEl('costsTirages',      d.usage.tirages);
+                setEl('costsClaudeCalls',  d.usage.claudeApiCalls);
+                setEl('costsClaudeCost',   eur(d.usage.claudeApiCostEstimateEur));
+                setEl('costsQrngAnu',      d.usage.qrng.anu);
+                setEl('costsQrngFallback', d.usage.qrng.fallback > 0 ? `+ ${d.usage.qrng.fallback} fallback` : 'Service gratuit');
+
+                setEl('costsSubscriptions', d.subscriptions.map(s => {
+                    const amount = `${eur(s.amountEur)} / ${s.period === 'annuel' ? 'an' : 'mois'}`;
+                    const detail = s.period === 'annuel'
+                        ? `<div class="text-light-gold/40 text-xs mt-1">Soit ${eur(s.monthlyEquivalentEur)} / mois · dernier paiement le ${new Date(s.lastPaidAt).toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' })}</div>`
+                        : (s.note ? `<div class="text-light-gold/40 text-xs mt-1">${s.note}</div>` : '');
+                    return `
+                        <div class="flex justify-between items-start border-b border-gold/10 pb-3 last:border-0 last:pb-0">
+                            <div>
+                                <div class="text-light-gold/80">${s.name}</div>
+                                ${detail}
+                            </div>
+                            <div class="text-gold font-semibold whitespace-nowrap">${amount}</div>
+                        </div>`;
+                }).join(''));
+
+            } catch (e) {
+                console.error('[Admin] loadCosts error:', e);
+                ['costsTotalMonthly','costsTirages','costsClaudeCalls','costsClaudeCost','costsQrngAnu'].forEach(id =>
+                    setEl(id, '<span class="text-red-400 text-xs">Erreur</span>'));
             }
         }
 

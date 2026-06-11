@@ -422,6 +422,83 @@ async function handleData(req, res) {
     }
 
     // ── Section synchronicité — stats d'étude (#31) ──
+    // ── Section coûts du site (temps réel + abonnements fixes) ──
+    if (section === 'costs') {
+      const now = new Date();
+      const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+
+      // Tirages du mois en cours → proxy du nombre d'appels à l'API Anthropic
+      // (1 appel claude-haiku-4-5 par analyse de tirage générée).
+      const { count: tiragesCount, error: tiragesErr } = await supabase
+        .from('tirages')
+        .select('id', { count: 'exact', head: true })
+        .gte('created_at', startOfMonth);
+      if (tiragesErr) throw tiragesErr;
+
+      // Fenêtres d'observation activées ce mois-ci → proxy du nombre d'appels QRNG (ANU).
+      let qrngAnu = 0, qrngFallback = 0;
+      {
+        const { data: obsRows, error } = await supabase
+          .from('observation_windows')
+          .select('qrng_source')
+          .gte('created_at', startOfMonth);
+        if (!error) {
+          qrngAnu = (obsRows || []).filter(r => r.qrng_source === 'anu').length;
+          qrngFallback = (obsRows || []).filter(r => r.qrng_source && r.qrng_source !== 'anu').length;
+        }
+      }
+
+      // Estimation du coût Anthropic (claude-haiku-4-5) : ~1 500 tokens en entrée
+      // (prompt + contexte des cartes) + jusqu'à 1024 tokens en sortie par analyse.
+      // Tarifs Anthropic (Haiku) : ~0,80 $/M tokens entrée, ~4 $/M tokens sortie.
+      // => coût estimé par appel ≈ 0,80*1500/1e6 + 4*1024/1e6 ≈ 0,0053 $
+      const COST_PER_AI_CALL_USD = 0.0053;
+      const USD_TO_EUR = 0.92;
+      const claudeApiCostEstimate = tiragesCount * COST_PER_AI_CALL_USD * USD_TO_EUR;
+
+      // Abonnements fixes (saisis manuellement, à ajuster ici si les tarifs changent)
+      const CLAUDE_PRO_MONTHLY_EUR = 21.59; // ~20 $/mois
+      const GANDI_DOMAIN_ANNUAL_EUR = 28.78;
+      const GANDI_LAST_PAID_AT = '2026-06-08';
+      const gandiMonthlyEquivalent = GANDI_DOMAIN_ANNUAL_EUR / 12;
+
+      const subscriptions = [
+        {
+          name: 'Claude Pro (abonnement)',
+          amountEur: CLAUDE_PRO_MONTHLY_EUR,
+          period: 'mensuel',
+          note: 'Utilisé pour le développement / usage personnel'
+        },
+        {
+          name: 'Nom de domaine (Gandi)',
+          amountEur: GANDI_DOMAIN_ANNUAL_EUR,
+          period: 'annuel',
+          lastPaidAt: GANDI_LAST_PAID_AT,
+          monthlyEquivalentEur: Math.round(gandiMonthlyEquivalent * 100) / 100
+        }
+      ];
+
+      const totalMonthlyEstimate = claudeApiCostEstimate + CLAUDE_PRO_MONTHLY_EUR + gandiMonthlyEquivalent;
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          period: {
+            start: startOfMonth,
+            label: now.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' })
+          },
+          usage: {
+            tirages: tiragesCount || 0,
+            claudeApiCalls: tiragesCount || 0,
+            claudeApiCostEstimateEur: Math.round(claudeApiCostEstimate * 100) / 100,
+            qrng: { anu: qrngAnu, fallback: qrngFallback, costEur: 0 } // l'API ANU QRNG est gratuite
+          },
+          subscriptions,
+          totalMonthlyEstimateEur: Math.round(totalMonthlyEstimate * 100) / 100
+        }
+      });
+    }
+
     if (section === 'synchronicity') {
       // Tente d'abord avec qrng_source (après migration), sinon sans (fallback gracieux)
       let responses, syncErr;

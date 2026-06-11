@@ -5584,9 +5584,13 @@ function closeToreExitModal(){
         }
 
         // Filet de sécurité : si toutes les cartes sont retournées et que la phase pièce
-        // n'a pas démarré 4s après ce flip, la forcer
+        // n'a pas démarré 4s après ce flip, la forcer.
+        // On vérifie aussi que le message de guidage (carte cosmos) n'est pas en cours
+        // d'affichage/fermeture : sinon la pièce apparaissait dans le bandeau AVANT
+        // que la fenêtre de la carte cosmos ne soit refermée (Palier 2 #18).
         setTimeout(() => {
-          if (!isGuideMessageShown && boardHost) {
+          const guideVisible = guideMessage && getComputedStyle(guideMessage).visibility !== 'hidden';
+          if (!isGuideMessageShown && !guideVisible && boardHost) {
             const total = boardHost.querySelectorAll('.tore-card').length;
             const flipped = boardHost.querySelectorAll('.tore-card.flipped').length;
             if (total > 0 && flipped === total) {
