@@ -427,13 +427,39 @@ async function handleData(req, res) {
       const now = new Date();
       const startOfMonth = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
 
-      // Tirages du mois en cours → proxy du nombre d'appels à l'API Anthropic
-      // (1 appel claude-haiku-4-5 par analyse de tirage générée).
-      const { count: tiragesCount, error: tiragesErr } = await supabase
-        .from('tirages')
-        .select('id', { count: 'exact', head: true })
-        .gte('created_at', startOfMonth);
-      if (tiragesErr) throw tiragesErr;
+      // Importer le tracker d'utilisation API
+      const { getUsageStats } = require('./api-usage-tracker.js');
+
+      // Récupérer les statistiques d'utilisation API réelles
+      let apiStats = {
+        totalCalls: 0,
+        successfulCalls: 0,
+        totalTokens: 0,
+        totalCostEur: 0,
+        byModel: {}
+      };
+
+      try {
+        const statsResult = await getUsageStats(startOfMonth);
+        if (statsResult.success) {
+          apiStats = statsResult.data;
+        }
+      } catch (e) {
+        console.warn('[Admin Data] Erreur récupération stats API:', e.message);
+      }
+
+      // Compter les tirages (utiliser les appels API réussis comme proxy, avec fallback)
+      let tiragesCount = apiStats.successfulCalls;
+      if (tiragesCount === 0) {
+        // Fallback: compter depuis la table tirages
+        const { count: fallbackCount, error: tiragesErr } = await supabase
+          .from('tirages')
+          .select('id', { count: 'exact', head: true })
+          .gte('created_at', startOfMonth);
+        if (!tiragesErr && fallbackCount !== null) {
+          tiragesCount = fallbackCount;
+        }
+      }
 
       // Fenêtres d'observation activées ce mois-ci → proxy du nombre d'appels QRNG (ANU).
       let qrngAnu = 0, qrngFallback = 0;
@@ -448,13 +474,14 @@ async function handleData(req, res) {
         }
       }
 
-      // Estimation du coût Anthropic (claude-haiku-4-5) : ~1 500 tokens en entrée
-      // (prompt + contexte des cartes) + jusqu'à 1024 tokens en sortie par analyse.
-      // Tarifs Anthropic (Haiku) : ~0,80 $/M tokens entrée, ~4 $/M tokens sortie.
-      // => coût estimé par appel ≈ 0,80*1500/1e6 + 4*1024/1e6 ≈ 0,0053 $
-      const COST_PER_AI_CALL_USD = 0.0053;
-      const USD_TO_EUR = 0.92;
-      const claudeApiCostEstimate = tiragesCount * COST_PER_AI_CALL_USD * USD_TO_EUR;
+      // Utiliser le coût réel calculé depuis les tokens, avec fallback sur l'estimation
+      let claudeApiCostEstimate = apiStats.totalCostEur;
+      if (claudeApiCostEstimate === 0) {
+        // Fallback: estimation basée sur le nombre de tirages si pas de données réelles
+        const COST_PER_AI_CALL_USD = 0.0053;
+        const USD_TO_EUR = 0.92;
+        claudeApiCostEstimate = tiragesCount * COST_PER_AI_CALL_USD * USD_TO_EUR;
+      }
 
       // Abonnements fixes (saisis manuellement, à ajuster ici si les tarifs changent)
       const CLAUDE_PRO_MONTHLY_EUR = 21.59; // ~20 $/mois
@@ -489,8 +516,12 @@ async function handleData(req, res) {
           },
           usage: {
             tirages: tiragesCount || 0,
-            claudeApiCalls: tiragesCount || 0,
+            claudeApiCalls: apiStats.totalCalls || 0,
             claudeApiCostEstimateEur: Math.round(claudeApiCostEstimate * 100) / 100,
+            claudeApiTokens: apiStats.totalTokens || 0,
+            claudeApiErrors: apiStats.errorCalls || 0,
+            claudeApiFallbacks: apiStats.fallbackCalls || 0,
+            claudeModels: apiStats.byModel || {},
             qrng: { anu: qrngAnu, fallback: qrngFallback, costEur: 0 } // l'API ANU QRNG est gratuite
           },
           subscriptions,

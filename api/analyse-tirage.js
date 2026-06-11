@@ -9,6 +9,9 @@ const MODELS_FALLBACK = [
     'claude-sonnet-4-5',
 ];
 
+// Importer le tracker d'utilisation (en ESM)
+import { logApiUsage } from '../admin/api-usage-tracker.js';
+
 async function sendModelAlert(failedModel, usedModel) {
     try {
         await fetch('https://api.brevo.com/v3/smtp/email', {
@@ -37,8 +40,9 @@ async function sendModelAlert(failedModel, usedModel) {
     }
 }
 
-async function callAnthropicWithFallback(payload) {
+async function callAnthropicWithFallback(payload, userEmail, clientIP) {
     let firstModel = MODELS_FALLBACK[0];
+    const startTime = Date.now();
     
     for (const model of MODELS_FALLBACK) {
         try {
@@ -55,10 +59,46 @@ async function callAnthropicWithFallback(payload) {
             });
 
             if (response.ok) {
+                const duration = Date.now() - startTime;
+                
+                // Extraire les informations d'utilisation de l'API
+                const usage = response.headers.get('anthropic-ratelimit-usage');
+                let requestTokens = null;
+                let responseTokens = null;
+                
+                try {
+                    // Essayer de parser les tokens depuis le corps de la réponse
+                    const responseClone = response.clone();
+                    const responseData = await responseClone.json();
+                    if (responseData.usage) {
+                        requestTokens = responseData.usage.input_tokens;
+                        responseTokens = responseData.usage.output_tokens;
+                    }
+                } catch (e) {
+                    // Si on ne peut pas extraire les tokens, on continue sans
+                    console.warn('[analyse-tirage] Impossible d\'extraire les tokens:', e.message);
+                }
+                
+                // Logger l'utilisation en arrière-plan (non bloquant)
+                const status = model !== firstModel ? 'fallback' : 'success';
+                logApiUsage({
+                    apiName: 'anthropic-claude',
+                    modelName: model,
+                    requestTokens,
+                    responseTokens,
+                    userEmail,
+                    ipAddress: clientIP,
+                    status,
+                    requestDurationMs: duration
+                }).catch(err => {
+                    console.warn('[analyse-tirage] Erreur logging API usage:', err.message);
+                });
+                
                 if (model !== firstModel) {
                     // Fallback activé : envoyer alerte email (non bloquant)
                     sendModelAlert(firstModel, model);
                 }
+                
                 return response;
             }
 
@@ -67,9 +107,43 @@ async function callAnthropicWithFallback(payload) {
                 console.warn(`[analyse-tirage] Modèle ${model} introuvable, essai suivant...`);
                 continue;
             }
+            
+            // Logger l'erreur
+            const duration = Date.now() - startTime;
+            logApiUsage({
+                apiName: 'anthropic-claude',
+                modelName: model,
+                requestTokens: null,
+                responseTokens: null,
+                userEmail,
+                ipAddress: clientIP,
+                status: 'error',
+                errorMessage: err.error?.message || 'Unknown error',
+                requestDurationMs: duration
+            }).catch(err => {
+                console.warn('[analyse-tirage] Erreur logging API error:', err.message);
+            });
+            
             return response;
         } catch (e) {
             console.warn(`[analyse-tirage] Erreur modèle ${model}:`, e.message);
+            
+            // Logger l'exception
+            const duration = Date.now() - startTime;
+            logApiUsage({
+                apiName: 'anthropic-claude',
+                modelName: model,
+                requestTokens: null,
+                responseTokens: null,
+                userEmail,
+                ipAddress: clientIP,
+                status: 'error',
+                errorMessage: e.message,
+                requestDurationMs: duration
+            }).catch(err => {
+                console.warn('[analyse-tirage] Erreur logging API exception:', err.message);
+            });
+            
             continue;
         }
     }
@@ -264,7 +338,7 @@ IMPORTANT : Utilise une formulation comme "Une fenêtre de 3 jours est recommand
         max_tokens: 1024,
         temperature: 0.7,
         messages: [{ role: 'user', content: userPrompt }],
-    });
+    }, userEmail, clientIP);
 
     if (!anthropicResponse.ok) {
       const errText = await anthropicResponse.text();

@@ -1125,17 +1125,34 @@
                     <div class="text-2xl font-bold text-teal-300" id="costsTirages">—</div>
                 </div>
                 <div class="stat-card rounded-xl p-5">
-                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Appels Anthropic (Claude)</div>
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Appels Claude API</div>
                     <div class="text-2xl font-bold text-teal-300" id="costsClaudeCalls">—</div>
+                    <div class="text-light-gold/40 text-xs mt-1">
+                        <span id="costsClaudeErrors"></span>
+                        <span id="costsClaudeFallbacks"></span>
+                    </div>
                 </div>
                 <div class="stat-card rounded-xl p-5">
-                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Coût Claude (estimé)</div>
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Tokens Claude</div>
+                    <div class="text-2xl font-bold text-teal-300" id="costsClaudeTokens">—</div>
+                    <div class="text-light-gold/40 text-xs mt-1" id="costsClaudeModels"></div>
+                </div>
+                <div class="stat-card rounded-xl p-5">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Coût Claude réel</div>
                     <div class="text-2xl font-bold text-gold" id="costsClaudeCost">—</div>
                 </div>
+            </div>
+
+            <!-- Détails API et QRNG -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                 <div class="stat-card rounded-xl p-5">
                     <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Appels QRNG (ANU)</div>
                     <div class="text-2xl font-bold text-teal-300" id="costsQrngAnu">—</div>
                     <div class="text-light-gold/40 text-xs" id="costsQrngFallback"></div>
+                </div>
+                <div class="stat-card rounded-xl p-5">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Modèles Claude utilisés</div>
+                    <div id="costsClaudeModelsDetail" class="text-sm text-light-gold/70 space-y-1">—</div>
                 </div>
             </div>
 
@@ -3179,6 +3196,7 @@
             setEl('costsTirages',      '<span class="animate-pulse">…</span>');
             setEl('costsClaudeCalls',  '<span class="animate-pulse">…</span>');
             setEl('costsClaudeCost',   '<span class="animate-pulse">…</span>');
+            setEl('costsClaudeTokens', '<span class="animate-pulse">…</span>');
             setEl('costsQrngAnu',      '<span class="animate-pulse">…</span>');
 
             const eur = (n) => `${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
@@ -3197,8 +3215,37 @@
                 setEl('costsTirages',      d.usage.tirages);
                 setEl('costsClaudeCalls',  d.usage.claudeApiCalls);
                 setEl('costsClaudeCost',   eur(d.usage.claudeApiCostEstimateEur));
+                setEl('costsClaudeTokens', (d.usage.claudeApiTokens || 0).toLocaleString('fr-FR'));
                 setEl('costsQrngAnu',      d.usage.qrng.anu);
                 setEl('costsQrngFallback', d.usage.qrng.fallback > 0 ? `+ ${d.usage.qrng.fallback} fallback` : 'Service gratuit');
+
+                // Afficher les erreurs et fallbacks Claude
+                const errorsEl = document.getElementById('costsClaudeErrors');
+                const fallbacksEl = document.getElementById('costsClaudeFallbacks');
+                if (errorsEl) {
+                    errorsEl.innerHTML = d.usage.claudeApiErrors > 0 
+                        ? `<span class="text-red-400">⚠ ${d.usage.claudeApiErrors} erreurs</span>` 
+                        : '';
+                }
+                if (fallbacksEl) {
+                    fallbacksEl.innerHTML = d.usage.claudeApiFallbacks > 0 
+                        ? `<span class="text-yellow-400">↻ ${d.usage.claudeApiFallbacks} fallbacks</span>` 
+                        : '';
+                }
+
+                // Afficher les modèles utilisés
+                const modelsDetailEl = document.getElementById('costsClaudeModelsDetail');
+                if (modelsDetailEl && d.usage.claudeModels) {
+                    const models = Object.entries(d.usage.claudeModels)
+                        .map(([model, stats]) => 
+                            `<div class="flex justify-between">
+                                <span class="text-light-gold/60">${model}:</span>
+                                <span>${stats.calls} appels • ${stats.tokens.toLocaleString('fr-FR')} tokens • ${eur(stats.costEur)}</span>
+                            </div>`
+                        )
+                        .join('');
+                    modelsDetailEl.innerHTML = models || '<div class="text-light-gold/40">Aucun modèle utilisé</div>';
+                }
 
                 setEl('costsSubscriptions', d.subscriptions.map(s => {
                     const amount = `${eur(s.amountEur)} / ${s.period === 'annuel' ? 'an' : 'mois'}`;
@@ -3217,7 +3264,7 @@
 
             } catch (e) {
                 console.error('[Admin] loadCosts error:', e);
-                ['costsTotalMonthly','costsTirages','costsClaudeCalls','costsClaudeCost','costsQrngAnu'].forEach(id =>
+                ['costsTotalMonthly','costsTirages','costsClaudeCalls','costsClaudeCost','costsClaudeTokens','costsQrngAnu'].forEach(id =>
                     setEl(id, '<span class="text-red-400 text-xs">Erreur</span>'));
             }
         }
