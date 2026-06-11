@@ -164,7 +164,7 @@
             </div>
             <div class="nav-item" onclick="showTab('waitlist')" id="nav-waitlist">
                 <i class="fas fa-users w-4 text-center"></i>
-                <span>Waitlist</span>
+                <span>Contacts</span>
                 <span class="ml-auto text-xs bg-blue-500/20 text-blue-400 rounded-full px-2 py-0.5" id="nav-badge-waitlist"></span>
             </div>
 
@@ -327,7 +327,7 @@
                         <div class="text-xs text-light-gold/50 uppercase tracking-wider">+25%</div>
                     </div>
                     <div class="text-3xl font-bold text-gold mb-1" id="waitlistCount">-</div>
-                    <p class="text-light-gold text-sm">Waitlist</p>
+                    <p class="text-light-gold text-sm">Contacts</p>
                     <div class="mt-2 h-1 bg-blue-500/20 rounded-full overflow-hidden">
                         <div class="h-full bg-blue-500/60 rounded-full transition-all duration-1000" style="width: 0%" id="waitlistProgress"></div>
                     </div>
@@ -385,7 +385,7 @@
                         <i class="fas fa-sync text-orange-500"></i>
                         <div>
                             <div class="text-lg font-bold text-gold" id="waitlistNotSynced">-</div>
-                            <p class="text-light-gold text-sm">Waitlist non sync Brevo</p>
+                            <p class="text-light-gold text-sm">Contacts non sync Brevo</p>
                         </div>
                     </div>
                 </div>
@@ -409,7 +409,7 @@
                     <p class="text-gold text-xl font-bold" id="averageBasket">-</p>
                 </div>
                 <div class="stat-card rounded-xl p-4">
-                    <p class="text-light-gold/70 text-xs uppercase tracking-wider">Conversion waitlist</p>
+                    <p class="text-light-gold/70 text-xs uppercase tracking-wider">Conversion contacts</p>
                     <p class="text-gold text-xl font-bold" id="conversionRate">-</p>
                 </div>
             </div>
@@ -1103,7 +1103,7 @@
             overview:       'Tableau de bord',
             preorders:      'Précommandes',
             donors:         'Dons',
-            waitlist:       'Waitlist',
+            waitlist:       'Contacts',
             newsletter:     'Newsletter',
             journal:        'Journal admin',
             subscriptions:  'Abonnements Tore',
@@ -1837,7 +1837,7 @@
                 alerts.push({
                     level: 'info',
                     icon: 'fa-rotate',
-                    text: `${data.waitlist.notSynced} contact(s) waitlist non synchronisé(s) Brevo.`
+                    text: `${data.waitlist.notSynced} contact(s) non synchronisé(s) Brevo.`
                 });
             }
 
