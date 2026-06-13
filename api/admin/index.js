@@ -8,6 +8,8 @@ const jwt = require('jsonwebtoken');
 const { parse: parseCookie, serialize: serializeCookie } = require('cookie');
 const xml2js = require('xml2js');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const { sendShippingEmail, sendExportEmail } = require('../../lib/brevo-order-email.js');
 
 // Tables exportables (récap mensuel preorders/donors/tirages)
@@ -1076,13 +1078,20 @@ const NL_TON_LABELS = {
 function buildGeneratePrompt(body) {
   const { type, intention, source, ton, energie, idees_bonus, promo_type, promo_details, cta_text } = body;
 
+  const voiceRules = [
+    `Tu écris au nom d'une personne réelle, la créatrice d'ORADIA (oracle de cartes "Le Tore"), pas au nom d'une marque ou d'une équipe.`,
+    `Écris à la première personne du singulier ("je", "mon", "ma", "moi") — jamais "nous", "notre" ou "l'équipe Oradia".`,
+    `Phrases courtes et directes. Vocabulaire simple, concret, parlé. Pas de tournures alambiquées, pas de jargon marketing, pas de superlatifs ("incroyable", "magique", "extraordinaire").`,
+    `Termine par une formule de signature simple à la première personne (ex : "À très vite,") sans nom de marque ni "L'équipe ORADIA" — laisse la place libre pour une signature personnelle.`
+  ];
+
   if (type === 'promo') {
     return [
-      `Tu es la voix de la marque ORADIA (oracle de cartes "Le Tore", boussole intérieure, univers contemplatif et incarné).`,
+      ...voiceRules,
       `Rédige un email promotionnel pour : ${PROMO_TYPE_LABELS[promo_type] || promo_type || 'une communication spéciale'}.`,
       `Sujet / annonce : ${intention}`,
       promo_details ? `Détails à intégrer : ${promo_details}` : '',
-      `Ton : chaleureux et incarné, fidèle à l'univers contemplatif d'Oradia, sans superlatifs marketing excessifs, mais clair sur l'offre/l'annonce.`,
+      `Ton : chaleureux, sincère et incarné — comme si tu écrivais à un ami, mais clair sur l'offre/l'annonce.`,
       `Le bouton d'action de l'email s'intitule : "${cta_text || 'Découvrir'}" — n'y fais pas explicitement référence dans le texte.`,
       ``,
       `Réponds STRICTEMENT dans ce format, sans rien ajouter avant ou après :`,
@@ -1093,7 +1102,7 @@ function buildGeneratePrompt(body) {
   }
 
   return [
-    `Tu es la voix de la marque ORADIA (oracle de cartes "Le Tore", boussole intérieure, univers contemplatif, poétique et incarné).`,
+    ...voiceRules,
     `Rédige la newsletter hebdomadaire sur le thème : ${intention}.`,
     source === 'conte'
       ? `Inspire-toi d'un conte initiatique pour illustrer le propos.`
@@ -1174,6 +1183,32 @@ function nlSupabase() {
     process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
     process.env.SUPABASE_SERVICE_ROLE_KEY
   );
+}
+
+// Traduit une réponse d'erreur Brevo en message clair (clé API / liste / plan)
+async function brevoErrorMessage(r, context) {
+  const rawText = await r.text();
+  let code = null, brevoMsg = null;
+  try {
+    const parsed = JSON.parse(rawText);
+    code = parsed.code || null;
+    brevoMsg = parsed.message || null;
+  } catch (_) { /* réponse non JSON */ }
+
+  let diagnostic;
+  if (r.status === 401 || code === 'unauthorized') {
+    diagnostic = "Clé API Brevo invalide ou manquante. Vérifie la variable BREVO_API_KEY sur Vercel.";
+  } else if (r.status === 403 || code === 'permission_denied' || code === 'not_enough_credits') {
+    diagnostic = "Ton plan Brevo ne permet pas cette action (campagnes email ou crédits insuffisants). Vérifie ton plan dans Brevo → Paramètres → Plans et facturation.";
+  } else if (r.status === 404 || code === 'not_found') {
+    diagnostic = "Liste de contacts introuvable. Vérifie que la liste ID 5 existe bien dans Brevo → Contacts → Listes.";
+  } else if (code === 'invalid_parameter' && /sender/i.test(brevoMsg || '')) {
+    diagnostic = "L'adresse expéditrice contact@oradia.fr n'est pas un expéditeur vérifié dans Brevo. Vérifie-la dans Brevo → Expéditeurs.";
+  } else {
+    diagnostic = "Erreur inattendue de l'API Brevo.";
+  }
+
+  return `${context} : ${diagnostic}${brevoMsg ? ` (Brevo : ${brevoMsg})` : ''}`;
 }
 
 async function handleNewsletter(req, res) {
@@ -1381,7 +1416,7 @@ async function handleNewsletter(req, res) {
             })
           });
           if (!r.ok) {
-            return res.status(502).json({ error: 'Erreur envoi du test Brevo', details: await r.text() });
+            return res.status(502).json({ error: await brevoErrorMessage(r, "Erreur lors de l'envoi du test") });
           }
           return res.status(200).json({ success: true });
         }
@@ -1399,7 +1434,7 @@ async function handleNewsletter(req, res) {
           })
         });
         if (!campRes.ok) {
-          return res.status(502).json({ error: 'Erreur création de la campagne Brevo', details: await campRes.text() });
+          return res.status(502).json({ error: await brevoErrorMessage(campRes, "Erreur lors de la création de la campagne") });
         }
         const camp = await campRes.json();
 
@@ -1408,7 +1443,7 @@ async function handleNewsletter(req, res) {
           headers: { 'api-key': BREVO_API_KEY }
         });
         if (!sendRes.ok) {
-          return res.status(502).json({ error: "Erreur lors de l'envoi de la campagne Brevo", details: await sendRes.text() });
+          return res.status(502).json({ error: await brevoErrorMessage(sendRes, "Erreur lors du lancement de l'envoi") });
         }
 
         await supabase
@@ -1430,19 +1465,89 @@ async function handleNewsletter(req, res) {
 }
 
 // ── NEWSLETTER IMAGES ───────────────────────────────────────────────────
+// Images "produit" : visuels Oradia déjà disponibles sur le site, réutilisables dans les communications
+const NL_PRODUIT_IMAGES = [
+  { file: 'Coffret.webp', name: 'Coffret Oradia' },
+  { file: 'plateau.webp', name: 'Plateau du Tore' },
+  { file: 'apercu-hd.webp', name: "Aperçu de l'oracle" },
+  { file: 'oradia-hero-4k.webp', name: 'Visuel Oradia' },
+  { file: 'coin-oradia.webp', name: 'Détail Oradia' }
+];
+
+const NL_AMBIANCE_DIR = path.join(process.cwd(), 'images', 'newsletter', 'ambiance');
+
 async function handleNewsletterImages(req, res) {
   try {
     verifyAdminAuth(req);
-    
+
     if (req.method === 'GET') {
       return res.status(200).json({ success: true, images: [] });
     }
-    
+
     if (req.method === 'POST') {
-      // Upload d'image
-      return res.status(200).json({ success: true, message: 'Image uploadée' });
+      const body = await new Promise((resolve, reject) => {
+        let d = '';
+        req.on('data', c => d += c);
+        req.on('end', () => { try { resolve(d ? JSON.parse(d) : {}); } catch (e) { reject(e); } });
+        req.on('error', reject);
+      });
+
+      // Action "save" : utilisée pour les images Unsplash, pas de persistance possible
+      // sur Vercel (filesystem en lecture seule) — on renvoie l'URL d'origine telle quelle.
+      if (body.action === 'save') {
+        return res.status(200).json({ success: false });
+      }
+
+      // 1. Images produit (assets statiques du site)
+      const produit = NL_PRODUIT_IMAGES
+        .filter(img => fs.existsSync(path.join(process.cwd(), 'images', img.file)))
+        .map(img => ({ path: `/images/${img.file}`, name: img.name, source: 'local' }));
+
+      // 2. Ma bibliothèque (images déjà collectées pour les newsletters)
+      let ambiance_locale = [];
+      try {
+        const allFiles = fs.readdirSync(NL_AMBIANCE_DIR).filter(f => /\.(webp|jpe?g|png)$/i.test(f));
+        const basenames = [...new Set(allFiles.map(f => f.replace(/\.(webp|jpe?g|png)$/i, '')))];
+        ambiance_locale = basenames.map(base => {
+          const file = allFiles.find(f => f === base + '.webp') || allFiles.find(f => f.startsWith(base + '.'));
+          return {
+            path: `/images/newsletter/ambiance/${file}`,
+            name: base.replace(/[_-]+/g, ' '),
+            source: 'local'
+          };
+        });
+      } catch (e) {
+        console.error('Erreur lecture dossier ambiance:', e.message);
+      }
+
+      // 3. Unsplash (uniquement si une clé API est configurée)
+      let unsplash = [];
+      const UNSPLASH_KEY = process.env.UNSPLASH_ACCESS_KEY;
+      if (UNSPLASH_KEY) {
+        try {
+          const query = body.theme_keywords || body.intention || 'contemplation';
+          const r = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=6&orientation=landscape`, {
+            headers: { Authorization: `Client-ID ${UNSPLASH_KEY}` }
+          });
+          if (r.ok) {
+            const data = await r.json();
+            unsplash = (data.results || []).map(photo => ({
+              path: photo.urls.regular,
+              thumb: photo.urls.small,
+              name: photo.alt_description || 'Photo Unsplash',
+              source: 'unsplash',
+              download_url: photo.links.download_location,
+              filename: `unsplash_${photo.id}.jpg`
+            }));
+          }
+        } catch (e) {
+          console.error('Erreur Unsplash:', e.message);
+        }
+      }
+
+      return res.status(200).json({ success: true, produit, ambiance_locale, unsplash });
     }
-    
+
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
     console.error('Newsletter images error:', error);

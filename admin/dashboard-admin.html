@@ -71,7 +71,7 @@
         /* ── Layout sidebar ── */
         .sidebar {
             width: 240px;
-            min-height: 100vh;
+            height: 100vh;
             background: linear-gradient(180deg, #040e1e 0%, #051428 100%);
             border-right: 1px solid rgba(212,175,55,0.15);
             position: fixed;
@@ -2940,7 +2940,7 @@
                         subject: document.getElementById('nl-subject').value.trim() })
                 });
                 const data = await res.json();
-                if (!res.ok) throw new Error((data.error || 'Erreur') + (data.details ? ' — ' + JSON.stringify(data.details) : ''));
+                if (!res.ok) throw new Error(data.error || 'Erreur');
                 nlStatus('success', 'Email de test envoyé à ' + email + ' ✓');
             } catch(e) { nlStatus('error', e.message); }
         }
