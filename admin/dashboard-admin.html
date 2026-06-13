@@ -189,7 +189,6 @@
             <div class="nav-item" onclick="showTab('synchronicity')" id="nav-synchronicity">
                 <i class="fas fa-atom w-4 text-center"></i>
                 <span>Synchronicités</span>
-                <span class="ml-auto text-xs bg-teal-500/20 text-teal-300 rounded-full px-2 py-0.5" id="nav-badge-synchronicity"></span>
             </div>
             <div class="nav-item" onclick="showTab('support')" id="nav-support">
                 <i class="fas fa-inbox w-4 text-center"></i>
@@ -249,6 +248,63 @@
                 </button>
                 <button id="shippingModalConfirm" class="flex-1 px-4 py-2 bg-gold text-night-blue font-semibold rounded-lg hover:bg-light-gold transition text-sm">
                     <i class="fas fa-shipping-fast mr-2"></i>Confirmer
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="ordersPdfModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm">
+        <div class="bg-[#0a1628] border border-gold/30 rounded-xl p-8 w-full max-w-md mx-4 shadow-2xl">
+            <h3 class="text-gold font-bold text-xl mb-2" style="font-family:'Cormorant Garamond',serif;">Récapitulatif PDF des commandes</h3>
+            <p class="text-light-gold/70 text-sm mb-6">Choisissez les commandes à inclure dans le récapitulatif. Une fenêtre d'impression s'ouvrira — utilisez "Enregistrer en PDF" comme destination.</p>
+
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-light-gold/80 text-sm mb-1">Statut de paiement</label>
+                    <select id="ordersPdfPaidStatus" class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-4 py-2 focus:outline-none focus:border-gold text-sm">
+                        <option value="all">Tous</option>
+                        <option value="completed">Payées</option>
+                        <option value="pending">En attente</option>
+                        <option value="failed">Échouées</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-light-gold/80 text-sm mb-1">Statut de livraison</label>
+                    <select id="ordersPdfShippingStatus" class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-4 py-2 focus:outline-none focus:border-gold text-sm">
+                        <option value="all">Tous</option>
+                        <option value="shipped">Expédiées</option>
+                        <option value="pending">En attente d'expédition</option>
+                        <option value="pending_label">Attente étiquette</option>
+                        <option value="label_created">Étiquette créée</option>
+                        <option value="not_required">Non requis (remise en main propre)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-light-gold/80 text-sm mb-1">Période</label>
+                    <select id="ordersPdfPeriod" class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-4 py-2 focus:outline-none focus:border-gold text-sm">
+                        <option value="all">Toutes périodes</option>
+                        <option value="today">Aujourd'hui</option>
+                        <option value="7d">7 derniers jours</option>
+                        <option value="30d">30 derniers jours</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-light-gold/80 text-sm mb-1">Offre</label>
+                    <select id="ordersPdfOffer" class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-4 py-2 focus:outline-none focus:border-gold text-sm">
+                        <option value="all">Toutes offres</option>
+                        <option value="standard">Standard</option>
+                        <option value="guidance-incluse">Guidance incluse</option>
+                        <option value="edition-signature">Édition signature</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button id="ordersPdfCancel" class="flex-1 px-4 py-2 border border-gold/30 text-light-gold rounded-lg hover:bg-gold/10 transition text-sm">
+                    Annuler
+                </button>
+                <button id="ordersPdfGenerate" class="flex-1 px-4 py-2 bg-gold text-night-blue font-semibold rounded-lg hover:bg-light-gold transition text-sm">
+                    <i class="fas fa-file-pdf mr-2"></i>Générer le PDF
                 </button>
             </div>
         </div>
@@ -501,6 +557,9 @@
                     </button>
                     <button id="exportMondialRelayBtn" class="bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition font-semibold">
                         <i class="fas fa-truck mr-2"></i>Export Mondial Relay
+                    </button>
+                    <button id="openOrdersPdfBtn" class="bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition font-semibold">
+                        <i class="fas fa-file-pdf mr-2"></i>Récap PDF
                     </button>
                 </div>
             </div>
@@ -1515,11 +1574,6 @@
                 if (supText) supText.textContent = `${sup.newCount} nouveau${sup.newCount > 1 ? 'x' : ''} message${sup.newCount > 1 ? 's' : ''} de support en attente`;
             }
 
-            // ── Synchronicités — badge overview (#31) ──
-            const sync = data.synchronicity || {};
-            const syncNavBadge = document.getElementById('nav-badge-synchronicity');
-            if (syncNavBadge && sync.total) syncNavBadge.textContent = sync.total;
-
             // ── Camembert revenus (#29) ──
             updatePieChart(data.global?.breakdown || {});
         }
@@ -1752,6 +1806,134 @@
         function exportContacts(format = 'standard') {
             const qs = format === 'mondial-relay' ? '?format=mondial-relay' : '';
             window.location.href = `/api/admin/contacts-export${qs}`;
+        }
+
+        // Générer un récapitulatif PDF des commandes (filtré) — via la boîte de dialogue d'impression du navigateur
+        async function generateOrdersPdf() {
+            const paidStatus     = document.getElementById('ordersPdfPaidStatus').value;
+            const shippingStatus = document.getElementById('ordersPdfShippingStatus').value;
+            const period         = document.getElementById('ordersPdfPeriod').value;
+            const offer          = document.getElementById('ordersPdfOffer').value;
+
+            const generateBtn = document.getElementById('ordersPdfGenerate');
+            const originalLabel = generateBtn.innerHTML;
+            generateBtn.disabled = true;
+            generateBtn.innerHTML = '<span class="animate-pulse">Génération…</span>';
+
+            try {
+                // Récupère l'ensemble des précommandes (toutes pages)
+                let all = [];
+                let page = 1;
+                const limit = 200;
+                while (true) {
+                    const res = await adminFetch(`/api/admin/data?section=preorders&page=${page}&limit=${limit}`);
+                    const data = await res.json();
+                    if (!data.success) throw new Error(data.error || 'Erreur de chargement');
+                    all = all.concat(data.data || []);
+                    if (!data.pagination || page >= data.pagination.pages) break;
+                    page++;
+                }
+
+                // Filtres
+                const now = Date.now();
+                const day1  = 24 * 60 * 60 * 1000;
+                const day7  = 7  * day1;
+                const day30 = 30 * day1;
+
+                const filtered = all.filter(o => {
+                    if (paidStatus !== 'all' && o.paid_status !== paidStatus) return false;
+                    if (shippingStatus !== 'all' && (o.shipping_status || 'pending') !== shippingStatus) return false;
+                    if (offer !== 'all' && o.offer !== offer) return false;
+                    if (period !== 'all') {
+                        const age = now - new Date(o.created_at).getTime();
+                        if (period === 'today' && age > day1) return false;
+                        if (period === '7d' && age > day7) return false;
+                        if (period === '30d' && age > day30) return false;
+                    }
+                    return true;
+                });
+
+                const totalAmount = filtered.reduce((sum, o) => sum + (Number(o.amount_total) || 0), 0);
+                const countByPaidStatus = { completed: 0, pending: 0, failed: 0 };
+                const countByShippingStatus = { shipped: 0, pending: 0, pending_label: 0, label_created: 0, not_required: 0 };
+                filtered.forEach(o => {
+                    if (countByPaidStatus[o.paid_status] !== undefined) countByPaidStatus[o.paid_status]++;
+                    const ss = o.shipping_status || 'pending';
+                    if (countByShippingStatus[ss] !== undefined) countByShippingStatus[ss]++;
+                });
+
+                const filterLabels = [];
+                if (paidStatus !== 'all') filterLabels.push(`Paiement : ${getStatusLabelFr(paidStatus)}`);
+                if (shippingStatus !== 'all') filterLabels.push(`Livraison : ${getShippingStatusLabel(shippingStatus)}`);
+                if (period !== 'all') filterLabels.push(`Période : ${{ today: 'Aujourd\'hui', '7d': '7 derniers jours', '30d': '30 derniers jours' }[period]}`);
+                if (offer !== 'all') filterLabels.push(`Offre : ${offer}`);
+
+                const rowsHtml = filtered.map(o => `
+                    <tr>
+                        <td>${o.created_at_fr || formatDate(o.created_at)}</td>
+                        <td>${o.email || '-'}</td>
+                        <td>${o.full_name || '-'}</td>
+                        <td>${o.offer || '-'}</td>
+                        <td>${formatCurrency(o.amount_total)}</td>
+                        <td>${getStatusLabelFr(o.paid_status)}</td>
+                        <td>${getShippingStatusLabel(o.shipping_status)}</td>
+                        <td>${o.tracking_number || '-'}</td>
+                    </tr>`).join('');
+
+                const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+                <title>Récapitulatif des commandes — Oradia</title>
+                <style>
+                    body { font-family: 'Georgia', serif; color: #2d2a1e; margin: 32px; }
+                    h1 { color: #8b6914; font-size: 22px; margin-bottom: 4px; }
+                    .meta { color: #777; font-size: 12px; margin-bottom: 20px; }
+                    .summary { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
+                    .summary div { border: 1px solid #d4af37; border-radius: 8px; padding: 10px 16px; font-size: 13px; min-width: 140px; }
+                    .summary strong { display: block; font-size: 18px; color: #8b6914; }
+                    table { width: 100%; border-collapse: collapse; font-size: 11px; }
+                    th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
+                    th { background: #fffbef; color: #8b6914; text-transform: uppercase; font-size: 10px; }
+                    tr:nth-child(even) { background: #fdfbf5; }
+                    .filters { font-size: 12px; color: #555; margin-bottom: 16px; }
+                </style></head><body>
+                    <h1>Récapitulatif des commandes — Oracle Oradia</h1>
+                    <div class="meta">Généré le ${new Date().toLocaleString('fr-FR')}</div>
+                    ${filterLabels.length ? `<div class="filters"><strong>Filtres appliqués :</strong> ${filterLabels.join(' · ')}</div>` : ''}
+                    <div class="summary">
+                        <div>Commandes<strong>${filtered.length}</strong></div>
+                        <div>Montant total<strong>${formatCurrency(totalAmount)}</strong></div>
+                        <div>Payées<strong>${countByPaidStatus.completed}</strong></div>
+                        <div>En attente<strong>${countByPaidStatus.pending}</strong></div>
+                        <div>Échouées<strong>${countByPaidStatus.failed}</strong></div>
+                        <div>Expédiées<strong>${countByShippingStatus.shipped}</strong></div>
+                    </div>
+                    <table>
+                        <thead><tr>
+                            <th>Date</th><th>Email</th><th>Nom</th><th>Offre</th><th>Montant</th>
+                            <th>Paiement</th><th>Livraison</th><th>Tracking</th>
+                        </tr></thead>
+                        <tbody>${rowsHtml}</tbody>
+                    </table>
+                    <script>window.onload = function(){ window.print(); }<\/script>
+                </body></html>`;
+
+                const w = window.open('', '_blank', 'width=1000,height=800');
+                w.document.write(html);
+                w.document.close();
+
+                document.getElementById('ordersPdfModal').classList.add('hidden');
+                document.getElementById('ordersPdfModal').classList.remove('flex');
+            } catch (e) {
+                console.error('[Admin] generateOrdersPdf error:', e);
+                alert('Erreur lors de la génération du récapitulatif : ' + e.message);
+            } finally {
+                generateBtn.disabled = false;
+                generateBtn.innerHTML = originalLabel;
+            }
+        }
+
+        function getStatusLabelFr(status) {
+            const labels = { completed: 'Payée', pending: 'En attente', failed: 'Échouée' };
+            return labels[status] || status || '-';
         }
 
         function copyTracking(trackingNumber, triggerEl) {
@@ -2068,7 +2250,26 @@
             if (exportMondialRelayBtn) {
                 exportMondialRelayBtn.addEventListener('click', () => exportContacts('mondial-relay'));
             }
-            
+
+            const openOrdersPdfBtn = document.getElementById('openOrdersPdfBtn');
+            if (openOrdersPdfBtn) {
+                openOrdersPdfBtn.addEventListener('click', () => {
+                    document.getElementById('ordersPdfModal').classList.remove('hidden');
+                    document.getElementById('ordersPdfModal').classList.add('flex');
+                });
+            }
+            const ordersPdfCancel = document.getElementById('ordersPdfCancel');
+            if (ordersPdfCancel) {
+                ordersPdfCancel.addEventListener('click', () => {
+                    document.getElementById('ordersPdfModal').classList.add('hidden');
+                    document.getElementById('ordersPdfModal').classList.remove('flex');
+                });
+            }
+            const ordersPdfGenerate = document.getElementById('ordersPdfGenerate');
+            if (ordersPdfGenerate) {
+                ordersPdfGenerate.addEventListener('click', generateOrdersPdf);
+            }
+
             const logoutBtn = document.getElementById('logoutBtn');
             if (logoutBtn) {
                 logoutBtn.addEventListener('click', logout);
@@ -3099,9 +3300,6 @@
                     }
                 }
 
-                // Badge nav
-                const badge = document.getElementById('nav-badge-synchronicity');
-                if (badge) badge.textContent = d.total > 0 ? d.total : '';
 
                 // Distribution scores — barres verticales proportionnelles
                 const maxCount = Math.max(...d.scoreDistrib.map(s => s.count), 1);
