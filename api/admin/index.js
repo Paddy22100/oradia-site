@@ -8,6 +8,7 @@ const jwt = require('jsonwebtoken');
 const { parse: parseCookie, serialize: serializeCookie } = require('cookie');
 const xml2js = require('xml2js');
 const crypto = require('crypto');
+const { sendBrevoEmail } = require('../../lib/brevo-order-email.js');
 
 // Configuration Mondial Relay
 const MONDIAL_RELAY_API1_URL =
@@ -66,7 +67,16 @@ function verifyAdminAuth(req) {
   }
 
   if (!token) { const e = new Error('Session non trouvée'); e.statusCode = 401; throw e; }
-  const decoded = jwt.verify(token, process.env.ADMIN_SESSION_SECRET);
+
+  let decoded;
+  try {
+    decoded = jwt.verify(token, process.env.ADMIN_SESSION_SECRET);
+  } catch (err) {
+    const e = new Error('Session expirée, merci de vous reconnecter');
+    e.statusCode = 401;
+    throw e;
+  }
+
   if (decoded.type !== 'admin') { const e = new Error('Type de session invalide'); e.statusCode = 401; throw e; }
   const sessionAge = Math.floor((Date.now() - decoded.loginTime) / 1000 / 60);
   if (sessionAge > 120) { const e = new Error('Session expirée'); e.statusCode = 401; throw e; }
@@ -255,6 +265,38 @@ async function handleData(req, res) {
 
       if (action === 'resend_code' && subscriptionId) {
         return res.status(200).json({ success: true, emailSent: false, message: 'Fonction email non configurée' });
+      }
+
+      if (action === 'resend-order-email' && body.orderId) {
+        const table = body.table === 'donors' ? 'donors' : 'preorders';
+
+        const { data: order, error: fetchError } = await supabase
+          .from(table)
+          .select('*')
+          .eq('id', body.orderId)
+          .maybeSingle();
+
+        if (fetchError) throw fetchError;
+        if (!order) return res.status(404).json({ error: 'Commande introuvable' });
+        if (!order.email) return res.status(400).json({ error: 'Aucun email associé à cette commande' });
+
+        const emailSent = await sendBrevoEmail({
+          toEmail: order.email,
+          toName: order.full_name || (table === 'donors' ? 'Ami(e) d\'ORADIA' : 'Client ORADIA'),
+          offer: order.offer || (table === 'donors' ? 'contribution-libre' : ''),
+          amountTotal: Number(order.amount_total).toFixed(2),
+          invoiceUrl: order.stripe_invoice_url || null
+        });
+
+        if (!emailSent) return res.status(502).json({ error: 'Envoi de l\'email échoué' });
+
+        const { error: updateError } = await supabase
+          .from(table)
+          .update({ email_sent_at: new Date().toISOString() })
+          .eq('id', body.orderId);
+        if (updateError) throw updateError;
+
+        return res.status(200).json({ success: true, emailSent: true });
       }
 
       return res.status(400).json({ error: 'Action invalide' });
