@@ -8,7 +8,46 @@ const jwt = require('jsonwebtoken');
 const { parse: parseCookie, serialize: serializeCookie } = require('cookie');
 const xml2js = require('xml2js');
 const crypto = require('crypto');
-const { sendBrevoEmail } = require('../../lib/brevo-order-email.js');
+const { sendShippingEmail, sendExportEmail } = require('../../lib/brevo-order-email.js');
+
+// Tables exportables (récap mensuel preorders/donors/tirages)
+const EXPORTABLE_TABLES = ['preorders', 'donors', 'tirages'];
+
+// Convertit un tableau d'objets en CSV (échappement basique des guillemets/virgules)
+function rowsToCsv(rows) {
+  if (!rows || rows.length === 0) return '';
+  const columns = Object.keys(rows[0]);
+  const escape = (v) => {
+    if (v === null || v === undefined) return '';
+    const s = typeof v === 'object' ? JSON.stringify(v) : String(v);
+    if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
+    return s;
+  };
+  const lines = [columns.join(',')];
+  for (const row of rows) {
+    lines.push(columns.map(c => escape(row[c])).join(','));
+  }
+  return lines.join('\n');
+}
+
+// Récupère toutes les lignes d'une table (pagination Supabase par lots de 1000)
+async function fetchAllRows(supabase, table) {
+  const rows = [];
+  let from = 0;
+  const pageSize = 1000;
+  while (true) {
+    const { data, error } = await supabase
+      .from(table)
+      .select('*')
+      .range(from, from + pageSize - 1);
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+    rows.push(...data);
+    if (data.length < pageSize) break;
+    from += pageSize;
+  }
+  return rows;
+}
 
 // Configuration Mondial Relay
 const MONDIAL_RELAY_API1_URL =
@@ -33,7 +72,7 @@ function setCORS(res, req) {
     res.setHeader('Access-Control-Allow-Origin', 'https://oradia.fr');
   }
   res.setHeader('Access-Control-Allow-Credentials', 'true');
-  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.setHeader('Pragma', 'no-cache');
@@ -220,7 +259,14 @@ async function handleAuth(req, res) {
 async function handleData(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    verifyAdminAuth(req);
+    // Les tâches automatiques quotidiennes (GitHub Actions) s'authentifient via
+    // un secret partagé plutôt qu'une session admin (pas de cookie/JWT dans un cron).
+    const cronSecret = req.headers['x-cron-secret'];
+    const isCronRequest = !!process.env.CRON_SECRET && cronSecret === process.env.CRON_SECRET;
+
+    if (!isCronRequest) {
+      verifyAdminAuth(req);
+    }
 
     const supabase = createClient(
       process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
@@ -237,6 +283,26 @@ async function handleData(req, res) {
       });
 
       const { action, email, fullName, accessCode, expiresAt, subscriptionId } = body;
+
+      // ── Action réservée aux tâches automatiques (cron quotidien) ──
+      if (isCronRequest) {
+        if (action === 'mr-check-deliveries') {
+          return await checkMondialRelayDeliveries(supabase, res);
+        }
+        if (action === 'monthly-export-email') {
+          if (!process.env.ADMIN_EMAIL) {
+            return res.status(200).json({ success: false, message: 'ADMIN_EMAIL non configuré' });
+          }
+          const files = [];
+          for (const table of EXPORTABLE_TABLES) {
+            const rows = await fetchAllRows(supabase, table);
+            files.push({ name: `${table}.csv`, content: rowsToCsv(rows) });
+          }
+          const sent = await sendExportEmail({ toEmail: process.env.ADMIN_EMAIL, files });
+          return res.status(200).json({ success: sent });
+        }
+        return res.status(403).json({ error: 'Action non autorisée' });
+      }
 
       if (action === 'create' && email) {
         const { error } = await supabase
@@ -267,42 +333,72 @@ async function handleData(req, res) {
         return res.status(200).json({ success: true, emailSent: false, message: 'Fonction email non configurée' });
       }
 
-      if (action === 'resend-order-email' && body.orderId) {
-        const table = body.table === 'donors' ? 'donors' : 'preorders';
-
+      // Marquer une précommande comme expédiée — envoie automatiquement
+      // l'email "commande en chemin" au client (remplace l'ancien envoi manuel).
+      if (action === 'mark-shipped' && body.orderId && body.trackingNumber) {
         const { data: order, error: fetchError } = await supabase
-          .from(table)
+          .from('preorders')
           .select('*')
           .eq('id', body.orderId)
           .maybeSingle();
 
         if (fetchError) throw fetchError;
         if (!order) return res.status(404).json({ error: 'Commande introuvable' });
-        if (!order.email) return res.status(400).json({ error: 'Aucun email associé à cette commande' });
-
-        const emailSent = await sendBrevoEmail({
-          toEmail: order.email,
-          toName: order.full_name || (table === 'donors' ? 'Ami(e) d\'ORADIA' : 'Client ORADIA'),
-          offer: order.offer || (table === 'donors' ? 'contribution-libre' : ''),
-          amountTotal: Number(order.amount_total).toFixed(2),
-          invoiceUrl: order.stripe_invoice_url || null
-        });
-
-        if (!emailSent) return res.status(502).json({ error: 'Envoi de l\'email échoué' });
 
         const { error: updateError } = await supabase
-          .from(table)
-          .update({ email_sent_at: new Date().toISOString() })
+          .from('preorders')
+          .update({
+            shipping_status: 'shipped',
+            tracking_number: body.trackingNumber,
+            shipment_number: body.shipmentNumber || null,
+            shipped_at: new Date().toISOString()
+          })
           .eq('id', body.orderId);
         if (updateError) throw updateError;
 
-        return res.status(200).json({ success: true, emailSent: true });
+        let emailSent = false;
+        if (order.email) {
+          emailSent = await sendShippingEmail({
+            toEmail: order.email,
+            toName: order.full_name || 'Client ORADIA',
+            trackingNumber: body.trackingNumber
+          });
+        }
+
+        return res.status(200).json({ success: true, emailSent });
+      }
+
+      // Marquer une précommande comme livrée — clôture la commande.
+      if (action === 'mark-delivered' && body.orderId) {
+        const { error: updateError } = await supabase
+          .from('preorders')
+          .update({
+            shipping_status: 'delivered',
+            delivered_at: new Date().toISOString()
+          })
+          .eq('id', body.orderId);
+        if (updateError) throw updateError;
+
+        return res.status(200).json({ success: true });
       }
 
       return res.status(400).json({ error: 'Action invalide' });
     }
 
     const section = req.query?.section || 'all';
+
+    // ── Export CSV à la demande (bouton "Télécharger" dans l'onglet Surveillance) ──
+    if (section === 'export') {
+      const table = req.query?.table;
+      if (!EXPORTABLE_TABLES.includes(table)) {
+        return res.status(400).json({ error: 'Table invalide' });
+      }
+      const rows = await fetchAllRows(supabase, table);
+      const csv = rowsToCsv(rows);
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', `attachment; filename="${table}-${new Date().toISOString().slice(0, 10)}.csv"`);
+      return res.status(200).send(csv);
+    }
 
     // ── Section abonnements Tore ──
     if (section === 'subscriptions') {
@@ -568,6 +664,97 @@ async function handleData(req, res) {
           },
           subscriptions,
           totalMonthlyEstimateEur: Math.round(totalMonthlyEstimate * 100) / 100
+        }
+      });
+    }
+
+    // ── Section surveillance : dernier audit + état UptimeRobot ──
+    if (section === 'monitoring') {
+      // Historique des audits (le plus récent en premier)
+      const { data: auditRows, error: auditErr } = await supabase
+        .from('audit_reports')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(7);
+      if (auditErr) console.warn('[Admin Data] Erreur audit_reports:', auditErr.message);
+
+      // État UptimeRobot (nécessite UPTIMEROBOT_API_KEY en variable d'environnement Vercel)
+      let uptime = null;
+      const UPTIMEROBOT_API_KEY = process.env.UPTIMEROBOT_API_KEY;
+      if (UPTIMEROBOT_API_KEY) {
+        try {
+          const urResponse = await fetch('https://api.uptimerobot.com/v2/getMonitors', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'Cache-Control': 'no-cache' },
+            body: new URLSearchParams({
+              api_key: UPTIMEROBOT_API_KEY,
+              format: 'json',
+              logs: '0',
+              custom_uptime_ratios: '7-30'
+            })
+          });
+          const urData = await urResponse.json();
+          if (urData.stat === 'ok') {
+            uptime = {
+              monitors: (urData.monitors || []).map(m => ({
+                id: m.id,
+                name: m.friendly_name,
+                url: m.url,
+                status: m.status, // 0=paused, 1=not checked, 2=up, 8=seems down, 9=down
+                uptimeRatio7d: m.custom_uptime_ratio ? m.custom_uptime_ratio.split('-')[0] : null,
+                uptimeRatio30d: m.custom_uptime_ratio ? m.custom_uptime_ratio.split('-')[1] : null
+              }))
+            };
+          } else {
+            uptime = { error: urData.error?.message || 'Erreur UptimeRobot' };
+          }
+        } catch (e) {
+          uptime = { error: e.message };
+        }
+      }
+
+      // État Supabase (usage + sauvegardes, nécessite SUPABASE_ACCESS_TOKEN — token API Management Supabase)
+      let supabaseStatus = null;
+      const SUPABASE_ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
+      const projectRef = (process.env.SUPABASE_URL || '').match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
+      if (!SUPABASE_ACCESS_TOKEN || !projectRef) {
+        supabaseStatus = { configured: false };
+      } else {
+        try {
+          const mgmtHeaders = { Authorization: `Bearer ${SUPABASE_ACCESS_TOKEN}` };
+
+          const [usageRes, backupsRes] = await Promise.all([
+            fetch(`https://api.supabase.com/v1/projects/${projectRef}/usage`, { headers: mgmtHeaders }),
+            fetch(`https://api.supabase.com/v1/projects/${projectRef}/database/backups`, { headers: mgmtHeaders })
+          ]);
+
+          const usageData = usageRes.ok ? await usageRes.json() : null;
+          const backupsData = backupsRes.ok ? await backupsRes.json() : null;
+
+          supabaseStatus = {
+            configured: true,
+            usage: usageData,
+            backups: backupsData ? {
+              pitrEnabled: !!backupsData.pitr_enabled,
+              backups: (backupsData.backups || []).slice(0, 5).map(b => ({
+                status: b.status,
+                isPhysical: !!b.is_physical_backup,
+                createdAt: b.inserted_at
+              }))
+            } : null,
+            error: (!usageRes.ok || !backupsRes.ok) ? `Erreur API Supabase (${usageRes.status}/${backupsRes.status})` : null
+          };
+        } catch (e) {
+          supabaseStatus = { configured: true, error: e.message };
+        }
+      }
+
+      return res.status(200).json({
+        success: true,
+        data: {
+          audits: auditRows || [],
+          uptime,
+          supabaseStatus
         }
       });
     }
@@ -869,122 +1056,372 @@ async function handleContactsExport(req, res) {
   }
 }
 
-// ── NEWSLETTER ──────────────────────────────────────────────────────────
+// ── COMMUNICATION (newsletter + emails promotionnels) ───────────────────
+
+const PROMO_TYPE_LABELS = {
+  lancement_precommande: 'Lancement de précommande',
+  evenement: "Annonce d'événement",
+  reduction: 'Réduction / code promo',
+  offre_speciale: 'Offre spéciale',
+  soldes: 'Soldes'
+};
+
+const NL_TON_LABELS = {
+  contemplatif: 'contemplatif et incarné',
+  poetique: 'poétique et sensoriel',
+  scientifique: 'ancré et scientifique',
+  narratif: 'narratif, sous forme de récit court'
+};
+
+function buildGeneratePrompt(body) {
+  const { type, intention, source, ton, energie, idees_bonus, promo_type, promo_details, cta_text } = body;
+
+  if (type === 'promo') {
+    return [
+      `Tu es la voix de la marque ORADIA (oracle de cartes "Le Tore", boussole intérieure, univers contemplatif et incarné).`,
+      `Rédige un email promotionnel pour : ${PROMO_TYPE_LABELS[promo_type] || promo_type || 'une communication spéciale'}.`,
+      `Sujet / annonce : ${intention}`,
+      promo_details ? `Détails à intégrer : ${promo_details}` : '',
+      `Ton : chaleureux et incarné, fidèle à l'univers contemplatif d'Oradia, sans superlatifs marketing excessifs, mais clair sur l'offre/l'annonce.`,
+      `Le bouton d'action de l'email s'intitule : "${cta_text || 'Découvrir'}" — n'y fais pas explicitement référence dans le texte.`,
+      ``,
+      `Réponds STRICTEMENT dans ce format, sans rien ajouter avant ou après :`,
+      `OBJET: <objet de l'email, percutant, sans emoji excessif>`,
+      ``,
+      `<corps de l'email en texte brut, 2 à 4 paragraphes courts, sans markdown>`
+    ].filter(Boolean).join('\n');
+  }
+
+  return [
+    `Tu es la voix de la marque ORADIA (oracle de cartes "Le Tore", boussole intérieure, univers contemplatif, poétique et incarné).`,
+    `Rédige la newsletter hebdomadaire sur le thème : ${intention}.`,
+    source === 'conte'
+      ? `Inspire-toi d'un conte initiatique pour illustrer le propos.`
+      : `Pars d'une observation du vivant (nature, saison, geste quotidien) pour illustrer le propos.`,
+    `Ton : ${NL_TON_LABELS[ton] || NL_TON_LABELS.contemplatif}.`,
+    energie ? `Énergie du moment à intégrer si pertinent : ${energie}.` : '',
+    idees_bonus ? `Fragments du carnet à utiliser si pertinent :\n${idees_bonus}` : '',
+    ``,
+    `Réponds STRICTEMENT dans ce format, sans rien ajouter avant ou après :`,
+    `OBJET: <objet de l'email>`,
+    ``,
+    `<corps de la newsletter en texte brut, 3 à 5 paragraphes courts, sans markdown>`
+  ].filter(Boolean).join('\n');
+}
+
+function nlEscHtml(s) {
+  return String(s ?? '')
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+function nlAbsUrl(path) {
+  if (!path) return '';
+  return /^https?:\/\//.test(path) ? path : `https://oradia.fr${path.startsWith('/') ? '' : '/'}${path}`;
+}
+
+// Construit le HTML complet de l'email (newsletter ou promo) à partir d'un brouillon
+function buildCommunicationEmailHtml(draft) {
+  const subject = draft.subject || '';
+  const content = draft.content || '';
+  const intention = draft.intention || '';
+  const images = draft.images || [];
+  const extra = draft.extra || {};
+  const isPromo = draft.type === 'promo';
+  const ctaText = extra.cta_text || (isPromo ? "Découvrir l'offre" : "Découvrir l'Oracle Oradia");
+  const ctaUrl = extra.cta_url || 'https://oradia.fr';
+
+  const imagesHtml = images.length > 0 ? `
+    <tr><td style="padding:0 40px 30px;">
+      <table width="100%" cellpadding="0" cellspacing="0"><tr>
+        ${images.map(img => `<td style="padding:0 8px; text-align:center;"><img src="${nlAbsUrl(img.path)}" alt="${nlEscHtml(img.name || '')}" style="width:100%; max-height:200px; object-fit:cover; border-radius:12px;"></td>`).join('')}
+      </tr></table>
+    </td></tr>` : '';
+
+  const badgeHtml = isPromo && extra.badge
+    ? `<p style="margin:0 0 14px;"><span style="display:inline-block; background:#d4af37; color:#0a192f; padding:6px 16px; border-radius:20px; font-size:12px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;">${nlEscHtml(extra.badge)}</span></p>`
+    : '';
+
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0; padding:0; background:#0a192f;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#0a192f 0%,#051428 100%); max-width:600px; margin:0 auto;">
+  <tr><td style="padding:40px; text-align:center; background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.95) 100%);">
+    <h1 style="margin:0; color:#d4af37; font-family:Georgia,serif; font-size:28px; font-weight:700; letter-spacing:0.1em;">ORADIA</h1>
+    <p style="margin:10px 0 0; color:#f5e7a1; font-size:16px; font-style:italic; letter-spacing:0.1em;">La Boussole Intérieure</p>
+    ${intention ? `<p style="margin:20px 0 0; color:#c8c0a8; font-size:14px; font-style:italic;">« ${nlEscHtml(intention)} »</p>` : ''}
+  </td></tr>
+  ${imagesHtml}
+  <tr><td style="padding:30px 40px;">
+    ${badgeHtml}
+    ${subject ? `<h2 style="color:#d4af37; font-family:Georgia,serif; font-size:24px; margin:0 0 20px;">${nlEscHtml(subject)}</h2>` : ''}
+    <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; white-space:pre-wrap;">${nlEscHtml(content).replace(/\n/g, '<br>')}</div>
+  </td></tr>
+  <tr><td style="padding:0 40px 40px; text-align:center;">
+    <a href="${nlAbsUrl(ctaUrl).replace(/"/g, '')}" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">${nlEscHtml(ctaText)}</a>
+  </td></tr>
+  <tr><td style="padding:30px 40px; border-top:1px solid rgba(212,175,55,0.2); text-align:center;">
+    <p style="margin:0 0 10px; color:#f5e7a1; font-size:14px; opacity:0.8;">Avec gratitude,<br>Rudy Boucheron</p>
+    <p style="margin:20px 0 0; color:#c8c0a8; font-size:12px; opacity:0.6;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none;">oradia.fr</a></p>
+    <p style="margin:15px 0 0; color:#c8c0a8; font-size:11px; opacity:0.5;">Vous recevez cet email car vous êtes abonné·e aux communications Oradia. <a href="{unsubscribe}" style="color:#c8c0a8;">Se désabonner</a></p>
+  </td></tr>
+</table>
+</body></html>`;
+}
+
+function nlSupabase() {
+  return createClient(
+    process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+}
+
 async function handleNewsletter(req, res) {
   try {
     verifyAdminAuth(req);
-    
+
     const url = new URL(req.url, `http://${req.headers.host}`);
     const action = url.searchParams.get('action');
-    
+    const supabase = nlSupabase();
+
     if (req.method === 'GET') {
       if (action === 'drafts') {
-        // Récupérer les brouillons depuis newsletter_drafts
-        const supabase = createClient(
-          process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
-          process.env.SUPABASE_SERVICE_ROLE_KEY
-        );
-        
+        const id = url.searchParams.get('id');
+        if (id) {
+          const { data, error } = await supabase
+            .from('newsletter_drafts')
+            .select('*')
+            .eq('id', id)
+            .maybeSingle();
+          if (error) throw error;
+          if (!data) return res.status(404).json({ error: 'Brouillon introuvable' });
+          return res.status(200).json(data);
+        }
+
         const { data: drafts, error } = await supabase
           .from('newsletter_drafts')
           .select('*')
           .order('created_at', { ascending: false });
-          
+
         if (error) {
           console.error('Error fetching drafts:', error);
           return res.status(500).json({ error: 'Erreur lors de la récupération des brouillons' });
         }
-        
+
         return res.status(200).json(drafts || []);
       }
-      
-      // Liste des newsletters (autre logique si nécessaire)
+
+      if (action === 'ideas') {
+        const { data, error } = await supabase
+          .from('newsletter_ideas')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        return res.status(200).json(data || []);
+      }
+
       return res.status(200).json({ success: true, newsletters: [] });
     }
-    
+
+    if (req.method === 'DELETE') {
+      if (action === 'ideas') {
+        const id = url.searchParams.get('id');
+        if (!id) return res.status(400).json({ error: 'ID requis' });
+        const { error } = await supabase.from('newsletter_ideas').delete().eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+      if (action === 'drafts') {
+        const id = url.searchParams.get('id');
+        if (!id) return res.status(400).json({ error: 'ID requis' });
+        const { error } = await supabase.from('newsletter_drafts').delete().eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+      return res.status(400).json({ error: 'Action invalide' });
+    }
+
     if (req.method === 'POST') {
       const body = await parseBody(req);
-      
+
+      // ── Génération IA (newsletter ou email promotionnel) ──
+      if (action === 'generate') {
+        if (!process.env.ANTHROPIC_API_KEY) {
+          return res.status(500).json({ error: 'ANTHROPIC_API_KEY non configurée' });
+        }
+        if (!body.intention || !body.intention.trim()) {
+          return res.status(400).json({ error: "L'intention / le sujet est requis" });
+        }
+
+        const prompt = buildGeneratePrompt(body);
+        const models = [process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5', 'claude-3-5-haiku-20241022'];
+        let lastErr;
+
+        for (const model of models) {
+          try {
+            const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': process.env.ANTHROPIC_API_KEY,
+                'anthropic-version': '2023-06-01'
+              },
+              body: JSON.stringify({
+                model,
+                max_tokens: 1500,
+                messages: [{ role: 'user', content: prompt }]
+              }),
+              signal: AbortSignal.timeout(30000)
+            });
+
+            if (!aiRes.ok) { lastErr = await aiRes.text(); continue; }
+            const data = await aiRes.json();
+            const content = (data.content || []).map(b => b.text || '').join('').trim();
+            if (!content) { lastErr = 'Réponse vide du modèle'; continue; }
+            return res.status(200).json({ success: true, content });
+          } catch (e) {
+            lastErr = e.message;
+          }
+        }
+
+        return res.status(502).json({ error: 'Erreur lors de la génération IA', details: lastErr });
+      }
+
+      // ── Sauvegarde d'un brouillon (newsletter ou promo) ──
       if (action === 'save') {
-        // Sauvegarder un brouillon
-        const supabase = createClient(
-          process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
-          process.env.SUPABASE_SERVICE_ROLE_KEY
-        );
-        
-        const { id, subject, content, html_content } = body;
-        
+        const { id, subject, content, html_content, intention, type, images, extra } = body;
+
+        const payload = {
+          subject: subject || '',
+          content: content || '',
+          html_content: html_content || null,
+          intention: intention || null,
+          type: type === 'promo' ? 'promo' : 'newsletter',
+          images: Array.isArray(images) ? images : [],
+          extra: extra && typeof extra === 'object' ? extra : {},
+          updated_at: new Date().toISOString()
+        };
+
         if (id) {
-          // Mettre à jour un brouillon existant
           const { error } = await supabase
             .from('newsletter_drafts')
-            .update({
-              subject,
-              content,
-              html_content,
-              updated_at: new Date().toISOString()
-            })
+            .update(payload)
             .eq('id', id);
-            
           if (error) {
             console.error('Error updating draft:', error);
             return res.status(500).json({ error: 'Erreur lors de la mise à jour du brouillon' });
           }
-          
           return res.status(200).json({ success: true, message: 'Brouillon mis à jour', id });
-        } else {
-          // Créer un nouveau brouillon
-          const { data, error } = await supabase
-            .from('newsletter_drafts')
-            .insert({
-              subject,
-              content,
-              html_content,
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            })
-            .select()
-            .single();
-            
-          if (error) {
-            console.error('Error creating draft:', error);
-            return res.status(500).json({ error: 'Erreur lors de la création du brouillon' });
-          }
-          
-          return res.status(200).json({ success: true, message: 'Brouillon créé', id: data.id });
         }
-      }
-      
-      if (action === 'delete') {
-        // Supprimer un brouillon
-        const supabase = createClient(
-          process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
-          process.env.SUPABASE_SERVICE_ROLE_KEY
-        );
-        
-        const { id } = body;
-        
-        if (!id) {
-          return res.status(400).json({ error: 'ID du brouillon requis' });
-        }
-        
-        const { error } = await supabase
+
+        const { data, error } = await supabase
           .from('newsletter_drafts')
-          .delete()
-          .eq('id', id);
-          
+          .insert({ ...payload, statut: 'brouillon', created_at: new Date().toISOString() })
+          .select()
+          .single();
+        if (error) {
+          console.error('Error creating draft:', error);
+          return res.status(500).json({ error: 'Erreur lors de la création du brouillon' });
+        }
+        return res.status(200).json({ success: true, message: 'Brouillon créé', id: data.id });
+      }
+
+      // ── Ajout d'un fragment au carnet ──
+      if (action === 'ideas') {
+        const { content, source } = body;
+        if (!content || !content.trim()) return res.status(400).json({ error: 'Contenu requis' });
+        const { data, error } = await supabase
+          .from('newsletter_ideas')
+          .insert({ content: content.trim(), source: source || null })
+          .select()
+          .single();
+        if (error) throw error;
+        return res.status(200).json(data);
+      }
+
+      if (action === 'delete') {
+        const { id } = body;
+        if (!id) return res.status(400).json({ error: 'ID du brouillon requis' });
+        const { error } = await supabase.from('newsletter_drafts').delete().eq('id', id);
         if (error) {
           console.error('Error deleting draft:', error);
           return res.status(500).json({ error: 'Erreur lors de la suppression du brouillon' });
         }
-        
         return res.status(200).json({ success: true, message: 'Brouillon supprimé' });
       }
-      
-      // Logique d'envoi newsletter
-      return res.status(200).json({ success: true, message: 'Newsletter envoyée' });
+
+      // ── Envoi (email de test ou diffusion réelle via Brevo) ──
+      if (action === 'send') {
+        const { draft_id, test_email, subject } = body;
+        if (!draft_id) return res.status(400).json({ error: 'draft_id requis' });
+
+        const { data: draft, error: draftErr } = await supabase
+          .from('newsletter_drafts')
+          .select('*')
+          .eq('id', draft_id)
+          .maybeSingle();
+        if (draftErr) throw draftErr;
+        if (!draft) return res.status(404).json({ error: 'Brouillon introuvable' });
+
+        const finalSubject = (subject && subject.trim()) || draft.subject || 'Oradia';
+        const html = buildCommunicationEmailHtml({ ...draft, subject: finalSubject });
+
+        const BREVO_API_KEY = process.env.BREVO_API_KEY;
+        if (!BREVO_API_KEY) return res.status(500).json({ error: 'BREVO_API_KEY non configurée' });
+
+        if (test_email) {
+          const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+            body: JSON.stringify({
+              sender: { name: 'Oradia', email: 'contact@oradia.fr' },
+              to: [{ email: test_email }],
+              subject: '[TEST] ' + finalSubject,
+              htmlContent: html.replace('{unsubscribe}', 'https://oradia.fr')
+            })
+          });
+          if (!r.ok) {
+            return res.status(502).json({ error: 'Erreur envoi du test Brevo', details: await r.text() });
+          }
+          return res.status(200).json({ success: true });
+        }
+
+        // Diffusion réelle : campagne Brevo vers la liste newsletter (ID 5)
+        const campRes = await fetch('https://api.brevo.com/v3/emailCampaigns', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+          body: JSON.stringify({
+            name: `${draft.type === 'promo' ? 'Promo' : 'Newsletter'} — ${finalSubject} — ${new Date().toISOString()}`,
+            subject: finalSubject,
+            sender: { name: 'Oradia', email: 'contact@oradia.fr' },
+            htmlContent: html,
+            recipients: { listIds: [5] }
+          })
+        });
+        if (!campRes.ok) {
+          return res.status(502).json({ error: 'Erreur création de la campagne Brevo', details: await campRes.text() });
+        }
+        const camp = await campRes.json();
+
+        const sendRes = await fetch(`https://api.brevo.com/v3/emailCampaigns/${camp.id}/sendNow`, {
+          method: 'POST',
+          headers: { 'api-key': BREVO_API_KEY }
+        });
+        if (!sendRes.ok) {
+          return res.status(502).json({ error: "Erreur lors de l'envoi de la campagne Brevo", details: await sendRes.text() });
+        }
+
+        await supabase
+          .from('newsletter_drafts')
+          .update({ statut: 'envoyé', sent_at: new Date().toISOString(), subject: finalSubject })
+          .eq('id', draft_id);
+
+        return res.status(200).json({ success: true });
+      }
+
+      return res.status(400).json({ error: 'Action invalide' });
     }
-    
+
     return res.status(405).json({ error: 'Method not allowed' });
   } catch (error) {
     console.error('Newsletter error:', error);
@@ -1418,6 +1855,120 @@ async function searchPickupPoints(postalCode, country) {
     console.error('Erreur API Mondial Relay:', error.message);
     throw error;
   }
+}
+
+/**
+ * Interroge le suivi détaillé Mondial Relay (WSI2_TracingColisDetaille_Liste)
+ * pour un lot de numéros d'expédition, et renvoie ceux qui sont marqués livrés.
+ * Security = MD5(Enseigne + Expedition + Langue + ClePrivee).toUpperCase()
+ */
+async function trackMondialRelayShipments(trackingNumbers) {
+  const expedition = trackingNumbers.join(';');
+  const langue = 'FR';
+  const securityString = MONDIAL_RELAY_ENSEIGNE + expedition + langue + MONDIAL_RELAY_PRIVATE_KEY;
+  const security = crypto.createHash('md5').update(securityString, 'utf8').digest('hex').toUpperCase();
+
+  const soapBody = `<?xml version="1.0" encoding="utf-8"?>
+<soap:Envelope xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/">
+  <soap:Body>
+    <WSI2_TracingColisDetaille_Liste xmlns="http://www.mondialrelay.fr/webservice/">
+      <Enseigne>${MONDIAL_RELAY_ENSEIGNE}</Enseigne>
+      <Expedition>${expedition}</Expedition>
+      <Langue>${langue}</Langue>
+      <Security>${security}</Security>
+    </WSI2_TracingColisDetaille_Liste>
+  </soap:Body>
+</soap:Envelope>`;
+
+  const response = await fetch(MONDIAL_RELAY_API1_URL, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'text/xml; charset=utf-8',
+      'SOAPAction': 'http://www.mondialrelay.fr/webservice/WSI2_TracingColisDetaille_Liste',
+      'MessageType': 'CALL'
+    },
+    body: soapBody
+  });
+
+  if (!response.ok) {
+    throw new Error(`API Mondial Relay (tracing) HTTP error: ${response.status} ${response.statusText}`);
+  }
+
+  const xmlResponse = await response.text();
+  const parser = new xml2js.Parser({ explicitArray: false, ignoreAttrs: false, mergeAttrs: true });
+  const parsedData = await parser.parseStringPromise(xmlResponse);
+
+  const result =
+    parsedData?.['soap:Envelope']?.['soap:Body']?.WSI2_TracingColisDetaille_ListeResponse?.WSI2_TracingColisDetaille_ListeResult
+    || parsedData?.['soap12:Envelope']?.['soap12:Body']?.WSI2_TracingColisDetaille_ListeResponse?.WSI2_TracingColisDetaille_ListeResult
+    || parsedData?.soap?.Envelope?.Body?.WSI2_TracingColisDetaille_ListeResponse?.WSI2_TracingColisDetaille_ListeResult;
+
+  if (!result) {
+    throw new Error('No WSI2_TracingColisDetaille_ListeResult node found');
+  }
+
+  const expeditionsRaw = result?.Tracing_Detaille_Result?.Expedition;
+  const expeditions = !expeditionsRaw ? [] : (Array.isArray(expeditionsRaw) ? expeditionsRaw : [expeditionsRaw]);
+
+  // Un colis est considéré "livré" si l'un de ses événements de suivi contient
+  // un libellé évoquant la livraison (la doc Mondial Relay liste plusieurs
+  // libellés français possibles selon le type de livraison).
+  const delivered = new Set();
+  for (const exp of expeditions) {
+    const num = exp?.NumeroExpedition || exp?.Numero;
+    if (!num) continue;
+    const tracesRaw = exp?.Traces?.Trace;
+    const traces = !tracesRaw ? [] : (Array.isArray(tracesRaw) ? tracesRaw : [tracesRaw]);
+    const isDelivered = traces.some(t => /livr/i.test(t?.Libelle || ''));
+    if (isDelivered) delivered.add(String(num));
+  }
+
+  return delivered;
+}
+
+/**
+ * Vérifie les commandes "expédiées" et marque automatiquement comme "livrées"
+ * celles dont le suivi Mondial Relay indique une livraison effectuée.
+ * Appelé quotidiennement par GitHub Actions (secret CRON_SECRET).
+ */
+async function checkMondialRelayDeliveries(supabase, res) {
+  if (!MONDIAL_RELAY_ENSEIGNE || !MONDIAL_RELAY_PRIVATE_KEY) {
+    return res.status(200).json({ success: true, checked: 0, delivered: 0, message: 'Mondial Relay non configuré' });
+  }
+
+  const { data: shipped, error } = await supabase
+    .from('preorders')
+    .select('id, tracking_number')
+    .eq('shipping_status', 'shipped')
+    .not('tracking_number', 'is', null);
+  if (error) throw error;
+
+  if (!shipped || shipped.length === 0) {
+    return res.status(200).json({ success: true, checked: 0, delivered: 0 });
+  }
+
+  const trackingNumbers = shipped.map(o => o.tracking_number).filter(Boolean);
+
+  let deliveredSet;
+  try {
+    deliveredSet = await trackMondialRelayShipments(trackingNumbers);
+  } catch (e) {
+    console.error('[Cron] Erreur suivi Mondial Relay:', e.message);
+    return res.status(200).json({ success: false, checked: trackingNumbers.length, delivered: 0, error: e.message });
+  }
+
+  let deliveredCount = 0;
+  for (const order of shipped) {
+    if (deliveredSet.has(String(order.tracking_number))) {
+      const { error: updateError } = await supabase
+        .from('preorders')
+        .update({ shipping_status: 'delivered', delivered_at: new Date().toISOString() })
+        .eq('id', order.id);
+      if (!updateError) deliveredCount++;
+    }
+  }
+
+  return res.status(200).json({ success: true, checked: trackingNumbers.length, delivered: deliveredCount });
 }
 
 /**

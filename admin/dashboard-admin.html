@@ -181,8 +181,8 @@
 
             <p class="text-gold/50 text-xs uppercase tracking-widest px-5 mt-5 mb-2">Contenu</p>
             <div class="nav-item" onclick="showTab('newsletter')" id="nav-newsletter">
-                <i class="fas fa-envelope-open-text w-4 text-center"></i>
-                <span>Newsletter</span>
+                <i class="fas fa-bullhorn w-4 text-center"></i>
+                <span>Communication</span>
             </div>
 
             <p class="text-gold/50 text-xs uppercase tracking-widest px-5 mt-5 mb-2">Système</p>
@@ -203,6 +203,11 @@
                 <i class="fas fa-coins w-4 text-center"></i>
                 <span>Coûts du site</span>
             </div>
+            <div class="nav-item" onclick="showTab('monitoring')" id="nav-monitoring">
+                <i class="fas fa-heartbeat w-4 text-center"></i>
+                <span>Surveillance</span>
+                <span class="ml-auto text-xs bg-red-500/20 text-red-300 rounded-full px-2 py-0.5" id="nav-badge-monitoring"></span>
+            </div>
         </nav>
 
         <!-- Footer sidebar -->
@@ -222,9 +227,9 @@
     <!-- Modal Expédition -->
     <div id="shippingModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm">
         <div class="bg-[#0a1628] border border-gold/30 rounded-xl p-8 w-full max-w-md mx-4 shadow-2xl">
-            <h3 class="text-gold font-bold text-xl mb-2" style="font-family:'Cormorant Garamond',serif;">Marquer comme expédié</h3>
+            <h3 class="text-gold font-bold text-xl mb-2" style="font-family:'Cormorant Garamond',serif;">Marquer comme expédiée</h3>
             <p class="text-light-gold/70 text-sm mb-6" id="shippingModalName"></p>
-            
+
             <div class="space-y-4">
                 <div>
                     <label class="block text-light-gold/80 text-sm mb-1">Numéro de suivi <span class="text-gold">*</span></label>
@@ -236,10 +241,7 @@
                     <input id="shippingShipmentInput" type="text" placeholder="Optionnel"
                         class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-4 py-2 focus:outline-none focus:border-gold text-sm">
                 </div>
-                <label class="flex items-center gap-3 cursor-pointer">
-                    <input id="shippingSendEmailCheckbox" type="checkbox" checked class="w-4 h-4 accent-yellow-500">
-                    <span class="text-light-gold text-sm">Envoyer l'email de suivi au client</span>
-                </label>
+                <p class="text-light-gold/50 text-xs"><i class="fas fa-info-circle mr-1"></i>L'email "Ta commande ORADIA est en chemin" sera envoyé automatiquement au client avec ce numéro de suivi.</p>
             </div>
 
             <div class="flex gap-3 mt-8">
@@ -775,8 +777,8 @@
         <section class="mb-12" id="newsletter-section">
             <div class="flex items-center justify-between mb-8">
                 <div>
-                    <h2 class="cormorant text-3xl font-bold text-gold">La newsletter Oradia</h2>
-                    <p class="text-light-gold/50 text-sm mt-1">Génération et envoi de la lettre hebdomadaire</p>
+                    <h2 class="cormorant text-3xl font-bold text-gold">Communication Oradia</h2>
+                    <p class="text-light-gold/50 text-sm mt-1">Newsletter hebdomadaire et emails promotionnels (lancements, offres, événements...)</p>
                 </div>
                 <div class="flex gap-3">
                     <button onclick="nlShowTab('generate')" data-nltab="generate"
@@ -800,7 +802,7 @@
                         <i class="fas fa-envelope text-purple-400"></i>
                     </div>
                     <div class="text-3xl font-bold text-gold mb-1" id="nl-kpi-total">—</div>
-                    <p class="text-light-gold text-sm">Newsletters créées</p>
+                    <p class="text-light-gold text-sm">Communications créées</p>
                 </div>
                 <div class="stat-card rounded-2xl p-6">
                     <div class="w-10 h-10 bg-gradient-to-br from-gold/20 to-gold/10 rounded-lg flex items-center justify-center mb-3">
@@ -825,39 +827,91 @@
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6">
                         <h4 class="cormorant text-xl text-gold mb-5">Paramètres</h4>
-                        <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Intention / thème *</label>
+
+                        <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Type de communication</label>
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <button type="button" onclick="nlSetType('newsletter')" id="nl-type-newsletter" data-nltype="newsletter"
+                                class="nl-type-btn bg-gold text-night-blue rounded-lg py-2 text-sm font-semibold transition">
+                                <i class="fas fa-envelope-open-text mr-1"></i>Newsletter
+                            </button>
+                            <button type="button" onclick="nlSetType('promo')" id="nl-type-promo" data-nltype="promo"
+                                class="nl-type-btn bg-gold/20 text-gold border border-gold/30 rounded-lg py-2 text-sm hover:bg-gold/30 transition">
+                                <i class="fas fa-bullhorn mr-1"></i>Email promotionnel
+                            </button>
+                        </div>
+
+                        <label id="nl-intention-label" class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Intention / thème *</label>
                         <input type="text" id="nl-intention"
                             class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-4 text-sm focus:outline-none focus:border-gold"
                             placeholder="Ex: la résistance juste, l'adaptome, la vulnérabilité...">
-                        <div class="grid grid-cols-2 gap-4 mb-4">
-                            <div>
-                                <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Source</label>
-                                <select id="nl-source" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-gold">
-                                    <option value="libre">Observation du vivant (libre)</option>
-                                    <option value="conte">Conte initiatique du livret</option>
-                                </select>
+
+                        <!-- Champs spécifiques NEWSLETTER -->
+                        <div id="nl-fields-newsletter">
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Source</label>
+                                    <select id="nl-source" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-gold">
+                                        <option value="libre">Observation du vivant (libre)</option>
+                                        <option value="conte">Conte initiatique du livret</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Ton</label>
+                                    <select id="nl-ton" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-gold">
+                                        <option value="contemplatif">Contemplatif & incarné</option>
+                                        <option value="poetique">Poétique & sensoriel</option>
+                                        <option value="scientifique">Ancré & scientifique</option>
+                                        <option value="narratif">Narratif & story</option>
+                                    </select>
+                                </div>
                             </div>
-                            <div>
-                                <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Ton</label>
-                                <select id="nl-ton" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-gold">
-                                    <option value="contemplatif">Contemplatif & incarné</option>
-                                    <option value="poetique">Poétique & sensoriel</option>
-                                    <option value="scientifique">Ancré & scientifique</option>
-                                    <option value="narratif">Narratif & story</option>
-                                </select>
-                            </div>
+                            <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Énergie du moment <span class="text-gold/30 normal-case tracking-normal text-xs">(facultatif)</span></label>
+                            <input type="text" id="nl-energie"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-4 text-sm focus:outline-none focus:border-gold"
+                                placeholder="Saison, hexagramme, lune, actualité...">
+                            <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Fragments du carnet <span class="text-gold/30 normal-case tracking-normal text-xs">(facultatif)</span></label>
+                            <textarea id="nl-idees-bonus" rows="3"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-5 text-sm focus:outline-none focus:border-gold resize-y"
+                                placeholder="Fragments du carnet à intégrer..."></textarea>
                         </div>
-                        <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Énergie du moment <span class="text-gold/30 normal-case tracking-normal text-xs">(facultatif)</span></label>
-                        <input type="text" id="nl-energie"
-                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-4 text-sm focus:outline-none focus:border-gold"
-                            placeholder="Saison, hexagramme, lune, actualité...">
-                        <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Fragments du carnet <span class="text-gold/30 normal-case tracking-normal text-xs">(facultatif)</span></label>
-                        <textarea id="nl-idees-bonus" rows="3"
-                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-5 text-sm focus:outline-none focus:border-gold resize-y"
-                            placeholder="Fragments du carnet à intégrer..."></textarea>
+
+                        <!-- Champs spécifiques PROMO -->
+                        <div id="nl-fields-promo" class="hidden">
+                            <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Type de promotion</label>
+                            <select id="nl-promo-type" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-4 text-sm focus:outline-none focus:border-gold">
+                                <option value="lancement_precommande">Lancement de précommande</option>
+                                <option value="evenement">Annonce d'événement</option>
+                                <option value="reduction">Réduction / code promo</option>
+                                <option value="offre_speciale">Offre spéciale</option>
+                                <option value="soldes">Soldes</option>
+                            </select>
+                            <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Détails de l'offre <span class="text-gold/30 normal-case tracking-normal text-xs">(facultatif)</span></label>
+                            <textarea id="nl-promo-details" rows="3"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-4 text-sm focus:outline-none focus:border-gold resize-y"
+                                placeholder="Ex: -20% avec le code ORADIA20 jusqu'au 30 juin, livraison offerte..."></textarea>
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Badge <span class="text-gold/30 normal-case tracking-normal text-xs">(facultatif)</span></label>
+                                    <input type="text" id="nl-cta-badge"
+                                        class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-gold"
+                                        placeholder="Ex: Offre limitée">
+                                </div>
+                                <div>
+                                    <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Texte du bouton</label>
+                                    <input type="text" id="nl-cta-text"
+                                        class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-gold"
+                                        placeholder="Découvrir l'offre">
+                                </div>
+                            </div>
+                            <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Lien du bouton</label>
+                            <input type="text" id="nl-cta-url"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-5 text-sm focus:outline-none focus:border-gold"
+                                placeholder="https://oradia.fr">
+                        </div>
+
                         <button onclick="nlGenerate()" id="nl-btn-generate"
                             class="w-full bg-gold text-night-blue font-semibold rounded-lg py-3 hover:bg-light-gold transition flex items-center justify-center gap-2">
-                            <i class="fas fa-magic"></i> Générer la newsletter
+                            <i class="fas fa-magic"></i> <span id="nl-btn-generate-label">Générer la newsletter</span>
                         </button>
                     </div>
 
@@ -1223,6 +1277,70 @@
         </section>
         </div><!-- /tab-costs -->
 
+        <!-- ══ ONGLET : SURVEILLANCE DU SITE ══ -->
+        <div id="tab-monitoring" class="tab-panel">
+        <section class="mb-10">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="cormorant text-2xl font-bold text-gold">Surveillance du site</h3>
+                    <p class="text-light-gold/50 text-sm mt-1">Dernier audit automatique et disponibilité (UptimeRobot)</p>
+                </div>
+                <button onclick="loadMonitoring()" class="bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-lg px-4 py-2 text-sm hover:bg-teal-500/30 transition">
+                    <i class="fas fa-sync-alt mr-1"></i>Actualiser
+                </button>
+            </div>
+
+            <!-- Dernier audit -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-gold text-sm font-semibold uppercase tracking-wider">Dernier audit automatique</h4>
+                    <div class="text-xs text-light-gold/50" id="auditLastDate">—</div>
+                </div>
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="text-3xl font-bold" id="auditGlobalScore">—</div>
+                    <div class="flex-1 grid grid-cols-2 md:grid-cols-4 gap-3 text-xs" id="auditSummary">—</div>
+                </div>
+                <div class="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3 mb-4" id="auditScores">—</div>
+                <div id="auditTopIssues" class="space-y-2 text-sm">—</div>
+            </div>
+
+            <!-- Historique des scores -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5 mb-6">
+                <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider">Historique des 7 derniers audits</h4>
+                <div id="auditHistory" class="space-y-2 text-sm">—</div>
+            </div>
+
+            <!-- UptimeRobot -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5 mb-6">
+                <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider">Disponibilité (UptimeRobot)</h4>
+                <div id="uptimeContent" class="space-y-3 text-sm">—</div>
+            </div>
+
+            <!-- Supabase : usage et sauvegardes -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5 mb-6">
+                <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider">Supabase — usage &amp; sauvegardes</h4>
+                <div id="supabaseStatusContent" class="space-y-3 text-sm">—</div>
+            </div>
+
+            <!-- Export des données -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5">
+                <h4 class="text-gold text-sm font-semibold mb-2 uppercase tracking-wider">Export des données</h4>
+                <p class="text-light-gold/50 text-xs mb-4">Télécharge un fichier CSV à jour de chaque table. Un export complet est aussi envoyé automatiquement par email le 1er de chaque mois.</p>
+                <div class="flex flex-wrap gap-3">
+                    <button onclick="downloadExport('preorders')" class="bg-gold/10 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/20 transition">
+                        <i class="fas fa-download mr-1"></i>Précommandes (preorders)
+                    </button>
+                    <button onclick="downloadExport('donors')" class="bg-gold/10 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/20 transition">
+                        <i class="fas fa-download mr-1"></i>Dons (donors)
+                    </button>
+                    <button onclick="downloadExport('tirages')" class="bg-gold/10 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/20 transition">
+                        <i class="fas fa-download mr-1"></i>Tirages (tirages)
+                    </button>
+                </div>
+            </div>
+        </section>
+        </div><!-- /tab-monitoring -->
+
     </main>
     </div><!-- /main-content -->
 
@@ -1233,13 +1351,14 @@
             preorders:      'Précommandes',
             donors:         'Dons',
             waitlist:       'Contacts',
-            newsletter:     'Newsletter',
+            newsletter:     'Communication',
             journal:        'Journal admin',
             subscriptions:  'Abonnements Tore',
             'single-draws':  'Tirages ponctuels',
             support:         'Support · Témoignages · Suggestions',
             synchronicity:   'Étude — Synchronicités',
-            costs:           'Coûts du site'
+            costs:           'Coûts du site',
+            monitoring:      'Surveillance du site'
         };
 
         function showTab(name) {
@@ -1258,6 +1377,7 @@
             if (name === 'support')        loadSupportMessages();
             if (name === 'synchronicity')  loadSynchronicity();
             if (name === 'costs')          loadCosts();
+            if (name === 'monitoring')     loadMonitoring();
         }
 
         // ── État global
@@ -1292,7 +1412,8 @@
                 'pending': 'En attente',
                 'pending_label': 'Attente étiquette',
                 'label_created': 'Étiquette créée',
-                'shipped': 'Expédié',
+                'shipped': 'Expédiée',
+                'delivered': 'Livrée',
                 'not_required': 'Non requis'
             };
             return labels[status] || status || '-';
@@ -1304,9 +1425,27 @@
                 'pending_label': 'bg-orange/20 text-orange border border-orange/30',
                 'label_created': 'bg-blue/20 text-blue border border-blue/30',
                 'shipped': 'bg-green/20 text-green border border-green/30',
+                'delivered': 'bg-teal-500/20 text-teal-300 border border-teal-500/30',
                 'not_required': 'bg-gray/20 text-gray border border-gray/30'
             };
             return classes[status] || 'bg-gray/20 text-gray border border-gray/30';
+        }
+
+        // État général de la commande, affiché en haut de la colonne Livraison
+        function getOrderStateLabel(preorder) {
+            if (!preorder.paid_status || preorder.paid_status !== 'completed') return 'En attente de paiement';
+            if (preorder.shipping_status === 'delivered') return 'Clôturée — livrée';
+            if (preorder.shipping_status === 'shipped') return 'Expédiée';
+            if (preorder.shipping_method === 'hand_delivery') return 'Remise en main propre';
+            return 'Payée — à expédier';
+        }
+
+        function getOrderStateClass(preorder) {
+            if (!preorder.paid_status || preorder.paid_status !== 'completed') return 'bg-yellow/20 text-yellow border border-yellow/30';
+            if (preorder.shipping_status === 'delivered') return 'bg-teal-500/20 text-teal-300 border border-teal-500/30';
+            if (preorder.shipping_status === 'shipped') return 'bg-green/20 text-green border border-green/30';
+            if (preorder.shipping_method === 'hand_delivery') return 'bg-purple/20 text-purple border border-purple/30';
+            return 'bg-blue/20 text-blue border border-blue/30';
         }
 
         function getShippingActionButtons(preorder) {
@@ -1318,29 +1457,41 @@
                 return '<span class="text-xs text-light-gold/40">Main propre</span>';
             }
 
-            let buttons = [];
-
-            // Si déjà expédié : bouton copier tracking
-            if (preorder.tracking_number) {
-                buttons.push(`
-                    <button onclick="copyTracking('${preorder.tracking_number}', this)" 
-                            class="px-3 py-1 bg-purple/20 text-purple rounded hover:bg-purple/30 transition text-xs"
-                            title="Copier le tracking">
-                        <i class="fas fa-copy"></i> Copier
-                    </button>
-                `);
-            } else {
-                // Si pas encore expédié : bouton marquer comme expédié
-                buttons.push(`
-                    <button onclick="markAsShipped('${preorder.id}')" 
-                            class="px-3 py-1 bg-green/20 text-green rounded hover:bg-green/30 transition text-xs"
-                            title="Marquer comme expédié">
-                        <i class="fas fa-shipping-fast"></i> Expédier
-                    </button>
-                `);
+            // Déjà livrée : commande clôturée, plus d'action
+            if (preorder.shipping_status === 'delivered') {
+                return '<span class="text-xs text-teal-300"><i class="fas fa-check-circle mr-1"></i>Clôturée</span>';
             }
 
-            return buttons.join(' ') || '<span class="text-xs text-light-gold/40">-</span>';
+            // Déjà expédiée : suivi + copier + marquer livrée
+            if (preorder.shipping_status === 'shipped' && preorder.tracking_number) {
+                const trackingUrl = `https://www.mondialrelay.fr/suivi-de-colis?numeroExpedition=${encodeURIComponent(preorder.tracking_number)}`;
+                return `
+                    <a href="${trackingUrl}" target="_blank" rel="noopener"
+                            class="px-3 py-1 bg-blue/20 text-blue rounded hover:bg-blue/30 transition text-xs inline-flex items-center"
+                            title="Suivre sur Mondial Relay">
+                        <i class="fas fa-truck mr-1"></i> Suivi
+                    </a>
+                    <button onclick="copyTracking('${preorder.tracking_number}', this)"
+                            class="px-3 py-1 bg-purple/20 text-purple rounded hover:bg-purple/30 transition text-xs"
+                            title="Copier le numéro de suivi">
+                        <i class="fas fa-copy"></i> Copier
+                    </button>
+                    <button onclick="markAsDelivered('${preorder.id}')"
+                            class="px-3 py-1 bg-teal-500/20 text-teal-300 rounded hover:bg-teal-500/30 transition text-xs"
+                            title="Marquer comme livrée">
+                        <i class="fas fa-check"></i> Livrée
+                    </button>
+                `;
+            }
+
+            // Pas encore expédiée : bouton marquer comme expédiée
+            return `
+                <button onclick="markAsShipped('${preorder.id}')"
+                        class="px-3 py-1 bg-green/20 text-green rounded hover:bg-green/30 transition text-xs"
+                        title="Marquer comme expédiée">
+                    <i class="fas fa-shipping-fast"></i> Expédier
+                </button>
+            `;
         }
 
         // Helper : fetch admin avec Bearer token automatique
@@ -1670,16 +1821,16 @@
                     </td>
                     <td class="px-6 py-4">
                         <div class="space-y-2">
+                            <div>
+                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-semibold ${getOrderStateClass(preorder)}">
+                                    ${getOrderStateLabel(preorder)}
+                                </span>
+                            </div>
                             <div class="flex items-center gap-2">
                                 <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getShippingMethodClass(preorder.shipping_method)}">
                                     ${getShippingMethodLabel(preorder.shipping_method)}
                                 </span>
                                 ${preorder.shipping_price_cents ? `<span class="text-xs text-light-gold/70">${formatCurrency(preorder.shipping_price_cents / 100)}</span>` : ''}
-                            </div>
-                            <div>
-                                <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium ${getShippingStatusClass(preorder.shipping_status)}">
-                                    ${getShippingStatusLabel(preorder.shipping_status)}
-                                </span>
                             </div>
                         </div>
                     </td>
@@ -1690,23 +1841,25 @@
                                     <div class="font-medium">${preorder.relay_name}</div>
                                     <div class="text-xs text-light-gold/60">${preorder.relay_address1}, ${preorder.relay_postal_code} ${preorder.relay_city}</div>
                                 </div>
-                            ` : preorder.tracking_number ? `
+                            ` : ''}
+                            ${preorder.tracking_number ? `
                                 <div class="text-light-gold">
                                     <div class="font-medium">${preorder.tracking_number}</div>
                                     <div class="text-xs text-light-gold/60">${preorder.shipment_number || ''}</div>
+                                    ${preorder.shipped_at ? `<div class="text-xs text-light-gold/40">Expédiée le ${formatDate(preorder.shipped_at)}</div>` : ''}
+                                    ${preorder.delivered_at ? `<div class="text-xs text-teal-300/70">Livrée le ${formatDate(preorder.delivered_at)}</div>` : ''}
                                 </div>
                             ` : preorder.shipping_method === 'hand_delivery' ? `
                                 <div class="text-light-gold/60 text-xs">Remise en main propre</div>
-                            ` : `
+                            ` : !preorder.shipping_method || !preorder.relay_name ? `
                                 <div class="text-light-gold/40 text-xs">-</div>
-                            `}
+                            ` : ''}
                         </div>
                     </td>
                     <td class="px-6 py-4">
-                        <div class="flex gap-2 flex-wrap">
+                        <div class="flex gap-2 flex-wrap items-center">
                             ${getShippingActionButtons(preorder)}
                             ${getProcessedButton(preorder)}
-                            ${preorder.email ? getEmailButton(preorder) : ''}
                         </div>
                     </td>
                 </tr>
@@ -1968,7 +2121,6 @@
             document.getElementById('shippingModalName').textContent = `Commande de ${order.full_name || order.email}`;
             document.getElementById('shippingTrackingInput').value = '';
             document.getElementById('shippingShipmentInput').value = '';
-            document.getElementById('shippingSendEmailCheckbox').checked = true;
             modal.classList.remove('hidden');
             modal.classList.add('flex');
             document.getElementById('shippingTrackingInput').focus();
@@ -1990,7 +2142,6 @@
                 document.getElementById('shippingTrackingInput').classList.remove('border-red-500');
 
                 const shipmentNumber = document.getElementById('shippingShipmentInput').value.trim();
-                const sendEmail = document.getElementById('shippingSendEmailCheckbox').checked;
 
                 const confirmBtn = document.getElementById('shippingModalConfirm');
                 confirmBtn.disabled = true;
@@ -2001,10 +2152,10 @@
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({
+                            action: 'mark-shipped',
                             orderId: orderId,
                             trackingNumber,
-                            shipmentNumber: shipmentNumber || null,
-                            sendEmail
+                            shipmentNumber: shipmentNumber || null
                         })
                     });
 
@@ -2015,7 +2166,7 @@
 
                     if (!response.ok) throw new Error(data.message || 'Erreur lors de la mise à jour');
 
-                    alert(`✅ Expédié${data.emailSent ? ' · Email envoyé au client' : ''} !`);
+                    alert(`✅ Expédiée${data.emailSent ? ' · Email envoyé au client' : ''} !`);
                     await loadPreorders();
 
                 } catch (error) {
@@ -2026,6 +2177,31 @@
                     confirmBtn.innerHTML = '<i class="fas fa-shipping-fast mr-2"></i>Confirmer';
                 }
             };
+        }
+
+        // Marquer une commande comme livrée (clôture la commande)
+        async function markAsDelivered(orderId) {
+            if (!confirm('Marquer cette commande comme livrée ? La commande sera clôturée.')) return;
+
+            try {
+                const response = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        action: 'mark-delivered',
+                        orderId: orderId
+                    })
+                });
+
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.message || 'Erreur lors de la mise à jour');
+
+                alert('✅ Commande marquée comme livrée !');
+                await loadPreorders();
+            } catch (error) {
+                console.error('Erreur markAsDelivered:', error);
+                alert('❌ Erreur : ' + error.message);
+            }
         }
 
         // Déconnexion
@@ -2168,15 +2344,6 @@
             }
         }
 
-        function getEmailLog() {
-            try {
-                const raw = localStorage.getItem('oradia-admin-email-log');
-                return raw ? JSON.parse(raw) : {};
-            } catch {
-                return {};
-            }
-        }
-
         function getProcessedButton(preorder) {
             const orderId = String(preorder.id || preorder.session_id || '');
             const processedAt = getProcessedOrders()[orderId];
@@ -2186,15 +2353,6 @@
             return `<button onclick="markOrderProcessed('${orderId}')" class="px-3 py-1 bg-green-500/20 text-green-300 rounded hover:bg-green-500/30 transition text-xs">
                                 <i class="fas fa-check mr-1"></i>Traité
                             </button>`;
-        }
-
-        function getEmailButton(preorder) {
-            const orderId = String(preorder.id || preorder.session_id || '');
-            const sentAt = getEmailLog()[orderId];
-            if (sentAt) {
-                return `<span class="px-3 py-1 bg-blue-500/10 text-blue-400 rounded text-xs inline-flex items-center" title="Email envoyé le ${formatDate(sentAt)}"><i class="fas fa-check-circle mr-1"></i>Envoyé le ${formatDate(sentAt)}</span>`;
-            }
-            return `<button onclick="resendOrderEmail('${orderId}', '${preorder.email}')" class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded hover:bg-blue-500/30 transition text-xs"><i class='fas fa-envelope mr-1'></i>Email</button>`;
         }
 
         function refreshPreordersTable() {
@@ -2209,31 +2367,6 @@
             localStorage.setItem('oradia-admin-processed-orders', JSON.stringify(processed));
             pushAuditLog('Commande marquée traitée', `Commande: ${key || 'N/A'}`);
             refreshPreordersTable();
-        };
-
-        window.resendOrderEmail = async function resendOrderEmail(orderId, email) {
-            const key = String(orderId || '');
-            if (!key) return;
-
-            try {
-                const res = await adminFetch('/api/admin/data', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'resend-order-email', orderId: key, table: 'preorders' })
-                });
-                const json = await res.json();
-                if (!res.ok || !json.success) {
-                    throw new Error(json.error || 'Échec de l\'envoi');
-                }
-
-                const emailLog = getEmailLog();
-                emailLog[key] = new Date().toISOString();
-                localStorage.setItem('oradia-admin-email-log', JSON.stringify(emailLog));
-                pushAuditLog('Relance email client', `Email: ${email}`);
-                refreshPreordersTable();
-            } catch (e) {
-                alert(`Échec de l'envoi de l'email à ${email} : ${e.message}`);
-            }
         };
 
         // Initialisation
@@ -2335,9 +2468,31 @@
         // NEWSLETTER
         // ═══════════════════════════════════════════════
         let nlCurrentDraftId = null, nlIdeas = [], nlDrafts = [];
+        let nlCurrentType = 'newsletter';
 
         function scrollToNewsletter() {
             document.getElementById('newsletter-section').scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function nlSetType(type) {
+            nlCurrentType = type;
+            document.querySelectorAll('.nl-type-btn').forEach(btn => {
+                const active = btn.getAttribute('data-nltype') === type;
+                btn.className = active
+                    ? 'nl-type-btn bg-gold text-night-blue rounded-lg py-2 text-sm font-semibold transition'
+                    : 'nl-type-btn bg-gold/20 text-gold border border-gold/30 rounded-lg py-2 text-sm hover:bg-gold/30 transition';
+            });
+            document.getElementById('nl-fields-newsletter').classList.toggle('hidden', type !== 'newsletter');
+            document.getElementById('nl-fields-promo').classList.toggle('hidden', type !== 'promo');
+            document.getElementById('nl-intention-label').textContent = type === 'promo'
+                ? 'Sujet de la communication *'
+                : 'Intention / thème *';
+            document.getElementById('nl-intention').placeholder = type === 'promo'
+                ? "Ex: ouverture des précommandes, -20% jusqu'au 30 juin..."
+                : "Ex: la résistance juste, l'adaptome, la vulnérabilité...";
+            document.getElementById('nl-btn-generate-label').textContent = type === 'promo'
+                ? "Générer l'email promotionnel"
+                : 'Générer la newsletter';
         }
 
         function nlShowTab(name) {
@@ -2366,22 +2521,34 @@
 
         async function nlGenerate() {
             const intention = document.getElementById('nl-intention').value.trim();
-            if (!intention) return nlStatus('error', "L'intention est requise");
+            if (!intention) return nlStatus('error', "L'intention / le sujet est requis");
             const btn = document.getElementById('nl-btn-generate');
+            const btnLabel = nlCurrentType === 'promo' ? "Générer l'email promotionnel" : 'Générer la newsletter';
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Claude rédige...';
             nlStatus('info', 'Génération en cours — quelques secondes...');
             try {
-                const res = await adminFetch('/api/admin/newsletter?action=generate', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
+                const payload = nlCurrentType === 'promo'
+                    ? {
+                        type: 'promo',
+                        intention,
+                        promo_type: document.getElementById('nl-promo-type').value,
+                        promo_details: document.getElementById('nl-promo-details').value.trim() || undefined,
+                        cta_text: document.getElementById('nl-cta-text').value.trim() || undefined
+                    }
+                    : {
+                        type: 'newsletter',
                         intention,
                         source: document.getElementById('nl-source').value,
                         ton: document.getElementById('nl-ton').value,
                         energie: document.getElementById('nl-energie').value.trim() || undefined,
                         idees_bonus: document.getElementById('nl-idees-bonus').value.trim() || undefined
-                    })
+                    };
+
+                const res = await adminFetch('/api/admin/newsletter?action=generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error((data.error || 'Erreur génération') + (data.details ? ' — ' + data.details : ''));
@@ -2394,12 +2561,12 @@
                 document.getElementById('nl-save-zone').classList.remove('hidden');
                 document.getElementById('nl-send-zone').classList.add('hidden');
                 nlCurrentDraftId = null;
-                nlStatus('success', 'Newsletter générée. Choisis une image puis sauvegarde.');
+                nlStatus('success', (nlCurrentType === 'promo' ? 'Email promotionnel généré.' : 'Newsletter générée.') + ' Choisis une image puis sauvegarde.');
                 nlFetchAndShowImages(intention);
             } catch(e) { nlStatus('error', e.message); }
             finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-magic mr-2"></i>Générer la newsletter';
+                btn.innerHTML = '<i class="fas fa-magic mr-2"></i><span id="nl-btn-generate-label">' + btnLabel + '</span>';
             }
         }
 
@@ -2620,6 +2787,14 @@
                 return;
             }
             
+            const isPromo = nlCurrentType === 'promo';
+            const ctaText = (isPromo && document.getElementById('nl-cta-text').value.trim()) || (isPromo ? "Découvrir l'offre" : "Découvrir l'Oracle Oradia");
+            const ctaUrl = (isPromo && document.getElementById('nl-cta-url').value.trim()) || 'https://oradia.fr';
+            const badge = isPromo ? document.getElementById('nl-cta-badge').value.trim() : '';
+            const badgeHtml = badge
+                ? `<p style="margin: 0 0 14px;"><span style="display: inline-block; background: #d4af37; color: #0a192f; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700; letter-spacing: 0.1em; text-transform: uppercase;">${badge}</span></p>`
+                : '';
+
             // Générer HTML des images sélectionnées
             let imagesHtml = '';
             if (nlSelectedImages.length > 0) {
@@ -2640,7 +2815,7 @@
                     <!-- Header -->
                     <div style="background: linear-gradient(135deg, #0a192f 0%, #051428 100%); padding: 20px; border-radius: 24px 24px 0 0; border-bottom: 1px solid rgba(212,175,55,0.2); display: flex; justify-content: space-between; align-items: center;">
                         <h3 style="margin: 0; color: #d4af37; font-family: Georgia, serif; font-size: 20px; font-weight: 700; letter-spacing: 0.05em;">
-                            <i class="fas fa-envelope" style="margin-right: 10px;"></i>Aperçu Newsletter
+                            <i class="fas fa-envelope" style="margin-right: 10px;"></i>${isPromo ? 'Aperçu Email promotionnel' : 'Aperçu Newsletter'}
                         </h3>
                         <button onclick="this.closest('.fixed').remove()" style="background: none; border: none; color: rgba(212,175,55,0.6); font-size: 24px; cursor: pointer;">&times;</button>
                     </div>
@@ -2667,18 +2842,19 @@
                             <!-- Content -->
                             <tr>
                                 <td style="padding: 30px 40px;">
+                                    ${badgeHtml}
                                     ${subject ? `<h2 style="color: #d4af37; font-family: Georgia, serif; font-size: 24px; margin: 0 0 20px;">${subject}</h2>` : ''}
                                     <div style="color: #c8c0a8; font-size: 16px; line-height: 1.8; font-family: Georgia, serif; white-space: pre-wrap;">
                                         ${content.replace(/\n/g, '<br>')}
                                     </div>
                                 </td>
                             </tr>
-                            
+
                             <!-- CTA -->
                             <tr>
                                 <td style="padding: 0 40px 40px; text-align: center;">
-                                    <a href="https://oradia.fr" style="display: inline-block; background: linear-gradient(135deg, #d4af37, #f5e7a1); color: #0a192f; text-decoration: none; padding: 16px 40px; border-radius: 50px; font-weight: 700; font-size: 16px; letter-spacing: 0.05em;">
-                                        Découvrir l'Oracle Oradia
+                                    <a href="${ctaUrl}" style="display: inline-block; background: linear-gradient(135deg, #d4af37, #f5e7a1); color: #0a192f; text-decoration: none; padding: 16px 40px; border-radius: 50px; font-weight: 700; font-size: 16px; letter-spacing: 0.05em;">
+                                        ${ctaText}
                                     </a>
                                 </td>
                             </tr>
@@ -2719,6 +2895,12 @@
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sauvegarde...';
             try {
+                const extra = nlCurrentType === 'promo' ? {
+                    cta_text: document.getElementById('nl-cta-text').value.trim() || undefined,
+                    cta_url: document.getElementById('nl-cta-url').value.trim() || undefined,
+                    badge: document.getElementById('nl-cta-badge').value.trim() || undefined
+                } : {};
+
                 const res = await adminFetch('/api/admin/newsletter?action=save', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -2726,7 +2908,10 @@
                         id: nlCurrentDraftId,
                         subject: document.getElementById('nl-subject').value.trim(),
                         content,
-                        intention: document.getElementById('nl-intention').value.trim()
+                        intention: document.getElementById('nl-intention').value.trim(),
+                        type: nlCurrentType,
+                        images: nlSelectedImages.map(s => ({ path: s.path, name: s.name })),
+                        extra
                     })
                 });
                 const data = await res.json();
@@ -2800,7 +2985,7 @@
         function nlRenderDrafts() {
             const tbody = document.getElementById('nl-drafts-tbody');
             if (!nlDrafts.length) {
-                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-12 text-gold/30 cormorant text-lg">Aucune newsletter</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="4" class="text-center py-12 text-gold/30 cormorant text-lg">Aucune communication</td></tr>';
                 return;
             }
             tbody.innerHTML = nlDrafts.map(d => `
@@ -2810,6 +2995,11 @@
                         ${d.intention ? `<p class="text-xs text-gold/40 mt-0.5 italic">${d.intention}</p>` : ''}
                     </td>
                     <td class="px-6 py-4">
+                        <span class="text-xs px-2 py-1 rounded-full mr-1 ${d.type === 'promo'
+                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
+                            : 'bg-purple-500/20 text-purple-300 border border-purple-500/30'}">
+                            ${d.type === 'promo' ? 'Promo' : 'Newsletter'}
+                        </span>
                         <span class="text-xs px-2 py-1 rounded-full ${d.statut === 'envoyé'
                             ? 'bg-green-500/20 text-green-300 border border-green-500/30'
                             : 'bg-gold/10 text-gold border border-gold/30'}">
@@ -2871,6 +3061,19 @@
                     const placeholder = document.getElementById('nl-placeholder');
                     const saveZone   = document.getElementById('nl-save-zone');
                     const sendZone   = document.getElementById('nl-send-zone');
+
+                    nlSetType(data.type === 'promo' ? 'promo' : 'newsletter');
+                    if (data.intention) document.getElementById('nl-intention').value = data.intention;
+
+                    const extra = data.extra || {};
+                    if (data.type === 'promo') {
+                        document.getElementById('nl-cta-text').value = extra.cta_text || '';
+                        document.getElementById('nl-cta-url').value = extra.cta_url || '';
+                        document.getElementById('nl-cta-badge').value = extra.badge || '';
+                    }
+
+                    nlSelectedImages = (data.images || []).map((img, i) => ({ index: i, path: img.path, name: img.name }));
+
                     if (data.content) {
                         contentEl.value = data.content;
                         contentEl.classList.remove('hidden');
@@ -3484,6 +3687,214 @@
                 console.error('[Admin] loadCosts error:', e);
                 ['costsTotalMonthly','costsTirages','costsClaudeCalls','costsClaudeCost','costsClaudeTokens','costsQrngAnu'].forEach(id =>
                     setEl(id, '<span class="text-red-400 text-xs">Erreur</span>'));
+            }
+        }
+
+        async function loadMonitoring() {
+            const setEl = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
+            setEl('auditGlobalScore', '<span class="animate-pulse">…</span>');
+            setEl('auditSummary', '<span class="animate-pulse">…</span>');
+            setEl('auditScores', '<span class="animate-pulse">…</span>');
+            setEl('auditTopIssues', '<span class="animate-pulse">…</span>');
+            setEl('auditHistory', '<span class="animate-pulse">…</span>');
+            setEl('uptimeContent', '<span class="animate-pulse">…</span>');
+            setEl('supabaseStatusContent', '<span class="animate-pulse">…</span>');
+
+            const scoreColor = s => s >= 80 ? '#22c55e' : s >= 60 ? '#f59e0b' : '#ef4444';
+            const scoreGrade = s => s >= 90 ? 'A' : s >= 80 ? 'B' : s >= 60 ? 'C' : s >= 40 ? 'D' : 'F';
+
+            try {
+                const res  = await adminFetch('/api/admin/data?section=monitoring');
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+
+                const d = data.data;
+                const audits = d.audits || [];
+                const latest = audits[0];
+
+                if (!latest) {
+                    setEl('auditGlobalScore', '<span class="text-light-gold/40 text-sm">Aucun audit reçu pour le moment</span>');
+                    setEl('auditSummary', '');
+                    setEl('auditScores', '');
+                    setEl('auditTopIssues', '<p class="text-light-gold/30 text-sm italic">Le premier rapport apparaîtra ici après le prochain audit quotidien.</p>');
+                } else {
+                    document.getElementById('auditLastDate').textContent =
+                        new Date(latest.created_at).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' });
+
+                    const gs = latest.global_score;
+                    setEl('auditGlobalScore', gs != null
+                        ? `<div style="display:inline-flex;align-items:center;justify-content:center;width:56px;height:56px;border-radius:50%;font-weight:700;font-size:1.4rem;color:#fff;background:${scoreColor(gs)};">${scoreGrade(gs)}</div>`
+                        : '<span class="text-light-gold/40 text-sm">—</span>');
+
+                    const sum = latest.summary || {};
+                    setEl('auditSummary', `
+                        <div class="bg-[rgba(5,20,40,0.6)] border border-red-500/20 rounded-lg p-2 text-center"><div class="text-red-400 font-bold text-lg">${sum.critical || 0}</div><div class="text-light-gold/40">Critiques</div></div>
+                        <div class="bg-[rgba(5,20,40,0.6)] border border-orange-500/20 rounded-lg p-2 text-center"><div class="text-orange-400 font-bold text-lg">${sum.important || 0}</div><div class="text-light-gold/40">Importants</div></div>
+                        <div class="bg-[rgba(5,20,40,0.6)] border border-yellow-500/20 rounded-lg p-2 text-center"><div class="text-yellow-400 font-bold text-lg">${sum.minor || 0}</div><div class="text-light-gold/40">Mineurs</div></div>
+                        <div class="bg-[rgba(5,20,40,0.6)] border border-green-500/20 rounded-lg p-2 text-center"><div class="text-green-400 font-bold text-lg">${sum.ok || 0}</div><div class="text-light-gold/40">OK</div></div>
+                    `);
+
+                    const scores = latest.scores || {};
+                    setEl('auditScores', Object.entries(scores)
+                        .filter(([, s]) => s !== null && s !== undefined)
+                        .map(([label, s]) => `
+                            <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-3 text-center">
+                                <div style="display:inline-flex;align-items:center;justify-content:center;width:32px;height:32px;border-radius:50%;font-weight:700;font-size:0.85rem;color:#fff;background:${scoreColor(s)};margin-bottom:4px;">${scoreGrade(s)}</div>
+                                <div class="text-light-gold/60 text-xs">${label}</div>
+                                <div class="text-light-gold/80 text-xs font-semibold">${s}/100</div>
+                            </div>
+                        `).join(''));
+
+                    const topIssues = latest.top_issues || [];
+                    setEl('auditTopIssues', topIssues.length === 0
+                        ? '<p class="text-green-400 text-sm"><i class="fas fa-check-circle mr-1"></i>Aucun problème critique ou important détecté.</p>'
+                        : topIssues.map(i => `
+                            <div class="flex items-start gap-2 border-b border-gold/10 pb-2 last:border-0 last:pb-0">
+                                <span class="mt-0.5">${i.level === 'critical' ? '🔴' : '🟠'}</span>
+                                <div>
+                                    <div class="text-light-gold/80">${i.title}</div>
+                                    ${i.detail ? `<div class="text-light-gold/40 text-xs mt-0.5">${i.detail}</div>` : ''}
+                                </div>
+                            </div>
+                        `).join(''));
+                }
+
+                // Historique
+                setEl('auditHistory', audits.length === 0
+                    ? '<p class="text-light-gold/30 text-sm italic">Pas encore d\'historique.</p>'
+                    : audits.map(a => {
+                        const gs = a.global_score;
+                        const sum = a.summary || {};
+                        return `
+                            <div class="flex items-center justify-between border-b border-gold/10 pb-2 last:border-0 last:pb-0">
+                                <div class="text-light-gold/70">${new Date(a.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' })}</div>
+                                <div class="flex items-center gap-3">
+                                    <span class="text-red-400 text-xs">${sum.critical || 0} 🔴</span>
+                                    <span class="text-orange-400 text-xs">${sum.important || 0} 🟠</span>
+                                    ${gs != null ? `<div style="display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;font-weight:700;font-size:0.75rem;color:#fff;background:${scoreColor(gs)};">${scoreGrade(gs)}</div>` : '—'}
+                                </div>
+                            </div>`;
+                    }).join(''));
+
+                // Badge sidebar : nombre de critiques du dernier audit + monitors down
+                const badge = document.getElementById('nav-badge-monitoring');
+                let alertCount = (latest?.summary?.critical || 0);
+
+                // UptimeRobot
+                const uptime = d.uptime;
+                if (!uptime) {
+                    setEl('uptimeContent', `
+                        <p class="text-light-gold/40 text-sm">UptimeRobot n'est pas encore connecté.</p>
+                        <p class="text-light-gold/30 text-xs mt-1">Pour l'activer : ajoute la variable d'environnement <code class="text-gold">UPTIMEROBOT_API_KEY</code> (clé "Read-Only API Key" trouvable dans UptimeRobot &gt; My Settings &gt; API Settings) dans les paramètres Vercel du projet, puis redéploie.</p>
+                    `);
+                } else if (uptime.error) {
+                    setEl('uptimeContent', `<p class="text-red-400 text-sm">Erreur UptimeRobot : ${uptime.error}</p>`);
+                } else {
+                    const statusLabel = s => ({ 0: 'En pause', 1: 'Non vérifié', 2: 'En ligne', 8: 'Semble en panne', 9: 'En panne' }[s] || 'Inconnu');
+                    const statusClass = s => ({ 0: 'text-light-gold/40', 1: 'text-light-gold/40', 2: 'text-green-400', 8: 'text-orange-400', 9: 'text-red-400' }[s] || 'text-light-gold/40');
+                    alertCount += uptime.monitors.filter(m => m.status === 8 || m.status === 9).length;
+
+                    setEl('uptimeContent', uptime.monitors.length === 0
+                        ? '<p class="text-light-gold/40 text-sm">Aucun moniteur configuré sur UptimeRobot.</p>'
+                        : uptime.monitors.map(m => `
+                            <div class="flex items-center justify-between border-b border-gold/10 pb-2 last:border-0 last:pb-0">
+                                <div>
+                                    <div class="text-light-gold/80">${m.name}</div>
+                                    <div class="text-light-gold/40 text-xs">${m.url}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="font-semibold ${statusClass(m.status)}"><i class="fas fa-circle text-xs mr-1"></i>${statusLabel(m.status)}</div>
+                                    ${m.uptimeRatio30d ? `<div class="text-light-gold/40 text-xs">${m.uptimeRatio30d}% sur 30j</div>` : ''}
+                                </div>
+                            </div>
+                        `).join(''));
+                }
+
+                if (badge) badge.textContent = alertCount > 0 ? alertCount : '';
+
+                // Supabase : usage & sauvegardes
+                const sb = d.supabaseStatus;
+                if (!sb || !sb.configured) {
+                    setEl('supabaseStatusContent', `
+                        <p class="text-light-gold/40 text-sm">Le suivi Supabase n'est pas encore connecté.</p>
+                        <p class="text-light-gold/30 text-xs mt-1">Pour l'activer : crée un token d'accès personnel sur <span class="text-gold">supabase.com &gt; Account &gt; Access Tokens</span>, puis ajoute-le comme variable d'environnement <code class="text-gold">SUPABASE_ACCESS_TOKEN</code> dans les paramètres Vercel du projet, et redéploie.</p>
+                        <p class="text-light-gold/30 text-xs mt-2">En attendant, consulte l'usage directement sur <span class="text-gold">Supabase &gt; Project Settings &gt; Usage</span> et les sauvegardes sur <span class="text-gold">Database &gt; Backups</span>.</p>
+                    `);
+                } else if (sb.error && !sb.usage && !sb.backups) {
+                    setEl('supabaseStatusContent', `<p class="text-red-400 text-sm">Erreur Supabase : ${sb.error}</p>`);
+                } else {
+                    let html = '';
+
+                    if (sb.usage) {
+                        const fmtBytes = b => b == null ? '—' : `${(b / (1024*1024)).toFixed(1)} Mo`;
+                        const u = sb.usage;
+                        html += `
+                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+                                <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-2 text-center">
+                                    <div class="text-gold font-bold">${fmtBytes(u.db_size?.usage)}</div>
+                                    <div class="text-light-gold/40 text-xs">Base de données</div>
+                                </div>
+                                <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-2 text-center">
+                                    <div class="text-gold font-bold">${fmtBytes(u.storage_size?.usage)}</div>
+                                    <div class="text-light-gold/40 text-xs">Stockage fichiers</div>
+                                </div>
+                                <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-2 text-center">
+                                    <div class="text-gold font-bold">${u.monthly_active_users?.usage ?? '—'}</div>
+                                    <div class="text-light-gold/40 text-xs">Utilisateurs actifs/mois</div>
+                                </div>
+                                <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-2 text-center">
+                                    <div class="text-gold font-bold">${fmtBytes(u.egress?.usage)}</div>
+                                    <div class="text-light-gold/40 text-xs">Bande passante (egress)</div>
+                                </div>
+                            </div>
+                        `;
+                    }
+
+                    if (sb.backups) {
+                        html += `<div class="text-light-gold/60 text-xs mb-2">Sauvegardes automatiques (PITR) : <span class="${sb.backups.pitrEnabled ? 'text-green-400' : 'text-orange-400'}">${sb.backups.pitrEnabled ? 'activées' : 'désactivées (plan gratuit)'}</span></div>`;
+                        html += sb.backups.backups.length === 0
+                            ? '<p class="text-light-gold/30 text-sm italic">Aucune sauvegarde listée par l\'API Supabase.</p>'
+                            : sb.backups.backups.map(b => `
+                                <div class="flex items-center justify-between border-b border-gold/10 pb-2 last:border-0 last:pb-0">
+                                    <div class="text-light-gold/70">${b.createdAt ? new Date(b.createdAt).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</div>
+                                    <div class="text-light-gold/40 text-xs">${b.status || ''} ${b.isPhysical ? '(physique)' : ''}</div>
+                                </div>
+                            `).join('');
+                    }
+
+                    if (sb.error) {
+                        html += `<p class="text-orange-400 text-xs mt-2">Avertissement : ${sb.error}</p>`;
+                    }
+
+                    setEl('supabaseStatusContent', html || '<p class="text-light-gold/40 text-sm">Aucune donnée disponible.</p>');
+                }
+
+            } catch (e) {
+                console.error('[Admin] loadMonitoring error:', e);
+                ['auditGlobalScore','auditSummary','auditScores','auditTopIssues','auditHistory','uptimeContent','supabaseStatusContent'].forEach(id =>
+                    setEl(id, '<span class="text-red-400 text-xs">Erreur de chargement</span>'));
+            }
+        }
+
+        async function downloadExport(table) {
+            try {
+                const res = await adminFetch(`/api/admin/data?section=export&table=${table}`);
+                if (!res.ok) {
+                    alert('Erreur lors de l\'export.');
+                    return;
+                }
+                const blob = await res.blob();
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${table}-${new Date().toISOString().slice(0, 10)}.csv`;
+                document.body.appendChild(a);
+                a.click();
+                a.remove();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                console.error('[Admin] downloadExport error:', e);
+                alert('Erreur lors de l\'export.');
             }
         }
 

@@ -1114,6 +1114,51 @@ async function cleanupOldReports() {
   }
 }
 
+// ─── ENVOI DU RÉSUMÉ VERS SUPABASE (pour le dashboard admin) ──
+async function pushReportToSupabase() {
+  const SUPABASE_URL = process.env.SUPABASE_URL;
+  const SUPABASE_SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+    log('   ⚠️  SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY absents : audit non envoyé au dashboard');
+    return;
+  }
+
+  const globalScore = Math.round(
+    Object.values(report.scores).filter(s => s !== null).reduce((a, b) => a + b, 0) /
+    Object.values(report.scores).filter(s => s !== null).length
+  );
+
+  const topIssues = [];
+  for (const [key, items] of Object.entries(report.sections)) {
+    for (const item of items) {
+      if (item.level === 'critical' || item.level === 'important') {
+        topIssues.push({ level: item.level, category: key, title: item.title, detail: item.detail || '' });
+      }
+    }
+  }
+
+  try {
+    await axios.post(`${SUPABASE_URL}/rest/v1/audit_reports`, {
+      target_url: BASE_URL,
+      global_score: Number.isFinite(globalScore) ? globalScore : null,
+      scores: report.scores,
+      summary: report.summary,
+      top_issues: topIssues,
+    }, {
+      headers: {
+        'apikey': SUPABASE_SERVICE_ROLE_KEY,
+        'Authorization': `Bearer ${SUPABASE_SERVICE_ROLE_KEY}`,
+        'Content-Type': 'application/json',
+        'Prefer': 'return=minimal',
+      },
+    });
+    log('   ✅ Résumé de l\'audit envoyé au dashboard admin');
+  } catch (e) {
+    log('   ⚠️  Erreur envoi audit vers Supabase : ' + (e.response?.data?.message || e.message));
+  }
+}
+
 // ─── MAIN ────────────────────────────────────────────────────
 async function main() {
   console.log('\n' + '═'.repeat(60));
@@ -1160,6 +1205,7 @@ async function main() {
   console.log(`  🟢 ${report.summary.ok} OK`);
   console.log('═'.repeat(60) + '\n');
 
+  await pushReportToSupabase();
   await sendReportByEmail(reportPath);
 }
 

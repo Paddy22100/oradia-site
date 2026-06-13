@@ -1,10 +1,9 @@
 name: Audit oradia.fr
 
 on:
-  # Automatique : lundi et jeudi à 8h55 heure de Paris (UTC+2 en été)
+  # Automatique : tous les jours à 8h55 heure de Paris (UTC+2 en été)
   schedule:
-    - cron: '55 6 * * 1'   # Lundi    06:55 UTC = 08:55 Paris
-    - cron: '55 6 * * 4'   # Jeudi    06:55 UTC = 08:55 Paris
+    - cron: '55 6 * * *'   # Tous les jours 06:55 UTC = 08:55 Paris
 
   # Manuel : depuis l'onglet Actions sur GitHub
   workflow_dispatch:
@@ -55,12 +54,39 @@ jobs:
           AUDIT_SMTP_SECURE=${{ secrets.AUDIT_SMTP_SECURE }}
           AUDIT_SMTP_USER=${{ secrets.AUDIT_SMTP_USER }}
           AUDIT_SMTP_PASS=${{ secrets.AUDIT_SMTP_PASS }}
+          SUPABASE_URL=${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY=${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           EOF
 
       # ─── 6. Lancement de l'audit ──────────────────────────
       - name: Run audit
         working-directory: ./audit
         run: node audit-oradia.js
+
+      # ─── 6b. Vérification automatique des livraisons Mondial Relay ─
+      - name: Check Mondial Relay deliveries
+        if: always()
+        run: |
+          curl -s -o /dev/null -w "Statut: %{http_code}\n" -X POST \
+            -H "Content-Type: application/json" \
+            -H "X-Cron-Secret: ${{ secrets.CRON_SECRET }}" \
+            -d '{"action":"mr-check-deliveries"}' \
+            "${{ inputs.target_url || 'https://oradia.fr' }}/api/admin/data"
+
+      # ─── 6c. Export mensuel des tables (preorders/donors/tirages) ─
+      # Envoyé par email le 1er de chaque mois uniquement
+      - name: Monthly data export
+        if: always()
+        run: |
+          if [ "$(date +%d)" = "01" ]; then
+            curl -s -o /dev/null -w "Statut export mensuel: %{http_code}\n" -X POST \
+              -H "Content-Type: application/json" \
+              -H "X-Cron-Secret: ${{ secrets.CRON_SECRET }}" \
+              -d '{"action":"monthly-export-email"}' \
+              "${{ inputs.target_url || 'https://oradia.fr' }}/api/admin/data"
+          else
+            echo "Pas le 1er du mois, export ignoré."
+          fi
 
       # ─── 7. Upload du rapport comme artifact GitHub ────────
       - name: Upload audit report
