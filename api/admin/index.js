@@ -8,8 +8,6 @@ const jwt = require('jsonwebtoken');
 const { parse: parseCookie, serialize: serializeCookie } = require('cookie');
 const xml2js = require('xml2js');
 const crypto = require('crypto');
-const fs = require('fs');
-const path = require('path');
 const { sendShippingEmail, sendExportEmail } = require('../../lib/brevo-order-email.js');
 
 // Tables exportables (récap mensuel preorders/donors/tirages)
@@ -449,11 +447,30 @@ async function handleData(req, res) {
       const page   = parseInt(req.query?.page  || '1', 10);
       const limit  = parseInt(req.query?.limit || '10', 10);
       const offset = (page - 1) * limit;
-      const { data, count, error } = await supabase
+      const status = req.query?.status || 'all';
+      const period = req.query?.period || 'all';
+      const offer  = req.query?.offer  || 'all';
+      const q      = (req.query?.q || '').trim();
+
+      let query = supabase
         .from('preorders')
         .select('*', { count: 'exact' })
-        .order('created_at', { ascending: false })
-        .range(offset, offset + limit - 1);
+        .order('created_at', { ascending: false });
+
+      if (status !== 'all') query = query.eq('paid_status', status);
+      if (offer  !== 'all') query = query.eq('offer', offer);
+      if (q) query = query.or(`email.ilike.%${q}%,full_name.ilike.%${q}%`);
+
+      if (period !== 'all') {
+        const now = new Date();
+        const since = new Date(now);
+        if (period === 'today') since.setHours(0, 0, 0, 0);
+        else if (period === '7d') since.setDate(now.getDate() - 7);
+        else if (period === '30d') since.setDate(now.getDate() - 30);
+        query = query.gte('created_at', since.toISOString());
+      }
+
+      const { data, count, error } = await query.range(offset, offset + limit - 1);
       if (error) throw error;
       return res.status(200).json({
         success: true,
@@ -1474,7 +1491,14 @@ const NL_PRODUIT_IMAGES = [
   { file: 'coin-oradia.webp', name: 'Détail Oradia' }
 ];
 
-const NL_AMBIANCE_DIR = path.join(process.cwd(), 'images', 'newsletter', 'ambiance');
+// Images "Ma bibliothèque" : liste statique (mise à jour manuellement si de nouvelles images
+// sont ajoutées dans images/newsletter/ambiance/). Volontairement codée en dur — un fs.readdir
+// sur ce dossier ferait inclure tout le dossier /images (350+ Mo) dans la fonction serverless
+// et dépasserait la limite de taille Vercel.
+const NL_AMBIANCE_IMAGES = [
+  { file: 'unsplash_hrerggbegny_accueillir_la_vuln_rabilit_.webp', name: 'Accueillir la vulnérabilité 1' },
+  { file: 'unsplash_mgf7vfrbrei_accueillir_la_vuln_rabilit_.webp', name: 'Accueillir la vulnérabilité 2' }
+];
 
 async function handleNewsletterImages(req, res) {
   try {
@@ -1500,25 +1524,11 @@ async function handleNewsletterImages(req, res) {
 
       // 1. Images produit (assets statiques du site)
       const produit = NL_PRODUIT_IMAGES
-        .filter(img => fs.existsSync(path.join(process.cwd(), 'images', img.file)))
         .map(img => ({ path: `/images/${img.file}`, name: img.name, source: 'local' }));
 
       // 2. Ma bibliothèque (images déjà collectées pour les newsletters)
-      let ambiance_locale = [];
-      try {
-        const allFiles = fs.readdirSync(NL_AMBIANCE_DIR).filter(f => /\.(webp|jpe?g|png)$/i.test(f));
-        const basenames = [...new Set(allFiles.map(f => f.replace(/\.(webp|jpe?g|png)$/i, '')))];
-        ambiance_locale = basenames.map(base => {
-          const file = allFiles.find(f => f === base + '.webp') || allFiles.find(f => f.startsWith(base + '.'));
-          return {
-            path: `/images/newsletter/ambiance/${file}`,
-            name: base.replace(/[_-]+/g, ' '),
-            source: 'local'
-          };
-        });
-      } catch (e) {
-        console.error('Erreur lecture dossier ambiance:', e.message);
-      }
+      const ambiance_locale = NL_AMBIANCE_IMAGES
+        .map(img => ({ path: `/images/newsletter/ambiance/${img.file}`, name: img.name, source: 'local' }));
 
       // 3. Unsplash (uniquement si une clé API est configurée)
       let unsplash = [];

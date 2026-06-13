@@ -555,9 +555,10 @@ async function auditAuth(browser) {
 
     await emailField.fill(TEST_EMAIL);
     await passField.fill(TEST_PASS);
+    await submitBtn.scrollIntoViewIfNeeded().catch(() => null);
     await Promise.all([
       page.waitForNavigation({ timeout: 15000 }).catch(() => null),
-      submitBtn.click(),
+      submitBtn.click({ timeout: 10000 }),
     ]);
     await page.waitForTimeout(3000);
 
