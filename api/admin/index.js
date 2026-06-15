@@ -1315,46 +1315,70 @@ function buildCommunicationEmailHtml(draft) {
   const ctaText = extra.cta_text || (isPromo ? "Découvrir l'offre" : "Découvrir l'Oracle Oradia");
   const ctaUrl = extra.cta_url || 'https://oradia.fr';
 
-  const imagesHtml = images.length > 0 ? `
-    <tr><td style="padding:0 40px 30px;">
-      <table width="100%" cellpadding="0" cellspacing="0"><tr>
-        ${images.map(img => `<td style="padding:0 8px; text-align:center;"><img src="${nlAbsUrl(img.path)}" alt="${nlEscHtml(img.name || '')}" style="width:100%; max-height:200px; object-fit:cover; border-radius:12px;"></td>`).join('')}
-      </tr></table>
-    </td></tr>` : '';
-
   const badgeHtml = isPromo && extra.badge
     ? `<p style="margin:0 0 14px;"><span style="display:inline-block; background:#d4af37; color:#0a192f; padding:6px 16px; border-radius:20px; font-size:12px; font-weight:700; letter-spacing:0.1em; text-transform:uppercase;">${nlEscHtml(extra.badge)}</span></p>`
     : '';
 
+  // Répartit les images sélectionnées dans le corps du texte (entre les paragraphes)
+  // au lieu de les empiler en haut de l'email, pour aérer la lecture.
+  const paragraphs = content.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+  const totalParas = paragraphs.length || 1;
+  const totalImages = images.length;
+
+  const imageRow = (img) => `
+    <tr><td style="padding:0 32px 24px;">
+      <img src="${nlAbsUrl(img.path)}" alt="${nlEscHtml(img.name || '')}" style="display:block; width:100%; max-height:320px; object-fit:cover; border-radius:14px;">
+    </td></tr>`;
+
+  let bodyRows = '';
+  let imgIdx = 0;
+  paragraphs.forEach((para, i) => {
+    // Insère une image avant ce paragraphe si on atteint son point de répartition
+    while (imgIdx < totalImages && Math.floor((imgIdx + 1) * totalParas / (totalImages + 1)) === i) {
+      bodyRows += imageRow(images[imgIdx]);
+      imgIdx++;
+    }
+    bodyRows += `<tr><td style="padding:0 32px 20px;">
+      <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif;">${nlEscHtml(para).replace(/\n/g, '<br>')}</div>
+    </td></tr>`;
+  });
+  // Images restantes (s'il y en a plus que de paragraphes pour les répartir)
+  while (imgIdx < totalImages) {
+    bodyRows += imageRow(images[imgIdx]);
+    imgIdx++;
+  }
+
   return `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
-<body style="margin:0; padding:0; background:#040d1c;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#040d1c;"><tr><td align="center" style="padding:24px 12px;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#0a192f 0%,#051428 100%); max-width:600px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.15);">
+<body style="margin:0; padding:0; background-color:#040d1c;">
+<table width="100%" cellpadding="0" cellspacing="0" background="https://oradia.fr/images/oradia-hero-4k.webp" bgcolor="#040d1c" style="background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat; background-color:#040d1c;">
+<tr><td align="center" style="padding:32px 12px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.96) 100%); max-width:640px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
   <tr><td background="https://oradia.fr/images/oradia-hero-4k.webp" bgcolor="#0a192f" style="background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat;">
-    <table width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:50px 40px; text-align:center; background:linear-gradient(135deg, rgba(10,25,47,0.78) 0%, rgba(5,20,40,0.85) 100%);">
-      <h1 style="margin:0; color:#d4af37; font-family:Georgia,serif; font-size:30px; font-weight:700; letter-spacing:0.1em; line-height:1;">
-        <img src="https://oradia.fr/images/logo-hd-v2.webp" alt="O" width="32" height="32" style="height:32px; width:32px; vertical-align:middle; border-radius:50%; margin-right:4px; display:inline-block;">RADIA
-      </h1>
+    <table width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:50px 32px; text-align:center; background:linear-gradient(135deg, rgba(10,25,47,0.78) 0%, rgba(5,20,40,0.85) 100%);">
+      <table cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr>
+        <td style="vertical-align:middle; padding-right:8px;"><img src="https://oradia.fr/images/logo-hd-v2.webp" alt="O" width="34" height="34" style="display:block; height:34px; width:34px; border-radius:50%;"></td>
+        <td style="vertical-align:middle;"><span style="color:#d4af37; font-family:Georgia,serif; font-size:30px; font-weight:700; letter-spacing:0.1em; line-height:34px;">RADIA</span></td>
+      </tr></table>
       <p style="margin:10px 0 0; color:#f5e7a1; font-size:16px; font-style:italic; letter-spacing:0.1em;">La Boussole Intérieure</p>
       ${intention ? `<p style="margin:20px 0 0; color:#c8c0a8; font-size:14px; font-style:italic;">« ${nlEscHtml(intention)} »</p>` : ''}
     </td></tr></table>
   </td></tr>
-  ${imagesHtml}
-  <tr><td style="padding:30px 40px;">
+  <tr><td style="padding:30px 32px 0;">
     ${badgeHtml}
     ${subject ? `<h2 style="color:#d4af37; font-family:Georgia,serif; font-size:24px; margin:0 0 20px;">${nlEscHtml(subject)}</h2>` : ''}
-    <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; white-space:pre-wrap;">${nlEscHtml(content).replace(/\n/g, '<br>')}</div>
   </td></tr>
-  <tr><td style="padding:0 40px 40px; text-align:center;">
+  ${bodyRows}
+  <tr><td style="padding:10px 32px 40px; text-align:center;">
     <a href="${nlAbsUrl(ctaUrl).replace(/"/g, '')}" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">${nlEscHtml(ctaText)}</a>
   </td></tr>
-  <tr><td style="padding:30px 40px; border-top:1px solid rgba(212,175,55,0.2); text-align:center;">
+  <tr><td style="padding:30px 32px; border-top:1px solid rgba(212,175,55,0.2); text-align:center;">
     <p style="margin:0 0 10px; color:#f5e7a1; font-size:14px; opacity:0.8;">Avec gratitude,<br>Rudy Boucheron</p>
     <p style="margin:20px 0 0; color:#c8c0a8; font-size:12px; opacity:0.6;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none;">oradia.fr</a></p>
     <p style="margin:15px 0 0; color:#c8c0a8; font-size:11px; opacity:0.5;">Vous recevez cet email car vous êtes abonné·e aux communications Oradia. <a href="{unsubscribe}" style="color:#c8c0a8;">Se désabonner</a></p>
   </td></tr>
 </table>
+</td></tr></table>
 </td></tr></table>
 </body></html>`;
 }
