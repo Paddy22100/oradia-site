@@ -2130,6 +2130,9 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Erreur');
+                if (!data.brevoDeleted) {
+                    alert("Contact supprimé du dashboard. Attention : il n'a pas pu être supprimé de Brevo automatiquement — pense à le retirer manuellement de tes listes Brevo.");
+                }
                 loadWaitlist(currentData.waitlistPagination?.page || 1);
             } catch (e) {
                 alert('Erreur : ' + e.message);

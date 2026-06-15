@@ -492,9 +492,33 @@ async function handleData(req, res) {
       if (action === 'delete-contact') {
         const { id } = body;
         if (!id) return res.status(400).json({ error: 'id requis' });
+
+        const { data: contact, error: fetchErr } = await supabase
+          .from('newsletter_contacts')
+          .select('id, email')
+          .eq('id', id)
+          .maybeSingle();
+        if (fetchErr) throw fetchErr;
+
         const { error } = await supabase.from('newsletter_contacts').delete().eq('id', id);
         if (error) throw error;
-        return res.status(200).json({ success: true });
+
+        // Supprime également le contact de Brevo (toutes listes) pour rester synchronisé.
+        let brevoDeleted = false;
+        const BREVO_API_KEY = process.env.BREVO_API_KEY;
+        if (contact?.email && BREVO_API_KEY) {
+          try {
+            const r = await fetch(`https://api.brevo.com/v3/contacts/${encodeURIComponent(contact.email)}`, {
+              method: 'DELETE',
+              headers: { 'api-key': BREVO_API_KEY }
+            });
+            brevoDeleted = r.ok || r.status === 404;
+          } catch (e) {
+            console.error('Brevo delete error for', contact.email, e.message);
+          }
+        }
+
+        return res.status(200).json({ success: true, brevoDeleted });
       }
 
       return res.status(400).json({ error: 'Action invalide' });
