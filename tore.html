@@ -4644,6 +4644,21 @@ function showToreAnalysisCTA() {
 
 
 
+  // Marque comme tirées une carte ET sa carte miroir (même carte physique, face opposée).
+  // Les cartes sont rangées par paires miroir consécutives (index 0/1, 2/3, 4/5, ...).
+  function markCardAndMirrorDrawn(pool, idx) {
+    const card = pool[idx];
+    const cardId = card.name || card.file || JSON.stringify(card);
+    drawnCards.add(cardId);
+    const mirrorIdx = idx % 2 === 0 ? idx + 1 : idx - 1;
+    const mirror = pool[mirrorIdx];
+    if (mirror) {
+      const mirrorId = mirror.name || mirror.file || JSON.stringify(mirror);
+      drawnCards.add(mirrorId);
+    }
+    return card;
+  }
+
   async function pickFromData(familyKey, avoidDuplicates = true) {
 
     const pool = Array.isArray(window.DATA?.[familyKey]) ? window.DATA[familyKey] : [];
@@ -4690,9 +4705,7 @@ function showToreAnalysisCTA() {
         drawnCards.clear();
         try {
           const idx = await QRNG.getInt(0, pool.length);
-          const selectedCard = pool[idx];
-          const cardId = selectedCard.name || selectedCard.file || JSON.stringify(selectedCard);
-          drawnCards.add(cardId);
+          const selectedCard = markCardAndMirrorDrawn(pool, idx);
           hideQrngLoading(); return selectedCard;
         } catch(e) {
           hideQrngLoading();
@@ -4706,16 +4719,14 @@ function showToreAnalysisCTA() {
       try {
         const idx = await QRNG.getInt(0, availableCards.length);
         const selectedCard = availableCards[idx];
-        const cardId = selectedCard.name || selectedCard.file || JSON.stringify(selectedCard);
-        drawnCards.add(cardId);
+        markCardAndMirrorDrawn(pool, pool.indexOf(selectedCard));
         hideQrngLoading(); return selectedCard;
       } catch(e) {
         hideQrngLoading();
         QRNG.markFallback();
         const idx = Math.floor(Math.random() * availableCards.length);
         const selectedCard = availableCards[idx];
-        const cardId = selectedCard.name || selectedCard.file || JSON.stringify(selectedCard);
-        drawnCards.add(cardId);
+        markCardAndMirrorDrawn(pool, pool.indexOf(selectedCard));
         return selectedCard || null;
       }
     }

@@ -1104,13 +1104,26 @@ const NL_TON_LABELS = {
   narratif: 'narratif, sous forme de récit court'
 };
 
+// Faits concrets sur le produit, à disposition du modèle pour ancrer le texte
+// dans le réel plutôt que dans des généralités marketing.
+const PRODUIT_FACTS = [
+  `Le Tore — La Boussole Intérieure : un oracle de 64 cartes (80x120mm), illustrations originales.`,
+  `Le coffret physique contient : 64 cartes, un livret A5 de 200 pages avec un conte initiatique, une pièce de tirage, une boîte rigide.`,
+  `Chaque tirage traverse 6 niveaux de lecture : émotion, besoin, transmutation, archétype, révélation, action.`,
+  `L'oracle tourne aussi en ligne sur oradia.fr : 2 tirages gratuits, puis accès complet à 8€/mois (espace personnel + historique des tirages) ou tirages ponctuels à 3,90€.`,
+  `Offres de lancement précommande : STANDARD à 38€ (coffret complet), ÉDITION SIGNATURE à 42€ — 100 exemplaires (coffret + dédicace personnalisée), GUIDANCE OFFERTE à 48€ (coffret + dédicace + séance de guidance en visio de 30 min).`
+].join('\n');
+
 function buildGeneratePrompt(body) {
-  const { type, intention, source, ton, energie, idees_bonus, promo_type, promo_details, cta_text } = body;
+  const { type, intention, source, ton, energie, idees_bonus, promo_type, promo_details, cta_text, cta_url } = body;
 
   const voiceRules = [
     `Tu écris au nom d'une personne réelle, la créatrice d'ORADIA (oracle de cartes "Le Tore"), pas au nom d'une marque ou d'une équipe.`,
     `Écris à la première personne du singulier ("je", "mon", "ma", "moi") — jamais "nous", "notre" ou "l'équipe Oradia".`,
     `Phrases courtes et directes. Vocabulaire simple, concret, parlé. Pas de tournures alambiquées, pas de jargon marketing, pas de superlatifs ("incroyable", "magique", "extraordinaire").`,
+    `Évite absolument les formules génériques de newsletter de créateur·rice ("C'est le moment", "Après des mois de travail", "Je suis vraiment impatiente de te montrer", "ça me permet de financer l'impression", "n'hésite pas à m'écrire, je lis vraiment les messages"). Remplace les affirmations vagues ("c'est beau", "c'est pensé pour durer", "je suis contente du résultat") par des faits concrets et vérifiables sur le produit.`,
+    `N'utilise jamais le tiret cadratin (—) dans le texte, y compris pour les listes. Pour une liste d'options ou de prix, utilise un retour à la ligne simple ou un tiret normal "-" suivi d'un espace.`,
+    `Utilise les faits suivants sur le produit pour ancrer le texte (n'en cite que ceux qui sont pertinents pour ce message, ne les recopie pas tous mécaniquement) :\n${PRODUIT_FACTS}`,
     `Termine par une formule de signature simple à la première personne (ex : "À très vite,") sans nom de marque ni "L'équipe ORADIA" — laisse la place libre pour une signature personnelle.`
   ];
 
@@ -1120,13 +1133,14 @@ function buildGeneratePrompt(body) {
       `Rédige un email promotionnel pour : ${PROMO_TYPE_LABELS[promo_type] || promo_type || 'une communication spéciale'}.`,
       `Sujet / annonce : ${intention}`,
       promo_details ? `Détails à intégrer : ${promo_details}` : '',
-      `Ton : chaleureux, sincère et incarné — comme si tu écrivais à un ami, mais clair sur l'offre/l'annonce.`,
-      `Le bouton d'action de l'email s'intitule : "${cta_text || 'Découvrir'}" — n'y fais pas explicitement référence dans le texte.`,
+      `Ton : sincère et incarné, mais surtout informatif et concret — explique ce qu'est le produit, ce qu'il contient, ce qui change, avant de chercher à créer de l'émotion.`,
+      `Si l'annonce porte sur une offre ou un lancement avec plusieurs formules (ex : plusieurs prix ou options), présente-les de façon structurée et lisible (une ligne par option avec son prix et ce qu'elle inclut), pas fondues dans un paragraphe.`,
+      `Le bouton d'action de l'email s'intitule : "${cta_text || 'Découvrir'}"${cta_url ? ` et pointe vers ${cta_url}` : ''}. Tu peux y faire référence dans le texte avec une phrase d'appel à l'action explicite juste avant.`,
       ``,
       `Réponds STRICTEMENT dans ce format, sans rien ajouter avant ou après :`,
-      `OBJET: <objet de l'email, percutant, sans emoji excessif>`,
+      `OBJET: <objet de l'email, percutant et concret, sans emoji excessif>`,
       ``,
-      `<corps de l'email en texte brut, 2 à 4 paragraphes courts, sans markdown>`
+      `<corps de l'email en texte brut, sans markdown, sans tiret cadratin (—) ; autant de paragraphes et de lignes que nécessaire pour être clair, y compris des listes avec "-" si besoin>`
     ].filter(Boolean).join('\n');
   }
 
