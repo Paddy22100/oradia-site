@@ -8,7 +8,19 @@ const jwt = require('jsonwebtoken');
 const { parse: parseCookie, serialize: serializeCookie } = require('cookie');
 const xml2js = require('xml2js');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const { sendShippingEmail, sendExportEmail } = require('../../lib/brevo-order-email.js');
+
+// Manifest statique des illustrations du Tore (généré une fois, fichier unique et léger —
+// ne pas remplacer par un fs.readdir sur /images, ça ferait bundler tout le dossier (350+ Mo)
+// et dépasserait la limite de taille des fonctions Vercel.
+let NL_LIBRARY_IMAGES = [];
+try {
+  NL_LIBRARY_IMAGES = JSON.parse(fs.readFileSync(path.join(__dirname, 'newsletter-images-manifest.json'), 'utf8'));
+} catch (e) {
+  console.error('Impossible de charger newsletter-images-manifest.json:', e.message);
+}
 
 // Tables exportables (récap mensuel preorders/donors/tirages)
 const EXPORTABLE_TABLES = ['preorders', 'donors', 'tirages'];
@@ -1500,6 +1512,66 @@ const NL_AMBIANCE_IMAGES = [
   { file: 'unsplash_mgf7vfrbrei_accueillir_la_vuln_rabilit_.webp', name: 'Accueillir la vulnérabilité 2' }
 ];
 
+// Petit dictionnaire FR → EN pour améliorer la pertinence des recherches Unsplash
+// (l'API Unsplash répond beaucoup mieux à des mots-clés anglais).
+const NL_FR_EN_DICT = {
+  'lâcher-prise': 'letting go', 'lacher-prise': 'letting go', 'lâcher prise': 'letting go',
+  'gratitude': 'gratitude', 'printemps': 'spring', 'été': 'summer', 'automne': 'autumn', 'hiver': 'winter',
+  'lumière': 'light', 'lumiere': 'light', 'ombre': 'shadow', 'silence': 'silence', 'calme': 'calm',
+  'océan': 'ocean', 'ocean': 'ocean', 'mer': 'sea', 'montagne': 'mountain', 'forêt': 'forest', 'foret': 'forest',
+  'rivière': 'river', 'riviere': 'river', 'ciel': 'sky', 'étoiles': 'stars', 'etoiles': 'stars',
+  'étoile': 'star', 'etoile': 'star', 'lune': 'moon', 'soleil': 'sun', 'racines': 'roots', 'racine': 'root',
+  'ancrage': 'grounding', 'transformation': 'transformation', 'renaissance': 'rebirth',
+  'intuition': 'intuition', 'sérénité': 'serenity', 'serenite': 'serenity', 'paix': 'peace',
+  'amour': 'love', 'compassion': 'compassion', 'vulnérabilité': 'vulnerability', 'vulnerabilite': 'vulnerability',
+  'courage': 'courage', 'confiance': 'trust', 'doute': 'doubt', 'peur': 'fear', 'joie': 'joy',
+  'tristesse': 'sadness', 'colère': 'anger', 'colere': 'anger', 'patience': 'patience',
+  'présence': 'presence', 'presence': 'presence', 'méditation': 'meditation', 'meditation': 'meditation',
+  'respiration': 'breathing', 'équilibre': 'balance', 'equilibre': 'balance', 'mouvement': 'movement',
+  'eau': 'water', 'terre': 'earth', 'feu': 'fire', 'air': 'air', 'vent': 'wind', 'pluie': 'rain',
+  'nuit': 'night', 'jour': 'day', 'aube': 'dawn', 'crépuscule': 'dusk', 'crepuscule': 'dusk',
+  'chemin': 'path', 'voyage': 'journey', 'porte': 'door', 'seuil': 'threshold', 'graine': 'seed',
+  'fleur': 'flower', 'fleurs': 'flowers', 'arbre': 'tree', 'arbres': 'trees', 'feuille': 'leaf',
+  'feuilles': 'leaves', 'vague': 'wave', 'vagues': 'waves', 'marée': 'tide', 'maree': 'tide',
+  'brume': 'mist', 'neige': 'snow', 'glace': 'ice', 'sable': 'sand', 'désert': 'desert', 'desert': 'desert',
+  'jardin': 'garden', 'nid': 'nest', 'cocon': 'cocoon', 'papillon': 'butterfly', 'oiseau': 'bird',
+  'plume': 'feather', 'miroir': 'mirror', 'cercle': 'circle', 'spirale': 'spiral', 'cristal': 'crystal',
+  'pierre': 'stone', 'pierres': 'stones', 'bois': 'wood', 'sentier': 'trail', 'horizon': 'horizon',
+  'aurore': 'sunrise', 'coucher de soleil': 'sunset', 'nature': 'nature', 'guérison': 'healing',
+  'guerison': 'healing', 'éveil': 'awakening', 'eveil': 'awakening', 'introspection': 'introspection',
+  'simplicité': 'simplicity', 'simplicite': 'simplicity', 'douceur': 'softness', 'liberté': 'freedom',
+  'liberte': 'freedom', 'espoir': 'hope', 'changement': 'change', 'cycle': 'cycle', 'saisons': 'seasons'
+};
+
+// Traduit grossièrement une intention/énergie en mots-clés anglais pour Unsplash.
+// Garde les mots non reconnus tels quels (souvent des noms propres ou déjà en anglais).
+function nlTranslateForUnsplash(text) {
+  if (!text) return '';
+  const normalized = text.toLowerCase()
+    .replace(/[.,;:!?«»"']/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+  // Essai sur les expressions à plusieurs mots d'abord
+  let remaining = normalized;
+  const found = [];
+  for (const [fr, en] of Object.entries(NL_FR_EN_DICT)) {
+    if (fr.includes(' ') || fr.includes('-')) {
+      if (remaining.includes(fr)) {
+        found.push(en);
+        remaining = remaining.replace(fr, ' ');
+      }
+    }
+  }
+
+  for (const word of remaining.split(' ')) {
+    if (!word) continue;
+    if (NL_FR_EN_DICT[word]) found.push(NL_FR_EN_DICT[word]);
+  }
+
+  return found.length ? found.slice(0, 4).join(' ') : 'nature calm minimal';
+}
+
 async function handleNewsletterImages(req, res) {
   try {
     verifyAdminAuth(req);
@@ -1526,17 +1598,19 @@ async function handleNewsletterImages(req, res) {
       const produit = NL_PRODUIT_IMAGES
         .map(img => ({ path: `/images/${img.file}`, name: img.name, source: 'local' }));
 
-      // 2. Ma bibliothèque (images déjà collectées pour les newsletters)
+      // 2. Ma bibliothèque (images déjà collectées pour les newsletters + illustrations du Tore)
       const ambiance_locale = NL_AMBIANCE_IMAGES
-        .map(img => ({ path: `/images/newsletter/ambiance/${img.file}`, name: img.name, source: 'local' }));
+        .map(img => ({ path: `/images/newsletter/ambiance/${img.file}`, name: img.name, source: 'local' }))
+        .concat(NL_LIBRARY_IMAGES.map(img => ({ path: img.path, name: img.name, source: 'local' })));
 
       // 3. Unsplash (uniquement si une clé API est configurée)
       let unsplash = [];
       const UNSPLASH_KEY = process.env.UNSPLASH_ACCESS_KEY;
       if (UNSPLASH_KEY) {
         try {
-          const query = body.theme_keywords || body.intention || 'contemplation';
-          const r = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=6&orientation=landscape`, {
+          const rawQuery = body.theme_keywords || body.intention || 'contemplation';
+          const query = nlTranslateForUnsplash(rawQuery);
+          const r = await fetch(`https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=6&orientation=landscape&content_filter=high`, {
             headers: { Authorization: `Client-ID ${UNSPLASH_KEY}` }
           });
           if (r.ok) {

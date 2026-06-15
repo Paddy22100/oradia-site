@@ -954,6 +954,13 @@
 
                 <div id="nl-send-zone" class="hidden bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6 mt-6">
                     <h4 class="cormorant text-xl text-gold mb-4">Envoyer à tes abonnés</h4>
+                    <div class="mb-6">
+                        <button onclick="nlSendPreviewSelf()" id="nl-btn-preview-self"
+                            class="w-full bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg py-2 hover:bg-blue-500/30 transition text-sm">
+                            <i class="fas fa-inbox mr-2"></i>Recevoir le rendu réel sur contact@oradia.fr
+                        </button>
+                        <p class="text-xs text-gold/30 mt-2 text-center italic">Envoie l'email tel qu'il apparaîtra dans une vraie boîte mail.</p>
+                    </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Email de test <span class="text-gold/30 normal-case text-xs">(recommandé)</span></label>
@@ -2555,9 +2562,13 @@
                 document.getElementById('nl-placeholder').classList.add('hidden');
                 const editor = document.getElementById('nl-content');
                 editor.classList.remove('hidden');
-                editor.value = data.content;
-                const m = data.content.match(/OBJET\s*:\s*(.+)/i);
-                if (m) document.getElementById('nl-subject').value = m[1].trim();
+                let bodyContent = data.content;
+                const m = bodyContent.match(/OBJET\s*:\s*(.+)/i);
+                if (m) {
+                    document.getElementById('nl-subject').value = m[1].trim();
+                    bodyContent = bodyContent.replace(/OBJET\s*:\s*.+(\r?\n)+/i, '').trim();
+                }
+                editor.value = bodyContent;
                 document.getElementById('nl-save-zone').classList.remove('hidden');
                 document.getElementById('nl-send-zone').classList.add('hidden');
                 nlCurrentDraftId = null;
@@ -2585,7 +2596,10 @@
                     <i class="fas fa-images mr-2"></i>Choisir 3 illustrations maximum
                 </h4>
                 <p class="text-xs text-gold/60 mb-3">Les images seront affichées dans la newsletter. Clique sur une image pour la voir en grand.</p>
-                <p class="text-xs text-gold/40 mb-5 uppercase tracking-widest">Sélectionne jusqu'à 3 images — Produit · Bibliothèque · Unsplash</p>
+                <p class="text-xs text-gold/40 mb-3 uppercase tracking-widest">Sélectionne jusqu'à 3 images — Produit · Bibliothèque · Unsplash</p>
+                <input type="text" id="nl-image-search" oninput="nlFilterImages()"
+                    class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-4 text-sm focus:outline-none focus:border-gold"
+                    placeholder="Rechercher une image (ex: lâcher-prise, océan, joie...)">
                 <div id="nl-images-grid" class="grid grid-cols-3 gap-4">
                     <div class="col-span-5 text-center py-6 text-gold/30 text-sm">
                         <i class="fas fa-spinner fa-spin mr-2"></i>Recherche d'images...
@@ -2614,7 +2628,6 @@
                 });
 
                 const data = await res.json();
-                const grid = document.getElementById('nl-images-grid');
 
                 const allImages = [];
                 // Ajouter les images produit (maintenant un tableau)
@@ -2622,13 +2635,29 @@
                 (data.ambiance_locale || []).forEach(img => allImages.push({ ...img, label: 'Ma bibliothèque' }));
                 (data.unsplash || []).forEach(img => allImages.push({ ...img, label: 'Unsplash' }));
 
-                if (!allImages.length) {
-                    grid.innerHTML = '<p class="col-span-5 text-center text-gold/30 text-sm py-4">Aucune image trouvée</p>';
-                    return;
-                }
-
                 window.nlAllImages = allImages;
-                grid.innerHTML = allImages.map((img, i) => `
+                nlRenderImagesGrid(allImages);
+
+            } catch(e) {
+                document.getElementById('nl-images-grid').innerHTML =
+                    '<p class="col-span-5 text-center text-red-400 text-sm py-4">Erreur chargement images</p>';
+            }
+        }
+
+        function nlNormalize(s) {
+            return (s || '').toString().toLowerCase()
+                .normalize('NFD').replace(/[̀-ͯ]/g, '');
+        }
+
+        function nlRenderImagesGrid(images) {
+            const grid = document.getElementById('nl-images-grid');
+            if (!images.length) {
+                grid.innerHTML = '<p class="col-span-5 text-center text-gold/30 text-sm py-4">Aucune image trouvée</p>';
+                return;
+            }
+            grid.innerHTML = images.map(img => {
+                const i = window.nlAllImages.indexOf(img);
+                return `
                     <div id="nl-img-option-${i}"
                         class="cursor-pointer rounded-xl overflow-hidden border-2 border-transparent hover:border-gold/50 transition-all duration-200 group relative"
                         onclick="nlPreviewImage(${i})">
@@ -2641,7 +2670,7 @@
                             <i class="fas fa-check mr-1"></i>Sélectionnée
                         </div>
                         <!-- Bouton +/check -->
-                        <button onclick="event.stopPropagation(); nlToggleImage(${i})" 
+                        <button onclick="event.stopPropagation(); nlToggleImage(${i})"
                             class="absolute top-2 right-2 w-8 h-8 rounded-full bg-black/60 hover:bg-black/80 flex items-center justify-center transition z-10"
                             id="nl-img-toggle-${i}">
                             <i class="fas fa-plus text-white text-sm"></i>
@@ -2657,12 +2686,16 @@
                             </span>
                         </div>
                     </div>
-                `).join('');
+                `;
+            }).join('');
+        }
 
-            } catch(e) {
-                document.getElementById('nl-images-grid').innerHTML =
-                    '<p class="col-span-5 text-center text-red-400 text-sm py-4">Erreur chargement images</p>';
-            }
+        function nlFilterImages() {
+            const q = nlNormalize(document.getElementById('nl-image-search').value.trim());
+            const all = window.nlAllImages || [];
+            if (!q) return nlRenderImagesGrid(all);
+            const filtered = all.filter(img => nlNormalize(img.name).includes(q) || nlNormalize(img.label).includes(q));
+            nlRenderImagesGrid(filtered);
         }
 
         function nlPreviewImage(index) {
@@ -2799,12 +2832,11 @@
             let imagesHtml = '';
             if (nlSelectedImages.length > 0) {
                 imagesHtml = '<tr><td style="padding: 0 40px 30px;">' +
-                    '<h2 style="color: #d4af37; font-family: Georgia, serif; font-size: 22px; text-align: center; margin: 0 0 20px;">Vos illustrations</h2>' +
-                    '<div style="display: grid; grid-template-columns: repeat(' + Math.min(nlSelectedImages.length, 3) + ', 1fr); gap: 15px;">';
+                    '<table width="100%" cellpadding="0" cellspacing="0"><tr>';
                 nlSelectedImages.forEach(sel => {
-                    imagesHtml += `<div style="text-align: center;"><img src="${sel.path}" alt="${sel.name}" style="width: 100%; max-height: 200px; object-fit: cover; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.3);"><p style="color: #c8c0a8; font-size: 12px; margin: 8px 0 0;">${sel.name}</p></div>`;
+                    imagesHtml += `<td style="padding:0 8px; text-align:center;"><img src="${sel.path}" alt="${sel.name}" style="width:100%; max-height:200px; object-fit:cover; border-radius:12px;"></td>`;
                 });
-                imagesHtml += '</div></td></tr>';
+                imagesHtml += '</tr></table></td></tr>';
             }
             
             // Créer modal d'aperçu avec template email Oradia
@@ -2943,6 +2975,29 @@
                 if (!res.ok) throw new Error(data.error || 'Erreur');
                 nlStatus('success', 'Email de test envoyé à ' + email + ' ✓');
             } catch(e) { nlStatus('error', e.message); }
+        }
+
+        async function nlSendPreviewSelf() {
+            if (!nlCurrentDraftId) return nlStatus('error', 'Sauvegardez d\'abord le brouillon');
+            const btn = document.getElementById('nl-btn-preview-self');
+            btn.disabled = true;
+            const original = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Envoi en cours...';
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=send', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ draft_id: nlCurrentDraftId, test_email: 'contact@oradia.fr',
+                        subject: document.getElementById('nl-subject').value.trim() })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                nlStatus('success', 'Email envoyé sur contact@oradia.fr — va voir dans la boîte mail ✓');
+            } catch(e) { nlStatus('error', e.message); }
+            finally {
+                btn.disabled = false;
+                btn.innerHTML = original;
+            }
         }
 
         async function nlSendReal() {
