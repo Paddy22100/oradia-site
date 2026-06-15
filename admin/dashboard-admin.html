@@ -2821,9 +2821,15 @@
                 </h4>
                 <p class="text-xs text-gold/60 mb-3">Les images seront affichées dans la newsletter. Clique sur une image pour la voir en grand.</p>
                 <p class="text-xs text-gold/40 mb-3 uppercase tracking-widest">Sélectionne jusqu'à 3 images — Produit · Bibliothèque · Unsplash</p>
-                <input type="text" id="nl-image-search" oninput="nlFilterImages()"
-                    class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-4 text-sm focus:outline-none focus:border-gold"
-                    placeholder="Rechercher une image (ex: lâcher-prise, océan, joie...)">
+                <div class="flex flex-col sm:flex-row gap-2 mb-4">
+                    <input type="text" id="nl-image-search" oninput="nlFilterImages()"
+                        class="flex-1 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-gold"
+                        placeholder="Rechercher une image (ex: lâcher-prise, océan, joie...)">
+                    <select id="nl-image-category" onchange="nlFilterImages()"
+                        class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold sm:w-56">
+                        <option value="">Toutes les catégories</option>
+                    </select>
+                </div>
                 <div id="nl-images-grid" class="grid grid-cols-3 gap-4">
                     <div class="col-span-5 text-center py-6 text-gold/30 text-sm">
                         <i class="fas fa-spinner fa-spin mr-2"></i>Recherche d'images...
@@ -2860,6 +2866,7 @@
                 (data.unsplash || []).forEach(img => allImages.push({ ...img, label: 'Unsplash' }));
 
                 window.nlAllImages = allImages;
+                nlPopulateImageCategories(allImages);
                 nlRenderImagesGrid(allImages);
 
             } catch(e) {
@@ -2914,11 +2921,43 @@
             }).join('');
         }
 
+        // Libellés FR pour les catégories de la bibliothèque d'images
+        const NL_CATEGORY_LABELS = {
+            produit: 'Produit',
+            ambiance: 'Ambiance',
+            bibliotheque: 'Bibliothèque',
+            actions: 'Actions',
+            archetypes: 'Archétypes',
+            besoins: 'Besoins',
+            cosmos: 'Cosmos',
+            emotions: 'Émotions',
+            memoire_cosmos: 'Mémoire & Cosmos',
+            revelations: 'Révélations',
+            transmutations: 'Transmutations',
+            medias: 'Médias',
+            general: 'Général',
+            dos: 'Dos de carte',
+            unsplash: 'Unsplash'
+        };
+
+        function nlPopulateImageCategories(images) {
+            const select = document.getElementById('nl-image-category');
+            if (!select) return;
+            const categories = [...new Set(images.map(img => img.category).filter(Boolean))];
+            categories.sort((a, b) => (NL_CATEGORY_LABELS[a] || a).localeCompare(NL_CATEGORY_LABELS[b] || b, 'fr'));
+            select.innerHTML = '<option value="">Toutes les catégories</option>' +
+                categories.map(c => `<option value="${c}">${NL_CATEGORY_LABELS[c] || c}</option>`).join('');
+        }
+
         function nlFilterImages() {
             const q = nlNormalize(document.getElementById('nl-image-search').value.trim());
+            const category = document.getElementById('nl-image-category')?.value || '';
             const all = window.nlAllImages || [];
-            if (!q) return nlRenderImagesGrid(all);
-            const filtered = all.filter(img => nlNormalize(img.name).includes(q) || nlNormalize(img.label).includes(q));
+            const filtered = all.filter(img => {
+                if (category && img.category !== category) return false;
+                if (!q) return true;
+                return nlNormalize(img.name).includes(q) || nlNormalize(img.label).includes(q);
+            });
             nlRenderImagesGrid(filtered);
         }
 
@@ -3188,9 +3227,12 @@
         async function nlSendTest() {
             const email = document.getElementById('nl-test-email').value.trim();
             if (!email) return nlStatus('error', 'Entrez un email de test');
-            if (!nlCurrentDraftId) return nlStatus('error', 'Sauvegardez d\'abord le brouillon');
             nlStatus('info', 'Envoi du test...');
             try {
+                // Resauvegarde le brouillon pour être sûr que le contenu et les images
+                // sélectionnées sont bien ceux envoyés dans l'email de test.
+                await nlSave();
+                if (!nlCurrentDraftId) throw new Error('Impossible de sauvegarder le brouillon avant l\'envoi');
                 const res = await adminFetch('/api/admin/newsletter?action=send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
@@ -3210,10 +3252,10 @@
             const originals = [];
             btns.forEach(btn => { btn.disabled = true; originals.push(btn.innerHTML); btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Envoi en cours...'; });
             try {
-                if (!nlCurrentDraftId) {
-                    await nlSave();
-                    if (!nlCurrentDraftId) throw new Error('Impossible de sauvegarder le brouillon avant l\'envoi');
-                }
+                // Resauvegarde le brouillon pour être sûr que le contenu et les images
+                // sélectionnées sont bien ceux envoyés dans l'email.
+                await nlSave();
+                if (!nlCurrentDraftId) throw new Error('Impossible de sauvegarder le brouillon avant l\'envoi');
                 const res = await adminFetch('/api/admin/newsletter?action=send', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },

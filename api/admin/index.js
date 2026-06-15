@@ -1849,12 +1849,12 @@ async function handleNewsletterImages(req, res) {
 
       // 1. Images produit (assets statiques du site)
       const produit = NL_PRODUIT_IMAGES
-        .map(img => ({ path: `/images/${img.file}`, name: img.name, source: 'local' }));
+        .map(img => ({ path: `/images/${img.file}`, name: img.name, source: 'local', category: 'produit' }));
 
       // 2. Ma bibliothèque (images déjà collectées pour les newsletters + illustrations du Tore)
       const ambiance_locale = NL_AMBIANCE_IMAGES
-        .map(img => ({ path: `/images/newsletter/ambiance/${img.file}`, name: img.name, source: 'local' }))
-        .concat(NL_LIBRARY_IMAGES.map(img => ({ path: img.path, name: img.name, source: 'local' })));
+        .map(img => ({ path: `/images/newsletter/ambiance/${img.file}`, name: img.name, source: 'local', category: 'ambiance' }))
+        .concat(NL_LIBRARY_IMAGES.map(img => ({ path: img.path, name: img.name, source: 'local', category: img.category || 'bibliotheque' })));
 
       // 3. Unsplash (uniquement si une clé API est configurée)
       let unsplash = [];
@@ -1873,6 +1873,7 @@ async function handleNewsletterImages(req, res) {
               thumb: photo.urls.small,
               name: photo.alt_description || 'Photo Unsplash',
               source: 'unsplash',
+              category: 'unsplash',
               download_url: photo.links.download_location,
               filename: `unsplash_${photo.id}.jpg`
             }));
