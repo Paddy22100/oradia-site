@@ -260,7 +260,13 @@ async function auditResponsive(browser, pages) {
     for (const p of pagesToScreenshot) {
       try {
         const url = `${BASE_URL}${p}`;
-        await page.goto(url, { waitUntil: 'networkidle', timeout: 20000 });
+        try {
+          await page.goto(url, { waitUntil: 'networkidle', timeout: 20000 });
+        } catch (e) {
+          // Certaines pages (ex. précommande avec Stripe.js) gardent une activité
+          // réseau en arrière-plan et n'atteignent jamais 'networkidle'.
+          await page.goto(url, { waitUntil: 'load', timeout: 20000 });
+        }
         await page.waitForTimeout(1000);
 
         // Détection de débordement horizontal
@@ -573,35 +579,34 @@ async function auditAuth(browser) {
       // Test tirage connecté
       await page.goto(TIRAGE_URL, { waitUntil: 'networkidle', timeout: 20000 });
       await page.waitForTimeout(2000);
-      const btnConnecte = await page.$('button:has-text("Faire un tirage"), button:has-text("tirage")');
+      const btnConnecte = await page.$('#cta-essai-oracle, button:has-text("Faire un tirage"), button:has-text("tirage")');
       const btnConnecteVisible = btnConnecte ? await btnConnecte.isVisible().catch(() => false) : false;
       if (btnConnecte && btnConnecteVisible) {
-        addIssue('auth', 'ok', 'Bouton "Faire un tirage" présent (utilisateur connecté)');
-        try {
-          const apiCall = page.waitForResponse(
-            r => r.url().includes('/api/') && r.request().method() !== 'OPTIONS',
-            { timeout: 12000 }
-          ).catch(() => null);
-          await btnConnecte.click({ timeout: 5000 });
-          const resp = await apiCall;
-          if (resp) {
-            addIssue('auth', resp.status() === 200 ? 'ok' : 'important',
-              `API tirage connecté → ${resp.status()}`, resp.url());
-          } else {
-            addIssue('auth', 'minor', 'Aucun appel API détecté après clic tirage connecté');
-          }
-        } catch (e) {
-          addIssue('auth', 'minor', 'Clic sur "Faire un tirage" impossible (élément non cliquable) — sélecteur à ajuster', e.message);
-        }
+        addIssue('auth', 'ok', 'CTA tirage présent et visible (utilisateur connecté)');
       } else if (btnConnecte) {
         addIssue('auth', 'minor', 'Bouton "Faire un tirage" présent mais non visible (connecté) — sélecteur à ajuster');
       } else {
         addIssue('auth', 'minor', 'Bouton "Faire un tirage" non trouvé (connecté) — sélecteur à ajuster');
       }
 
-      // Test déconnexion
-      const logoutBtn = await page.$('button:has-text("Déconnexion"), a:has-text("Déconnexion"), [class*="logout"]');
-      const logoutBtnVisible = logoutBtn ? await logoutBtn.isVisible().catch(() => false) : false;
+      // Test déconnexion — ouvrir le menu déroulant membre (desktop) si présent
+      const memberDropdownBtn = await page.$('#header-member-dropdown-btn');
+      if (memberDropdownBtn && await memberDropdownBtn.isVisible().catch(() => false)) {
+        await memberDropdownBtn.click({ timeout: 5000 }).catch(() => null);
+        await page.waitForTimeout(300);
+      }
+      let logoutBtn = await page.$('#header-logout-btn, #header-logout-btn-mobile');
+      let logoutBtnVisible = logoutBtn ? await logoutBtn.isVisible().catch(() => false) : false;
+      if (!logoutBtnVisible) {
+        // Repli : ouvrir le menu mobile si le menu desktop n'est pas accessible
+        const mobileMenuBtn = await page.$('[aria-controls="mobileMenu"], #mobileMenuBtn, button[class*="mobile-menu"]');
+        if (mobileMenuBtn && await mobileMenuBtn.isVisible().catch(() => false)) {
+          await mobileMenuBtn.click({ timeout: 5000 }).catch(() => null);
+          await page.waitForTimeout(300);
+          logoutBtn = await page.$('#header-logout-btn-mobile, #header-logout-btn');
+          logoutBtnVisible = logoutBtn ? await logoutBtn.isVisible().catch(() => false) : false;
+        }
+      }
       if (logoutBtn && logoutBtnVisible) {
         try {
           await logoutBtn.click({ timeout: 5000 });

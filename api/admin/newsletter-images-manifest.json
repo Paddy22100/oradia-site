@@ -658,5 +658,100 @@
     "path": "/images/transmutations/vide.webp",
     "name": "Vide (Transmutation)",
     "category": "transmutations"
+  },
+  {
+    "path": "/images/medias/apercu_stripe.webp",
+    "name": "Aperçu Stripe (Médias)",
+    "category": "medias"
+  },
+  {
+    "path": "/images/medias/newsletter_image.webp",
+    "name": "Image Newsletter (Médias)",
+    "category": "medias"
+  },
+  {
+    "path": "/images/medias/photo_a_propos.webp",
+    "name": "Photo À Propos (Médias)",
+    "category": "medias"
+  },
+  {
+    "path": "/images/Coffret.webp",
+    "name": "Coffret (Général)",
+    "category": "general"
+  },
+  {
+    "path": "/images/apercu-hd.webp",
+    "name": "Aperçu HD (Général)",
+    "category": "general"
+  },
+  {
+    "path": "/images/coin-oradia.webp",
+    "name": "Coin Oradia (Général)",
+    "category": "general"
+  },
+  {
+    "path": "/images/coin_cercle.webp",
+    "name": "Coin Cercle (Général)",
+    "category": "general"
+  },
+  {
+    "path": "/images/coin_triangle.webp",
+    "name": "Coin Triangle (Général)",
+    "category": "general"
+  },
+  {
+    "path": "/images/fenetre_observation.webp",
+    "name": "Fenêtre d'observation (Général)",
+    "category": "general"
+  },
+  {
+    "path": "/images/logo-hd-v2.webp",
+    "name": "Logo HD (Général)",
+    "category": "general"
+  },
+  {
+    "path": "/images/oradia-hero-4k.webp",
+    "name": "Oradia Hero 4K (Général)",
+    "category": "general"
+  },
+  {
+    "path": "/images/plateau.webp",
+    "name": "Plateau (Général)",
+    "category": "general"
+  },
+  {
+    "path": "/images/dos/dos_action.webp",
+    "name": "Dos — Action",
+    "category": "dos"
+  },
+  {
+    "path": "/images/dos/dos_archetype.webp",
+    "name": "Dos — Archétype",
+    "category": "dos"
+  },
+  {
+    "path": "/images/dos/dos_besoin.webp",
+    "name": "Dos — Besoin",
+    "category": "dos"
+  },
+  {
+    "path": "/images/dos/dos_emotion.webp",
+    "name": "Dos — Émotion",
+    "category": "dos"
+  },
+  {
+    "path": "/images/dos/dos_memoire_cosmos.webp",
+    "name": "Dos — Mémoire Cosmos",
+    "category": "dos"
+  },
+  {
+    "path": "/images/dos/dos_revelation.webp",
+    "name": "Dos — Révélation",
+    "category": "dos"
+  },
+  {
+    "path": "/images/dos/dos_transmutation.webp",
+    "name": "Dos — Transmutation",
+    "category": "dos"
   }
 ]
