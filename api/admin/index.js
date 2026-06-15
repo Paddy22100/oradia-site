@@ -35,6 +35,45 @@ const CONTACT_TAGS = [
   { value: 'communaute',  label: 'Communauté' }
 ];
 
+// Synchronise un contact avec Brevo : seuls les contacts de la catégorie "general"
+// sont ajoutés à la liste 5 (newsletter principale). Les autres catégories sont
+// gérées uniquement depuis le dashboard (envois ciblés directs, sans liste Brevo).
+// Si un contact perd la catégorie "general", il est retiré de la liste 5.
+async function syncContactToBrevo(supabase, BREVO_API_KEY, contact) {
+  if (!BREVO_API_KEY || !contact?.email) return;
+  const isGeneral = (contact.tags || []).includes('general');
+  try {
+    if (isGeneral) {
+      const r = await fetch('https://api.brevo.com/v3/contacts', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+        body: JSON.stringify({
+          email: contact.email,
+          listIds: [5],
+          updateEnabled: true,
+          attributes: { ORADIA_INSCRIPTION: contact.created_at || new Date().toISOString() }
+        })
+      });
+      if (!r.ok && r.status !== 409) {
+        console.warn('Brevo sync (add) échoué pour', contact.email, r.status);
+        return;
+      }
+    } else {
+      await fetch('https://api.brevo.com/v3/contacts/lists/5/contacts/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+        body: JSON.stringify({ emails: [contact.email] })
+      }).catch(() => {});
+    }
+    await supabase
+      .from('newsletter_contacts')
+      .update({ brevo_synced: true, brevo_synced_at: new Date().toISOString() })
+      .eq('id', contact.id);
+  } catch (e) {
+    console.error('Brevo sync error for', contact.email, e.message);
+  }
+}
+
 // Convertit un tableau d'objets en CSV (échappement basique des guillemets/virgules)
 function rowsToCsv(rows) {
   if (!rows || rows.length === 0) return '';
@@ -423,6 +462,7 @@ async function handleData(req, res) {
           .select()
           .single();
         if (error) throw error;
+        await syncContactToBrevo(supabase, process.env.BREVO_API_KEY, data);
         return res.status(200).json({ success: true, data });
       }
 
@@ -437,8 +477,14 @@ async function handleData(req, res) {
         if (body.notes !== undefined) updates.notes = (body.notes || '').trim() || null;
         if (body.status !== undefined) updates.status = body.status;
 
-        const { error } = await supabase.from('newsletter_contacts').update(updates).eq('id', id);
+        const { data, error } = await supabase
+          .from('newsletter_contacts')
+          .update(updates)
+          .eq('id', id)
+          .select()
+          .single();
         if (error) throw error;
+        if (updates.tags !== undefined) await syncContactToBrevo(supabase, process.env.BREVO_API_KEY, data);
         return res.status(200).json({ success: true });
       }
 
@@ -1258,12 +1304,17 @@ function buildCommunicationEmailHtml(draft) {
 
   return `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
-<body style="margin:0; padding:0; background:#0a192f;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#0a192f 0%,#051428 100%); max-width:600px; margin:0 auto;">
-  <tr><td style="padding:40px; text-align:center; background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.95) 100%);">
-    <h1 style="margin:0; color:#d4af37; font-family:Georgia,serif; font-size:28px; font-weight:700; letter-spacing:0.1em;">ORADIA</h1>
-    <p style="margin:10px 0 0; color:#f5e7a1; font-size:16px; font-style:italic; letter-spacing:0.1em;">La Boussole Intérieure</p>
-    ${intention ? `<p style="margin:20px 0 0; color:#c8c0a8; font-size:14px; font-style:italic;">« ${nlEscHtml(intention)} »</p>` : ''}
+<body style="margin:0; padding:0; background:#040d1c;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:#040d1c;"><tr><td align="center" style="padding:24px 12px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,#0a192f 0%,#051428 100%); max-width:600px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.15);">
+  <tr><td background="https://oradia.fr/images/oradia-hero-4k.webp" bgcolor="#0a192f" style="background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat;">
+    <table width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:50px 40px; text-align:center; background:linear-gradient(135deg, rgba(10,25,47,0.78) 0%, rgba(5,20,40,0.85) 100%);">
+      <h1 style="margin:0; color:#d4af37; font-family:Georgia,serif; font-size:30px; font-weight:700; letter-spacing:0.1em; line-height:1;">
+        <img src="https://oradia.fr/images/logo-hd-v2.webp" alt="O" width="32" height="32" style="height:32px; width:32px; vertical-align:middle; border-radius:50%; margin-right:4px; display:inline-block;">RADIA
+      </h1>
+      <p style="margin:10px 0 0; color:#f5e7a1; font-size:16px; font-style:italic; letter-spacing:0.1em;">La Boussole Intérieure</p>
+      ${intention ? `<p style="margin:20px 0 0; color:#c8c0a8; font-size:14px; font-style:italic;">« ${nlEscHtml(intention)} »</p>` : ''}
+    </td></tr></table>
   </td></tr>
   ${imagesHtml}
   <tr><td style="padding:30px 40px;">
@@ -1280,6 +1331,7 @@ function buildCommunicationEmailHtml(draft) {
     <p style="margin:15px 0 0; color:#c8c0a8; font-size:11px; opacity:0.5;">Vous recevez cet email car vous êtes abonné·e aux communications Oradia. <a href="{unsubscribe}" style="color:#c8c0a8;">Se désabonner</a></p>
   </td></tr>
 </table>
+</td></tr></table>
 </body></html>`;
 }
 
@@ -1543,8 +1595,20 @@ async function handleNewsletter(req, res) {
           const htmlWithUnsub = html.replace('{unsubscribe}', 'https://oradia.fr');
           // Envoi individuel par lots (un email par destinataire, pas de diffusion groupée
           // visible) pour rester dans le temps d'exécution de la fonction serverless.
+          // On continue même en cas d'échecs isolés, mais on s'arrête si Brevo
+          // signale un quota dépassé (402, plan gratuit = 300 emails/jour).
           const BATCH_SIZE = 10;
+          let sent = 0;
+          const failedEmails = [];
+          let quotaExceeded = false;
+
           for (let i = 0; i < emails.length; i += BATCH_SIZE) {
+            if (quotaExceeded) {
+              // Quota Brevo dépassé : le reste du lot n'a pas été envoyé, à relancer demain.
+              failedEmails.push(...emails.slice(i));
+              break;
+            }
+
             const batch = emails.slice(i, i + BATCH_SIZE);
             const results = await Promise.all(batch.map(email => fetch('https://api.brevo.com/v3/smtp/email', {
               method: 'POST',
@@ -1556,18 +1620,39 @@ async function handleNewsletter(req, res) {
                 htmlContent: htmlWithUnsub
               })
             })));
-            const failed = results.find(r => !r.ok);
-            if (failed) {
-              return res.status(502).json({ error: await brevoErrorMessage(failed, "Erreur lors de l'envoi ciblé") });
-            }
+
+            results.forEach((r, idx) => {
+              if (r.ok) {
+                sent++;
+              } else {
+                failedEmails.push(batch[idx]);
+                if (r.status === 402) quotaExceeded = true;
+              }
+            });
           }
+
+          const failed = failedEmails.length;
 
           await supabase
             .from('newsletter_drafts')
-            .update({ statut: 'envoyé', sent_at: new Date().toISOString(), subject: finalSubject })
+            .update({
+              statut: 'envoyé',
+              sent_at: new Date().toISOString(),
+              subject: finalSubject,
+              sent_count: sent,
+              failed_count: failed,
+              failed_emails: failedEmails
+            })
             .eq('id', draft_id);
 
-          return res.status(200).json({ success: true, recipients: emails.length });
+          return res.status(200).json({
+            success: true,
+            recipients: emails.length,
+            sent,
+            failed,
+            failedEmails,
+            quotaExceeded
+          });
         }
 
         // Diffusion réelle : campagne Brevo vers la liste newsletter (ID 5)
@@ -1777,54 +1862,68 @@ async function handleSyncBrevo(req, res) {
 
     const { data: contacts, error } = await supabase
       .from('newsletter_contacts')
-      .select('id, email, created_at')
+      .select('id, email, created_at, tags')
       .eq('brevo_synced', false)
       .order('created_at', { ascending: false })
       .limit(100);
 
     if (error) throw error;
 
-    // Sync vers Brevo
+    // Sync vers Brevo : seuls les contacts "general" (ou sans tags = anciennes
+    // inscriptions) sont ajoutés à la liste 5. Les autres catégories sont
+    // marquées synchronisées sans toucher à la liste Brevo.
     let synced = 0;
+    let errors = 0;
     for (const contact of contacts) {
+      const isGeneral = !contact.tags || contact.tags.length === 0 || contact.tags.includes('general');
       try {
-        const response = await fetch('https://api.brevo.com/v3/contacts', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'api-key': BREVO_API_KEY
-          },
-          body: JSON.stringify({
-            email: contact.email,
-            listIds: [5],          // List ID 5 = newsletter Oradia (CLAUDE.md)
-            updateEnabled: true,   // Met à jour si contact déjà existant dans Brevo
-            attributes: { ORADIA_INSCRIPTION: contact.created_at }
-          })
-        });
-
-        // Si l'envoi réussit (200, 201 ou 409 = déjà existant), mettre à jour brevo_synced
-        if (response.ok || response.status === 409) {
-          const { error: updateError } = await supabase
-            .from('newsletter_contacts')
-            .update({ 
-              brevo_synced: true,
-              brevo_synced_at: new Date().toISOString()
+        if (isGeneral) {
+          const response = await fetch('https://api.brevo.com/v3/contacts', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'api-key': BREVO_API_KEY
+            },
+            body: JSON.stringify({
+              email: contact.email,
+              listIds: [5],          // List ID 5 = newsletter Oradia (CLAUDE.md)
+              updateEnabled: true,   // Met à jour si contact déjà existant dans Brevo
+              attributes: { ORADIA_INSCRIPTION: contact.created_at }
             })
-            .eq('id', contact.id);
-          
-          if (!updateError) {
-            synced++;
-          } else {
-            console.error('Failed to update brevo_synced for', contact.email, updateError.message);
+          });
+
+          // Si l'envoi réussit (200, 201 ou 409 = déjà existant), mettre à jour brevo_synced
+          if (!(response.ok || response.status === 409)) {
+            errors++;
+            continue;
           }
         }
+
+        const { error: updateError } = await supabase
+          .from('newsletter_contacts')
+          .update({
+            brevo_synced: true,
+            brevo_synced_at: new Date().toISOString()
+          })
+          .eq('id', contact.id);
+
+        if (!updateError) {
+          synced++;
+        } else {
+          errors++;
+          console.error('Failed to update brevo_synced for', contact.email, updateError.message);
+        }
       } catch (e) {
+        errors++;
         console.error('Brevo sync error for', contact.email, e.message);
       }
     }
 
-    return res.status(200).json({ 
-      success: true, 
+    return res.status(200).json({
+      success: true,
+      synced,
+      errors,
+      already: 0,
       message: `${synced} contacts synchronisés avec Brevo`,
       total: contacts.length
     });

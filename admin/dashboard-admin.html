@@ -880,6 +880,13 @@
             </div>
 
             <div id="nl-status" class="hidden mb-6 px-4 py-3 rounded-lg text-sm border"></div>
+            <div id="nl-failed-emails" class="hidden mb-6 px-4 py-3 rounded-lg text-sm border bg-red-500/10 border-red-500/30 text-red-300">
+                <div class="flex items-center justify-between gap-3 mb-2">
+                    <span class="font-semibold"><i class="fas fa-triangle-exclamation mr-2"></i>Emails non envoyés</span>
+                    <button onclick="nlCopyFailedEmails()" class="text-xs px-3 py-1 rounded border border-red-400/40 hover:bg-red-500/20"><i class="fas fa-copy mr-1"></i>Copier la liste</button>
+                </div>
+                <div id="nl-failed-emails-list" class="text-xs font-mono break-all opacity-90"></div>
+            </div>
 
             <!-- TAB GÉNÉRER -->
             <div id="nl-tab-generate" class="nl-tab-content">
@@ -2740,6 +2747,7 @@
             if (type === 'success') el.classList.add('bg-green-500/10', 'border-green-500/30', 'text-green-300');
             if (type === 'error')   el.classList.add('bg-red-500/10', 'border-red-500/30', 'text-red-300');
             if (type === 'info')    el.classList.add('bg-gold/10', 'border-gold/30', 'text-gold');
+            if (type === 'warning') el.classList.add('bg-yellow-500/10', 'border-yellow-500/30', 'text-yellow-300');
             el.textContent = msg;
             el.classList.remove('hidden');
             if (type === 'success') setTimeout(() => el.classList.add('hidden'), 4000);
@@ -3247,6 +3255,28 @@
             return Array.from(document.querySelectorAll('input[name="nl-target-tag"]:checked')).map(el => el.value);
         }
 
+        let nlLastFailedEmails = [];
+        function nlShowFailedEmails(emails) {
+            nlLastFailedEmails = emails || [];
+            const box = document.getElementById('nl-failed-emails');
+            const list = document.getElementById('nl-failed-emails-list');
+            if (!nlLastFailedEmails.length) {
+                box.classList.add('hidden');
+                return;
+            }
+            list.textContent = nlLastFailedEmails.join(', ');
+            box.classList.remove('hidden');
+        }
+
+        async function nlCopyFailedEmails() {
+            try {
+                await navigator.clipboard.writeText(nlLastFailedEmails.join(', '));
+                nlStatus('success', 'Liste des emails en échec copiée ✓');
+            } catch (e) {
+                nlStatus('error', 'Impossible de copier : ' + e.message);
+            }
+        }
+
         async function nlSendReal() {
             if (!nlCurrentDraftId) return nlStatus('error', 'Sauvegardez d\'abord le brouillon');
             const targetTags = nlGetTargetTags();
@@ -3267,7 +3297,20 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error);
-                nlStatus('success', targetTags.length ? `Newsletter envoyée à ${data.recipients || 0} contact(s) ✓` : 'Newsletter envoyée ✓');
+
+                if (targetTags.length) {
+                    if (data.quotaExceeded) {
+                        nlStatus('warning', `Limite quotidienne Brevo atteinte (plan gratuit = 300 emails/jour) : ${data.sent || 0} envoyé(s) sur ${data.recipients || 0}, le reste sera à renvoyer demain.${data.failed ? ` (${data.failed} échec(s) au total)` : ''}`);
+                    } else if (data.failed) {
+                        nlStatus('warning', `Newsletter envoyée : ${data.sent || 0} réussi(s), ${data.failed} échec(s) sur ${data.recipients || 0} contact(s).`);
+                    } else {
+                        nlStatus('success', `Newsletter envoyée à ${data.sent ?? data.recipients ?? 0} contact(s) ✓`);
+                    }
+                    nlShowFailedEmails(data.failedEmails);
+                } else {
+                    nlStatus('success', 'Newsletter envoyée ✓');
+                    nlShowFailedEmails([]);
+                }
                 await nlLoadDrafts();
             } catch(e) { nlStatus('error', e.message); }
             finally {
@@ -3390,6 +3433,7 @@
                     if (saveZone)  saveZone.classList.remove('hidden');
                     if (sendZone)  sendZone.classList.remove('hidden');
                     await nlRenderTargetTags();
+                    nlShowFailedEmails(data.failed_emails);
                 }
                 nlStatus('info', 'Brouillon chargé.');
             } catch(e) { nlStatus('error', 'Impossible de charger le brouillon : ' + e.message); }
