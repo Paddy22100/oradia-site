@@ -1025,13 +1025,6 @@
                 <div id="nl-send-zone" class="hidden bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6 mt-6">
                     <h4 class="cormorant text-xl text-gold mb-4">Envoyer à tes abonnés</h4>
                     <div class="mb-6">
-                        <button onclick="nlSendPreviewSelf()" id="nl-btn-preview-self"
-                            class="w-full bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg py-2 hover:bg-blue-500/30 transition text-sm">
-                            <i class="fas fa-inbox mr-2"></i>Recevoir le rendu réel sur contact@oradia.fr
-                        </button>
-                        <p class="text-xs text-gold/30 mt-2 text-center italic">Envoie l'email tel qu'il apparaîtra dans une vraie boîte mail.</p>
-                    </div>
-                    <div class="mb-6">
                         <label class="block text-xs uppercase tracking-widest text-gold/60 mb-2">Cibler des catégories <span class="text-gold/30 normal-case text-xs">(laisser vide = tous les abonnés)</span></label>
                         <div id="nl-target-tags" class="flex flex-wrap gap-3"></div>
                     </div>
@@ -2961,7 +2954,8 @@
                 // Désélectionner
                 nlSelectedImages.splice(existingIndex, 1);
                 document.getElementById(`nl-img-option-${index}`)?.classList.remove('border-gold', 'ring-2', 'ring-gold/40');
-                document.getElementById(`nl-img-toggle-${index}`).innerHTML = '<i class="fas fa-plus text-white text-sm"></i>';
+                const toggleBtn = document.getElementById(`nl-img-toggle-${index}`);
+                if (toggleBtn) toggleBtn.innerHTML = '<i class="fas fa-plus text-white text-sm"></i>';
                 document.getElementById(`nl-selected-badge-${index}`)?.classList.add('hidden');
             } else {
                 // Sélectionner (max 3)
@@ -3425,7 +3419,9 @@
                         document.getElementById('nl-cta-badge').value = extra.badge || '';
                     }
 
-                    nlSelectedImages = (data.images || []).map((img, i) => ({ index: i, path: img.path, name: img.name }));
+                    // Index négatifs pour ne pas entrer en collision avec les index de la grille
+                    // d'images rechargée ci-dessous (0..N), tout en gardant un id unique pour le toggle.
+                    nlSelectedImages = (data.images || []).map((img, i) => ({ index: -(i + 1), path: img.path, name: img.name }));
 
                     if (data.content) {
                         contentEl.value = data.content;
@@ -3437,6 +3433,8 @@
                     if (sendZone)  sendZone.classList.remove('hidden');
                     await nlRenderTargetTags();
                     nlShowFailedEmails(data.failed_emails);
+                    await nlFetchAndShowImages(data.intention || data.subject || '');
+                    nlUpdateSelectedPreviews();
                 }
                 nlStatus('info', 'Brouillon chargé.');
             } catch(e) { nlStatus('error', 'Impossible de charger le brouillon : ' + e.message); }
