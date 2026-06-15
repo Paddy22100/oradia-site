@@ -852,10 +852,14 @@ function computeScores() {
   for (const [label, key] of Object.entries(categories)) {
     const issues = report.sections[key];
     if (!issues || issues.length === 0) { report.scores[label] = null; continue; }
-    const total = issues.length;
-    const ok = issues.filter(i => i.level === 'ok').length;
-    const critical = issues.filter(i => i.level === 'critical').length;
-    const important = issues.filter(i => i.level === 'important').length;
+    // Les items "info" sont des constats neutres (test ignoré, comportement attendu...)
+    // et ne doivent pas compter comme des échecs dans le score.
+    const scored = issues.filter(i => i.level !== 'info');
+    if (scored.length === 0) { report.scores[label] = null; continue; }
+    const total = scored.length;
+    const ok = scored.filter(i => i.level === 'ok').length;
+    const critical = scored.filter(i => i.level === 'critical').length;
+    const important = scored.filter(i => i.level === 'important').length;
     const score = Math.max(0, Math.round(
       ((ok / total) * 100) - (critical * 15) - (important * 5)
     ));
