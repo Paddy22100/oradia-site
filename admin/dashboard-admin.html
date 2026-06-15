@@ -312,6 +312,53 @@
         </div>
     </div>
 
+    <!-- Modal Contact (ajout / édition) -->
+    <div id="contactModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm">
+        <div class="bg-[#0a1628] border border-gold/30 rounded-xl p-8 w-full max-w-md mx-4 shadow-2xl">
+            <h3 class="text-gold font-bold text-xl mb-2" style="font-family:'Cormorant Garamond',serif;" id="contactModalTitle">Ajouter un contact</h3>
+            <p class="text-light-gold/70 text-sm mb-6">Les catégories permettent de cibler tes envois de newsletter depuis le dashboard.</p>
+
+            <div class="space-y-4">
+                <input type="hidden" id="contactModalId">
+                <div>
+                    <label class="block text-light-gold/80 text-sm mb-1">Email <span class="text-gold">*</span></label>
+                    <input id="contactModalEmail" type="email" placeholder="nom@email.fr"
+                        class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-4 py-2 focus:outline-none focus:border-gold text-sm">
+                </div>
+                <div>
+                    <label class="block text-light-gold/80 text-sm mb-1">Nom <span class="text-light-gold/40">(optionnel)</span></label>
+                    <input id="contactModalName" type="text" placeholder="Prénom Nom"
+                        class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-4 py-2 focus:outline-none focus:border-gold text-sm">
+                </div>
+                <div>
+                    <label class="block text-light-gold/80 text-sm mb-2">Catégories</label>
+                    <div id="contactModalTags" class="flex flex-wrap gap-3"></div>
+                    <div class="flex gap-2 mt-3">
+                        <input id="contactModalCustomTag" type="text" placeholder="Catégorie personnalisée..."
+                            class="flex-1 bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-3 py-2 focus:outline-none focus:border-gold text-sm">
+                        <button type="button" id="contactModalAddTag" class="px-3 py-2 border border-gold/30 text-gold rounded-lg hover:bg-gold/10 transition text-sm">
+                            <i class="fas fa-plus"></i>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-light-gold/80 text-sm mb-1">Notes <span class="text-light-gold/40">(optionnel)</span></label>
+                    <textarea id="contactModalNotes" rows="2" placeholder="Ex: thérapeute à Lyon, rencontré au salon..."
+                        class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-4 py-2 focus:outline-none focus:border-gold text-sm resize-y"></textarea>
+                </div>
+            </div>
+
+            <div class="flex gap-3 mt-8">
+                <button id="contactModalCancel" class="flex-1 px-4 py-2 border border-gold/30 text-light-gold rounded-lg hover:bg-gold/10 transition text-sm">
+                    Annuler
+                </button>
+                <button id="contactModalSave" class="flex-1 px-4 py-2 bg-gold text-night-blue font-semibold rounded-lg hover:bg-light-gold transition text-sm">
+                    <i class="fas fa-save mr-2"></i>Enregistrer
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Topbar -->
     <div class="topbar">
         <div class="flex items-center gap-3">
@@ -650,15 +697,25 @@
         <!-- ══ ONGLET : WAITLIST ══ -->
         <div id="tab-waitlist" class="tab-panel">
         <section class="mb-10">
-            <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center justify-between mb-8 gap-3 flex-wrap">
                 <h3 class="cormorant text-2xl font-bold text-gold">Contacts Newsletter</h3>
-                <button onclick="syncBrevo()" id="syncBrevoBtn"
-                    class="flex items-center gap-2 bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition text-sm font-semibold">
-                    <i class="fas fa-sync-alt"></i> Sync Brevo
-                </button>
+                <div class="flex items-center gap-3 flex-wrap">
+                    <select id="waitlistTagFilter" onchange="loadWaitlist(1)"
+                        class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                        <option value="">Toutes les catégories</option>
+                    </select>
+                    <button onclick="openContactModal()"
+                        class="flex items-center gap-2 bg-gold/20 border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-gold/30 transition text-sm font-semibold">
+                        <i class="fas fa-user-plus"></i> Ajouter un contact
+                    </button>
+                    <button onclick="syncBrevo()" id="syncBrevoBtn"
+                        class="flex items-center gap-2 bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition text-sm font-semibold">
+                        <i class="fas fa-sync-alt"></i> Sync Brevo
+                    </button>
+                </div>
             </div>
             <div id="sync-status" class="hidden mb-4 px-4 py-3 rounded-lg text-sm border"></div>
-            
+
             <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full" id="waitlistTable">
@@ -666,15 +723,17 @@
                             <tr>
                                 <th class="px-6 py-4 text-left text-gold font-semibold">Email</th>
                                 <th class="px-6 py-4 text-left text-gold font-semibold">Nom</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Catégories</th>
                                 <th class="px-6 py-4 text-left text-gold font-semibold">Date</th>
                                 <th class="px-6 py-4 text-left text-gold font-semibold">Statut</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gold/20">
                         </tbody>
                     </table>
                 </div>
-                
+
                 <div id="waitlistPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)]">
                 </div>
             </div>
@@ -964,6 +1023,10 @@
                             <i class="fas fa-inbox mr-2"></i>Recevoir le rendu réel sur contact@oradia.fr
                         </button>
                         <p class="text-xs text-gold/30 mt-2 text-center italic">Envoie l'email tel qu'il apparaîtra dans une vraie boîte mail.</p>
+                    </div>
+                    <div class="mb-6">
+                        <label class="block text-xs uppercase tracking-widest text-gold/60 mb-2">Cibler des catégories <span class="text-gold/30 normal-case text-xs">(laisser vide = tous les abonnés)</span></label>
+                        <div id="nl-target-tags" class="flex flex-wrap gap-3"></div>
                     </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
@@ -1665,15 +1728,33 @@
         // Charger la waitlist
         async function loadWaitlist(page = 1, limit = 10) {
             try {
-                const response = await adminFetch(`/api/admin/data?section=waitlist&page=${page}&limit=${limit}`);
+                const tag = document.getElementById('waitlistTagFilter')?.value || '';
+                const url = `/api/admin/data?section=waitlist&page=${page}&limit=${limit}` + (tag ? `&tag=${encodeURIComponent(tag)}` : '');
+                const response = await adminFetch(url);
                 const data = await response.json();
-                
+
                 if (data.success) {
                     currentData.waitlist = data.data;
+                    currentData.waitlistPagination = data.pagination;
+                    if (Array.isArray(data.availableTags)) populateContactTagOptions(data.availableTags);
                     updateWaitlistTable(data.data, data.pagination);
                 }
             } catch (error) {
                 console.error('[Admin] Error loading waitlist:', error);
+            }
+        }
+
+        // Catégories de contacts connues (rafraîchies depuis l'API à chaque chargement)
+        let contactTagOptions = [];
+
+        function populateContactTagOptions(tags) {
+            contactTagOptions = tags;
+            const filterSelect = document.getElementById('waitlistTagFilter');
+            if (filterSelect) {
+                const current = filterSelect.value;
+                filterSelect.innerHTML = '<option value="">Toutes les catégories</option>' +
+                    tags.map(t => `<option value="${t.value}">${t.label}</option>`).join('');
+                filterSelect.value = current;
             }
         }
 
@@ -1904,14 +1985,148 @@
             
             tbody.innerHTML = waitlist.map(item => `
                 <tr class="hover:bg-[rgba(5,20,40,0.8)] transition">
-                    <td class="px-6 py-4 text-light-gold">${item.email || '-'}</td>
-                    <td class="px-6 py-4 text-light-gold">${item.full_name || '-'}</td>
+                    <td class="px-6 py-4 text-light-gold">${escapeHtmlFront(item.email || '-')}</td>
+                    <td class="px-6 py-4 text-light-gold">${escapeHtmlFront(item.full_name || '-')}</td>
+                    <td class="px-6 py-4 text-light-gold">
+                        <div class="flex flex-wrap gap-1">
+                            ${(item.tags || []).map(tag => `<span class="px-2 py-0.5 rounded text-xs bg-gold/10 text-gold border border-gold/30">${escapeHtmlFront(contactTagLabel(tag))}</span>`).join('') || '-'}
+                        </div>
+                    </td>
                     <td class="px-6 py-4 text-light-gold">${item.created_at_fr || formatDate(item.created_at)}</td>
                     <td class="px-6 py-4"><span class="px-2 py-1 rounded text-sm ${item.brevo_synced ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">${item.brevo_synced ? 'Sync' : 'Non sync'}</span></td>
+                    <td class="px-6 py-4">
+                        <div class="flex gap-2">
+                            <button onclick='openContactModal(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="text-gold/70 hover:text-gold transition" title="Modifier">
+                                <i class="fas fa-pen"></i>
+                            </button>
+                            <button onclick="deleteContact('${item.id}')" class="text-red-400/70 hover:text-red-400 transition" title="Supprimer">
+                                <i class="fas fa-trash"></i>
+                            </button>
+                        </div>
+                    </td>
                 </tr>
             `).join('');
             
             updatePagination('waitlist', pagination);
+        }
+
+        // ── Gestion des contacts (catégories newsletter) ──
+
+        function contactTagLabel(value) {
+            const found = contactTagOptions.find(t => t.value === value);
+            return found ? found.label : value;
+        }
+
+        // Catégories temporairement sélectionnées dans le modal (édition en cours)
+        let contactModalTags = [];
+
+        function renderContactModalTags() {
+            const container = document.getElementById('contactModalTags');
+            // Fusionne les catégories connues avec celles déjà présentes sur le contact (catégories libres)
+            const allTags = [...contactTagOptions];
+            contactModalTags.forEach(tag => {
+                if (!allTags.find(t => t.value === tag)) allTags.push({ value: tag, label: tag });
+            });
+            container.innerHTML = allTags.map(t => `
+                <label class="flex items-center gap-2 text-sm text-light-gold cursor-pointer">
+                    <input type="checkbox" value="${escapeHtmlFront(t.value)}" ${contactModalTags.includes(t.value) ? 'checked' : ''}
+                        onchange="toggleContactModalTag('${t.value.replace(/'/g, "\\'")}', this.checked)"
+                        class="accent-gold">
+                    ${escapeHtmlFront(t.label)}
+                </label>
+            `).join('');
+        }
+
+        function toggleContactModalTag(value, checked) {
+            if (checked) {
+                if (!contactModalTags.includes(value)) contactModalTags.push(value);
+            } else {
+                contactModalTags = contactModalTags.filter(t => t !== value);
+            }
+        }
+
+        function openContactModal(item) {
+            const modal = document.getElementById('contactModal');
+            document.getElementById('contactModalTitle').textContent = item ? 'Modifier le contact' : 'Ajouter un contact';
+            document.getElementById('contactModalId').value = item?.id || '';
+            document.getElementById('contactModalEmail').value = item?.email || '';
+            document.getElementById('contactModalEmail').disabled = !!item;
+            document.getElementById('contactModalName').value = item?.full_name || '';
+            document.getElementById('contactModalNotes').value = item?.notes || '';
+            document.getElementById('contactModalCustomTag').value = '';
+            contactModalTags = item?.tags ? [...item.tags] : ['general'];
+            renderContactModalTags();
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeContactModal() {
+            const modal = document.getElementById('contactModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        document.getElementById('contactModalCancel').onclick = closeContactModal;
+
+        document.getElementById('contactModalAddTag').onclick = () => {
+            const input = document.getElementById('contactModalCustomTag');
+            const value = input.value.trim().toLowerCase().replace(/\s+/g, '_');
+            if (!value) return;
+            if (!contactModalTags.includes(value)) contactModalTags.push(value);
+            input.value = '';
+            renderContactModalTags();
+        };
+
+        document.getElementById('contactModalSave').onclick = async () => {
+            const id = document.getElementById('contactModalId').value;
+            const email = document.getElementById('contactModalEmail').value.trim();
+            const full_name = document.getElementById('contactModalName').value.trim();
+            const notes = document.getElementById('contactModalNotes').value.trim();
+
+            if (!id && !email) {
+                alert('L\'email est requis.');
+                return;
+            }
+
+            const btn = document.getElementById('contactModalSave');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Enregistrement...';
+            try {
+                const action = id ? 'update-contact' : 'add-contact';
+                const body = id
+                    ? { action, id, full_name, notes, tags: contactModalTags }
+                    : { action, email, full_name, notes, tags: contactModalTags };
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(body)
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                closeContactModal();
+                loadWaitlist(currentData.waitlistPagination?.page || 1);
+            } catch (e) {
+                alert('Erreur : ' + e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save mr-2"></i>Enregistrer';
+            }
+        };
+
+        async function deleteContact(id) {
+            if (!confirm('Supprimer ce contact de la liste newsletter ?')) return;
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete-contact', id })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                loadWaitlist(currentData.waitlistPagination?.page || 1);
+            } catch (e) {
+                alert('Erreur : ' + e.message);
+            }
         }
 
         // Formater la date
@@ -2955,6 +3170,7 @@
                 if (!res.ok) throw new Error(data.error);
                 nlCurrentDraftId = data.id;
                 document.getElementById('nl-send-zone').classList.remove('hidden');
+                await nlRenderTargetTags();
                 nlStatus('success', 'Brouillon sauvegardé.');
                 await nlLoadDrafts();
             } catch(e) { nlStatus('error', e.message); }
@@ -3008,9 +3224,36 @@
             }
         }
 
+        // Affiche les catégories de contacts disponibles pour cibler l'envoi
+        async function nlRenderTargetTags() {
+            const container = document.getElementById('nl-target-tags');
+            if (!container) return;
+            if (!contactTagOptions.length) {
+                try {
+                    const res = await adminFetch('/api/admin/data?section=waitlist&page=1&limit=1');
+                    const data = await res.json();
+                    if (Array.isArray(data.availableTags)) populateContactTagOptions(data.availableTags);
+                } catch (e) { /* ignore */ }
+            }
+            container.innerHTML = contactTagOptions.map(t => `
+                <label class="flex items-center gap-2 text-sm text-light-gold cursor-pointer">
+                    <input type="checkbox" value="${escapeHtmlFront(t.value)}" name="nl-target-tag" class="accent-gold">
+                    ${escapeHtmlFront(t.label)}
+                </label>
+            `).join('');
+        }
+
+        function nlGetTargetTags() {
+            return Array.from(document.querySelectorAll('input[name="nl-target-tag"]:checked')).map(el => el.value);
+        }
+
         async function nlSendReal() {
             if (!nlCurrentDraftId) return nlStatus('error', 'Sauvegardez d\'abord le brouillon');
-            if (!confirm('Envoyer à tous tes abonnés Brevo ?\n\nIrréversible.')) return;
+            const targetTags = nlGetTargetTags();
+            const confirmMsg = targetTags.length
+                ? `Envoyer à la/aux catégorie(s) sélectionnée(s) (${targetTags.map(contactTagLabel).join(', ')}) ?\n\nIrréversible.`
+                : 'Envoyer à tous tes abonnés Brevo ?\n\nIrréversible.';
+            if (!confirm(confirmMsg)) return;
             const btn = document.getElementById('nl-btn-send');
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Envoi...';
@@ -3019,11 +3262,12 @@
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ draft_id: nlCurrentDraftId,
-                        subject: document.getElementById('nl-subject').value.trim() })
+                        subject: document.getElementById('nl-subject').value.trim(),
+                        target_tags: targetTags })
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error);
-                nlStatus('success', 'Newsletter envoyée ✓');
+                nlStatus('success', targetTags.length ? `Newsletter envoyée à ${data.recipients || 0} contact(s) ✓` : 'Newsletter envoyée ✓');
                 await nlLoadDrafts();
             } catch(e) { nlStatus('error', e.message); }
             finally {
@@ -3145,6 +3389,7 @@
                     if (subjectEl && data.subject) subjectEl.value = data.subject;
                     if (saveZone)  saveZone.classList.remove('hidden');
                     if (sendZone)  sendZone.classList.remove('hidden');
+                    await nlRenderTargetTags();
                 }
                 nlStatus('info', 'Brouillon chargé.');
             } catch(e) { nlStatus('error', 'Impossible de charger le brouillon : ' + e.message); }

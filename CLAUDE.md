@@ -37,7 +37,7 @@ Il décrit l'architecture du projet, les règles à respecter, et les audits à 
 |---|---|---|
 | `preorders` | Précommandes physiques (Stripe) | colonnes relay ajoutées par `mondial-relay-migration.sql` |
 | `donors` | Dons libres (contribution-libre) | — |
-| `newsletter_contacts` | Inscriptions newsletter/waitlist → Brevo list 5 | migration : `supabase-migration-missing-tables.sql` |
+| `newsletter_contacts` | Inscriptions newsletter/waitlist → Brevo list 5 + contacts ajoutés manuellement (catégories `tags`) | migrations : `supabase-migration-missing-tables.sql`, `supabase-migration-contact-tags.sql` |
 | `tore_subscriptions` | Membres actifs pour tirages en ligne | migration : `supabase-migration-missing-tables.sql` |
 | `tirages` | Historique des tirages par user (RLS stricte) | purge auto : 20 max par user |
 | `newsletter_drafts` | Brouillons de newsletter (5 lignes) | géré par le dashboard admin |

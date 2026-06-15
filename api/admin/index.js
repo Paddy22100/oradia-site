@@ -25,6 +25,16 @@ try {
 // Tables exportables (récap mensuel preorders/donors/tirages)
 const EXPORTABLE_TABLES = ['preorders', 'donors', 'tirages'];
 
+// Catégories de contacts newsletter (utilisées pour cibler les envois depuis le dashboard,
+// sans passer par les listes Brevo). Liste indicative — des tags libres restent possibles.
+const CONTACT_TAGS = [
+  { value: 'general',     label: 'Liste générale' },
+  { value: 'therapeute',  label: 'Thérapeutes' },
+  { value: 'prospect',    label: 'Prospects Oracle' },
+  { value: 'presse',      label: 'Presse / médias' },
+  { value: 'communaute',  label: 'Communauté' }
+];
+
 // Convertit un tableau d'objets en CSV (échappement basique des guillemets/virgules)
 function rowsToCsv(rows) {
   if (!rows || rows.length === 0) return '';
@@ -391,6 +401,53 @@ async function handleData(req, res) {
           .eq('id', body.orderId);
         if (updateError) throw updateError;
 
+        return res.status(200).json({ success: true });
+      }
+
+      // ── Contacts newsletter : ajout manuel depuis le dashboard ──
+      if (action === 'add-contact') {
+        const contactEmail = (body.email || '').toLowerCase().trim();
+        if (!contactEmail) return res.status(400).json({ error: 'Email requis' });
+
+        const tags = Array.isArray(body.tags) && body.tags.length ? body.tags : ['general'];
+        const { data, error } = await supabase
+          .from('newsletter_contacts')
+          .upsert({
+            email: contactEmail,
+            full_name: (body.full_name || '').trim() || null,
+            notes: (body.notes || '').trim() || null,
+            tags,
+            source: 'manuel',
+            status: 'active'
+          }, { onConflict: 'email' })
+          .select()
+          .single();
+        if (error) throw error;
+        return res.status(200).json({ success: true, data });
+      }
+
+      // ── Contacts newsletter : mise à jour (tags, nom, notes, statut) ──
+      if (action === 'update-contact') {
+        const { id } = body;
+        if (!id) return res.status(400).json({ error: 'id requis' });
+
+        const updates = {};
+        if (body.tags !== undefined) updates.tags = Array.isArray(body.tags) ? body.tags : [];
+        if (body.full_name !== undefined) updates.full_name = (body.full_name || '').trim() || null;
+        if (body.notes !== undefined) updates.notes = (body.notes || '').trim() || null;
+        if (body.status !== undefined) updates.status = body.status;
+
+        const { error } = await supabase.from('newsletter_contacts').update(updates).eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      // ── Contacts newsletter : suppression ──
+      if (action === 'delete-contact') {
+        const { id } = body;
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { error } = await supabase.from('newsletter_contacts').delete().eq('id', id);
+        if (error) throw error;
         return res.status(200).json({ success: true });
       }
 
@@ -893,25 +950,30 @@ async function handleData(req, res) {
     if (section === 'waitlist') {
       const page   = parseInt(req.query?.page  || '1', 10);
       const limit  = parseInt(req.query?.limit || '10', 10);
+      const tag    = (req.query?.tag || '').trim();
       const offset = (page - 1) * limit;
-      const { data, count, error } = await supabase
+      let query = supabase
         .from('newsletter_contacts')
         .select('*', { count: 'exact' })
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
+      if (tag) query = query.contains('tags', [tag]);
+      const { data, count, error } = await query;
       // Si la table n'existe pas (PGRST205), retourner une liste vide au lieu d'une 500
       if (error) {
         console.warn('Waitlist section error (non-fatal):', error.message);
         return res.status(200).json({
           success: true,
           data: [],
-          pagination: { page, limit, total: 0, pages: 0 }
+          pagination: { page, limit, total: 0, pages: 0 },
+          availableTags: CONTACT_TAGS
         });
       }
       return res.status(200).json({
         success: true,
         data: data || [],
-        pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) }
+        pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) },
+        availableTags: CONTACT_TAGS
       });
     }
 
@@ -1367,12 +1429,11 @@ async function handleNewsletter(req, res) {
 
       // ── Sauvegarde d'un brouillon (newsletter ou promo) ──
       if (action === 'save') {
-        const { id, subject, content, html_content, intention, type, images, extra } = body;
+        const { id, subject, content, intention, type, images, extra } = body;
 
         const payload = {
           subject: subject || '',
           content: content || '',
-          html_content: html_content || null,
           intention: intention || null,
           type: type === 'promo' ? 'promo' : 'newsletter',
           images: Array.isArray(images) ? images : [],
@@ -1430,7 +1491,7 @@ async function handleNewsletter(req, res) {
 
       // ── Envoi (email de test ou diffusion réelle via Brevo) ──
       if (action === 'send') {
-        const { draft_id, test_email, subject } = body;
+        const { draft_id, test_email, subject, target_tags } = body;
         if (!draft_id) return res.status(400).json({ error: 'draft_id requis' });
 
         const { data: draft, error: draftErr } = await supabase
@@ -1462,6 +1523,51 @@ async function handleNewsletter(req, res) {
             return res.status(502).json({ error: await brevoErrorMessage(r, "Erreur lors de l'envoi du test") });
           }
           return res.status(200).json({ success: true });
+        }
+
+        // Diffusion ciblée : envoi direct aux contacts portant une (ou plusieurs) catégorie(s),
+        // sans passer par les listes Brevo (gestion des catégories uniquement via le dashboard).
+        if (Array.isArray(target_tags) && target_tags.length > 0) {
+          const { data: contacts, error: contactsErr } = await supabase
+            .from('newsletter_contacts')
+            .select('email')
+            .eq('status', 'active')
+            .overlaps('tags', target_tags);
+          if (contactsErr) throw contactsErr;
+
+          const emails = [...new Set((contacts || []).map(c => c.email).filter(Boolean))];
+          if (emails.length === 0) {
+            return res.status(400).json({ error: 'Aucun contact actif ne correspond à cette/ces catégorie(s)' });
+          }
+
+          const htmlWithUnsub = html.replace('{unsubscribe}', 'https://oradia.fr');
+          // Envoi individuel par lots (un email par destinataire, pas de diffusion groupée
+          // visible) pour rester dans le temps d'exécution de la fonction serverless.
+          const BATCH_SIZE = 10;
+          for (let i = 0; i < emails.length; i += BATCH_SIZE) {
+            const batch = emails.slice(i, i + BATCH_SIZE);
+            const results = await Promise.all(batch.map(email => fetch('https://api.brevo.com/v3/smtp/email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+              body: JSON.stringify({
+                sender: { name: 'Oradia', email: 'contact@oradia.fr' },
+                to: [{ email }],
+                subject: finalSubject,
+                htmlContent: htmlWithUnsub
+              })
+            })));
+            const failed = results.find(r => !r.ok);
+            if (failed) {
+              return res.status(502).json({ error: await brevoErrorMessage(failed, "Erreur lors de l'envoi ciblé") });
+            }
+          }
+
+          await supabase
+            .from('newsletter_drafts')
+            .update({ statut: 'envoyé', sent_at: new Date().toISOString(), subject: finalSubject })
+            .eq('id', draft_id);
+
+          return res.status(200).json({ success: true, recipients: emails.length });
         }
 
         // Diffusion réelle : campagne Brevo vers la liste newsletter (ID 5)
