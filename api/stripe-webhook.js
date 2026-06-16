@@ -517,9 +517,11 @@ async function processEvent(event) {
         }
 
         case 'checkout.session.completed': {
+                const stripe = getStripeClient();
+                const supabase = getSupabaseClient();
                 const session = event.data.object;
                 const sessionId = session.id;
-                
+
                 console.log(`Session completed: ${sessionId}`);
                 
                 // Extraction robuste des données avec fallbacks
@@ -602,7 +604,6 @@ async function processEvent(event) {
 
                 // ── Gestion abonnement Tore ──────────────────────────────────────
                 if (extractedData.offer === 'tore-subscription') {
-                    const supabase = getSupabaseClient();
 
                     // 1. Créer ou mettre à jour l'utilisateur dans Supabase Auth
                     const tempPassword = crypto.randomBytes(8).toString('hex'); // Mot de passe temporaire
