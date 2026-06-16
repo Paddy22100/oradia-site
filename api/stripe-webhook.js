@@ -323,14 +323,21 @@ const handler = async (req, res) => {
         }
 
         console.log(`Webhook event: ${event.type}`);
-        
-        // Répondre immédiatement à Stripe
-        res.status(200).json({ received: true });
 
-        // Traitement asynchrone ensuite (fire and forget)
-        processEvent(event).catch(err => {
+        // Traiter l'événement AVANT de répondre à Stripe.
+        // Sur Vercel, la fonction serverless est interrompue dès que la réponse est
+        // envoyée — un pattern "fire and forget" après res.json() ne s'exécuterait
+        // jamais. On attend donc la fin du traitement (DB + email) avant le 200.
+        // La limite d'exécution Vercel Hobby est 10 s — largement suffisant.
+        try {
+            await processEvent(event);
+        } catch (err) {
             console.error('[webhook] Processing error:', err);
-        });
+            // On répond quand même 200 pour éviter les relivraisons Stripe en boucle.
+            // L'erreur est journalisée dans les logs Vercel.
+        }
+
+        return res.status(200).json({ received: true });
     } catch (error) {
         console.error('Webhook processing error:', error.message);
         return res.status(500).json({ 

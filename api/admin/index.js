@@ -10,7 +10,7 @@ const xml2js = require('xml2js');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { sendShippingEmail, sendExportEmail } = require('../../lib/brevo-order-email.js');
+const { sendBrevoEmail, sendShippingEmail, sendExportEmail } = require('../../lib/brevo-order-email.js');
 
 // Manifest statique des illustrations du Tore (généré une fois, fichier unique et léger —
 // ne pas remplacer par un fs.readdir sur /images, ça ferait bundler tout le dossier (350+ Mo)
@@ -424,6 +424,41 @@ async function handleData(req, res) {
             toName: order.full_name || 'Client ORADIA',
             trackingNumber: body.trackingNumber
           });
+        }
+
+        return res.status(200).json({ success: true, emailSent });
+      }
+
+      // Marquer une précommande comme payée manuellement + renvoyer l'email de confirmation.
+      // Utilisé quand le webhook Stripe a échoué (paid_status reste 'pending' malgré le paiement réel).
+      if (action === 'mark-paid' && body.orderId) {
+        const { data: order, error: fetchError } = await supabase
+          .from('preorders')
+          .select('*')
+          .eq('id', body.orderId)
+          .maybeSingle();
+        if (fetchError) throw fetchError;
+        if (!order) return res.status(404).json({ error: 'Commande introuvable' });
+
+        const { error: updateError } = await supabase
+          .from('preorders')
+          .update({ paid_status: 'completed', updated_at: new Date().toISOString() })
+          .eq('id', body.orderId);
+        if (updateError) throw updateError;
+
+        let emailSent = false;
+        if (order.email) {
+          emailSent = await sendBrevoEmail({
+            toEmail: order.email,
+            toName: order.full_name || 'Ami(e) d\'ORADIA',
+            offer: order.offer,
+            amountTotal: Number(order.amount_total || 0).toFixed(2)
+          });
+          if (emailSent) {
+            await supabase.from('preorders')
+              .update({ email_sent_at: new Date().toISOString() })
+              .eq('id', body.orderId);
+          }
         }
 
         return res.status(200).json({ success: true, emailSent });

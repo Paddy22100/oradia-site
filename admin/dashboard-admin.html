@@ -1524,7 +1524,11 @@
 
         function getShippingActionButtons(preorder) {
             if (!preorder.paid_status || preorder.paid_status !== 'completed') {
-                return '<span class="text-xs text-light-gold/40">En attente paiement</span>';
+                return `<button onclick="markAsPaid('${preorder.id}')"
+                    class="px-3 py-1 bg-yellow-500/20 text-yellow-300 rounded hover:bg-yellow-500/30 transition text-xs"
+                    title="Webhook Stripe manquant — marquer payé manuellement et envoyer l'email de confirmation">
+                    <i class="fas fa-check mr-1"></i>Marquer payé + email
+                </button>`;
             }
 
             if (preorder.shipping_method === 'hand_delivery') {
@@ -2429,6 +2433,27 @@
                 await loadPreorders();
             } catch (error) {
                 console.error('Erreur markAsDelivered:', error);
+                alert('❌ Erreur : ' + error.message);
+            }
+        }
+
+        async function markAsPaid(orderId) {
+            if (!confirm('Marquer cette commande comme payée et envoyer l\'email de confirmation au client ?')) return;
+            try {
+                const response = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'mark-paid', orderId })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || data.message || 'Erreur');
+                if (data.emailSent) {
+                    alert('✅ Commande marquée payée et email de confirmation envoyé !');
+                } else {
+                    alert('✅ Commande marquée payée.\n⚠️ L\'email n\'a pas pu être envoyé (vérifier BREVO_SENDER_EMAIL dans Vercel).');
+                }
+                await loadPreorders();
+            } catch (error) {
                 alert('❌ Erreur : ' + error.message);
             }
         }
