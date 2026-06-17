@@ -1306,35 +1306,77 @@ async function handleContactsExport(req, res) {
     const urlParams = new URLSearchParams(req.url?.split('?')[1] || '');
     const format = urlParams.get('format') || req.query?.format || 'standard';
 
+    // Format preorders : export complet des précommandes
+    if (format === 'preorders') {
+      const { data: orders, error } = await supabase
+        .from('preorders')
+        .select('created_at, email, full_name, offer, amount_total, paid_status, shipping_method, shipping_address, address_complement, postal_code, city, country, relay_name, relay_address1, relay_postal_code, relay_city, tracking_number, shipping_status')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+
+      const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+      const header = [
+        'Date', 'Email', 'Nom', 'Offre', 'Montant (€)', 'Statut paiement',
+        'Mode livraison', 'Adresse domicile', 'Point relais', 'Tracking', 'Statut expédition'
+      ].map(esc).join(',');
+
+      const rows = (orders || []).map(r => {
+        const adresseDomicile = r.shipping_method === 'home'
+          ? [r.shipping_address, r.address_complement, r.postal_code, r.city, r.country].filter(Boolean).join(', ')
+          : '';
+        const pointRelais = r.shipping_method === 'relay'
+          ? [r.relay_name, r.relay_address1, r.relay_postal_code, r.relay_city].filter(Boolean).join(', ')
+          : '';
+        return [
+          r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : '',
+          r.email, r.full_name, r.offer,
+          r.amount_total != null ? (r.amount_total / 100).toFixed(2).replace('.', ',') : '',
+          r.paid_status, r.shipping_method,
+          adresseDomicile, pointRelais,
+          r.tracking_number || '', r.shipping_status || ''
+        ].map(esc).join(',');
+      });
+
+      res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+      res.setHeader('Content-Disposition', 'attachment; filename=precommandes-oradia.csv');
+      return res.status(200).send('﻿' + header + '\n' + rows.join('\n'));
+    }
+
     if (format === 'mondial-relay') {
       const { data: orders, error } = await supabase
         .from('preorders')
-        .select('email, full_name, relay_id, relay_name, relay_address1, relay_address2, relay_postal_code, relay_city, relay_country, shipping_status, created_at')
+        .select('id, email, full_name, relay_id, relay_address1, relay_postal_code, relay_city, relay_country, shipping_status, created_at')
         .eq('shipping_method', 'relay')
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      // Échapper les valeurs pour CSV : guillemets doubles autour de chaque champ,
-      // guillemets internes doublés — évite la troncature sur virgule/espace dans les adresses
       const esc = (v) => `"${String(v ?? '').replace(/"/g, '""')}"`;
 
-      const header = ['Email', 'Nom', 'ID Point Relais', 'Nom Point Relais',
-        'Adresse 1', 'Adresse 2', 'Code Postal', 'Ville', 'Pays',
-        'Statut expédition', 'Date commande'].map(esc).join(',');
+      // Colonnes dans l'ordre d'import Mondial Relay
+      const header = ['Nom', 'Prénom', 'Adresse1', 'CodePostal', 'Ville', 'Pays',
+        'NumeroPointRelais', 'Téléphone', 'Email', 'Poids', 'Reference'].map(esc).join(',');
 
-      const rows = (orders || []).map(r => [
-        r.email, r.full_name,
-        r.relay_id, r.relay_name,
-        r.relay_address1, r.relay_address2 || '',
-        r.relay_postal_code, r.relay_city, r.relay_country || 'FR',
-        r.shipping_status || 'pending',
-        r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : ''
-      ].map(esc).join(','));
+      const rows = (orders || []).map(r => {
+        const [firstName = '', ...lastParts] = (r.full_name || '').trim().split(' ');
+        const lastName = lastParts.join(' ') || firstName;
+        const firstNameOnly = lastParts.length > 0 ? firstName : '';
+        return [
+          lastName, firstNameOnly,
+          r.relay_address1 || '',
+          r.relay_postal_code || '',
+          r.relay_city || '',
+          r.relay_country || 'FR',
+          r.relay_id || '',
+          '',
+          r.email,
+          '500',
+          r.id || ''
+        ].map(esc).join(',');
+      });
 
       res.setHeader('Content-Type', 'text/csv; charset=utf-8');
       res.setHeader('Content-Disposition', 'attachment; filename=mondial-relay-export.csv');
-      // BOM UTF-8 pour Excel (évite les problèmes d'encodage sur les noms accentués)
       return res.status(200).send('﻿' + header + '\n' + rows.join('\n'));
     }
 

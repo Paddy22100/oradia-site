@@ -1918,6 +1918,11 @@
                                     <div class="font-medium">${preorder.relay_name}</div>
                                     <div class="text-xs text-light-gold/60">${preorder.relay_address1}, ${preorder.relay_postal_code} ${preorder.relay_city}</div>
                                 </div>
+                            ` : preorder.shipping_method === 'home' ? `
+                                <div class="text-light-gold">
+                                    <div class="text-xs text-light-gold/60">${preorder.shipping_address || ''}${preorder.address_complement ? ', ' + preorder.address_complement : ''}</div>
+                                    <div class="text-xs text-light-gold/60">${preorder.postal_code || ''} ${preorder.city || ''}</div>
+                                </div>
                             ` : ''}
                             ${preorder.tracking_number ? `
                                 <div class="text-light-gold">
@@ -2175,6 +2180,10 @@
             window.location.href = `/api/admin/contacts-export${qs}`;
         }
 
+        function exportPreorders() {
+            window.location.href = '/api/admin/contacts-export?format=preorders';
+        }
+
         // Générer un récapitulatif PDF des commandes (filtré) — via la boîte de dialogue d'impression du navigateur
         async function generateOrdersPdf() {
             const paidStatus     = document.getElementById('ordersPdfPaidStatus').value;
@@ -2243,6 +2252,7 @@
                         <td>${o.offer || '-'}</td>
                         <td>${formatCurrency(o.amount_total)}</td>
                         <td>${getStatusLabelFr(o.paid_status)}</td>
+                        <td>${getShippingMethodLabel(o.shipping_method)}</td>
                         <td>${getShippingStatusLabel(o.shipping_status)}</td>
                         <td>${o.tracking_number || '-'}</td>
                     </tr>`).join('');
@@ -2266,7 +2276,8 @@
                     <div class="meta">Généré le ${new Date().toLocaleString('fr-FR')}</div>
                     ${filterLabels.length ? `<div class="filters"><strong>Filtres appliqués :</strong> ${filterLabels.join(' · ')}</div>` : ''}
                     <div class="summary">
-                        <div>Commandes<strong>${filtered.length}</strong></div>
+                        <div>Commandes chargées<strong>${all.length}</strong></div>
+                        <div>Après filtres<strong>${filtered.length}</strong></div>
                         <div>Montant total<strong>${formatCurrency(totalAmount)}</strong></div>
                         <div>Payées<strong>${countByPaidStatus.completed}</strong></div>
                         <div>En attente<strong>${countByPaidStatus.pending}</strong></div>
@@ -2276,7 +2287,7 @@
                     <table>
                         <thead><tr>
                             <th>Date</th><th>Email</th><th>Nom</th><th>Offre</th><th>Montant</th>
-                            <th>Paiement</th><th>Livraison</th><th>Tracking</th>
+                            <th>Paiement</th><th>Mode</th><th>Expédition</th><th>Tracking</th>
                         </tr></thead>
                         <tbody>${rowsHtml}</tbody>
                     </table>
@@ -2611,7 +2622,7 @@
             
             const exportBtn = document.getElementById('exportContactsBtn');
             if (exportBtn) {
-                exportBtn.addEventListener('click', () => exportContacts('standard'));
+                exportBtn.addEventListener('click', () => exportPreorders());
             }
 
             const exportMondialRelayBtn = document.getElementById('exportMondialRelayBtn');
