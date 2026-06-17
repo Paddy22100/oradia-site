@@ -173,11 +173,6 @@
                 <span>Abonnements</span>
                 <span class="ml-auto text-xs bg-gold/20 text-gold rounded-full px-2 py-0.5" id="nav-badge-subscriptions"></span>
             </div>
-            <div class="nav-item" onclick="showTab('single-draws')" id="nav-single-draws">
-                <i class="fas fa-magic w-4 text-center"></i>
-                <span>Tirages ponctuels</span>
-                <span class="ml-auto text-xs bg-purple-500/20 text-purple-300 rounded-full px-2 py-0.5" id="nav-badge-single-draws"></span>
-            </div>
 
             <p class="text-gold/50 text-xs uppercase tracking-widest px-5 mt-5 mb-2">Contenu</p>
             <div class="nav-item" onclick="showTab('newsletter')" id="nav-newsletter">
@@ -529,7 +524,7 @@
                 <!-- Camembert revenus -->
                 <div class="stat-card rounded-2xl p-6">
                     <h3 class="text-gold font-semibold mb-1" style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;">Répartition des revenus</h3>
-                    <p class="text-light-gold/50 text-xs mb-5">Précommandes · Dons · Tirages ponctuels</p>
+                    <p class="text-light-gold/50 text-xs mb-5">Précommandes · Dons</p>
                     <div class="flex items-center gap-6">
                         <!-- Donut SVG généré dynamiquement -->
                         <div class="relative flex-shrink-0" style="width:120px;height:120px;">
@@ -554,35 +549,10 @@
                                 <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span><span class="text-light-gold">Dons</span></span>
                                 <span class="text-gold font-semibold" id="pie-label-donors">—</span>
                             </div>
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-purple-500 inline-block"></span><span class="text-light-gold">Tirages (3,90€)</span></span>
-                                <span class="text-gold font-semibold" id="pie-label-singledraws">—</span>
-                            </div>
                         </div>
                     </div>
                 </div>
 
-                <!-- KPI tirages ponctuels -->
-                <div class="stat-card rounded-2xl p-6">
-                    <h3 class="text-gold font-semibold mb-4" style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;">Tirages ponctuels (3,90€)</h3>
-                    <div class="grid grid-cols-2 gap-4">
-                        <div class="bg-[rgba(168,85,247,0.08)] border border-purple-500/20 rounded-xl p-4">
-                            <div class="text-2xl font-bold text-purple-300 mb-1" id="singleDrawsCount">—</div>
-                            <p class="text-light-gold/60 text-xs uppercase tracking-wider">Tirages vendus</p>
-                        </div>
-                        <div class="bg-[rgba(168,85,247,0.08)] border border-purple-500/20 rounded-xl p-4">
-                            <div class="text-2xl font-bold text-purple-300 mb-1" id="singleDrawsTotal">—</div>
-                            <p class="text-light-gold/60 text-xs uppercase tracking-wider">Revenus tirages</p>
-                        </div>
-                        <div class="bg-[rgba(168,85,247,0.08)] border border-purple-500/20 rounded-xl p-4 col-span-2">
-                            <div class="text-xl font-bold text-purple-300 mb-1" id="singleDrawsCustomers">—</div>
-                            <p class="text-light-gold/60 text-xs uppercase tracking-wider">Clients distincts</p>
-                        </div>
-                    </div>
-                    <button onclick="showTab('single-draws')" class="mt-4 text-xs text-purple-300 hover:text-purple-200 transition underline underline-offset-2">
-                        Voir le détail →
-                    </button>
-                </div>
             </div>
 
             <!-- ── Messages support récents ── -->
@@ -1165,56 +1135,6 @@
         </section>
         </div><!-- /tab-newsletter -->
 
-        <!-- ══ ONGLET : TIRAGES PONCTUELS (#28) ══ -->
-        <div id="tab-single-draws" class="tab-panel">
-        <section class="mb-10">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h3 class="cormorant text-2xl font-bold text-gold">Tirages ponctuels</h3>
-                    <p class="text-light-gold/50 text-sm mt-1">Achats à 3,90€ — crédits tirage one-shot</p>
-                </div>
-                <button onclick="loadSingleDraws()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
-            </div>
-
-            <!-- KPI résumé -->
-            <div class="grid grid-cols-3 gap-4 mb-6">
-                <div class="stat-card rounded-xl p-4 border border-purple-500/20">
-                    <div class="text-2xl font-bold text-purple-300" id="sd-total-credits">—</div>
-                    <p class="text-light-gold/60 text-xs mt-1">Crédits vendus</p>
-                </div>
-                <div class="stat-card rounded-xl p-4 border border-purple-500/20">
-                    <div class="text-2xl font-bold text-purple-300" id="sd-total-revenue">—</div>
-                    <p class="text-light-gold/60 text-xs mt-1">Revenus générés</p>
-                </div>
-                <div class="stat-card rounded-xl p-4 border border-purple-500/20">
-                    <div class="text-2xl font-bold text-purple-300" id="sd-total-customers">—</div>
-                    <p class="text-light-gold/60 text-xs mt-1">Clients distincts</p>
-                </div>
-            </div>
-
-            <!-- Tableau -->
-            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden shadow-2xl">
-                <div class="overflow-x-auto">
-                    <table class="w-full">
-                        <thead class="bg-gradient-to-r from-[rgba(5,20,40,0.9)] to-[rgba(5,20,40,0.7)] border-b border-gold/30">
-                            <tr>
-                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Email</th>
-                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Nom</th>
-                                <th class="px-5 py-4 text-center text-gold font-semibold text-xs uppercase tracking-wider">Crédits restants</th>
-                                <th class="px-5 py-4 text-right text-gold font-semibold text-xs uppercase tracking-wider">Total payé</th>
-                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Date</th>
-                            </tr>
-                        </thead>
-                        <tbody id="singleDrawsTbody" class="divide-y divide-gold/10">
-                            <tr><td colspan="5" class="px-5 py-8 text-center text-light-gold/40 text-sm">Chargement…</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-                <div id="singleDrawsPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)] border-t border-gold/20 text-light-gold/50 text-sm"></div>
-            </div>
-        </section>
-        </div><!-- /tab-single-draws -->
-
         <!-- ══ ONGLET : SUPPORT / TÉMOIGNAGES (#30) ══ -->
         <div id="tab-support" class="tab-panel">
         <section class="mb-10">
@@ -1499,7 +1419,6 @@
             newsletter:     'Communication',
             journal:        'Journal admin',
             subscriptions:  'Abonnements Tore',
-            'single-draws':  'Tirages ponctuels',
             support:         'Support · Témoignages · Suggestions',
             synchronicity:   'Étude — Synchronicités',
             costs:           'Coûts du site',
@@ -1518,7 +1437,6 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
             if (name === 'newsletter')    nlLoadDrafts();
             if (name === 'subscriptions') loadSubscriptions();
-            if (name === 'single-draws')   loadSingleDraws();
             if (name === 'support')        loadSupportMessages();
             if (name === 'synchronicity')  loadSynchronicity();
             if (name === 'costs')          loadCosts();
@@ -1872,14 +1790,6 @@
             animateProgress('preordersTotalProgress', Math.min((data.preorders.total / 1000) * 100, 100));
             animateProgress('donorsProgress', Math.min((data.donors.count / 50) * 100, 100));
             animateProgress('waitlistProgress', Math.min((data.waitlist.count / 200) * 100, 100));
-
-            // ── Tirages ponctuels (#28) ──
-            const sd = data.singleDraws || {};
-            updateElement('singleDrawsCount',     sd.count     || 0);
-            updateElement('singleDrawsTotal',     formatCurrency(sd.total     || 0));
-            updateElement('singleDrawsCustomers', sd.customers || 0);
-            const sdBadge = document.getElementById('nav-badge-single-draws');
-            if (sdBadge) sdBadge.textContent = sd.count || '';
 
             // ── Support badge (#30) ──
             const sup = data.support || {};
@@ -3951,64 +3861,6 @@
             nlLoadDrafts();
             nlLoadIdeas();
         });
-
-        // ══ TIRAGES PONCTUELS (#28) ══════════════════════════════════════════════
-        let sdPage = 1;
-
-        async function loadSingleDraws(page = 1) {
-            sdPage = page;
-            const tbody = document.getElementById('singleDrawsTbody');
-            if (!tbody) return;
-            tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-8 text-center text-light-gold/40 text-sm">Chargement…</td></tr>';
-
-            try {
-                const res  = await adminFetch(`/api/admin/data?section=single-draws&page=${page}&limit=20`);
-                const data = await res.json();
-                if (!data.success) throw new Error(data.error);
-
-                const rows = data.data || [];
-                const pg   = data.pagination || {};
-
-                // KPI résumé
-                const totalCredits  = rows.reduce((s, r) => s + (r.single_draw_credits || 0), 0);
-                const totalRevenue  = (totalCredits * 3.90).toFixed(2).replace('.', ',') + ' €';
-                updateElement('sd-total-credits',   totalCredits);
-                updateElement('sd-total-revenue',   totalRevenue);
-                updateElement('sd-total-customers', pg.total || rows.length);
-
-                if (rows.length === 0) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-8 text-center text-light-gold/40 text-sm">Aucun achat ponctuel enregistré.</td></tr>';
-                    return;
-                }
-
-                const typeLabel = { single_draw: 'Ponctuel', active: 'Abonné' };
-                tbody.innerHTML = rows.map(r => `
-                    <tr class="hover:bg-gold/5 transition-colors">
-                        <td class="px-5 py-3 text-sm text-light-gold">${r.email || '—'}</td>
-                        <td class="px-5 py-3 text-sm text-light-gold/70">${r.full_name || '—'}</td>
-                        <td class="px-5 py-3 text-center">
-                            <span class="inline-block bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-full px-3 py-0.5 text-sm font-semibold">${r.single_draw_credits || 0}</span>
-                        </td>
-                        <td class="px-5 py-3 text-right text-sm font-semibold text-gold">${r.total_spent_eur}</td>
-                        <td class="px-5 py-3 text-sm text-light-gold/50">${r.created_at_fr || '—'}</td>
-                    </tr>`).join('');
-
-                // Pagination
-                const pgEl = document.getElementById('singleDrawsPagination');
-                if (pgEl && pg.pages > 1) {
-                    let btns = '';
-                    for (let i = 1; i <= pg.pages; i++) {
-                        btns += `<button onclick="loadSingleDraws(${i})" class="px-3 py-1 rounded text-sm mx-0.5 ${i === pg.page ? 'bg-gold text-night-blue font-semibold' : 'bg-gold/10 text-gold hover:bg-gold/20'} transition">${i}</button>`;
-                    }
-                    pgEl.innerHTML = `<span class="mr-2 text-light-gold/50">Page ${pg.page}/${pg.pages} · ${pg.total} clients</span>${btns}`;
-                } else if (pgEl) {
-                    pgEl.innerHTML = `<span class="text-light-gold/40">${pg.total || rows.length} client${(pg.total || rows.length) > 1 ? 's' : ''}</span>`;
-                }
-            } catch (e) {
-                console.error('[Admin] loadSingleDraws error:', e);
-                if (tbody) tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-8 text-center text-red-400 text-sm">Erreur de chargement.</td></tr>';
-            }
-        }
 
         // ══ SUPPORT / TÉMOIGNAGES (#30) ══════════════════════════════════════════
         let supPage = 1;

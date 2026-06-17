@@ -23,7 +23,7 @@ export default async function handler(req, res) {
 
       const { data: sub } = await supabase
         .from('tore_subscriptions')
-        .select('status, expires_at, single_draw_credits')
+        .select('status, expires_at')
         .eq('email', email)
         .single();
 
@@ -35,15 +35,6 @@ export default async function handler(req, res) {
       // Abonné actif → tirages illimités
       if (sub.status === 'active' && new Date(sub.expires_at) > new Date()) {
         return res.status(200).json({ canDraw: true, drawsUsed: 0 });
-      }
-
-      // Crédits ponctuels disponibles
-      if ((sub.single_draw_credits || 0) > 0) {
-        return res.status(200).json({
-          canDraw: true,
-          drawsUsed: 0,
-          singleDrawCredits: sub.single_draw_credits
-        });
       }
 
       // Freemium : déléguer à localStorage (retourner true par défaut)

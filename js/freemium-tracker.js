@@ -280,30 +280,13 @@ class FreemiumTracker {
 
     canDrawTore() {
         if (this.isSubscribed()) return true;
-        // Vérifier les crédits ponctuels achetés
-        const credits = parseInt(
-            localStorage.getItem('oradia_single_draw_credits') || '0', 10
-        );
-        if (credits > 0) return true;
-        // Vérifier le quota lifetime gratuit
         const used = parseInt(localStorage.getItem('oradia_tore_lifetime_draws') || '0', 10);
         return used < 2;
     }
 
     recordToreDraw() {
         if (this.isSubscribed()) return;
-        // Si l'utilisateur a des crédits ponctuels, les consommer en priorité
-        const credits = parseInt(
-            localStorage.getItem('oradia_single_draw_credits') || '0', 10
-        );
-        if (credits > 0) {
-            localStorage.setItem('oradia_single_draw_credits', String(credits - 1));
-            return; // Ne pas incrémenter le compteur lifetime
-        }
-        // Sinon incrémenter le compteur lifetime gratuit
-        const used = parseInt(
-            localStorage.getItem('oradia_tore_lifetime_draws') || '0', 10
-        );
+        const used = parseInt(localStorage.getItem('oradia_tore_lifetime_draws') || '0', 10);
         localStorage.setItem('oradia_tore_lifetime_draws', String(used + 1));
     }
 
@@ -316,6 +299,7 @@ class FreemiumTracker {
 
     showToreLimitReached() {
         if (document.getElementById('tore-limit-modal')) return;
+        _saveToreEmailSilent();
 
         if (!document.getElementById('tore-limit-modal-styles')) {
             const style = document.createElement('style');
@@ -489,3 +473,27 @@ class FreemiumTracker {
 
 // Instance globale
 window.freemiumTracker = new FreemiumTracker();
+
+function _saveToreEmailSilent() {
+    try {
+        const sources = [
+            sessionStorage.getItem('oradia_member_session'),
+            localStorage.getItem('oradia_member_session'),
+            sessionStorage.getItem('oradia_session'),
+            sessionStorage.getItem('userData'),
+            localStorage.getItem('userEmail')
+        ];
+        let email = '';
+        for (const s of sources) {
+            if (!s) continue;
+            if (s.startsWith('{')) { const e = JSON.parse(s).email; if (e) { email = e; break; } }
+            else if (s.includes('@')) { email = s; break; }
+        }
+        if (!email) return;
+        fetch('/api/auth/save-tore-email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        }).catch(() => {});
+    } catch(e) {}
+}

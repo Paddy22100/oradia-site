@@ -507,8 +507,7 @@
     try {
         const ft = window.freemiumTracker;
         if (!ft) return;
-        const credits = parseInt(localStorage.getItem('oradia_single_draw_credits') || '0', 10);
-        const eligible = ft.isSubscribed() || credits > 0;
+        const eligible = ft.isSubscribed();
         if (eligible) {
             const label = document.getElementById('cta-essai-oracle-label');
             if (label) label.textContent = 'Faire un tirage du Tore';

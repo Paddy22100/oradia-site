@@ -345,7 +345,7 @@ async function handleConsumeToreDraw(req, res) {
   try {
     const { data: sub } = await supabase
       .from('tore_subscriptions')
-      .select('id, status, expires_at, single_draw_credits')
+      .select('id, status, expires_at')
       .eq('email', email)
       .single();
 
@@ -358,14 +358,6 @@ async function handleConsumeToreDraw(req, res) {
     if (sub.status === 'active' && new Date(sub.expires_at) > new Date()) {
       res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
       return res.end(JSON.stringify({ ok: true }));
-    }
-
-    // Décrémenter le crédit ponctuel si disponible
-    if ((sub.single_draw_credits || 0) > 0) {
-      await supabase
-        .from('tore_subscriptions')
-        .update({ single_draw_credits: sub.single_draw_credits - 1 })
-        .eq('id', sub.id);
     }
 
     res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
@@ -438,6 +430,31 @@ async function handleCheckToreDraw(req, res) {
 
   res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
   return res.end(JSON.stringify({ allowed: true, plan: 'decouverte' }));
+}
+
+// ============ SAVE TORE EMAIL (relance freemium) ============
+async function handleSaveToreEmail(req, res) {
+  const body = await new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', c => data += c);
+    req.on('end', () => { try { resolve(data ? JSON.parse(data) : {}); } catch { resolve({}); } });
+    req.on('error', reject);
+  });
+  const email = (body.email || '').trim().toLowerCase();
+  if (!email || !email.includes('@')) {
+    res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, error: 'Email invalide' }));
+  }
+  const supabase = createClient(
+    process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+  await supabase.from('tore_emails').upsert(
+    { email, consent_marketing: false, created_at: new Date().toISOString() },
+    { onConflict: 'email', ignoreDuplicates: true }
+  );
+  res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+  return res.end(JSON.stringify({ success: true }));
 }
 
 // ============ FORGOT PASSWORD ============
@@ -534,6 +551,11 @@ module.exports = async (req, res) => {
     // POST /check-tore-draw — vérifie et consomme le quota journalier (Découverte)
     if (path.includes('check-tore-draw') || fullUrl.includes('check-tore-draw')) {
       return await handleCheckToreDraw(req, res);
+    }
+
+    // POST /save-tore-email — enregistre l'email pour la séquence de relance freemium
+    if (path.includes('save-tore-email') || fullUrl.includes('save-tore-email')) {
+      return await handleSaveToreEmail(req, res);
     }
 
     // Route non reconnue

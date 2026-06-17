@@ -32,7 +32,7 @@
       "dest": "/api/admin/index.js"
     },
     {
-      "src": "/api/auth/(login|forgot-password|check-subscription|consume-tore-draw|check-tore-draw)(.*)",
+      "src": "/api/auth/(login|forgot-password|check-subscription|consume-tore-draw|check-tore-draw|save-tore-email)(.*)",
       "dest": "/api/auth/index.js"
     },
     {

@@ -777,9 +777,9 @@
                 <div class="w-24 h-px mx-auto mb-8" style="background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4),transparent)"></div>
 
                 <!-- Deux offres côte à côte -->
-                <div class="grid md:grid-cols-2 gap-5 max-w-2xl mx-auto mb-6">
+                <div class="max-w-sm mx-auto mb-6">
 
-                  <!-- Offre 1 : Abonnement (primary) -->
+                  <!-- Offre Abonnement -->
                   <div class="relative overflow-hidden rounded-2xl flex flex-col" style="background:linear-gradient(135deg,rgba(212,175,55,0.15),rgba(212,175,55,0.05));border:1px solid rgba(212,175,55,0.45)">
                     <!-- Badge populaire -->
                     <div class="absolute top-0 inset-x-0 flex justify-center">
@@ -804,27 +804,6 @@
                       <a href="/tore-abonnement.html" class="block w-full text-center font-bold rounded-full py-3 transition-all duration-300 hover:shadow-lg hover:scale-105" style="background:linear-gradient(135deg,#d4af37,#b8962e);color:#020817;font-family:'Cinzel',serif;font-size:0.85rem;letter-spacing:0.05em;box-shadow:0 4px 20px rgba(212,175,55,0.25)">
                         Commencer l'abonnement →
                       </a>
-                    </div>
-                  </div>
-
-                  <!-- Offre 2 : Tirage ponctuel (secondary) -->
-                  <div class="relative overflow-hidden rounded-2xl flex flex-col" style="background:rgba(5,20,40,0.6);border:1px solid rgba(212,175,55,0.2)">
-                    <div class="p-6 flex flex-col flex-1 text-center">
-                      <div class="w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3" style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2)">
-                        <i class="fas fa-star text-gold text-base" style="opacity:0.8"></i>
-                      </div>
-                      <p class="font-cinzel font-bold text-sm mb-1 tracking-wide" style="color:rgba(212,175,55,0.8)">TIRAGE PONCTUEL</p>
-                      <div class="flex items-baseline justify-center gap-1 mb-3">
-                        <span class="font-cormorant font-bold" style="font-size:2.2rem;color:#f5e7a1;letter-spacing:-0.01em">3,90</span>
-                        <span class="font-cormorant font-bold text-2xl text-gold">€</span>
-                      </div>
-                      <ul class="text-left space-y-2 mb-5 flex-1">
-                        <li class="flex items-center gap-2 text-sm" style="color:rgba(245,231,161,0.7)"><i class="fas fa-check text-xs flex-shrink-0" style="color:rgba(212,175,55,0.6)"></i>1 tirage complet avec analyse IA</li>
-                        <li class="flex items-center gap-2 text-sm" style="color:rgba(245,231,161,0.7)"><i class="fas fa-check text-xs flex-shrink-0" style="color:rgba(212,175,55,0.6)"></i>Accès immédiat</li>
-                      </ul>
-                      <button id="tore-single-draw-btn" class="block w-full text-center font-semibold rounded-full py-3 transition-all duration-300 hover:scale-105" style="background:transparent;border:1px solid rgba(212,175,55,0.35);color:rgba(212,175,55,0.85);font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:0.04em;cursor:pointer">
-                        Acheter ce tirage
-                      </button>
                     </div>
                   </div>
 
@@ -2237,57 +2216,6 @@
     </script>
 <script>document.addEventListener('DOMContentLoaded', () => { requestAnimationFrame(() => { document.body.classList.add('page-ready'); }); });</script>
 
-<!-- Modal email — achat tirage ponctuel (doit être dans le DOM avant le script qui attache les listeners) -->
-<div id="_sdraw-modal" role="dialog" aria-modal="true" aria-labelledby="_sdraw-title"
-  style="display:none;position:fixed;inset:0;z-index:9999;align-items:center;justify-content:center;
-         padding:1.5rem;background:radial-gradient(circle at center,rgba(0,0,0,0.88) 0%,rgba(0,0,0,0.96) 100%);">
-  <div style="background:linear-gradient(135deg,rgba(15,25,50,0.98) 0%,rgba(20,30,60,0.95) 100%);
-              border:1.5px solid rgba(212,175,55,0.45);border-radius:1.5rem;max-width:420px;width:100%;
-              box-shadow:0 25px 50px -12px rgba(0,0,0,0.7),0 0 40px rgba(212,175,55,0.08);
-              position:relative;padding:2.25rem 1.75rem 1.75rem;overflow:hidden;">
-    <div style="position:absolute;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.7),transparent);"></div>
-    <div style="text-align:center;margin-bottom:1rem;">
-      <div style="display:inline-flex;align-items:center;justify-content:center;width:48px;height:48px;
-                  border-radius:50%;border:1.5px solid rgba(212,175,55,0.4);background:rgba(212,175,55,0.08);">
-        <i class="fas fa-lock" style="color:rgba(212,175,55,0.85);font-size:1.1rem;"></i>
-      </div>
-    </div>
-    <h2 id="_sdraw-title" style="font-family:'Cinzel',serif;color:rgba(212,175,55,0.95);font-size:1.05rem;
-       text-align:center;letter-spacing:0.07em;margin-bottom:0.4rem;">Finaliser votre achat</h2>
-    <p style="color:rgba(200,210,230,0.65);font-size:0.82rem;text-align:center;line-height:1.6;margin-bottom:1.5rem;">
-      Votre analyse complète · <strong style="color:rgba(212,175,55,0.8);">3,90 €</strong><br>
-      <span style="font-size:0.75rem;opacity:0.7;">Paiement sécurisé via Stripe</span>
-    </p>
-    <form id="_sdraw-form" novalidate>
-      <label for="_sdraw-email" style="display:block;font-family:'Lora',serif;font-size:0.78rem;
-             color:rgba(212,175,55,0.7);letter-spacing:0.1em;text-transform:uppercase;margin-bottom:0.5rem;">
-        Adresse email
-      </label>
-      <input id="_sdraw-email" type="email" autocomplete="email" placeholder="votre@email.fr"
-        style="width:100%;padding:0.8rem 1rem;border-radius:0.75rem;border:1px solid rgba(212,175,55,0.35);
-               background:rgba(255,255,255,0.04);color:#f0e8d0;font-size:0.9rem;font-family:'Lora',serif;
-               outline:none;box-sizing:border-box;margin-bottom:0.5rem;transition:border-color 0.2s;"
-        onfocus="this.style.borderColor='rgba(212,175,55,0.7)'"
-        onblur="this.style.borderColor='rgba(212,175,55,0.35)'">
-      <p id="_sdraw-error" style="color:rgba(255,120,100,0.85);font-size:0.78rem;min-height:1.2em;margin-bottom:0.75rem;"></p>
-      <button type="submit"
-        style="width:100%;padding:0.9rem;border-radius:0.85rem;border:1.5px solid rgba(212,175,55,0.6);
-               background:linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.1));
-               color:rgba(212,175,55,0.95);font-family:'Cinzel',serif;font-size:0.85rem;
-               letter-spacing:0.08em;cursor:pointer;transition:all 0.2s;margin-bottom:0.6rem;"
-        onmouseover="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.3),rgba(212,175,55,0.18))'"
-        onmouseout="this.style.background='linear-gradient(135deg,rgba(212,175,55,0.2),rgba(212,175,55,0.1))'">
-        Payer 3,90 € →
-      </button>
-      <button type="button" id="_sdraw-cancel"
-        style="width:100%;padding:0.6rem;border:none;background:none;
-               color:rgba(180,190,210,0.45);font-size:0.78rem;cursor:pointer;letter-spacing:0.03em;">
-        Annuler
-      </button>
-    </form>
-    <div style="position:absolute;bottom:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);"></div>
-  </div>
-</div>
 
 <script>
 // ── Bloc conversion Tore ──────────────────────────────────────────────────
@@ -2341,82 +2269,6 @@
     run();
   }
 
-  // ── Bouton achat tirage ponctuel ────────────────────────────────────────
-  // Récupérer l'email de session si disponible
-  function _getSessionEmail() {
-    try {
-      const sources = [
-        sessionStorage.getItem('oradia_member_session'),
-        localStorage.getItem('oradia_member_session'),
-        sessionStorage.getItem('oradia_session'),
-        sessionStorage.getItem('userData'),
-        localStorage.getItem('userEmail')
-      ];
-      for (const s of sources) {
-        if (!s) continue;
-        if (s.startsWith('{')) { const e = JSON.parse(s).email; if (e) return e; }
-        else if (s.includes('@')) return s;
-      }
-    } catch(e) {}
-    return '';
-  }
-
-  function _launchSingleDrawCheckout(email) {
-    const btn = document.getElementById('tore-single-draw-btn');
-    if (btn) { btn.disabled = true; btn.textContent = 'Redirection…'; }
-    fetch('/api/create-checkout-session', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ type: 'single-draw', email }),
-    })
-    .then(r => r.json())
-    .then(data => {
-      if (data.url) { window.location.href = data.url; }
-      else { throw new Error(data.error || 'Erreur inconnue'); }
-    })
-    .catch(e => {
-      console.error('[tore-conversion] single-draw error:', e);
-      if (btn) { btn.disabled = false; btn.textContent = 'Acheter ce tirage'; }
-      const errEl = document.getElementById('_sdraw-error');
-      if (errEl) errEl.textContent = 'Une erreur est survenue. Veuillez réessayer.';
-    });
-  }
-
-  document.getElementById('tore-single-draw-btn')?.addEventListener('click', () => {
-    // Pré-remplir avec email de session si dispo
-    const prefill = _getSessionEmail();
-    const emailInput = document.getElementById('_sdraw-email');
-    if (emailInput && prefill) emailInput.value = prefill;
-    const modal = document.getElementById('_sdraw-modal');
-    if (modal) {
-      modal.style.display = 'flex';
-      (emailInput || document.getElementById('_sdraw-email'))?.focus();
-    }
-  });
-
-  // Soumission du modal email
-  document.getElementById('_sdraw-form')?.addEventListener('submit', e => {
-    e.preventDefault();
-    const email = (document.getElementById('_sdraw-email')?.value || '').trim();
-    const errEl = document.getElementById('_sdraw-error');
-    if (!email || !email.includes('@') || !email.includes('.')) {
-      if (errEl) errEl.textContent = 'Veuillez saisir une adresse email valide.';
-      return;
-    }
-    if (errEl) errEl.textContent = '';
-    document.getElementById('_sdraw-modal').style.display = 'none';
-    _launchSingleDrawCheckout(email);
-  });
-
-  document.getElementById('_sdraw-cancel')?.addEventListener('click', () => {
-    document.getElementById('_sdraw-modal').style.display = 'none';
-  });
-
-  // Fermer sur clic fond
-  document.getElementById('_sdraw-modal')?.addEventListener('click', e => {
-    if (e.target === document.getElementById('_sdraw-modal'))
-      document.getElementById('_sdraw-modal').style.display = 'none';
-  });
 })();
 </script>
 
