@@ -324,9 +324,11 @@ async function handleData(req, res) {
     // un secret partagé plutôt qu'une session admin (pas de cookie/JWT dans un cron).
     const cronSecret    = req.headers['x-cron-secret'];
     const vercelCronSig = req.headers['x-vercel-cron-signature'];
+    const vercelCron    = req.headers['x-vercel-cron'];
     const isCronRequest =
       (!!process.env.CRON_SECRET && cronSecret === process.env.CRON_SECRET) ||
-      !!vercelCronSig;
+      !!vercelCronSig ||
+      vercelCron === '1';
 
     if (!isCronRequest) {
       verifyAdminAuth(req);
