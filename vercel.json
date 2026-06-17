@@ -1,5 +1,8 @@
 {
   "version": 2,
+  "crons": [
+    { "path": "/api/admin/data?action=cron-relance", "schedule": "0 9 * * *" }
+  ],
     "redirects": [
     {
       "source": "/index.html",
@@ -29,7 +32,7 @@
       "dest": "/api/admin/index.js"
     },
     {
-      "src": "/api/auth/(login|forgot-password|check-subscription|consume-tore-draw)(.*)",
+      "src": "/api/auth/(login|forgot-password|check-subscription|consume-tore-draw|check-tore-draw)(.*)",
       "dest": "/api/auth/index.js"
     },
     {

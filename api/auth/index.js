@@ -377,6 +377,69 @@ async function handleConsumeToreDraw(req, res) {
   }
 }
 
+// ============ CHECK TORE DRAW (limite journalière Découverte) ============
+async function handleCheckToreDraw(req, res) {
+  const body = await new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', chunk => data += chunk);
+    req.on('end', () => { try { resolve(JSON.parse(data)); } catch { resolve({}); } });
+    req.on('error', reject);
+  });
+
+  const { email } = body;
+  if (!email) {
+    res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ allowed: false, error: 'Email requis' }));
+  }
+
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  const { data: sub } = await supabase
+    .from('tore_subscriptions')
+    .select('id, status, expires_at, plan, daily_draw_count, last_draw_date')
+    .eq('email', email)
+    .eq('status', 'active')
+    .maybeSingle();
+
+  // Pas d'abonnement actif ou expiré → laisser passer (freemium localStorage gère côté client)
+  if (!sub || (sub.expires_at && new Date(sub.expires_at) <= new Date())) {
+    res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ allowed: true, plan: null }));
+  }
+
+  const plan = sub.plan || 'complet';
+
+  // Plan complet : aucune limite
+  if (plan !== 'decouverte') {
+    res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ allowed: true, plan }));
+  }
+
+  // Plan Découverte : 1 tirage par jour
+  const today   = new Date().toISOString().slice(0, 10); // 'YYYY-MM-DD'
+  const sameDay = sub.last_draw_date === today;
+  const count   = sub.daily_draw_count || 0;
+
+  if (sameDay && count >= 1) {
+    res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ allowed: false, reason: 'daily_limit', plan: 'decouverte' }));
+  }
+
+  // Autoriser : incrémenter le compteur et mémoriser la date
+  await supabase
+    .from('tore_subscriptions')
+    .update({
+      daily_draw_count: sameDay ? count + 1 : 1,
+      last_draw_date:   today,
+      updated_at:       new Date().toISOString()
+    })
+    .eq('id', sub.id);
+
+  res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+  return res.end(JSON.stringify({ allowed: true, plan: 'decouverte' }));
+}
+
 // ============ FORGOT PASSWORD ============
 async function handleForgotPassword(req, res) {
   const body = await new Promise((resolve, reject) => {
@@ -466,6 +529,11 @@ module.exports = async (req, res) => {
     // POST /consume-tore-draw - vérifie si l'URL contient "consume-tore-draw"
     if (path.includes('consume-tore-draw') || fullUrl.includes('consume-tore-draw')) {
       return await handleConsumeToreDraw(req, res);
+    }
+
+    // POST /check-tore-draw — vérifie et consomme le quota journalier (Découverte)
+    if (path.includes('check-tore-draw') || fullUrl.includes('check-tore-draw')) {
+      return await handleCheckToreDraw(req, res);
     }
 
     // Route non reconnue

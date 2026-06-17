@@ -334,6 +334,15 @@ async function handleData(req, res) {
       process.env.SUPABASE_SERVICE_ROLE_KEY
     );
 
+    // ── Cron via GET (Vercel Cron Jobs) ──
+    if (isCronRequest && req.method === 'GET') {
+      const getAction = req.query?.action;
+      if (getAction === 'cron-relance') {
+        return await handleCronRelance(supabase, res);
+      }
+      return res.status(403).json({ error: 'Action non autorisée' });
+    }
+
     // ── POST : actions sur abonnements ──
     if (req.method === 'POST') {
       const body = await new Promise((resolve, reject) => {
@@ -388,6 +397,62 @@ async function handleData(req, res) {
           .eq('id', subscriptionId);
         if (error) throw error;
         return res.status(200).json({ success: true });
+      }
+
+      if (action === 'manual-relance' && body.toreEmailId) {
+        const BREVO_API_KEY = process.env.BREVO_API_KEY;
+        if (!BREVO_API_KEY) return res.status(500).json({ error: 'BREVO_API_KEY non configuré' });
+
+        const { data: contact, error: cErr } = await supabase
+          .from('tore_emails')
+          .select('id, email, relance_j1_sent, relance_j4_sent, relance_j10_sent, unsubscribed')
+          .eq('id', body.toreEmailId)
+          .maybeSingle();
+        if (cErr) throw cErr;
+        if (!contact) return res.status(404).json({ error: 'Contact introuvable' });
+        if (contact.unsubscribed) return res.status(400).json({ error: 'Contact désabonné' });
+
+        // Détermine le prochain template à envoyer dans l'ordre J+1 → J+4 → J+10
+        let field, sentAt, templateEnv, templateLabel;
+        if (!contact.relance_j1_sent) {
+          field = 'relance_j1_sent'; sentAt = 'relance_j1_sent_at'; templateEnv = 'BREVO_TEMPLATE_J1'; templateLabel = 'J+1';
+        } else if (!contact.relance_j4_sent) {
+          field = 'relance_j4_sent'; sentAt = 'relance_j4_sent_at'; templateEnv = 'BREVO_TEMPLATE_J4'; templateLabel = 'J+4';
+        } else if (!contact.relance_j10_sent) {
+          field = 'relance_j10_sent'; sentAt = 'relance_j10_sent_at'; templateEnv = 'BREVO_TEMPLATE_J10'; templateLabel = 'J+10';
+        } else {
+          return res.status(400).json({ error: 'Séquence déjà complète pour ce contact' });
+        }
+
+        const templateId = parseInt(process.env[templateEnv] || '0', 10);
+        if (!templateId) return res.status(500).json({ error: `${templateEnv} non configuré` });
+
+        const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ templateId, to: [{ email: contact.email }] })
+        });
+        if (!brevoRes.ok) {
+          const txt = await brevoRes.text();
+          throw new Error(`Brevo ${brevoRes.status}: ${txt}`);
+        }
+
+        await supabase.from('tore_emails').update({
+          [field]: true,
+          [sentAt]: new Date().toISOString()
+        }).eq('id', contact.id);
+
+        return res.status(200).json({ success: true, template: templateLabel, email: contact.email });
+      }
+
+      if (action === 'upgrade_plan' && subscriptionId) {
+        const newPlan = body.plan || 'complet';
+        const { error } = await supabase
+          .from('tore_subscriptions')
+          .update({ plan: newPlan, updated_at: new Date().toISOString() })
+          .eq('id', subscriptionId);
+        if (error) throw error;
+        return res.status(200).json({ success: true, plan: newPlan });
       }
 
       if (action === 'resend_code' && subscriptionId) {
@@ -579,6 +644,7 @@ async function handleData(req, res) {
       const page   = parseInt(req.query?.page  || '1', 10);
       const limit  = parseInt(req.query?.limit || '15', 10);
       const status = req.query?.status || 'all';
+      const plan   = req.query?.plan   || 'all';
       const q      = (req.query?.q || '').trim().toLowerCase();
       const offset = (page - 1) * limit;
 
@@ -589,6 +655,7 @@ async function handleData(req, res) {
         .range(offset, offset + limit - 1);
 
       if (status !== 'all') query = query.eq('status', status);
+      if (plan !== 'all') query = query.eq('plan', plan);
       if (q) {
         // Échapper les caractères spéciaux du mini-langage de filtre PostgREST
         // (`,` sépare les conditions du `.or()`, `)` peut clore une condition
@@ -614,6 +681,42 @@ async function handleData(req, res) {
         data: rows,
         pagination: { page, limit, total: count || 0, pages: totalPages }
       });
+    }
+
+    // ── Section tore-emails (freemium relance) ──
+    if (section === 'tore-emails') {
+      const { data, error } = await supabase
+        .from('tore_emails')
+        .select('id, email, created_at, consent_marketing, relance_j1_sent, relance_j4_sent, relance_j10_sent, unsubscribed')
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (error) throw error;
+      return res.status(200).json({ success: true, data: data || [] });
+    }
+
+    // ── Section user-tirages (tirages d'un abonné, pour modal admin) ──
+    if (section === 'user-tirages') {
+      const email = (req.query?.email || '').trim().toLowerCase();
+      if (!email) return res.status(400).json({ error: 'email requis' });
+      // Retrouver le user_id via auth.users (email) puis ses tirages
+      const { data: users, error: uErr } = await supabase
+        .from('users')
+        .select('id')
+        .eq('email', email)
+        .limit(1);
+      if (uErr) throw uErr;
+      if (!users || !users.length) {
+        return res.status(200).json({ success: true, data: [] });
+      }
+      const userId = users[0].id;
+      const { data: tirages, error: tErr } = await supabase
+        .from('tirages')
+        .select('id, created_at, question')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(20);
+      if (tErr) throw tErr;
+      return res.status(200).json({ success: true, data: tirages || [] });
     }
 
     // ── Section preorders ──
@@ -2513,4 +2616,75 @@ async function handleMondialRelayPickupPoints(req, res) {
       message: 'Une erreur est survenue lors de la recherche des points relais'
     });
   }
+}
+
+async function handleCronRelance(supabase, res) {
+  const BREVO_API_KEY = process.env.BREVO_API_KEY;
+  if (!BREVO_API_KEY) {
+    return res.status(200).json({ success: false, message: 'BREVO_API_KEY non configuré' });
+  }
+
+  const now = new Date();
+  const dateOffset = (days) => {
+    const d = new Date(now);
+    d.setDate(d.getDate() - days);
+    return d.toISOString().slice(0, 10);
+  };
+
+  const results = { j1: 0, j4: 0, j10: 0, errors: [] };
+
+  const relances = [
+    { field: 'relance_j1_sent',  sentAt: 'relance_j1_sent_at',  days: 1,  templateEnv: 'BREVO_TEMPLATE_J1' },
+    { field: 'relance_j4_sent',  sentAt: 'relance_j4_sent_at',  days: 4,  templateEnv: 'BREVO_TEMPLATE_J4' },
+    { field: 'relance_j10_sent', sentAt: 'relance_j10_sent_at', days: 10, templateEnv: 'BREVO_TEMPLATE_J10' },
+  ];
+
+  for (const { field, sentAt, days, templateEnv } of relances) {
+    const templateId = parseInt(process.env[templateEnv] || '0', 10);
+    if (!templateId) continue;
+
+    const targetDate = dateOffset(days);
+
+    const { data: contacts, error } = await supabase
+      .from('tore_emails')
+      .select('id, email')
+      .eq(field, false)
+      .eq('unsubscribed', false)
+      .gte('created_at', `${targetDate}T00:00:00.000Z`)
+      .lt('created_at', `${targetDate}T23:59:59.999Z`);
+
+    if (error) {
+      console.error(`[cron-relance] Erreur lecture tore_emails (${field}):`, error.message);
+      results.errors.push(`${field}: ${error.message}`);
+      continue;
+    }
+
+    for (const contact of (contacts || [])) {
+      try {
+        const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            templateId,
+            to: [{ email: contact.email }]
+          })
+        });
+        if (!r.ok) {
+          const txt = await r.text();
+          throw new Error(`Brevo ${r.status}: ${txt}`);
+        }
+        await supabase.from('tore_emails').update({
+          [field]: true,
+          [sentAt]: now.toISOString()
+        }).eq('id', contact.id);
+        results[`j${days}`]++;
+      } catch (e) {
+        console.error(`[cron-relance] Erreur envoi à ${contact.email}:`, e.message);
+        results.errors.push(`${contact.email}: ${e.message}`);
+      }
+    }
+  }
+
+  console.log('[cron-relance] Résultat:', results);
+  return res.status(200).json({ success: true, ...results });
 }

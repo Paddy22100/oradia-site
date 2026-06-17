@@ -34,7 +34,7 @@ function validateEnvironment() {
     }
 }
 
-async function sendToreSubscriptionEmail({ toEmail, toName, tempPassword }) {
+async function sendToreSubscriptionEmail({ toEmail, toName, tempPassword, plan }) {
     try {
         if (!process.env.BREVO_API_KEY || !process.env.BREVO_SENDER_EMAIL) return false;
         
@@ -69,7 +69,9 @@ async function sendToreSubscriptionEmail({ toEmail, toName, tempPassword }) {
                 sender:    { email: process.env.BREVO_SENDER_EMAIL, name: process.env.BREVO_SENDER_NAME || 'ORADIA' },
                 to:        [{ email: toEmail, name: toName }],
                 replyTo:   { email: 'contact@oradia.fr', name: 'Oradia' },
-                subject:   '✦ Bienvenue dans Le Tore — Votre abonnement est actif',
+                subject:   plan === 'decouverte'
+                    ? '✦ Bienvenue dans Le Tore — Formule Découverte activée'
+                    : '✦ Bienvenue dans Le Tore — Votre abonnement est actif',
                 htmlContent: `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#050a14;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#050a14;padding:48px 20px;">
@@ -482,6 +484,8 @@ async function processEvent(event) {
                     const expireAt = new Date();
                     expireAt.setMonth(expireAt.getMonth() + 1);
                     
+                    const subPlan = session.metadata?.plan || 'complet';
+
                     const { error: subError } = await supabase
                         .from('tore_subscriptions')
                         .upsert({
@@ -489,7 +493,8 @@ async function processEvent(event) {
                             full_name:    extractedData.full_name || '',
                             access_code:  accessCode,
                             status:       'active',
-                            expires_at:   expireAt.toISOString(), // Date d'expiration
+                            expires_at:   expireAt.toISOString(),
+                            plan:         subPlan,
                             // Identifiants Stripe stockés pour fiabiliser la corrélation lors
                             // des renouvellements/annulations (plus robuste qu'une recherche
                             // par email, qui peut échouer si le client change d'adresse côté Stripe)
@@ -504,9 +509,10 @@ async function processEvent(event) {
                     // Email Brevo de confirmation d'abonnement avec mot de passe temporaire
                     if (extractedData.email) {
                         await sendToreSubscriptionEmail({
-                            toEmail:    extractedData.email,
-                            toName:     extractedData.full_name || '',
-                            tempPassword: existingUsers ? null : tempPassword // Envoyer le mot de passe si nouvel utilisateur
+                            toEmail:      extractedData.email,
+                            toName:       extractedData.full_name || '',
+                            tempPassword: existingUsers ? null : tempPassword,
+                            plan:         subPlan
                         });
                     }
 

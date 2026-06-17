@@ -743,10 +743,10 @@
         <!-- ══ ONGLET : ABONNEMENTS ══ -->
         <div id="tab-subscriptions" class="tab-panel">
         <section class="mb-10">
-            <div class="flex items-center justify-between mb-8">
+            <div class="flex items-center justify-between mb-6">
                 <div>
                     <h3 class="cormorant text-2xl font-bold text-gold">Abonnements Tore</h3>
-                    <p class="text-light-gold/50 text-sm mt-1">Gérez les codes d'accès illimités au Tore</p>
+                    <p class="text-light-gold/50 text-sm mt-1">Gérez les formules Découverte et Complète</p>
                 </div>
                 <button onclick="document.getElementById('newSubPanel').classList.toggle('hidden')" class="flex items-center gap-2 bg-gradient-to-r from-gold/20 to-gold/10 border border-gold/50 text-gold px-4 py-2 rounded-lg hover:from-gold/30 hover:to-gold/20 transition text-sm font-semibold">
                     <i class="fas fa-plus"></i> Nouvel abonnement
@@ -785,6 +785,26 @@
                 </div>
             </div>
 
+            <!-- Stats rapides -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="subStatsRow">
+                <div class="bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl p-4 text-center">
+                    <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">Total actifs</p>
+                    <p class="text-gold text-2xl font-bold cormorant" id="statSubTotal">—</p>
+                </div>
+                <div class="bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl p-4 text-center">
+                    <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">Découverte</p>
+                    <p class="text-blue-300 text-2xl font-bold cormorant" id="statSubDecouverte">—</p>
+                </div>
+                <div class="bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl p-4 text-center">
+                    <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">Complète</p>
+                    <p class="text-green-300 text-2xl font-bold cormorant" id="statSubComplet">—</p>
+                </div>
+                <div class="bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl p-4 text-center">
+                    <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">Nouveaux (7j)</p>
+                    <p class="text-light-gold text-2xl font-bold cormorant" id="statSubNew">—</p>
+                </div>
+            </div>
+
             <!-- Filtres -->
             <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-4 mb-4">
                 <div class="flex flex-wrap gap-3">
@@ -793,6 +813,11 @@
                         <option value="all">Tous statuts</option>
                         <option value="active">Actif</option>
                         <option value="revoked">Révoqué</option>
+                    </select>
+                    <select id="subPlanFilter" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold" onchange="loadSubscriptions()">
+                        <option value="all">Tous plans</option>
+                        <option value="decouverte">Découverte</option>
+                        <option value="complet">Complète</option>
                     </select>
                     <button onclick="loadSubscriptions()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
                 </div>
@@ -806,10 +831,12 @@
                             <tr>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Email</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Nom</th>
-                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Code</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Plan</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Stripe</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Statut</th>
-                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Créé le</th>
-                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Expire le</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Dernier tirage</th>
+                                <th class="px-5 py-4 text-center text-gold font-semibold text-xs uppercase tracking-wider">Tirages/j</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Abonné le</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
@@ -817,6 +844,50 @@
                     </table>
                 </div>
                 <div id="subscriptionsPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)] border-t border-gold/20"></div>
+            </div>
+        </section>
+
+        <!-- Modal : tirages d'un abonné -->
+        <div id="modalTirages" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onclick="if(event.target===this)closeTiragesModal()">
+            <div class="bg-[#07112a] border border-gold/30 rounded-2xl p-6 w-full max-w-lg shadow-2xl">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="cormorant text-xl font-bold text-gold" id="modalTiragesTitle">Tirages</h4>
+                    <button onclick="closeTiragesModal()" class="text-gold/50 hover:text-gold text-xl"><i class="fas fa-times"></i></button>
+                </div>
+                <div id="modalTiragesBody" class="space-y-2 max-h-80 overflow-y-auto text-sm text-light-gold/80">
+                    <p class="text-gold/40 text-center py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Section tore_emails (séquence relance freemium) ── -->
+        <section class="mb-10">
+            <div class="flex items-center justify-between mb-4">
+                <div>
+                    <h3 class="cormorant text-xl font-bold text-gold">Emails freemium — Séquence relance</h3>
+                    <p class="text-light-gold/50 text-xs mt-1">Utilisateurs ayant effectué leurs 2 tirages gratuits sans souscrire</p>
+                </div>
+                <button onclick="loadToreEmails()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
+            </div>
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden shadow-2xl">
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="toreEmailsTable">
+                        <thead class="bg-gradient-to-r from-[rgba(5,20,40,0.9)] to-[rgba(5,20,40,0.7)] border-b border-gold/30">
+                            <tr>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Email</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Capturé le</th>
+                                <th class="px-5 py-4 text-center text-gold font-semibold text-xs uppercase tracking-wider">Consentement</th>
+                                <th class="px-5 py-4 text-center text-gold font-semibold text-xs uppercase tracking-wider">J+1</th>
+                                <th class="px-5 py-4 text-center text-gold font-semibold text-xs uppercase tracking-wider">J+4</th>
+                                <th class="px-5 py-4 text-center text-gold font-semibold text-xs uppercase tracking-wider">J+10</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="toreEmailsTbody" class="divide-y divide-gold/10">
+                            <tr><td colspan="6" class="px-6 py-8 text-center text-gold/40 text-sm">Cliquez sur Actualiser pour charger</td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </section>
         </div><!-- /tab-subscriptions -->
@@ -3604,50 +3675,82 @@
             subPage = page;
             const q      = document.getElementById('subSearch')?.value || '';
             const status = document.getElementById('subStatusFilter')?.value || 'all';
+            const plan   = document.getElementById('subPlanFilter')?.value || 'all';
             const tbody  = document.getElementById('subscriptionsTbody');
-            tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gold/40"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-8 text-center text-gold/40"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</td></tr>';
             try {
-                const url = `/api/admin/data?section=subscriptions&page=${page}&limit=15&status=${status}&q=${encodeURIComponent(q)}`;
+                const url = `/api/admin/data?section=subscriptions&page=${page}&limit=15&status=${status}&plan=${plan}&q=${encodeURIComponent(q)}`;
                 const res = await adminFetch(url);
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.message);
                 renderSubscriptions(json.data || [], json.pagination);
                 const badge = document.getElementById('nav-badge-subscriptions');
                 if (badge && json.pagination) badge.textContent = json.pagination.total || '';
+                loadSubStats();
             } catch(e) {
-                tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-red-400/70">${e.message}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="9" class="px-6 py-8 text-center text-red-400/70">${e.message}</td></tr>`;
             }
+        }
+
+        async function loadSubStats() {
+            try {
+                const res  = await adminFetch('/api/admin/data?section=subscriptions&page=1&limit=1000&status=active');
+                const json = await res.json();
+                if (!res.ok) return;
+                const all  = json.data || [];
+                const now  = new Date();
+                const week = new Date(now); week.setDate(week.getDate() - 7);
+                const dec  = all.filter(s => (s.plan || 'complet') === 'decouverte').length;
+                const comp = all.filter(s => (s.plan || 'complet') === 'complet').length;
+                const nw   = all.filter(s => s.created_at && new Date(s.created_at) >= week).length;
+                document.getElementById('statSubTotal').textContent       = all.length;
+                document.getElementById('statSubDecouverte').textContent  = dec;
+                document.getElementById('statSubComplet').textContent     = comp;
+                document.getElementById('statSubNew').textContent         = nw;
+            } catch {}
         }
 
         function renderSubscriptions(subs, pagination) {
             const tbody = document.getElementById('subscriptionsTbody');
             if (!subs.length) {
-                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun abonnement</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun abonnement</td></tr>';
                 return;
             }
             tbody.innerHTML = subs.map(s => {
                 const isActive  = s.status === 'active';
                 const isExpired = s.expires_at && new Date(s.expires_at) < new Date();
+                const plan      = s.plan || 'complet';
                 const statusBadge = isExpired
                     ? '<span class="bg-orange-500/20 text-orange-400 text-xs px-2 py-0.5 rounded-full">Expiré</span>'
                     : isActive
                         ? '<span class="bg-green-500/20 text-green-400 text-xs px-2 py-0.5 rounded-full">Actif</span>'
                         : '<span class="bg-red-500/20 text-red-400 text-xs px-2 py-0.5 rounded-full">Révoqué</span>';
+                const planBadge = plan === 'decouverte'
+                    ? '<span class="bg-blue-500/20 text-blue-300 text-xs px-2 py-0.5 rounded-full">Découverte</span>'
+                    : '<span class="bg-green-500/20 text-green-300 text-xs px-2 py-0.5 rounded-full">Complète</span>';
+                const stripeId = s.stripe_subscription_id;
+                const stripeBadge = stripeId
+                    ? `<span class="text-green-400 text-xs" title="${stripeId}"><i class="fas fa-credit-card"></i></span>`
+                    : '<span class="text-gold/30 text-xs" title="Accès manuel"><i class="fas fa-key"></i></span>';
+                const lastDraw  = s.last_draw_date || '—';
+                const drawCount = s.daily_draw_count != null ? s.daily_draw_count : '—';
+                const emailEsc  = (s.email || '').replace(/'/g, "\\'");
                 return `
                 <tr class="hover:bg-gold/5 transition">
                     <td class="px-5 py-4 text-light-gold text-sm">${s.email || '—'}</td>
                     <td class="px-5 py-4 text-light-gold/80 text-sm">${s.full_name || '—'}</td>
-                    <td class="px-5 py-4">
-                        <code class="bg-gold/10 text-gold text-xs px-2 py-1 rounded font-mono">${s.access_code || '—'}</code>
-                    </td>
+                    <td class="px-5 py-4">${planBadge}</td>
+                    <td class="px-5 py-4">${stripeBadge}</td>
                     <td class="px-5 py-4">${statusBadge}</td>
+                    <td class="px-5 py-4 text-light-gold/60 text-xs">${lastDraw}</td>
+                    <td class="px-5 py-4 text-light-gold/60 text-xs text-center">${drawCount}</td>
                     <td class="px-5 py-4 text-light-gold/60 text-xs">${s.created_at_fr || '—'}</td>
-                    <td class="px-5 py-4 text-light-gold/60 text-xs ${isExpired ? 'text-orange-400' : ''}">${s.expires_at_fr || '—'}</td>
                     <td class="px-5 py-4">
-                        <div class="flex gap-2">
-                            <button onclick="resendCode('${s.id}')" title="Renvoyer le code" class="text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 text-xs transition">
-                                <i class="fas fa-envelope mr-1"></i>Renvoyer
+                        <div class="flex gap-2 flex-wrap">
+                            <button onclick="viewTirages('${emailEsc}')" title="Voir les tirages" class="text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 text-xs transition">
+                                <i class="fas fa-layer-group"></i>
                             </button>
+                            ${plan === 'decouverte' && isActive ? `<button onclick="upgradeToPlan('${s.id}')" title="Passer en Complète" class="text-green-400/70 hover:text-green-400 border border-green-400/20 hover:border-green-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-arrow-up mr-1"></i>Complet</button>` : ''}
                             ${isActive ? `<button onclick="revokeSubscription('${s.id}')" title="Révoquer" class="text-red-400/50 hover:text-red-400 border border-red-400/20 hover:border-red-400/40 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-ban"></i></button>` : ''}
                         </div>
                     </td>
@@ -3662,6 +3765,114 @@
                 btns += `<button onclick="loadSubscriptions(${i})" class="px-3 py-1 rounded text-sm ${i === pagination.page ? 'bg-gold text-night-blue font-semibold' : 'bg-gold/10 text-gold hover:bg-gold/20'} transition">${i}</button>`;
             }
             pag.innerHTML = `<div class="flex items-center gap-2 flex-wrap"><span class="text-light-gold/50 text-xs mr-2">${pagination.total} abonné(s)</span>${btns}</div>`;
+        }
+
+        async function upgradeToPlan(id) {
+            if (!confirm('Passer cet abonnement en formule Complète ?')) return;
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'upgrade_plan', subscriptionId: id, plan: 'complet' })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error);
+                await loadSubscriptions(subPage);
+            } catch(e) { alert('Erreur : ' + e.message); }
+        }
+
+        async function loadToreEmails() {
+            const tbody = document.getElementById('toreEmailsTbody');
+            tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gold/40"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</td></tr>';
+            try {
+                const res  = await adminFetch('/api/admin/data?section=tore-emails');
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || json.message);
+                renderToreEmails(json.data || []);
+            } catch(e) {
+                tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-red-400/70">${e.message}</td></tr>`;
+            }
+        }
+
+        function renderToreEmails(rows) {
+            const tbody = document.getElementById('toreEmailsTbody');
+            if (!rows.length) {
+                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun email capturé</td></tr>';
+                return;
+            }
+            const sentDot  = '<span class="inline-block w-2 h-2 rounded-full bg-green-400" title="Envoyé"></span>';
+            const pendDot  = '<span class="inline-block w-2 h-2 rounded-full bg-gold/30" title="En attente"></span>';
+            tbody.innerHTML = rows.map(r => {
+                const d = r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : '—';
+                const consentBadge = r.consent_marketing
+                    ? '<span class="text-green-400 text-xs"><i class="fas fa-check-circle mr-1"></i>Oui</span>'
+                    : '<span class="text-light-gold/30 text-xs"><i class="fas fa-minus-circle mr-1"></i>Non</span>';
+                const allSent = r.relance_j1_sent && r.relance_j4_sent && r.relance_j10_sent;
+                const unsub   = r.unsubscribed;
+                const emailEsc = (r.email || '').replace(/'/g, "\\'");
+                const actionBtn = (!allSent && !unsub)
+                    ? `<button onclick="manualRelance('${r.id}', '${emailEsc}')" class="text-gold/70 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-paper-plane mr-1"></i>Relancer</button>`
+                    : unsub
+                        ? '<span class="text-red-400/50 text-xs">Désabonné</span>'
+                        : '<span class="text-light-gold/20 text-xs">Séquence terminée</span>';
+                return `
+                <tr class="hover:bg-gold/5 transition">
+                    <td class="px-5 py-3 text-light-gold text-sm">${r.email || '—'}</td>
+                    <td class="px-5 py-3 text-light-gold/60 text-xs">${d}</td>
+                    <td class="px-5 py-3 text-center">${consentBadge}</td>
+                    <td class="px-5 py-3 text-center">${r.relance_j1_sent  ? sentDot : pendDot}</td>
+                    <td class="px-5 py-3 text-center">${r.relance_j4_sent  ? sentDot : pendDot}</td>
+                    <td class="px-5 py-3 text-center">${r.relance_j10_sent ? sentDot : pendDot}</td>
+                    <td class="px-5 py-3">${actionBtn}</td>
+                </tr>`;
+            }).join('');
+        }
+
+        async function manualRelance(id, email) {
+            if (!confirm(`Envoyer le prochain email de relance à ${email} ?`)) return;
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'manual-relance', toreEmailId: id })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error);
+                alert(`✓ Email ${json.template} envoyé à ${email}`);
+                await loadToreEmails();
+            } catch(e) { alert('Erreur : ' + e.message); }
+        }
+
+        async function viewTirages(email) {
+            document.getElementById('modalTiragesTitle').textContent = `Tirages — ${email}`;
+            document.getElementById('modalTirages').classList.remove('hidden');
+            const body = document.getElementById('modalTiragesBody');
+            body.innerHTML = '<p class="text-gold/40 text-center py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</p>';
+            try {
+                const res  = await adminFetch(`/api/admin/data?section=user-tirages&email=${encodeURIComponent(email)}`);
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error);
+                const tirages = json.data || [];
+                if (!tirages.length) {
+                    body.innerHTML = '<p class="text-gold/30 text-center py-6 cormorant text-lg">Aucun tirage enregistré</p>';
+                    return;
+                }
+                body.innerHTML = tirages.map(t => {
+                    const d = t.created_at ? new Date(t.created_at).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '—';
+                    return `<div class="bg-[rgba(5,20,40,0.6)] border border-gold/15 rounded-lg px-4 py-3">
+                        <div class="flex items-center justify-between">
+                            <span class="text-gold/70 text-xs">${d}</span>
+                            <span class="text-light-gold/50 text-xs">${t.question ? t.question.slice(0, 50) + (t.question.length > 50 ? '…' : '') : 'Sans question'}</span>
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch(e) {
+                body.innerHTML = `<p class="text-red-400/70 text-center py-4">${e.message}</p>`;
+            }
+        }
+
+        function closeTiragesModal() {
+            document.getElementById('modalTirages').classList.add('hidden');
         }
 
         async function createSubscription() {
