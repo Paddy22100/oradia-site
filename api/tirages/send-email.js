@@ -591,19 +591,76 @@ oradia.fr
   }
 }
 
+// ============ ACTION : collecter email + consentement + envoyer le résultat ============
+async function handleCollectEmail(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+  const body = await parseJsonBody(req);
+  const { consentMarketing, ...emailPayload } = body;
+  const email = emailPayload.email;
+
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return res.status(400).json({ success: false, error: 'Email invalide' });
+  }
+
+  // 1. Envoyer l'email de résultat (réutilise handleSendEmail via req synthétique)
+  let emailOk = false;
+  try {
+    await new Promise((resolve, reject) => {
+      const fakeReq = { method: 'POST', body: emailPayload };
+      const fakeRes = {
+        status(code) { return { json(d) { emailOk = d?.success === true; resolve(); } }; },
+        json(d)      { emailOk = d?.success === true; resolve(); }
+      };
+      handleSendEmail(fakeReq, fakeRes).catch(reject);
+    });
+  } catch (e) {
+    console.error('[collect-email] Erreur envoi email:', e.message);
+    return res.status(500).json({ success: false, error: 'Erreur lors de l\'envoi de l\'email' });
+  }
+
+  if (!emailOk) {
+    return res.status(500).json({ success: false, error: 'Envoi email échoué' });
+  }
+
+  // 2. Brevo : liste 5 (avec consentement) ou liste 6 (sans)
+  try {
+    const listId = consentMarketing
+      ? parseInt(process.env.BREVO_NEWSLETTER_LIST_ID || '5')
+      : parseInt(process.env.BREVO_LIST_NO_CONSENT_ID || '6');
+    const attributes = consentMarketing ? { CONSENT_DATE: new Date().toISOString() } : {};
+    await fetch('https://api.brevo.com/v3/contacts', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+      body: JSON.stringify({ email, listIds: [listId], attributes, updateEnabled: true })
+    });
+  } catch (e) { console.error('[collect-email] Brevo error:', e.message); }
+
+  // 3. Supabase : table tore_emails (upsert sur email)
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+    await supabase.from('tore_emails').upsert({
+      email,
+      consent_marketing: !!consentMarketing,
+      consent_date: consentMarketing ? new Date().toISOString() : null,
+    }, { onConflict: 'email', ignoreDuplicates: false });
+  } catch (e) { console.error('[collect-email] Supabase error:', e.message); }
+
+  return res.status(200).json({ success: true });
+}
+
 // ============ DISPATCH PRINCIPAL ============
 export default async function handler(req, res) {
   const action = req.query.action || 'send-email';
 
   switch (action) {
-    case 'save':
-      return handleSaveTirage(req, res);
-    case 'update':
-      return handleUpdateTirage(req, res);
-    case 'list':
-      return handleListTirages(req, res);
+    case 'save':          return handleSaveTirage(req, res);
+    case 'update':        return handleUpdateTirage(req, res);
+    case 'list':          return handleListTirages(req, res);
+    case 'collect-email': return handleCollectEmail(req, res);
     case 'send-email':
-    default:
-      return handleSendEmail(req, res);
+    default:              return handleSendEmail(req, res);
   }
 }

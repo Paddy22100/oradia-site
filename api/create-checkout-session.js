@@ -78,42 +78,26 @@ module.exports = async (req, res) => {
         // Configuration URLs unique
         const frontendUrl = process.env.FRONTEND_URL || 'https://oradia.fr';
         
-        // ── Création abonnement Tore ──────────────────────────────────────────
-        // Note : l'ancien système validate-tore-code (accès par code saisi) a été
-        // supprimé — l'accès est désormais géré par status='active' ou single_draw_credits > 0.
-        if (req.body.type === 'tore-subscription') {
+        // ── Abonnement Découverte (5€/mois) ou Complet (8€/mois) ─────────────────
+        if (req.body.type === 'tore-decouverte' || req.body.type === 'tore-complet') {
             const email    = (req.body.email || '').trim();
             const fullName = (req.body.fullName || '').trim();
             if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
                 return res.status(400).json({ error: 'Email invalide' });
-            const priceId = process.env.STRIPE_TORE_PRICE_ID;
-            if (!priceId) return res.status(500).json({ error: 'STRIPE_TORE_PRICE_ID non configuré' });
+            const plan    = req.body.type === 'tore-decouverte' ? 'decouverte' : 'complet';
+            const priceId = plan === 'decouverte'
+                ? process.env.STRIPE_PRICE_DECOUVERTE
+                : process.env.STRIPE_PRICE_COMPLET;
+            if (!priceId) return res.status(500).json({ error: `STRIPE_PRICE_${plan.toUpperCase()} non configuré` });
             const session = await stripe.checkout.sessions.create({
                 payment_method_types: ['card'],
                 mode: 'subscription',
                 line_items: [{ price: priceId, quantity: 1 }],
                 customer_email: email,
                 success_url: `${frontendUrl}/success-tore.html?session_id={CHECKOUT_SESSION_ID}`,
-                cancel_url:  `${frontendUrl}/tore-abonnement.html?cancelled=1`,
-                metadata: { offer: 'tore-subscription', email, full_name: fullName },
-                subscription_data: { metadata: { email, full_name: fullName, offer: 'tore-subscription' } }
-            });
-            return res.json({ success: true, url: session.url });
-        }
-
-        // ── Achat ponctuel tirage Tore ───────────────────────────────────────────
-        if (req.body.type === 'single-draw') {
-            const email = (req.body.email || '').trim();
-            const priceId = process.env.STRIPE_SINGLE_DRAW_PRICE_ID;
-            if (!priceId) return res.status(500).json({ error: 'STRIPE_SINGLE_DRAW_PRICE_ID non configuré' });
-            const session = await stripe.checkout.sessions.create({
-                payment_method_types: ['card'],
-                mode: 'payment',
-                line_items: [{ price: priceId, quantity: 1 }],
-                customer_email: email || undefined,
-                success_url: `${frontendUrl}/tore.html?single_draw=success&session_id={CHECKOUT_SESSION_ID}`,
-                cancel_url:  `${frontendUrl}/tore.html?single_draw=cancel`,
-                metadata: { type: 'single_tore_draw' },
+                cancel_url:  `${frontendUrl}/tore.html?cancelled=1`,
+                metadata: { offer: 'tore-subscription', plan, email, full_name: fullName },
+                subscription_data: { metadata: { email, full_name: fullName, plan } }
             });
             return res.json({ success: true, url: session.url });
         }

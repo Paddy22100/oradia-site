@@ -6562,35 +6562,6 @@ function showArrowForStep(stepIndex, isMatch) {
     // remaining === 2 : rien afficher
   })();
 
-  // Détecter le retour après achat ponctuel réussi
-  (function() {
-    const urlParams = new URLSearchParams(window.location.search);
-    const singleDraw = urlParams.get('single_draw');
-    if (singleDraw === 'success') {
-      // Nettoyer l'URL sans recharger
-      window.history.replaceState({}, '', '/tore.html');
-      // Créditer 1 tirage ponctuel dans localStorage
-      const _curCredits = parseInt(
-        localStorage.getItem('oradia_single_draw_credits') || '0', 10
-      );
-      localStorage.setItem('oradia_single_draw_credits',
-        String(_curCredits + 1));
-      // Afficher un message de confirmation
-      const msgEl = document.createElement('div');
-      msgEl.style.cssText =
-        'position:fixed;top:20px;left:50%;transform:translateX(-50%);' +
-        'background:linear-gradient(135deg,#1a1f00,#2a2f00);' +
-        'color:#d4af37;padding:14px 28px;border-radius:999px;' +
-        'font-family:Cinzel,serif;font-size:0.9rem;z-index:99999;' +
-        'box-shadow:0 4px 20px rgba(212,175,55,0.4);' +
-        'border:1px solid rgba(212,175,55,0.3);text-align:center;';
-      msgEl.textContent = '✦ Tirage crédité — vous pouvez commencer';
-      document.body.appendChild(msgEl);
-      setTimeout(() => msgEl.remove(), 4000);
-    } else if (singleDraw === 'cancel') {
-      window.history.replaceState({}, '', '/tore.html');
-    }
-  })();
 
   
 
@@ -7057,36 +7028,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   }
 
-  document.getElementById('btn-single-draw-purchase')
-    ?.addEventListener('click', async (e) => {
-      e.preventDefault();
-      const btn = e.currentTarget;
-      btn.textContent = 'Redirection…';
-      btn.style.pointerEvents = 'none';
-
-      try {
-        const sessStr = sessionStorage.getItem('oradia_member_session')
-                      || localStorage.getItem('oradia_member_session');
-        const email = sessStr ? JSON.parse(sessStr).email : undefined;
-
-        const resp = await fetch('/api/create-checkout-session', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ type: 'single-draw', email })
-        });
-        const data = await resp.json();
-
-        if (data.url) {
-          window.location.href = data.url;
-        } else {
-          throw new Error('No URL returned');
-        }
-      } catch(err) {
-        btn.textContent = 'Ou acheter un tirage unique (3,90€)';
-        btn.style.pointerEvents = 'auto';
-        alert('Une erreur est survenue. Réessayez.');
-      }
-    });
 
 });
 

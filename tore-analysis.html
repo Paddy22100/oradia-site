@@ -1970,58 +1970,61 @@
         }
 
         async function sendAnalysisByEmail(btn) {
-            // Empêcher les double-clics
             if (btn.dataset.sending === '1') return;
 
-            // Récupérer l'email depuis la session
-            let userEmail = null;
+            // Email pré-rempli depuis la session si disponible
+            let knownEmail = '';
             try {
                 const sessStr = sessionStorage.getItem('oradia_member_session')
-                            || localStorage.getItem('oradia_member_session');
-                if (sessStr) {
-                    const sess = JSON.parse(sessStr);
-                    userEmail = sess.email || null;
-                }
+                              || localStorage.getItem('oradia_member_session');
+                if (sessStr) knownEmail = JSON.parse(sessStr).email || '';
             } catch(_) {}
 
-            // Si pas d'email disponible, afficher un champ inline
-            if (!userEmail) {
-                // Créer un champ email inline sous le bouton
-                const container = btn.parentElement;
-                let emailInput = container.querySelector('#inline-email-input');
-                if (!emailInput) {
-                    const wrapper = document.createElement('div');
-                    wrapper.style.cssText =
-                        'margin-top:10px;display:flex;gap:8px;align-items:center;' +
-                        'animation:fadeInUp 0.3s ease both;';
-                    wrapper.innerHTML =
-                        '<input id="inline-email-input" type="email" placeholder="votre@email.fr"' +
-                        ' style="flex:1;background:rgba(5,15,35,0.8);border:1px solid rgba(212,175,55,0.4);' +
-                        'border-radius:8px;padding:10px 14px;color:#e8dfc8;font-size:14px;outline:none;">' +
-                        '<button id="inline-email-confirm" style="background:linear-gradient(135deg,#d4af37,#b8962e);' +
-                        'color:#06101f;border:none;border-radius:8px;padding:10px 16px;' +
-                        'cursor:pointer;font-size:13px;white-space:nowrap;">Envoyer</button>';
-                    container.appendChild(wrapper);
+            // Toujours afficher le panneau email + case RGPD avant envoi
+            const container = btn.parentElement;
+            if (container.querySelector('#toa-email-panel')) return;
 
-                    const confirmBtn = wrapper.querySelector('#inline-email-confirm');
-                    confirmBtn.addEventListener('click', () => {
-                        const val = wrapper.querySelector('#inline-email-input').value.trim();
-                        if (!val || !val.includes('@')) {
-                            wrapper.querySelector('#inline-email-input').style.borderColor = 'rgba(231,76,60,0.6)';
-                            return;
-                        }
-                        wrapper.remove();
-                        doSendEmail(btn, val);
-                    });
-                    wrapper.querySelector('#inline-email-input').focus();
+            const panel = document.createElement('div');
+            panel.id = 'toa-email-panel';
+            panel.style.cssText = 'margin-top:12px;animation:fadeInUp 0.3s ease both;';
+            panel.innerHTML =
+                '<input id="toa-email-input" type="email" autocomplete="email"' +
+                ' placeholder="votre@email.fr"' +
+                ' style="width:100%;box-sizing:border-box;background:rgba(5,15,35,0.8);' +
+                'border:1px solid rgba(212,175,55,0.4);border-radius:8px;' +
+                'padding:10px 14px;color:#e8dfc8;font-size:14px;outline:none;margin-bottom:10px;">' +
+                '<label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;' +
+                'color:rgba(232,223,200,0.65);font-size:12px;line-height:1.5;' +
+                'margin-bottom:12px;text-align:left;">' +
+                '<input id="toa-consent-checkbox" type="checkbox"' +
+                ' style="margin-top:2px;accent-color:#d4af37;flex-shrink:0;">' +
+                'J\'accepte de recevoir des conseils et offres Oradia par email' +
+                '</label>' +
+                '<button id="toa-send-confirm"' +
+                ' style="width:100%;background:linear-gradient(135deg,#d4af37,#b8962e);' +
+                'color:#06101f;border:none;border-radius:8px;padding:11px 16px;' +
+                'cursor:pointer;font-size:13px;font-weight:600;">' +
+                'Envoyer mon résultat' +
+                '</button>';
+            container.appendChild(panel);
+
+            // Pré-remplir l'email si connu
+            if (knownEmail) panel.querySelector('#toa-email-input').value = knownEmail;
+            panel.querySelector('#toa-email-input').focus();
+
+            panel.querySelector('#toa-send-confirm').addEventListener('click', () => {
+                const emailVal = panel.querySelector('#toa-email-input').value.trim();
+                if (!emailVal || !emailVal.includes('@')) {
+                    panel.querySelector('#toa-email-input').style.borderColor = 'rgba(231,76,60,0.6)';
+                    return;
                 }
-                return;
-            }
-
-            doSendEmail(btn, userEmail);
+                const consent = panel.querySelector('#toa-consent-checkbox').checked;
+                panel.remove();
+                doSendEmail(btn, emailVal, consent);
+            });
         }
 
-        async function doSendEmail(btn, email) {
+        async function doSendEmail(btn, email, consentMarketing) {
             // Verrouiller et afficher le spinner
             btn.dataset.sending = '1';
             const originalHTML = btn.innerHTML;
@@ -2144,7 +2147,7 @@
                     allKeys: Object.keys(sessionStorage)
                 });
 
-                const resp = await fetch('/api/tirages/send-email', {
+                const resp = await fetch('/api/tirages/send-email?action=collect-email', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
@@ -2156,6 +2159,7 @@
                         observationDays,
                         observationText,
                         attentionPoints,
+                        consentMarketing: !!consentMarketing,
                     }),
                 });
 

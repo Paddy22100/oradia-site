@@ -315,10 +315,8 @@ class FreemiumTracker {
     }
 
     showToreLimitReached() {
-        // Éviter les doublons
         if (document.getElementById('tore-limit-modal')) return;
 
-        // Injecter les animations une seule fois
         if (!document.getElementById('tore-limit-modal-styles')) {
             const style = document.createElement('style');
             style.id = 'tore-limit-modal-styles';
@@ -328,129 +326,139 @@ class FreemiumTracker {
                 @keyframes toreStarPulse { 0%,100% { transform:scale(1); opacity:0.9; } 50% { transform:scale(1.15); opacity:1; } }
                 #tore-limit-modal .tlm-card { animation: toreModalCardIn 0.45s cubic-bezier(0.22,1,0.36,1); }
                 #tore-limit-modal .tlm-star { animation: toreStarPulse 2.6s ease-in-out infinite; }
-                #tore-limit-modal .tlm-cta:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(212,175,55,0.5); }
                 #tore-limit-modal .tlm-cta { transition:transform 0.25s ease, box-shadow 0.25s ease; }
-                #tore-limit-modal .tlm-secondary { transition:background 0.25s ease, border-color 0.25s ease, transform 0.2s ease; }
+                #tore-limit-modal .tlm-cta:hover { transform:translateY(-2px); box-shadow:0 8px 30px rgba(212,175,55,0.5); }
+                #tore-limit-modal .tlm-secondary { transition:background 0.2s ease, border-color 0.2s ease, transform 0.2s ease; }
                 #tore-limit-modal .tlm-secondary:hover { background:rgba(212,175,55,0.1); border-color:rgba(212,175,55,0.55); transform:translateY(-1px); }
-                #tore-limit-modal .tlm-close:hover { color:rgba(233,231,223,0.85); border-color:rgba(233,231,223,0.35); }
                 #tore-limit-modal .tlm-close { transition:color 0.2s ease, border-color 0.2s ease; }
+                #tore-limit-modal .tlm-close:hover { color:rgba(233,231,223,0.85); border-color:rgba(233,231,223,0.35); }
+                #tore-limit-modal .tlm-email { width:100%;box-sizing:border-box;background:rgba(255,255,255,0.05);border:1px solid rgba(212,175,55,0.4);border-radius:8px;padding:10px 14px;color:#f5e7a1;font-size:0.88rem;outline:none;font-family:Georgia,serif; }
+                #tore-limit-modal .tlm-email::placeholder { color:rgba(212,175,55,0.35); }
+                #tore-limit-modal .tlm-email:focus { border-color:rgba(212,175,55,0.75); }
+                #tore-limit-modal .tlm-offer { flex:1;border-radius:14px;padding:18px 12px;text-align:center; }
             `;
             document.head.appendChild(style);
         }
 
         const modal = document.createElement('div');
         modal.id = 'tore-limit-modal';
-        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;background:rgba(2,6,23,0.82);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:toreModalFadeIn 0.3s ease;';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(2,6,23,0.85);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:toreModalFadeIn 0.3s ease;';
         modal.innerHTML = `
-            <div class="tlm-card" role="dialog" aria-modal="true" aria-label="Tirages gratuits utilisés"
-                 style="position:relative;text-align:center;max-width:420px;width:100%;
-                        padding:38px 30px 30px;border-radius:20px;
+            <div class="tlm-card" role="dialog" aria-modal="true" aria-label="Tirages offerts utilisés"
+                 style="position:relative;text-align:center;max-width:480px;width:100%;
+                        padding:36px 24px 28px;border-radius:20px;
                         background:linear-gradient(160deg,#0c1730 0%,#0a1224 100%);
                         border:1px solid rgba(212,175,55,0.28);
-                        box-shadow:0 24px 70px rgba(0,0,0,0.6), 0 0 0 1px rgba(212,175,55,0.06) inset, 0 0 60px rgba(212,175,55,0.08);">
+                        box-shadow:0 24px 70px rgba(0,0,0,0.6),0 0 60px rgba(212,175,55,0.08);">
 
                 <button data-close-limit-modal aria-label="Fermer"
                         style="position:absolute;top:14px;right:16px;background:none;border:none;
-                               color:rgba(233,231,223,0.4);font-size:1.3rem;line-height:1;
-                               cursor:pointer;padding:4px;">&times;</button>
+                               color:rgba(233,231,223,0.4);font-size:1.3rem;line-height:1;cursor:pointer;padding:4px;">&times;</button>
 
-                <div class="tlm-star" style="font-size:2rem;color:#d4af37;margin-bottom:14px;
-                            text-shadow:0 0 20px rgba(212,175,55,0.5);">✦</div>
+                <div class="tlm-star" style="font-size:2rem;color:#d4af37;margin-bottom:12px;text-shadow:0 0 20px rgba(212,175,55,0.5);">✦</div>
 
-                <h3 style="font-family:'Cinzel',serif;font-size:1.25rem;
-                           color:#d4af37;margin:0 0 14px;letter-spacing:0.05em;line-height:1.4;">
-                  Vos 2 tirages gratuits<br>ont été utilisés
+                <h3 style="font-family:'Cinzel',serif;font-size:1.15rem;color:#d4af37;margin:0 0 10px;letter-spacing:0.05em;line-height:1.4;">
+                    Vous avez exploré vos deux tirages offerts
                 </h3>
-
-                <p style="color:rgba(233,231,223,0.78);font-size:0.9rem;
-                          line-height:1.65;margin:0 auto 26px;max-width:340px;">
-                  Vous avez exploré La Boussole Intérieure à travers 2 tirages complets.
-                  Pour continuer à recevoir une guidance approfondie à tout moment,
-                  découvrez l'abonnement Oradia.
+                <p style="color:rgba(233,231,223,0.72);font-size:0.88rem;line-height:1.65;margin:0 auto 20px;max-width:360px;">
+                    Pour continuer à recevoir une guidance approfondie, choisissez la formule qui vous correspond.
                 </p>
 
-                <!-- CTA principal : abonnement -->
-                <a href="/tore-abonnement.html" class="tlm-cta"
-                   style="display:inline-flex;align-items:center;gap:8px;
-                          background:linear-gradient(135deg,#e6c456,#c79b2f);
-                          color:#0a1224;font-family:'Cinzel',serif;font-size:0.92rem;
-                          font-weight:700;padding:14px 30px;border-radius:999px;
-                          text-decoration:none;letter-spacing:0.04em;
-                          box-shadow:0 4px 24px rgba(212,175,55,0.4);">
-                  Accéder aux tirages illimités →
-                </a>
-                <p style="color:rgba(212,175,55,0.55);font-size:0.76rem;margin:10px 0 0;
-                          letter-spacing:0.02em;">
-                  8€ / mois · Sans engagement
-                </p>
-
-                <!-- Séparateur -->
-                <div style="display:flex;align-items:center;gap:12px;margin:22px auto 18px;max-width:280px;">
-                  <span style="flex:1;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.25));"></span>
-                  <span style="color:rgba(212,175,55,0.4);font-size:0.7rem;letter-spacing:0.08em;">OU</span>
-                  <span style="flex:1;height:1px;background:linear-gradient(90deg,rgba(212,175,55,0.25),transparent);"></span>
+                <!-- Champ email (affiché si email non connu) -->
+                <div id="tlm-email-wrapper" style="display:none;margin-bottom:16px;">
+                    <input id="tlm-email-input" type="email" class="tlm-email" placeholder="Votre adresse email" autocomplete="email" />
                 </div>
 
-                <!-- CTA secondaire : tirage ponctuel -->
-                <a href="#" id="btn-single-draw-purchase" class="tlm-secondary"
-                    style="display:flex;align-items:center;justify-content:center;gap:8px;
-                           max-width:300px;margin:0 auto;
-                           padding:11px 22px;border-radius:999px;
-                           border:1px solid rgba(212,175,55,0.3);
-                           background:rgba(212,175,55,0.04);
-                           color:#d4af37;font-size:0.85rem;font-weight:600;
-                           text-decoration:none;cursor:pointer;letter-spacing:0.02em;">
-                  <span style="font-size:0.95rem;">✧</span>
-                  Acheter un tirage unique · 3,90€
-                </a>
-                <span style="color:rgba(233,231,223,0.42);font-size:0.72rem;
-                             display:block;margin-top:9px;font-style:italic;">
-                  L'abonnement est rentable dès le 3ème tirage
-                </span>
+                <!-- Grille 2 offres -->
+                <div style="display:flex;gap:10px;margin-bottom:20px;">
 
-                <!-- Fermeture discrète -->
+                    <!-- Découverte -->
+                    <div class="tlm-offer" style="border:1px solid rgba(212,175,55,0.32);background:rgba(255,255,255,0.02);">
+                        <p style="color:rgba(212,175,55,0.55);font-size:0.68rem;letter-spacing:0.2em;text-transform:uppercase;margin:0 0 6px;">Découverte</p>
+                        <p style="color:#f0c75e;font-size:1.5rem;font-weight:700;margin:0 0 12px;font-family:'Cinzel',serif;">5€<span style="font-size:0.75rem;font-weight:400;color:rgba(212,175,55,0.6);">/mois</span></p>
+                        <ul style="list-style:none;padding:0;margin:0 0 16px;text-align:left;color:rgba(233,231,223,0.7);font-size:0.8rem;line-height:1.8;">
+                            <li>✦ 1 tirage par jour</li>
+                            <li>✦ Historique 30 jours</li>
+                        </ul>
+                        <button id="tlm-btn-decouverte" class="tlm-secondary"
+                                style="width:100%;padding:10px 8px;border-radius:999px;border:1px solid rgba(212,175,55,0.4);
+                                       background:rgba(212,175,55,0.06);color:#d4af37;font-size:0.82rem;font-weight:600;
+                                       cursor:pointer;font-family:Georgia,serif;">
+                            Choisir Découverte
+                        </button>
+                    </div>
+
+                    <!-- Complète (mise en avant) -->
+                    <div class="tlm-offer" style="border:2px solid rgba(212,175,55,0.65);background:rgba(212,175,55,0.06);
+                                                   box-shadow:0 0 28px rgba(212,175,55,0.1);">
+                        <p style="color:rgba(212,175,55,0.5);font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;margin:0 0 2px;">Recommandé</p>
+                        <p style="color:rgba(212,175,55,0.65);font-size:0.65rem;letter-spacing:0.18em;text-transform:uppercase;margin:0 0 6px;">Complète</p>
+                        <p style="color:#f0c75e;font-size:1.5rem;font-weight:700;margin:0 0 12px;font-family:'Cinzel',serif;">8€<span style="font-size:0.75rem;font-weight:400;color:rgba(212,175,55,0.6);">/mois</span></p>
+                        <ul style="list-style:none;padding:0;margin:0 0 16px;text-align:left;color:rgba(233,231,223,0.7);font-size:0.8rem;line-height:1.8;">
+                            <li>✦ Tirages illimités</li>
+                            <li>✦ Historique complet</li>
+                            <li>✦ Espace membres</li>
+                        </ul>
+                        <button id="tlm-btn-complet" class="tlm-cta"
+                                style="width:100%;padding:10px 8px;border-radius:999px;
+                                       background:linear-gradient(135deg,#e6c456,#c79b2f);
+                                       color:#0a1224;font-size:0.82rem;font-weight:700;
+                                       border:none;cursor:pointer;font-family:'Cinzel',serif;
+                                       box-shadow:0 4px 20px rgba(212,175,55,0.35);">
+                            Choisir l'offre Complète
+                        </button>
+                    </div>
+
+                </div>
+
                 <button data-close-limit-modal class="tlm-close"
-                        style="display:inline-block;margin:24px auto 0;
-                               padding:7px 18px;border-radius:999px;
+                        style="display:inline-block;padding:7px 18px;border-radius:999px;
                                background:none;border:1px solid rgba(233,231,223,0.12);
-                               color:rgba(233,231,223,0.45);font-size:0.78rem;
-                               cursor:pointer;">
-                  Peut-être plus tard
+                               color:rgba(233,231,223,0.42);font-size:0.78rem;cursor:pointer;">
+                    Peut-être plus tard
                 </button>
             </div>
         `;
         document.body.appendChild(modal);
 
-        const closeModal = () => modal.remove();
+        // Email connu depuis la session membre
+        let knownEmail = '';
+        try {
+            const sessStr = sessionStorage.getItem('oradia_member_session')
+                          || localStorage.getItem('oradia_member_session');
+            if (sessStr) knownEmail = JSON.parse(sessStr).email || '';
+        } catch (_) {}
 
-        // Fermeture : boutons + clic sur l'arrière-plan + touche Échap
-        modal.querySelectorAll('[data-close-limit-modal]').forEach(btn => {
-            btn.addEventListener('click', closeModal);
-        });
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) closeModal();
-        });
-        const onKey = (e) => {
-            if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', onKey); }
-        };
-        document.addEventListener('keydown', onKey);
+        if (!knownEmail) {
+            document.getElementById('tlm-email-wrapper').style.display = 'block';
+        }
 
-        // Handler du tirage unique (lié à l'élément réel du pop-up)
-        modal.querySelector('#btn-single-draw-purchase')?.addEventListener('click', async (e) => {
-            e.preventDefault();
-            const btn = e.currentTarget;
-            const originalText = btn.textContent;
-            btn.textContent = 'Redirection…';
-            btn.style.pointerEvents = 'none';
+        // Handler checkout commun aux deux boutons
+        const handleCheckout = async (type) => {
+            const emailInput = document.getElementById('tlm-email-input');
+            const email = knownEmail || (emailInput ? emailInput.value.trim() : '');
+
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                const wrapper = document.getElementById('tlm-email-wrapper');
+                if (wrapper) wrapper.style.display = 'block';
+                if (emailInput) {
+                    emailInput.style.borderColor = '#e05252';
+                    emailInput.focus();
+                }
+                return;
+            }
+
+            const btnD = document.getElementById('tlm-btn-decouverte');
+            const btnC = document.getElementById('tlm-btn-complet');
+            [btnD, btnC].forEach(b => {
+                if (b) { b.disabled = true; b.textContent = 'Chargement…'; b.style.opacity = '0.6'; b.style.cursor = 'default'; }
+            });
+
             try {
-                const sessStr = sessionStorage.getItem('oradia_member_session')
-                              || localStorage.getItem('oradia_member_session');
-                const email = sessStr ? JSON.parse(sessStr).email : undefined;
-
                 const resp = await fetch('/api/create-checkout-session', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type: 'single-draw', email })
+                    body: JSON.stringify({ type, email })
                 });
                 const data = await resp.json();
                 if (data.url) {
@@ -458,12 +466,24 @@ class FreemiumTracker {
                 } else {
                     throw new Error('No URL returned');
                 }
-            } catch (err) {
-                btn.textContent = originalText;
-                btn.style.pointerEvents = 'auto';
+            } catch (_) {
+                [btnD, btnC].forEach(b => {
+                    if (b) { b.disabled = false; b.style.opacity = '1'; b.style.cursor = 'pointer'; }
+                });
+                if (btnD) btnD.textContent = 'Choisir Découverte';
+                if (btnC) btnC.textContent = "Choisir l'offre Complète";
                 alert('Une erreur est survenue. Réessayez.');
             }
-        });
+        };
+
+        modal.querySelector('#tlm-btn-decouverte')?.addEventListener('click', () => handleCheckout('tore-decouverte'));
+        modal.querySelector('#tlm-btn-complet')?.addEventListener('click',    () => handleCheckout('tore-complet'));
+
+        const closeModal = () => modal.remove();
+        modal.querySelectorAll('[data-close-limit-modal]').forEach(btn => btn.addEventListener('click', closeModal));
+        modal.addEventListener('click', (e) => { if (e.target === modal) closeModal(); });
+        const onKey = (e) => { if (e.key === 'Escape') { closeModal(); document.removeEventListener('keydown', onKey); } };
+        document.addEventListener('keydown', onKey);
     }
 }
 
