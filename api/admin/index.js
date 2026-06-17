@@ -325,8 +325,10 @@ async function handleData(req, res) {
     const cronSecret    = req.headers['x-cron-secret'];
     const vercelCronSig = req.headers['x-vercel-cron-signature'];
     const vercelCron    = req.headers['x-vercel-cron'];
+    const cronQs        = req.query?.cron_secret;
     const isCronRequest =
       (!!process.env.CRON_SECRET && cronSecret === process.env.CRON_SECRET) ||
+      (!!process.env.CRON_SECRET && cronQs     === process.env.CRON_SECRET) ||
       !!vercelCronSig ||
       vercelCron === '1';
 
