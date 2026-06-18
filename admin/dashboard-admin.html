@@ -1734,6 +1734,13 @@
                     currentData.waitlistPagination = data.pagination;
                     if (Array.isArray(data.availableTags)) populateContactTagOptions(data.availableTags);
                     updateWaitlistTable(data.data, data.pagination);
+                    // Pré-charger tous les contacts pour la recherche client-side (fire-and-forget)
+                    if (!currentData.waitlistAll) {
+                        adminFetch('/api/admin/data?section=waitlist&page=1&limit=500')
+                            .then(r => r.json())
+                            .then(d => { if (d.success) currentData.waitlistAll = d.data || []; })
+                            .catch(() => {});
+                    }
                 }
             } catch (error) {
                 console.error('[Admin] Error loading waitlist:', error);
@@ -2009,7 +2016,8 @@
                 updateWaitlistTable(currentData.waitlist || [], currentData.waitlistPagination || {});
                 return;
             }
-            const filtered = (currentData.waitlist || []).filter(c =>
+            const source = currentData.waitlistAll || currentData.waitlist || [];
+            const filtered = source.filter(c =>
                 (c.email || '').toLowerCase().includes(q) ||
                 (c.full_name || '').toLowerCase().includes(q)
             );
@@ -2076,7 +2084,8 @@
 
         document.getElementById('contactModalAddTag').onclick = () => {
             const input = document.getElementById('contactModalCustomTag');
-            const value = input.value.trim().toLowerCase().replace(/\s+/g, '_');
+            const raw = input.value.trim().toLowerCase().replace(/\s+/g, '_');
+            const value = raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : '';
             if (!value) return;
             if (!contactModalTags.includes(value)) contactModalTags.push(value);
             input.value = '';

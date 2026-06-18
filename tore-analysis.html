@@ -1502,6 +1502,7 @@
         window._obsWindowText = '';
         window._obsAttentionPoints = [];
         window._obsSuggestedDays = null;
+        window._obsWindowActivated = false;
         window._emailSent = false;
 
         function parseObservationSection(fullText) {
@@ -1783,6 +1784,7 @@
                 if (data.success) {
                     document.getElementById('obs-form-wrap').style.display = 'none';
                     document.getElementById('obs-success').style.display = 'block';
+                    window._obsWindowActivated = true;
                 } else {
                     throw new Error(data.message || 'Erreur inconnue');
                 }
@@ -1964,6 +1966,23 @@
 
             let _isBrevoSubscribed = false;
 
+            // Si email connu : checker Brevo AVANT d'insérer le panel pour éviter le flash checkbox
+            if (knownEmail) {
+                const loader = document.createElement('div');
+                loader.id = 'toa-email-panel';
+                loader.style.cssText = 'margin-top:12px;color:rgba(212,175,55,0.5);font-size:12px;text-align:center;padding:8px 0;';
+                loader.textContent = 'Chargement…';
+                container.appendChild(loader);
+                try {
+                    const r = await fetch('/api/tirages/send-email?action=check-brevo&email=' + encodeURIComponent(knownEmail));
+                    const d = await r.json();
+                    _isBrevoSubscribed = !!d.subscribed;
+                } catch (_) {}
+                loader.remove();
+                // Si re-cliqué pendant le check, ne pas ouvrir un second panel
+                if (container.querySelector('#toa-email-panel')) return;
+            }
+
             const panel = document.createElement('div');
             panel.id = 'toa-email-panel';
             panel.style.cssText = 'margin-top:12px;animation:fadeInUp 0.3s ease both;';
@@ -1990,11 +2009,16 @@
                 '</button>';
             container.appendChild(panel);
 
-            // Pré-remplir l'email si connu
+            // Appliquer le résultat du check si email connu
+            if (_isBrevoSubscribed) {
+                const wrapper = panel.querySelector('#toa-consent-wrapper');
+                if (wrapper) wrapper.style.display = 'none';
+            }
+
             if (knownEmail) panel.querySelector('#toa-email-input').value = knownEmail;
             panel.querySelector('#toa-email-input').focus();
 
-            // Vérifier si déjà abonné Brevo (sur blur ou si email pré-rempli)
+            // Check Brevo sur blur pour email saisi manuellement (pas de setTimeout : déjà checké si knownEmail)
             const checkBrevoSubscription = async () => {
                 const v = panel.querySelector('#toa-email-input')?.value.trim() || '';
                 if (!v || !v.includes('@') || !v.includes('.')) return;
@@ -2006,8 +2030,9 @@
                     if (wrapper) wrapper.style.display = _isBrevoSubscribed ? 'none' : '';
                 } catch (_) {}
             };
-            panel.querySelector('#toa-email-input').addEventListener('blur', checkBrevoSubscription);
-            if (knownEmail) setTimeout(checkBrevoSubscription, 150);
+            if (!knownEmail) {
+                panel.querySelector('#toa-email-input').addEventListener('blur', checkBrevoSubscription);
+            }
 
             panel.querySelector('#toa-send-confirm').addEventListener('click', () => {
                 const emailVal = panel.querySelector('#toa-email-input').value.trim();
@@ -2050,9 +2075,6 @@
                 // Chercher l'analyse dans toutes les clés connues
                 let analysis = '';
                 let synthesis = '';
-                let observationDays = null;
-                let observationText = '';
-                let attentionPoints = [];
                 let cards = [];
 
                 // Essayer tore_analysis_data en premier
@@ -2062,9 +2084,6 @@
                         const d = JSON.parse(rawData);
                         analysis = d.analysis || d.message || '';
                         synthesis = d.synthesis || '';
-                        observationDays = d.observationDays || null;
-                        observationText = d.observationText || '';
-                        attentionPoints = Array.isArray(d.attentionPoints) ? d.attentionPoints : [];
                         cards = d.cards || [];
                     } catch(_) {}
                 }
@@ -2081,13 +2100,9 @@
                                 if (typeof d === 'string') { analysis = d; break; }
                                 analysis = d.analysis || d.message || d.text || '';
                                 synthesis = d.synthesis || synthesis;
-                                observationDays = d.observationDays || observationDays;
-                                observationText = d.observationText || observationText;
-                                if (Array.isArray(d.attentionPoints) && d.attentionPoints.length) attentionPoints = d.attentionPoints;
                                 if (Array.isArray(d.cards)) cards = d.cards;
                                 if (analysis) break;
                             } catch(_) {
-                                // Si c'est directement du texte
                                 if (typeof v === 'string' && v.length > 50) { analysis = v; break; }
                             }
                         }
@@ -2109,40 +2124,11 @@
                     }
                 }
 
-                // Chercher observationDays dans les clés de fenêtre
-                if (!observationDays) {
-                    const obsKeys = ['tore_observation', 'fenetre_observation', 'observation_window',
-                                     'tore_fenetre', 'observation_days'];
-                    for (const k of obsKeys) {
-                        const v = sessionStorage.getItem(k);
-                        if (v) {
-                            try {
-                                const d = JSON.parse(v);
-                                observationDays = d.days || d.duration || d.observationDays || parseInt(v) || null;
-                                observationText = d.text || d.observationText || observationText;
-                                if (observationDays) break;
-                            } catch(_) {
-                                observationDays = parseInt(v) || null;
-                                if (observationDays) break;
-                            }
-                        }
-                    }
-                }
-
-                // Toujours utiliser la durée choisie par l'utilisateur (mise à jour par selectObsDuration)
-                if (typeof window._obsSuggestedDays === 'number' && window._obsSuggestedDays > 0) {
-                    observationDays = window._obsSuggestedDays;
-                }
-
-                // LOG pour debug (à retirer après confirmation)
-                console.log('[doSendEmail] Keys found:', {
-                    intention: !!intention,
-                    analysis: analysis.length,
-                    synthesis: synthesis.length,
-                    cards: cards.length,
-                    observationDays,
-                    allKeys: Object.keys(sessionStorage)
-                });
+                // Fenêtre d'observation : uniquement si l'utilisateur a explicitement cliqué "Activer"
+                const observationDays = (window._obsWindowActivated && window._obsSuggestedDays > 0)
+                    ? window._obsSuggestedDays : null;
+                const observationText = window._obsWindowActivated ? (window._obsWindowText || '') : '';
+                const attentionPoints = window._obsWindowActivated ? (window._obsAttentionPoints || []) : [];
 
                 const resp = await fetch('/api/tirages/send-email?action=collect-email', {
                     method: 'POST',
