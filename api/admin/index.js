@@ -562,6 +562,9 @@ async function handleData(req, res) {
             email: contactEmail,
             full_name: (body.full_name || '').trim() || null,
             notes: (body.notes || '').trim() || null,
+            phone: (body.phone || '').trim() || null,
+            company: (body.company || '').trim() || null,
+            address: (body.address || '').trim() || null,
             tags,
             source: 'manuel',
             status: 'active'
@@ -583,6 +586,9 @@ async function handleData(req, res) {
         if (body.full_name !== undefined) updates.full_name = (body.full_name || '').trim() || null;
         if (body.notes !== undefined) updates.notes = (body.notes || '').trim() || null;
         if (body.status !== undefined) updates.status = body.status;
+        if (body.phone !== undefined) updates.phone = (body.phone || '').trim() || null;
+        if (body.company !== undefined) updates.company = (body.company || '').trim() || null;
+        if (body.address !== undefined) updates.address = (body.address || '').trim() || null;
 
         const { data, error } = await supabase
           .from('newsletter_contacts')
@@ -760,7 +766,7 @@ async function handleData(req, res) {
       const userId = users[0].id;
       const { data: tirages, error: tErr } = await supabase
         .from('tirages')
-        .select('id, created_at, question')
+        .select('id, created_at, intention, cartes')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(20);
@@ -1583,7 +1589,7 @@ function buildCommunicationEmailHtml(draft) {
 
   const imageRow = (img) => `
     <tr><td style="padding:0 32px 24px;">
-      <img src="${nlAbsUrl(img.path)}" alt="${nlEscHtml(img.name || '')}" style="display:block; width:100%; max-height:320px; object-fit:cover; border-radius:14px;">
+      <img src="${nlAbsUrl(img.path)}" alt="${nlEscHtml(img.name || '')}" width="576" style="display:block; width:100%; max-width:576px; height:auto; border-radius:14px;">
     </td></tr>`;
 
   let bodyRows = '';
