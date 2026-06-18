@@ -28,11 +28,11 @@ const EXPORTABLE_TABLES = ['preorders', 'donors', 'tirages'];
 // Catégories de contacts newsletter (utilisées pour cibler les envois depuis le dashboard,
 // sans passer par les listes Brevo). Liste indicative — des tags libres restent possibles.
 const CONTACT_TAGS = [
-  { value: 'general',     label: 'Liste générale' },
-  { value: 'therapeute',  label: 'Thérapeutes' },
-  { value: 'prospect',    label: 'Prospects Oracle' },
-  { value: 'presse',      label: 'Presse / médias' },
-  { value: 'communaute',  label: 'Communauté' }
+  { value: 'general',    label: 'Liste générale',  system: true },
+  { value: 'therapeute', label: 'Thérapeutes',      system: true },
+  { value: 'prospect',   label: 'Prospects Oracle', system: true },
+  { value: 'presse',     label: 'Presse / médias',  system: true },
+  { value: 'communaute', label: 'Communauté',        system: true }
 ];
 
 // Synchronise un contact avec Brevo : seuls les contacts de la catégorie "general"
@@ -626,6 +626,48 @@ async function handleData(req, res) {
         }
 
         return res.status(200).json({ success: true, brevoDeleted });
+      }
+
+      // ── Contacts : supprimer un tag de tous les contacts ──
+      if (action === 'delete-tag') {
+        const { tagValue } = body;
+        if (!tagValue) return res.status(400).json({ error: 'tagValue requis' });
+        if (CONTACT_TAGS.find(t => t.value === tagValue)) {
+          return res.status(400).json({ error: 'Impossible de supprimer un tag système' });
+        }
+        const { data: affected, error: fetchErr } = await supabase
+          .from('newsletter_contacts').select('id, tags').contains('tags', [tagValue]);
+        if (fetchErr) throw fetchErr;
+        let updatedCount = 0;
+        for (const contact of (affected || [])) {
+          const newTags = (contact.tags || []).filter(t => t !== tagValue);
+          const { error: updateErr } = await supabase
+            .from('newsletter_contacts').update({ tags: newTags }).eq('id', contact.id);
+          if (!updateErr) updatedCount++;
+        }
+        return res.status(200).json({ success: true, updatedCount });
+      }
+
+      // ── Contacts : renommer un tag sur tous les contacts ──
+      if (action === 'rename-tag') {
+        const { oldValue, newValue: rawNew } = body;
+        if (!oldValue || !rawNew) return res.status(400).json({ error: 'oldValue et newValue requis' });
+        if (CONTACT_TAGS.find(t => t.value === oldValue)) {
+          return res.status(400).json({ error: 'Impossible de renommer un tag système' });
+        }
+        const newValue = rawNew.trim().toLowerCase().replace(/\s+/g, '_');
+        if (!newValue) return res.status(400).json({ error: 'newValue invalide' });
+        const { data: affected, error: fetchErr } = await supabase
+          .from('newsletter_contacts').select('id, tags').contains('tags', [oldValue]);
+        if (fetchErr) throw fetchErr;
+        let updatedCount = 0;
+        for (const contact of (affected || [])) {
+          const newTags = (contact.tags || []).map(t => t === oldValue ? newValue : t);
+          const { error: updateErr } = await supabase
+            .from('newsletter_contacts').update({ tags: newTags }).eq('id', contact.id);
+          if (!updateErr) updatedCount++;
+        }
+        return res.status(200).json({ success: true, updatedCount });
       }
 
       return res.status(400).json({ error: 'Action invalide' });

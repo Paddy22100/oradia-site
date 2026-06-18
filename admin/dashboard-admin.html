@@ -354,6 +354,32 @@
         </div>
     </div>
 
+    <!-- Modal : Gérer les catégories -->
+    <div id="categoryManagerModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm">
+        <div class="bg-[#0a1628] border border-gold/30 rounded-xl p-8 w-full max-w-lg mx-4 shadow-2xl">
+            <div class="flex items-center justify-between mb-6">
+                <h3 class="text-gold font-bold text-xl" style="font-family:'Cormorant Garamond',serif;">Gérer les catégories</h3>
+                <button onclick="closeCategoryManager()" class="text-light-gold/50 hover:text-light-gold transition">
+                    <i class="fas fa-times text-lg"></i>
+                </button>
+            </div>
+            <div id="categoryManagerList" class="space-y-2 mb-6 max-h-72 overflow-y-auto pr-1"></div>
+            <div class="border-t border-gold/20 pt-5">
+                <p class="text-xs text-light-gold/50 uppercase tracking-widest mb-3">Nouvelle catégorie</p>
+                <div class="flex gap-2">
+                    <input id="categoryManagerNewTag" type="text" placeholder="Nom de la catégorie…"
+                        class="flex-1 bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold"
+                        onkeydown="if(event.key==='Enter') addCategoryManagerTag()">
+                    <button onclick="addCategoryManagerTag()"
+                        class="px-4 py-2 bg-gold/20 border border-gold/40 text-gold rounded-lg hover:bg-gold/30 transition text-sm font-semibold">
+                        <i class="fas fa-plus"></i>
+                    </button>
+                </div>
+                <p id="categoryManagerMsg" class="text-xs mt-2 hidden"></p>
+            </div>
+        </div>
+    </div>
+
     <!-- Topbar -->
     <div class="topbar">
         <div class="flex items-center gap-3">
@@ -677,6 +703,10 @@
                         class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
                         <option value="">Toutes les catégories</option>
                     </select>
+                    <button onclick="openCategoryManager()"
+                        class="flex items-center gap-2 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-gold/80 px-4 py-2 rounded-lg hover:bg-gold/10 transition text-sm">
+                        <i class="fas fa-tags"></i> Catégories
+                    </button>
                     <button onclick="openContactModal()"
                         class="flex items-center gap-2 bg-gold/20 border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-gold/30 transition text-sm font-semibold">
                         <i class="fas fa-user-plus"></i> Ajouter un contact
@@ -2022,6 +2052,112 @@
                 (c.full_name || '').toLowerCase().includes(q)
             );
             updateWaitlistTable(filtered, { page: 1, limit: filtered.length, total: filtered.length, pages: 1 });
+        }
+
+        // ── Gestionnaire de catégories ──
+
+        function openCategoryManager() {
+            renderCategoryManagerList();
+            const m = document.getElementById('categoryManagerModal');
+            m.classList.remove('hidden'); m.classList.add('flex');
+        }
+
+        function closeCategoryManager() {
+            const m = document.getElementById('categoryManagerModal');
+            m.classList.add('hidden'); m.classList.remove('flex');
+        }
+
+        function renderCategoryManagerList() {
+            const container = document.getElementById('categoryManagerList');
+            if (!container) return;
+            if (!contactTagOptions.length) {
+                container.innerHTML = '<p class="text-light-gold/40 text-sm text-center py-4">Aucune catégorie.</p>';
+                return;
+            }
+            container.innerHTML = contactTagOptions.map(t => {
+                const isSystem = !!t.system;
+                return `<div class="flex items-center justify-between px-3 py-2.5 rounded-lg bg-[rgba(5,20,40,0.5)] border border-gold/10">
+                    <div class="flex items-center gap-2 min-w-0">
+                        <i class="fas ${isSystem ? 'fa-lock text-gold/25' : 'fa-tag text-gold/45'} text-xs flex-shrink-0"></i>
+                        <span class="text-light-gold text-sm truncate">${escapeHtmlFront(t.label)}</span>
+                        ${isSystem ? '<span class="text-xs text-light-gold/30 italic flex-shrink-0 ml-1">système</span>' : ''}
+                    </div>
+                    ${!isSystem ? `<div class="flex gap-1.5 flex-shrink-0 ml-2">
+                        <button onclick="promptRenameTag('${escapeHtmlFront(t.value)}','${escapeHtmlFront(t.label)}')"
+                            class="text-gold/50 hover:text-gold transition text-xs px-2 py-1 border border-gold/20 rounded" title="Renommer">
+                            <i class="fas fa-pen"></i>
+                        </button>
+                        <button onclick="deleteCategoryTag('${escapeHtmlFront(t.value)}')"
+                            class="text-red-400/60 hover:text-red-400 transition text-xs px-2 py-1 border border-red-400/20 rounded" title="Supprimer de tous les contacts">
+                            <i class="fas fa-trash"></i>
+                        </button>
+                    </div>` : ''}
+                </div>`;
+            }).join('');
+        }
+
+        async function deleteCategoryTag(tagValue) {
+            if (!confirm(`Supprimer la catégorie "${tagValue}" de tous les contacts ?\nCette action est irréversible.`)) return;
+            const msgEl = document.getElementById('categoryManagerMsg');
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete-tag', tagValue })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                contactTagOptions = contactTagOptions.filter(t => t.value !== tagValue);
+                currentData.waitlistAll = null;
+                populateContactTagOptions(contactTagOptions);
+                renderCategoryManagerList();
+                loadWaitlist(1);
+                if (msgEl) { msgEl.className = 'text-xs mt-2 text-green-400'; msgEl.textContent = `Catégorie supprimée (${data.updatedCount} contact(s) mis à jour).`; msgEl.classList.remove('hidden'); setTimeout(() => msgEl.classList.add('hidden'), 3000); }
+            } catch(e) {
+                if (msgEl) { msgEl.className = 'text-xs mt-2 text-red-400'; msgEl.textContent = 'Erreur : ' + e.message; msgEl.classList.remove('hidden'); }
+            }
+        }
+
+        async function promptRenameTag(oldValue, oldLabel) {
+            const newLabel = prompt(`Renommer la catégorie "${oldLabel}" en :`, oldLabel);
+            if (!newLabel || newLabel.trim() === oldLabel) return;
+            const newValue = newLabel.trim().toLowerCase().replace(/\s+/g, '_');
+            const msgEl = document.getElementById('categoryManagerMsg');
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'rename-tag', oldValue, newValue })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                const tag = contactTagOptions.find(t => t.value === oldValue);
+                if (tag) { tag.value = newValue; tag.label = newLabel.trim(); }
+                currentData.waitlistAll = null;
+                populateContactTagOptions(contactTagOptions);
+                renderCategoryManagerList();
+                loadWaitlist(1);
+                if (msgEl) { msgEl.className = 'text-xs mt-2 text-green-400'; msgEl.textContent = `Renommé (${data.updatedCount} contact(s) mis à jour).`; msgEl.classList.remove('hidden'); setTimeout(() => msgEl.classList.add('hidden'), 3000); }
+            } catch(e) {
+                if (msgEl) { msgEl.className = 'text-xs mt-2 text-red-400'; msgEl.textContent = 'Erreur : ' + e.message; msgEl.classList.remove('hidden'); }
+            }
+        }
+
+        function addCategoryManagerTag() {
+            const input = document.getElementById('categoryManagerNewTag');
+            const raw = (input?.value || '').trim().toLowerCase().replace(/\s+/g, '_');
+            const value = raw ? raw.charAt(0).toUpperCase() + raw.slice(1) : '';
+            const msgEl = document.getElementById('categoryManagerMsg');
+            if (!value) return;
+            if (contactTagOptions.find(t => t.value === value)) {
+                if (msgEl) { msgEl.className = 'text-xs mt-2 text-yellow-400'; msgEl.textContent = 'Cette catégorie existe déjà.'; msgEl.classList.remove('hidden'); setTimeout(() => msgEl.classList.add('hidden'), 2000); }
+                return;
+            }
+            contactTagOptions.push({ value, label: value });
+            populateContactTagOptions(contactTagOptions);
+            renderCategoryManagerList();
+            input.value = '';
+            if (msgEl) { msgEl.className = 'text-xs mt-2 text-green-400'; msgEl.textContent = `"${value}" ajouté. Assignez-la à un contact pour la persister.`; msgEl.classList.remove('hidden'); setTimeout(() => msgEl.classList.add('hidden'), 4000); }
         }
 
         // ── Gestion des contacts (catégories newsletter) ──
