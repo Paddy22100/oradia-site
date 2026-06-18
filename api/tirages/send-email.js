@@ -232,6 +232,26 @@ async function handleSendEmail(req, res) {
       const imgPath = getImagePath(card);
       const src = imgPath.startsWith('http') ? imgPath : `https://oradia.fr/${imgPath.replace(/^\//, '')}`;
       const color = FAMILY_COLORS[card.family] || '#4a5a6a';
+
+      // Bloc passerelle (ligne mutante) — affiché sous la carte mère si présent
+      let bridgeHtml = '';
+      if (card.bridgeCard) {
+        const b = card.bridgeCard;
+        const bImgPath = getImagePath(b);
+        const bSrc = bImgPath.startsWith('http') ? bImgPath : `https://oradia.fr/${bImgPath.replace(/^\//, '')}`;
+        const bColor = FAMILY_COLORS[b.family] || '#4a5a6a';
+        bridgeHtml = `
+          <div style="text-align:center;margin-top:8px;">
+            <div style="width:1px;height:10px;background:rgba(212,175,55,0.25);margin:0 auto;"></div>
+            <p style="margin:3px 0 5px;color:rgba(212,175,55,0.45);font-size:7px;letter-spacing:1.5px;text-transform:uppercase;">&#9830; Passerelle</p>
+            <img src="${bSrc}" alt="${b.name.replace(/_/g,' ')}" width="${BRIDGE_W}" height="${BRIDGE_H}"
+              style="display:block;width:${BRIDGE_W}px;height:${BRIDGE_H}px;object-fit:cover;border-radius:6px;margin:0 auto;border:1px solid rgba(212,175,55,0.45);"
+              onerror="this.style.background='${bColor}';this.removeAttribute('src');">
+            <p style="margin:5px 0 1px;color:#f5e7a1;font-size:9px;font-weight:700;line-height:1.3;">${b.name.replace(/_/g,' ')}</p>
+            <p style="margin:0;color:rgba(212,175,55,0.4);font-size:7px;font-style:italic;">ligne mutante</p>
+          </div>`;
+      }
+
       return `<td width="33%" style="width:33%;padding:8px;vertical-align:top;">
         <div style="text-align:center;">
           <img src="${src}" alt="${card.name.replace(/_/g,' ')}" width="${w}" height="${h}"
@@ -239,6 +259,7 @@ async function handleSendEmail(req, res) {
             onerror="this.style.background='${color}';this.removeAttribute('src');">
           <p style="margin:8px 0 2px;color:#d4af37;font-size:10px;font-weight:700;line-height:1.3;">${card.name.replace(/_/g,' ')}</p>
           <p style="margin:0;color:#4a5a6a;font-size:8px;font-style:italic;text-transform:capitalize;">${card.family.replace(/_/g,' ')}</p>
+          ${bridgeHtml}
         </div>
       </td>`;
     };
