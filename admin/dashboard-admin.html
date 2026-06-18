@@ -2197,18 +2197,11 @@
             generateBtn.innerHTML = '<span class="animate-pulse">Génération…</span>';
 
             try {
-                // Récupère l'ensemble des précommandes (toutes pages)
-                let all = [];
-                let page = 1;
-                const limit = 200;
-                while (true) {
-                    const res = await adminFetch(`/api/admin/data?section=preorders&page=${page}&limit=${limit}`);
-                    const data = await res.json();
-                    if (!data.success) throw new Error(data.error || 'Erreur de chargement');
-                    all = all.concat(data.data || []);
-                    if (!data.pagination || page >= data.pagination.pages) break;
-                    page++;
-                }
+                // Récupère toutes les précommandes en un seul appel (bypass pagination)
+                const res = await adminFetch('/api/admin/data?section=preorders&export=1');
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error || 'Erreur de chargement');
+                const all = data.data || [];
 
                 // Filtres
                 const now = Date.now();
@@ -2266,9 +2259,18 @@
                     .summary { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; }
                     .summary div { border: 1px solid #d4af37; border-radius: 8px; padding: 10px 16px; font-size: 13px; min-width: 140px; }
                     .summary strong { display: block; font-size: 18px; color: #8b6914; }
-                    table { width: 100%; border-collapse: collapse; font-size: 11px; }
-                    th, td { border: 1px solid #ddd; padding: 6px 8px; text-align: left; }
-                    th { background: #fffbef; color: #8b6914; text-transform: uppercase; font-size: 10px; }
+                    table { width: 100%; border-collapse: collapse; font-size: 10px; table-layout: fixed; }
+                    th, td { border: 1px solid #ddd; padding: 5px 6px; text-align: left; word-break: break-word; overflow-wrap: break-word; }
+                    th { background: #fffbef; color: #8b6914; text-transform: uppercase; font-size: 9px; }
+                    td:nth-child(1) { width: 7%; }
+                    td:nth-child(2) { width: 18%; }
+                    td:nth-child(3) { width: 14%; }
+                    td:nth-child(4) { width: 10%; }
+                    td:nth-child(5) { width: 8%; }
+                    td:nth-child(6) { width: 8%; }
+                    td:nth-child(7) { width: 10%; }
+                    td:nth-child(8) { width: 10%; }
+                    td:nth-child(9) { width: 15%; }
                     tr:nth-child(even) { background: #fdfbf5; }
                     .filters { font-size: 12px; color: #555; margin-bottom: 16px; }
                 </style></head><body>

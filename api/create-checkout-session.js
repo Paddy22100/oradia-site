@@ -270,7 +270,7 @@ module.exports = async (req, res) => {
         };
 
         // Configuration des produits et poids (identique au frontend)
-        const PRODUCT_WEIGHT_KG = 0.5; // 500g par oracle
+        const PRODUCT_WEIGHT_KG = 0.8; // 800g par oracle
         
         // Configuration des tarifs Mondial Relay France (en euros) - IDENTIQUE AU FRONTEND
         const MONDIAL_RELAY_RATES = {

@@ -728,6 +728,21 @@ async function handleData(req, res) {
 
     // ── Section preorders ──
     if (section === 'preorders') {
+      // Paramètre export=1 : retourne tous les enregistrements sans pagination (utilisé par le PDF)
+      if (req.query?.export === '1') {
+        const { data: allData, error: allError } = await supabase
+          .from('preorders')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(500);
+        if (allError) throw allError;
+        return res.status(200).json({
+          success: true,
+          data: allData || [],
+          pagination: { page: 1, limit: 500, total: allData?.length || 0, pages: 1 }
+        });
+      }
+
       const page   = parseInt(req.query?.page  || '1', 10);
       const limit  = parseInt(req.query?.limit || '10', 10);
       const offset = (page - 1) * limit;
@@ -1330,7 +1345,7 @@ async function handleContactsExport(req, res) {
         return [
           r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : '',
           r.email, r.full_name, r.offer,
-          r.amount_total != null ? (r.amount_total / 100).toFixed(2).replace('.', ',') : '',
+          r.amount_total != null ? parseFloat(r.amount_total).toFixed(2).replace('.', ',') : '',
           r.paid_status, r.shipping_method,
           adresseDomicile, pointRelais,
           r.tracking_number || '', r.shipping_status || ''
@@ -1370,7 +1385,7 @@ async function handleContactsExport(req, res) {
           r.relay_id || '',
           '',
           r.email,
-          '500',
+          '800',
           r.id || ''
         ].map(esc).join(',');
       });
