@@ -1501,7 +1501,7 @@
 
         window._obsWindowText = '';
         window._obsAttentionPoints = [];
-        window._obsSuggestedDays = 7;
+        window._obsSuggestedDays = null;
         window._emailSent = false;
 
         function parseObservationSection(fullText) {
@@ -1959,9 +1959,10 @@
                 if (sessStr) knownEmail = JSON.parse(sessStr).email || '';
             } catch(_) {}
 
-            // Toujours afficher le panneau email + case RGPD avant envoi
             const container = btn.parentElement;
             if (container.querySelector('#toa-email-panel')) return;
+
+            let _isBrevoSubscribed = false;
 
             const panel = document.createElement('div');
             panel.id = 'toa-email-panel';
@@ -1972,6 +1973,7 @@
                 ' style="width:100%;box-sizing:border-box;background:rgba(5,15,35,0.8);' +
                 'border:1px solid rgba(212,175,55,0.4);border-radius:8px;' +
                 'padding:10px 14px;color:#e8dfc8;font-size:14px;outline:none;margin-bottom:10px;">' +
+                '<div id="toa-consent-wrapper">' +
                 '<label style="display:flex;align-items:flex-start;gap:10px;cursor:pointer;' +
                 'color:rgba(232,223,200,0.65);font-size:12px;line-height:1.5;' +
                 'margin-bottom:12px;text-align:left;">' +
@@ -1979,6 +1981,7 @@
                 ' style="margin-top:2px;accent-color:#d4af37;flex-shrink:0;">' +
                 'J\'accepte de recevoir des conseils et offres Oradia par email' +
                 '</label>' +
+                '</div>' +
                 '<button id="toa-send-confirm"' +
                 ' style="width:100%;background:linear-gradient(135deg,#d4af37,#b8962e);' +
                 'color:#06101f;border:none;border-radius:8px;padding:11px 16px;' +
@@ -1991,13 +1994,28 @@
             if (knownEmail) panel.querySelector('#toa-email-input').value = knownEmail;
             panel.querySelector('#toa-email-input').focus();
 
+            // Vérifier si déjà abonné Brevo (sur blur ou si email pré-rempli)
+            const checkBrevoSubscription = async () => {
+                const v = panel.querySelector('#toa-email-input')?.value.trim() || '';
+                if (!v || !v.includes('@') || !v.includes('.')) return;
+                try {
+                    const r = await fetch('/api/tirages/send-email?action=check-brevo&email=' + encodeURIComponent(v));
+                    const d = await r.json();
+                    _isBrevoSubscribed = !!d.subscribed;
+                    const wrapper = panel.querySelector('#toa-consent-wrapper');
+                    if (wrapper) wrapper.style.display = _isBrevoSubscribed ? 'none' : '';
+                } catch (_) {}
+            };
+            panel.querySelector('#toa-email-input').addEventListener('blur', checkBrevoSubscription);
+            if (knownEmail) setTimeout(checkBrevoSubscription, 150);
+
             panel.querySelector('#toa-send-confirm').addEventListener('click', () => {
                 const emailVal = panel.querySelector('#toa-email-input').value.trim();
                 if (!emailVal || !emailVal.includes('@')) {
                     panel.querySelector('#toa-email-input').style.borderColor = 'rgba(231,76,60,0.6)';
                     return;
                 }
-                const consent = panel.querySelector('#toa-consent-checkbox').checked;
+                const consent = _isBrevoSubscribed ? false : (panel.querySelector('#toa-consent-checkbox')?.checked || false);
                 panel.remove();
                 doSendEmail(btn, emailVal, consent);
             });

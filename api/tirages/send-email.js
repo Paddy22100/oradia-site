@@ -221,99 +221,59 @@ async function handleSendEmail(req, res) {
     const CARD_W   =  88; const CARD_H   = 132; // cartes de la roue
     const BRIDGE_W =  66; const BRIDGE_H =  99; // cartes passerelle
 
-    const cardImg = (card, w, h) => {
-      const imgPath = getImagePath(card);
-      const src = imgPath.startsWith('http') ? imgPath : `https://oradia.fr/${imgPath.replace(/^\//, '')}`;
-      return `<img src="${src}" alt="${card.name.replace(/_/g,' ')}" width="${w}" height="${h}"
-        style="display:block;width:${w}px;height:${h}px;object-fit:cover;border-radius:7px;margin:0 auto;border:1px solid rgba(30,58,90,0.8);">`;
+    // Couleurs de fallback par famille (si l'image ne charge pas)
+    const FAMILY_COLORS = {
+      emotion: '#3b6fd4', besoin: '#2e8b57', transmutation: '#7b5ea7',
+      archetype: '#c8922a', revelation: '#c0672a', action: '#b03030',
+      memoire_cosmos: '#d4af37'
     };
 
-    const cardLabel = (card, color = '#d4af37', size = 10) =>
-      `<p style="margin:6px 0 2px;color:${color};font-size:${size}px;font-weight:700;line-height:1.25;text-align:center;">${card.name.replace(/_/g,' ')}</p>
-       <p style="margin:0;color:#4a5a6a;font-size:8px;font-style:italic;text-transform:capitalize;text-align:center;">${card.family.replace(/_/g,' ')}</p>`;
-
-    const bridgeHtml = (bridge) => bridge ? `
-      <div style="text-align:center;margin:6px 0 4px;">
-        <div style="width:1px;height:8px;background:rgba(212,175,55,0.5);margin:0 auto;"></div>
-        <p style="margin:1px 0;color:rgba(212,175,55,0.6);font-size:7px;letter-spacing:2px;text-transform:uppercase;">&#9660; Passerelle</p>
-        <div style="width:1px;height:8px;background:rgba(212,175,55,0.5);margin:0 auto;"></div>
-      </div>
-      <div style="background:#0c1f33;border:1px solid rgba(212,175,55,0.35);border-radius:8px;padding:8px 6px;text-align:center;">
-        ${cardImg(bridge, BRIDGE_W, BRIDGE_H)}
-        ${cardLabel(bridge, 'rgba(212,175,55,0.8)', 9)}
-      </div>` : '';
-
-    // Séparer cosmos (centre) des cartes de la roue
-    const cosmosCard   = cards.find(c => c.family === 'memoire_cosmos') || null;
-    const wheelCards   = cards.filter(c => c.family !== 'memoire_cosmos');
-
-    // Construire la cellule d'une carte de roue — taille uniforme imposée
-    const wheelCellHtml = (card) => card ? `
-      <td width="33%" style="width:33%;padding:6px;vertical-align:top;">
-        <div style="background:rgba(7,24,40,0.85);border:1px solid rgba(30,58,90,0.8);border-radius:10px;padding:12px 8px;text-align:center;">
-          ${cardImg(card, CARD_W, CARD_H)}
-          ${cardLabel(card)}
-          ${bridgeHtml(card.bridgeCard)}
+    const emailCardCell = (card, w, h) => {
+      const imgPath = getImagePath(card);
+      const src = imgPath.startsWith('http') ? imgPath : `https://oradia.fr/${imgPath.replace(/^\//, '')}`;
+      const color = FAMILY_COLORS[card.family] || '#4a5a6a';
+      return `<td width="33%" style="width:33%;padding:8px;vertical-align:top;">
+        <div style="text-align:center;">
+          <img src="${src}" alt="${card.name.replace(/_/g,' ')}" width="${w}" height="${h}"
+            style="display:block;width:${w}px;height:${h}px;object-fit:cover;border-radius:7px;margin:0 auto;border:1px solid rgba(30,58,90,0.8);"
+            onerror="this.style.background='${color}';this.removeAttribute('src');">
+          <p style="margin:8px 0 2px;color:#d4af37;font-size:10px;font-weight:700;line-height:1.3;">${card.name.replace(/_/g,' ')}</p>
+          <p style="margin:0;color:#4a5a6a;font-size:8px;font-style:italic;text-transform:capitalize;">${card.family.replace(/_/g,' ')}</p>
         </div>
-      </td>` : `<td width="33%" style="width:33%;padding:6px;"></td>`;
+      </td>`;
+    };
 
-    // Grille roue : rangée haute (3), rangée milieu cosmos (2+cosmos), rangée basse centrée
-    const topRow    = wheelCards.slice(0, 3);
-    const midRow    = wheelCards.slice(3, 5); // max 2 autour du cosmos
-    const bottomRow = wheelCards.slice(5);    // cartes restantes, centrées
+    // Layout : 2 rangées de 3 + cosmos centré seul en dessous
+    const cosmosCard = cards.find(c => c.family === 'memoire_cosmos') || null;
+    const wheelCards = cards.filter(c => c.family !== 'memoire_cosmos');
 
-    const cosmosCell = cosmosCard ? `
-      <td width="34%" style="width:34%;padding:6px;vertical-align:middle;text-align:center;">
-        <div style="background:linear-gradient(145deg,rgba(12,31,51,0.95),rgba(7,20,42,0.9));border:2px solid rgba(212,175,55,0.55);border-radius:12px;padding:16px 10px;box-shadow:0 0 24px rgba(212,175,55,0.18);">
-          ${cardImg(cosmosCard, COSMOS_W, COSMOS_H)}
-          ${cardLabel(cosmosCard, '#f0c75e', 11)}
-          <p style="margin:5px 0 0;color:rgba(212,175,55,0.5);font-size:7px;letter-spacing:2px;text-transform:uppercase;">Centre du Tore</p>
-        </div>
-      </td>` : `<td width="34%" style="width:34%;padding:6px;"></td>`;
-
-    // Rangée haute : toujours 3 cellules
-    const topRowHtml = () => {
-      const cells = topRow.map(c => wheelCellHtml(c));
-      while (cells.length < 3) cells.push(`<td width="33%" style="width:33%;padding:6px;"></td>`);
+    const makeCardRow = (rowCards) => {
+      const cells = rowCards.map(c => emailCardCell(c, CARD_W, CARD_H));
+      while (cells.length < 3) cells.push(`<td width="33%" style="width:33%;padding:8px;"></td>`);
       return `<tr>${cells.join('')}</tr>`;
     };
 
-    // Rangée milieu : gauche (33%) + cosmos (34%) + droite (33%)
-    const midRowHtml = () => `<tr>
-      ${wheelCellHtml(midRow[0] || null)}
-      ${cosmosCell}
-      ${wheelCellHtml(midRow[1] || null)}
-    </tr>`;
-
-    // Rangée basse : cartes restantes centrées (1 carte → colonne centrale, 2 → côte-à-côte centrées, 3 → pleine)
-    const bottomRowHtml = () => {
-      if (!bottomRow.length) return '';
-      if (bottomRow.length === 1) {
-        return `<tr>
-          <td width="33%" style="width:33%;padding:6px;"></td>
-          ${wheelCellHtml(bottomRow[0])}
-          <td width="33%" style="width:33%;padding:6px;"></td>
-        </tr>`;
-      }
-      if (bottomRow.length === 2) {
-        return `<tr>
-          ${wheelCellHtml(bottomRow[0])}
-          <td width="34%" style="width:34%;padding:6px;"></td>
-          ${wheelCellHtml(bottomRow[1])}
-        </tr>`;
-      }
-      return `<tr>${bottomRow.slice(0,3).map(c => wheelCellHtml(c)).join('')}</tr>`;
-    };
-
-    const wheelRows = cosmosCard
-      ? `${topRowHtml()}${midRowHtml()}${bottomRowHtml()}`
-      : `<tr>${cards.slice(0,3).map(c => wheelCellHtml(c)).join('')}</tr>
-         <tr>${cards.slice(3,6).map(c => wheelCellHtml(c)).join('')}</tr>
-         ${cards.length > 6 ? `<tr>${cards.slice(6).map(c => wheelCellHtml(c)).join('')}</tr>` : ''}`;
+    const cosmosRowHtml = cosmosCard ? (() => {
+      const imgPath = getImagePath(cosmosCard);
+      const src = imgPath.startsWith('http') ? imgPath : `https://oradia.fr/${imgPath.replace(/^\//, '')}`;
+      return `<tr><td colspan="3" style="padding:12px 8px;text-align:center;">
+        <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
+          <tr><td style="text-align:center;">
+            <img src="${src}" alt="${cosmosCard.name.replace(/_/g,' ')}" width="${COSMOS_W}" height="${COSMOS_H}"
+              style="display:block;width:${COSMOS_W}px;height:${COSMOS_H}px;object-fit:cover;border-radius:9px;margin:0 auto;border:2px solid rgba(212,175,55,0.55);"
+              onerror="this.style.background='${FAMILY_COLORS.memoire_cosmos}';this.removeAttribute('src');">
+            <p style="margin:8px 0 2px;color:#f0c75e;font-size:11px;font-weight:700;">${cosmosCard.name.replace(/_/g,' ')}</p>
+            <p style="margin:0;color:rgba(212,175,55,0.5);font-size:8px;letter-spacing:2px;text-transform:uppercase;">Centre du Tore</p>
+          </td></tr>
+        </table>
+      </td></tr>`;
+    })() : '';
 
     const cardsWheelHtml = `
       <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
-        ${wheelRows}
+        ${makeCardRow(wheelCards.slice(0, 3))}
+        ${makeCardRow(wheelCards.slice(3, 6))}
+        ${cosmosRowHtml}
       </table>`;
 
     // --- Section fenêtre d'observation (pré-calculée hors template literal) ---
@@ -352,6 +312,9 @@ async function handleSendEmail(req, res) {
         + closingHtml
         + '</td></tr></table></div></td></tr>';
     }
+
+    // Vérifier si déjà abonné à la newsletter — ne bloque pas l'envoi en cas d'erreur Brevo
+    const alreadySubscribed = await isBrevoSubscribed(email);
 
     // Formatage de l'analyse en paragraphes HTML
     const formatAnalysis = (text) => {
@@ -453,6 +416,7 @@ async function handleSendEmail(req, res) {
         <tr><td style="padding:0 32px;"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td style="height:1px;background:rgba(212,175,55,0.10);"></td></tr></table></td></tr>
 
         <!-- ═══ NEWSLETTER ═══ -->
+        ${!alreadySubscribed ? `
         <tr>
           <td style="padding:22px 32px;">
             <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -469,7 +433,7 @@ async function handleSendEmail(req, res) {
               </tr>
             </table>
           </td>
-        </tr>
+        </tr>` : ''}
 
         <!-- ═══ BANDEAU ORACLE PHYSIQUE ═══ -->
         <tr>
@@ -651,6 +615,28 @@ async function handleCollectEmail(req, res) {
   return res.status(200).json({ success: true });
 }
 
+// Vérifie si un email est déjà abonné à la liste Brevo (list ID 5 par défaut).
+// En cas d'erreur ou de timeout Brevo, retourne false pour ne pas bloquer l'envoi.
+async function isBrevoSubscribed(email) {
+  try {
+    const r = await fetch(`https://api.brevo.com/v3/contacts/${encodeURIComponent(email)}`, {
+      headers: { 'api-key': process.env.BREVO_API_KEY }
+    });
+    if (!r.ok) return false;
+    const contact = await r.json();
+    const listId = parseInt(process.env.BREVO_NEWSLETTER_LIST_ID || '5');
+    return Array.isArray(contact.listIds) && contact.listIds.includes(listId);
+  } catch { return false; }
+}
+
+async function handleCheckBrevo(req, res) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  const email = req.query.email || '';
+  if (!email || !email.includes('@')) return res.status(400).json({ error: 'Email invalide' });
+  const subscribed = await isBrevoSubscribed(email);
+  return res.status(200).json({ subscribed });
+}
+
 // ============ DISPATCH PRINCIPAL ============
 export default async function handler(req, res) {
   const action = req.query.action || 'send-email';
@@ -660,6 +646,7 @@ export default async function handler(req, res) {
     case 'update':        return handleUpdateTirage(req, res);
     case 'list':          return handleListTirages(req, res);
     case 'collect-email': return handleCollectEmail(req, res);
+    case 'check-brevo':   return handleCheckBrevo(req, res);
     case 'send-email':
     default:              return handleSendEmail(req, res);
   }

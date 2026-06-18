@@ -1199,11 +1199,23 @@ async function handleData(req, res) {
           availableTags: CONTACT_TAGS
         });
       }
+      // Merger les tags hardcodés avec les tags personnalisés présents dans les données
+      const knownTagValues = new Set(CONTACT_TAGS.map(t => t.value));
+      const mergedTags = [...CONTACT_TAGS];
+      (data || []).forEach(contact => {
+        (contact.tags || []).forEach(tag => {
+          if (!knownTagValues.has(tag)) {
+            knownTagValues.add(tag);
+            mergedTags.push({ value: tag, label: tag });
+          }
+        });
+      });
+
       return res.status(200).json({
         success: true,
         data: data || [],
         pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) },
-        availableTags: CONTACT_TAGS
+        availableTags: mergedTags
       });
     }
 

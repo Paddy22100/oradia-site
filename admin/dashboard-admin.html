@@ -670,6 +670,9 @@
             <div class="flex items-center justify-between mb-8 gap-3 flex-wrap">
                 <h3 class="cormorant text-2xl font-bold text-gold">Contacts Newsletter</h3>
                 <div class="flex items-center gap-3 flex-wrap">
+                    <input id="waitlistSearch" type="text" placeholder="Rechercher email ou nom…"
+                        oninput="filterWaitlistLocal()"
+                        class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-48">
                     <select id="waitlistTagFilter" onchange="loadWaitlist(1)"
                         class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
                         <option value="">Toutes les catégories</option>
@@ -1998,6 +2001,19 @@
             `).join('');
             
             updatePagination('waitlist', pagination);
+        }
+
+        function filterWaitlistLocal() {
+            const q = (document.getElementById('waitlistSearch')?.value || '').toLowerCase().trim();
+            if (!q) {
+                updateWaitlistTable(currentData.waitlist || [], currentData.waitlistPagination || {});
+                return;
+            }
+            const filtered = (currentData.waitlist || []).filter(c =>
+                (c.email || '').toLowerCase().includes(q) ||
+                (c.full_name || '').toLowerCase().includes(q)
+            );
+            updateWaitlistTable(filtered, { page: 1, limit: filtered.length, total: filtered.length, pages: 1 });
         }
 
         // ── Gestion des contacts (catégories newsletter) ──
