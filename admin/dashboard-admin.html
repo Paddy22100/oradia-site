@@ -411,6 +411,19 @@
         </div>
     </div>
 
+    <!-- Modal globale : tirages d'un contact/abonné (hors tab-panel pour rester visible depuis tous les onglets) -->
+    <div id="modalTirages" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onclick="if(event.target===this)closeTiragesModal()">
+        <div class="bg-[#07112a] border border-gold/30 rounded-2xl p-6 w-full max-w-lg shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="cormorant text-xl font-bold text-gold" id="modalTiragesTitle">Tirages</h4>
+                <button onclick="closeTiragesModal()" class="text-gold/50 hover:text-gold text-xl"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="modalTiragesBody" class="space-y-2 max-h-80 overflow-y-auto text-sm text-light-gold/80">
+                <p class="text-gold/40 text-center py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</p>
+            </div>
+        </div>
+    </div>
+
     <main class="px-6 py-8">
         <!-- ══ ONGLET : TABLEAU DE BORD ══ -->
         <div id="tab-overview" class="tab-panel active">
@@ -866,19 +879,6 @@
                 <div id="subscriptionsPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)] border-t border-gold/20"></div>
             </div>
         </section>
-
-        <!-- Modal : tirages d'un abonné -->
-        <div id="modalTirages" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onclick="if(event.target===this)closeTiragesModal()">
-            <div class="bg-[#07112a] border border-gold/30 rounded-2xl p-6 w-full max-w-lg shadow-2xl">
-                <div class="flex items-center justify-between mb-4">
-                    <h4 class="cormorant text-xl font-bold text-gold" id="modalTiragesTitle">Tirages</h4>
-                    <button onclick="closeTiragesModal()" class="text-gold/50 hover:text-gold text-xl"><i class="fas fa-times"></i></button>
-                </div>
-                <div id="modalTiragesBody" class="space-y-2 max-h-80 overflow-y-auto text-sm text-light-gold/80">
-                    <p class="text-gold/40 text-center py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</p>
-                </div>
-            </div>
-        </div>
 
         <!-- ── Section tore_emails (séquence relance freemium) ── -->
         <section class="mb-10">
