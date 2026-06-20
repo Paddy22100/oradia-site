@@ -753,37 +753,13 @@ async function handleData(req, res) {
     if (section === 'user-tirages') {
       const email = (req.query?.email || '').trim().toLowerCase();
       if (!email) return res.status(400).json({ error: 'email requis' });
-
-      // Retrouver le user_id via l'API REST GoTrue (plus fiable que auth.admin.listUsers)
-      const supabaseUrl = process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co';
-      const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY;
-      const gotoRes = await fetch(
-        `${supabaseUrl}/auth/v1/admin/users?search=${encodeURIComponent(email)}&per_page=50`,
-        { headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` } }
-      );
-      if (!gotoRes.ok) {
-        const errText = await gotoRes.text();
-        console.error('[user-tirages] GoTrue error:', gotoRes.status, errText);
-        return res.status(200).json({ success: true, data: [], debug: `gotrue_error_${gotoRes.status}` });
-      }
-      const gotoJson = await gotoRes.json();
-      const gotoUsers = gotoJson.users || [];
-      console.log(`[user-tirages] email="${email}" GoTrue users returned=${gotoUsers.length}`);
-      const authUser = gotoUsers.find(u => u.email?.toLowerCase() === email);
-      if (!authUser) {
-        console.log(`[user-tirages] no auth user found for email="${email}"`);
-        return res.status(200).json({ success: true, data: [], debug: 'no_auth_user' });
-      }
-      const userId = authUser.id;
-      console.log(`[user-tirages] found userId=${userId}, querying tirages via RPC`);
-      // SECURITY DEFINER bypasse le RLS de tirages (auth.uid() = null en contexte serverless)
+      // Jointure auth.users ↔ tirages côté SQL (SECURITY DEFINER — bypasse RLS et GoTrue)
       const { data: tirages, error: tErr } = await supabase
-        .rpc('admin_get_user_tirages', { p_user_id: userId });
+        .rpc('admin_get_tirages_by_email', { p_email: email });
       if (tErr) {
         console.error('[user-tirages] RPC error:', tErr);
         throw tErr;
       }
-      console.log(`[user-tirages] tirages found=${tirages?.length || 0}`);
       return res.status(200).json({ success: true, data: tirages || [] });
     }
 
