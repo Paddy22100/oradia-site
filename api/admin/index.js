@@ -787,7 +787,7 @@ async function handleData(req, res) {
         throw tErr;
       }
       console.log(`[user-tirages] tirages found=${tirages?.length || 0}`);
-      return res.status(200).json({ success: true, data: tirages || [] });
+      return res.status(200).json({ success: true, data: tirages || [], debug_userId: userId, debug_count: tirages?.length || 0 });
     }
 
     // ── Section preorders ──
