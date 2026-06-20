@@ -1796,14 +1796,27 @@ async function handleNewsletter(req, res) {
           .limit(100);
         if (tErr) throw tErr;
 
+        const { data: anonIntentions } = await nlSupabase2
+          .from('intentions_anonymes')
+          .select('intention, cartes, created_at')
+          .not('intention', 'is', null)
+          .neq('intention', '')
+          .order('created_at', { ascending: false })
+          .limit(100);
+
         const { data: allTirages } = await nlSupabase2
           .from('tirages')
           .select('cartes')
           .order('created_at', { ascending: false })
           .limit(200);
+        const { data: allAnon } = await nlSupabase2
+          .from('intentions_anonymes')
+          .select('cartes')
+          .order('created_at', { ascending: false })
+          .limit(200);
 
         const carteCount = {};
-        (allTirages || []).forEach(t => {
+        [...(allTirages || []), ...(allAnon || [])].forEach(t => {
           (t.cartes || []).forEach(c => { if (c) carteCount[c] = (carteCount[c] || 0) + 1; });
         });
         const topCartes = Object.entries(carteCount)
@@ -1811,7 +1824,10 @@ async function handleNewsletter(req, res) {
           .slice(0, 10)
           .map(([name, nb]) => `${name.replace(/_/g, ' ')} (${nb}x)`);
 
-        const intentions = (tiragesWithIntent || []).map(t => t.intention.trim()).filter(Boolean);
+        const intentions = [
+          ...(tiragesWithIntent || []),
+          ...(anonIntentions || [])
+        ].map(t => t.intention.trim()).filter(Boolean);
         if (intentions.length === 0) {
           return res.status(200).json({ success: true, result: null, message: 'Aucune intention enregistrée' });
         }
@@ -1849,6 +1865,16 @@ Contraintes : exactement 5 thèmes dont les pourcentages totalisent 100, exactem
             // Retire les blocs markdown si présents
             raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
             const result = JSON.parse(raw);
+            try {
+              const { logApiUsage } = require('../../lib/api-usage-tracker.js');
+              await logApiUsage({
+                apiName: 'analyze-intentions',
+                modelName: model,
+                requestTokens: aiData.usage?.input_tokens || 0,
+                responseTokens: aiData.usage?.output_tokens || 0,
+                status: 'success'
+              });
+            } catch (_) {}
             return res.status(200).json({ success: true, result, nb_intentions: intentions.length, analysed_at: new Date().toISOString() });
           } catch (e) { lastErr = e.message; }
         }
@@ -2435,6 +2461,24 @@ module.exports = async (req, res) => {
       fullPath === '/api/mondial-relay/pickup-points' || fullPath === '/api/mondial-relay/pickup-points/'
     ) {
       return await handleMondialRelayPickupPoints(req, res);
+    }
+
+    // ── Sauvegarde d'une intention anonyme (visiteur sans compte) ──
+    if (path === '/intentions' || path === '/intentions/') {
+      if (req.method !== 'POST') return res.status(405).end();
+      const body = await parseBody(req);
+      const intention = (body.intention || '').trim();
+      if (!intention) return res.status(400).json({ error: 'intention requise' });
+      const sb = createClient(
+        process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      const { error: iErr } = await sb.from('intentions_anonymes').insert({
+        intention,
+        cartes: body.cartes || null
+      });
+      if (iErr) { console.error('[intentions_anonymes]', iErr); return res.status(500).json({ error: 'Erreur sauvegarde' }); }
+      return res.status(200).json({ success: true });
     }
 
     // Route par défaut - liste des routes disponibles

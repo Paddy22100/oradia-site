@@ -4573,6 +4573,14 @@ function showToreAnalysisCTA() {
         tirages.push(entry);
         if (tirages.length > 20) tirages.splice(0, tirages.length - 20);
         localStorage.setItem('oradia_tirages_invite', JSON.stringify(tirages));
+        // Sauvegarder l'intention pour l'analyse éditoriale (pas de données perso)
+        if (intention) {
+          fetch('/api/admin/intentions', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ intention, cartes: entry.cartes })
+          }).catch(() => {});
+        }
       }
     } catch(e) {}
   })();
