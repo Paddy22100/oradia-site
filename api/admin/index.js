@@ -775,19 +775,16 @@ async function handleData(req, res) {
         return res.status(200).json({ success: true, data: [], debug: 'no_auth_user' });
       }
       const userId = authUser.id;
-      console.log(`[user-tirages] found userId=${userId}, querying tirages`);
+      console.log(`[user-tirages] found userId=${userId}, querying tirages via RPC`);
+      // SECURITY DEFINER bypasse le RLS de tirages (auth.uid() = null en contexte serverless)
       const { data: tirages, error: tErr } = await supabase
-        .from('tirages')
-        .select('id, created_at, intention, cartes')
-        .eq('user_id', userId)
-        .order('created_at', { ascending: false })
-        .limit(20);
+        .rpc('admin_get_user_tirages', { p_user_id: userId });
       if (tErr) {
-        console.error('[user-tirages] tirages query error:', tErr);
+        console.error('[user-tirages] RPC error:', tErr);
         throw tErr;
       }
       console.log(`[user-tirages] tirages found=${tirages?.length || 0}`);
-      return res.status(200).json({ success: true, data: tirages || [], debug_userId: userId, debug_count: tirages?.length || 0 });
+      return res.status(200).json({ success: true, data: tirages || [] });
     }
 
     // ── Section preorders ──
