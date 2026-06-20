@@ -753,15 +753,23 @@ async function handleData(req, res) {
     if (section === 'user-tirages') {
       const email = (req.query?.email || '').trim().toLowerCase();
       if (!email) return res.status(400).json({ error: 'email requis' });
-      // Retrouver le user_id via auth.admin (la table publique users est vide)
-      const { data: authData, error: authErr } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-      if (authErr) {
-        console.error('[user-tirages] listUsers error:', authErr);
-        throw authErr;
+
+      // Retrouver le user_id via l'API REST GoTrue (plus fiable que auth.admin.listUsers)
+      const supabaseUrl = process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co';
+      const serviceKey  = process.env.SUPABASE_SERVICE_ROLE_KEY;
+      const gotoRes = await fetch(
+        `${supabaseUrl}/auth/v1/admin/users?search=${encodeURIComponent(email)}&per_page=50`,
+        { headers: { 'apikey': serviceKey, 'Authorization': `Bearer ${serviceKey}` } }
+      );
+      if (!gotoRes.ok) {
+        const errText = await gotoRes.text();
+        console.error('[user-tirages] GoTrue error:', gotoRes.status, errText);
+        return res.status(200).json({ success: true, data: [], debug: `gotrue_error_${gotoRes.status}` });
       }
-      const allAuthUsers = authData?.users || [];
-      console.log(`[user-tirages] email="${email}" totalAuthUsers=${allAuthUsers.length}`);
-      const authUser = allAuthUsers.find(u => u.email?.toLowerCase() === email);
+      const gotoJson = await gotoRes.json();
+      const gotoUsers = gotoJson.users || [];
+      console.log(`[user-tirages] email="${email}" GoTrue users returned=${gotoUsers.length}`);
+      const authUser = gotoUsers.find(u => u.email?.toLowerCase() === email);
       if (!authUser) {
         console.log(`[user-tirages] no auth user found for email="${email}"`);
         return res.status(200).json({ success: true, data: [], debug: 'no_auth_user' });
