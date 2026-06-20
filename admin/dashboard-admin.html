@@ -203,6 +203,10 @@
                 <span>Surveillance</span>
                 <span class="ml-auto text-xs bg-red-500/20 text-red-300 rounded-full px-2 py-0.5" id="nav-badge-monitoring"></span>
             </div>
+            <div class="nav-item" onclick="showTab('insights')" id="nav-insights">
+                <i class="fas fa-lightbulb w-4 text-center"></i>
+                <span>Insights</span>
+            </div>
         </nav>
 
         <!-- Footer sidebar -->
@@ -1456,6 +1460,54 @@
         </section>
         </div><!-- /tab-monitoring -->
 
+        <!-- ── INSIGHTS ── -->
+        <div id="tab-insights" class="tab-panel">
+            <div class="max-w-3xl mx-auto space-y-6">
+                <!-- Bouton analyse -->
+                <div class="flex items-center justify-between">
+                    <p class="text-gold/60 text-sm" id="insights-meta"></p>
+                    <button onclick="analyzeIntentions()" id="btn-analyze" class="flex items-center gap-2 bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold px-5 py-2 rounded-xl text-sm font-medium transition">
+                        <i class="fas fa-lightbulb"></i> Analyser les intentions
+                    </button>
+                </div>
+
+                <!-- État initial -->
+                <div id="insights-empty" class="text-center text-gold/40 py-20 text-sm">
+                    Cliquez sur "Analyser les intentions" pour générer les insights à partir des tirages.
+                </div>
+
+                <!-- Résultats -->
+                <div id="insights-result" class="hidden space-y-6">
+                    <!-- Thèmes -->
+                    <div class="bg-white/3 border border-gold/10 rounded-2xl p-6">
+                        <h3 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-chart-pie text-gold/60"></i> Thèmes dominants</h3>
+                        <div id="insights-themes" class="space-y-3"></div>
+                    </div>
+                    <!-- Besoins -->
+                    <div class="bg-white/3 border border-gold/10 rounded-2xl p-6">
+                        <h3 class="text-gold font-semibold mb-3 flex items-center gap-2"><i class="fas fa-heart text-gold/60"></i> Besoins récurrents</h3>
+                        <ul id="insights-besoins" class="space-y-2 text-gold/80 text-sm list-disc list-inside"></ul>
+                    </div>
+                    <!-- Cartes dominantes -->
+                    <div class="bg-white/3 border border-gold/10 rounded-2xl p-6">
+                        <h3 class="text-gold font-semibold mb-3 flex items-center gap-2"><i class="fas fa-layer-group text-gold/60"></i> Cartes les plus tirées</h3>
+                        <div id="insights-cartes" class="flex flex-wrap gap-2"></div>
+                    </div>
+                    <!-- Suggestions newsletter -->
+                    <div class="bg-white/3 border border-gold/10 rounded-2xl p-6">
+                        <h3 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-envelope text-gold/60"></i> Suggestions de newsletter</h3>
+                        <div id="insights-suggestions" class="space-y-3"></div>
+                    </div>
+                </div>
+
+                <!-- Loader -->
+                <div id="insights-loader" class="hidden text-center py-20">
+                    <i class="fas fa-spinner fa-spin text-gold/50 text-2xl mb-3 block"></i>
+                    <p class="text-gold/40 text-sm">Analyse en cours…</p>
+                </div>
+            </div>
+        </div><!-- /tab-insights -->
+
     </main>
     </div><!-- /main-content -->
 
@@ -1472,7 +1524,8 @@
             support:         'Support · Témoignages · Suggestions',
             synchronicity:   'Étude — Synchronicités',
             costs:           'Coûts du site',
-            monitoring:      'Surveillance du site'
+            monitoring:      'Surveillance du site',
+            insights:        'Insights — Intentions de tirages'
         };
 
         function showTab(name) {
@@ -4603,6 +4656,80 @@
             } catch (e) {
                 console.error('[Admin] downloadExport error:', e);
                 alert('Erreur lors de l\'export.');
+            }
+        }
+
+        async function analyzeIntentions() {
+            const btn = document.getElementById('btn-analyze');
+            const loader = document.getElementById('insights-loader');
+            const empty = document.getElementById('insights-empty');
+            const result = document.getElementById('insights-result');
+            const meta = document.getElementById('insights-meta');
+
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyse…';
+            empty.classList.add('hidden');
+            result.classList.add('hidden');
+            loader.classList.remove('hidden');
+
+            try {
+                const res = await adminFetch('/api/admin?section=newsletter&action=analyze-intentions', { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+                if (!data.result) {
+                    empty.textContent = data.message || 'Aucune intention enregistrée.';
+                    empty.classList.remove('hidden');
+                    return;
+                }
+                const r = data.result;
+                // Meta
+                const d = new Date(data.analysed_at);
+                meta.textContent = `${data.nb_intentions} intentions analysées — ${d.toLocaleDateString('fr-FR')} à ${d.toLocaleTimeString('fr-FR', {hour:'2-digit',minute:'2-digit'})}`;
+
+                // Thèmes
+                const themesEl = document.getElementById('insights-themes');
+                themesEl.innerHTML = (r.themes || []).map(t => `
+                    <div>
+                        <div class="flex justify-between text-sm mb-1">
+                            <span class="text-gold/90 font-medium">${t.theme}</span>
+                            <span class="text-gold/50">${t.pourcentage}%</span>
+                        </div>
+                        <div class="w-full bg-white/5 rounded-full h-1.5 mb-1">
+                            <div class="bg-gold/60 h-1.5 rounded-full" style="width:${t.pourcentage}%"></div>
+                        </div>
+                        <p class="text-gold/50 text-xs">${t.description || ''}</p>
+                    </div>`).join('');
+
+                // Besoins
+                const besoinsEl = document.getElementById('insights-besoins');
+                besoinsEl.innerHTML = (r.besoins || []).map(b => `<li>${b}</li>`).join('');
+
+                // Cartes
+                const cartesEl = document.getElementById('insights-cartes');
+                cartesEl.innerHTML = (r.cartes_dominantes || []).map(c => `<span class="bg-gold/10 border border-gold/20 text-gold/80 text-xs px-3 py-1 rounded-full">${c}</span>`).join('');
+
+                // Suggestions
+                const suggestEl = document.getElementById('insights-suggestions');
+                suggestEl.innerHTML = (r.suggestions_newsletter || []).map((s, i) => `
+                    <div class="flex items-start justify-between gap-3 bg-white/3 border border-gold/10 rounded-xl p-4">
+                        <div>
+                            <p class="text-gold/90 font-medium text-sm mb-1">${s.sujet}</p>
+                            <p class="text-gold/50 text-xs">${s.angle || ''}</p>
+                        </div>
+                        <button onclick="navigator.clipboard.writeText(${JSON.stringify(s.sujet)}).then(()=>{this.innerHTML='<i class=\\'fas fa-check\\'></i>';setTimeout(()=>{this.innerHTML='<i class=\\'fas fa-copy\\'></i>'},1500)})" class="shrink-0 text-gold/40 hover:text-gold transition text-sm pt-0.5" title="Copier">
+                            <i class="fas fa-copy"></i>
+                        </button>
+                    </div>`).join('');
+
+                result.classList.remove('hidden');
+            } catch (e) {
+                console.error('[insights]', e);
+                empty.textContent = 'Erreur : ' + e.message;
+                empty.classList.remove('hidden');
+            } finally {
+                loader.classList.add('hidden');
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-lightbulb"></i> Analyser les intentions';
             }
         }
 

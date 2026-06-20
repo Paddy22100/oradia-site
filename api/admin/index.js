@@ -1778,6 +1778,81 @@ async function handleNewsletter(req, res) {
         return res.status(502).json({ error: 'Erreur lors de la génération IA', details: lastErr });
       }
 
+      // ── Analyse des intentions de tirages (insights newsletter) ──
+      if (action === 'analyze-intentions') {
+        if (!process.env.ANTHROPIC_API_KEY) {
+          return res.status(500).json({ error: 'ANTHROPIC_API_KEY non configurée' });
+        }
+        const nlSupabase2 = createClient(
+          process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+          process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+        const { data: tiragesWithIntent, error: tErr } = await nlSupabase2
+          .from('tirages')
+          .select('intention, cartes, created_at')
+          .not('intention', 'is', null)
+          .neq('intention', '')
+          .order('created_at', { ascending: false })
+          .limit(100);
+        if (tErr) throw tErr;
+
+        const { data: allTirages } = await nlSupabase2
+          .from('tirages')
+          .select('cartes')
+          .order('created_at', { ascending: false })
+          .limit(200);
+
+        const carteCount = {};
+        (allTirages || []).forEach(t => {
+          (t.cartes || []).forEach(c => { if (c) carteCount[c] = (carteCount[c] || 0) + 1; });
+        });
+        const topCartes = Object.entries(carteCount)
+          .sort((a, b) => b[1] - a[1])
+          .slice(0, 10)
+          .map(([name, nb]) => `${name.replace(/_/g, ' ')} (${nb}x)`);
+
+        const intentions = (tiragesWithIntent || []).map(t => t.intention.trim()).filter(Boolean);
+        if (intentions.length === 0) {
+          return res.status(200).json({ success: true, result: null, message: 'Aucune intention enregistrée' });
+        }
+
+        const prompt = `Tu es un assistant éditorial pour Oradia, un oracle de développement personnel basé sur le Tore.
+
+Voici ${intentions.length} intentions posées par des utilisateurs lors de leurs tirages :
+
+${intentions.map((i, n) => `${n + 1}. "${i}"`).join('\n')}
+
+Cartes les plus tirées : ${topCartes.join(', ')}
+
+Réponds UNIQUEMENT avec un JSON valide, sans markdown, sans blocs de code :
+{"themes":[{"theme":"nom","pourcentage":30,"description":"explication courte"}],"besoins":["besoin 1","besoin 2","besoin 3"],"suggestions_newsletter":[{"sujet":"Titre newsletter","angle":"angle éditorial"},{"sujet":"...","angle":"..."},{"sujet":"...","angle":"..."}],"cartes_dominantes":${JSON.stringify(topCartes.slice(0, 5))}}
+
+Contraintes : exactement 5 thèmes dont les pourcentages totalisent 100, exactement 3 besoins, exactement 3 suggestions_newsletter.`;
+
+        const models = [process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5', 'claude-3-5-haiku-20241022'];
+        let lastErr;
+        for (const model of models) {
+          try {
+            const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': process.env.ANTHROPIC_API_KEY,
+                'anthropic-version': '2023-06-01'
+              },
+              body: JSON.stringify({ model, max_tokens: 1200, messages: [{ role: 'user', content: prompt }] }),
+              signal: AbortSignal.timeout(30000)
+            });
+            if (!aiRes.ok) { lastErr = await aiRes.text(); continue; }
+            const aiData = await aiRes.json();
+            const raw = (aiData.content || []).map(b => b.text || '').join('').trim();
+            const result = JSON.parse(raw);
+            return res.status(200).json({ success: true, result, nb_intentions: intentions.length, analysed_at: new Date().toISOString() });
+          } catch (e) { lastErr = e.message; }
+        }
+        return res.status(502).json({ error: 'Erreur analyse IA', details: lastErr });
+      }
+
       // ── Sauvegarde d'un brouillon (newsletter ou promo) ──
       if (action === 'save') {
         const { id, subject, content, intention, type, images, extra } = body;
