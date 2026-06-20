@@ -753,17 +753,12 @@ async function handleData(req, res) {
     if (section === 'user-tirages') {
       const email = (req.query?.email || '').trim().toLowerCase();
       if (!email) return res.status(400).json({ error: 'email requis' });
-      // Retrouver le user_id via auth.users (email) puis ses tirages
-      const { data: users, error: uErr } = await supabase
-        .from('users')
-        .select('id')
-        .eq('email', email)
-        .limit(1);
-      if (uErr) throw uErr;
-      if (!users || !users.length) {
-        return res.status(200).json({ success: true, data: [] });
-      }
-      const userId = users[0].id;
+      // Retrouver le user_id via auth.admin (la table publique users est vide)
+      const { data: authData, error: authErr } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+      if (authErr) throw authErr;
+      const authUser = (authData?.users || []).find(u => u.email?.toLowerCase() === email);
+      if (!authUser) return res.status(200).json({ success: true, data: [] });
+      const userId = authUser.id;
       const { data: tirages, error: tErr } = await supabase
         .from('tirages')
         .select('id, created_at, intention, cartes')
