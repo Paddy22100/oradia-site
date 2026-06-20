@@ -1435,12 +1435,6 @@
                 <div id="uptimeContent" class="space-y-3 text-sm">—</div>
             </div>
 
-            <!-- Supabase : usage et sauvegardes -->
-            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5 mb-6">
-                <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider">Supabase — usage &amp; sauvegardes</h4>
-                <div id="supabaseStatusContent" class="space-y-3 text-sm">—</div>
-            </div>
-
             <!-- Export des données -->
             <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5">
                 <h4 class="text-gold text-sm font-semibold mb-2 uppercase tracking-wider">Export des données</h4>
@@ -4459,7 +4453,6 @@
             setEl('auditTopIssues', '<span class="animate-pulse">…</span>');
             setEl('auditHistory', '<span class="animate-pulse">…</span>');
             setEl('uptimeContent', '<span class="animate-pulse">…</span>');
-            setEl('supabaseStatusContent', '<span class="animate-pulse">…</span>');
 
             const scoreColor = s => s >= 80 ? '#22c55e' : s >= 60 ? '#f59e0b' : '#ef4444';
             const scoreGrade = s => s >= 90 ? 'A' : s >= 80 ? 'B' : s >= 60 ? 'C' : s >= 40 ? 'D' : 'F';
@@ -4573,62 +4566,6 @@
 
                 if (badge) badge.textContent = alertCount > 0 ? alertCount : '';
 
-                // Supabase : usage & sauvegardes
-                const sb = d.supabaseStatus;
-                if (!sb || !sb.configured) {
-                    setEl('supabaseStatusContent', `
-                        <p class="text-light-gold/40 text-sm">Le suivi Supabase n'est pas encore connecté.</p>
-                        <p class="text-light-gold/30 text-xs mt-1">Pour l'activer : crée un token d'accès personnel sur <span class="text-gold">supabase.com &gt; Account &gt; Access Tokens</span>, puis ajoute-le comme variable d'environnement <code class="text-gold">SUPABASE_ACCESS_TOKEN</code> dans les paramètres Vercel du projet, et redéploie.</p>
-                        <p class="text-light-gold/30 text-xs mt-2">En attendant, consulte l'usage directement sur <span class="text-gold">Supabase &gt; Project Settings &gt; Usage</span> et les sauvegardes sur <span class="text-gold">Database &gt; Backups</span>.</p>
-                    `);
-                } else if (sb.error && !sb.usage && !sb.backups) {
-                    setEl('supabaseStatusContent', `<p class="text-red-400 text-sm">Erreur Supabase : ${sb.error}</p>`);
-                } else {
-                    let html = '';
-
-                    if (sb.usage) {
-                        const fmtBytes = b => b == null ? '—' : `${(b / (1024*1024)).toFixed(1)} Mo`;
-                        const u = sb.usage;
-                        html += `
-                            <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
-                                <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-2 text-center">
-                                    <div class="text-gold font-bold">${fmtBytes(u.db_size?.usage)}</div>
-                                    <div class="text-light-gold/40 text-xs">Base de données</div>
-                                </div>
-                                <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-2 text-center">
-                                    <div class="text-gold font-bold">${fmtBytes(u.storage_size?.usage)}</div>
-                                    <div class="text-light-gold/40 text-xs">Stockage fichiers</div>
-                                </div>
-                                <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-2 text-center">
-                                    <div class="text-gold font-bold">${u.monthly_active_users?.usage ?? '—'}</div>
-                                    <div class="text-light-gold/40 text-xs">Utilisateurs actifs/mois</div>
-                                </div>
-                                <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-2 text-center">
-                                    <div class="text-gold font-bold">${fmtBytes(u.egress?.usage)}</div>
-                                    <div class="text-light-gold/40 text-xs">Bande passante (egress)</div>
-                                </div>
-                            </div>
-                        `;
-                    }
-
-                    if (sb.backups) {
-                        html += `<div class="text-light-gold/60 text-xs mb-2">Sauvegardes automatiques (PITR) : <span class="${sb.backups.pitrEnabled ? 'text-green-400' : 'text-orange-400'}">${sb.backups.pitrEnabled ? 'activées' : 'désactivées (plan gratuit)'}</span></div>`;
-                        html += sb.backups.backups.length === 0
-                            ? '<p class="text-light-gold/30 text-sm italic">Aucune sauvegarde listée par l\'API Supabase.</p>'
-                            : sb.backups.backups.map(b => `
-                                <div class="flex items-center justify-between border-b border-gold/10 pb-2 last:border-0 last:pb-0">
-                                    <div class="text-light-gold/70">${b.createdAt ? new Date(b.createdAt).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</div>
-                                    <div class="text-light-gold/40 text-xs">${b.status || ''} ${b.isPhysical ? '(physique)' : ''}</div>
-                                </div>
-                            `).join('');
-                    }
-
-                    if (sb.error) {
-                        html += `<p class="text-orange-400 text-xs mt-2">Avertissement : ${sb.error}</p>`;
-                    }
-
-                    setEl('supabaseStatusContent', html || '<p class="text-light-gold/40 text-sm">Aucune donnée disponible.</p>');
-                }
 
             } catch (e) {
                 console.error('[Admin] loadMonitoring error:', e);

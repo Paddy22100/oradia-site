@@ -1068,48 +1068,11 @@ async function handleData(req, res) {
         }
       }
 
-      // État Supabase (usage + sauvegardes, nécessite SUPABASE_ACCESS_TOKEN — token API Management Supabase)
-      let supabaseStatus = null;
-      const SUPABASE_ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
-      const projectRef = (process.env.SUPABASE_URL || '').match(/https?:\/\/([^.]+)\.supabase\.co/)?.[1];
-      if (!SUPABASE_ACCESS_TOKEN || !projectRef) {
-        supabaseStatus = { configured: false };
-      } else {
-        try {
-          const mgmtHeaders = { Authorization: `Bearer ${SUPABASE_ACCESS_TOKEN}` };
-
-          const [usageRes, backupsRes] = await Promise.all([
-            fetch(`https://api.supabase.com/v1/projects/${projectRef}/usage`, { headers: mgmtHeaders }),
-            fetch(`https://api.supabase.com/v1/projects/${projectRef}/database/backups`, { headers: mgmtHeaders })
-          ]);
-
-          const usageData = usageRes.ok ? await usageRes.json() : null;
-          const backupsData = backupsRes.ok ? await backupsRes.json() : null;
-
-          supabaseStatus = {
-            configured: true,
-            usage: usageData,
-            backups: backupsData ? {
-              pitrEnabled: !!backupsData.pitr_enabled,
-              backups: (backupsData.backups || []).slice(0, 5).map(b => ({
-                status: b.status,
-                isPhysical: !!b.is_physical_backup,
-                createdAt: b.inserted_at
-              }))
-            } : null,
-            error: (!usageRes.ok || !backupsRes.ok) ? `Erreur API Supabase (${usageRes.status}/${backupsRes.status})` : null
-          };
-        } catch (e) {
-          supabaseStatus = { configured: true, error: e.message };
-        }
-      }
-
       return res.status(200).json({
         success: true,
         data: {
           audits: auditRows || [],
-          uptime,
-          supabaseStatus
+          uptime
         }
       });
     }
