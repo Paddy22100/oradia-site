@@ -2049,7 +2049,7 @@
                             <button onclick='openContactModal(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="text-gold/70 hover:text-gold transition" title="Modifier">
                                 <i class="fas fa-pen"></i>
                             </button>
-                            <button onclick="viewTirages('${item.email.replace(/\\/g,'\\\\').replace(/'/g,"\\'")}')" class="text-gold/60 hover:text-gold transition" title="Voir les tirages">
+                            <button data-email="${escapeHtmlFront(item.email || '')}" onclick="viewTirages(this.dataset.email)" class="text-gold/60 hover:text-gold transition" title="Voir les tirages">
                                 <i class="fas fa-layer-group"></i>
                             </button>
                             <button onclick="deleteContact('${item.id}')" class="text-red-400/70 hover:text-red-400 transition" title="Supprimer">
