@@ -755,17 +755,30 @@ async function handleData(req, res) {
       if (!email) return res.status(400).json({ error: 'email requis' });
       // Retrouver le user_id via auth.admin (la table publique users est vide)
       const { data: authData, error: authErr } = await supabase.auth.admin.listUsers({ perPage: 1000 });
-      if (authErr) throw authErr;
-      const authUser = (authData?.users || []).find(u => u.email?.toLowerCase() === email);
-      if (!authUser) return res.status(200).json({ success: true, data: [] });
+      if (authErr) {
+        console.error('[user-tirages] listUsers error:', authErr);
+        throw authErr;
+      }
+      const allAuthUsers = authData?.users || [];
+      console.log(`[user-tirages] email="${email}" totalAuthUsers=${allAuthUsers.length}`);
+      const authUser = allAuthUsers.find(u => u.email?.toLowerCase() === email);
+      if (!authUser) {
+        console.log(`[user-tirages] no auth user found for email="${email}"`);
+        return res.status(200).json({ success: true, data: [], debug: 'no_auth_user' });
+      }
       const userId = authUser.id;
+      console.log(`[user-tirages] found userId=${userId}, querying tirages`);
       const { data: tirages, error: tErr } = await supabase
         .from('tirages')
         .select('id, created_at, intention, cartes')
         .eq('user_id', userId)
         .order('created_at', { ascending: false })
         .limit(20);
-      if (tErr) throw tErr;
+      if (tErr) {
+        console.error('[user-tirages] tirages query error:', tErr);
+        throw tErr;
+      }
+      console.log(`[user-tirages] tirages found=${tirages?.length || 0}`);
       return res.status(200).json({ success: true, data: tirages || [] });
     }
 
