@@ -1845,7 +1845,9 @@ Contraintes : exactement 5 thèmes dont les pourcentages totalisent 100, exactem
             });
             if (!aiRes.ok) { lastErr = await aiRes.text(); continue; }
             const aiData = await aiRes.json();
-            const raw = (aiData.content || []).map(b => b.text || '').join('').trim();
+            let raw = (aiData.content || []).map(b => b.text || '').join('').trim();
+            // Retire les blocs markdown si présents
+            raw = raw.replace(/^```(?:json)?\s*/i, '').replace(/\s*```\s*$/i, '').trim();
             const result = JSON.parse(raw);
             return res.status(200).json({ success: true, result, nb_intentions: intentions.length, analysed_at: new Date().toISOString() });
           } catch (e) { lastErr = e.message; }
