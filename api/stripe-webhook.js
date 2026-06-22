@@ -781,7 +781,7 @@ async function handleCalWebhook(req, res) {
                     sender: { email: process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr', name: 'Rudy · Oradia' },
                     to: [{ email: clientEmail, name: clientName }],
                     replyTo: { email: 'contact@oradia.fr', name: 'Rudy · Oradia' },
-                    subject: `✦ Votre guidance Oradia est confirmée — ${dateStr}`,
+                    subject: `✦ Votre lien de connexion — Guidance Oradia du ${dateStr}`,
                     htmlContent: `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#050a14;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#050a14;padding:48px 20px;">
@@ -794,7 +794,8 @@ async function handleCalWebhook(req, res) {
         </td></tr>
         <tr><td style="padding:0 40px 32px;">
           <p style="color:#e8e9eb;font-family:Georgia,serif;font-size:16px;line-height:1.8;">${clientName ? clientName + ',' : 'Bonjour,'}</p>
-          <p style="color:#d1d5db;font-family:Georgia,serif;font-size:15px;line-height:1.9;">Votre guidance de <strong style="color:#f0c75e;">${duration} minutes</strong> est confirmée.</p>
+          <p style="color:rgba(200,192,168,0.55);font-family:Georgia,serif;font-size:13px;line-height:1.7;font-style:italic;margin-bottom:16px;">Vous avez reçu un email de confirmation de Cal.com avec l'invitation calendrier. Cet email contient votre lien personnel pour rejoindre la visio.</p>
+          <p style="color:#d1d5db;font-family:Georgia,serif;font-size:15px;line-height:1.9;">Votre guidance de <strong style="color:#f0c75e;">${duration} minutes</strong> est prévue le <strong style="color:#f0c75e;">${dateStr}</strong>.</p>
           <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:4px;margin:24px 0;">
             <tr><td style="padding:24px;">
               <p style="margin:0 0 8px;color:rgba(212,175,55,0.6);font-family:Georgia,serif;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;">Date &amp; heure</p>
