@@ -121,6 +121,9 @@ async function sendToreSubscriptionEmail({ toEmail, toName, tempPassword, plan }
 
 
 const handler = async (req, res) => {
+    if ((req.url || '').includes('cal-webhook')) {
+        return handleCalWebhook(req, res);
+    }
     try {
         validateEnvironment();
 
@@ -698,6 +701,159 @@ async function processEvent(event) {
                 break;
         }
     }
+
+async function handleCalWebhook(req, res) {
+    const chunks = [];
+    for await (const chunk of req) chunks.push(chunk);
+    const rawBody = Buffer.concat(chunks);
+
+    const sig = req.headers['x-cal-signature-256'];
+    const secret = process.env.CAL_WEBHOOK_SECRET;
+    if (secret) {
+        const expected = crypto.createHmac('sha256', secret).update(rawBody).digest('hex');
+        if (sig !== expected) {
+            console.error('[cal-webhook] Signature invalide');
+            return res.status(401).json({ error: 'Invalid signature' });
+        }
+    }
+
+    let body;
+    try { body = JSON.parse(rawBody.toString()); }
+    catch (e) { return res.status(400).json({ error: 'Invalid JSON' }); }
+
+    const trigger = body.triggerEvent;
+    const payload = body.payload || {};
+    const bookingUid = payload.uid || '';
+    const attendee = (payload.attendees || [])[0] || {};
+    const clientEmail = attendee.email || '';
+    const clientName = attendee.name || '';
+    const duration = payload.length || 30;
+    const amount = duration === 60 ? 6000 : 3000;
+    const scheduledAt = payload.startTime || null;
+
+    console.log(`[cal-webhook] ${trigger} — uid:${bookingUid} email:${clientEmail}`);
+
+    const supabase = getSupabaseClient();
+
+    if (trigger === 'BOOKING_PAID') {
+        const jitsiRoom = 'oradia-' + crypto.randomBytes(8).toString('hex');
+        const jitsiUrl = `https://meet.jit.si/${jitsiRoom}`;
+
+        let toreHistory = null;
+        if (clientEmail) {
+            try {
+                const { data: tirages } = await supabase.rpc('admin_get_tirages_by_email', { p_email: clientEmail });
+                if (tirages && tirages.length > 0) toreHistory = tirages;
+            } catch (_) {}
+        }
+
+        const { data: guidance, error: gErr } = await supabase
+            .from('guidances')
+            .insert({
+                client_email: clientEmail,
+                client_name: clientName,
+                duration,
+                amount,
+                scheduled_at: scheduledAt,
+                jitsi_room: jitsiRoom,
+                jitsi_url: jitsiUrl,
+                cal_booking_uid: bookingUid,
+                status: 'confirmed',
+                tore_history: toreHistory
+            })
+            .select()
+            .single();
+
+        if (gErr) {
+            console.error('[cal-webhook] Erreur insertion guidance:', gErr.message);
+            return res.status(500).json({ error: 'DB error' });
+        }
+
+        const dateStr = scheduledAt
+            ? new Date(scheduledAt).toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' })
+            : '—';
+
+        if (clientEmail && process.env.BREVO_API_KEY) {
+            await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+                body: JSON.stringify({
+                    sender: { email: process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr', name: 'Rudy · Oradia' },
+                    to: [{ email: clientEmail, name: clientName }],
+                    replyTo: { email: 'contact@oradia.fr', name: 'Rudy · Oradia' },
+                    subject: `✦ Votre guidance Oradia est confirmée — ${dateStr}`,
+                    htmlContent: `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>
+<body style="margin:0;padding:0;background:#050a14;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:#050a14;padding:48px 20px;">
+    <tr><td align="center">
+      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background:linear-gradient(135deg,#0a1628,#051428);border:1px solid rgba(212,175,55,0.3);border-radius:4px;">
+        <tr><td align="center" style="padding:48px 40px 24px;">
+          <p style="margin:0 0 6px;color:rgba(212,175,55,0.5);font-family:Georgia,serif;font-size:11px;letter-spacing:0.45em;text-transform:uppercase;">Guidance par visio</p>
+          <h1 style="margin:0;color:#f0c75e;font-family:Georgia,serif;font-size:36px;font-weight:300;letter-spacing:2px;">ORADIA</h1>
+          <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:20px auto;"></div>
+        </td></tr>
+        <tr><td style="padding:0 40px 32px;">
+          <p style="color:#e8e9eb;font-family:Georgia,serif;font-size:16px;line-height:1.8;">${clientName ? clientName + ',' : 'Bonjour,'}</p>
+          <p style="color:#d1d5db;font-family:Georgia,serif;font-size:15px;line-height:1.9;">Votre guidance de <strong style="color:#f0c75e;">${duration} minutes</strong> est confirmée.</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.2);border-radius:4px;margin:24px 0;">
+            <tr><td style="padding:24px;">
+              <p style="margin:0 0 8px;color:rgba(212,175,55,0.6);font-family:Georgia,serif;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;">Date &amp; heure</p>
+              <p style="margin:0 0 20px;color:#f0c75e;font-family:Georgia,serif;font-size:17px;">${dateStr}</p>
+              <p style="margin:0 0 8px;color:rgba(212,175,55,0.6);font-family:Georgia,serif;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;">Lien de connexion</p>
+              <a href="${jitsiUrl}" style="color:#f0c75e;font-family:Georgia,serif;font-size:14px;word-break:break-all;">${jitsiUrl}</a>
+            </td></tr>
+          </table>
+          <p style="color:#d1d5db;font-family:Georgia,serif;font-size:14px;line-height:1.8;">Cliquez sur le lien au moment du rendez-vous pour rejoindre la visio. Aucune installation requise.</p>
+          <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
+            <tr><td align="center">
+              <a href="${jitsiUrl}" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a1628;font-family:Georgia,serif;font-size:16px;font-weight:600;text-decoration:none;padding:16px 40px;border-radius:50px;">Rejoindre la visio</a>
+            </td></tr>
+          </table>
+        </td></tr>
+        <tr><td align="center" style="padding:24px 40px 48px;border-top:1px solid rgba(212,175,55,0.1);">
+          <p style="margin:0 0 4px;color:#f0c75e;font-family:Georgia,serif;font-size:26px;">Rudy</p>
+          <p style="margin:0;color:rgba(212,175,55,0.4);font-family:Georgia,serif;font-size:12px;font-style:italic;">Fondateur d'ORADIA</p>
+        </td></tr>
+      </table>
+    </td></tr>
+  </table>
+</body></html>`,
+                    textContent: `Guidance Oradia confirmée\n\nDate : ${dateStr}\nDurée : ${duration} minutes\nLien Jitsi : ${jitsiUrl}\n\nCliquez sur le lien au moment du rendez-vous.\n\nOradia — oradia.fr`
+                })
+            }).catch(e => console.error('[cal-webhook] Email client:', e.message));
+        }
+
+        if (process.env.BREVO_API_KEY) {
+            await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+                body: JSON.stringify({
+                    sender: { email: process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr', name: 'Oradia Système' },
+                    to: [{ email: 'contact@oradia.fr', name: 'Rudy' }],
+                    subject: `[Admin] Nouvelle guidance ${duration}min — ${clientName || clientEmail}`,
+                    htmlContent: `<p>Nouvelle guidance réservée :</p><ul><li><strong>Client :</strong> ${clientName} (${clientEmail})</li><li><strong>Durée :</strong> ${duration} min — ${amount / 100}€</li><li><strong>Date :</strong> ${dateStr}</li><li><strong>Jitsi :</strong> <a href="${jitsiUrl}">${jitsiUrl}</a></li><li><strong>Historique tirages :</strong> ${toreHistory ? toreHistory.length + ' tirage(s)' : 'aucun'}</li></ul>`,
+                    textContent: `Nouvelle guidance\n${clientName} — ${duration}min\n${dateStr}\n${jitsiUrl}`
+                })
+            }).catch(e => console.error('[cal-webhook] Email admin:', e.message));
+        }
+
+        console.log(`[cal-webhook] Guidance créée: ${guidance.id}`);
+    }
+
+    else if (trigger === 'BOOKING_CANCELLED') {
+        const { error } = await supabase.from('guidances').update({ status: 'cancelled' }).eq('cal_booking_uid', bookingUid);
+        if (error) console.error('[cal-webhook] Cancel guidance:', error.message);
+        else console.log(`[cal-webhook] Guidance annulée: ${bookingUid}`);
+    }
+
+    else if (trigger === 'BOOKING_RESCHEDULED') {
+        const { error } = await supabase.from('guidances').update({ scheduled_at: scheduledAt, status: 'confirmed' }).eq('cal_booking_uid', bookingUid);
+        if (error) console.error('[cal-webhook] Reschedule guidance:', error.message);
+        else console.log(`[cal-webhook] Guidance reprogrammée: ${bookingUid}`);
+    }
+
+    return res.status(200).json({ received: true });
+}
 
 export default handler;
 

@@ -173,6 +173,11 @@
                 <span>Abonnements</span>
                 <span class="ml-auto text-xs bg-gold/20 text-gold rounded-full px-2 py-0.5" id="nav-badge-subscriptions"></span>
             </div>
+            <div class="nav-item" onclick="showTab('guidances')" id="nav-guidances">
+                <i class="fas fa-video w-4 text-center"></i>
+                <span>Guidances</span>
+                <span class="ml-auto text-xs bg-teal-500/20 text-teal-300 rounded-full px-2 py-0.5 hidden" id="nav-badge-guidances"></span>
+            </div>
 
             <p class="text-gold/50 text-xs uppercase tracking-widest px-5 mt-5 mb-2">Contenu</p>
             <div class="nav-item" onclick="showTab('newsletter')" id="nav-newsletter">
@@ -916,6 +921,47 @@
         </section>
         </div><!-- /tab-subscriptions -->
 
+        <!-- ══ ONGLET : GUIDANCES PAR VISIO ══ -->
+        <div id="tab-guidances" class="tab-panel">
+        <section class="mb-10">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+                <div>
+                    <h3 class="cormorant text-2xl font-bold text-gold">Guidances par visio</h3>
+                    <p class="text-light-gold/50 text-sm mt-1">Séances réservées via Cal.com</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <select id="guidanceStatusFilter" onchange="loadGuidances(1)" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                        <option value="">Tous les statuts</option>
+                        <option value="confirmed">Confirmées</option>
+                        <option value="completed">Terminées</option>
+                        <option value="cancelled">Annulées</option>
+                        <option value="pending">En attente</option>
+                    </select>
+                    <button onclick="loadGuidances(1)" class="bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-lg px-4 py-2 text-sm hover:bg-teal-500/30 transition">
+                        <i class="fas fa-sync-alt mr-1"></i>Actualiser
+                    </button>
+                </div>
+            </div>
+
+            <div id="guidances-list" class="space-y-3">
+                <p class="text-gold/30 text-sm italic text-center py-12">Chargement…</p>
+            </div>
+
+            <div id="guidances-pagination" class="flex justify-center gap-2 mt-6"></div>
+
+            <!-- Modal tirages client -->
+            <div id="modalGuidanceTirages" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onclick="if(event.target===this)document.getElementById('modalGuidanceTirages').classList.add('hidden')">
+                <div class="bg-[#0a1628] border border-gold/20 rounded-2xl p-6 max-w-lg w-full mx-4 max-h-[80vh] overflow-y-auto">
+                    <div class="flex justify-between items-center mb-4">
+                        <h3 class="text-gold font-semibold" id="modalGuidanceTiragesTitle">Tirages du client</h3>
+                        <button onclick="document.getElementById('modalGuidanceTirages').classList.add('hidden')" class="text-gold/40 hover:text-gold"><i class="fas fa-times"></i></button>
+                    </div>
+                    <div id="modalGuidanceTiragesContent" class="space-y-3 text-sm"></div>
+                </div>
+            </div>
+        </section>
+        </div><!-- /tab-guidances -->
+
         <!-- ══ ONGLET : JOURNAL ══ -->
         <div id="tab-journal" class="tab-panel">
         <section class="mb-10">
@@ -1518,6 +1564,7 @@
             support:         'Support · Témoignages · Suggestions',
             synchronicity:   'Étude — Synchronicités',
             costs:           'Coûts du site',
+            guidances:       'Guidances par visio',
             monitoring:      'Surveillance du site',
             insights:        'Insights — Intentions de tirages'
         };
@@ -1538,6 +1585,7 @@
             if (name === 'synchronicity')  loadSynchronicity();
             if (name === 'costs')          loadCosts();
             if (name === 'monitoring')     loadMonitoring();
+            if (name === 'guidances')      loadGuidances();
         }
 
         // ── État global
@@ -4594,6 +4642,122 @@
                 console.error('[Admin] downloadExport error:', e);
                 alert('Erreur lors de l\'export.');
             }
+        }
+
+        const GUIDANCE_STATUS_LABELS = { pending: 'En attente', confirmed: 'Confirmée', completed: 'Terminée', cancelled: 'Annulée' };
+        const GUIDANCE_STATUS_COLORS = { pending: 'text-yellow-400 bg-yellow-400/10 border-yellow-400/20', confirmed: 'text-teal-300 bg-teal-500/10 border-teal-500/20', completed: 'text-green-400 bg-green-500/10 border-green-500/20', cancelled: 'text-red-400 bg-red-500/10 border-red-500/20' };
+
+        let guidancesPage = 1;
+
+        async function loadGuidances(page = guidancesPage) {
+            guidancesPage = page;
+            const status = document.getElementById('guidanceStatusFilter')?.value || '';
+            const list = document.getElementById('guidances-list');
+            const pag = document.getElementById('guidances-pagination');
+            if (list) list.innerHTML = '<p class="text-gold/30 text-sm italic text-center py-12">Chargement…</p>';
+
+            try {
+                const params = new URLSearchParams({ page });
+                if (status) params.set('status', status);
+                const res = await adminFetch(`/api/admin/guidances?${params}`);
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+
+                const items = data.data || [];
+                window._guidancesCache = items;
+                const total = data.total || 0;
+
+                if (items.length === 0) {
+                    list.innerHTML = '<p class="text-gold/30 text-sm italic text-center py-12">Aucune guidance trouvée.</p>';
+                    if (pag) pag.innerHTML = '';
+                    return;
+                }
+
+                list.innerHTML = items.map(g => {
+                    const date = g.scheduled_at ? new Date(g.scheduled_at).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
+                    const sc = GUIDANCE_STATUS_COLORS[g.status] || 'text-gold/40';
+                    const sl = GUIDANCE_STATUS_LABELS[g.status] || g.status;
+                    const hasTirages = g.tore_history && g.tore_history.length > 0;
+                    return `
+                    <div class="bg-white/3 border border-gold/10 rounded-xl p-4" id="guidance-row-${g.id}">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
+                                    <span class="text-gold/90 font-medium">${escapeHtmlFront(g.client_name || '—')}</span>
+                                    <span class="text-gold/40 text-xs">${escapeHtmlFront(g.client_email)}</span>
+                                    <span class="text-xs border rounded-full px-2 py-0.5 ${sc}">${sl}</span>
+                                </div>
+                                <div class="flex flex-wrap gap-3 text-xs text-gold/50 mb-2">
+                                    <span><i class="fas fa-calendar mr-1"></i>${date}</span>
+                                    <span><i class="fas fa-clock mr-1"></i>${g.duration} min</span>
+                                    <span><i class="fas fa-euro-sign mr-1"></i>${(g.amount / 100).toFixed(2)} €</span>
+                                </div>
+                                ${g.notes ? `<p class="text-gold/50 text-xs italic border-l-2 border-gold/20 pl-2">${escapeHtmlFront(g.notes)}</p>` : ''}
+                            </div>
+                            <div class="flex items-center gap-2 flex-wrap">
+                                ${g.jitsi_url ? `<a href="${g.jitsi_url}" target="_blank" rel="noopener" class="flex items-center gap-1 bg-teal-500/20 hover:bg-teal-500/30 border border-teal-500/30 text-teal-300 text-xs px-3 py-1.5 rounded-lg transition"><i class="fas fa-video"></i> Rejoindre</a>` : ''}
+                                ${hasTirages ? `<button onclick="showGuidanceTirages('${g.id}','${escapeHtmlFront(g.client_name || g.client_email)}')" class="flex items-center gap-1 bg-gold/10 hover:bg-gold/20 border border-gold/20 text-gold/70 text-xs px-3 py-1.5 rounded-lg transition"><i class="fas fa-layer-group"></i> ${g.tore_history.length} tirage${g.tore_history.length > 1 ? 's' : ''}</button>` : ''}
+                                <select onchange="updateGuidanceStatus('${g.id}', this.value)" class="bg-white/5 border border-gold/20 text-gold/70 rounded-lg px-2 py-1.5 text-xs">
+                                    ${['pending','confirmed','completed','cancelled'].map(s => `<option value="${s}"${g.status===s?' selected':''}>${GUIDANCE_STATUS_LABELS[s]}</option>`).join('')}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <textarea placeholder="Notes admin…" rows="1" oninput="this.style.height='auto';this.style.height=this.scrollHeight+'px'" onblur="saveGuidanceNotes('${g.id}', this.value)" class="w-full bg-white/3 border border-gold/10 rounded-lg px-3 py-2 text-xs text-gold/70 placeholder-gold/20 resize-none focus:outline-none focus:border-gold/30">${escapeHtmlFront(g.notes || '')}</textarea>
+                        </div>
+                    </div>`;
+                }).join('');
+
+                // Pagination
+                const totalPages = Math.ceil(total / 20);
+                if (pag) {
+                    pag.innerHTML = totalPages <= 1 ? '' : Array.from({ length: totalPages }, (_, i) => i + 1)
+                        .map(p => `<button onclick="loadGuidances(${p})" class="px-3 py-1 rounded-lg text-sm border ${p === page ? 'bg-gold/20 border-gold/40 text-gold' : 'border-gold/10 text-gold/40 hover:border-gold/30'}">${p}</button>`)
+                        .join('');
+                }
+
+                // Badge nav
+                const badge = document.getElementById('nav-badge-guidances');
+                const confirmed = items.filter(g => g.status === 'confirmed').length;
+                if (badge) { badge.textContent = confirmed || ''; badge.classList.toggle('hidden', !confirmed); }
+
+            } catch (e) {
+                console.error('[guidances]', e);
+                if (list) list.innerHTML = `<p class="text-red-400 text-sm text-center py-8">Erreur : ${e.message}</p>`;
+            }
+        }
+
+        async function updateGuidanceStatus(id, status) {
+            try {
+                const res = await adminFetch('/api/admin/guidances', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, status }) });
+                if (!res.ok) throw new Error('Erreur');
+            } catch (e) { console.error('[guidances] updateStatus', e); alert('Erreur lors de la mise à jour.'); }
+        }
+
+        async function saveGuidanceNotes(id, notes) {
+            try {
+                await adminFetch('/api/admin/guidances', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, notes }) });
+            } catch (e) { console.error('[guidances] saveNotes', e); }
+        }
+
+        function showGuidanceTirages(id, name) {
+            const row = document.getElementById(`guidance-row-${id}`);
+            if (!row) return;
+            const guidance = (window._guidancesCache || []).find(g => g.id === id);
+            const tirages = guidance?.tore_history || [];
+            document.getElementById('modalGuidanceTiragesTitle').textContent = `Tirages de ${name}`;
+            document.getElementById('modalGuidanceTiragesContent').innerHTML = tirages.length === 0
+                ? '<p class="text-gold/40 italic">Aucun tirage enregistré.</p>'
+                : tirages.map(t => {
+                    const d = new Date(t.created_at).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+                    const cartes = Array.isArray(t.cartes) ? t.cartes.map(c => c.replace(/_/g,' ')).join(' · ') : '';
+                    return `<div class="border-b border-gold/10 pb-3 last:border-0">
+                        <p class="text-gold/40 text-xs mb-1">${d}</p>
+                        ${t.intention ? `<p class="text-gold/80 text-sm italic mb-1">"${escapeHtmlFront(t.intention)}"</p>` : ''}
+                        ${cartes ? `<p class="text-gold/50 text-xs">${escapeHtmlFront(cartes)}</p>` : ''}
+                    </div>`;
+                }).join('');
+            document.getElementById('modalGuidanceTirages').classList.remove('hidden');
         }
 
         async function analyzeIntentions() {

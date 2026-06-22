@@ -2426,6 +2426,44 @@ module.exports = async (req, res) => {
       return await handleMondialRelayPickupPoints(req, res);
     }
 
+    // ── Guidances par visio ──
+    if (path === '/guidances' || path === '/guidances/') {
+      verifyAdminAuth(req);
+      const sb = createClient(
+        process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+
+      if (req.method === 'GET') {
+        const page = parseInt(urlParams.get('page') || '1', 10);
+        const statusFilter = urlParams.get('status') || '';
+        const limit = 20;
+        const offset = (page - 1) * limit;
+        let query = sb.from('guidances')
+          .select('*', { count: 'exact' })
+          .order('scheduled_at', { ascending: false })
+          .range(offset, offset + limit - 1);
+        if (statusFilter) query = query.eq('status', statusFilter);
+        const { data, error, count } = await query;
+        if (error) throw error;
+        return res.status(200).json({ success: true, data: data || [], total: count || 0, page });
+      }
+
+      if (req.method === 'POST') {
+        const body = await parseBody(req);
+        const { id, status, notes } = body;
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const updates = {};
+        if (status !== undefined) updates.status = status;
+        if (notes !== undefined) updates.notes = notes;
+        const { error } = await sb.from('guidances').update(updates).eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      return res.status(405).end();
+    }
+
     // ── Sauvegarde d'une intention anonyme (visiteur sans compte) ──
     if (path === '/intentions' || path === '/intentions/') {
       if (req.method !== 'POST') return res.status(405).end();
