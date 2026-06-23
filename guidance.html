@@ -73,6 +73,24 @@
       padding: 28px 24px;
     }
 
+    .cta-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 16px 36px;
+      border-radius: 50px;
+      background: linear-gradient(135deg, #d4af37, #f5e7a1);
+      color: #0a1628;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 17px;
+      font-weight: 600;
+      border: none;
+      cursor: pointer;
+      letter-spacing: 0.04em;
+      transition: opacity 0.2s, transform 0.15s;
+    }
+    .cta-btn:hover { opacity: 0.88; transform: translateY(-1px); }
+
     .step-number {
       width: 40px;
       height: 40px;
@@ -104,7 +122,7 @@
   <!-- Hero -->
   <section class="hero-bg pt-28 pb-16 px-4">
     <div class="max-w-3xl mx-auto text-center">
-      <p class="text-gold/60 text-xs uppercase tracking-widest mb-4" style="letter-spacing:0.35em;">Guidance par visio</p>
+      <p class="text-gold/60 text-xs uppercase tracking-widest mb-4" style="letter-spacing:0.35em;">Séance individuelle</p>
       <h1 class="cormorant text-4xl md:text-6xl font-light gold-gradient mb-6 leading-tight">
         Guidance par visio<br>avec Rudy
       </h1>
@@ -113,8 +131,12 @@
         à partir de votre tirage ou de votre questionnement.
       </p>
       <div class="flex flex-wrap items-center justify-center gap-4">
-        <span class="badge"><i class="fas fa-clock text-gold/60"></i>30 min · 30€</span>
-        <span class="badge"><i class="fas fa-clock text-gold/60"></i>1h · 60€</span>
+        <button class="cta-btn" onclick="selectCalEvent('rudy-boucheron-azhech/30min')">
+          <i class="fas fa-clock"></i> 30 min · 30€
+        </button>
+        <button class="cta-btn" onclick="selectCalEvent('rudy-boucheron-azhech/15min')">
+          <i class="fas fa-clock"></i> 1h · 60€
+        </button>
       </div>
     </div>
   </section>
@@ -151,6 +173,15 @@
 
   <div id="footer-placeholder"></div>
 
+  <script>
+    function selectCalEvent(slug) {
+      const el = document.getElementById('cal-booking-placeholder');
+      if (!el) return;
+      el.innerHTML = '';
+      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      Cal("inline", { elementOrSelector: "#cal-booking-placeholder", calLink: slug, layout: "month_view" });
+    }
+  </script>
   <script src="components/header-manager.js" defer></script>
   <script src="components/footer-manager.js" defer></script>
 
