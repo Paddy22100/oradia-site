@@ -1220,13 +1220,14 @@ async function handleData(req, res) {
     }
 
     // ── Section overview / all : agrégats KPI ──
-    const [waitlistRes, preordersRes, donorsRes, singleDrawsRes, supportRes, syncRes] = await Promise.all([
+    const [waitlistRes, preordersRes, donorsRes, singleDrawsRes, supportRes, syncRes, guidancesRes] = await Promise.all([
       supabase.from('newsletter_contacts').select('*'),
       supabase.from('preorders').select('*'),
       supabase.from('donors').select('*'),
       supabase.from('tore_subscriptions').select('email, single_draw_credits, status').or('status.eq.single_draw,single_draw_credits.gt.0'),
       supabase.from('support_messages').select('id, type, status, created_at').order('created_at', { ascending: false }).limit(5),
-      supabase.from('synchronicity_responses').select('score_synchronicites', { count: 'exact', head: false })
+      supabase.from('synchronicity_responses').select('score_synchronicites', { count: 'exact', head: false }),
+      supabase.from('guidances').select('id, amount, status, created_at').in('status', ['confirmed', 'completed'])
     ]);
 
     const waitlistRows    = waitlistRes.data    || [];
@@ -1243,6 +1244,13 @@ async function handleData(req, res) {
     const singleDrawCount  = singleDrawRows.reduce((s, r) => s + (r.single_draw_credits || 0), 0);
     const singleDrawTotal  = singleDrawCount * 3.90;
 
+    // Calcul guidances
+    const guidanceRows       = guidancesRes.data || [];
+    const guidancesTotal     = guidanceRows.reduce((s, r) => s + ((r.amount || 0) / 100), 0);
+    const guidancesConfirmed = guidanceRows.filter(r => r.status === 'confirmed').length;
+    const guidancesCompleted = guidanceRows.filter(r => r.status === 'completed').length;
+    const sumGuidances       = rows => rows.reduce((s, r) => s + ((r.amount || 0) / 100), 0);
+
     const now   = Date.now();
     const day1  = 24 * 3600 * 1000;
     const day7  = 7  * day1;
@@ -1256,10 +1264,13 @@ async function handleData(req, res) {
     const preorders30d   = preorderRows.filter(r => now - new Date(r.created_at).getTime() < day30);
     const donors7d       = donorRows.filter(r => now - new Date(r.created_at).getTime() < day7);
     const donors30d      = donorRows.filter(r => now - new Date(r.created_at).getTime() < day30);
+    const guidancesToday = guidanceRows.filter(r => now - new Date(r.created_at).getTime() < day1);
+    const guidances7d    = guidanceRows.filter(r => now - new Date(r.created_at).getTime() < day7);
+    const guidances30d   = guidanceRows.filter(r => now - new Date(r.created_at).getTime() < day30);
 
     const preordersTotal  = sumPreorders(preorderRows);
     const donorsTotal     = sumDonors(donorRows);
-    const globalTotal     = preordersTotal + donorsTotal + singleDrawTotal;
+    const globalTotal     = preordersTotal + donorsTotal + singleDrawTotal + guidancesTotal;
     const totalContacts   = preorderRows.length + donorRows.length + waitlistRows.length;
     const averageBasket   = preorderRows.length > 0 ? preordersTotal / preorderRows.length : 0;
 
@@ -1286,6 +1297,12 @@ async function handleData(req, res) {
           total:      singleDrawTotal,
           customers:  singleDrawRows.length
         },
+        guidances: {
+          count:     guidanceRows.length,
+          confirmed: guidancesConfirmed,
+          completed: guidancesCompleted,
+          total:     guidancesTotal
+        },
         support: {
           recent:     recentMessages,
           newCount:   recentMessages.filter(m => m.status === 'new').length
@@ -1301,13 +1318,14 @@ async function handleData(req, res) {
           breakdown: {
             preorders:   preordersTotal,
             donors:      donorsTotal,
-            singleDraws: singleDrawTotal
+            singleDraws: singleDrawTotal,
+            guidances:   guidancesTotal
           }
         },
         performance: {
-          revenueToday:    sumPreorders(preordersToday) + sumDonors(donorRows.filter(r => now - new Date(r.created_at).getTime() < day1)),
-          revenue7d:       sumPreorders(preorders7d)    + sumDonors(donors7d),
-          revenue30d:      sumPreorders(preorders30d)   + sumDonors(donors30d),
+          revenueToday:    sumPreorders(preordersToday) + sumDonors(donorRows.filter(r => now - new Date(r.created_at).getTime() < day1)) + sumGuidances(guidancesToday),
+          revenue7d:       sumPreorders(preorders7d)    + sumDonors(donors7d)    + sumGuidances(guidances7d),
+          revenue30d:      sumPreorders(preorders30d)   + sumDonors(donors30d)   + sumGuidances(guidances30d),
           conversionRate:  totalContacts > 0 ? ((preorderRows.length + donorRows.length) / totalContacts * 100) : 0
         }
       }

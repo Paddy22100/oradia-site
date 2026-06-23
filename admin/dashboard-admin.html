@@ -504,23 +504,30 @@
             </div>
 
             <!-- KPI Secondaires -->
-            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <!-- Total Global -->
                 <div class="stat-card rounded-2xl p-6">
                     <div class="text-2xl font-bold text-gold mb-1" id="globalTotal">-</div>
                     <p class="text-light-gold">Total global</p>
                 </div>
-                
+
                 <!-- Total Contacts -->
                 <div class="stat-card rounded-2xl p-6">
                     <div class="text-2xl font-bold text-gold mb-1" id="totalContacts">-</div>
                     <p class="text-light-gold">Total contacts</p>
                 </div>
-                
+
                 <!-- Montant Dons -->
                 <div class="stat-card rounded-2xl p-6">
                     <div class="text-2xl font-bold text-gold mb-1" id="donorsTotal">-</div>
                     <p class="text-light-gold">Montant dons</p>
+                </div>
+
+                <!-- Guidances visio -->
+                <div class="stat-card rounded-2xl p-6">
+                    <div class="text-2xl font-bold text-teal-300 mb-1" id="guidancesCount">-</div>
+                    <p class="text-light-gold">Guidances visio</p>
+                    <p class="text-light-gold/40 text-xs mt-1" id="guidancesCountDetail">—</p>
                 </div>
             </div>
             
@@ -589,7 +596,7 @@
                 <!-- Camembert revenus -->
                 <div class="stat-card rounded-2xl p-6">
                     <h3 class="text-gold font-semibold mb-1" style="font-family:'Cormorant Garamond',serif;font-size:1.1rem;">Répartition des revenus</h3>
-                    <p class="text-light-gold/50 text-xs mb-5">Précommandes · Dons</p>
+                    <p class="text-light-gold/50 text-xs mb-5">Précommandes · Dons · Guidances</p>
                     <div class="flex items-center gap-6">
                         <!-- Donut SVG généré dynamiquement -->
                         <div class="relative flex-shrink-0" style="width:120px;height:120px;">
@@ -598,6 +605,7 @@
                                 <circle id="pie-preorders"   cx="18" cy="18" r="15.9" fill="none" stroke="#d4af37"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
                                 <circle id="pie-donors"      cx="18" cy="18" r="15.9" fill="none" stroke="#ef4444"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
                                 <circle id="pie-singledraws" cx="18" cy="18" r="15.9" fill="none" stroke="#a855f7"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
+                                <circle id="pie-guidances"   cx="18" cy="18" r="15.9" fill="none" stroke="#14b8a6"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
                             </svg>
                             <div class="absolute inset-0 flex flex-col items-center justify-center">
                                 <span class="text-gold font-bold text-sm" id="pie-center-total">—</span>
@@ -613,6 +621,10 @@
                             <div class="flex items-center justify-between gap-2">
                                 <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span><span class="text-light-gold">Dons</span></span>
                                 <span class="text-gold font-semibold" id="pie-label-donors">—</span>
+                            </div>
+                            <div class="flex items-center justify-between gap-2">
+                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#14b8a6] inline-block"></span><span class="text-light-gold">Guidances</span></span>
+                                <span class="text-gold font-semibold" id="pie-label-guidances">—</span>
                             </div>
                         </div>
                     </div>
@@ -1915,6 +1927,10 @@
             updateElement('preordersNoEmail', data.preorders.noEmail || 0);
             updateElement('donorsNoEmail', data.donors.noEmail || 0);
             updateElement('waitlistNotSynced', data.waitlist.notSynced || 0);
+            const gd = data.guidances || {};
+            updateElement('guidancesCount', formatCurrency(gd.total || 0));
+            const gdDetail = [gd.confirmed ? `${gd.confirmed} confirmée${gd.confirmed>1?'s':''}` : '', gd.completed ? `${gd.completed} terminée${gd.completed>1?'s':''}` : ''].filter(Boolean).join(' · ') || '—';
+            updateElement('guidancesCountDetail', gdDetail);
             updateElement('revenueToday', formatCurrency(data.performance?.revenueToday || 0));
             updateElement('revenue7d', formatCurrency(data.performance?.revenue7d || 0));
             updateElement('revenue30d', formatCurrency(data.performance?.revenue30d || 0));
@@ -1960,7 +1976,7 @@
 
         // Dessine le donut SVG — technique stroke-dasharray sur cercle r=15.9 (circonf≈99.9)
         function updatePieChart(breakdown) {
-            const total = (breakdown.preorders || 0) + (breakdown.donors || 0) + (breakdown.singleDraws || 0);
+            const total = (breakdown.preorders || 0) + (breakdown.donors || 0) + (breakdown.singleDraws || 0) + (breakdown.guidances || 0);
             if (total <= 0) return;
 
             const fmtEur = v => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(v);
@@ -1968,20 +1984,24 @@
             updateElement('pie-label-preorders',     fmtEur(breakdown.preorders   || 0));
             updateElement('pie-label-donors',        fmtEur(breakdown.donors      || 0));
             updateElement('pie-label-singledraws',   fmtEur(breakdown.singleDraws || 0));
+            updateElement('pie-label-guidances',     fmtEur(breakdown.guidances   || 0));
 
             // Circonf SVG ≈ 99.9 (2πr = 2π×15.9)
             const C = 99.9;
             const pctPre = (breakdown.preorders   || 0) / total;
             const pctDon = (breakdown.donors      || 0) / total;
             const pctSd  = (breakdown.singleDraws || 0) / total;
+            const pctGui = (breakdown.guidances   || 0) / total;
 
             const lenPre = pctPre * C;
             const lenDon = pctDon * C;
             const lenSd  = pctSd  * C;
+            const lenGui = pctGui * C;
 
             const offPre = 0;
             const offDon = offPre + lenPre;
             const offSd  = offDon + lenDon;
+            const offGui = offSd  + lenSd;
 
             const setArc = (id, len, offset) => {
                 const el = document.getElementById(id);
@@ -1992,6 +2012,7 @@
             setArc('pie-preorders',   lenPre, offPre);
             setArc('pie-donors',      lenDon, offDon);
             setArc('pie-singledraws', lenSd,  offSd);
+            setArc('pie-guidances',   lenGui, offGui);
         }
         
         // Animer les barres de progression
