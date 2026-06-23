@@ -37,12 +37,24 @@
   </script>
 
   <style>
-    body { background: #040d1c; color: #c8c0a8; }
+    body {
+      background: #040d1c url('images/oradia-hero-4k.webp') center top / cover fixed;
+      color: #c8c0a8;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: rgba(4,13,28,0.72);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    body > * { position: relative; z-index: 1; }
 
     .hero-bg {
-      background:
-        linear-gradient(to bottom, rgba(4,13,28,0.7) 0%, rgba(4,13,28,0.95) 100%),
-        url('images/oradia-hero-4k.webp') center/cover no-repeat;
+      background: transparent;
     }
 
     .gold-gradient {
