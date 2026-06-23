@@ -55,6 +55,12 @@
       "src": "/api/tirages/send-email",
       "dest": "/api/tirages/send-email.js"
     },
+    { "src": "/blog",                                    "dest": "/blog/index.html" },
+    { "src": "/blog/voyance-guidance",                  "dest": "/blog/voyance-guidance.html" },
+    { "src": "/blog/decision-difficile",                "dest": "/blog/decision-difficile.html" },
+    { "src": "/blog/oracle-developpement-personnel",    "dest": "/blog/oracle-developpement-personnel.html" },
+    { "src": "/blog/adaptome-strategies-survie",        "dest": "/blog/adaptome-strategies-survie.html" },
+    { "src": "/blog/guidance-spirituelle-voyance",      "dest": "/blog/guidance-spirituelle-voyance.html" },
     { "src": "/guidance",                        "dest": "/guidance.html" },
     { "src": "/guidance-confirmation",          "dest": "/guidance-confirmation.html" },
     { "src": "/oracle",                        "dest": "/oracle.html" },
