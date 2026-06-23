@@ -736,8 +736,13 @@ async function handleCalWebhook(req, res) {
     const supabase = getSupabaseClient();
 
     if (trigger === 'BOOKING_PAID') {
-        const jitsiRoom = 'oradia-' + crypto.randomBytes(8).toString('hex');
-        const jitsiUrl = `https://meet.jit.si/${jitsiRoom}`;
+        const calVideoUrl =
+            payload.metadata?.videoCallUrl ||
+            (typeof payload.location === 'string' && payload.location.startsWith('http') ? payload.location : null) ||
+            payload.conferenceData?.entryPoints?.[0]?.uri ||
+            null;
+        const jitsiRoom = calVideoUrl ? null : 'oradia-' + crypto.randomBytes(8).toString('hex');
+        const jitsiUrl  = calVideoUrl || `https://meet.jit.si/${jitsiRoom}`;
 
         let toreHistory = null;
         if (clientEmail) {
