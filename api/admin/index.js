@@ -1274,18 +1274,36 @@ async function handleData(req, res) {
     const totalContacts   = preorderRows.length + donorRows.length + waitlistRows.length;
     const averageBasket   = preorderRows.length > 0 ? preordersTotal / preorderRows.length : 0;
 
+    // Frais Stripe estimés : 1,5% + 0,25€/transaction (cartes européennes)
+    const stripeFee     = (total, count) => Math.max(0, total * 0.015 + 0.25 * count);
+    const preordersNet  = preordersTotal  - stripeFee(preordersTotal,  preorderRows.length);
+    const donorsNet     = donorsTotal     - stripeFee(donorsTotal,     donorRows.length);
+    const singleDrawNet = singleDrawTotal - stripeFee(singleDrawTotal, singleDrawCount);
+    const guidancesNet  = guidancesTotal  - stripeFee(guidancesTotal,  guidanceRows.length);
+    const globalNet     = preordersNet + donorsNet + singleDrawNet + guidancesNet;
+
+    const donorsToday = donorRows.filter(r => now - new Date(r.created_at).getTime() < day1);
+    const revToday    = sumPreorders(preordersToday) + sumDonors(donorsToday)  + sumGuidances(guidancesToday);
+    const rev7d       = sumPreorders(preorders7d)    + sumDonors(donors7d)     + sumGuidances(guidances7d);
+    const rev30d      = sumPreorders(preorders30d)   + sumDonors(donors30d)    + sumGuidances(guidances30d);
+    const netRevToday = revToday - stripeFee(revToday, preordersToday.length + donorsToday.length + guidancesToday.length);
+    const netRev7d    = rev7d    - stripeFee(rev7d,    preorders7d.length   + donors7d.length   + guidances7d.length);
+    const netRev30d   = rev30d   - stripeFee(rev30d,   preorders30d.length  + donors30d.length  + guidances30d.length);
+
     return res.status(200).json({
       success: true,
       data: {
         preorders: {
           count:        preorderRows.length,
           total:        preordersTotal,
+          net:          preordersNet,
           noEmail:      preorderRows.filter(r => !r.email).length,
           averageBasket
         },
         donors: {
           count:   donorRows.length,
           total:   donorsTotal,
+          net:     donorsNet,
           noEmail: donorRows.filter(r => !r.email).length
         },
         waitlist: {
@@ -1301,7 +1319,8 @@ async function handleData(req, res) {
           count:     guidanceRows.length,
           confirmed: guidancesConfirmed,
           completed: guidancesCompleted,
-          total:     guidancesTotal
+          total:     guidancesTotal,
+          net:       guidancesNet
         },
         support: {
           recent:     recentMessages,
@@ -1313,6 +1332,7 @@ async function handleData(req, res) {
         },
         global: {
           total:         globalTotal,
+          net:           globalNet,
           totalContacts,
           // Répartition pour camembert (#29)
           breakdown: {
@@ -1323,9 +1343,9 @@ async function handleData(req, res) {
           }
         },
         performance: {
-          revenueToday:    sumPreorders(preordersToday) + sumDonors(donorRows.filter(r => now - new Date(r.created_at).getTime() < day1)) + sumGuidances(guidancesToday),
-          revenue7d:       sumPreorders(preorders7d)    + sumDonors(donors7d)    + sumGuidances(guidances7d),
-          revenue30d:      sumPreorders(preorders30d)   + sumDonors(donors30d)   + sumGuidances(guidances30d),
+          revenueToday:    revToday,    netRevenueToday:    netRevToday,
+          revenue7d:       rev7d,       netRevenue7d:       netRev7d,
+          revenue30d:      rev30d,      netRevenue30d:      netRev30d,
           conversionRate:  totalContacts > 0 ? ((preorderRows.length + donorRows.length) / totalContacts * 100) : 0
         }
       }

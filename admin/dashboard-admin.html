@@ -467,6 +467,7 @@
                     </div>
                     <div class="text-3xl font-bold text-gold mb-1" id="preordersTotal">-</div>
                     <p class="text-light-gold text-sm">Montant précommandes</p>
+                    <p class="text-teal-400 text-xs mt-1" id="preordersTotalNet">-</p>
                     <div class="mt-2 h-1 bg-green-500/20 rounded-full overflow-hidden">
                         <div class="h-full bg-green-500/60 rounded-full transition-all duration-1000" style="width: 0%" id="preordersTotalProgress"></div>
                     </div>
@@ -509,6 +510,8 @@
                 <div class="stat-card rounded-2xl p-6">
                     <div class="text-2xl font-bold text-gold mb-1" id="globalTotal">-</div>
                     <p class="text-light-gold">Total global</p>
+                    <p class="text-teal-400 text-xs mt-1" id="globalTotalNet">-</p>
+                    <p class="text-light-gold/25 text-xs mt-2">Frais estimés : 1,5% + 0,25€/tx (cartes EU)</p>
                 </div>
 
                 <!-- Total Contacts -->
@@ -521,12 +524,14 @@
                 <div class="stat-card rounded-2xl p-6">
                     <div class="text-2xl font-bold text-gold mb-1" id="donorsTotal">-</div>
                     <p class="text-light-gold">Montant dons</p>
+                    <p class="text-teal-400 text-xs mt-1" id="donorsTotalNet">-</p>
                 </div>
 
                 <!-- Guidances visio -->
                 <div class="stat-card rounded-2xl p-6">
                     <div class="text-2xl font-bold text-teal-300 mb-1" id="guidancesCount">-</div>
                     <p class="text-light-gold">Guidances visio</p>
+                    <p class="text-teal-400 text-xs mt-0.5" id="guidancesNet">-</p>
                     <p class="text-light-gold/40 text-xs mt-1" id="guidancesCountDetail">—</p>
                 </div>
             </div>
@@ -571,14 +576,17 @@
                 <div class="stat-card rounded-xl p-4">
                     <p class="text-light-gold/70 text-xs uppercase tracking-wider">CA aujourd'hui</p>
                     <p class="text-gold text-xl font-bold" id="revenueToday">-</p>
+                    <p class="text-teal-400 text-xs mt-1" id="revenueNetToday">-</p>
                 </div>
                 <div class="stat-card rounded-xl p-4">
                     <p class="text-light-gold/70 text-xs uppercase tracking-wider">CA 7 jours</p>
                     <p class="text-gold text-xl font-bold" id="revenue7d">-</p>
+                    <p class="text-teal-400 text-xs mt-1" id="revenueNet7d">-</p>
                 </div>
                 <div class="stat-card rounded-xl p-4">
                     <p class="text-light-gold/70 text-xs uppercase tracking-wider">CA 30 jours</p>
                     <p class="text-gold text-xl font-bold" id="revenue30d">-</p>
+                    <p class="text-teal-400 text-xs mt-1" id="revenueNet30d">-</p>
                 </div>
                 <div class="stat-card rounded-xl p-4">
                     <p class="text-light-gold/70 text-xs uppercase tracking-wider">Panier moyen</p>
@@ -1962,6 +1970,13 @@
             updateElement('revenueToday', formatCurrency(data.performance?.revenueToday || 0));
             updateElement('revenue7d', formatCurrency(data.performance?.revenue7d || 0));
             updateElement('revenue30d', formatCurrency(data.performance?.revenue30d || 0));
+            updateElement('preordersTotalNet', `~${formatCurrency(data.preorders?.net || 0)} net`);
+            updateElement('globalTotalNet',    `~${formatCurrency(data.global?.net   || 0)} net Stripe`);
+            updateElement('donorsTotalNet',    `~${formatCurrency(data.donors?.net   || 0)} net`);
+            updateElement('guidancesNet',      `~${formatCurrency(data.guidances?.net || 0)} net`);
+            updateElement('revenueNetToday',   `~${formatCurrency(data.performance?.netRevenueToday || 0)} net`);
+            updateElement('revenueNet7d',      `~${formatCurrency(data.performance?.netRevenue7d    || 0)} net`);
+            updateElement('revenueNet30d',     `~${formatCurrency(data.performance?.netRevenue30d   || 0)} net`);
             updateElement('averageBasket', formatCurrency(data.preorders?.averageBasket || 0));
             updateElement('conversionRate', `${Number(data.performance?.conversionRate || 0).toFixed(1)}%`);
             updateAlertsPanel(data);
