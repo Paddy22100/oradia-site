@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+  <title>Guidance par visio — Oradia</title>
+  <meta name="description" content="Réservez une guidance par visio avec Rudy — 30 minutes ou 1 heure pour approfondir votre tirage ou votre questionnement intérieur." />
+  <link rel="canonical" href="https://oradia.fr/guidance" />
+
+  <meta property="og:type" content="website" />
+  <meta property="og:url" content="https://oradia.fr/guidance" />
+  <meta property="og:title" content="Guidance par visio — Oradia" />
+  <meta property="og:description" content="Un espace d'écoute et de guidance approfondie, à partir de votre tirage ou de votre questionnement." />
+  <meta property="og:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg" />
+  <meta property="og:site_name" content="Oradia" />
+  <meta property="og:locale" content="fr_FR" />
+
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#040d1c',
+            'gold': '#d4af37',
+            'light-gold': '#f0c75e',
+          },
+          fontFamily: {
+            cormorant: ['"Cormorant Garamond"', 'Georgia', 'serif'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body { background: #040d1c; color: #c8c0a8; }
+
+    .hero-bg {
+      background:
+        linear-gradient(to bottom, rgba(4,13,28,0.7) 0%, rgba(4,13,28,0.95) 100%),
+        url('images/oradia-hero-4k.webp') center/cover no-repeat;
+    }
+
+    .gold-gradient {
+      background: linear-gradient(135deg, #d4af37, #f5e7a1, #d4af37);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 20px;
+      border-radius: 50px;
+      border: 1px solid rgba(212,175,55,0.35);
+      background: rgba(212,175,55,0.07);
+      color: #f0c75e;
+      font-family: Georgia, serif;
+      font-size: 15px;
+      font-weight: 500;
+    }
+
+    .step-card {
+      background: rgba(10,22,40,0.6);
+      border: 1px solid rgba(212,175,55,0.15);
+      border-radius: 12px;
+      padding: 28px 24px;
+    }
+
+    .step-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(212,175,55,0.1);
+      border: 1px solid rgba(212,175,55,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #d4af37;
+      font-family: 'Cormorant Garamond', Georgia, serif;
+      font-size: 20px;
+      font-weight: 600;
+      flex-shrink: 0;
+      margin-bottom: 16px;
+    }
+
+    /* Cal.com dark theme override */
+    #cal-booking-placeholder {
+      border-radius: 12px;
+      overflow: hidden;
+    }
+  </style>
+</head>
+
+<body class="bg-night-blue text-light-gold">
+  <div id="header-placeholder"></div>
+
+  <!-- Hero -->
+  <section class="hero-bg pt-28 pb-16 px-4">
+    <div class="max-w-3xl mx-auto text-center">
+      <p class="text-gold/60 text-xs uppercase tracking-widest mb-4" style="letter-spacing:0.35em;">Guidance par visio</p>
+      <h1 class="cormorant text-4xl md:text-6xl font-light gold-gradient mb-6 leading-tight">
+        Guidance par visio<br>avec Rudy
+      </h1>
+      <p class="text-light-gold/70 text-lg md:text-xl leading-relaxed mb-10 max-w-xl mx-auto" style="font-family:Georgia,serif;">
+        Un espace d'écoute et de guidance approfondie,<br>
+        à partir de votre tirage ou de votre questionnement.
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-4">
+        <span class="badge"><i class="fas fa-clock text-gold/60"></i>30 min · 30€</span>
+        <span class="badge"><i class="fas fa-clock text-gold/60"></i>1h · 60€</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Widget Cal.com -->
+  <section class="max-w-5xl mx-auto px-4 py-12">
+    <div id="cal-booking-placeholder" style="width:100%;height:700px;"></div>
+  </section>
+
+  <!-- Comment ça se passe -->
+  <section class="max-w-4xl mx-auto px-4 pb-20">
+    <div class="text-center mb-12">
+      <p class="text-gold/50 text-xs uppercase tracking-widest mb-3" style="letter-spacing:0.3em;">Déroulement</p>
+      <h2 class="cormorant text-3xl md:text-4xl font-light gold-gradient">Comment ça se passe</h2>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="step-card">
+        <div class="step-number">1</div>
+        <h3 class="text-gold font-medium mb-2" style="font-family:Georgia,serif;">Vous choisissez votre créneau</h3>
+        <p class="text-light-gold/55 text-sm leading-relaxed" style="font-family:Georgia,serif;">Sélectionnez la durée et le moment qui vous convient, puis réglez en ligne au moment de la réservation.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">2</div>
+        <h3 class="text-gold font-medium mb-2" style="font-family:Georgia,serif;">Vous recevez votre lien</h3>
+        <p class="text-light-gold/55 text-sm leading-relaxed" style="font-family:Georgia,serif;">Un email vous est envoyé avec votre lien personnel pour rejoindre la visio. Aucune installation requise.</p>
+      </div>
+      <div class="step-card">
+        <div class="step-number">3</div>
+        <h3 class="text-gold font-medium mb-2" style="font-family:Georgia,serif;">Nous nous retrouvons en visio</h3>
+        <p class="text-light-gold/55 text-sm leading-relaxed" style="font-family:Georgia,serif;">Au moment convenu, cliquez sur le lien et rejoignez l'espace de guidance. Prenez le temps de noter vos ressentis.</p>
+      </div>
+    </div>
+  </section>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="components/header-manager.js" defer></script>
+  <script src="components/footer-manager.js" defer></script>
+
+  <!-- Cal.com embed -->
+  <script type="text/javascript">
+    (function (C, A, L) {
+      let p = function (a, ar) { a.q.push(ar); };
+      let d = C.document;
+      C.Cal = C.Cal || function () {
+        let cal = C.Cal;
+        let ar = arguments;
+        if (!cal.loaded) {
+          cal.ns = {};
+          cal.q = cal.q || [];
+          d.head.appendChild(d.createElement("script")).src = A;
+          cal.loaded = true;
+        }
+        if (ar[0] === L) {
+          const api = function () { p(api, arguments); };
+          const namespace = ar[1];
+          api.q = api.q || [];
+          if (typeof namespace === "string") {
+            cal.ns[namespace] = cal.ns[namespace] || api;
+            p(cal.ns[namespace], ar);
+            p(cal, ["-init", namespace, window.location.href]);
+          } else {
+            p(cal, ar);
+            p(cal, ["-init", namespace, window.location.href]);
+          }
+          return;
+        }
+        p(cal, ar);
+      };
+    })(window, "https://app.cal.com/embed/embed.js", "init");
+
+    Cal("init", { origin: "https://cal.com" });
+    Cal("inline", {
+      elementOrSelector: "#cal-booking-placeholder",
+      calLink: "rudy-boucheron-azhech",
+      layout: "month_view"
+    });
+    Cal("ui", {
+      theme: "dark",
+      styles: { branding: { brandColor: "#d4af37" } },
+      hideEventTypeDetails: false,
+      layout: "month_view"
+    });
+  </script>
+</body>
+</html>

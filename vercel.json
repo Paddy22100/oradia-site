@@ -55,6 +55,7 @@
       "src": "/api/tirages/send-email",
       "dest": "/api/tirages/send-email.js"
     },
+    { "src": "/guidance",                        "dest": "/guidance.html" },
     { "src": "/guidance-confirmation",          "dest": "/guidance-confirmation.html" },
     { "src": "/oracle",                        "dest": "/oracle.html" },
     { "src": "/precommande-oracle",            "dest": "/precommande-oracle.html" },
