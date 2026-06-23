@@ -116,6 +116,21 @@
                             <li>Préférences et paramètres du compte</li>
                         </ul>
 
+                        <h3 class="text-gold font-semibold mb-3">Données de guidance par visio</h3>
+                        <ul class="list-disc list-inside mb-4 space-y-1">
+                            <li>Nom et email transmis par Cal.com lors de la réservation</li>
+                            <li>Créneau et durée de la séance</li>
+                            <li>Contenu du tirage effectué pendant la séance (cartes tirées, intention posée, analyse IA)</li>
+                            <li>Lien Jitsi Meet de la séance</li>
+                        </ul>
+
+                        <h3 class="text-gold font-semibold mb-3">Intentions de tirage anonymes</h3>
+                        <ul class="list-disc list-inside mb-4 space-y-1">
+                            <li>Intention posée lors d'un tirage sans compte (visiteurs non connectés)</li>
+                            <li>Cartes tirées associées</li>
+                            <li>Aucune donnée d'identification n'est collectée pour ces entrées</li>
+                        </ul>
+
                         <h3 class="text-gold font-semibold mb-3">Données techniques et statistiques</h3>
                         <ul class="list-disc list-inside space-y-1">
                             <li>Adresse IP (anonymisée)</li>
@@ -163,6 +178,19 @@
                             <li>Analyse statistique anonymisée</li>
                             <li>Optimisation de l'expérience utilisateur</li>
                             <li>Développement de nouvelles fonctionnalités</li>
+                        </ul>
+
+                        <h3 class="text-gold font-semibold mb-2">Guidance par visio</h3>
+                        <ul class="list-disc list-inside mb-4 space-y-1">
+                            <li>Organisation et suivi des séances réservées via Cal.com</li>
+                            <li>Envoi du lien de connexion Jitsi Meet par email</li>
+                            <li>Consultation de l'historique de tirages du client pour préparer la guidance</li>
+                        </ul>
+
+                        <h3 class="text-gold font-semibold mb-2">Analyse éditoriale (intérêt légitime)</h3>
+                        <ul class="list-disc list-inside mb-4 space-y-1">
+                            <li>Analyse agrégée et anonymisée des intentions de tirage pour orienter les contenus éditoriaux (newsletter, blog)</li>
+                            <li>Aucune décision individuelle basée sur ces données</li>
                         </ul>
 
                         <h3 class="text-gold font-semibold mb-2">Obligations légales</h3>
@@ -337,16 +365,31 @@
                         <i class="fas fa-handshake mr-2"></i>Sous-traitants et transferts
                     </h2>
                     <div class="bg-[rgba(5,20,40,0.6)] rounded-lg p-6 border border-gold/20">
-                        <p class="mb-4">J'utilise des sous-traitants pour :</p>
-                        <ul class="list-disc list-inside space-y-1">
-                            <li>Hébergement du site et des données</li>
-                            <li>Envoi d'emails (newsletter, notifications)</li>
-                            <li>Outils de visioconférence pour consultations</li>
-                            <li>Solutions de paiement sécurisées</li>
-                            <li>Outils d'analyse statistique anonymisée</li>
-                        </ul>
-                        <p>Tous nos sous-traitants sont sélectionnés pour leur conformité RGPD et signent 
-                        des contrats incluant des clauses de protection des données.</p>
+                        <p class="mb-4">Les sous-traitants suivants interviennent dans le traitement de vos données :</p>
+                        <div class="space-y-3">
+                            <div class="border-b border-gold/10 pb-3">
+                                <p><strong class="text-gold">Vercel Inc.</strong> (États-Unis) — Hébergement du site web et des fonctions serverless.</p>
+                            </div>
+                            <div class="border-b border-gold/10 pb-3">
+                                <p><strong class="text-gold">Supabase Inc.</strong> (États-Unis) — Base de données chiffrée (profils, tirages, commandes, guidances).</p>
+                            </div>
+                            <div class="border-b border-gold/10 pb-3">
+                                <p><strong class="text-gold">Brevo SAS</strong> (France / Union européenne) — Envoi d'emails transactionnels et de newsletter.</p>
+                            </div>
+                            <div class="border-b border-gold/10 pb-3">
+                                <p><strong class="text-gold">Stripe Inc.</strong> (États-Unis) — Traitement des paiements. Aucune donnée bancaire n'est stockée par Oradia.</p>
+                            </div>
+                            <div class="border-b border-gold/10 pb-3">
+                                <p><strong class="text-gold">Cal.com Inc.</strong> (États-Unis) — Réservation des séances de guidance par visio. Données transmises : nom, email, créneau horaire.</p>
+                            </div>
+                            <div class="border-b border-gold/10 pb-3">
+                                <p><strong class="text-gold">Anthropic PBC</strong> (États-Unis) — Analyse IA des tirages et intentions (API Claude). Les intentions et cartes sont transmises pour génération de l'analyse ; elles ne sont pas utilisées pour l'entraînement du modèle.</p>
+                            </div>
+                            <div>
+                                <p><strong class="text-gold">8x8 Inc. / Jitsi Meet</strong> (États-Unis) — Visioconférence pour les séances de guidance. Les flux audio et vidéo transitent par leurs serveurs le temps de la séance.</p>
+                            </div>
+                        </div>
+                        <p class="mt-4">Les transferts vers des sous-traitants situés hors de l'Union européenne sont encadrés par des garanties appropriées (clauses contractuelles types ou décision d'adéquation de la Commission européenne).</p>
                     </div>
                 </section>
 
@@ -378,7 +421,7 @@
             <!-- Date de mise à jour -->
             <div class="text-center mt-12 pt-8 border-t border-gold/20">
                 <p class="text-light-gold/60 text-sm">
-                    Dernière mise à jour : 09 juin 2026
+                    Dernière mise à jour : 23 juin 2026
                 </p>
             </div>
         </div>
