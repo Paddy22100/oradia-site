@@ -1562,22 +1562,28 @@ function buildCommunicationEmailHtml(draft) {
       <img src="${nlAbsUrl(img.path)}" alt="${nlEscHtml(img.name || '')}" width="576" style="display:block; width:100%; max-width:576px; height:auto; border-radius:14px;">
     </td></tr>`;
 
+  const hasPositions = images.length > 0 && images.every(img => img.position !== undefined && img.position !== null);
   let bodyRows = '';
-  let imgIdx = 0;
-  paragraphs.forEach((para, i) => {
-    // Insère une image avant ce paragraphe si on atteint son point de répartition
-    while (imgIdx < totalImages && Math.floor((imgIdx + 1) * totalParas / (totalImages + 1)) === i) {
-      bodyRows += imageRow(images[imgIdx]);
-      imgIdx++;
-    }
-    bodyRows += `<tr><td style="padding:0 32px 20px;">
+  if (hasPositions) {
+    const sorted = [...images].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+    paragraphs.forEach((para, i) => {
+      sorted.filter(img => (img.position ?? 0) === i).forEach(img => { bodyRows += imageRow(img); });
+      bodyRows += `<tr><td style="padding:0 32px 20px;">
       <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif;">${nlEscHtml(para).replace(/\n/g, '<br>')}</div>
     </td></tr>`;
-  });
-  // Images restantes (s'il y en a plus que de paragraphes pour les répartir)
-  while (imgIdx < totalImages) {
-    bodyRows += imageRow(images[imgIdx]);
-    imgIdx++;
+    });
+    sorted.filter(img => (img.position ?? 0) >= paragraphs.length).forEach(img => { bodyRows += imageRow(img); });
+  } else {
+    let imgIdx = 0;
+    paragraphs.forEach((para, i) => {
+      while (imgIdx < totalImages && Math.floor((imgIdx + 1) * totalParas / (totalImages + 1)) === i) {
+        bodyRows += imageRow(images[imgIdx++]);
+      }
+      bodyRows += `<tr><td style="padding:0 32px 20px;">
+      <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif;">${nlEscHtml(para).replace(/\n/g, '<br>')}</div>
+    </td></tr>`;
+    });
+    while (imgIdx < totalImages) { bodyRows += imageRow(images[imgIdx++]); }
   }
 
   return `<!DOCTYPE html>

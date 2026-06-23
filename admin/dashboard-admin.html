@@ -3373,7 +3373,7 @@
                     }
                 }
                 
-                nlSelectedImages.push({ index, path: finalPath, name: img.name });
+                nlSelectedImages.push({ index, path: finalPath, name: img.name, position: 0 });
                 document.getElementById(`nl-img-option-${index}`)?.classList.add('border-gold', 'ring-2', 'ring-gold/40');
                 document.getElementById(`nl-img-toggle-${index}`).innerHTML = '<i class="fas fa-check text-white text-sm"></i>';
                 document.getElementById(`nl-selected-badge-${index}`)?.classList.remove('hidden');
@@ -3391,20 +3391,37 @@
                 return;
             }
             
+            const contentVal = document.getElementById('nl-content')?.value || '';
+            const paraCount = contentVal.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).length || 1;
+            const posOptions = [
+                { v: 0,   l: 'Début du mail' },
+                ...Array.from({length: paraCount}, (_, i) => ({
+                    v: i + 1,
+                    l: i === 0 ? 'Après le 1er paragraphe' : `Après le ${i + 1}e paragraphe`
+                })),
+                { v: 999, l: 'Fin du mail' }
+            ];
             container.innerHTML = nlSelectedImages.map((sel, i) => `
-                <div class="relative group">
-                    <img src="${sel.path}" alt="${sel.name}" class="w-full h-24 object-cover rounded-lg">
-                    <button onclick="nlToggleImage(${sel.index})" 
-                        class="absolute top-1 right-1 w-6 h-6 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center">
-                        <i class="fas fa-times text-white text-xs"></i>
-                    </button>
-                    <p class="text-xs text-gold/60 mt-1 truncate">${sel.name}</p>
+                <div class="bg-white/3 border border-gold/10 rounded-xl p-3 flex gap-3 items-start">
+                    <img src="${sel.path}" alt="${sel.name}" class="w-20 h-14 object-cover rounded-lg flex-shrink-0">
+                    <div class="flex-1 min-w-0">
+                        <p class="text-xs text-gold/60 truncate mb-2">${sel.name}</p>
+                        <select onchange="nlSetImagePosition(${i}, +this.value)"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/20 text-gold/70 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-gold">
+                            ${posOptions.map(o => `<option value="${o.v}"${(sel.position??0)===o.v?' selected':''}>${o.l}</option>`).join('')}
+                        </select>
+                    </div>
+                    <button onclick="nlToggleImage(${sel.index})" class="text-red-400/50 hover:text-red-400 flex-shrink-0 mt-1"><i class="fas fa-times text-xs"></i></button>
                 </div>
             `).join('');
             
             const label = document.getElementById('nl-image-selected-label');
             label.classList.remove('hidden');
             label.querySelector('span').textContent = `${nlSelectedImages.length} image(s) sélectionnée(s)`;
+        }
+
+        function nlSetImagePosition(i, value) {
+            if (nlSelectedImages[i]) nlSelectedImages[i].position = value;
         }
 
         function nlClearImages() {
@@ -3559,7 +3576,7 @@
                         content,
                         intention: document.getElementById('nl-intention').value.trim(),
                         type: nlCurrentType,
-                        images: nlSelectedImages.map(s => ({ path: s.path, name: s.name })),
+                        images: nlSelectedImages.map(s => ({ path: s.path, name: s.name, position: s.position ?? 0 })),
                         extra
                     })
                 });
