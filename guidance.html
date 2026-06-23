@@ -120,10 +120,16 @@
       margin-bottom: 16px;
     }
 
-    /* Cal.com dark theme override */
-    #cal-booking-placeholder {
-      border-radius: 12px;
+    /* Cal.com integration */
+    #cal-booking-wrapper {
+      background: rgba(6,16,34,0.85);
+      border: 1px solid rgba(212,175,55,0.18);
+      border-radius: 14px;
       overflow: hidden;
+      backdrop-filter: blur(8px);
+    }
+    #cal-booking-placeholder iframe {
+      border-radius: 0;
     }
   </style>
 </head>
@@ -154,8 +160,10 @@
   </section>
 
   <!-- Widget Cal.com -->
-  <section class="max-w-5xl mx-auto px-4 py-12">
-    <div id="cal-booking-placeholder" style="width:100%;"></div>
+  <section class="max-w-5xl mx-auto px-4 py-12" id="cal-section" style="display:none;">
+    <div id="cal-booking-wrapper">
+      <div id="cal-booking-placeholder" style="width:100%;"></div>
+    </div>
   </section>
 
   <!-- Comment ça se passe -->
@@ -188,10 +196,16 @@
   <script>
     function selectCalEvent(slug) {
       const el = document.getElementById('cal-booking-placeholder');
+      const section = document.getElementById('cal-section');
       if (!el) return;
       el.innerHTML = '';
-      el.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      Cal("inline", { elementOrSelector: "#cal-booking-placeholder", calLink: slug, layout: "month_view" });
+      if (section) section.style.display = '';
+      setTimeout(() => section && section.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50);
+      Cal("inline", {
+        elementOrSelector: "#cal-booking-placeholder",
+        calLink: slug,
+        config: { theme: "dark", brandColor: "#d4af37", layout: "month_view" }
+      });
     }
   </script>
   <script src="components/header-manager.js" defer></script>
