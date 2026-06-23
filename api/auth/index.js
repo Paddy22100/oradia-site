@@ -501,6 +501,41 @@ async function handleForgotPassword(req, res) {
   return res.end(JSON.stringify({ success: true }));
 }
 
+// ============ SAVE GUIDANCE TORE ============
+async function handleSaveGuidanceTore(req, res) {
+  const body = await new Promise((resolve, reject) => {
+    let d = '';
+    req.on('data', c => d += c);
+    req.on('end', () => { try { resolve(JSON.parse(d || '{}')); } catch(e) { reject(e); } });
+  });
+  const { guidance_id, cards, analysis, synthesis, intention } = body;
+  if (!guidance_id) {
+    res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, error: 'guidance_id requis' }));
+  }
+  const supabase = createClient(
+    process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+  const { data: existing } = await supabase
+    .from('guidances').select('id').eq('id', guidance_id).maybeSingle();
+  if (!existing) {
+    res.writeHead(404, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, error: 'Guidance introuvable' }));
+  }
+  const { error } = await supabase.from('guidances').update({
+    tore_result: { cards, analysis, synthesis },
+    tore_intention: intention || null,
+    tore_drawn_at: new Date().toISOString()
+  }).eq('id', guidance_id);
+  if (error) {
+    res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, error: error.message }));
+  }
+  res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+  return res.end(JSON.stringify({ success: true }));
+}
+
 // ============ ROUTEUR PRINCIPAL ============
 module.exports = async (req, res) => {
   // Handle preflight
@@ -556,6 +591,11 @@ module.exports = async (req, res) => {
     // POST /save-tore-email — enregistre l'email pour la séquence de relance freemium
     if (path.includes('save-tore-email') || fullUrl.includes('save-tore-email')) {
       return await handleSaveToreEmail(req, res);
+    }
+
+    // POST /save-guidance-tore — sauvegarde le tirage d'une guidance en cours
+    if (path.includes('save-guidance-tore') || fullUrl.includes('save-guidance-tore')) {
+      return await handleSaveGuidanceTore(req, res);
     }
 
     // Route non reconnue

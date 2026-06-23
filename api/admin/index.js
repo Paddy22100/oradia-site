@@ -2461,6 +2461,8 @@ module.exports = async (req, res) => {
           .select('*', { count: 'exact' })
           .order('scheduled_at', { ascending: false })
           .range(offset, offset + limit - 1);
+        const idFilter = urlParams.get('id');
+        if (idFilter) query = query.eq('id', idFilter);
         if (statusFilter) query = query.eq('status', statusFilter);
         const { data, error, count } = await query;
         if (error) throw error;

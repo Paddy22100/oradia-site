@@ -3820,6 +3820,13 @@ const BACK_IMAGES = {
 
 let toreThrowIndex = 0;                       // 0 → 5 (6 lancers)
 
+// Mode guidance : détecter ?guidance=ID dès le chargement
+(function() {
+  const gId = new URLSearchParams(location.search).get('guidance');
+  if (gId) sessionStorage.setItem('tore_guidance_id', gId);
+  else sessionStorage.removeItem('tore_guidance_id');
+})();
+
 // Protection rechargement : gérée par le modal custom #abandon-tirage-modal (en bas de page)
 
 
@@ -4040,6 +4047,23 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
         if (data.success && data.analysis) {
           // Stocker l'analyse préchargée pour utilisation immédiate
           sessionStorage.setItem('preloaded_analysis', JSON.stringify(data));
+          // Mode guidance : transmettre le tirage à Rudy
+          const gId = sessionStorage.getItem('tore_guidance_id');
+          if (gId) {
+            fetch('/api/auth/save-guidance-tore', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                guidance_id: gId,
+                cards: JSON.parse(sessionStorage.getItem('tore_cards') || '[]'),
+                analysis: data.analysis,
+                synthesis: data.synthesis,
+                intention: sessionStorage.getItem('tore_intention') || ''
+              })
+            }).catch(() => {});
+            const fb = document.getElementById('tore-floating-analysis-btn');
+            if (fb) fb.innerHTML = '<i class="fas fa-check-circle mr-2"></i>✦ Votre tirage a été transmis à Rudy';
+          }
         }
       })
       .catch(err => {
@@ -6648,6 +6672,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     setTimeout(() => form?.dispatchEvent(new Event('submit', {bubbles: true, cancelable: true})), 500);
     return;
   }
+  if (sessionStorage.getItem('tore_guidance_id')) isSubscribed = true;
   let isSubscribed = window.freemiumTracker.isSubscribed();
 
   if (!isSubscribed) {
