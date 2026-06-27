@@ -305,117 +305,135 @@ class FreemiumTracker {
             const style = document.createElement('style');
             style.id = 'tore-limit-modal-styles';
             style.textContent = `
-                @keyframes toreModalFadeIn { from { opacity:0; } to { opacity:1; } }
-                @keyframes toreModalCardIn { from { opacity:0; transform:translateY(20px) scale(0.97); } to { opacity:1; transform:translateY(0) scale(1); } }
-                @keyframes toreStarPulse { 0%,100% { transform:scale(1) rotate(0deg); opacity:0.85; } 50% { transform:scale(1.2) rotate(15deg); opacity:1; } }
-                #tore-limit-modal .tlm-card { animation: toreModalCardIn 0.5s cubic-bezier(0.22,1,0.36,1); }
-                #tore-limit-modal .tlm-star { animation: toreStarPulse 3s ease-in-out infinite; }
-                #tore-limit-modal .tlm-cta { transition:transform 0.25s ease, box-shadow 0.25s ease, opacity 0.2s ease; }
-                #tore-limit-modal .tlm-cta:hover { transform:translateY(-2px); box-shadow:0 10px 36px rgba(212,175,55,0.55); opacity:0.92; }
-                #tore-limit-modal .tlm-secondary { transition:background 0.2s ease, border-color 0.2s ease, transform 0.2s ease; }
-                #tore-limit-modal .tlm-secondary:hover { background:rgba(212,175,55,0.12); border-color:rgba(212,175,55,0.6); transform:translateY(-1px); }
-                #tore-limit-modal .tlm-close { transition:color 0.2s ease; }
-                #tore-limit-modal .tlm-close:hover { color:rgba(233,231,223,0.7); }
-                #tore-limit-modal .tlm-email { width:100%;box-sizing:border-box;background:rgba(10,25,47,0.6);border:1px solid rgba(212,175,55,0.35);border-radius:10px;padding:11px 16px;color:#f5e7a1;font-size:0.9rem;outline:none;font-family:Georgia,serif;backdrop-filter:blur(4px); }
+                @keyframes toreModalFadeIn { from{opacity:0} to{opacity:1} }
+                @keyframes toreModalCardIn { from{opacity:0;transform:translateY(24px) scale(0.96)} to{opacity:1;transform:translateY(0) scale(1)} }
+                @keyframes tlmStarSpin { 0%,100%{transform:scale(1);opacity:0.8} 50%{transform:scale(1.25);opacity:1} }
+                #tore-limit-modal .tlm-card { animation:toreModalCardIn 0.55s cubic-bezier(0.22,1,0.36,1); }
+                #tore-limit-modal .tlm-star { animation:tlmStarSpin 3s ease-in-out infinite; display:inline-block; }
+                #tore-limit-modal .tlm-cta:hover { opacity:0.88; transform:translateY(-2px); box-shadow:0 12px 40px rgba(212,175,55,0.55) !important; }
+                #tore-limit-modal .tlm-secondary:hover { background:rgba(212,175,55,0.1) !important; border-color:rgba(212,175,55,0.6) !important; transform:translateY(-1px); }
+                #tore-limit-modal .tlm-cta, #tore-limit-modal .tlm-secondary { transition:all 0.22s ease; }
+                #tore-limit-modal .tlm-email { width:100%;box-sizing:border-box;background:rgba(7,20,42,0.8);border:1px solid rgba(212,175,55,0.35);border-radius:8px;padding:11px 16px;color:#f5e7a1;font-size:0.9rem;outline:none;font-family:Georgia,serif; }
                 #tore-limit-modal .tlm-email::placeholder { color:rgba(212,175,55,0.3); }
-                #tore-limit-modal .tlm-email:focus { border-color:rgba(212,175,55,0.7);box-shadow:0 0 0 3px rgba(212,175,55,0.08); }
-                #tore-limit-modal .tlm-divider { height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.2),transparent);margin:0 auto 20px; }
-                #tore-limit-modal .tlm-offer { flex:1;border-radius:16px;padding:20px 14px 16px;text-align:center;position:relative; }
+                #tore-limit-modal .tlm-email:focus { border-color:rgba(212,175,55,0.65);box-shadow:0 0 0 3px rgba(212,175,55,0.1); }
+                #tore-limit-modal .tlm-close:hover { color:rgba(233,231,223,0.6) !important; }
+                #tore-limit-modal .tlm-preorder:hover { transform:scale(1.01); box-shadow:0 8px 32px rgba(0,0,0,0.5) !important; }
+                #tore-limit-modal .tlm-preorder { transition:all 0.22s ease; }
             `;
             document.head.appendChild(style);
         }
 
         const modal = document.createElement('div');
         modal.id = 'tore-limit-modal';
-        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(2,6,23,0.82);backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);animation:toreModalFadeIn 0.35s ease;';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(2,6,20,0.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:toreModalFadeIn 0.35s ease;overflow-y:auto;';
         modal.innerHTML = `
             <div class="tlm-card" role="dialog" aria-modal="true" aria-label="Tirages offerts utilisés"
-                 style="position:relative;text-align:center;max-width:480px;width:100%;
-                        border-radius:22px;overflow:hidden;
-                        border:1px solid rgba(212,175,55,0.22);
-                        box-shadow:0 28px 80px rgba(0,0,0,0.7),0 0 80px rgba(212,175,55,0.06);">
+                 style="position:relative;width:100%;max-width:460px;border-radius:0;overflow:hidden;
+                        border:1px solid rgba(212,175,55,0.25);
+                        box-shadow:0 32px 90px rgba(0,0,0,0.8),0 0 60px rgba(212,175,55,0.06);
+                        font-family:Georgia,'Times New Roman',serif;">
 
-                <!-- Fond hero avec overlay -->
-                <div style="position:absolute;inset:0;background:url('/images/oradia-hero-4k.webp') center/cover no-repeat;opacity:0.18;pointer-events:none;"></div>
-                <div style="position:absolute;inset:0;background:linear-gradient(160deg,rgba(8,18,38,0.97) 0%,rgba(5,13,28,0.98) 100%);pointer-events:none;"></div>
-
-                <!-- Contenu -->
-                <div style="position:relative;padding:32px 24px 24px;">
-
+                <!-- ── HEADER style email ── -->
+                <div style="background:linear-gradient(160deg,#07142a 0%,#0a1f3a 100%);padding:28px 24px 22px;text-align:center;border-bottom:1px solid rgba(212,175,55,0.15);position:relative;">
                     <button data-close-limit-modal aria-label="Fermer"
-                            style="position:absolute;top:0;right:4px;background:none;border:none;
-                                   color:rgba(233,231,223,0.3);font-size:1.5rem;line-height:1;cursor:pointer;padding:6px 10px;">×</button>
-
-                    <div class="tlm-star" style="font-size:1.8rem;color:#d4af37;margin-bottom:14px;text-shadow:0 0 24px rgba(212,175,55,0.6);">✦</div>
-
-                    <h3 style="font-family:'Cormorant Garamond','Cinzel',serif;font-size:1.45rem;font-weight:400;color:#f0c75e;margin:0 0 10px;letter-spacing:0.04em;line-height:1.3;">
-                        Vous avez exploré vos deux tirages offerts
+                            style="position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(233,231,223,0.3);font-size:1.4rem;line-height:1;cursor:pointer;padding:4px 8px;">×</button>
+                    <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:14px;">
+                        <img src="/images/logo-hd-v2.webp" alt="O" style="width:34px;height:34px;border-radius:50%;border:1px solid rgba(212,175,55,0.4);">
+                        <span style="color:#d4af37;font-family:Georgia,serif;font-size:24px;font-weight:700;letter-spacing:6px;text-transform:uppercase;line-height:1;">RADIA</span>
+                    </div>
+                    <div class="tlm-star" style="font-size:1.4rem;color:#d4af37;margin-bottom:10px;text-shadow:0 0 20px rgba(212,175,55,0.7);">✦</div>
+                    <h3 style="margin:0 0 8px;color:#f0c75e;font-family:Georgia,serif;font-size:1.25rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;line-height:1.3;">
+                        Vos deux tirages offerts<br>ont été explorés
                     </h3>
-                    <p style="color:rgba(233,231,223,0.62);font-size:0.87rem;line-height:1.7;margin:0 auto 22px;max-width:340px;font-style:italic;font-family:Georgia,serif;">
-                        Pour continuer à recevoir une guidance approfondie,<br>choisissez la formule qui vous correspond.
+                    <p style="margin:0;color:rgba(212,175,55,0.45);font-size:0.7rem;letter-spacing:3px;text-transform:uppercase;">La Boussole Intérieure</p>
+                </div>
+
+                <!-- ── CORPS ── -->
+                <div style="background:rgba(5,12,28,0.97);padding:22px 20px;">
+
+                    <p style="color:rgba(233,231,223,0.68);font-size:0.88rem;line-height:1.75;margin:0 auto 18px;text-align:center;font-style:italic;max-width:340px;">
+                        Pour continuer à recevoir une guidance approfondie, choisissez la formule qui vous correspond.
                     </p>
 
-                    <!-- Champ email (affiché si email non connu) -->
-                    <div id="tlm-email-wrapper" style="display:none;margin-bottom:20px;">
-                        <p style="color:rgba(212,175,55,0.5);font-size:0.75rem;letter-spacing:0.12em;text-transform:uppercase;margin:0 0 8px;font-family:Georgia,serif;">Votre email pour recevoir le lien d'accès</p>
-                        <input id="tlm-email-input" type="email" class="tlm-email" placeholder="contact@exemple.fr" autocomplete="email" />
+                    <!-- Email -->
+                    <div id="tlm-email-wrapper" style="display:none;margin-bottom:16px;">
+                        <p style="color:rgba(212,175,55,0.55);font-size:0.68rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 7px;text-align:center;">✦ Votre email pour recevoir le lien d'accès</p>
+                        <input id="tlm-email-input" type="email" class="tlm-email" placeholder="votre@email.fr" autocomplete="email" />
                     </div>
 
-                    <div class="tlm-divider" style="width:60px;"></div>
+                    <!-- Séparateur -->
+                    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);margin:0 auto 18px;"></div>
 
-                    <!-- Grille 2 offres -->
-                    <div style="display:flex;gap:10px;margin-bottom:20px;">
+                    <!-- 2 offres -->
+                    <div style="display:flex;gap:8px;margin-bottom:18px;">
 
                         <!-- Découverte -->
-                        <div class="tlm-offer" style="border:1px solid rgba(212,175,55,0.25);background:rgba(255,255,255,0.025);">
-                            <p style="color:rgba(212,175,55,0.5);font-size:0.65rem;letter-spacing:0.22em;text-transform:uppercase;margin:0 0 8px;font-family:Georgia,serif;">Découverte</p>
-                            <p style="color:#f0c75e;font-size:1.65rem;font-weight:600;margin:0 0 4px;font-family:'Cormorant Garamond','Cinzel',serif;line-height:1;">5€<span style="font-size:0.8rem;font-weight:400;color:rgba(212,175,55,0.5);">/mois</span></p>
-                            <div style="height:1px;background:rgba(212,175,55,0.12);margin:10px 0;"></div>
-                            <ul style="list-style:none;padding:0;margin:0 0 16px;text-align:left;color:rgba(233,231,223,0.65);font-size:0.82rem;line-height:2;font-family:Georgia,serif;">
+                        <div style="flex:1;background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:16px 12px 14px;text-align:center;">
+                            <p style="color:rgba(212,175,55,0.5);font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 8px;">Découverte</p>
+                            <p style="color:#f0c75e;font-size:1.75rem;font-weight:700;margin:0 0 2px;letter-spacing:1px;line-height:1;">5€</p>
+                            <p style="color:rgba(212,175,55,0.45);font-size:0.7rem;margin:0 0 10px;">/mois</p>
+                            <div style="height:1px;background:rgba(212,175,55,0.1);margin:0 0 12px;"></div>
+                            <ul style="list-style:none;padding:0;margin:0 0 14px;text-align:left;color:rgba(233,231,223,0.65);font-size:0.8rem;line-height:2;">
                                 <li>✦ 1 tirage par jour</li>
                                 <li>✦ Historique 30 jours</li>
                             </ul>
                             <button id="tlm-btn-decouverte" class="tlm-secondary"
-                                    style="width:100%;padding:10px 8px;border-radius:50px;border:1px solid rgba(212,175,55,0.38);
-                                           background:transparent;color:#d4af37;font-size:0.82rem;font-weight:600;
-                                           cursor:pointer;font-family:Georgia,serif;letter-spacing:0.03em;">
-                                Choisir Découverte
+                                    style="width:100%;padding:9px 8px;border-radius:50px;border:1px solid rgba(212,175,55,0.4);
+                                           background:rgba(212,175,55,0.05);color:#d4af37;font-size:0.78rem;font-weight:700;
+                                           cursor:pointer;letter-spacing:1px;text-transform:uppercase;">
+                                Choisir
                             </button>
                         </div>
 
-                        <!-- Complète (mise en avant) -->
-                        <div class="tlm-offer" style="border:1.5px solid rgba(212,175,55,0.55);background:rgba(212,175,55,0.05);
-                                                       box-shadow:0 0 32px rgba(212,175,55,0.08),inset 0 0 20px rgba(212,175,55,0.03);">
-                            <p style="color:rgba(212,175,55,0.5);font-size:0.6rem;letter-spacing:0.22em;text-transform:uppercase;margin:0 0 2px;font-family:Georgia,serif;">Recommandé</p>
-                            <p style="color:rgba(212,175,55,0.7);font-size:0.62rem;letter-spacing:0.2em;text-transform:uppercase;margin:0 0 8px;font-family:Georgia,serif;">Complète</p>
-                            <p style="color:#f0c75e;font-size:1.65rem;font-weight:600;margin:0 0 4px;font-family:'Cormorant Garamond','Cinzel',serif;line-height:1;">8€<span style="font-size:0.8rem;font-weight:400;color:rgba(212,175,55,0.5);">/mois</span></p>
-                            <div style="height:1px;background:rgba(212,175,55,0.18);margin:10px 0;"></div>
-                            <ul style="list-style:none;padding:0;margin:0 0 16px;text-align:left;color:rgba(233,231,223,0.75);font-size:0.82rem;line-height:2;font-family:Georgia,serif;">
+                        <!-- Complète -->
+                        <div style="flex:1;background:rgba(212,175,55,0.05);border:1.5px solid rgba(212,175,55,0.5);border-radius:12px;padding:16px 12px 14px;text-align:center;box-shadow:0 0 28px rgba(212,175,55,0.08);">
+                            <p style="color:rgba(212,175,55,0.5);font-size:0.55rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 1px;">Recommandé</p>
+                            <p style="color:rgba(212,175,55,0.65);font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 8px;">Complète</p>
+                            <p style="color:#f0c75e;font-size:1.75rem;font-weight:700;margin:0 0 2px;letter-spacing:1px;line-height:1;">8€</p>
+                            <p style="color:rgba(212,175,55,0.45);font-size:0.7rem;margin:0 0 10px;">/mois</p>
+                            <div style="height:1px;background:rgba(212,175,55,0.18);margin:0 0 12px;"></div>
+                            <ul style="list-style:none;padding:0;margin:0 0 14px;text-align:left;color:rgba(233,231,223,0.75);font-size:0.8rem;line-height:2;">
                                 <li>✦ Tirages illimités</li>
                                 <li>✦ Historique complet</li>
                                 <li>✦ Espace membres</li>
                             </ul>
                             <button id="tlm-btn-complet" class="tlm-cta"
-                                    style="width:100%;padding:11px 8px;border-radius:50px;
-                                           background:linear-gradient(135deg,#d4af37,#f5e7a1);
-                                           color:#0a1224;font-size:0.85rem;font-weight:700;
-                                           border:none;cursor:pointer;font-family:'Cinzel',Georgia,serif;
-                                           letter-spacing:0.04em;
-                                           box-shadow:0 4px 24px rgba(212,175,55,0.38);">
-                                Choisir l'offre Complète
+                                    style="width:100%;padding:10px 8px;border-radius:50px;
+                                           background:linear-gradient(135deg,#d4af37,#f0c75e);
+                                           color:#050f23;font-size:0.78rem;font-weight:700;
+                                           border:none;cursor:pointer;letter-spacing:1px;text-transform:uppercase;
+                                           box-shadow:0 4px 20px rgba(212,175,55,0.4);">
+                                Choisir
                             </button>
                         </div>
-
                     </div>
 
+                    <!-- Séparateur -->
+                    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);margin:0 auto 16px;"></div>
+
+                    <!-- ── PUB PRÉCOMMANDE style bannière FB ── -->
+                    <a href="/precommande-oracle.html" class="tlm-preorder"
+                       style="display:block;border-radius:10px;overflow:hidden;text-decoration:none;
+                              box-shadow:0 4px 20px rgba(0,0,0,0.4);margin-bottom:16px;position:relative;">
+                        <img src="/images/medias/Banni%C3%A8re%20Facebook.png" alt="Précommande Oracle Oradia"
+                             style="display:block;width:100%;height:auto;max-height:130px;object-fit:cover;">
+                        <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(5,12,28,0.75) 0%,rgba(5,12,28,0.2) 100%);display:flex;align-items:center;padding:0 18px;">
+                            <div>
+                                <p style="margin:0 0 3px;color:rgba(212,175,55,0.7);font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;">Première édition limitée</p>
+                                <p style="margin:0 0 8px;color:#f5e7a1;font-size:1rem;font-weight:700;letter-spacing:1px;line-height:1.2;">L'Oracle Oradia<br>en précommande</p>
+                                <span style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#050f23;font-size:0.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:50px;">
+                                    Réserver · dès 38€
+                                </span>
+                            </div>
+                        </div>
+                    </a>
+
                     <button data-close-limit-modal class="tlm-close"
-                            style="display:inline-block;padding:6px 16px;
-                                   background:none;border:none;
-                                   color:rgba(233,231,223,0.3);font-size:0.8rem;cursor:pointer;
-                                   font-family:Georgia,serif;font-style:italic;letter-spacing:0.05em;">
+                            style="display:block;width:100%;padding:6px;background:none;border:none;
+                                   color:rgba(233,231,223,0.28);font-size:0.78rem;cursor:pointer;
+                                   font-style:italic;text-align:center;letter-spacing:0.05em;">
                         Peut-être plus tard
                     </button>
-
                 </div>
             </div>
         `;
