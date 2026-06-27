@@ -328,7 +328,12 @@ class FreemiumTracker {
 
         const modal = document.createElement('div');
         modal.id = 'tore-limit-modal';
-        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(2,6,20,0.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:toreModalFadeIn 0.35s ease;overflow-y:auto;';
+        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;background:url(\'/images/oradia-hero-4k.webp\') center/cover no-repeat;animation:toreModalFadeIn 0.35s ease;overflow-y:auto;';
+        modal.style.setProperty('--tlm-bg', 'rgba(2,6,20,0.82)');
+        // Overlay sombre sur l'image hero
+        const bgOverlay = document.createElement('div');
+        bgOverlay.style.cssText = 'position:fixed;inset:0;z-index:-1;background:rgba(2,6,20,0.82);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);';
+        modal.appendChild(bgOverlay);
         modal.innerHTML = `
             <div class="tlm-card" role="dialog" aria-modal="true" aria-label="Tirages offerts utilisés"
                  style="position:relative;width:calc(100vw - 24px);max-width:560px;border-radius:0;overflow:hidden;
@@ -351,8 +356,7 @@ class FreemiumTracker {
                 </div>
 
                 <!-- ── CORPS ── -->
-                <div style="position:relative;background:url('/images/oradia-hero-4k.webp') center/cover no-repeat;padding:20px 18px;">
-                <div style="position:absolute;inset:0;background:rgba(6,14,32,0.84);pointer-events:none;"></div>
+                <div style="background:rgba(6,14,32,0.96);padding:20px 18px;">
                 <div style="position:relative;">
 
                     <p style="color:rgba(233,231,223,0.68);font-size:0.88rem;line-height:1.75;margin:0 auto 18px;text-align:center;font-style:italic;max-width:340px;">
