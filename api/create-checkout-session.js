@@ -85,16 +85,20 @@ module.exports = async (req, res) => {
             const plan    = 'complet';
             const priceId = process.env.STRIPE_PRICE_COMPLET;
             if (!priceId) return res.status(500).json({ error: 'STRIPE_PRICE_COMPLET non configuré' });
-            const session = await stripe.checkout.sessions.create({
+            const sessionParams = {
                 payment_method_types: ['card'],
                 mode: 'subscription',
                 line_items: [{ price: priceId, quantity: 1 }],
-                customer_email: email,
                 success_url: `${frontendUrl}/success-tore.html?session_id={CHECKOUT_SESSION_ID}`,
                 cancel_url:  `${frontendUrl}/tore.html?cancelled=1`,
                 metadata: { offer: 'tore-subscription', plan, email, full_name: fullName },
                 subscription_data: { metadata: { email, full_name: fullName, plan } }
-            });
+            };
+            // Pré-remplir l'email si connu, sinon Stripe le collecte pendant le checkout
+            if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                sessionParams.customer_email = email;
+            }
+            const session = await stripe.checkout.sessions.create(sessionParams);
             return res.json({ success: true, url: session.url });
         }
 
