@@ -247,8 +247,8 @@ async function handleSendEmail(req, res) {
             <img src="${bSrc}" alt="${b.name.replace(/_/g,' ')}" width="${BRIDGE_W}" height="${BRIDGE_H}"
               style="display:block;width:${BRIDGE_W}px;height:${BRIDGE_H}px;object-fit:cover;border-radius:6px;margin:0 auto;border:1px solid rgba(212,175,55,0.45);"
               onerror="this.style.background='${bColor}';this.removeAttribute('src');">
-            <p style="margin:5px 0 1px;color:#f5e7a1;font-size:9px;font-weight:700;line-height:1.3;">${(b.name.replace(/_/g,' ')).replace(/\b\w/g, l => l.toUpperCase())}</p>
-            <p style="margin:0;color:rgba(212,175,55,0.4);font-size:7px;font-style:italic;">ligne mutante</p>
+            <p style="margin:5px 0 1px;color:#f5e7a1;font-size:11px;font-weight:700;line-height:1.3;">${(b.name.replace(/_/g,' ')).replace(/\b\w/g, l => l.toUpperCase())}</p>
+            <p style="margin:0;color:rgba(212,175,55,0.5);font-size:10px;font-style:italic;">ligne mutante</p>
           </div>`;
       }
 
@@ -257,8 +257,8 @@ async function handleSendEmail(req, res) {
           <img src="${src}" alt="${card.name.replace(/_/g,' ')}" width="${w}" height="${h}"
             style="display:block;width:${w}px;height:${h}px;object-fit:cover;border-radius:7px;margin:0 auto;border:1px solid rgba(30,58,90,0.8);"
             onerror="this.style.background='${color}';this.removeAttribute('src');">
-          <p style="margin:8px 0 2px;color:#d4af37;font-size:10px;font-weight:700;line-height:1.3;">${(card.name.replace(/_/g,' ')).replace(/\b\w/g, l => l.toUpperCase())}</p>
-          <p style="margin:0;color:#4a5a6a;font-size:8px;font-style:italic;text-transform:capitalize;">${card.family.replace(/_/g,' ')}</p>
+          <p style="margin:8px 0 2px;color:#d4af37;font-size:13px;font-weight:700;line-height:1.3;">${(card.name.replace(/_/g,' ')).replace(/\b\w/g, l => l.toUpperCase())}</p>
+          <p style="margin:0;color:#8a9aaa;font-size:11px;font-style:italic;text-transform:capitalize;">${card.family.replace(/_/g,' ')}</p>
           ${bridgeHtml}
         </div>
       </td>`;
