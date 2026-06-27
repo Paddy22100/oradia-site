@@ -374,7 +374,9 @@ class FreemiumTracker {
 
                             <!-- Découverte -->
                             <div style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:14px 10px 12px;text-align:center;display:flex;flex-direction:column;">
-                                <p style="color:rgba(212,175,55,0.5);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">Découverte</p>
+                                <div style="height:2.4rem;display:flex;flex-direction:column;justify-content:flex-end;margin-bottom:6px;">
+                                    <p style="color:rgba(212,175,55,0.5);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;margin:0;">Découverte</p>
+                                </div>
                                 <p style="color:#f0c75e;font-size:1.6rem;font-weight:700;margin:0 0 8px;line-height:1;white-space:nowrap;">5€ <span style="font-size:0.65rem;color:rgba(212,175,55,0.45);font-weight:400;">/mois</span></p>
                                 <div style="height:1px;background:rgba(212,175,55,0.1);margin:0 0 8px;"></div>
                                 <ul style="list-style:none;padding:0;margin:0 0 10px;text-align:left;color:rgba(233,231,223,0.65);font-size:0.75rem;line-height:1.9;">
@@ -391,8 +393,10 @@ class FreemiumTracker {
 
                             <!-- Complète -->
                             <div style="flex:1;background:rgba(212,175,55,0.06);border:1.5px solid rgba(212,175,55,0.5);border-radius:12px;padding:14px 10px 12px;text-align:center;box-shadow:0 0 22px rgba(212,175,55,0.1);display:flex;flex-direction:column;">
-                                <p style="color:rgba(212,175,55,0.5);font-size:0.52rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 1px;">Recommandé</p>
-                                <p style="color:rgba(212,175,55,0.65);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">Complète</p>
+                                <div style="height:2.4rem;display:flex;flex-direction:column;justify-content:flex-end;margin-bottom:6px;">
+                                    <p style="color:rgba(212,175,55,0.5);font-size:0.52rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 1px;">Recommandé</p>
+                                    <p style="color:rgba(212,175,55,0.65);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;margin:0;">Complète</p>
+                                </div>
                                 <p style="color:#f0c75e;font-size:1.6rem;font-weight:700;margin:0 0 8px;line-height:1;white-space:nowrap;">8€ <span style="font-size:0.65rem;color:rgba(212,175,55,0.45);font-weight:400;">/mois</span></p>
                                 <div style="height:1px;background:rgba(212,175,55,0.18);margin:0 0 8px;"></div>
                                 <ul style="list-style:none;padding:0;margin:0 0 10px;text-align:left;color:rgba(233,231,223,0.75);font-size:0.75rem;line-height:1.9;">
