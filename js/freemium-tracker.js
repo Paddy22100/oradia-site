@@ -318,9 +318,9 @@ class FreemiumTracker {
                 #tore-limit-modal .tlm-offers-row { display:flex;gap:8px;margin-bottom:14px;align-items:stretch; }
                 #tore-limit-modal .tlm-offers-left { flex:1;display:flex;flex-direction:row;gap:8px;min-width:0; }
                 #tore-limit-modal .tlm-offers-left > div { flex:1;display:flex;flex-direction:column; }
-                #tore-limit-modal .tlm-preorder { width:130px;flex-shrink:0;border-radius:10px;overflow:hidden;text-decoration:none;position:relative;display:block;transition:opacity 0.2s ease;box-shadow:0 4px 20px rgba(0,0,0,0.4);min-height:200px; }
+                #tore-limit-modal .tlm-preorder { width:160px;flex-shrink:0;border-radius:10px;overflow:hidden;text-decoration:none;position:relative;display:block;transition:opacity 0.2s ease;box-shadow:0 4px 20px rgba(0,0,0,0.4);min-height:200px; }
                 #tore-limit-modal .tlm-preorder:hover { opacity:0.88; }
-                @media(max-width:400px){ #tore-limit-modal .tlm-preorder { width:100px; } }
+                @media(max-width:420px){ #tore-limit-modal .tlm-preorder { width:110px; } }
             `;
             document.head.appendChild(style);
         }
