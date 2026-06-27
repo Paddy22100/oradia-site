@@ -369,7 +369,7 @@ class FreemiumTracker {
                         <div class="tlm-offers-left">
 
                             <!-- Découverte -->
-                            <div style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:14px 10px 12px;text-align:center;">
+                            <div style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:14px 10px 12px;text-align:center;display:flex;flex-direction:column;">
                                 <p style="color:rgba(212,175,55,0.5);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">Découverte</p>
                                 <p style="color:#f0c75e;font-size:1.6rem;font-weight:700;margin:0 0 8px;line-height:1;white-space:nowrap;">5€ <span style="font-size:0.65rem;color:rgba(212,175,55,0.45);font-weight:400;">/mois</span></p>
                                 <div style="height:1px;background:rgba(212,175,55,0.1);margin:0 0 8px;"></div>
@@ -380,13 +380,13 @@ class FreemiumTracker {
                                 <button id="tlm-btn-decouverte" class="tlm-secondary"
                                         style="width:100%;padding:8px;border-radius:50px;border:1px solid rgba(212,175,55,0.4);
                                                background:rgba(212,175,55,0.05);color:#d4af37;font-size:0.72rem;font-weight:700;
-                                               cursor:pointer;letter-spacing:1px;text-transform:uppercase;">
+                                               cursor:pointer;letter-spacing:1px;text-transform:uppercase;margin-top:auto;">
                                     Choisir
                                 </button>
                             </div>
 
                             <!-- Complète -->
-                            <div style="flex:1;background:rgba(212,175,55,0.06);border:1.5px solid rgba(212,175,55,0.5);border-radius:12px;padding:14px 10px 12px;text-align:center;box-shadow:0 0 22px rgba(212,175,55,0.1);">
+                            <div style="flex:1;background:rgba(212,175,55,0.06);border:1.5px solid rgba(212,175,55,0.5);border-radius:12px;padding:14px 10px 12px;text-align:center;box-shadow:0 0 22px rgba(212,175,55,0.1);display:flex;flex-direction:column;">
                                 <p style="color:rgba(212,175,55,0.5);font-size:0.52rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 1px;">Recommandé</p>
                                 <p style="color:rgba(212,175,55,0.65);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">Complète</p>
                                 <p style="color:#f0c75e;font-size:1.6rem;font-weight:700;margin:0 0 8px;line-height:1;white-space:nowrap;">8€ <span style="font-size:0.65rem;color:rgba(212,175,55,0.45);font-weight:400;">/mois</span></p>
@@ -401,7 +401,7 @@ class FreemiumTracker {
                                                background:linear-gradient(135deg,#d4af37,#f0c75e);
                                                color:#050f23;font-size:0.72rem;font-weight:700;
                                                border:none;cursor:pointer;letter-spacing:1px;text-transform:uppercase;
-                                               box-shadow:0 4px 18px rgba(212,175,55,0.38);">
+                                               box-shadow:0 4px 18px rgba(212,175,55,0.38);margin-top:auto;">
                                     Choisir
                                 </button>
                             </div>
@@ -427,8 +427,8 @@ class FreemiumTracker {
                         </a>
                     </div>
 
-                    <p style="color:rgba(233,231,223,0.28);font-size:0.65rem;text-align:center;margin:10px 0 6px;font-style:italic;line-height:1.5;">
-                        En vous abonnant, vous serez ajouté(e) à notre newsletter.<br>Désabonnement possible à tout moment.
+                    <p style="color:rgba(233,231,223,0.28);font-size:0.65rem;text-align:center;margin:10px 0 6px;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                        En vous abonnant, vous serez ajouté(e) à notre newsletter. Désabonnement possible à tout moment.
                     </p>
                     <button data-close-limit-modal class="tlm-close"
                             style="display:block;width:100%;padding:4px;background:none;border:none;
