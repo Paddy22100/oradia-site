@@ -349,7 +349,9 @@ class FreemiumTracker {
                 </div>
 
                 <!-- ── CORPS ── -->
-                <div style="background:rgba(10,20,42,0.98);padding:20px 18px;">
+                <div style="position:relative;background:url('/images/oradia-hero-4k.webp') center/cover no-repeat;padding:20px 18px;">
+                <div style="position:absolute;inset:0;background:rgba(6,14,32,0.84);pointer-events:none;"></div>
+                <div style="position:relative;">
 
                     <p style="color:rgba(233,231,223,0.68);font-size:0.88rem;line-height:1.75;margin:0 auto 18px;text-align:center;font-style:italic;max-width:340px;">
                         Pour continuer à recevoir une guidance approfondie, choisissez la formule qui vous correspond.
@@ -371,10 +373,10 @@ class FreemiumTracker {
                         <div class="tlm-offers-left">
 
                             <!-- Découverte -->
-                            <div style="flex:1;background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:14px 10px 12px;text-align:center;">
-                                <p style="color:rgba(212,175,55,0.5);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">Découverte</p>
-                                <p style="color:#f0c75e;font-size:1.6rem;font-weight:700;margin:0 0 1px;line-height:1;">5€</p>
-                                <p style="color:rgba(212,175,55,0.45);font-size:0.65rem;margin:0 0 8px;">/mois</p>
+                            <div style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:14px 10px 12px;text-align:center;">
+                                <p style="color:rgba(212,175,55,0.5);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 1px;">Découverte</p>
+                                <p style="color:rgba(212,175,55,0.5);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;visibility:hidden;">·</p>
+                                <p style="color:#f0c75e;font-size:1.6rem;font-weight:700;margin:0 0 8px;line-height:1;white-space:nowrap;">5€ <span style="font-size:0.65rem;color:rgba(212,175,55,0.45);font-weight:400;">/mois</span></p>
                                 <div style="height:1px;background:rgba(212,175,55,0.1);margin:0 0 8px;"></div>
                                 <ul style="list-style:none;padding:0;margin:0 0 10px;text-align:left;color:rgba(233,231,223,0.65);font-size:0.75rem;line-height:1.9;">
                                     <li>✦ 1 tirage par jour</li>
@@ -389,11 +391,10 @@ class FreemiumTracker {
                             </div>
 
                             <!-- Complète -->
-                            <div style="flex:1;background:rgba(212,175,55,0.05);border:1.5px solid rgba(212,175,55,0.5);border-radius:12px;padding:14px 10px 12px;text-align:center;box-shadow:0 0 22px rgba(212,175,55,0.08);">
+                            <div style="flex:1;background:rgba(212,175,55,0.06);border:1.5px solid rgba(212,175,55,0.5);border-radius:12px;padding:14px 10px 12px;text-align:center;box-shadow:0 0 22px rgba(212,175,55,0.1);">
                                 <p style="color:rgba(212,175,55,0.5);font-size:0.52rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 1px;">Recommandé</p>
                                 <p style="color:rgba(212,175,55,0.65);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">Complète</p>
-                                <p style="color:#f0c75e;font-size:1.6rem;font-weight:700;margin:0 0 1px;line-height:1;">8€</p>
-                                <p style="color:rgba(212,175,55,0.45);font-size:0.65rem;margin:0 0 8px;">/mois</p>
+                                <p style="color:#f0c75e;font-size:1.6rem;font-weight:700;margin:0 0 8px;line-height:1;white-space:nowrap;">8€ <span style="font-size:0.65rem;color:rgba(212,175,55,0.45);font-weight:400;">/mois</span></p>
                                 <div style="height:1px;background:rgba(212,175,55,0.18);margin:0 0 8px;"></div>
                                 <ul style="list-style:none;padding:0;margin:0 0 10px;text-align:left;color:rgba(233,231,223,0.75);font-size:0.75rem;line-height:1.9;">
                                     <li>✦ Tirages illimités</li>
@@ -432,7 +433,7 @@ class FreemiumTracker {
                                    font-style:italic;text-align:center;letter-spacing:0.05em;">
                         Peut-être plus tard
                     </button>
-                </div>
+                </div></div>
             </div>
         `;
         document.body.appendChild(modal);
