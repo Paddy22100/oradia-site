@@ -307,9 +307,7 @@ class FreemiumTracker {
             style.textContent = `
                 @keyframes toreModalFadeIn { from{opacity:0} to{opacity:1} }
                 @keyframes toreModalCardIn { from{opacity:0;transform:translateY(24px) scale(0.96)} to{opacity:1;transform:translateY(0) scale(1)} }
-                @keyframes tlmStarSpin { 0%,100%{transform:scale(1);opacity:0.8} 50%{transform:scale(1.25);opacity:1} }
                 #tore-limit-modal .tlm-card { animation:toreModalCardIn 0.55s cubic-bezier(0.22,1,0.36,1); }
-                #tore-limit-modal .tlm-star { animation:tlmStarSpin 3s ease-in-out infinite; display:inline-block; }
                 #tore-limit-modal .tlm-cta:hover { opacity:0.88; transform:translateY(-2px); box-shadow:0 12px 40px rgba(212,175,55,0.55) !important; }
                 #tore-limit-modal .tlm-secondary:hover { background:rgba(212,175,55,0.1) !important; border-color:rgba(212,175,55,0.6) !important; transform:translateY(-1px); }
                 #tore-limit-modal .tlm-cta, #tore-limit-modal .tlm-secondary { transition:all 0.22s ease; }
@@ -334,22 +332,21 @@ class FreemiumTracker {
                         font-family:Georgia,'Times New Roman',serif;">
 
                 <!-- ── HEADER style email ── -->
-                <div style="background:linear-gradient(160deg,#07142a 0%,#0a1f3a 100%);padding:28px 24px 22px;text-align:center;border-bottom:1px solid rgba(212,175,55,0.15);position:relative;">
+                <div style="background:linear-gradient(160deg,#0d1e3a 0%,#0f2545 100%);padding:26px 24px 20px;text-align:center;border-bottom:1px solid rgba(212,175,55,0.18);position:relative;">
                     <button data-close-limit-modal aria-label="Fermer"
-                            style="position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(233,231,223,0.3);font-size:1.4rem;line-height:1;cursor:pointer;padding:4px 8px;">×</button>
-                    <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:14px;">
-                        <img src="/images/logo-hd-v2.webp" alt="O" style="width:34px;height:34px;border-radius:50%;border:1px solid rgba(212,175,55,0.4);">
-                        <span style="color:#d4af37;font-family:Georgia,serif;font-size:24px;font-weight:700;letter-spacing:6px;text-transform:uppercase;line-height:1;">RADIA</span>
+                            style="position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(233,231,223,0.35);font-size:1.4rem;line-height:1;cursor:pointer;padding:4px 8px;">×</button>
+                    <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;">
+                        <img src="/images/logo-hd-v2.webp" alt="O" style="width:32px;height:32px;border-radius:50%;border:1px solid rgba(212,175,55,0.4);">
+                        <span style="color:#d4af37;font-family:Georgia,serif;font-size:22px;font-weight:700;letter-spacing:6px;text-transform:uppercase;line-height:1;">RADIA</span>
                     </div>
-                    <div class="tlm-star" style="font-size:1.4rem;color:#d4af37;margin-bottom:10px;text-shadow:0 0 20px rgba(212,175,55,0.7);">✦</div>
-                    <h3 style="margin:0 0 8px;color:#f0c75e;font-family:Georgia,serif;font-size:1.25rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;line-height:1.3;">
+                    <h3 style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:1.2rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;line-height:1.3;">
                         Vos deux tirages offerts<br>ont été explorés
                     </h3>
-                    <p style="margin:0;color:rgba(212,175,55,0.45);font-size:0.7rem;letter-spacing:3px;text-transform:uppercase;">La Boussole Intérieure</p>
+                    <p style="margin:0;color:rgba(212,175,55,0.4);font-size:0.65rem;letter-spacing:3px;text-transform:uppercase;">La Boussole Intérieure</p>
                 </div>
 
                 <!-- ── CORPS ── -->
-                <div style="background:rgba(5,12,28,0.97);padding:22px 20px;">
+                <div style="background:rgba(10,20,42,0.98);padding:20px 18px;">
 
                     <p style="color:rgba(233,231,223,0.68);font-size:0.88rem;line-height:1.75;margin:0 auto 18px;text-align:center;font-style:italic;max-width:340px;">
                         Pour continuer à recevoir une guidance approfondie, choisissez la formule qui vous correspond.
@@ -411,19 +408,23 @@ class FreemiumTracker {
                     <!-- Séparateur -->
                     <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);margin:0 auto 16px;"></div>
 
-                    <!-- ── PUB PRÉCOMMANDE style bannière FB ── -->
+                    <!-- ── PUB PRÉCOMMANDE ── -->
                     <a href="/precommande-oracle.html" class="tlm-preorder"
                        style="display:block;border-radius:10px;overflow:hidden;text-decoration:none;
-                              box-shadow:0 4px 20px rgba(0,0,0,0.4);margin-bottom:16px;position:relative;">
-                        <img src="/images/medias/Banni%C3%A8re%20Facebook.png" alt="Précommande Oracle Oradia"
-                             style="display:block;width:100%;height:auto;max-height:130px;object-fit:cover;">
-                        <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(5,12,28,0.75) 0%,rgba(5,12,28,0.2) 100%);display:flex;align-items:center;padding:0 18px;">
-                            <div>
-                                <p style="margin:0 0 3px;color:rgba(212,175,55,0.7);font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;">Première édition limitée</p>
-                                <p style="margin:0 0 8px;color:#f5e7a1;font-size:1rem;font-weight:700;letter-spacing:1px;line-height:1.2;">L'Oracle Oradia<br>en précommande</p>
-                                <span style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#050f23;font-size:0.7rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 14px;border-radius:50px;">
-                                    Réserver · dès 38€
-                                </span>
+                              box-shadow:0 4px 20px rgba(0,0,0,0.5);margin-bottom:16px;">
+                        <!-- Image bannière -->
+                        <div style="position:relative;height:110px;overflow:hidden;">
+                            <img src="/images/medias/banniere-facebook.png" alt="Précommande Oracle Oradia"
+                                 style="display:block;width:100%;height:110px;object-fit:cover;object-position:center;">
+                            <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(4,10,24,0.78) 40%,rgba(4,10,24,0.15) 100%);"></div>
+                            <div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 16px;">
+                                <div>
+                                    <p style="margin:0 0 3px;color:rgba(212,175,55,0.75);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;">Première édition limitée</p>
+                                    <p style="margin:0 0 8px;color:#f5e7a1;font-size:0.95rem;font-weight:700;line-height:1.25;">L'Oracle Oradia<br>en précommande</p>
+                                    <span style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#050f23;font-size:0.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 13px;border-radius:50px;">
+                                        Réserver · dès 38€
+                                    </span>
+                                </div>
                             </div>
                         </div>
                     </a>
