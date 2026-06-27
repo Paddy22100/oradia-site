@@ -315,8 +315,12 @@ class FreemiumTracker {
                 #tore-limit-modal .tlm-email::placeholder { color:rgba(212,175,55,0.3); }
                 #tore-limit-modal .tlm-email:focus { border-color:rgba(212,175,55,0.65);box-shadow:0 0 0 3px rgba(212,175,55,0.1); }
                 #tore-limit-modal .tlm-close:hover { color:rgba(233,231,223,0.6) !important; }
-                #tore-limit-modal .tlm-preorder:hover { transform:scale(1.01); box-shadow:0 8px 32px rgba(0,0,0,0.5) !important; }
-                #tore-limit-modal .tlm-preorder { transition:all 0.22s ease; }
+                #tore-limit-modal .tlm-preorder { transition:opacity 0.2s ease; border-radius:10px;overflow:hidden;text-decoration:none;display:flex;height:80px; }
+                #tore-limit-modal .tlm-preorder:hover { opacity:0.9; }
+                #tore-limit-modal .tlm-preorder-text { flex:1;min-width:0;background:rgba(8,18,38,0.97);border:1px solid rgba(212,175,55,0.22);border-right:none;border-radius:10px 0 0 10px;padding:10px 14px;display:flex;flex-direction:column;justify-content:center; }
+                #tore-limit-modal .tlm-preorder-img { width:120px;flex-shrink:0;overflow:hidden;border-radius:0 10px 10px 0;position:relative; }
+                @media(max-width:380px){ #tore-limit-modal .tlm-preorder-img { width:90px; } }
+                @media(max-width:320px){ #tore-limit-modal .tlm-preorder { height:auto;flex-direction:column; } #tore-limit-modal .tlm-preorder-img { width:100%;height:70px;border-radius:0 0 10px 10px; } #tore-limit-modal .tlm-preorder-text { border-right:1px solid rgba(212,175,55,0.22);border-bottom:none;border-radius:10px 10px 0 0; } }
             `;
             document.head.appendChild(style);
         }
@@ -409,23 +413,17 @@ class FreemiumTracker {
                     <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);margin:0 auto 16px;"></div>
 
                     <!-- ── PUB PRÉCOMMANDE ── -->
-                    <a href="/precommande-oracle.html" class="tlm-preorder"
-                       style="display:block;border-radius:10px;overflow:hidden;text-decoration:none;
-                              box-shadow:0 4px 20px rgba(0,0,0,0.5);margin-bottom:16px;">
-                        <!-- Image bannière -->
-                        <div style="position:relative;height:110px;overflow:hidden;">
-                            <img src="/images/medias/banniere-facebook.png" alt="Précommande Oracle Oradia"
-                                 style="display:block;width:100%;height:110px;object-fit:cover;object-position:center;">
-                            <div style="position:absolute;inset:0;background:linear-gradient(to right,rgba(4,10,24,0.78) 40%,rgba(4,10,24,0.15) 100%);"></div>
-                            <div style="position:absolute;inset:0;display:flex;align-items:center;padding:0 16px;">
-                                <div>
-                                    <p style="margin:0 0 3px;color:rgba(212,175,55,0.75);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;">Première édition limitée</p>
-                                    <p style="margin:0 0 8px;color:#f5e7a1;font-size:0.95rem;font-weight:700;line-height:1.25;">L'Oracle Oradia<br>en précommande</p>
-                                    <span style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#050f23;font-size:0.68rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:5px 13px;border-radius:50px;">
-                                        Réserver · dès 38€
-                                    </span>
-                                </div>
-                            </div>
+                    <a href="/precommande-oracle.html" class="tlm-preorder" style="margin-bottom:14px;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
+                        <div class="tlm-preorder-text">
+                            <p style="margin:0 0 2px;color:rgba(212,175,55,0.6);font-size:0.55rem;letter-spacing:3px;text-transform:uppercase;">Première édition</p>
+                            <p style="margin:0 0 6px;color:#f5e7a1;font-size:0.82rem;font-weight:700;line-height:1.25;white-space:nowrap;">L'Oracle Oradia</p>
+                            <span style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#050f23;font-size:0.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:50px;white-space:nowrap;">
+                                Réserver · dès 38€
+                            </span>
+                        </div>
+                        <div class="tlm-preorder-img">
+                            <img src="/images/medias/banniere-facebook.png" alt="Oracle Oradia"
+                                 style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
                         </div>
                     </a>
 
