@@ -919,19 +919,35 @@
                             à votre rythme.
                         </p>
 
-                        <div style="display:flex; align-items:center; gap:12px; margin-bottom:1.8rem; padding:0.9rem 1.2rem; background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.2); border-radius:12px;">
-                            <i class="fas fa-clock" style="color:#d4af37; font-size:1.1rem; flex-shrink:0;"></i>
-                            <div>
-                                <p style="color:#d4af37; font-family:'Cinzel',serif; font-size:0.78rem; font-weight:700; margin:0;">30 minutes · En visio</p>
-                            </div>
+                        <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:1.8rem;">
+                            <a href="/guidance" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0.9rem 1.2rem; background:rgba(212,175,55,0.06); border:1px solid rgba(212,175,55,0.25); border-radius:12px; text-decoration:none; transition:background 0.2s, border-color 0.2s;" onmouseover="this.style.background='rgba(212,175,55,0.12)';this.style.borderColor='rgba(212,175,55,0.5)'" onmouseout="this.style.background='rgba(212,175,55,0.06)';this.style.borderColor='rgba(212,175,55,0.25)'">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <i class="fas fa-clock" style="color:#d4af37; font-size:1.1rem; flex-shrink:0;"></i>
+                                    <div>
+                                        <p style="color:#d4af37; font-family:'Cinzel',serif; font-size:0.78rem; font-weight:700; margin:0 0 2px;">30 minutes · En visio</p>
+                                        <p style="color:rgba(212,175,55,0.55); font-size:0.75rem; margin:0; font-family:Georgia,serif;">30€</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color:rgba(212,175,55,0.5); font-size:0.8rem;"></i>
+                            </a>
+                            <a href="/guidance" style="display:flex; align-items:center; justify-content:space-between; gap:12px; padding:0.9rem 1.2rem; background:rgba(212,175,55,0.04); border:1px solid rgba(212,175,55,0.18); border-radius:12px; text-decoration:none; transition:background 0.2s, border-color 0.2s;" onmouseover="this.style.background='rgba(212,175,55,0.1)';this.style.borderColor='rgba(212,175,55,0.4)'" onmouseout="this.style.background='rgba(212,175,55,0.04)';this.style.borderColor='rgba(212,175,55,0.18)'">
+                                <div style="display:flex; align-items:center; gap:12px;">
+                                    <i class="fas fa-clock" style="color:#d4af37; font-size:1.1rem; flex-shrink:0;"></i>
+                                    <div>
+                                        <p style="color:#d4af37; font-family:'Cinzel',serif; font-size:0.78rem; font-weight:700; margin:0 0 2px;">1 heure · En visio</p>
+                                        <p style="color:rgba(212,175,55,0.55); font-size:0.75rem; margin:0; font-family:Georgia,serif;">60€</p>
+                                    </div>
+                                </div>
+                                <i class="fas fa-arrow-right" style="color:rgba(212,175,55,0.5); font-size:0.8rem;"></i>
+                            </a>
                         </div>
 
-                        <span class="self-start flex items-center gap-3 opacity-50 cursor-not-allowed select-none"
-                              style="background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);color:rgba(212,175,55,0.5);padding:0.6rem 1.2rem;border-radius:9999px;font-family:'Cinzel',serif;font-size:0.8rem;letter-spacing:0.06em;"
-                              title="Bientôt disponible">
-                            <i class="fas fa-clock"></i>
-                            Bientôt disponible
-                        </span>
+                        <a href="/guidance"
+                           style="display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a1224;padding:0.7rem 1.5rem;border-radius:9999px;font-family:'Cinzel',serif;font-size:0.82rem;font-weight:700;letter-spacing:0.06em;text-decoration:none;transition:opacity 0.2s, transform 0.2s;"
+                           onmouseover="this.style.opacity='0.88';this.style.transform='translateY(-1px)'" onmouseout="this.style.opacity='1';this.style.transform='none'">
+                            <i class="fas fa-video"></i>
+                            Réserver une guidance
+                        </a>
 
                     </div>
                 </div>
