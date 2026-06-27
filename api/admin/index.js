@@ -35,6 +35,16 @@ const CONTACT_TAGS = [
   { value: 'communaute', label: 'Communauté',        system: true }
 ];
 
+async function logSystemEvent(sb, { level='info', source, method, path, status_code, message, details }) {
+    try {
+        const supabaseLog = sb || require('@supabase/supabase-js').createClient(
+            process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+            process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+        await supabaseLog.from('system_logs').insert({ level, source, method, path, status_code, message, details: details || null });
+    } catch (_) {}
+}
+
 // Synchronise un contact avec Brevo : seuls les contacts de la catégorie "general"
 // sont ajoutés à la liste 5 (newsletter principale). Les autres catégories sont
 // gérées uniquement depuis le dashboard (envois ciblés directs, sans liste Brevo).
@@ -346,6 +356,43 @@ async function handleData(req, res) {
       const getAction = req.query?.action;
       if (getAction === 'cron-relance') {
         return await handleCronRelance(supabase, res);
+      }
+      if (getAction === 'cron-fetch-logs') {
+        const sb = supabase;
+        try {
+            const token = process.env.VERCEL_TOKEN;
+            const projectId = process.env.VERCEL_PROJECT_ID || 'prj_0DJh0iGvBHlRVp6MfrTCUa53Yhkd';
+            const teamId = process.env.VERCEL_TEAM_ID || 'team_OH3FH8jY7Lx9tjNcayHH42xg';
+            if (!token) return res.status(200).json({ success: true, message: 'VERCEL_TOKEN manquant' });
+            // Récupérer le dernier déploiement
+            const depRes = await fetch(`https://api.vercel.com/v6/deployments?projectId=${projectId}&teamId=${teamId}&limit=1&state=READY`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const depData = await depRes.json();
+            const deployment = (depData.deployments || [])[0];
+            if (!deployment) return res.status(200).json({ success: true, message: 'Aucun déploiement trouvé' });
+            // Récupérer les events du déploiement (dernière heure)
+            const since = Date.now() - 3600000;
+            const evRes = await fetch(`https://api.vercel.com/v2/deployments/${deployment.uid}/events?teamId=${teamId}&since=${since}&limit=100`, {
+                headers: { Authorization: `Bearer ${token}` }
+            });
+            const events = await evRes.json();
+            const logsToInsert = (Array.isArray(events) ? events : []).filter(e => e.type === 'stderr' || e.type === 'error').map(e => ({
+                level: 'error',
+                source: 'vercel-cron',
+                path: deployment.url,
+                message: typeof e.payload === 'string' ? e.payload.slice(0,500) : JSON.stringify(e.payload).slice(0,500),
+                details: { deployment_id: deployment.uid, event_type: e.type }
+            }));
+            if (logsToInsert.length > 0) {
+                await sb.from('system_logs').insert(logsToInsert);
+            }
+            await logSystemEvent(sb, { level:'info', source:'cron-fetch-logs', message:`Cron logs: ${logsToInsert.length} erreurs trouvées`, details: { deployment: deployment.uid } });
+            return res.status(200).json({ success: true, fetched: logsToInsert.length });
+        } catch(e) {
+            await logSystemEvent(supabase, { level:'error', source:'cron-fetch-logs', message: e.message });
+            return res.status(200).json({ success: false, error: e.message });
+        }
       }
       return res.status(403).json({ error: 'Action non autorisée' });
     }
@@ -674,6 +721,23 @@ async function handleData(req, res) {
           if (!updateErr) updatedCount++;
         }
         return res.status(200).json({ success: true, updatedCount });
+      }
+
+      if (action === 'import-transactions') {
+        const sb = supabase;
+        // Import depuis preorders
+        const { data: preorders } = await sb.from('preorders').select('created_at,amount_total,email,full_name,offer,stripe_session_id').eq('paid_status','completed');
+        const { data: donors } = await sb.from('donors').select('created_at,amount,email,full_name,stripe_session_id');
+        const { data: guidances } = await sb.from('guidances').select('created_at,amount,client_email,client_name,cal_booking_uid').in('status',['confirmed','completed']);
+        const toInsert = [
+            ...(preorders||[]).map(p => ({ date: p.created_at?.split('T')[0], type:'recette', category:'précommande', description:`Précommande ${p.offer||''} — ${p.full_name||p.email||''}`, amount: parseFloat(p.amount_total)||0, source:'precommande', source_ref: p.stripe_session_id })).filter(t=>t.amount>0),
+            ...(donors||[]).map(d => ({ date: d.created_at?.split('T')[0], type:'recette', category:'don', description:`Don — ${d.full_name||d.email||''}`, amount: parseFloat(d.amount)||0, source:'don', source_ref: d.stripe_session_id })).filter(t=>t.amount>0),
+            ...(guidances||[]).map(g => ({ date: g.created_at?.split('T')[0], type:'recette', category:'guidance', description:`Guidance — ${g.client_name||g.client_email||''}`, amount: (g.amount||0)/100, source:'guidance', source_ref: g.cal_booking_uid })).filter(t=>t.amount>0),
+        ];
+        if (toInsert.length === 0) return res.status(200).json({ success: true, imported: 0 });
+        const { error } = await sb.from('transactions').upsert(toInsert, { onConflict: 'source_ref', ignoreDuplicates: true });
+        if (error) throw error;
+        return res.status(200).json({ success: true, imported: toInsert.length });
       }
 
       return res.status(400).json({ error: 'Action invalide' });
@@ -2510,6 +2574,98 @@ module.exports = async (req, res) => {
       return res.status(405).end();
     }
 
+    if (path === '/system-logs' || path === '/system-logs/') {
+      verifyAdminAuth(req);
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      if (req.method === 'GET') {
+        const level = urlParams.get('level') || '';
+        const limit = Math.min(parseInt(urlParams.get('limit') || '200', 10), 500);
+        const since = urlParams.get('since') || '';
+        let q = sb.from('system_logs').select('*').order('created_at', { ascending: false }).limit(limit);
+        if (level) q = q.eq('level', level);
+        if (since) q = q.gte('created_at', since);
+        const { data, error, count } = await q;
+        if (error) throw error;
+        return res.status(200).json({ success: true, data: data || [], total: count });
+      }
+      if (req.method === 'DELETE') {
+        const { error } = await sb.from('system_logs').delete().lt('created_at', new Date(Date.now() - 86400000).toISOString());
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+      return res.status(405).end();
+    }
+
+    if (path === '/transactions' || path === '/transactions/') {
+      verifyAdminAuth(req);
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      if (req.method === 'GET') {
+        const year = urlParams.get('year') || new Date().getFullYear().toString();
+        const month = urlParams.get('month') || '';
+        const type = urlParams.get('type') || '';
+        const dateFrom = month ? `${year}-${month.padStart(2,'0')}-01` : `${year}-01-01`;
+        const dateTo = month ? `${year}-${month.padStart(2,'0')}-31` : `${year}-12-31`;
+        let q = sb.from('transactions').select('*').gte('date', dateFrom).lte('date', dateTo).order('date', { ascending: false });
+        if (type) q = q.eq('type', type);
+        const { data, error } = await q;
+        if (error) throw error;
+        const recettes = (data || []).filter(t => t.type === 'recette').reduce((s, t) => s + parseFloat(t.amount), 0);
+        const depenses = (data || []).filter(t => t.type === 'depense').reduce((s, t) => s + parseFloat(t.amount), 0);
+        const urssaf = recettes * 0.22;
+        return res.status(200).json({ success: true, data: data || [], summary: { recettes, depenses, net: recettes - depenses, urssaf } });
+      }
+      if (req.method === 'POST') {
+        const body = await parseBody(req);
+        if (body.id) {
+          const { id, ...updates } = body;
+          const { error } = await sb.from('transactions').update(updates).eq('id', id);
+          if (error) throw error;
+          return res.status(200).json({ success: true });
+        }
+        const { error, data } = await sb.from('transactions').insert(body).select().single();
+        if (error) throw error;
+        return res.status(200).json({ success: true, data });
+      }
+      if (req.method === 'DELETE') {
+        const id = urlParams.get('id');
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { error } = await sb.from('transactions').delete().eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+      return res.status(405).end();
+    }
+
+    if (path === '/analytics' || path === '/analytics/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'GET') return res.status(405).end();
+      const token = process.env.VERCEL_TOKEN;
+      const projectId = process.env.VERCEL_PROJECT_ID || 'prj_0DJh0iGvBHlRVp6MfrTCUa53Yhkd';
+      const teamId = process.env.VERCEL_TEAM_ID || 'team_OH3FH8jY7Lx9tjNcayHH42xg';
+      const range = urlParams.get('range') || '7d';
+      const to = Date.now();
+      const from = to - (range === '30d' ? 30 : range === '7d' ? 7 : 1) * 86400000;
+      // Stats depuis system_logs (toujours disponibles)
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const { data: logs } = await sb.from('system_logs').select('created_at,level,path,status_code').gte('created_at', new Date(from).toISOString()).order('created_at', { ascending: false });
+      const errors = (logs || []).filter(l => l.level === 'error').length;
+      const warnings = (logs || []).filter(l => l.level === 'warning').length;
+      const pathCounts = {};
+      (logs || []).forEach(l => { if (l.path) pathCounts[l.path] = (pathCounts[l.path] || 0) + 1; });
+      const topPaths = Object.entries(pathCounts).sort((a,b) => b[1]-a[1]).slice(0,10).map(([path,count]) => ({path,count}));
+      // Tenter l'API Vercel Analytics
+      let vercelAnalytics = null;
+      if (token) {
+        try {
+          const vaRes = await fetch(`https://api.vercel.com/v1/web/analytics/event-data?projectId=${projectId}&teamId=${teamId}&from=${from}&to=${to}&limit=1000&environment=production`, {
+            headers: { Authorization: `Bearer ${token}` }
+          });
+          if (vaRes.ok) vercelAnalytics = await vaRes.json();
+        } catch(_) {}
+      }
+      return res.status(200).json({ success: true, logs_stats: { errors, warnings, total: (logs||[]).length, top_paths: topPaths }, vercel_analytics: vercelAnalytics, range });
+    }
+
     // ── Sauvegarde d'une intention anonyme (visiteur sans compte) ──
     if (path === '/intentions' || path === '/intentions/') {
       if (req.method !== 'POST') return res.status(405).end();
@@ -2545,6 +2701,10 @@ module.exports = async (req, res) => {
     });
   } catch (error) {
     console.error('Admin router error:', error);
+    try {
+        const logSb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+        await logSb.from('system_logs').insert({ level: 'error', source: 'api/admin', path: req.url, method: req.method, status_code: error.statusCode || 500, message: error.message, details: { stack: error.stack?.slice(0,300) } });
+    } catch (_) {}
     return res.status(500).json({ error: 'Erreur serveur' });
   }
 };

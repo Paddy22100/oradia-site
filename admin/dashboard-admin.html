@@ -190,6 +190,14 @@
             </div>
 
             <p class="text-gold/50 text-xs uppercase tracking-widest px-5 mt-5 mb-2">Système</p>
+            <div class="nav-item" onclick="showTab('analytics')" id="nav-analytics">
+                <i class="fas fa-chart-line w-4 text-center"></i>
+                <span>Analytiques</span>
+            </div>
+            <div class="nav-item" onclick="showTab('comptabilite')" id="nav-comptabilite">
+                <i class="fas fa-calculator w-4 text-center"></i>
+                <span>Comptabilité</span>
+            </div>
             <div class="nav-item" onclick="showTab('synchronicity')" id="nav-synchronicity">
                 <i class="fas fa-atom w-4 text-center"></i>
                 <span>Synchronicités</span>
@@ -1545,8 +1553,192 @@
                     </button>
                 </div>
             </div>
+
+            <!-- Logs système en temps réel -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5 mt-4">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-gold text-sm font-semibold uppercase tracking-wider flex items-center gap-2">
+                        <i class="fas fa-terminal"></i> Logs système (30 derniers jours)
+                    </h4>
+                    <div class="flex gap-2">
+                        <button onclick="loadSurveillanceLogs()" class="text-teal-300/70 hover:text-teal-300 text-xs transition"><i class="fas fa-sync-alt"></i></button>
+                        <button onclick="clearOldLogs()" class="text-red-400/50 hover:text-red-400 text-xs transition">Purger</button>
+                    </div>
+                </div>
+                <div id="surveillance-logs" class="space-y-1 max-h-60 overflow-y-auto font-mono text-xs">
+                    <p class="text-gold/30 italic">Cliquez sur Actualiser pour charger les logs.</p>
+                </div>
+            </div>
         </section>
         </div><!-- /tab-monitoring -->
+
+        <!-- ══ ONGLET : ANALYTIQUES ══ -->
+        <div id="tab-analytics" class="tab-panel">
+        <section class="mb-10">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+                <div>
+                    <h3 class="cormorant text-2xl font-bold text-gold">Analytiques</h3>
+                    <p class="text-light-gold/50 text-sm mt-1">Performances du site, erreurs et analyse IA</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <select id="analytics-range" onchange="loadAnalytics()" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                        <option value="1d">Aujourd'hui</option>
+                        <option value="7d" selected>7 jours</option>
+                        <option value="30d">30 jours</option>
+                    </select>
+                    <button onclick="loadAnalytics()" class="bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-lg px-4 py-2 text-sm hover:bg-teal-500/30 transition">
+                        <i class="fas fa-sync-alt mr-1"></i>Actualiser
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPIs -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="analytics-kpis">
+                <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-teal-300" id="ana-total">—</div><p class="text-gold/50 text-xs mt-1">Événements API</p></div>
+                <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-red-400" id="ana-errors">—</div><p class="text-gold/50 text-xs mt-1">Erreurs</p></div>
+                <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-yellow-400" id="ana-warnings">—</div><p class="text-gold/50 text-xs mt-1">Avertissements</p></div>
+                <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-green-400" id="ana-uptime">—</div><p class="text-gold/50 text-xs mt-1">Taux de succès</p></div>
+            </div>
+
+            <!-- Top endpoints + IA -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <div class="stat-card rounded-2xl p-6">
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-route text-gold/60"></i> Endpoints les plus actifs</h4>
+                    <div id="analytics-top-paths" class="space-y-2 text-sm"></div>
+                </div>
+                <div class="stat-card rounded-2xl p-6">
+                    <h4 class="text-gold font-semibold mb-3 flex items-center gap-2"><i class="fas fa-brain text-gold/60"></i> Analyse IA</h4>
+                    <p class="text-gold/40 text-xs mb-3 italic">Analyse les performances et propose des améliorations.</p>
+                    <button onclick="analyzeWithAI()" id="btn-ai-analyze" class="flex items-center gap-2 bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold px-4 py-2 rounded-xl text-sm font-medium transition w-full justify-center mb-3">
+                        <i class="fas fa-lightbulb"></i> Analyser avec l'IA
+                    </button>
+                    <div id="analytics-ai-result" class="text-gold/70 text-sm leading-relaxed hidden"></div>
+                </div>
+            </div>
+
+            <!-- Vercel Analytics link -->
+            <div class="stat-card rounded-2xl p-5 mb-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="text-gold font-semibold mb-1 flex items-center gap-2"><i class="fas fa-chart-area text-gold/60"></i> Vercel Analytics</h4>
+                        <p class="text-gold/40 text-xs">Pages vues, visiteurs uniques, pays, appareils — directement dans Vercel.</p>
+                    </div>
+                    <a href="https://vercel.com/paddy22100s-projects/oradia-site/analytics" target="_blank" rel="noopener"
+                       class="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-gold/20 text-gold/70 px-4 py-2 rounded-xl text-sm transition">
+                        <i class="fas fa-external-link-alt"></i> Ouvrir
+                    </a>
+                </div>
+            </div>
+
+            <!-- Logs récents -->
+            <div class="stat-card rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4">
+                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-terminal text-gold/60"></i> Logs système récents</h4>
+                    <select id="logs-level-filter" onchange="loadAnalytics()" class="bg-white/5 border border-gold/20 text-gold/70 rounded-lg px-2 py-1 text-xs">
+                        <option value="">Tous</option>
+                        <option value="error">Erreurs</option>
+                        <option value="warning">Avertissements</option>
+                        <option value="info">Info</option>
+                    </select>
+                </div>
+                <div id="analytics-logs" class="space-y-2 max-h-80 overflow-y-auto text-xs font-mono"></div>
+            </div>
+        </section>
+        </div><!-- /tab-analytics -->
+
+        <!-- ══ ONGLET : COMPTABILITÉ ══ -->
+        <div id="tab-comptabilite" class="tab-panel">
+        <section class="mb-10">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+                <div>
+                    <h3 class="cormorant text-2xl font-bold text-gold">Comptabilité</h3>
+                    <p class="text-light-gold/50 text-sm mt-1">Recettes, dépenses et déclarations URSSAF</p>
+                </div>
+                <div class="flex items-center gap-2 flex-wrap">
+                    <select id="compta-year" onchange="loadComptabilite()" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                        <option value="2026">2026</option><option value="2025">2025</option>
+                    </select>
+                    <select id="compta-month" onchange="loadComptabilite()" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                        <option value="">Toute l'année</option>
+                        <option value="1">Janvier</option><option value="2">Février</option><option value="3">Mars</option>
+                        <option value="4">Avril</option><option value="5">Mai</option><option value="6">Juin</option>
+                        <option value="7">Juillet</option><option value="8">Août</option><option value="9">Septembre</option>
+                        <option value="10">Octobre</option><option value="11">Novembre</option><option value="12">Décembre</option>
+                    </select>
+                    <button onclick="importTransactions()" class="bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg px-4 py-2 text-sm hover:bg-blue-500/30 transition">
+                        <i class="fas fa-download mr-1"></i>Importer
+                    </button>
+                    <button onclick="showAddTransaction()" class="bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold rounded-lg px-4 py-2 text-sm transition">
+                        <i class="fas fa-plus mr-1"></i>Ajouter
+                    </button>
+                </div>
+            </div>
+
+            <!-- KPIs -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                <div class="stat-card rounded-xl p-4 text-center">
+                    <div class="text-2xl font-bold text-green-400" id="compta-recettes">—</div>
+                    <p class="text-gold/50 text-xs mt-1">Recettes brutes</p>
+                </div>
+                <div class="stat-card rounded-xl p-4 text-center">
+                    <div class="text-2xl font-bold text-red-400" id="compta-depenses">—</div>
+                    <p class="text-gold/50 text-xs mt-1">Dépenses</p>
+                </div>
+                <div class="stat-card rounded-xl p-4 text-center">
+                    <div class="text-2xl font-bold text-teal-300" id="compta-net">—</div>
+                    <p class="text-gold/50 text-xs mt-1">Résultat net</p>
+                </div>
+                <div class="stat-card rounded-xl p-4 text-center border border-orange-500/20">
+                    <div class="text-2xl font-bold text-orange-400" id="compta-urssaf">—</div>
+                    <p class="text-gold/50 text-xs mt-1">URSSAF estimé (22%)</p>
+                    <p class="text-gold/30 text-xs">BNC / Micro-entrepreneur</p>
+                </div>
+            </div>
+
+            <!-- Formulaire ajout -->
+            <div id="compta-add-form" class="hidden bg-white/3 border border-gold/15 rounded-2xl p-5 mb-6">
+                <h4 class="text-gold font-semibold mb-4">Nouvelle transaction</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="text-gold/50 text-xs uppercase tracking-wider mb-1 block">Type</label>
+                        <select id="ct-type" class="w-full bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                            <option value="recette">Recette</option>
+                            <option value="depense">Dépense</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-gold/50 text-xs uppercase tracking-wider mb-1 block">Date</label>
+                        <input type="date" id="ct-date" class="w-full bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
+                    </div>
+                    <div>
+                        <label class="text-gold/50 text-xs uppercase tracking-wider mb-1 block">Description</label>
+                        <input type="text" id="ct-description" placeholder="Description..." class="w-full bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm placeholder-gold/20">
+                    </div>
+                    <div>
+                        <label class="text-gold/50 text-xs uppercase tracking-wider mb-1 block">Montant (€)</label>
+                        <input type="number" id="ct-amount" step="0.01" min="0" placeholder="0.00" class="w-full bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm placeholder-gold/20">
+                    </div>
+                    <div>
+                        <label class="text-gold/50 text-xs uppercase tracking-wider mb-1 block">Catégorie</label>
+                        <input type="text" id="ct-category" placeholder="Ex: abonnement, matériel..." class="w-full bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm placeholder-gold/20">
+                    </div>
+                    <div>
+                        <label class="text-gold/50 text-xs uppercase tracking-wider mb-1 block">Notes</label>
+                        <input type="text" id="ct-notes" placeholder="Notes optionnelles..." class="w-full bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm placeholder-gold/20">
+                    </div>
+                </div>
+                <div class="flex gap-3 mt-4">
+                    <button onclick="saveTransaction()" class="bg-gold/20 hover:bg-gold/30 border border-gold/40 text-gold px-5 py-2 rounded-xl text-sm font-medium transition">Enregistrer</button>
+                    <button onclick="document.getElementById('compta-add-form').classList.add('hidden')" class="text-gold/40 hover:text-gold text-sm transition px-3">Annuler</button>
+                </div>
+            </div>
+
+            <!-- Liste transactions -->
+            <div id="compta-list" class="space-y-2">
+                <p class="text-gold/30 text-sm italic text-center py-8">Chargement…</p>
+            </div>
+        </section>
+        </div><!-- /tab-comptabilite -->
 
         <!-- ── INSIGHTS ── -->
         <div id="tab-insights" class="tab-panel">
@@ -1614,7 +1806,9 @@
             costs:           'Coûts du site',
             guidances:       'Guidances par visio',
             monitoring:      'Surveillance du site',
-            insights:        'Insights — Intentions de tirages'
+            insights:        'Insights — Intentions de tirages',
+            analytics:       'Analytiques — Stats & IA',
+            comptabilite:    'Comptabilité'
         };
 
         function showTab(name) {
@@ -1634,6 +1828,8 @@
             if (name === 'costs')          loadCosts();
             if (name === 'monitoring')     loadMonitoring();
             if (name === 'guidances')      loadGuidances();
+            if (name === 'analytics')      loadAnalytics();
+            if (name === 'comptabilite')   loadComptabilite();
         }
 
         // ── État global
@@ -4984,6 +5180,210 @@
                 btn.innerHTML = '<i class="fas fa-lightbulb"></i> Analyser les intentions';
             }
         }
+
+        // ── ANALYTIQUES ──────────────────────────────────────────────────────────────
+        let _analyticsData = null;
+
+        async function loadAnalytics() {
+            const range = document.getElementById('analytics-range')?.value || '7d';
+            const levelFilter = document.getElementById('logs-level-filter')?.value || '';
+            try {
+                const res = await adminFetch(`/api/admin/analytics?range=${range}`);
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                _analyticsData = data;
+                const s = data.logs_stats;
+                const total = s.total || 0;
+                const errors = s.errors || 0;
+                const uptime = total > 0 ? (((total - errors) / total) * 100).toFixed(1) + '%' : '—';
+                setEl('ana-total', total);
+                setEl('ana-errors', errors);
+                setEl('ana-warnings', s.warnings || 0);
+                setEl('ana-uptime', uptime);
+                // Top paths
+                const pathsEl = document.getElementById('analytics-top-paths');
+                if (pathsEl) {
+                    const max = Math.max(...(s.top_paths||[]).map(p => p.count), 1);
+                    pathsEl.innerHTML = (s.top_paths||[]).length === 0
+                        ? '<p class="text-gold/30 italic text-xs">Aucun log enregistré.</p>'
+                        : (s.top_paths||[]).map(p => `
+                            <div class="flex items-center gap-2">
+                                <span class="text-gold/60 font-mono text-xs truncate flex-1" title="${p.path}">${p.path}</span>
+                                <span class="text-gold/40 text-xs w-6 text-right">${p.count}</span>
+                                <div class="w-20 h-1.5 bg-white/5 rounded-full overflow-hidden flex-shrink-0">
+                                    <div class="h-full bg-teal-400/60 rounded-full" style="width:${(p.count/max*100).toFixed(0)}%"></div>
+                                </div>
+                            </div>`).join('');
+                }
+                // Logs récents
+                await loadRecentLogs(levelFilter);
+            } catch(e) {
+                console.error('[analytics]', e);
+            }
+        }
+
+        async function loadRecentLogs(level='') {
+            const logsEl = document.getElementById('analytics-logs');
+            if (!logsEl) return;
+            const params = new URLSearchParams({ limit: '50' });
+            if (level) params.set('level', level);
+            const res = await adminFetch(`/api/admin/system-logs?${params}`);
+            const data = await res.json();
+            const logs = data.data || [];
+            if (logs.length === 0) { logsEl.innerHTML = '<p class="text-gold/30 italic">Aucun log dans cette période.</p>'; return; }
+            const levelColors = { error: 'text-red-400', warning: 'text-yellow-400', info: 'text-teal-300' };
+            logsEl.innerHTML = logs.map(l => {
+                const t = new Date(l.created_at).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+                const lc = levelColors[l.level] || 'text-gold/50';
+                return `<div class="flex gap-2 border-b border-white/5 pb-1 last:border-0">
+                    <span class="text-gold/30 flex-shrink-0">${t}</span>
+                    <span class="${lc} font-bold uppercase text-xs flex-shrink-0 w-14">${l.level}</span>
+                    <span class="text-gold/50 flex-shrink-0 hidden sm:block w-24 truncate">${l.source||''}</span>
+                    <span class="text-gold/70 truncate">${escapeHtmlFront(l.message||'')}</span>
+                </div>`;
+            }).join('');
+        }
+
+        async function analyzeWithAI() {
+            const btn = document.getElementById('btn-ai-analyze');
+            const result = document.getElementById('analytics-ai-result');
+            if (!_analyticsData) { alert('Chargez d\'abord les données.'); return; }
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyse en cours…'; }
+            try {
+                if (result) {
+                    result.innerHTML = '<p class="text-gold/50 italic text-xs">Utilisez le bouton "Analyser les intentions" de l\'onglet Insights pour une analyse IA complète.</p>';
+                    result.classList.remove('hidden');
+                }
+            } catch(e) {
+                if (result) {
+                    result.innerHTML = `<p class="text-red-400/70 text-xs">Erreur: ${e.message}</p>`;
+                    result.classList.remove('hidden');
+                }
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-lightbulb"></i> Analyser avec l\'IA'; }
+            }
+        }
+
+        // ── SURVEILLANCE LOGS ────────────────────────────────────────────────────────
+        async function loadSurveillanceLogs() {
+            const el = document.getElementById('surveillance-logs');
+            if (!el) return;
+            el.innerHTML = '<p class="text-gold/30 italic animate-pulse">Chargement…</p>';
+            const res = await adminFetch('/api/admin/system-logs?limit=30');
+            const data = await res.json();
+            const logs = data.data || [];
+            if (logs.length === 0) { el.innerHTML = '<p class="text-gold/30 italic">Aucun log enregistré.</p>'; return; }
+            const lc = { error: 'text-red-400', warning: 'text-yellow-400', info: 'text-teal-300' };
+            el.innerHTML = logs.map(l => {
+                const t = new Date(l.created_at).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
+                return `<div class="flex gap-2 py-0.5 border-b border-white/5 last:border-0">
+                    <span class="text-gold/25">${t}</span>
+                    <span class="${lc[l.level]||'text-gold/40'} font-bold">[${l.level?.toUpperCase()}]</span>
+                    <span class="text-gold/60 truncate">${escapeHtmlFront(l.message||'—')}</span>
+                </div>`;
+            }).join('');
+        }
+
+        async function clearOldLogs() {
+            if (!confirm('Supprimer les logs de plus de 24h ?')) return;
+            await adminFetch('/api/admin/system-logs', { method: 'DELETE' });
+            loadSurveillanceLogs();
+        }
+
+        // ── COMPTABILITÉ ─────────────────────────────────────────────────────────────
+        let _comptaEditId = null;
+
+        async function loadComptabilite() {
+            const year = document.getElementById('compta-year')?.value || '2026';
+            const month = document.getElementById('compta-month')?.value || '';
+            const list = document.getElementById('compta-list');
+            if (list) list.innerHTML = '<p class="text-gold/30 text-sm italic text-center py-8 animate-pulse">Chargement…</p>';
+            const params = new URLSearchParams({ year });
+            if (month) params.set('month', month);
+            const res = await adminFetch(`/api/admin/transactions?${params}`);
+            const data = await res.json();
+            if (!data.success) { if (list) list.innerHTML = `<p class="text-red-400 text-sm text-center">${data.error}</p>`; return; }
+            const s = data.summary || {};
+            const fmt = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(v||0);
+            setEl('compta-recettes', fmt(s.recettes));
+            setEl('compta-depenses', fmt(s.depenses));
+            setEl('compta-net', fmt(s.net));
+            setEl('compta-urssaf', fmt(s.urssaf));
+            const transactions = data.data || [];
+            if (!list) return;
+            if (transactions.length === 0) { list.innerHTML = '<p class="text-gold/30 text-sm italic text-center py-8">Aucune transaction. Cliquez sur "Importer" pour charger les données existantes.</p>'; return; }
+            list.innerHTML = transactions.map(t => {
+                const isRecette = t.type === 'recette';
+                const fmt2 = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(v);
+                const d = new Date(t.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+                return `<div class="flex items-center justify-between gap-3 bg-white/3 border border-gold/10 rounded-xl px-4 py-3">
+                    <div class="flex items-center gap-3 min-w-0">
+                        <span class="w-2 h-2 rounded-full flex-shrink-0 ${isRecette?'bg-green-400':'bg-red-400'}"></span>
+                        <div class="min-w-0">
+                            <p class="text-gold/80 text-sm font-medium truncate">${escapeHtmlFront(t.description)}</p>
+                            <p class="text-gold/40 text-xs">${d}${t.category?' · '+escapeHtmlFront(t.category):''}${t.source&&t.source!=='manuel'?' · '+t.source:''}</p>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3 flex-shrink-0">
+                        <span class="font-bold ${isRecette?'text-green-400':'text-red-400'}">${isRecette?'+':'-'}${fmt2(t.amount)}</span>
+                        <button onclick="deleteTransaction('${t.id}')" class="text-red-400/40 hover:text-red-400 text-xs transition"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function showAddTransaction() {
+            const form = document.getElementById('compta-add-form');
+            if (form) {
+                form.classList.remove('hidden');
+                document.getElementById('ct-date').value = new Date().toISOString().split('T')[0];
+                form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+
+        async function saveTransaction() {
+            const type = document.getElementById('ct-type')?.value;
+            const date = document.getElementById('ct-date')?.value;
+            const description = document.getElementById('ct-description')?.value.trim();
+            const amount = parseFloat(document.getElementById('ct-amount')?.value);
+            const category = document.getElementById('ct-category')?.value.trim();
+            const notes = document.getElementById('ct-notes')?.value.trim();
+            if (!description || !amount || amount <= 0) { alert('Description et montant requis.'); return; }
+            const body = { type, date, description, amount, ...(category && {category}), ...(notes && {notes}) };
+            if (_comptaEditId) body.id = _comptaEditId;
+            const res = await adminFetch('/api/admin/transactions', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+            const data = await res.json();
+            if (!data.success) { alert('Erreur: ' + data.error); return; }
+            document.getElementById('compta-add-form').classList.add('hidden');
+            ['ct-description','ct-amount','ct-category','ct-notes'].forEach(id => { const el = document.getElementById(id); if (el) el.value = ''; });
+            _comptaEditId = null;
+            loadComptabilite();
+        }
+
+        async function deleteTransaction(id) {
+            if (!confirm('Supprimer cette transaction ?')) return;
+            const res = await adminFetch(`/api/admin/transactions?id=${id}`, { method: 'DELETE' });
+            const data = await res.json();
+            if (!data.success) { alert('Erreur: ' + data.error); return; }
+            loadComptabilite();
+        }
+
+        async function importTransactions() {
+            const btn = event.target.closest('button');
+            if (btn) { btn.disabled = true; btn.textContent = 'Import…'; }
+            try {
+                const res = await adminFetch('/api/admin/data', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ action: 'import-transactions' }) });
+                const data = await res.json();
+                if (data.success) {
+                    alert(`${data.imported} transaction(s) importée(s).`);
+                    loadComptabilite();
+                } else alert('Erreur: ' + data.error);
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-download mr-1"></i>Importer'; }
+            }
+        }
+
+        function setEl(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
 
     </script>
 </body>
