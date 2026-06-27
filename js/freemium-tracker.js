@@ -316,10 +316,11 @@ class FreemiumTracker {
                 #tore-limit-modal .tlm-email:focus { border-color:rgba(212,175,55,0.65);box-shadow:0 0 0 3px rgba(212,175,55,0.1); }
                 #tore-limit-modal .tlm-close:hover { color:rgba(233,231,223,0.6) !important; }
                 #tore-limit-modal .tlm-offers-row { display:flex;gap:8px;margin-bottom:14px;align-items:stretch; }
-                #tore-limit-modal .tlm-offers-left { flex:1;display:flex;flex-direction:column;gap:8px;min-width:0; }
-                #tore-limit-modal .tlm-preorder { width:120px;flex-shrink:0;border-radius:10px;overflow:hidden;text-decoration:none;position:relative;display:block;transition:opacity 0.2s ease;box-shadow:0 4px 20px rgba(0,0,0,0.4); }
+                #tore-limit-modal .tlm-offers-left { flex:1;display:flex;flex-direction:row;gap:8px;min-width:0; }
+                #tore-limit-modal .tlm-offers-left > div { flex:1;display:flex;flex-direction:column; }
+                #tore-limit-modal .tlm-preorder { width:130px;flex-shrink:0;border-radius:10px;overflow:hidden;text-decoration:none;position:relative;display:block;transition:opacity 0.2s ease;box-shadow:0 4px 20px rgba(0,0,0,0.4);min-height:200px; }
                 #tore-limit-modal .tlm-preorder:hover { opacity:0.88; }
-                @media(max-width:360px){ #tore-limit-modal .tlm-preorder { width:90px; } }
+                @media(max-width:400px){ #tore-limit-modal .tlm-preorder { width:100px; } }
             `;
             document.head.appendChild(style);
         }
@@ -329,7 +330,7 @@ class FreemiumTracker {
         modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;background:rgba(2,6,20,0.88);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);animation:toreModalFadeIn 0.35s ease;overflow-y:auto;';
         modal.innerHTML = `
             <div class="tlm-card" role="dialog" aria-modal="true" aria-label="Tirages offerts utilisés"
-                 style="position:relative;width:100%;max-width:460px;border-radius:0;overflow:hidden;
+                 style="position:relative;width:calc(100vw - 24px);max-width:560px;border-radius:0;overflow:hidden;
                         border:1px solid rgba(212,175,55,0.25);
                         box-shadow:0 32px 90px rgba(0,0,0,0.8),0 0 60px rgba(212,175,55,0.06);
                         font-family:Georgia,'Times New Roman',serif;">
@@ -374,8 +375,7 @@ class FreemiumTracker {
 
                             <!-- Découverte -->
                             <div style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:14px 10px 12px;text-align:center;">
-                                <p style="color:rgba(212,175,55,0.5);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 1px;">Découverte</p>
-                                <p style="color:rgba(212,175,55,0.5);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;visibility:hidden;">·</p>
+                                <p style="color:rgba(212,175,55,0.5);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">Découverte</p>
                                 <p style="color:#f0c75e;font-size:1.6rem;font-weight:700;margin:0 0 8px;line-height:1;white-space:nowrap;">5€ <span style="font-size:0.65rem;color:rgba(212,175,55,0.45);font-weight:400;">/mois</span></p>
                                 <div style="height:1px;background:rgba(212,175,55,0.1);margin:0 0 8px;"></div>
                                 <ul style="list-style:none;padding:0;margin:0 0 10px;text-align:left;color:rgba(233,231,223,0.65);font-size:0.75rem;line-height:1.9;">
