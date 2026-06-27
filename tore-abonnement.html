@@ -4,13 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5">
     <title>Choisissez votre offre Tore — ORADIA</title>
-    <meta name="description" content="Découverte 5€/mois ou Complète 8€/mois — accédez à l'expérience du Tore selon votre rythme. Sans engagement.">
+    <meta name="description" content="Abonnement Tore Oradia — 8€/mois, tirages illimités, historique complet, espace membres. Sans engagement, résiliable à tout moment.">
     <meta name="robots" content="index, follow">
     <link rel="canonical" href="https://oradia.fr/tore-abonnement.html">
     <!-- Open Graph -->
     <meta property="og:type" content="website">
     <meta property="og:title" content="Choisissez votre offre Tore — ORADIA">
-    <meta property="og:description" content="Découverte 5€/mois · 1 tirage/jour — ou Complète 8€/mois · tirages illimités. Sans engagement.">
+    <meta property="og:description" content="Accès complet au Tore Oradia — 8€/mois, tirages illimités, historique complet, espace membres. Sans engagement.">
     <meta property="og:url" content="https://oradia.fr/tore-abonnement.html">
     <meta property="og:image" content="https://oradia.fr/images/oradia-hero-4k.webp">
     <meta property="og:locale" content="fr_FR">
@@ -18,7 +18,7 @@
     <!-- Twitter Card -->
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Choisissez votre offre Tore — ORADIA">
-    <meta name="twitter:description" content="Découverte 5€/mois ou Complète 8€/mois — tirages illimités, espace membres. Sans engagement.">
+    <meta name="twitter:description" content="Accès complet au Tore Oradia — 8€/mois, tirages illimités, espace membres. Sans engagement.">
     <meta name="twitter:image" content="https://oradia.fr/images/oradia-hero-4k.webp">
 
     <script src="https://cdn.tailwindcss.com"></script>
@@ -243,7 +243,7 @@
         </h1>
         <div class="gold-divider" style="width:80px;margin:0 auto 24px;"></div>
         <p style="font-family:'Poppins',sans-serif;font-size:16px;color:rgba(229,231,235,0.75);line-height:1.85;max-width:520px;margin:0 auto;">
-            Deux formules sans engagement pour explorer à votre rythme.
+            Accès complet, sans engagement, résiliable à tout moment.
         </p>
     </div>
 </section>
@@ -258,42 +258,11 @@
         </p>
     </div>
 
-    <!-- Grille 2 offres -->
-    <div class="offers-grid" style="display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:40px;">
+    <!-- Offre unique -->
+    <div style="max-width:480px;margin:0 auto 40px;">
 
-        <!-- DÉCOUVERTE -->
-        <div class="pricing-card p-8 fade-up delay-1" style="text-align:center;">
-            <p style="font-family:'Poppins',sans-serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;color:rgba(212,175,55,0.55);margin-bottom:16px;">Découverte</p>
-            <div class="cormorant" style="font-size:68px;font-weight:700;color:#f0c75e;line-height:1;">
-                5<span style="font-size:32px;color:rgba(212,175,55,0.6);">€</span>
-            </div>
-            <p style="font-family:'Poppins',sans-serif;font-size:14px;color:rgba(212,175,55,0.55);margin-bottom:28px;letter-spacing:0.05em;">par mois · sans engagement</p>
-
-            <div style="margin-bottom:28px;text-align:left;">
-                <div class="feature-row">
-                    <div class="feature-icon"><i class="fas fa-sun"></i></div>
-                    <div>
-                        <p style="font-family:'Poppins',sans-serif;font-size:15px;color:#e9e7df;font-weight:600;margin:0 0 4px;">1 tirage par jour</p>
-                        <p style="font-family:'Poppins',sans-serif;font-size:13px;color:rgba(229,231,235,0.5);margin:0;line-height:1.6;">Une guidance quotidienne, à votre rythme.</p>
-                    </div>
-                </div>
-                <div class="feature-row">
-                    <div class="feature-icon"><i class="fas fa-history"></i></div>
-                    <div>
-                        <p style="font-family:'Poppins',sans-serif;font-size:15px;color:#e9e7df;font-weight:600;margin:0 0 4px;">Historique 30 jours</p>
-                        <p style="font-family:'Poppins',sans-serif;font-size:13px;color:rgba(229,231,235,0.5);margin:0;line-height:1.6;">Retrouvez vos 30 derniers tirages.</p>
-                    </div>
-                </div>
-            </div>
-
-            <button id="btn-decouverte" class="btn-gold" style="width:100%;font-size:0.95rem;"
-                    aria-label="Choisir l'offre Découverte — 5€/mois">
-                Choisir Découverte
-            </button>
-        </div>
-
-        <!-- COMPLÈTE (mise en avant) -->
-        <div class="pricing-card p-8 fade-up delay-2"
+        <!-- COMPLÈTE -->
+        <div class="pricing-card p-8 fade-up delay-1"
              style="text-align:center;border-color:rgba(212,175,55,0.65);
                     box-shadow:0 0 80px rgba(212,175,55,0.2),0 28px 72px rgba(0,0,0,0.6);
                     position:relative;">
@@ -387,10 +356,8 @@
     }
 
     async function handleCheckout(type) {
-        const btnD = document.getElementById('btn-decouverte');
         const btnC = document.getElementById('btn-complet');
 
-        // Résoudre l'email : param URL > session Supabase > prompt
         let email = registeredEmail;
         if (!email) {
             const { data: { session } } = await window.supabaseClient.auth.getSession();
@@ -401,12 +368,9 @@
         }
         if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return;
 
-        const origD = btnD.innerHTML;
         const origC = btnC.innerHTML;
-        [btnD, btnC].forEach(b => {
-            b.disabled = true;
-            b.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement…';
-        });
+        btnC.disabled = true;
+        btnC.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement…';
 
         try {
             const res = await fetch('/api/create-checkout-session', {
@@ -421,15 +385,13 @@
                 throw new Error(data.error || 'Erreur');
             }
         } catch (err) {
-            [btnD, btnC].forEach(b => { b.disabled = false; });
-            btnD.innerHTML = origD;
+            btnC.disabled = false;
             btnC.innerHTML = origC;
             alert('Erreur : ' + err.message + '. Veuillez réessayer.');
         }
     }
 
-    document.getElementById('btn-decouverte').addEventListener('click', () => handleCheckout('tore-decouverte'));
-    document.getElementById('btn-complet').addEventListener('click',    () => handleCheckout('tore-complet'));
+    document.getElementById('btn-complet').addEventListener('click', () => handleCheckout('tore-complet'));
 </script>
 
 </body>

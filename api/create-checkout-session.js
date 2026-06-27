@@ -78,17 +78,13 @@ module.exports = async (req, res) => {
         // Configuration URLs unique
         const frontendUrl = process.env.FRONTEND_URL || 'https://oradia.fr';
         
-        // ── Abonnement Découverte (5€/mois) ou Complet (8€/mois) ─────────────────
-        if (req.body.type === 'tore-decouverte' || req.body.type === 'tore-complet') {
+        // ── Abonnement Complet (8€/mois) ─────────────────────────────────────────
+        if (req.body.type === 'tore-complet' || req.body.type === 'tore-decouverte') {
             const email    = (req.body.email || '').trim();
             const fullName = (req.body.fullName || '').trim();
-            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
-                return res.status(400).json({ error: 'Email invalide' });
-            const plan    = req.body.type === 'tore-decouverte' ? 'decouverte' : 'complet';
-            const priceId = plan === 'decouverte'
-                ? process.env.STRIPE_PRICE_DECOUVERTE
-                : process.env.STRIPE_PRICE_COMPLET;
-            if (!priceId) return res.status(500).json({ error: `STRIPE_PRICE_${plan.toUpperCase()} non configuré` });
+            const plan    = 'complet';
+            const priceId = process.env.STRIPE_PRICE_COMPLET;
+            if (!priceId) return res.status(500).json({ error: 'STRIPE_PRICE_COMPLET non configuré' });
             const session = await stripe.checkout.sessions.create({
                 payment_method_types: ['card'],
                 mode: 'subscription',

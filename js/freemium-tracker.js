@@ -372,31 +372,9 @@ class FreemiumTracker {
                         <!-- Colonne gauche : 2 offres empilées -->
                         <div class="tlm-offers-left">
 
-                            <!-- Découverte -->
-                            <div style="flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:14px 10px 12px;text-align:center;display:flex;flex-direction:column;">
-                                <div style="height:2.4rem;display:flex;flex-direction:column;justify-content:flex-end;margin-bottom:6px;">
-                                    <p style="color:rgba(212,175,55,0.5);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;margin:0;">Découverte</p>
-                                </div>
-                                <p style="color:#f0c75e;font-size:1.6rem;font-weight:700;margin:0 0 8px;line-height:1;white-space:nowrap;">5€ <span style="font-size:0.65rem;color:rgba(212,175,55,0.45);font-weight:400;">/mois</span></p>
-                                <div style="height:1px;background:rgba(212,175,55,0.1);margin:0 0 8px;"></div>
-                                <ul style="list-style:none;padding:0;margin:0 0 10px;text-align:left;color:rgba(233,231,223,0.65);font-size:0.75rem;line-height:1.9;">
-                                    <li>✦ 1 tirage par jour</li>
-                                    <li>✦ Historique 30 jours</li>
-                                </ul>
-                                <button id="tlm-btn-decouverte" class="tlm-secondary"
-                                        style="width:100%;padding:8px;border-radius:50px;border:1px solid rgba(212,175,55,0.4);
-                                               background:rgba(212,175,55,0.05);color:#d4af37;font-size:0.72rem;font-weight:700;
-                                               cursor:pointer;letter-spacing:1px;text-transform:uppercase;margin-top:auto;">
-                                    Choisir
-                                </button>
-                            </div>
-
-                            <!-- Complète -->
-                            <div style="flex:1;background:rgba(212,175,55,0.06);border:1.5px solid rgba(212,175,55,0.5);border-radius:12px;padding:14px 10px 12px;text-align:center;box-shadow:0 0 22px rgba(212,175,55,0.1);display:flex;flex-direction:column;">
-                                <div style="height:2.4rem;display:flex;flex-direction:column;justify-content:flex-end;margin-bottom:6px;">
-                                    <p style="color:rgba(212,175,55,0.5);font-size:0.52rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 1px;">Recommandé</p>
-                                    <p style="color:rgba(212,175,55,0.65);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;margin:0;">Complète</p>
-                                </div>
+                            <!-- Complète — offre unique -->
+                            <div style="flex:1;background:rgba(212,175,55,0.06);border:1.5px solid rgba(212,175,55,0.5);border-radius:12px;padding:18px 14px 14px;text-align:center;box-shadow:0 0 28px rgba(212,175,55,0.1);display:flex;flex-direction:column;">
+                                <p style="color:rgba(212,175,55,0.65);font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">Accès complet</p>
                                 <p style="color:#f0c75e;font-size:1.6rem;font-weight:700;margin:0 0 8px;line-height:1;white-space:nowrap;">8€ <span style="font-size:0.65rem;color:rgba(212,175,55,0.45);font-weight:400;">/mois</span></p>
                                 <div style="height:1px;background:rgba(212,175,55,0.18);margin:0 0 8px;"></div>
                                 <ul style="list-style:none;padding:0;margin:0 0 10px;text-align:left;color:rgba(233,231,223,0.75);font-size:0.75rem;line-height:1.9;">
@@ -461,11 +439,8 @@ class FreemiumTracker {
         const handleCheckout = async (type) => {
             const email = knownEmail || '';
 
-            const btnD = document.getElementById('tlm-btn-decouverte');
             const btnC = document.getElementById('tlm-btn-complet');
-            [btnD, btnC].forEach(b => {
-                if (b) { b.disabled = true; b.textContent = 'Chargement…'; b.style.opacity = '0.6'; b.style.cursor = 'default'; }
-            });
+            if (btnC) { btnC.disabled = true; btnC.textContent = 'Chargement…'; btnC.style.opacity = '0.6'; btnC.style.cursor = 'default'; }
 
             try {
                 const resp = await fetch('/api/create-checkout-session', {
@@ -480,17 +455,12 @@ class FreemiumTracker {
                     throw new Error('No URL returned');
                 }
             } catch (_) {
-                [btnD, btnC].forEach(b => {
-                    if (b) { b.disabled = false; b.style.opacity = '1'; b.style.cursor = 'pointer'; }
-                });
-                if (btnD) btnD.textContent = 'Choisir Découverte';
-                if (btnC) btnC.textContent = "Choisir l'offre Complète";
+                if (btnC) { btnC.disabled = false; btnC.style.opacity = '1'; btnC.style.cursor = 'pointer'; btnC.textContent = "S'abonner"; }
                 alert('Une erreur est survenue. Réessayez.');
             }
         };
 
-        modal.querySelector('#tlm-btn-decouverte')?.addEventListener('click', () => handleCheckout('tore-decouverte'));
-        modal.querySelector('#tlm-btn-complet')?.addEventListener('click',    () => handleCheckout('tore-complet'));
+        modal.querySelector('#tlm-btn-complet')?.addEventListener('click', () => handleCheckout('tore-complet'));
 
         const closeModal = () => modal.remove();
         modal.querySelectorAll('[data-close-limit-modal]').forEach(btn => btn.addEventListener('click', closeModal));
