@@ -503,17 +503,26 @@
 
 <script>
 // Adapter le CTA principal selon l'éligibilité de l'utilisateur (#3)
-(function() {
+// Exécuté après chargement des scripts defer via window.load
+window.addEventListener('load', function() {
     try {
+        const label = document.getElementById('cta-essai-oracle-label');
+        if (!label) return;
+
+        // Utilisateur connecté (session membre présente)
+        const sessStr = sessionStorage.getItem('oradia_member_session')
+                     || localStorage.getItem('oradia_member_session');
+        const isLoggedIn = !!sessStr;
+
+        // Abonné (détecté via freemiumTracker si disponible)
         const ft = window.freemiumTracker;
-        if (!ft) return;
-        const eligible = ft.isSubscribed();
-        if (eligible) {
-            const label = document.getElementById('cta-essai-oracle-label');
-            if (label) label.textContent = 'Faire un tirage du Tore';
+        const isSubscribed = ft ? ft.isSubscribed() : false;
+
+        if (isLoggedIn || isSubscribed) {
+            label.textContent = 'Faire un tirage du Tore';
         }
     } catch (e) {}
-})();
+});
 </script>
 
 <script>
