@@ -509,6 +509,37 @@ async function processEvent(event) {
 
                     if (subError) console.error('tore_subscriptions upsert error:', subError.message);
 
+                    // 3. Ajouter aux contacts newsletter (Supabase + Brevo list 5)
+                    if (extractedData.email) {
+                        await supabase.from('newsletter_contacts').upsert({
+                            email:    extractedData.email,
+                            full_name: extractedData.full_name || '',
+                            source:   'abonnement-tore',
+                            tags:     ['abonne-tore'],
+                            status:   'active',
+                            brevo_synced: false
+                        }, { onConflict: 'email', ignoreDuplicates: false }).catch(e =>
+                            console.error('[webhook] newsletter_contacts upsert:', e.message)
+                        );
+
+                        if (process.env.BREVO_API_KEY) {
+                            const nameParts = (extractedData.full_name || '').trim().split(' ');
+                            await fetch('https://api.brevo.com/v3/contacts', {
+                                method: 'POST',
+                                headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+                                body: JSON.stringify({
+                                    email: extractedData.email,
+                                    attributes: {
+                                        PRENOM: nameParts[0] || '',
+                                        NOM:    nameParts.slice(1).join(' ') || ''
+                                    },
+                                    listIds: [5],
+                                    updateEnabled: true
+                                })
+                            }).catch(e => console.error('[webhook] Brevo add to list 5:', e.message));
+                        }
+                    }
+
                     // Email Brevo de confirmation d'abonnement avec mot de passe temporaire
                     if (extractedData.email) {
                         await sendToreSubscriptionEmail({

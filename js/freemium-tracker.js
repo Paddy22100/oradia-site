@@ -318,9 +318,10 @@ class FreemiumTracker {
                 #tore-limit-modal .tlm-offers-row { display:flex;gap:8px;margin-bottom:14px;align-items:stretch; }
                 #tore-limit-modal .tlm-offers-left { flex:1;display:flex;flex-direction:row;gap:8px;min-width:0; }
                 #tore-limit-modal .tlm-offers-left > div { flex:1;display:flex;flex-direction:column; }
-                #tore-limit-modal .tlm-preorder { width:160px;flex-shrink:0;border-radius:10px;overflow:hidden;text-decoration:none;position:relative;display:block;transition:opacity 0.2s ease;box-shadow:0 4px 20px rgba(0,0,0,0.4);min-height:200px; }
-                #tore-limit-modal .tlm-preorder:hover { opacity:0.88; }
-                @media(max-width:420px){ #tore-limit-modal .tlm-preorder { width:110px; } }
+                #tore-limit-modal .tlm-preorder { width:190px;flex-shrink:0;border-radius:10px;overflow:hidden;text-decoration:none;position:relative;display:block;transition:transform 0.2s ease,box-shadow 0.2s ease;box-shadow:0 4px 20px rgba(0,0,0,0.4);min-height:200px; }
+                #tore-limit-modal .tlm-preorder:hover { transform:scale(1.02);box-shadow:0 8px 32px rgba(212,175,55,0.25); }
+                @media(max-width:440px){ #tore-limit-modal .tlm-preorder { width:130px; } }
+                @media(max-width:360px){ #tore-limit-modal .tlm-preorder { width:100px; } }
             `;
             document.head.appendChild(style);
         }
@@ -357,12 +358,6 @@ class FreemiumTracker {
                     <p style="color:rgba(233,231,223,0.68);font-size:0.88rem;line-height:1.75;margin:0 auto 18px;text-align:center;font-style:italic;max-width:340px;">
                         Pour continuer à recevoir une guidance approfondie, choisissez la formule qui vous correspond.
                     </p>
-
-                    <!-- Email -->
-                    <div id="tlm-email-wrapper" style="display:none;margin-bottom:16px;">
-                        <p style="color:rgba(212,175,55,0.55);font-size:0.68rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 7px;text-align:center;">✦ Votre email pour recevoir le lien d'accès</p>
-                        <input id="tlm-email-input" type="email" class="tlm-email" placeholder="votre@email.fr" autocomplete="email" />
-                    </div>
 
                     <!-- Séparateur -->
                     <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);margin:0 auto 18px;"></div>
@@ -414,22 +409,30 @@ class FreemiumTracker {
 
                         <!-- Colonne droite : pub précommande -->
                         <a href="/precommande-oracle.html" class="tlm-preorder">
-                            <img src="/images/medias/banniere-facebook.png" alt="Oracle Oradia"
+                            <img src="/images/medias/apercu_stripe.webp" alt="Oracle Oradia coffret physique"
                                  style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
-                            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(4,10,24,0.92) 0%,rgba(4,10,24,0.45) 55%,rgba(4,10,24,0.1) 100%);"></div>
+                            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(3,8,20,0.96) 0%,rgba(3,8,20,0.5) 50%,rgba(3,8,20,0.15) 100%);"></div>
+                            <!-- Badge haut -->
+                            <div style="position:absolute;top:8px;left:0;right:0;text-align:center;">
+                                <span style="display:inline-block;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.5rem;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;border-radius:50px;">Édition limitée</span>
+                            </div>
+                            <!-- Contenu bas -->
                             <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 8px;text-align:center;">
-                                <p style="margin:0 0 2px;color:rgba(212,175,55,0.65);font-size:0.5rem;letter-spacing:2px;text-transform:uppercase;">Édition limitée</p>
-                                <p style="margin:0 0 6px;color:#f5e7a1;font-size:0.72rem;font-weight:700;line-height:1.2;">L'Oracle<br>Oradia</p>
-                                <span style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#050f23;font-size:0.55rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:4px 8px;border-radius:50px;">
-                                    dès 38€
+                                <p style="margin:0 0 2px;color:#f5e7a1;font-size:0.78rem;font-weight:700;line-height:1.25;text-shadow:0 1px 4px rgba(0,0,0,0.8);">Tenez-le<br>entre vos mains</p>
+                                <p style="margin:0 0 7px;color:rgba(212,175,55,0.65);font-size:0.55rem;line-height:1.4;">64 cartes · Livret · Coffret</p>
+                                <span style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#050f23;font-size:0.65rem;font-weight:700;letter-spacing:0.5px;padding:5px 10px;border-radius:50px;box-shadow:0 2px 8px rgba(212,175,55,0.4);">
+                                    Je réserve · 38€
                                 </span>
                             </div>
                         </a>
                     </div>
 
+                    <p style="color:rgba(233,231,223,0.28);font-size:0.65rem;text-align:center;margin:10px 0 6px;font-style:italic;line-height:1.5;">
+                        En vous abonnant, vous serez ajouté(e) à notre newsletter.<br>Désabonnement possible à tout moment.
+                    </p>
                     <button data-close-limit-modal class="tlm-close"
-                            style="display:block;width:100%;padding:6px;background:none;border:none;
-                                   color:rgba(233,231,223,0.28);font-size:0.78rem;cursor:pointer;
+                            style="display:block;width:100%;padding:4px;background:none;border:none;
+                                   color:rgba(233,231,223,0.22);font-size:0.75rem;cursor:pointer;
                                    font-style:italic;text-align:center;letter-spacing:0.05em;">
                         Peut-être plus tard
                     </button>
@@ -438,7 +441,7 @@ class FreemiumTracker {
         `;
         document.body.appendChild(modal);
 
-        // Email connu depuis la session membre
+        // Email connu depuis la session membre (pré-rempli dans Stripe si disponible)
         let knownEmail = '';
         try {
             const sessStr = sessionStorage.getItem('oradia_member_session')
@@ -446,24 +449,9 @@ class FreemiumTracker {
             if (sessStr) knownEmail = JSON.parse(sessStr).email || '';
         } catch (_) {}
 
-        if (!knownEmail) {
-            document.getElementById('tlm-email-wrapper').style.display = 'block';
-        }
-
         // Handler checkout commun aux deux boutons
         const handleCheckout = async (type) => {
-            const emailInput = document.getElementById('tlm-email-input');
-            const email = knownEmail || (emailInput ? emailInput.value.trim() : '');
-
-            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
-                const wrapper = document.getElementById('tlm-email-wrapper');
-                if (wrapper) wrapper.style.display = 'block';
-                if (emailInput) {
-                    emailInput.style.borderColor = '#e05252';
-                    emailInput.focus();
-                }
-                return;
-            }
+            const email = knownEmail || '';
 
             const btnD = document.getElementById('tlm-btn-decouverte');
             const btnC = document.getElementById('tlm-btn-complet');
