@@ -53,10 +53,8 @@ module.exports = async (req, res) => {
         const supabase = getSupabaseClient();
         const { data, error } = await supabase
           .from('preorders')
-          .select('id, items, paid_status, stripe_session_id, email')
-          .eq('paid_status', 'completed')
-          .not('stripe_session_id', 'like', 'cs_test_%')
-          .neq('email', 'contact@oradia.fr');
+          .select('id, items, paid_status')
+          .eq('paid_status', 'completed');
 
         if (error) {
           console.error('Progress query failed:', error.message);
