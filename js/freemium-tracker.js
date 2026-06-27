@@ -315,12 +315,11 @@ class FreemiumTracker {
                 #tore-limit-modal .tlm-email::placeholder { color:rgba(212,175,55,0.3); }
                 #tore-limit-modal .tlm-email:focus { border-color:rgba(212,175,55,0.65);box-shadow:0 0 0 3px rgba(212,175,55,0.1); }
                 #tore-limit-modal .tlm-close:hover { color:rgba(233,231,223,0.6) !important; }
-                #tore-limit-modal .tlm-preorder { transition:opacity 0.2s ease; border-radius:10px;overflow:hidden;text-decoration:none;display:flex;height:80px; }
-                #tore-limit-modal .tlm-preorder:hover { opacity:0.9; }
-                #tore-limit-modal .tlm-preorder-text { flex:1;min-width:0;background:rgba(8,18,38,0.97);border:1px solid rgba(212,175,55,0.22);border-right:none;border-radius:10px 0 0 10px;padding:10px 14px;display:flex;flex-direction:column;justify-content:center; }
-                #tore-limit-modal .tlm-preorder-img { width:120px;flex-shrink:0;overflow:hidden;border-radius:0 10px 10px 0;position:relative; }
-                @media(max-width:380px){ #tore-limit-modal .tlm-preorder-img { width:90px; } }
-                @media(max-width:320px){ #tore-limit-modal .tlm-preorder { height:auto;flex-direction:column; } #tore-limit-modal .tlm-preorder-img { width:100%;height:70px;border-radius:0 0 10px 10px; } #tore-limit-modal .tlm-preorder-text { border-right:1px solid rgba(212,175,55,0.22);border-bottom:none;border-radius:10px 10px 0 0; } }
+                #tore-limit-modal .tlm-offers-row { display:flex;gap:8px;margin-bottom:14px;align-items:stretch; }
+                #tore-limit-modal .tlm-offers-left { flex:1;display:flex;flex-direction:column;gap:8px;min-width:0; }
+                #tore-limit-modal .tlm-preorder { width:120px;flex-shrink:0;border-radius:10px;overflow:hidden;text-decoration:none;position:relative;display:block;transition:opacity 0.2s ease;box-shadow:0 4px 20px rgba(0,0,0,0.4); }
+                #tore-limit-modal .tlm-preorder:hover { opacity:0.88; }
+                @media(max-width:360px){ #tore-limit-modal .tlm-preorder { width:90px; } }
             `;
             document.head.appendChild(style);
         }
@@ -365,67 +364,67 @@ class FreemiumTracker {
                     <!-- Séparateur -->
                     <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);margin:0 auto 18px;"></div>
 
-                    <!-- 2 offres -->
-                    <div style="display:flex;gap:8px;margin-bottom:18px;">
+                    <!-- Offres + pub côte à côte -->
+                    <div class="tlm-offers-row">
 
-                        <!-- Découverte -->
-                        <div style="flex:1;background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:16px 12px 14px;text-align:center;">
-                            <p style="color:rgba(212,175,55,0.5);font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 8px;">Découverte</p>
-                            <p style="color:#f0c75e;font-size:1.75rem;font-weight:700;margin:0 0 2px;letter-spacing:1px;line-height:1;">5€</p>
-                            <p style="color:rgba(212,175,55,0.45);font-size:0.7rem;margin:0 0 10px;">/mois</p>
-                            <div style="height:1px;background:rgba(212,175,55,0.1);margin:0 0 12px;"></div>
-                            <ul style="list-style:none;padding:0;margin:0 0 14px;text-align:left;color:rgba(233,231,223,0.65);font-size:0.8rem;line-height:2;">
-                                <li>✦ 1 tirage par jour</li>
-                                <li>✦ Historique 30 jours</li>
-                            </ul>
-                            <button id="tlm-btn-decouverte" class="tlm-secondary"
-                                    style="width:100%;padding:9px 8px;border-radius:50px;border:1px solid rgba(212,175,55,0.4);
-                                           background:rgba(212,175,55,0.05);color:#d4af37;font-size:0.78rem;font-weight:700;
-                                           cursor:pointer;letter-spacing:1px;text-transform:uppercase;">
-                                Choisir
-                            </button>
+                        <!-- Colonne gauche : 2 offres empilées -->
+                        <div class="tlm-offers-left">
+
+                            <!-- Découverte -->
+                            <div style="flex:1;background:rgba(255,255,255,0.02);border:1px solid rgba(212,175,55,0.2);border-radius:12px;padding:14px 10px 12px;text-align:center;">
+                                <p style="color:rgba(212,175,55,0.5);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">Découverte</p>
+                                <p style="color:#f0c75e;font-size:1.6rem;font-weight:700;margin:0 0 1px;line-height:1;">5€</p>
+                                <p style="color:rgba(212,175,55,0.45);font-size:0.65rem;margin:0 0 8px;">/mois</p>
+                                <div style="height:1px;background:rgba(212,175,55,0.1);margin:0 0 8px;"></div>
+                                <ul style="list-style:none;padding:0;margin:0 0 10px;text-align:left;color:rgba(233,231,223,0.65);font-size:0.75rem;line-height:1.9;">
+                                    <li>✦ 1 tirage par jour</li>
+                                    <li>✦ Historique 30 jours</li>
+                                </ul>
+                                <button id="tlm-btn-decouverte" class="tlm-secondary"
+                                        style="width:100%;padding:8px;border-radius:50px;border:1px solid rgba(212,175,55,0.4);
+                                               background:rgba(212,175,55,0.05);color:#d4af37;font-size:0.72rem;font-weight:700;
+                                               cursor:pointer;letter-spacing:1px;text-transform:uppercase;">
+                                    Choisir
+                                </button>
+                            </div>
+
+                            <!-- Complète -->
+                            <div style="flex:1;background:rgba(212,175,55,0.05);border:1.5px solid rgba(212,175,55,0.5);border-radius:12px;padding:14px 10px 12px;text-align:center;box-shadow:0 0 22px rgba(212,175,55,0.08);">
+                                <p style="color:rgba(212,175,55,0.5);font-size:0.52rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 1px;">Recommandé</p>
+                                <p style="color:rgba(212,175,55,0.65);font-size:0.58rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">Complète</p>
+                                <p style="color:#f0c75e;font-size:1.6rem;font-weight:700;margin:0 0 1px;line-height:1;">8€</p>
+                                <p style="color:rgba(212,175,55,0.45);font-size:0.65rem;margin:0 0 8px;">/mois</p>
+                                <div style="height:1px;background:rgba(212,175,55,0.18);margin:0 0 8px;"></div>
+                                <ul style="list-style:none;padding:0;margin:0 0 10px;text-align:left;color:rgba(233,231,223,0.75);font-size:0.75rem;line-height:1.9;">
+                                    <li>✦ Tirages illimités</li>
+                                    <li>✦ Historique complet</li>
+                                    <li>✦ Espace membres</li>
+                                </ul>
+                                <button id="tlm-btn-complet" class="tlm-cta"
+                                        style="width:100%;padding:9px;border-radius:50px;
+                                               background:linear-gradient(135deg,#d4af37,#f0c75e);
+                                               color:#050f23;font-size:0.72rem;font-weight:700;
+                                               border:none;cursor:pointer;letter-spacing:1px;text-transform:uppercase;
+                                               box-shadow:0 4px 18px rgba(212,175,55,0.38);">
+                                    Choisir
+                                </button>
+                            </div>
                         </div>
 
-                        <!-- Complète -->
-                        <div style="flex:1;background:rgba(212,175,55,0.05);border:1.5px solid rgba(212,175,55,0.5);border-radius:12px;padding:16px 12px 14px;text-align:center;box-shadow:0 0 28px rgba(212,175,55,0.08);">
-                            <p style="color:rgba(212,175,55,0.5);font-size:0.55rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 1px;">Recommandé</p>
-                            <p style="color:rgba(212,175,55,0.65);font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 8px;">Complète</p>
-                            <p style="color:#f0c75e;font-size:1.75rem;font-weight:700;margin:0 0 2px;letter-spacing:1px;line-height:1;">8€</p>
-                            <p style="color:rgba(212,175,55,0.45);font-size:0.7rem;margin:0 0 10px;">/mois</p>
-                            <div style="height:1px;background:rgba(212,175,55,0.18);margin:0 0 12px;"></div>
-                            <ul style="list-style:none;padding:0;margin:0 0 14px;text-align:left;color:rgba(233,231,223,0.75);font-size:0.8rem;line-height:2;">
-                                <li>✦ Tirages illimités</li>
-                                <li>✦ Historique complet</li>
-                                <li>✦ Espace membres</li>
-                            </ul>
-                            <button id="tlm-btn-complet" class="tlm-cta"
-                                    style="width:100%;padding:10px 8px;border-radius:50px;
-                                           background:linear-gradient(135deg,#d4af37,#f0c75e);
-                                           color:#050f23;font-size:0.78rem;font-weight:700;
-                                           border:none;cursor:pointer;letter-spacing:1px;text-transform:uppercase;
-                                           box-shadow:0 4px 20px rgba(212,175,55,0.4);">
-                                Choisir
-                            </button>
-                        </div>
-                    </div>
-
-                    <!-- Séparateur -->
-                    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);margin:0 auto 16px;"></div>
-
-                    <!-- ── PUB PRÉCOMMANDE ── -->
-                    <a href="/precommande-oracle.html" class="tlm-preorder" style="margin-bottom:14px;box-shadow:0 4px 20px rgba(0,0,0,0.4);">
-                        <div class="tlm-preorder-text">
-                            <p style="margin:0 0 2px;color:rgba(212,175,55,0.6);font-size:0.55rem;letter-spacing:3px;text-transform:uppercase;">Première édition</p>
-                            <p style="margin:0 0 6px;color:#f5e7a1;font-size:0.82rem;font-weight:700;line-height:1.25;white-space:nowrap;">L'Oracle Oradia</p>
-                            <span style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#050f23;font-size:0.6rem;font-weight:700;letter-spacing:1px;text-transform:uppercase;padding:4px 10px;border-radius:50px;white-space:nowrap;">
-                                Réserver · dès 38€
-                            </span>
-                        </div>
-                        <div class="tlm-preorder-img">
+                        <!-- Colonne droite : pub précommande -->
+                        <a href="/precommande-oracle.html" class="tlm-preorder">
                             <img src="/images/medias/banniere-facebook.png" alt="Oracle Oradia"
-                                 style="width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
-                        </div>
-                    </a>
+                                 style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
+                            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(4,10,24,0.92) 0%,rgba(4,10,24,0.45) 55%,rgba(4,10,24,0.1) 100%);"></div>
+                            <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 8px;text-align:center;">
+                                <p style="margin:0 0 2px;color:rgba(212,175,55,0.65);font-size:0.5rem;letter-spacing:2px;text-transform:uppercase;">Édition limitée</p>
+                                <p style="margin:0 0 6px;color:#f5e7a1;font-size:0.72rem;font-weight:700;line-height:1.2;">L'Oracle<br>Oradia</p>
+                                <span style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#050f23;font-size:0.55rem;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:4px 8px;border-radius:50px;">
+                                    dès 38€
+                                </span>
+                            </div>
+                        </a>
+                    </div>
 
                     <button data-close-limit-modal class="tlm-close"
                             style="display:block;width:100%;padding:6px;background:none;border:none;
