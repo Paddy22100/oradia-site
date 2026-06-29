@@ -6,6 +6,7 @@
   "dependencies": {
     "@anthropic-ai/sdk": "^0.97.1",
     "@supabase/supabase-js": "^2.107.0",
+    "@vercel/analytics": "^2.0.1",
     "bcrypt": "^5.1.1",
     "bcryptjs": "^3.0.3",
     "cookie": "^0.6.0",
