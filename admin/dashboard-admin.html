@@ -5295,9 +5295,24 @@
             if (!data.success) { if (list) list.innerHTML = `<p class="text-red-400 text-sm text-center">${data.error}</p>`; return; }
             const s = data.summary || {};
             const fmt = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(v||0);
+
+            // Inclure les coûts techniques (Claude Pro, Gandi, API Claude) dans les dépenses du mois en cours
+            let costsMonthlyEur = 0;
+            const isCurrentMonthView = !month || (parseInt(month,10) === (new Date().getMonth()+1) && parseInt(year,10) === new Date().getFullYear());
+            if (isCurrentMonthView) {
+                try {
+                    const costsRes = await adminFetch('/api/admin/data?section=costs');
+                    const costsData = await costsRes.json();
+                    if (costsData.success) costsMonthlyEur = costsData.data?.totalMonthlyEstimateEur || 0;
+                } catch(_) {}
+            }
+            const depensesTotal = (s.depenses || 0) + costsMonthlyEur;
+            const netTotal = (s.recettes || 0) - depensesTotal;
+
             setEl('compta-recettes', fmt(s.recettes));
-            setEl('compta-depenses', fmt(s.depenses));
-            setEl('compta-net', fmt(s.net));
+            const depensesEl = document.getElementById('compta-depenses');
+            if (depensesEl) depensesEl.innerHTML = fmt(depensesTotal) + (costsMonthlyEur > 0 ? ` <span class="text-gold/30 text-xs font-normal block">(dont ${fmt(costsMonthlyEur)} coûts du site)</span>` : '');
+            setEl('compta-net', fmt(netTotal));
             setEl('compta-urssaf', fmt(s.urssaf));
             const transactions = data.data || [];
             if (!list) return;
