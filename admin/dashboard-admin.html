@@ -1552,7 +1552,16 @@
                 <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-blue-300" id="ana-pages-per-visit">—</div><p class="text-gold/50 text-xs mt-1">Pages / visite</p></div>
                 <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-yellow-400" id="ana-bounce">—</div><p class="text-gold/50 text-xs mt-1">Taux de rebond</p></div>
                 <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-light-gold" id="ana-top-page">—</div><p class="text-gold/50 text-xs mt-1">Page n°1</p></div>
-                <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-red-400" id="ana-errors">—</div><p class="text-gold/50 text-xs mt-1">Erreurs techniques</p></div>
+                <div class="stat-card rounded-xl p-4 text-center cursor-pointer" onclick="toggleErrorDetails()" title="Cliquer pour voir le détail">
+                    <div class="text-2xl font-bold text-red-400" id="ana-errors">—</div>
+                    <p class="text-gold/50 text-xs mt-1">Erreurs techniques <i class="fas fa-chevron-down text-[10px]" id="ana-errors-chevron"></i></p>
+                </div>
+            </div>
+
+            <!-- Détail des erreurs techniques -->
+            <div id="analytics-error-details" class="stat-card rounded-2xl p-6 mb-6 hidden">
+                <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-triangle-exclamation text-red-400/70"></i> Détail des erreurs (période sélectionnée)</h4>
+                <div id="analytics-error-list" class="space-y-2 max-h-80 overflow-y-auto text-xs font-mono"></div>
             </div>
 
             <!-- Analyse IA -->
@@ -5184,6 +5193,39 @@
         // ── ANALYTIQUES ──────────────────────────────────────────────────────────────
         let _analyticsData = null;
 
+        let _errorDetailsOpen = false;
+        async function toggleErrorDetails() {
+            const panel = document.getElementById('analytics-error-details');
+            const chevron = document.getElementById('ana-errors-chevron');
+            _errorDetailsOpen = !_errorDetailsOpen;
+            if (!_errorDetailsOpen) { panel.classList.add('hidden'); if (chevron) chevron.className = 'fas fa-chevron-down text-[10px]'; return; }
+            panel.classList.remove('hidden');
+            if (chevron) chevron.className = 'fas fa-chevron-up text-[10px]';
+            const listEl = document.getElementById('analytics-error-list');
+            listEl.innerHTML = '<p class="text-gold/30 italic animate-pulse">Chargement…</p>';
+            try {
+                const range = document.getElementById('analytics-range')?.value || '7d';
+                const days = range === '30d' ? 30 : range === '7d' ? 7 : 1;
+                const since = new Date(Date.now() - days * 86400000).toISOString();
+                const res = await adminFetch(`/api/admin/system-logs?level=error&since=${encodeURIComponent(since)}&limit=100`);
+                const data = await res.json();
+                const logs = data.data || [];
+                if (logs.length === 0) { listEl.innerHTML = '<p class="text-gold/30 italic">Aucune erreur sur cette période.</p>'; return; }
+                listEl.innerHTML = logs.map(l => {
+                    const t = new Date(l.created_at).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+                    return `<div class="border-b border-white/5 pb-1.5 last:border-0">
+                        <div class="flex gap-2">
+                            <span class="text-gold/30 flex-shrink-0">${t}</span>
+                            <span class="text-gold/50 flex-shrink-0">${l.source||''}${l.path ? ' · ' + l.path : ''}</span>
+                        </div>
+                        <div class="text-red-300/80 break-words">${escapeHtmlFront(l.message||'')}</div>
+                    </div>`;
+                }).join('');
+            } catch(e) {
+                listEl.innerHTML = `<p class="text-red-400 text-xs">Erreur de chargement : ${e.message}</p>`;
+            }
+        }
+
         function renderDailyViewsChart(days) {
             const chartEl = document.getElementById('analytics-daily-chart');
             if (!chartEl) return;
@@ -5297,6 +5339,8 @@
                                 </div>
                             </div>`).join('');
                 }
+
+                if (_errorDetailsOpen) { _errorDetailsOpen = false; await toggleErrorDetails(); }
             } catch(e) {
                 console.error('[analytics]', e);
             }
