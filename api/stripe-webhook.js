@@ -307,6 +307,16 @@ async function processEvent(event) {
                 console.error('[webhook] Échec prolongation abonnement Tore:', renewError.message);
             } else {
                 console.log(`[webhook] Abonnement Tore prolongé jusqu'au ${newExpireAt.toISOString()} pour ${row.email}`);
+                // Enregistrement automatique de la recette (renouvellement mensuel)
+                await supabase.from('transactions').insert({
+                    date: new Date().toISOString().split('T')[0],
+                    type: 'recette',
+                    category: 'abonnement',
+                    description: `Renouvellement abonnement Tore — ${row.email}`,
+                    amount: (invoice.amount_paid || 0) / 100,
+                    source: 'abonnement',
+                    source_ref: invoice.id
+                }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (renouvellement):', error.message); });
             }
             break;
         }
@@ -509,6 +519,17 @@ async function processEvent(event) {
 
                     if (subError) console.error('tore_subscriptions upsert error:', subError.message);
 
+                    // Enregistrement automatique de la recette (souscription initiale)
+                    await supabase.from('transactions').insert({
+                        date: new Date().toISOString().split('T')[0],
+                        type: 'recette',
+                        category: 'abonnement',
+                        description: `Abonnement Tore ${subPlan} — ${extractedData.full_name || extractedData.email}`,
+                        amount: (extractedData.amount_total || 0) / 100,
+                        source: 'abonnement',
+                        source_ref: sessionId
+                    }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (abonnement):', error.message); });
+
                     // 3. Ajouter aux contacts newsletter (Supabase + Brevo list 5)
                     if (extractedData.email) {
                         await supabase.from('newsletter_contacts').upsert({
@@ -606,6 +627,17 @@ async function processEvent(event) {
                         }
                     }
                     
+                    // Enregistrement automatique de la recette
+                    await supabase.from('transactions').insert({
+                        date: new Date().toISOString().split('T')[0],
+                        type: 'recette',
+                        category: 'don',
+                        description: `Don — ${donorResult.full_name || donorResult.email || ''}`,
+                        amount: amountInEuros,
+                        source: 'don',
+                        source_ref: sessionId
+                    }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (don):', error.message); });
+
                     console.log(`[webhook] Don traité: ${sessionId} | Email:${emailSent ? 'OK' : 'Skipped'}`);
                     return;
                 }
@@ -723,6 +755,17 @@ async function processEvent(event) {
                     }
                 }
                 
+                // Enregistrement automatique de la recette
+                await supabase.from('transactions').insert({
+                    date: new Date().toISOString().split('T')[0],
+                    type: 'recette',
+                    category: 'précommande',
+                    description: `Précommande ${upsertData.offer || ''} — ${upsertData.full_name || upsertData.email || ''}`,
+                    amount: parseFloat(upsertData.amount_total) || 0,
+                    source: 'precommande',
+                    source_ref: sessionId
+                }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (precommande):', error.message); });
+
                 console.log(`[webhook] Précommande traitée: ${sessionId} | DB:OK | Email:${emailSent ? 'OK' : 'Skipped'}`);
                 return;
             }
@@ -804,6 +847,17 @@ async function handleCalWebhook(req, res) {
             console.error('[cal-webhook] Erreur insertion guidance:', gErr.message);
             return res.status(500).json({ error: 'DB error' });
         }
+
+        // Enregistrement automatique de la recette
+        await supabase.from('transactions').insert({
+            date: new Date().toISOString().split('T')[0],
+            type: 'recette',
+            category: 'guidance',
+            description: `Guidance — ${clientName || clientEmail || ''}`,
+            amount: (amount || 0) / 100,
+            source: 'guidance',
+            source_ref: bookingUid
+        }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (guidance):', error.message); });
 
         const dateStr = scheduledAt
             ? new Date(scheduledAt).toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' })
