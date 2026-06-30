@@ -2717,52 +2717,98 @@ module.exports = async (req, res) => {
 
     if (path === '/analytics' || path === '/analytics/') {
       verifyAdminAuth(req);
-      if (req.method !== 'GET') return res.status(405).end();
       const range = urlParams.get('range') || '7d';
       const days = range === '30d' ? 30 : range === '7d' ? 7 : 1;
-      const since = new Date(Date.now() - days * 86400000).toISOString();
+      const now = Date.now();
+      const since = new Date(now - days * 86400000).toISOString();
+      const prevSince = new Date(now - days * 2 * 86400000).toISOString();
       const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+      const computeTraffic = (rows) => {
+        const v = rows || [];
+        const uniqueSessions = new Set(v.map(r => r.session_id)).size;
+        const pageCounts = {};
+        v.forEach(r => { if (r.path) pageCounts[r.path] = (pageCounts[r.path] || 0) + 1; });
+        const topPages = Object.entries(pageCounts).sort((a,b) => b[1]-a[1]).slice(0,10).map(([path,count]) => ({path,count}));
+        const referrerCounts = {};
+        v.forEach(r => {
+          let ref = 'Direct / inconnu';
+          if (r.referrer) { try { ref = new URL(r.referrer).hostname.replace(/^www\./,''); } catch(_) { ref = 'Direct / inconnu'; } }
+          referrerCounts[ref] = (referrerCounts[ref] || 0) + 1;
+        });
+        const topReferrers = Object.entries(referrerCounts).sort((a,b) => b[1]-a[1]).slice(0,8).map(([referrer,count]) => ({referrer,count}));
+        const byDay = {};
+        v.forEach(r => { const d = r.created_at.slice(0,10); byDay[d] = (byDay[d] || 0) + 1; });
+        const dailyViews = Object.entries(byDay).sort((a,b) => a[0]<b[0]?-1:1).map(([date,count]) => ({date,count}));
+        const sessionPageCount = {};
+        v.forEach(r => { sessionPageCount[r.session_id] = (sessionPageCount[r.session_id] || 0) + 1; });
+        const singlePageSessions = Object.values(sessionPageCount).filter(n => n === 1).length;
+        const bounceRate = uniqueSessions > 0 ? (singlePageSessions / uniqueSessions * 100) : null;
+        const pagesPerVisit = uniqueSessions > 0 ? (v.length / uniqueSessions) : null;
+        return { total_views: v.length, unique_visitors: uniqueSessions, top_pages: topPages, top_referrers: topReferrers, daily_views: dailyViews, bounce_rate: bounceRate, pages_per_visit: pagesPerVisit };
+      };
 
       // ── Trafic réel (pages vues du site, via js/page-tracker.js) ──
       const { data: views } = await sb.from('page_views').select('created_at,path,referrer,session_id').gte('created_at', since).order('created_at', { ascending: false }).limit(20000);
-      const v = views || [];
-      const uniqueSessions = new Set(v.map(r => r.session_id)).size;
-      const pageCounts = {};
-      v.forEach(r => { if (r.path) pageCounts[r.path] = (pageCounts[r.path] || 0) + 1; });
-      const topPages = Object.entries(pageCounts).sort((a,b) => b[1]-a[1]).slice(0,10).map(([path,count]) => ({path,count}));
-      const referrerCounts = {};
-      v.forEach(r => {
-        let ref = 'Direct / inconnu';
-        if (r.referrer) { try { ref = new URL(r.referrer).hostname.replace(/^www\./,''); } catch(_) { ref = 'Direct / inconnu'; } }
-        referrerCounts[ref] = (referrerCounts[ref] || 0) + 1;
-      });
-      const topReferrers = Object.entries(referrerCounts).sort((a,b) => b[1]-a[1]).slice(0,8).map(([referrer,count]) => ({referrer,count}));
-      // Répartition par jour (pour le graphique simple)
-      const byDay = {};
-      v.forEach(r => { const d = r.created_at.slice(0,10); byDay[d] = (byDay[d] || 0) + 1; });
-      const dailyViews = Object.entries(byDay).sort((a,b) => a[0]<b[0]?-1:1).map(([date,count]) => ({date,count}));
-      // Sessions ayant vu une seule page = "rebond"
-      const sessionPageCount = {};
-      v.forEach(r => { sessionPageCount[r.session_id] = (sessionPageCount[r.session_id] || 0) + 1; });
-      const singlePageSessions = Object.values(sessionPageCount).filter(n => n === 1).length;
-      const bounceRate = uniqueSessions > 0 ? (singlePageSessions / uniqueSessions * 100) : null;
+      const { data: prevViews } = await sb.from('page_views').select('created_at,session_id').gte('created_at', prevSince).lt('created_at', since).limit(20000);
+      const traffic = computeTraffic(views);
+      const prevTraffic = computeTraffic(prevViews);
+      const pctChange = (curr, prev) => (prev > 0 ? Math.round(((curr - prev) / prev) * 100) : (curr > 0 ? 100 : 0));
+      traffic.views_change_pct = pctChange(traffic.total_views, prevTraffic.total_views);
+      traffic.visitors_change_pct = pctChange(traffic.unique_visitors, prevTraffic.unique_visitors);
 
       // ── Santé technique (erreurs API, depuis system_logs) ──
       const { data: logs } = await sb.from('system_logs').select('level').gte('created_at', since);
       const errors = (logs || []).filter(l => l.level === 'error').length;
       const warnings = (logs || []).filter(l => l.level === 'warning').length;
 
+      if (req.method === 'POST') {
+        if (!process.env.ANTHROPIC_API_KEY) {
+          return res.status(500).json({ error: 'ANTHROPIC_API_KEY non configurée' });
+        }
+        const prompt = `Tu es consultant en growth marketing pour Oradia, un site français d'oracle/guidance spirituelle (vente d'un oracle physique en précommande, abonnement "Tore" pour tirages en ligne à 8€/mois, guidances individuelles par visio, dons libres).
+
+Voici les statistiques de trafic réelles des ${days} derniers jours (comparées à la période précédente de même durée) :
+- Pages vues : ${traffic.total_views} (${traffic.views_change_pct >= 0 ? '+' : ''}${traffic.views_change_pct}% vs période précédente)
+- Visiteurs uniques : ${traffic.unique_visitors} (${traffic.visitors_change_pct >= 0 ? '+' : ''}${traffic.visitors_change_pct}%)
+- Pages vues par visite : ${traffic.pages_per_visit != null ? traffic.pages_per_visit.toFixed(2) : 'N/A'}
+- Taux de rebond (visite d'une seule page) : ${traffic.bounce_rate != null ? traffic.bounce_rate.toFixed(0) + '%' : 'N/A'}
+- Pages les plus consultées : ${traffic.top_pages.map(p => `${p.path} (${p.count})`).join(', ') || 'aucune donnée'}
+- Provenance des visiteurs : ${traffic.top_referrers.map(r => `${r.referrer} (${r.count})`).join(', ') || 'aucune donnée'}
+- Erreurs techniques sur la période : ${errors}
+
+Analyse ces chiffres et donne-moi, en français, de façon concise et actionnable (utilise des puces, pas de blabla) :
+1. Ce qui va bien
+2. Ce qui est préoccupant ou à surveiller
+3. 3 à 5 actions concrètes et priorisées pour améliorer le trafic et la conversion du site, en tenant compte du contexte (petit site indépendant, trafic encore faible, donc ne suggère pas d'analyses nécessitant un grand volume de données)
+
+Sois honnête si les données sont trop limitées pour conclure quoi que ce soit de fiable — dans ce cas dis-le clairement plutôt que d'inventer des tendances.`;
+
+        const models = [process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5', 'claude-3-5-haiku-20241022'];
+        let lastErr;
+        for (const model of models) {
+          try {
+            const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+              body: JSON.stringify({ model, max_tokens: 1200, messages: [{ role: 'user', content: prompt }] }),
+              signal: AbortSignal.timeout(30000)
+            });
+            if (!aiRes.ok) { lastErr = await aiRes.text(); continue; }
+            const data = await aiRes.json();
+            const content = (data.content || []).map(b => b.text || '').join('').trim();
+            if (!content) { lastErr = 'Réponse vide du modèle'; continue; }
+            return res.status(200).json({ success: true, analysis: content });
+          } catch (e) { lastErr = e.message; }
+        }
+        return res.status(502).json({ error: 'Erreur lors de l\'analyse IA', details: lastErr });
+      }
+
+      if (req.method !== 'GET') return res.status(405).end();
       return res.status(200).json({
         success: true,
         range,
-        traffic: {
-          total_views: v.length,
-          unique_visitors: uniqueSessions,
-          top_pages: topPages,
-          top_referrers: topReferrers,
-          daily_views: dailyViews,
-          bounce_rate: bounceRate
-        },
+        traffic,
         logs_stats: { errors, warnings, total: (logs||[]).length }
       });
     }
