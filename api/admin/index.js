@@ -10,7 +10,7 @@ const xml2js = require('xml2js');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { sendBrevoEmail, sendShippingEmail, sendExportEmail } = require('../../lib/brevo-order-email.js');
+const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail } = require('../../lib/brevo-order-email.js');
 
 // Manifest statique des illustrations du Tore (généré une fois, fichier unique et léger —
 // ne pas remplacer par un fs.readdir sur /images, ça ferait bundler tout le dossier (350+ Mo)
@@ -687,6 +687,30 @@ async function handleData(req, res) {
               .eq('id', body.orderId);
           }
         }
+
+        return res.status(200).json({ success: true, emailSent });
+      }
+
+      // Notifier le client que sa commande en main propre est prête.
+      if (action === 'mark-ready' && body.orderId) {
+        const { data: order, error: fetchError } = await supabase
+          .from('preorders')
+          .select('email, full_name')
+          .eq('id', body.orderId)
+          .maybeSingle();
+        if (fetchError) throw fetchError;
+        if (!order) return res.status(404).json({ error: 'Commande introuvable' });
+
+        const { error: updateError } = await supabase
+          .from('preorders')
+          .update({ ready_at: new Date().toISOString() })
+          .eq('id', body.orderId);
+        if (updateError) throw updateError;
+
+        const emailSent = await sendReadyEmail({
+          toEmail: order.email,
+          toName: order.full_name || ''
+        });
 
         return res.status(200).json({ success: true, emailSent });
       }

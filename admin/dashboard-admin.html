@@ -2392,6 +2392,7 @@
                     <td class="px-6 py-4">
                         <div class="flex gap-2 flex-wrap items-center">
                             ${getShippingActionButtons(preorder)}
+                            ${getReadyButton(preorder)}
                             ${getProcessedButton(preorder)}
                         </div>
                     </td>
@@ -3176,6 +3177,17 @@
             }
         }
 
+        function getReadyButton(preorder) {
+            if (preorder.shipping_method !== 'hand_delivery') return '';
+            const orderId = String(preorder.id || '');
+            if (preorder.ready_at) {
+                return `<span class="px-3 py-1 bg-blue-500/10 text-blue-300 rounded text-xs inline-flex items-center" title="Notifié le ${formatDate(preorder.ready_at)}"><i class="fas fa-envelope-open-text mr-1"></i>Notifié le ${formatDate(preorder.ready_at)}</span>`;
+            }
+            return `<button onclick="markOrderReady('${orderId}')" class="px-3 py-1 bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded hover:bg-blue-500/30 transition text-xs">
+                <i class="fas fa-bell mr-1"></i>Disponible
+            </button>`;
+        }
+
         function getProcessedButton(preorder) {
             const orderId = String(preorder.id || preorder.session_id || '');
             const processedAt = getProcessedOrders()[orderId];
@@ -3186,13 +3198,30 @@
                 </div>`;
             }
             return `<button onclick="markOrderProcessed('${orderId}')" class="px-3 py-1 bg-green-500/20 text-green-300 rounded hover:bg-green-500/30 transition text-xs">
-                                <i class="fas fa-check mr-1"></i>Traité
-                            </button>`;
+                <i class="fas fa-check mr-1"></i>Traité
+            </button>`;
         }
 
         function refreshPreordersTable() {
             updatePreordersTable(currentData.preorders || [], currentData.preordersPagination);
         }
+
+        window.markOrderReady = async function markOrderReady(orderId) {
+            if (!confirm('Envoyer un email au client pour lui dire que sa commande est prête à récupérer ?')) return;
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'mark-ready', orderId })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                alert(data.emailSent ? '✅ Email envoyé au client !' : '✅ Commande marquée disponible.\n⚠️ Email non envoyé (vérifier config Brevo).');
+                await loadDashboardData();
+            } catch (e) {
+                alert('❌ Erreur : ' + e.message);
+            }
+        };
 
         window.unmarkOrderProcessed = function unmarkOrderProcessed(orderId) {
             const key = String(orderId || '');
