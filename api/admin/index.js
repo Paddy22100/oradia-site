@@ -25,6 +25,9 @@ try {
 // Tables exportables (récap mensuel preorders/donors/tirages)
 const EXPORTABLE_TABLES = ['preorders', 'donors', 'tirages'];
 
+// Comptes à ne jamais compter dans la comptabilité (audit/test + compte personnel du fondateur)
+const ACCOUNTING_EXCLUDED_EMAILS = ['boucheron.r89@gmail.com', 'audit@oradia.fr'];
+
 // Catégories de contacts newsletter (utilisées pour cibler les envois depuis le dashboard,
 // sans passer par les listes Brevo). Liste indicative — des tags libres restent possibles.
 const CONTACT_TAGS = [
@@ -746,6 +749,7 @@ async function handleData(req, res) {
 
       if (action === 'import-transactions') {
         const sb = supabase;
+        const isExcluded = (email) => email && ACCOUNTING_EXCLUDED_EMAILS.includes(String(email).toLowerCase().trim());
         // Import depuis preorders
         const { data: preorders } = await sb.from('preorders').select('created_at,amount_total,email,full_name,offer,stripe_session_id').eq('paid_status','completed');
         const { data: donors } = await sb.from('donors').select('created_at,amount,email,full_name,stripe_session_id');
@@ -753,11 +757,17 @@ async function handleData(req, res) {
         const { data: subs } = await sb.from('tore_subscriptions').select('created_at,email,full_name,plan,status').neq('status','payment_failed');
         const planPriceEur = p => p === 'decouverte' ? 5 : 8;
         const toInsert = [
-            ...(preorders||[]).map(p => ({ date: p.created_at?.split('T')[0], type:'recette', category:'précommande', description:`Précommande ${p.offer||''} — ${p.full_name||p.email||''}`, amount: parseFloat(p.amount_total)||0, source:'precommande', source_ref: p.stripe_session_id })).filter(t=>t.amount>0),
-            ...(donors||[]).map(d => ({ date: d.created_at?.split('T')[0], type:'recette', category:'don', description:`Don — ${d.full_name||d.email||''}`, amount: parseFloat(d.amount)||0, source:'don', source_ref: d.stripe_session_id })).filter(t=>t.amount>0),
-            ...(guidances||[]).map(g => ({ date: g.created_at?.split('T')[0], type:'recette', category:'guidance', description:`Guidance — ${g.client_name||g.client_email||''}`, amount: (g.amount||0)/100, source:'guidance', source_ref: g.cal_booking_uid })).filter(t=>t.amount>0),
-            ...(subs||[]).map(s => ({ date: s.created_at?.split('T')[0], type:'recette', category:'abonnement', description:`Abonnement Tore ${s.plan||'complet'} — ${s.full_name||s.email||''}`, amount: planPriceEur(s.plan), source:'abonnement', source_ref: `sub_${s.email}_${s.created_at?.split('T')[0]}` })),
+            ...(preorders||[]).filter(p=>!isExcluded(p.email)).map(p => ({ date: p.created_at?.split('T')[0], type:'recette', category:'précommande', description:`Précommande ${p.offer||''} — ${p.full_name||p.email||''}`, amount: parseFloat(p.amount_total)||0, source:'precommande', source_ref: p.stripe_session_id })).filter(t=>t.amount>0),
+            ...(donors||[]).filter(d=>!isExcluded(d.email)).map(d => ({ date: d.created_at?.split('T')[0], type:'recette', category:'don', description:`Don — ${d.full_name||d.email||''}`, amount: parseFloat(d.amount)||0, source:'don', source_ref: d.stripe_session_id })).filter(t=>t.amount>0),
+            ...(guidances||[]).filter(g=>!isExcluded(g.client_email)).map(g => ({ date: g.created_at?.split('T')[0], type:'recette', category:'guidance', description:`Guidance — ${g.client_name||g.client_email||''}`, amount: (g.amount||0)/100, source:'guidance', source_ref: g.cal_booking_uid })).filter(t=>t.amount>0),
+            ...(subs||[]).filter(s=>!isExcluded(s.email)).map(s => ({ date: s.created_at?.split('T')[0], type:'recette', category:'abonnement', description:`Abonnement Tore ${s.plan||'complet'} — ${s.full_name||s.email||''}`, amount: planPriceEur(s.plan), source:'abonnement', source_ref: `sub_${s.email}_${s.created_at?.split('T')[0]}` })),
         ];
+        // Purger les transactions déjà importées pour les comptes exclus (audit/test, fondateur)
+        for (const email of ACCOUNTING_EXCLUDED_EMAILS) {
+          await sb.from('transactions').delete().ilike('description', `%${email}%`);
+        }
+        await sb.from('transactions').delete().ilike('description', '%compte audit test%');
+        await sb.from('transactions').delete().ilike('description', '%Rudy BOUCHERON%');
         if (toInsert.length === 0) return res.status(200).json({ success: true, imported: 0 });
         const { error } = await sb.from('transactions').upsert(toInsert, { onConflict: 'source_ref', ignoreDuplicates: true });
         if (error) throw error;

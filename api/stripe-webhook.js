@@ -2,6 +2,10 @@ const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
 const { sendBrevoEmail } = require('../lib/brevo-order-email.js');
 
+// Comptes à ne jamais compter dans la comptabilité (audit/test + compte personnel du fondateur)
+const ACCOUNTING_EXCLUDED_EMAILS = ['boucheron.r89@gmail.com', 'audit@oradia.fr'];
+const isAccountingExcluded = (email) => !!email && ACCOUNTING_EXCLUDED_EMAILS.includes(String(email).toLowerCase().trim());
+
 // Fonctions pour créer les clients après validation environnement
 function getStripeClient() {
     return require('stripe')(process.env.STRIPE_SECRET_KEY);
@@ -308,6 +312,7 @@ async function processEvent(event) {
             } else {
                 console.log(`[webhook] Abonnement Tore prolongé jusqu'au ${newExpireAt.toISOString()} pour ${row.email}`);
                 // Enregistrement automatique de la recette (renouvellement mensuel)
+                if (isAccountingExcluded(row.email)) { break; }
                 await supabase.from('transactions').insert({
                     date: new Date().toISOString().split('T')[0],
                     type: 'recette',
@@ -520,6 +525,7 @@ async function processEvent(event) {
                     if (subError) console.error('tore_subscriptions upsert error:', subError.message);
 
                     // Enregistrement automatique de la recette (souscription initiale)
+                    if (!isAccountingExcluded(extractedData.email)) {
                     await supabase.from('transactions').insert({
                         date: new Date().toISOString().split('T')[0],
                         type: 'recette',
@@ -529,6 +535,7 @@ async function processEvent(event) {
                         source: 'abonnement',
                         source_ref: sessionId
                     }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (abonnement):', error.message); });
+                    }
 
                     // 3. Ajouter aux contacts newsletter (Supabase + Brevo list 5)
                     if (extractedData.email) {
@@ -628,6 +635,7 @@ async function processEvent(event) {
                     }
                     
                     // Enregistrement automatique de la recette
+                    if (!isAccountingExcluded(donorResult.email)) {
                     await supabase.from('transactions').insert({
                         date: new Date().toISOString().split('T')[0],
                         type: 'recette',
@@ -637,6 +645,7 @@ async function processEvent(event) {
                         source: 'don',
                         source_ref: sessionId
                     }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (don):', error.message); });
+                    }
 
                     console.log(`[webhook] Don traité: ${sessionId} | Email:${emailSent ? 'OK' : 'Skipped'}`);
                     return;
@@ -756,6 +765,7 @@ async function processEvent(event) {
                 }
                 
                 // Enregistrement automatique de la recette
+                if (!isAccountingExcluded(upsertData.email)) {
                 await supabase.from('transactions').insert({
                     date: new Date().toISOString().split('T')[0],
                     type: 'recette',
@@ -765,6 +775,7 @@ async function processEvent(event) {
                     source: 'precommande',
                     source_ref: sessionId
                 }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (precommande):', error.message); });
+                }
 
                 console.log(`[webhook] Précommande traitée: ${sessionId} | DB:OK | Email:${emailSent ? 'OK' : 'Skipped'}`);
                 return;
@@ -849,6 +860,7 @@ async function handleCalWebhook(req, res) {
         }
 
         // Enregistrement automatique de la recette
+        if (!isAccountingExcluded(clientEmail)) {
         await supabase.from('transactions').insert({
             date: new Date().toISOString().split('T')[0],
             type: 'recette',
@@ -858,6 +870,7 @@ async function handleCalWebhook(req, res) {
             source: 'guidance',
             source_ref: bookingUid
         }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (guidance):', error.message); });
+        }
 
         const dateStr = scheduledAt
             ? new Date(scheduledAt).toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' })
