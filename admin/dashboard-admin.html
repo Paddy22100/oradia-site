@@ -1623,8 +1623,8 @@
                 </div>
                 <div class="stat-card rounded-xl p-4 text-center border border-orange-500/20">
                     <div class="text-2xl font-bold text-orange-400" id="compta-urssaf">—</div>
-                    <p class="text-gold/50 text-xs mt-1">URSSAF estimé (22%)</p>
-                    <p class="text-gold/30 text-xs">BNC / Micro-entrepreneur</p>
+                    <p class="text-gold/50 text-xs mt-1">URSSAF estimé</p>
+                    <p class="text-gold/30 text-xs" id="compta-urssaf-detail">Micro-entrepreneur</p>
                 </div>
             </div>
 
@@ -5314,6 +5314,11 @@
             if (depensesEl) depensesEl.innerHTML = fmt(depensesTotal) + (costsMonthlyEur > 0 ? ` <span class="text-gold/30 text-xs font-normal block">(dont ${fmt(costsMonthlyEur)} coûts du site)</span>` : '');
             setEl('compta-net', fmt(netTotal));
             setEl('compta-urssaf', fmt(s.urssaf));
+            const b = s.breakdown;
+            const urssafDetailEl = document.getElementById('compta-urssaf-detail');
+            if (urssafDetailEl && b) {
+                urssafDetailEl.innerHTML = `BIC ventes ${(b.tauxBIC*100).toFixed(1)}% : ${fmt(b.urssafBIC)}<br>BNC services ${(b.tauxBNC*100).toFixed(1)}% : ${fmt(b.urssafBNC)}`;
+            }
             const transactions = data.data || [];
             if (!list) return;
             if (transactions.length === 0) { list.innerHTML = '<p class="text-gold/30 text-sm italic text-center py-8">Aucune transaction. Cliquez sur "Importer" pour charger les données existantes.</p>'; return; }

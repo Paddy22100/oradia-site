@@ -2630,10 +2630,34 @@ module.exports = async (req, res) => {
         if (type) q = q.eq('type', type);
         const { data, error } = await q;
         if (error) throw error;
-        const recettes = (data || []).filter(t => t.type === 'recette').reduce((s, t) => s + parseFloat(t.amount), 0);
+        const recetteRows = (data || []).filter(t => t.type === 'recette');
+        const recettes = recetteRows.reduce((s, t) => s + parseFloat(t.amount), 0);
         const depenses = (data || []).filter(t => t.type === 'depense').reduce((s, t) => s + parseFloat(t.amount), 0);
-        const urssaf = recettes * 0.22;
-        return res.status(200).json({ success: true, data: data || [], summary: { recettes, depenses, net: recettes - depenses, urssaf } });
+
+        // Distinction fiscale micro-entrepreneur : vente de marchandises (BIC, 12,3%)
+        // vs prestations de services (BNC, 21,1%) — taux 2026
+        const recettesVentesBIC = recetteRows
+          .filter(t => t.source === 'precommande')
+          .reduce((s, t) => s + parseFloat(t.amount), 0);
+        const recettesServicesBNC = recettes - recettesVentesBIC;
+        const URSSAF_RATE_BIC = 0.123;
+        const URSSAF_RATE_BNC = 0.211;
+        const urssafBIC = recettesVentesBIC * URSSAF_RATE_BIC;
+        const urssafBNC = recettesServicesBNC * URSSAF_RATE_BNC;
+        const urssaf = urssafBIC + urssafBNC;
+
+        return res.status(200).json({
+          success: true,
+          data: data || [],
+          summary: {
+            recettes, depenses, net: recettes - depenses, urssaf,
+            breakdown: {
+              recettesVentesBIC, recettesServicesBNC,
+              urssafBIC, urssafBNC,
+              tauxBIC: URSSAF_RATE_BIC, tauxBNC: URSSAF_RATE_BNC
+            }
+          }
+        });
       }
       if (req.method === 'POST') {
         const body = await parseBody(req);
