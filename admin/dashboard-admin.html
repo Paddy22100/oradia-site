@@ -127,7 +127,15 @@
             .sidebar { transform: translateX(-100%); }
             .sidebar.open { transform: translateX(0); }
             .main-content { margin-left: 0; }
+            .topbar { padding: 10px 14px; flex-wrap: wrap; gap: 8px; }
+            .topbar h2 { font-size: 15px; }
+            main { padding-left: 14px !important; padding-right: 14px !important; padding-top: 16px !important; }
+            #lastUpdate { display: none; }
+            .stat-card { padding: 12px !important; }
+            table { font-size: 12.5px; }
+            h3.cormorant { font-size: 1.4rem !important; }
         }
+        html, body { overflow-x: hidden; max-width: 100vw; }
     </style>
 </head>
 <body class="bg-night-blue text-light-gold">
@@ -1562,7 +1570,7 @@
             <!-- Pages vues par jour -->
             <div class="stat-card rounded-2xl p-6 mb-6">
                 <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-chart-bar text-gold/60"></i> Pages vues par jour</h4>
-                <div id="analytics-daily-chart" class="flex items-end gap-1 h-32"></div>
+                <div id="analytics-daily-chart" class="h-40"></div>
             </div>
 
             <!-- Pages et provenance -->
@@ -5176,6 +5184,56 @@
         // ── ANALYTIQUES ──────────────────────────────────────────────────────────────
         let _analyticsData = null;
 
+        function renderDailyViewsChart(days) {
+            const chartEl = document.getElementById('analytics-daily-chart');
+            if (!chartEl) return;
+            if (!days.length) { chartEl.innerHTML = '<p class="text-gold/30 italic text-xs">Aucune donnée pour cette période.</p>'; return; }
+
+            const W = chartEl.clientWidth || 800, H = 160;
+            const padL = 28, padB = 20, padT = 10, padR = 8;
+            const innerW = W - padL - padR, innerH = H - padT - padB;
+            const max = Math.max(...days.map(d => d.count), 1);
+            const n = days.length;
+            const x = i => padL + (n === 1 ? innerW / 2 : (i / (n - 1)) * innerW);
+            const y = v => padT + innerH - (v / max) * innerH;
+
+            const points = days.map((d, i) => [x(i), y(d.count)]);
+            const linePath = points.map((p, i) => (i === 0 ? 'M' : 'L') + p[0].toFixed(1) + ',' + p[1].toFixed(1)).join(' ');
+            const areaPath = linePath + ` L${x(n-1).toFixed(1)},${(padT+innerH).toFixed(1)} L${x(0).toFixed(1)},${(padT+innerH).toFixed(1)} Z`;
+
+            const gridLines = [0, 0.5, 1].map(f => {
+                const gy = padT + innerH * f;
+                const val = Math.round(max * (1 - f));
+                return `<line x1="${padL}" y1="${gy}" x2="${W-padR}" y2="${gy}" stroke="rgba(212,175,55,0.08)" stroke-width="1"/>
+                        <text x="2" y="${gy+4}" font-size="10" fill="rgba(212,175,55,0.35)">${val}</text>`;
+            }).join('');
+
+            const labelEvery = Math.max(1, Math.ceil(n / 7));
+            const xLabels = days.map((d, i) => {
+                if (i % labelEvery !== 0 && i !== n - 1) return '';
+                return `<text x="${x(i).toFixed(1)}" y="${H-4}" font-size="10" fill="rgba(212,175,55,0.35)" text-anchor="middle">${d.date.slice(8,10)}/${d.date.slice(5,7)}</text>`;
+            }).join('');
+
+            const dots = points.map((p, i) => `<circle cx="${p[0].toFixed(1)}" cy="${p[1].toFixed(1)}" r="2.5" fill="#2dd4bf">
+                <title>${days[i].date} : ${days[i].count} vue(s)</title>
+            </circle>`).join('');
+
+            chartEl.innerHTML = `
+                <svg viewBox="0 0 ${W} ${H}" width="100%" height="${H}" preserveAspectRatio="none">
+                    <defs>
+                        <linearGradient id="dailyViewsGradient" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0%" stop-color="#2dd4bf" stop-opacity="0.35"/>
+                            <stop offset="100%" stop-color="#2dd4bf" stop-opacity="0"/>
+                        </linearGradient>
+                    </defs>
+                    ${gridLines}
+                    <path d="${areaPath}" fill="url(#dailyViewsGradient)" stroke="none"/>
+                    <path d="${linePath}" fill="none" stroke="#2dd4bf" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"/>
+                    ${dots}
+                    ${xLabels}
+                </svg>`;
+        }
+
         async function loadAnalytics() {
             const range = document.getElementById('analytics-range')?.value || '7d';
             try {
@@ -5203,19 +5261,8 @@
                 const visitorsTrendEl = document.getElementById('ana-visitors-trend');
                 if (visitorsTrendEl) visitorsTrendEl.innerHTML = trendHtml(t.visitors_change_pct);
 
-                // Graphique pages vues / jour
-                const chartEl = document.getElementById('analytics-daily-chart');
-                if (chartEl) {
-                    const days = t.daily_views || [];
-                    const max = Math.max(...days.map(d => d.count), 1);
-                    chartEl.innerHTML = days.length === 0
-                        ? '<p class="text-gold/30 italic text-xs">Aucune donnée pour cette période.</p>'
-                        : days.map(d => `
-                            <div class="flex-1 flex flex-col items-center justify-end h-full" title="${d.date} : ${d.count} vues">
-                                <div class="w-full bg-teal-400/50 rounded-t" style="height:${(d.count/max*100).toFixed(0)}%; min-height:2px;"></div>
-                                <span class="text-gold/30 text-[10px] mt-1">${d.date.slice(8,10)}/${d.date.slice(5,7)}</span>
-                            </div>`).join('');
-                }
+                // Graphique pages vues / jour (courbe + zone dégradée, style Vercel Analytics)
+                renderDailyViewsChart(t.daily_views || []);
 
                 // Pages les plus consultées
                 const pathsEl = document.getElementById('analytics-top-paths');
