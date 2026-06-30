@@ -241,7 +241,7 @@ async function handleCheckSubscription(req, res) {
   try {
     const { data: subData } = await supabase
       .from('tore_subscriptions')
-      .select('status, expires_at, created_at')
+      .select('status, expires_at, created_at, birth_date, birth_place')
       .eq('email', email)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
@@ -254,10 +254,12 @@ async function handleCheckSubscription(req, res) {
     }
 
     res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ 
-      subscribed, 
+    return res.end(JSON.stringify({
+      subscribed,
       expires_at: subData?.expires_at,
-      subscription_start: subData?.created_at 
+      subscription_start: subData?.created_at,
+      birth_date: subData?.birth_date || null,
+      birth_place: subData?.birth_place || null
     }));
 
   } catch (err) {
@@ -457,6 +459,41 @@ async function handleSaveToreEmail(req, res) {
   return res.end(JSON.stringify({ success: true }));
 }
 
+// ============ SAUVEGARDE DATE/LIEU DE NAISSANCE (profil membre) ============
+async function handleSaveBirthInfo(req, res) {
+  const body = await new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', c => data += c);
+    req.on('end', () => { try { resolve(data ? JSON.parse(data) : {}); } catch { resolve({}); } });
+    req.on('error', reject);
+  });
+  const email = (body.email || '').trim().toLowerCase();
+  const birthDate = (body.birth_date || '').trim();
+  const birthPlace = (body.birth_place || '').trim().slice(0, 200);
+  if (!email || !email.includes('@')) {
+    res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, error: 'Email invalide' }));
+  }
+  if (birthDate && !/^\d{4}-\d{2}-\d{2}$/.test(birthDate)) {
+    res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, error: 'Date de naissance invalide' }));
+  }
+  const supabase = createClient(
+    process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+  const { error } = await supabase
+    .from('tore_subscriptions')
+    .update({ birth_date: birthDate || null, birth_place: birthPlace || null, updated_at: new Date().toISOString() })
+    .eq('email', email);
+  if (error) {
+    res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, error: error.message }));
+  }
+  res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+  return res.end(JSON.stringify({ success: true }));
+}
+
 // ============ FORGOT PASSWORD ============
 async function handleForgotPassword(req, res) {
   const body = await new Promise((resolve, reject) => {
@@ -596,6 +633,11 @@ module.exports = async (req, res) => {
     // POST /save-guidance-tore — sauvegarde le tirage d'une guidance en cours
     if (path.includes('save-guidance-tore') || fullUrl.includes('save-guidance-tore')) {
       return await handleSaveGuidanceTore(req, res);
+    }
+
+    // POST /save-birth-info — enregistre date/lieu de naissance (profil membre)
+    if (path.includes('save-birth-info') || fullUrl.includes('save-birth-info')) {
+      return await handleSaveBirthInfo(req, res);
     }
 
     // Route non reconnue

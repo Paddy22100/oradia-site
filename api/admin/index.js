@@ -1787,6 +1787,12 @@ async function handleNewsletter(req, res) {
     const supabase = nlSupabase();
 
     if (req.method === 'GET') {
+      if (action === 'unsent-count') {
+        const { count: total } = await supabase.from('newsletter_contacts').select('*', { count: 'exact', head: true }).eq('status', 'active');
+        const { count: unsent } = await supabase.from('newsletter_contacts').select('*', { count: 'exact', head: true }).eq('status', 'active').is('precommande_launch_sent_at', null);
+        return res.status(200).json({ success: true, total: total || 0, unsent: unsent || 0, already_sent: (total || 0) - (unsent || 0) });
+      }
+
       if (action === 'drafts') {
         const id = url.searchParams.get('id');
         if (id) {
@@ -2056,7 +2062,7 @@ Contraintes : exactement 5 thèmes dont les pourcentages totalisent 100, exactem
 
       // ── Envoi (email de test ou diffusion réelle via Brevo) ──
       if (action === 'send') {
-        const { draft_id, test_email, subject, target_tags } = body;
+        const { draft_id, test_email, subject, target_tags, exclude_already_sent } = body;
         if (!draft_id) return res.status(400).json({ error: 'draft_id requis' });
 
         const { data: draft, error: draftErr } = await supabase
@@ -2092,17 +2098,18 @@ Contraintes : exactement 5 thèmes dont les pourcentages totalisent 100, exactem
 
         // Diffusion ciblée : envoi direct aux contacts portant une (ou plusieurs) catégorie(s),
         // sans passer par les listes Brevo (gestion des catégories uniquement via le dashboard).
-        if (Array.isArray(target_tags) && target_tags.length > 0) {
-          const { data: contacts, error: contactsErr } = await supabase
-            .from('newsletter_contacts')
-            .select('email')
-            .eq('status', 'active')
-            .overlaps('tags', target_tags);
+        // exclude_already_sent force aussi ce chemin (même sans catégorie) pour permettre le
+        // suivi par contact (precommande_launch_sent_at) — la campagne Brevo native ne le permet pas.
+        if ((Array.isArray(target_tags) && target_tags.length > 0) || exclude_already_sent) {
+          let contactsQuery = supabase.from('newsletter_contacts').select('email').eq('status', 'active');
+          if (Array.isArray(target_tags) && target_tags.length > 0) contactsQuery = contactsQuery.overlaps('tags', target_tags);
+          if (exclude_already_sent) contactsQuery = contactsQuery.is('precommande_launch_sent_at', null);
+          const { data: contacts, error: contactsErr } = await contactsQuery;
           if (contactsErr) throw contactsErr;
 
           const emails = [...new Set((contacts || []).map(c => c.email).filter(Boolean))];
           if (emails.length === 0) {
-            return res.status(400).json({ error: 'Aucun contact actif ne correspond à cette/ces catégorie(s)' });
+            return res.status(400).json({ error: exclude_already_sent ? 'Tous les contacts actifs ont déjà reçu cet email.' : 'Aucun contact actif ne correspond à cette/ces catégorie(s)' });
           }
 
           const htmlWithUnsub = html.replace('{unsubscribe}', 'https://oradia.fr');
@@ -2112,6 +2119,7 @@ Contraintes : exactement 5 thèmes dont les pourcentages totalisent 100, exactem
           // signale un quota dépassé (402, plan gratuit = 300 emails/jour).
           const BATCH_SIZE = 10;
           let sent = 0;
+          const sentEmails = [];
           const failedEmails = [];
           let quotaExceeded = false;
 
@@ -2137,6 +2145,7 @@ Contraintes : exactement 5 thèmes dont les pourcentages totalisent 100, exactem
             results.forEach((r, idx) => {
               if (r.ok) {
                 sent++;
+                sentEmails.push(batch[idx]);
               } else {
                 failedEmails.push(batch[idx]);
                 if (r.status === 402) quotaExceeded = true;
@@ -2145,6 +2154,13 @@ Contraintes : exactement 5 thèmes dont les pourcentages totalisent 100, exactem
           }
 
           const failed = failedEmails.length;
+
+          if (exclude_already_sent && sentEmails.length > 0) {
+            await supabase
+              .from('newsletter_contacts')
+              .update({ precommande_launch_sent_at: new Date().toISOString() })
+              .in('email', sentEmails);
+          }
 
           await supabase
             .from('newsletter_drafts')

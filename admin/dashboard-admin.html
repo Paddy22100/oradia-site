@@ -1233,6 +1233,13 @@
                         <label class="block text-xs uppercase tracking-widest text-gold/60 mb-2">Cibler des catégories <span class="text-gold/30 normal-case text-xs">(laisser vide = tous les abonnés)</span></label>
                         <div id="nl-target-tags" class="flex flex-wrap gap-3"></div>
                     </div>
+                    <div class="mb-6 bg-white/5 border border-gold/10 rounded-lg p-4">
+                        <label class="flex items-start gap-2 text-light-gold/80 text-sm cursor-pointer">
+                            <input id="nl-exclude-already-sent" type="checkbox" class="accent-gold w-4 h-4 mt-0.5" onchange="nlUpdateUnsentCount()">
+                            <span>Email de lancement précommande — <strong>ne pas renvoyer</strong> aux contacts qui l'ont déjà reçu (utile pour relancer uniquement les nouveaux contacts ou reprendre après une limite Brevo atteinte)</span>
+                        </label>
+                        <p id="nl-unsent-count" class="text-gold/40 text-xs mt-2 hidden"></p>
+                    </div>
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                         <div>
                             <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Email de test <span class="text-gold/30 normal-case text-xs">(recommandé)</span></label>
@@ -3894,10 +3901,26 @@
             }
         }
 
+        async function nlUpdateUnsentCount() {
+            const checked = document.getElementById('nl-exclude-already-sent')?.checked;
+            const el = document.getElementById('nl-unsent-count');
+            if (!checked) { el.classList.add('hidden'); return; }
+            el.classList.remove('hidden');
+            el.textContent = 'Chargement…';
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=unsent-count');
+                const data = await res.json();
+                el.textContent = `${data.unsent} contact(s) n'ont pas encore reçu cet email (${data.already_sent} déjà notifié(s) sur ${data.total}).`;
+            } catch(e) { el.textContent = 'Impossible de charger le compteur.'; }
+        }
+
         async function nlSendReal() {
             if (!nlCurrentDraftId) return nlStatus('error', 'Sauvegardez d\'abord le brouillon');
             const targetTags = nlGetTargetTags();
-            const confirmMsg = targetTags.length
+            const excludeAlreadySent = document.getElementById('nl-exclude-already-sent')?.checked || false;
+            const confirmMsg = excludeAlreadySent
+                ? 'Envoyer uniquement aux contacts qui n\'ont pas encore reçu cet email de lancement ?\n\nIrréversible.'
+                : targetTags.length
                 ? `Envoyer à la/aux catégorie(s) sélectionnée(s) (${targetTags.map(contactTagLabel).join(', ')}) ?\n\nIrréversible.`
                 : 'Envoyer à tous tes abonnés Brevo ?\n\nIrréversible.';
             if (!confirm(confirmMsg)) return;
@@ -3910,20 +3933,22 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ draft_id: nlCurrentDraftId,
                         subject: document.getElementById('nl-subject').value.trim(),
-                        target_tags: targetTags })
+                        target_tags: targetTags,
+                        exclude_already_sent: excludeAlreadySent })
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error);
 
-                if (targetTags.length) {
+                if (targetTags.length || excludeAlreadySent) {
                     if (data.quotaExceeded) {
-                        nlStatus('warning', `Limite quotidienne Brevo atteinte (plan gratuit = 300 emails/jour) : ${data.sent || 0} envoyé(s) sur ${data.recipients || 0}, le reste sera à renvoyer demain.${data.failed ? ` (${data.failed} échec(s) au total)` : ''}`);
+                        nlStatus('warning', `Limite quotidienne Brevo atteinte (plan gratuit = 300 emails/jour) : ${data.sent || 0} envoyé(s) sur ${data.recipients || 0}, le reste sera à renvoyer demain (recochez la case et relancez).${data.failed ? ` (${data.failed} échec(s) au total)` : ''}`);
                     } else if (data.failed) {
                         nlStatus('warning', `Newsletter envoyée : ${data.sent || 0} réussi(s), ${data.failed} échec(s) sur ${data.recipients || 0} contact(s).`);
                     } else {
                         nlStatus('success', `Newsletter envoyée à ${data.sent ?? data.recipients ?? 0} contact(s) ✓`);
                     }
                     nlShowFailedEmails(data.failedEmails);
+                    if (excludeAlreadySent) nlUpdateUnsentCount();
                 } else {
                     nlStatus('success', 'Newsletter envoyée ✓');
                     nlShowFailedEmails([]);
