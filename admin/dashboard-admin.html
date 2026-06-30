@@ -1653,6 +1653,18 @@
                 </div>
             </div>
 
+            <!-- Trésorerie réelle (après frais Stripe estimés) — purement informatif, n'affecte pas l'URSSAF -->
+            <div class="bg-white/3 border border-gold/10 rounded-xl p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
+                <div>
+                    <p class="text-gold/60 text-xs uppercase tracking-widest mb-1">Trésorerie réelle estimée <span class="text-gold/30 normal-case">(après frais Stripe ~1,4% + 0,25€/transaction)</span></p>
+                    <p class="text-light-gold/40 text-xs italic">Information seule — l'URSSAF se calcule sur le montant brut encaissé, pas sur ce montant.</p>
+                </div>
+                <div class="text-right">
+                    <p class="text-xs text-red-400/70" id="compta-stripe-fees">—</p>
+                    <p class="text-lg font-bold text-blue-300" id="compta-tresorerie-reelle">—</p>
+                </div>
+            </div>
+
             <!-- Formulaire ajout -->
             <div id="compta-add-form" class="hidden bg-white/3 border border-gold/15 rounded-2xl p-5 mb-6">
                 <h4 class="text-gold font-semibold mb-4">Nouvelle transaction</h4>
@@ -5492,6 +5504,8 @@
             setEl('compta-net', fmt(netTotal));
             setEl('compta-urssaf', fmt(s.urssaf));
             const b = s.breakdown;
+            setEl('compta-stripe-fees', `− ${fmt(s.stripeFeesEstimate)} de frais Stripe estimés`);
+            setEl('compta-tresorerie-reelle', fmt((s.tresorerieReelleEstimee||0) - costsMonthlyEur));
             const urssafDetailEl = document.getElementById('compta-urssaf-detail');
             if (urssafDetailEl && b) {
                 urssafDetailEl.innerHTML = `BIC ventes ${(b.tauxBIC*100).toFixed(1)}% : ${fmt(b.urssafBIC)}<br>BNC services ${(b.tauxBNC*100).toFixed(1)}% : ${fmt(b.urssafBNC)}`;
