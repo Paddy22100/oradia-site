@@ -468,9 +468,11 @@ async function handleData(req, res) {
           const BREVO_API_KEY = process.env.BREVO_API_KEY;
           if (!adminEmail || !BREVO_API_KEY) return res.status(200).json({ success: false, message: 'ADMIN_EMAIL ou BREVO_API_KEY manquant' });
           const now = new Date();
-          const monthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
-          const monthEnd = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-          const monthLabel = new Date(now.getFullYear(), now.getMonth() - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+          const testCurrentMonth = req.query?.test_current_month === '1';
+          const offset = testCurrentMonth ? 0 : -1;
+          const monthStart = new Date(now.getFullYear(), now.getMonth() + offset, 1).toISOString();
+          const monthEnd = new Date(now.getFullYear(), now.getMonth() + offset + 1, 1).toISOString();
+          const monthLabel = new Date(now.getFullYear(), now.getMonth() + offset, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' }) + (testCurrentMonth ? ' (en cours — test)' : '');
           const { data: txs } = await supabase.from('transactions').select('type,category,amount,source').gte('date', monthStart.slice(0,10)).lt('date', monthEnd.slice(0,10));
           const recetteRows = (txs||[]).filter(t => t.type === 'recette');
           const depenseRows = (txs||[]).filter(t => t.type === 'depense');
