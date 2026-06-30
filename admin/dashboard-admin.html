@@ -1209,9 +1209,24 @@
                                     </button>
                                 </div>
                                 <button onclick="nlSendReal()" id="nl-btn-send"
-                                    class="w-full bg-gold text-night-blue font-semibold rounded-lg py-2 hover:bg-light-gold transition text-sm flex items-center justify-center gap-2">
-                                    <i class="fas fa-broadcast-tower"></i> Envoyer à tous les abonnés
+                                    class="w-full bg-gold text-night-blue font-semibold rounded-lg py-2 hover:bg-light-gold transition text-sm flex items-center justify-center gap-2 mb-3">
+                                    <i class="fas fa-broadcast-tower"></i> Envoyer maintenant
                                 </button>
+                                <div class="border-t border-gold/10 pt-3">
+                                    <label class="block text-xs uppercase tracking-widest text-gold/60 mb-2">Ou programmer l'envoi</label>
+                                    <div class="flex gap-2">
+                                        <input type="datetime-local" id="nl-scheduled-at"
+                                            class="flex-1 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                                        <button onclick="nlSchedule()" id="nl-btn-schedule"
+                                            class="bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg px-3 py-2 text-sm hover:bg-blue-500/30 transition whitespace-nowrap">
+                                            <i class="fas fa-clock mr-1"></i>Programmer
+                                        </button>
+                                    </div>
+                                    <div id="nl-schedule-status" class="hidden mt-2 text-xs text-blue-300 flex items-center justify-between gap-2">
+                                        <span id="nl-schedule-label"></span>
+                                        <button onclick="nlUnschedule()" class="text-red-400/60 hover:text-red-400 transition text-xs"><i class="fas fa-times mr-1"></i>Annuler</button>
+                                    </div>
+                                </div>
                             </div>
                             <p class="text-xs text-gold/30 mt-3 text-center italic">Teste d'abord — l'envoi réel est irréversible.</p>
                         </div>
@@ -3931,6 +3946,48 @@
             } catch(e) { el.textContent = 'Impossible de charger le compteur.'; }
         }
 
+        async function nlSchedule() {
+            if (!nlCurrentDraftId) return nlStatus('error', 'Sauvegardez d\'abord le brouillon');
+            const val = document.getElementById('nl-scheduled-at')?.value;
+            if (!val) return nlStatus('error', 'Choisissez une date et une heure');
+            const scheduled_at = new Date(val).toISOString();
+            if (new Date(val) <= new Date()) return nlStatus('error', 'La date doit être dans le futur');
+            try {
+                await nlSave();
+                const res = await adminFetch('/api/admin/newsletter?action=schedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ draft_id: nlCurrentDraftId, scheduled_at, subject: document.getElementById('nl-subject')?.value.trim() })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                const schedStatus = document.getElementById('nl-schedule-status');
+                const schedLabel = document.getElementById('nl-schedule-label');
+                if (schedStatus) schedStatus.classList.remove('hidden');
+                if (schedLabel) schedLabel.textContent = '⏰ Programmé pour le ' + new Date(val).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+                nlStatus('success', '✓ Envoi programmé — le mail partira automatiquement à l\'heure choisie.');
+                await nlLoadDrafts();
+            } catch(e) { nlStatus('error', e.message); }
+        }
+
+        async function nlUnschedule() {
+            if (!nlCurrentDraftId) return;
+            if (!confirm('Annuler la programmation de cet envoi ?')) return;
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=unschedule', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ draft_id: nlCurrentDraftId })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error);
+                document.getElementById('nl-schedule-status')?.classList.add('hidden');
+                document.getElementById('nl-scheduled-at').value = '';
+                nlStatus('success', 'Programmation annulée — le brouillon est de nouveau en attente.');
+                await nlLoadDrafts();
+            } catch(e) { nlStatus('error', e.message); }
+        }
+
         async function nlSendReal() {
             if (!nlCurrentDraftId) return nlStatus('error', 'Sauvegardez d\'abord le brouillon');
             const targetTags = nlGetTargetTags();
@@ -4011,8 +4068,10 @@
                         </span>
                         <span class="text-xs px-2 py-1 rounded-full ${d.statut === 'envoyé'
                             ? 'bg-green-500/20 text-green-300 border border-green-500/30'
+                            : d.statut === 'programmé'
+                            ? 'bg-blue-500/20 text-blue-300 border border-blue-500/30'
                             : 'bg-gold/10 text-gold border border-gold/30'}">
-                            ${d.statut === 'envoyé' ? '✓ Envoyée' : '◈ Brouillon'}
+                            ${d.statut === 'envoyé' ? '✓ Envoyée' : d.statut === 'programmé' ? '⏰ ' + new Date(d.scheduled_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '◈ Brouillon'}
                         </span>
                     </td>
                     <td class="px-6 py-4 text-xs text-gold/40">
@@ -4115,6 +4174,19 @@
                     if (sendZone)  sendZone.classList.remove('hidden');
                     await nlRenderTargetTags();
                     nlShowFailedEmails(data.failed_emails);
+                    // Préfill programmation
+                    const schedInput = document.getElementById('nl-scheduled-at');
+                    const schedStatus = document.getElementById('nl-schedule-status');
+                    const schedLabel = document.getElementById('nl-schedule-label');
+                    if (data.scheduled_at) {
+                        const local = new Date(data.scheduled_at).toISOString().slice(0,16);
+                        if (schedInput) schedInput.value = local;
+                        if (schedStatus) schedStatus.classList.remove('hidden');
+                        if (schedLabel) schedLabel.textContent = '⏰ Programmé pour le ' + new Date(data.scheduled_at).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+                    } else {
+                        if (schedInput) schedInput.value = '';
+                        if (schedStatus) schedStatus.classList.add('hidden');
+                    }
                     await nlFetchAndShowImages(data.intention || data.subject || '');
                     nlUpdateSelectedPreviews();
                 }

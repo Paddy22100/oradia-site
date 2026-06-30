@@ -360,6 +360,49 @@ async function handleData(req, res) {
       if (getAction === 'cron-relance') {
         return await handleCronRelance(supabase, res);
       }
+      if (getAction === 'cron-send-scheduled') {
+        try {
+          const { data: due } = await supabase
+            .from('newsletter_drafts')
+            .select('*')
+            .eq('statut', 'programmé')
+            .lte('scheduled_at', new Date().toISOString())
+            .limit(5);
+          if (!due || due.length === 0) return res.status(200).json({ success: true, sent: 0 });
+          const BREVO_API_KEY = process.env.BREVO_API_KEY;
+          if (!BREVO_API_KEY) return res.status(200).json({ success: false, error: 'BREVO_API_KEY manquante' });
+          const results = [];
+          for (const draft of due) {
+            try {
+              const finalSubject = draft.subject || 'Oradia';
+              const html = buildCommunicationEmailHtml({ ...draft, subject: finalSubject });
+              const campRes = await fetch('https://api.brevo.com/v3/emailCampaigns', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+                body: JSON.stringify({
+                  name: `${draft.type === 'promo' ? 'Promo' : 'Newsletter'} — ${finalSubject} — ${new Date().toISOString()}`,
+                  subject: finalSubject,
+                  sender: { name: 'Oradia', email: 'contact@oradia.fr' },
+                  htmlContent: html,
+                  recipients: { listIds: [5] }
+                })
+              });
+              if (!campRes.ok) { results.push({ id: draft.id, ok: false }); continue; }
+              const camp = await campRes.json();
+              await fetch(`https://api.brevo.com/v3/emailCampaigns/${camp.id}/sendNow`, {
+                method: 'POST', headers: { 'api-key': BREVO_API_KEY }
+              });
+              await supabase.from('newsletter_drafts')
+                .update({ statut: 'envoyé', sent_at: new Date().toISOString(), scheduled_at: null })
+                .eq('id', draft.id);
+              results.push({ id: draft.id, ok: true });
+            } catch(e) { results.push({ id: draft.id, ok: false, error: e.message }); }
+          }
+          return res.status(200).json({ success: true, sent: results.filter(r=>r.ok).length, results });
+        } catch(e) {
+          return res.status(200).json({ success: false, error: e.message });
+        }
+      }
       if (getAction === 'cron-fetch-logs') {
         const sb = supabase;
         try {
@@ -2061,6 +2104,24 @@ Contraintes : exactement 5 thèmes dont les pourcentages totalisent 100, exactem
       }
 
       // ── Envoi (email de test ou diffusion réelle via Brevo) ──
+      if (action === 'schedule') {
+        const { draft_id, scheduled_at, subject } = body;
+        if (!draft_id || !scheduled_at) return res.status(400).json({ error: 'draft_id et scheduled_at requis' });
+        const updates = { statut: 'programmé', scheduled_at };
+        if (subject && subject.trim()) updates.subject = subject.trim();
+        const { error } = await supabase.from('newsletter_drafts').update(updates).eq('id', draft_id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      if (action === 'unschedule') {
+        const { draft_id } = body;
+        if (!draft_id) return res.status(400).json({ error: 'draft_id requis' });
+        const { error } = await supabase.from('newsletter_drafts').update({ statut: 'brouillon', scheduled_at: null }).eq('id', draft_id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
       if (action === 'send') {
         const { draft_id, test_email, subject, target_tags, exclude_already_sent } = body;
         if (!draft_id) return res.status(400).json({ error: 'draft_id requis' });
