@@ -1511,7 +1511,7 @@
             <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
                 <div>
                     <h3 class="cormorant text-2xl font-bold text-gold">Analytiques</h3>
-                    <p class="text-light-gold/50 text-sm mt-1">Performances du site, erreurs et analyse IA</p>
+                    <p class="text-light-gold/50 text-sm mt-1">Trafic du site : pages consultées, visiteurs, provenance</p>
                 </div>
                 <div class="flex items-center gap-2">
                     <select id="analytics-range" onchange="loadAnalytics()" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
@@ -1525,56 +1525,30 @@
                 </div>
             </div>
 
-            <!-- KPIs -->
+            <!-- KPIs trafic -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="analytics-kpis">
-                <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-teal-300" id="ana-total">—</div><p class="text-gold/50 text-xs mt-1">Événements API</p></div>
-                <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-red-400" id="ana-errors">—</div><p class="text-gold/50 text-xs mt-1">Erreurs</p></div>
-                <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-yellow-400" id="ana-warnings">—</div><p class="text-gold/50 text-xs mt-1">Avertissements</p></div>
-                <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-green-400" id="ana-uptime">—</div><p class="text-gold/50 text-xs mt-1">Taux de succès</p></div>
+                <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-teal-300" id="ana-views">—</div><p class="text-gold/50 text-xs mt-1">Pages vues</p></div>
+                <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-gold" id="ana-visitors">—</div><p class="text-gold/50 text-xs mt-1">Visiteurs uniques</p></div>
+                <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-yellow-400" id="ana-bounce">—</div><p class="text-gold/50 text-xs mt-1">Taux de rebond</p></div>
+                <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-red-400" id="ana-errors">—</div><p class="text-gold/50 text-xs mt-1">Erreurs techniques</p></div>
             </div>
 
-            <!-- Top endpoints + IA -->
+            <!-- Pages vues par jour -->
+            <div class="stat-card rounded-2xl p-6 mb-6">
+                <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-chart-bar text-gold/60"></i> Pages vues par jour</h4>
+                <div id="analytics-daily-chart" class="flex items-end gap-1 h-32"></div>
+            </div>
+
+            <!-- Pages et provenance -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <div class="stat-card rounded-2xl p-6">
-                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-route text-gold/60"></i> Endpoints les plus actifs</h4>
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-file-alt text-gold/60"></i> Pages les plus consultées</h4>
                     <div id="analytics-top-paths" class="space-y-2 text-sm"></div>
                 </div>
                 <div class="stat-card rounded-2xl p-6">
-                    <h4 class="text-gold font-semibold mb-3 flex items-center gap-2"><i class="fas fa-brain text-gold/60"></i> Analyse IA</h4>
-                    <p class="text-gold/40 text-xs mb-3 italic">Analyse les performances et propose des améliorations.</p>
-                    <button onclick="analyzeWithAI()" id="btn-ai-analyze" class="flex items-center gap-2 bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold px-4 py-2 rounded-xl text-sm font-medium transition w-full justify-center mb-3">
-                        <i class="fas fa-lightbulb"></i> Analyser avec l'IA
-                    </button>
-                    <div id="analytics-ai-result" class="text-gold/70 text-sm leading-relaxed hidden"></div>
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-link text-gold/60"></i> Provenance des visiteurs</h4>
+                    <div id="analytics-top-referrers" class="space-y-2 text-sm"></div>
                 </div>
-            </div>
-
-            <!-- Vercel Analytics link -->
-            <div class="stat-card rounded-2xl p-5 mb-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <h4 class="text-gold font-semibold mb-1 flex items-center gap-2"><i class="fas fa-chart-area text-gold/60"></i> Vercel Analytics</h4>
-                        <p class="text-gold/40 text-xs">Pages vues, visiteurs uniques, pays, appareils — directement dans Vercel.</p>
-                    </div>
-                    <a href="https://vercel.com/paddy22100s-projects/oradia-site/analytics" target="_blank" rel="noopener"
-                       class="flex items-center gap-2 bg-white/5 hover:bg-white/10 border border-gold/20 text-gold/70 px-4 py-2 rounded-xl text-sm transition">
-                        <i class="fas fa-external-link-alt"></i> Ouvrir
-                    </a>
-                </div>
-            </div>
-
-            <!-- Logs récents -->
-            <div class="stat-card rounded-2xl p-6">
-                <div class="flex items-center justify-between mb-4">
-                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-terminal text-gold/60"></i> Logs système récents</h4>
-                    <select id="logs-level-filter" onchange="loadAnalytics()" class="bg-white/5 border border-gold/20 text-gold/70 rounded-lg px-2 py-1 text-xs">
-                        <option value="">Tous</option>
-                        <option value="error">Erreurs</option>
-                        <option value="warning">Avertissements</option>
-                        <option value="info">Info</option>
-                    </select>
-                </div>
-                <div id="analytics-logs" class="space-y-2 max-h-80 overflow-y-auto text-xs font-mono"></div>
             </div>
         </section>
         </div><!-- /tab-analytics -->
@@ -5176,81 +5150,67 @@
 
         async function loadAnalytics() {
             const range = document.getElementById('analytics-range')?.value || '7d';
-            const levelFilter = document.getElementById('logs-level-filter')?.value || '';
             try {
                 const res = await adminFetch(`/api/admin/analytics?range=${range}`);
                 const data = await res.json();
                 if (!data.success) throw new Error(data.error);
                 _analyticsData = data;
-                const s = data.logs_stats;
-                const total = s.total || 0;
-                const errors = s.errors || 0;
-                const uptime = total > 0 ? (((total - errors) / total) * 100).toFixed(1) + '%' : '—';
-                setEl('ana-total', total);
-                setEl('ana-errors', errors);
-                setEl('ana-warnings', s.warnings || 0);
-                setEl('ana-uptime', uptime);
-                // Top paths
+                const t = data.traffic || {};
+                const s = data.logs_stats || {};
+                setEl('ana-views', t.total_views ?? 0);
+                setEl('ana-visitors', t.unique_visitors ?? 0);
+                setEl('ana-bounce', t.bounce_rate != null ? t.bounce_rate.toFixed(0) + '%' : '—');
+                setEl('ana-errors', s.errors ?? 0);
+
+                // Graphique pages vues / jour
+                const chartEl = document.getElementById('analytics-daily-chart');
+                if (chartEl) {
+                    const days = t.daily_views || [];
+                    const max = Math.max(...days.map(d => d.count), 1);
+                    chartEl.innerHTML = days.length === 0
+                        ? '<p class="text-gold/30 italic text-xs">Aucune donnée pour cette période.</p>'
+                        : days.map(d => `
+                            <div class="flex-1 flex flex-col items-center justify-end h-full" title="${d.date} : ${d.count} vues">
+                                <div class="w-full bg-teal-400/50 rounded-t" style="height:${(d.count/max*100).toFixed(0)}%; min-height:2px;"></div>
+                                <span class="text-gold/30 text-[10px] mt-1">${d.date.slice(8,10)}/${d.date.slice(5,7)}</span>
+                            </div>`).join('');
+                }
+
+                // Pages les plus consultées
                 const pathsEl = document.getElementById('analytics-top-paths');
                 if (pathsEl) {
-                    const max = Math.max(...(s.top_paths||[]).map(p => p.count), 1);
-                    pathsEl.innerHTML = (s.top_paths||[]).length === 0
-                        ? '<p class="text-gold/30 italic text-xs">Aucun log enregistré.</p>'
-                        : (s.top_paths||[]).map(p => `
+                    const pages = t.top_pages || [];
+                    const max = Math.max(...pages.map(p => p.count), 1);
+                    pathsEl.innerHTML = pages.length === 0
+                        ? '<p class="text-gold/30 italic text-xs">Aucune visite enregistrée pour cette période.</p>'
+                        : pages.map(p => `
                             <div class="flex items-center gap-2">
                                 <span class="text-gold/60 font-mono text-xs truncate flex-1" title="${p.path}">${p.path}</span>
-                                <span class="text-gold/40 text-xs w-6 text-right">${p.count}</span>
+                                <span class="text-gold/40 text-xs w-8 text-right">${p.count}</span>
                                 <div class="w-20 h-1.5 bg-white/5 rounded-full overflow-hidden flex-shrink-0">
                                     <div class="h-full bg-teal-400/60 rounded-full" style="width:${(p.count/max*100).toFixed(0)}%"></div>
                                 </div>
                             </div>`).join('');
                 }
-                // Logs récents
-                await loadRecentLogs(levelFilter);
+
+                // Provenance
+                const refEl = document.getElementById('analytics-top-referrers');
+                if (refEl) {
+                    const refs = t.top_referrers || [];
+                    const max = Math.max(...refs.map(r => r.count), 1);
+                    refEl.innerHTML = refs.length === 0
+                        ? '<p class="text-gold/30 italic text-xs">Aucune donnée de provenance.</p>'
+                        : refs.map(r => `
+                            <div class="flex items-center gap-2">
+                                <span class="text-gold/60 text-xs truncate flex-1" title="${r.referrer}">${r.referrer}</span>
+                                <span class="text-gold/40 text-xs w-8 text-right">${r.count}</span>
+                                <div class="w-20 h-1.5 bg-white/5 rounded-full overflow-hidden flex-shrink-0">
+                                    <div class="h-full bg-gold/50 rounded-full" style="width:${(r.count/max*100).toFixed(0)}%"></div>
+                                </div>
+                            </div>`).join('');
+                }
             } catch(e) {
                 console.error('[analytics]', e);
-            }
-        }
-
-        async function loadRecentLogs(level='') {
-            const logsEl = document.getElementById('analytics-logs');
-            if (!logsEl) return;
-            const params = new URLSearchParams({ limit: '50' });
-            if (level) params.set('level', level);
-            const res = await adminFetch(`/api/admin/system-logs?${params}`);
-            const data = await res.json();
-            const logs = data.data || [];
-            if (logs.length === 0) { logsEl.innerHTML = '<p class="text-gold/30 italic">Aucun log dans cette période.</p>'; return; }
-            const levelColors = { error: 'text-red-400', warning: 'text-yellow-400', info: 'text-teal-300' };
-            logsEl.innerHTML = logs.map(l => {
-                const t = new Date(l.created_at).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
-                const lc = levelColors[l.level] || 'text-gold/50';
-                return `<div class="flex gap-2 border-b border-white/5 pb-1 last:border-0">
-                    <span class="text-gold/30 flex-shrink-0">${t}</span>
-                    <span class="${lc} font-bold uppercase text-xs flex-shrink-0 w-14">${l.level}</span>
-                    <span class="text-gold/50 flex-shrink-0 hidden sm:block w-24 truncate">${l.source||''}</span>
-                    <span class="text-gold/70 truncate">${escapeHtmlFront(l.message||'')}</span>
-                </div>`;
-            }).join('');
-        }
-
-        async function analyzeWithAI() {
-            const btn = document.getElementById('btn-ai-analyze');
-            const result = document.getElementById('analytics-ai-result');
-            if (!_analyticsData) { alert('Chargez d\'abord les données.'); return; }
-            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyse en cours…'; }
-            try {
-                if (result) {
-                    result.innerHTML = '<p class="text-gold/50 italic text-xs">Utilisez le bouton "Analyser les intentions" de l\'onglet Insights pour une analyse IA complète.</p>';
-                    result.classList.remove('hidden');
-                }
-            } catch(e) {
-                if (result) {
-                    result.innerHTML = `<p class="text-red-400/70 text-xs">Erreur: ${e.message}</p>`;
-                    result.classList.remove('hidden');
-                }
-            } finally {
-                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-lightbulb"></i> Analyser avec l\'IA'; }
             }
         }
 

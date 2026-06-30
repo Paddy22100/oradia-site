@@ -2,7 +2,7 @@
   "version": 2,
   "crons": [
     { "path": "/api/admin/data?action=cron-relance&cron_secret=fK9mX2pL7qRvN4wT8sYcB3hD6jA1eU5i", "schedule": "0 9 * * *" },
-    { "path": "/api/admin/data?action=cron-fetch-logs&cron_secret=fK9mX2pL7qRvN4wT8sYcB3hD6jA1eU5i", "schedule": "0 * * * *" }
+    { "path": "/api/admin/data?action=cron-fetch-logs&cron_secret=fK9mX2pL7qRvN4wT8sYcB3hD6jA1eU5i", "schedule": "0 8 * * *" }
   ],
     "redirects": [
     {

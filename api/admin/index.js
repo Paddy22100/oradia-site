@@ -2598,6 +2598,21 @@ module.exports = async (req, res) => {
       return res.status(405).end();
     }
 
+    // ── Tracking de pages vues (route publique, appelée par js/page-tracker.js) ──
+    if (path === '/track' || path === '/track/') {
+      if (req.method !== 'POST') return res.status(405).end();
+      try {
+        const body = await parseBody(req);
+        const pagePath = String(body.path || '').slice(0, 300);
+        const referrer = String(body.referrer || '').slice(0, 500);
+        const sessionId = String(body.session_id || '').slice(0, 100);
+        if (!pagePath || !sessionId) return res.status(204).end();
+        const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+        await sb.from('page_views').insert({ path: pagePath, referrer: referrer || null, session_id: sessionId });
+      } catch (_) { /* le tracking ne doit jamais faire échouer la requête côté visiteur */ }
+      return res.status(204).end();
+    }
+
     if (path === '/system-logs' || path === '/system-logs/') {
       verifyAdminAuth(req);
       const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
@@ -2687,31 +2702,53 @@ module.exports = async (req, res) => {
     if (path === '/analytics' || path === '/analytics/') {
       verifyAdminAuth(req);
       if (req.method !== 'GET') return res.status(405).end();
-      const token = process.env.VERCEL_TOKEN;
-      const projectId = process.env.VERCEL_PROJECT_ID || 'prj_0DJh0iGvBHlRVp6MfrTCUa53Yhkd';
-      const teamId = process.env.VERCEL_TEAM_ID || 'team_OH3FH8jY7Lx9tjNcayHH42xg';
       const range = urlParams.get('range') || '7d';
-      const to = Date.now();
-      const from = to - (range === '30d' ? 30 : range === '7d' ? 7 : 1) * 86400000;
-      // Stats depuis system_logs (toujours disponibles)
+      const days = range === '30d' ? 30 : range === '7d' ? 7 : 1;
+      const since = new Date(Date.now() - days * 86400000).toISOString();
       const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
-      const { data: logs } = await sb.from('system_logs').select('created_at,level,path,status_code').gte('created_at', new Date(from).toISOString()).order('created_at', { ascending: false });
+
+      // ── Trafic réel (pages vues du site, via js/page-tracker.js) ──
+      const { data: views } = await sb.from('page_views').select('created_at,path,referrer,session_id').gte('created_at', since).order('created_at', { ascending: false }).limit(20000);
+      const v = views || [];
+      const uniqueSessions = new Set(v.map(r => r.session_id)).size;
+      const pageCounts = {};
+      v.forEach(r => { if (r.path) pageCounts[r.path] = (pageCounts[r.path] || 0) + 1; });
+      const topPages = Object.entries(pageCounts).sort((a,b) => b[1]-a[1]).slice(0,10).map(([path,count]) => ({path,count}));
+      const referrerCounts = {};
+      v.forEach(r => {
+        let ref = 'Direct / inconnu';
+        if (r.referrer) { try { ref = new URL(r.referrer).hostname.replace(/^www\./,''); } catch(_) { ref = 'Direct / inconnu'; } }
+        referrerCounts[ref] = (referrerCounts[ref] || 0) + 1;
+      });
+      const topReferrers = Object.entries(referrerCounts).sort((a,b) => b[1]-a[1]).slice(0,8).map(([referrer,count]) => ({referrer,count}));
+      // Répartition par jour (pour le graphique simple)
+      const byDay = {};
+      v.forEach(r => { const d = r.created_at.slice(0,10); byDay[d] = (byDay[d] || 0) + 1; });
+      const dailyViews = Object.entries(byDay).sort((a,b) => a[0]<b[0]?-1:1).map(([date,count]) => ({date,count}));
+      // Sessions ayant vu une seule page = "rebond"
+      const sessionPageCount = {};
+      v.forEach(r => { sessionPageCount[r.session_id] = (sessionPageCount[r.session_id] || 0) + 1; });
+      const singlePageSessions = Object.values(sessionPageCount).filter(n => n === 1).length;
+      const bounceRate = uniqueSessions > 0 ? (singlePageSessions / uniqueSessions * 100) : null;
+
+      // ── Santé technique (erreurs API, depuis system_logs) ──
+      const { data: logs } = await sb.from('system_logs').select('level').gte('created_at', since);
       const errors = (logs || []).filter(l => l.level === 'error').length;
       const warnings = (logs || []).filter(l => l.level === 'warning').length;
-      const pathCounts = {};
-      (logs || []).forEach(l => { if (l.path) pathCounts[l.path] = (pathCounts[l.path] || 0) + 1; });
-      const topPaths = Object.entries(pathCounts).sort((a,b) => b[1]-a[1]).slice(0,10).map(([path,count]) => ({path,count}));
-      // Tenter l'API Vercel Analytics
-      let vercelAnalytics = null;
-      if (token) {
-        try {
-          const vaRes = await fetch(`https://api.vercel.com/v1/web/analytics/event-data?projectId=${projectId}&teamId=${teamId}&from=${from}&to=${to}&limit=1000&environment=production`, {
-            headers: { Authorization: `Bearer ${token}` }
-          });
-          if (vaRes.ok) vercelAnalytics = await vaRes.json();
-        } catch(_) {}
-      }
-      return res.status(200).json({ success: true, logs_stats: { errors, warnings, total: (logs||[]).length, top_paths: topPaths }, vercel_analytics: vercelAnalytics, range });
+
+      return res.status(200).json({
+        success: true,
+        range,
+        traffic: {
+          total_views: v.length,
+          unique_visitors: uniqueSessions,
+          top_pages: topPages,
+          top_referrers: topReferrers,
+          daily_views: dailyViews,
+          bounce_rate: bounceRate
+        },
+        logs_stats: { errors, warnings, total: (logs||[]).length }
+      });
     }
 
     // ── Sauvegarde d'une intention anonyme (visiteur sans compte) ──
