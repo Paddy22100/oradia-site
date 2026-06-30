@@ -2671,7 +2671,7 @@ module.exports = async (req, res) => {
         // Distinction fiscale micro-entrepreneur : vente de marchandises (BIC, 12,3%)
         // vs prestations de services (BNC, 21,1%) — taux 2026
         const recettesVentesBIC = recetteRows
-          .filter(t => t.source === 'precommande')
+          .filter(t => t.source === 'precommande' || t.source === 'abonnement')
           .reduce((s, t) => s + parseFloat(t.amount), 0);
         const recettesServicesBNC = recettes - recettesVentesBIC;
         const URSSAF_RATE_BIC = 0.123;
