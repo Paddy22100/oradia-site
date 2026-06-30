@@ -365,7 +365,8 @@ async function handleData(req, res) {
           const { data: due } = await supabase
             .from('newsletter_drafts')
             .select('*')
-            .eq('statut', 'programmé')
+            .neq('statut', 'envoyé')
+            .not('scheduled_at', 'is', null)
             .lte('scheduled_at', new Date().toISOString())
             .limit(5);
           if (!due || due.length === 0) return res.status(200).json({ success: true, sent: 0 });
@@ -2107,7 +2108,7 @@ Contraintes : exactement 5 thèmes dont les pourcentages totalisent 100, exactem
       if (action === 'schedule') {
         const { draft_id, scheduled_at, subject } = body;
         if (!draft_id || !scheduled_at) return res.status(400).json({ error: 'draft_id et scheduled_at requis' });
-        const updates = { statut: 'programmé', scheduled_at };
+        const updates = { scheduled_at };
         if (subject && subject.trim()) updates.subject = subject.trim();
         const { error } = await supabase.from('newsletter_drafts').update(updates).eq('id', draft_id);
         if (error) throw error;
@@ -2117,7 +2118,7 @@ Contraintes : exactement 5 thèmes dont les pourcentages totalisent 100, exactem
       if (action === 'unschedule') {
         const { draft_id } = body;
         if (!draft_id) return res.status(400).json({ error: 'draft_id requis' });
-        const { error } = await supabase.from('newsletter_drafts').update({ statut: 'brouillon', scheduled_at: null }).eq('id', draft_id);
+        const { error } = await supabase.from('newsletter_drafts').update({ scheduled_at: null }).eq('id', draft_id);
         if (error) throw error;
         return res.status(200).json({ success: true });
       }
