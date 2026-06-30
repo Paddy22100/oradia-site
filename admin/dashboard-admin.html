@@ -1860,6 +1860,7 @@
             const title = document.getElementById('topbar-title');
             if (title) title.textContent = TAB_TITLES[name] || '';
             window.scrollTo({ top: 0, behavior: 'smooth' });
+            document.getElementById('sidebar').classList.remove('open');
             if (name === 'newsletter')    nlLoadDrafts();
             if (name === 'subscriptions') loadSubscriptions();
             if (name === 'support')        loadSupportMessages();
