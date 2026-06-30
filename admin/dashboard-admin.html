@@ -211,10 +211,6 @@
                 <i class="fas fa-history w-4 text-center"></i>
                 <span>Journal</span>
             </div>
-            <div class="nav-item" onclick="showTab('costs')" id="nav-costs">
-                <i class="fas fa-coins w-4 text-center"></i>
-                <span>Coûts du site</span>
-            </div>
             <div class="nav-item" onclick="showTab('monitoring')" id="nav-monitoring">
                 <i class="fas fa-heartbeat w-4 text-center"></i>
                 <span>Surveillance</span>
@@ -1434,69 +1430,6 @@
         </div><!-- /tab-synchronicity -->
 
         <!-- ══ ONGLET : COÛTS DU SITE ══ -->
-        <div id="tab-costs" class="tab-panel">
-        <section class="mb-10">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h3 class="cormorant text-2xl font-bold text-gold">Coûts du site</h3>
-                    <p class="text-light-gold/50 text-sm mt-1" id="costsPeriodLabel">Estimation du mois en cours</p>
-                </div>
-                <button onclick="loadCosts()" class="bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-lg px-4 py-2 text-sm hover:bg-teal-500/30 transition">
-                    <i class="fas fa-sync-alt mr-1"></i>Actualiser
-                </button>
-            </div>
-
-            <!-- Total estimé -->
-            <div class="rounded-xl p-5 mb-6 border" style="border-color:rgba(212,175,55,0.25);background:rgba(5,20,40,0.5);">
-                <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Estimation totale mensuelle</div>
-                <div class="text-3xl font-bold text-gold" id="costsTotalMonthly">—</div>
-            </div>
-
-            <!-- Usage API -->
-            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="costsUsageRow">
-                <div class="stat-card rounded-xl p-5">
-                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Tirages ce mois</div>
-                    <div class="text-2xl font-bold text-teal-300" id="costsTirages">—</div>
-                </div>
-                <div class="stat-card rounded-xl p-5">
-                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Appels Claude API</div>
-                    <div class="text-2xl font-bold text-teal-300" id="costsClaudeCalls">—</div>
-                    <div class="text-light-gold/40 text-xs mt-1">
-                        <span id="costsClaudeErrors"></span>
-                        <span id="costsClaudeFallbacks"></span>
-                    </div>
-                </div>
-                <div class="stat-card rounded-xl p-5">
-                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Tokens Claude</div>
-                    <div class="text-2xl font-bold text-teal-300" id="costsClaudeTokens">—</div>
-                    <div class="text-light-gold/40 text-xs mt-1" id="costsClaudeModels"></div>
-                </div>
-                <div class="stat-card rounded-xl p-5">
-                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Coût Claude réel</div>
-                    <div class="text-2xl font-bold text-gold" id="costsClaudeCost">—</div>
-                </div>
-            </div>
-
-            <!-- Détails API et QRNG -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div class="stat-card rounded-xl p-5">
-                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Appels QRNG (ANU)</div>
-                    <div class="text-2xl font-bold text-teal-300" id="costsQrngAnu">—</div>
-                    <div class="text-light-gold/40 text-xs" id="costsQrngFallback"></div>
-                </div>
-                <div class="stat-card rounded-xl p-5">
-                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Modèles Claude utilisés</div>
-                    <div id="costsClaudeModelsDetail" class="text-sm text-light-gold/70 space-y-1">—</div>
-                </div>
-            </div>
-
-            <!-- Abonnements fixes -->
-            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5">
-                <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider">Abonnements & frais fixes</h4>
-                <div id="costsSubscriptions" class="space-y-3 text-sm text-light-gold/70">—</div>
-            </div>
-        </section>
-        </div><!-- /tab-costs -->
 
         <!-- ══ ONGLET : SURVEILLANCE DU SITE ══ -->
         <div id="tab-monitoring" class="tab-panel">
@@ -1734,8 +1667,67 @@
             </div>
 
             <!-- Liste transactions -->
-            <div id="compta-list" class="space-y-2">
+            <div id="compta-list" class="space-y-2 mb-10">
                 <p class="text-gold/30 text-sm italic text-center py-8">Chargement…</p>
+            </div>
+
+            <!-- ── Coûts du site (frais techniques + abonnements) ── -->
+            <div class="border-t border-gold/10 pt-8 mt-4">
+                <div class="flex items-center justify-between mb-6">
+                    <div>
+                        <h3 class="cormorant text-xl font-bold text-gold">Coûts du site</h3>
+                        <p class="text-light-gold/50 text-sm mt-1" id="costsPeriodLabel">Estimation du mois en cours</p>
+                    </div>
+                    <button onclick="loadCosts()" class="bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-lg px-4 py-2 text-sm hover:bg-teal-500/30 transition">
+                        <i class="fas fa-sync-alt mr-1"></i>Actualiser
+                    </button>
+                </div>
+
+                <div class="rounded-xl p-5 mb-6 border" style="border-color:rgba(212,175,55,0.25);background:rgba(5,20,40,0.5);">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Estimation totale mensuelle</div>
+                    <div class="text-3xl font-bold text-gold" id="costsTotalMonthly">—</div>
+                </div>
+
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6" id="costsUsageRow">
+                    <div class="stat-card rounded-xl p-5">
+                        <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Tirages ce mois</div>
+                        <div class="text-2xl font-bold text-teal-300" id="costsTirages">—</div>
+                    </div>
+                    <div class="stat-card rounded-xl p-5">
+                        <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Appels Claude API</div>
+                        <div class="text-2xl font-bold text-teal-300" id="costsClaudeCalls">—</div>
+                        <div class="text-light-gold/40 text-xs mt-1">
+                            <span id="costsClaudeErrors"></span>
+                            <span id="costsClaudeFallbacks"></span>
+                        </div>
+                    </div>
+                    <div class="stat-card rounded-xl p-5">
+                        <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Tokens Claude</div>
+                        <div class="text-2xl font-bold text-teal-300" id="costsClaudeTokens">—</div>
+                        <div class="text-light-gold/40 text-xs mt-1" id="costsClaudeModels"></div>
+                    </div>
+                    <div class="stat-card rounded-xl p-5">
+                        <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Coût Claude réel</div>
+                        <div class="text-2xl font-bold text-gold" id="costsClaudeCost">—</div>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="stat-card rounded-xl p-5">
+                        <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Appels QRNG (ANU)</div>
+                        <div class="text-2xl font-bold text-teal-300" id="costsQrngAnu">—</div>
+                        <div class="text-light-gold/40 text-xs" id="costsQrngFallback"></div>
+                    </div>
+                    <div class="stat-card rounded-xl p-5">
+                        <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Modèles Claude utilisés</div>
+                        <div id="costsClaudeModelsDetail" class="text-sm text-light-gold/70 space-y-1">—</div>
+                    </div>
+                </div>
+
+                <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5">
+                    <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider">Abonnements & frais fixes</h4>
+                    <div id="costsSubscriptions" class="space-y-3 text-sm text-light-gold/70">—</div>
+                </div>
             </div>
         </section>
         </div><!-- /tab-comptabilite -->
@@ -1803,7 +1795,6 @@
             subscriptions:  'Abonnements Tore',
             support:         'Support · Témoignages · Suggestions',
             synchronicity:   'Étude — Synchronicités',
-            costs:           'Coûts du site',
             guidances:       'Guidances par visio',
             monitoring:      'Surveillance du site',
             insights:        'Insights — Intentions de tirages',
@@ -1825,11 +1816,10 @@
             if (name === 'subscriptions') loadSubscriptions();
             if (name === 'support')        loadSupportMessages();
             if (name === 'synchronicity')  loadSynchronicity();
-            if (name === 'costs')          loadCosts();
             if (name === 'monitoring')     loadMonitoring();
             if (name === 'guidances')      loadGuidances();
             if (name === 'analytics')      loadAnalytics();
-            if (name === 'comptabilite')   loadComptabilite();
+            if (name === 'comptabilite')   { loadComptabilite(); loadCosts(); }
         }
 
         // ── État global
