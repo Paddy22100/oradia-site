@@ -462,6 +462,39 @@ async function handleData(req, res) {
             return res.status(200).json({ success: false, error: e.message });
         }
       }
+      if (getAction === 'cron-monthly-report') {
+        try {
+          const adminEmail = process.env.ADMIN_EMAIL;
+          const BREVO_API_KEY = process.env.BREVO_API_KEY;
+          if (!adminEmail || !BREVO_API_KEY) return res.status(200).json({ success: false, message: 'ADMIN_EMAIL ou BREVO_API_KEY manquant' });
+          const now = new Date();
+          const monthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
+          const monthEnd = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
+          const monthLabel = new Date(now.getFullYear(), now.getMonth() - 1, 1).toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+          const { data: txs } = await supabase.from('transactions').select('type,category,amount,source').gte('date', monthStart.slice(0,10)).lt('date', monthEnd.slice(0,10));
+          const recetteRows = (txs||[]).filter(t => t.type === 'recette');
+          const depenseRows = (txs||[]).filter(t => t.type === 'depense');
+          const totalRecettes = recetteRows.reduce((s,t) => s + parseFloat(t.amount), 0);
+          const totalDepenses = depenseRows.reduce((s,t) => s + parseFloat(t.amount), 0);
+          const recBIC = recetteRows.filter(t => t.source === 'precommande' || t.source === 'abonnement').reduce((s,t) => s + parseFloat(t.amount), 0);
+          const recBNC = totalRecettes - recBIC;
+          const urssaf = recBIC * 0.123 + recBNC * 0.211;
+          const fmt = v => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR' }).format(v);
+          const byCategory = {};
+          recetteRows.forEach(t => { byCategory[t.category||t.source] = (byCategory[t.category||t.source]||0) + parseFloat(t.amount); });
+          const { count: activeSubs } = await supabase.from('tore_subscriptions').select('*',{count:'exact',head:true}).eq('status','active');
+          const { count: newContacts } = await supabase.from('newsletter_contacts').select('*',{count:'exact',head:true}).gte('created_at', monthStart).lt('created_at', monthEnd);
+          const { data: views } = await supabase.from('page_views').select('session_id').gte('created_at', monthStart).lt('created_at', monthEnd);
+          const totalViews = (views||[]).length;
+          const uniqueVisitors = new Set((views||[]).map(v=>v.session_id)).size;
+          const { count: errors } = await supabase.from('system_logs').select('*',{count:'exact',head:true}).eq('level','error').gte('created_at', monthStart).lt('created_at', monthEnd);
+          const catRows = Object.entries(byCategory).sort((a,b)=>b[1]-a[1]).map(([cat,amt]) => `<tr><td style="padding:6px 12px;color:#d1c9b0;">${cat}</td><td style="padding:6px 12px;text-align:right;color:#f0c75e;font-weight:600;">${fmt(amt)}</td></tr>`).join('');
+          const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
+          const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#050a14;font-family:Georgia,serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#050a14;padding:40px 20px;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#0a1628;border:1px solid rgba(212,175,55,0.25);border-radius:6px;"><tr><td style="padding:40px 40px 24px;border-bottom:1px solid rgba(212,175,55,0.1);"><p style="margin:0 0 4px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Rapport mensuel</p><h1 style="margin:0;color:#f0c75e;font-size:26px;font-weight:300;">ORADIA — ${cap(monthLabel)}</h1></td></tr><tr><td style="padding:32px 40px;"><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Comptabilité</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:12px;"><table width="100%">${catRows||'<tr><td style="padding:6px;color:#d1c9b0;">Aucune transaction ce mois</td></tr>'}</table></td></tr><tr><td style="padding:4px 12px;border-top:1px solid rgba(212,175,55,0.1);"><table width="100%"><tr><td style="padding:8px 0;color:#d1c9b0;font-size:13px;">Total recettes</td><td style="text-align:right;color:#4ade80;font-weight:700;">${fmt(totalRecettes)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">Total dépenses</td><td style="text-align:right;color:#f87171;">${fmt(totalDepenses)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;font-weight:600;">Résultat net</td><td style="text-align:right;color:#f0c75e;font-weight:700;">${fmt(totalRecettes-totalDepenses)}</td></tr></table></td></tr></table><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">URSSAF (micro-entrepreneur)</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%"><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">BIC 12,3% sur ${fmt(recBIC)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recBIC*0.123)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">BNC 21,1% sur ${fmt(recBNC)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recBNC*0.211)}</td></tr><tr><td style="padding:8px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Total cotisations estimées</td><td style="text-align:right;color:#f0c75e;font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">${fmt(urssaf)}</td></tr></table></td></tr></table><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Activité du site</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%"><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Pages vues</td><td style="text-align:right;color:#2dd4bf;font-weight:600;">${totalViews}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Visiteurs uniques</td><td style="text-align:right;color:#2dd4bf;font-weight:600;">${uniqueVisitors}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Abonnés Tore actifs</td><td style="text-align:right;color:#f0c75e;font-weight:600;">${activeSubs||0}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Nouveaux contacts</td><td style="text-align:right;color:#f0c75e;font-weight:600;">+${newContacts||0}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Erreurs techniques</td><td style="text-align:right;color:${(errors||0)>0?'#f87171':'#4ade80'};font-weight:600;">${errors||0}</td></tr></table></td></tr></table><p style="margin:0;color:rgba(212,175,55,0.3);font-size:11px;text-align:center;font-style:italic;">Rapport automatique · oradia.fr/admin</p></td></tr></table></td></tr></table></body></html>`;
+          const r = await fetch('https://api.brevo.com/v3/smtp/email', { method:'POST', headers:{'Content-Type':'application/json','api-key':BREVO_API_KEY}, body: JSON.stringify({ sender:{email:'contact@oradia.fr',name:'ORADIA Dashboard'}, to:[{email:adminEmail}], subject:`📊 Rapport mensuel ORADIA — ${cap(monthLabel)}`, htmlContent: html }) });
+          return res.status(200).json({ success: r.ok, status: r.status });
+        } catch(e) { return res.status(200).json({ success: false, error: e.message }); }
+      }
       return res.status(403).json({ error: 'Action non autorisée' });
     }
 
@@ -492,115 +525,6 @@ async function handleData(req, res) {
           }
           const sent = await sendExportEmail({ toEmail: process.env.ADMIN_EMAIL, files });
           return res.status(200).json({ success: sent });
-        }
-        if (action === 'cron-monthly-report') {
-          const adminEmail = process.env.ADMIN_EMAIL;
-          const BREVO_API_KEY = process.env.BREVO_API_KEY;
-          if (!adminEmail || !BREVO_API_KEY) return res.status(200).json({ success: false, message: 'ADMIN_EMAIL ou BREVO_API_KEY manquant' });
-
-          // Période : mois précédent
-          const now = new Date();
-          const monthStart = new Date(now.getFullYear(), now.getMonth() - 1, 1).toISOString();
-          const monthEnd = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
-          const monthLabel = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-            .toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
-
-          // Transactions du mois
-          const { data: txs } = await supabase.from('transactions')
-            .select('type,category,amount,source,description')
-            .gte('date', monthStart.slice(0,10))
-            .lt('date', monthEnd.slice(0,10));
-          const recetteRows = (txs||[]).filter(t => t.type === 'recette');
-          const depenseRows = (txs||[]).filter(t => t.type === 'depense');
-          const totalRecettes = recetteRows.reduce((s,t) => s + parseFloat(t.amount), 0);
-          const totalDepenses = depenseRows.reduce((s,t) => s + parseFloat(t.amount), 0);
-          const recBIC = recetteRows.filter(t => t.source === 'precommande' || t.source === 'abonnement').reduce((s,t) => s + parseFloat(t.amount), 0);
-          const recBNC = totalRecettes - recBIC;
-          const urssaf = recBIC * 0.123 + recBNC * 0.211;
-          const fmt = v => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR' }).format(v);
-          const byCategory = {};
-          recetteRows.forEach(t => { byCategory[t.category||t.source] = (byCategory[t.category||t.source]||0) + parseFloat(t.amount); });
-
-          // Abonnés actifs
-          const { count: activeSubs } = await supabase.from('tore_subscriptions').select('*',{count:'exact',head:true}).eq('status','active');
-
-          // Nouveaux contacts du mois
-          const { count: newContacts } = await supabase.from('newsletter_contacts').select('*',{count:'exact',head:true})
-            .gte('created_at', monthStart).lt('created_at', monthEnd);
-
-          // Pages vues du mois
-          const { data: views } = await supabase.from('page_views').select('session_id')
-            .gte('created_at', monthStart).lt('created_at', monthEnd);
-          const totalViews = (views||[]).length;
-          const uniqueVisitors = new Set((views||[]).map(v=>v.session_id)).size;
-
-          // Erreurs techniques du mois
-          const { count: errors } = await supabase.from('system_logs').select('*',{count:'exact',head:true})
-            .eq('level','error').gte('created_at', monthStart).lt('created_at', monthEnd);
-
-          const catRows = Object.entries(byCategory).sort((a,b)=>b[1]-a[1])
-            .map(([cat,amt]) => `<tr><td style="padding:6px 12px;color:#d1c9b0;">${cat}</td><td style="padding:6px 12px;text-align:right;color:#f0c75e;font-weight:600;">${fmt(amt)}</td></tr>`).join('');
-
-          const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#050a14;font-family:Georgia,serif;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:#050a14;padding:40px 20px;">
-<tr><td align="center">
-<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#0a1628;border:1px solid rgba(212,175,55,0.25);border-radius:6px;">
-  <tr><td style="padding:40px 40px 24px;border-bottom:1px solid rgba(212,175,55,0.1);">
-    <p style="margin:0 0 4px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Rapport mensuel</p>
-    <h1 style="margin:0;color:#f0c75e;font-size:26px;font-weight:300;">ORADIA — ${monthLabel.charAt(0).toUpperCase()+monthLabel.slice(1)}</h1>
-  </td></tr>
-  <tr><td style="padding:32px 40px;">
-    <!-- Comptabilité -->
-    <p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Comptabilité</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;">
-      <tr><td style="padding:12px 12px 4px;"><table width="100%" cellpadding="0" cellspacing="0">
-        ${catRows || '<tr><td style="padding:6px 12px;color:#d1c9b0;">Aucune transaction ce mois</td></tr>'}
-      </table></td></tr>
-      <tr><td style="padding:4px 12px 4px;border-top:1px solid rgba(212,175,55,0.1);"><table width="100%">
-        <tr><td style="padding:8px 0;color:#d1c9b0;font-size:13px;">Total recettes</td><td style="text-align:right;color:#4ade80;font-weight:700;font-size:15px;">${fmt(totalRecettes)}</td></tr>
-        <tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">Total dépenses</td><td style="text-align:right;color:#f87171;font-size:14px;">${fmt(totalDepenses)}</td></tr>
-        <tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">Résultat net</td><td style="text-align:right;color:#f0c75e;font-weight:700;font-size:15px;">${fmt(totalRecettes-totalDepenses)}</td></tr>
-      </table></td></tr>
-    </table>
-    <!-- URSSAF -->
-    <p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">URSSAF (estimation micro-entrepreneur)</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;">
-      <tr><td style="padding:16px 12px;"><table width="100%">
-        <tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">BIC ventes (12,3%) — ${fmt(recBIC)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recBIC*0.123)}</td></tr>
-        <tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">BNC services (21,1%) — ${fmt(recBNC)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recBNC*0.211)}</td></tr>
-        <tr><td style="padding:8px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Total cotisations estimées</td><td style="text-align:right;color:#f0c75e;font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">${fmt(urssaf)}</td></tr>
-      </table></td></tr>
-    </table>
-    <!-- Activité -->
-    <p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Activité du site</p>
-    <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;">
-      <tr><td style="padding:16px 12px;"><table width="100%">
-        <tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Pages vues</td><td style="text-align:right;color:#2dd4bf;font-weight:600;">${totalViews}</td></tr>
-        <tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Visiteurs uniques</td><td style="text-align:right;color:#2dd4bf;font-weight:600;">${uniqueVisitors}</td></tr>
-        <tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Abonnés Tore actifs</td><td style="text-align:right;color:#f0c75e;font-weight:600;">${activeSubs||0}</td></tr>
-        <tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Nouveaux contacts</td><td style="text-align:right;color:#f0c75e;font-weight:600;">+${newContacts||0}</td></tr>
-        <tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Erreurs techniques</td><td style="text-align:right;color:${(errors||0)>0?'#f87171':'#4ade80'};font-weight:600;">${errors||0}</td></tr>
-      </table></td></tr>
-    </table>
-    <p style="margin:0;color:rgba(212,175,55,0.3);font-size:11px;text-align:center;font-style:italic;">Rapport généré automatiquement le 1er du mois · oradia.fr/admin</p>
-  </td></tr>
-</table>
-</td></tr>
-</table>
-</body></html>`;
-
-          const r = await fetch('https://api.brevo.com/v3/smtp/email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
-            body: JSON.stringify({
-              sender: { email: 'contact@oradia.fr', name: 'ORADIA Dashboard' },
-              to: [{ email: adminEmail }],
-              subject: `📊 Rapport mensuel ORADIA — ${monthLabel.charAt(0).toUpperCase()+monthLabel.slice(1)}`,
-              htmlContent: html
-            })
-          });
-          return res.status(200).json({ success: r.ok, status: r.status });
         }
         return res.status(403).json({ error: 'Action non autorisée' });
       }
