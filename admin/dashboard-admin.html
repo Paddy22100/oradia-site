@@ -3180,7 +3180,10 @@
             const orderId = String(preorder.id || preorder.session_id || '');
             const processedAt = getProcessedOrders()[orderId];
             if (processedAt) {
-                return `<span class="px-3 py-1 bg-green-500/10 text-green-400 rounded text-xs inline-flex items-center" title="Traité le ${formatDate(processedAt)}"><i class="fas fa-check-circle mr-1"></i>Traité le ${formatDate(processedAt)}</span>`;
+                return `<div class="flex flex-col gap-1">
+                    <span class="px-3 py-1 bg-green-500/10 text-green-400 rounded text-xs inline-flex items-center" title="Traité le ${formatDate(processedAt)}"><i class="fas fa-check-circle mr-1"></i>Traité le ${formatDate(processedAt)}</span>
+                    <button onclick="unmarkOrderProcessed('${orderId}')" class="px-3 py-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded hover:bg-red-500/20 transition text-xs"><i class="fas fa-undo mr-1"></i>Annuler</button>
+                </div>`;
             }
             return `<button onclick="markOrderProcessed('${orderId}')" class="px-3 py-1 bg-green-500/20 text-green-300 rounded hover:bg-green-500/30 transition text-xs">
                                 <i class="fas fa-check mr-1"></i>Traité
@@ -3190,6 +3193,16 @@
         function refreshPreordersTable() {
             updatePreordersTable(currentData.preorders || [], currentData.preordersPagination);
         }
+
+        window.unmarkOrderProcessed = function unmarkOrderProcessed(orderId) {
+            const key = String(orderId || '');
+            if (!key) return;
+            const processed = getProcessedOrders();
+            delete processed[key];
+            localStorage.setItem('oradia-admin-processed-orders', JSON.stringify(processed));
+            pushAuditLog('Commande dé-marquée traitée', `Commande: ${key}`);
+            refreshPreordersTable();
+        };
 
         window.markOrderProcessed = function markOrderProcessed(orderId) {
             const key = String(orderId || '');
