@@ -843,7 +843,11 @@
                         <input id="newSubExpiry" type="date" class="w-full bg-[#051428] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
                     </div>
                 </div>
-                <div class="flex items-center gap-4">
+                <div class="flex items-center gap-4 flex-wrap">
+                    <label class="flex items-center gap-2 text-light-gold/80 text-sm cursor-pointer">
+                        <input id="newSubFree" type="checkbox" class="accent-gold w-4 h-4">
+                        Gratuit (exclu des recettes en comptabilité)
+                    </label>
                     <button onclick="createSubscription()" class="bg-gold text-night-blue font-semibold px-5 py-2 rounded-lg hover:bg-light-gold transition text-sm">
                         <i class="fas fa-paper-plane mr-2"></i>Créer et envoyer le code par email
                     </button>
@@ -4188,7 +4192,7 @@
                 <tr class="hover:bg-gold/5 transition">
                     <td class="px-5 py-4 text-light-gold text-sm">${s.email || '—'}</td>
                     <td class="px-5 py-4 text-light-gold/80 text-sm">${s.full_name || '—'}</td>
-                    <td class="px-5 py-4">${planBadge}</td>
+                    <td class="px-5 py-4">${planBadge}${s.is_free ? ' <span class="bg-purple-500/20 text-purple-300 text-xs px-2 py-0.5 rounded-full ml-1" title="Exclu des recettes en comptabilité">Gratuit</span>' : ''}</td>
                     <td class="px-5 py-4">${stripeBadge}</td>
                     <td class="px-5 py-4">${statusBadge}</td>
                     <td class="px-5 py-4 text-light-gold/60 text-xs">${lastDraw}</td>
@@ -4338,6 +4342,7 @@
             const fullName = document.getElementById('newSubName').value.trim();
             const code     = document.getElementById('newSubCode').value.trim();
             const expiry   = document.getElementById('newSubExpiry').value;
+            const isFree   = document.getElementById('newSubFree').checked;
             const msg      = document.getElementById('newSubMsg');
 
             if (!email || !code) { msg.style.color = '#f87171'; msg.textContent = 'Email et code requis.'; return; }
@@ -4347,7 +4352,7 @@
                 const res = await adminFetch('/api/admin/data', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'create', email, fullName, accessCode: code, expiresAt: expiry || null })
+                    body: JSON.stringify({ action: 'create', email, fullName, accessCode: code, expiresAt: expiry || null, isFree })
                 });
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.error);
@@ -4357,6 +4362,7 @@
                 document.getElementById('newSubName').value = '';
                 document.getElementById('newSubCode').value = '';
                 document.getElementById('newSubExpiry').value = '';
+                document.getElementById('newSubFree').checked = false;
                 await loadSubscriptions();
             } catch(e) { msg.style.color = '#f87171'; msg.textContent = e.message; }
         }

@@ -3,7 +3,7 @@ const crypto = require('crypto');
 const { sendBrevoEmail } = require('../lib/brevo-order-email.js');
 
 // Comptes à ne jamais compter dans la comptabilité (audit/test + compte personnel du fondateur)
-const ACCOUNTING_EXCLUDED_EMAILS = ['boucheron.r89@gmail.com', 'audit@oradia.fr'];
+const ACCOUNTING_EXCLUDED_EMAILS = ['boucheron.r89@gmail.com', 'audit@oradia.fr', 'contact@oradia.fr'];
 const isAccountingExcluded = (email) => !!email && ACCOUNTING_EXCLUDED_EMAILS.includes(String(email).toLowerCase().trim());
 
 // Fonctions pour créer les clients après validation environnement
@@ -236,7 +236,7 @@ async function findToreSubscriptionRow(stripe, supabase, object) {
     if (subscriptionId) {
         const { data } = await supabase
             .from('tore_subscriptions')
-            .select('id, email')
+            .select('id, email, is_free')
             .eq('stripe_subscription_id', subscriptionId)
             .maybeSingle();
         if (data) return data;
@@ -245,7 +245,7 @@ async function findToreSubscriptionRow(stripe, supabase, object) {
     if (customerId) {
         const { data } = await supabase
             .from('tore_subscriptions')
-            .select('id, email')
+            .select('id, email, is_free')
             .eq('stripe_customer_id', customerId)
             .maybeSingle();
         if (data) return data;
@@ -255,7 +255,7 @@ async function findToreSubscriptionRow(stripe, supabase, object) {
     if (email) {
         const { data } = await supabase
             .from('tore_subscriptions')
-            .select('id, email')
+            .select('id, email, is_free')
             .eq('email', email)
             .maybeSingle();
         if (data) return data;
@@ -312,7 +312,7 @@ async function processEvent(event) {
             } else {
                 console.log(`[webhook] Abonnement Tore prolongé jusqu'au ${newExpireAt.toISOString()} pour ${row.email}`);
                 // Enregistrement automatique de la recette (renouvellement mensuel)
-                if (isAccountingExcluded(row.email)) { break; }
+                if (isAccountingExcluded(row.email) || row.is_free) { break; }
                 await supabase.from('transactions').insert({
                     date: new Date().toISOString().split('T')[0],
                     type: 'recette',

@@ -26,7 +26,7 @@ try {
 const EXPORTABLE_TABLES = ['preorders', 'donors', 'tirages'];
 
 // Comptes à ne jamais compter dans la comptabilité (audit/test + compte personnel du fondateur)
-const ACCOUNTING_EXCLUDED_EMAILS = ['boucheron.r89@gmail.com', 'audit@oradia.fr'];
+const ACCOUNTING_EXCLUDED_EMAILS = ['boucheron.r89@gmail.com', 'audit@oradia.fr', 'contact@oradia.fr'];
 
 // Catégories de contacts newsletter (utilisées pour cibler les envois depuis le dashboard,
 // sans passer par les listes Brevo). Liste indicative — des tags libres restent possibles.
@@ -430,7 +430,7 @@ async function handleData(req, res) {
         req.on('error', reject);
       });
 
-      const { action, email, fullName, accessCode, expiresAt, subscriptionId } = body;
+      const { action, email, fullName, accessCode, expiresAt, subscriptionId, isFree } = body;
 
       // ── Action réservée aux tâches automatiques (cron quotidien) ──
       if (isCronRequest) {
@@ -461,6 +461,7 @@ async function handleData(req, res) {
             access_code: accessCode || ('ADMIN-' + Date.now().toString(36).toUpperCase()),
             expires_at: expiresAt || null,
             status: 'active',
+            is_free: !!isFree,
             created_at: new Date().toISOString(),
             updated_at: new Date().toISOString()
           }, { onConflict: 'email' });
@@ -754,14 +755,19 @@ async function handleData(req, res) {
         const { data: preorders } = await sb.from('preorders').select('created_at,amount_total,email,full_name,offer,stripe_session_id').eq('paid_status','completed');
         const { data: donors } = await sb.from('donors').select('created_at,amount,email,full_name,stripe_session_id');
         const { data: guidances } = await sb.from('guidances').select('created_at,amount,client_email,client_name,cal_booking_uid').in('status',['confirmed','completed']);
-        const { data: subs } = await sb.from('tore_subscriptions').select('created_at,email,full_name,plan,status').neq('status','payment_failed');
+        const { data: subs } = await sb.from('tore_subscriptions').select('created_at,email,full_name,plan,status,is_free').neq('status','payment_failed');
         const planPriceEur = p => p === 'decouverte' ? 5 : 8;
         const toInsert = [
             ...(preorders||[]).filter(p=>!isExcluded(p.email)).map(p => ({ date: p.created_at?.split('T')[0], type:'recette', category:'précommande', description:`Précommande ${p.offer||''} — ${p.full_name||p.email||''}`, amount: parseFloat(p.amount_total)||0, source:'precommande', source_ref: p.stripe_session_id })).filter(t=>t.amount>0),
             ...(donors||[]).filter(d=>!isExcluded(d.email)).map(d => ({ date: d.created_at?.split('T')[0], type:'recette', category:'don', description:`Don — ${d.full_name||d.email||''}`, amount: parseFloat(d.amount)||0, source:'don', source_ref: d.stripe_session_id })).filter(t=>t.amount>0),
             ...(guidances||[]).filter(g=>!isExcluded(g.client_email)).map(g => ({ date: g.created_at?.split('T')[0], type:'recette', category:'guidance', description:`Guidance — ${g.client_name||g.client_email||''}`, amount: (g.amount||0)/100, source:'guidance', source_ref: g.cal_booking_uid })).filter(t=>t.amount>0),
-            ...(subs||[]).filter(s=>!isExcluded(s.email)).map(s => ({ date: s.created_at?.split('T')[0], type:'recette', category:'abonnement', description:`Abonnement Tore ${s.plan||'complet'} — ${s.full_name||s.email||''}`, amount: planPriceEur(s.plan), source:'abonnement', source_ref: `sub_${s.email}_${s.created_at?.split('T')[0]}` })),
+            ...(subs||[]).filter(s=>!isExcluded(s.email) && !s.is_free).map(s => ({ date: s.created_at?.split('T')[0], type:'recette', category:'abonnement', description:`Abonnement Tore ${s.plan||'complet'} — ${s.full_name||s.email||''}`, amount: planPriceEur(s.plan), source:'abonnement', source_ref: `sub_${s.email}_${s.created_at?.split('T')[0]}` })),
         ];
+        // Purger les transactions des abonnements gratuits déjà importées avant que is_free soit posé
+        const freeSubEmails = (subs||[]).filter(s=>s.is_free).map(s=>s.email);
+        for (const email of freeSubEmails) {
+          await sb.from('transactions').delete().eq('source','abonnement').ilike('source_ref', `sub_${email}_%`);
+        }
         // Purger les transactions déjà importées pour les comptes exclus (audit/test, fondateur)
         for (const email of ACCOUNTING_EXCLUDED_EMAILS) {
           await sb.from('transactions').delete().ilike('description', `%${email}%`);
