@@ -377,18 +377,39 @@ async function handleData(req, res) {
                 headers: { Authorization: `Bearer ${token}` }
             });
             const events = await evRes.json();
-            const logsToInsert = (Array.isArray(events) ? events : []).filter(e => e.type === 'stderr' || e.type === 'error').map(e => ({
-                level: 'error',
-                source: 'vercel-cron',
-                path: deployment.url,
-                message: typeof e.payload === 'string' ? e.payload.slice(0,500) : JSON.stringify(e.payload).slice(0,500),
-                details: { deployment_id: deployment.uid, event_type: e.type }
-            }));
+            const crypto = require('crypto');
+            const candidateLogs = (Array.isArray(events) ? events : [])
+                .filter(e => e.type === 'stderr' || e.type === 'error')
+                .map(e => {
+                    const msg = typeof e.payload === 'string' ? e.payload.slice(0,500) : JSON.stringify(e.payload).slice(0,500);
+                    const eventKey = crypto.createHash('md5').update(`${deployment.uid}:${e.created || ''}:${msg}`).digest('hex');
+                    return {
+                        level: 'error',
+                        source: 'vercel-cron',
+                        path: deployment.url,
+                        message: msg,
+                        details: { deployment_id: deployment.uid, event_type: e.type, event_key: eventKey }
+                    };
+                });
+
+            // Déduplication : ignorer les events déjà enregistrés (clé hash sur deployment+timestamp+message)
+            let logsToInsert = candidateLogs;
+            if (candidateLogs.length > 0) {
+                const { data: existing } = await sb
+                    .from('system_logs')
+                    .select('details')
+                    .eq('source', 'vercel-cron')
+                    .gte('created_at', new Date(since).toISOString())
+                    .limit(500);
+                const existingKeys = new Set((existing || []).map(r => r.details?.event_key).filter(Boolean));
+                logsToInsert = candidateLogs.filter(l => !existingKeys.has(l.details.event_key));
+            }
+
             if (logsToInsert.length > 0) {
                 await sb.from('system_logs').insert(logsToInsert);
             }
-            await logSystemEvent(sb, { level:'info', source:'cron-fetch-logs', message:`Cron logs: ${logsToInsert.length} erreurs trouvées`, details: { deployment: deployment.uid } });
-            return res.status(200).json({ success: true, fetched: logsToInsert.length });
+            await logSystemEvent(sb, { level:'info', source:'cron-fetch-logs', message:`Cron logs: ${logsToInsert.length} nouvelles erreurs (${candidateLogs.length} détectées, ${candidateLogs.length - logsToInsert.length} doublons ignorés)`, details: { deployment: deployment.uid } });
+            return res.status(200).json({ success: true, fetched: logsToInsert.length, total_detected: candidateLogs.length });
         } catch(e) {
             await logSystemEvent(supabase, { level:'error', source:'cron-fetch-logs', message: e.message });
             return res.status(200).json({ success: false, error: e.message });
