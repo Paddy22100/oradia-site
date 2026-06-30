@@ -1794,7 +1794,7 @@
             if (name === 'subscriptions') loadSubscriptions();
             if (name === 'support')        loadSupportMessages();
             if (name === 'synchronicity')  loadSynchronicity();
-            if (name === 'monitoring')     loadMonitoring();
+            if (name === 'monitoring')     { loadMonitoring(); loadSurveillanceLogs(); }
             if (name === 'guidances')      loadGuidances();
             if (name === 'analytics')      loadAnalytics();
             if (name === 'comptabilite')   { loadComptabilite(); loadCosts(); }
