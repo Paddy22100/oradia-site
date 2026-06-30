@@ -2772,7 +2772,9 @@ module.exports = async (req, res) => {
         const month = urlParams.get('month') || '';
         const type = urlParams.get('type') || '';
         const dateFrom = month ? `${year}-${month.padStart(2,'0')}-01` : `${year}-01-01`;
-        const dateTo = month ? `${year}-${month.padStart(2,'0')}-31` : `${year}-12-31`;
+        const dateTo = month
+          ? new Date(parseInt(year,10), parseInt(month,10), 0).toISOString().slice(0,10)
+          : `${year}-12-31`;
         let q = sb.from('transactions').select('*').gte('date', dateFrom).lte('date', dateTo).order('date', { ascending: false });
         if (type) q = q.eq('type', type);
         const { data, error } = await q;
