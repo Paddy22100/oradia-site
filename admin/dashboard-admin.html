@@ -3384,9 +3384,20 @@
             picker.id = 'nl-image-picker';
             picker.className = 'mt-6 bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6';
             picker.innerHTML = `
-                <h4 class="cormorant text-xl text-gold mb-2">
-                    <i class="fas fa-images mr-2"></i>Choisir 3 illustrations maximum
-                </h4>
+                <div class="flex items-center justify-between gap-3 mb-2 flex-wrap">
+                    <h4 class="cormorant text-xl text-gold">
+                        <i class="fas fa-images mr-2"></i>Choisir 3 illustrations maximum
+                    </h4>
+                    <div class="flex gap-2">
+                        <button onclick="nlToggleImagePicker()" id="nl-image-picker-toggle" class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/40 rounded px-2 py-1 transition">
+                            <i class="fas fa-compress-alt mr-1"></i>Réduire
+                        </button>
+                        <button onclick="document.getElementById('nl-send-zone').scrollIntoView({behavior:'smooth', block:'start'})" class="text-xs text-gold border border-gold/40 hover:bg-gold/10 rounded px-2 py-1 transition">
+                            <i class="fas fa-arrow-down mr-1"></i>Aller à l'envoi
+                        </button>
+                    </div>
+                </div>
+                <div id="nl-image-picker-body">
                 <p class="text-xs text-gold/60 mb-3">Les images seront affichées dans la newsletter. Clique sur une image pour la voir en grand.</p>
                 <p class="text-xs text-gold/40 mb-3 uppercase tracking-widest">Sélectionne jusqu'à 3 images — Produit · Bibliothèque · Unsplash</p>
                 <div class="flex flex-col sm:flex-row gap-2 mb-4">
@@ -3410,6 +3421,7 @@
                 <button onclick="nlClearImages()" class="mt-3 text-xs text-gold/40 hover:text-gold/70 transition">
                     ✕ Effacer toutes les images
                 </button>
+                </div>
             `;
 
             const saveZone = document.getElementById('nl-save-zone');
@@ -3592,8 +3604,12 @@
                 document.getElementById(`nl-img-option-${index}`)?.classList.add('border-gold', 'ring-2', 'ring-gold/40');
                 document.getElementById(`nl-img-toggle-${index}`).innerHTML = '<i class="fas fa-check text-white text-sm"></i>';
                 document.getElementById(`nl-selected-badge-${index}`)?.classList.remove('hidden');
+                if (nlSelectedImages.length >= 3) {
+                    const body = document.getElementById('nl-image-picker-body');
+                    if (body && !body.classList.contains('hidden')) nlToggleImagePicker();
+                }
             }
-            
+
             nlUpdateSelectedPreviews();
         }
 
@@ -3652,6 +3668,16 @@
             });
             nlUpdateSelectedPreviews();
             document.getElementById('nl-image-selected-label')?.classList.add('hidden');
+        }
+
+        function nlToggleImagePicker() {
+            const body = document.getElementById('nl-image-picker-body');
+            const btn = document.getElementById('nl-image-picker-toggle');
+            if (!body || !btn) return;
+            const collapsed = body.classList.toggle('hidden');
+            btn.innerHTML = collapsed
+                ? '<i class="fas fa-expand-alt mr-1"></i>Agrandir'
+                : '<i class="fas fa-compress-alt mr-1"></i>Réduire';
         }
 
         function nlCopy() {
