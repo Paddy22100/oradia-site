@@ -18,10 +18,6 @@
       "dest": "/api/stripe-webhook.js"
     },
     {
-      "src": "/api/payments/webhook",
-      "dest": "/api/stripe-webhook.js"
-    },
-    {
       "src": "/api/cal-webhook",
       "dest": "/api/stripe-webhook.js"
     },
