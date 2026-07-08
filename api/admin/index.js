@@ -2598,6 +2598,76 @@ async function handleSyncBrevo(req, res) {
   }
 }
 
+// ── Sync des désinscriptions : interroge Brevo pour chaque abonné actif ──
+// et met à jour Supabase si le contact s'est désabonné ou est blacklisté.
+async function handleSyncBrevoUnsubscribes(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'POST requis' });
+  try {
+    verifyAdminAuth(req);
+
+    const BREVO_API_KEY = process.env.BREVO_API_KEY;
+    if (!BREVO_API_KEY) return res.status(500).json({ error: 'Clé Brevo manquante' });
+
+    const supabase = createClient(
+      process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+
+    // Récupère les abonnés actifs (ceux qu'on croit inscrits dans Brevo)
+    const { data: subscribers, error } = await supabase
+      .from('newsletter_contacts')
+      .select('id, email')
+      .eq('brevo_synced', true)
+      .neq('status', 'unsubscribed')
+      .limit(100);
+
+    if (error) throw error;
+    if (!subscribers || subscribers.length === 0) {
+      return res.status(200).json({ success: true, checked: 0, unsubscribed: 0, message: 'Aucun abonné actif à vérifier' });
+    }
+
+    let unsubscribedCount = 0;
+    const now = new Date().toISOString();
+
+    for (const contact of subscribers) {
+      try {
+        const r = await fetch(`https://api.brevo.com/v3/contacts/${encodeURIComponent(contact.email)}`, {
+          headers: { 'api-key': BREVO_API_KEY, 'Accept': 'application/json' }
+        });
+        if (!r.ok) continue; // contact introuvable dans Brevo = on ne touche pas
+
+        const brevoContact = await r.json();
+        // emailBlacklisted = true si l'utilisateur s'est globalement désabonné
+        // listUnsubscribed contient les listes dont il s'est désabonné
+        const listId = parseInt(process.env.BREVO_WAITLIST_LIST_ID || '5', 10);
+        const isUnsubscribed = brevoContact.emailBlacklisted === true
+          || (Array.isArray(brevoContact.listUnsubscribed) && brevoContact.listUnsubscribed.includes(listId));
+
+        if (isUnsubscribed) {
+          await supabase.from('newsletter_contacts').update({
+            status: 'unsubscribed',
+            brevo_synced: false,
+            unsubscribed_at: now
+          }).eq('id', contact.id);
+          unsubscribedCount++;
+        }
+      } catch (e) {
+        console.warn('[sync-unsubscribes] erreur pour', contact.email, e.message);
+      }
+    }
+
+    return res.status(200).json({
+      success: true,
+      checked: subscribers.length,
+      unsubscribed: unsubscribedCount,
+      message: `${subscribers.length} abonnés vérifiés, ${unsubscribedCount} désabonnement(s) détecté(s)`
+    });
+  } catch (error) {
+    console.error('handleSyncBrevoUnsubscribes error:', error);
+    return res.status(error.statusCode || 500).json({ error: error.message });
+  }
+}
+
 // ── SUBSCRIPTIONS ──────────────────────────────────────────────────────
 async function handleSubscriptions(req, res) {
   try {
@@ -2702,6 +2772,10 @@ module.exports = async (req, res) => {
     
     if (path === '/sync-brevo' || path === '/sync-brevo/') {
       return await handleSyncBrevo(req, res);
+    }
+
+    if (path === '/sync-brevo-unsubscribes' || path === '/sync-brevo-unsubscribes/') {
+      return await handleSyncBrevoUnsubscribes(req, res);
     }
 
     if (path === '/subscriptions' || path === '/subscriptions/') {

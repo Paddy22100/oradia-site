@@ -856,6 +856,11 @@
                     <input id="nlSubscribersSearch" type="text" placeholder="Rechercher…"
                         oninput="filterNlSubscribersLocal()"
                         class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-44">
+                    <button onclick="syncBrevoUnsubscribes()" id="syncUnsubBtn"
+                        class="flex items-center gap-2 bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition text-sm font-semibold"
+                        title="Interroge Brevo pour détecter les désabonnements récents">
+                        <i class="fas fa-sync-alt"></i> Sync désinscriptions
+                    </button>
                 </div>
             </div>
 
@@ -2318,6 +2323,28 @@
             } else if (pagEl) {
                 pagEl.innerHTML = '';
             }
+        }
+
+        async function syncBrevoUnsubscribes() {
+            const btn = document.getElementById('syncUnsubBtn');
+            if (!btn) return;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Vérification…';
+            try {
+                const res = await adminFetch('/api/admin/sync-brevo-unsubscribes', { method: 'POST' });
+                const data = await res.json();
+                if (data.success) {
+                    btn.innerHTML = `<i class="fas fa-check mr-2"></i>${data.unsubscribed} désabonnement(s) détecté(s)`;
+                    if (data.unsubscribed > 0) loadNlSubscribers(1);
+                } else {
+                    btn.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Erreur';
+                }
+            } catch (e) {
+                btn.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Erreur réseau';
+            }
+            setTimeout(() => {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Sync désinscriptions'; }
+            }, 4000);
         }
 
         function filterNlSubscribersLocal() {
