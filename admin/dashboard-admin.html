@@ -629,10 +629,9 @@
                             <svg id="revenuePie" viewBox="0 0 36 36" style="transform:rotate(-90deg);width:120px;height:120px;">
                                 <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(212,175,55,0.08)" stroke-width="3.8"/>
                                 <circle id="pie-preorders"     cx="18" cy="18" r="15.9" fill="none" stroke="#d4af37"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
-                                <circle id="pie-donors"        cx="18" cy="18" r="15.9" fill="none" stroke="#ef4444"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
-                                <circle id="pie-singledraws"   cx="18" cy="18" r="15.9" fill="none" stroke="#a855f7"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
-                                <circle id="pie-guidances"     cx="18" cy="18" r="15.9" fill="none" stroke="#14b8a6"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
-                                <circle id="pie-subscriptions" cx="18" cy="18" r="15.9" fill="none" stroke="#3b82f6"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
+                                <circle id="pie-donors"        cx="18" cy="18" r="15.9" fill="none" stroke="#EE7733"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
+                                <circle id="pie-guidances"     cx="18" cy="18" r="15.9" fill="none" stroke="#009988"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
+                                <circle id="pie-subscriptions" cx="18" cy="18" r="15.9" fill="none" stroke="#0077BB"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
                             </svg>
                             <div class="absolute inset-0 flex flex-col items-center justify-center">
                                 <span class="text-gold font-bold text-sm" id="pie-center-total">—</span>
@@ -642,23 +641,19 @@
                         <!-- Légende -->
                         <div class="space-y-2 text-sm flex-1">
                             <div class="flex items-center justify-between gap-2">
-                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#d4af37] inline-block"></span><span class="text-light-gold">Précommandes</span></span>
+                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full inline-block" style="background:#d4af37"></span><span class="text-light-gold">Précommandes</span></span>
                                 <span class="text-gold font-semibold" id="pie-label-preorders">—</span>
                             </div>
                             <div class="flex items-center justify-between gap-2">
-                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-red-500 inline-block"></span><span class="text-light-gold">Dons</span></span>
+                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full inline-block" style="background:#EE7733"></span><span class="text-light-gold">Dons</span></span>
                                 <span class="text-gold font-semibold" id="pie-label-donors">—</span>
                             </div>
                             <div class="flex items-center justify-between gap-2">
-                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#a855f7] inline-block"></span><span class="text-light-gold">Tirages ponctuels</span></span>
-                                <span class="text-gold font-semibold" id="pie-label-singledraws">—</span>
-                            </div>
-                            <div class="flex items-center justify-between gap-2">
-                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#14b8a6] inline-block"></span><span class="text-light-gold">Guidances</span></span>
+                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full inline-block" style="background:#009988"></span><span class="text-light-gold">Guidances</span></span>
                                 <span class="text-gold font-semibold" id="pie-label-guidances">—</span>
                             </div>
                             <div class="flex items-center justify-between gap-2">
-                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full bg-[#3b82f6] inline-block"></span><span class="text-light-gold">Abonnements</span></span>
+                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full inline-block" style="background:#0077BB"></span><span class="text-light-gold">Abonnements</span></span>
                                 <span class="text-gold font-semibold" id="pie-label-subscriptions">—</span>
                             </div>
                         </div>
@@ -2450,29 +2445,26 @@
 
         // Dessine le donut SVG — technique stroke-dasharray sur cercle r=15.9 (circonf≈99.9)
         function updatePieChart(breakdown) {
-            const total = (breakdown.preorders || 0) + (breakdown.donors || 0) + (breakdown.singleDraws || 0) + (breakdown.guidances || 0) + (breakdown.subscriptions || 0);
+            const total = (breakdown.preorders || 0) + (breakdown.donors || 0) + (breakdown.guidances || 0) + (breakdown.subscriptions || 0);
             if (total <= 0) return;
 
             const fmtEur = v => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR', maximumFractionDigits:0 }).format(v);
-            updateElement('pie-center-total',          fmtEur(total));
-            updateElement('pie-label-preorders',       fmtEur(breakdown.preorders     || 0));
-            updateElement('pie-label-donors',          fmtEur(breakdown.donors        || 0));
-            updateElement('pie-label-singledraws',     fmtEur(breakdown.singleDraws   || 0));
-            updateElement('pie-label-guidances',       fmtEur(breakdown.guidances     || 0));
-            updateElement('pie-label-subscriptions',   fmtEur(breakdown.subscriptions || 0));
+            updateElement('pie-center-total',        fmtEur(total));
+            updateElement('pie-label-preorders',     fmtEur(breakdown.preorders     || 0));
+            updateElement('pie-label-donors',        fmtEur(breakdown.donors        || 0));
+            updateElement('pie-label-guidances',     fmtEur(breakdown.guidances     || 0));
+            updateElement('pie-label-subscriptions', fmtEur(breakdown.subscriptions || 0));
 
             // Circonf SVG ≈ 99.9 (2πr = 2π×15.9)
             const C = 99.9;
             const lenPre = (breakdown.preorders     || 0) / total * C;
             const lenDon = (breakdown.donors        || 0) / total * C;
-            const lenSd  = (breakdown.singleDraws   || 0) / total * C;
             const lenGui = (breakdown.guidances     || 0) / total * C;
             const lenSub = (breakdown.subscriptions || 0) / total * C;
 
             const offPre = 0;
             const offDon = offPre + lenPre;
-            const offSd  = offDon + lenDon;
-            const offGui = offSd  + lenSd;
+            const offGui = offDon + lenDon;
             const offSub = offGui + lenGui;
 
             const setArc = (id, len, offset) => {
@@ -2483,7 +2475,6 @@
             };
             setArc('pie-preorders',     lenPre, offPre);
             setArc('pie-donors',        lenDon, offDon);
-            setArc('pie-singledraws',   lenSd,  offSd);
             setArc('pie-guidances',     lenGui, offGui);
             setArc('pie-subscriptions', lenSub, offSub);
         }

@@ -1578,7 +1578,6 @@ async function handleData(req, res) {
           breakdown: {
             preorders:     preordersTotal,
             donors:        donorsTotal,
-            singleDraws:   singleDrawTotal,
             guidances:     guidancesTotal,
             subscriptions: subscriptionsTotal
           }
