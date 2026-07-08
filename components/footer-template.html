@@ -1,3 +1,54 @@
+<!-- Bandeau Newsletter -->
+<section class="py-14 px-6 bg-dark-blue border-t border-gold/20">
+    <div class="container mx-auto max-w-2xl text-center">
+        <p class="cormorant text-3xl md:text-4xl font-bold gold-gradient mb-3">Restez dans l'univers ORADIA</p>
+        <p class="text-light-gold/70 text-sm mb-8">Inspirations, actualités de La Boussole Intérieure et avant-premières — pas de spam, désinscription en un clic.</p>
+        <form id="footer-newsletter-form" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" onsubmit="footerNewsletterSubmit(event)">
+            <input type="email" id="footer-newsletter-email" placeholder="Votre adresse email" required
+                class="flex-1 bg-night-blue/80 border border-gold/30 rounded-lg px-4 py-3 text-light-gold placeholder-light-gold/40 focus:outline-none focus:border-gold/70 transition text-sm" />
+            <button type="submit" id="footer-newsletter-btn"
+                class="bg-gold text-night-blue font-semibold px-6 py-3 rounded-lg hover:bg-light-gold transition text-sm whitespace-nowrap">
+                S'inscrire
+            </button>
+        </form>
+        <p id="footer-newsletter-msg" class="mt-4 text-sm hidden"></p>
+    </div>
+</section>
+<script>
+async function footerNewsletterSubmit(e) {
+    e.preventDefault();
+    const email = document.getElementById('footer-newsletter-email').value.trim();
+    const btn = document.getElementById('footer-newsletter-btn');
+    const msg = document.getElementById('footer-newsletter-msg');
+    btn.disabled = true;
+    btn.textContent = '...';
+    try {
+        const res = await fetch('/api/waitlist', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, source: 'footer-newsletter' })
+        });
+        const data = await res.json();
+        if (res.ok && data.success) {
+            document.getElementById('footer-newsletter-form').style.display = 'none';
+            msg.textContent = '✓ Merci ! Vérifie ta boîte mail pour confirmer ton inscription.';
+            msg.className = 'mt-4 text-sm text-gold';
+        } else {
+            msg.textContent = data.message || 'Une erreur est survenue, réessaie.';
+            msg.className = 'mt-4 text-sm text-red-400';
+            btn.disabled = false;
+            btn.textContent = "S'inscrire";
+        }
+    } catch {
+        msg.textContent = 'Erreur réseau, réessaie.';
+        msg.className = 'mt-4 text-sm text-red-400';
+        btn.disabled = false;
+        btn.textContent = "S'inscrire";
+    }
+    msg.classList.remove('hidden');
+}
+</script>
+
 <!-- Footer Template -->
 <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
     <div class="container mx-auto max-w-6xl">

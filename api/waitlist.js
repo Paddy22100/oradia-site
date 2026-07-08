@@ -254,19 +254,26 @@ async function sendWaitlistConfirmationEmail(email) {
               </p>
 
               <p style="margin:0 0 28px 0;color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;">
-                Merci de rejoindre la communauté ORADIA. Tu seras informé(e) en priorité dès l'ouverture des tirages en ligne et des prochaines étapes de cette aventure.
+                Merci de rejoindre la communauté ORADIA. Tu recevras nos inspirations, actualités de l'Oracle et avant-premières directement dans ta boîte mail.
               </p>
 
               <p style="margin:0 0 28px 0;color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;">
-                En attendant, tu peux déjà découvrir l'univers de l'Oracle et précommander ton exemplaire physique pour faire partie de la première édition.
+                Tu peux dès maintenant faire un tirage en ligne avec La Boussole Intérieure, ou précommander ton exemplaire physique pour faire partie de la première édition.
               </p>
 
-              <!-- CTA Précommander -->
+              <!-- CTAs -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:32px 0;">
                 <tr>
+                  <td align="center" style="padding:0 0 12px 0;">
+                    <a href="https://oradia.fr/tore.html" style="display:inline-block;background:linear-gradient(135deg, #d4af37 0%, #f0c75e 100%);color:#0a1628;font-family:'Lora',Georgia,serif;font-size:15px;font-weight:600;text-decoration:none;padding:16px 32px;border-radius:4px;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(212,175,55,0.3);">
+                      Faire un tirage maintenant
+                    </a>
+                  </td>
+                </tr>
+                <tr>
                   <td align="center" style="padding:0;">
-                    <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg, #d4af37 0%, #f0c75e 100%);color:#0a1628;font-family:'Lora',Georgia,serif;font-size:15px;font-weight:600;text-decoration:none;padding:16px 32px;border-radius:4px;letter-spacing:0.5px;box-shadow:0 4px 12px rgba(212,175,55,0.3);">
-                      Découvrir les offres de précommande
+                    <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;color:#d4af37;font-family:'Lora',Georgia,serif;font-size:13px;text-decoration:none;border-bottom:1px solid rgba(212,175,55,0.4);padding-bottom:2px;letter-spacing:0.5px;">
+                      Précommander l'Oracle physique
                     </a>
                   </td>
                 </tr>
