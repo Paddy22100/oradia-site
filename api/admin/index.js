@@ -1436,14 +1436,15 @@ async function handleData(req, res) {
     }
 
     // ── Section overview / all : agrégats KPI ──
-    const [waitlistRes, preordersRes, donorsRes, singleDrawsRes, supportRes, syncRes, guidancesRes] = await Promise.all([
+    const [waitlistRes, preordersRes, donorsRes, singleDrawsRes, supportRes, syncRes, guidancesRes, subscriptionsRes] = await Promise.all([
       supabase.from('newsletter_contacts').select('*'),
       supabase.from('preorders').select('*'),
       supabase.from('donors').select('*'),
       supabase.from('tore_subscriptions').select('email, single_draw_credits, status').or('status.eq.single_draw,single_draw_credits.gt.0'),
       supabase.from('support_messages').select('id, type, status, created_at').order('created_at', { ascending: false }).limit(5),
       supabase.from('synchronicity_responses').select('score_synchronicites', { count: 'exact', head: false }),
-      supabase.from('guidances').select('id, amount, status, created_at').in('status', ['confirmed', 'completed'])
+      supabase.from('guidances').select('id, amount, status, created_at').in('status', ['confirmed', 'completed']),
+      supabase.from('tore_subscriptions').select('plan, status, is_free, created_at').neq('status', 'payment_failed').neq('status', 'single_draw').not('is_free', 'eq', true)
     ]);
 
     const waitlistRows    = waitlistRes.data    || [];
@@ -1459,6 +1460,12 @@ async function handleData(req, res) {
     // Calcul tirages ponctuels
     const singleDrawCount  = singleDrawRows.reduce((s, r) => s + (r.single_draw_credits || 0), 0);
     const singleDrawTotal  = singleDrawCount * 3.90;
+
+    // Calcul abonnements Tore (revenus totaux = chaque abonnement × son prix mensuel)
+    const subscriptionRows = subscriptionsRes.data || [];
+    const planPrice = p => p === 'decouverte' ? 5 : 8;
+    const subscriptionsTotal = subscriptionRows.reduce((s, r) => s + planPrice(r.plan), 0);
+    const subscriptionsActive = subscriptionRows.filter(r => r.status === 'active').length;
 
     // Calcul guidances
     const guidanceRows       = guidancesRes.data || [];
@@ -1490,7 +1497,7 @@ async function handleData(req, res) {
 
     const preordersTotal  = sumPreorders(paidPreorderRows);
     const donorsTotal     = sumDonors(donorRows);
-    const globalTotal     = preordersTotal + donorsTotal + singleDrawTotal + guidancesTotal;
+    const globalTotal     = preordersTotal + donorsTotal + singleDrawTotal + guidancesTotal + subscriptionsTotal;
     const totalContacts   = paidPreorderRows.length + donorRows.length + waitlistRows.length;
     const averageBasket   = paidPreorderRows.length > 0 ? preordersTotal / paidPreorderRows.length : 0;
 
@@ -1498,9 +1505,10 @@ async function handleData(req, res) {
     const stripeFee     = (total, count) => Math.max(0, total * 0.015 + 0.25 * count);
     const preordersNet  = preordersTotal  - stripeFee(preordersTotal,  paidPreorderRows.length);
     const donorsNet     = donorsTotal     - stripeFee(donorsTotal,     donorRows.length);
-    const singleDrawNet = singleDrawTotal - stripeFee(singleDrawTotal, singleDrawCount);
-    const guidancesNet  = guidancesTotal  - stripeFee(guidancesTotal,  guidanceRows.length);
-    const globalNet     = preordersNet + donorsNet + singleDrawNet + guidancesNet;
+    const singleDrawNet      = singleDrawTotal      - stripeFee(singleDrawTotal,      singleDrawCount);
+    const guidancesNet       = guidancesTotal       - stripeFee(guidancesTotal,       guidanceRows.length);
+    const subscriptionsNet   = subscriptionsTotal   - stripeFee(subscriptionsTotal,   subscriptionRows.length);
+    const globalNet          = preordersNet + donorsNet + singleDrawNet + guidancesNet + subscriptionsNet;
 
     const donorsToday = donorRows.filter(r => now - new Date(r.created_at).getTime() < day1);
     const revToday    = sumPreorders(preordersToday) + sumDonors(donorsToday)  + sumGuidances(guidancesToday);
@@ -1557,10 +1565,11 @@ async function handleData(req, res) {
           totalContacts,
           // Répartition pour camembert (#29)
           breakdown: {
-            preorders:   preordersTotal,
-            donors:      donorsTotal,
-            singleDraws: singleDrawTotal,
-            guidances:   guidancesTotal
+            preorders:     preordersTotal,
+            donors:        donorsTotal,
+            singleDraws:   singleDrawTotal,
+            guidances:     guidancesTotal,
+            subscriptions: subscriptionsTotal
           }
         },
         performance: {
