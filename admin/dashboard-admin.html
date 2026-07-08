@@ -1934,7 +1934,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
             document.getElementById('sidebar').classList.remove('open');
             if (name === 'newsletter')    nlLoadDrafts();
-            if (name === 'nl-subscribers') loadNlSubscribers(1);
+            if (name === 'nl-subscribers') { loadNlSubscribers(1); syncBrevoUnsubscribes(); }
             if (name === 'subscriptions') loadSubscriptions();
             if (name === 'support')        loadSupportMessages();
             if (name === 'synchronicity')  loadSynchronicity();
