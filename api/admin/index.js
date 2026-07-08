@@ -2953,7 +2953,7 @@ module.exports = async (req, res) => {
     if (path === '/analytics' || path === '/analytics/') {
       verifyAdminAuth(req);
       const range = urlParams.get('range') || '7d';
-      const days = range === '30d' ? 30 : range === '7d' ? 7 : 1;
+      const days = range === '365d' ? 365 : range === '30d' ? 30 : range === '7d' ? 7 : 1;
       const now = Date.now();
       const since = new Date(now - days * 86400000).toISOString();
       const prevSince = new Date(now - days * 2 * 86400000).toISOString();
@@ -2965,10 +2965,12 @@ module.exports = async (req, res) => {
         const pageCounts = {};
         v.forEach(r => { if (r.path) pageCounts[r.path] = (pageCounts[r.path] || 0) + 1; });
         const topPages = Object.entries(pageCounts).sort((a,b) => b[1]-a[1]).slice(0,10).map(([path,count]) => ({path,count}));
+        const SELF_REFERRERS = new Set(['oradia.fr', 'www.oradia.fr', 'oradia-site.vercel.app']);
         const referrerCounts = {};
         v.forEach(r => {
           let ref = 'Direct / inconnu';
           if (r.referrer) { try { ref = new URL(r.referrer).hostname.replace(/^www\./,''); } catch(_) { ref = 'Direct / inconnu'; } }
+          if (SELF_REFERRERS.has(ref)) return; // exclure les visites depuis le site lui-même
           referrerCounts[ref] = (referrerCounts[ref] || 0) + 1;
         });
         const topReferrers = Object.entries(referrerCounts).sort((a,b) => b[1]-a[1]).slice(0,8).map(([referrer,count]) => ({referrer,count}));

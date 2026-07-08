@@ -1628,8 +1628,9 @@
                 <div class="flex items-center gap-2">
                     <select id="analytics-range" onchange="loadAnalytics()" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
                         <option value="1d">Aujourd'hui</option>
-                        <option value="7d" selected>7 jours</option>
-                        <option value="30d">30 jours</option>
+                        <option value="7d" selected>7 derniers jours</option>
+                        <option value="30d">30 derniers jours</option>
+                        <option value="365d">1 an</option>
                     </select>
                     <button onclick="loadAnalytics()" class="bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-lg px-4 py-2 text-sm hover:bg-teal-500/30 transition">
                         <i class="fas fa-sync-alt mr-1"></i>Actualiser
@@ -1651,7 +1652,7 @@
                 </div>
                 <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-blue-300" id="ana-pages-per-visit">—</div><p class="text-gold/50 text-xs mt-1">Pages / visite</p></div>
                 <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-yellow-400" id="ana-bounce">—</div><p class="text-gold/50 text-xs mt-1">Taux de rebond</p></div>
-                <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-light-gold" id="ana-top-page">—</div><p class="text-gold/50 text-xs mt-1">Page n°1</p></div>
+                <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-light-gold" id="ana-top-page">—</div><p class="text-gold/50 text-xs mt-1">Page la + visitée</p></div>
             </div>
 
             <!-- Analyse IA -->
@@ -5658,11 +5659,13 @@
                 setEl('ana-pages-per-visit', t.pages_per_visit != null ? t.pages_per_visit.toFixed(1) : '—');
                 setEl('ana-top-page', (t.top_pages && t.top_pages[0]) ? t.top_pages[0].path : '—');
 
+                const rangeLabels = { '1d': 'hier', '7d': '7j préc.', '30d': 'mois préc.', '365d': 'an préc.' };
+                const rangeLabel = rangeLabels[range] || 'période préc.';
                 const trendHtml = (pct) => {
                     if (pct == null) return '<span class="text-gold/30">—</span>';
                     const cls = pct > 0 ? 'text-green-400' : pct < 0 ? 'text-red-400' : 'text-gold/40';
                     const icon = pct > 0 ? '▲' : pct < 0 ? '▼' : '–';
-                    return `<span class="${cls}">${icon} ${pct > 0 ? '+' : ''}${pct}% vs période préc.</span>`;
+                    return `<span class="${cls}">${icon} ${pct > 0 ? '+' : ''}${pct}% vs ${rangeLabel}</span>`;
                 };
                 const viewsTrendEl = document.getElementById('ana-views-trend');
                 if (viewsTrendEl) viewsTrendEl.innerHTML = trendHtml(t.views_change_pct);
