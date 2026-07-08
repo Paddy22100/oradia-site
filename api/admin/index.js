@@ -1402,6 +1402,8 @@ async function handleData(req, res) {
       if (tag) query = query.contains('tags', [tag]);
       if (newsletterFilter === 'newsletter') query = query.eq('brevo_synced', true).neq('status', 'unsubscribed');
       if (newsletterFilter === 'no-newsletter') query = query.or('brevo_synced.eq.false,status.eq.unsubscribed');
+      const nlStatus = (req.query?.nl_status || urlParams.get('nl_status') || '').trim();
+      if (nlStatus === 'unsubscribed') query = query.eq('status', 'unsubscribed');
       const { data, count, error } = await query;
       // Si la table n'existe pas (PGRST205), retourner une liste vide au lieu d'une 500
       if (error) {
@@ -2989,6 +2991,51 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
       });
       if (iErr) { console.error('[intentions_anonymes]', iErr); return res.status(500).json({ error: 'Erreur sauvegarde' }); }
       return res.status(200).json({ success: true });
+    }
+
+    // ── Webhook Brevo : synchronisation des désinscriptions newsletter ──
+    // Brevo appelle ce endpoint quand un contact se désinscrit d'une campagne email.
+    // URL à configurer dans Brevo > Paramètres > Webhooks : /api/admin/brevo-webhook?key=BREVO_WEBHOOK_SECRET
+    if (path === '/brevo-webhook' || path === '/brevo-webhook/') {
+      // Vérification du secret partagé (clé dans query param)
+      const webhookKey = urlParams.get('key') || req.query?.key;
+      const expectedKey = process.env.BREVO_WEBHOOK_SECRET;
+      if (expectedKey && webhookKey !== expectedKey) {
+        console.warn('[brevo-webhook] Clé invalide reçue');
+        return res.status(401).json({ error: 'Unauthorized' });
+      }
+
+      if (req.method !== 'POST') return res.status(405).end();
+
+      const body = await parseBody(req);
+      // Brevo envoie : { event: 'unsubscribed'|'hardBounced'|'softBounced'|..., email: '...' }
+      const event = body.event || '';
+      const email = (body.email || '').trim().toLowerCase();
+
+      if (!email) return res.status(400).json({ error: 'email manquant' });
+
+      const sb = createClient(
+        process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+
+      if (event === 'unsubscribed' || event === 'hardBounced') {
+        const updates = {
+          status: 'unsubscribed',
+          brevo_synced: false,
+          unsubscribed_at: new Date().toISOString()
+        };
+        const { error } = await sb.from('newsletter_contacts').update(updates).eq('email', email);
+        if (error) {
+          console.error('[brevo-webhook] update error:', error.message);
+          return res.status(500).json({ error: 'db error' });
+        }
+        console.log(`[brevo-webhook] ${event} pour ${email}`);
+        return res.status(200).json({ success: true, event, email });
+      }
+
+      // Événement non géré — on répond 200 pour que Brevo ne retry pas
+      return res.status(200).json({ success: true, ignored: event });
     }
 
     // Route par défaut - liste des routes disponibles

@@ -171,9 +171,14 @@
                 <span class="ml-auto text-xs bg-red-500/20 text-red-400 rounded-full px-2 py-0.5" id="nav-badge-donors"></span>
             </div>
             <div class="nav-item" onclick="showTab('waitlist')" id="nav-waitlist">
-                <i class="fas fa-users w-4 text-center"></i>
+                <i class="fas fa-address-book w-4 text-center"></i>
                 <span>Contacts</span>
                 <span class="ml-auto text-xs bg-blue-500/20 text-blue-400 rounded-full px-2 py-0.5" id="nav-badge-waitlist"></span>
+            </div>
+            <div class="nav-item" onclick="showTab('nl-subscribers')" id="nav-nl-subscribers">
+                <i class="fas fa-envelope-open-text w-4 text-center"></i>
+                <span>Newsletter</span>
+                <span class="ml-auto text-xs bg-emerald-500/20 text-emerald-400 rounded-full px-2 py-0.5" id="nav-badge-nl-subscribers"></span>
             </div>
 
             <div class="nav-item" onclick="showTab('subscriptions')" id="nav-subscriptions">
@@ -820,6 +825,60 @@
             </div>
         </section>
         </div><!-- /tab-waitlist -->
+
+        <!-- ══ ONGLET : NEWSLETTER ══ -->
+        <div id="tab-nl-subscribers" class="tab-panel">
+        <section class="mb-10">
+            <div class="flex items-center justify-between mb-8 gap-3 flex-wrap">
+                <div>
+                    <h3 class="cormorant text-2xl font-bold text-gold">Abonnés Newsletter</h3>
+                    <p class="text-light-gold/50 text-sm mt-1">Personnes inscrites à la newsletter ORADIA (synchronisées avec Brevo)</p>
+                </div>
+                <div class="flex items-center gap-3 flex-wrap">
+                    <!-- KPI chips -->
+                    <div class="flex gap-3">
+                        <div class="bg-emerald-500/10 border border-emerald-500/30 rounded-xl px-4 py-2 text-center min-w-[80px]">
+                            <div class="text-xl font-bold text-emerald-400" id="nl-active-count">-</div>
+                            <div class="text-xs text-emerald-300/70">Inscrits</div>
+                        </div>
+                        <div class="bg-red-500/10 border border-red-500/30 rounded-xl px-4 py-2 text-center min-w-[80px]">
+                            <div class="text-xl font-bold text-red-400" id="nl-unsub-count">-</div>
+                            <div class="text-xs text-red-300/70">Désabonnés</div>
+                        </div>
+                    </div>
+                    <!-- Filtre statut -->
+                    <select id="nlSubscribersFilter" onchange="loadNlSubscribers(1)"
+                        class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                        <option value="active">Inscrits actifs</option>
+                        <option value="unsubscribed">Désabonnés</option>
+                        <option value="all">Tous</option>
+                    </select>
+                    <input id="nlSubscribersSearch" type="text" placeholder="Rechercher…"
+                        oninput="filterNlSubscribersLocal()"
+                        class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-44">
+                </div>
+            </div>
+
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="nlSubscribersTable">
+                        <thead class="bg-[rgba(5,20,40,0.8)]">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Email</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Nom</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Inscrit le</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Désabonné le</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gold/20">
+                        </tbody>
+                    </table>
+                </div>
+                <div id="nlSubscribersPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)]"></div>
+            </div>
+        </section>
+        </div><!-- /tab-nl-subscribers -->
 
         <!-- ══ ONGLET : ABONNEMENTS ══ -->
         <div id="tab-subscriptions" class="tab-panel">
@@ -1844,8 +1903,9 @@
             overview:       'Tableau de bord',
             preorders:      'Précommandes',
             donors:         'Dons',
-            waitlist:       'Contacts',
-            newsletter:     'Communication',
+            waitlist:         'Contacts',
+            'nl-subscribers': 'Newsletter — Abonnés',
+            newsletter:       'Communication',
             journal:        'Journal admin',
             subscriptions:  'Abonnements Tore',
             support:         'Support · Témoignages · Suggestions',
@@ -1869,6 +1929,7 @@
             window.scrollTo({ top: 0, behavior: 'smooth' });
             document.getElementById('sidebar').classList.remove('open');
             if (name === 'newsletter')    nlLoadDrafts();
+            if (name === 'nl-subscribers') loadNlSubscribers(1);
             if (name === 'subscriptions') loadSubscriptions();
             if (name === 'support')        loadSupportMessages();
             if (name === 'synchronicity')  loadSynchronicity();
@@ -2178,6 +2239,93 @@
             } catch (error) {
                 console.error('[Admin] Error loading waitlist:', error);
             }
+        }
+
+        // ── Newsletter subscribers ──
+
+        async function loadNlSubscribers(page = 1, limit = 20) {
+            try {
+                const status = document.getElementById('nlSubscribersFilter')?.value || 'active';
+                let url = `/api/admin/data?section=waitlist&page=${page}&limit=${limit}`;
+                if (status === 'active')            url += '&newsletter=newsletter';
+                else if (status === 'unsubscribed') url += '&nl_status=unsubscribed';
+                // "all" = pas de filtre
+
+                // Charger la liste ET les compteurs KPI en parallèle (seulement page 1)
+                const promises = [adminFetch(url).then(r => r.json())];
+                if (page === 1) {
+                    promises.push(
+                        adminFetch('/api/admin/data?section=waitlist&page=1&limit=1&newsletter=newsletter').then(r => r.json()),
+                        adminFetch('/api/admin/data?section=waitlist&page=1&limit=1&nl_status=unsubscribed').then(r => r.json())
+                    );
+                }
+                const [data, activeData, unsubData] = await Promise.all(promises);
+
+                if (data.success) {
+                    currentData.nlSubscribers = data.data;
+                    currentData.nlSubscribersPagination = data.pagination;
+                    updateNlSubscribersTable(data.data, data.pagination);
+                }
+                if (activeData?.success) {
+                    const el = document.getElementById('nl-active-count');
+                    if (el) el.textContent = activeData.pagination?.total ?? '-';
+                    const badge = document.getElementById('nav-badge-nl-subscribers');
+                    if (badge) badge.textContent = activeData.pagination?.total || '';
+                }
+                if (unsubData?.success) {
+                    const el = document.getElementById('nl-unsub-count');
+                    if (el) el.textContent = unsubData.pagination?.total ?? '-';
+                }
+            } catch (e) {
+                console.error('[Admin] Error loading nl-subscribers:', e);
+            }
+        }
+
+        function updateNlSubscribersTable(rows, pagination) {
+            const tbody = document.querySelector('#nlSubscribersTable tbody');
+            if (!tbody) return;
+            if (!rows || rows.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gold/40 text-sm">Aucun abonné trouvé</td></tr>';
+                document.getElementById('nlSubscribersPagination').innerHTML = '';
+                return;
+            }
+            const fmt = iso => iso ? new Date(iso).toLocaleDateString('fr-FR', { day:'2-digit', month:'2-digit', year:'numeric', hour:'2-digit', minute:'2-digit' }) : '-';
+            tbody.innerHTML = rows.map(item => `
+                <tr class="hover:bg-[rgba(5,20,40,0.8)] transition">
+                    <td class="px-6 py-4 text-light-gold">${escapeHtmlFront(item.email || '-')}</td>
+                    <td class="px-6 py-4 text-light-gold">${escapeHtmlFront(item.full_name || '-')}</td>
+                    <td class="px-6 py-4 text-light-gold/70 text-sm">${fmt(item.subscribed_at || item.created_at)}</td>
+                    <td class="px-6 py-4 text-sm">${item.unsubscribed_at ? `<span class="text-red-400">${fmt(item.unsubscribed_at)}</span>` : '<span class="text-gold/30">-</span>'}</td>
+                    <td class="px-6 py-4">
+                        ${item.status === 'unsubscribed'
+                            ? '<span class="px-2 py-1 rounded text-xs bg-red-500/20 text-red-400">Désabonné</span>'
+                            : '<span class="px-2 py-1 rounded text-xs bg-emerald-500/20 text-emerald-400">Inscrit</span>'
+                        }
+                    </td>
+                </tr>
+            `).join('');
+            // Pagination
+            const pag = pagination || {};
+            const pagEl = document.getElementById('nlSubscribersPagination');
+            if (pagEl && pag.pages > 1) {
+                pagEl.innerHTML = `<div class="flex items-center justify-between">
+                    <span class="text-sm text-light-gold">${((pag.page-1)*pag.limit)+1} à ${Math.min(pag.page*pag.limit, pag.total)} sur ${pag.total}</span>
+                    <div class="flex gap-2">
+                        ${pag.page > 1 ? `<button onclick="loadNlSubscribers(${pag.page-1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Précédent</button>` : ''}
+                        ${pag.page < pag.pages ? `<button onclick="loadNlSubscribers(${pag.page+1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Suivant</button>` : ''}
+                    </div>
+                </div>`;
+            } else if (pagEl) {
+                pagEl.innerHTML = '';
+            }
+        }
+
+        function filterNlSubscribersLocal() {
+            const q = (document.getElementById('nlSubscribersSearch')?.value || '').toLowerCase().trim();
+            const source = currentData.nlSubscribers || [];
+            if (!q) { updateNlSubscribersTable(source, currentData.nlSubscribersPagination); return; }
+            const filtered = source.filter(c => (c.email||'').toLowerCase().includes(q) || (c.full_name||'').toLowerCase().includes(q));
+            updateNlSubscribersTable(filtered, { page:1, limit:filtered.length, total:filtered.length, pages:1 });
         }
 
         // Catégories de contacts connues (rafraîchies depuis l'API à chaque chargement)
