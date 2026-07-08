@@ -1,5 +1,8 @@
 (function () {
   try {
+    // Ne pas tracker les visites de l'admin (connecté via le dashboard)
+    if (sessionStorage.getItem('oradia_auth')) return;
+
     var KEY = 'oradia_session_id';
     var sessionId = sessionStorage.getItem(KEY);
     if (!sessionId) {

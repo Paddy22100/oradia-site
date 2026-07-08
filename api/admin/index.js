@@ -1389,9 +1389,10 @@ async function handleData(req, res) {
 
     // ── Section waitlist ──
     if (section === 'waitlist') {
-      const page   = parseInt(req.query?.page  || '1', 10);
-      const limit  = parseInt(req.query?.limit || '10', 10);
-      const tag    = (req.query?.tag || '').trim();
+      const page             = parseInt(req.query?.page  || '1', 10);
+      const limit            = parseInt(req.query?.limit || '10', 10);
+      const tag              = (req.query?.tag || '').trim();
+      const newsletterFilter = (req.query?.newsletter || '').trim();
       const offset = (page - 1) * limit;
       let query = supabase
         .from('newsletter_contacts')
@@ -1399,6 +1400,8 @@ async function handleData(req, res) {
         .order('created_at', { ascending: false })
         .range(offset, offset + limit - 1);
       if (tag) query = query.contains('tags', [tag]);
+      if (newsletterFilter === 'newsletter') query = query.eq('brevo_synced', true).neq('status', 'unsubscribed');
+      if (newsletterFilter === 'no-newsletter') query = query.or('brevo_synced.eq.false,status.eq.unsubscribed');
       const { data, count, error } = await query;
       // Si la table n'existe pas (PGRST205), retourner une liste vide au lieu d'une 500
       if (error) {
@@ -2906,8 +2909,8 @@ module.exports = async (req, res) => {
       };
 
       // ── Trafic réel (pages vues du site, via js/page-tracker.js) ──
-      const { data: views } = await sb.from('page_views').select('created_at,path,referrer,session_id').gte('created_at', since).order('created_at', { ascending: false }).limit(20000);
-      const { data: prevViews } = await sb.from('page_views').select('created_at,session_id').gte('created_at', prevSince).lt('created_at', since).limit(20000);
+      const { data: views } = await sb.from('page_views').select('created_at,path,referrer,session_id').gte('created_at', since).not('path', 'like', '/admin%').order('created_at', { ascending: false }).limit(20000);
+      const { data: prevViews } = await sb.from('page_views').select('created_at,session_id').gte('created_at', prevSince).lt('created_at', since).not('path', 'like', '/admin%').limit(20000);
       const traffic = computeTraffic(views);
       const prevTraffic = computeTraffic(prevViews);
       const pctChange = (curr, prev) => (prev > 0 ? Math.round(((curr - prev) / prev) * 100) : (curr > 0 ? 100 : 0));

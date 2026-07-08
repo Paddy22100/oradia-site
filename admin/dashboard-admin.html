@@ -771,6 +771,12 @@
                     <input id="waitlistSearch" type="text" placeholder="Rechercher email ou nom…"
                         oninput="filterWaitlistLocal()"
                         class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-48">
+                    <select id="waitlistNewsletterFilter" onchange="loadWaitlist(1)"
+                        class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                        <option value="">Tous les contacts</option>
+                        <option value="newsletter">Newsletter uniquement</option>
+                        <option value="no-newsletter">Hors newsletter</option>
+                    </select>
                     <select id="waitlistTagFilter" onchange="loadWaitlist(1)"
                         class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
                         <option value="">Toutes les catégories</option>
@@ -800,7 +806,7 @@
                                 <th class="px-6 py-4 text-left text-gold font-semibold">Nom</th>
                                 <th class="px-6 py-4 text-left text-gold font-semibold">Catégories</th>
                                 <th class="px-6 py-4 text-left text-gold font-semibold">Date</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Statut</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Newsletter</th>
                                 <th class="px-6 py-4 text-left text-gold font-semibold">Actions</th>
                             </tr>
                         </thead>
@@ -2151,7 +2157,8 @@
         async function loadWaitlist(page = 1, limit = 10) {
             try {
                 const tag = document.getElementById('waitlistTagFilter')?.value || '';
-                const url = `/api/admin/data?section=waitlist&page=${page}&limit=${limit}` + (tag ? `&tag=${encodeURIComponent(tag)}` : '');
+                const newsletterFilter = document.getElementById('waitlistNewsletterFilter')?.value || '';
+                const url = `/api/admin/data?section=waitlist&page=${page}&limit=${limit}` + (tag ? `&tag=${encodeURIComponent(tag)}` : '') + (newsletterFilter ? `&newsletter=${encodeURIComponent(newsletterFilter)}` : '');
                 const response = await adminFetch(url);
                 const data = await response.json();
 
@@ -2442,7 +2449,15 @@
                         </div>
                     </td>
                     <td class="px-6 py-4 text-light-gold">${item.created_at_fr || formatDate(item.created_at)}</td>
-                    <td class="px-6 py-4"><span class="px-2 py-1 rounded text-sm ${item.brevo_synced ? 'bg-green-500/20 text-green-400' : 'bg-yellow-500/20 text-yellow-400'}">${item.brevo_synced ? 'Sync' : 'Non sync'}</span></td>
+                    <td class="px-6 py-4">
+                        ${item.status === 'unsubscribed'
+                            ? '<span class="px-2 py-1 rounded text-xs bg-red-500/20 text-red-400">Désabonné</span>'
+                            : item.brevo_synced
+                                ? '<span class="px-2 py-1 rounded text-xs bg-green-500/20 text-green-400">Inscrit</span>'
+                                : '<span class="px-2 py-1 rounded text-xs bg-yellow-500/20 text-yellow-400">Hors newsletter</span>'
+                        }
+                        ${item.source ? `<span class="ml-1 px-1.5 py-0.5 rounded text-xs bg-gold/10 text-gold/50 border border-gold/20">${escapeHtmlFront(item.source.replace('precommande-oracle','précommande').replace('footer-newsletter','footer').replace('footer_newsletter','footer'))}</span>` : ''}
+                    </td>
                     <td class="px-6 py-4">
                         <div class="flex gap-2">
                             <button onclick='openContactModal(${JSON.stringify(item).replace(/'/g, "&#39;")})' class="text-gold/70 hover:text-gold transition" title="Modifier">
