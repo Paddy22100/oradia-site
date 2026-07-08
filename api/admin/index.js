@@ -1444,7 +1444,7 @@ async function handleData(req, res) {
       supabase.from('support_messages').select('id, type, status, created_at').order('created_at', { ascending: false }).limit(5),
       supabase.from('synchronicity_responses').select('score_synchronicites', { count: 'exact', head: false }),
       supabase.from('guidances').select('id, amount, status, created_at').in('status', ['confirmed', 'completed']),
-      supabase.from('tore_subscriptions').select('plan, status, is_free, created_at').neq('status', 'payment_failed').neq('status', 'single_draw').not('is_free', 'eq', true)
+      supabase.from('tore_subscriptions').select('plan, status, is_free, created_at').neq('status', 'payment_failed').neq('status', 'single_draw').or('is_free.is.null,is_free.eq.false')
     ]);
 
     const waitlistRows    = waitlistRes.data    || [];

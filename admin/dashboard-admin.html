@@ -3296,13 +3296,6 @@
                 });
             }
 
-            if ((data.waitlist.notSynced || 0) > 0) {
-                alerts.push({
-                    level: 'info',
-                    icon: 'fa-rotate',
-                    text: `${data.waitlist.notSynced} contact(s) non synchronisé(s) Brevo.`
-                });
-            }
 
             if (alerts.length === 0) {
                 container.innerHTML = `<div class="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-green-300 text-sm"><i class="fas fa-check-circle mr-2"></i>Aucune alerte critique actuellement.</div>`;
