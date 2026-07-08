@@ -272,79 +272,63 @@
         </p>
       </div>
       
-      <div class="relative mb-12">
-        <div class="overflow-hidden rounded-2xl bg-[rgba(5,20,40,0.6)] p-2">
-          <div class="flex gap-4 overflow-x-auto snap-x snap-mandatory pb-4" style="scrollbar-width: thin; scrollbar-color: #d4af37 #1a365d;">
-            <!-- Cartes représentatives -->
-            <div class="flex-shrink-0 w-48 snap-center">
-              <div class="bg-[rgba(212,175,55,0.05)] rounded-xl p-4 border border-gold/30 hover:border-gold/50 transition-all duration-300">
-                <img src="images/emotions/joie.png" alt="Joie" class="w-full h-64 object-cover rounded-lg mb-3" loading="lazy">
-                <h3 class="cormorant text-xl font-bold text-gold mb-1">Joie</h3>
-                <p class="text-light-gold/80 text-sm">Émotion</p>
-              </div>
+      <div class="relative mb-12 max-w-xs mx-auto">
+        <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-4 border border-gold/20">
+          <div class="relative aspect-[3/4] overflow-hidden rounded-xl" id="oracleCarouselWrapper">
+            <div class="oracle-card-slide absolute inset-0 flex flex-col items-center justify-center opacity-100 transition-opacity duration-700">
+              <img src="images/emotions/joie.png" alt="Joie" class="w-full h-full object-cover rounded-lg" loading="lazy">
+              <span class="absolute bottom-2 left-0 right-0 text-center text-xs text-gold/80 bg-night-blue/70 py-1">Joie · Émotion</span>
             </div>
-            
-            <div class="flex-shrink-0 w-48 snap-center">
-              <div class="bg-[rgba(212,175,55,0.05)] rounded-xl p-4 border border-gold/30 hover:border-gold/50 transition-all duration-300">
-                <img src="images/besoins/securite.png" alt="Sécurité" class="w-full h-64 object-cover rounded-lg mb-3" loading="lazy">
-                <h3 class="cormorant text-xl font-bold text-gold mb-1">Sécurité</h3>
-                <p class="text-light-gold/80 text-sm">Besoin</p>
-              </div>
+            <div class="oracle-card-slide absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-700">
+              <img src="images/besoins/securite.png" alt="Sécurité" class="w-full h-full object-cover rounded-lg" loading="lazy">
+              <span class="absolute bottom-2 left-0 right-0 text-center text-xs text-gold/80 bg-night-blue/70 py-1">Sécurité · Besoin</span>
             </div>
-            
-            <div class="flex-shrink-0 w-48 snap-center">
-              <div class="bg-[rgba(212,175,55,0.05)] rounded-xl p-4 border border-gold/30 hover:border-gold/50 transition-all duration-300">
-                <img src="images/transmutations/transformation.png" alt="Transformation" class="w-full h-64 object-cover rounded-lg mb-3" loading="lazy">
-                <h3 class="cormorant text-xl font-bold text-gold mb-1">Transformation</h3>
-                <p class="text-light-gold/80 text-sm">Transmutation</p>
-              </div>
+            <div class="oracle-card-slide absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-700">
+              <img src="images/transmutations/transformation.png" alt="Transformation" class="w-full h-full object-cover rounded-lg" loading="lazy">
+              <span class="absolute bottom-2 left-0 right-0 text-center text-xs text-gold/80 bg-night-blue/70 py-1">Transformation · Transmutation</span>
             </div>
-            
-            <div class="flex-shrink-0 w-48 snap-center">
-              <div class="bg-[rgba(212,175,55,0.05)] rounded-xl p-4 border border-gold/30 hover:border-gold/50 transition-all duration-300">
-                <img src="images/revelations/lumiere.png" alt="Lumière" class="w-full h-64 object-cover rounded-lg mb-3" loading="lazy">
-                <h3 class="cormorant text-xl font-bold text-gold mb-1">Lumière</h3>
-                <p class="text-light-gold/80 text-sm">Révélation</p>
-              </div>
+            <div class="oracle-card-slide absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-700">
+              <img src="images/revelations/lumiere.png" alt="Lumière" class="w-full h-full object-cover rounded-lg" loading="lazy">
+              <span class="absolute bottom-2 left-0 right-0 text-center text-xs text-gold/80 bg-night-blue/70 py-1">Lumière · Révélation</span>
             </div>
-            
-            <div class="flex-shrink-0 w-48 snap-center">
-              <div class="bg-[rgba(212,175,55,0.05)] rounded-xl p-4 border border-gold/30 hover:border-gold/50 transition-all duration-300">
-                <img src="images/archetypes/le_sage.png" alt="Le Sage" class="w-full h-64 object-cover rounded-lg mb-3" loading="lazy">
-                <h3 class="cormorant text-xl font-bold text-gold mb-1">Le Sage</h3>
-                <p class="text-light-gold/80 text-sm">Archétype</p>
-              </div>
+            <div class="oracle-card-slide absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-700">
+              <img src="images/archetypes/le_sage.png" alt="Le Sage" class="w-full h-full object-cover rounded-lg" loading="lazy">
+              <span class="absolute bottom-2 left-0 right-0 text-center text-xs text-gold/80 bg-night-blue/70 py-1">Le Sage · Archétype</span>
             </div>
-            
-            <div class="flex-shrink-0 w-48 snap-center">
-              <div class="bg-[rgba(212,175,55,0.05)] rounded-xl p-4 border border-gold/30 hover:border-gold/50 transition-all duration-300">
-                <img src="images/actions/choisir.png" alt="Choisir" class="w-full h-64 object-cover rounded-lg mb-3" loading="lazy">
-                <h3 class="cormorant text-xl font-bold text-gold mb-1">Choisir</h3>
-                <p class="text-light-gold/80 text-sm">Action</p>
-              </div>
+            <div class="oracle-card-slide absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-700">
+              <img src="images/actions/choisir.png" alt="Choisir" class="w-full h-full object-cover rounded-lg" loading="lazy">
+              <span class="absolute bottom-2 left-0 right-0 text-center text-xs text-gold/80 bg-night-blue/70 py-1">Choisir · Action</span>
             </div>
-            
-            <div class="flex-shrink-0 w-48 snap-center">
-              <div class="bg-[rgba(212,175,55,0.05)] rounded-xl p-4 border border-gold/30 hover:border-gold/50 transition-all duration-300">
-                <img src="images/memoire_cosmos/point_zero.png" alt="Point Zéro" class="w-full h-64 object-cover rounded-lg mb-3" loading="lazy">
-                <h3 class="cormorant text-xl font-bold text-gold mb-1">Point Zéro</h3>
-                <p class="text-light-gold/80 text-sm">Mémoire Cosmos</p>
-              </div>
+            <div class="oracle-card-slide absolute inset-0 flex flex-col items-center justify-center opacity-0 transition-opacity duration-700">
+              <img src="images/memoire_cosmos/point_zero.png" alt="Point Zéro" class="w-full h-full object-cover rounded-lg" loading="lazy">
+              <span class="absolute bottom-2 left-0 right-0 text-center text-xs text-gold/80 bg-night-blue/70 py-1">Point Zéro · Mémoire Cosmos</span>
             </div>
           </div>
-        </div>
-        
-        <!-- Indicateurs -->
-        <div class="flex justify-center mt-4 gap-2">
-          <div class="w-2 h-2 bg-gold rounded-full"></div>
-          <div class="w-2 h-2 bg-gold/50 rounded-full"></div>
-          <div class="w-2 h-2 bg-gold/50 rounded-full"></div>
-          <div class="w-2 h-2 bg-gold/50 rounded-full"></div>
-          <div class="w-2 h-2 bg-gold/50 rounded-full"></div>
-          <div class="w-2 h-2 bg-gold/50 rounded-full"></div>
-          <div class="w-2 h-2 bg-gold/50 rounded-full"></div>
+          <div class="flex justify-center mt-3 gap-2" id="oracleCarouselDots">
+            <div class="w-2 h-2 bg-gold rounded-full cursor-pointer transition-all duration-300" data-idx="0"></div>
+            <div class="w-2 h-2 bg-gold/40 rounded-full cursor-pointer transition-all duration-300" data-idx="1"></div>
+            <div class="w-2 h-2 bg-gold/40 rounded-full cursor-pointer transition-all duration-300" data-idx="2"></div>
+            <div class="w-2 h-2 bg-gold/40 rounded-full cursor-pointer transition-all duration-300" data-idx="3"></div>
+            <div class="w-2 h-2 bg-gold/40 rounded-full cursor-pointer transition-all duration-300" data-idx="4"></div>
+            <div class="w-2 h-2 bg-gold/40 rounded-full cursor-pointer transition-all duration-300" data-idx="5"></div>
+            <div class="w-2 h-2 bg-gold/40 rounded-full cursor-pointer transition-all duration-300" data-idx="6"></div>
+          </div>
         </div>
       </div>
+      <script>
+        (function() {
+          const slides = document.querySelectorAll('.oracle-card-slide');
+          const dots = document.querySelectorAll('#oracleCarouselDots [data-idx]');
+          let cur = 0;
+          function show(i) {
+            slides.forEach((s, j) => { s.style.opacity = j === i ? '1' : '0'; });
+            dots.forEach((d, j) => { d.style.opacity = j === i ? '1' : '0.4'; d.style.transform = j === i ? 'scale(1.3)' : 'scale(1)'; });
+            cur = i;
+          }
+          dots.forEach(d => d.addEventListener('click', () => show(+d.dataset.idx)));
+          setInterval(() => show((cur + 1) % slides.length), 3500);
+        })();
+      </script>
     </div>
   </section>
 
@@ -621,7 +605,7 @@
         Oracle Oradia : un oracle de clarté pour les périodes de transition
       </h2>
 
-      <div class="space-y-5 text-light-gold/90 leading-relaxed text-base sm:text-lg">
+      <div class="space-y-5 text-light-gold/90 leading-relaxed text-base sm:text-lg text-justify">
         <p>
           L'Oracle Oradia est un oracle de 64 cartes conçu pour aider celles et ceux qui traversent un moment de doute, de questionnement ou de transformation. Contrairement à une approche de prédiction, Oracle Oradia propose une lecture de votre présent : ce que vous ressentez, ce qui vous manque, ce qui cherche à évoluer et les directions possibles à explorer. Cette approche en fait un outil concret de développement personnel, utilisable seul, en séance ou dans une pratique d'accompagnement.
         </p>
