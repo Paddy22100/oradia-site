@@ -2637,18 +2637,17 @@ async function handleSyncBrevoUnsubscribes(req, res) {
         if (!r.ok) continue; // contact introuvable dans Brevo = on ne touche pas
 
         const brevoContact = await r.json();
-        // emailBlacklisted = true si l'utilisateur s'est globalement désabonné
-        // listUnsubscribed contient les listes dont il s'est désabonné
+        // On ne se fie QU'à listUnsubscribed pour la liste 5 :
+        // un contact peut être emailBlacklisted pour des raisons techniques (bounce)
+        // sans avoir volontairement cliqué sur "se désabonner".
         const listId = parseInt(process.env.BREVO_WAITLIST_LIST_ID || '5', 10);
-        const isUnsubscribed = brevoContact.emailBlacklisted === true
-          || (Array.isArray(brevoContact.listUnsubscribed) && brevoContact.listUnsubscribed.includes(listId));
+        const unsubLists = Array.isArray(brevoContact.listUnsubscribed) ? brevoContact.listUnsubscribed : [];
+        const isUnsubscribed = unsubLists.some(id => String(id) === String(listId));
 
         if (isUnsubscribed) {
-          await supabase.from('newsletter_contacts').update({
-            status: 'unsubscribed',
-            brevo_synced: false,
-            unsubscribed_at: now
-          }).eq('id', contact.id);
+          const updatePayload = { status: 'unsubscribed', brevo_synced: false };
+          try { updatePayload.unsubscribed_at = now; } catch (_) {}
+          await supabase.from('newsletter_contacts').update(updatePayload).eq('id', contact.id);
           unsubscribedCount++;
         }
       } catch (e) {
