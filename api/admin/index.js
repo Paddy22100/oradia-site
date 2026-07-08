@@ -1402,7 +1402,7 @@ async function handleData(req, res) {
       if (tag) query = query.contains('tags', [tag]);
       if (newsletterFilter === 'newsletter') query = query.eq('brevo_synced', true).neq('status', 'unsubscribed');
       if (newsletterFilter === 'no-newsletter') query = query.or('brevo_synced.eq.false,status.eq.unsubscribed');
-      const nlStatus = (req.query?.nl_status || urlParams.get('nl_status') || '').trim();
+      const nlStatus = (req.query?.nl_status || new URLSearchParams(req.url?.split('?')[1] || '').get('nl_status') || '').trim();
       if (nlStatus === 'unsubscribed') query = query.eq('status', 'unsubscribed');
       const { data, count, error } = await query;
       // Si la table n'existe pas (PGRST205), retourner une liste vide au lieu d'une 500
