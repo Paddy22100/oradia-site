@@ -1518,11 +1518,22 @@ async function handleData(req, res) {
     const netRev7d    = rev7d    - stripeFee(rev7d,    preorders7d.length   + donors7d.length   + guidances7d.length);
     const netRev30d   = rev30d   - stripeFee(rev30d,   preorders30d.length  + donors30d.length  + guidances30d.length);
 
+    // Nombre d'oracles commandés (somme des quantités dans items[], pas juste le nb de commandes)
+    const countOracles = (rows) => rows.reduce((sum, r) => {
+      if (Array.isArray(r.items) && r.items.length > 0) {
+        const qty = r.items.reduce((s, item) => { const q = Number(item?.quantity); return s + (Number.isFinite(q) && q > 0 ? q : 0); }, 0);
+        return sum + (qty > 0 ? qty : 1);
+      }
+      return sum + 1;
+    }, 0);
+    const oraclesCount = countOracles(paidPreorderRows);
+
     return res.status(200).json({
       success: true,
       data: {
         preorders: {
           count:        paidPreorderRows.length,
+          oraclesCount,
           total:        preordersTotal,
           net:          preordersNet,
           noEmail:      paidPreorderRows.filter(r => !r.email).length,

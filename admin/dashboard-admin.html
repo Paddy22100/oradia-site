@@ -2381,7 +2381,7 @@
 
         // Mettre à jour les KPI
         function updateKPIs(data) {
-            updateElement('preordersCount', data.preorders.count);
+            updateElement('preordersCount', data.preorders.oraclesCount ?? data.preorders.count);
             const abandoned = data.preorders.abandoned || 0;
             const abEl = document.getElementById('preordersAbandoned');
             if (abEl && abandoned > 0) { abEl.textContent = abandoned + ' panier' + (abandoned > 1 ? 's' : '') + ' abandonné' + (abandoned > 1 ? 's' : ''); abEl.style.display = ''; }
