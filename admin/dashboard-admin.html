@@ -463,7 +463,8 @@
                         <div class="text-xs text-light-gold/50 uppercase tracking-wider">+12%</div>
                     </div>
                     <div class="text-3xl font-bold text-gold mb-1" id="preordersCount">-</div>
-                    <p class="text-light-gold text-sm">Précommandes</p>
+                    <p class="text-light-gold text-sm">Oracles commandés</p>
+                    <p class="text-xs text-orange-300/70 mt-1" id="preordersAbandoned" style="display:none"></p>
                     <div class="mt-2 h-1 bg-gold/20 rounded-full overflow-hidden">
                         <div class="h-full bg-gold/60 rounded-full transition-all duration-1000" style="width: 0%" id="preordersProgress"></div>
                     </div>
@@ -2189,6 +2190,9 @@
         // Mettre à jour les KPI
         function updateKPIs(data) {
             updateElement('preordersCount', data.preorders.count);
+            const abandoned = data.preorders.abandoned || 0;
+            const abEl = document.getElementById('preordersAbandoned');
+            if (abEl && abandoned > 0) { abEl.textContent = abandoned + ' panier' + (abandoned > 1 ? 's' : '') + ' abandonné' + (abandoned > 1 ? 's' : ''); abEl.style.display = ''; }
             updateElement('preordersTotal', formatCurrency(data.preorders.total));
             updateElement('donorsCount', data.donors.count);
             updateElement('donorsTotal', formatCurrency(data.donors.total));

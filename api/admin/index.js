@@ -1470,24 +1470,28 @@ async function handleData(req, res) {
     const sumPreorders = (rows) => rows.reduce((s, r) => s + (parseFloat(r.amount_total) || parseFloat(r.amount) || 0), 0);
     const sumDonors    = (rows) => rows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
 
-    const preordersToday = preorderRows.filter(r => now - new Date(r.created_at).getTime() < day1);
-    const preorders7d    = preorderRows.filter(r => now - new Date(r.created_at).getTime() < day7);
-    const preorders30d   = preorderRows.filter(r => now - new Date(r.created_at).getTime() < day30);
+    // Séparer commandes payées et abandons (en attente / échouées)
+    const paidPreorderRows      = preorderRows.filter(r => r.paid_status === 'completed');
+    const abandonedPreorderRows = preorderRows.filter(r => r.paid_status !== 'completed' && r.email);
+
+    const preordersToday = paidPreorderRows.filter(r => now - new Date(r.created_at).getTime() < day1);
+    const preorders7d    = paidPreorderRows.filter(r => now - new Date(r.created_at).getTime() < day7);
+    const preorders30d   = paidPreorderRows.filter(r => now - new Date(r.created_at).getTime() < day30);
     const donors7d       = donorRows.filter(r => now - new Date(r.created_at).getTime() < day7);
     const donors30d      = donorRows.filter(r => now - new Date(r.created_at).getTime() < day30);
     const guidancesToday = guidanceRows.filter(r => now - new Date(r.created_at).getTime() < day1);
     const guidances7d    = guidanceRows.filter(r => now - new Date(r.created_at).getTime() < day7);
     const guidances30d   = guidanceRows.filter(r => now - new Date(r.created_at).getTime() < day30);
 
-    const preordersTotal  = sumPreorders(preorderRows);
+    const preordersTotal  = sumPreorders(paidPreorderRows);
     const donorsTotal     = sumDonors(donorRows);
     const globalTotal     = preordersTotal + donorsTotal + singleDrawTotal + guidancesTotal;
-    const totalContacts   = preorderRows.length + donorRows.length + waitlistRows.length;
-    const averageBasket   = preorderRows.length > 0 ? preordersTotal / preorderRows.length : 0;
+    const totalContacts   = paidPreorderRows.length + donorRows.length + waitlistRows.length;
+    const averageBasket   = paidPreorderRows.length > 0 ? preordersTotal / paidPreorderRows.length : 0;
 
     // Frais Stripe estimés : 1,5% + 0,25€/transaction (cartes européennes)
     const stripeFee     = (total, count) => Math.max(0, total * 0.015 + 0.25 * count);
-    const preordersNet  = preordersTotal  - stripeFee(preordersTotal,  preorderRows.length);
+    const preordersNet  = preordersTotal  - stripeFee(preordersTotal,  paidPreorderRows.length);
     const donorsNet     = donorsTotal     - stripeFee(donorsTotal,     donorRows.length);
     const singleDrawNet = singleDrawTotal - stripeFee(singleDrawTotal, singleDrawCount);
     const guidancesNet  = guidancesTotal  - stripeFee(guidancesTotal,  guidanceRows.length);
@@ -1505,11 +1509,12 @@ async function handleData(req, res) {
       success: true,
       data: {
         preorders: {
-          count:        preorderRows.length,
+          count:        paidPreorderRows.length,
           total:        preordersTotal,
           net:          preordersNet,
-          noEmail:      preorderRows.filter(r => !r.email).length,
-          averageBasket
+          noEmail:      paidPreorderRows.filter(r => !r.email).length,
+          averageBasket,
+          abandoned:    abandonedPreorderRows.length
         },
         donors: {
           count:   donorRows.length,
