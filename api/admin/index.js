@@ -607,6 +607,15 @@ async function handleData(req, res) {
         return res.status(200).json({ success: true, template: templateLabel, email: contact.email });
       }
 
+      if (action === 'set-expiry' && subscriptionId) {
+        const { error } = await supabase
+          .from('tore_subscriptions')
+          .update({ expires_at: body.expiresAt || null, updated_at: new Date().toISOString() })
+          .eq('id', subscriptionId);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
       if (action === 'upgrade_plan' && subscriptionId) {
         const newPlan = body.plan || 'complet';
         const { error } = await supabase
