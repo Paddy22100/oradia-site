@@ -2876,7 +2876,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
   <div class="relative z-10 container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8" style="height:100%;display:flex;flex-direction:column;">
 
     <!-- FORMULAIRE D'INTENTION -->
-    <form id="tore-form" class="flex flex-col items-center justify-start" style="flex:1;min-height:100vh;min-height:100dvh;padding:clamp(16px,3vh,40px) 0 clamp(20px,5vh,60px);overflow:hidden;overflow-anchor:none;gap:clamp(24px,4vh,48px);">
+    <form id="tore-form" class="flex flex-col items-center justify-start" style="flex:1;min-height:100vh;min-height:100dvh;padding:clamp(12px,2vh,32px) 0 clamp(12px,3vh,40px);overflow:hidden;overflow-anchor:none;gap:clamp(14px,2.5vh,32px);">
 
       <!-- Titre principal unique -->
       <div class="text-center" style="margin-bottom:0;width:100%;max-width:42rem;">
@@ -2918,7 +2918,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
                            focus:outline-none transition-all duration-300
                            placeholder:text-light-gold/30 placeholder:italic
                            resize-none"
-                    style="background: rgba(10,25,47,0.7); border: 1px solid rgba(212,175,55,0.35); backdrop-filter: blur(12px); min-height: clamp(80px,15vh,160px); padding: clamp(10px,1.5vh,24px); font-size: clamp(13px,1.4vw,17px);"
+                    style="background: rgba(10,25,47,0.7); border: 1px solid rgba(212,175,55,0.35); backdrop-filter: blur(12px); min-height: clamp(64px,10vh,120px); padding: clamp(8px,1.2vh,18px); font-size: clamp(13px,1.4vw,17px);"
                     placeholder="Comment puis-je avancer sur mon chemin ? Quelle est la prochaine étape pour moi ?"
                     required></textarea>
           <div class="absolute bottom-3 right-4 text-gold/40 text-xs">
@@ -2926,24 +2926,19 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
           </div>
         </div>
 
-        <!-- Genre (facultatif) -->
-        <div style="margin-top:16px;">
-          <p class="text-light-gold/50 text-xs text-center italic" style="margin-bottom:8px;">Pour adapter la synthèse (facultatif)</p>
+        <!-- Genre (obligatoire) -->
+        <div style="margin:0;text-align:center;">
+          <p class="text-light-gold/40 text-center italic" style="font-size:clamp(10px,1.1vw,12px);margin-bottom:clamp(4px,0.8vh,8px);">Vous&#8239;êtes&nbsp;:</p>
           <div class="flex justify-center gap-3" id="tore-gender-buttons">
             <button type="button" data-gender="homme" onclick="selectGender(this)"
-              class="tore-gender-btn px-4 py-2 rounded-full text-sm border transition-all duration-200"
-              style="border-color:rgba(212,175,55,0.3);color:rgba(212,175,55,0.6);background:transparent;">
+              class="tore-gender-btn rounded-full border transition-all duration-200"
+              style="padding:clamp(4px,0.8vh,7px) clamp(12px,2.5vw,22px);font-size:clamp(11px,1.2vw,13px);border-color:rgba(212,175,55,0.3);color:rgba(212,175,55,0.6);background:transparent;">
               Homme
             </button>
             <button type="button" data-gender="femme" onclick="selectGender(this)"
-              class="tore-gender-btn px-4 py-2 rounded-full text-sm border transition-all duration-200"
-              style="border-color:rgba(212,175,55,0.3);color:rgba(212,175,55,0.6);background:transparent;">
+              class="tore-gender-btn rounded-full border transition-all duration-200"
+              style="padding:clamp(4px,0.8vh,7px) clamp(12px,2.5vw,22px);font-size:clamp(11px,1.2vw,13px);border-color:rgba(212,175,55,0.3);color:rgba(212,175,55,0.6);background:transparent;">
               Femme
-            </button>
-            <button type="button" data-gender="neutre" onclick="selectGender(this)"
-              class="tore-gender-btn px-4 py-2 rounded-full text-sm border transition-all duration-200"
-              style="border-color:rgba(212,175,55,0.3);color:rgba(212,175,55,0.6);background:transparent;">
-              Ne pas préciser
             </button>
           </div>
         </div>
@@ -5196,6 +5191,7 @@ function closeToreExitModal(){
     btn.style.borderColor = 'rgba(212,175,55,0.8)';
     btn.style.color = '#f0c75e';
     btn.style.background = 'rgba(212,175,55,0.12)';
+    if (typeof updateSubmitBtn === 'function') updateSubmitBtn();
   }
   window.selectGender = selectGender;
 
@@ -6446,43 +6442,26 @@ function showArrowForStep(stepIndex, isMatch) {
     return s.split(/\s+/).length >= 3;
   }
 
-  // Vérifier la question à chaque saisie
-  // Utiliser une vérification plus robuste
-  function setupIntentionValidation() {
+  function isGenderSelected() {
+    return !!document.querySelector('.tore-gender-btn.selected');
+  }
+
+  function updateSubmitBtn() {
     const input = el('tore-intention-input');
     const btn = el('tore-submit-btn');
-    
-    if (input && btn) {
-      // Initialiser l'état du bouton
-      btn.disabled = !isOpenQuestion(input.value);
-      
-      // Ajouter l'écouteur d'événement
-      input.addEventListener('input', () => {
-        const isValid = isOpenQuestion(input.value);
-        btn.disabled = !isValid;
-        
-        if (isValid) {
-          input.setCustomValidity('');
-        }
-      });
-      
-      // iOS Safari : listener keyup pour meilleure réactivité
-      input.addEventListener('keyup', () => {
-        const isValid = isOpenQuestion(input.value);
-        btn.disabled = !isValid;
-        if (isValid) input.setCustomValidity('');
-      });
-      
-      // Listener paste (collage depuis presse-papier)
-      input.addEventListener('paste', () => {
-        setTimeout(() => {
-          const isValid = isOpenQuestion(input.value);
-          btn.disabled = !isValid;
-          if (isValid) input.setCustomValidity('');
-        }, 0);
-      });
-      
-    }
+    if (!input || !btn) return;
+    const valid = isOpenQuestion(input.value) && isGenderSelected();
+    btn.disabled = !valid;
+    if (isOpenQuestion(input.value)) input.setCustomValidity('');
+  }
+
+  function setupIntentionValidation() {
+    const input = el('tore-intention-input');
+    if (!input) return;
+    updateSubmitBtn();
+    input.addEventListener('input', updateSubmitBtn);
+    input.addEventListener('keyup', updateSubmitBtn);
+    input.addEventListener('paste', () => setTimeout(updateSubmitBtn, 0));
   }
   
   // Exécuter la configuration
@@ -6672,7 +6651,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   // Sauvegarder l'intention et le genre dans sessionStorage
   sessionStorage.setItem('tore_intention', intentionValue);
   const selectedGenderBtn = document.querySelector('.tore-gender-btn.selected');
-  sessionStorage.setItem('tore_gender', selectedGenderBtn ? selectedGenderBtn.dataset.gender : 'neutre');
+  sessionStorage.setItem('tore_gender', selectedGenderBtn?.dataset.gender || 'neutre');
 
   form.classList.add('hidden');
   buildBoardTore();
