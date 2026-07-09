@@ -484,7 +484,7 @@
                 if (data.subscribed) {
                     // Abonnement actif — si arrivé via lien email de relance, rediriger vers le dashboard
                     if (new URLSearchParams(window.location.search).get('fromEmail') === '1') {
-                        window.location.href = 'dashboard.html'; return;
+                        window.location.href = '../index.html'; return;
                     }
                     if (statusEl) statusEl.textContent = 'Abonnement Tore actif';
                     if (planLabel) planLabel.innerHTML = 'Formule <span class="text-gold font-medium">Tore Premium</span>';
