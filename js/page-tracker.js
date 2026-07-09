@@ -1,7 +1,8 @@
 (function () {
   try {
-    // Ne pas tracker les visites de l'admin (connecté via le dashboard)
+    // Ne pas tracker les visites de l'admin (session en cours ou appareil admin connu)
     if (sessionStorage.getItem('oradia_auth')) return;
+    if (localStorage.getItem('oradia_admin_device')) return;
 
     var KEY = 'oradia_session_id';
     var sessionId = sessionStorage.getItem(KEY);

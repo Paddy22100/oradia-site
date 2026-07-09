@@ -423,6 +423,17 @@
         </div>
     </div>
 
+    <!-- Modal : Détail d'une précommande -->
+    <div id="preorderDetailModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 backdrop-blur-sm" onclick="if(event.target===this)closePreorderDetail()">
+        <div class="bg-[#0a1628] border border-gold/30 rounded-xl p-6 w-full max-w-2xl mx-4 shadow-2xl max-h-[90vh] overflow-y-auto">
+            <div class="flex items-center justify-between mb-5">
+                <h3 class="text-gold font-bold text-xl" style="font-family:'Cormorant Garamond',serif;">Détail de la commande</h3>
+                <button onclick="closePreorderDetail()" class="text-light-gold/50 hover:text-light-gold transition"><i class="fas fa-times text-lg"></i></button>
+            </div>
+            <div id="preorderDetailContent"></div>
+        </div>
+    </div>
+
     <!-- Topbar -->
     <div class="topbar">
         <div class="flex items-center gap-3">
@@ -629,9 +640,9 @@
                             <svg id="revenuePie" viewBox="0 0 36 36" style="transform:rotate(-90deg);width:120px;height:120px;">
                                 <circle cx="18" cy="18" r="15.9" fill="none" stroke="rgba(212,175,55,0.08)" stroke-width="3.8"/>
                                 <circle id="pie-preorders"     cx="18" cy="18" r="15.9" fill="none" stroke="#d4af37"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
-                                <circle id="pie-donors"        cx="18" cy="18" r="15.9" fill="none" stroke="#EE7733"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
-                                <circle id="pie-guidances"     cx="18" cy="18" r="15.9" fill="none" stroke="#009988"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
-                                <circle id="pie-subscriptions" cx="18" cy="18" r="15.9" fill="none" stroke="#0077BB"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
+                                <circle id="pie-donors"        cx="18" cy="18" r="15.9" fill="none" stroke="#CC6677"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
+                                <circle id="pie-guidances"     cx="18" cy="18" r="15.9" fill="none" stroke="#44AA99"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
+                                <circle id="pie-subscriptions" cx="18" cy="18" r="15.9" fill="none" stroke="#4477AA"   stroke-width="3.8" stroke-dasharray="0 100" stroke-linecap="round"/>
                             </svg>
                             <div class="absolute inset-0 flex flex-col items-center justify-center">
                                 <span class="text-gold font-bold text-sm" id="pie-center-total">—</span>
@@ -645,15 +656,15 @@
                                 <span class="text-gold font-semibold" id="pie-label-preorders">—</span>
                             </div>
                             <div class="flex items-center justify-between gap-2">
-                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full inline-block" style="background:#EE7733"></span><span class="text-light-gold">Dons</span></span>
+                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full inline-block" style="background:#CC6677"></span><span class="text-light-gold">Dons</span></span>
                                 <span class="text-gold font-semibold" id="pie-label-donors">—</span>
                             </div>
                             <div class="flex items-center justify-between gap-2">
-                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full inline-block" style="background:#009988"></span><span class="text-light-gold">Guidances</span></span>
+                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full inline-block" style="background:#44AA99"></span><span class="text-light-gold">Guidances</span></span>
                                 <span class="text-gold font-semibold" id="pie-label-guidances">—</span>
                             </div>
                             <div class="flex items-center justify-between gap-2">
-                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full inline-block" style="background:#0077BB"></span><span class="text-light-gold">Abonnements</span></span>
+                                <span class="flex items-center gap-2"><span class="w-3 h-3 rounded-full inline-block" style="background:#4477AA"></span><span class="text-light-gold">Abonnements</span></span>
                                 <span class="text-gold font-semibold" id="pie-label-subscriptions">—</span>
                             </div>
                         </div>
@@ -2159,6 +2170,7 @@
                     token: existing.token || null,
                     email: existing.email || null
                 }));
+                localStorage.setItem('oradia_admin_device', '1'); // exclure cet appareil des stats analytics
 
                 // Auth OK → rendre la page visible UNIQUEMENT après validation API
                 // setProperty avec 'important' pour surpasser la règle html{visibility:hidden!important}
@@ -2580,6 +2592,15 @@
                             ${getShippingActionButtons(preorder)}
                             ${getReadyButton(preorder)}
                             ${getProcessedButton(preorder)}
+                            <button onclick="openPreorderDetail(${JSON.stringify(preorder).replace(/"/g,'&quot;')})"
+                                class="px-3 py-1 bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg text-xs hover:bg-blue-500/30 transition">
+                                <i class="fas fa-eye mr-1"></i>Détail
+                            </button>
+                            ${preorder.paid_status !== 'completed' && preorder.email ? `
+                            <button onclick="sendAbandonRelance('${preorder.id}','${preorder.email}','${(preorder.full_name||'').replace(/'/g,"\\'")}','${preorder.offer||''}')"
+                                class="px-3 py-1 bg-orange-500/20 text-orange-300 border border-orange-500/40 rounded-lg text-xs hover:bg-orange-500/30 transition">
+                                <i class="fas fa-paper-plane mr-1"></i>Relancer
+                            </button>` : ''}
                         </div>
                     </td>
                 </tr>
@@ -3245,6 +3266,7 @@
             // Nettoyer complètement
             sessionStorage.clear();
             localStorage.removeItem('admin_email');
+            localStorage.removeItem('oradia_admin_device');
             window.location.href = 'login.html';
         }
 
@@ -5865,6 +5887,81 @@
         }
 
         function setEl(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
+
+        // ── Détail précommande ──
+        function openPreorderDetail(preorder) {
+            const fmt = v => v || '<span class="text-light-gold/30">—</span>';
+            const statusClass = preorder.paid_status === 'completed' ? 'text-green-400' : preorder.paid_status === 'pending' ? 'text-yellow-400' : 'text-red-400';
+            const items = Array.isArray(preorder.items) ? preorder.items : [];
+            const itemsHtml = items.length ? items.map(it => `
+                <div class="flex justify-between text-sm py-1 border-b border-gold/10">
+                    <span class="text-light-gold/80">${it.name || it.id || '?'}</span>
+                    <span class="text-gold font-semibold">× ${it.quantity || 1}</span>
+                </div>`).join('') : '<p class="text-light-gold/40 text-sm">Aucun article</p>';
+
+            document.getElementById('preorderDetailContent').innerHTML = `
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-5">
+                    <div class="space-y-2">
+                        <p class="text-xs text-light-gold/40 uppercase tracking-widest mb-1">Client</p>
+                        <p class="text-light-gold font-medium">${fmt(preorder.full_name)}</p>
+                        <p class="text-light-gold/70">${fmt(preorder.email)}</p>
+                        <p class="text-light-gold/70">${fmt(preorder.phone)}</p>
+                    </div>
+                    <div class="space-y-2">
+                        <p class="text-xs text-light-gold/40 uppercase tracking-widest mb-1">Commande</p>
+                        <p class="text-light-gold/70">Offre : <span class="text-light-gold">${fmt(preorder.offer)}</span></p>
+                        <p class="text-light-gold/70">Statut : <span class="${statusClass} font-semibold">${fmt(preorder.paid_status)}</span></p>
+                        <p class="text-light-gold/70">Montant : <span class="text-gold font-semibold">${preorder.amount_total != null ? formatCurrency(preorder.amount_total) : '—'}</span></p>
+                        <p class="text-light-gold/70 text-xs">Stripe ID : ${fmt(preorder.stripe_session_id)}</p>
+                    </div>
+                </div>
+                <div class="mb-5">
+                    <p class="text-xs text-light-gold/40 uppercase tracking-widest mb-2">Articles</p>
+                    ${itemsHtml}
+                </div>
+                <div class="mb-5 space-y-1">
+                    <p class="text-xs text-light-gold/40 uppercase tracking-widest mb-2">Livraison</p>
+                    <p class="text-light-gold/70 text-sm">Méthode : <span class="text-light-gold">${fmt(preorder.shipping_method)}</span></p>
+                    ${preorder.relay_name ? `<p class="text-light-gold/70 text-sm">Relais : ${preorder.relay_name} — ${preorder.relay_id || ''}</p>` : ''}
+                    ${preorder.shipping_address ? `<p class="text-light-gold/70 text-sm">${preorder.shipping_address}${preorder.address_complement ? ', ' + preorder.address_complement : ''}</p>` : ''}
+                    ${preorder.postal_code ? `<p class="text-light-gold/70 text-sm">${preorder.postal_code} ${preorder.city || ''}</p>` : ''}
+                    ${preorder.tracking_number ? `<p class="text-light-gold/70 text-sm">Suivi : <span class="text-teal-300">${preorder.tracking_number}</span></p>` : ''}
+                    ${preorder.shipped_at ? `<p class="text-light-gold/40 text-xs">Expédiée le ${formatDate(preorder.shipped_at)}</p>` : ''}
+                    ${preorder.delivered_at ? `<p class="text-teal-300/70 text-xs">Livrée le ${formatDate(preorder.delivered_at)}</p>` : ''}
+                </div>
+                <div class="text-xs text-light-gold/30 border-t border-gold/10 pt-3">
+                    Créée le ${preorder.created_at ? formatDate(preorder.created_at) : '—'} · ID ${preorder.id || '—'}
+                </div>`;
+            const modal = document.getElementById('preorderDetailModal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closePreorderDetail() {
+            const modal = document.getElementById('preorderDetailModal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        // ── Relance panier abandonné ──
+        async function sendAbandonRelance(orderId, email, name, offer) {
+            if (!confirm(`Envoyer un email de relance à ${email} pour la commande "${offer}" ?`)) return;
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'abandon-relance', orderId, email, name, offer })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    alert(`Email de relance envoyé à ${email}.`);
+                } else {
+                    alert('Erreur : ' + (data.error || 'Inconnu'));
+                }
+            } catch(e) {
+                alert('Erreur : ' + e.message);
+            }
+        }
 
     </script>
 </body>

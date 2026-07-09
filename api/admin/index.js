@@ -887,6 +887,28 @@ async function handleData(req, res) {
         return res.status(200).json({ success: true, imported: toInsert.length });
       }
 
+      if (action === 'abandon-relance' && body.orderId && body.email) {
+        const BREVO_API_KEY = process.env.BREVO_API_KEY;
+        if (!BREVO_API_KEY) return res.status(500).json({ error: 'BREVO_API_KEY non configuré' });
+        const templateId = parseInt(process.env.BREVO_TEMPLATE_ABANDON_CART || '0', 10);
+        if (!templateId) return res.status(500).json({ error: 'BREVO_TEMPLATE_ABANDON_CART non configuré' });
+
+        const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            templateId,
+            to: [{ email: body.email, name: body.name || undefined }],
+            params: { OFFER: body.offer || '', NAME: body.name || '' }
+          })
+        });
+        if (!brevoRes.ok) {
+          const txt = await brevoRes.text();
+          throw new Error(`Brevo ${brevoRes.status}: ${txt}`);
+        }
+        return res.status(200).json({ success: true, email: body.email });
+      }
+
       return res.status(400).json({ error: 'Action invalide' });
     }
 

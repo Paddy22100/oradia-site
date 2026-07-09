@@ -1,53 +1,31 @@
 <!-- Bandeau Newsletter -->
-<section class="py-14 px-6 bg-dark-blue border-t border-gold/20">
-    <div class="container mx-auto max-w-2xl text-center">
-        <p class="cormorant text-3xl md:text-4xl font-bold gold-gradient mb-3">Restez dans l'univers ORADIA</p>
-        <p class="text-light-gold/70 text-sm mb-8">Inspirations, actualités de La Boussole Intérieure et avant-premières — pas de spam, désinscription en un clic.</p>
-        <form id="footer-newsletter-form" class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" onsubmit="footerNewsletterSubmit(event)">
+<section style="position:relative;overflow:hidden;border-top:1px solid rgba(212,175,55,0.2);">
+    <!-- Image de fond -->
+    <div style="position:absolute;inset:0;background-image:url('/images/medias/newsletter_image.webp');background-size:cover;background-position:center top;"></div>
+    <!-- Voile sombre -->
+    <div style="position:absolute;inset:0;background:linear-gradient(135deg,rgba(4,14,30,0.88) 0%,rgba(5,20,40,0.82) 100%);"></div>
+    <!-- Contenu -->
+    <div style="position:relative;z-index:1;padding:64px 24px;text-align:center;">
+        <!-- Filet doré décoratif -->
+        <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:0 auto 20px;"></div>
+        <p style="font-family:'Cormorant Garamond',Georgia,serif;font-size:clamp(26px,4vw,38px);font-weight:700;color:#f0c75e;margin:0 0 12px;letter-spacing:0.5px;line-height:1.2;">Restez dans l'univers ORADIA</p>
+        <p style="color:rgba(212,175,55,0.7);font-size:15px;font-family:'Cormorant Garamond',Georgia,serif;line-height:1.7;max-width:500px;margin:0 auto 32px;">Inspirations, actualités de La Boussole Intérieure et avant-premières.<br>Pas de spam, désinscription en un clic.</p>
+        <form id="footer-newsletter-form" style="display:flex;flex-direction:column;gap:12px;max-width:440px;margin:0 auto;">
             <input type="email" id="footer-newsletter-email" placeholder="Votre adresse email" required
-                class="flex-1 bg-night-blue/80 border border-gold/30 rounded-lg px-4 py-3 text-light-gold placeholder-light-gold/40 focus:outline-none focus:border-gold/70 transition text-sm" />
+                style="background:rgba(5,20,40,0.7);border:1px solid rgba(212,175,55,0.3);border-radius:12px;color:#e8d9b0;font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;padding:14px 18px;outline:none;width:100%;box-sizing:border-box;"
+                onfocus="this.style.borderColor='rgba(212,175,55,0.7)'"
+                onblur="this.style.borderColor='rgba(212,175,55,0.3)'" />
             <button type="submit" id="footer-newsletter-btn"
-                class="bg-gold text-night-blue font-semibold px-6 py-3 rounded-lg hover:bg-light-gold transition text-sm whitespace-nowrap">
-                S'inscrire
+                style="background:linear-gradient(to right,#d4af37,#f0c75e);color:#0a1628;font-family:'Lora',Georgia,serif;font-size:15px;font-weight:700;padding:14px 32px;border:none;border-radius:9999px;cursor:pointer;letter-spacing:0.5px;transition:all 0.3s;width:100%;"
+                onmouseover="this.style.boxShadow='0 8px 20px rgba(212,175,55,0.3)';this.style.transform='scale(1.03)'" onmouseout="this.style.boxShadow='none';this.style.transform='scale(1)'">
+                S'inscrire à la newsletter
             </button>
         </form>
-        <p id="footer-newsletter-msg" class="mt-4 text-sm hidden"></p>
+        <p id="footer-newsletter-msg" class="mt-4 text-sm hidden" style="margin-top:16px;font-size:14px;"></p>
+        <!-- Filet doré décoratif bas -->
+        <div style="width:40px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:28px auto 0;"></div>
     </div>
 </section>
-<script>
-async function footerNewsletterSubmit(e) {
-    e.preventDefault();
-    const email = document.getElementById('footer-newsletter-email').value.trim();
-    const btn = document.getElementById('footer-newsletter-btn');
-    const msg = document.getElementById('footer-newsletter-msg');
-    btn.disabled = true;
-    btn.textContent = '...';
-    try {
-        const res = await fetch('/api/waitlist', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email, source: 'footer-newsletter' })
-        });
-        const data = await res.json();
-        if (res.ok && data.success) {
-            document.getElementById('footer-newsletter-form').style.display = 'none';
-            msg.textContent = '✓ Merci ! Vérifie ta boîte mail pour confirmer ton inscription.';
-            msg.className = 'mt-4 text-sm text-gold';
-        } else {
-            msg.textContent = data.message || 'Une erreur est survenue, réessaie.';
-            msg.className = 'mt-4 text-sm text-red-400';
-            btn.disabled = false;
-            btn.textContent = "S'inscrire";
-        }
-    } catch {
-        msg.textContent = 'Erreur réseau, réessaie.';
-        msg.className = 'mt-4 text-sm text-red-400';
-        btn.disabled = false;
-        btn.textContent = "S'inscrire";
-    }
-    msg.classList.remove('hidden');
-}
-</script>
 
 <!-- Footer Template -->
 <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
