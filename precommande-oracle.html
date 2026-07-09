@@ -1346,6 +1346,7 @@
                 <input
                     type="email"
                     id="contributionEmail"
+                    aria-label="Votre email"
                     placeholder="Votre email"
                     class="w-full px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-light-gold/60 transition-all duration-300"
                     required
@@ -1353,12 +1354,14 @@
                 <input
                     type="text"
                     id="contributionName"
+                    aria-label="Votre nom (optionnel)"
                     placeholder="Votre nom (optionnel)"
                     class="w-full px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-light-gold/60 transition-all duration-300"
                 />
                 <input
                     type="text"
                     id="customAmount"
+                    aria-label="Montant libre (minimum 20€)"
                     placeholder="Montant libre (min 20€)"
                     min="20"
                     class="w-full px-4 py-3 rounded-full text-center text-gold bg-[rgba(5,20,40,0.8)] border border-gold/30 focus:border-gold/60 focus:outline-none focus:ring-2 focus:ring-gold/20 placeholder:text-light-gold/60 transition-all duration-300"
@@ -1478,6 +1481,7 @@
                                     type="email"
                                     id="waitlist-email"
                                     name="email"
+                                    aria-label="Votre adresse email"
                                     placeholder="Votre adresse email"
                                     class="w-full px-5 py-3.5 bg-[rgba(5,20,40,0.7)] border border-gold/30 rounded-xl text-light-gold placeholder-light-gold/40 focus:outline-none focus:border-gold/70 focus:ring-2 focus:ring-gold/15 transition-all duration-300 text-sm"
                                     required
@@ -1606,13 +1610,13 @@ La production est lancée grâce aux premières commandes.</p>
                 
                 <form id="precommandeForm" class="space-y-4">
                     <div>
-                        <label class="block text-gold mb-2">Email</label>
-                        <input type="email" name="email" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="votre@email.com">
+                        <label for="precommande-email" class="block text-gold mb-2">Email</label>
+                        <input type="email" id="precommande-email" name="email" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="votre@email.com">
                     </div>
-                    
+
                     <div>
-                        <label class="block text-gold mb-2">Nom complet</label>
-                        <input type="text" name="name" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="Jean Dupont">
+                        <label for="precommande-name" class="block text-gold mb-2">Nom complet</label>
+                        <input type="text" id="precommande-name" name="name" required class="w-full bg-[rgba(5,20,40,0.6)] border border-gold/30 rounded-lg p-3 text-light-gold" placeholder="Jean Dupont">
                     </div>
                     
                     <p class="text-light-gold/60 text-xs">L'adresse de livraison vous sera demandée lors de l'étape suivante, après réservation.</p>
