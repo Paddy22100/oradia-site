@@ -203,9 +203,23 @@ async function handleLogin(req, res) {
     }
   } catch (e) {}
 
+  // Vérifier si l'utilisateur a un facteur MFA TOTP actif
+  let mfaRequired = false;
+  let mfaFactorId = null;
+  try {
+    const { data: factorsData } = await supabase.auth.admin.mfa.listFactors({ userId: authData.user.id });
+    const verifiedFactor = factorsData?.totp?.find(f => f.status === 'verified');
+    if (verifiedFactor) {
+      mfaRequired = true;
+      mfaFactorId = verifiedFactor.id;
+    }
+  } catch(e) {}
+
   res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
   return res.end(JSON.stringify({
     success: true,
+    mfa_required: mfaRequired,
+    mfa_factor_id: mfaFactorId,
     user: {
       email: authData.user.email,
       name: authData.user.user_metadata?.full_name || email.split('@')[0],

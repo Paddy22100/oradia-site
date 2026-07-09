@@ -133,6 +133,7 @@
             <p class="col-sub">Retrouvez votre espace intérieur</p>
             <div class="divider-line"></div>
 
+            <!-- Étape 1 : email + mot de passe -->
             <form id="loginForm" novalidate>
                 <div class="fg">
                     <label class="fl" for="email">Email</label>
@@ -161,6 +162,23 @@
                 <p class="login-err" id="loginErr"></p>
             </form>
 
+            <!-- Étape 2 : code 2FA (affiché seulement si MFA activé) -->
+            <div id="mfaStep" style="display:none;">
+                <p style="color:rgba(212,175,55,0.7);font-size:13px;text-align:center;margin-bottom:18px;">
+                    <i class="fas fa-shield-alt" style="margin-right:6px;"></i>Entrez le code de votre application d'authentification
+                </p>
+                <div class="fg">
+                    <label class="fl" for="mfaCode">Code à 6 chiffres</label>
+                    <div class="fw">
+                        <i class="fas fa-key fi"></i>
+                        <input class="fi-input" type="text" id="mfaCode" placeholder="000000" maxlength="6" inputmode="numeric" autocomplete="one-time-code" style="letter-spacing:6px;font-size:20px;text-align:center;">
+                    </div>
+                </div>
+                <button type="button" class="btn-main" id="mfaSubmit">Vérifier</button>
+                <p class="login-err" id="mfaErr"></p>
+                <button type="button" style="background:none;border:none;cursor:pointer;font-size:11px;color:rgba(212,175,55,0.35);font-family:Lora,serif;margin-top:12px;display:block;width:100%;text-align:center;" id="mfaBack">← Retour à la connexion</button>
+            </div>
+
             <a href="../index.html" class="back-home" style="margin-top:24px;">← Retour à l'accueil</a>
         </div>
 
@@ -184,7 +202,38 @@
         </div>
     </div>
 
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <script>
+        const SUPABASE_URL = 'https://nxzetkdozynyutlbhxdx.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54emV0a2RvenlueXV0bGJoeGR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MTcxMTUsImV4cCI6MjA5MDM5MzExNX0.tDJqNQKrQl909nyM7sZW1uVx8ozhrf0ZUuKULLvfwwE';
+
+        // État MFA
+        let _mfaSession = null;
+        let _mfaFactorId = null;
+        let _mfaRememberMe = false;
+        let _mfaLoginData = null;
+
+        function completLogin(user, sessionObj, rememberMe) {
+            const sessionData = typeof sessionObj === 'string' ? sessionObj : JSON.stringify(sessionObj);
+            sessionStorage.setItem('oradia_member_session', sessionData);
+            if (rememberMe) {
+                localStorage.setItem('isLoggedIn', 'true');
+                localStorage.setItem('userEmail', user.email);
+                localStorage.setItem('userName', user.name || user.email.split('@')[0]);
+                localStorage.setItem('rememberMe', 'true');
+                localStorage.setItem('oradia_member_session', sessionData);
+            } else {
+                sessionStorage.setItem('isLoggedIn', 'true');
+                sessionStorage.setItem('userEmail', user.email);
+                sessionStorage.setItem('userName', user.name || user.email.split('@')[0]);
+                sessionStorage.setItem('rememberMe', 'false');
+            }
+            flash('Connexion réussie ! Redirection…', 'success');
+            const returnTo = new URLSearchParams(window.location.search).get('returnTo') || sessionStorage.getItem('oradia_login_return');
+            sessionStorage.removeItem('oradia_login_return');
+            setTimeout(() => { window.location.href = returnTo || '../index.html'; }, 1400);
+        }
+
         // Œil mot de passe
         document.getElementById('togglePw').addEventListener('click', function() {
             const inp = document.getElementById('password');
@@ -216,38 +265,27 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    // Vérifier si "Se souvenir de moi" est coché
                     const rememberMe = document.getElementById('remember')?.checked || false;
-                    
-                    const sessionData = JSON.stringify({
-                        email,
-                        name: data.user?.name || email.split('@')[0],
-                        subscribed: data.user?.subscribed || false,
-                        id: data.user?.id || null,
-                        access_token: data.session?.access_token || null,
-                        refresh_token: data.session?.refresh_token || null
-                    });
-                    sessionStorage.setItem('oradia_member_session', sessionData);
-
-                    if (rememberMe) {
-                        // Persistance avec localStorage
-                        localStorage.setItem('isLoggedIn', 'true');
-                        localStorage.setItem('userEmail', email);
-                        localStorage.setItem('userName', data.user?.name || email.split('@')[0]);
-                        localStorage.setItem('rememberMe', 'true');
-                        localStorage.setItem('oradia_member_session', sessionData);
+                    if (data.mfa_required) {
+                        // Stocker les infos pour l'étape MFA
+                        _mfaSession = data.session;
+                        _mfaFactorId = data.mfa_factor_id;
+                        _mfaRememberMe = rememberMe;
+                        _mfaLoginData = data;
+                        btn.disabled = false; btn.textContent = 'Se connecter';
+                        document.getElementById('loginForm').style.display = 'none';
+                        document.getElementById('mfaStep').style.display = 'block';
+                        document.getElementById('mfaCode').focus();
                     } else {
-                        // Session temporaire avec sessionStorage (se supprime à la fermeture)
-                        sessionStorage.setItem('isLoggedIn', 'true');
-                        sessionStorage.setItem('userEmail', email);
-                        sessionStorage.setItem('userName', data.user?.name || email.split('@')[0]);
-                        sessionStorage.setItem('rememberMe', 'false');
+                        const sessionObj = JSON.stringify({
+                            email, name: data.user?.name || email.split('@')[0],
+                            subscribed: data.user?.subscribed || false,
+                            id: data.user?.id || null,
+                            access_token: data.session?.access_token || null,
+                            refresh_token: data.session?.refresh_token || null
+                        });
+                        completLogin(data.user, sessionObj, rememberMe);
                     }
-                    flash('Connexion réussie ! Redirection…', 'success');
-                    const returnTo = sessionStorage.getItem('oradia_login_return');
-                    sessionStorage.removeItem('oradia_login_return');
-                    // Rediriger vers la page demandée, ou abonnements par défaut (pas dashboard admin)
-                    setTimeout(() => { window.location.href = returnTo || '../index.html'; }, 1400);
                 } else {
                     btn.disabled = false; btn.textContent = 'Se connecter';
                     err.textContent = data.error || 'Email ou mot de passe incorrect.';
@@ -257,6 +295,45 @@
                 err.textContent = 'Erreur de connexion. Veuillez réessayer.';
                 console.error('Login error:', error);
             }
+        });
+
+        // MFA — vérification du code TOTP
+        document.getElementById('mfaSubmit').addEventListener('click', async function() {
+            const code = document.getElementById('mfaCode').value.trim().replace(/\s/g, '');
+            const err = document.getElementById('mfaErr');
+            if (code.length !== 6 || !/^\d+$/.test(code)) { err.textContent = 'Le code doit contenir 6 chiffres.'; return; }
+            err.textContent = '';
+            this.disabled = true; this.textContent = 'Vérification…';
+            try {
+                const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                await sb.auth.setSession({ access_token: _mfaSession.access_token, refresh_token: _mfaSession.refresh_token });
+                const { data: challengeData, error: cErr } = await sb.auth.mfa.challenge({ factorId: _mfaFactorId });
+                if (cErr) throw new Error(cErr.message);
+                const { error: vErr } = await sb.auth.mfa.verify({ factorId: _mfaFactorId, challengeId: challengeData.id, code });
+                if (vErr) throw new Error('Code incorrect ou expiré.');
+                const user = _mfaLoginData.user;
+                const sessionObj = JSON.stringify({
+                    email: user.email, name: user.name || user.email.split('@')[0],
+                    subscribed: user.subscribed || false, id: user.id || null,
+                    access_token: _mfaSession.access_token, refresh_token: _mfaSession.refresh_token
+                });
+                completLogin(user, sessionObj, _mfaRememberMe);
+            } catch(e) {
+                this.disabled = false; this.textContent = 'Vérifier';
+                err.textContent = e.message || 'Erreur de vérification.';
+            }
+        });
+
+        document.getElementById('mfaCode').addEventListener('keydown', e => {
+            if (e.key === 'Enter') document.getElementById('mfaSubmit').click();
+        });
+
+        document.getElementById('mfaBack').addEventListener('click', () => {
+            document.getElementById('mfaStep').style.display = 'none';
+            document.getElementById('loginForm').style.display = 'block';
+            document.getElementById('mfaCode').value = '';
+            document.getElementById('mfaErr').textContent = '';
+            _mfaSession = _mfaFactorId = _mfaLoginData = null;
         });
 
         // Modal mot de passe oublié

@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Paramètres - ORADIA</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../style.css">
     
@@ -255,6 +256,52 @@
                 </div>
             </section>
 
+            <!-- Authentification à deux facteurs -->
+            <section class="mb-8" id="section2fa">
+                <h3 class="cormorant text-xl text-light-gold mb-4 flex items-center gap-3">
+                    <i class="fas fa-shield-alt"></i>
+                    Authentification à deux facteurs (2FA)
+                </h3>
+                <div class="settings-section rounded-xl p-6">
+                    <div id="mfa-status" class="flex justify-between items-center py-2 mb-4">
+                        <div>
+                            <p class="text-light-gold font-medium">Code d'authentification (TOTP)</p>
+                            <p class="text-light-gold/50 text-sm mt-1" id="mfa-status-text">Chargement…</p>
+                        </div>
+                        <span id="mfa-badge" class="text-xs px-3 py-1 rounded-full border" style="display:none;"></span>
+                    </div>
+
+                    <!-- Activation -->
+                    <div id="mfa-enable-section" style="display:none;">
+                        <div id="mfa-qr-step" style="display:none;" class="space-y-4">
+                            <p class="text-light-gold/70 text-sm">Scannez ce QR code avec votre application (Google Authenticator, Authy…) puis entrez le code à 6 chiffres pour confirmer.</p>
+                            <div class="flex justify-center">
+                                <img id="mfa-qr-img" src="" alt="QR Code 2FA" style="width:180px;height:180px;border-radius:8px;background:#fff;padding:8px;">
+                            </div>
+                            <p class="text-light-gold/40 text-xs text-center">Ou entrez ce code manuellement : <span id="mfa-secret" class="text-gold font-mono"></span></p>
+                            <input type="text" id="mfa-enroll-code" placeholder="Code à 6 chiffres" maxlength="6" inputmode="numeric"
+                                class="w-full rounded-lg px-4 py-3 text-center text-lg tracking-widest font-mono"
+                                style="background:rgba(10,25,47,0.7);border:1px solid rgba(212,175,55,0.35);color:#f5e7a1;">
+                            <p id="mfa-enroll-err" class="text-red-400 text-sm"></p>
+                            <div class="flex gap-3">
+                                <button onclick="confirmMfaEnroll()" class="btn-gold flex-1 py-3 rounded-lg text-sm font-semibold">Activer la 2FA</button>
+                                <button onclick="cancelMfaEnroll()" class="flex-1 py-3 rounded-lg text-sm border border-gold/20 text-light-gold/50 hover:border-gold/40 transition-colors">Annuler</button>
+                            </div>
+                        </div>
+                        <button id="mfa-start-btn" onclick="startMfaEnroll()" class="btn-gold px-6 py-2.5 rounded-lg text-sm font-semibold">
+                            <i class="fas fa-plus mr-2"></i>Activer la 2FA
+                        </button>
+                    </div>
+
+                    <!-- Désactivation -->
+                    <div id="mfa-disable-section" style="display:none;">
+                        <button onclick="disableMfa()" class="px-6 py-2.5 rounded-lg text-sm font-semibold border border-red-500/40 text-red-400 hover:bg-red-500/10 transition-colors">
+                            <i class="fas fa-shield-slash mr-2"></i>Désactiver la 2FA
+                        </button>
+                    </div>
+                </div>
+            </section>
+
             <!-- Suppression de compte -->
             <section class="mb-8">
                 <h3 class="cormorant text-xl text-red-400 mb-4 flex items-center gap-3">
@@ -363,6 +410,106 @@
             btn.disabled = true;
             setTimeout(() => { btn.innerHTML = orig; btn.disabled = false; }, 2000);
         }
+
+        // ── 2FA / MFA ─────────────────────────────────────────────────────────
+        const SUPABASE_URL = 'https://nxzetkdozynyutlbhxdx.supabase.co';
+        const SUPABASE_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im54emV0a2RvenlueXV0bGJoeGR4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4MTcxMTUsImV4cCI6MjA5MDM5MzExNX0.tDJqNQKrQl909nyM7sZW1uVx8ozhrf0ZUuKULLvfwwE';
+        let _sb = null, _mfaFactorId = null;
+
+        function getSbClient() {
+            if (_sb) return _sb;
+            _sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON);
+            return _sb;
+        }
+
+        async function initMfa() {
+            try {
+                const sess = JSON.parse(sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY) || '{}');
+                if (!sess.access_token) { showMfaState('unknown'); return; }
+                const sb = getSbClient();
+                await sb.auth.setSession({ access_token: sess.access_token, refresh_token: sess.refresh_token });
+                const { data } = await sb.auth.mfa.listFactors();
+                const verified = data?.totp?.find(f => f.status === 'verified');
+                if (verified) { _mfaFactorId = verified.id; showMfaState('enabled'); }
+                else { showMfaState('disabled'); }
+            } catch(e) { showMfaState('unknown'); }
+        }
+
+        function showMfaState(state) {
+            const txt = document.getElementById('mfa-status-text');
+            const badge = document.getElementById('mfa-badge');
+            const enableSec = document.getElementById('mfa-enable-section');
+            const disableSec = document.getElementById('mfa-disable-section');
+            badge.style.display = 'inline';
+            if (state === 'enabled') {
+                txt.textContent = 'Votre compte est protégé par un code d\'authentification.';
+                badge.textContent = 'Activée'; badge.style.cssText = 'display:inline;background:rgba(34,197,94,0.15);color:#4ade80;border-color:rgba(34,197,94,0.3);font-size:11px;padding:2px 10px;border-radius:999px;border:1px solid;';
+                enableSec.style.display = 'none'; disableSec.style.display = 'block';
+            } else if (state === 'disabled') {
+                txt.textContent = 'Ajoutez une couche de sécurité supplémentaire à votre compte.';
+                badge.textContent = 'Désactivée'; badge.style.cssText = 'display:inline;background:rgba(212,175,55,0.1);color:rgba(212,175,55,0.6);border-color:rgba(212,175,55,0.2);font-size:11px;padding:2px 10px;border-radius:999px;border:1px solid;';
+                enableSec.style.display = 'block'; disableSec.style.display = 'none';
+                document.getElementById('mfa-start-btn').style.display = 'inline-flex';
+                document.getElementById('mfa-qr-step').style.display = 'none';
+            } else {
+                txt.textContent = 'Reconnectez-vous pour gérer la 2FA.';
+                badge.style.display = 'none';
+            }
+        }
+
+        async function startMfaEnroll() {
+            document.getElementById('mfa-start-btn').style.display = 'none';
+            document.getElementById('mfa-qr-step').style.display = 'block';
+            document.getElementById('mfa-enroll-err').textContent = '';
+            try {
+                const sb = getSbClient();
+                const { data, error } = await sb.auth.mfa.enroll({ factorType: 'totp', friendlyName: 'Oradia' });
+                if (error) throw error;
+                _mfaFactorId = data.id;
+                document.getElementById('mfa-qr-img').src = data.totp.qr_code;
+                document.getElementById('mfa-secret').textContent = data.totp.secret;
+                document.getElementById('mfa-enroll-code').focus();
+            } catch(e) {
+                document.getElementById('mfa-enroll-err').textContent = e.message || 'Erreur lors de la génération du QR code.';
+            }
+        }
+
+        async function confirmMfaEnroll() {
+            const code = document.getElementById('mfa-enroll-code').value.trim();
+            const err = document.getElementById('mfa-enroll-err');
+            if (code.length !== 6) { err.textContent = 'Entrez le code à 6 chiffres.'; return; }
+            err.textContent = '';
+            try {
+                const sb = getSbClient();
+                const { data: ch, error: cErr } = await sb.auth.mfa.challenge({ factorId: _mfaFactorId });
+                if (cErr) throw cErr;
+                const { error: vErr } = await sb.auth.mfa.verify({ factorId: _mfaFactorId, challengeId: ch.id, code });
+                if (vErr) throw new Error('Code incorrect. Réessayez.');
+                showMfaState('enabled');
+                alert('La 2FA est maintenant activée sur votre compte.');
+            } catch(e) { err.textContent = e.message || 'Erreur de vérification.'; }
+        }
+
+        function cancelMfaEnroll() {
+            document.getElementById('mfa-qr-step').style.display = 'none';
+            document.getElementById('mfa-start-btn').style.display = 'inline-flex';
+            document.getElementById('mfa-enroll-code').value = '';
+            document.getElementById('mfa-enroll-err').textContent = '';
+        }
+
+        async function disableMfa() {
+            if (!confirm('Désactiver la 2FA ? Votre compte sera moins sécurisé.')) return;
+            try {
+                const sb = getSbClient();
+                const { error } = await sb.auth.mfa.unenroll({ factorId: _mfaFactorId });
+                if (error) throw error;
+                _mfaFactorId = null;
+                showMfaState('disabled');
+                alert('La 2FA a été désactivée.');
+            } catch(e) { alert('Erreur : ' + (e.message || 'Impossible de désactiver la 2FA.')); }
+        }
+
+        initMfa();
 
         // ── Suppression de compte ─────────────────────────────────────────────
         function confirmDelete() {
