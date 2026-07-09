@@ -1001,6 +1001,7 @@
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Dernier tirage</th>
                                 <th class="px-5 py-4 text-center text-gold font-semibold text-xs uppercase tracking-wider">Tirages/j</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Abonné le</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Échéance</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
@@ -4653,6 +4654,7 @@
                     <td class="px-5 py-4 text-light-gold/60 text-xs">${lastDraw}</td>
                     <td class="px-5 py-4 text-light-gold/60 text-xs text-center">${drawCount}</td>
                     <td class="px-5 py-4 text-light-gold/60 text-xs">${s.created_at_fr || '—'}</td>
+                    <td class="px-5 py-4 text-xs ${isExpired ? 'text-orange-400 font-semibold' : 'text-light-gold/60'}">${s.expires_at ? new Date(s.expires_at).toLocaleDateString('fr-FR') : '<span class="text-light-gold/30">Illimité</span>'}</td>
                     <td class="px-5 py-4">
                         <div class="flex gap-2 flex-wrap">
                             <button onclick="viewTirages('${emailEsc}')" title="Voir les tirages" class="text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 text-xs transition">
