@@ -1012,36 +1012,6 @@
             </div>
         </section>
 
-        <!-- ── Section tore_emails (séquence relance freemium) ── -->
-        <section class="mb-10">
-            <div class="flex items-center justify-between mb-4">
-                <div>
-                    <h3 class="cormorant text-xl font-bold text-gold">Emails freemium — Séquence relance</h3>
-                    <p class="text-light-gold/50 text-xs mt-1">Utilisateurs ayant effectué leurs 2 tirages gratuits sans souscrire</p>
-                </div>
-                <button onclick="loadToreEmails()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
-            </div>
-            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden shadow-2xl">
-                <div class="overflow-x-auto">
-                    <table class="w-full" id="toreEmailsTable">
-                        <thead class="bg-gradient-to-r from-[rgba(5,20,40,0.9)] to-[rgba(5,20,40,0.7)] border-b border-gold/30">
-                            <tr>
-                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Email</th>
-                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Capturé le</th>
-                                <th class="px-5 py-4 text-center text-gold font-semibold text-xs uppercase tracking-wider">Consentement</th>
-                                <th class="px-5 py-4 text-center text-gold font-semibold text-xs uppercase tracking-wider">J+1</th>
-                                <th class="px-5 py-4 text-center text-gold font-semibold text-xs uppercase tracking-wider">J+4</th>
-                                <th class="px-5 py-4 text-center text-gold font-semibold text-xs uppercase tracking-wider">J+10</th>
-                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="toreEmailsTbody" class="divide-y divide-gold/10">
-                            <tr><td colspan="6" class="px-6 py-8 text-center text-gold/40 text-sm">Cliquez sur Actualiser pour charger</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
         </div><!-- /tab-subscriptions -->
 
         <!-- ══ ONGLET : GUIDANCES PAR VISIO ══ -->
@@ -4706,68 +4676,6 @@
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.error);
                 await loadSubscriptions(subPage);
-            } catch(e) { alert('Erreur : ' + e.message); }
-        }
-
-        async function loadToreEmails() {
-            const tbody = document.getElementById('toreEmailsTbody');
-            tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-8 text-center text-gold/40"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</td></tr>';
-            try {
-                const res  = await adminFetch('/api/admin/data?section=tore-emails');
-                const json = await res.json();
-                if (!res.ok) throw new Error(json.error || json.message);
-                renderToreEmails(json.data || []);
-            } catch(e) {
-                tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-red-400/70">${e.message}</td></tr>`;
-            }
-        }
-
-        function renderToreEmails(rows) {
-            const tbody = document.getElementById('toreEmailsTbody');
-            if (!rows.length) {
-                tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun email capturé</td></tr>';
-                return;
-            }
-            const sentDot  = '<span class="inline-block w-2 h-2 rounded-full bg-green-400" title="Envoyé"></span>';
-            const pendDot  = '<span class="inline-block w-2 h-2 rounded-full bg-gold/30" title="En attente"></span>';
-            tbody.innerHTML = rows.map(r => {
-                const d = r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : '—';
-                const consentBadge = r.consent_marketing
-                    ? '<span class="text-green-400 text-xs"><i class="fas fa-check-circle mr-1"></i>Oui</span>'
-                    : '<span class="text-light-gold/30 text-xs"><i class="fas fa-minus-circle mr-1"></i>Non</span>';
-                const allSent = r.relance_j1_sent && r.relance_j4_sent && r.relance_j10_sent;
-                const unsub   = r.unsubscribed;
-                const emailEsc = (r.email || '').replace(/'/g, "\\'");
-                const actionBtn = (!allSent && !unsub)
-                    ? `<button onclick="manualRelance('${r.id}', '${emailEsc}')" class="text-gold/70 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-paper-plane mr-1"></i>Relancer</button>`
-                    : unsub
-                        ? '<span class="text-red-400/50 text-xs">Désabonné</span>'
-                        : '<span class="text-light-gold/20 text-xs">Séquence terminée</span>';
-                return `
-                <tr class="hover:bg-gold/5 transition">
-                    <td class="px-5 py-3 text-light-gold text-sm">${r.email || '—'}</td>
-                    <td class="px-5 py-3 text-light-gold/60 text-xs">${d}</td>
-                    <td class="px-5 py-3 text-center">${consentBadge}</td>
-                    <td class="px-5 py-3 text-center">${r.relance_j1_sent  ? sentDot : pendDot}</td>
-                    <td class="px-5 py-3 text-center">${r.relance_j4_sent  ? sentDot : pendDot}</td>
-                    <td class="px-5 py-3 text-center">${r.relance_j10_sent ? sentDot : pendDot}</td>
-                    <td class="px-5 py-3">${actionBtn}</td>
-                </tr>`;
-            }).join('');
-        }
-
-        async function manualRelance(id, email) {
-            if (!confirm(`Envoyer le prochain email de relance à ${email} ?`)) return;
-            try {
-                const res = await adminFetch('/api/admin/data', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ action: 'manual-relance', toreEmailId: id })
-                });
-                const json = await res.json();
-                if (!res.ok) throw new Error(json.error);
-                alert(`✓ Email ${json.template} envoyé à ${email}`);
-                await loadToreEmails();
             } catch(e) { alert('Erreur : ' + e.message); }
         }
 
