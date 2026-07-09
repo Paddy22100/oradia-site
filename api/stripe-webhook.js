@@ -242,9 +242,9 @@ async function sendSubscriptionEmail(toEmail, toName, type) {
         : `Bonjour${toName ? ' ' + toName : ''},<br><br>Votre abonnement <strong style="color:#f0c75e;">Le Tore</strong> est arrivé à échéance et votre accès a été suspendu.<br><br>Renouvelez votre abonnement pour retrouver votre espace et continuer vos tirages.`;
 
     const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0"><style>@media only screen and (max-width:620px){.container{width:100%!important}.pad{padding:24px 20px!important}.pad-body{padding:0 20px 24px!important}.h1{font-size:26px!important}.btn{padding:13px 20px!important}}</style></head>
-<body style="margin:0;padding:0;background-color:#050a14;" bgcolor="#050a14">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#050a14">
-<tr><td align="center" style="padding:32px 16px;background-color:#050a14;">
+<body style="margin:0;padding:0;background-color:#050a14;background-image:url('https://oradia.fr/images/oradia-hero-4k.png');background-size:cover;background-position:center;" bgcolor="#050a14">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#050a14" background="https://oradia.fr/images/oradia-hero-4k.png">
+<tr><td align="center" style="padding:32px 16px;background-image:url('https://oradia.fr/images/oradia-hero-4k.png');background-size:cover;background-position:center;">
 <table class="container" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;" bgcolor="#0a1628">
 <tr><td style="padding:0;line-height:0;font-size:0;"><img src="https://oradia.fr/images/medias/apercu_stripe.jpg" alt="Oracle ORADIA" width="600" height="220" style="display:block;width:100%;height:220px;object-fit:cover;border:0;"></td></tr>
 <tr><td class="pad" align="center" style="padding:32px 40px 20px;" bgcolor="#0a1628">
