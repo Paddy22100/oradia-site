@@ -903,149 +903,77 @@
     }
   }
 
-  /* ── Flip scaleX 2D (desktop ≥ 640px) — même animation que mobile ── */
-  @media (min-width: 640px) {
-    .tore-card {
-      perspective: none !important;
-    }
-    .tore-card,
-    .tore-card-inner,
-    .tore-card-back,
-    .tore-card-front {
-      backface-visibility: visible !important;
-      -webkit-backface-visibility: visible !important;
-      transform-style: flat !important;
-      -webkit-transform-style: flat !important;
-    }
-    .tore-card-inner {
-      transform-origin: center center;
-      transition: transform 0.22s ease-in;
-    }
-    .tore-card.flipping .tore-card-inner {
-      transform: scaleX(0);
-    }
-    .tore-card.flipped .tore-card-inner {
-      transform: scaleX(1);
-      transition: transform 0.22s ease-out;
-    }
-    .tore-card-back {
-      position: absolute;
-      inset: 0;
-      opacity: 1;
-      visibility: visible;
-    }
-    .tore-card-front {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      visibility: hidden;
-      transform: none !important;
-      pointer-events: none;
-      background: transparent;
-      transition: opacity 0.18s ease;
-    }
-    .tore-card.flipped .tore-card-back {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-    .tore-card.flipped .tore-card-front {
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-      transition: opacity 0.18s ease 0.05s;
-    }
+  /* ── Flip 3D rotateY — toutes tailles ── */
+  .tore-card {
+    perspective: 900px;
+  }
+  .tore-card-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transform-style: preserve-3d;
+    transform: rotateY(0deg);
+    transition: transform 0.38s ease-in;
+    transform-origin: center center;
+  }
+  /* Phase 1 : rotation vers 90° (dos disparaît) */
+  .tore-card.flipping .tore-card-inner {
+    transform: rotateY(90deg);
+    transition: transform 0.38s ease-in;
+  }
+  /* Phase 2 : repli de 90° vers 0° (face apparaît) */
+  .tore-card.flipped .tore-card-inner {
+    transform: rotateY(0deg);
+    transition: transform 0.38s ease-out;
+  }
+  .tore-card-back {
+    position: absolute;
+    inset: 0;
+    opacity: 1;
+    visibility: visible;
+    backface-visibility: visible;
+  }
+  .tore-card-front {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    background: transparent;
+    backface-visibility: visible;
+    transition: opacity 0.22s ease 0.05s;
+  }
+  .tore-card.flipped .tore-card-back {
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+  }
+  .tore-card.flipped .tore-card-front {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+    transition: opacity 0.22s ease 0.05s;
   }
 
-  /* ── Flip scaleX 2D (mobile < 640px) — compatible iOS/Android ── */
+  /* ── Fallback scaleX 2D mobile iOS (évite les bugs 3D Safari anciens) ── */
   @media (max-width: 639px) {
-    /* Annuler tout contexte 3D */
-    .tore-card {
-      perspective: none !important;
-    }
-    .tore-card,
-    .tore-card-inner,
-    .tore-card-back,
-    .tore-card-front {
+    .tore-card { perspective: none !important; }
+    .tore-card, .tore-card-inner, .tore-card-back, .tore-card-front {
       backface-visibility: visible !important;
       -webkit-backface-visibility: visible !important;
       transform-style: flat !important;
       -webkit-transform-style: flat !important;
     }
     .tore-card-inner {
-      position: relative;
-      width: 100%;
-      height: 100%;
-      /* Animation flip en deux phases via scaleX */
-      transform-origin: center center;
-      transition: transform 0.22s ease-in;
-    }
-    /* Phase 1 : rétrécissement (déclenché par JS avec .flipping) */
-    .tore-card.flipping .tore-card-inner {
-      transform: scaleX(0);
-    }
-    /* Phase 2 : expansion (déclenché par JS avec .flipped après le scaleX(0)) */
-    .tore-card.flipped .tore-card-inner {
       transform: scaleX(1);
-      transition: transform 0.22s ease-out;
+      transition: transform 0.38s ease-in;
     }
-    /* Dos : visible par défaut */
-    .tore-card-back {
-      position: absolute;
-      inset: 0;
-      opacity: 1;
-      visibility: visible;
-    }
-    /* Face avant : cachée par défaut */
-    .tore-card-front {
-      position: absolute;
-      inset: 0;
-      opacity: 0;
-      visibility: hidden;
-      transform: none !important;
-      pointer-events: none;
-      background: transparent;
-      transition: opacity 0.18s ease;
-    }
-    /* Après retournement : dos caché, face visible */
-    .tore-card.flipped .tore-card-back {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-    .tore-card.flipped .tore-card-front {
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-      transition: opacity 0.18s ease 0.05s;
-    }
+    .tore-card.flipping .tore-card-inner { transform: scaleX(0); transition: transform 0.38s ease-in; }
+    .tore-card.flipped .tore-card-inner { transform: scaleX(1); transition: transform 0.38s ease-out; }
   }
 
   /* Tablette : même comportement que mobile pour le flip */
   @media (min-width: 640px) and (max-width: 1023px) {
-    .tore-card {
-      perspective: none !important;
-    }
-    .tore-card,
-    .tore-card-inner,
-    .tore-card-back,
-    .tore-card-front {
-      backface-visibility: visible !important;
-      -webkit-backface-visibility: visible !important;
-      transform-style: flat !important;
-      -webkit-transform-style: flat !important;
-    }
-    .tore-card-inner {
-      transform-origin: center center;
-      transition: transform 0.22s ease-in;
-    }
-    .tore-card.flipping .tore-card-inner {
-      transform: scaleX(0);
-    }
-    .tore-card.flipped .tore-card-inner {
-      transform: scaleX(1);
-      transition: transform 0.22s ease-out;
-    }
     .tore-card-back {
       opacity: 1;
       visibility: visible;
@@ -5551,10 +5479,14 @@ function closeToreExitModal(){
         const FLIP_TIMEOUT = _fast ? 600 : 1500;
 
         const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        if (!prefersReduced) {
-          isCardFlipping = true;
-          card.classList.add('flipping');
-          if (coinWrapper) coinWrapper.style.pointerEvents = 'none';
+        const PHASE1_DURATION = 380; // doit correspondre à la durée CSS transition phase 1
+
+        // Préparer l'image en parallèle de la phase 1
+        if (imgEl.src !== imgPath) imgEl.src = imgPath;
+        let imgReady = imgEl.complete && imgEl.naturalWidth > 0;
+        if (!imgReady) {
+          imgEl.onload = () => { imgReady = true; };
+          imgEl.onerror = () => { imgReady = true; };
         }
 
         const doFlip = () => {
@@ -5564,40 +5496,32 @@ function closeToreExitModal(){
           if (coinWrapper && coinWrapper.style.display !== 'none') {
             coinWrapper.style.pointerEvents = 'auto';
           }
-          // Remplir le contenu de la face avant ici
           const escName = (data.name || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
           const imgEl2 = document.createElement('img');
           imgEl2.src = imgPath;
           imgEl2.alt = escName;
           imgEl2.setAttribute('loading', 'eager');
           imgEl2.setAttribute('fetchpriority', 'high');
-          // Garder le placeholder visible pendant le fade-in de l'image
-          // imgEl2 est placé AU-DESSUS du placeholder via position:absolute
           front.style.position = 'relative';
           imgEl2.style.cssText = 'position:absolute;inset:0;width:100%;height:100%;object-fit:contain;display:block;opacity:0;transition:opacity 0.35s ease;';
-          // Vider le placeholder seulement après que l'image est visible
           front.innerHTML = '<div style="position:absolute;inset:0;background:linear-gradient(135deg,#1a1200,#2a1f00,#1a1200);border-radius:10px;z-index:0;"></div>';
           front.appendChild(imgEl2);
-          // Retour haptique discret sur mobile
           if (navigator.vibrate) navigator.vibrate(18);
-          void card.offsetWidth;
           card.classList.remove('flipping');
           card.classList.add('flipped', 'just-flipped');
           setTimeout(() => {
             const inner = card.querySelector('.tore-card-inner');
             if (inner) inner.style.willChange = 'auto';
           }, 1200);
-          // Mettre à jour aria-pressed pour les lecteurs d'écran
           const backEl = card.querySelector('.tore-card-back');
           if (backEl) {
             backEl.setAttribute('aria-pressed', 'true');
             backEl.setAttribute('aria-label', 'Carte retournée');
-            backEl.setAttribute('tabindex', '-1'); // sortir du tabindex maintenant que la carte est retournée
+            backEl.setAttribute('tabindex', '-1');
           }
           requestAnimationFrame(() => {
             requestAnimationFrame(() => {
               imgEl2.style.opacity = '1';
-              // Supprimer le placeholder sombre une fois l'image visible
               setTimeout(() => {
                 const placeholder = front.querySelector('div');
                 if (placeholder) placeholder.remove();
@@ -5605,21 +5529,35 @@ function closeToreExitModal(){
               }, 400);
             });
           });
-          
           setTimeout(() => {
-            card.classList.remove('just-flipped'); // retirer l'exception
+            card.classList.remove('just-flipped');
             showGuideMessage(famKey, data);
           }, prefersReduced ? 100 : 1000);
         };
 
-        if (imgEl.complete && imgEl.naturalWidth > 0) {
-          // Image déjà entièrement préchargée (pré-sélection) : on retourne aussitôt.
+        if (prefersReduced) {
           doFlip();
         } else {
-          imgEl.onload = doFlip;
-          imgEl.onerror = doFlip;
-          setTimeout(doFlip, prefersReduced ? 300 : FLIP_TIMEOUT);
-          imgEl.src = imgPath;
+          isCardFlipping = true;
+          card.classList.add('flipping');
+          if (coinWrapper) coinWrapper.style.pointerEvents = 'none';
+          // Attendre la fin de la phase 1 (carte à 90°) avant de swapper le contenu
+          const inner = card.querySelector('.tore-card-inner');
+          let phase1Done = false;
+          const onPhase1End = () => {
+            if (phase1Done) return;
+            phase1Done = true;
+            inner && inner.removeEventListener('transitionend', onPhase1End);
+            // Si l'image n'est pas encore chargée, attendre un peu plus
+            if (imgReady) { doFlip(); }
+            else {
+              imgEl.onload = imgEl.onerror = doFlip;
+              setTimeout(doFlip, FLIP_TIMEOUT);
+            }
+          };
+          if (inner) inner.addEventListener('transitionend', onPhase1End);
+          // Filet de sécurité si transitionend ne se déclenche pas
+          setTimeout(onPhase1End, PHASE1_DURATION + 100);
         }
 
         // Filet de sécurité : si toutes les cartes sont retournées et que la phase pièce
