@@ -905,26 +905,21 @@
 
   /* ── Flip 3D rotateY — toutes tailles ── */
   .tore-card {
-    perspective: 900px;
+    perspective: 800px;
   }
   .tore-card-inner {
-    position: relative;
-    width: 100%;
-    height: 100%;
     transform-style: preserve-3d;
     transform: rotateY(0deg);
-    transition: transform 0.38s ease-in;
+    transition: transform 0.28s ease-in;
     transform-origin: center center;
   }
-  /* Phase 1 : rotation vers 90° (dos disparaît) */
   .tore-card.flipping .tore-card-inner {
     transform: rotateY(90deg);
-    transition: transform 0.38s ease-in;
+    transition: transform 0.28s ease-in;
   }
-  /* Phase 2 : repli de 90° vers 0° (face apparaît) */
   .tore-card.flipped .tore-card-inner {
     transform: rotateY(0deg);
-    transition: transform 0.38s ease-out;
+    transition: transform 0.28s ease-out;
   }
   .tore-card-back {
     position: absolute;
@@ -941,7 +936,7 @@
     pointer-events: none;
     background: transparent;
     backface-visibility: visible;
-    transition: opacity 0.22s ease 0.05s;
+    transition: opacity 0.2s ease 0.04s;
   }
   .tore-card.flipped .tore-card-back {
     opacity: 0;
@@ -952,51 +947,7 @@
     opacity: 1;
     visibility: visible;
     pointer-events: auto;
-    transition: opacity 0.22s ease 0.05s;
-  }
-
-  /* ── Fallback scaleX 2D mobile iOS (évite les bugs 3D Safari anciens) ── */
-  @media (max-width: 639px) {
-    .tore-card { perspective: none !important; }
-    .tore-card, .tore-card-inner, .tore-card-back, .tore-card-front {
-      backface-visibility: visible !important;
-      -webkit-backface-visibility: visible !important;
-      transform-style: flat !important;
-      -webkit-transform-style: flat !important;
-    }
-    .tore-card-inner {
-      transform: scaleX(1);
-      transition: transform 0.38s ease-in;
-    }
-    .tore-card.flipping .tore-card-inner { transform: scaleX(0); transition: transform 0.38s ease-in; }
-    .tore-card.flipped .tore-card-inner { transform: scaleX(1); transition: transform 0.38s ease-out; }
-  }
-
-  /* Tablette : même comportement que mobile pour le flip */
-  @media (min-width: 640px) and (max-width: 1023px) {
-    .tore-card-back {
-      opacity: 1;
-      visibility: visible;
-    }
-    .tore-card-front {
-      opacity: 0;
-      visibility: hidden;
-      transform: none !important;
-      pointer-events: none;
-      background: transparent;
-      transition: opacity 0.18s ease;
-    }
-    .tore-card.flipped .tore-card-back {
-      opacity: 0;
-      visibility: hidden;
-      pointer-events: none;
-    }
-    .tore-card.flipped .tore-card-front {
-      opacity: 1;
-      visibility: visible;
-      pointer-events: auto;
-      transition: opacity 0.18s ease 0.05s;
-    }
+    transition: opacity 0.2s ease 0.04s;
   }
 
   /* ── Masquer le logo-circle global dans les cartes du tore ── */
@@ -5479,7 +5430,7 @@ function closeToreExitModal(){
         const FLIP_TIMEOUT = _fast ? 600 : 1500;
 
         const prefersReduced = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-        const PHASE1_DURATION = 380; // doit correspondre à la durée CSS transition phase 1
+        const PHASE1_DURATION = 280; // doit correspondre à la durée CSS transition phase 1
 
         // Préparer l'image en parallèle de la phase 1
         if (imgEl.src !== imgPath) imgEl.src = imgPath;
