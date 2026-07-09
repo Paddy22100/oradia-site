@@ -2982,7 +2982,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
                 <span class="quantum-label">Tirage quantique</span>
                 <span class="quantum-sublabel">Vraie indétermination · ANU Lab, Australie</span>
               </div>
-              <button type="button" class="quantum-learn-more" onclick="document.getElementById('quantum-explication').classList.toggle('open')">
+              <button type="button" class="quantum-learn-more" onclick="(function(){const p=document.getElementById('quantum-explication');const s=document.getElementById('tore-immersif');p.classList.toggle('open');s.style.overflow=p.classList.contains('open')?'auto':'hidden';})()">
                 En savoir plus
               </button>
             </div>
@@ -6906,6 +6906,8 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!qPanel || !qPanel.classList.contains('open')) return;
     if (!qPanel.contains(e.target) && !qBtn?.contains(e.target)) {
       qPanel.classList.remove('open');
+      const s = document.getElementById('tore-immersif');
+      if (s) s.style.overflow = 'hidden';
     }
   }, { passive: true });
 
