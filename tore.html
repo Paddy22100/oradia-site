@@ -2868,15 +2868,15 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
   </div>
 
 <section id="tore-immersif" class="relative"
-  style="background-image: url('images/oradia-hero-4k.webp'); background-size: cover; background-repeat: no-repeat; isolation: isolate;">
+  style="background-image: url('images/oradia-hero-4k.webp'); background-size: cover; background-repeat: no-repeat; isolation: isolate; height:100vh; height:100dvh; overflow:hidden;">
 
   <!-- Voile comme l'index -->
   <div class="absolute inset-0" style="background: radial-gradient(circle at 20% 80%, rgba(212,175,55,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(212,175,55,0.04) 0%, transparent 50%), linear-gradient(135deg, rgba(10,25,47,0.65) 0%, rgba(5,20,40,0.75) 100%);"></div>
 
-  <div class="relative z-10 container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8" style="height:100%;display:flex;flex-direction:column;">
+  <div class="relative z-10 container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8" style="height:100%;display:flex;flex-direction:column;overflow:hidden;">
 
     <!-- FORMULAIRE D'INTENTION -->
-    <form id="tore-form" class="flex flex-col items-center justify-start" style="flex:1;min-height:100vh;min-height:100dvh;padding:clamp(12px,2vh,32px) 0 clamp(12px,3vh,40px);overflow:hidden;overflow-anchor:none;gap:clamp(14px,2.5vh,32px);">
+    <form id="tore-form" class="flex flex-col items-center justify-center" style="flex:1;height:100%;padding:clamp(12px,2vh,28px) 0 clamp(8px,1.5vh,24px);overflow:hidden;overflow-anchor:none;gap:clamp(10px,2vh,24px);">
 
       <!-- Titre principal unique -->
       <div class="text-center" style="margin-bottom:0;width:100%;max-width:42rem;">
@@ -2888,7 +2888,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
       </div>
 
       <!-- Bloc formulaire unique sans cadres multiples -->
-      <div class="w-full max-w-2xl" style="display:flex;flex-direction:column;gap:clamp(22px,4vh,40px);">
+      <div class="w-full max-w-2xl" style="display:flex;flex-direction:column;gap:clamp(8px,1.8vh,20px);">
 
         <!-- Sous-titre question -->
         <div class="text-center" style="margin-bottom:0;">
@@ -2928,16 +2928,16 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
         <!-- Genre (obligatoire) -->
         <div style="margin:0;text-align:center;">
-          <p class="text-light-gold/40 text-center italic" style="font-size:clamp(10px,1.1vw,12px);margin-bottom:clamp(4px,0.8vh,8px);">Vous&#8239;êtes&nbsp;:</p>
-          <div class="flex justify-center gap-3" id="tore-gender-buttons">
+          <p class="text-center" style="font-size:clamp(12px,1.3vw,14px);margin-bottom:clamp(6px,1vh,10px);color:rgba(212,175,55,0.75);font-style:italic;">Vous êtes :</p>
+          <div class="flex justify-center gap-4" id="tore-gender-buttons">
             <button type="button" data-gender="homme" onclick="selectGender(this)"
               class="tore-gender-btn rounded-full border transition-all duration-200"
-              style="padding:clamp(4px,0.8vh,7px) clamp(12px,2.5vw,22px);font-size:clamp(11px,1.2vw,13px);border-color:rgba(212,175,55,0.3);color:rgba(212,175,55,0.6);background:transparent;">
+              style="padding:clamp(7px,1.2vh,11px) clamp(22px,4vw,36px);font-size:clamp(13px,1.4vw,15px);border-color:rgba(212,175,55,0.5);color:rgba(212,175,55,0.85);background:rgba(212,175,55,0.05);">
               Homme
             </button>
             <button type="button" data-gender="femme" onclick="selectGender(this)"
               class="tore-gender-btn rounded-full border transition-all duration-200"
-              style="padding:clamp(4px,0.8vh,7px) clamp(12px,2.5vw,22px);font-size:clamp(11px,1.2vw,13px);border-color:rgba(212,175,55,0.3);color:rgba(212,175,55,0.6);background:transparent;">
+              style="padding:clamp(7px,1.2vh,11px) clamp(22px,4vw,36px);font-size:clamp(13px,1.4vw,15px);border-color:rgba(212,175,55,0.5);color:rgba(212,175,55,0.85);background:rgba(212,175,55,0.05);">
               Femme
             </button>
           </div>
@@ -2962,12 +2962,12 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
              style="display:none;color:rgba(212,175,55,0.5);font-size:0.875rem;
                     margin-top:4px;text-align:center;">
           </p>
-          <p class="text-light-gold/40 text-sm mt-3">
+          <p class="text-light-gold/40 text-xs mt-2">
             <i class="fas fa-lock mr-1"></i>Votre intention reste confidentielle
           </p>
 
           <!-- Quantum Badge -->
-          <div class="mt-5 flex justify-center" id="quantum-section">
+          <div class="mt-2 flex justify-center" id="quantum-section">
             <div class="quantum-badge">
               <div class="quantum-icon">
                 <svg width="24" height="24" viewBox="0 0 28 28" fill="none" xmlns="http://www.w3.org/2000/svg">
