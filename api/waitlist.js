@@ -205,7 +205,7 @@ async function sendWaitlistConfirmationEmail(email) {
           email: "contact@oradia.fr",
           name: "Oradia"
         },
-        subject: 'Bienvenue dans l\'univers ORADIA ✨',
+        subject: "Rudy d'Oradia - Bienvenue dans l'univers ORADIA ✨",
         htmlContent: `
 <!DOCTYPE html>
 <html lang="fr" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
@@ -391,7 +391,7 @@ async function sendSignupConfirmationEmail(email, name) {
         sender: { email: senderEmail, name: senderName },
         to: [{ email, name }],
         replyTo: { email: 'contact@oradia.fr', name: 'Oradia' },
-        subject: 'Bienvenue dans votre espace ORADIA ✨',
+        subject: "Rudy d'Oradia - Bienvenue dans votre espace ORADIA ✨",
         htmlContent: `<!DOCTYPE html>
 <html lang="fr" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 <head>

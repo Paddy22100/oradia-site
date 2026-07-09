@@ -125,7 +125,7 @@ async function handleClose(req, res) {
         body: JSON.stringify({
           sender: { name: FROM_NAME, email: FROM_EMAIL },
           to: [{ email: win.email }],
-          subject: `Votre fenêtre d'observation se referme — qu'avez-vous perçu ?`,
+          subject: `Rudy d'Oradia - Votre fenêtre d'observation se referme — qu'avez-vous perçu ?`,
           htmlContent: emailHTML,
         }),
       });

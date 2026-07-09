@@ -546,7 +546,7 @@ oradia.fr
           email: 'contact@oradia.fr'
         },
         to: [{ email }],
-        subject: intention ? `Votre tirage du Tore : ${intention}` : 'Votre tirage du Tore',
+        subject: intention ? `Rudy d'Oradia - Votre tirage du Tore : ${intention}` : "Rudy d'Oradia - Votre tirage du Tore",
         htmlContent,
         textContent
       })

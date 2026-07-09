@@ -74,8 +74,8 @@ async function sendToreSubscriptionEmail({ toEmail, toName, tempPassword, plan }
                 to:        [{ email: toEmail, name: toName }],
                 replyTo:   { email: 'contact@oradia.fr', name: 'Oradia' },
                 subject:   plan === 'decouverte'
-                    ? '✦ Bienvenue dans Le Tore — Formule Découverte activée'
-                    : '✦ Bienvenue dans Le Tore — Votre abonnement est actif',
+                    ? "Rudy d'Oradia - Bienvenue dans Le Tore — Formule Découverte activée"
+                    : "Rudy d'Oradia - Bienvenue dans Le Tore — Votre abonnement est actif",
                 htmlContent: `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#050a14;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#050a14;padding:48px 20px;">
@@ -884,7 +884,7 @@ async function handleCalWebhook(req, res) {
                     sender: { email: process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr', name: 'Rudy · Oradia' },
                     to: [{ email: clientEmail, name: clientName }],
                     replyTo: { email: 'contact@oradia.fr', name: 'Rudy · Oradia' },
-                    subject: `✦ Votre lien de connexion — Guidance Oradia du ${dateStr}`,
+                    subject: `Rudy d'Oradia - Votre lien de connexion — Guidance Oradia du ${dateStr}`,
                     htmlContent: `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>
 <body style="margin:0;padding:0;background:#050a14;">
   <table width="100%" cellpadding="0" cellspacing="0" style="background:#050a14;padding:48px 20px;">
