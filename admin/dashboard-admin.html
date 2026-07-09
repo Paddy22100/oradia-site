@@ -5893,11 +5893,13 @@
             const fmt = v => v || '<span class="text-light-gold/30">—</span>';
             const statusClass = preorder.paid_status === 'completed' ? 'text-green-400' : preorder.paid_status === 'pending' ? 'text-yellow-400' : 'text-red-400';
             const items = Array.isArray(preorder.items) ? preorder.items : [];
-            const itemsHtml = items.length ? items.map(it => `
+            const offerLabel = preorder.offer || 'Oracle ORADIA';
+            const totalQty = items.reduce((s, it) => s + (Number(it?.quantity) || 1), 0) || 1;
+            const itemsHtml = `
                 <div class="flex justify-between text-sm py-1 border-b border-gold/10">
-                    <span class="text-light-gold/80">${it.name || it.id || '?'}</span>
-                    <span class="text-gold font-semibold">× ${it.quantity || 1}</span>
-                </div>`).join('') : '<p class="text-light-gold/40 text-sm">Aucun article</p>';
+                    <span class="text-light-gold/80">${offerLabel}</span>
+                    <span class="text-gold font-semibold">× ${totalQty}</span>
+                </div>`;
 
             document.getElementById('preorderDetailContent').innerHTML = `
                 <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm mb-5">
