@@ -4582,29 +4582,25 @@ function showToreAnalysisCTA() {
         passerelles: cards.filter(c => c.bridgeCard).map(c => ({ carte: c.name, passerelle: c.bridgeCard.name }))
       };
       if (window.OradiaTirageStorage) {
-        // Sauvegarde sécurisée côté Supabase pour les membres connectés (RLS : chacun ne voit que ses tirages),
-        // ou stockage local namespacé "invité" pour les visiteurs anonymes — jamais sous une clé globale partagée.
         const result = await window.OradiaTirageStorage.addTirage(entry, 20);
-        // Mémoriser l'id du tirage pour que tore-analysis.html puisse le compléter
-        // avec l'analyse IA, la synthèse et la fenêtre d'observation une fois disponibles.
         if (result && result.id) {
           sessionStorage.setItem('tore_tirage_id', String(result.id));
         } else {
           sessionStorage.removeItem('tore_tirage_id');
         }
-      } else {
-        const tirages = JSON.parse(localStorage.getItem('oradia_tirages_invite') || '[]');
-        tirages.push(entry);
-        if (tirages.length > 20) tirages.splice(0, tirages.length - 20);
-        localStorage.setItem('oradia_tirages_invite', JSON.stringify(tirages));
-        // Sauvegarder l'intention pour l'analyse éditoriale (pas de données perso)
-        if (intention) {
+        // Sauvegarder l'intention pour l'analyse éditoriale si visiteur anonyme
+        if (!window.OradiaTirageStorage.isAuthenticated() && intention) {
           fetch('/api/admin/intentions', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ intention, cartes: entry.cartes })
           }).catch(() => {});
         }
+      } else {
+        const tirages = JSON.parse(localStorage.getItem('oradia_tirages_invite') || '[]');
+        tirages.push(entry);
+        if (tirages.length > 20) tirages.splice(0, tirages.length - 20);
+        localStorage.setItem('oradia_tirages_invite', JSON.stringify(tirages));
       }
     } catch(e) {}
   })();
