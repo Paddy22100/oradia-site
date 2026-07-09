@@ -265,7 +265,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Invalid JSON' });
   }
 
-  const { intention, cards, userEmail } = body;
+  const { intention, cards, userEmail, gender } = body;
   if (!Array.isArray(cards) || cards.length === 0) {
     return res.status(400).json({ error: 'Cards array required' });
   }
@@ -295,7 +295,15 @@ export default async function handler(req, res) {
     return `${i + 1}. ${c.family}: ${c.name}${polarity}${bridge}`;
   }).join('\n');
 
+  const genderInstruction = gender === 'homme'
+    ? "L'utilisateur est un homme. Accorde les adjectifs et participes passés au masculin quand tu t'adresses à lui directement."
+    : gender === 'femme'
+    ? "L'utilisateur est une femme. Accorde les adjectifs et participes passés au féminin quand tu t'adresses à elle directement."
+    : "Ne fais pas d'accord genré — utilise des formulations neutres ou épicènes.";
+
   const userPrompt = `Tu es l'Oracle Oradia, un guide introspectif bienveillant.
+
+${genderInstruction}
 
 INTENTION DE L'UTILISATEUR : "${intention || 'question personnelle'}"
 

@@ -1466,7 +1466,7 @@
                     const resp = await fetch('/api/analyse-tirage', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ intention, cards })
+                        body: JSON.stringify({ intention, cards, gender: sessionStorage.getItem('tore_gender') || 'neutre' })
                     });
                     data = await resp.json();
                     if (!resp.ok || !data.success || !data.analysis) throw new Error(data.error || 'Analyse indisponible');

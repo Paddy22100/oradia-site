@@ -2926,6 +2926,28 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
           </div>
         </div>
 
+        <!-- Genre (facultatif) -->
+        <div style="margin-top:16px;">
+          <p class="text-light-gold/50 text-xs text-center italic" style="margin-bottom:8px;">Pour adapter la synthèse (facultatif)</p>
+          <div class="flex justify-center gap-3" id="tore-gender-buttons">
+            <button type="button" data-gender="homme" onclick="selectGender(this)"
+              class="tore-gender-btn px-4 py-2 rounded-full text-sm border transition-all duration-200"
+              style="border-color:rgba(212,175,55,0.3);color:rgba(212,175,55,0.6);background:transparent;">
+              Homme
+            </button>
+            <button type="button" data-gender="femme" onclick="selectGender(this)"
+              class="tore-gender-btn px-4 py-2 rounded-full text-sm border transition-all duration-200"
+              style="border-color:rgba(212,175,55,0.3);color:rgba(212,175,55,0.6);background:transparent;">
+              Femme
+            </button>
+            <button type="button" data-gender="neutre" onclick="selectGender(this)"
+              class="tore-gender-btn px-4 py-2 rounded-full text-sm border transition-all duration-200"
+              style="border-color:rgba(212,175,55,0.3);color:rgba(212,175,55,0.6);background:transparent;">
+              Ne pas préciser
+            </button>
+          </div>
+        </div>
+
         <!-- Bouton -->
         <div class="text-center">
           <button id="tore-submit-btn"
@@ -3900,7 +3922,7 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       fetch('/api/analyse-tirage', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ intention, cards, userEmail })
+        body: JSON.stringify({ intention, cards, userEmail, gender: sessionStorage.getItem('tore_gender') || 'neutre' })
       })
       .then(resp => {
         if (resp.status === 429) {
@@ -5162,6 +5184,20 @@ function closeToreExitModal(){
 }
 
 
+
+  function selectGender(btn) {
+    document.querySelectorAll('.tore-gender-btn').forEach(b => {
+      b.classList.remove('selected');
+      b.style.borderColor = 'rgba(212,175,55,0.3)';
+      b.style.color = 'rgba(212,175,55,0.6)';
+      b.style.background = 'transparent';
+    });
+    btn.classList.add('selected');
+    btn.style.borderColor = 'rgba(212,175,55,0.8)';
+    btn.style.color = '#f0c75e';
+    btn.style.background = 'rgba(212,175,55,0.12)';
+  }
+  window.selectGender = selectGender;
 
   function buildBoardTore () {
 
@@ -6633,8 +6669,10 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     }
   }
 
-  // Sauvegarder l'intention dans sessionStorage
+  // Sauvegarder l'intention et le genre dans sessionStorage
   sessionStorage.setItem('tore_intention', intentionValue);
+  const selectedGenderBtn = document.querySelector('.tore-gender-btn.selected');
+  sessionStorage.setItem('tore_gender', selectedGenderBtn ? selectedGenderBtn.dataset.gender : 'neutre');
 
   form.classList.add('hidden');
   buildBoardTore();
