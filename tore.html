@@ -1896,11 +1896,7 @@
   /* Animation de lancer */
 
   .tore-coin.spin {
-
-    /* Durée de référence du tirage de pièce : 1,5s (Palier 2 #11 — alignée
-       avec le setTimeout JS qui orchestre la suite de la séquence) */
-    animation: coin-spin 1.5s ease-in-out;
-
+    animation: coin-spin 1.4s linear forwards;
   }
 
   /* Animation de mise en évidence pour attirer l'attention */
@@ -1930,15 +1926,11 @@
 
 
   @keyframes coin-spin {
-
-    0%   { transform: rotateY(0deg) scale(1); }
-
-    35%  { transform: rotateY(360deg) scale(1.25); }
-
-    70%  { transform: rotateY(720deg) scale(1.05); }
-
+    0%   { transform: rotateY(0deg)    scale(1); }
+    12%  { transform: rotateY(130deg)  scale(1.15); }
+    50%  { transform: rotateY(540deg)  scale(1.22); }
+    88%  { transform: rotateY(950deg)  scale(1.15); }
     100% { transform: rotateY(1080deg) scale(1); }
-
   }
 
   @keyframes coin-glow {
@@ -2762,10 +2754,14 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
   pointer-events: auto;
 }
 
+#tore-coin-wrapper {
+  perspective: 600px;
+}
 #tore-coin {
   pointer-events: auto;
   position: relative;
   z-index: 1;
+  transform-style: preserve-3d;
 }
 
 
@@ -6219,16 +6215,16 @@ function showArrowForStep(stepIndex, isMatch) {
     // Plateau verrouillé pendant l'animation
     boardHost.classList.add('board-locked');
 
-    // On enlève halo et onde précédents
-    coin.classList.remove('glow', 'ripple', 'face-yang', 'face-yin');
+    // On enlève halo et onde précédents + spin pour forcer le redémarrage
+    coin.classList.remove('spin', 'glow', 'ripple', 'face-yang', 'face-yin');
 
-    // Reset animation ripple
+    // Force reflow pour que l'animation reparte de zéro
     void coin.offsetWidth;
 
     // Maintenir le faisceau lumineux pendant le tirage
     highlightNextCard();
 
-    // Lancer d'animation de rotation
+    // Lancer l'animation de rotation
     coin.classList.add('spin');
 
     // Fin de l'animation (1,5s — alignée avec `coin-spin` ; Palier 2 #11)
