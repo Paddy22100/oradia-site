@@ -256,7 +256,7 @@ async function sendSubscriptionEmail(toEmail, toName, type) {
 <p style="margin:0 0 24px;color:#d1d5db;font-family:Georgia,serif;font-size:15px;line-height:1.8;">${bodyText}</p>
 <table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;">
 <tr><td style="border-radius:6px;" bgcolor="#d4af37">
-<a href="https://oradia.fr/tore.html" class="btn" style="display:inline-block;padding:15px 32px;color:#0a1628;font-family:Georgia,serif;font-size:14px;font-weight:bold;letter-spacing:1px;text-decoration:none;text-transform:uppercase;border-radius:6px;">Renouveler mon abonnement</a>
+<a href="https://oradia.fr/member/abonnements.html" class="btn" style="display:inline-block;padding:15px 32px;color:#0a1628;font-family:Georgia,serif;font-size:14px;font-weight:bold;letter-spacing:1px;text-decoration:none;text-transform:uppercase;border-radius:6px;">Renouveler mon abonnement</a>
 </td></tr></table>
 </td></tr>
 <tr><td style="padding:0 40px;" bgcolor="#0a1628"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="1" bgcolor="#3a3010" style="line-height:1px;font-size:1px;">&nbsp;</td></tr></table></td></tr>
