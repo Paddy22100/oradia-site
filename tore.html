@@ -2868,15 +2868,15 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
   </div>
 
 <section id="tore-immersif" class="relative"
-  style="background-image: url('images/oradia-hero-4k.webp'); background-size: cover; background-repeat: no-repeat; isolation: isolate; height:100vh; height:100dvh; overflow:hidden;">
+  style="background-image: url('images/oradia-hero-4k.webp'); background-size: cover; background-repeat: no-repeat; isolation: isolate; min-height:100vh; min-height:100dvh;">
 
   <!-- Voile comme l'index -->
   <div class="absolute inset-0" style="background: radial-gradient(circle at 20% 80%, rgba(212,175,55,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(212,175,55,0.04) 0%, transparent 50%), linear-gradient(135deg, rgba(10,25,47,0.65) 0%, rgba(5,20,40,0.75) 100%);"></div>
 
-  <div class="relative z-10 container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8" style="height:100%;display:flex;flex-direction:column;overflow:hidden;">
+  <div class="relative z-10 container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8" style="min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;">
 
     <!-- FORMULAIRE D'INTENTION -->
-    <form id="tore-form" class="flex flex-col items-center justify-center" style="flex:1;height:100%;padding:clamp(12px,2vh,28px) 0 clamp(8px,1.5vh,24px);overflow:hidden;overflow-anchor:none;gap:clamp(10px,2vh,24px);">
+    <form id="tore-form" class="flex flex-col items-center justify-center" style="flex:1;padding:clamp(12px,2vh,28px) 0 clamp(8px,1.5vh,24px);gap:clamp(10px,2vh,24px);">
 
       <!-- Titre principal unique -->
       <div class="text-center" style="margin-bottom:0;width:100%;max-width:42rem;">
@@ -2982,7 +2982,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
                 <span class="quantum-label">Tirage quantique</span>
                 <span class="quantum-sublabel">Vraie indétermination · ANU Lab, Australie</span>
               </div>
-              <button type="button" class="quantum-learn-more" onclick="(function(){const p=document.getElementById('quantum-explication');const s=document.getElementById('tore-immersif');const f=document.getElementById('tore-form');const open=!p.classList.contains('open');p.classList.toggle('open');s.style.overflow=open?'auto':'hidden';if(f){f.style.overflow=open?'visible':'hidden';}})()">
+              <button type="button" class="quantum-learn-more" onclick="(function(){const p=document.getElementById('quantum-explication');const open=!p.classList.contains('open');p.classList.toggle('open');document.body.style.overflow=open?'auto':'hidden';})()">
                 En savoir plus
               </button>
             </div>
@@ -6467,6 +6467,9 @@ function showArrowForStep(stepIndex, isMatch) {
   // Exécuter la configuration
   setupIntentionValidation();
 
+  // Bloquer le scroll page par défaut (débloqué uniquement si panel quantum ouvert)
+  document.body.style.overflow = 'hidden';
+
   // Compteur de tirages gratuits restants
   (function() {
     if (!window.freemiumTracker) return;
@@ -6906,10 +6909,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!qPanel || !qPanel.classList.contains('open')) return;
     if (!qPanel.contains(e.target) && !qBtn?.contains(e.target)) {
       qPanel.classList.remove('open');
-      const s = document.getElementById('tore-immersif');
-      if (s) s.style.overflow = 'hidden';
-      const f = document.getElementById('tore-form');
-      if (f) f.style.overflow = 'hidden';
+      document.body.style.overflow = 'hidden';
     }
   }, { passive: true });
 
