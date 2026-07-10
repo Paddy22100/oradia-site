@@ -1591,12 +1591,13 @@
                     <h4 class="text-gold text-sm font-semibold uppercase tracking-wider flex items-center gap-2">
                         <i class="fas fa-terminal"></i> Logs système (30 derniers jours)
                     </h4>
-                    <div class="flex gap-2">
-                        <button onclick="loadSurveillanceLogs()" class="text-teal-300/70 hover:text-teal-300 text-xs transition"><i class="fas fa-sync-alt"></i></button>
+                    <div class="flex gap-2 items-center">
+                        <button onclick="loadSurveillanceLogs()" class="text-teal-300/70 hover:text-teal-300 text-xs transition" title="Actualiser"><i class="fas fa-sync-alt"></i></button>
+                        <button onclick="downloadLogs()" class="text-gold/60 hover:text-gold text-xs transition" title="Télécharger"><i class="fas fa-download mr-1"></i>Télécharger</button>
                         <button onclick="clearOldLogs()" class="text-red-400/50 hover:text-red-400 text-xs transition">Purger</button>
                     </div>
                 </div>
-                <div id="surveillance-logs" class="space-y-1 max-h-60 overflow-y-auto font-mono text-xs">
+                <div id="surveillance-logs" class="space-y-1 max-h-[600px] overflow-y-auto font-mono text-xs">
                     <p class="text-gold/30 italic">Cliquez sur Actualiser pour charger les logs.</p>
                 </div>
             </div>
@@ -5674,23 +5675,41 @@
         }
 
         // ── SURVEILLANCE LOGS ────────────────────────────────────────────────────────
+        let _surveillanceLogs = [];
+
         async function loadSurveillanceLogs() {
             const el = document.getElementById('surveillance-logs');
             if (!el) return;
             el.innerHTML = '<p class="text-gold/30 italic animate-pulse">Chargement…</p>';
-            const res = await adminFetch('/api/admin/system-logs?limit=30');
+            const res = await adminFetch('/api/admin/system-logs?limit=500');
             const data = await res.json();
-            const logs = data.data || [];
-            if (logs.length === 0) { el.innerHTML = '<p class="text-gold/30 italic">Aucun log enregistré.</p>'; return; }
+            _surveillanceLogs = data.data || [];
+            if (_surveillanceLogs.length === 0) { el.innerHTML = '<p class="text-gold/30 italic">Aucun log enregistré.</p>'; return; }
             const lc = { error: 'text-red-400', warning: 'text-yellow-400', info: 'text-teal-300' };
-            el.innerHTML = logs.map(l => {
-                const t = new Date(l.created_at).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-                return `<div class="flex gap-2 py-0.5 border-b border-white/5 last:border-0">
-                    <span class="text-gold/25">${t}</span>
-                    <span class="${lc[l.level]||'text-gold/40'} font-bold">[${l.level?.toUpperCase()}]</span>
-                    <span class="text-gold/60 truncate">${escapeHtmlFront(l.message||'—')}</span>
+            el.innerHTML = _surveillanceLogs.map(l => {
+                const t = new Date(l.created_at).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+                return `<div class="py-0.5 border-b border-white/5 last:border-0">
+                    <span class="text-gold/25 mr-1">${t}</span>
+                    <span class="${lc[l.level]||'text-gold/40'} font-bold mr-1">[${(l.level||'?').toUpperCase()}]</span>
+                    <span class="text-gold/70 break-all whitespace-pre-wrap">${escapeHtmlFront(l.message||'—')}</span>
+                    ${l.details ? `<div class="text-gold/40 break-all whitespace-pre-wrap pl-4 mt-0.5">${escapeHtmlFront(typeof l.details === 'string' ? l.details : JSON.stringify(l.details, null, 2))}</div>` : ''}
                 </div>`;
             }).join('');
+        }
+
+        function downloadLogs() {
+            if (_surveillanceLogs.length === 0) { alert('Chargez d\'abord les logs.'); return; }
+            const lines = _surveillanceLogs.map(l => {
+                const t = new Date(l.created_at).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit',second:'2-digit'});
+                let line = `${t} [${(l.level||'?').toUpperCase()}] ${l.message||'—'}`;
+                if (l.details) line += '\n  ' + (typeof l.details === 'string' ? l.details : JSON.stringify(l.details));
+                return line;
+            });
+            const blob = new Blob([lines.join('\n')], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = `oradia-logs-${new Date().toISOString().slice(0,10)}.txt`;
+            a.click();
         }
 
         async function clearOldLogs() {
