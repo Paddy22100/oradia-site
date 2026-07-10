@@ -6254,8 +6254,8 @@ function showArrowForStep(stepIndex, isMatch) {
     // Plateau verrouillé pendant l'animation
     boardHost.classList.add('board-locked');
 
-    // On enlève halo et onde précédents + spin pour forcer le redémarrage
-    coin.classList.remove('spin', 'glow', 'ripple', 'face-yang', 'face-yin');
+    // On enlève halo, onde, pulse et spin précédents pour forcer le redémarrage
+    coin.classList.remove('spin', 'glow', 'ripple', 'face-yang', 'face-yin', 'pulse-highlight');
 
     // Force reflow pour que l'animation reparte de zéro
     void coin.offsetWidth;
