@@ -1902,7 +1902,7 @@
   /* Animation de lancer */
 
   .tore-coin.spin {
-    animation: coin-spin 1.6s ease-in-out forwards;
+    animation: coin-spin 1.6s cubic-bezier(0.15, 0, 0.4, 1) forwards;
     transition: none;
   }
 
@@ -4104,6 +4104,9 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
       
       // Ajouter le nouveau listener
       newBtn.addEventListener('click', () => {
+        // Libérer immédiatement pour que les clics carte ne soient pas avalés
+        isGuideMessageShown = false;
+        if (boardHost) boardHost.style.pointerEvents = 'auto';
         // Fermeture avec transition
         guideMessage.classList.add('guide-hiding');
         guideMessage.style.opacity = '0';
@@ -4111,8 +4114,6 @@ let isBridgeCardProcessing = false; // Bloquer les clics pendant le traitement d
         setTimeout(() => {
           guideMessage.style.visibility = 'hidden';
           guideMessage.classList.remove('guide-hiding');
-          isGuideMessageShown = false;
-          if (boardHost) boardHost.style.pointerEvents = 'auto';
           const total = boardHost ? boardHost.querySelectorAll('.tore-card').length : 0;
           const flipped = boardHost ? boardHost.querySelectorAll('.tore-card.flipped').length : 0;
           // Mettre à jour le contenu du bandeau AVANT de le rendre visible
