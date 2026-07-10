@@ -1902,7 +1902,7 @@
   /* Animation de lancer */
 
   .tore-coin.spin {
-    animation: coin-spin 1.4s linear forwards;
+    animation: coin-spin 1.6s ease-in-out forwards;
     transition: none;
   }
 
@@ -6265,9 +6265,13 @@ function showArrowForStep(stepIndex, isMatch) {
     // Lancer l'animation de rotation
     coin.classList.add('spin');
 
-    // Fin de l'animation (1,5s — alignée avec `coin-spin` ; Palier 2 #11)
+    // Fin de l'animation (1,6s — alignée avec `coin-spin`)
     setTimeout(async () => {
+      // Supprimer la transition avant de retirer .spin pour éviter la rotation inverse
+      coin.style.transition = 'none';
       coin.classList.remove('spin');
+      void coin.offsetWidth;
+      coin.style.transition = '';
 
       const _qBit = await QRNG.getInt(0, 2);
       const isYang = _qBit === 1;
@@ -6397,7 +6401,7 @@ function showArrowForStep(stepIndex, isMatch) {
         }
       }
 
-    }, 1500);
+    }, 1650);
   }
 
   // Afficher un message pour la carte passerelle

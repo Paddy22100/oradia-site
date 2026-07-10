@@ -12,6 +12,11 @@ h4, h5, h6 {
     font-family: "Cormorant SC", serif !important;
 }
 
+/* ===== HEADER ===== */
+.header-bg {
+    background: rgba(5, 20, 40, 0.98);
+}
+
 /* ===== RESET & FOND ===== */
 body {
     margin: 0; /* IMPORTANT pour que le fond soit plein écran */
