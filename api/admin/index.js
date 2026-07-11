@@ -1824,7 +1824,7 @@ function buildCommunicationEmailHtml(draft) {
   const totalImages = images.length;
 
   const imageRow = (img) => `
-    <tr><td style="padding:0 32px 24px;">
+    <tr><td style="padding:0 24px 24px;">
       <img src="${nlAbsUrl(img.path)}" alt="${nlEscHtml(img.name || '')}" width="576" style="display:block; width:100%; max-width:576px; height:auto; border-radius:14px;">
     </td></tr>`;
 
@@ -1834,7 +1834,7 @@ function buildCommunicationEmailHtml(draft) {
     const sorted = [...images].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
     paragraphs.forEach((para, i) => {
       sorted.filter(img => (img.position ?? 0) === i).forEach(img => { bodyRows += imageRow(img); });
-      bodyRows += `<tr><td style="padding:0 32px 20px;">
+      bodyRows += `<tr><td style="padding:0 24px 20px;">
       <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif;">${nlEscHtml(para).replace(/\n/g, '<br>')}</div>
     </td></tr>`;
     });
@@ -1845,7 +1845,7 @@ function buildCommunicationEmailHtml(draft) {
       while (imgIdx < totalImages && Math.floor((imgIdx + 1) * totalParas / (totalImages + 1)) === i) {
         bodyRows += imageRow(images[imgIdx++]);
       }
-      bodyRows += `<tr><td style="padding:0 32px 20px;">
+      bodyRows += `<tr><td style="padding:0 24px 20px;">
       <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif;">${nlEscHtml(para).replace(/\n/g, '<br>')}</div>
     </td></tr>`;
     });
@@ -1857,7 +1857,7 @@ function buildCommunicationEmailHtml(draft) {
 <body style="margin:0; padding:0; background-color:#040d1c;">
 <table width="100%" cellpadding="0" cellspacing="0" background="https://oradia.fr/images/oradia-hero-4k.webp" bgcolor="#040d1c" style="background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat; background-color:#040d1c;">
 <tr><td align="center" style="padding:32px 12px;">
-<table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.96) 100%); max-width:640px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.96) 100%); max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
   <tr><td background="https://oradia.fr/images/oradia-hero-4k.webp" bgcolor="#0a192f" style="background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat;">
     <table width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:50px 32px; text-align:center; background:linear-gradient(135deg, rgba(10,25,47,0.78) 0%, rgba(5,20,40,0.85) 100%);">
       <table cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr>
