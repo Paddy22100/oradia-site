@@ -3700,8 +3700,12 @@
                 </div>
                 <div id="nl-image-picker-body">
                 <p class="text-xs text-gold/60 mb-3">Les images seront affichées dans la newsletter. Clique sur une image pour la voir en grand.</p>
-                <p class="text-xs text-gold/40 mb-3 uppercase tracking-widest">Sélectionne jusqu'à 3 images — Produit · Bibliothèque · Unsplash</p>
+                <p class="text-xs text-gold/40 mb-3 uppercase tracking-widest">Sélectionne jusqu'à 3 images — Produit · Bibliothèque · Unsplash · Import</p>
                 <div class="flex flex-col sm:flex-row gap-2 mb-4">
+                    <label class="shrink-0 flex items-center gap-2 cursor-pointer bg-gold/10 border border-gold/30 text-gold rounded-lg px-3 py-2 text-sm hover:bg-gold/20 transition" title="Importer une image depuis votre ordinateur">
+                        <i class="fas fa-upload"></i><span>Importer</span>
+                        <input type="file" accept="image/jpeg,image/png,image/webp,image/gif" class="hidden" onchange="nlUploadImage(this)">
+                    </label>
                     <input type="text" id="nl-image-search" oninput="nlFilterImages()"
                         class="flex-1 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-gold"
                         placeholder="Rechercher une image (ex: lâcher-prise, océan, joie...)">
@@ -3754,6 +3758,34 @@
                 document.getElementById('nl-images-grid').innerHTML =
                     '<p class="col-span-5 text-center text-red-400 text-sm py-4">Erreur chargement images</p>';
             }
+        }
+
+        async function nlUploadImage(input) {
+            const file = input.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) { nlStatus('error', 'Image trop lourde (5 Mo max)'); return; }
+            nlStatus('info', 'Import en cours...');
+            try {
+                const base64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = e => resolve(e.target.result.split(',')[1]);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+                const res = await adminFetch('/api/admin/newsletter-images', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'upload-image', filename: file.name, contentType: file.type, base64 })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.url) throw new Error(data.error || 'Erreur upload');
+                const img = { path: data.url, thumb: data.url, name: data.name || file.name, source: 'upload', label: 'Import', category: 'import' };
+                if (!window.nlAllImages) window.nlAllImages = [];
+                window.nlAllImages.unshift(img);
+                nlRenderImagesGrid(window.nlAllImages);
+                nlStatus('success', 'Image importée. Clique dessus pour la sélectionner.');
+            } catch (e) { nlStatus('error', e.message); }
+            input.value = '';
         }
 
         function nlNormalize(s) {

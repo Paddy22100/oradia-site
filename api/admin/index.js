@@ -2507,6 +2507,31 @@ async function handleNewsletterImages(req, res) {
         return res.status(200).json({ success: false });
       }
 
+      // Action "upload-image" : reçoit une image en base64, la stocke dans Supabase Storage
+      if (body.action === 'upload-image') {
+        const { filename, contentType, base64 } = body;
+        if (!filename || !contentType || !base64) {
+          return res.status(400).json({ error: 'filename, contentType et base64 requis' });
+        }
+        const allowed = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+        if (!allowed.includes(contentType)) {
+          return res.status(400).json({ error: 'Type de fichier non autorisé (jpeg, png, webp, gif uniquement)' });
+        }
+        const sb = createClient(
+          process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+          process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+        const buffer = Buffer.from(base64, 'base64');
+        const ext = contentType.split('/')[1].replace('jpeg', 'jpg');
+        const safeName = `${Date.now()}_${filename.replace(/[^a-zA-Z0-9._-]/g, '_')}.${ext}`.replace(/\.+/g, '.');
+        const { error: upErr } = await sb.storage
+          .from('newsletter-uploads')
+          .upload(safeName, buffer, { contentType, upsert: false });
+        if (upErr) throw new Error(upErr.message);
+        const { data: { publicUrl } } = sb.storage.from('newsletter-uploads').getPublicUrl(safeName);
+        return res.status(200).json({ success: true, url: publicUrl, name: filename });
+      }
+
       // 1. Images produit (assets statiques du site)
       const produit = NL_PRODUIT_IMAGES
         .map(img => ({ path: `/images/${img.file}`, name: img.name, source: 'local', category: 'produit' }));
