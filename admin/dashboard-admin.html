@@ -1722,6 +1722,9 @@
                     <button onclick="showAddTransaction()" class="bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold rounded-lg px-4 py-2 text-sm transition">
                         <i class="fas fa-plus mr-1"></i>Ajouter
                     </button>
+                    <button onclick="exportComptaPDF()" class="bg-red-500/15 hover:bg-red-500/25 border border-red-400/30 text-red-300 hover:text-red-200 rounded-lg px-4 py-2 text-sm transition flex items-center gap-2">
+                        <i class="fas fa-file-pdf"></i>Exporter PDF
+                    </button>
                 </div>
             </div>
 
@@ -5868,6 +5871,8 @@
         // ── COMPTABILITÉ ─────────────────────────────────────────────────────────────
         let _comptaEditId = null;
 
+        let _comptaCache = null;
+
         async function loadComptabilite() {
             const year = document.getElementById('compta-year')?.value || '2026';
             const month = document.getElementById('compta-month')?.value || '';
@@ -5907,6 +5912,7 @@
                 urssafDetailEl.innerHTML = `BIC ventes ${(b.tauxBIC*100).toFixed(1)}% : ${fmt(b.urssafBIC)}<br>BNC services ${(b.tauxBNC*100).toFixed(1)}% : ${fmt(b.urssafBNC)}`;
             }
             const transactions = data.data || [];
+            _comptaCache = { year, month, transactions, summary: s, costsMonthlyEur, depensesTotal, netTotal };
             if (!list) return;
             if (transactions.length === 0) { list.innerHTML = '<p class="text-gold/30 text-sm italic text-center py-8">Aucune transaction. Cliquez sur "Resynchroniser l\'historique" pour charger les données existantes.</p>'; return; }
             list.innerHTML = transactions.map(t => {
@@ -5927,6 +5933,68 @@
                     </div>
                 </div>`;
             }).join('');
+        }
+
+        function exportComptaPDF() {
+            if (!_comptaCache) { alert('Chargez d\'abord les données de comptabilité.'); return; }
+            const { year, month, transactions, summary: s, costsMonthlyEur, depensesTotal, netTotal } = _comptaCache;
+            const fmt = v => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(v || 0);
+            const moisNoms = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
+            const periodeLabel = month ? `${moisNoms[parseInt(month)]} ${year}` : `Année ${year}`;
+            const recettes = transactions.filter(t => t.type === 'recette');
+            const depenses = transactions.filter(t => t.type === 'depense');
+            const row = t => {
+                const d = new Date(t.date).toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+                const isR = t.type === 'recette';
+                return `<tr>
+                    <td>${d}</td>
+                    <td>${t.description || ''}</td>
+                    <td>${t.category || ''}</td>
+                    <td style="color:${isR?'#166534':'#991b1b'};font-weight:600;text-align:right">${isR ? '+' : '−'}${fmt(t.amount)}</td>
+                </tr>`;
+            };
+            const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8">
+<title>Comptabilité ORADIA — ${periodeLabel}</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Georgia, serif; color: #1a1a2e; padding: 32px 40px; font-size: 12px; }
+  h1 { font-size: 22px; font-weight: bold; margin-bottom: 4px; }
+  .subtitle { color: #555; font-size: 13px; margin-bottom: 24px; }
+  .kpis { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 28px; }
+  .kpi { border: 1px solid #ddd; border-radius: 8px; padding: 12px 14px; text-align: center; }
+  .kpi .label { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #777; margin-bottom: 4px; }
+  .kpi .val { font-size: 16px; font-weight: bold; }
+  .kpi.recettes .val { color: #166534; }
+  .kpi.depenses .val { color: #991b1b; }
+  .kpi.net .val { color: #0f766e; }
+  .kpi.urssaf .val { color: #92400e; }
+  h2 { font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: .08em; color: #555; margin: 20px 0 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 4px; }
+  th { background: #f3f4f6; text-align: left; padding: 7px 10px; font-size: 10px; text-transform: uppercase; letter-spacing: .06em; color: #555; }
+  td { padding: 7px 10px; border-bottom: 1px solid #f3f4f6; font-size: 11.5px; }
+  tr:last-child td { border-bottom: none; }
+  .empty { color: #aaa; font-style: italic; padding: 10px; }
+  .footer { margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 10px; color: #aaa; font-size: 10px; display: flex; justify-content: space-between; }
+  @media print { @page { margin: 18mm 14mm; } }
+</style></head><body>
+<h1>ORADIA — Comptabilité</h1>
+<p class="subtitle">Période : ${periodeLabel} · Généré le ${new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' })}</p>
+<div class="kpis">
+  <div class="kpi recettes"><div class="label">Recettes brutes</div><div class="val">${fmt(s.recettes)}</div></div>
+  <div class="kpi depenses"><div class="label">Dépenses</div><div class="val">${fmt(depensesTotal)}</div></div>
+  <div class="kpi net"><div class="label">Résultat net</div><div class="val">${fmt(netTotal)}</div></div>
+  <div class="kpi urssaf"><div class="label">URSSAF estimé</div><div class="val">${fmt(s.urssaf)}</div></div>
+</div>
+<h2>Recettes (${recettes.length})</h2>
+${recettes.length ? `<table><thead><tr><th>Date</th><th>Description</th><th>Catégorie</th><th style="text-align:right">Montant</th></tr></thead><tbody>${recettes.map(row).join('')}</tbody></table>` : '<p class="empty">Aucune recette sur la période.</p>'}
+<h2>Dépenses (${depenses.length})</h2>
+${depenses.length ? `<table><thead><tr><th>Date</th><th>Description</th><th>Catégorie</th><th style="text-align:right">Montant</th></tr></thead><tbody>${depenses.map(row).join('')}</tbody></table>` : '<p class="empty">Aucune dépense sur la période.</p>'}
+<div class="footer"><span>ORADIA · oradia.fr</span><span>Document généré automatiquement — non contractuel</span></div>
+<script>window.onload = () => window.print();<\/script>
+</body></html>`;
+            const w = window.open('', '_blank');
+            w.document.write(html);
+            w.document.close();
         }
 
         function showAddTransaction() {
