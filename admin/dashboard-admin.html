@@ -5535,13 +5535,18 @@
                 const suggestEl = document.getElementById('insights-suggestions');
                 suggestEl.innerHTML = (r.suggestions_newsletter || []).map((s, i) => `
                     <div class="flex items-start justify-between gap-3 bg-white/3 border border-gold/10 rounded-xl p-4">
-                        <div>
+                        <div class="flex-1 min-w-0">
                             <p class="text-gold/90 font-medium text-sm mb-1">${s.sujet}</p>
                             <p class="text-gold/50 text-xs">${s.angle || ''}</p>
                         </div>
-                        <button onclick="navigator.clipboard.writeText(${JSON.stringify(s.sujet)}).then(()=>{this.innerHTML='<i class=\\'fas fa-check\\'></i>';setTimeout(()=>{this.innerHTML='<i class=\\'fas fa-copy\\'></i>'},1500)})" class="shrink-0 text-gold/40 hover:text-gold transition text-sm pt-0.5" title="Copier">
-                            <i class="fas fa-copy"></i>
-                        </button>
+                        <div class="shrink-0 flex items-center gap-2 pt-0.5">
+                            <button onclick="navigator.clipboard.writeText(${JSON.stringify(s.sujet)}).then(()=>{this.innerHTML='<i class=\\'fas fa-check\\'></i>';setTimeout(()=>{this.innerHTML='<i class=\\'fas fa-copy\\'></i>'},1500)})" class="text-gold/40 hover:text-gold transition text-sm" title="Copier le sujet">
+                                <i class="fas fa-copy"></i>
+                            </button>
+                            <button id="save-draft-btn-${i}" onclick="saveInsightAsDraft(${i}, ${JSON.stringify(s.sujet)}, ${JSON.stringify(s.angle || '')})" class="flex items-center gap-1 text-xs bg-gold/10 hover:bg-gold/20 border border-gold/20 text-gold/70 hover:text-gold px-2 py-1 rounded-lg transition" title="Enregistrer comme brouillon">
+                                <i class="fas fa-save"></i> Brouillon
+                            </button>
+                        </div>
                     </div>`).join('');
 
                 result.classList.remove('hidden');
@@ -5553,6 +5558,30 @@
                 loader.classList.add('hidden');
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-lightbulb"></i> Analyser les intentions';
+            }
+        }
+
+        async function saveInsightAsDraft(idx, sujet, angle) {
+            const btn = document.getElementById(`save-draft-btn-${idx}`);
+            if (!btn) return;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            try {
+                const content = angle ? `<!-- Angle éditorial : ${angle} -->\n\n` : '';
+                const res  = await adminFetch('/api/admin/newsletter?action=save', {
+                    method: 'POST',
+                    body: JSON.stringify({ subject: sujet, content })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                btn.innerHTML = '<i class="fas fa-check"></i> Enregistré';
+                btn.classList.replace('border-gold/20', 'border-emerald-400/30');
+                btn.classList.replace('text-gold/70', 'text-emerald-400');
+                btn.classList.replace('bg-gold/10', 'bg-emerald-400/10');
+            } catch (e) {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-save"></i> Brouillon';
+                alert('Erreur : ' + e.message);
             }
         }
 
