@@ -2441,7 +2441,7 @@
             if (bd)  bd.textContent  = data.donors.count || '';
             if (bw)  bw.textContent  = data.waitlist.count || '';
             if (bs)  bs.textContent  = data.subscriptions?.count || '';
-            if (bnl) bnl.textContent = data.waitlist.count || '';
+            // badge newsletter : mis à jour uniquement à l'ouverture de l'onglet (compte Brevo actifs)
             if (bg)  { const c = data.guidances?.confirmed || 0; bg.textContent = c || ''; bg.classList.toggle('hidden', !c); }
             const bm = document.getElementById('nav-badge-monitoring');
             if (bm)  { const c = data.monitoring?.critical || 0; bm.textContent = c || ''; bm.classList.toggle('hidden', !c); }
