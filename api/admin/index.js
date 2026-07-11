@@ -2491,7 +2491,7 @@ async function handlePublishSocial(req, res) {
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
     const body = req.body || {};
-    const { subject, textContent, scheduleAt } = body;
+    const { subject, textContent, scheduleAt, imageUrl } = body;
     if (!subject || !textContent) return res.status(400).json({ error: 'subject et textContent requis' });
 
     const MAKE_WEBHOOK_URL = process.env.MAKE_SOCIAL_WEBHOOK_URL;
@@ -2543,7 +2543,8 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
     if (!instagram_text) instagram_text = `${subject}\n\n${textContent.substring(0, 150)}...\n\n#oradia #oracle #developpementpersonnel #tore #conscience`;
 
     // Envoyer au webhook Make.com
-    const payload = { subject, facebook_text, instagram_text, schedule_at: scheduleAt || null, sent_at: new Date().toISOString() };
+    const DEFAULT_IMAGE = 'https://oradia.fr/images/logo-hd-v2.webp';
+    const payload = { subject, facebook_text, instagram_text, image_url: imageUrl || DEFAULT_IMAGE, schedule_at: scheduleAt || null, sent_at: new Date().toISOString() };
     const makeRes = await fetch(MAKE_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
