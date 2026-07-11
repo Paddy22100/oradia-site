@@ -1010,6 +1010,29 @@
                 </div>
                 <div id="subscriptionsPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)] border-t border-gold/20"></div>
             </div>
+        <!-- Tableau comptes système -->
+        <section class="mt-8">
+            <div class="flex items-center gap-3 mb-3">
+                <h4 class="text-gold/50 text-xs uppercase tracking-widest font-semibold">Comptes système</h4>
+                <div class="flex-1 h-px bg-gold/10"></div>
+            </div>
+            <div class="bg-[rgba(5,20,40,0.4)] rounded-xl border border-gold/10 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="border-b border-gold/10">
+                            <tr>
+                                <th class="px-5 py-3 text-left text-gold/40 font-semibold text-xs uppercase tracking-wider">Email</th>
+                                <th class="px-5 py-3 text-left text-gold/40 font-semibold text-xs uppercase tracking-wider">Nom</th>
+                                <th class="px-5 py-3 text-left text-gold/40 font-semibold text-xs uppercase tracking-wider">Statut</th>
+                                <th class="px-5 py-3 text-left text-gold/40 font-semibold text-xs uppercase tracking-wider">Échéance</th>
+                                <th class="px-5 py-3 text-left text-gold/40 font-semibold text-xs uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="systemSubsTbody" class="divide-y divide-gold/5"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
         </section>
 
         </div><!-- /tab-subscriptions -->
@@ -4572,6 +4595,8 @@
 
         let subPage = 1;
 
+        const SYSTEM_EMAILS = ['audit@oradia.fr', 'contact@oradia.fr'];
+
         async function loadSubscriptions(page = 1) {
             subPage = page;
             const q      = document.getElementById('subSearch')?.value || '';
@@ -4580,13 +4605,17 @@
             const tbody  = document.getElementById('subscriptionsTbody');
             tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-8 text-center text-gold/40"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</td></tr>';
             try {
-                const url = `/api/admin/data?section=subscriptions&page=${page}&limit=15&status=${status}&plan=${plan}&q=${encodeURIComponent(q)}`;
+                const url = `/api/admin/data?section=subscriptions&page=${page}&limit=1000&status=${status}&plan=${plan}&q=${encodeURIComponent(q)}`;
                 const res = await adminFetch(url);
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.message);
-                renderSubscriptions(json.data || [], json.pagination);
+                const all    = json.data || [];
+                const real   = all.filter(s => !SYSTEM_EMAILS.includes((s.email || '').toLowerCase()));
+                const system = all.filter(s =>  SYSTEM_EMAILS.includes((s.email || '').toLowerCase()));
+                renderSubscriptions(real, null);
+                renderSystemSubscriptions(system);
                 const badge = document.getElementById('nav-badge-subscriptions');
-                if (badge && json.pagination) badge.textContent = json.pagination.total || '';
+                if (badge) badge.textContent = real.filter(s => s.status === 'active').length || '';
                 loadSubStats();
             } catch(e) {
                 tbody.innerHTML = `<tr><td colspan="9" class="px-6 py-8 text-center text-red-400/70">${e.message}</td></tr>`;
@@ -4598,7 +4627,7 @@
                 const res  = await adminFetch('/api/admin/data?section=subscriptions&page=1&limit=1000&status=active');
                 const json = await res.json();
                 if (!res.ok) return;
-                const all  = json.data || [];
+                const all  = (json.data || []).filter(s => !SYSTEM_EMAILS.includes((s.email || '').toLowerCase()));
                 const now  = new Date();
                 const week = new Date(now); week.setDate(week.getDate() - 7);
                 const dec  = all.filter(s => (s.plan || 'complet') === 'decouverte').length;
@@ -4609,6 +4638,31 @@
                 document.getElementById('statSubComplet').textContent     = comp;
                 document.getElementById('statSubNew').textContent         = nw;
             } catch {}
+        }
+
+        function renderSystemSubscriptions(subs) {
+            const tbody = document.getElementById('systemSubsTbody');
+            if (!tbody) return;
+            if (!subs.length) { tbody.innerHTML = '<tr><td colspan="5" class="px-5 py-4 text-center text-gold/20 text-xs">Aucun compte système</td></tr>'; return; }
+            tbody.innerHTML = subs.map(s => {
+                const isActive = s.status === 'active';
+                const statusBadge = isActive
+                    ? '<span class="bg-green-500/10 text-green-400/60 text-xs px-2 py-0.5 rounded-full">Actif</span>'
+                    : '<span class="bg-red-500/10 text-red-400/60 text-xs px-2 py-0.5 rounded-full">Révoqué</span>';
+                const emailEsc = (s.email || '').replace(/'/g, "\\'");
+                return `<tr class="hover:bg-gold/3 transition">
+                    <td class="px-5 py-3 text-gold/40 text-xs">${s.email || '—'}</td>
+                    <td class="px-5 py-3 text-gold/30 text-xs">${s.full_name || '—'}</td>
+                    <td class="px-5 py-3">${statusBadge}</td>
+                    <td class="px-5 py-3 text-gold/30 text-xs">${s.expires_at ? new Date(s.expires_at).toLocaleDateString('fr-FR') : '<span class="text-gold/20">Illimité</span>'}</td>
+                    <td class="px-5 py-3">
+                        <div class="flex gap-2">
+                            <button onclick="viewTirages('${emailEsc}')" title="Voir les tirages" class="text-gold/30 hover:text-gold/60 border border-gold/10 hover:border-gold/30 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-layer-group"></i></button>
+                            <button onclick="editExpiry('${s.id}','${s.expires_at ? s.expires_at.split('T')[0] : ''}')" title="Modifier l'échéance" class="text-blue-400/30 hover:text-blue-400/70 border border-blue-400/10 hover:border-blue-400/30 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-calendar-alt"></i></button>
+                        </div>
+                    </td>
+                </tr>`;
+            }).join('');
         }
 
         function renderSubscriptions(subs, pagination) {
