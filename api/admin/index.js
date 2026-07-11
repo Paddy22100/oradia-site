@@ -2485,6 +2485,84 @@ function nlTranslateForUnsplash(text) {
   return found.length ? found.slice(0, 4).join(' ') : 'nature calm minimal';
 }
 
+async function handlePublishSocial(req, res) {
+  try {
+    verifyAdminAuth(req);
+    if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+
+    const body = req.body || {};
+    const { subject, textContent, scheduleAt } = body;
+    if (!subject || !textContent) return res.status(400).json({ error: 'subject et textContent requis' });
+
+    const MAKE_WEBHOOK_URL = process.env.MAKE_SOCIAL_WEBHOOK_URL;
+    if (!MAKE_WEBHOOK_URL) return res.status(500).json({ error: 'MAKE_SOCIAL_WEBHOOK_URL non configuré' });
+
+    // Générer les textes adaptés par réseau via Claude
+    const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+    let facebook_text = '';
+    let instagram_text = '';
+
+    if (ANTHROPIC_API_KEY) {
+      const prompt = `Tu es expert en communication digitale pour Oradia, un oracle de développement personnel basé sur le Tore.
+
+Newsletter à adapter :
+Sujet : ${subject}
+Contenu : ${textContent.substring(0, 1500)}
+
+Génère deux publications séparées :
+
+1. FACEBOOK (300-400 mots, ton inspirant et profond, peut contenir des paragraphes, emoji discrets, appel à l'action vers le site)
+2. INSTAGRAM (150-200 mots max, percutant, 5-8 hashtags pertinents en fin de texte, emojis bienvenus)
+
+Réponds UNIQUEMENT en JSON valide avec cette structure :
+{"facebook":"texte facebook","instagram":"texte instagram"}
+
+Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jamais promettre de résultats garantis.`;
+
+      const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 1024, messages: [{ role: 'user', content: prompt }] })
+      });
+      if (aiRes.ok) {
+        const aiData = await aiRes.json();
+        const raw = aiData.content?.[0]?.text || '';
+        try {
+          const jsonMatch = raw.match(/\{[\s\S]*\}/);
+          if (jsonMatch) {
+            const parsed = JSON.parse(jsonMatch[0]);
+            facebook_text = parsed.facebook || '';
+            instagram_text = parsed.instagram || '';
+          }
+        } catch (_) {}
+      }
+    }
+
+    // Fallback si l'IA échoue
+    if (!facebook_text) facebook_text = `${subject}\n\n${textContent.substring(0, 400)}...\n\nPlus sur oradia.fr`;
+    if (!instagram_text) instagram_text = `${subject}\n\n${textContent.substring(0, 150)}...\n\n#oradia #oracle #developpementpersonnel #tore #conscience`;
+
+    // Envoyer au webhook Make.com
+    const payload = { subject, facebook_text, instagram_text, schedule_at: scheduleAt || null, sent_at: new Date().toISOString() };
+    const makeRes = await fetch(MAKE_WEBHOOK_URL, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+
+    if (!makeRes.ok) {
+      const errText = await makeRes.text();
+      return res.status(502).json({ error: 'Make.com webhook error', detail: errText });
+    }
+
+    return res.status(200).json({ success: true, facebook_text, instagram_text });
+  } catch (err) {
+    if (err.message === 'Unauthorized') return res.status(401).json({ error: 'Non autorisé' });
+    console.error('handlePublishSocial error:', err);
+    return res.status(500).json({ error: err.message });
+  }
+}
+
 async function handleNewsletterImages(req, res) {
   try {
     verifyAdminAuth(req);
@@ -2840,6 +2918,10 @@ module.exports = async (req, res) => {
     
     if (path === '/sync-brevo' || path === '/sync-brevo/') {
       return await handleSyncBrevo(req, res);
+    }
+
+    if (path === '/publish-social' || path === '/publish-social/') {
+      return await handlePublishSocial(req, res);
     }
 
     if (path === '/sync-brevo-unsubscribes' || path === '/sync-brevo-unsubscribes/') {
