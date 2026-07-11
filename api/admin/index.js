@@ -2116,9 +2116,9 @@ ${intentions.map((i, n) => `${n + 1}. "${i}"`).join('\n')}
 Cartes les plus tirées : ${topCartes.join(', ')}
 
 Réponds UNIQUEMENT avec un JSON valide, sans markdown, sans blocs de code :
-{"themes":[{"theme":"nom","pourcentage":30,"description":"explication courte"}],"besoins":["besoin 1","besoin 2","besoin 3"],"suggestions_newsletter":[{"sujet":"Titre newsletter","angle":"angle éditorial"},{"sujet":"...","angle":"..."},{"sujet":"...","angle":"..."}],"cartes_dominantes":${JSON.stringify(topCartes.slice(0, 5))}}
+{"themes":[{"theme":"nom","pourcentage":30,"description":"explication courte"}],"besoins":["besoin 1","besoin 2","besoin 3"],"suggestions_newsletter":[{"sujet":"Titre accrocheur de la newsletter","angle":"angle éditorial en une phrase","contenu":"Corps de la newsletter : 3 à 5 paragraphes courts, ton chaleureux et introspectif, cohérent avec l'univers Oradia. Texte directement réutilisable comme base de rédaction."},{"sujet":"...","angle":"...","contenu":"..."},{"sujet":"...","angle":"...","contenu":"..."}],"cartes_dominantes":${JSON.stringify(topCartes.slice(0, 5))}}
 
-Contraintes : exactement 5 thèmes dont les pourcentages totalisent 100, exactement 3 besoins, exactement 3 suggestions_newsletter.`;
+Contraintes : exactement 5 thèmes dont les pourcentages totalisent 100, exactement 3 besoins, exactement 3 suggestions_newsletter avec chacune un contenu rédigé de 150 à 250 mots.`;
 
         const models = [process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5', 'claude-3-5-haiku-20241022'];
         let lastErr;
@@ -2131,7 +2131,7 @@ Contraintes : exactement 5 thèmes dont les pourcentages totalisent 100, exactem
                 'x-api-key': process.env.ANTHROPIC_API_KEY,
                 'anthropic-version': '2023-06-01'
               },
-              body: JSON.stringify({ model, max_tokens: 1200, messages: [{ role: 'user', content: prompt }] }),
+              body: JSON.stringify({ model, max_tokens: 2400, messages: [{ role: 'user', content: prompt }] }),
               signal: AbortSignal.timeout(30000)
             });
             if (!aiRes.ok) { lastErr = await aiRes.text(); continue; }

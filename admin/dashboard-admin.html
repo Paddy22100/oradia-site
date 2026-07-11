@@ -5588,23 +5588,25 @@
                 const cartesEl = document.getElementById('insights-cartes');
                 cartesEl.innerHTML = (r.cartes_dominantes || []).map(c => `<span class="bg-gold/10 border border-gold/20 text-gold/80 text-xs px-3 py-1 rounded-full">${c}</span>`).join('');
 
-                // Suggestions
+                // Suggestions — stockées dans une variable globale pour éviter les problèmes d'échappement inline
+                window._insightSuggestions = r.suggestions_newsletter || [];
                 const suggestEl = document.getElementById('insights-suggestions');
-                suggestEl.innerHTML = (r.suggestions_newsletter || []).map((s, i) => `
-                    <div class="flex items-start justify-between gap-3 bg-white/3 border border-gold/10 rounded-xl p-4">
-                        <div class="flex-1 min-w-0">
-                            <p class="text-gold/90 font-medium text-sm mb-1">${s.sujet}</p>
-                            <p class="text-gold/50 text-xs">${s.angle || ''}</p>
+                suggestEl.innerHTML = window._insightSuggestions.map((s, i) => {
+                    const contenuHtml = (s.contenu || '').split('\n').filter(Boolean).map(p => `<p class="text-gold/70 text-sm leading-relaxed mb-2">${escapeHtmlFront(p)}</p>`).join('');
+                    return `<div class="bg-white/3 border border-gold/10 rounded-xl overflow-hidden">
+                        <div class="flex items-start justify-between gap-3 p-4">
+                            <div class="flex-1 min-w-0">
+                                <p class="text-gold font-semibold text-sm mb-1">${escapeHtmlFront(s.sujet)}</p>
+                                <p class="text-gold/50 text-xs italic">${escapeHtmlFront(s.angle || '')}</p>
+                            </div>
+                            <div class="shrink-0 flex items-center gap-2">
+                                <button onclick="copyInsightSujet(${i})" class="text-gold/40 hover:text-gold transition text-sm" title="Copier le titre"><i class="fas fa-copy"></i></button>
+                                <button id="save-draft-btn-${i}" onclick="saveInsightAsDraft(${i})" class="flex items-center gap-1 text-xs bg-gold/10 hover:bg-gold/20 border border-gold/20 text-gold/70 hover:text-gold px-2 py-1 rounded-lg transition"><i class="fas fa-save"></i> Brouillon</button>
+                            </div>
                         </div>
-                        <div class="shrink-0 flex items-center gap-2 pt-0.5">
-                            <button onclick="navigator.clipboard.writeText(${JSON.stringify(s.sujet)}).then(()=>{this.innerHTML='<i class=\\'fas fa-check\\'></i>';setTimeout(()=>{this.innerHTML='<i class=\\'fas fa-copy\\'></i>'},1500)})" class="text-gold/40 hover:text-gold transition text-sm" title="Copier le sujet">
-                                <i class="fas fa-copy"></i>
-                            </button>
-                            <button id="save-draft-btn-${i}" onclick="saveInsightAsDraft(${i}, ${JSON.stringify(s.sujet)}, ${JSON.stringify(s.angle || '')})" class="flex items-center gap-1 text-xs bg-gold/10 hover:bg-gold/20 border border-gold/20 text-gold/70 hover:text-gold px-2 py-1 rounded-lg transition" title="Enregistrer comme brouillon">
-                                <i class="fas fa-save"></i> Brouillon
-                            </button>
-                        </div>
-                    </div>`).join('');
+                        ${s.contenu ? `<div class="border-t border-gold/10 px-4 py-3 bg-white/2">${contenuHtml}</div>` : ''}
+                    </div>`;
+                }).join('');
 
                 result.classList.remove('hidden');
             } catch (e) {
@@ -5618,16 +5620,27 @@
             }
         }
 
-        async function saveInsightAsDraft(idx, sujet, angle) {
+        function copyInsightSujet(idx) {
+            const s = (window._insightSuggestions || [])[idx];
+            if (!s) return;
+            navigator.clipboard.writeText(s.sujet).catch(() => {});
+        }
+
+        async function saveInsightAsDraft(idx) {
+            const s = (window._insightSuggestions || [])[idx];
+            if (!s) return;
             const btn = document.getElementById(`save-draft-btn-${idx}`);
             if (!btn) return;
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
             try {
-                const content = angle ? `<!-- Angle éditorial : ${angle} -->\n\n` : '';
+                const content = [
+                    s.angle ? `Angle éditorial : ${s.angle}\n` : '',
+                    s.contenu || ''
+                ].filter(Boolean).join('\n');
                 const res  = await adminFetch('/api/admin/newsletter?action=save', {
                     method: 'POST',
-                    body: JSON.stringify({ subject: sujet, content })
+                    body: JSON.stringify({ subject: s.sujet, content })
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Erreur');
