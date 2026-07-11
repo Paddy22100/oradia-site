@@ -1430,7 +1430,7 @@ async function handleData(req, res) {
     }
 
     // ── Section overview / all : agrégats KPI ──
-    const [waitlistRes, preordersRes, donorsRes, singleDrawsRes, supportRes, syncRes, guidancesRes, subscriptionsRes] = await Promise.all([
+    const [waitlistRes, preordersRes, donorsRes, singleDrawsRes, supportRes, syncRes, guidancesRes, subscriptionsRes, auditRes] = await Promise.all([
       supabase.from('newsletter_contacts').select('*'),
       supabase.from('preorders').select('*'),
       supabase.from('donors').select('*'),
@@ -1438,7 +1438,8 @@ async function handleData(req, res) {
       supabase.from('support_messages').select('id, type, status, created_at').order('created_at', { ascending: false }).limit(5),
       supabase.from('synchronicity_responses').select('score_synchronicites', { count: 'exact', head: false }),
       supabase.from('guidances').select('id, amount, status, created_at').in('status', ['confirmed', 'completed']),
-      supabase.from('tore_subscriptions').select('plan, status, is_free, created_at').neq('status', 'payment_failed').neq('status', 'single_draw')
+      supabase.from('tore_subscriptions').select('plan, status, is_free, created_at').neq('status', 'payment_failed').neq('status', 'single_draw'),
+      supabase.from('audit_reports').select('summary').order('created_at', { ascending: false }).limit(1)
     ]);
 
     const waitlistRows    = waitlistRes.data    || [];
@@ -1447,6 +1448,8 @@ async function handleData(req, res) {
     const singleDrawRows  = singleDrawsRes.data || [];
     const recentMessages  = supportRes.data     || [];
     const syncRows        = syncRes.data        || [];
+    const latestAudit     = (auditRes.data || [])[0];
+    const monitoringCritical = latestAudit?.summary?.critical || 0;
     const syncAvg         = syncRows.length > 0
       ? (syncRows.reduce((s, r) => s + (r.score_synchronicites || 0), 0) / syncRows.length).toFixed(1)
       : null;
@@ -1568,6 +1571,9 @@ async function handleData(req, res) {
         subscriptions: {
           count:  subscriptionsActive,
           total:  subscriptionsTotal
+        },
+        monitoring: {
+          critical: monitoringCritical
         },
         global: {
           total:         globalTotal,
