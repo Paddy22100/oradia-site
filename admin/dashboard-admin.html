@@ -1842,6 +1842,18 @@
         <!-- ── INSIGHTS ── -->
         <div id="tab-insights" class="tab-panel">
             <div class="max-w-3xl mx-auto space-y-6">
+
+                <!-- Liste brute des intentions -->
+                <div class="bg-white/3 border border-gold/10 rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <h3 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-list text-gold/60"></i> Intentions collectées</h3>
+                        <span id="intentions-count" class="text-gold/40 text-xs"></span>
+                    </div>
+                    <div id="intentions-list-loader" class="text-center py-8 text-gold/30 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</div>
+                    <div id="intentions-list-empty" class="hidden text-center py-8 text-gold/30 text-sm">Aucune intention collectée pour l'instant.</div>
+                    <div id="intentions-list" class="hidden space-y-2 max-h-96 overflow-y-auto pr-1"></div>
+                </div>
+
                 <!-- Bouton analyse -->
                 <div class="flex items-center justify-between">
                     <p class="text-gold/60 text-sm" id="insights-meta"></p>
@@ -1851,7 +1863,7 @@
                 </div>
 
                 <!-- État initial -->
-                <div id="insights-empty" class="text-center text-gold/40 py-20 text-sm">
+                <div id="insights-empty" class="text-center text-gold/40 py-10 text-sm">
                     Cliquez sur "Analyser les intentions" pour générer les insights à partir des tirages.
                 </div>
 
@@ -1930,6 +1942,7 @@
             if (name === 'guidances')      loadGuidances();
             if (name === 'analytics')      loadAnalytics();
             if (name === 'comptabilite')   { loadComptabilite(); loadCosts(); }
+            if (name === 'insights')       loadIntentionsList();
         }
 
         // ── État global
@@ -5540,6 +5553,49 @@
                 loader.classList.add('hidden');
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fas fa-lightbulb"></i> Analyser les intentions';
+            }
+        }
+
+        // ── LISTE INTENTIONS ─────────────────────────────────────────────────────────
+        let _intentionsLoaded = false;
+        async function loadIntentionsList() {
+            if (_intentionsLoaded) return;
+            const loader = document.getElementById('intentions-list-loader');
+            const empty  = document.getElementById('intentions-list-empty');
+            const list   = document.getElementById('intentions-list');
+            const count  = document.getElementById('intentions-count');
+            try {
+                const res  = await adminFetch('/api/admin/newsletter?action=list-intentions', { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+                const intentions = data.intentions || [];
+                loader.classList.add('hidden');
+                if (intentions.length === 0) { empty.classList.remove('hidden'); return; }
+                count.textContent = `${intentions.length} intention${intentions.length > 1 ? 's' : ''}`;
+                list.innerHTML = intentions.map(i => {
+                    const d = new Date(i.created_at);
+                    const dateStr = d.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+                    const cartes = (i.cartes || []).map(c => c.replace(/_/g, ' ')).join(', ');
+                    const badge = i.source === 'membre'
+                        ? '<span class="text-xs bg-blue-500/10 text-blue-300/70 border border-blue-400/20 rounded-full px-2 py-0.5">membre</span>'
+                        : '<span class="text-xs bg-white/5 text-gold/30 border border-gold/10 rounded-full px-2 py-0.5">anonyme</span>';
+                    return `<div class="flex flex-col gap-1 bg-white/3 border border-gold/8 rounded-xl px-4 py-3">
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-gold/80 text-sm leading-snug">${i.intention}</span>
+                            <span class="shrink-0 text-gold/30 text-xs">${dateStr}</span>
+                        </div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            ${badge}
+                            ${cartes ? `<span class="text-gold/30 text-xs">${cartes}</span>` : ''}
+                        </div>
+                    </div>`;
+                }).join('');
+                list.classList.remove('hidden');
+                _intentionsLoaded = true;
+            } catch (e) {
+                loader.classList.add('hidden');
+                empty.textContent = 'Erreur de chargement : ' + e.message;
+                empty.classList.remove('hidden');
             }
         }
 

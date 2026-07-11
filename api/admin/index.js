@@ -2036,6 +2036,23 @@ async function handleNewsletter(req, res) {
         return res.status(502).json({ error: 'Erreur lors de la génération IA', details: lastErr });
       }
 
+      // ── Liste brute des intentions (anonymisées, triées par date) ──
+      if (action === 'list-intentions') {
+        const nlSupa = createClient(
+          process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+          process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+        const [{ data: fromTirages }, { data: fromAnon }] = await Promise.all([
+          nlSupa.from('tirages').select('intention, cartes, created_at').not('intention', 'is', null).neq('intention', '').order('created_at', { ascending: false }).limit(200),
+          nlSupa.from('intentions_anonymes').select('intention, cartes, created_at').not('intention', 'is', null).neq('intention', '').order('created_at', { ascending: false }).limit(200)
+        ]);
+        const all = [
+          ...(fromTirages || []).map(r => ({ ...r, source: 'membre' })),
+          ...(fromAnon    || []).map(r => ({ ...r, source: 'anonyme' }))
+        ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        return res.status(200).json({ success: true, intentions: all });
+      }
+
       // ── Analyse des intentions de tirages (insights newsletter) ──
       if (action === 'analyze-intentions') {
         if (!process.env.ANTHROPIC_API_KEY) {
