@@ -98,7 +98,15 @@
          sans passer par le modal d'abandon de tirage */
       overscroll-behavior-y: contain;
 
+      /* Empêche la sélection de texte bleue lors des clics rapides */
+      -webkit-user-select: none;
+      user-select: none;
+
     }
+
+    /* Réactiver la sélection dans les champs de saisie et le guide carte */
+    input, textarea, [contenteditable] { user-select: text; -webkit-user-select: text; }
+    #tore-guide-message * { user-select: text; -webkit-user-select: text; }
 
 
 
@@ -2849,7 +2857,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
         <!-- Info : compteur + famille -->
         <div style="flex:1;min-width:0;">
-          <div id="coin-throw-counter" style="font-family:'Lora',Georgia,serif;font-size:10px;color:rgba(212,175,55,0.5);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:2px;white-space:nowrap;">Lancer 1 / 6</div>
+          <div id="coin-throw-counter" style="font-family:'Lora',Georgia,serif;font-size:10px;color:rgba(212,175,55,0.75);letter-spacing:0.18em;text-transform:uppercase;margin-bottom:2px;white-space:nowrap;">Lancer 1 / 6</div>
           <div id="coin-family-label" style="font-family:'Cormorant Garamond','Cormorant',Georgia,serif;font-size:clamp(14px,4vw,17px);color:#f0c75e;font-weight:700;letter-spacing:0.05em;line-height:1.1;"></div>
         </div>
 
@@ -2859,7 +2867,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
             style="white-space:nowrap;background:none;border:1px solid rgba(212,175,55,0.5);color:#d4af37;font-family:'Lora',Georgia,serif;font-size:12px;letter-spacing:0.08em;padding:7px 14px;border-radius:20px;cursor:pointer;transition:all 0.2s;touch-action:manipulation;"
             onmouseenter="this.style.background='rgba(212,175,55,0.12)';this.style.borderColor='rgba(212,175,55,0.9)'"
             onmouseleave="this.style.background='none';this.style.borderColor='rgba(212,175,55,0.5)'">
-            ✦ Lancer
+            ✦ Lancer la pièce
           </button>
           <button type="button" id="tore-to-analysis"
             style="display:none;white-space:nowrap;background:none;border:1px solid rgba(212,175,55,0.5);color:#d4af37;font-family:'Lora',Georgia,serif;font-size:12px;letter-spacing:0.08em;padding:7px 14px;border-radius:20px;cursor:pointer;transition:all 0.2s;"
