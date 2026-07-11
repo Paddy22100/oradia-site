@@ -2391,15 +2391,19 @@
             updateElement('conversionRate', `${Number(data.performance?.conversionRate || 0).toFixed(1)}%`);
             updateAlertsPanel(data);
 
-            // Badges sidebar
-            const bp = document.getElementById('nav-badge-preorders');
-            const bd = document.getElementById('nav-badge-donors');
-            const bw = document.getElementById('nav-badge-waitlist');
-            const bs = document.getElementById('nav-badge-subscriptions');
-            if (bp) bp.textContent = data.preorders.count || '';
-            if (bd) bd.textContent = data.donors.count || '';
-            if (bw) bw.textContent = data.waitlist.count || '';
-            if (bs) bs.textContent = data.subscriptions?.count || '';
+            // Badges sidebar — tous mis à jour au chargement initial
+            const bp  = document.getElementById('nav-badge-preorders');
+            const bd  = document.getElementById('nav-badge-donors');
+            const bw  = document.getElementById('nav-badge-waitlist');
+            const bs  = document.getElementById('nav-badge-subscriptions');
+            const bnl = document.getElementById('nav-badge-nl-subscribers');
+            const bg  = document.getElementById('nav-badge-guidances');
+            if (bp)  bp.textContent  = data.preorders.count || '';
+            if (bd)  bd.textContent  = data.donors.count || '';
+            if (bw)  bw.textContent  = data.waitlist.count || '';
+            if (bs)  bs.textContent  = data.subscriptions?.count || '';
+            if (bnl) bnl.textContent = data.waitlist.count || '';
+            if (bg)  { const c = data.guidances?.confirmed || 0; bg.textContent = c || ''; bg.classList.toggle('hidden', !c); }
             
             // Mettre à jour l'heure de dernière mise à jour
             updateElement('lastUpdate', new Date().toLocaleTimeString('fr-FR', { 
