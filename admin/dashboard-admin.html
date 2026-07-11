@@ -1843,6 +1843,14 @@
         <div id="tab-insights" class="tab-panel">
             <div class="max-w-3xl mx-auto space-y-6">
 
+                <!-- Bouton analyse -->
+                <div class="flex items-center justify-between">
+                    <p class="text-gold/60 text-sm" id="insights-meta"></p>
+                    <button onclick="analyzeIntentions()" id="btn-analyze" class="flex items-center gap-2 bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold px-5 py-2 rounded-xl text-sm font-medium transition">
+                        <i class="fas fa-lightbulb"></i> Analyser les intentions
+                    </button>
+                </div>
+
                 <!-- Liste brute des intentions -->
                 <div class="bg-white/3 border border-gold/10 rounded-2xl p-6">
                     <div class="flex items-center justify-between mb-4">
@@ -1852,14 +1860,6 @@
                     <div id="intentions-list-loader" class="text-center py-8 text-gold/30 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</div>
                     <div id="intentions-list-empty" class="hidden text-center py-8 text-gold/30 text-sm">Aucune intention collectée pour l'instant.</div>
                     <div id="intentions-list" class="hidden space-y-2 max-h-96 overflow-y-auto pr-1"></div>
-                </div>
-
-                <!-- Bouton analyse -->
-                <div class="flex items-center justify-between">
-                    <p class="text-gold/60 text-sm" id="insights-meta"></p>
-                    <button onclick="analyzeIntentions()" id="btn-analyze" class="flex items-center gap-2 bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold px-5 py-2 rounded-xl text-sm font-medium transition">
-                        <i class="fas fa-lightbulb"></i> Analyser les intentions
-                    </button>
                 </div>
 
                 <!-- État initial -->
