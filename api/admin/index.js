@@ -2118,7 +2118,9 @@ Cartes les plus tirées : ${topCartes.join(', ')}
 Réponds UNIQUEMENT avec un JSON valide, sans markdown, sans blocs de code :
 {"themes":[{"theme":"nom","pourcentage":30,"description":"explication courte"}],"besoins":["besoin 1","besoin 2","besoin 3"],"suggestions_newsletter":[{"sujet":"Titre accrocheur de la newsletter","angle":"angle éditorial en une phrase","contenu":"Corps de la newsletter : 3 à 5 paragraphes courts, ton chaleureux et introspectif, cohérent avec l'univers Oradia. Texte directement réutilisable comme base de rédaction."},{"sujet":"...","angle":"...","contenu":"..."},{"sujet":"...","angle":"...","contenu":"..."}],"cartes_dominantes":${JSON.stringify(topCartes.slice(0, 5))}}
 
-Contraintes : exactement 5 thèmes dont les pourcentages totalisent 100, exactement 3 besoins, exactement 3 suggestions_newsletter avec chacune un contenu rédigé de 150 à 250 mots.`;
+Contraintes : exactement 5 thèmes dont les pourcentages totalisent 100, exactement 3 besoins, exactement 3 suggestions_newsletter avec chacune un contenu rédigé de 150 à 250 mots. Dans le contenu des newsletters, lorsque tu mentionnes une carte du Tore, préfixe toujours son nom par "La carte" (ex : "La carte du Bâtisseur", "La carte Archive du Vivant") — jamais le nom seul précédé d'un article simple. Remplace toute occurrence de "Tore intérieur" par "espace intérieur".
+
+IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS reprendre de détails concrets, spécifiques ou reconnaissables issus des intentions (ex : "vendre son cabinet", "quitter son emploi", "déménager à Lyon"). Travaille uniquement à partir des grandes tendances et des archétypes universels. Un lecteur ne doit jamais pouvoir se reconnaître ou reconnaître la situation d'une autre personne dans le texte. Reste dans le registre du symbolique, du mouvement intérieur, du questionnement universel.`;
 
         const models = [process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5', 'claude-3-5-haiku-20241022'];
         let lastErr;
