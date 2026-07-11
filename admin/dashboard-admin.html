@@ -2395,9 +2395,11 @@
             const bp = document.getElementById('nav-badge-preorders');
             const bd = document.getElementById('nav-badge-donors');
             const bw = document.getElementById('nav-badge-waitlist');
+            const bs = document.getElementById('nav-badge-subscriptions');
             if (bp) bp.textContent = data.preorders.count || '';
             if (bd) bd.textContent = data.donors.count || '';
             if (bw) bw.textContent = data.waitlist.count || '';
+            if (bs) bs.textContent = data.subscriptions?.count || '';
             
             // Mettre à jour l'heure de dernière mise à jour
             updateElement('lastUpdate', new Date().toLocaleTimeString('fr-FR', { 

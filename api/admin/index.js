@@ -1438,7 +1438,7 @@ async function handleData(req, res) {
       supabase.from('support_messages').select('id, type, status, created_at').order('created_at', { ascending: false }).limit(5),
       supabase.from('synchronicity_responses').select('score_synchronicites', { count: 'exact', head: false }),
       supabase.from('guidances').select('id, amount, status, created_at').in('status', ['confirmed', 'completed']),
-      supabase.from('tore_subscriptions').select('plan, status, is_free, created_at').neq('status', 'payment_failed').neq('status', 'single_draw').or('is_free.is.null,is_free.eq.false')
+      supabase.from('tore_subscriptions').select('plan, status, is_free, created_at').neq('status', 'payment_failed').neq('status', 'single_draw')
     ]);
 
     const waitlistRows    = waitlistRes.data    || [];
@@ -1458,7 +1458,8 @@ async function handleData(req, res) {
     // Calcul abonnements Tore (revenus totaux = chaque abonnement × son prix mensuel)
     const subscriptionRows = subscriptionsRes.data || [];
     const planPrice = p => p === 'decouverte' ? 5 : 8;
-    const subscriptionsTotal = subscriptionRows.reduce((s, r) => s + planPrice(r.plan), 0);
+    // is_free peut être absent si la migration n'a pas tourné — on l'exclut seulement si explicitement true
+    const subscriptionsTotal = subscriptionRows.reduce((s, r) => r.is_free === true ? s : s + planPrice(r.plan), 0);
     const subscriptionsActive = subscriptionRows.filter(r => r.status === 'active').length;
 
     // Calcul guidances
@@ -1563,6 +1564,10 @@ async function handleData(req, res) {
         synchronicity: {
           total:    syncRows.length,
           avgScore: syncAvg
+        },
+        subscriptions: {
+          count:  subscriptionsActive,
+          total:  subscriptionsTotal
         },
         global: {
           total:         globalTotal,
