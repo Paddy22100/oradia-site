@@ -3834,6 +3834,8 @@
             if (!intention) return nlStatus('error', "L'intention / le sujet est requis");
             const btn = document.getElementById('nl-btn-generate');
             const btnLabel = nlCurrentType === 'promo' ? "Générer l'email promotionnel" : 'Générer la newsletter';
+            const btnLabelRegen = nlCurrentType === 'promo' ? "Regénérer l'email" : 'Regénérer la newsletter';
+            let nlGenerateSuccess = false;
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Claude rédige...';
             nlStatus('info', 'Génération en cours — quelques secondes...');
@@ -3878,10 +3880,12 @@
                 nlCurrentDraftId = null;
                 nlStatus('success', (nlCurrentType === 'promo' ? 'Email promotionnel généré.' : 'Newsletter générée.') + ' Choisis une image puis sauvegarde.');
                 nlFetchAndShowImages(intention);
+                nlGenerateSuccess = true;
             } catch(e) { nlStatus('error', e.message); }
             finally {
                 btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-magic mr-2"></i><span id="nl-btn-generate-label">' + btnLabel + '</span>';
+                const label = nlGenerateSuccess ? btnLabelRegen : btnLabel;
+                btn.innerHTML = '<i class="fas fa-redo mr-2"></i><span id="nl-btn-generate-label">' + label + '</span>';
             }
         }
 
