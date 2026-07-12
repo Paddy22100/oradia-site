@@ -1349,9 +1349,25 @@
                                         <input type="url" id="nl-banner-cta-url" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold" placeholder="https://oradia.fr/...">
                                     </div>
                                     <div>
-                                        <label class="block text-xs text-gold/60 mb-1">Image du bandeau (optionnel)</label>
-                                        <input type="url" id="nl-banner-image" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold" placeholder="https://oradia.fr/images/...">
-                                        <p class="text-xs text-gold/30 mt-1">Sera affichée en haut du bandeau dans l'email.</p>
+                                        <label class="block text-xs text-gold/60 mb-2">Image du bandeau (optionnel)</label>
+                                        <!-- Aperçu image sélectionnée -->
+                                        <div id="nl-banner-image-preview" class="hidden mb-2 relative rounded-lg overflow-hidden border border-gold/25" style="max-height:120px;">
+                                            <img id="nl-banner-image-preview-el" src="" alt="" class="w-full object-cover" style="max-height:120px;">
+                                            <button onclick="nlClearBannerImage()" class="absolute top-1 right-1 w-6 h-6 rounded-full bg-black/70 text-white text-xs flex items-center justify-center hover:bg-black/90 transition">&times;</button>
+                                        </div>
+                                        <!-- Boutons de sélection -->
+                                        <div id="nl-banner-image-btns" class="flex gap-2">
+                                            <button type="button" onclick="nlOpenBannerImagePicker()"
+                                                class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gold/10 border border-gold/30 text-gold rounded-lg text-xs hover:bg-gold/20 transition">
+                                                <i class="fas fa-images text-xs"></i> Bibliothèque
+                                            </button>
+                                            <label class="flex-1 flex items-center justify-center gap-1.5 px-3 py-2 bg-gold/10 border border-gold/30 text-gold rounded-lg text-xs hover:bg-gold/20 transition cursor-pointer">
+                                                <i class="fas fa-upload text-xs"></i> Importer
+                                                <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" onchange="nlUploadBannerImage(this)">
+                                            </label>
+                                        </div>
+                                        <!-- Champ caché pour stocker l'URL -->
+                                        <input type="hidden" id="nl-banner-image">
                                     </div>
                                 </div>
                             </div>
@@ -6025,7 +6041,7 @@
             document.getElementById('nl-banner-desc').value = p.desc;
             document.getElementById('nl-banner-cta-text').value = p.cta_text;
             document.getElementById('nl-banner-cta-url').value = p.cta_url;
-            document.getElementById('nl-banner-image').value = p.image || '';
+            nlSetBannerImageUrl(p.image || '');
         }
         function nlGetBanner() {
             if (!document.getElementById('nl-banner-enabled')?.checked) return null;
@@ -6045,7 +6061,126 @@
             document.getElementById('nl-banner-desc').value = banner.desc || '';
             document.getElementById('nl-banner-cta-text').value = banner.cta_text || '';
             document.getElementById('nl-banner-cta-url').value = banner.cta_url || '';
-            document.getElementById('nl-banner-image').value = banner.image || '';
+            nlSetBannerImageUrl(banner.image || '');
+        }
+
+        // ── Banner image picker ──
+        function nlSetBannerImageUrl(url) {
+            document.getElementById('nl-banner-image').value = url;
+            const preview = document.getElementById('nl-banner-image-preview');
+            const el = document.getElementById('nl-banner-image-preview-el');
+            if (url) { el.src = url; preview.classList.remove('hidden'); }
+            else { preview.classList.add('hidden'); el.src = ''; }
+        }
+
+        function nlClearBannerImage() {
+            nlSetBannerImageUrl('');
+        }
+
+        function nlOpenBannerImagePicker() {
+            // Réutilise window.nlAllImages si disponible, sinon charge via l'API
+            const open = (images) => {
+                const existing = document.getElementById('nl-banner-img-modal');
+                if (existing) existing.remove();
+                const modal = document.createElement('div');
+                modal.id = 'nl-banner-img-modal';
+                modal.className = 'fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-4';
+                modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+                const cats = [...new Set((images||[]).map(i => i.category).filter(Boolean))].sort();
+                const catOpts = '<option value="">Toutes</option>' + cats.map(c => `<option value="${c}">${NL_CATEGORY_LABELS[c]||c}</option>`).join('');
+                modal.innerHTML = `
+                    <div class="bg-[rgba(5,15,35,0.98)] border border-gold/30 rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col overflow-hidden shadow-2xl" onclick="event.stopPropagation()">
+                        <div class="flex items-center justify-between px-5 py-4 border-b border-gold/15">
+                            <span class="cormorant text-lg text-gold">Choisir une image pour le bandeau</span>
+                            <button onclick="document.getElementById('nl-banner-img-modal').remove()" class="text-gold/40 hover:text-gold text-xl leading-none">&times;</button>
+                        </div>
+                        <div class="flex gap-2 px-4 pt-3 pb-2">
+                            <label class="flex items-center gap-1.5 px-3 py-1.5 bg-gold/10 border border-gold/30 text-gold rounded-lg text-xs hover:bg-gold/20 transition cursor-pointer shrink-0">
+                                <i class="fas fa-upload text-xs"></i> Importer
+                                <input type="file" accept="image/jpeg,image/png,image/webp" class="hidden" onchange="nlUploadBannerImage(this, true)">
+                            </label>
+                            <input type="text" id="nl-banner-img-search" oninput="nlFilterBannerImages()" placeholder="Rechercher..."
+                                class="flex-1 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:border-gold">
+                            <select id="nl-banner-img-cat" onchange="nlFilterBannerImages()"
+                                class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-gold">
+                                ${catOpts}
+                            </select>
+                        </div>
+                        <div id="nl-banner-img-grid" class="flex-1 overflow-y-auto px-4 pb-4 grid grid-cols-3 gap-3 content-start"></div>
+                    </div>`;
+                document.body.appendChild(modal);
+                window.nlBannerPickerImages = images || [];
+                nlFilterBannerImages();
+            };
+
+            if (window.nlAllImages && window.nlAllImages.length) {
+                open(window.nlAllImages);
+            } else {
+                nlStatus('info', 'Chargement des images...');
+                adminFetch('/api/admin/newsletter-images', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ intention: '', theme_keywords: '' })
+                }).then(r => r.json()).then(data => {
+                    const imgs = [];
+                    (data.produit || []).forEach(i => imgs.push({ ...i, source: 'local', label: 'Produit' }));
+                    (data.ambiance_locale || []).forEach(i => imgs.push({ ...i, label: 'Ma bibliothèque' }));
+                    (data.unsplash || []).forEach(i => imgs.push({ ...i, label: 'Unsplash' }));
+                    window.nlAllImages = imgs;
+                    open(imgs);
+                }).catch(e => nlStatus('error', e.message));
+            }
+        }
+
+        function nlFilterBannerImages() {
+            const q = nlNormalize(document.getElementById('nl-banner-img-search')?.value || '');
+            const cat = document.getElementById('nl-banner-img-cat')?.value || '';
+            const grid = document.getElementById('nl-banner-img-grid');
+            if (!grid) return;
+            const imgs = (window.nlBannerPickerImages || []).filter(img => {
+                if (cat && img.category !== cat) return false;
+                if (!q) return true;
+                return nlNormalize(img.name).includes(q) || nlNormalize(img.label || '').includes(q);
+            });
+            grid.innerHTML = imgs.length ? imgs.map(img => `
+                <div class="cursor-pointer rounded-xl overflow-hidden border-2 border-transparent hover:border-gold/60 transition group relative"
+                     onclick="nlSelectBannerImage('${(img.path||'').replace(/'/g,'\\\'')}')" title="${img.name}">
+                    <img src="${img.thumb||img.path}" alt="${img.name}" class="w-full h-32 object-cover group-hover:scale-105 transition-transform duration-200" loading="lazy"
+                         onerror="this.src='${img.path}'">
+                    <div class="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent flex items-end p-1.5 pointer-events-none">
+                        <span class="text-xs text-white/80 leading-tight">${img.name.slice(0,20)}</span>
+                    </div>
+                </div>`).join('')
+              : '<p class="col-span-3 text-center text-gold/30 text-sm py-8">Aucune image trouvée</p>';
+        }
+
+        function nlSelectBannerImage(url) {
+            nlSetBannerImageUrl(url);
+            document.getElementById('nl-banner-img-modal')?.remove();
+        }
+
+        async function nlUploadBannerImage(input, fromModal = false) {
+            const file = input.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) { nlStatus('error', 'Image trop lourde (5 Mo max)'); return; }
+            nlStatus('info', 'Import en cours...');
+            try {
+                const base64 = await new Promise((resolve, reject) => {
+                    const reader = new FileReader();
+                    reader.onload = e => resolve(e.target.result.split(',')[1]);
+                    reader.onerror = reject;
+                    reader.readAsDataURL(file);
+                });
+                const res = await adminFetch('/api/admin/newsletter-images', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'upload-image', filename: file.name, contentType: file.type, base64 })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.url) throw new Error(data.error || 'Erreur upload');
+                nlSelectBannerImage(data.url);
+                if (fromModal) document.getElementById('nl-banner-img-modal')?.remove();
+                nlStatus('success', 'Image importée.');
+            } catch(e) { nlStatus('error', e.message); }
+            input.value = '';
         }
 
         // ── Éditeur newsletter riche ──
