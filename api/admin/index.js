@@ -3045,9 +3045,14 @@ module.exports = async (req, res) => {
         const pagePath = String(body.path || '').slice(0, 300);
         const referrer = String(body.referrer || '').slice(0, 500);
         const sessionId = String(body.session_id || '').slice(0, 100);
+        const userAgent = String(body.user_agent || '').slice(0, 500);
+        const isNewVisitor = body.is_new_visitor === true;
         if (!pagePath || !sessionId) return res.status(204).end();
+        // Filtrer les bots connus côté serveur
+        const BOT_PATTERN = /bot|crawler|spider|crawling|googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex|sogou|facebot|ia_archiver|semrush|ahrefs|mj12bot|dotbot/i;
+        if (BOT_PATTERN.test(userAgent)) return res.status(204).end();
         const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
-        await sb.from('page_views').insert({ path: pagePath, referrer: referrer || null, session_id: sessionId });
+        await sb.from('page_views').insert({ path: pagePath, referrer: referrer || null, session_id: sessionId, user_agent: userAgent || null, is_new_visitor: isNewVisitor });
       } catch (_) { /* le tracking ne doit jamais faire échouer la requête côté visiteur */ }
       return res.status(204).end();
     }
@@ -3165,11 +3170,39 @@ module.exports = async (req, res) => {
         v.forEach(r => { if (r.path) pageCounts[r.path] = (pageCounts[r.path] || 0) + 1; });
         const topPages = Object.entries(pageCounts).sort((a,b) => b[1]-a[1]).slice(0,10).map(([path,count]) => ({path,count}));
         const SELF_REFERRERS = new Set(['oradia.fr', 'www.oradia.fr', 'oradia-site.vercel.app']);
+        const FRIENDLY_NAMES = {
+          'google.com': 'Google',
+          'google.fr': 'Google',
+          'bing.com': 'Bing',
+          'yahoo.com': 'Yahoo',
+          'duckduckgo.com': 'DuckDuckGo',
+          'facebook.com': 'Facebook',
+          'lm.facebook.com': 'Facebook',
+          'l.facebook.com': 'Facebook',
+          'instagram.com': 'Instagram',
+          'l.instagram.com': 'Instagram',
+          'linkedin.com': 'LinkedIn',
+          'lnkd.in': 'LinkedIn',
+          'twitter.com': 'X (Twitter)',
+          't.co': 'X (Twitter)',
+          'x.com': 'X (Twitter)',
+          'pinterest.com': 'Pinterest',
+          'youtube.com': 'YouTube',
+          'tiktok.com': 'TikTok',
+          'reddit.com': 'Reddit',
+        };
+        const EMAIL_DOMAINS = /sendibm|brevo|sendinblue|mailchimp|mailjet|sendgrid|mandrill|mailerlite|constantcontact|campaign-archive|list-manage/i;
         const referrerCounts = {};
         v.forEach(r => {
-          let ref = 'Direct / inconnu';
-          if (r.referrer) { try { ref = new URL(r.referrer).hostname.replace(/^www\./,''); } catch(_) { ref = 'Direct / inconnu'; } }
-          if (SELF_REFERRERS.has(ref)) return; // exclure les visites depuis le site lui-même
+          let ref = 'Accès direct';
+          if (r.referrer) {
+            try {
+              const hostname = new URL(r.referrer).hostname.replace(/^www\./, '');
+              if (SELF_REFERRERS.has(hostname)) return;
+              if (EMAIL_DOMAINS.test(hostname)) { ref = 'Email / Newsletter'; }
+              else { ref = FRIENDLY_NAMES[hostname] || hostname; }
+            } catch(_) { ref = 'Accès direct'; }
+          }
           referrerCounts[ref] = (referrerCounts[ref] || 0) + 1;
         });
         const topReferrers = Object.entries(referrerCounts).sort((a,b) => b[1]-a[1]).slice(0,8).map(([referrer,count]) => ({referrer,count}));
@@ -3181,11 +3214,16 @@ module.exports = async (req, res) => {
         const singlePageSessions = Object.values(sessionPageCount).filter(n => n === 1).length;
         const bounceRate = uniqueSessions > 0 ? (singlePageSessions / uniqueSessions * 100) : null;
         const pagesPerVisit = uniqueSessions > 0 ? (v.length / uniqueSessions) : null;
-        return { total_views: v.length, unique_visitors: uniqueSessions, top_pages: topPages, top_referrers: topReferrers, daily_views: dailyViews, bounce_rate: bounceRate, pages_per_visit: pagesPerVisit };
+        // Nouveaux vs anciens visiteurs (basé sur is_new_visitor de la première vue de chaque session)
+        const sessionFirstView = {};
+        v.forEach(r => { if (!sessionFirstView[r.session_id]) sessionFirstView[r.session_id] = r; });
+        let newVisitors = 0, returningVisitors = 0;
+        Object.values(sessionFirstView).forEach(r => { if (r.is_new_visitor === true) newVisitors++; else if (r.is_new_visitor === false) returningVisitors++; });
+        return { total_views: v.length, unique_visitors: uniqueSessions, top_pages: topPages, top_referrers: topReferrers, daily_views: dailyViews, bounce_rate: bounceRate, pages_per_visit: pagesPerVisit, new_visitors: newVisitors, returning_visitors: returningVisitors };
       };
 
       // ── Trafic réel (pages vues du site, via js/page-tracker.js) ──
-      const { data: views } = await sb.from('page_views').select('created_at,path,referrer,session_id').gte('created_at', since).not('path', 'like', '/admin%').order('created_at', { ascending: false }).limit(20000);
+      const { data: views } = await sb.from('page_views').select('created_at,path,referrer,session_id,is_new_visitor').gte('created_at', since).not('path', 'like', '/admin%').order('created_at', { ascending: false }).limit(20000);
       const { data: prevViews } = await sb.from('page_views').select('created_at,session_id').gte('created_at', prevSince).lt('created_at', since).not('path', 'like', '/admin%').limit(20000);
       const traffic = computeTraffic(views);
       const prevTraffic = computeTraffic(prevViews);

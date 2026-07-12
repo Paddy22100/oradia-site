@@ -1720,8 +1720,12 @@
                 <div id="analytics-daily-chart" class="h-40"></div>
             </div>
 
-            <!-- Pages et provenance -->
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+            <!-- Nouveaux vs anciens visiteurs + Pages et provenance -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div class="stat-card rounded-2xl p-6 flex flex-col items-center justify-center">
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2 self-start"><i class="fas fa-users text-gold/60"></i> Type de visiteurs</h4>
+                    <div id="analytics-visitor-type-chart" class="w-full flex flex-col items-center"></div>
+                </div>
                 <div class="stat-card rounded-2xl p-6">
                     <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-file-alt text-gold/60"></i> Pages les plus consultées</h4>
                     <div id="analytics-top-paths" class="space-y-2 text-sm"></div>
@@ -5818,6 +5822,47 @@
         // ── ANALYTIQUES ──────────────────────────────────────────────────────────────
         let _analyticsData = null;
 
+        function renderVisitorTypeChart(newV, returning) {
+            const el = document.getElementById('analytics-visitor-type-chart');
+            if (!el) return;
+            const total = newV + returning;
+            if (total === 0) {
+                el.innerHTML = '<p class="text-gold/30 italic text-xs text-center">Données insuffisantes.<br>Disponible après migration SQL.</p>';
+                return;
+            }
+            const pctNew = Math.round(newV / total * 100);
+            const pctRet = 100 - pctNew;
+            // Donut SVG
+            const r = 56, cx = 80, cy = 80, stroke = 22;
+            const circ = 2 * Math.PI * r;
+            const newArc = circ * pctNew / 100;
+            const retArc = circ - newArc;
+            el.innerHTML = `
+                <svg viewBox="0 0 160 160" width="140" height="140">
+                    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="${stroke}"/>
+                    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#2dd4bf" stroke-width="${stroke}"
+                        stroke-dasharray="${newArc.toFixed(2)} ${retArc.toFixed(2)}"
+                        stroke-dashoffset="${(circ * 0.25).toFixed(2)}" stroke-linecap="butt" transform="rotate(0 ${cx} ${cy})"/>
+                    <circle cx="${cx}" cy="${cy}" r="${r}" fill="none" stroke="#d4af37" stroke-width="${stroke}"
+                        stroke-dasharray="${retArc.toFixed(2)} ${newArc.toFixed(2)}"
+                        stroke-dashoffset="${(circ * 0.25 - newArc).toFixed(2)}" stroke-linecap="butt"/>
+                    <text x="${cx}" y="${cy - 6}" text-anchor="middle" font-size="22" font-weight="bold" fill="#2dd4bf">${pctNew}%</text>
+                    <text x="${cx}" y="${cy + 14}" text-anchor="middle" font-size="10" fill="rgba(212,175,55,0.5)">nouveaux</text>
+                </svg>
+                <div class="flex items-center gap-4 mt-1 text-xs">
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-teal-400 inline-block"></span>
+                        <span class="text-gold/60">Nouveaux</span>
+                        <span class="text-teal-300 font-semibold">${newV}</span>
+                    </div>
+                    <div class="flex items-center gap-1.5">
+                        <span class="w-2.5 h-2.5 rounded-full bg-gold inline-block" style="background:#d4af37"></span>
+                        <span class="text-gold/60">Anciens</span>
+                        <span class="text-gold font-semibold">${returning}</span>
+                    </div>
+                </div>`;
+        }
+
         function renderDailyViewsChart(days) {
             const chartEl = document.getElementById('analytics-daily-chart');
             if (!chartEl) return;
@@ -5897,6 +5942,9 @@
 
                 // Graphique pages vues / jour (courbe + zone dégradée, style Vercel Analytics)
                 renderDailyViewsChart(t.daily_views || []);
+
+                // Graphique donut nouveaux vs anciens visiteurs
+                renderVisitorTypeChart(t.new_visitors || 0, t.returning_visitors || 0);
 
                 // Pages les plus consultées
                 const pathsEl = document.getElementById('analytics-top-paths');
