@@ -401,6 +401,49 @@ async function handleData(req, res) {
           return res.status(200).json({ success: false, error: e.message });
         }
       }
+      if (getAction === 'cron-relance') {
+        try {
+          const BREVO_API_KEY = process.env.BREVO_API_KEY;
+          const templateId = parseInt(process.env.BREVO_TEMPLATE_ABANDON_CART || '0', 10);
+          if (!BREVO_API_KEY || !templateId) {
+            return res.status(200).json({ success: false, error: 'BREVO_API_KEY ou BREVO_TEMPLATE_ABANDON_CART manquant' });
+          }
+          // Commandes pending créées entre 24h et 48h (fenêtre unique, évite les doublons)
+          const now = new Date();
+          const h24ago = new Date(now.getTime() - 24 * 60 * 60 * 1000).toISOString();
+          const h48ago = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();
+          const { data: pending, error } = await supabase
+            .from('preorders')
+            .select('id, email, offer, created_at')
+            .eq('paid_status', 'pending')
+            .not('email', 'is', null)
+            .gte('created_at', h48ago)
+            .lte('created_at', h24ago);
+          if (error) return res.status(200).json({ success: false, error: error.message });
+          if (!pending || pending.length === 0) return res.status(200).json({ success: true, sent: 0, message: 'Aucune commande à relancer' });
+          const results = [];
+          for (const order of pending) {
+            try {
+              const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+                method: 'POST',
+                headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  templateId,
+                  to: [{ email: order.email }],
+                  params: { OFFER: order.offer || 'Oracle Oradia', NAME: '' }
+                })
+              });
+              results.push({ email: order.email, ok: brevoRes.ok, status: brevoRes.status });
+            } catch(e) {
+              results.push({ email: order.email, ok: false, error: e.message });
+            }
+          }
+          await logSystemEvent(supabase, { level: 'info', source: 'cron-relance', method: 'GET', path: '/api/admin/data', status_code: 200, message: `Relances envoyées : ${results.filter(r=>r.ok).length}/${results.length}`, details: results });
+          return res.status(200).json({ success: true, sent: results.filter(r=>r.ok).length, total: results.length, results });
+        } catch(e) {
+          return res.status(200).json({ success: false, error: e.message });
+        }
+      }
       if (getAction === 'cron-fetch-logs') {
         const sb = supabase;
         try {
