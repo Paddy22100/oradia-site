@@ -1933,6 +1933,7 @@ function buildCommunicationEmailHtml(draft) {
   ${extra.promo_banner ? `
   <tr><td style="padding:0 24px 32px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06)); border:1px solid rgba(212,175,55,0.35); border-radius:14px; overflow:hidden;">
+      ${extra.promo_banner.image ? `<tr><td style="padding:0; line-height:0;"><img src="${extra.promo_banner.image.replace(/"/g,'')}" alt="" width="100%" style="display:block; width:100%; max-height:220px; object-fit:cover; border-radius:14px 14px 0 0;"></td></tr>` : ''}
       <tr><td style="padding:28px 32px; text-align:center;">
         <p style="margin:0 0 8px; color:#d4af37; font-family:Georgia,serif; font-size:20px; font-weight:700; letter-spacing:0.05em;">${nlEscHtml(extra.promo_banner.title || '')}</p>
         ${extra.promo_banner.desc ? `<p style="margin:0 0 20px; color:#c8c0a8; font-size:13px; opacity:0.8;">${nlEscHtml(extra.promo_banner.desc)}</p>` : '<p style="margin:0 0 20px;"></p>'}

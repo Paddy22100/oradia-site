@@ -1348,6 +1348,11 @@
                                         <label class="block text-xs text-gold/60 mb-1">URL du bouton</label>
                                         <input type="url" id="nl-banner-cta-url" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold" placeholder="https://oradia.fr/...">
                                     </div>
+                                    <div>
+                                        <label class="block text-xs text-gold/60 mb-1">Image du bandeau (optionnel)</label>
+                                        <input type="url" id="nl-banner-image" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold" placeholder="https://oradia.fr/images/...">
+                                        <p class="text-xs text-gold/30 mt-1">Sera affichée en haut du bandeau dans l'email.</p>
+                                    </div>
                                 </div>
                             </div>
 
@@ -6000,7 +6005,8 @@
                 title: 'Pré-commandez l\'Oracle Oradia',
                 desc: 'Livraison prévue automne 2025 · Édition limitée · 3,90€',
                 cta_text: 'Je pré-commande',
-                cta_url: 'https://oradia.fr/precommande-oracle'
+                cta_url: 'https://oradia.fr/precommande-oracle',
+                image: 'https://oradia.fr/images/medias/banniere-facebook.png'
             }
         };
         function nlToggleBanner() {
@@ -6015,6 +6021,7 @@
             document.getElementById('nl-banner-desc').value = p.desc;
             document.getElementById('nl-banner-cta-text').value = p.cta_text;
             document.getElementById('nl-banner-cta-url').value = p.cta_url;
+            document.getElementById('nl-banner-image').value = p.image || '';
         }
         function nlGetBanner() {
             if (!document.getElementById('nl-banner-enabled')?.checked) return null;
@@ -6022,7 +6029,8 @@
                 title: document.getElementById('nl-banner-title')?.value.trim() || '',
                 desc: document.getElementById('nl-banner-desc')?.value.trim() || '',
                 cta_text: document.getElementById('nl-banner-cta-text')?.value.trim() || '',
-                cta_url: document.getElementById('nl-banner-cta-url')?.value.trim() || ''
+                cta_url: document.getElementById('nl-banner-cta-url')?.value.trim() || '',
+                image: document.getElementById('nl-banner-image')?.value.trim() || ''
             };
         }
         function nlSetBanner(banner) {
@@ -6033,6 +6041,7 @@
             document.getElementById('nl-banner-desc').value = banner.desc || '';
             document.getElementById('nl-banner-cta-text').value = banner.cta_text || '';
             document.getElementById('nl-banner-cta-url').value = banner.cta_url || '';
+            document.getElementById('nl-banner-image').value = banner.image || '';
         }
 
         // ── Éditeur newsletter riche ──
