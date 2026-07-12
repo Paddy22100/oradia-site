@@ -1124,47 +1124,43 @@
                     <h2 class="cormorant text-3xl font-bold text-gold">Communication Oradia</h2>
                     <p class="text-light-gold/50 text-sm mt-1">Newsletter hebdomadaire et emails promotionnels (lancements, offres, événements...)</p>
                 </div>
-                <div class="flex gap-3">
+                <div class="flex gap-1 bg-white/5 border border-gold/15 rounded-xl p-1">
                     <button onclick="nlShowTab('generate')" data-nltab="generate"
-                        class="nl-tab-btn bg-gold text-night-blue px-4 py-2 rounded-lg font-semibold text-sm">
-                        <i class="fas fa-magic mr-2"></i>Générer
+                        class="nl-tab-btn bg-gold text-night-blue px-4 py-1.5 rounded-lg font-semibold text-sm">
+                        <i class="fas fa-magic mr-1.5"></i>Générer
                     </button>
                     <button onclick="nlShowTab('drafts')" data-nltab="drafts"
-                        class="nl-tab-btn bg-gold/20 text-gold border border-gold/30 px-4 py-2 rounded-lg text-sm hover:bg-gold/30 transition">
-                        <i class="fas fa-layer-group mr-2"></i>Brouillons
+                        class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
+                        <i class="fas fa-layer-group mr-1.5"></i>Brouillons
                     </button>
                     <button onclick="nlShowTab('scheduled')" data-nltab="scheduled"
-                        class="nl-tab-btn bg-gold/20 text-gold border border-gold/30 px-4 py-2 rounded-lg text-sm hover:bg-gold/30 transition">
-                        <i class="fas fa-clock mr-2"></i>Programmés
+                        class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
+                        <i class="fas fa-clock mr-1.5"></i>Programmés
                     </button>
                     <button onclick="nlShowTab('ideas')" data-nltab="ideas"
-                        class="nl-tab-btn bg-gold/20 text-gold border border-gold/30 px-4 py-2 rounded-lg text-sm hover:bg-gold/30 transition">
-                        <i class="fas fa-feather-alt mr-2"></i>Carnet
+                        class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
+                        <i class="fas fa-feather-alt mr-1.5"></i>Carnet
                     </button>
                 </div>
             </div>
 
-            <div class="grid grid-cols-3 gap-6 mb-8">
-                <div class="stat-card rounded-2xl p-6">
-                    <div class="w-10 h-10 bg-gradient-to-br from-purple-500/20 to-purple-500/10 rounded-lg flex items-center justify-center mb-3">
-                        <i class="fas fa-envelope text-purple-400"></i>
-                    </div>
-                    <div class="text-3xl font-bold text-gold mb-1" id="nl-kpi-total">—</div>
-                    <p class="text-light-gold text-sm">Communications créées</p>
+            <div class="flex gap-4 mb-6 bg-white/5 border border-gold/15 rounded-xl px-5 py-3">
+                <div class="flex items-center gap-3 flex-1">
+                    <i class="fas fa-envelope text-purple-400 text-sm"></i>
+                    <span class="text-2xl font-bold text-gold" id="nl-kpi-total">—</span>
+                    <span class="text-light-gold/60 text-xs">créées</span>
                 </div>
-                <div class="stat-card rounded-2xl p-6">
-                    <div class="w-10 h-10 bg-gradient-to-br from-gold/20 to-gold/10 rounded-lg flex items-center justify-center mb-3">
-                        <i class="fas fa-edit text-gold"></i>
-                    </div>
-                    <div class="text-3xl font-bold text-gold mb-1" id="nl-kpi-brouillons">—</div>
-                    <p class="text-light-gold text-sm">Brouillons</p>
+                <div class="w-px bg-gold/15"></div>
+                <div class="flex items-center gap-3 flex-1">
+                    <i class="fas fa-edit text-gold text-sm"></i>
+                    <span class="text-2xl font-bold text-gold" id="nl-kpi-brouillons">—</span>
+                    <span class="text-light-gold/60 text-xs">brouillons</span>
                 </div>
-                <div class="stat-card rounded-2xl p-6">
-                    <div class="w-10 h-10 bg-gradient-to-br from-green-500/20 to-green-500/10 rounded-lg flex items-center justify-center mb-3">
-                        <i class="fas fa-paper-plane text-green-400"></i>
-                    </div>
-                    <div class="text-3xl font-bold text-gold mb-1" id="nl-kpi-envoyes">—</div>
-                    <p class="text-light-gold text-sm">Envoyées</p>
+                <div class="w-px bg-gold/15"></div>
+                <div class="flex items-center gap-3 flex-1">
+                    <i class="fas fa-paper-plane text-green-400 text-sm"></i>
+                    <span class="text-2xl font-bold text-gold" id="nl-kpi-envoyes">—</span>
+                    <span class="text-light-gold/60 text-xs">envoyées</span>
                 </div>
             </div>
 
@@ -1179,6 +1175,24 @@
 
             <!-- TAB GÉNÉRER -->
             <div id="nl-tab-generate" class="nl-tab-content">
+                <!-- Indicateur d'étapes -->
+                <div id="nl-step-indicator" class="flex items-center gap-0 mb-6">
+                    <div id="nl-step-1" class="nl-step flex items-center gap-2 px-4 py-2 rounded-lg transition-all">
+                        <span class="w-6 h-6 rounded-full bg-gold text-night-blue text-xs font-bold flex items-center justify-center">1</span>
+                        <span class="text-sm font-medium text-gold">Paramètres</span>
+                    </div>
+                    <div class="flex-1 h-px bg-gold/20 mx-1"></div>
+                    <div id="nl-step-2" class="nl-step flex items-center gap-2 px-4 py-2 rounded-lg transition-all opacity-40">
+                        <span class="w-6 h-6 rounded-full bg-gold/30 text-gold text-xs font-bold flex items-center justify-center">2</span>
+                        <span class="text-sm font-medium text-gold/60">Contenu & Images</span>
+                    </div>
+                    <div class="flex-1 h-px bg-gold/20 mx-1"></div>
+                    <div id="nl-step-3" class="nl-step flex items-center gap-2 px-4 py-2 rounded-lg transition-all opacity-40">
+                        <span class="w-6 h-6 rounded-full bg-gold/30 text-gold text-xs font-bold flex items-center justify-center">3</span>
+                        <span class="text-sm font-medium text-gold/60">Publier</span>
+                    </div>
+                </div>
+
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6">
                         <h4 class="cormorant text-xl text-gold mb-5">Paramètres</h4>
@@ -1226,14 +1240,21 @@
                                     </select>
                                 </div>
                             </div>
-                            <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Énergie du moment <span class="text-gold/30 normal-case tracking-normal text-xs">(facultatif)</span></label>
-                            <input type="text" id="nl-energie"
-                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-4 text-sm focus:outline-none focus:border-gold"
-                                placeholder="Saison, hexagramme, lune, actualité...">
-                            <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Fragments du carnet <span class="text-gold/30 normal-case tracking-normal text-xs">(facultatif)</span></label>
-                            <textarea id="nl-idees-bonus" rows="3"
-                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-5 text-sm focus:outline-none focus:border-gold resize-y"
-                                placeholder="Fragments du carnet à intégrer..."></textarea>
+                            <button type="button" onclick="nlToggleAdvanced()" id="nl-advanced-toggle"
+                                class="flex items-center gap-1.5 text-xs text-gold/50 hover:text-gold/80 transition mb-3 mt-1">
+                                <i id="nl-advanced-icon" class="fas fa-chevron-right text-xs transition-transform"></i>
+                                Options avancées
+                            </button>
+                            <div id="nl-advanced-fields" class="hidden">
+                                <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Énergie du moment <span class="text-gold/30 normal-case tracking-normal text-xs">(facultatif)</span></label>
+                                <input type="text" id="nl-energie"
+                                    class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-4 text-sm focus:outline-none focus:border-gold"
+                                    placeholder="Saison, hexagramme, lune, actualité...">
+                                <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Fragments du carnet <span class="text-gold/30 normal-case tracking-normal text-xs">(facultatif)</span></label>
+                                <textarea id="nl-idees-bonus" rows="3"
+                                    class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-3 text-sm focus:outline-none focus:border-gold resize-y"
+                                    placeholder="Fragments du carnet à intégrer..."></textarea>
+                            </div>
                         </div>
 
                         <!-- Champs spécifiques PROMO -->
@@ -1275,116 +1296,6 @@
                             <i class="fas fa-magic"></i> <span id="nl-btn-generate-label">Générer la newsletter</span>
                         </button>
 
-                        <div id="nl-send-zone" class="hidden bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6 mt-6">
-                            <h4 class="cormorant text-xl text-gold mb-4">Envoyer mail Newsletter aux abonnés</h4>
-                            <div class="mb-6">
-                                <label class="block text-xs uppercase tracking-widest text-gold/60 mb-2">Cibler des catégories <span class="text-gold/30 normal-case text-xs">(laisser vide = tous les abonnés)</span></label>
-                                <div id="nl-target-tags" class="flex flex-wrap gap-3"></div>
-                            </div>
-                            <div class="mb-6 bg-white/5 border border-gold/10 rounded-lg p-4">
-                                <label class="flex items-start gap-2 text-light-gold/80 text-sm cursor-pointer">
-                                    <input id="nl-exclude-already-sent" type="checkbox" class="accent-gold w-4 h-4 mt-0.5" onchange="nlUpdateUnsentCount()">
-                                    <span>Email de lancement précommande — <strong>ne pas renvoyer</strong> aux contacts qui l'ont déjà reçu (utile pour relancer uniquement les nouveaux contacts ou reprendre après une limite Brevo atteinte)</span>
-                                </label>
-                                <p id="nl-unsent-count" class="text-gold/40 text-xs mt-2 hidden"></p>
-                            </div>
-                            <div>
-                                <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Email de test <span class="text-gold/30 normal-case text-xs">(recommandé)</span></label>
-                                <div class="flex gap-2 mb-4">
-                                    <input type="email" id="nl-test-email"
-                                        class="flex-1 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-gold"
-                                        placeholder="ton@email.fr">
-                                    <button onclick="nlSendTest()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 hover:bg-gold/30 transition text-sm whitespace-nowrap">
-                                        <i class="fas fa-paper-plane mr-1"></i>Tester
-                                    </button>
-                                </div>
-                                <button onclick="nlSendReal()" id="nl-btn-send"
-                                    class="w-full bg-gold text-night-blue font-semibold rounded-lg py-2 hover:bg-light-gold transition text-sm flex items-center justify-center gap-2 mb-3">
-                                    <i class="fas fa-broadcast-tower"></i> Envoyer maintenant
-                                </button>
-                                <div class="border-t border-gold/10 pt-3">
-                                    <label class="block text-xs uppercase tracking-widest text-gold/60 mb-2">Ou programmer l'envoi</label>
-                                    <div class="flex gap-2">
-                                        <input type="datetime-local" id="nl-scheduled-at"
-                                            class="flex-1 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
-                                        <button onclick="nlSchedule()" id="nl-btn-schedule"
-                                            class="bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg px-3 py-2 text-sm hover:bg-blue-500/30 transition whitespace-nowrap">
-                                            <i class="fas fa-clock mr-1"></i>Programmer
-                                        </button>
-                                    </div>
-                                    <div id="nl-schedule-status" class="hidden mt-2 text-xs text-blue-300 flex items-center justify-between gap-2">
-                                        <span id="nl-schedule-label"></span>
-                                        <button onclick="nlUnschedule()" class="text-red-400/60 hover:text-red-400 transition text-xs"><i class="fas fa-times mr-1"></i>Annuler</button>
-                                    </div>
-                                </div>
-                            </div>
-                            <p class="text-xs text-gold/30 mt-3 text-center italic">Teste d'abord — l'envoi réel est irréversible.</p>
-                        </div>
-                    </div>
-
-                    <!-- Réseaux sociaux -->
-                    <div id="nl-social-section" class="hidden bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6">
-                        <div class="flex items-center gap-3 mb-4">
-                            <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-                                <i class="fas fa-share-alt text-purple-300 text-sm"></i>
-                            </div>
-                            <h4 class="cormorant text-xl text-gold">Publier sur les réseaux</h4>
-                        </div>
-                        <p class="text-xs text-gold/50 mb-4">Génère automatiquement une publication adaptée pour Facebook et Instagram à partir de la newsletter en cours, et l'envoie via Make.com.</p>
-                        <div class="mb-3">
-                            <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Image (URL publique)</label>
-                            <input type="url" id="nl-social-image" placeholder="https://oradia.fr/images/..."
-                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
-                            <p class="text-xs text-gold/30 mt-1">Laisse vide pour utiliser le logo Oradia par défaut.</p>
-                        </div>
-                        <div class="mb-3">
-                            <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Programmer (optionnel)</label>
-                            <input type="datetime-local" id="nl-social-schedule"
-                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
-                        </div>
-                        <button onclick="nlPublishSocial()" id="nl-btn-social"
-                            class="w-full bg-gradient-to-r from-purple-600/80 to-pink-600/80 text-white font-semibold rounded-lg py-2 hover:from-purple-500/80 hover:to-pink-500/80 transition text-sm flex items-center justify-center gap-2 mb-3">
-                            <i class="fab fa-instagram"></i><i class="fab fa-facebook ml-1"></i><span class="ml-1">Publier sur les réseaux</span>
-                        </button>
-                        <div id="nl-social-status" class="hidden text-xs rounded-lg px-3 py-2 mt-2"></div>
-                        <div id="nl-social-preview" class="hidden mt-4 space-y-4">
-                            <!-- Aperçu Facebook -->
-                            <div class="bg-[#1a2942] border border-blue-400/30 rounded-xl overflow-hidden">
-                                <div class="flex items-center gap-2 px-3 py-2 border-b border-blue-400/20">
-                                    <i class="fab fa-facebook text-blue-400 text-sm"></i>
-                                    <span class="text-xs text-blue-300 font-semibold">Aperçu Facebook</span>
-                                </div>
-                                <div class="p-3">
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <img src="https://oradia.fr/images/logo-hd-v2.webp" class="w-7 h-7 rounded-full">
-                                        <div><p class="text-xs text-white font-semibold leading-none">ORADIA</p><p class="text-xs text-blue-300/60">Page · Maintenant</p></div>
-                                    </div>
-                                    <p id="nl-social-fb-text" class="text-xs text-white/80 whitespace-pre-wrap leading-relaxed mb-2"></p>
-                                    <div id="nl-social-fb-img" class="hidden rounded-lg overflow-hidden mb-1">
-                                        <img id="nl-social-fb-img-el" src="" alt="image" class="w-full max-h-48 object-cover">
-                                    </div>
-                                </div>
-                            </div>
-                            <!-- Aperçu Instagram -->
-                            <div class="bg-[#1a1a2e] border border-pink-400/30 rounded-xl overflow-hidden">
-                                <div class="flex items-center gap-2 px-3 py-2 border-b border-pink-400/20">
-                                    <i class="fab fa-instagram text-pink-400 text-sm"></i>
-                                    <span class="text-xs text-pink-300 font-semibold">Aperçu Instagram</span>
-                                </div>
-                                <div>
-                                    <div class="flex items-center gap-2 px-3 py-2">
-                                        <img src="https://oradia.fr/images/logo-hd-v2.webp" class="w-7 h-7 rounded-full border border-pink-400/40">
-                                        <span class="text-xs text-white font-semibold">oradia.oracle</span>
-                                    </div>
-                                    <div id="nl-social-ig-img" class="hidden">
-                                        <img id="nl-social-ig-img-el" src="" alt="image" class="w-full max-h-64 object-cover">
-                                    </div>
-                                    <div class="px-3 py-2">
-                                        <p id="nl-social-ig-text" class="text-xs text-white/80 whitespace-pre-wrap leading-relaxed"></p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
                     </div>
 
                     <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6">
@@ -1474,6 +1385,127 @@
                             oninput="nlSyncEditor()"></div>
                         <!-- Textarea caché pour compatibilité avec le code existant -->
                         <textarea id="nl-content" class="hidden"></textarea>
+                    </div>
+                </div>
+
+                <!-- Panneau "Publier" fusionné — visible après génération -->
+                <div id="nl-publish-zone" class="hidden mt-8">
+                    <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6">
+                        <h4 class="cormorant text-2xl text-gold mb-6 flex items-center gap-3">
+                            <i class="fas fa-broadcast-tower text-gold/60 text-lg"></i> Publier
+                        </h4>
+                        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+
+                            <!-- Email abonnés -->
+                            <div id="nl-send-zone">
+                                <div class="flex items-center gap-2 mb-4 pb-3 border-b border-gold/15">
+                                    <i class="fas fa-envelope text-gold/60"></i>
+                                    <span class="text-sm font-semibold text-gold">Envoyer mail Newsletter aux abonnés</span>
+                                </div>
+                                <div class="mb-5">
+                                    <label class="block text-xs uppercase tracking-widest text-gold/60 mb-2">Cibler des catégories <span class="text-gold/30 normal-case text-xs">(laisser vide = tous les abonnés)</span></label>
+                                    <div id="nl-target-tags" class="flex flex-wrap gap-3"></div>
+                                </div>
+                                <div class="mb-5 bg-white/5 border border-gold/10 rounded-lg p-4">
+                                    <label class="flex items-start gap-2 text-light-gold/80 text-sm cursor-pointer">
+                                        <input id="nl-exclude-already-sent" type="checkbox" class="accent-gold w-4 h-4 mt-0.5" onchange="nlUpdateUnsentCount()">
+                                        <span>Email de lancement précommande — <strong>ne pas renvoyer</strong> aux contacts qui l'ont déjà reçu</span>
+                                    </label>
+                                    <p id="nl-unsent-count" class="text-gold/40 text-xs mt-2 hidden"></p>
+                                </div>
+                                <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Email de test <span class="text-gold/30 normal-case text-xs">(recommandé)</span></label>
+                                <div class="flex gap-2 mb-3">
+                                    <input type="email" id="nl-test-email"
+                                        class="flex-1 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-gold"
+                                        placeholder="ton@email.fr">
+                                    <button onclick="nlSendTest()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 hover:bg-gold/30 transition text-sm whitespace-nowrap">
+                                        <i class="fas fa-paper-plane mr-1"></i>Tester
+                                    </button>
+                                </div>
+                                <button onclick="nlSendReal()" id="nl-btn-send"
+                                    class="w-full bg-gold text-night-blue font-semibold rounded-lg py-2 hover:bg-light-gold transition text-sm flex items-center justify-center gap-2 mb-3">
+                                    <i class="fas fa-broadcast-tower"></i> Envoyer maintenant
+                                </button>
+                                <div class="border-t border-gold/10 pt-3">
+                                    <label class="block text-xs uppercase tracking-widest text-gold/60 mb-2">Ou programmer l'envoi</label>
+                                    <div class="flex gap-2">
+                                        <input type="datetime-local" id="nl-scheduled-at"
+                                            class="flex-1 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                                        <button onclick="nlSchedule()" id="nl-btn-schedule"
+                                            class="bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg px-3 py-2 text-sm hover:bg-blue-500/30 transition whitespace-nowrap">
+                                            <i class="fas fa-clock mr-1"></i>Programmer
+                                        </button>
+                                    </div>
+                                    <div id="nl-schedule-status" class="hidden mt-2 text-xs text-blue-300 flex items-center justify-between gap-2">
+                                        <span id="nl-schedule-label"></span>
+                                        <button onclick="nlUnschedule()" class="text-red-400/60 hover:text-red-400 transition text-xs"><i class="fas fa-times mr-1"></i>Annuler</button>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-gold/30 mt-3 text-center italic">Teste d'abord — l'envoi réel est irréversible.</p>
+                            </div>
+
+                            <!-- Réseaux sociaux -->
+                            <div id="nl-social-section">
+                                <div class="flex items-center gap-2 mb-4 pb-3 border-b border-gold/15">
+                                    <i class="fas fa-share-alt text-purple-300/60"></i>
+                                    <span class="text-sm font-semibold text-gold">Publier sur les réseaux</span>
+                                </div>
+                                <p class="text-xs text-gold/50 mb-4">Génère automatiquement une publication adaptée pour Facebook et Instagram à partir de la newsletter en cours, et l'envoie via Make.com.</p>
+                                <div class="mb-3">
+                                    <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Image (URL publique)</label>
+                                    <input type="url" id="nl-social-image" placeholder="https://oradia.fr/images/..."
+                                        class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                                    <p class="text-xs text-gold/30 mt-1">Laisse vide pour utiliser le logo Oradia par défaut.</p>
+                                </div>
+                                <div class="mb-3">
+                                    <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Programmer (optionnel)</label>
+                                    <input type="datetime-local" id="nl-social-schedule"
+                                        class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                                </div>
+                                <button onclick="nlPublishSocial()" id="nl-btn-social"
+                                    class="w-full bg-gradient-to-r from-purple-600/80 to-pink-600/80 text-white font-semibold rounded-lg py-2 hover:from-purple-500/80 hover:to-pink-500/80 transition text-sm flex items-center justify-center gap-2 mb-3">
+                                    <i class="fab fa-instagram"></i><i class="fab fa-facebook ml-1"></i><span class="ml-1">Publier sur les réseaux</span>
+                                </button>
+                                <div id="nl-social-status" class="hidden text-xs rounded-lg px-3 py-2 mt-2"></div>
+                                <div id="nl-social-preview" class="hidden mt-4 space-y-4">
+                                    <div class="bg-[#1a2942] border border-blue-400/30 rounded-xl overflow-hidden">
+                                        <div class="flex items-center gap-2 px-3 py-2 border-b border-blue-400/20">
+                                            <i class="fab fa-facebook text-blue-400 text-sm"></i>
+                                            <span class="text-xs text-blue-300 font-semibold">Aperçu Facebook</span>
+                                        </div>
+                                        <div class="p-3">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <img src="https://oradia.fr/images/logo-hd-v2.webp" class="w-7 h-7 rounded-full">
+                                                <div><p class="text-xs text-white font-semibold leading-none">ORADIA</p><p class="text-xs text-blue-300/60">Page · Maintenant</p></div>
+                                            </div>
+                                            <p id="nl-social-fb-text" class="text-xs text-white/80 whitespace-pre-wrap leading-relaxed mb-2"></p>
+                                            <div id="nl-social-fb-img" class="hidden rounded-lg overflow-hidden mb-1">
+                                                <img id="nl-social-fb-img-el" src="" alt="image" class="w-full max-h-48 object-cover">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-[#1a1a2e] border border-pink-400/30 rounded-xl overflow-hidden">
+                                        <div class="flex items-center gap-2 px-3 py-2 border-b border-pink-400/20">
+                                            <i class="fab fa-instagram text-pink-400 text-sm"></i>
+                                            <span class="text-xs text-pink-300 font-semibold">Aperçu Instagram</span>
+                                        </div>
+                                        <div>
+                                            <div class="flex items-center gap-2 px-3 py-2">
+                                                <img src="https://oradia.fr/images/logo-hd-v2.webp" class="w-7 h-7 rounded-full border border-pink-400/40">
+                                                <span class="text-xs text-white font-semibold">oradia.oracle</span>
+                                            </div>
+                                            <div id="nl-social-ig-img" class="hidden">
+                                                <img id="nl-social-ig-img-el" src="" alt="image" class="w-full max-h-64 object-cover">
+                                            </div>
+                                            <div class="px-3 py-2">
+                                                <p id="nl-social-ig-text" class="text-xs text-white/80 whitespace-pre-wrap leading-relaxed"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3731,12 +3763,53 @@
             document.querySelectorAll('.nl-tab-btn').forEach(btn => {
                 const active = btn.getAttribute('data-nltab') === name;
                 btn.className = active
-                    ? 'nl-tab-btn bg-gold text-night-blue px-4 py-2 rounded-lg font-semibold text-sm'
-                    : 'nl-tab-btn bg-gold/20 text-gold border border-gold/30 px-4 py-2 rounded-lg text-sm hover:bg-gold/30 transition';
+                    ? 'nl-tab-btn bg-gold text-night-blue px-4 py-1.5 rounded-lg font-semibold text-sm'
+                    : 'nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition';
             });
             if (name === 'drafts') nlRenderDrafts();
             if (name === 'ideas') nlRenderIdeas();
             if (name === 'scheduled') nlRenderScheduled();
+        }
+
+        function nlSetStep(step) {
+            [1,2,3].forEach(n => {
+                const el = document.getElementById('nl-step-' + n);
+                if (!el) return;
+                if (n < step) {
+                    el.classList.remove('opacity-40');
+                    el.querySelector('span:first-child').className = 'w-6 h-6 rounded-full bg-green-500/80 text-white text-xs font-bold flex items-center justify-center';
+                    el.querySelector('span:last-child').className = 'text-sm font-medium text-gold/70';
+                } else if (n === step) {
+                    el.classList.remove('opacity-40');
+                    el.querySelector('span:first-child').className = 'w-6 h-6 rounded-full bg-gold text-night-blue text-xs font-bold flex items-center justify-center';
+                    el.querySelector('span:last-child').className = 'text-sm font-medium text-gold';
+                } else {
+                    el.classList.add('opacity-40');
+                    el.querySelector('span:first-child').className = 'w-6 h-6 rounded-full bg-gold/30 text-gold text-xs font-bold flex items-center justify-center';
+                    el.querySelector('span:last-child').className = 'text-sm font-medium text-gold/60';
+                }
+            });
+        }
+
+        function nlToggleAdvanced() {
+            const fields = document.getElementById('nl-advanced-fields');
+            const icon = document.getElementById('nl-advanced-icon');
+            const hidden = fields.classList.toggle('hidden');
+            icon.style.transform = hidden ? '' : 'rotate(90deg)';
+        }
+
+        function nlShowPublishZone(visible) {
+            const pz = document.getElementById('nl-publish-zone');
+            if (!pz) return;
+            if (visible) { pz.classList.remove('hidden'); nlSetStep(3); }
+            else pz.classList.add('hidden');
+        }
+
+        function nlShowFloatingBar(visible) {
+            const fb = document.getElementById('nl-floating-bar');
+            if (!fb) return;
+            fb.style.transform = visible ? 'translateY(0)' : 'translateY(100%)';
+            fb.style.opacity = visible ? '1' : '0';
         }
 
         function nlStatus(type, msg) {
@@ -3794,8 +3867,9 @@
                 }
                 nlShowEditor(bodyContent);
                 document.getElementById('nl-save-zone').classList.remove('hidden');
-                document.getElementById('nl-send-zone').classList.add('hidden');
-                document.getElementById('nl-social-section')?.classList.add('hidden');
+                nlShowPublishZone(false);
+                nlShowFloatingBar(true);
+                nlSetStep(2);
                 nlCurrentDraftId = null;
                 nlStatus('success', (nlCurrentType === 'promo' ? 'Email promotionnel généré.' : 'Newsletter générée.') + ' Choisis une image puis sauvegarde.');
                 nlFetchAndShowImages(intention);
@@ -4288,8 +4362,8 @@
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error);
                 nlCurrentDraftId = data.id;
-                document.getElementById('nl-send-zone').classList.remove('hidden');
-                document.getElementById('nl-social-section')?.classList.remove('hidden');
+                nlShowPublishZone(true);
+                nlShowFloatingBar(true);
                 await nlRenderTargetTags();
                 nlStatus('success', 'Brouillon sauvegardé.');
                 await nlLoadDrafts();
@@ -4697,7 +4771,7 @@
                     const subjectEl  = document.getElementById('nl-subject');
                     const placeholder = document.getElementById('nl-placeholder');
                     const saveZone   = document.getElementById('nl-save-zone');
-                    const sendZone   = document.getElementById('nl-send-zone');
+
 
                     nlSetType(data.type === 'promo' ? 'promo' : 'newsletter');
                     if (data.intention) document.getElementById('nl-intention').value = data.intention;
@@ -4719,9 +4793,9 @@
                         if (placeholder) placeholder.classList.add('hidden');
                     }
                     if (subjectEl && data.subject) subjectEl.value = data.subject;
-                    if (saveZone)  saveZone.classList.remove('hidden');
-                    if (sendZone)  sendZone.classList.remove('hidden');
-                    document.getElementById('nl-social-section')?.classList.remove('hidden');
+                    if (saveZone) saveZone.classList.remove('hidden');
+                    nlShowPublishZone(true);
+                    nlShowFloatingBar(true);
                     await nlRenderTargetTags();
                     nlShowFailedEmails(data.failed_emails);
                     // Préfill programmation
@@ -6479,5 +6553,28 @@ ${depenses.length ? `<table><thead><tr><th>Date</th><th>Description</th><th>Cat�
         }
 
     </script>
+
+    <!-- Barre d'action flottante -->
+    <div id="nl-floating-bar" style="position:fixed;bottom:0;left:0;right:0;z-index:9999;transform:translateY(100%);opacity:0;transition:transform 0.3s ease,opacity 0.3s ease;pointer-events:none;">
+        <div style="pointer-events:auto;" class="max-w-7xl mx-auto px-6 pb-4">
+            <div class="bg-[rgba(5,15,35,0.97)] border border-gold/30 rounded-2xl px-5 py-3 flex items-center gap-3 shadow-2xl backdrop-blur">
+                <span class="text-xs text-gold/50 mr-2 hidden lg:block">Newsletter prête</span>
+                <div class="flex-1"></div>
+                <button onclick="nlPreview()" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30 text-sm hover:bg-blue-500/30 transition">
+                    <i class="fas fa-eye text-xs"></i> Aperçu
+                </button>
+                <button onclick="nlSave()" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gold/20 text-gold border border-gold/40 text-sm hover:bg-gold/30 transition">
+                    <i class="fas fa-save text-xs"></i> Sauvegarder
+                </button>
+                <button onclick="nlSendPreviewSelf()" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-green-500/20 text-green-300 border border-green-500/30 text-sm hover:bg-green-500/30 transition">
+                    <i class="fas fa-inbox text-xs"></i> Tester
+                </button>
+                <button onclick="nlShowPublishZone(true);document.getElementById('nl-publish-zone').scrollIntoView({behavior:'smooth',block:'start'})" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gold text-night-blue font-semibold text-sm hover:bg-light-gold transition">
+                    <i class="fas fa-broadcast-tower text-xs"></i> Publier
+                </button>
+                <button onclick="nlShowFloatingBar(false)" class="text-gold/30 hover:text-gold/60 ml-1 transition text-lg leading-none">&times;</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>
