@@ -1877,10 +1877,27 @@ function buildCommunicationEmailHtml(draft) {
   const totalParas = paragraphs.length || 1;
   const totalImages = images.length;
 
-  const imageRow = (img) => `
-    <tr><td style="padding:0 24px 24px;">
-      <img src="${nlAbsUrl(img.path)}" alt="${nlEscHtml(img.name || '')}" width="576" style="display:block; width:100%; max-width:576px; height:auto; border-radius:14px;">
+  const separator = `
+    <tr><td style="padding:4px 40px 4px; text-align:center;">
+      <span style="display:inline-block; width:48px; height:1px; background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4)); vertical-align:middle;"></span>
+      <span style="display:inline-block; width:6px; height:6px; background:#d4af37; border-radius:50%; opacity:0.55; vertical-align:middle; margin:0 10px;"></span>
+      <span style="display:inline-block; width:48px; height:1px; background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent); vertical-align:middle;"></span>
     </td></tr>`;
+
+  const imageRow = (img) => `
+    ${separator}
+    <tr><td style="padding:8px 20px 8px; text-align:center;">
+      <table cellpadding="0" cellspacing="0" style="margin:0 auto; max-width:600px; width:100%; border-radius:14px; overflow:hidden; border:1px solid rgba(212,175,55,0.22); box-shadow:0 6px 28px rgba(0,0,0,0.45);">
+        <tr><td style="padding:0; line-height:0;">
+          <img src="${nlAbsUrl(img.path)}" alt="${nlEscHtml(img.name || '')}" width="600" style="display:block; width:100%; height:auto;">
+        </td></tr>
+      </table>
+    </td></tr>
+    ${separator}`;
+
+  const paraRow = (para) => `<tr><td style="padding:0 32px 20px;">
+    <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:justify;">${renderPara(para)}</div>
+  </td></tr>`;
 
   const hasPositions = images.length > 0 && images.every(img => img.position !== undefined && img.position !== null);
   let bodyRows = '';
@@ -1888,9 +1905,7 @@ function buildCommunicationEmailHtml(draft) {
     const sorted = [...images].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
     paragraphs.forEach((para, i) => {
       sorted.filter(img => (img.position ?? 0) === i).forEach(img => { bodyRows += imageRow(img); });
-      bodyRows += `<tr><td style="padding:0 24px 20px;">
-      <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:justify;">${renderPara(para)}</div>
-    </td></tr>`;
+      bodyRows += paraRow(para);
     });
     sorted.filter(img => (img.position ?? 0) >= paragraphs.length).forEach(img => { bodyRows += imageRow(img); });
   } else {
@@ -1899,9 +1914,7 @@ function buildCommunicationEmailHtml(draft) {
       while (imgIdx < totalImages && Math.floor((imgIdx + 1) * totalParas / (totalImages + 1)) === i) {
         bodyRows += imageRow(images[imgIdx++]);
       }
-      bodyRows += `<tr><td style="padding:0 24px 20px;">
-      <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:justify;">${renderPara(para)}</div>
-    </td></tr>`;
+      bodyRows += paraRow(para);
     });
     while (imgIdx < totalImages) { bodyRows += imageRow(images[imgIdx++]); }
   }
@@ -1927,7 +1940,12 @@ function buildCommunicationEmailHtml(draft) {
     ${subject ? `<h2 style="color:#d4af37; font-family:Georgia,serif; font-size:24px; margin:0 0 20px;">${nlEscHtml(subject)}</h2>` : ''}
   </td></tr>
   ${bodyRows}
-  <tr><td style="padding:10px 32px 40px; text-align:center;">
+  <tr><td style="padding:4px 40px 4px; text-align:center;">
+    <span style="display:inline-block; width:48px; height:1px; background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4)); vertical-align:middle;"></span>
+    <span style="display:inline-block; width:6px; height:6px; background:#d4af37; border-radius:50%; opacity:0.55; vertical-align:middle; margin:0 10px;"></span>
+    <span style="display:inline-block; width:48px; height:1px; background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent); vertical-align:middle;"></span>
+  </td></tr>
+  <tr><td style="padding:20px 32px 40px; text-align:center;">
     <a href="${nlAbsUrl(ctaUrl).replace(/"/g, '')}" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">${nlEscHtml(ctaText)}</a>
   </td></tr>
   ${extra.promo_banner ? `
