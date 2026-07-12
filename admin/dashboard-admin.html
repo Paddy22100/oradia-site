@@ -1323,7 +1323,7 @@
                     </div>
 
                     <!-- Réseaux sociaux -->
-                    <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6">
+                    <div id="nl-social-section" class="hidden bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6">
                         <div class="flex items-center gap-3 mb-4">
                             <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
                                 <i class="fas fa-share-alt text-purple-300 text-sm"></i>
@@ -3795,6 +3795,7 @@
                 nlShowEditor(bodyContent);
                 document.getElementById('nl-save-zone').classList.remove('hidden');
                 document.getElementById('nl-send-zone').classList.add('hidden');
+                document.getElementById('nl-social-section')?.classList.add('hidden');
                 nlCurrentDraftId = null;
                 nlStatus('success', (nlCurrentType === 'promo' ? 'Email promotionnel généré.' : 'Newsletter générée.') + ' Choisis une image puis sauvegarde.');
                 nlFetchAndShowImages(intention);
@@ -4288,6 +4289,7 @@
                 if (!res.ok) throw new Error(data.error);
                 nlCurrentDraftId = data.id;
                 document.getElementById('nl-send-zone').classList.remove('hidden');
+                document.getElementById('nl-social-section')?.classList.remove('hidden');
                 await nlRenderTargetTags();
                 nlStatus('success', 'Brouillon sauvegardé.');
                 await nlLoadDrafts();
@@ -4719,6 +4721,7 @@
                     if (subjectEl && data.subject) subjectEl.value = data.subject;
                     if (saveZone)  saveZone.classList.remove('hidden');
                     if (sendZone)  sendZone.classList.remove('hidden');
+                    document.getElementById('nl-social-section')?.classList.remove('hidden');
                     await nlRenderTargetTags();
                     nlShowFailedEmails(data.failed_emails);
                     // Préfill programmation
