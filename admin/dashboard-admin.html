@@ -3750,7 +3750,14 @@
                     </button>
                 </div>
                 <div id="nl-image-picker-body">
-                <p class="text-xs text-gold/60 mb-3">Les images seront affichées dans la newsletter. Clique sur une image pour la voir en grand.</p>
+                <p class="text-xs text-gold/60 mb-2">Les images seront affichées dans la newsletter. Clique sur une image pour la voir en grand.</p>
+                <div id="nl-image-selected-label" class="hidden mb-2 text-xs text-green-300">
+                    <i class="fas fa-check-circle mr-1"></i><span></span>
+                </div>
+                <div id="nl-selected-previews" class="grid grid-cols-3 gap-3 mb-3"></div>
+                <button onclick="nlClearImages()" id="nl-clear-btn" class="hidden mb-4 text-xs text-gold/40 hover:text-gold/70 transition">
+                    ✕ Effacer toutes les images
+                </button>
                 <p class="text-xs text-gold/40 mb-3 uppercase tracking-widest">Sélectionne jusqu'à 3 images — Produit · Bibliothèque · Unsplash · Import</p>
                 <div class="flex flex-col sm:flex-row gap-2 mb-4">
                     <label class="shrink-0 flex items-center gap-2 cursor-pointer bg-gold/10 border border-gold/30 text-gold rounded-lg px-3 py-2 text-sm hover:bg-gold/20 transition" title="Importer une image depuis votre ordinateur">
@@ -3770,13 +3777,6 @@
                         <i class="fas fa-spinner fa-spin mr-2"></i>Recherche d'images...
                     </div>
                 </div>
-                <div id="nl-image-selected-label" class="hidden mt-4 text-xs text-green-300">
-                    <i class="fas fa-check-circle mr-1"></i><span></span>
-                </div>
-                <div id="nl-selected-previews" class="mt-4 grid grid-cols-3 gap-3"></div>
-                <button onclick="nlClearImages()" class="mt-3 text-xs text-gold/40 hover:text-gold/70 transition">
-                    ✕ Effacer toutes les images
-                </button>
                 </div>
             `;
 
@@ -4033,6 +4033,8 @@
             const label = document.getElementById('nl-image-selected-label');
             label.classList.remove('hidden');
             label.querySelector('span').textContent = `${nlSelectedImages.length} image(s) sélectionnée(s)`;
+            const clearBtn = document.getElementById('nl-clear-btn');
+            if (clearBtn) clearBtn.classList.toggle('hidden', nlSelectedImages.length === 0);
         }
 
         function nlSetImagePosition(i, value) {
