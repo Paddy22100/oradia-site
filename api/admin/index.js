@@ -2243,6 +2243,12 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
       }
 
       // ── Sauvegarde d'un brouillon (newsletter ou promo) ──
+      if (action === 'preview') {
+        const { subject, content, intention, type, images, extra } = body;
+        const html = buildCommunicationEmailHtml({ subject, content, intention, type, images: images || [], extra: extra || {} });
+        return res.status(200).json({ html });
+      }
+
       if (action === 'save') {
         const { id, subject, content, intention, type, images, extra } = body;
 
