@@ -5827,7 +5827,7 @@
             if (!el) return;
             const total = newV + returning;
             if (total === 0) {
-                el.innerHTML = '<p class="text-gold/30 italic text-xs text-center">Données insuffisantes.<br>Disponible après migration SQL.</p>';
+                el.innerHTML = '<p class="text-gold/30 italic text-xs text-center">Se remplira avec les<br>prochaines visites.</p>';
                 return;
             }
             const pctNew = Math.round(newV / total * 100);
