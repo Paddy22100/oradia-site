@@ -2667,6 +2667,21 @@ async function handleNewsletterImages(req, res) {
         .map(img => ({ path: `/images/newsletter/ambiance/${img.file}`, name: img.name, source: 'local', category: 'ambiance' }))
         .concat(NL_LIBRARY_IMAGES.map(img => ({ path: img.path, name: img.name, source: 'local', category: img.category || 'bibliotheque' })));
 
+      // 2b. Images importées par l'admin (Supabase Storage bucket "newsletter-uploads")
+      try {
+        const sbImg = createClient(
+          process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+          process.env.SUPABASE_SERVICE_ROLE_KEY
+        );
+        const { data: uploaded } = await sbImg.storage.from('newsletter-uploads').list('', { limit: 100, sortBy: { column: 'created_at', order: 'desc' } });
+        if (uploaded && uploaded.length > 0) {
+          uploaded.forEach(file => {
+            const { data: { publicUrl } } = sbImg.storage.from('newsletter-uploads').getPublicUrl(file.name);
+            ambiance_locale.push({ path: publicUrl, name: file.name.replace(/^\d+_/, '').replace(/\.[^.]+$/, ''), source: 'uploaded', category: 'bibliotheque' });
+          });
+        }
+      } catch(e) { console.error('Erreur listing uploads:', e.message); }
+
       // 3. Unsplash (uniquement si une clé API est configurée)
       let unsplash = [];
       const UNSPLASH_KEY = process.env.UNSPLASH_ACCESS_KEY;
