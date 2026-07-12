@@ -433,6 +433,9 @@ async function handleData(req, res) {
                   params: { OFFER: order.offer || 'Oracle Oradia', NAME: '' }
                 })
               });
+              if (brevoRes.ok) {
+                await supabase.from('preorders').update({ relance_sent_at: new Date().toISOString() }).eq('id', order.id);
+              }
               results.push({ email: order.email, ok: brevoRes.ok, status: brevoRes.status });
             } catch(e) {
               results.push({ email: order.email, ok: false, error: e.message });
@@ -932,6 +935,7 @@ async function handleData(req, res) {
           const txt = await brevoRes.text();
           throw new Error(`Brevo ${brevoRes.status}: ${txt}`);
         }
+        await supabase.from('preorders').update({ relance_sent_at: new Date().toISOString() }).eq('id', body.orderId);
         return res.status(200).json({ success: true, email: body.email });
       }
 
