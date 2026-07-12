@@ -1930,6 +1930,16 @@ function buildCommunicationEmailHtml(draft) {
   <tr><td style="padding:10px 32px 40px; text-align:center;">
     <a href="${nlAbsUrl(ctaUrl).replace(/"/g, '')}" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">${nlEscHtml(ctaText)}</a>
   </td></tr>
+  ${extra.promo_banner ? `
+  <tr><td style="padding:0 24px 32px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06)); border:1px solid rgba(212,175,55,0.35); border-radius:14px; overflow:hidden;">
+      <tr><td style="padding:28px 32px; text-align:center;">
+        <p style="margin:0 0 8px; color:#d4af37; font-family:Georgia,serif; font-size:20px; font-weight:700; letter-spacing:0.05em;">${nlEscHtml(extra.promo_banner.title || '')}</p>
+        ${extra.promo_banner.desc ? `<p style="margin:0 0 20px; color:#c8c0a8; font-size:13px; opacity:0.8;">${nlEscHtml(extra.promo_banner.desc)}</p>` : '<p style="margin:0 0 20px;"></p>'}
+        ${extra.promo_banner.cta_url ? `<a href="${nlAbsUrl(extra.promo_banner.cta_url).replace(/"/g, '')}" style="display:inline-block; background:#d4af37; color:#0a192f; text-decoration:none; padding:12px 32px; border-radius:50px; font-weight:700; font-size:14px; letter-spacing:0.05em;">${nlEscHtml(extra.promo_banner.cta_text || 'En savoir plus')}</a>` : ''}
+      </td></tr>
+    </table>
+  </td></tr>` : ''}
   <tr><td style="padding:30px 32px; border-top:1px solid rgba(212,175,55,0.2); text-align:center;">
     <p style="margin:0 0 10px; color:#f5e7a1; font-size:14px; opacity:0.8;">Avec gratitude,<br>Rudy Boucheron</p>
     <p style="margin:20px 0 0; color:#c8c0a8; font-size:12px; opacity:0.6;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none;">oradia.fr</a></p>
@@ -2610,7 +2620,7 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
       return res.status(502).json({ error: 'Make.com webhook error', detail: errText });
     }
 
-    return res.status(200).json({ success: true, facebook_text, instagram_text });
+    return res.status(200).json({ success: true, facebook_text, instagram_text, image_url: payload.image_url });
   } catch (err) {
     if (err.message === 'Unauthorized') return res.status(401).json({ error: 'Non autorisé' });
     console.error('handlePublishSocial error:', err);

@@ -1276,7 +1276,7 @@
                         </button>
 
                         <div id="nl-send-zone" class="hidden bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6 mt-6">
-                            <h4 class="cormorant text-xl text-gold mb-4">Envoyer à tes abonnés</h4>
+                            <h4 class="cormorant text-xl text-gold mb-4">Envoyer mail Newsletter aux abonnés</h4>
                             <div class="mb-6">
                                 <label class="block text-xs uppercase tracking-widest text-gold/60 mb-2">Cibler des catégories <span class="text-gold/30 normal-case text-xs">(laisser vide = tous les abonnés)</span></label>
                                 <div id="nl-target-tags" class="flex flex-wrap gap-3"></div>
@@ -1347,14 +1347,42 @@
                             <i class="fab fa-instagram"></i><i class="fab fa-facebook ml-1"></i><span class="ml-1">Publier sur les réseaux</span>
                         </button>
                         <div id="nl-social-status" class="hidden text-xs rounded-lg px-3 py-2 mt-2"></div>
-                        <div id="nl-social-preview" class="hidden mt-3 space-y-3">
-                            <div class="bg-blue-900/20 border border-blue-400/20 rounded-lg p-3">
-                                <p class="text-xs text-blue-300 font-semibold mb-1"><i class="fab fa-facebook mr-1"></i>Facebook</p>
-                                <p id="nl-social-fb-text" class="text-xs text-light-gold/80 whitespace-pre-wrap"></p>
+                        <div id="nl-social-preview" class="hidden mt-4 space-y-4">
+                            <!-- Aperçu Facebook -->
+                            <div class="bg-[#1a2942] border border-blue-400/30 rounded-xl overflow-hidden">
+                                <div class="flex items-center gap-2 px-3 py-2 border-b border-blue-400/20">
+                                    <i class="fab fa-facebook text-blue-400 text-sm"></i>
+                                    <span class="text-xs text-blue-300 font-semibold">Aperçu Facebook</span>
+                                </div>
+                                <div class="p-3">
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <img src="https://oradia.fr/images/logo-hd-v2.webp" class="w-7 h-7 rounded-full">
+                                        <div><p class="text-xs text-white font-semibold leading-none">ORADIA</p><p class="text-xs text-blue-300/60">Page · Maintenant</p></div>
+                                    </div>
+                                    <p id="nl-social-fb-text" class="text-xs text-white/80 whitespace-pre-wrap leading-relaxed mb-2"></p>
+                                    <div id="nl-social-fb-img" class="hidden rounded-lg overflow-hidden mb-1">
+                                        <img id="nl-social-fb-img-el" src="" alt="image" class="w-full max-h-48 object-cover">
+                                    </div>
+                                </div>
                             </div>
-                            <div class="bg-pink-900/20 border border-pink-400/20 rounded-lg p-3">
-                                <p class="text-xs text-pink-300 font-semibold mb-1"><i class="fab fa-instagram mr-1"></i>Instagram</p>
-                                <p id="nl-social-ig-text" class="text-xs text-light-gold/80 whitespace-pre-wrap"></p>
+                            <!-- Aperçu Instagram -->
+                            <div class="bg-[#1a1a2e] border border-pink-400/30 rounded-xl overflow-hidden">
+                                <div class="flex items-center gap-2 px-3 py-2 border-b border-pink-400/20">
+                                    <i class="fab fa-instagram text-pink-400 text-sm"></i>
+                                    <span class="text-xs text-pink-300 font-semibold">Aperçu Instagram</span>
+                                </div>
+                                <div>
+                                    <div class="flex items-center gap-2 px-3 py-2">
+                                        <img src="https://oradia.fr/images/logo-hd-v2.webp" class="w-7 h-7 rounded-full border border-pink-400/40">
+                                        <span class="text-xs text-white font-semibold">oradia.oracle</span>
+                                    </div>
+                                    <div id="nl-social-ig-img" class="hidden">
+                                        <img id="nl-social-ig-img-el" src="" alt="image" class="w-full max-h-64 object-cover">
+                                    </div>
+                                    <div class="px-3 py-2">
+                                        <p id="nl-social-ig-text" class="text-xs text-white/80 whitespace-pre-wrap leading-relaxed"></p>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -1376,6 +1404,42 @@
                             <input type="text" id="nl-subject"
                                 class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-4 text-sm focus:outline-none focus:border-gold"
                                 placeholder="Objet de l'email...">
+
+                            <!-- Bandeau promotionnel -->
+                            <div class="mb-4 bg-[rgba(212,175,55,0.05)] border border-gold/20 rounded-xl p-4">
+                                <label class="flex items-center gap-2 cursor-pointer mb-3">
+                                    <input type="checkbox" id="nl-banner-enabled" class="accent-gold w-4 h-4" onchange="nlToggleBanner()">
+                                    <span class="text-sm text-gold font-medium">Ajouter un bandeau promotionnel en bas de l'email</span>
+                                </label>
+                                <div id="nl-banner-fields" class="hidden space-y-3">
+                                    <div>
+                                        <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Preset</label>
+                                        <select id="nl-banner-preset" onchange="nlApplyBannerPreset()" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                                            <option value="custom">Personnalisé</option>
+                                            <option value="precommande">Précommande — Oracle Oradia</option>
+                                        </select>
+                                    </div>
+                                    <div class="grid grid-cols-2 gap-3">
+                                        <div>
+                                            <label class="block text-xs text-gold/60 mb-1">Titre du bandeau</label>
+                                            <input type="text" id="nl-banner-title" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold" placeholder="Ex: Pré-commandez l'Oracle">
+                                        </div>
+                                        <div>
+                                            <label class="block text-xs text-gold/60 mb-1">Texte du bouton</label>
+                                            <input type="text" id="nl-banner-cta-text" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold" placeholder="Ex: Je pré-commande">
+                                        </div>
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gold/60 mb-1">Description (optionnel)</label>
+                                        <input type="text" id="nl-banner-desc" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold" placeholder="Ex: Livraison prévue automne 2025 · Édition limitée">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs text-gold/60 mb-1">URL du bouton</label>
+                                        <input type="url" id="nl-banner-cta-url" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold" placeholder="https://oradia.fr/...">
+                                    </div>
+                                </div>
+                            </div>
+
                             <div class="grid grid-cols-3 gap-3">
                                 <button onclick="nlPreview()" id="nl-btn-preview"
                                     class="bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg py-2 hover:bg-blue-500/30 transition text-sm">
@@ -4204,6 +4268,8 @@
                     cta_url: document.getElementById('nl-cta-url').value.trim() || undefined,
                     badge: document.getElementById('nl-cta-badge').value.trim() || undefined
                 } : {};
+                const banner = nlGetBanner();
+                if (banner) extra.promo_banner = banner;
 
                 const res = await adminFetch('/api/admin/newsletter?action=save', {
                     method: 'POST',
@@ -4432,7 +4498,10 @@
             if (!subject) return nlSocialStatus('error', 'Remplis d\'abord le sujet de la newsletter.');
             if (!textContent) return nlSocialStatus('error', 'Le contenu de la newsletter est vide.');
             const scheduleVal = document.getElementById('nl-social-schedule')?.value;
-            const imageUrl = document.getElementById('nl-social-image')?.value.trim() || '';
+            // Priorité : URL manuelle > première image de la newsletter sélectionnée > logo par défaut
+            const manualUrl = document.getElementById('nl-social-image')?.value.trim() || '';
+            const autoUrl = nlSelectedImages.length > 0 ? nlSelectedImages[0].path : '';
+            const imageUrl = manualUrl || autoUrl || '';
             const btn = document.getElementById('nl-btn-social');
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Génération et envoi...';
@@ -4450,6 +4519,13 @@
                 const igEl = document.getElementById('nl-social-ig-text');
                 if (fbEl) fbEl.textContent = data.facebook_text || '';
                 if (igEl) igEl.textContent = data.instagram_text || '';
+                // Afficher l'image dans l'aperçu
+                const usedImage = data.image_url || imageUrl;
+                ['fb', 'ig'].forEach(net => {
+                    const wrap = document.getElementById(`nl-social-${net}-img`);
+                    const img  = document.getElementById(`nl-social-${net}-img-el`);
+                    if (wrap && img && usedImage) { img.src = usedImage; wrap.classList.remove('hidden'); }
+                });
             } catch(e) {
                 nlSocialStatus('error', e.message);
             } finally {
@@ -4630,6 +4706,7 @@
                         document.getElementById('nl-cta-url').value = extra.cta_url || '';
                         document.getElementById('nl-cta-badge').value = extra.badge || '';
                     }
+                    if (extra.promo_banner) nlSetBanner(extra.promo_banner);
 
                     // Index négatifs pour ne pas entrer en collision avec les index de la grille
                     // d'images rechargée ci-dessous (0..N), tout en gardant un id unique pour le toggle.
@@ -5839,6 +5916,47 @@
 
         // ── ANALYTIQUES ──────────────────────────────────────────────────────────────
         let _analyticsData = null;
+
+        // ── Bandeau promotionnel ──
+        const NL_BANNER_PRESETS = {
+            precommande: {
+                title: 'Pré-commandez l\'Oracle Oradia',
+                desc: 'Livraison prévue automne 2025 · Édition limitée · 3,90€',
+                cta_text: 'Je pré-commande',
+                cta_url: 'https://oradia.fr/precommande-oracle'
+            }
+        };
+        function nlToggleBanner() {
+            const enabled = document.getElementById('nl-banner-enabled')?.checked;
+            document.getElementById('nl-banner-fields')?.classList.toggle('hidden', !enabled);
+        }
+        function nlApplyBannerPreset() {
+            const preset = document.getElementById('nl-banner-preset')?.value;
+            if (preset === 'custom' || !NL_BANNER_PRESETS[preset]) return;
+            const p = NL_BANNER_PRESETS[preset];
+            document.getElementById('nl-banner-title').value = p.title;
+            document.getElementById('nl-banner-desc').value = p.desc;
+            document.getElementById('nl-banner-cta-text').value = p.cta_text;
+            document.getElementById('nl-banner-cta-url').value = p.cta_url;
+        }
+        function nlGetBanner() {
+            if (!document.getElementById('nl-banner-enabled')?.checked) return null;
+            return {
+                title: document.getElementById('nl-banner-title')?.value.trim() || '',
+                desc: document.getElementById('nl-banner-desc')?.value.trim() || '',
+                cta_text: document.getElementById('nl-banner-cta-text')?.value.trim() || '',
+                cta_url: document.getElementById('nl-banner-cta-url')?.value.trim() || ''
+            };
+        }
+        function nlSetBanner(banner) {
+            if (!banner) return;
+            document.getElementById('nl-banner-enabled').checked = true;
+            nlToggleBanner();
+            document.getElementById('nl-banner-title').value = banner.title || '';
+            document.getElementById('nl-banner-desc').value = banner.desc || '';
+            document.getElementById('nl-banner-cta-text').value = banner.cta_text || '';
+            document.getElementById('nl-banner-cta-url').value = banner.cta_url || '';
+        }
 
         // ── Éditeur newsletter riche ──
         function nlShowEditor(content) {
