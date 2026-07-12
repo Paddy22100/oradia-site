@@ -1866,7 +1866,14 @@ function buildCommunicationEmailHtml(draft) {
 
   // Répartit les images sélectionnées dans le corps du texte (entre les paragraphes)
   // au lieu de les empiler en haut de l'email, pour aérer la lecture.
-  const paragraphs = content.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+  const isHtml = /<[a-z][\s\S]*>/i.test(content);
+  const paragraphs = isHtml
+    ? content.split(/<\/p>\s*<p[^>]*>/i).map(p => p.replace(/^<p[^>]*>/i, '').replace(/<\/p>$/i, '').trim()).filter(Boolean)
+    : content.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+  // Rendu d'un paragraphe : autorise b/strong/i/em/u/br, échappe le reste
+  const renderPara = (para) => isHtml
+    ? para.replace(/<(?!\/?(?:b|strong|i|em|u|br)\b)[^>]*>/gi, '')
+    : nlEscHtml(para).replace(/\n/g, '<br>');
   const totalParas = paragraphs.length || 1;
   const totalImages = images.length;
 
@@ -1882,7 +1889,7 @@ function buildCommunicationEmailHtml(draft) {
     paragraphs.forEach((para, i) => {
       sorted.filter(img => (img.position ?? 0) === i).forEach(img => { bodyRows += imageRow(img); });
       bodyRows += `<tr><td style="padding:0 24px 20px;">
-      <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif;">${nlEscHtml(para).replace(/\n/g, '<br>')}</div>
+      <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:justify;">${renderPara(para)}</div>
     </td></tr>`;
     });
     sorted.filter(img => (img.position ?? 0) >= paragraphs.length).forEach(img => { bodyRows += imageRow(img); });
@@ -1893,7 +1900,7 @@ function buildCommunicationEmailHtml(draft) {
         bodyRows += imageRow(images[imgIdx++]);
       }
       bodyRows += `<tr><td style="padding:0 24px 20px;">
-      <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif;">${nlEscHtml(para).replace(/\n/g, '<br>')}</div>
+      <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:justify;">${renderPara(para)}</div>
     </td></tr>`;
     });
     while (imgIdx < totalImages) { bodyRows += imageRow(images[imgIdx++]); }
