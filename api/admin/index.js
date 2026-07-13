@@ -1920,7 +1920,10 @@ function buildCommunicationEmailHtml(draft) {
   }
 
   return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<style>@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');</style>
+</head>
 <body style="margin:0; padding:0; background-color:#040d1c;">
 <table width="100%" cellpadding="0" cellspacing="0" background="https://oradia.fr/images/oradia-hero-4k.webp" bgcolor="#040d1c" style="background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat; background-color:#040d1c;">
 <tr><td align="center" style="padding:32px 12px;">
@@ -1979,10 +1982,17 @@ function buildCommunicationEmailHtml(draft) {
   </td></tr>`;
     }
   })() : ''}
-  <tr><td style="padding:30px 32px; border-top:1px solid rgba(212,175,55,0.2); text-align:center;">
-    <p style="margin:0 0 10px; color:#f5e7a1; font-size:14px; opacity:0.8;">Avec gratitude,<br>Rudy Boucheron</p>
-    <p style="margin:20px 0 0; color:#c8c0a8; font-size:12px; opacity:0.6;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none;">oradia.fr</a></p>
-    <p style="margin:15px 0 0; color:#c8c0a8; font-size:11px; opacity:0.5;">Vous recevez cet email car vous êtes abonné·e aux communications Oradia. <a href="{unsubscribe}" style="color:#c8c0a8;">Se désabonner</a></p>
+  <tr><td style="padding:36px 32px 28px; border-top:1px solid rgba(212,175,55,0.15); text-align:center;">
+    <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
+    <p style="margin:0 0 4px; color:#d4af37; font-size:44px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy Boucheron</p>
+    <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
+    <p style="margin:0 0 20px; text-align:center;">
+      <span style="display:inline-block; width:32px; height:1px; background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4)); vertical-align:middle;"></span>
+      <span style="display:inline-block; width:5px; height:5px; background:#d4af37; border-radius:50%; opacity:0.45; vertical-align:middle; margin:0 8px;"></span>
+      <span style="display:inline-block; width:32px; height:1px; background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent); vertical-align:middle;"></span>
+    </p>
+    <p style="margin:0 0 20px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
+    <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Vous recevez cet email car vous êtes abonné·e aux communications Oradia.<br><a href="{unsubscribe}" style="color:#c8c0a8; text-decoration:underline;">Se désabonner</a></p>
   </td></tr>
 </table>
 </td></tr></table>
