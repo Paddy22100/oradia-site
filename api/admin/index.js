@@ -1948,17 +1948,37 @@ function buildCommunicationEmailHtml(draft) {
   <tr><td style="padding:20px 32px 40px; text-align:center;">
     <a href="${nlAbsUrl(ctaUrl).replace(/"/g, '')}" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">${nlEscHtml(ctaText)}</a>
   </td></tr>
-  ${extra.promo_banner ? `
+  ${extra.promo_banner ? (() => {
+    const b = extra.promo_banner;
+    const hasImage = !!b.image;
+    const hasCta = !!b.cta_url;
+    if (hasImage) {
+      // Avec image : l'image porte le message — juste un bandeau CTA sombre en dessous
+      return `
+  <tr><td style="padding:0 24px 32px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.3); border-radius:14px; overflow:hidden;">
+      <tr><td style="padding:0; line-height:0;">
+        <img src="${b.image.replace(/"/g,'')}" alt="" width="100%" style="display:block; width:100%; height:auto;">
+      </td></tr>
+      ${hasCta ? `<tr><td style="padding:18px 32px; text-align:center; background:linear-gradient(135deg,#0c1e3a,#07152b);">
+        <a href="${nlAbsUrl(b.cta_url).replace(/"/g,'')}" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:13px 36px; border-radius:50px; font-weight:700; font-size:15px; letter-spacing:0.05em;">${nlEscHtml(b.cta_text || 'En savoir plus')}</a>
+      </td></tr>` : ''}
+    </table>
+  </td></tr>`;
+    } else {
+      // Sans image : présentation texte classique
+      return `
   <tr><td style="padding:0 24px 32px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06)); border:1px solid rgba(212,175,55,0.35); border-radius:14px; overflow:hidden;">
-      ${extra.promo_banner.image ? `<tr><td style="padding:0; line-height:0;"><img src="${extra.promo_banner.image.replace(/"/g,'')}" alt="" width="100%" style="display:block; width:100%; max-height:220px; object-fit:cover; border-radius:14px 14px 0 0;"></td></tr>` : ''}
       <tr><td style="padding:28px 32px; text-align:center;">
-        <p style="margin:0 0 8px; color:#d4af37; font-family:Georgia,serif; font-size:20px; font-weight:700; letter-spacing:0.05em;">${nlEscHtml(extra.promo_banner.title || '')}</p>
-        ${extra.promo_banner.desc ? `<p style="margin:0 0 20px; color:#c8c0a8; font-size:13px; opacity:0.8;">${nlEscHtml(extra.promo_banner.desc)}</p>` : '<p style="margin:0 0 20px;"></p>'}
-        ${extra.promo_banner.cta_url ? `<a href="${nlAbsUrl(extra.promo_banner.cta_url).replace(/"/g, '')}" style="display:inline-block; background:#d4af37; color:#0a192f; text-decoration:none; padding:12px 32px; border-radius:50px; font-weight:700; font-size:14px; letter-spacing:0.05em;">${nlEscHtml(extra.promo_banner.cta_text || 'En savoir plus')}</a>` : ''}
+        ${b.title ? `<p style="margin:0 0 8px; color:#d4af37; font-family:Georgia,serif; font-size:20px; font-weight:700; letter-spacing:0.05em;">${nlEscHtml(b.title)}</p>` : ''}
+        ${b.desc ? `<p style="margin:0 0 20px; color:#c8c0a8; font-size:13px;">${nlEscHtml(b.desc)}</p>` : '<p style="margin:0 0 20px;"></p>'}
+        ${hasCta ? `<a href="${nlAbsUrl(b.cta_url).replace(/"/g,'')}" style="display:inline-block; background:#d4af37; color:#0a192f; text-decoration:none; padding:12px 32px; border-radius:50px; font-weight:700; font-size:14px; letter-spacing:0.05em;">${nlEscHtml(b.cta_text || 'En savoir plus')}</a>` : ''}
       </td></tr>
     </table>
-  </td></tr>` : ''}
+  </td></tr>`;
+    }
+  })() : ''}
   <tr><td style="padding:30px 32px; border-top:1px solid rgba(212,175,55,0.2); text-align:center;">
     <p style="margin:0 0 10px; color:#f5e7a1; font-size:14px; opacity:0.8;">Avec gratitude,<br>Rudy Boucheron</p>
     <p style="margin:20px 0 0; color:#c8c0a8; font-size:12px; opacity:0.6;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none;">oradia.fr</a></p>
