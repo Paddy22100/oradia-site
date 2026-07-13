@@ -1483,10 +1483,16 @@
                                     <input type="datetime-local" id="nl-social-schedule"
                                         class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
                                 </div>
-                                <button onclick="nlPublishSocial()" id="nl-btn-social"
-                                    class="w-full bg-gradient-to-r from-purple-600/80 to-pink-600/80 text-white font-semibold rounded-lg py-2 hover:from-purple-500/80 hover:to-pink-500/80 transition text-sm flex items-center justify-center gap-2 mb-3">
-                                    <i class="fab fa-instagram"></i><i class="fab fa-facebook ml-1"></i><span class="ml-1">Publier sur les réseaux</span>
-                                </button>
+                                <div class="flex gap-2 mb-3">
+                                    <button onclick="nlPreviewSocial()" id="nl-btn-social-preview"
+                                        class="flex-1 bg-white/5 border border-gold/20 text-gold/70 font-medium rounded-lg py-2 hover:bg-white/10 transition text-sm flex items-center justify-center gap-2">
+                                        <i class="fas fa-eye"></i><span>Aperçu</span>
+                                    </button>
+                                    <button onclick="nlPublishSocial()" id="nl-btn-social"
+                                        class="flex-1 bg-gradient-to-r from-purple-600/80 to-pink-600/80 text-white font-semibold rounded-lg py-2 hover:from-purple-500/80 hover:to-pink-500/80 transition text-sm flex items-center justify-center gap-2">
+                                        <i class="fab fa-instagram"></i><i class="fab fa-facebook ml-1"></i><span class="ml-1">Publier</span>
+                                    </button>
+                                </div>
                                 <div id="nl-social-status" class="hidden text-xs rounded-lg px-3 py-2 mt-2"></div>
                                 <div id="nl-social-preview" class="hidden mt-4 space-y-4">
                                     <div class="bg-[#1a2942] border border-blue-400/30 rounded-xl overflow-hidden">
@@ -4327,12 +4333,12 @@
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Erreur');
                 const iframe = document.getElementById('nl-preview-iframe');
-                iframe.srcdoc = data.html;
                 iframe.onload = () => {
-                    iframe.style.height = (iframe.contentDocument.documentElement.scrollHeight + 32) + 'px';
+                    try { iframe.style.height = (iframe.contentDocument.documentElement.scrollHeight + 32) + 'px'; } catch(_) {}
                     document.getElementById('nl-preview-loading')?.remove();
                     iframe.classList.remove('hidden');
                 };
+                iframe.srcdoc = data.html;
             } catch(e) {
                 document.getElementById('nl-preview-loading').innerHTML = `<i class="fas fa-exclamation-triangle text-red-400 mr-2"></i>${e.message}`;
             }
@@ -4575,6 +4581,49 @@
             }
         }
 
+        function nlFillSocialPreview(data, imageUrl) {
+            document.getElementById('nl-social-preview')?.classList.remove('hidden');
+            const fbEl = document.getElementById('nl-social-fb-text');
+            const igEl = document.getElementById('nl-social-ig-text');
+            if (fbEl) fbEl.textContent = data.facebook_text || '';
+            if (igEl) igEl.textContent = data.instagram_text || '';
+            const usedImage = data.image_url || imageUrl;
+            ['fb', 'ig'].forEach(net => {
+                const wrap = document.getElementById(`nl-social-${net}-img`);
+                const img  = document.getElementById(`nl-social-${net}-img-el`);
+                if (wrap && img && usedImage) { img.src = usedImage; wrap.classList.remove('hidden'); }
+            });
+        }
+
+        async function nlPreviewSocial() {
+            const subject = document.getElementById('nl-subject')?.value.trim();
+            const textContent = document.getElementById('nl-content')?.value.trim() || '';
+            if (!subject) return nlSocialStatus('error', 'Remplis d\'abord le sujet.');
+            if (!textContent) return nlSocialStatus('error', 'Le contenu est vide.');
+            const btn = document.getElementById('nl-btn-social-preview');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i><span class="ml-1">Génération...</span>';
+            const manualUrl = document.getElementById('nl-social-image')?.value.trim() || '';
+            const autoUrl = nlSelectedImages.length > 0 ? nlSelectedImages[0].path : '';
+            const imageUrl = manualUrl || autoUrl || '';
+            try {
+                const res = await adminFetch('/api/admin/publish-social?preview=1', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subject, textContent, imageUrl: imageUrl || null })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                nlFillSocialPreview(data, imageUrl);
+                nlSocialStatus('info', 'Aperçu généré — pas encore publié.');
+            } catch(e) {
+                nlSocialStatus('error', e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-eye"></i><span class="ml-1">Aperçu</span>';
+            }
+        }
+
         async function nlPublishSocial() {
             const subject = document.getElementById('nl-subject')?.value.trim();
             const textContent = document.getElementById('nl-content')?.value.trim() || '';
@@ -4597,18 +4646,7 @@
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Erreur inconnue');
                 nlSocialStatus('success', '✓ Publications envoyées à Make.com — Facebook et Instagram seront publiés automatiquement.');
-                document.getElementById('nl-social-preview')?.classList.remove('hidden');
-                const fbEl = document.getElementById('nl-social-fb-text');
-                const igEl = document.getElementById('nl-social-ig-text');
-                if (fbEl) fbEl.textContent = data.facebook_text || '';
-                if (igEl) igEl.textContent = data.instagram_text || '';
-                // Afficher l'image dans l'aperçu
-                const usedImage = data.image_url || imageUrl;
-                ['fb', 'ig'].forEach(net => {
-                    const wrap = document.getElementById(`nl-social-${net}-img`);
-                    const img  = document.getElementById(`nl-social-${net}-img-el`);
-                    if (wrap && img && usedImage) { img.src = usedImage; wrap.classList.remove('hidden'); }
-                });
+                nlFillSocialPreview(data, imageUrl);
             } catch(e) {
                 nlSocialStatus('error', e.message);
             } finally {

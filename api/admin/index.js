@@ -2599,12 +2599,15 @@ async function handlePublishSocial(req, res) {
     verifyAdminAuth(req);
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+    const url = new URL(req.url, `http://${req.headers.host}`);
+    const previewOnly = url.searchParams.get('preview') === '1';
+
     const body = req.body || {};
     const { subject, textContent, scheduleAt, imageUrl } = body;
     if (!subject || !textContent) return res.status(400).json({ error: 'subject et textContent requis' });
 
     const MAKE_WEBHOOK_URL = process.env.MAKE_SOCIAL_WEBHOOK_URL;
-    if (!MAKE_WEBHOOK_URL) return res.status(500).json({ error: 'MAKE_SOCIAL_WEBHOOK_URL non configuré' });
+    if (!previewOnly && !MAKE_WEBHOOK_URL) return res.status(500).json({ error: 'MAKE_SOCIAL_WEBHOOK_URL non configuré' });
 
     // Générer les textes adaptés par réseau via Claude
     const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
@@ -2651,9 +2654,16 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
     if (!facebook_text) facebook_text = `${subject}\n\n${textContent.substring(0, 400)}...\n\nPlus sur oradia.fr`;
     if (!instagram_text) instagram_text = `${subject}\n\n${textContent.substring(0, 150)}...\n\n#oradia #oracle #developpementpersonnel #tore #conscience`;
 
-    // Envoyer au webhook Make.com
     const DEFAULT_IMAGE = 'https://oradia.fr/images/logo-hd-v2.webp';
-    const payload = { subject, facebook_text, instagram_text, image_url: imageUrl || DEFAULT_IMAGE, schedule_at: scheduleAt || null, sent_at: new Date().toISOString() };
+    const image_url = imageUrl || DEFAULT_IMAGE;
+
+    // Mode aperçu : retourne le texte sans envoyer à Make.com
+    if (previewOnly) {
+      return res.status(200).json({ success: true, facebook_text, instagram_text, image_url, preview: true });
+    }
+
+    // Envoyer au webhook Make.com
+    const payload = { subject, facebook_text, instagram_text, image_url, schedule_at: scheduleAt || null, sent_at: new Date().toISOString() };
     const makeRes = await fetch(MAKE_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -2665,7 +2675,7 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
       return res.status(502).json({ error: 'Make.com webhook error', detail: errText });
     }
 
-    return res.status(200).json({ success: true, facebook_text, instagram_text, image_url: payload.image_url });
+    return res.status(200).json({ success: true, facebook_text, instagram_text, image_url });
   } catch (err) {
     if (err.message === 'Unauthorized') return res.status(401).json({ error: 'Non autorisé' });
     console.error('handlePublishSocial error:', err);
