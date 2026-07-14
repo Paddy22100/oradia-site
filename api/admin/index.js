@@ -1869,7 +1869,7 @@ function buildCommunicationEmailHtml(draft) {
   const isHtml = /<[a-z][\s\S]*>/i.test(content);
   const paragraphs = isHtml
     ? content.split(/<\/p>\s*<p[^>]*>/i).map(p => p.replace(/^<p[^>]*>/i, '').replace(/<\/p>$/i, '').trim()).filter(Boolean)
-    : content.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+    : content.split(/\n+/).map(p => p.trim()).filter(Boolean);
   // Rendu d'un paragraphe : autorise b/strong/i/em/u/br, échappe le reste
   const renderPara = (para) => isHtml
     ? para.replace(/<(?!\/?(?:b|strong|i|em|u|br)\b)[^>]*>/gi, '')

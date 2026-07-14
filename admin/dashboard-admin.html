@@ -4227,7 +4227,7 @@
             clearBtn?.classList.remove('hidden');
 
             const contentVal = document.getElementById('nl-content')?.value || '';
-            const paragraphs = contentVal.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+            const paragraphs = contentVal.split(/\n+/).map(p => p.trim()).filter(Boolean);
             const hasActive = nlActivePlacementIdx !== null;
 
             // Vignettes des images sélectionnées
@@ -4267,7 +4267,7 @@
             } else {
                 placementHtml += makeSlot(0);
                 paragraphs.forEach((para, i) => {
-                    const preview = para.length > 100 ? para.substring(0, 100) + '…' : para;
+                    const preview = para.length > 200 ? para.substring(0, 200) + '…' : para;
                     placementHtml += `<div class="bg-white/3 border border-white/5 rounded-lg px-3 py-2 my-0.5">
                         <p class="text-xs text-gold/35 leading-relaxed">${preview}</p>
                     </div>`;
