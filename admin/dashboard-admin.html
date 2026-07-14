@@ -3917,7 +3917,8 @@
                 let bodyContent = data.content;
                 const m = bodyContent.match(/OBJET\s*:\s*(.+)/i);
                 if (m) {
-                    document.getElementById('nl-subject').value = m[1].trim();
+                    const titre = m[1].trim().replace(/^Rudy d['']ORADIA\s*[-–]\s*/i, '');
+                    document.getElementById('nl-subject').value = `Rudy d'ORADIA - ${titre}`;
                     bodyContent = bodyContent.replace(/OBJET\s*:\s*.+(\r?\n)+/i, '').trim();
                 }
                 nlShowEditor(bodyContent);
