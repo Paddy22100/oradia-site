@@ -6328,6 +6328,7 @@
             const editorDiv = document.getElementById('nl-content-editor');
             const textarea  = document.getElementById('nl-content');
             if (editorDiv && textarea) textarea.value = editorDiv.innerHTML;
+            if (nlSelectedImages.length > 0) nlUpdateSelectedPreviews();
         }
         function nlFormat(cmd) {
             const editorDiv = document.getElementById('nl-content-editor');
