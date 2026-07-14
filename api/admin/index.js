@@ -2618,10 +2618,15 @@ async function handlePublishSocial(req, res) {
     const MAKE_WEBHOOK_URL = process.env.MAKE_SOCIAL_WEBHOOK_URL;
     if (!previewOnly && !MAKE_WEBHOOK_URL) return res.status(500).json({ error: 'MAKE_SOCIAL_WEBHOOK_URL non configuré' });
 
+    // Si les textes ont déjà été édités côté client, les utiliser directement sans régénérer
+    let facebook_text = body.facebook_text || '';
+    let instagram_text = body.instagram_text || '';
+
+    if (facebook_text && instagram_text) {
+      // Textes fournis — pas de génération IA nécessaire
+    } else {
     // Générer les textes adaptés par réseau via Claude
     const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-    let facebook_text = '';
-    let instagram_text = '';
 
     if (ANTHROPIC_API_KEY) {
       const prompt = `Tu es expert en communication digitale pour Oradia, un oracle de développement personnel basé sur le Tore.
@@ -2662,6 +2667,7 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
     // Fallback si l'IA échoue
     if (!facebook_text) facebook_text = `${subject}\n\n${textContent.substring(0, 400)}...\n\nPlus sur oradia.fr`;
     if (!instagram_text) instagram_text = `${subject}\n\n${textContent.substring(0, 150)}...\n\n#oradia #oracle #developpementpersonnel #tore #conscience`;
+    } // fin du bloc else (génération IA)
 
     const DEFAULT_IMAGE = 'https://oradia.fr/images/logo-hd-v2.webp';
     const image_url = imageUrl || DEFAULT_IMAGE;

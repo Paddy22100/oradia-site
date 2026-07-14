@@ -1521,7 +1521,7 @@
                                                 <img src="https://oradia.fr/images/logo-hd-v2.webp" class="w-7 h-7 rounded-full">
                                                 <div><p class="text-xs text-white font-semibold leading-none">ORADIA</p><p class="text-xs text-blue-300/60">Page · Maintenant</p></div>
                                             </div>
-                                            <p id="nl-social-fb-text" class="text-xs text-white/80 whitespace-pre-wrap leading-relaxed mb-2"></p>
+                                            <textarea id="nl-social-fb-text" rows="5" class="w-full text-xs text-white/80 leading-relaxed mb-2 bg-transparent border border-blue-400/20 rounded-lg px-2 py-1.5 resize-none focus:outline-none focus:border-blue-400/50" placeholder="Le texte Facebook apparaîtra ici après l'aperçu..."></textarea>
                                             <div id="nl-social-fb-img" class="hidden rounded-lg overflow-hidden mb-1">
                                                 <img id="nl-social-fb-img-el" src="" alt="image" class="w-full max-h-48 object-cover">
                                             </div>
@@ -1541,7 +1541,7 @@
                                                 <img id="nl-social-ig-img-el" src="" alt="image" class="w-full max-h-64 object-cover">
                                             </div>
                                             <div class="px-3 py-2">
-                                                <p id="nl-social-ig-text" class="text-xs text-white/80 whitespace-pre-wrap leading-relaxed"></p>
+                                                <textarea id="nl-social-ig-text" rows="6" class="w-full text-xs text-white/80 leading-relaxed bg-transparent border border-pink-400/20 rounded-lg px-2 py-1.5 resize-none focus:outline-none focus:border-pink-400/50" placeholder="Le texte Instagram apparaîtra ici après l'aperçu..."></textarea>
                                             </div>
                                         </div>
                                     </div>
@@ -4712,8 +4712,8 @@
             document.getElementById('nl-social-preview')?.classList.remove('hidden');
             const fbEl = document.getElementById('nl-social-fb-text');
             const igEl = document.getElementById('nl-social-ig-text');
-            if (fbEl) fbEl.textContent = data.facebook_text || '';
-            if (igEl) igEl.textContent = data.instagram_text || '';
+            if (fbEl) fbEl.value = data.facebook_text || '';
+            if (igEl) igEl.value = data.instagram_text || '';
             const usedImage = data.image_url || imageUrl;
             ['fb', 'ig'].forEach(net => {
                 const wrap = document.getElementById(`nl-social-${net}-img`);
@@ -4761,14 +4761,23 @@
             const manualUrl = document.getElementById('nl-social-image')?.value.trim() || '';
             const autoUrl = nlSelectedImages.length > 0 ? nlSelectedImages[0].path : '';
             const imageUrl = manualUrl || autoUrl || '';
+            // Si les textes ont déjà été générés (et éventuellement modifiés), les réutiliser
+            const editedFb = document.getElementById('nl-social-fb-text')?.value.trim() || '';
+            const editedIg = document.getElementById('nl-social-ig-text')?.value.trim() || '';
             const btn = document.getElementById('nl-btn-social');
             btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Génération et envoi...';
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Envoi...';
             try {
                 const res = await adminFetch('/api/admin/publish-social', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ subject, textContent, scheduleAt: scheduleVal || null, imageUrl: imageUrl || null })
+                    body: JSON.stringify({
+                        subject, textContent,
+                        scheduleAt: scheduleVal || null,
+                        imageUrl: imageUrl || null,
+                        facebook_text: editedFb || undefined,
+                        instagram_text: editedIg || undefined
+                    })
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Erreur inconnue');
