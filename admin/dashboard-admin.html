@@ -4907,7 +4907,7 @@
 
                     // Index négatifs pour ne pas entrer en collision avec les index de la grille
                     // d'images rechargée ci-dessous (0..N), tout en gardant un id unique pour le toggle.
-                    nlSelectedImages = (data.images || []).map((img, i) => ({ index: -(i + 1), path: img.path, name: img.name }));
+                    nlSelectedImages = (data.images || []).map((img, i) => ({ index: -(i + 1), path: img.path, name: img.name, position: img.position ?? -1 }));
 
                     if (data.content) {
                         nlShowEditor(data.content);
