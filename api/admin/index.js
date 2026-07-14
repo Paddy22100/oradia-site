@@ -1852,6 +1852,7 @@ function nlAbsUrl(path) {
 // Construit le HTML complet de l'email (newsletter ou promo) à partir d'un brouillon
 function buildCommunicationEmailHtml(draft) {
   const subject = draft.subject || '';
+  const displayTitle = subject.replace(/^Rudy d['']ORADIA\s*[-–]\s*/i, '').trim();
   const content = draft.content || '';
   const intention = draft.intention || '';
   const images = draft.images || [];
@@ -1938,7 +1939,7 @@ function buildCommunicationEmailHtml(draft) {
   </td></tr>
   <tr><td style="padding:30px 32px 0;">
     ${badgeHtml}
-    ${subject ? `<h2 style="color:#d4af37; font-family:Georgia,serif; font-size:24px; margin:0 0 20px;">${nlEscHtml(subject)}</h2>` : ''}
+    ${displayTitle ? `<h2 style="color:#d4af37; font-family:Georgia,serif; font-size:24px; margin:0 0 20px;">${nlEscHtml(displayTitle)}</h2>` : ''}
   </td></tr>
   ${bodyRows}
   <tr><td style="padding:4px 40px 4px; text-align:center;">
