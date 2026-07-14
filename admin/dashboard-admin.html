@@ -4412,9 +4412,8 @@
         async function nlSave() {
             const content = document.getElementById('nl-content').value.trim();
             if (!content) return;
-            const btn = document.getElementById('nl-btn-save');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Sauvegarde...';
+            const saveBtns = document.querySelectorAll('[id^="nl-btn-save"]');
+            saveBtns.forEach(b => { b.disabled = true; b.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Sauvegarde…'; });
             try {
                 const extra = nlCurrentType === 'promo' ? {
                     cta_text: document.getElementById('nl-cta-text').value.trim() || undefined,
@@ -4443,12 +4442,17 @@
                 nlShowPublishZone(true);
                 nlShowFloatingBar(true);
                 await nlRenderTargetTags();
+                saveBtns.forEach(b => { b.innerHTML = '<i class="fas fa-check mr-1"></i>Sauvegardé !'; });
+                setTimeout(() => saveBtns.forEach(b => { b.innerHTML = '<i class="fas fa-save mr-1"></i>Sauvegarder'; }), 2000);
                 nlStatus('success', 'Brouillon sauvegardé.');
                 await nlLoadDrafts();
-            } catch(e) { nlStatus('error', e.message); }
+            } catch(e) {
+                saveBtns.forEach(b => { b.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Erreur'; });
+                setTimeout(() => saveBtns.forEach(b => { b.innerHTML = '<i class="fas fa-save mr-1"></i>Sauvegarder'; }), 2500);
+                nlStatus('error', e.message);
+            }
             finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-save mr-2"></i>Sauvegarder le brouillon';
+                saveBtns.forEach(b => { b.disabled = false; });
             }
         }
 
@@ -4492,10 +4496,16 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Erreur');
+                btns.forEach(btn => { btn.innerHTML = '<i class="fas fa-check mr-1"></i>Envoyé !'; });
+                setTimeout(() => btns.forEach((btn, i) => { btn.innerHTML = originals[i]; }), 2500);
                 nlStatus('success', 'Email envoyé sur contact@oradia.fr — va voir dans la boîte mail ✓');
-            } catch(e) { nlStatus('error', e.message); }
+            } catch(e) {
+                btns.forEach(btn => { btn.innerHTML = '<i class="fas fa-exclamation-triangle mr-1"></i>Erreur'; });
+                setTimeout(() => btns.forEach((btn, i) => { btn.innerHTML = originals[i]; }), 2500);
+                nlStatus('error', e.message);
+            }
             finally {
-                btns.forEach((btn, i) => { btn.disabled = false; btn.innerHTML = originals[i]; });
+                btns.forEach(btn => { btn.disabled = false; });
             }
         }
 
@@ -6797,10 +6807,10 @@ ${depenses.length ? `<table><thead><tr><th>Date</th><th>Description</th><th>Cat�
                 <button onclick="nlPreview()" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-blue-500/20 text-blue-300 border border-blue-500/30 text-sm hover:bg-blue-500/30 transition">
                     <i class="fas fa-eye text-xs"></i> Aperçu
                 </button>
-                <button onclick="nlSave()" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gold/20 text-gold border border-gold/40 text-sm hover:bg-gold/30 transition">
+                <button onclick="nlSave()" id="nl-btn-save-floating" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gold/20 text-gold border border-gold/40 text-sm hover:bg-gold/30 transition">
                     <i class="fas fa-save text-xs"></i> Sauvegarder
                 </button>
-                <button onclick="nlSendPreviewSelf()" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-green-500/20 text-green-300 border border-green-500/30 text-sm hover:bg-green-500/30 transition">
+                <button onclick="nlSendPreviewSelf()" id="nl-btn-preview-self-floating" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-green-500/20 text-green-300 border border-green-500/30 text-sm hover:bg-green-500/30 transition">
                     <i class="fas fa-inbox text-xs"></i> Tester
                 </button>
                 <button onclick="nlShowPublishZone(true);document.getElementById('nl-publish-zone').scrollIntoView({behavior:'smooth',block:'start'})" class="flex items-center gap-1.5 px-4 py-2 rounded-lg bg-gold text-night-blue font-semibold text-sm hover:bg-light-gold transition">
