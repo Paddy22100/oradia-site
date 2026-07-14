@@ -4447,12 +4447,18 @@
                 const banner = nlGetBanner();
                 if (banner) extra.promo_banner = banner;
 
+                const subjectEl = document.getElementById('nl-subject');
+                const rawSubject = subjectEl.value.trim();
+                const prefix = "Rudy d'ORADIA - ";
+                const subject = rawSubject.match(/^Rudy d['']ORADIA\s*[-–]/i) ? rawSubject : prefix + rawSubject;
+                subjectEl.value = subject;
+
                 const res = await adminFetch('/api/admin/newsletter?action=save', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({
                         id: nlCurrentDraftId,
-                        subject: document.getElementById('nl-subject').value.trim(),
+                        subject,
                         content,
                         intention: document.getElementById('nl-intention').value.trim(),
                         type: nlCurrentType,
