@@ -1933,15 +1933,8 @@ function buildCommunicationEmailHtml(draft) {
 <table width="100%" cellpadding="0" cellspacing="0" background="https://oradia.fr/images/oradia-hero-4k.webp" bgcolor="#040d1c" style="background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat; background-color:#040d1c;">
 <tr><td align="center" style="padding:32px 12px;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.96) 100%); max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
-  <tr><td background="https://oradia.fr/images/oradia-hero-4k.webp" bgcolor="#0a192f" style="background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat;">
-    <table width="100%" cellpadding="0" cellspacing="0"><tr><td style="padding:50px 32px; text-align:center; background:linear-gradient(135deg, rgba(10,25,47,0.78) 0%, rgba(5,20,40,0.85) 100%);">
-      <table cellpadding="0" cellspacing="0" style="margin:0 auto;"><tr>
-        <td style="vertical-align:middle; padding-right:8px;"><img src="https://oradia.fr/images/logo-hd-v2.webp" alt="O" width="34" height="34" style="display:block; height:34px; width:34px; border-radius:50%;"></td>
-        <td style="vertical-align:middle;"><span style="color:#d4af37; font-family:Georgia,serif; font-size:30px; font-weight:700; letter-spacing:0.1em; line-height:34px;">RADIA</span></td>
-      </tr></table>
-      <p style="margin:10px 0 0; color:#f5e7a1; font-size:16px; font-style:italic; letter-spacing:0.1em;">La Boussole Intérieure</p>
-      ${intention ? `<p style="margin:20px 0 0; color:#c8c0a8; font-size:14px; font-style:italic;">« ${nlEscHtml(intention)} »</p>` : ''}
-    </td></tr></table>
+  <tr><td style="padding:0; line-height:0;">
+    <img src="https://oradia.fr/images/medias/bandeau_newsletter.webp" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
   </td></tr>
   <tr><td style="padding:30px 32px 0;">
     ${badgeHtml}
