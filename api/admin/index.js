@@ -1899,24 +1899,29 @@ function buildCommunicationEmailHtml(draft) {
     <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:justify;">${renderPara(para)}</div>
   </td></tr>`;
 
-  const hasPositions = images.length > 0 && images.every(img => img.position !== undefined && img.position !== null);
+  const placedImages = images.filter(img => img.position !== undefined && img.position !== null && img.position >= 0);
+  const unplacedImages = images.filter(img => img.position === undefined || img.position === null || img.position < 0);
   let bodyRows = '';
-  if (hasPositions) {
-    const sorted = [...images].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
+  if (placedImages.length > 0) {
+    const sorted = [...placedImages].sort((a, b) => (a.position ?? 0) - (b.position ?? 0));
     paragraphs.forEach((para, i) => {
-      sorted.filter(img => (img.position ?? 0) === i).forEach(img => { bodyRows += imageRow(img); });
+      sorted.filter(img => img.position === i).forEach(img => { bodyRows += imageRow(img); });
       bodyRows += paraRow(para);
     });
-    sorted.filter(img => (img.position ?? 0) >= paragraphs.length).forEach(img => { bodyRows += imageRow(img); });
+    sorted.filter(img => img.position >= paragraphs.length).forEach(img => { bodyRows += imageRow(img); });
+    // Unplaced images appended after the last paragraph
+    unplacedImages.forEach(img => { bodyRows += imageRow(img); });
   } else {
+    const allImages = [...images];
+    const totalImagesAll = allImages.length;
     let imgIdx = 0;
     paragraphs.forEach((para, i) => {
-      while (imgIdx < totalImages && Math.floor((imgIdx + 1) * totalParas / (totalImages + 1)) === i) {
-        bodyRows += imageRow(images[imgIdx++]);
+      while (imgIdx < totalImagesAll && Math.floor((imgIdx + 1) * totalParas / (totalImagesAll + 1)) === i) {
+        bodyRows += imageRow(allImages[imgIdx++]);
       }
       bodyRows += paraRow(para);
     });
-    while (imgIdx < totalImages) { bodyRows += imageRow(images[imgIdx++]); }
+    while (imgIdx < totalImagesAll) { bodyRows += imageRow(allImages[imgIdx++]); }
   }
 
   return `<!DOCTYPE html>

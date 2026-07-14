@@ -3940,6 +3940,7 @@
 
         // ── Sélection d'images ───────────────────────────────────────────────────
         let nlSelectedImages = [];
+        let nlActivePlacementIdx = null;
 
         async function nlFetchAndShowImages(intention) {
             const existing = document.getElementById('nl-image-picker');
@@ -4193,7 +4194,7 @@
                     }
                 }
                 
-                nlSelectedImages.push({ index, path: finalPath, name: img.name, position: 0 });
+                nlSelectedImages.push({ index, path: finalPath, name: img.name, position: -1 });
                 document.getElementById(`nl-img-option-${index}`)?.classList.add('border-gold', 'ring-2', 'ring-gold/40');
                 document.getElementById(`nl-img-toggle-${index}`).innerHTML = '<i class="fas fa-check text-white text-sm"></i>';
                 document.getElementById(`nl-selected-badge-${index}`)?.classList.remove('hidden');
@@ -4209,41 +4210,103 @@
         function nlUpdateSelectedPreviews() {
             const container = document.getElementById('nl-selected-previews');
             if (!container) return;
-            
+
+            const label = document.getElementById('nl-image-selected-label');
+            const clearBtn = document.getElementById('nl-clear-btn');
+
             if (nlSelectedImages.length === 0) {
                 container.innerHTML = '';
+                label?.classList.add('hidden');
+                clearBtn?.classList.add('hidden');
+                nlActivePlacementIdx = null;
                 return;
             }
-            
+
+            label?.classList.remove('hidden');
+            label.querySelector('span').textContent = `${nlSelectedImages.length} image(s) — cliquez sur une vignette puis sur l'emplacement dans le texte`;
+            clearBtn?.classList.remove('hidden');
+
             const contentVal = document.getElementById('nl-content')?.value || '';
-            const paraCount = contentVal.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean).length || 1;
-            const posOptions = [
-                { v: 0,   l: 'Début du mail' },
-                ...Array.from({length: paraCount}, (_, i) => ({
-                    v: i + 1,
-                    l: i === 0 ? 'Après le 1er paragraphe' : `Après le ${i + 1}e paragraphe`
-                })),
-                { v: 999, l: 'Fin du mail' }
-            ];
-            container.innerHTML = nlSelectedImages.map((sel, i) => `
-                <div class="bg-white/3 border border-gold/10 rounded-xl p-3 flex gap-3 items-start">
-                    <img src="${sel.path}" alt="${sel.name}" class="w-20 h-14 object-cover rounded-lg flex-shrink-0">
-                    <div class="flex-1 min-w-0">
-                        <p class="text-xs text-gold/60 truncate mb-2">${sel.name}</p>
-                        <select onchange="nlSetImagePosition(${i}, +this.value)"
-                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/20 text-gold/70 rounded-lg px-2 py-1.5 text-xs focus:outline-none focus:border-gold">
-                            ${posOptions.map(o => `<option value="${o.v}"${(sel.position??0)===o.v?' selected':''}>${o.l}</option>`).join('')}
-                        </select>
+            const paragraphs = contentVal.split(/\n\s*\n/).map(p => p.trim()).filter(Boolean);
+            const hasActive = nlActivePlacementIdx !== null;
+
+            // Vignettes des images sélectionnées
+            const imgsHtml = nlSelectedImages.map((sel, i) => {
+                const isActive = nlActivePlacementIdx === i;
+                const placed = (sel.position ?? -1) >= 0;
+                return `<div onclick="nlSetActivePlacement(${i})"
+                    class="cursor-pointer border-2 ${isActive ? 'border-gold ring-2 ring-gold/30' : 'border-gold/20 hover:border-gold/50'} rounded-xl p-1.5 transition flex-shrink-0">
+                    <img src="${sel.path}" class="w-16 h-12 object-cover rounded-lg">
+                    <div class="flex items-center justify-between mt-1 gap-1">
+                        <span class="text-xs truncate max-w-[52px] ${placed ? 'text-green-400' : isActive ? 'text-gold' : 'text-gold/35'}">${placed ? '✓' : isActive ? '← choisir' : 'non placée'}</span>
+                        <button onclick="event.stopPropagation();nlToggleImage(${sel.index})" class="text-red-400/40 hover:text-red-400 text-xs flex-shrink-0">✕</button>
                     </div>
-                    <button onclick="nlToggleImage(${sel.index})" class="text-red-400/50 hover:text-red-400 flex-shrink-0 mt-1"><i class="fas fa-times text-xs"></i></button>
+                </div>`;
+            }).join('');
+
+            // Fonction pour générer un "slot" d'insertion
+            const makeSlot = (slotVal) => {
+                const img = nlSelectedImages.find(s => (s.position ?? -1) === slotVal);
+                if (img) {
+                    return `<div class="border border-gold/30 bg-gold/5 rounded-lg px-3 py-1.5 flex items-center gap-2 my-1">
+                        <img src="${img.path}" class="w-10 h-7 object-cover rounded flex-shrink-0">
+                        <span class="text-xs text-gold/70 flex-1 truncate">${img.name}</span>
+                        <button onclick="nlClearImageSlot(${slotVal})" class="text-red-400/40 hover:text-red-400 text-xs flex-shrink-0">✕ retirer</button>
+                    </div>`;
+                }
+                return `<div onclick="${hasActive ? 'nlPlaceImageAtSlot(' + slotVal + ')' : ''}"
+                    class="my-1 border border-dashed ${hasActive ? 'border-gold/40 cursor-pointer hover:border-gold hover:bg-gold/5' : 'border-white/8'} rounded-lg px-3 py-1 text-center transition">
+                    <span class="text-xs ${hasActive ? 'text-gold/50' : 'text-white/12'}">${hasActive ? '+ Insérer ici' : '·'}</span>
+                </div>`;
+            };
+
+            // Zone de placement visuel
+            let placementHtml = '';
+            if (paragraphs.length === 0) {
+                placementHtml = `<p class="text-xs text-gold/30 italic py-2">Générez ou saisissez le contenu pour placer les images entre les paragraphes</p>`;
+            } else {
+                placementHtml += makeSlot(0);
+                paragraphs.forEach((para, i) => {
+                    const preview = para.length > 100 ? para.substring(0, 100) + '…' : para;
+                    placementHtml += `<div class="bg-white/3 border border-white/5 rounded-lg px-3 py-2 my-0.5">
+                        <p class="text-xs text-gold/35 leading-relaxed">${preview}</p>
+                    </div>`;
+                    placementHtml += makeSlot(i === paragraphs.length - 1 ? 999 : i + 1);
+                });
+            }
+
+            container.innerHTML = `<div class="col-span-3 space-y-3">
+                <div class="flex gap-2 flex-wrap items-start">
+                    ${imgsHtml}
+                    ${hasActive ? '<div class="text-xs text-gold/60 self-center ml-1">← Cliquez sur un emplacement ci-dessous</div>' : '<div class="text-xs text-gold/35 self-center ml-1">Cliquez sur une image pour la placer</div>'}
                 </div>
-            `).join('');
-            
-            const label = document.getElementById('nl-image-selected-label');
-            label.classList.remove('hidden');
-            label.querySelector('span').textContent = `${nlSelectedImages.length} image(s) sélectionnée(s)`;
-            const clearBtn = document.getElementById('nl-clear-btn');
-            if (clearBtn) clearBtn.classList.toggle('hidden', nlSelectedImages.length === 0);
+                <div class="border border-gold/10 rounded-xl p-3 bg-black/20">
+                    <p class="text-xs text-gold/40 uppercase tracking-widest mb-2">Placement dans la newsletter</p>
+                    ${placementHtml}
+                </div>
+            </div>`;
+        }
+
+        function nlSetActivePlacement(i) {
+            nlActivePlacementIdx = (nlActivePlacementIdx === i) ? null : i;
+            nlUpdateSelectedPreviews();
+        }
+
+        function nlPlaceImageAtSlot(slotVal) {
+            if (nlActivePlacementIdx === null) return;
+            const img = nlSelectedImages[nlActivePlacementIdx];
+            if (!img) return;
+            // Libérer l'autre image qui occupe ce slot
+            nlSelectedImages.forEach(s => { if ((s.position ?? -1) === slotVal) s.position = -1; });
+            img.position = slotVal;
+            nlActivePlacementIdx = null;
+            nlUpdateSelectedPreviews();
+        }
+
+        function nlClearImageSlot(slotVal) {
+            const img = nlSelectedImages.find(s => (s.position ?? -1) === slotVal);
+            if (img) img.position = -1;
+            nlUpdateSelectedPreviews();
         }
 
         function nlSetImagePosition(i, value) {
