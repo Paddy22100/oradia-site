@@ -4251,7 +4251,13 @@
             clearBtn?.classList.remove('hidden');
 
             const contentVal = document.getElementById('nl-content')?.value || '';
-            const paragraphs = contentVal.split(/\n+/).map(p => p.trim()).filter(Boolean);
+            // Extraire le texte brut depuis le HTML de l'éditeur riche
+            const tmp = document.createElement('div');
+            tmp.innerHTML = contentVal;
+            // Chaque <p> ou <br> ou \n = séparateur de section
+            tmp.querySelectorAll('br').forEach(br => br.replaceWith('\n'));
+            const rawText = tmp.innerText || tmp.textContent || '';
+            const paragraphs = rawText.split(/\n+/).map(p => p.trim()).filter(Boolean);
             const hasActive = nlActivePlacementIdx !== null;
 
             // Vignettes des images sélectionnées
