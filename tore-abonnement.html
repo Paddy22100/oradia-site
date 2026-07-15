@@ -377,7 +377,7 @@
 
         try {
             const urlDiscount = new URLSearchParams(window.location.search).get('discount');
-            const promoCode = urlDiscount === 'email24h' ? 'promo_1TtWot5oaKXBczQqAKp6f7o6' : null;
+            const promoCode = urlDiscount === 'email24h' ? 'promo_1TtZP25oaKXBczQqQEQ85oV7' : null;
             const res = await fetch('/api/create-checkout-session', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
