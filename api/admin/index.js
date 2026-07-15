@@ -1337,13 +1337,53 @@ async function handleData(req, res) {
     }
 
     if (section === 'observation-windows') {
-      const { data: windows, error: winErr } = await supabase
+      // Source 1 : table observation_windows (non-membres / freemium)
+      const { data: freeWindows } = await supabase
         .from('observation_windows')
         .select('email, created_at, duration_days, closes_at, intention, qrng_source')
         .order('created_at', { ascending: false })
-        .limit(200);
-      if (winErr) return res.status(500).json({ success: false, error: winErr.message });
-      return res.status(200).json({ success: true, windows: windows || [] });
+        .limit(500);
+
+      // Source 2 : table tirages (membres connectés), filtrer ceux ayant une fenêtre activée
+      const { data: tiragesWithWindow } = await supabase
+        .from('tirages')
+        .select('user_id, created_at, intention, observation_window')
+        .not('observation_window', 'is', null)
+        .order('created_at', { ascending: false })
+        .limit(500);
+
+      // Récupérer les emails des membres via auth.users (service role)
+      let userEmails = {};
+      if (tiragesWithWindow && tiragesWithWindow.length > 0) {
+        const userIds = [...new Set(tiragesWithWindow.map(t => t.user_id).filter(Boolean))];
+        const { data: { users } = {} } = await supabase.auth.admin.listUsers({ perPage: 1000 });
+        if (users) users.forEach(u => { userEmails[u.id] = u.email; });
+      }
+
+      // Normaliser les tirages au même format que observation_windows
+      const memberWindows = (tiragesWithWindow || [])
+        .filter(t => t.observation_window && (t.observation_window.durationDays || t.observation_window.duration_days))
+        .map(t => {
+          const ow = t.observation_window;
+          const durationDays = ow.durationDays || ow.duration_days || null;
+          const closesAt = ow.closesAt || ow.closes_at || null;
+          return {
+            email: userEmails[t.user_id] || null,
+            created_at: t.created_at,
+            duration_days: durationDays,
+            closes_at: closesAt,
+            intention: t.intention || '',
+            source: 'membre'
+          };
+        });
+
+      // Fusionner et trier par date décroissante
+      const allWindows = [
+        ...(freeWindows || []).map(w => ({ ...w, source: 'freemium' })),
+        ...memberWindows
+      ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      return res.status(200).json({ success: true, windows: allWindows });
     }
 
     if (section === 'synchronicity') {
