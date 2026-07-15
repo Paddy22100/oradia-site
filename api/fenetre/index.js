@@ -5,6 +5,7 @@
 // POST /api/fenetre/survey       → reçoit le questionnaire de synchronicité
 
 import { createClient } from '@supabase/supabase-js';
+import jwt from 'jsonwebtoken';
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -421,7 +422,6 @@ export default async function handler(req, res) {
       let isAuthorized = rawToken === process.env.CRON_SECRET || rawToken === process.env.ADMIN_SECRET;
       if (!isAuthorized && rawToken) {
         try {
-          const jwt = require('jsonwebtoken');
           const decoded = jwt.verify(rawToken, process.env.ADMIN_SESSION_SECRET);
           isAuthorized = decoded.type === 'admin';
         } catch (_) {}
