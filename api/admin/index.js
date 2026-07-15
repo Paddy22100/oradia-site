@@ -443,11 +443,20 @@ async function handleData(req, res) {
           }
           await logSystemEvent(supabase, { level: 'info', source: 'cron-relance', method: 'GET', path: '/api/admin/data', status_code: 200, message: `Relances envoyées : ${results.filter(r=>r.ok).length}/${results.length}`, details: results });
 
-          // Déclencher les promos tirage 24h après (fire-and-forget, ne bloque pas la réponse)
+          // Déclencher les promos tirage 24h après (fire-and-forget)
           try {
             const promoUrl = `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}/api/tirages/send-email?action=cron-promo-tirage&cron_secret=${process.env.CRON_SECRET}`;
             fetch(promoUrl, { method: 'GET' }).catch(e => console.error('[cron-relance] promo-tirage fire error:', e.message));
           } catch(e) { console.error('[cron-relance] promo-tirage launch error:', e.message); }
+
+          // Déclencher l'email de clôture des fenêtres d'observation arrivées à terme (fire-and-forget)
+          try {
+            const fenetreUrl = `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}/api/fenetre/close`;
+            fetch(fenetreUrl, {
+              method: 'POST',
+              headers: { 'Authorization': `Bearer ${process.env.CRON_SECRET}` }
+            }).catch(e => console.error('[cron-relance] fenetre-close fire error:', e.message));
+          } catch(e) { console.error('[cron-relance] fenetre-close launch error:', e.message); }
 
           return res.status(200).json({ success: true, sent: results.filter(r=>r.ok).length, total: results.length, results });
         } catch(e) {
@@ -1340,7 +1349,7 @@ async function handleData(req, res) {
       // Source 1 : table observation_windows (non-membres / freemium)
       const { data: freeWindows } = await supabase
         .from('observation_windows')
-        .select('email, created_at, duration_days, closes_at, intention, qrng_source')
+        .select('email, created_at, duration_days, closes_at, intention, qrng_source, closing_email_sent_at')
         .order('created_at', { ascending: false })
         .limit(500);
 
@@ -1380,7 +1389,7 @@ async function handleData(req, res) {
       // Fusionner et trier par date décroissante
       const allWindows = [
         ...(freeWindows || []).map(w => ({ ...w, source: 'freemium' })),
-        ...memberWindows
+        ...memberWindows.map(w => ({ ...w, closing_email_sent_at: null }))
       ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
       return res.status(200).json({ success: true, windows: allWindows });

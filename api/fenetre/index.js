@@ -93,11 +93,15 @@ async function handleClose(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  // Récupérer les fenêtres arrivées à terme, email de clôture non envoyé
+  // Récupérer les fenêtres arrivées à terme dans les 48 dernières heures, email non envoyé.
+  // Le filtre gte(closes_at, cutoff) évite d'envoyer rétroactivement aux anciennes fenêtres.
+  const now = new Date();
+  const cutoff48h = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();
   const { data: windows, error } = await supabase
     .from('observation_windows')
     .select('*, response_token')
-    .lte('closes_at', new Date().toISOString())
+    .lte('closes_at', now.toISOString())
+    .gte('closes_at', cutoff48h)
     .is('closing_email_sent_at', null)
     .limit(20);
 
