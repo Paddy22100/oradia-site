@@ -692,7 +692,7 @@ function buildPromoTirageEmailHtml() {
   ${bodyRows}
   ${separator}
   <tr><td style="padding:20px 32px 40px; text-align:center;">
-    <a href="https://oradia.fr/tore-abonnement.html" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">Accéder à l'abonnement</a>
+    <a href="https://oradia.fr/tore-abonnement.html?discount=email24h" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">Accéder à l'abonnement</a>
   </td></tr>
   <tr><td style="padding:0 24px 16px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));border:1px solid rgba(212,175,55,0.35);border-radius:14px;overflow:hidden;">

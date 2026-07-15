@@ -85,6 +85,7 @@ module.exports = async (req, res) => {
             const plan    = 'complet';
             const priceId = process.env.STRIPE_PRICE_COMPLET;
             if (!priceId) return res.status(500).json({ error: 'STRIPE_PRICE_COMPLET non configuré' });
+            const promoCode = (req.body.promoCode || '').trim();
             const sessionParams = {
                 payment_method_types: ['card'],
                 mode: 'subscription',
@@ -94,6 +95,9 @@ module.exports = async (req, res) => {
                 metadata: { offer: 'tore-subscription', plan, email, full_name: fullName },
                 subscription_data: { metadata: { email, full_name: fullName, plan } }
             };
+            if (promoCode) {
+                sessionParams.discounts = [{ promotion_code: promoCode }];
+            }
             // Pré-remplir l'email si connu, sinon Stripe le collecte pendant le checkout
             if (email && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
                 sessionParams.customer_email = email;

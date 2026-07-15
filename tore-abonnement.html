@@ -304,6 +304,9 @@
                 </div>
             </div>
 
+            <div id="discount-badge" style="display:none;margin-bottom:12px;padding:10px 16px;background:linear-gradient(135deg,rgba(212,175,55,0.15),rgba(212,175,55,0.05));border:1px solid rgba(212,175,55,0.4);border-radius:10px;font-family:'Poppins',sans-serif;font-size:13px;color:#f0c75e;text-align:center;">
+                <i class="fas fa-tag" style="margin-right:6px;"></i>Code promo appliqué : <strong>3€ offerts sur le premier mois</strong>
+            </div>
             <button id="btn-complet" class="btn-gold" style="width:100%;font-size:0.95rem;"
                     aria-label="Choisir l'offre Complète — 8€/mois">
                 Choisir l'offre Complète
@@ -373,10 +376,12 @@
         btnC.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement…';
 
         try {
+            const urlDiscount = new URLSearchParams(window.location.search).get('discount');
+            const promoCode = urlDiscount === 'email24h' ? 'promo_1TtWot5oaKXBczQqAKp6f7o6' : null;
             const res = await fetch('/api/create-checkout-session', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ type, email })
+                body: JSON.stringify({ type, email, ...(promoCode ? { promoCode } : {}) })
             });
             const data = await res.json();
             if (data.url) {
@@ -392,6 +397,10 @@
     }
 
     document.getElementById('btn-complet').addEventListener('click', () => handleCheckout('tore-complet'));
+
+    if (new URLSearchParams(window.location.search).get('discount') === 'email24h') {
+        document.getElementById('discount-badge').style.display = 'block';
+    }
 </script>
 
 <script src="js/page-tracker.js" defer></script>
