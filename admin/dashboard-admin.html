@@ -1716,8 +1716,8 @@
         <div id="tab-synchronicity" class="tab-panel">
 
         <!-- Section : Fenêtres d'observation activées -->
-        <section class="mb-10">
-            <div class="flex items-center justify-between mb-6">
+        <section class="mb-8">
+            <div class="flex items-center justify-between mb-5">
                 <div>
                     <h3 class="cormorant text-2xl font-bold text-gold">Retour fenêtre d'observation</h3>
                     <p class="text-light-gold/50 text-sm mt-1">Fenêtres activées par les utilisateurs après leur tirage</p>
@@ -1727,25 +1727,37 @@
                 </button>
             </div>
 
-            <!-- KPIs fenêtres -->
-            <div class="grid grid-cols-3 gap-4 mb-6">
-                <div class="stat-card rounded-xl p-5 text-center">
-                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Activées total</div>
+            <!-- KPIs fenêtres : 5 cartes -->
+            <div class="grid grid-cols-5 gap-3 mb-5">
+                <div class="stat-card rounded-xl p-4 text-center">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Total</div>
                     <div class="text-2xl font-bold text-gold" id="obsTotal">—</div>
                 </div>
-                <div class="stat-card rounded-xl p-5 text-center">
+                <div class="stat-card rounded-xl p-4 text-center">
                     <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">En cours</div>
                     <div class="text-2xl font-bold text-green-400" id="obsActive">—</div>
                 </div>
-                <div class="stat-card rounded-xl p-5 text-center">
+                <div class="stat-card rounded-xl p-4 text-center">
                     <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Terminées</div>
                     <div class="text-2xl font-bold text-light-gold/50" id="obsClosed">—</div>
                 </div>
+                <div class="stat-card rounded-xl p-4 text-center">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Mails retour</div>
+                    <div class="text-2xl font-bold text-blue-300" id="obsMailsSent">—</div>
+                </div>
+                <div class="stat-card rounded-xl p-4 text-center">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Questionnaires</div>
+                    <div class="text-2xl font-bold text-teal-300" id="obsQuestionnaires">—</div>
+                </div>
             </div>
 
-            <!-- Liste -->
+            <!-- Liste dans un conteneur scrollable -->
             <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5">
-                <div id="obs-windows-list">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-gold/50 text-xs uppercase tracking-wider">Liste des fenêtres</span>
+                    <span id="obs-windows-count" class="text-gold/30 text-xs"></span>
+                </div>
+                <div id="obs-windows-list" class="overflow-y-auto" style="max-height:320px;">
                     <p class="text-gold/30 italic text-center py-8">Cliquez sur Actualiser pour charger les données.</p>
                 </div>
             </div>
@@ -5766,9 +5778,14 @@
                 const now = new Date();
                 const active = rows.filter(r => new Date(r.closes_at) > now);
                 const closed = rows.filter(r => new Date(r.closes_at) <= now);
+                const mailsSent = rows.filter(r => r.closing_email_sent_at).length;
                 document.getElementById('obsTotal').textContent = rows.length;
                 document.getElementById('obsActive').textContent = active.length;
                 document.getElementById('obsClosed').textContent = closed.length;
+                document.getElementById('obsMailsSent').textContent = mailsSent;
+                document.getElementById('obsQuestionnaires').textContent = data.questionnaire_count ?? '—';
+                const countEl = document.getElementById('obs-windows-count');
+                if (countEl) countEl.textContent = rows.length + ' entrée' + (rows.length > 1 ? 's' : '');
                 if (rows.length === 0) {
                     listEl.innerHTML = '<p class="text-gold/30 italic text-center py-8">Aucune fenêtre activée pour l\'instant.</p>';
                     return;

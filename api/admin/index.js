@@ -1392,7 +1392,14 @@ async function handleData(req, res) {
         ...memberWindows.map(w => ({ ...w, closing_email_sent_at: null }))
       ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
 
-      return res.status(200).json({ success: true, windows: allWindows });
+      // Compter les retours questionnaire
+      let questionnaire_count = 0;
+      const { count: qCount } = await supabase
+        .from('synchronicity_stats')
+        .select('*', { count: 'exact', head: true });
+      if (qCount !== null) questionnaire_count = qCount;
+
+      return res.status(200).json({ success: true, windows: allWindows, questionnaire_count });
     }
 
     if (section === 'synchronicity') {
