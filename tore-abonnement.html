@@ -275,10 +275,24 @@
                 </span>
             </div>
             <p style="font-family:'Poppins',sans-serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;color:rgba(212,175,55,0.65);margin-bottom:16px;margin-top:14px;">Complète</p>
-            <div class="cormorant" style="font-size:68px;font-weight:700;color:#f0c75e;line-height:1;">
-                8<span style="font-size:32px;color:rgba(212,175,55,0.6);">€</span>
+            <div id="price-normal">
+                <div class="cormorant" style="font-size:68px;font-weight:700;color:#f0c75e;line-height:1;">
+                    8<span style="font-size:32px;color:rgba(212,175,55,0.6);">€</span>
+                </div>
+                <p style="font-family:'Poppins',sans-serif;font-size:14px;color:rgba(212,175,55,0.55);margin-bottom:28px;letter-spacing:0.05em;">par mois · sans engagement</p>
             </div>
-            <p style="font-family:'Poppins',sans-serif;font-size:14px;color:rgba(212,175,55,0.55);margin-bottom:28px;letter-spacing:0.05em;">par mois · sans engagement</p>
+            <div id="price-promo" style="display:none;margin-bottom:28px;">
+                <div style="display:flex;align-items:baseline;justify-content:center;gap:14px;">
+                    <div class="cormorant" style="font-size:44px;font-weight:700;color:rgba(212,175,55,0.35);line-height:1;text-decoration:line-through;">
+                        8<span style="font-size:22px;">€</span>
+                    </div>
+                    <div class="cormorant" style="font-size:68px;font-weight:700;color:#f0c75e;line-height:1;">
+                        5<span style="font-size:32px;color:rgba(212,175,55,0.6);">€</span>
+                    </div>
+                </div>
+                <p style="font-family:'Poppins',sans-serif;font-size:13px;color:#f0c75e;letter-spacing:0.03em;margin-top:6px;">le 1er mois · puis 8€/mois · sans engagement</p>
+                <p style="font-family:'Poppins',sans-serif;font-size:11px;color:rgba(212,175,55,0.5);letter-spacing:0.05em;margin-top:2px;">Code TORE5 appliqué automatiquement</p>
+            </div>
 
             <div style="margin-bottom:28px;text-align:left;">
                 <div class="feature-row">
@@ -399,7 +413,8 @@
     document.getElementById('btn-complet').addEventListener('click', () => handleCheckout('tore-complet'));
 
     if (new URLSearchParams(window.location.search).get('discount') === 'email24h') {
-        document.getElementById('discount-badge').style.display = 'block';
+        document.getElementById('price-normal').style.display = 'none';
+        document.getElementById('price-promo').style.display = 'block';
     }
 </script>
 
