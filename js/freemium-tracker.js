@@ -372,8 +372,12 @@ class FreemiumTracker {
 
                             <!-- Complète — offre unique -->
                             <div style="flex:1;background:rgba(212,175,55,0.06);border:1.5px solid rgba(212,175,55,0.5);border-radius:12px;padding:18px 14px 14px;text-align:center;box-shadow:0 0 28px rgba(212,175,55,0.1);display:flex;flex-direction:column;">
-                                <p style="color:rgba(212,175,55,0.65);font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">Accès complet</p>
-                                <p style="color:#f0c75e;font-size:1.6rem;font-weight:700;margin:0 0 8px;line-height:1;white-space:nowrap;">8€ <span style="font-size:0.65rem;color:rgba(212,175,55,0.45);font-weight:400;">/mois</span></p>
+                                <p style="color:rgba(212,175,55,0.65);font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">Accès complet · Offre de lancement</p>
+                                <p style="margin:0 0 4px;line-height:1;">
+                                    <span style="color:rgba(212,175,55,0.35);font-size:1rem;font-weight:700;text-decoration:line-through;margin-right:6px;">8€</span>
+                                    <span style="color:#f0c75e;font-size:1.6rem;font-weight:700;">5€ <span style="font-size:0.65rem;color:rgba(212,175,55,0.45);font-weight:400;">/1er mois</span></span>
+                                </p>
+                                <p style="color:rgba(212,175,55,0.45);font-size:0.6rem;letter-spacing:1px;margin:0 0 8px;">puis 8€/mois · sans engagement</p>
                                 <div style="height:1px;background:rgba(212,175,55,0.18);margin:0 0 8px;"></div>
                                 <ul style="list-style:none;padding:0;margin:0 0 10px;text-align:left;color:rgba(233,231,223,0.75);font-size:0.75rem;line-height:1.9;">
                                     <li>✦ Tirages illimités</li>
@@ -444,7 +448,7 @@ class FreemiumTracker {
                 const resp = await fetch('/api/create-checkout-session', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ type, email })
+                    body: JSON.stringify({ type, email, promoCode: 'promo_1TtZP25oaKXBczQqQEQ85oV7' })
                 });
                 const data = await resp.json();
                 if (data.url) {
