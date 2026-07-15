@@ -657,10 +657,10 @@ async function handleCollectEmail(req, res) {
 function buildPromoTirageEmailHtml() {
   const bandeau = 'https://oradia.fr/images/medias/bandea_rappel_abonnement_tore.png';
   const paragraphs = [
-    `Tu as fait ton premier tirage du Tore. Si quelque chose t'a touché là-dedans, c'est que la connexion était réelle.`,
-    `Le tirage gratuit te donne un aperçu. L'abonnement Tore t'ouvre quelque chose de plus profond : des tirages illimités, des fenêtres d'observation pour suivre les synchronicités dans le temps, un accès à ton historique personnel, et bientôt des analyses personnalisées.`,
-    `Ce n'est pas un outil de divertissement. C'est une pratique : celle de se retourner vers soi avec régularité, de noter ce qui résonne, d'observer comment les cartes parlent à travers les événements de ta vie.`,
-    `Si tu sens que tu veux aller plus loin, je t'invite à rejoindre l'espace Tore Online.`
+    `Vous avez fait votre premier tirage du Tore. Si quelque chose vous a touché là-dedans, c'est que la connexion était réelle.`,
+    `Les deux tirages gratuits donnent un aperçu. L'abonnement Tore ouvre quelque chose de plus profond : des tirages illimités, des fenêtres d'observation pour suivre les synchronicités dans le temps, un accès à votre historique personnel, et bientôt des analyses personnalisées...`,
+    `Ce n'est pas un outil de divertissement. C'est une pratique : celle de se retourner vers soi avec régularité, de noter ce qui résonne, d'observer comment les cartes parlent à travers les événements de votre vie.`,
+    `Si vous sentez que vous voulez aller plus loin, je vous invite à rejoindre l'espace Tore.`
   ];
 
   const bodyRows = paragraphs.map(p => `
@@ -687,7 +687,7 @@ function buildPromoTirageEmailHtml() {
     <img src="${bandeau}" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
   </td></tr>
   <tr><td style="padding:30px 32px 0;">
-    <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:24px; margin:0 0 20px;">Et si tu allais plus loin ?</h2>
+    <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:24px; margin:0 0 20px;">Et si vous alliez plus loin ?</h2>
   </td></tr>
   ${bodyRows}
   ${separator}
