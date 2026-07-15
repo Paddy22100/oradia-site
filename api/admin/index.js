@@ -1336,6 +1336,16 @@ async function handleData(req, res) {
       });
     }
 
+    if (section === 'observation-windows') {
+      const { data: windows, error: winErr } = await supabase
+        .from('observation_windows')
+        .select('email, created_at, duration_days, closes_at, intention, qrng_source')
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (winErr) return res.status(500).json({ success: false, error: winErr.message });
+      return res.status(200).json({ success: true, windows: windows || [] });
+    }
+
     if (section === 'synchronicity') {
       // Tente d'abord avec qrng_source (après migration), sinon sans (fallback gracieux)
       let responses, syncErr;

@@ -212,8 +212,8 @@
                 <span>Comptabilité</span>
             </div>
             <div class="nav-item" onclick="showTab('synchronicity')" id="nav-synchronicity">
-                <i class="fas fa-atom w-4 text-center"></i>
-                <span>Synchronicités</span>
+                <i class="fas fa-eye w-4 text-center"></i>
+                <span>Retour fenêtre</span>
             </div>
             <div class="nav-item" onclick="showTab('support')" id="nav-support">
                 <i class="fas fa-inbox w-4 text-center"></i>
@@ -1714,10 +1714,48 @@
 
         <!-- ══ ONGLET : SYNCHRONICITÉS (#31) ══ -->
         <div id="tab-synchronicity" class="tab-panel">
+
+        <!-- Section : Fenêtres d'observation activées -->
         <section class="mb-10">
             <div class="flex items-center justify-between mb-6">
                 <div>
-                    <h3 class="cormorant text-2xl font-bold text-gold">Étude — Synchronicités</h3>
+                    <h3 class="cormorant text-2xl font-bold text-gold">Retour fenêtre d'observation</h3>
+                    <p class="text-light-gold/50 text-sm mt-1">Fenêtres activées par les utilisateurs après leur tirage</p>
+                </div>
+                <button onclick="loadObservationWindows()" class="bg-gold/20 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition">
+                    <i class="fas fa-sync-alt mr-1"></i>Actualiser
+                </button>
+            </div>
+
+            <!-- KPIs fenêtres -->
+            <div class="grid grid-cols-3 gap-4 mb-6">
+                <div class="stat-card rounded-xl p-5 text-center">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Activées total</div>
+                    <div class="text-2xl font-bold text-gold" id="obsTotal">—</div>
+                </div>
+                <div class="stat-card rounded-xl p-5 text-center">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">En cours</div>
+                    <div class="text-2xl font-bold text-green-400" id="obsActive">—</div>
+                </div>
+                <div class="stat-card rounded-xl p-5 text-center">
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Terminées</div>
+                    <div class="text-2xl font-bold text-light-gold/50" id="obsClosed">—</div>
+                </div>
+            </div>
+
+            <!-- Liste -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5">
+                <div id="obs-windows-list">
+                    <p class="text-gold/30 italic text-center py-8">Cliquez sur Actualiser pour charger les données.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Section : Étude Synchronicités -->
+        <section class="mb-10">
+            <div class="flex items-center justify-between mb-6">
+                <div>
+                    <h3 class="cormorant text-xl font-bold text-gold/70">Étude — Synchronicités</h3>
                     <p class="text-light-gold/50 text-sm mt-1">Réponses anonymes au questionnaire post-fenêtre d'observation</p>
                 </div>
                 <button onclick="loadSynchronicity()" class="bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-lg px-4 py-2 text-sm hover:bg-teal-500/30 transition">
@@ -2236,7 +2274,7 @@
             if (name === 'nl-subscribers') { loadNlSubscribers(1); syncBrevoUnsubscribes(); }
             if (name === 'subscriptions') loadSubscriptions();
             if (name === 'support')        loadSupportMessages();
-            if (name === 'synchronicity')  loadSynchronicity();
+            if (name === 'synchronicity') { loadObservationWindows(); loadSynchronicity(); }
             if (name === 'monitoring')     { loadMonitoring(); loadSurveillanceLogs(); }
             if (name === 'guidances')      loadGuidances();
             if (name === 'analytics')      loadAnalytics();
@@ -5717,6 +5755,56 @@
         }
 
         // ── SYNCHRONICITÉS (#31) ──────────────────────────────────────────────────
+        async function loadObservationWindows() {
+            const listEl = document.getElementById('obs-windows-list');
+            if (listEl) listEl.innerHTML = '<p class="text-gold/30 italic text-center py-8 animate-pulse">Chargement…</p>';
+            try {
+                const res = await adminFetch('/api/admin/data?section=observation-windows');
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                const rows = data.windows || [];
+                const now = new Date();
+                const active = rows.filter(r => new Date(r.closes_at) > now);
+                const closed = rows.filter(r => new Date(r.closes_at) <= now);
+                document.getElementById('obsTotal').textContent = rows.length;
+                document.getElementById('obsActive').textContent = active.length;
+                document.getElementById('obsClosed').textContent = closed.length;
+                if (rows.length === 0) {
+                    listEl.innerHTML = '<p class="text-gold/30 italic text-center py-8">Aucune fenêtre activée pour l\'instant.</p>';
+                    return;
+                }
+                listEl.innerHTML = `<div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead><tr class="text-gold/40 text-xs uppercase tracking-wider border-b border-gold/10">
+                        <th class="text-left py-2 pr-4">Email</th>
+                        <th class="text-left py-2 pr-4">Activée le</th>
+                        <th class="text-left py-2 pr-4">Durée</th>
+                        <th class="text-left py-2 pr-4">Se termine</th>
+                        <th class="text-left py-2">Statut</th>
+                    </tr></thead>
+                    <tbody class="divide-y divide-gold/5">
+                    ${rows.map(r => {
+                        const isActive = new Date(r.closes_at) > now;
+                        const closesAt = new Date(r.closes_at).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric'});
+                        const createdAt = new Date(r.created_at).toLocaleDateString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric'});
+                        return `<tr class="text-gold/70 hover:bg-white/3 transition">
+                            <td class="py-2 pr-4 font-mono text-xs">${r.email || '<span class="text-gold/30 italic">anonyme</span>'}</td>
+                            <td class="py-2 pr-4 text-xs text-gold/50">${createdAt}</td>
+                            <td class="py-2 pr-4 text-xs">${r.duration_days} jour${r.duration_days > 1 ? 's' : ''}</td>
+                            <td class="py-2 pr-4 text-xs text-gold/50">${closesAt}</td>
+                            <td class="py-2">${isActive
+                                ? '<span class="text-xs px-2 py-0.5 rounded-full bg-green-500/20 text-green-400 border border-green-500/30">En cours</span>'
+                                : '<span class="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gold/30 border border-gold/10">Terminée</span>'
+                            }</td>
+                        </tr>`;
+                    }).join('')}
+                    </tbody>
+                </table></div>`;
+            } catch(e) {
+                if (listEl) listEl.innerHTML = '<p class="text-red-400/60 italic text-center py-8">Erreur de chargement.</p>';
+            }
+        }
+
         async function loadSynchronicity() {
             const setEl = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
             setEl('syncTotal',    '<span class="animate-pulse">…</span>');
