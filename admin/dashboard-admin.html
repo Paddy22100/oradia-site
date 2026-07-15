@@ -1141,6 +1141,10 @@
                         class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
                         <i class="fas fa-feather-alt mr-1.5"></i>Carnet
                     </button>
+                    <button onclick="nlShowTab('sent')" data-nltab="sent"
+                        class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
+                        <i class="fas fa-paper-plane mr-1.5"></i>Envoyées
+                    </button>
                 </div>
             </div>
 
@@ -1575,6 +1579,13 @@
             <!-- TAB PROGRAMMÉS -->
             <div id="nl-tab-scheduled" class="nl-tab-content hidden">
                 <div id="nl-scheduled-list" class="space-y-4">
+                    <p class="text-gold/30 italic text-center py-8">Chargement…</p>
+                </div>
+            </div>
+
+            <!-- TAB ENVOYÉES -->
+            <div id="nl-tab-sent" class="nl-tab-content hidden">
+                <div id="nl-sent-list" class="space-y-3">
                     <p class="text-gold/30 italic text-center py-8">Chargement…</p>
                 </div>
             </div>
@@ -3813,6 +3824,7 @@
             if (name === 'drafts') nlRenderDrafts();
             if (name === 'ideas') nlRenderIdeas();
             if (name === 'scheduled') nlRenderScheduled();
+            if (name === 'sent') nlRenderSent();
         }
 
         function nlSetStep(step) {
@@ -4828,6 +4840,43 @@
                         </button>
                         <button onclick="nlOpenDraft('${d.id}')" class="bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 text-xs hover:bg-gold/20 transition">
                             <i class="fas fa-edit mr-1"></i>Modifier
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        function nlRenderSent() {
+            const el = document.getElementById('nl-sent-list');
+            if (!el) return;
+            const sent = nlDrafts.filter(d => d.statut === 'envoyé').sort((a, b) => new Date(b.sent_at || b.updated_at) - new Date(a.sent_at || a.updated_at));
+            if (sent.length === 0) {
+                el.innerHTML = '<p class="text-gold/30 italic text-center py-12">Aucune newsletter envoyée.</p>';
+                return;
+            }
+            el.innerHTML = sent.map(d => {
+                const sentDate = d.sent_at || d.updated_at;
+                const dtStr = sentDate ? new Date(sentDate).toLocaleString('fr-FR', {weekday:'long', day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'}) : '—';
+                const thumb = d.images && d.images[0]
+                    ? `<img src="${d.images[0].path}" alt="" class="w-20 h-14 object-cover rounded-lg flex-shrink-0">`
+                    : `<div class="w-20 h-14 bg-white/5 rounded-lg flex-shrink-0 flex items-center justify-center"><i class="fas fa-envelope text-gold/20 text-lg"></i></div>`;
+                const recipients = d.recipients_count != null ? `<span class="text-xs text-green-300/70"><i class="fas fa-users mr-1"></i>${d.recipients_count} destinataires</span>` : '';
+                return `<div class="stat-card rounded-2xl p-4 flex items-start gap-4">
+                    ${thumb}
+                    <div class="flex-1 min-w-0">
+                        <p class="text-gold font-semibold truncate mb-1">${d.subject || d.intention || 'Sans titre'}</p>
+                        <p class="text-green-300/80 text-xs mb-1"><i class="fas fa-check-circle mr-1"></i>${dtStr}</p>
+                        <div class="flex gap-3 flex-wrap">
+                            <span class="text-xs text-gold/40">${d.type === 'promo' ? 'Email promotionnel' : 'Newsletter'}</span>
+                            ${recipients}
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2 flex-shrink-0">
+                        <button onclick="nlPreviewDraft('${d.id}')" class="bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg px-3 py-1.5 text-xs hover:bg-blue-500/30 transition">
+                            <i class="fas fa-eye mr-1"></i>Aperçu
+                        </button>
+                        <button onclick="nlOpenDraft('${d.id}')" class="bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 text-xs hover:bg-gold/20 transition">
+                            <i class="fas fa-redo mr-1"></i>Réutiliser
                         </button>
                     </div>
                 </div>`;

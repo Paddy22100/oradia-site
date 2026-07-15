@@ -2508,7 +2508,7 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
 
         await supabase
           .from('newsletter_drafts')
-          .update({ statut: 'envoyé', sent_at: new Date().toISOString(), subject: finalSubject })
+          .update({ statut: 'envoyé', sent_at: new Date().toISOString(), subject: finalSubject, recipients_count: sent })
           .eq('id', draft_id);
 
         return res.status(200).json({ success: true });
