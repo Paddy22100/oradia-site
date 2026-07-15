@@ -1528,8 +1528,8 @@
             if (start === -1) return null;
 
             const raw = fullText.slice(start + trigger.length).trim();
-            const daysMatch = raw.match(/\b(1|3|5)\s*jour/i);
-            const days = daysMatch ? parseInt(daysMatch[1]) : 3;
+            const daysMatch = raw.match(/\b(\d+)\s*jour/i);
+            const days = daysMatch ? parseInt(daysMatch[1]) : 14;
             const points = extractObservationPoints(raw);
 
             return { text: raw, days, points };
