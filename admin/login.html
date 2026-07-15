@@ -249,7 +249,7 @@ async function checkExistingSession() {
     const isAllowedDomain = allowedDomains.some(d => currentDomain.includes(d));
     if (!isAllowedDomain) {
         console.warn('[Admin] Domaine non autorisé pour l\'admin:', currentDomain);
-        sessionStorage.removeItem('oradia_auth');
+        localStorage.removeItem('oradia_auth');
         return false;
     }
 
@@ -259,7 +259,7 @@ async function checkExistingSession() {
         // Récupérer le token stocké si disponible
         let existingToken = null;
         try {
-            const d = sessionStorage.getItem('oradia_auth');
+            const d = localStorage.getItem('oradia_auth');
             if (d) existingToken = JSON.parse(d).token || null;
         } catch(e) {}
 
@@ -275,7 +275,7 @@ async function checkExistingSession() {
             console.log('✅ Session valide, redirection dashboard');
             const result = await response.json();
             
-            sessionStorage.setItem('oradia_auth', JSON.stringify({
+            localStorage.setItem('oradia_auth', JSON.stringify({
                 valid: true,
                 timestamp: Date.now(),
                 email: result.user?.email,
@@ -286,11 +286,11 @@ async function checkExistingSession() {
             return true;
         } else {
             console.log('❌ Pas de session valide');
-            sessionStorage.removeItem('oradia_auth');
+            localStorage.removeItem('oradia_auth');
         }
     } catch (error) {
         console.log('❌ Erreur vérification:', error.message);
-        sessionStorage.removeItem('oradia_auth');
+        localStorage.removeItem('oradia_auth');
     }
     return false;
 }
@@ -335,7 +335,7 @@ async function handleLogin(e) {
                 email: result.email || email,
                 token: result.token
             };
-            sessionStorage.setItem('oradia_auth', JSON.stringify(authData));
+            localStorage.setItem('oradia_auth', JSON.stringify(authData));
 
             // Attendre 300ms que le cookie httpOnly soit bien enregistré
             await new Promise(resolve => setTimeout(resolve, 300));

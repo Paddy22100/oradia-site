@@ -2484,7 +2484,7 @@
         // Helper : fetch admin avec Bearer token automatique
         function getAdminToken() {
             try {
-                const d = sessionStorage.getItem('oradia_auth');
+                const d = localStorage.getItem('oradia_auth');
                 if (d) {
                     const parsed = JSON.parse(d);
                     return parsed.token || null;
@@ -2527,12 +2527,12 @@
             }
 
             function redirectToLogin() {
-                sessionStorage.removeItem('oradia_auth');
+                localStorage.removeItem('oradia_auth');
                 window.location.replace('https://oradia.fr/admin/login.html');
             }
 
             // Vérifier si on a une session locale valide et récente (< 2h)
-            const authDataStr = sessionStorage.getItem('oradia_auth');
+            const authDataStr = localStorage.getItem('oradia_auth');
             let skipInitialCheck = false;
 
             if (authDataStr) {
@@ -2567,7 +2567,7 @@
 
                 // Session validée par l'API → mettre à jour le stockage local
                 const existing = JSON.parse(authDataStr || '{}');
-                sessionStorage.setItem('oradia_auth', JSON.stringify({
+                localStorage.setItem('oradia_auth', JSON.stringify({
                     valid: true,
                     timestamp: Date.now(),
                     token: existing.token || null,
@@ -3679,7 +3679,7 @@
             }
             
             // Nettoyer complètement
-            sessionStorage.clear();
+            localStorage.removeItem('oradia_auth');
             localStorage.removeItem('admin_email');
             localStorage.removeItem('oradia_admin_device');
             window.location.href = 'login.html';
