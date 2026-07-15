@@ -660,7 +660,7 @@ async function handleCollectEmail(req, res) {
 
 // ============ EMAIL PROMO ABONNEMENT TORE ============
 function buildPromoTirageEmailHtml() {
-  const bandeau = 'https://oradia.fr/images/medias/bandeau_newsletter.webp';
+  const bandeau = 'https://oradia.fr/images/medias/bandea_rappel_abonnement_tore.png';
   const paragraphs = [
     `Tu as fait ton premier tirage du Tore — et si quelque chose t'a touché là-dedans, c'est que la connexion était réelle.`,
     `Le tirage gratuit te donne un aperçu. L'abonnement Tore t'ouvre quelque chose de plus profond : des tirages illimités, des fenêtres d'observation pour suivre les synchronicités dans le temps, un accès à ton historique personnel, et bientôt des analyses personnalisées.`,

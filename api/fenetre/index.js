@@ -229,7 +229,7 @@ function buildClosingEmail(win, responseToken) {
           <tr>
             <td align="center" style="padding:0;position:relative;">
               <div style="position:relative;width:100%;height:200px;overflow:hidden;">
-                <img src="https://oradia.fr/images/medias/apercu_stripe.jpg" alt="Oracle ORADIA" width="600" style="display:block;width:100%;height:200px;object-fit:cover;border:0;opacity:0.85;">
+                <img src="https://oradia.fr/images/medias/bandeau_mail_fenetre_observation.png" alt="Fenêtre d'observation — ORADIA" width="600" style="display:block;width:100%;height:auto;max-height:220px;object-fit:cover;border:0;">
                 <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(180deg, rgba(5,10,20,0) 0%, rgba(5,10,20,0.95) 100%);"></div>
               </div>
             </td>
@@ -397,6 +397,34 @@ export default async function handler(req, res) {
         .maybeSingle();
       if (error || !win) return res.status(404).json({ error: 'Fenêtre introuvable' });
       return res.status(200).json({ success: true, window: win });
+    }
+
+    // POST /api/fenetre/test-preview → envoie un mail de clôture de test à contact@oradia.fr
+    if (path.includes('test-preview')) {
+      const authHeader = req.headers['authorization'] || '';
+      if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && authHeader !== `Bearer ${process.env.ADMIN_SECRET}`) {
+        return res.status(401).json({ error: 'Non autorisé' });
+      }
+      const testWin = {
+        email: 'contact@oradia.fr',
+        duration_days: 14,
+        closes_at: new Date().toISOString(),
+        intention: 'Trouver ma voie professionnelle et oser ce changement',
+        attention_points: ['Les signes liés à un changement de direction', 'Les rencontres ou conversations inattendues', 'Les rêves et images récurrentes']
+      };
+      const emailHTML = buildClosingEmail(testWin, 'TOKEN-TEST-EXEMPLE-1234');
+      const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender: { name: FROM_NAME, email: FROM_EMAIL },
+          to: [{ email: 'contact@oradia.fr' }],
+          subject: '[TEST] Votre fenêtre d\'observation se referme — qu\'avez-vous perçu ?',
+          htmlContent: emailHTML
+        })
+      });
+      if (!brevoRes.ok) { const t = await brevoRes.text(); throw new Error(`Brevo ${brevoRes.status}: ${t}`); }
+      return res.status(200).json({ success: true, sentTo: 'contact@oradia.fr' });
     }
 
     return res.status(404).json({ success: false, error: 'Route non trouvée' });

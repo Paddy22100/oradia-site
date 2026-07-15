@@ -1149,6 +1149,10 @@
                         class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
                         <i class="fas fa-vial mr-1.5"></i>Testeurs
                     </button>
+                    <button onclick="nlShowTab('mail-tests')" data-nltab="mail-tests"
+                        class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
+                        <i class="fas fa-flask mr-1.5"></i>Tester mails
+                    </button>
                 </div>
             </div>
 
@@ -1650,6 +1654,105 @@
                 <div id="nl-testers-list" class="space-y-2">
                     <p class="text-gold/30 italic text-center py-8">Chargement…</p>
                 </div>
+            </div>
+
+            <!-- TAB TESTER MAILS -->
+            <div id="nl-tab-mail-tests" class="nl-tab-content hidden">
+                <div class="mb-4">
+                    <p class="text-gold/50 text-xs">Envoie une version test de chaque mail à <span class="text-gold font-mono">contact@oradia.fr</span>. Aucun envoi aux vrais destinataires.</p>
+                </div>
+                <div class="space-y-3" id="mail-tests-list">
+
+                    <!-- Fenêtre d'observation — clôture -->
+                    <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-gold font-semibold text-sm">Clôture fenêtre d'observation</p>
+                            <p class="text-gold/40 text-xs mt-0.5">Envoyé à l'échéance · bandeau_mail_fenetre_observation</p>
+                        </div>
+                        <button onclick="sendMailTest('fenetre-closing')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                    </div>
+
+                    <!-- Promo tirage -->
+                    <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-gold font-semibold text-sm">Rappel abonnement Tore</p>
+                            <p class="text-gold/40 text-xs mt-0.5">Envoyé 24h après tirage freemium · bandeau_rappel_abonnement_tore</p>
+                        </div>
+                        <button onclick="sendMailTest('promo-tirage')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                    </div>
+
+                    <!-- Confirmation inscription newsletter -->
+                    <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-gold font-semibold text-sm">Confirmation inscription newsletter</p>
+                            <p class="text-gold/40 text-xs mt-0.5">Envoyé à l'inscription sur le site</p>
+                        </div>
+                        <button onclick="sendMailTest('newsletter-confirm')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                    </div>
+
+                    <!-- Confirmation paiement Tore -->
+                    <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-gold font-semibold text-sm">Confirmation paiement abonnement Tore</p>
+                            <p class="text-gold/40 text-xs mt-0.5">Envoyé après paiement Stripe réussi</p>
+                        </div>
+                        <button onclick="sendMailTest('tore-payment')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                    </div>
+
+                    <!-- Confirmation précommande -->
+                    <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-gold font-semibold text-sm">Confirmation précommande Oracle physique</p>
+                            <p class="text-gold/40 text-xs mt-0.5">Envoyé après paiement précommande</p>
+                        </div>
+                        <button onclick="sendMailTest('preorder-confirm')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                    </div>
+
+                    <!-- Confirmation guidance -->
+                    <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-gold font-semibold text-sm">Confirmation réservation guidance</p>
+                            <p class="text-gold/40 text-xs mt-0.5">Envoyé au client après réservation</p>
+                        </div>
+                        <button onclick="sendMailTest('guidance-confirm')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                    </div>
+
+                    <!-- Abonnement expiré -->
+                    <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-gold font-semibold text-sm">Abonnement Tore expiré</p>
+                            <p class="text-gold/40 text-xs mt-0.5">Envoyé à l'expiration de l'abonnement</p>
+                        </div>
+                        <button onclick="sendMailTest('tore-expired')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                    </div>
+
+                    <!-- Paiement échoué -->
+                    <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
+                        <div>
+                            <p class="text-gold font-semibold text-sm">Paiement Tore échoué</p>
+                            <p class="text-gold/40 text-xs mt-0.5">Envoyé si le renouvellement Stripe échoue</p>
+                        </div>
+                        <button onclick="sendMailTest('tore-payment-failed')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                        </button>
+                    </div>
+
+                </div>
+                <p id="mail-test-feedback" class="text-center text-sm mt-5 hidden"></p>
             </div>
 
             <!-- TAB CARNET -->
@@ -5053,6 +5156,61 @@
                 nlStatus('success', '✓ Mail promo envoyé à contact@oradia.fr — vérifie ta boîte !');
             } catch(e) {
                 nlStatus('error', e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = orig;
+            }
+        }
+
+        async function sendMailTest(type) {
+            const btn = event.currentTarget;
+            const orig = btn.innerHTML;
+            const feedback = document.getElementById('mail-test-feedback');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin text-xs"></i> Envoi…';
+            if (feedback) { feedback.className = 'text-center text-sm mt-5'; feedback.textContent = ''; }
+            try {
+                let res;
+                if (type === 'fenetre-closing') {
+                    res = await adminFetch('/api/fenetre/test-preview', { method: 'POST' });
+                } else if (type === 'promo-tirage') {
+                    res = await adminFetch('/api/tirages/send-email?action=send-promo-preview', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: 'contact@oradia.fr' })
+                    });
+                } else if (type === 'tore-expired') {
+                    res = await adminFetch('/api/admin?action=test-subscription-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'expired', email: 'contact@oradia.fr' })
+                    });
+                } else if (type === 'tore-payment-failed') {
+                    res = await adminFetch('/api/admin?action=test-subscription-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type: 'payment_failed', email: 'contact@oradia.fr' })
+                    });
+                } else {
+                    res = await adminFetch('/api/admin?action=test-email', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ type })
+                    });
+                }
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                if (feedback) {
+                    feedback.className = 'text-center text-sm mt-5 text-green-400';
+                    feedback.textContent = '✓ Mail envoyé à contact@oradia.fr — vérifie ta boîte !';
+                    feedback.classList.remove('hidden');
+                }
+            } catch(e) {
+                if (feedback) {
+                    feedback.className = 'text-center text-sm mt-5 text-red-400';
+                    feedback.textContent = '✗ ' + e.message;
+                    feedback.classList.remove('hidden');
+                }
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = orig;

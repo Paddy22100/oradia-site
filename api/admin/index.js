@@ -932,6 +932,59 @@ async function handleData(req, res) {
         return res.status(200).json({ success: true, email: toEmail, type });
       }
 
+      if (action === 'test-email') {
+        const BREVO_API_KEY = process.env.BREVO_API_KEY;
+        if (!BREVO_API_KEY) return res.status(500).json({ error: 'BREVO_API_KEY non configuré' });
+        const type = body.type || '';
+        const dest = 'contact@oradia.fr';
+        const senderEmail = process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr';
+        const emailStyle = `background:#050a14;padding:48px 20px;`;
+        const containerStyle = `max-width:580px;background:linear-gradient(135deg,#0a1628,#051428);border:1px solid rgba(212,175,55,0.3);`;
+        const headerCell = (label, title) => `<tr><td align="center" style="padding:48px 40px 24px;"><p style="margin:0 0 6px;color:rgba(212,175,55,0.5);font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.45em;text-transform:uppercase;">${label}</p><h1 style="margin:0;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:36px;font-weight:300;letter-spacing:2px;">${title}</h1><div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:20px auto;"></div></td></tr>`;
+        const para = (text) => `<p style="color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;margin-bottom:20px;">${text}</p>`;
+        const cta = (label, href) => `<table cellpadding="0" cellspacing="0" border="0" style="margin:24px auto 0;"><tr><td style="border-radius:4px;background:linear-gradient(135deg,#d4af37,#f0c75e);"><a href="${href}" style="display:inline-block;padding:15px 36px;color:#0a1628;font-family:'Lora',Georgia,serif;font-size:14px;font-weight:700;text-decoration:none;letter-spacing:0.5px;">${label}</a></td></tr></table>`;
+        const footerCell = `<tr><td align="center" style="padding:20px 40px;background:rgba(5,10,20,0.6);border-top:1px solid rgba(212,175,55,0.15);"><p style="margin:0;color:#9ca3af;font-family:'Lora',Georgia,serif;font-size:11px;line-height:1.6;"><a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;">oradia.fr</a> · <a href="mailto:contact@oradia.fr" style="color:#d4af37;text-decoration:none;">contact@oradia.fr</a><br>ORADIA – La Boussole Intérieure · Révéler. Transmuter. Relier.</p></td></tr>`;
+        const wrap = (rows) => `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#050a14;"><table width="100%" cellpadding="0" cellspacing="0" style="${emailStyle}"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="${containerStyle}">${rows}${footerCell}</table></td></tr></table></body></html>`;
+
+        let subject, html;
+
+        if (type === 'newsletter-confirm') {
+          subject = "[TEST] Rudy d'Oradia - Bienvenue dans l'univers ORADIA";
+          html = wrap(
+            headerCell('Bienvenue', 'ORADIA') +
+            `<tr><td style="padding:0 40px 40px;">${para('Bienvenue dans l\'univers Oradia ✨')}${para('Votre inscription est confirmée. Vous recevrez les prochaines inspirations d\'ORADIA directement dans votre boîte mail.')}${cta('Explorer ORADIA', 'https://oradia.fr')}</td></tr>`
+          );
+        } else if (type === 'tore-payment') {
+          subject = "[TEST] Rudy d'Oradia - Bienvenue dans Le Tore — Votre abonnement est actif";
+          html = wrap(
+            headerCell('Abonnement activé', 'Le Tore') +
+            `<tr><td style="padding:0 40px 40px;">${para('Votre abonnement au Tore est maintenant actif. Vous avez accès illimité à l\'expérience complète d\'Oradia.')}${para('<strong style="color:#f0c75e;">Accès direct :</strong> Rendez-vous sur la page Tore et connectez-vous à votre espace membre pour commencer votre exploration.')}${cta('Accéder au Tore', 'https://oradia.fr/tore.html')}</td></tr>`
+          );
+        } else if (type === 'preorder-confirm') {
+          subject = "[TEST] Rudy d'Oradia - Votre précommande est confirmée";
+          html = wrap(
+            headerCell('Précommande confirmée', 'Oracle ORADIA') +
+            `<tr><td style="padding:0 40px 40px;">${para('Merci pour votre précommande de l\'Oracle ORADIA. Votre soutien contribue directement à la création de ce projet.')}${para('Vous recevrez un email de suivi dès que l\'oracle sera prêt à être expédié. Livraison estimée : automne 2025.')}${cta('Suivre ma précommande', 'https://oradia.fr')}</td></tr>`
+          );
+        } else if (type === 'guidance-confirm') {
+          subject = "[TEST] Rudy d'Oradia - Votre guidance est confirmée";
+          html = wrap(
+            headerCell('Guidance confirmée', 'Séance 1h') +
+            `<tr><td style="padding:0 40px 40px;">${para('Votre séance de guidance est confirmée. Un lien Jitsi vous sera envoyé le jour J.')}${para('<strong style="color:#f0c75e;">Rappel :</strong> La séance se déroule en visio, à l\'heure convenue. Prévoyez un espace calme.')}${cta('oradia.fr', 'https://oradia.fr')}</td></tr>`
+          );
+        } else {
+          return res.status(400).json({ error: `Type de mail inconnu : ${type}` });
+        }
+
+        const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
+          body: JSON.stringify({ sender: { email: senderEmail, name: "Rudy d'Oradia" }, to: [{ email: dest }], subject, htmlContent: html })
+        });
+        if (!r.ok) { const t = await r.text(); throw new Error(`Brevo ${r.status}: ${t}`); }
+        return res.status(200).json({ success: true, sentTo: dest, type });
+      }
+
       if (action === 'abandon-relance' && body.orderId && body.email) {
         const BREVO_API_KEY = process.env.BREVO_API_KEY;
         if (!BREVO_API_KEY) return res.status(500).json({ error: 'BREVO_API_KEY non configuré' });
