@@ -414,9 +414,16 @@ export default async function handler(req, res) {
     // POST /api/fenetre/test-preview → envoie un mail de clôture de test à contact@oradia.fr
     if (path.includes('test-preview')) {
       const authHeader = req.headers['authorization'] || '';
-      if (authHeader !== `Bearer ${process.env.CRON_SECRET}` && authHeader !== `Bearer ${process.env.ADMIN_SECRET}`) {
-        return res.status(401).json({ error: 'Non autorisé' });
+      const rawToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+      let isAuthorized = rawToken === process.env.CRON_SECRET || rawToken === process.env.ADMIN_SECRET;
+      if (!isAuthorized && rawToken) {
+        try {
+          const jwt = require('jsonwebtoken');
+          const decoded = jwt.verify(rawToken, process.env.ADMIN_SESSION_SECRET);
+          isAuthorized = decoded.type === 'admin';
+        } catch (_) {}
       }
+      if (!isAuthorized) return res.status(401).json({ error: 'Non autorisé' });
       const testWin = {
         email: 'contact@oradia.fr',
         duration_days: 14,
