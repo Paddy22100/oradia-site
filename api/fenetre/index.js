@@ -215,7 +215,7 @@ function buildClosingEmail(win, responseToken) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 </head>
 <body style="margin:0;padding:0;width:100%;background:#050a14;">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;min-width:100%;background:#050a14;margin:0;padding:0;">
@@ -313,22 +313,24 @@ function buildClosingEmail(win, responseToken) {
               <!-- Séparateur -->
               <div style="width:100%;height:1px;background:linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.3) 50%, transparent 100%);margin:0 0 32px 0;"></div>
 
-              <p style="margin:0 0 8px 0;color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;">
-                Avec gratitude,
+              <p style="margin:0 0 6px;color:#c8c0a8;font-size:13px;font-style:italic;opacity:0.7;font-family:Georgia,serif;">Avec gratitude,</p>
+              <p style="margin:0 0 4px;color:#d4af37;font-size:52px;font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive;font-weight:700;line-height:1.1;letter-spacing:0.01em;">Rudy</p>
+              <p style="margin:0 0 16px;color:#c8c0a8;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.55;font-family:Georgia,serif;">Fondateur d'Oradia</p>
+              <p style="margin:0 0 20px;text-align:center;">
+                <span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4));vertical-align:middle;"></span>
+                <span style="display:inline-block;width:5px;height:5px;background:#d4af37;border-radius:50%;opacity:0.45;vertical-align:middle;margin:0 8px;"></span>
+                <span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent);vertical-align:middle;"></span>
               </p>
-              <p style="margin:0;color:#d8bf72;font-family:'Cormorant Garamond',Georgia,serif;font-size:18px;font-weight:600;letter-spacing:1px;">
-                Rudy Boucheron
-              </p>
+              <p style="margin:0;"><a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-size:13px;letter-spacing:0.08em;font-family:Georgia,serif;">oradia.fr</a></p>
 
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
-            <td style="padding:24px 40px;background:rgba(5,10,20,0.6);border-top:1px solid rgba(212,175,55,0.2);">
-              <p style="margin:0;color:#9ca3af;font-family:'Lora',Georgia,serif;font-size:11px;text-align:center;line-height:1.6;">
-                <a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;">oradia.fr</a> · <a href="mailto:contact@oradia.fr" style="color:#d4af37;text-decoration:none;">contact@oradia.fr</a><br>
-                ORADIA – La Boussole Intérieure · Révéler. Transmuter. Relier.
+            <td style="padding:20px 40px;background:rgba(5,10,20,0.6);border-top:1px solid rgba(212,175,55,0.1);text-align:center;">
+              <p style="margin:0;color:#9ca3af;font-family:'Lora',Georgia,serif;font-size:11px;line-height:1.6;opacity:0.5;">
+                Tu reçois cet email car tu as activé une fenêtre d'observation sur oradia.fr.
               </p>
             </td>
           </tr>

@@ -494,15 +494,17 @@ async function handleSendEmail(req, res) {
 
         <!-- FOOTER -->
         <tr>
-          <td align="center" style="padding:18px 32px 28px;" bgcolor="#040c1a">
-            <p style="margin:0 0 3px;color:#4a5a6a;font-size:12px;">Avec gratitude,</p>
-            <p style="margin:0 0 14px;color:#d4af37;font-size:13px;font-weight:700;">Rudy Boucheron</p>
-            <p style="margin:0 0 12px;">
-              <a href="https://oradia.fr" style="color:#4a5a6a;text-decoration:none;font-size:10px;letter-spacing:2px;">oradia.fr</a>
-              &#160;&#183;&#160;
-              <a href="mailto:contact@oradia.fr" style="color:#4a5a6a;text-decoration:none;font-size:10px;">contact@oradia.fr</a>
+          <td align="center" style="padding:36px 32px 28px; border-top:1px solid rgba(212,175,55,0.15);" bgcolor="#040c1a">
+            <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
+            <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
+            <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
+            <p style="margin:0 0 20px; text-align:center;">
+              <span style="display:inline-block; width:32px; height:1px; background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4)); vertical-align:middle;"></span>
+              <span style="display:inline-block; width:5px; height:5px; background:#d4af37; border-radius:50%; opacity:0.45; vertical-align:middle; margin:0 8px;"></span>
+              <span style="display:inline-block; width:32px; height:1px; background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent); vertical-align:middle;"></span>
             </p>
-            <p style="margin:0;color:#2a3a4a;font-size:10px;line-height:1.6;">Vous recevez cet email car vous avez demand&#233; &#224; recevoir votre tirage.<br>Il ne constitue pas un abonnement &#224; notre newsletter.</p>
+            <p style="margin:0 0 20px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
+            <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car tu as demandé à recevoir ton tirage.<br>Il ne constitue pas un abonnement à notre newsletter.</p>
           </td>
         </tr>
 
@@ -680,7 +682,10 @@ function buildPromoTirageEmailHtml() {
   </td></tr>`;
 
   return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<style>@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');</style>
+</head>
 <body style="margin:0; padding:0; background-color:#040d1c;">
 <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#040d1c" style="background-color:#040d1c;">
 <tr><td align="center" style="padding:32px 12px;">
@@ -696,15 +701,17 @@ function buildPromoTirageEmailHtml() {
   <tr><td style="padding:20px 32px 40px; text-align:center;">
     <a href="https://oradia.fr/tore-abonnement.html" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">Accéder à l'abonnement</a>
   </td></tr>
-  <tr><td style="padding:0 32px 32px; text-align:center;">
-    <p style="color:#6a7a8a; font-size:13px; margin:0 0 6px; font-family:Georgia,serif;">Avec gratitude,</p>
-    <p style="color:#d4af37; font-size:15px; font-weight:700; margin:0 0 20px; font-family:Georgia,serif;">Rudy Boucheron</p>
-    <p style="color:#3a4a5a; font-size:11px; margin:0; line-height:1.6;">
-      <a href="https://oradia.fr" style="color:#4a5a6a; text-decoration:none;">oradia.fr</a>
-      &nbsp;·&nbsp;
-      <a href="mailto:contact@oradia.fr" style="color:#4a5a6a; text-decoration:none;">contact@oradia.fr</a>
+  <tr><td style="padding:36px 32px 28px; border-top:1px solid rgba(212,175,55,0.15); text-align:center;">
+    <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
+    <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
+    <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
+    <p style="margin:0 0 20px; text-align:center;">
+      <span style="display:inline-block; width:32px; height:1px; background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4)); vertical-align:middle;"></span>
+      <span style="display:inline-block; width:5px; height:5px; background:#d4af37; border-radius:50%; opacity:0.45; vertical-align:middle; margin:0 8px;"></span>
+      <span style="display:inline-block; width:32px; height:1px; background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent); vertical-align:middle;"></span>
     </p>
-    <p style="color:#2a3a4a; font-size:10px; margin:12px 0 0; line-height:1.6;">Tu reçois cet email car tu as fait un tirage du Tore sur oradia.fr.</p>
+    <p style="margin:0 0 20px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
+    <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car tu as fait un tirage du Tore sur oradia.fr.</p>
   </td></tr>
 </table>
 </td></tr>
