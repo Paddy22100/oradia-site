@@ -4835,8 +4835,62 @@
         }
 
         async function nlPreviewDraft(id) {
-            await nlOpenDraft(id);
-            nlPreview();
+            // Récupérer les données du brouillon directement sans naviguer
+            let draft = nlDrafts.find(d => d.id === id);
+            if (!draft || !draft.content) {
+                try {
+                    const res = await adminFetch(`/api/admin/newsletter?action=drafts&id=${id}`);
+                    if (res.ok) draft = await res.json();
+                } catch(e) {}
+            }
+            if (!draft) return nlStatus('error', 'Brouillon introuvable');
+
+            const extra = draft.extra || {};
+            const modal = document.createElement('div');
+            modal.className = 'fixed inset-0 z-50 flex flex-col bg-black/95 backdrop-blur-sm';
+            modal.innerHTML = `
+                <div class="flex items-center justify-between px-5 py-3 bg-[rgba(5,15,35,0.98)] border-b border-gold/20 shrink-0">
+                    <span class="cormorant text-lg text-gold"><i class="fas fa-envelope mr-2"></i>Aperçu — ${draft.subject || 'Sans titre'}</span>
+                    <button onclick="this.closest('.fixed').remove()"
+                        class="text-xs text-gold/50 hover:text-gold border border-gold/20 hover:border-gold/40 rounded px-3 py-1.5 transition">
+                        <i class="fas fa-times mr-1"></i>Fermer
+                    </button>
+                </div>
+                <div class="flex-1 overflow-hidden bg-[#1a1a2a] flex items-start justify-center py-6 px-4 overflow-y-auto">
+                    <div id="nl-preview-loading-draft" class="text-gold/40 text-sm flex items-center gap-2 mt-20">
+                        <i class="fas fa-spinner fa-spin"></i> Génération de l'aperçu...
+                    </div>
+                    <iframe id="nl-preview-iframe-draft" class="hidden w-full rounded-lg shadow-2xl" style="max-width:700px; border:none; background:#040d1c;"
+                        sandbox="allow-same-origin"></iframe>
+                </div>`;
+            document.body.appendChild(modal);
+
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=preview', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        subject: draft.subject || '',
+                        content: draft.content || '',
+                        intention: draft.intention || '',
+                        type: draft.type || 'newsletter',
+                        images: draft.images || [],
+                        extra
+                    })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                const iframe = document.getElementById('nl-preview-iframe-draft');
+                iframe.onload = () => {
+                    try { iframe.style.height = (iframe.contentDocument.documentElement.scrollHeight + 32) + 'px'; } catch(_) {}
+                    document.getElementById('nl-preview-loading-draft')?.remove();
+                    iframe.classList.remove('hidden');
+                };
+                iframe.srcdoc = data.html;
+            } catch(e) {
+                document.getElementById('nl-preview-loading-draft').innerHTML =
+                    `<i class="fas fa-exclamation-triangle text-red-400 mr-2"></i>${e.message}`;
+            }
         }
 
         async function nlLoadDrafts() {
