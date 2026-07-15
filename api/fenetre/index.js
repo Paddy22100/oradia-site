@@ -314,8 +314,11 @@ function buildClosingEmail(win, responseToken) {
               <div style="width:100%;height:1px;background:linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.3) 50%, transparent 100%);margin:0 0 32px 0;"></div>
 
               <!-- Bandeau précommande -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;">
-                <tr><td style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));border:1px solid rgba(212,175,55,0.35);border-radius:14px;padding:24px 32px;text-align:center;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;border:1px solid rgba(212,175,55,0.35);border-radius:14px;">
+                <tr><td style="padding:0;line-height:0;font-size:0;">
+                  <img src="https://oradia.fr/images/medias/banniere-facebook.webp" alt="Oracle Oradia — Précommandes ouvertes" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:14px 14px 0 0;">
+                </td></tr>
+                <tr><td style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));padding:24px 32px;text-align:center;border-radius:0 0 14px 14px;">
                   <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Précommandes ouvertes</p>
                   <p style="margin:0 0 6px;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:600;">L'Oracle Oradia</p>
                   <p style="margin:0 0 16px;color:#c8c0a8;font-family:'Lora',Georgia,serif;font-size:13px;line-height:1.6;">64 cartes · Livret · Conte initiatique · Pièce artisanale</p>
