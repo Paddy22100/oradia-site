@@ -108,9 +108,22 @@ async function sendToreSubscriptionEmail({ toEmail, toName, tempPassword, plan }
             Votre abonnement se renouvelle automatiquement chaque mois. Vous pouvez le gérer à tout moment depuis votre espace membre.
           </p>
         </td></tr>
-        <tr><td align="center" style="padding:24px 40px 48px;border-top:1px solid rgba(212,175,55,0.1);">
-          <p style="margin:0 0 4px;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:26px;">Rudy</p>
-          <p style="margin:0;color:rgba(212,175,55,0.4);font-family:'Lora',Georgia,serif;font-size:12px;font-style:italic;">Fondateur d'ORADIA</p>
+        <tr><td style="padding:0 24px 16px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));border:1px solid rgba(212,175,55,0.35);border-radius:14px;overflow:hidden;">
+            <tr><td style="padding:24px 32px;text-align:center;">
+              <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Précommandes ouvertes</p>
+              <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">L'Oracle Oradia</p>
+              <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">64 cartes · Livret · Conte initiatique · Pièce artisanale</p>
+              <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">Précommander</a>
+            </td></tr>
+          </table>
+        </td></tr>
+        <tr><td align="center" style="padding:36px 32px 28px;border-top:1px solid rgba(212,175,55,0.15);">
+          <p style="margin:0 0 6px;color:#c8c0a8;font-size:13px;font-style:italic;opacity:0.7;font-family:Georgia,serif;">Avec gratitude,</p>
+          <p style="margin:0 0 4px;color:#d4af37;font-size:52px;font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive;font-weight:700;line-height:1.1;letter-spacing:0.01em;">Rudy</p>
+          <p style="margin:0 0 16px;color:#c8c0a8;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.55;font-family:Georgia,serif;">Fondateur d'Oradia</p>
+          <p style="margin:0 0 12px;text-align:center;"><span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4));vertical-align:middle;"></span><span style="display:inline-block;width:5px;height:5px;background:#d4af37;border-radius:50%;opacity:0.45;vertical-align:middle;margin:0 8px;"></span><span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent);vertical-align:middle;"></span></p>
+          <a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-size:13px;letter-spacing:0.08em;font-family:Georgia,serif;">oradia.fr</a>
         </td></tr>
       </table>
     </td></tr>
@@ -260,15 +273,22 @@ async function sendSubscriptionEmail(toEmail, toName, type) {
 </td></tr></table>
 </td></tr>
 <tr><td style="padding:0 40px;" bgcolor="#0a1628"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="1" bgcolor="#3a3010" style="line-height:1px;font-size:1px;">&nbsp;</td></tr></table></td></tr>
-<tr><td align="center" style="padding:28px 40px 32px;" bgcolor="#0a1628">
-<p style="margin:0 0 6px;color:#9ca3af;font-family:Georgia,serif;font-size:13px;font-style:italic;">Avec toute ma gratitude,</p>
-<p style="margin:0 0 4px;color:#f0c75e;font-family:Georgia,serif;font-size:26px;font-weight:bold;letter-spacing:1px;">Rudy</p>
-<p style="margin:0 0 16px;color:#d8bf72;font-family:Georgia,serif;font-size:13px;font-style:italic;">Fondateur d'ORADIA</p>
-<a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-family:Georgia,serif;font-size:13px;letter-spacing:1px;border-bottom:1px solid #8a6d20;padding-bottom:2px;">oradia.fr</a>
+<tr><td style="padding:0 24px 16px;" bgcolor="#0a1628">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));border:1px solid rgba(212,175,55,0.35);border-radius:14px;overflow:hidden;">
+    <tr><td style="padding:24px 32px;text-align:center;">
+      <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Précommandes ouvertes</p>
+      <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">L'Oracle Oradia</p>
+      <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">64 cartes · Livret · Conte initiatique · Pièce artisanale</p>
+      <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">Précommander</a>
+    </td></tr>
+  </table>
 </td></tr>
-<tr><td align="center" style="padding:20px 40px;" bgcolor="#040c1a">
-<p style="margin:0 0 8px;color:#9ca3af;font-family:Georgia,serif;font-size:12px;line-height:1.6;"><a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;">oradia.fr</a> &nbsp;&middot;&nbsp; <a href="mailto:contact@oradia.fr" style="color:#d4af37;text-decoration:none;">contact@oradia.fr</a></p>
-<p style="margin:0;color:#6b7280;font-family:Georgia,serif;font-size:11px;line-height:1.5;">ORADIA — La Boussole Intérieure<br>Révéler. Transmuter. Relier.</p>
+<tr><td align="center" style="padding:36px 32px 28px;border-top:1px solid rgba(212,175,55,0.15);" bgcolor="#0a1628">
+<p style="margin:0 0 6px;color:#c8c0a8;font-size:13px;font-style:italic;opacity:0.7;font-family:Georgia,serif;">Avec gratitude,</p>
+<p style="margin:0 0 4px;color:#d4af37;font-size:52px;font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive;font-weight:700;line-height:1.1;letter-spacing:0.01em;">Rudy</p>
+<p style="margin:0 0 16px;color:#c8c0a8;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.55;font-family:Georgia,serif;">Fondateur d'Oradia</p>
+<p style="margin:0 0 12px;text-align:center;"><span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4));vertical-align:middle;"></span><span style="display:inline-block;width:5px;height:5px;background:#d4af37;border-radius:50%;opacity:0.45;vertical-align:middle;margin:0 8px;"></span><span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent);vertical-align:middle;"></span></p>
+<a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-size:13px;letter-spacing:0.08em;font-family:Georgia,serif;">oradia.fr</a>
 </td></tr>
 </table></td></tr></table></body></html>`;
 
@@ -978,9 +998,22 @@ async function handleCalWebhook(req, res) {
             </td></tr>
           </table>
         </td></tr>
-        <tr><td align="center" style="padding:24px 40px 48px;border-top:1px solid rgba(212,175,55,0.1);">
-          <p style="margin:0 0 4px;color:#f0c75e;font-family:Georgia,serif;font-size:26px;">Rudy</p>
-          <p style="margin:0;color:rgba(212,175,55,0.4);font-family:Georgia,serif;font-size:12px;font-style:italic;">Fondateur d'ORADIA</p>
+        <tr><td style="padding:0 24px 16px;">
+          <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));border:1px solid rgba(212,175,55,0.35);border-radius:14px;overflow:hidden;">
+            <tr><td style="padding:24px 32px;text-align:center;">
+              <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Précommandes ouvertes</p>
+              <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">L'Oracle Oradia</p>
+              <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">64 cartes · Livret · Conte initiatique · Pièce artisanale</p>
+              <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">Précommander</a>
+            </td></tr>
+          </table>
+        </td></tr>
+        <tr><td align="center" style="padding:36px 32px 28px;border-top:1px solid rgba(212,175,55,0.15);">
+          <p style="margin:0 0 6px;color:#c8c0a8;font-size:13px;font-style:italic;opacity:0.7;font-family:Georgia,serif;">Avec gratitude,</p>
+          <p style="margin:0 0 4px;color:#d4af37;font-size:52px;font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive;font-weight:700;line-height:1.1;letter-spacing:0.01em;">Rudy</p>
+          <p style="margin:0 0 16px;color:#c8c0a8;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.55;font-family:Georgia,serif;">Fondateur d'Oradia</p>
+          <p style="margin:0 0 12px;text-align:center;"><span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4));vertical-align:middle;"></span><span style="display:inline-block;width:5px;height:5px;background:#d4af37;border-radius:50%;opacity:0.45;vertical-align:middle;margin:0 8px;"></span><span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent);vertical-align:middle;"></span></p>
+          <a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-size:13px;letter-spacing:0.08em;font-family:Georgia,serif;">oradia.fr</a>
         </td></tr>
       </table>
     </td></tr>

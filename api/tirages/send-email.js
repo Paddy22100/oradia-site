@@ -473,21 +473,14 @@ async function handleSendEmail(req, res) {
 
         <!-- BANDEAU ORACLE PHYSIQUE -->
         <tr>
-          <td style="padding:0 32px 20px;" bgcolor="#050a19">
-            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #1e3a5a;" bgcolor="#071828">
-              <tr>
-                <td class="card-col" style="padding:18px;vertical-align:middle;">
-                  <p style="margin:0 0 3px;color:#4a6a5a;font-size:9px;letter-spacing:3px;text-transform:uppercase;">Pr&#233;commandes ouvertes</p>
-                  <p style="margin:0 0 6px;color:#f5e7a1;font-size:15px;font-weight:700;line-height:1.3;">L'Oracle Oradia<br>entre vos mains</p>
-                  <p style="margin:0 0 12px;color:#4a5a6a;font-size:11px;line-height:1.6;">64 cartes &#183; Livret &#183; Conte initiatique &#183; Pi&#232;ce artisanale</p>
-                  <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background-color:#d4af37;color:#050f23;font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;text-decoration:none;padding:9px 18px;">
-                    Pr&#233;commander
-                  </a>
-                </td>
-                <td class="card-img-col" style="padding:12px 14px 12px 0;vertical-align:middle;width:120px;text-align:right;">
-                  <img src="https://oradia.fr/images/medias/apercu_stripe.png" alt="Oracle Oradia" width="110" height="110" style="display:block;width:110px;border:1px solid #1e3a5a;margin-left:auto;">
-                </td>
-              </tr>
+          <td style="padding:0 32px 20px;">
+            <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));border:1px solid rgba(212,175,55,0.35);border-radius:14px;overflow:hidden;">
+              <tr><td style="padding:24px 32px;text-align:center;">
+                <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Précommandes ouvertes</p>
+                <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">L'Oracle Oradia</p>
+                <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">64 cartes · Livret · Conte initiatique · Pièce artisanale</p>
+                <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">Précommander</a>
+              </td></tr>
             </table>
           </td>
         </tr>
@@ -700,6 +693,16 @@ function buildPromoTirageEmailHtml() {
   ${separator}
   <tr><td style="padding:20px 32px 40px; text-align:center;">
     <a href="https://oradia.fr/tore-abonnement.html" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">Accéder à l'abonnement</a>
+  </td></tr>
+  <tr><td style="padding:0 24px 16px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));border:1px solid rgba(212,175,55,0.35);border-radius:14px;overflow:hidden;">
+      <tr><td style="padding:24px 32px;text-align:center;">
+        <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Précommandes ouvertes</p>
+        <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">L'Oracle Oradia</p>
+        <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">64 cartes · Livret · Conte initiatique · Pièce artisanale</p>
+        <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">Précommander</a>
+      </td></tr>
+    </table>
   </td></tr>
   <tr><td style="padding:36px 32px 28px; border-top:1px solid rgba(212,175,55,0.15); text-align:center;">
     <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>

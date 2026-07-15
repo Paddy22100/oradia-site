@@ -313,6 +313,16 @@ function buildClosingEmail(win, responseToken) {
               <!-- Séparateur -->
               <div style="width:100%;height:1px;background:linear-gradient(90deg, transparent 0%, rgba(212,175,55,0.3) 50%, transparent 100%);margin:0 0 32px 0;"></div>
 
+              <!-- Bandeau précommande -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;">
+                <tr><td style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));border:1px solid rgba(212,175,55,0.35);border-radius:14px;padding:24px 32px;text-align:center;">
+                  <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Précommandes ouvertes</p>
+                  <p style="margin:0 0 6px;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:20px;font-weight:600;">L'Oracle Oradia</p>
+                  <p style="margin:0 0 16px;color:#c8c0a8;font-family:'Lora',Georgia,serif;font-size:13px;line-height:1.6;">64 cartes · Livret · Conte initiatique · Pièce artisanale</p>
+                  <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:'Lora',Georgia,serif;">Précommander</a>
+                </td></tr>
+              </table>
+
               <p style="margin:0 0 6px;color:#c8c0a8;font-size:13px;font-style:italic;opacity:0.7;font-family:Georgia,serif;">Avec gratitude,</p>
               <p style="margin:0 0 4px;color:#d4af37;font-size:52px;font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive;font-weight:700;line-height:1.1;letter-spacing:0.01em;">Rudy</p>
               <p style="margin:0 0 16px;color:#c8c0a8;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.55;font-family:Georgia,serif;">Fondateur d'Oradia</p>
