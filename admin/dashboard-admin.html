@@ -1145,6 +1145,10 @@
                         class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
                         <i class="fas fa-paper-plane mr-1.5"></i>Envoyées
                     </button>
+                    <button onclick="nlShowTab('testers')" data-nltab="testers"
+                        class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
+                        <i class="fas fa-vial mr-1.5"></i>Testeurs
+                    </button>
                 </div>
             </div>
 
@@ -1439,7 +1443,7 @@
                                     <p id="nl-unsent-count" class="text-gold/40 text-xs mt-2 hidden"></p>
                                 </div>
                                 <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Email de test <span class="text-gold/30 normal-case text-xs">(recommandé)</span></label>
-                                <div class="flex gap-2 mb-3">
+                                <div class="flex gap-2 mb-4">
                                     <input type="email" id="nl-test-email"
                                         class="flex-1 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-gold"
                                         placeholder="ton@email.fr">
@@ -1447,25 +1451,51 @@
                                         <i class="fas fa-paper-plane mr-1"></i>Tester
                                     </button>
                                 </div>
-                                <button onclick="nlSendReal()" id="nl-btn-send"
-                                    class="w-full bg-gold text-night-blue font-semibold rounded-lg py-2 hover:bg-light-gold transition text-sm flex items-center justify-center gap-2 mb-3">
-                                    <i class="fas fa-broadcast-tower"></i> Envoyer maintenant
-                                </button>
-                                <div class="border-t border-gold/10 pt-3">
-                                    <label class="block text-xs uppercase tracking-widest text-gold/60 mb-2">Ou programmer l'envoi</label>
+                                <!-- Etat: déjà programmé -->
+                                <div id="nl-send-scheduled-state" class="hidden mb-3 bg-blue-500/10 border border-blue-500/20 rounded-lg p-3">
+                                    <p class="text-blue-300 text-sm font-semibold mb-2"><i class="fas fa-clock mr-2"></i><span id="nl-schedule-label"></span></p>
                                     <div class="flex gap-2">
-                                        <input type="datetime-local" id="nl-scheduled-at"
-                                            class="flex-1 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
-                                        <button onclick="nlSchedule()" id="nl-btn-schedule"
-                                            class="bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg px-3 py-2 text-sm hover:bg-blue-500/30 transition whitespace-nowrap">
-                                            <i class="fas fa-clock mr-1"></i>Programmer
+                                        <button onclick="nlSendReal()" id="nl-btn-send"
+                                            class="flex-1 bg-gold/20 text-gold border border-gold/30 rounded-lg py-1.5 text-sm hover:bg-gold/30 transition flex items-center justify-center gap-1">
+                                            <i class="fas fa-broadcast-tower"></i> Envoyer maintenant
+                                        </button>
+                                        <button onclick="nlUnschedule()"
+                                            class="flex-1 bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg py-1.5 text-sm hover:bg-red-500/20 transition flex items-center justify-center gap-1">
+                                            <i class="fas fa-times"></i> Annuler la programmation
                                         </button>
                                     </div>
-                                    <div id="nl-schedule-status" class="hidden mt-2 text-xs text-blue-300 flex items-center justify-between gap-2">
-                                        <span id="nl-schedule-label"></span>
-                                        <button onclick="nlUnschedule()" class="text-red-400/60 hover:text-red-400 transition text-xs"><i class="fas fa-times mr-1"></i>Annuler</button>
+                                </div>
+                                <!-- Etat: non programmé — toggle mode -->
+                                <div id="nl-send-unscheduled-state">
+                                    <div class="flex rounded-lg overflow-hidden border border-gold/20 mb-3">
+                                        <button id="nl-mode-now-btn" onclick="nlSetSendMode('now')"
+                                            class="flex-1 py-2 text-sm font-semibold transition flex items-center justify-center gap-2 bg-gold text-night-blue">
+                                            <i class="fas fa-broadcast-tower"></i> Maintenant
+                                        </button>
+                                        <button id="nl-mode-scheduled-btn" onclick="nlSetSendMode('scheduled')"
+                                            class="flex-1 py-2 text-sm font-semibold transition flex items-center justify-center gap-2 bg-white/5 text-gold/60 hover:bg-white/10">
+                                            <i class="fas fa-clock"></i> Programmé
+                                        </button>
+                                    </div>
+                                    <!-- Mode: maintenant -->
+                                    <div id="nl-mode-now">
+                                        <button onclick="nlSendReal()" id="nl-btn-send-now"
+                                            class="w-full bg-gold text-night-blue font-semibold rounded-lg py-2 hover:bg-light-gold transition text-sm flex items-center justify-center gap-2">
+                                            <i class="fas fa-broadcast-tower"></i> Publier maintenant
+                                        </button>
+                                    </div>
+                                    <!-- Mode: programmé -->
+                                    <div id="nl-mode-scheduled" class="hidden">
+                                        <input type="datetime-local" id="nl-scheduled-at"
+                                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold mb-2">
+                                        <button onclick="nlSchedule()" id="nl-btn-schedule"
+                                            class="w-full bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg py-2 text-sm hover:bg-blue-500/30 transition flex items-center justify-center gap-2">
+                                            <i class="fas fa-clock mr-1"></i>Publier à la date programmée
+                                        </button>
                                     </div>
                                 </div>
+                                <!-- Champ caché pour compatibilité (schedule status legacy) -->
+                                <div id="nl-schedule-status" class="hidden"></div>
                                 <p class="text-xs text-gold/30 mt-3 text-center italic">Teste d'abord — l'envoi réel est irréversible.</p>
                             </div>
 
@@ -1586,6 +1616,38 @@
             <!-- TAB ENVOYÉES -->
             <div id="nl-tab-sent" class="nl-tab-content hidden">
                 <div id="nl-sent-list" class="space-y-3">
+                    <p class="text-gold/30 italic text-center py-8">Chargement…</p>
+                </div>
+            </div>
+
+            <!-- TAB TESTEURS TIRAGE -->
+            <div id="nl-tab-testers" class="nl-tab-content hidden">
+                <div class="stat-card rounded-2xl p-5 mb-5">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-gold font-semibold text-sm mb-1">Testeurs Tirage — Mail promo abonnement</h3>
+                            <p class="text-gold/40 text-xs">Personnes ayant demandé leur résultat de tirage par mail</p>
+                        </div>
+                        <button onclick="nlSendPromoPreview()" class="bg-gold/20 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition flex items-center gap-2">
+                            <i class="fas fa-paper-plane"></i> Tester le mail promo (→ contact@oradia.fr)
+                        </button>
+                    </div>
+                    <div id="nl-testers-stats" class="grid grid-cols-3 gap-3 mb-4">
+                        <div class="bg-white/5 rounded-lg p-3 text-center">
+                            <p id="nl-testers-total" class="text-2xl font-bold text-gold">—</p>
+                            <p class="text-xs text-gold/50 mt-1">Testeurs total</p>
+                        </div>
+                        <div class="bg-white/5 rounded-lg p-3 text-center">
+                            <p id="nl-testers-promo-sent" class="text-2xl font-bold text-green-400">—</p>
+                            <p class="text-xs text-gold/50 mt-1">Promo envoyée</p>
+                        </div>
+                        <div class="bg-white/5 rounded-lg p-3 text-center">
+                            <p id="nl-testers-consent" class="text-2xl font-bold text-blue-300">—</p>
+                            <p class="text-xs text-gold/50 mt-1">Avec consentement</p>
+                        </div>
+                    </div>
+                </div>
+                <div id="nl-testers-list" class="space-y-2">
                     <p class="text-gold/30 italic text-center py-8">Chargement…</p>
                 </div>
             </div>
@@ -3825,6 +3887,7 @@
             if (name === 'ideas') nlRenderIdeas();
             if (name === 'scheduled') nlRenderScheduled();
             if (name === 'sent') nlRenderSent();
+            if (name === 'testers') nlLoadTesters();
         }
 
         function nlSetStep(step) {
@@ -4648,11 +4711,47 @@
                 if (!res.ok) throw new Error(data.error);
                 const schedStatus = document.getElementById('nl-schedule-status');
                 const schedLabel = document.getElementById('nl-schedule-label');
-                if (schedStatus) schedStatus.classList.remove('hidden');
-                if (schedLabel) schedLabel.textContent = '⏰ Programmé pour le ' + new Date(val).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+                nlShowScheduledState(new Date(val).toISOString());
                 nlStatus('success', '✓ Envoi programmé — le mail partira automatiquement à l\'heure choisie.');
                 await nlLoadDrafts();
             } catch(e) { nlStatus('error', e.message); }
+        }
+
+        function nlSetSendMode(mode) {
+            // mode: 'now' | 'scheduled' — contrôle le toggle dans l'état non-programmé
+            const nowBtn = document.getElementById('nl-mode-now-btn');
+            const schBtn = document.getElementById('nl-mode-scheduled-btn');
+            const nowDiv = document.getElementById('nl-mode-now');
+            const schDiv = document.getElementById('nl-mode-scheduled');
+            if (!nowBtn) return;
+            if (mode === 'now') {
+                nowBtn.className = 'flex-1 py-2 text-sm font-semibold transition flex items-center justify-center gap-2 bg-gold text-night-blue';
+                schBtn.className = 'flex-1 py-2 text-sm font-semibold transition flex items-center justify-center gap-2 bg-white/5 text-gold/60 hover:bg-white/10';
+                nowDiv.classList.remove('hidden');
+                schDiv.classList.add('hidden');
+            } else {
+                schBtn.className = 'flex-1 py-2 text-sm font-semibold transition flex items-center justify-center gap-2 bg-blue-500/20 text-blue-300';
+                nowBtn.className = 'flex-1 py-2 text-sm font-semibold transition flex items-center justify-center gap-2 bg-white/5 text-gold/60 hover:bg-white/10';
+                nowDiv.classList.add('hidden');
+                schDiv.classList.remove('hidden');
+            }
+        }
+
+        function nlShowScheduledState(scheduledAt) {
+            // Affiche le bloc "déjà programmé" et cache le sélecteur de mode
+            document.getElementById('nl-send-scheduled-state')?.classList.remove('hidden');
+            document.getElementById('nl-send-unscheduled-state')?.classList.add('hidden');
+            const label = document.getElementById('nl-schedule-label');
+            if (label && scheduledAt) {
+                label.textContent = 'Envoi programmé le ' + new Date(scheduledAt).toLocaleString('fr-FR', {weekday:'long', day:'2-digit', month:'long', year:'numeric', hour:'2-digit', minute:'2-digit'});
+            }
+        }
+
+        function nlShowUnscheduledState() {
+            // Affiche le sélecteur de mode et cache le bloc "déjà programmé"
+            document.getElementById('nl-send-scheduled-state')?.classList.add('hidden');
+            document.getElementById('nl-send-unscheduled-state')?.classList.remove('hidden');
+            nlSetSendMode('now');
         }
 
         async function nlUnschedule() {
@@ -4666,8 +4765,8 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error);
-                document.getElementById('nl-schedule-status')?.classList.add('hidden');
                 document.getElementById('nl-scheduled-at').value = '';
+                nlShowUnscheduledState();
                 nlStatus('success', 'Programmation annulée — le brouillon est de nouveau en attente.');
                 await nlLoadDrafts();
             } catch(e) { nlStatus('error', e.message); }
@@ -4683,9 +4782,8 @@
                 ? `Envoyer à la/aux catégorie(s) sélectionnée(s) (${targetTags.map(contactTagLabel).join(', ')}) ?\n\nIrréversible.`
                 : 'Envoyer à tous tes abonnés Brevo ?\n\nIrréversible.';
             if (!confirm(confirmMsg)) return;
-            const btn = document.getElementById('nl-btn-send');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Envoi...';
+            const btn = document.getElementById('nl-btn-send') || document.getElementById('nl-btn-send-now');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Envoi...'; }
             try {
                 const res = await adminFetch('/api/admin/newsletter?action=send', {
                     method: 'POST',
@@ -4844,6 +4942,71 @@
                     </div>
                 </div>`;
             }).join('');
+        }
+
+        async function nlLoadTesters() {
+            const listEl = document.getElementById('nl-testers-list');
+            if (!listEl) return;
+            listEl.innerHTML = '<p class="text-gold/30 italic text-center py-8">Chargement…</p>';
+            try {
+                const res = await adminFetch('/api/tirages/send-email?action=list-tore-emails');
+                if (!res.ok) throw new Error('Erreur API');
+                const data = await res.json();
+                const emails = data.emails || [];
+                const total = emails.length;
+                const promoSent = emails.filter(e => e.promo_sent_at).length;
+                const withConsent = emails.filter(e => e.consent_marketing).length;
+                document.getElementById('nl-testers-total').textContent = total;
+                document.getElementById('nl-testers-promo-sent').textContent = promoSent;
+                document.getElementById('nl-testers-consent').textContent = withConsent;
+                if (total === 0) {
+                    listEl.innerHTML = '<p class="text-gold/30 italic text-center py-8">Aucun testeur pour l\'instant.</p>';
+                    return;
+                }
+                listEl.innerHTML = `
+                    <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead><tr class="text-gold/40 text-xs uppercase tracking-wider border-b border-gold/10">
+                            <th class="text-left py-2 pr-4">Email</th>
+                            <th class="text-left py-2 pr-4">Inscrit le</th>
+                            <th class="text-left py-2 pr-4">Consentement</th>
+                            <th class="text-left py-2">Promo envoyée</th>
+                        </tr></thead>
+                        <tbody class="divide-y divide-gold/5">
+                        ${emails.map(e => `<tr class="text-gold/70">
+                            <td class="py-2 pr-4 font-mono text-xs">${e.email}</td>
+                            <td class="py-2 pr-4 text-xs text-gold/40">${new Date(e.created_at).toLocaleDateString('fr-FR')}</td>
+                            <td class="py-2 pr-4">${e.consent_marketing ? '<span class="text-green-400 text-xs">✓ Oui</span>' : '<span class="text-gold/30 text-xs">Non</span>'}</td>
+                            <td class="py-2">${e.promo_sent_at ? `<span class="text-green-400 text-xs">✓ ${new Date(e.promo_sent_at).toLocaleDateString('fr-FR')}</span>` : '<span class="text-gold/30 text-xs">—</span>'}</td>
+                        </tr>`).join('')}
+                        </tbody>
+                    </table>
+                    </div>`;
+            } catch(e) {
+                listEl.innerHTML = '<p class="text-red-400/60 italic text-center py-8">Erreur de chargement.</p>';
+            }
+        }
+
+        async function nlSendPromoPreview() {
+            const btn = event.currentTarget;
+            const orig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Envoi…';
+            try {
+                const res = await adminFetch('/api/tirages/send-email?action=send-promo-preview', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: 'contact@oradia.fr' })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                nlStatus('success', '✓ Mail promo envoyé à contact@oradia.fr — vérifie ta boîte !');
+            } catch(e) {
+                nlStatus('error', e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = orig;
+            }
         }
 
         function nlRenderSent() {
@@ -5090,11 +5253,10 @@
                     if (data.scheduled_at) {
                         const local = new Date(data.scheduled_at).toISOString().slice(0,16);
                         if (schedInput) schedInput.value = local;
-                        if (schedStatus) schedStatus.classList.remove('hidden');
-                        if (schedLabel) schedLabel.textContent = '⏰ Programmé pour le ' + new Date(data.scheduled_at).toLocaleString('fr-FR', {day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'});
+                        nlShowScheduledState(data.scheduled_at);
                     } else {
                         if (schedInput) schedInput.value = '';
-                        if (schedStatus) schedStatus.classList.add('hidden');
+                        nlShowUnscheduledState();
                     }
                     await nlFetchAndShowImages(data.intention || data.subject || '');
                     nlUpdateSelectedPreviews();

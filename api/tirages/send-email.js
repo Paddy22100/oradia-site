@@ -637,18 +637,151 @@ async function handleCollectEmail(req, res) {
   } catch (e) { console.error('[collect-email] Brevo error:', e.message); }
 
   // 3. Supabase : table tore_emails (upsert sur email)
+  let isNewEmail = false;
   try {
     const { createClient } = require('@supabase/supabase-js');
     const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+    // Vérifier si email déjà connu pour ne pas renvoyer la promo
+    const { data: existing } = await supabase.from('tore_emails').select('email, promo_sent_at').eq('email', email).single();
+    isNewEmail = !existing;
+    const promoAlreadySent = existing?.promo_sent_at;
     await supabase.from('tore_emails').upsert({
       email,
       consent_marketing: !!consentMarketing,
       consent_date: consentMarketing ? new Date().toISOString() : null,
     }, { onConflict: 'email', ignoreDuplicates: false });
+
+    // La promo part 24h après via le cron job quotidien
   } catch (e) { console.error('[collect-email] Supabase error:', e.message); }
 
   return res.status(200).json({ success: true });
+}
+
+// ============ EMAIL PROMO ABONNEMENT TORE ============
+function buildPromoTirageEmailHtml() {
+  const bandeau = 'https://oradia.fr/images/medias/bandeau_newsletter.webp';
+  const paragraphs = [
+    `Tu as fait ton premier tirage du Tore — et si quelque chose t'a touché là-dedans, c'est que la connexion était réelle.`,
+    `Le tirage gratuit te donne un aperçu. L'abonnement Tore t'ouvre quelque chose de plus profond : des tirages illimités, des fenêtres d'observation pour suivre les synchronicités dans le temps, un accès à ton historique personnel, et bientôt des analyses personnalisées.`,
+    `Ce n'est pas un outil de divertissement. C'est une pratique — celle de se retourner vers soi avec régularité, de noter ce qui résonne, d'observer comment les cartes parlent à travers les événements de ta vie.`,
+    `Si tu sens que tu veux aller plus loin, je t'invite à rejoindre l'espace Tore Online.`
+  ];
+
+  const bodyRows = paragraphs.map(p => `
+  <tr><td style="padding:0 32px 20px;">
+    <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:justify;">${p}</div>
+  </td></tr>`).join('');
+
+  const separator = `<tr><td style="padding:4px 40px 4px; text-align:center;">
+    <span style="display:inline-block; width:48px; height:1px; background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4)); vertical-align:middle;"></span>
+    <span style="display:inline-block; width:6px; height:6px; background:#d4af37; border-radius:50%; opacity:0.55; vertical-align:middle; margin:0 10px;"></span>
+    <span style="display:inline-block; width:48px; height:1px; background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent); vertical-align:middle;"></span>
+  </td></tr>`;
+
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0; padding:0; background-color:#040d1c;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#040d1c" style="background-color:#040d1c;">
+<tr><td align="center" style="padding:32px 12px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.96) 100%); max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
+  <tr><td style="padding:0; line-height:0;">
+    <img src="${bandeau}" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+  </td></tr>
+  <tr><td style="padding:30px 32px 0;">
+    <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:24px; margin:0 0 20px;">Et si tu allais plus loin ?</h2>
+  </td></tr>
+  ${bodyRows}
+  ${separator}
+  <tr><td style="padding:20px 32px 40px; text-align:center;">
+    <a href="https://oradia.fr/tore-abonnement.html" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">Découvrir l'abonnement Tore</a>
+  </td></tr>
+  <tr><td style="padding:0 32px 32px; text-align:center;">
+    <p style="color:#6a7a8a; font-size:13px; margin:0 0 6px; font-family:Georgia,serif;">Avec gratitude,</p>
+    <p style="color:#d4af37; font-size:15px; font-weight:700; margin:0 0 20px; font-family:Georgia,serif;">Rudy Boucheron</p>
+    <p style="color:#3a4a5a; font-size:11px; margin:0; line-height:1.6;">
+      <a href="https://oradia.fr" style="color:#4a5a6a; text-decoration:none;">oradia.fr</a>
+      &nbsp;·&nbsp;
+      <a href="mailto:contact@oradia.fr" style="color:#4a5a6a; text-decoration:none;">contact@oradia.fr</a>
+    </p>
+    <p style="color:#2a3a4a; font-size:10px; margin:12px 0 0; line-height:1.6;">Tu reçois cet email car tu as fait un tirage du Tore sur oradia.fr.</p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+async function sendPromoTirageEmail(email) {
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const { createClient } = require('@supabase/supabase-js');
+  const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  // Vérifier si déjà abonné (pas la peine de promouvoir)
+  const alreadySub = await isBrevoSubscribed(email);
+  if (alreadySub) return { skipped: true, reason: 'already_subscribed' };
+
+  const html = buildPromoTirageEmailHtml();
+  const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+    body: JSON.stringify({
+      sender: { name: "Rudy d'ORADIA", email: 'contact@oradia.fr' },
+      to: [{ email }],
+      subject: "Rudy d'ORADIA — Et si tu allais plus loin avec le Tore ?",
+      htmlContent: html
+    })
+  });
+
+  if (!brevoRes.ok) {
+    const err = await brevoRes.json().catch(() => ({}));
+    throw new Error(`Brevo error: ${err.message || brevoRes.status}`);
+  }
+
+  // Marquer comme envoyé dans tore_emails
+  await supabase.from('tore_emails')
+    .update({ promo_sent_at: new Date().toISOString() })
+    .eq('email', email);
+
+  return { sent: true };
+}
+
+// ============ ACTION : envoyer email promo de test (admin) ============
+async function handleSendPromoPreview(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const body = await parseJsonBody(req);
+  const targetEmail = body.email || 'contact@oradia.fr';
+  const html = buildPromoTirageEmailHtml();
+  const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+    body: JSON.stringify({
+      sender: { name: "Rudy d'ORADIA", email: 'contact@oradia.fr' },
+      to: [{ email: targetEmail }],
+      subject: "[TEST] Rudy d'ORADIA — Et si tu allais plus loin avec le Tore ?",
+      htmlContent: html
+    })
+  });
+  if (!brevoRes.ok) {
+    const err = await brevoRes.json().catch(() => ({}));
+    return res.status(500).json({ success: false, error: err.message || 'Erreur Brevo' });
+  }
+  return res.status(200).json({ success: true, sent_to: targetEmail });
+}
+
+// ============ ACTION : liste des tore_emails (admin) ============
+async function handleListToreEmails(req, res) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  const { createClient } = require('@supabase/supabase-js');
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+  const { data, error } = await supabase
+    .from('tore_emails')
+    .select('email, consent_marketing, promo_sent_at, created_at')
+    .order('created_at', { ascending: false })
+    .limit(200);
+  if (error) return res.status(500).json({ error: error.message });
+  return res.status(200).json({ success: true, emails: data || [] });
 }
 
 // Vérifie si un email est déjà abonné à la liste Brevo (list ID 5 par défaut).
@@ -673,6 +806,47 @@ async function handleCheckBrevo(req, res) {
   return res.status(200).json({ subscribed });
 }
 
+// ============ CRON : envoyer promo 24h après le tirage ============
+async function handleCronPromoTirage(req, res) {
+  const secret = req.query.cron_secret || '';
+  if (secret !== process.env.CRON_SECRET) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+
+  const { createClient } = require('@supabase/supabase-js');
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  // Cherche les emails créés il y a plus de 24h, sans promo envoyée
+  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  const { data: targets, error } = await supabase
+    .from('tore_emails')
+    .select('email')
+    .is('promo_sent_at', null)
+    .lt('created_at', cutoff)
+    .limit(50);
+
+  if (error) {
+    console.error('[cron-promo-tirage] Supabase error:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+
+  let sent = 0, skipped = 0, failed = 0;
+  for (const row of targets || []) {
+    try {
+      const result = await sendPromoTirageEmail(row.email);
+      if (result.skipped) skipped++;
+      else sent++;
+    } catch (e) {
+      console.error('[cron-promo-tirage] Failed for', row.email, e.message);
+      failed++;
+    }
+  }
+
+  console.log(`[cron-promo-tirage] sent=${sent} skipped=${skipped} failed=${failed}`);
+  return res.status(200).json({ success: true, sent, skipped, failed });
+}
+
 // ============ DISPATCH PRINCIPAL ============
 export default async function handler(req, res) {
   const action = req.query.action || 'send-email';
@@ -681,9 +855,12 @@ export default async function handler(req, res) {
     case 'save':          return handleSaveTirage(req, res);
     case 'update':        return handleUpdateTirage(req, res);
     case 'list':          return handleListTirages(req, res);
-    case 'collect-email': return handleCollectEmail(req, res);
-    case 'check-brevo':   return handleCheckBrevo(req, res);
+    case 'collect-email':      return handleCollectEmail(req, res);
+    case 'check-brevo':        return handleCheckBrevo(req, res);
+    case 'send-promo-preview': return handleSendPromoPreview(req, res);
+    case 'list-tore-emails':   return handleListToreEmails(req, res);
+    case 'cron-promo-tirage':  return handleCronPromoTirage(req, res);
     case 'send-email':
-    default:              return handleSendEmail(req, res);
+    default:                 return handleSendEmail(req, res);
   }
 }
