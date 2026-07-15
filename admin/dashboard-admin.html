@@ -1145,10 +1145,7 @@
                         class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
                         <i class="fas fa-paper-plane mr-1.5"></i>Envoyées
                     </button>
-                    <button onclick="nlShowTab('testers')" data-nltab="testers"
-                        class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
-                        <i class="fas fa-vial mr-1.5"></i>Testeurs
-                    </button>
+
                     <button onclick="nlShowTab('mail-tests')" data-nltab="mail-tests"
                         class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
                         <i class="fas fa-flask mr-1.5"></i>Tester mails
@@ -1624,32 +1621,6 @@
                 </div>
             </div>
 
-            <!-- TAB TESTEURS TIRAGE -->
-            <div id="nl-tab-testers" class="nl-tab-content hidden">
-                <div class="stat-card rounded-2xl p-5 mb-5">
-                    <div class="mb-4">
-                        <h3 class="text-gold font-semibold text-sm mb-1">Testeurs Tirage — Mail promo abonnement</h3>
-                        <p class="text-gold/40 text-xs">Personnes ayant demandé leur résultat de tirage par mail · Pour tester les mails : onglet <strong class="text-gold/60">Tester mails</strong></p>
-                    </div>
-                    <div id="nl-testers-stats" class="grid grid-cols-3 gap-3 mb-4">
-                        <div class="bg-white/5 rounded-lg p-3 text-center">
-                            <p id="nl-testers-total" class="text-2xl font-bold text-gold">—</p>
-                            <p class="text-xs text-gold/50 mt-1">Testeurs total</p>
-                        </div>
-                        <div class="bg-white/5 rounded-lg p-3 text-center">
-                            <p id="nl-testers-promo-sent" class="text-2xl font-bold text-green-400">—</p>
-                            <p class="text-xs text-gold/50 mt-1">Promo envoyée</p>
-                        </div>
-                        <div class="bg-white/5 rounded-lg p-3 text-center">
-                            <p id="nl-testers-consent" class="text-2xl font-bold text-blue-300">—</p>
-                            <p class="text-xs text-gold/50 mt-1">Avec consentement</p>
-                        </div>
-                    </div>
-                </div>
-                <div id="nl-testers-list" class="space-y-2">
-                    <p class="text-gold/30 italic text-center py-8">Chargement…</p>
-                </div>
-            </div>
 
             <!-- TAB TESTER MAILS -->
             <div id="nl-tab-mail-tests" class="nl-tab-content hidden">
