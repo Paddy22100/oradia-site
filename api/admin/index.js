@@ -1546,7 +1546,7 @@ async function handleData(req, res) {
       // Source 1 : table observation_windows (non-membres / freemium)
       const { data: freeWindows } = await supabase
         .from('observation_windows')
-        .select('email, created_at, duration_days, closes_at, intention, qrng_source, closing_email_sent_at')
+        .select('id, email, created_at, duration_days, closes_at, intention, qrng_source, closing_email_sent_at')
         .order('created_at', { ascending: false })
         .limit(500);
 

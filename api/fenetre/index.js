@@ -449,6 +449,58 @@ export default async function handler(req, res) {
       return res.status(200).json({ success: true, sentTo: 'contact@oradia.fr' });
     }
 
+    // POST /api/fenetre/send-closing → envoi manuel (admin) du mail de clôture pour une fenêtre précise
+    // Distinct du cron handleClose : pas de fenêtre de 48h, fonctionne même si déjà envoyé (renvoi volontaire).
+    if (path.includes('send-closing')) {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+      const authHeader = req.headers['authorization'] || '';
+      const rawToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+      let isAuthorized = false;
+      if (rawToken) {
+        try {
+          const decoded = jwt.verify(rawToken, process.env.ADMIN_SESSION_SECRET);
+          isAuthorized = decoded.type === 'admin';
+        } catch (_) {}
+      }
+      if (!isAuthorized) return res.status(401).json({ error: 'Non autorisé' });
+
+      let body;
+      try {
+        body = req.body && typeof req.body === 'object' ? req.body : JSON.parse(await streamToString(req));
+      } catch {
+        return res.status(400).json({ error: 'Invalid JSON' });
+      }
+      const { id } = body;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+
+      const { data: win, error: fetchErr } = await supabase
+        .from('observation_windows')
+        .select('*, response_token')
+        .eq('id', id)
+        .maybeSingle();
+      if (fetchErr || !win) return res.status(404).json({ error: 'Fenêtre introuvable' });
+
+      const emailHTML = buildClosingEmail(win, win.response_token || null);
+      const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sender: { name: FROM_NAME, email: FROM_EMAIL },
+          to: [{ email: win.email }],
+          subject: `Rudy d'Oradia - Votre fenêtre d'observation se referme — qu'avez-vous perçu ?`,
+          htmlContent: emailHTML,
+        })
+      });
+      if (!brevoRes.ok) { const t = await brevoRes.text(); throw new Error(`Brevo ${brevoRes.status}: ${t}`); }
+
+      await supabase
+        .from('observation_windows')
+        .update({ closing_email_sent_at: new Date().toISOString() })
+        .eq('id', id);
+
+      return res.status(200).json({ success: true, sentTo: win.email });
+    }
+
     return res.status(404).json({ success: false, error: 'Route non trouvée' });
   } catch (err) {
     console.error('[fenetre] Error:', err);
