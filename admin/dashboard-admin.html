@@ -7,6 +7,8 @@
     <title>Dashboard Admin - ORADIA</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" defer></script>
     <link rel="stylesheet" href="../style.css">
     
     <script>
@@ -2657,7 +2659,10 @@
                         </div>
                     </div>
                     <button onclick="exportCsv('preorders')" class="w-full bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition flex items-center justify-center gap-2">
-                        <i class="fas fa-download"></i> Télécharger
+                        <i class="fas fa-file-csv"></i> CSV (Excel)
+                    </button>
+                    <button onclick="exportPdf('preorders')" class="w-full bg-[rgba(26,54,93,0.8)] text-gold/80 border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-[rgba(26,54,93,1)] transition flex items-center justify-center gap-2">
+                        <i class="fas fa-file-pdf"></i> PDF Oradia
                     </button>
                     <p id="export-status-preorders" class="text-xs text-center text-light-gold/40 hidden"></p>
                 </div>
@@ -2672,7 +2677,10 @@
                         </div>
                     </div>
                     <button onclick="exportCsv('donors')" class="w-full bg-red-500/20 text-red-300 border border-red-500/40 rounded-lg px-4 py-2 text-sm hover:bg-red-500/30 transition flex items-center justify-center gap-2">
-                        <i class="fas fa-download"></i> Télécharger
+                        <i class="fas fa-file-csv"></i> CSV (Excel)
+                    </button>
+                    <button onclick="exportPdf('donors')" class="w-full bg-[rgba(26,54,93,0.8)] text-gold/80 border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-[rgba(26,54,93,1)] transition flex items-center justify-center gap-2">
+                        <i class="fas fa-file-pdf"></i> PDF Oradia
                     </button>
                     <p id="export-status-donors" class="text-xs text-center text-light-gold/40 hidden"></p>
                 </div>
@@ -2687,7 +2695,10 @@
                         </div>
                     </div>
                     <button onclick="exportCsv('contacts')" class="w-full bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg px-4 py-2 text-sm hover:bg-blue-500/30 transition flex items-center justify-center gap-2">
-                        <i class="fas fa-download"></i> Télécharger
+                        <i class="fas fa-file-csv"></i> CSV (Excel)
+                    </button>
+                    <button onclick="exportPdf('contacts')" class="w-full bg-[rgba(26,54,93,0.8)] text-gold/80 border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-[rgba(26,54,93,1)] transition flex items-center justify-center gap-2">
+                        <i class="fas fa-file-pdf"></i> PDF Oradia
                     </button>
                     <p id="export-status-contacts" class="text-xs text-center text-light-gold/40 hidden"></p>
                 </div>
@@ -7403,6 +7414,125 @@
                 show('Erreur : ' + e.message, 'text-red-400/80');
             }
             setTimeout(() => { if (statusEl) statusEl.classList.add('hidden'); }, 5000);
+        }
+
+        // ── Export PDF stylé univers Oradia ──
+        async function exportPdf(type) {
+            const statusEl = document.getElementById('export-status-' + type);
+            const show = (msg, cls='text-light-gold/60') => { if (statusEl) { statusEl.textContent = msg; statusEl.className = `text-xs text-center ${cls}`; statusEl.classList.remove('hidden'); } };
+            if (!window.jspdf?.jsPDF) { show('Librairie PDF non chargée — recharge la page.', 'text-red-400/80'); return; }
+            show('Préparation du PDF…');
+            try {
+                const dateFr = (iso) => iso ? new Date(iso).toLocaleDateString('fr-FR') : '—';
+                let title, head, body;
+                if (type === 'preorders') {
+                    const res = await adminFetch('/api/admin/data?section=preorders&page=1&limit=500');
+                    const rows = (await res.json()).data || [];
+                    title = 'Précommandes';
+                    head = [['Date', 'Email', 'Offre', 'Montant', 'Statut']];
+                    body = rows.map(r => [
+                        dateFr(r.created_at),
+                        r.email || '—',
+                        Array.isArray(r.items) ? r.items.map(i => `${i.offer || ''} ×${i.quantity || 1}`).join(', ') : (r.offer || '—'),
+                        r.amount_total != null ? Number(r.amount_total).toFixed(2) + ' €' : '—',
+                        r.paid_status || r.status || '—'
+                    ]);
+                } else if (type === 'donors') {
+                    const res = await adminFetch('/api/admin/data?section=donors&page=1&limit=500');
+                    const rows = (await res.json()).data || [];
+                    title = 'Dons';
+                    head = [['Date', 'Email', 'Montant']];
+                    body = rows.map(r => [dateFr(r.created_at), r.email || '—', r.amount != null ? Number(r.amount).toFixed(2) + ' €' : '—']);
+                } else {
+                    const res = await adminFetch('/api/admin/data?section=waitlist&page=1&limit=5000');
+                    const rows = (await res.json()).data || [];
+                    title = 'Contacts';
+                    head = [['Email', 'Catégories', 'Statut', 'Inscription']];
+                    body = rows.map(r => [
+                        r.email || '—',
+                        Array.isArray(r.tags) ? r.tags.join(', ') : '—',
+                        r.status === 'unsubscribed' ? 'Désinscrit' : 'Actif',
+                        dateFr(r.created_at)
+                    ]);
+                }
+                if (body.length === 0) { show('Aucune donnée à exporter.', 'text-orange-400/80'); return; }
+
+                const { jsPDF } = window.jspdf;
+                const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+                const W = doc.internal.pageSize.getWidth();
+                const H = doc.internal.pageSize.getHeight();
+
+                const paintPage = () => {
+                    doc.setFillColor(6, 16, 34);           // bleu nuit Oradia
+                    doc.rect(0, 0, W, H, 'F');
+                };
+                const paintHeader = () => {
+                    doc.setFont('times', 'bold');
+                    doc.setFontSize(22);
+                    doc.setTextColor(212, 175, 55);        // or
+                    doc.text('O R A D I A', W / 2, 18, { align: 'center' });
+                    doc.setFontSize(9);
+                    doc.setFont('times', 'italic');
+                    doc.setTextColor(240, 199, 94);
+                    doc.text('La Boussole Intérieure', W / 2, 24, { align: 'center' });
+                    doc.setDrawColor(212, 175, 55);
+                    doc.setLineWidth(0.4);
+                    doc.line(W / 2 - 30, 27, W / 2 + 30, 27);
+                    doc.setFont('times', 'bold');
+                    doc.setFontSize(15);
+                    doc.setTextColor(245, 231, 161);
+                    doc.text(title, W / 2, 36, { align: 'center' });
+                    doc.setFont('times', 'normal');
+                    doc.setFontSize(9);
+                    doc.setTextColor(180, 160, 100);
+                    doc.text(`${body.length} entrée${body.length > 1 ? 's' : ''} — exporté le ${new Date().toLocaleDateString('fr-FR', { day: '2-digit', month: 'long', year: 'numeric' })}`, W / 2, 42, { align: 'center' });
+                };
+
+                paintPage();
+                paintHeader();
+
+                doc.autoTable({
+                    head, body,
+                    startY: 48,
+                    margin: { left: 12, right: 12, top: 14, bottom: 16 },
+                    styles: {
+                        font: 'times', fontSize: 8.5, cellPadding: 2.2,
+                        fillColor: [10, 25, 47], textColor: [215, 205, 170],
+                        lineColor: [212, 175, 55], lineWidth: 0.08
+                    },
+                    headStyles: {
+                        fillColor: [26, 54, 93], textColor: [212, 175, 55],
+                        fontStyle: 'bold', fontSize: 9, halign: 'left'
+                    },
+                    alternateRowStyles: { fillColor: [8, 20, 40] },
+                    didDrawPage: (d) => {
+                        if (d.pageNumber > 1) { /* fond déjà peint via willDrawPage */ }
+                        // Pied de page
+                        doc.setFont('times', 'italic');
+                        doc.setFontSize(8);
+                        doc.setTextColor(150, 130, 80);
+                        doc.text('oradia.fr — document confidentiel', 12, H - 8);
+                        doc.text(`Page ${d.pageNumber}`, W - 12, H - 8, { align: 'right' });
+                    },
+                    willDrawPage: (d) => {
+                        paintPage();
+                        if (d.pageNumber === 1) paintHeader();
+                        else {
+                            doc.setFont('times', 'bold');
+                            doc.setFontSize(11);
+                            doc.setTextColor(212, 175, 55);
+                            doc.text(`ORADIA — ${title}`, 12, 10);
+                        }
+                    }
+                });
+
+                doc.save(`oradia-${type}-${new Date().toISOString().slice(0, 10)}.pdf`);
+                show('PDF téléchargé ✓', 'text-green-400/80');
+            } catch (e) {
+                console.error('[Admin] exportPdf error:', e);
+                show('Erreur : ' + e.message, 'text-red-400/80');
+            }
+            setTimeout(() => { if (statusEl) statusEl.classList.add('hidden'); }, 6000);
         }
 
         // ── Paramètres système ──

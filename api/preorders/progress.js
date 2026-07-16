@@ -78,7 +78,9 @@ module.exports = async (req, res) => {
       console.warn('Supabase not configured - returning default values');
     }
 
-    const goal = Number(process.env.PREORDER_GOAL || 500);
+    // Objectif de prévente (jamais affiché tel quel sur le site — seuls le
+    // pourcentage et le nombre vendu sont montrés publiquement)
+    const goal = Number(process.env.PREORDER_GOAL || 200);
     const remaining = Math.max(goal - sold, 0);
     const percent = goal > 0 ? Math.min(Math.round((sold / goal) * 100), 100) : 0;
 
