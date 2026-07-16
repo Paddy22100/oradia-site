@@ -347,16 +347,22 @@ async function handleAuth(req, res) {
 async function handleData(req, res) {
   if (req.method !== 'GET' && req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
   try {
-    // Les tâches automatiques quotidiennes (GitHub Actions) s'authentifient via
-    // un secret partagé plutôt qu'une session admin (pas de cookie/JWT dans un cron).
+    // Les tâches automatiques (Vercel Cron, GitHub Actions, et les services externes
+    // comme cron-job.org pour les fréquences que le plan Vercel Hobby ne permet pas)
+    // s'authentifient via un secret partagé plutôt qu'une session admin. Le secret peut
+    // arriver par header (x-cron-secret, Authorization Bearer) ou en paramètre d'URL
+    // (?cron_secret=) — ce dernier reste nécessaire pour cron-job.org, qui ne permet
+    // pas d'envoyer un header personnalisé sur ses jobs existants.
     const cronSecret    = req.headers['x-cron-secret'];
     const authHeader    = req.headers['authorization'] || '';
     const bearerToken   = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    const cronQs        = req.query?.cron_secret;
     const vercelCronSig = req.headers['x-vercel-cron-signature'];
     const vercelCron    = req.headers['x-vercel-cron'];
     const isCronRequest =
       (!!process.env.CRON_SECRET && cronSecret  === process.env.CRON_SECRET) ||
       (!!process.env.CRON_SECRET && bearerToken === process.env.CRON_SECRET) ||
+      (!!process.env.CRON_SECRET && cronQs      === process.env.CRON_SECRET) ||
       !!vercelCronSig ||
       vercelCron === '1';
 
