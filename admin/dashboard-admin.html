@@ -782,66 +782,111 @@
         </section>
         </div><!-- /tab-donors -->
 
-        <!-- ══ ONGLET : WAITLIST ══ -->
+        <!-- ══ ONGLET : CONTACTS ══ -->
         <div id="tab-waitlist" class="tab-panel">
         <section class="mb-10">
-            <div class="flex items-center justify-between mb-8 gap-3 flex-wrap">
-                <h3 class="cormorant text-2xl font-bold text-gold">Contacts Newsletter</h3>
-                <div class="flex items-center gap-3 flex-wrap">
-                    <input id="waitlistSearch" type="text" placeholder="Rechercher email ou nom…"
-                        oninput="filterWaitlistLocal()"
-                        class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-48">
-                    <select id="waitlistNewsletterFilter" onchange="loadWaitlist(1)"
-                        class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
-                        <option value="">Tous les contacts</option>
-                        <option value="newsletter">Newsletter uniquement</option>
-                        <option value="no-newsletter">Hors newsletter</option>
-                    </select>
-                    <select id="waitlistTagFilter" onchange="loadWaitlist(1)"
-                        class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
-                        <option value="">Toutes les catégories</option>
-                    </select>
-                    <button onclick="openCategoryManager()"
-                        class="flex items-center gap-2 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-gold/80 px-4 py-2 rounded-lg hover:bg-gold/10 transition text-sm">
-                        <i class="fas fa-tags"></i> Catégories
-                    </button>
-                    <button onclick="openContactModal()"
-                        class="flex items-center gap-2 bg-gold/20 border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-gold/30 transition text-sm font-semibold">
-                        <i class="fas fa-user-plus"></i> Ajouter un contact
-                    </button>
-                    <button onclick="syncBrevo()" id="syncBrevoBtn"
-                        class="flex items-center gap-2 bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition text-sm font-semibold">
-                        <i class="fas fa-sync-alt"></i> Sync désinscriptions
-                    </button>
-                    <button onclick="importFromBrevo()" id="importBrevoBtn"
-                        class="flex items-center gap-2 bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition text-sm font-semibold">
-                        <i class="fas fa-cloud-download-alt"></i> Importer depuis Brevo
-                    </button>
-                </div>
-            </div>
+
+            <!-- Sync status (silencieux, s'affiche seulement en cas d'erreur) -->
             <div id="sync-status" class="hidden mb-4 px-4 py-3 rounded-lg text-sm border"></div>
 
-            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full" id="waitlistTable">
-                        <thead class="bg-[rgba(5,20,40,0.8)]">
-                            <tr>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Email</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Nom</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Catégories</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Date</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Newsletter</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-gold/20">
-                        </tbody>
-                    </table>
+            <!-- Sous-onglets Répertoire / Inscrits Newsletter -->
+            <div class="flex gap-1 mb-6 border-b border-gold/20 pb-0">
+                <button onclick="showContactsSubTab('repertoire')" id="contacts-subtab-btn-repertoire"
+                    class="contacts-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-gold text-gold bg-gold/10 transition">
+                    <i class="fas fa-address-book mr-1.5"></i>Répertoire
+                </button>
+                <button onclick="showContactsSubTab('newsletter')" id="contacts-subtab-btn-newsletter"
+                    class="contacts-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                    <i class="fas fa-envelope mr-1.5"></i>Inscrits Newsletter
+                    <span id="nl-count-badge" class="ml-1.5 text-xs bg-gold/20 text-gold rounded-full px-2 py-0.5"></span>
+                </button>
+            </div>
+
+            <!-- ── Sous-onglet Répertoire ── -->
+            <div id="contacts-subtab-repertoire">
+                <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
+                    <div class="flex items-center gap-3 flex-wrap">
+                        <input id="waitlistSearch" type="text" placeholder="Rechercher email ou nom…"
+                            oninput="filterWaitlistLocal()"
+                            class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-48">
+                        <select id="waitlistNewsletterFilter" onchange="loadWaitlist(1)"
+                            class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                            <option value="">Tous les contacts</option>
+                            <option value="newsletter">Newsletter uniquement</option>
+                            <option value="no-newsletter">Hors newsletter</option>
+                        </select>
+                        <select id="waitlistTagFilter" onchange="loadWaitlist(1)"
+                            class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
+                            <option value="">Toutes les catégories</option>
+                        </select>
+                        <button onclick="openCategoryManager()"
+                            class="flex items-center gap-2 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-gold/80 px-4 py-2 rounded-lg hover:bg-gold/10 transition text-sm">
+                            <i class="fas fa-tags"></i> Catégories
+                        </button>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="openContactModal()"
+                            class="flex items-center gap-2 bg-gold/20 border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-gold/30 transition text-sm font-semibold">
+                            <i class="fas fa-user-plus"></i> Ajouter
+                        </button>
+                        <button onclick="triggerSyncAll(true)" id="syncBrevoBtn"
+                            class="flex items-center gap-2 bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition text-sm">
+                            <i class="fas fa-sync-alt"></i> Synchroniser
+                        </button>
+                    </div>
                 </div>
 
-                <div id="waitlistPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)]">
+                <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full" id="waitlistTable">
+                            <thead class="bg-[rgba(5,20,40,0.8)]">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Email</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Nom</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Catégories</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Date</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Newsletter</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gold/20"></tbody>
+                        </table>
+                    </div>
+                    <div id="waitlistPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)]"></div>
                 </div>
             </div>
+
+            <!-- ── Sous-onglet Inscrits Newsletter ── -->
+            <div id="contacts-subtab-newsletter" class="hidden">
+                <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
+                    <div class="flex items-center gap-3">
+                        <input id="nlSearch" type="text" placeholder="Rechercher…"
+                            oninput="filterNlLocal()"
+                            class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-48">
+                        <span class="text-gold/50 text-sm">Abonnés actifs Brevo liste #5</span>
+                    </div>
+                    <button onclick="triggerSyncAll(true)" class="flex items-center gap-2 bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition text-sm">
+                        <i class="fas fa-sync-alt"></i> Synchroniser
+                    </button>
+                </div>
+                <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full" id="nlTable">
+                            <thead class="bg-[rgba(5,20,40,0.8)]">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Email</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Nom</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Date inscription</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Statut</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gold/20" id="nlTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="nlPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)]"></div>
+                </div>
+            </div>
+
         </section>
         </div><!-- /tab-waitlist -->
 
@@ -2369,6 +2414,7 @@
             if (name !== 'newsletter') nlShowFloatingBar(false);
             if (name === 'newsletter')    nlLoadDrafts();
             if (name === 'nl-subscribers') { loadNlSubscribers(1); syncBrevoUnsubscribes(); }
+            if (name === 'waitlist')       { triggerSyncAll(false); }
             if (name === 'subscriptions') loadSubscriptions();
             if (name === 'support')        loadSupportMessages();
             if (name === 'synchronicity') { loadObservationWindows(); loadSynchronicity(); }
@@ -2603,6 +2649,9 @@
                     loadDonors(),
                     loadWaitlist()
                 ]);
+
+                // Sync silencieuse Supabase ↔ Brevo au chargement du dashboard
+                triggerSyncAll(false);
 
             } catch (error) {
                 console.error('[Admin] Unexpected error during dashboard load:', error);
@@ -5391,55 +5440,99 @@
         }
 
         // ── Import Brevo → Supabase ───────────────────────────────────────────────
-        async function importFromBrevo() {
-            const btn = document.getElementById('importBrevoBtn');
+        // ── Sync bidirectionnelle Supabase ↔ Brevo ────────────────────────────────
+        // showFeedback=true : affiche le résultat dans #sync-status
+        // showFeedback=false : silencieux (déclenchement automatique)
+        let _syncInProgress = false;
+        async function triggerSyncAll(showFeedback) {
+            if (_syncInProgress) return;
+            _syncInProgress = true;
             const statusEl = document.getElementById('sync-status');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Import en cours…';
-            statusEl.className = 'mb-4 px-4 py-3 rounded-lg text-sm border bg-gold/10 border-gold/30 text-gold';
-            statusEl.textContent = 'Récupération des contacts depuis Brevo liste #5…';
-            statusEl.classList.remove('hidden');
+            const btns = document.querySelectorAll('#syncBrevoBtn, [onclick*="triggerSyncAll"]');
+            btns.forEach(b => { b.disabled = true; b.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i> Sync…'; });
             try {
-                const res = await adminFetch('/api/admin/import-brevo', { method: 'POST' });
+                const res = await adminFetch('/api/admin/sync-all', { method: 'POST' });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Erreur serveur');
-                statusEl.className = 'mb-4 px-4 py-3 rounded-lg text-sm border bg-green-500/10 border-green-500/30 text-green-300';
-                statusEl.textContent = `✓ ${data.imported} contact(s) importé(s) depuis Brevo liste #5.`;
+                if (showFeedback && statusEl) {
+                    const parts = [];
+                    if (data.pulled > 0) parts.push(`${data.pulled} importé(s) depuis Brevo`);
+                    if (data.pushed > 0) parts.push(`${data.pushed} envoyé(s) vers Brevo`);
+                    if (data.unsubscribed > 0) parts.push(`${data.unsubscribed} désinscription(s) détectée(s)`);
+                    statusEl.className = 'mb-4 px-4 py-3 rounded-lg text-sm border bg-green-500/10 border-green-500/30 text-green-300';
+                    statusEl.textContent = parts.length ? '✓ ' + parts.join(' · ') : '✓ Contacts à jour';
+                    statusEl.classList.remove('hidden');
+                    setTimeout(() => statusEl.classList.add('hidden'), 5000);
+                }
                 await loadWaitlist();
+                await loadNlSubscribers();
             } catch(e) {
-                statusEl.className = 'mb-4 px-4 py-3 rounded-lg text-sm border bg-red-500/10 border-red-500/30 text-red-300';
-                statusEl.textContent = '✗ ' + e.message;
+                if (showFeedback && statusEl) {
+                    statusEl.className = 'mb-4 px-4 py-3 rounded-lg text-sm border bg-red-500/10 border-red-500/30 text-red-300';
+                    statusEl.textContent = '✗ Sync échouée : ' + e.message;
+                    statusEl.classList.remove('hidden');
+                }
             } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-cloud-download-alt mr-2"></i>Importer depuis Brevo';
+                _syncInProgress = false;
+                btns.forEach(b => { b.disabled = false; b.innerHTML = '<i class="fas fa-sync-alt mr-1"></i> Synchroniser'; });
             }
         }
 
-        // ── Sync Brevo ────────────────────────────────────────────────────────────
-        async function syncBrevo() {
-            const btn = document.getElementById('syncBrevoBtn');
-            const statusEl = document.getElementById('sync-status');
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Synchronisation...';
-            statusEl.className = 'mb-4 px-4 py-3 rounded-lg text-sm border bg-gold/10 border-gold/30 text-gold';
-            statusEl.textContent = 'Synchronisation en cours...';
-            statusEl.classList.remove('hidden');
-            try {
-                const res = await adminFetch('/api/admin/sync-brevo', {
-                    method: 'POST'
-                });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Erreur serveur');
-                statusEl.className = 'mb-4 px-4 py-3 rounded-lg text-sm border bg-green-500/10 border-green-500/30 text-green-300';
-                statusEl.textContent = `✓ ${data.synced} contact(s) synchronisé(s) vers Brevo. ${data.already > 0 ? data.already + ' déjà sync.' : ''} ${data.errors > 0 ? data.errors + ' erreur(s).' : ''}`;
-                await loadWaitlist();
-            } catch(e) {
-                statusEl.className = 'mb-4 px-4 py-3 rounded-lg text-sm border bg-red-500/10 border-red-500/30 text-red-300';
-                statusEl.textContent = '✗ ' + e.message;
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = '<i class="fas fa-sync-alt mr-2"></i>Sync Brevo';
+        // Conservé pour compatibilité avec l'ancien code (tab nl-subscribers)
+        async function syncBrevo() { await triggerSyncAll(true); }
+        async function importFromBrevo() { await triggerSyncAll(true); }
+
+        // ── Sous-onglets Contacts ──────────────────────────────────────────────────
+        let _currentContactsSubTab = 'repertoire';
+        function showContactsSubTab(name) {
+            _currentContactsSubTab = name;
+            document.querySelectorAll('.contacts-subtab-btn').forEach(b => {
+                b.classList.remove('border-gold', 'text-gold', 'bg-gold/10');
+                b.classList.add('border-transparent', 'text-gold/50');
+            });
+            const activeBtn = document.getElementById('contacts-subtab-btn-' + name);
+            if (activeBtn) {
+                activeBtn.classList.add('border-gold', 'text-gold', 'bg-gold/10');
+                activeBtn.classList.remove('border-transparent', 'text-gold/50');
             }
+            document.getElementById('contacts-subtab-repertoire').classList.toggle('hidden', name !== 'repertoire');
+            document.getElementById('contacts-subtab-newsletter').classList.toggle('hidden', name !== 'newsletter');
+            if (name === 'newsletter') loadNlSubscribers();
+        }
+
+        // ── Inscrits Newsletter ────────────────────────────────────────────────────
+        let _nlData = [];
+        async function loadNlSubscribers() {
+            try {
+                const res = await adminFetch('/api/admin/data?section=waitlist&page=1&limit=500&newsletter=newsletter');
+                const json = await res.json();
+                if (!json.success) return;
+                _nlData = json.data || [];
+                renderNlTable(_nlData);
+                const badge = document.getElementById('nl-count-badge');
+                if (badge) badge.textContent = _nlData.length || '';
+            } catch(e) { /* silencieux */ }
+        }
+
+        function renderNlTable(rows) {
+            const tbody = document.getElementById('nlTableBody');
+            if (!tbody) return;
+            if (!rows.length) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-gold/40 italic">Aucun inscrit newsletter</td></tr>';
+                return;
+            }
+            tbody.innerHTML = rows.map(c => `
+                <tr class="hover:bg-gold/5 transition">
+                    <td class="px-6 py-3 text-light-gold text-sm font-mono">${c.email || ''}</td>
+                    <td class="px-6 py-3 text-light-gold/70 text-sm">${c.full_name || c.name || '—'}</td>
+                    <td class="px-6 py-3 text-light-gold/50 text-sm">${c.created_at ? new Date(c.created_at).toLocaleDateString('fr-FR') : '—'}</td>
+                    <td class="px-6 py-3"><span class="px-2 py-0.5 rounded-full text-xs ${c.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}">${c.status === 'active' ? 'Actif' : c.status || '—'}</span></td>
+                </tr>`).join('');
+        }
+
+        function filterNlLocal() {
+            const q = (document.getElementById('nlSearch')?.value || '').toLowerCase();
+            renderNlTable(q ? _nlData.filter(c => (c.email||'').toLowerCase().includes(q) || (c.full_name||'').toLowerCase().includes(q)) : _nlData);
         }
 
         async function nlOpenDraft(id) {

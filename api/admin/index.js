@@ -3247,7 +3247,7 @@ module.exports = async (req, res) => {
       return res.status(200).json({ success: true });
     }
 
-    if (path === '/import-brevo' || path === '/import-brevo/') {
+    if (path === '/sync-all' || path === '/sync-all/' || path === '/import-brevo' || path === '/import-brevo/') {
       verifyAdminAuth(req);
       const BREVO_API_KEY = process.env.BREVO_API_KEY;
       if (!BREVO_API_KEY) return res.status(500).json({ error: 'BREVO_API_KEY manquant' });
@@ -3255,34 +3255,75 @@ module.exports = async (req, res) => {
         process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
         process.env.SUPABASE_SERVICE_ROLE_KEY
       );
-      // Récupère tous les contacts de la liste 5 (pagination Brevo : max 500 par page)
-      let allContacts = [];
+
+      // ── 1. Brevo → Supabase : récupère tous les contacts liste 5 ──
+      let brevoContacts = [];
       let offset = 0;
-      const limit = 500;
+      const pageSize = 500;
       while (true) {
-        const r = await fetch(`https://api.brevo.com/v3/contacts/lists/5/contacts?limit=${limit}&offset=${offset}&sort=desc`, {
+        const r = await fetch(`https://api.brevo.com/v3/contacts/lists/5/contacts?limit=${pageSize}&offset=${offset}&sort=desc`, {
           headers: { 'api-key': BREVO_API_KEY, 'Accept': 'application/json' }
         });
-        if (!r.ok) return res.status(502).json({ error: `Brevo ${r.status}` });
+        if (!r.ok) break;
         const data = await r.json();
-        const contacts = data.contacts || [];
-        allContacts = allContacts.concat(contacts);
-        if (contacts.length < limit) break;
-        offset += limit;
+        const batch = data.contacts || [];
+        brevoContacts = brevoContacts.concat(batch);
+        if (batch.length < pageSize) break;
+        offset += pageSize;
       }
-      if (allContacts.length === 0) return res.status(200).json({ success: true, imported: 0, already: 0 });
-      // Upsert dans newsletter_contacts — on ne touche pas aux contacts déjà présents (onConflict email)
-      const rows = allContacts.map(c => ({
-        email: (c.email || '').toLowerCase().trim(),
-        status: c.emailBlacklisted ? 'unsubscribed' : 'active',
-        brevo_synced: !c.emailBlacklisted,
-        brevo_synced_at: new Date().toISOString(),
-        source: 'import-brevo'
-      })).filter(r => r.email);
-      const { data: upserted, error } = await sb.from('newsletter_contacts')
-        .upsert(rows, { onConflict: 'email', ignoreDuplicates: false });
-      if (error) return res.status(500).json({ error: error.message });
-      return res.status(200).json({ success: true, imported: rows.length });
+
+      const now = new Date().toISOString();
+      const brevoEmailSet = new Set(brevoContacts.map(c => (c.email || '').toLowerCase().trim()));
+
+      // Upsert dans Supabase — les contacts blacklistés passent en unsubscribed
+      let pulled = 0;
+      if (brevoContacts.length > 0) {
+        const rows = brevoContacts.map(c => ({
+          email: (c.email || '').toLowerCase().trim(),
+          status: c.emailBlacklisted ? 'unsubscribed' : 'active',
+          brevo_synced: !c.emailBlacklisted,
+          brevo_synced_at: now,
+          source: 'brevo-sync'
+        })).filter(r => r.email);
+        const { error } = await sb.from('newsletter_contacts')
+          .upsert(rows, { onConflict: 'email' });
+        if (!error) pulled = rows.length;
+      }
+
+      // ── 2. Supabase → Brevo : contacts actifs non encore synchro ──
+      const { data: unsynced } = await sb.from('newsletter_contacts')
+        .select('email')
+        .eq('status', 'active')
+        .eq('brevo_synced', false);
+
+      let pushed = 0;
+      const toAdd = (unsynced || []).map(c => c.email).filter(e => e && !brevoEmailSet.has(e));
+      if (toAdd.length > 0) {
+        const r = await fetch('https://api.brevo.com/v3/contacts/lists/5/contacts/add', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+          body: JSON.stringify({ emails: toAdd })
+        }).catch(() => null);
+        if (r && (r.ok || r.status === 204)) {
+          await sb.from('newsletter_contacts')
+            .update({ brevo_synced: true, brevo_synced_at: now })
+            .in('email', toAdd);
+          pushed = toAdd.length;
+        }
+      }
+
+      // ── 3. Désinscriptions Brevo → Supabase (contacts blacklistés) ──
+      const blacklisted = brevoContacts.filter(c => c.emailBlacklisted).map(c => (c.email || '').toLowerCase().trim()).filter(Boolean);
+      let unsubscribed = 0;
+      if (blacklisted.length > 0) {
+        const { error } = await sb.from('newsletter_contacts')
+          .update({ status: 'unsubscribed', brevo_synced: false, unsubscribed_at: now })
+          .in('email', blacklisted)
+          .neq('status', 'unsubscribed');
+        if (!error) unsubscribed = blacklisted.length;
+      }
+
+      return res.status(200).json({ success: true, pulled, pushed, unsubscribed });
     }
 
     if (path === '/subscriptions' || path === '/subscriptions/') {
