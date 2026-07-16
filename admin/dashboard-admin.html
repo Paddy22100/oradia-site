@@ -9,6 +9,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.2/jspdf.plugin.autotable.min.js" defer></script>
+    <!-- Import de sources .docx / .pdf pour la newsletter (extraction de texte côté navigateur) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
     <link rel="stylesheet" href="../style.css">
     
     <script>
@@ -1550,9 +1553,9 @@
                                         <button type="button" onclick="nlAddSource()" class="shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-1.5 text-xs hover:bg-gold/25 transition" title="Ajouter la source (nom seulement)">
                                             <i class="fas fa-plus"></i>
                                         </button>
-                                        <label class="shrink-0 cursor-pointer bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-1.5 text-xs hover:bg-gold/25 transition" title="Importer un fichier .txt/.md depuis ton PC — son contenu inspirera la génération">
+                                        <label class="shrink-0 cursor-pointer bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-1.5 text-xs hover:bg-gold/25 transition" title="Importer un fichier .txt/.md/.docx/.pdf depuis ton PC — son contenu inspirera la génération">
                                             <i class="fas fa-file-import"></i>
-                                            <input type="file" accept=".txt,.md" class="hidden" onchange="nlImportSourceFile(this)">
+                                            <input type="file" accept=".txt,.md,.docx,.pdf" class="hidden" onchange="nlImportSourceFile(this)">
                                         </label>
                                     </div>
                                     <p id="nl-source-file-status" class="text-xs mt-1 hidden"></p>
@@ -4682,33 +4685,79 @@
             nlRenderSources();
         }
 
-        // Import d'un fichier .txt/.md depuis le PC : son contenu devient une source
-        // d'inspiration cochable, injectée dans le prompt de génération au même titre
-        // que les "Fragments du carnet".
-        function nlImportSourceFile(input) {
+        // Import d'un fichier .txt/.md/.docx/.pdf depuis le PC : son contenu devient une
+        // source d'inspiration cochable, injectée dans le prompt de génération au même
+        // titre que les "Fragments du carnet". Extraction de texte entièrement côté
+        // navigateur (mammoth.js pour .docx, pdf.js pour .pdf), rien n'est envoyé au serveur.
+        const NL_SOURCE_MAX_UPLOAD = 8 * 1024 * 1024;   // 8 Mo (fichier brut : docx/pdf ont un poids binaire)
+        const NL_SOURCE_MAX_TEXT   = 300 * 1000;        // 300 000 caractères de texte extrait, évite un prompt démesuré
+
+        async function nlExtractDocx(file) {
+            if (!window.mammoth) throw new Error('Librairie .docx non chargée — recharge la page et réessaie.');
+            const arrayBuffer = await file.arrayBuffer();
+            const result = await window.mammoth.extractRawText({ arrayBuffer });
+            return (result.value || '').trim();
+        }
+
+        async function nlExtractPdf(file) {
+            if (!window.pdfjsLib) throw new Error('Librairie .pdf non chargée — recharge la page et réessaie.');
+            window.pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+            const arrayBuffer = await file.arrayBuffer();
+            const pdf = await window.pdfjsLib.getDocument({ data: arrayBuffer }).promise;
+            const pageTexts = [];
+            for (let i = 1; i <= pdf.numPages; i++) {
+                const page = await pdf.getPage(i);
+                const content = await page.getTextContent();
+                pageTexts.push(content.items.map(item => item.str).join(' '));
+            }
+            return pageTexts.join('\n\n').trim();
+        }
+
+        function nlExtractPlainText(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(String(reader.result || '').trim());
+                reader.onerror = () => reject(new Error('Erreur de lecture du fichier.'));
+                reader.readAsText(file);
+            });
+        }
+
+        async function nlImportSourceFile(input) {
             const file = input.files?.[0];
             if (!file) return;
             const statusEl = document.getElementById('nl-source-file-status');
             const show = (msg, cls) => { if (statusEl) { statusEl.textContent = msg; statusEl.className = `text-xs mt-1 ${cls}`; statusEl.classList.remove('hidden'); } };
-            const MAX_SIZE = 300 * 1024; // 300 Ko de texte, largement suffisant, évite un prompt démesuré
-            if (file.size > MAX_SIZE) {
-                show(`Fichier trop volumineux (${Math.round(file.size / 1024)} Ko, max 300 Ko de texte).`, 'text-red-400/80');
+
+            if (file.size > NL_SOURCE_MAX_UPLOAD) {
+                show(`Fichier trop volumineux (${Math.round(file.size / 1024)} Ko, max ${NL_SOURCE_MAX_UPLOAD / 1024 / 1024} Mo).`, 'text-red-400/80');
                 input.value = '';
                 return;
             }
-            const reader = new FileReader();
-            reader.onload = () => {
-                const content = String(reader.result || '').trim();
-                if (!content) { show('Fichier vide ou illisible comme texte.', 'text-red-400/80'); input.value = ''; return; }
+
+            const ext = (file.name.split('.').pop() || '').toLowerCase();
+            show('Extraction du texte en cours…', 'text-gold/50');
+            try {
+                let content;
+                if (ext === 'docx') content = await nlExtractDocx(file);
+                else if (ext === 'pdf') content = await nlExtractPdf(file);
+                else content = await nlExtractPlainText(file);
+
+                if (!content) { show('Aucun texte trouvé dans ce fichier (page scannée sans OCR ?).', 'text-red-400/80'); input.value = ''; return; }
+                if (content.length > NL_SOURCE_MAX_TEXT) {
+                    content = content.slice(0, NL_SOURCE_MAX_TEXT);
+                    show(`« ${file.name} » importé, tronqué à ${NL_SOURCE_MAX_TEXT.toLocaleString('fr-FR')} caractères (fichier très long).`, 'text-orange-400/80');
+                } else {
+                    show(`« ${file.name} » importé (${content.length.toLocaleString('fr-FR')} caractères).`, 'text-green-400/80');
+                }
                 const custom = nlGetCustomSources();
                 custom.push({ label: file.name, checked: true, content });
                 nlSaveCustomSources(custom);
                 nlRenderSources();
-                show(`« ${file.name} » importé (${content.length.toLocaleString('fr-FR')} caractères).`, 'text-green-400/80');
+            } catch (e) {
+                show('Erreur : ' + e.message, 'text-red-400/80');
+            } finally {
                 input.value = '';
-            };
-            reader.onerror = () => { show('Erreur de lecture du fichier.', 'text-red-400/80'); input.value = ''; };
-            reader.readAsText(file);
+            }
         }
 
         function nlRemoveSource(index) {
