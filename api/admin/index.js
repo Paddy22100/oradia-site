@@ -2544,6 +2544,79 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
         return res.status(200).json({ success: true });
       }
 
+      // Renvoie la dernière newsletter envoyée aux inscrits actifs qui ne l'ont pas reçue
+      // (last_newsletter_sent_at nul ou antérieur au sent_at du dernier envoi).
+      if (action === 'resend-last') {
+        const BREVO_API_KEY = process.env.BREVO_API_KEY;
+        if (!BREVO_API_KEY) return res.status(500).json({ error: 'BREVO_API_KEY non configurée' });
+
+        const { data: lastDraft, error: lastErr } = await supabase
+          .from('newsletter_drafts')
+          .select('*')
+          .eq('statut', 'envoyé')
+          .not('sent_at', 'is', null)
+          .order('sent_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (lastErr) throw lastErr;
+        if (!lastDraft) return res.status(404).json({ error: 'Aucune newsletter déjà envoyée' });
+
+        const finalSubject = lastDraft.subject || 'Oradia';
+        const html = buildCommunicationEmailHtml({ ...lastDraft, subject: finalSubject });
+
+        const { data: missing, error: missErr } = await supabase
+          .from('newsletter_contacts')
+          .select('email, last_newsletter_sent_at')
+          .eq('status', 'active');
+        if (missErr) {
+          // Colonne absente (migration last-newsletter non exécutée)
+          return res.status(400).json({ error: 'Migration last-newsletter requise (colonne last_newsletter_sent_at absente)' });
+        }
+        const sentAt = new Date(lastDraft.sent_at);
+        const targets = (missing || [])
+          .filter(c => !c.last_newsletter_sent_at || new Date(c.last_newsletter_sent_at) < sentAt)
+          .map(c => c.email)
+          .filter(Boolean);
+
+        if (body.dry_run) {
+          return res.status(200).json({ success: true, subject: finalSubject, sent_at: lastDraft.sent_at, targets: targets.length, emails: targets });
+        }
+        if (targets.length === 0) {
+          return res.status(200).json({ success: true, sent: 0, message: 'Tous les inscrits actifs ont déjà reçu cette newsletter' });
+        }
+
+        let sent = 0;
+        const sentEmails = [];
+        const failedEmails = [];
+        const BATCH = 10;
+        for (let i = 0; i < targets.length; i += BATCH) {
+          const batch = targets.slice(i, i + BATCH);
+          const results = await Promise.all(batch.map(email => fetch('https://api.brevo.com/v3/smtp/email', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+            body: JSON.stringify({
+              sender: { name: 'Oradia', email: 'contact@oradia.fr' },
+              to: [{ email }],
+              subject: finalSubject,
+              htmlContent: html.replace('{unsubscribe}', buildUnsubUrl(email))
+            })
+          })));
+          results.forEach((r, idx) => {
+            if (r.ok) { sent++; sentEmails.push(batch[idx]); }
+            else failedEmails.push(batch[idx]);
+          });
+        }
+
+        if (sentEmails.length > 0) {
+          await supabase
+            .from('newsletter_contacts')
+            .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
+            .in('email', sentEmails);
+        }
+
+        return res.status(200).json({ success: true, subject: finalSubject, sent, failed: failedEmails.length, failedEmails });
+      }
+
       if (action === 'send') {
         const { draft_id, test_email, subject, target_tags, exclude_already_sent } = body;
         if (!draft_id) return res.status(400).json({ error: 'draft_id requis' });
@@ -3648,11 +3721,17 @@ module.exports = async (req, res) => {
         const singlePageSessions = Object.values(sessionPageCount).filter(n => n === 1).length;
         const bounceRate = uniqueSessions > 0 ? (singlePageSessions / uniqueSessions * 100) : null;
         const pagesPerVisit = uniqueSessions > 0 ? (v.length / uniqueSessions) : null;
-        // Nouveaux vs anciens visiteurs (basé sur is_new_visitor de la première vue de chaque session)
-        const sessionFirstView = {};
-        v.forEach(r => { if (!sessionFirstView[r.session_id]) sessionFirstView[r.session_id] = r; });
+        // Nouveaux vs anciens visiteurs. Le tracker ne pose is_new_visitor=true que sur la
+        // toute première page vue de l'appareil (le flag localStorage est posé aussitôt) :
+        // une session est donc "nouvelle" dès qu'UNE de ses vues porte true — peu importe
+        // l'ordre de tri des vues.
+        const sessionIsNew = {};
+        v.forEach(r => {
+          if (r.is_new_visitor === true) sessionIsNew[r.session_id] = true;
+          else if (r.is_new_visitor === false && !(r.session_id in sessionIsNew)) sessionIsNew[r.session_id] = false;
+        });
         let newVisitors = 0, returningVisitors = 0;
-        Object.values(sessionFirstView).forEach(r => { if (r.is_new_visitor === true) newVisitors++; else if (r.is_new_visitor === false) returningVisitors++; });
+        Object.values(sessionIsNew).forEach(isNew => { if (isNew) newVisitors++; else returningVisitors++; });
         return { total_views: v.length, unique_visitors: uniqueSessions, top_pages: topPages, top_referrers: topReferrers, daily_views: dailyViews, bounce_rate: bounceRate, pages_per_visit: pagesPerVisit, new_visitors: newVisitors, returning_visitors: returningVisitors };
       };
 

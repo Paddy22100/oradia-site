@@ -900,10 +900,16 @@
                             class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-48">
                         <span class="text-gold/50 text-sm">Abonnés actifs Brevo liste #5</span>
                     </div>
-                    <button onclick="triggerSyncAll(true)" class="flex items-center gap-2 bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition text-sm">
-                        <i class="fas fa-sync-alt"></i> Synchroniser
-                    </button>
+                    <div class="flex items-center gap-2">
+                        <button onclick="resendLastNewsletter()" id="resendLastNlBtn" class="flex items-center gap-2 bg-gold/15 border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-gold/25 transition text-sm">
+                            <i class="fas fa-paper-plane"></i> Renvoyer la dernière NL aux non-destinataires
+                        </button>
+                        <button onclick="triggerSyncAll(true)" class="flex items-center gap-2 bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition text-sm">
+                            <i class="fas fa-sync-alt"></i> Synchroniser
+                        </button>
+                    </div>
                 </div>
+                <p id="resendLastNlStatus" class="hidden text-sm mb-4 px-1"></p>
                 <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full" id="nlTable">
@@ -5798,6 +5804,46 @@
                     <td class="px-6 py-3">${lastNl}</td>
                 </tr>`;
             }).join('');
+        }
+
+        // ── Renvoi de la dernière newsletter aux inscrits qui ne l'ont pas reçue ──
+        async function resendLastNewsletter() {
+            const btn = document.getElementById('resendLastNlBtn');
+            const status = document.getElementById('resendLastNlStatus');
+            const show = (msg, cls='text-light-gold/60') => { if (status) { status.innerHTML = msg; status.className = `text-sm mb-4 px-1 ${cls}`; status.classList.remove('hidden'); } };
+            if (btn) btn.disabled = true;
+            show('<i class="fas fa-spinner fa-spin mr-2"></i>Vérification des destinataires manquants…');
+            try {
+                // 1. Dry-run : compter qui n'a pas reçu la dernière newsletter
+                const dryRes = await adminFetch('/api/admin/newsletter?action=resend-last', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'resend-last', dry_run: true })
+                });
+                const dry = await dryRes.json();
+                if (!dryRes.ok) throw new Error(dry.error || 'Erreur');
+                if (!dry.targets) {
+                    show('✓ Tous les inscrits actifs ont déjà reçu la dernière newsletter (« ' + escapeHtmlFront(dry.subject || '') + ' »).', 'text-green-400/80');
+                    return;
+                }
+                // 2. Confirmation puis envoi réel
+                const ok = confirm(`Renvoyer « ${dry.subject} » à ${dry.targets} contact(s) qui ne l'ont pas reçue ?\n\n${(dry.emails || []).slice(0, 15).join('\n')}${dry.targets > 15 ? '\n…' : ''}`);
+                if (!ok) { show('Envoi annulé.'); return; }
+                show('<i class="fas fa-spinner fa-spin mr-2"></i>Envoi en cours vers ' + dry.targets + ' contact(s)…');
+                const res = await adminFetch('/api/admin/newsletter?action=resend-last', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'resend-last' })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                show(`✓ ${data.sent} email(s) envoyé(s)` + (data.failed ? ` · ${data.failed} échec(s) : ${(data.failedEmails||[]).join(', ')}` : ''), data.failed ? 'text-orange-400/80' : 'text-green-400/80');
+                loadNlSubscribers();
+            } catch (e) {
+                show('✗ ' + e.message, 'text-red-400/80');
+            } finally {
+                if (btn) btn.disabled = false;
+            }
         }
 
         function filterNlLocal() {
