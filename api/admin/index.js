@@ -534,7 +534,11 @@ async function handleData(req, res) {
             if (logsToInsert.length > 0) {
                 await sb.from('system_logs').insert(logsToInsert);
             }
-            await logSystemEvent(sb, { level:'info', source:'cron-fetch-logs', message:`Cron logs: ${logsToInsert.length} nouvelles erreurs (${candidateLogs.length} détectées, ${candidateLogs.length - logsToInsert.length} doublons ignorés)`, details: { deployment: deployment.uid } });
+            // Ne journaliser un résumé que si quelque chose a réellement été détecté —
+            // sinon "0 nouvelles erreurs" toutes les 15 min noie les vraies erreurs dans le bruit.
+            if (logsToInsert.length > 0) {
+                await logSystemEvent(sb, { level:'info', source:'cron-fetch-logs', message:`Cron logs: ${logsToInsert.length} nouvelle(s) erreur(s) détectée(s) (${candidateLogs.length - logsToInsert.length} doublon(s) ignoré(s))`, details: { deployment: deployment.uid } });
+            }
             return res.status(200).json({ success: true, fetched: logsToInsert.length, total_detected: candidateLogs.length });
         } catch(e) {
             await logSystemEvent(supabase, { level:'error', source:'cron-fetch-logs', message: e.message });
@@ -1044,6 +1048,83 @@ async function handleData(req, res) {
       res.setHeader('Content-Type', 'text/csv; charset=utf-8');
       res.setHeader('Content-Disposition', `attachment; filename="${table}-${new Date().toISOString().slice(0, 10)}.csv"`);
       return res.status(200).send(csv);
+    }
+
+    // ── Déploiements Vercel (rollback de code) ──
+    if (section === 'deployments') {
+      const token = process.env.VERCEL_TOKEN;
+      const projectId = process.env.VERCEL_PROJECT_ID || 'prj_0DJh0iGvBHlRVp6MfrTCUa53Yhkd';
+      const teamId = process.env.VERCEL_TEAM_ID || 'team_OH3FH8jY7Lx9tjNcayHH42xg';
+      if (!token) return res.status(200).json({ success: false, error: 'VERCEL_TOKEN non configurée' });
+      try {
+        const r = await fetch(`https://api.vercel.com/v6/deployments?projectId=${projectId}&teamId=${teamId}&limit=15&state=READY&target=production`, {
+          headers: { Authorization: `Bearer ${token}` }
+        });
+        const data = await r.json();
+        if (!r.ok) return res.status(200).json({ success: false, error: data.error?.message || 'Erreur Vercel' });
+        const deployments = (data.deployments || []).map(d => ({
+          uid: d.uid,
+          url: d.url,
+          created: d.created || d.createdAt,
+          commit_message: d.meta?.githubCommitMessage || null,
+          commit_sha: d.meta?.githubCommitSha ? d.meta.githubCommitSha.slice(0, 7) : null,
+          is_current: d.uid === (data.deployments?.[0]?.uid)
+        }));
+        return res.status(200).json({ success: true, deployments, project_slug_url: `https://vercel.com/${teamId}/${projectId}` });
+      } catch (e) {
+        return res.status(200).json({ success: false, error: e.message });
+      }
+    }
+
+    // ── Sauvegardes de données Supabase (runs du workflow GitHub Actions) ──
+    if (section === 'backup-runs') {
+      const ghToken = process.env.GITHUB_TOKEN;
+      const repo = process.env.GITHUB_REPO || 'Paddy22100/oradia-site';
+      if (!ghToken) return res.status(200).json({ success: false, error: 'GITHUB_TOKEN non configurée' });
+      try {
+        const r = await fetch(`https://api.github.com/repos/${repo}/actions/workflows/backup-supabase.yml/runs?per_page=12`, {
+          headers: { Authorization: `Bearer ${ghToken}`, Accept: 'application/vnd.github+json' }
+        });
+        const data = await r.json();
+        if (!r.ok) return res.status(200).json({ success: false, error: data.message || 'Erreur GitHub' });
+        const runs = (data.workflow_runs || []).filter(w => w.conclusion === 'success').map(w => ({
+          id: w.id,
+          created_at: w.created_at,
+          run_number: w.run_number,
+          html_url: w.html_url
+        }));
+        return res.status(200).json({ success: true, runs });
+      } catch (e) {
+        return res.status(200).json({ success: false, error: e.message });
+      }
+    }
+
+    // ── Téléchargement d'une sauvegarde (proxy authentifié vers l'artefact GitHub) ──
+    if (section === 'backup-download') {
+      const ghToken = process.env.GITHUB_TOKEN;
+      const repo = process.env.GITHUB_REPO || 'Paddy22100/oradia-site';
+      const runId = req.query?.run_id;
+      if (!ghToken) return res.status(400).json({ error: 'GITHUB_TOKEN non configurée' });
+      if (!runId) return res.status(400).json({ error: 'run_id requis' });
+      try {
+        const listRes = await fetch(`https://api.github.com/repos/${repo}/actions/runs/${runId}/artifacts`, {
+          headers: { Authorization: `Bearer ${ghToken}`, Accept: 'application/vnd.github+json' }
+        });
+        const listData = await listRes.json();
+        const artifact = (listData.artifacts || [])[0];
+        if (!artifact) return res.status(404).json({ error: 'Aucune sauvegarde trouvée pour ce run' });
+        const dlRes = await fetch(`https://api.github.com/repos/${repo}/actions/artifacts/${artifact.id}/zip`, {
+          headers: { Authorization: `Bearer ${ghToken}`, Accept: 'application/vnd.github+json' },
+          redirect: 'follow'
+        });
+        if (!dlRes.ok) return res.status(502).json({ error: 'Téléchargement échoué' });
+        const buf = Buffer.from(await dlRes.arrayBuffer());
+        res.setHeader('Content-Type', 'application/zip');
+        res.setHeader('Content-Disposition', `attachment; filename="oradia-backup-${runId}.zip"`);
+        return res.status(200).send(buf);
+      } catch (e) {
+        return res.status(500).json({ error: e.message });
+      }
     }
 
     // ── Section abonnements Tore ──
@@ -3363,7 +3444,7 @@ module.exports = async (req, res) => {
 
     if (path === '/env-status' || path === '/env-status/') {
       verifyAdminAuth(req);
-      const VARS = ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','STRIPE_SECRET_KEY','STRIPE_WEBHOOK_SECRET','BREVO_API_KEY','ANTHROPIC_API_KEY','ADMIN_SESSION_SECRET','ADMIN_EMAIL','ADMIN_PASSWORD_HASH','CRON_SECRET'];
+      const VARS = ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','STRIPE_SECRET_KEY','STRIPE_WEBHOOK_SECRET','BREVO_API_KEY','ANTHROPIC_API_KEY','ADMIN_SESSION_SECRET','ADMIN_EMAIL','ADMIN_PASSWORD_HASH','CRON_SECRET','VERCEL_TOKEN','GITHUB_TOKEN'];
       return res.status(200).json(Object.fromEntries(VARS.map(k => [k, !!process.env[k]])));
     }
 

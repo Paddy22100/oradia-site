@@ -785,6 +785,50 @@ async function handleSendPromoPreview(req, res) {
   return res.status(200).json({ success: true, sent_to: targetEmail });
 }
 
+// ============ ACTION : envoi RÉEL (manuel, depuis le dashboard) de la promo abonnement ============
+// Distinct de send-promo-preview (test, sujet préfixé [TEST], pas de marquage DB).
+async function handleSendPromoManual(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const authHeader = req.headers.authorization || '';
+  const rawToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  if (!rawToken) return res.status(401).json({ error: 'Non autorisé' });
+  try {
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(rawToken, process.env.ADMIN_SESSION_SECRET);
+    if (decoded.type !== 'admin') throw new Error('type invalide');
+  } catch (_) {
+    return res.status(401).json({ error: 'Non autorisé' });
+  }
+  const body = await parseJsonBody(req);
+  const email = (body.email || '').trim().toLowerCase();
+  if (!email) return res.status(400).json({ error: 'email requis' });
+
+  const html = buildPromoTirageEmailHtml();
+  const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+    body: JSON.stringify({
+      sender: { name: "Rudy d'ORADIA", email: 'contact@oradia.fr' },
+      to: [{ email }],
+      subject: "Rudy d'ORADIA — Et si tu allais plus loin avec le Tore ?",
+      htmlContent: html
+    })
+  });
+  if (!brevoRes.ok) {
+    const err = await brevoRes.json().catch(() => ({}));
+    return res.status(500).json({ success: false, error: err.message || 'Erreur Brevo' });
+  }
+
+  const { createClient } = require('@supabase/supabase-js');
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+  await supabase.from('tore_emails')
+    .update({ promo_sent_at: new Date().toISOString(), promo_skipped: false })
+    .eq('email', email);
+
+  return res.status(200).json({ success: true, sent_to: email });
+}
+
 // ============ ACTION : liste des tore_emails (admin uniquement) ============
 async function handleListToreEmails(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
@@ -804,7 +848,7 @@ async function handleListToreEmails(req, res) {
   const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
   const { data, error } = await supabase
     .from('tore_emails')
-    .select('email, consent_marketing, promo_sent_at, created_at')
+    .select('email, consent_marketing, promo_sent_at, promo_skipped, created_at')
     .order('created_at', { ascending: false })
     .limit(500);
   if (error) return res.status(500).json({ error: error.message });
@@ -855,7 +899,7 @@ async function handleImportToreHistory(req, res) {
       email,
       consent_marketing: false,
       created_at,
-      promo_sent_at: new Date().toISOString() // pas de promo rétroactive
+      promo_skipped: true // pas de promo rétroactive — distinct de promo_sent_at (envoi réel)
     }));
 
   if (rows.length === 0) {
@@ -905,6 +949,7 @@ async function handleCronPromoTirage(req, res) {
     .from('tore_emails')
     .select('email')
     .is('promo_sent_at', null)
+    .or('promo_skipped.is.null,promo_skipped.eq.false')
     .lt('created_at', cutoff)
     .limit(50);
 
@@ -940,6 +985,7 @@ export default async function handler(req, res) {
     case 'collect-email':      return handleCollectEmail(req, res);
     case 'check-brevo':        return handleCheckBrevo(req, res);
     case 'send-promo-preview': return handleSendPromoPreview(req, res);
+    case 'send-promo-manual':  return handleSendPromoManual(req, res);
     case 'list-tore-emails':   return handleListToreEmails(req, res);
     case 'import-tore-history': return handleImportToreHistory(req, res);
     case 'cron-promo-tirage':  return handleCronPromoTirage(req, res);
