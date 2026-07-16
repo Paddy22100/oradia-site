@@ -6461,6 +6461,35 @@ function showArrowForStep(stepIndex, isMatch) {
     return s.split(/\s+/).length >= 3;
   }
 
+  // Détecte plusieurs questions dans une même intention : soit plusieurs « ? »,
+  // soit plusieurs amorces interrogatives en début de proposition
+  // (début du texte, ou après « , ; . ? », ou après « et / ou »).
+  function hasMultipleQuestions(txt) {
+    const s = (txt || '').trim().toLowerCase();
+    if (!s) return false;
+    const qMarks = (s.match(/\?/g) || []).length;
+    if (qMarks >= 2) return true;
+    // NB : \b ne fonctionne pas avec les caractères accentués en JS, d'où les (?:\s|$)
+    const re = /(^|[,;.?]\s*|\s(?:et|ou)\s+)(pourquoi\b|comment\b|est[- ]ce que|quand\b|où(?:\s|$)|qui\s|quelles?\s|quels?\s|combien\b|à quoi(?:\s|$)|vers quoi(?:\s|$)|qu'est[- ]ce)/g;
+    let count = 0;
+    while (re.exec(s)) count++;
+    return count >= 2;
+  }
+
+  function showIntentionHint(msg) {
+    const input = el('tore-intention-input');
+    if (!input) return;
+    let hint = document.getElementById('tore-intention-hint');
+    if (!msg) { if (hint) hint.remove(); return; }
+    if (!hint) {
+      hint = document.createElement('p');
+      hint.id = 'tore-intention-hint';
+      hint.style.cssText = 'color:#fca5a5;font-size:0.8rem;margin-top:6px;line-height:1.5;';
+      input.insertAdjacentElement('afterend', hint);
+    }
+    hint.textContent = msg;
+  }
+
   function isGenderSelected() {
     return !!document.querySelector('.tore-gender-btn.selected');
   }
@@ -6469,9 +6498,13 @@ function showArrowForStep(stepIndex, isMatch) {
     const input = el('tore-intention-input');
     const btn = el('tore-submit-btn');
     if (!input || !btn) return;
-    const valid = isOpenQuestion(input.value) && isGenderSelected();
+    const multiple = hasMultipleQuestions(input.value);
+    const valid = isOpenQuestion(input.value) && !multiple && isGenderSelected();
     btn.disabled = !valid;
-    if (isOpenQuestion(input.value)) input.setCustomValidity('');
+    showIntentionHint(multiple
+      ? 'Votre intention contient plusieurs questions. Le Tore répond à UNE question à la fois : choisissez celle qui compte le plus et reformulez.'
+      : '');
+    if (isOpenQuestion(input.value) && !multiple) input.setCustomValidity('');
   }
 
   function setupIntentionValidation() {
@@ -6566,16 +6599,18 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     if (btnSpan) btnSpan.textContent = 'Chargement…';
   }
 
-  // Vérifier que la question est ouverte
+  // Vérifier que la question est ouverte et unique
   const intentionValue = toreIntentionInput?.value || '';
-  if (!isOpenQuestion(intentionValue)) {
+  if (!isOpenQuestion(intentionValue) || hasMultipleQuestions(intentionValue)) {
     if (submitBtn) {
       submitBtn.disabled = false;
       submitBtn.dataset.submitting = '0';
       const _s = submitBtn.querySelector('.font-cinzel');
       if (_s) _s.textContent = 'Commencer le Tirage';
     }
-    toreIntentionInput?.setCustomValidity("Formulez une question ouverte (ex. « Comment… ? », « Pourquoi… ? ») et terminez par « ? »" );
+    toreIntentionInput?.setCustomValidity(hasMultipleQuestions(intentionValue)
+      ? "Votre intention contient plusieurs questions. Reformulez-la en UNE seule question."
+      : "Formulez une question ouverte (ex. « Comment… ? », « Pourquoi… ? ») et terminez par « ? »");
     toreIntentionInput?.reportValidity();
     return;
   } else {

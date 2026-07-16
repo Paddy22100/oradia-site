@@ -136,6 +136,116 @@
             h3.cormorant { font-size: 1.4rem !important; }
         }
         html, body { overflow-x: hidden; max-width: 100vw; }
+
+        /* ── Refonte visuelle : univers Oradia (halo céleste, or, profondeur) ── */
+
+        /* Fond : halo doré très subtil comme sur oradia.fr */
+        .main-content {
+            background:
+                radial-gradient(ellipse 90% 55% at 50% -10%, rgba(212,175,55,0.07), transparent 60%),
+                radial-gradient(ellipse 60% 40% at 85% 110%, rgba(26,54,93,0.5), transparent 65%),
+                #0a192f;
+        }
+
+        /* Titres de sections de la sidebar : ligne dorée décorative */
+        nav p.uppercase {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 10px;
+            letter-spacing: 0.22em;
+        }
+        nav p.uppercase::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: linear-gradient(90deg, rgba(212,175,55,0.25), transparent);
+        }
+
+        /* Nav : indicateur doré vertical sur l'item actif */
+        .nav-item { position: relative; }
+        .nav-item.active::before {
+            content: '';
+            position: absolute;
+            left: -12px; top: 20%; bottom: 20%;
+            width: 3px;
+            border-radius: 2px;
+            background: linear-gradient(180deg, #f0c75e, #d4af37);
+            box-shadow: 0 0 8px rgba(212,175,55,0.6);
+        }
+        .nav-item i { transition: transform 0.2s ease; }
+        .nav-item:hover i { transform: scale(1.15); }
+
+        /* Cartes : reflet doré en haut + halo au survol */
+        .stat-card {
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 10%; right: 10%;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(212,175,55,0.45), transparent);
+        }
+
+        /* Topbar : léger dégradé et ombre portée */
+        .topbar {
+            background: linear-gradient(180deg, rgba(4,14,30,0.97), rgba(5,20,40,0.92));
+            box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+        }
+
+        /* Scrollbars dorées discrètes */
+        ::-webkit-scrollbar { width: 9px; height: 9px; }
+        ::-webkit-scrollbar-track { background: rgba(5,20,40,0.6); }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(212,175,55,0.25);
+            border-radius: 5px;
+            border: 2px solid rgba(5,20,40,0.6);
+        }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(212,175,55,0.45); }
+
+        /* Tableaux : en-têtes espacés, lignes plus lisibles */
+        thead th { letter-spacing: 0.06em; }
+        tbody tr { transition: background 0.15s ease; }
+
+        /* Boutons : micro-élévation au survol */
+        button { transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease, border-color 0.15s ease; }
+        button:hover:not(:disabled) { transform: translateY(-1px); }
+        button:active:not(:disabled) { transform: translateY(0); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+        /* Focus visible accessible, doré */
+        input:focus-visible, select:focus-visible, textarea:focus-visible, button:focus-visible {
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(212,175,55,0.35);
+        }
+
+        /* Titres cormorant : petit ornement ◆ doré */
+        h3.cormorant {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        h3.cormorant::before {
+            content: '◆';
+            font-size: 0.5em;
+            color: rgba(212,175,55,0.55);
+        }
+
+        /* Badges de la sidebar : léger anneau */
+        .nav-item span[id^="nav-badge"]:not(:empty) {
+            box-shadow: 0 0 0 1px rgba(212,175,55,0.15);
+        }
+
+        /* Modales : entrée douce */
+        #clientSheetModal > div, #tirages-modal > div {
+            animation: fadeIn 0.25s ease-out;
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after { animation: none !important; transition: none !important; }
+        }
     </style>
 </head>
 <body class="bg-night-blue text-light-gold">
@@ -1926,27 +2036,32 @@
                 </button>
             </div>
 
-            <!-- KPIs fenêtres : 5 cartes -->
-            <div class="grid grid-cols-5 gap-3 mb-5">
-                <div class="stat-card rounded-xl p-4 text-center">
-                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Total</div>
-                    <div class="text-2xl font-bold text-gold" id="obsTotal">—</div>
+            <!-- Visuels fenêtres : entonnoir du parcours + taux de réponse -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                <!-- Entonnoir : de l'activation au questionnaire -->
+                <div class="stat-card rounded-xl p-5 md:col-span-2">
+                    <div class="flex items-center justify-between mb-4">
+                        <span class="text-gold/60 text-xs uppercase tracking-widest"><i class="fas fa-filter mr-1"></i>Parcours des fenêtres</span>
+                        <span class="text-xs px-2.5 py-1 rounded-full bg-green-500/15 text-green-300 border border-green-500/25">
+                            <span id="obsActive">—</span> en cours
+                        </span>
+                    </div>
+                    <div id="obsFunnel" class="space-y-3">
+                        <p class="text-light-gold/30 italic text-sm text-center py-6">Chargement…</p>
+                    </div>
+                    <!-- valeurs brutes conservées pour le JS existant (masquées) -->
+                    <span class="hidden" id="obsTotal">—</span>
+                    <span class="hidden" id="obsClosed">—</span>
+                    <span class="hidden" id="obsMailsSent">—</span>
+                    <span class="hidden" id="obsQuestionnaires">—</span>
                 </div>
-                <div class="stat-card rounded-xl p-4 text-center">
-                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">En cours</div>
-                    <div class="text-2xl font-bold text-green-400" id="obsActive">—</div>
-                </div>
-                <div class="stat-card rounded-xl p-4 text-center">
-                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Terminées</div>
-                    <div class="text-2xl font-bold text-light-gold/50" id="obsClosed">—</div>
-                </div>
-                <div class="stat-card rounded-xl p-4 text-center">
-                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Mails retour</div>
-                    <div class="text-2xl font-bold text-blue-300" id="obsMailsSent">—</div>
-                </div>
-                <div class="stat-card rounded-xl p-4 text-center">
-                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Questionnaires</div>
-                    <div class="text-2xl font-bold text-teal-300" id="obsQuestionnaires">—</div>
+                <!-- Donut : taux de réponse aux questionnaires -->
+                <div class="stat-card rounded-xl p-5 flex flex-col items-center justify-center">
+                    <span class="text-gold/60 text-xs uppercase tracking-widest mb-3 self-start"><i class="fas fa-reply mr-1"></i>Taux de réponse</span>
+                    <div id="obsResponseDonut" class="flex-1 flex items-center justify-center">
+                        <p class="text-light-gold/30 italic text-sm">—</p>
+                    </div>
+                    <p id="obsResponseLegend" class="text-light-gold/40 text-xs text-center mt-2"></p>
                 </div>
             </div>
 
@@ -4520,6 +4635,27 @@
                         <option value="">Toutes les catégories</option>
                     </select>
                 </div>
+                <!-- Génération d'image par IA (gratuit, Pollinations) -->
+                <div class="border border-gold/25 rounded-xl p-4 mb-4 bg-[rgba(212,175,55,0.04)]">
+                    <p class="text-xs text-gold/60 uppercase tracking-widest mb-2"><i class="fas fa-wand-magic-sparkles mr-1"></i>Générer une image par IA (gratuit)</p>
+                    <div class="flex flex-col sm:flex-row gap-2">
+                        <input type="text" id="nl-ai-prompt"
+                            class="flex-1 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 text-sm focus:outline-none focus:border-gold"
+                            placeholder="Décris l'image (ex: une main ouverte recevant une lumière dorée, lâcher-prise)">
+                        <button onclick="nlGenerateAiImage()" id="nl-ai-generate-btn"
+                            class="shrink-0 bg-gold/20 border border-gold/40 text-gold rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition">
+                            <i class="fas fa-sparkles mr-1"></i>Générer
+                        </button>
+                    </div>
+                    <div id="nl-ai-preview" class="hidden mt-3 flex flex-col sm:flex-row gap-3 items-start">
+                        <img id="nl-ai-preview-img" class="rounded-lg border border-gold/30 max-w-[280px] w-full" alt="Image générée">
+                        <div class="flex flex-col gap-2">
+                            <button onclick="nlGenerateAiImage(true)" class="bg-[rgba(26,54,93,0.8)] border border-gold/30 text-gold/80 rounded-lg px-3 py-1.5 text-xs hover:bg-[rgba(26,54,93,1)] transition"><i class="fas fa-dice mr-1"></i>Autre variante</button>
+                            <button onclick="nlUseAiImage()" class="bg-gold/25 border border-gold/50 text-gold rounded-lg px-3 py-1.5 text-xs hover:bg-gold/35 transition"><i class="fas fa-plus mr-1"></i>Ajouter à la bibliothèque</button>
+                        </div>
+                    </div>
+                    <p id="nl-ai-status" class="text-xs text-gold/50 mt-2 hidden"></p>
+                </div>
                 <div id="nl-images-grid" class="grid grid-cols-3 gap-4">
                     <div class="col-span-5 text-center py-6 text-gold/30 text-sm">
                         <i class="fas fa-spinner fa-spin mr-2"></i>Recherche d'images...
@@ -4608,6 +4744,62 @@
                 nlStatus('success', 'Image importée. Clique dessus pour la sélectionner.');
             } catch (e) { nlStatus('error', e.message); }
             input.value = '';
+        }
+
+        // ── Génération d'image IA (Pollinations.ai — gratuit, sans clé API) ──
+        // Le style Oradia est injecté automatiquement autour de la description.
+        let _nlAiSeed = Math.floor(Math.random() * 100000);
+        const NL_AI_STYLE = 'mystical elegant illustration, deep midnight blue background (#0a192f), luminous gold accents (#d4af37), soft ethereal glow, sacred geometry torus energy, celestial atmosphere, fine art quality, no text, no watermark';
+
+        function nlAiStatus(msg, isError) {
+            const el = document.getElementById('nl-ai-status');
+            if (!el) return;
+            el.textContent = msg || '';
+            el.className = `text-xs mt-2 ${isError ? 'text-red-400/80' : 'text-gold/50'} ${msg ? '' : 'hidden'}`;
+        }
+
+        function nlGenerateAiImage(newSeed) {
+            const promptInput = document.getElementById('nl-ai-prompt');
+            const desc = (promptInput?.value || '').trim();
+            if (!desc) { nlAiStatus('Décris d\'abord l\'image souhaitée.', true); return; }
+            if (newSeed) _nlAiSeed = Math.floor(Math.random() * 100000);
+            const fullPrompt = `${desc}, ${NL_AI_STYLE}`;
+            const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=1200&height=675&nologo=true&seed=${_nlAiSeed}`;
+            const img = document.getElementById('nl-ai-preview-img');
+            const preview = document.getElementById('nl-ai-preview');
+            if (!img || !preview) return;
+            nlAiStatus('Génération en cours (10 à 30 secondes)…');
+            preview.classList.remove('hidden');
+            img.style.opacity = '0.3';
+            img.onload = () => { img.style.opacity = '1'; nlAiStatus('Image générée. « Autre variante » pour régénérer, ou ajoute-la à ta bibliothèque.'); };
+            img.onerror = () => { nlAiStatus('Échec de la génération. Réessaie dans quelques secondes.', true); };
+            img.src = url;
+        }
+
+        async function nlUseAiImage() {
+            const img = document.getElementById('nl-ai-preview-img');
+            if (!img?.src) return;
+            nlAiStatus('Import dans la bibliothèque…');
+            try {
+                const blob = await fetch(img.src).then(r => { if (!r.ok) throw new Error('Téléchargement impossible'); return r.blob(); });
+                const desc = (document.getElementById('nl-ai-prompt')?.value || 'image-ia').trim().slice(0, 40);
+                const file = new File([blob], `ia-${desc.replace(/[^a-z0-9à-ÿ]+/gi, '-')}.jpg`, { type: blob.type || 'image/jpeg' });
+                const { base64, contentType, filename } = await nlToWebP(file);
+                const res = await adminFetch('/api/admin/newsletter-images', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'upload-image', filename, contentType, base64 })
+                });
+                const data = await res.json();
+                if (!res.ok || !data.url) throw new Error(data.error || 'Erreur upload');
+                const entry = { path: data.url, thumb: data.url, name: data.name || filename, source: 'upload', label: 'IA', category: 'import' };
+                if (!window.nlAllImages) window.nlAllImages = [];
+                window.nlAllImages.unshift(entry);
+                nlRenderImagesGrid(window.nlAllImages);
+                nlAiStatus('Image ajoutée à la bibliothèque — clique dessus dans la grille pour la sélectionner.');
+            } catch (e) {
+                nlAiStatus('Erreur : ' + e.message, true);
+            }
         }
 
         function nlNormalize(s) {
@@ -6542,6 +6734,53 @@
         }
 
         // ── SYNCHRONICITÉS (#31) ──────────────────────────────────────────────────
+        // Entonnoir + donut du taux de réponse pour l'onglet Retour fenêtre
+        function renderObsVisuals({ total, active, closed, mailsSent, questionnaires }) {
+            const funnel = document.getElementById('obsFunnel');
+            if (funnel) {
+                const steps = [
+                    { label: 'Fenêtres activées',          value: total,          color: '#d4af37', icon: 'fa-eye' },
+                    { label: 'Fenêtres terminées',         value: closed,         color: '#a78bfa', icon: 'fa-flag-checkered' },
+                    { label: 'Mails questionnaire envoyés', value: mailsSent,     color: '#60a5fa', icon: 'fa-envelope' },
+                    { label: 'Questionnaires reçus',       value: questionnaires, color: '#5eead4', icon: 'fa-inbox' }
+                ];
+                const max = Math.max(total, 1);
+                funnel.innerHTML = steps.map(s => {
+                    const pct = Math.round((s.value / max) * 100);
+                    return `<div>
+                        <div class="flex items-center justify-between text-xs mb-1">
+                            <span class="text-light-gold/70"><i class="fas ${s.icon} mr-1.5" style="color:${s.color}"></i>${s.label}</span>
+                            <span class="font-semibold" style="color:${s.color}">${s.value}<span class="text-light-gold/30 font-normal ml-1">(${pct}%)</span></span>
+                        </div>
+                        <div class="h-2.5 rounded-full bg-white/5 overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-700" style="width:${Math.max(pct, s.value > 0 ? 3 : 0)}%;background:linear-gradient(90deg,${s.color}66,${s.color})"></div>
+                        </div>
+                    </div>`;
+                }).join('');
+            }
+
+            const donutEl = document.getElementById('obsResponseDonut');
+            const legend  = document.getElementById('obsResponseLegend');
+            if (donutEl) {
+                if (mailsSent === 0) {
+                    donutEl.innerHTML = '<p class="text-light-gold/30 italic text-xs text-center">Aucun mail questionnaire<br>envoyé pour l\'instant.</p>';
+                    if (legend) legend.textContent = '';
+                } else {
+                    const rate = Math.min(Math.round((questionnaires / mailsSent) * 100), 100);
+                    const C = 2 * Math.PI * 40;
+                    donutEl.innerHTML = `
+                        <svg viewBox="0 0 100 100" style="width:120px;height:120px;transform:rotate(-90deg)">
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="rgba(212,175,55,0.12)" stroke-width="12"/>
+                            <circle cx="50" cy="50" r="40" fill="none" stroke="#5eead4" stroke-width="12" stroke-linecap="round"
+                                    stroke-dasharray="${(rate / 100 * C).toFixed(1)} ${C.toFixed(1)}"/>
+                            <text x="50" y="50" transform="rotate(90 50 50)" text-anchor="middle" dominant-baseline="central"
+                                  fill="#5eead4" font-size="20" font-weight="700" font-family="Georgia,serif">${rate}%</text>
+                        </svg>`;
+                    if (legend) legend.textContent = `${questionnaires} questionnaire${questionnaires > 1 ? 's' : ''} reçu${questionnaires > 1 ? 's' : ''} sur ${mailsSent} mail${mailsSent > 1 ? 's' : ''} envoyé${mailsSent > 1 ? 's' : ''}`;
+                }
+            }
+        }
+
         async function loadObservationWindows() {
             const listEl = document.getElementById('obs-windows-list');
             if (listEl) listEl.innerHTML = '<p class="text-gold/30 italic text-center py-8 animate-pulse">Chargement…</p>';
@@ -6559,6 +6798,13 @@
                 document.getElementById('obsClosed').textContent = closed.length;
                 document.getElementById('obsMailsSent').textContent = mailsSent;
                 document.getElementById('obsQuestionnaires').textContent = data.questionnaire_count ?? '—';
+                renderObsVisuals({
+                    total: rows.length,
+                    active: active.length,
+                    closed: closed.length,
+                    mailsSent,
+                    questionnaires: data.questionnaire_count ?? 0
+                });
                 const countEl = document.getElementById('obs-windows-count');
                 if (countEl) countEl.textContent = rows.length + ' entrée' + (rows.length > 1 ? 's' : '');
                 if (rows.length === 0) {
