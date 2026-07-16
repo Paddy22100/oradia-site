@@ -347,12 +347,13 @@ async function handleData(req, res) {
     // Les tâches automatiques quotidiennes (GitHub Actions) s'authentifient via
     // un secret partagé plutôt qu'une session admin (pas de cookie/JWT dans un cron).
     const cronSecret    = req.headers['x-cron-secret'];
+    const authHeader    = req.headers['authorization'] || '';
+    const bearerToken   = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
     const vercelCronSig = req.headers['x-vercel-cron-signature'];
     const vercelCron    = req.headers['x-vercel-cron'];
-    const cronQs        = req.query?.cron_secret;
     const isCronRequest =
-      (!!process.env.CRON_SECRET && cronSecret === process.env.CRON_SECRET) ||
-      (!!process.env.CRON_SECRET && cronQs     === process.env.CRON_SECRET) ||
+      (!!process.env.CRON_SECRET && cronSecret  === process.env.CRON_SECRET) ||
+      (!!process.env.CRON_SECRET && bearerToken === process.env.CRON_SECRET) ||
       !!vercelCronSig ||
       vercelCron === '1';
 
@@ -1242,6 +1243,49 @@ async function handleData(req, res) {
       if (admin_note !== undefined) updates.admin_note = admin_note;
 
       const { error } = await supabase.from('support_messages').update(updates).eq('id', id);
+      if (error) throw error;
+      return res.status(200).json({ success: true });
+    }
+
+    // ── Réponse à un message support, envoyée via Brevo depuis le dashboard ──
+    if (section === 'support-reply') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
+      const body = await parseBody(req);
+      const { id, email, subject, message } = body;
+      if (!id || !email || !message) return res.status(400).json({ error: 'id, email et message requis' });
+
+      const safeMsg = String(message)
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\n/g, '<br>');
+      const html = `
+        <div style="background:#050a14;padding:32px 16px;font-family:Georgia,serif;">
+          <div style="max-width:520px;margin:0 auto;background:linear-gradient(135deg,#0a1628,#051428);border:1px solid rgba(212,175,55,0.25);border-radius:16px;padding:40px 32px;">
+            <p style="color:#f0c75e;font-size:13px;letter-spacing:0.35em;text-transform:uppercase;text-align:center;margin:0 0 32px;opacity:0.7;">ORADIA</p>
+            <p style="color:#d1d5db;font-size:15px;line-height:1.7;margin:0 0 16px;">${safeMsg}</p>
+            <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:24px auto;"></div>
+            <p style="color:rgba(212,175,55,0.6);font-size:13px;text-align:center;margin:0;">Rudy — Oradia<br><a href="https://oradia.fr" style="color:#f0c75e;">oradia.fr</a></p>
+          </div>
+        </div>`;
+
+      const brevoResp = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+        body: JSON.stringify({
+          sender: { name: "Rudy d'Oradia", email: process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr' },
+          to: [{ email }],
+          subject: subject || 'Réponse à votre message — Oradia',
+          htmlContent: html
+        })
+      });
+      if (!brevoResp.ok) {
+        const err = await brevoResp.json().catch(() => ({}));
+        console.error('Brevo support-reply error:', err);
+        return res.status(502).json({ error: 'Envoi Brevo échoué' });
+      }
+
+      const { error } = await supabase.from('support_messages')
+        .update({ status: 'replied', read_at: new Date().toISOString() })
+        .eq('id', id);
       if (error) throw error;
       return res.status(200).json({ success: true });
     }
@@ -3340,6 +3384,13 @@ module.exports = async (req, res) => {
       // Marquer message comme lu/archivé/répondu — délégué à handleData avec section=support-update
       if (!req.query) req.query = {};
       req.query.section = 'support-update';
+      return await handleData(req, res);
+    }
+
+    if (path === '/support-reply' || path === '/support-reply/') {
+      // Répondre à un message support via Brevo — délégué à handleData avec section=support-reply
+      if (!req.query) req.query = {};
+      req.query.section = 'support-reply';
       return await handleData(req, res);
     }
 

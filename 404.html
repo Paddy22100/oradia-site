@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex">
+  <title>Chemin inconnu — Oradia</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #050a14;
+      color: #d1d5db;
+      font-family: Georgia, serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+      text-align: center;
+    }
+    .card { max-width: 520px; }
+    .logo {
+      color: #f0c75e;
+      font-size: 13px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+      opacity: 0.7;
+    }
+    .code {
+      font-size: 64px;
+      color: rgba(212,175,55,0.25);
+      letter-spacing: 0.2em;
+      margin-bottom: 8px;
+    }
+    h1 {
+      color: #f0c75e;
+      font-size: 26px;
+      font-weight: 400;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+    p { font-size: 15px; line-height: 1.7; color: rgba(212,175,55,0.7); margin-bottom: 12px; }
+    .divider {
+      width: 60px; height: 1px;
+      background: linear-gradient(90deg, transparent, #d4af37, transparent);
+      margin: 24px auto;
+    }
+    .btns { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-top: 28px; }
+    .btn {
+      display: inline-block;
+      padding: 12px 26px;
+      background: linear-gradient(135deg, #d4af37, #f0c75e);
+      color: #0a1628;
+      font-family: Georgia, serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-decoration: none;
+      border-radius: 6px;
+    }
+    .btn.ghost {
+      background: none;
+      color: #f0c75e;
+      border: 1px solid rgba(212,175,55,0.4);
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">ORADIA</div>
+    <div class="code">404</div>
+    <h1>Ce chemin ne mène nulle part…</h1>
+    <div class="divider"></div>
+    <p>La page que vous cherchez n'existe pas ou a changé de place.<br>
+    Peut-être est-ce l'occasion de laisser le Tore vous guider ?</p>
+    <div class="btns">
+      <a href="/tore.html" class="btn">Faire un tirage</a>
+      <a href="/" class="btn ghost">Retour à l'accueil</a>
+    </div>
+  </div>
+</body>
+</html>

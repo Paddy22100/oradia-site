@@ -456,8 +456,25 @@
             <h2 class="text-gold font-semibold text-lg" id="topbar-title">Tableau de bord</h2>
         </div>
         <div class="flex items-center gap-3">
+            <div class="relative hidden sm:block">
+                <i class="fas fa-search absolute left-3 top-1/2 -translate-y-1/2 text-gold/30 text-xs"></i>
+                <input id="globalSearch" type="text" placeholder="Rechercher un email…  ( / )"
+                       class="bg-[rgba(5,20,40,0.8)] border border-gold/25 rounded-lg pl-8 pr-3 py-1.5 text-sm text-light-gold placeholder:text-gold/25 w-56 focus:w-72 focus:border-gold/50 outline-none transition-all"
+                       onkeydown="if(event.key==='Enter') globalClientSearch(this.value)">
+            </div>
             <span class="text-gold/40 text-sm" id="lastUpdate"></span>
             <span class="text-xs text-gold/60 bg-gold/10 border border-gold/20 rounded-full px-3 py-1"><i class="fas fa-user-shield mr-1"></i>Admin</span>
+        </div>
+    </div>
+
+    <!-- Modal : fiche client unifiée (recherche globale) -->
+    <div id="clientSheetModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-black/70 p-4" onclick="if(event.target===this) this.classList.add('hidden')">
+        <div class="bg-gradient-to-b from-[#0a1628] to-[#051428] border border-gold/30 rounded-2xl w-full max-w-2xl max-h-[85vh] overflow-y-auto p-6">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="cormorant text-xl font-bold text-gold"><i class="fas fa-id-card mr-2"></i>Fiche client</h3>
+                <button onclick="document.getElementById('clientSheetModal').classList.add('hidden')" class="text-gold/50 hover:text-gold text-xl">&times;</button>
+            </div>
+            <div id="clientSheetBody"><p class="text-light-gold/40 text-sm text-center py-8">Chargement…</p></div>
         </div>
     </div>
 
@@ -956,7 +973,7 @@
                         </div>
                     </div>
                     <!-- Filtre statut -->
-                    <select id="nlSubscribersFilter" onchange="loadNlSubscribers(1)"
+                    <select id="nlSubscribersFilter" onchange="loadNlSubscribersLegacy(1)"
                         class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold">
                         <option value="active">Inscrits actifs</option>
                         <option value="unsubscribed">Désabonnés</option>
@@ -2580,7 +2597,7 @@
             document.getElementById('sidebar').classList.remove('open');
             if (name !== 'newsletter') nlShowFloatingBar(false);
             if (name === 'newsletter')    nlLoadDrafts();
-            if (name === 'nl-subscribers') { loadNlSubscribers(1); syncBrevoUnsubscribes(); }
+            if (name === 'nl-subscribers') { loadNlSubscribersLegacy(1); syncBrevoUnsubscribes(); }
             if (name === 'waitlist')       { triggerSyncAll(false); }
             if (name === 'subscriptions') loadSubscriptions();
             if (name === 'support')        loadSupportMessages();
@@ -2913,7 +2930,9 @@
 
         // ── Newsletter subscribers ──
 
-        async function loadNlSubscribers(page = 1, limit = 20) {
+        // Ancien onglet "Newsletter — Abonnés" (nl-subscribers), conservé mais plus dans la nav.
+        // Renommée pour ne plus entrer en collision avec loadNlSubscribers() du sous-onglet Contacts.
+        async function loadNlSubscribersLegacy(page = 1, limit = 20) {
             try {
                 const status = document.getElementById('nlSubscribersFilter')?.value || 'active';
                 let url = `/api/admin/data?section=waitlist&page=${page}&limit=${limit}`;
@@ -2981,8 +3000,8 @@
                 pagEl.innerHTML = `<div class="flex items-center justify-between">
                     <span class="text-sm text-light-gold">${((pag.page-1)*pag.limit)+1} à ${Math.min(pag.page*pag.limit, pag.total)} sur ${pag.total}</span>
                     <div class="flex gap-2">
-                        ${pag.page > 1 ? `<button onclick="loadNlSubscribers(${pag.page-1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Précédent</button>` : ''}
-                        ${pag.page < pag.pages ? `<button onclick="loadNlSubscribers(${pag.page+1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Suivant</button>` : ''}
+                        ${pag.page > 1 ? `<button onclick="loadNlSubscribersLegacy(${pag.page-1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Précédent</button>` : ''}
+                        ${pag.page < pag.pages ? `<button onclick="loadNlSubscribersLegacy(${pag.page+1})" class="px-3 py-1 bg-gold/20 text-gold rounded hover:bg-gold/30 transition">Suivant</button>` : ''}
                     </div>
                 </div>`;
             } else if (pagEl) {
@@ -3000,7 +3019,7 @@
                 const data = await res.json();
                 if (data.success) {
                     btn.innerHTML = `<i class="fas fa-check mr-2"></i>${data.unsubscribed} désabonnement(s) détecté(s)`;
-                    if (data.unsubscribed > 0) loadNlSubscribers(1);
+                    if (data.unsubscribed > 0) loadNlSubscribersLegacy(1);
                 } else {
                     btn.innerHTML = '<i class="fas fa-exclamation-triangle mr-2"></i>Erreur';
                 }
@@ -3106,6 +3125,13 @@
                 supBanner.classList.remove('hidden');
                 if (supText) supText.textContent = `${sup.newCount} nouveau${sup.newCount > 1 ? 'x' : ''} message${sup.newCount > 1 ? 's' : ''} de support en attente`;
             }
+
+            // Pastilles "nouveau depuis ma dernière visite"
+            updateNewActivityDots({
+                preorders: data.preorders?.count ?? null,
+                donors:    data.donors?.count ?? null,
+                support:   sup.newCount ?? null
+            });
 
             // ── Camembert revenus (#29) ──
             updatePieChart(data.global?.breakdown || {});
@@ -6236,7 +6262,15 @@
                             ${r.status !== 'read'     ? `<button onclick="updateSupportMsg('${r.id}','read')"     class="text-xs bg-gold/10 text-gold border border-gold/20 rounded-lg px-3 py-1 hover:bg-gold/20 transition">Marquer lu</button>` : ''}
                             ${r.status !== 'replied'  ? `<button onclick="updateSupportMsg('${r.id}','replied')"  class="text-xs bg-green-500/10 text-green-300 border border-green-500/20 rounded-lg px-3 py-1 hover:bg-green-500/20 transition">Répondu</button>` : ''}
                             ${r.status !== 'archived' ? `<button onclick="updateSupportMsg('${r.id}','archived')" class="text-xs bg-light-gold/10 text-light-gold/50 border border-light-gold/10 rounded-lg px-3 py-1 hover:bg-light-gold/20 transition">Archiver</button>` : ''}
-                            <a href="mailto:${escapeHtmlFront(r.email)}?subject=Re: Oradia" class="text-xs bg-blue-500/10 text-blue-300 border border-blue-500/20 rounded-lg px-3 py-1 hover:bg-blue-500/20 transition"><i class="fas fa-reply mr-1"></i>Répondre par email</a>
+                            <button onclick="toggleSupportReply('${r.id}')" class="text-xs bg-blue-500/10 text-blue-300 border border-blue-500/20 rounded-lg px-3 py-1 hover:bg-blue-500/20 transition"><i class="fas fa-reply mr-1"></i>Répondre</button>
+                        </div>
+                        <div id="reply-box-${r.id}" class="hidden mt-3 border-t border-gold/10 pt-3">
+                            <textarea id="reply-text-${r.id}" rows="4" placeholder="Votre réponse…"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50"></textarea>
+                            <div class="flex items-center gap-2 mt-2">
+                                <button onclick="sendSupportReply('${r.id}','${escapeHtmlFront(r.email)}')" class="text-xs bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-1.5 hover:bg-gold/30 transition"><i class="fas fa-paper-plane mr-1"></i>Envoyer via Brevo</button>
+                                <span id="reply-status-${r.id}" class="text-xs text-light-gold/40"></span>
+                            </div>
                         </div>
                         ${r.admin_note ? `<p class="mt-3 text-xs text-light-gold/40 italic border-t border-gold/10 pt-2">Note admin : ${escapeHtmlFront(r.admin_note)}</p>` : ''}
                     </div>`).join('');
@@ -6275,6 +6309,128 @@
         function escapeHtmlFront(text) {
             if (!text) return '';
             return String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+        }
+
+        // ── Réponse support via Brevo ──
+        function toggleSupportReply(id) {
+            document.getElementById('reply-box-' + id)?.classList.toggle('hidden');
+        }
+
+        async function sendSupportReply(id, email) {
+            const txt = document.getElementById('reply-text-' + id);
+            const status = document.getElementById('reply-status-' + id);
+            const message = (txt?.value || '').trim();
+            if (!message) { if (status) status.textContent = 'Message vide.'; return; }
+            if (status) status.textContent = 'Envoi…';
+            try {
+                const res = await adminFetch('/api/admin/support-reply', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, email, message })
+                });
+                const data = await res.json();
+                if (data.success) {
+                    if (status) status.textContent = 'Envoyé ✓';
+                    setTimeout(() => loadSupportMessages(supPage), 1200);
+                } else {
+                    if (status) status.textContent = 'Erreur : ' + (data.error || 'envoi échoué');
+                }
+            } catch (e) {
+                if (status) status.textContent = 'Erreur réseau.';
+            }
+        }
+
+        // ── Recherche globale + fiche client unifiée ──
+        async function globalClientSearch(q) {
+            q = (q || '').trim().toLowerCase();
+            if (!q) return;
+            const modal = document.getElementById('clientSheetModal');
+            const body  = document.getElementById('clientSheetBody');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            body.innerHTML = '<p class="text-light-gold/40 text-sm text-center py-8"><i class="fas fa-spinner fa-spin mr-2"></i>Recherche de « ' + escapeHtmlFront(q) + ' »…</p>';
+
+            const match = (r) => Object.values(r).some(v => typeof v === 'string' && v.toLowerCase().includes(q));
+            try {
+                const [pre, don, con, sub] = await Promise.all([
+                    adminFetch('/api/admin/data?section=preorders&page=1&limit=500').then(r => r.json()).catch(() => ({})),
+                    adminFetch('/api/admin/data?section=donors&page=1&limit=500').then(r => r.json()).catch(() => ({})),
+                    adminFetch('/api/admin/data?section=waitlist&page=1&limit=500').then(r => r.json()).catch(() => ({})),
+                    adminFetch('/api/admin/data?section=subscriptions&page=1&limit=500&q=' + encodeURIComponent(q)).then(r => r.json()).catch(() => ({}))
+                ]);
+                const preorders = (pre.data || []).filter(match);
+                const donors    = (don.data || []).filter(match);
+                const contacts  = (con.data || []).filter(match);
+                const subs      = (sub.data || []);
+
+                const section = (title, icon, rows, render) => rows.length === 0 ? '' : `
+                    <div class="mb-5">
+                        <p class="text-gold/70 text-xs uppercase tracking-widest mb-2"><i class="fas ${icon} mr-1"></i>${title} (${rows.length})</p>
+                        <div class="space-y-2">${rows.slice(0, 10).map(render).join('')}</div>
+                    </div>`;
+                const row = (main, sub2, extra='') => `
+                    <div class="bg-[rgba(5,20,40,0.6)] border border-gold/15 rounded-lg px-4 py-2.5 flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                        <span class="text-light-gold text-sm font-mono">${escapeHtmlFront(main)}</span>
+                        <span class="text-light-gold/50 text-xs">${escapeHtmlFront(sub2)}</span>
+                        ${extra}
+                    </div>`;
+                const dateFr = (iso) => iso ? new Date(iso).toLocaleDateString('fr-FR') : '—';
+
+                let html = '';
+                html += section('Précommandes', 'fa-shopping-cart', preorders, r =>
+                    row(r.email || '—', `${r.offer || ''} · ${r.amount_total ? r.amount_total + ' €' : ''} · ${dateFr(r.created_at)}`,
+                        `<span class="text-xs px-2 py-0.5 rounded-full bg-gold/10 text-gold/70 ml-auto">${escapeHtmlFront(r.status || '')}</span>`));
+                html += section('Dons', 'fa-heart', donors, r =>
+                    row(r.email || '—', `${r.amount ? r.amount + ' €' : ''} · ${dateFr(r.created_at)}`));
+                html += section('Contacts', 'fa-address-book', contacts, r =>
+                    row(r.email || '—', `${(r.tags || []).join(', ')} · ${dateFr(r.created_at)}`,
+                        `<span class="text-xs px-2 py-0.5 rounded-full ${r.status === 'unsubscribed' ? 'bg-red-500/15 text-red-300' : 'bg-green-500/15 text-green-300'} ml-auto">${r.status === 'unsubscribed' ? 'Désinscrit' : 'Actif'}</span>`));
+                html += section('Abonnements', 'fa-crown', subs, r =>
+                    row(r.email || '—', `${r.plan || ''} · ${escapeHtmlFront(r.status || '')} · ${dateFr(r.created_at)}`));
+
+                body.innerHTML = html || '<p class="text-light-gold/40 text-sm text-center py-8">Aucun résultat pour « ' + escapeHtmlFront(q) + ' »</p>';
+            } catch (e) {
+                body.innerHTML = '<p class="text-red-400/60 text-sm text-center py-8">Erreur pendant la recherche.</p>';
+            }
+        }
+
+        // ── Raccourcis clavier ──
+        const KEY_TABS = { '1':'overview', '2':'waitlist', '3':'preorders', '4':'donors', '5':'newsletter', '6':'planning', '7':'analytics', '8':'comptabilite', '9':'monitoring' };
+        document.addEventListener('keydown', (e) => {
+            const tag = (e.target.tagName || '').toLowerCase();
+            if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            if (e.key === '/') {
+                e.preventDefault();
+                document.getElementById('globalSearch')?.focus();
+            } else if (KEY_TABS[e.key]) {
+                showTab(KEY_TABS[e.key]);
+            } else if (e.key === 'Escape') {
+                document.getElementById('clientSheetModal')?.classList.add('hidden');
+            }
+        });
+
+        // ── Pastilles "nouveau depuis ma dernière visite" ──
+        function updateNewActivityDots(counts) {
+            // counts = { preorders, donors, support } (totaux actuels)
+            let seen = {};
+            try { seen = JSON.parse(localStorage.getItem('oradia_admin_seen_counts') || '{}'); } catch(_) {}
+            const dots = { preorders: 'nav-preorders', donors: 'nav-donors', support: 'nav-support-technique' };
+            Object.entries(dots).forEach(([key, navId]) => {
+                const nav = document.getElementById(navId);
+                if (!nav) return;
+                let dot = nav.querySelector('.new-dot');
+                const isNew = counts[key] != null && seen[key] != null && counts[key] > seen[key];
+                if (isNew && !dot) {
+                    dot = document.createElement('span');
+                    dot.className = 'new-dot';
+                    dot.style.cssText = 'width:7px;height:7px;border-radius:50%;background:#f87171;flex-shrink:0;box-shadow:0 0 6px rgba(248,113,113,0.8);';
+                    nav.appendChild(dot);
+                } else if (!isNew && dot) {
+                    dot.remove();
+                }
+            });
+            localStorage.setItem('oradia_admin_seen_counts', JSON.stringify({ ...seen, ...counts }));
         }
 
         // ── SYNCHRONICITÉS (#31) ──────────────────────────────────────────────────
@@ -6811,7 +6967,7 @@
         async function loadSettings() {
             const verEl = document.getElementById('settings-version');
             const envEl = document.getElementById('settings-env-list');
-            if (verEl) verEl.textContent = 'tore-v3.5.78';
+            if (verEl) verEl.textContent = 'tore-v3.5.79';
             if (!envEl) return;
             envEl.innerHTML = '<p class="text-light-gold/40 text-center py-4">Chargement…</p>';
             try {

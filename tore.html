@@ -6638,15 +6638,17 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
           const sess = JSON.parse(sessStr);
           if (sess.email) {
             try {
-              const quotaResp = await fetch('/api/check-tore-quota', {
+              const quotaResp = await fetch('/api/auth/check-tore-draw', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email: sess.email })
               });
               if (quotaResp.ok) {
                 const quotaData = await quotaResp.json();
-                // Si le serveur dit OK (abonné, crédits ponctuels, etc.)
-                serverAllows = quotaData.canDraw === true;
+                // Ne débloquer que si un abonnement actif existe (plan non nul) :
+                // l'endpoint renvoie allowed:true avec plan:null pour les non-abonnés
+                // (le freemium localStorage reste alors la seule limite).
+                serverAllows = quotaData.allowed === true && !!quotaData.plan;
               }
             } catch(_) {
               // API indisponible : bloquer (sécurité par défaut)
@@ -6685,10 +6687,8 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
   toreHasStarted = true;
   results.classList.add('hidden');
 
-  // Enregistrer le tirage (localStorage)
-  if (window.freemiumTracker && !window.freemiumTracker.isSubscribed()) {
-    window.freemiumTracker.recordToreDraw();
-  }
+  // Le tirage gratuit (localStorage) est enregistré à la COMPLÉTION du tirage
+  // dans showToreAnalysisCTA(), pas ici — sinon un même tirage serait compté deux fois.
 
   // Décrémenter le crédit serveur si disponible (sans bloquer le tirage)
   (async () => {
@@ -6698,7 +6698,7 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
       try {
         const sess = JSON.parse(sessStr);
         if (sess.email) {
-          await fetch('/api/consume-tore-draw', {
+          await fetch('/api/auth/consume-tore-draw', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email: sess.email })
