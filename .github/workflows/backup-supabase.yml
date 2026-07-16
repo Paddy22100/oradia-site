@@ -1,0 +1,73 @@
+# Sauvegarde hebdomadaire des données Supabase.
+# Le code du site est déjà versionné par git (chaque commit est restaurable,
+# et Vercel permet un rollback instantané de déploiement). Ce workflow couvre
+# ce que git ne couvre PAS : les données de la base.
+#
+# Chaque table est exportée en JSON et stockée en artefact GitHub privé
+# (conservé 90 jours, donc ~12 sauvegardes glissantes).
+#
+# Prérequis (une seule fois) : dans GitHub > Settings > Secrets and variables
+# > Actions, ajouter les secrets :
+#   SUPABASE_URL              (ex: https://xxxx.supabase.co)
+#   SUPABASE_SERVICE_ROLE_KEY
+#
+# Restauration : télécharger l'artefact depuis l'onglet Actions, puis
+# réimporter le JSON de la table voulue (demander à Claude Code de générer
+# les INSERT à partir du fichier, ou utiliser le Table Editor de Supabase).
+
+name: Sauvegarde Supabase
+
+on:
+  schedule:
+    - cron: '0 4 * * 1' # tous les lundis à 4h UTC
+  workflow_dispatch: {}   # lancement manuel possible depuis l'onglet Actions
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Exporter les tables
+        env:
+          SB_URL: ${{ secrets.SUPABASE_URL }}
+          SB_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          set -e
+          if [ -z "$SB_URL" ] || [ -z "$SB_KEY" ]; then
+            echo "Secrets SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY manquants."; exit 1
+          fi
+          mkdir -p backup chunks
+          TABLES="preorders donors newsletter_contacts tore_subscriptions tirages newsletter_drafts newsletter_ideas observation_windows support_messages tore_emails system_logs page_views"
+          for t in $TABLES; do
+            echo "Export $t…"
+            rm -f chunks/*
+            offset=0
+            ok=1
+            while :; do
+              if ! curl -sf "$SB_URL/rest/v1/$t?select=*&limit=1000&offset=$offset" \
+                   -H "apikey: $SB_KEY" -H "Authorization: Bearer $SB_KEY" \
+                   -o "chunks/$offset.json"; then
+                echo "  (table absente ou erreur, ignorée)"; ok=0; break
+              fi
+              n=$(python3 -c "import json;print(len(json.load(open('chunks/$offset.json'))))")
+              [ "$n" -lt 1000 ] && break
+              offset=$((offset+1000))
+            done
+            if [ "$ok" -eq 1 ]; then
+              python3 - "$t" <<'PYEOF'
+          import json, sys, glob, os
+          rows = []
+          for f in sorted(glob.glob('chunks/*.json'), key=lambda p: int(os.path.basename(p).split('.')[0])):
+              rows += json.load(open(f))
+          json.dump(rows, open(f'backup/{sys.argv[1]}.json', 'w'), ensure_ascii=False, indent=1)
+          print(f'  {len(rows)} ligne(s)')
+          PYEOF
+            fi
+          done
+          ls -la backup/
+
+      - name: Archiver la sauvegarde
+        uses: actions/upload-artifact@v4
+        with:
+          name: supabase-backup-${{ github.run_number }}
+          path: backup/
+          retention-days: 90

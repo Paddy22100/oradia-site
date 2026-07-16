@@ -811,6 +811,61 @@ async function handleListToreEmails(req, res) {
   return res.status(200).json({ success: true, emails: data || [] });
 }
 
+// ============ ACTION : import de l'historique des emails de tirage ============
+// Reprend les emails laissés lors des tirages passés (table observation_windows,
+// alimentée avant la création de tore_emails) et les upsert dans tore_emails.
+// promo_sent_at est marqué pour ne PAS envoyer la promo rétroactivement.
+async function handleImportToreHistory(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const authHeader = req.headers.authorization || '';
+  const rawToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  if (!rawToken) return res.status(401).json({ error: 'Non autorisé' });
+  try {
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(rawToken, process.env.ADMIN_SESSION_SECRET);
+    if (decoded.type !== 'admin') throw new Error('type invalide');
+  } catch (_) {
+    return res.status(401).json({ error: 'Non autorisé' });
+  }
+  const { createClient } = require('@supabase/supabase-js');
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  const { data: windows, error: winErr } = await supabase
+    .from('observation_windows')
+    .select('email, created_at')
+    .not('email', 'is', null)
+    .order('created_at', { ascending: true })
+    .limit(2000);
+  if (winErr) return res.status(500).json({ error: winErr.message });
+
+  // Dédupliquer (garder la date la plus ancienne par email)
+  const byEmail = {};
+  (windows || []).forEach(w => {
+    const e = (w.email || '').toLowerCase().trim();
+    if (e && !byEmail[e]) byEmail[e] = w.created_at;
+  });
+
+  // Ne pas écraser les entrées existantes de tore_emails
+  const { data: existing } = await supabase.from('tore_emails').select('email');
+  const known = new Set((existing || []).map(r => (r.email || '').toLowerCase().trim()));
+  const rows = Object.entries(byEmail)
+    .filter(([email]) => !known.has(email))
+    .map(([email, created_at]) => ({
+      email,
+      consent_marketing: false,
+      created_at,
+      promo_sent_at: new Date().toISOString() // pas de promo rétroactive
+    }));
+
+  if (rows.length === 0) {
+    return res.status(200).json({ success: true, imported: 0, message: 'Aucun email historique à importer' });
+  }
+  const { error: insErr } = await supabase.from('tore_emails').insert(rows);
+  if (insErr) return res.status(500).json({ error: insErr.message });
+  return res.status(200).json({ success: true, imported: rows.length });
+}
+
 // Vérifie si un email est déjà abonné à la liste Brevo (list ID 5 par défaut).
 // En cas d'erreur ou de timeout Brevo, retourne false pour ne pas bloquer l'envoi.
 async function isBrevoSubscribed(email) {
@@ -886,6 +941,7 @@ export default async function handler(req, res) {
     case 'check-brevo':        return handleCheckBrevo(req, res);
     case 'send-promo-preview': return handleSendPromoPreview(req, res);
     case 'list-tore-emails':   return handleListToreEmails(req, res);
+    case 'import-tore-history': return handleImportToreHistory(req, res);
     case 'cron-promo-tirage':  return handleCronPromoTirage(req, res);
     case 'send-email':
     default:                 return handleSendEmail(req, res);

@@ -101,6 +101,8 @@ function buildUnsubUrl(email) {
 // Convertit un tableau d'objets en CSV (échappement basique des guillemets/virgules)
 function rowsToCsv(rows) {
   if (!rows || rows.length === 0) return '';
+  // "sep=," indique le séparateur à Excel (sinon, en français, il attend
+  // des points-virgules et affiche tout dans une seule colonne)
   const columns = Object.keys(rows[0]);
   const escape = (v) => {
     if (v === null || v === undefined) return '';
@@ -108,11 +110,12 @@ function rowsToCsv(rows) {
     if (/[",\n]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
     return s;
   };
-  const lines = [columns.join(',')];
+  const lines = ['sep=,', columns.join(',')];
   for (const row of rows) {
     lines.push(columns.map(c => escape(row[c])).join(','));
   }
-  return lines.join('\n');
+  // BOM UTF-8 pour qu'Excel affiche correctement les accents
+  return '﻿' + lines.join('\r\n');
 }
 
 // Récupère toutes les lignes d'une table (pagination Supabase par lots de 1000)
@@ -3360,7 +3363,7 @@ module.exports = async (req, res) => {
 
     if (path === '/env-status' || path === '/env-status/') {
       verifyAdminAuth(req);
-      const VARS = ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','STRIPE_SECRET_KEY','STRIPE_WEBHOOK_SECRET','BREVO_API_KEY','ANTHROPIC_API_KEY','ADMIN_SESSION_SECRET','ADMIN_PASSWORD'];
+      const VARS = ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','STRIPE_SECRET_KEY','STRIPE_WEBHOOK_SECRET','BREVO_API_KEY','ANTHROPIC_API_KEY','ADMIN_SESSION_SECRET','ADMIN_EMAIL','ADMIN_PASSWORD_HASH','CRON_SECRET'];
       return res.status(200).json(Object.fromEntries(VARS.map(k => [k, !!process.env[k]])));
     }
 
