@@ -3214,6 +3214,12 @@ module.exports = async (req, res) => {
       return await handleSyncBrevoUnsubscribes(req, res);
     }
 
+    if (path === '/env-status' || path === '/env-status/') {
+      verifyAdminAuth(req);
+      const VARS = ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','STRIPE_SECRET_KEY','STRIPE_WEBHOOK_SECRET','BREVO_API_KEY','ANTHROPIC_API_KEY','ADMIN_SESSION_SECRET','ADMIN_PASSWORD'];
+      return res.status(200).json(Object.fromEntries(VARS.map(k => [k, !!process.env[k]])));
+    }
+
     if (path === '/unsubscribe' || path === '/unsubscribe/') {
       // action=generate : génère le lien pour un email (admin seulement)
       if (urlParams.get('action') === 'generate') {
