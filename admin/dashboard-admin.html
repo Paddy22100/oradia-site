@@ -800,6 +800,11 @@
                     <i class="fas fa-envelope mr-1.5"></i>Inscrits Newsletter
                     <span id="nl-count-badge" class="ml-1.5 text-xs bg-gold/20 text-gold rounded-full px-2 py-0.5"></span>
                 </button>
+                <button onclick="showContactsSubTab('tore-emails')" id="contacts-subtab-btn-tore-emails"
+                    class="contacts-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                    <i class="fas fa-magic mr-1.5"></i>Emails Tirages
+                    <span id="tore-emails-count-badge" class="ml-1.5 text-xs bg-gold/20 text-gold rounded-full px-2 py-0.5"></span>
+                </button>
             </div>
 
             <!-- ── Sous-onglet Répertoire ── -->
@@ -884,6 +889,33 @@
                         </table>
                     </div>
                     <div id="nlPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)]"></div>
+                </div>
+            </div>
+
+            <!-- ── Sous-onglet Emails Tirages ── -->
+            <div id="contacts-subtab-tore-emails" class="hidden">
+                <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
+                    <div class="flex items-center gap-3">
+                        <input id="toreEmailsSearch" type="text" placeholder="Rechercher…"
+                            oninput="filterToreEmailsLocal()"
+                            class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-48">
+                        <span class="text-gold/50 text-sm">Emails collectés lors des tirages freemium</span>
+                    </div>
+                </div>
+                <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-[rgba(5,20,40,0.8)]">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Email</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Date tirage</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Consentement marketing</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Promo 5€ envoyée</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gold/20" id="toreEmailsTableBody"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
@@ -5497,7 +5529,9 @@
             }
             document.getElementById('contacts-subtab-repertoire').classList.toggle('hidden', name !== 'repertoire');
             document.getElementById('contacts-subtab-newsletter').classList.toggle('hidden', name !== 'newsletter');
+            document.getElementById('contacts-subtab-tore-emails').classList.toggle('hidden', name !== 'tore-emails');
             if (name === 'newsletter') loadNlSubscribers();
+            if (name === 'tore-emails') loadToreEmails();
         }
 
         // ── Inscrits Newsletter ────────────────────────────────────────────────────
@@ -5533,6 +5567,54 @@
         function filterNlLocal() {
             const q = (document.getElementById('nlSearch')?.value || '').toLowerCase();
             renderNlTable(q ? _nlData.filter(c => (c.email||'').toLowerCase().includes(q) || (c.full_name||'').toLowerCase().includes(q)) : _nlData);
+        }
+
+        // ── Emails Tirages ─────────────────────────────────────────────────────────
+        let _toreEmailsData = [];
+        async function loadToreEmails() {
+            const tbody = document.getElementById('toreEmailsTableBody');
+            if (!tbody) return;
+            tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-gold/40 italic"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</td></tr>';
+            try {
+                const res = await adminFetch('/api/tirages/send-email?action=list-tore-emails');
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                _toreEmailsData = data.emails || [];
+                const badge = document.getElementById('tore-emails-count-badge');
+                if (badge) badge.textContent = _toreEmailsData.length || '';
+                renderToreEmailsTable(_toreEmailsData);
+            } catch(e) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-8 text-center text-red-400/60 italic">✗ ${e.message}</td></tr>`;
+            }
+        }
+
+        function renderToreEmailsTable(rows) {
+            const tbody = document.getElementById('toreEmailsTableBody');
+            if (!tbody) return;
+            if (!rows.length) {
+                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-gold/40 italic">Aucun email collecté</td></tr>';
+                return;
+            }
+            tbody.innerHTML = rows.map(r => `
+                <tr class="hover:bg-gold/5 transition">
+                    <td class="px-6 py-3 text-light-gold text-sm font-mono">${r.email || ''}</td>
+                    <td class="px-6 py-3 text-light-gold/50 text-sm">${r.created_at ? new Date(r.created_at).toLocaleDateString('fr-FR') : '—'}</td>
+                    <td class="px-6 py-3 text-sm">
+                        <span class="px-2 py-0.5 rounded-full text-xs ${r.consent_marketing ? 'bg-green-500/20 text-green-300' : 'bg-yellow-500/20 text-yellow-300'}">
+                            ${r.consent_marketing ? '✓ Oui — inscrit liste #5' : '✗ Non — liste #6 seulement'}
+                        </span>
+                    </td>
+                    <td class="px-6 py-3 text-sm">
+                        ${r.promo_sent_at
+                            ? `<span class="text-gold/60 text-xs">Envoyée le ${new Date(r.promo_sent_at).toLocaleDateString('fr-FR')}</span>`
+                            : `<span class="text-gold/30 text-xs italic">En attente (24h après tirage)</span>`}
+                    </td>
+                </tr>`).join('');
+        }
+
+        function filterToreEmailsLocal() {
+            const q = (document.getElementById('toreEmailsSearch')?.value || '').toLowerCase();
+            renderToreEmailsTable(q ? _toreEmailsData.filter(r => (r.email||'').toLowerCase().includes(q)) : _toreEmailsData);
         }
 
         async function nlOpenDraft(id) {

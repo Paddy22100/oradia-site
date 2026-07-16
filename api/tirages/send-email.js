@@ -785,9 +785,20 @@ async function handleSendPromoPreview(req, res) {
   return res.status(200).json({ success: true, sent_to: targetEmail });
 }
 
-// ============ ACTION : liste des tore_emails (admin) ============
+// ============ ACTION : liste des tore_emails (admin uniquement) ============
 async function handleListToreEmails(req, res) {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  // Vérification admin JWT
+  const authHeader = req.headers.authorization || '';
+  const rawToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  if (!rawToken) return res.status(401).json({ error: 'Non autorisé' });
+  try {
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(rawToken, process.env.ADMIN_SESSION_SECRET);
+    if (decoded.type !== 'admin') throw new Error('type invalide');
+  } catch (_) {
+    return res.status(401).json({ error: 'Non autorisé' });
+  }
   const { createClient } = require('@supabase/supabase-js');
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
@@ -795,7 +806,7 @@ async function handleListToreEmails(req, res) {
     .from('tore_emails')
     .select('email, consent_marketing, promo_sent_at, created_at')
     .order('created_at', { ascending: false })
-    .limit(200);
+    .limit(500);
   if (error) return res.status(500).json({ error: error.message });
   return res.status(200).json({ success: true, emails: data || [] });
 }
