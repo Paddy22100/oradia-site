@@ -3215,6 +3215,14 @@ module.exports = async (req, res) => {
     }
 
     if (path === '/unsubscribe' || path === '/unsubscribe/') {
+      // action=generate : génère le lien pour un email (admin seulement)
+      if (urlParams.get('action') === 'generate') {
+        verifyAdminAuth(req);
+        const email = (urlParams.get('email') || '').trim().toLowerCase();
+        if (!email) return res.status(400).json({ error: 'email requis' });
+        return res.status(200).json({ url: buildUnsubUrl(email) });
+      }
+
       // Endpoint PUBLIC — pas d'auth admin requise
       const email = (urlParams.get('email') || '').trim().toLowerCase();
       const token = (urlParams.get('token') || '').trim();

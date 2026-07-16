@@ -1717,6 +1717,18 @@
                         </button>
                     </div>
 
+                    <!-- Lien de désinscription -->
+                    <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
+                        <div class="flex-1 min-w-0">
+                            <p class="text-gold font-semibold text-sm">Lien de désinscription</p>
+                            <p class="text-gold/40 text-xs mt-0.5">Génère le lien pour contact@oradia.fr — vérifie que la page s'affiche correctement</p>
+                            <a id="unsub-test-link" href="#" target="_blank" class="hidden mt-2 text-xs font-mono text-gold/60 hover:text-gold break-all block"></a>
+                        </div>
+                        <button onclick="generateUnsubTestLink()" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                            <i class="fas fa-link text-xs"></i> Générer lien
+                        </button>
+                    </div>
+
                 </div>
                 <p id="mail-test-feedback" class="text-center text-sm mt-5 hidden"></p>
             </div>
@@ -5122,6 +5134,29 @@
                 nlStatus('success', '✓ Mail promo envoyé à contact@oradia.fr — vérifie ta boîte !');
             } catch(e) {
                 nlStatus('error', e.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = orig;
+            }
+        }
+
+        async function generateUnsubTestLink() {
+            const btn = event.currentTarget;
+            const orig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin text-xs"></i>';
+            const linkEl = document.getElementById('unsub-test-link');
+            try {
+                const res = await adminFetch('/api/admin/unsubscribe?action=generate&email=contact%40oradia.fr');
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                linkEl.href = data.url;
+                linkEl.textContent = data.url;
+                linkEl.classList.remove('hidden');
+            } catch(e) {
+                linkEl.href = '#';
+                linkEl.textContent = '✗ ' + e.message;
+                linkEl.classList.remove('hidden');
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = orig;
