@@ -144,33 +144,21 @@ function getRequestBody(req) {
 
 async function addContactToBrevoList(email) {
   const apiKey = process.env.BREVO_API_KEY;
-  const listId = process.env.BREVO_WAITLIST_LIST_ID;
-
-  if (!apiKey || !listId) {
-    console.warn('Brevo config missing for contact list addition');
+  if (!apiKey) {
+    console.warn('BREVO_API_KEY manquant');
     return false;
   }
-
   try {
     const response = await fetch('https://api.brevo.com/v3/contacts', {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'api-key': apiKey
-      },
-      body: JSON.stringify({
-        email,
-        listIds: [parseInt(listId)],
-        updateEnabled: true
-      })
+      headers: { 'Content-Type': 'application/json', 'api-key': apiKey },
+      body: JSON.stringify({ email, listIds: [5], updateEnabled: true })
     });
-
-    if (!response.ok && response.status !== 204) {
+    if (!response.ok && response.status !== 204 && response.status !== 409) {
       const err = await response.json().catch(() => ({}));
       console.error('Brevo add contact error:', err);
       return false;
     }
-
     return true;
   } catch (error) {
     console.error('Brevo add contact failed:', error.message);
@@ -651,13 +639,16 @@ module.exports = async (req, res) => {
       addContactToBrevoList(email)
     ]);
 
-    // Marquer precommande_launch_sent_at pour éviter de renvoyer l'email de lancement
-    // aux nouveaux abonnés (le mail de bienvenue contient déjà l'info précommande)
+    // Marquer brevo_synced + precommande_launch_sent_at en une seule update
     supabase.from('newsletter_contacts')
-      .update({ precommande_launch_sent_at: new Date().toISOString() })
+      .update({
+        brevo_synced: contactAdded ? true : undefined,
+        brevo_synced_at: contactAdded ? new Date().toISOString() : undefined,
+        precommande_launch_sent_at: new Date().toISOString()
+      })
       .eq('email', email)
       .is('precommande_launch_sent_at', null)
-      .then(({ error }) => { if (error) console.warn('[Waitlist] precommande_launch_sent_at update failed:', error.message); });
+      .then(({ error }) => { if (error) console.warn('[Waitlist] update brevo_synced failed:', error.message); });
 
     return res.status(200).json({
       success: true,

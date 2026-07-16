@@ -87,6 +87,17 @@ async function syncContactToBrevo(supabase, BREVO_API_KEY, contact) {
   }
 }
 
+// Génère un token HMAC pour les liens de désinscription — stateless, pas de BDD nécessaire
+function generateUnsubToken(email) {
+  const secret = process.env.ADMIN_SESSION_SECRET || 'oradia-fallback-secret';
+  return crypto.createHmac('sha256', secret).update(email.toLowerCase().trim()).digest('hex').slice(0, 32);
+}
+
+function buildUnsubUrl(email) {
+  const token = generateUnsubToken(email);
+  return `https://oradia.fr/unsubscribe.html?email=${encodeURIComponent(email)}&token=${token}`;
+}
+
 // Convertit un tableau d'objets en CSV (échappement basique des guillemets/virgules)
 function rowsToCsv(rows) {
   if (!rows || rows.length === 0) return '';
@@ -2535,7 +2546,6 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
             return res.status(400).json({ error: exclude_already_sent ? 'Tous les contacts actifs ont déjà reçu cet email.' : 'Aucun contact actif ne correspond à cette/ces catégorie(s)' });
           }
 
-          const htmlWithUnsub = html.replace('{unsubscribe}', 'https://oradia.fr');
           // Envoi individuel par lots (un email par destinataire, pas de diffusion groupée
           // visible) pour rester dans le temps d'exécution de la fonction serverless.
           // On continue même en cas d'échecs isolés, mais on s'arrête si Brevo
@@ -2561,7 +2571,7 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
                 sender: { name: 'Oradia', email: 'contact@oradia.fr' },
                 to: [{ email }],
                 subject: finalSubject,
-                htmlContent: htmlWithUnsub
+                htmlContent: html.replace('{unsubscribe}', buildUnsubUrl(email))
               })
             })));
 
@@ -3202,6 +3212,31 @@ module.exports = async (req, res) => {
 
     if (path === '/sync-brevo-unsubscribes' || path === '/sync-brevo-unsubscribes/') {
       return await handleSyncBrevoUnsubscribes(req, res);
+    }
+
+    if (path === '/unsubscribe' || path === '/unsubscribe/') {
+      // Endpoint PUBLIC — pas d'auth admin requise
+      const email = (urlParams.get('email') || '').trim().toLowerCase();
+      const token = (urlParams.get('token') || '').trim();
+      if (!email || !token) return res.status(400).json({ error: 'Paramètres manquants' });
+      const expectedToken = generateUnsubToken(email);
+      if (token !== expectedToken) return res.status(403).json({ error: 'Lien invalide ou expiré' });
+      const sb = createClient(
+        process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      await sb.from('newsletter_contacts')
+        .update({ status: 'unsubscribed', brevo_synced: false, unsubscribed_at: new Date().toISOString() })
+        .eq('email', email);
+      const BREVO_API_KEY = process.env.BREVO_API_KEY;
+      if (BREVO_API_KEY) {
+        await fetch('https://api.brevo.com/v3/contacts/lists/5/contacts/remove', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+          body: JSON.stringify({ emails: [email] })
+        }).catch(() => {});
+      }
+      return res.status(200).json({ success: true });
     }
 
     if (path === '/subscriptions' || path === '/subscriptions/') {

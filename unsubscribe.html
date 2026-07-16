@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Désinscription — Oradia</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      background: #050a14;
+      color: #d1d5db;
+      font-family: Georgia, serif;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 16px;
+    }
+    .card {
+      max-width: 480px;
+      width: 100%;
+      background: linear-gradient(135deg, #0a1628, #051428);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      border-radius: 16px;
+      padding: 48px 40px;
+      text-align: center;
+    }
+    .logo {
+      color: #f0c75e;
+      font-size: 13px;
+      letter-spacing: 0.35em;
+      text-transform: uppercase;
+      margin-bottom: 40px;
+      opacity: 0.7;
+    }
+    .icon { font-size: 48px; margin-bottom: 24px; }
+    h1 {
+      color: #f0c75e;
+      font-size: 24px;
+      font-weight: 400;
+      letter-spacing: 1px;
+      margin-bottom: 16px;
+    }
+    p { font-size: 15px; line-height: 1.7; color: rgba(212, 175, 55, 0.7); margin-bottom: 12px; }
+    .divider {
+      width: 60px; height: 1px;
+      background: linear-gradient(90deg, transparent, #d4af37, transparent);
+      margin: 24px auto;
+    }
+    .btn {
+      display: inline-block;
+      margin-top: 32px;
+      padding: 12px 28px;
+      background: linear-gradient(135deg, #d4af37, #f0c75e);
+      color: #0a1628;
+      font-family: Georgia, serif;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      text-decoration: none;
+      border-radius: 6px;
+    }
+    #state-loading, #state-success, #state-error, #state-invalid { display: none; }
+    #state-loading.active, #state-success.active, #state-error.active, #state-invalid.active { display: block; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">ORADIA</div>
+
+    <div id="state-loading" class="active">
+      <div class="icon">⏳</div>
+      <h1>Traitement en cours…</h1>
+    </div>
+
+    <div id="state-success">
+      <div class="icon">✓</div>
+      <h1>Désinscription confirmée</h1>
+      <div class="divider"></div>
+      <p>Vous ne recevrez plus les communications Oradia.</p>
+      <p style="font-size:13px;opacity:0.5;">Vous pouvez vous réinscrire à tout moment depuis le site.</p>
+      <a href="https://oradia.fr" class="btn">Retourner sur Oradia</a>
+    </div>
+
+    <div id="state-error">
+      <div class="icon">⚠️</div>
+      <h1>Une erreur est survenue</h1>
+      <div class="divider"></div>
+      <p>Impossible de traiter votre demande. Veuillez réessayer ou contacter <a href="mailto:contact@oradia.fr" style="color:#f0c75e;">contact@oradia.fr</a>.</p>
+    </div>
+
+    <div id="state-invalid">
+      <div class="icon">🔒</div>
+      <h1>Lien invalide</h1>
+      <div class="divider"></div>
+      <p>Ce lien de désinscription est invalide ou a déjà été utilisé.</p>
+      <a href="https://oradia.fr" class="btn">Retourner sur Oradia</a>
+    </div>
+  </div>
+
+  <script>
+    (async () => {
+      const params = new URLSearchParams(window.location.search);
+      const email = params.get('email');
+      const token = params.get('token');
+
+      function show(id) {
+        ['loading','success','error','invalid'].forEach(s => {
+          document.getElementById('state-' + s).classList.remove('active');
+        });
+        document.getElementById('state-' + id).classList.add('active');
+      }
+
+      if (!email || !token) { show('invalid'); return; }
+
+      try {
+        const res = await fetch(`/api/admin/unsubscribe?email=${encodeURIComponent(email)}&token=${encodeURIComponent(token)}`);
+        if (res.ok) {
+          show('success');
+        } else if (res.status === 403) {
+          show('invalid');
+        } else {
+          show('error');
+        }
+      } catch (e) {
+        show('error');
+      }
+    })();
+  </script>
+</body>
+</html>
