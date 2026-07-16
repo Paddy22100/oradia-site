@@ -913,6 +913,7 @@
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Nom</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Date inscription</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Statut</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Dernière newsletter</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gold/20" id="nlTableBody"></tbody>
@@ -2752,6 +2753,41 @@
             return null;
         }
 
+        // Libellés lisibles pour le journal automatique (par action ou par route)
+        const AUDIT_LABELS = {
+            'mark-shipped':       'Commande marquée expédiée',
+            'mark-paid':          'Commande marquée payée',
+            'mark-ready':         'Commande marquée disponible',
+            'mark-delivered':     'Commande marquée livrée',
+            'add-contact':        'Contact ajouté',
+            'update-contact':     'Contact modifié',
+            'delete-contact':     'Contact supprimé',
+            'delete-tag':         'Catégorie supprimée',
+            'rename-tag':         'Catégorie renommée',
+            'create':             'Abonnement créé',
+            'revoke':             'Abonnement révoqué',
+            'set-expiry':         'Expiration abonnement modifiée',
+            'upgrade_plan':       'Plan abonnement modifié',
+            'resend_code':        'Code abonnement renvoyé',
+            'abandon-relance':    'Relance email client',
+            'import-transactions':'Transactions importées',
+            'test-email':         'Email de test envoyé',
+            'test-subscription-email': 'Email test abonnement envoyé',
+            'save':               'Brouillon newsletter sauvegardé',
+            'send':               'Newsletter envoyée',
+            'schedule':           'Newsletter programmée',
+            'unschedule':         'Programmation annulée',
+            'delete':             'Brouillon supprimé',
+            'generate':           'Newsletter générée par IA',
+        };
+        const AUDIT_ROUTE_LABELS = {
+            '/api/admin/sync-all':       'Synchronisation Brevo ↔ Supabase',
+            '/api/admin/import-brevo':   'Import Brevo',
+            '/api/admin/support-update': 'Message support mis à jour',
+            '/api/admin/support-reply':  'Réponse support envoyée',
+            '/api/tirages/send-email':   'Action emails tirages',
+        };
+
         function adminFetch(url, options = {}) {
             const token = getAdminToken();
             const headers = { ...(options.headers || {}) };
@@ -2760,6 +2796,21 @@
                 if (res.status === 401) {
                     sessionStorage.removeItem('oradia_auth');
                     window.location.replace('https://oradia.fr/admin/login.html');
+                }
+                // Journal automatique : toute mutation réussie est tracée
+                if (res.ok && options.method && options.method.toUpperCase() !== 'GET') {
+                    try {
+                        let action = '';
+                        let detail = '';
+                        try {
+                            const body = typeof options.body === 'string' ? JSON.parse(options.body) : {};
+                            action = body.action || new URLSearchParams(url.split('?')[1] || '').get('action') || '';
+                            detail = body.email || body.orderId || body.subject || body.id || '';
+                        } catch(_) {}
+                        const route = url.split('?')[0];
+                        const label = AUDIT_LABELS[action] || AUDIT_ROUTE_LABELS[route] || ('Action : ' + (action || route));
+                        pushAuditLog(label, detail ? String(detail) : route);
+                    } catch(_) {}
                 }
                 return res;
             });
@@ -5726,16 +5777,27 @@
             const tbody = document.getElementById('nlTableBody');
             if (!tbody) return;
             if (!rows.length) {
-                tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-8 text-center text-gold/40 italic">Aucun inscrit newsletter</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gold/40 italic">Aucun inscrit newsletter</td></tr>';
                 return;
             }
-            tbody.innerHTML = rows.map(c => `
+            tbody.innerHTML = rows.map(c => {
+                let lastNl = '<span class="text-light-gold/30 text-xs italic">—</span>';
+                if (c.last_newsletter_sent_at) {
+                    const d = new Date(c.last_newsletter_sent_at).toLocaleDateString('fr-FR');
+                    const subj = c.last_newsletter_subject
+                        ? `<span class="block text-light-gold/40 text-xs truncate max-w-[180px]" title="${escapeHtmlFront(c.last_newsletter_subject)}">${escapeHtmlFront(c.last_newsletter_subject)}</span>`
+                        : '';
+                    lastNl = `<span class="text-green-300 text-xs"><i class="fas fa-check mr-1"></i>${d}</span>${subj}`;
+                }
+                return `
                 <tr class="hover:bg-gold/5 transition">
                     <td class="px-6 py-3 text-light-gold text-sm font-mono">${c.email || ''}</td>
                     <td class="px-6 py-3 text-light-gold/70 text-sm">${c.full_name || c.name || '—'}</td>
                     <td class="px-6 py-3 text-light-gold/50 text-sm">${c.created_at ? new Date(c.created_at).toLocaleDateString('fr-FR') : '—'}</td>
                     <td class="px-6 py-3"><span class="px-2 py-0.5 rounded-full text-xs ${c.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}">${c.status === 'active' ? 'Actif' : c.status || '—'}</span></td>
-                </tr>`).join('');
+                    <td class="px-6 py-3">${lastNl}</td>
+                </tr>`;
+            }).join('');
         }
 
         function filterNlLocal() {

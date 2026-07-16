@@ -405,6 +405,11 @@ async function handleData(req, res) {
               await supabase.from('newsletter_drafts')
                 .update({ statut: 'envoyé', sent_at: new Date().toISOString(), scheduled_at: null })
                 .eq('id', draft.id);
+              // Tracer la dernière newsletter par contact (colonne optionnelle)
+              await supabase.from('newsletter_contacts')
+                .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
+                .eq('status', 'active')
+                .eq('brevo_synced', true);
               results.push({ id: draft.id, ok: true });
             } catch(e) { results.push({ id: draft.id, ok: false, error: e.message }); }
           }
@@ -2639,6 +2644,17 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
               .in('email', sentEmails);
           }
 
+          // Tracer la dernière newsletter reçue par contact (colonne optionnelle —
+          // ignoré silencieusement si la migration last-newsletter n'est pas exécutée)
+          if (sentEmails.length > 0) {
+            try {
+              await supabase
+                .from('newsletter_contacts')
+                .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
+                .in('email', sentEmails);
+            } catch (_) {}
+          }
+
           await supabase
             .from('newsletter_drafts')
             .update({
@@ -2685,6 +2701,17 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
         if (!sendRes.ok) {
           return res.status(502).json({ error: await brevoErrorMessage(sendRes, "Erreur lors du lancement de l'envoi") });
         }
+
+        // Tracer la dernière newsletter par contact : la campagne part vers la liste Brevo 5,
+        // donc tous les contacts actifs synchronisés sont réputés destinataires.
+        // (Colonne optionnelle — ignoré si la migration last-newsletter n'est pas exécutée.)
+        try {
+          await supabase
+            .from('newsletter_contacts')
+            .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
+            .eq('status', 'active')
+            .eq('brevo_synced', true);
+        } catch (_) {}
 
         await supabase
           .from('newsletter_drafts')
