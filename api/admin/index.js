@@ -2138,12 +2138,18 @@ function buildCommunicationEmailHtml(draft) {
   // Répartit les images sélectionnées dans le corps du texte (entre les paragraphes)
   // au lieu de les empiler en haut de l'email, pour aérer la lecture.
   const isHtml = /<[a-z][\s\S]*>/i.test(content);
+  // Isole les blocs <ul>/<ol> comme paragraphes à part entière (au lieu de les laisser
+  // fusionnés avec le texte autour), pour que les listes à puces du générateur survivent
+  // jusqu'à l'email final au lieu d'être effacées par le filtre de balises ci-dessous.
+  const normalizedContent = isHtml
+    ? content.replace(/\s*(<ul[\s\S]*?<\/ul>|<ol[\s\S]*?<\/ol>)\s*/gi, '</p><p>$1</p><p>')
+    : content;
   const paragraphs = isHtml
-    ? content.split(/<\/p>\s*<p[^>]*>/i).map(p => p.replace(/^<p[^>]*>/i, '').replace(/<\/p>$/i, '').trim()).filter(Boolean)
-    : content.split(/\n+/).map(p => p.trim()).filter(Boolean);
-  // Rendu d'un paragraphe : autorise b/strong/i/em/u/br, échappe le reste
+    ? normalizedContent.split(/<\/p>\s*<p[^>]*>/i).map(p => p.replace(/^<p[^>]*>/i, '').replace(/<\/p>$/i, '').trim()).filter(Boolean)
+    : normalizedContent.split(/\n+/).map(p => p.trim()).filter(Boolean);
+  // Rendu d'un paragraphe : autorise b/strong/i/em/u/br/ul/ol/li, échappe le reste
   const renderPara = (para) => isHtml
-    ? para.replace(/<(?!\/?(?:b|strong|i|em|u|br)\b)[^>]*>/gi, '')
+    ? para.replace(/<(?!\/?(?:b|strong|i|em|u|br|ul|ol|li)\b)[^>]*>/gi, '')
     : nlEscHtml(para).replace(/\n/g, '<br>');
   const totalParas = paragraphs.length || 1;
   const totalImages = images.length;
@@ -2166,9 +2172,20 @@ function buildCommunicationEmailHtml(draft) {
     </td></tr>
     ${separator}`;
 
-  const paraRow = (para) => `<tr><td style="padding:0 32px 20px;">
+  const paraRow = (para) => {
+    const isList = /^<(ul|ol)[\s>]/i.test(para.trim());
+    if (isList) {
+      // Styles inline sur ul/ol/li — les clients mail ignorent le CSS externe
+      const styledList = renderPara(para)
+        .replace(/<ul[^>]*>/i, '<ul style="margin:0; padding-left:22px; color:#c8c0a8; font-size:16px; line-height:1.85; font-family:Georgia,serif;">')
+        .replace(/<ol[^>]*>/i, '<ol style="margin:0; padding-left:22px; color:#c8c0a8; font-size:16px; line-height:1.85; font-family:Georgia,serif;">')
+        .replace(/<li[^>]*>/gi, '<li style="margin-bottom:8px; padding-left:4px;">');
+      return `<tr><td style="padding:0 32px 20px;">${styledList}</td></tr>`;
+    }
+    return `<tr><td style="padding:0 32px 20px;">
     <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:justify;">${renderPara(para)}</div>
   </td></tr>`;
+  };
 
   const placedImages = images.filter(img => img.position !== undefined && img.position !== null && img.position >= 0);
   const unplacedImages = images.filter(img => img.position === undefined || img.position === null || img.position < 0);
