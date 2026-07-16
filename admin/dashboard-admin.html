@@ -4441,6 +4441,7 @@
         window.unmarkOrderProcessed = function unmarkOrderProcessed(orderId) {
             const key = String(orderId || '');
             if (!key) return;
+            if (!confirm('Dé-marquer cette commande comme traitée ?')) return;
             const processed = getProcessedOrders();
             delete processed[key];
             localStorage.setItem('oradia-admin-processed-orders', JSON.stringify(processed));
@@ -4451,6 +4452,7 @@
         window.markOrderProcessed = function markOrderProcessed(orderId) {
             const key = String(orderId || '');
             if (!key) return;
+            if (!confirm('Marquer cette commande comme traitée ?')) return;
             const processed = getProcessedOrders();
             processed[key] = new Date().toISOString();
             localStorage.setItem('oradia-admin-processed-orders', JSON.stringify(processed));
