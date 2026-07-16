@@ -1547,10 +1547,15 @@
                                         <input type="text" id="nl-source-new" placeholder="Ajouter une source…"
                                             class="flex-1 bg-[rgba(5,20,40,0.8)] border border-gold/20 text-light-gold rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-gold/50"
                                             onkeydown="if(event.key==='Enter'){event.preventDefault();nlAddSource();}">
-                                        <button type="button" onclick="nlAddSource()" class="shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-1.5 text-xs hover:bg-gold/25 transition">
+                                        <button type="button" onclick="nlAddSource()" class="shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-1.5 text-xs hover:bg-gold/25 transition" title="Ajouter la source (nom seulement)">
                                             <i class="fas fa-plus"></i>
                                         </button>
+                                        <label class="shrink-0 cursor-pointer bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-1.5 text-xs hover:bg-gold/25 transition" title="Importer un fichier .txt/.md depuis ton PC — son contenu inspirera la génération">
+                                            <i class="fas fa-file-import"></i>
+                                            <input type="file" accept=".txt,.md" class="hidden" onchange="nlImportSourceFile(this)">
+                                        </label>
                                     </div>
+                                    <p id="nl-source-file-status" class="text-xs mt-1 hidden"></p>
                                 </div>
                                 <div>
                                     <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Ton</label>
@@ -4659,8 +4664,8 @@
                 </label>`).join('');
             const customHtml = custom.map((s, i) => `
                 <label class="flex items-center gap-2 cursor-pointer text-sm text-light-gold group">
-                    <input type="checkbox" data-label="${escapeHtmlFront(s.label)}" ${s.checked ? 'checked' : ''} class="accent-gold w-4 h-4 rounded" onchange="nlToggleCustomSource(${i}, this.checked)">
-                    <span class="flex-1">${escapeHtmlFront(s.label)}</span>
+                    <input type="checkbox" data-label="${escapeHtmlFront(s.label)}" ${s.content ? `data-content="${escapeHtmlFront(s.content)}"` : ''} ${s.checked ? 'checked' : ''} class="accent-gold w-4 h-4 rounded" onchange="nlToggleCustomSource(${i}, this.checked)">
+                    <span class="flex-1">${s.content ? '<i class="fas fa-paperclip text-gold/40 mr-1" title="Fichier importé"></i>' : ''}${escapeHtmlFront(s.label)}</span>
                     <button type="button" onclick="event.preventDefault();nlRemoveSource(${i})" class="text-red-400/40 hover:text-red-400 opacity-0 group-hover:opacity-100 transition text-xs" title="Retirer cette source"><i class="fas fa-times"></i></button>
                 </label>`).join('');
             el.innerHTML = defaultHtml + customHtml;
@@ -4675,6 +4680,35 @@
             nlSaveCustomSources(custom);
             input.value = '';
             nlRenderSources();
+        }
+
+        // Import d'un fichier .txt/.md depuis le PC : son contenu devient une source
+        // d'inspiration cochable, injectée dans le prompt de génération au même titre
+        // que les "Fragments du carnet".
+        function nlImportSourceFile(input) {
+            const file = input.files?.[0];
+            if (!file) return;
+            const statusEl = document.getElementById('nl-source-file-status');
+            const show = (msg, cls) => { if (statusEl) { statusEl.textContent = msg; statusEl.className = `text-xs mt-1 ${cls}`; statusEl.classList.remove('hidden'); } };
+            const MAX_SIZE = 300 * 1024; // 300 Ko de texte, largement suffisant, évite un prompt démesuré
+            if (file.size > MAX_SIZE) {
+                show(`Fichier trop volumineux (${Math.round(file.size / 1024)} Ko, max 300 Ko de texte).`, 'text-red-400/80');
+                input.value = '';
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = () => {
+                const content = String(reader.result || '').trim();
+                if (!content) { show('Fichier vide ou illisible comme texte.', 'text-red-400/80'); input.value = ''; return; }
+                const custom = nlGetCustomSources();
+                custom.push({ label: file.name, checked: true, content });
+                nlSaveCustomSources(custom);
+                nlRenderSources();
+                show(`« ${file.name} » importé (${content.length.toLocaleString('fr-FR')} caractères).`, 'text-green-400/80');
+                input.value = '';
+            };
+            reader.onerror = () => { show('Erreur de lecture du fichier.', 'text-red-400/80'); input.value = ''; };
+            reader.readAsText(file);
         }
 
         function nlRemoveSource(index) {
@@ -4767,14 +4801,22 @@
                         cta_text: document.getElementById('nl-cta-text').value.trim() || undefined,
                         cta_url: document.getElementById('nl-cta-url').value.trim() || undefined
                     }
-                    : {
-                        type: 'newsletter',
-                        intention,
-                        source: [...document.querySelectorAll('#nl-sources-list input[type=checkbox]:checked')].map(el => el.dataset.label).join(', '),
-                        ton: document.getElementById('nl-ton').value,
-                        energie: document.getElementById('nl-energie').value.trim() || undefined,
-                        idees_bonus: document.getElementById('nl-idees-bonus').value.trim() || undefined
-                    };
+                    : (() => {
+                        const checkedSources = [...document.querySelectorAll('#nl-sources-list input[type=checkbox]:checked')];
+                        const fileContents = checkedSources
+                            .filter(el => el.dataset.content)
+                            .map(el => `--- Source « ${el.dataset.label} » ---\n${el.dataset.content}`)
+                            .join('\n\n');
+                        const ideesBonusManuel = document.getElementById('nl-idees-bonus').value.trim();
+                        return {
+                            type: 'newsletter',
+                            intention,
+                            source: checkedSources.map(el => el.dataset.label).join(', '),
+                            ton: document.getElementById('nl-ton').value,
+                            energie: document.getElementById('nl-energie').value.trim() || undefined,
+                            idees_bonus: [ideesBonusManuel, fileContents].filter(Boolean).join('\n\n') || undefined
+                        };
+                    })();
 
                 const res = await adminFetch('/api/admin/newsletter?action=generate', {
                     method: 'POST',
