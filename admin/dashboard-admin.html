@@ -1534,15 +1534,14 @@
                             <div class="grid grid-cols-2 gap-4 mb-4">
                                 <div>
                                     <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Source</label>
-                                    <div class="flex flex-col gap-2 mt-1">
-                                        <label class="flex items-center gap-2 cursor-pointer text-sm text-light-gold">
-                                            <input type="checkbox" id="nl-source-libre" value="libre" checked class="accent-gold w-4 h-4 rounded">
-                                            Observation du vivant (libre)
-                                        </label>
-                                        <label class="flex items-center gap-2 cursor-pointer text-sm text-light-gold">
-                                            <input type="checkbox" id="nl-source-conte" value="conte" class="accent-gold w-4 h-4 rounded">
-                                            Conte initiatique du livret
-                                        </label>
+                                    <div id="nl-sources-list" class="flex flex-col gap-2 mt-1"></div>
+                                    <div class="flex gap-2 mt-2">
+                                        <input type="text" id="nl-source-new" placeholder="Ajouter une source…"
+                                            class="flex-1 bg-[rgba(5,20,40,0.8)] border border-gold/20 text-light-gold rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-gold/50"
+                                            onkeydown="if(event.key==='Enter'){event.preventDefault();nlAddSource();}">
+                                        <button type="button" onclick="nlAddSource()" class="shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-1.5 text-xs hover:bg-gold/25 transition">
+                                            <i class="fas fa-plus"></i>
+                                        </button>
                                     </div>
                                 </div>
                                 <div>
@@ -4463,7 +4462,8 @@
         document.addEventListener('DOMContentLoaded', () => {
             loadDashboardData();
             renderAuditLog();
-            
+            nlRenderSources();
+
             const exportBtn = document.getElementById('exportContactsBtn');
             if (exportBtn) {
                 exportBtn.addEventListener('click', () => exportPreorders());
@@ -4621,6 +4621,62 @@
             });
         }
 
+        // ── Sources d'inspiration newsletter (2 par défaut + sources personnalisées) ──
+        const NL_DEFAULT_SOURCES = [
+            { id: 'libre', label: 'Observation du vivant (libre)', checked: true },
+            { id: 'conte', label: 'Conte initiatique du livret',   checked: false }
+        ];
+
+        function nlGetCustomSources() {
+            try { return JSON.parse(localStorage.getItem('oradia-nl-custom-sources') || '[]'); }
+            catch { return []; }
+        }
+
+        function nlSaveCustomSources(list) {
+            localStorage.setItem('oradia-nl-custom-sources', JSON.stringify(list));
+        }
+
+        function nlRenderSources() {
+            const el = document.getElementById('nl-sources-list');
+            if (!el) return;
+            const custom = nlGetCustomSources();
+            const defaultHtml = NL_DEFAULT_SOURCES.map(s => `
+                <label class="flex items-center gap-2 cursor-pointer text-sm text-light-gold">
+                    <input type="checkbox" data-label="${escapeHtmlFront(s.label)}" ${s.checked ? 'checked' : ''} class="accent-gold w-4 h-4 rounded">
+                    ${escapeHtmlFront(s.label)}
+                </label>`).join('');
+            const customHtml = custom.map((s, i) => `
+                <label class="flex items-center gap-2 cursor-pointer text-sm text-light-gold group">
+                    <input type="checkbox" data-label="${escapeHtmlFront(s.label)}" ${s.checked ? 'checked' : ''} class="accent-gold w-4 h-4 rounded" onchange="nlToggleCustomSource(${i}, this.checked)">
+                    <span class="flex-1">${escapeHtmlFront(s.label)}</span>
+                    <button type="button" onclick="event.preventDefault();nlRemoveSource(${i})" class="text-red-400/40 hover:text-red-400 opacity-0 group-hover:opacity-100 transition text-xs" title="Retirer cette source"><i class="fas fa-times"></i></button>
+                </label>`).join('');
+            el.innerHTML = defaultHtml + customHtml;
+        }
+
+        function nlAddSource() {
+            const input = document.getElementById('nl-source-new');
+            const label = (input?.value || '').trim();
+            if (!label) return;
+            const custom = nlGetCustomSources();
+            custom.push({ label, checked: true });
+            nlSaveCustomSources(custom);
+            input.value = '';
+            nlRenderSources();
+        }
+
+        function nlRemoveSource(index) {
+            const custom = nlGetCustomSources();
+            custom.splice(index, 1);
+            nlSaveCustomSources(custom);
+            nlRenderSources();
+        }
+
+        function nlToggleCustomSource(index, checked) {
+            const custom = nlGetCustomSources();
+            if (custom[index]) { custom[index].checked = checked; nlSaveCustomSources(custom); }
+        }
+
         function nlToggleAdvanced() {
             const fields = document.getElementById('nl-advanced-fields');
             const icon = document.getElementById('nl-advanced-icon');
@@ -4702,7 +4758,7 @@
                     : {
                         type: 'newsletter',
                         intention,
-                        source: ['nl-source-libre','nl-source-conte'].filter(id => document.getElementById(id)?.checked).map(id => document.getElementById(id).value).join(', '),
+                        source: [...document.querySelectorAll('#nl-sources-list input[type=checkbox]:checked')].map(el => el.dataset.label).join(', '),
                         ton: document.getElementById('nl-ton').value,
                         energie: document.getElementById('nl-energie').value.trim() || undefined,
                         idees_bonus: document.getElementById('nl-idees-bonus').value.trim() || undefined

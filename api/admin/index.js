@@ -2094,8 +2094,8 @@ function buildGeneratePrompt(body) {
   return [
     ...voiceRules,
     `Rédige la newsletter hebdomadaire sur le thème : ${intention}.`,
-    source === 'conte'
-      ? `Inspire-toi d'un conte initiatique pour illustrer le propos.`
+    source && source.trim()
+      ? `Inspire-toi de la ou des source(s) suivante(s) pour illustrer le propos : ${source}.`
       : `Pars d'une observation du vivant (nature, saison, geste quotidien) pour illustrer le propos.`,
     `Ton : ${NL_TON_LABELS[ton] || NL_TON_LABELS.contemplatif}.`,
     energie ? `Énergie du moment à intégrer si pertinent : ${energie}.` : '',
