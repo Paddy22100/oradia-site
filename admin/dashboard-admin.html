@@ -811,7 +811,11 @@
                     </button>
                     <button onclick="syncBrevo()" id="syncBrevoBtn"
                         class="flex items-center gap-2 bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition text-sm font-semibold">
-                        <i class="fas fa-sync-alt"></i> Sync Brevo
+                        <i class="fas fa-sync-alt"></i> Sync désinscriptions
+                    </button>
+                    <button onclick="importFromBrevo()" id="importBrevoBtn"
+                        class="flex items-center gap-2 bg-[rgba(26,54,93,0.8)] border border-gold/40 text-gold px-4 py-2 rounded-lg hover:bg-[rgba(26,54,93,1)] transition text-sm font-semibold">
+                        <i class="fas fa-cloud-download-alt"></i> Importer depuis Brevo
                     </button>
                 </div>
             </div>
@@ -5383,6 +5387,31 @@
                 await nlLoadDrafts();
             } catch(e) {
                 alert('Erreur lors de la suppression : ' + e.message);
+            }
+        }
+
+        // ── Import Brevo → Supabase ───────────────────────────────────────────────
+        async function importFromBrevo() {
+            const btn = document.getElementById('importBrevoBtn');
+            const statusEl = document.getElementById('sync-status');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Import en cours…';
+            statusEl.className = 'mb-4 px-4 py-3 rounded-lg text-sm border bg-gold/10 border-gold/30 text-gold';
+            statusEl.textContent = 'Récupération des contacts depuis Brevo liste #5…';
+            statusEl.classList.remove('hidden');
+            try {
+                const res = await adminFetch('/api/admin/import-brevo', { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur serveur');
+                statusEl.className = 'mb-4 px-4 py-3 rounded-lg text-sm border bg-green-500/10 border-green-500/30 text-green-300';
+                statusEl.textContent = `✓ ${data.imported} contact(s) importé(s) depuis Brevo liste #5.`;
+                await loadWaitlist();
+            } catch(e) {
+                statusEl.className = 'mb-4 px-4 py-3 rounded-lg text-sm border bg-red-500/10 border-red-500/30 text-red-300';
+                statusEl.textContent = '✗ ' + e.message;
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-cloud-download-alt mr-2"></i>Importer depuis Brevo';
             }
         }
 

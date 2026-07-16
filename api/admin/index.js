@@ -3247,6 +3247,44 @@ module.exports = async (req, res) => {
       return res.status(200).json({ success: true });
     }
 
+    if (path === '/import-brevo' || path === '/import-brevo/') {
+      verifyAdminAuth(req);
+      const BREVO_API_KEY = process.env.BREVO_API_KEY;
+      if (!BREVO_API_KEY) return res.status(500).json({ error: 'BREVO_API_KEY manquant' });
+      const sb = createClient(
+        process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      // Récupère tous les contacts de la liste 5 (pagination Brevo : max 500 par page)
+      let allContacts = [];
+      let offset = 0;
+      const limit = 500;
+      while (true) {
+        const r = await fetch(`https://api.brevo.com/v3/contacts/lists/5/contacts?limit=${limit}&offset=${offset}&sort=desc`, {
+          headers: { 'api-key': BREVO_API_KEY, 'Accept': 'application/json' }
+        });
+        if (!r.ok) return res.status(502).json({ error: `Brevo ${r.status}` });
+        const data = await r.json();
+        const contacts = data.contacts || [];
+        allContacts = allContacts.concat(contacts);
+        if (contacts.length < limit) break;
+        offset += limit;
+      }
+      if (allContacts.length === 0) return res.status(200).json({ success: true, imported: 0, already: 0 });
+      // Upsert dans newsletter_contacts — on ne touche pas aux contacts déjà présents (onConflict email)
+      const rows = allContacts.map(c => ({
+        email: (c.email || '').toLowerCase().trim(),
+        status: c.emailBlacklisted ? 'unsubscribed' : 'active',
+        brevo_synced: !c.emailBlacklisted,
+        brevo_synced_at: new Date().toISOString(),
+        source: 'import-brevo'
+      })).filter(r => r.email);
+      const { data: upserted, error } = await sb.from('newsletter_contacts')
+        .upsert(rows, { onConflict: 'email', ignoreDuplicates: false });
+      if (error) return res.status(500).json({ error: error.message });
+      return res.status(200).json({ success: true, imported: rows.length });
+    }
+
     if (path === '/subscriptions' || path === '/subscriptions/') {
       return await handleSubscriptions(req, res);
     }
