@@ -1533,7 +1533,7 @@
                         </div>
 
                         <label id="nl-intention-label" class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Intention / thème *</label>
-                        <input type="text" id="nl-intention"
+                        <input type="text" id="nl-intention" spellcheck="true" lang="fr"
                             class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-4 text-sm focus:outline-none focus:border-gold"
                             placeholder="Ex: la résistance juste, l'adaptome, la vulnérabilité...">
 
@@ -1574,11 +1574,11 @@
                             </button>
                             <div id="nl-advanced-fields" class="hidden">
                                 <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Énergie du moment <span class="text-gold/30 normal-case tracking-normal text-xs">(facultatif)</span></label>
-                                <input type="text" id="nl-energie"
+                                <input type="text" id="nl-energie" spellcheck="true" lang="fr"
                                     class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-4 text-sm focus:outline-none focus:border-gold"
                                     placeholder="Saison, hexagramme, lune, actualité...">
                                 <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Fragments du carnet <span class="text-gold/30 normal-case tracking-normal text-xs">(facultatif)</span></label>
-                                <textarea id="nl-idees-bonus" rows="3"
+                                <textarea id="nl-idees-bonus" rows="3" spellcheck="true" lang="fr"
                                     class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-3 text-sm focus:outline-none focus:border-gold resize-y"
                                     placeholder="Fragments du carnet à intégrer..."></textarea>
                             </div>
@@ -1595,7 +1595,7 @@
                                 <option value="soldes">Soldes</option>
                             </select>
                             <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Détails de l'offre <span class="text-gold/30 normal-case tracking-normal text-xs">(facultatif)</span></label>
-                            <textarea id="nl-promo-details" rows="3"
+                            <textarea id="nl-promo-details" rows="3" spellcheck="true" lang="fr"
                                 class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-4 text-sm focus:outline-none focus:border-gold resize-y"
                                 placeholder="Ex: -20% avec le code ORADIA20 jusqu'au 30 juin, livraison offerte..."></textarea>
                             <div class="grid grid-cols-2 gap-4 mb-4">
@@ -1639,7 +1639,7 @@
                         </div>
                         <div id="nl-save-zone" class="hidden mb-4">
                             <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Objet email</label>
-                            <input type="text" id="nl-subject"
+                            <input type="text" id="nl-subject" spellcheck="true" lang="fr"
                                 class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2 mb-4 text-sm focus:outline-none focus:border-gold"
                                 placeholder="Objet de l'email...">
 
@@ -1729,7 +1729,7 @@
                             <span class="text-xs text-gold/30 italic">Justification automatique dans l'email</span>
                         </div>
                         <!-- Éditeur riche -->
-                        <div id="nl-content-editor" contenteditable="true"
+                        <div id="nl-content-editor" contenteditable="true" spellcheck="true" lang="fr"
                             class="hidden w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-b-lg px-4 py-3 text-sm focus:outline-none focus:border-gold"
                             style="min-height:320px; line-height:1.8; white-space:pre-wrap; outline:none;"
                             oninput="nlSyncEditor()"></div>
@@ -1876,7 +1876,7 @@
                                                 <img src="https://oradia.fr/images/logo-hd-v2.webp" class="w-7 h-7 rounded-full">
                                                 <div><p class="text-xs text-white font-semibold leading-none">ORADIA</p><p class="text-xs text-blue-300/60">Page · Maintenant</p></div>
                                             </div>
-                                            <textarea id="nl-social-fb-text" rows="5" class="w-full text-xs text-white/80 leading-relaxed mb-2 bg-transparent border border-blue-400/20 rounded-lg px-2 py-1.5 resize-none focus:outline-none focus:border-blue-400/50" placeholder="Le texte Facebook apparaîtra ici après l'aperçu..."></textarea>
+                                            <textarea id="nl-social-fb-text" rows="5" spellcheck="true" lang="fr" class="w-full text-xs text-white/80 leading-relaxed mb-2 bg-transparent border border-blue-400/20 rounded-lg px-2 py-1.5 resize-none focus:outline-none focus:border-blue-400/50" placeholder="Le texte Facebook apparaîtra ici après l'aperçu..."></textarea>
                                             <div id="nl-social-fb-img" class="hidden rounded-lg overflow-hidden mb-1">
                                                 <img id="nl-social-fb-img-el" src="" alt="image" class="w-full max-h-48 object-cover">
                                             </div>
@@ -1896,7 +1896,7 @@
                                                 <img id="nl-social-ig-img-el" src="" alt="image" class="w-full max-h-64 object-cover">
                                             </div>
                                             <div class="px-3 py-2">
-                                                <textarea id="nl-social-ig-text" rows="6" class="w-full text-xs text-white/80 leading-relaxed bg-transparent border border-pink-400/20 rounded-lg px-2 py-1.5 resize-none focus:outline-none focus:border-pink-400/50" placeholder="Le texte Instagram apparaîtra ici après l'aperçu..."></textarea>
+                                                <textarea id="nl-social-ig-text" rows="6" spellcheck="true" lang="fr" class="w-full text-xs text-white/80 leading-relaxed bg-transparent border border-pink-400/20 rounded-lg px-2 py-1.5 resize-none focus:outline-none focus:border-pink-400/50" placeholder="Le texte Instagram apparaîtra ici après l'aperçu..."></textarea>
                                             </div>
                                         </div>
                                     </div>
