@@ -3604,7 +3604,14 @@ module.exports = async (req, res) => {
     if (path === '/env-status' || path === '/env-status/') {
       verifyAdminAuth(req);
       const VARS = ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','STRIPE_SECRET_KEY','STRIPE_WEBHOOK_SECRET','BREVO_API_KEY','ANTHROPIC_API_KEY','ADMIN_SESSION_SECRET','ADMIN_EMAIL','ADMIN_PASSWORD_HASH','CRON_SECRET','VERCEL_TOKEN','GITHUB_TOKEN','ELEVENLABS_API_KEY'];
-      return res.status(200).json(Object.fromEntries(VARS.map(k => [k, !!process.env[k]])));
+      // VERCEL_GIT_COMMIT_MESSAGE = message du commit déployé (nos noms de version
+      // sont toujours en 1ère ligne du message, ex: "tore-v3.6.8-mail-checkin-j3-harmonise").
+      // Fournie automatiquement par Vercel, aucune configuration nécessaire.
+      const commitMsg = (process.env.VERCEL_GIT_COMMIT_MESSAGE || '').split('\n')[0].trim();
+      return res.status(200).json({
+        ...Object.fromEntries(VARS.map(k => [k, !!process.env[k]])),
+        _deployedVersion: commitMsg || null
+      });
     }
 
     // ── Prototype livret audio : texte → synthèse vocale (ElevenLabs) ──

@@ -8123,12 +8123,14 @@
         async function loadSettings() {
             const verEl = document.getElementById('settings-version');
             const envEl = document.getElementById('settings-env-list');
-            if (verEl) verEl.textContent = 'tore-v3.5.79';
+            if (verEl) verEl.textContent = '…';
             if (!envEl) return;
             envEl.innerHTML = '<p class="text-light-gold/40 text-center py-4">Chargement…</p>';
             try {
                 const res = await adminFetch('/api/admin/env-status');
                 const vars = await res.json();
+                if (verEl) verEl.textContent = vars._deployedVersion || 'inconnue';
+                delete vars._deployedVersion;
                 const labels = {
                     SUPABASE_URL:              'Supabase URL',
                     SUPABASE_SERVICE_ROLE_KEY: 'Supabase Service Role',
