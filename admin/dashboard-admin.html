@@ -3237,6 +3237,23 @@
             }
         }
 
+        // Met à jour le badge sidebar "Contacts" et le "Total contacts" de la vue
+        // d'ensemble — ces compteurs ne se rafraîchissaient qu'au chargement initial
+        // du dashboard, jamais après un ajout/modif/suppression manuelle de contact.
+        async function refreshContactCounts(pagination) {
+            try {
+                const total = pagination
+                    ? pagination.total
+                    : (await adminFetch('/api/admin/data?section=waitlist&page=1&limit=1').then(r => r.json())).pagination?.total;
+                if (total == null) return;
+                const badge = document.getElementById('nav-badge-waitlist');
+                if (badge) badge.textContent = total;
+                const totalEl = document.getElementById('totalContacts');
+                if (totalEl) totalEl.textContent = total;
+                if (currentData.overview?.waitlist) currentData.overview.waitlist.count = total;
+            } catch (_) {}
+        }
+
         // Charger la waitlist
         async function loadWaitlist(page = 1, limit = 10) {
             try {
@@ -3251,6 +3268,10 @@
                     currentData.waitlistPagination = data.pagination;
                     if (Array.isArray(data.availableTags)) populateContactTagOptions(data.availableTags);
                     updateWaitlistTable(data.data, data.pagination);
+                    // Le badge sidebar / "Total contacts" doivent rester le total NON filtré —
+                    // ne pas réutiliser data.pagination ici si un filtre (tag/newsletter) est actif.
+                    if (!tag && !newsletterFilter) refreshContactCounts(data.pagination);
+                    else refreshContactCounts();
                     // Pré-charger tous les contacts pour la recherche client-side (fire-and-forget)
                     if (!currentData.waitlistAll) {
                         adminFetch('/api/admin/data?section=waitlist&page=1&limit=500')
