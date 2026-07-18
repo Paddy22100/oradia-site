@@ -725,6 +725,15 @@ function buildPromoTirageEmailHtml() {
       </td></tr>
     </table>
   </td></tr>
+  <tr><td style="padding:0 24px 16px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.2);border-radius:14px;">
+      <tr><td style="padding:20px 24px;text-align:center;">
+        <p style="margin:0 0 6px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">Au fait : tu n'es pas inscrit·e à la newsletter Oradia. Cet email t'a simplement été envoyé suite à ton tirage sur le Tore.</p>
+        <p style="margin:0 0 14px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">Si tu veux recevoir mes prochains messages (réflexions, actualités, avant-premières), tu peux t'inscrire ici :</p>
+        <a href="https://oradia.fr/#footer-newsletter-section" style="display:inline-block;background:rgba(212,175,55,0.12);color:#f0c75e;text-decoration:none;padding:10px 24px;border-radius:50px;font-weight:700;font-size:12px;letter-spacing:0.05em;font-family:Georgia,serif;border:1px solid rgba(212,175,55,0.35);">S'inscrire à la newsletter</a>
+      </td></tr>
+    </table>
+  </td></tr>
   <tr><td style="padding:36px 32px 28px; border-top:1px solid rgba(212,175,55,0.15); text-align:center;">
     <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
     <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
