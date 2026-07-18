@@ -2784,6 +2784,19 @@
         <!-- ══ ONGLET : PARAMÈTRES ══ -->
         <div id="tab-settings" class="tab-panel">
         <section class="mb-10">
+            <div class="mb-6 flex items-center justify-between">
+                <div>
+                    <h3 class="cormorant text-2xl font-bold text-gold">Fonctionnalités</h3>
+                    <p class="text-light-gold/50 text-sm mt-1">Activez ou désactivez les fonctionnalités du site en un clic — coupe réellement le comportement côté serveur.</p>
+                </div>
+                <button onclick="loadFeatureFlags()" class="text-xs bg-gold/20 text-gold border border-gold/30 rounded-lg px-3 py-2 hover:bg-gold/30 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
+            </div>
+            <div id="feature-flags-list" class="space-y-3">
+                <p class="text-light-gold/40 text-sm text-center py-8">Chargement…</p>
+            </div>
+        </section>
+
+        <section class="mb-10">
             <div class="mb-6">
                 <h3 class="cormorant text-2xl font-bold text-gold">Paramètres système</h3>
                 <p class="text-light-gold/50 text-sm mt-1">État de l'infrastructure et de la configuration</p>
@@ -2901,7 +2914,7 @@
             if (name === 'insights')       loadIntentionsList();
             if (name === 'planning')       loadPlanning();
             if (name === 'exports')        renderExports();
-            if (name === 'settings')       loadSettings();
+            if (name === 'settings')       { loadSettings(); loadFeatureFlags(); }
         }
 
         function showTabWithFilter(tabName, filterType, navId) {
@@ -5911,7 +5924,9 @@
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Erreur inconnue');
-                nlSocialStatus('success', '✓ Publications envoyées à Make.com — Facebook et Instagram seront publiés automatiquement.');
+                nlSocialStatus('success', data.scheduled
+                    ? `✓ Programmé pour le ${new Date(scheduleVal).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })} — Facebook et Instagram partiront ensemble à ce moment-là.`
+                    : '✓ Publications envoyées à Make.com — Facebook et Instagram seront publiés maintenant.');
                 nlFillSocialPreview(data, imageUrl);
             } catch(e) {
                 nlSocialStatus('error', e.message);
@@ -7855,9 +7870,48 @@
                         <button onclick="nlOpenDraft('${d.id}')" class="text-xs bg-white/5 text-light-gold/60 border border-white/10 rounded-lg px-3 py-1.5 hover:bg-white/10 transition shrink-0">Ouvrir</button>
                     </div>`).join('');
                 }
+
+                // ── Publications sociales programmées ──
+                try {
+                    const resSoc = await adminFetch('/api/admin/social-posts');
+                    const dataSoc = await resSoc.json();
+                    const socialScheduled = (dataSoc.posts || []).filter(p => p.statut === 'programmé');
+                    html += `<p class="text-purple-300/70 text-xs uppercase tracking-widest mt-6 mb-2"><i class="fas fa-share-alt mr-1"></i>Réseaux sociaux programmés (${socialScheduled.length})</p>`;
+                    if (socialScheduled.length === 0) {
+                        html += `<div class="border border-dashed border-purple-400/20 rounded-xl p-5 text-center">
+                            <p class="text-light-gold/30 text-sm">Aucune publication Facebook/Instagram programmée.</p>
+                            <p class="text-light-gold/20 text-xs mt-1">Depuis Newsletter &amp; Réseaux, choisis une date dans « Programmer » puis « Publier sur les réseaux ».</p>
+                        </div>`;
+                    } else {
+                        html += socialScheduled.map(p => {
+                            const dt = new Date(p.scheduled_at);
+                            const dateStr = dt.toLocaleString('fr-FR', { weekday:'long', day:'2-digit', month:'long', hour:'2-digit', minute:'2-digit' });
+                            return `<div class="stat-card rounded-xl p-4 flex items-center gap-4">
+                                <div class="w-10 h-10 rounded-full bg-purple-500/15 flex items-center justify-center shrink-0"><i class="fas fa-share-alt text-purple-300"></i></div>
+                                <div class="flex-1 min-w-0">
+                                    <p class="text-light-gold font-semibold truncate">${p.subject || '(sans sujet)'}</p>
+                                    <p class="text-purple-300/70 text-xs mt-0.5"><i class="fas fa-calendar mr-1"></i>${dateStr}</p>
+                                </div>
+                                <button onclick="cancelScheduledSocial('${p.id}')" class="text-xs bg-red-500/10 text-red-300/80 border border-red-500/25 rounded-lg px-3 py-1.5 hover:bg-red-500/20 transition shrink-0">Annuler</button>
+                            </div>`;
+                        }).join('');
+                    }
+                } catch (_) { /* table pas encore créée, on ignore silencieusement */ }
+
                 el.innerHTML = `<div class="space-y-3">${html}</div>`;
             } catch(e) {
                 el.innerHTML = '<p class="text-red-400/60 text-sm text-center py-8">Erreur de chargement</p>';
+            }
+        }
+
+        async function cancelScheduledSocial(id) {
+            if (!confirm('Annuler cette publication programmée ?')) return;
+            try {
+                const res = await adminFetch('/api/admin/social-posts?id=' + encodeURIComponent(id), { method: 'DELETE' });
+                if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Erreur');
+                loadPlanning();
+            } catch (e) {
+                alert('Erreur : ' + e.message);
             }
         }
 
@@ -8013,6 +8067,56 @@
                 show('Erreur : ' + e.message, 'text-red-400/80');
             }
             setTimeout(() => { if (statusEl) statusEl.classList.add('hidden'); }, 6000);
+        }
+
+        // ── Registre de fonctionnalités ──
+        const FEATURE_CATEGORY_LABELS = { acquisition: 'Acquisition', emails: 'Emails automatiques', contenu: 'Contenu public', general: 'Général' };
+        async function loadFeatureFlags() {
+            const el = document.getElementById('feature-flags-list');
+            if (!el) return;
+            el.innerHTML = '<p class="text-light-gold/40 text-sm text-center py-8">Chargement…</p>';
+            try {
+                const res = await adminFetch('/api/admin/features');
+                const data = await res.json();
+                const features = data.features || [];
+                if (features.length === 0) {
+                    el.innerHTML = `<div class="border border-dashed border-gold/20 rounded-xl p-5 text-center">
+                        <p class="text-light-gold/40 text-sm">Aucune fonctionnalité enregistrée pour l'instant.</p>
+                        <p class="text-light-gold/25 text-xs mt-1">Exécute la migration <span class="font-mono">supabase-migration-feature-flags.sql</span> dans Supabase pour peupler ce registre.</p>
+                    </div>`;
+                    return;
+                }
+                const byCategory = {};
+                features.forEach(f => { (byCategory[f.category || 'general'] ??= []).push(f); });
+                el.innerHTML = Object.entries(byCategory).map(([cat, items]) => `
+                    <p class="text-gold/60 text-xs uppercase tracking-widest mt-4 mb-2 first:mt-0">${FEATURE_CATEGORY_LABELS[cat] || cat}</p>
+                    ${items.map(f => `
+                        <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
+                            <div class="min-w-0">
+                                <p class="text-light-gold font-semibold text-sm">${f.label}</p>
+                                ${f.description ? `<p class="text-light-gold/40 text-xs mt-0.5">${f.description}</p>` : ''}
+                            </div>
+                            <button onclick="toggleFeatureFlag('${f.key}', ${!f.enabled})" class="shrink-0 relative inline-flex h-7 w-13 items-center rounded-full transition ${f.enabled ? 'bg-gold' : 'bg-white/10'}" style="width:52px;">
+                                <span class="inline-block h-5 w-5 transform rounded-full bg-night-blue transition ${f.enabled ? 'translate-x-7' : 'translate-x-1'}"></span>
+                            </button>
+                        </div>`).join('')}
+                `).join('');
+            } catch (e) {
+                el.innerHTML = `<p class="text-red-400/80 text-sm text-center py-8">Erreur : ${e.message}</p>`;
+            }
+        }
+        async function toggleFeatureFlag(key, enabled) {
+            try {
+                const res = await adminFetch('/api/admin/features', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ key, enabled })
+                });
+                if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Erreur');
+                await loadFeatureFlags();
+            } catch (e) {
+                show('Erreur : ' + e.message, 'text-red-400/80');
+            }
         }
 
         // ── Paramètres système ──

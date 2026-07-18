@@ -380,6 +380,9 @@ async function handleData(req, res) {
       const getAction = req.query?.action;
       if (getAction === 'cron-send-scheduled') {
         try {
+          if (!(await isFeatureEnabled(supabase, 'newsletter_scheduled_send'))) {
+            return res.status(200).json({ success: true, sent: 0, skipped_reason: 'feature_disabled' });
+          }
           const { data: due } = await supabase
             .from('newsletter_drafts')
             .select('*')
@@ -422,7 +425,39 @@ async function handleData(req, res) {
               results.push({ id: draft.id, ok: true });
             } catch(e) { results.push({ id: draft.id, ok: false, error: e.message }); }
           }
-          return res.status(200).json({ success: true, sent: results.filter(r=>r.ok).length, results });
+          // ── Publications sociales programmées (Facebook + Instagram, envoyées
+          // ensemble pour rester synchronisées — voir handlePublishSocial) ──
+          let socialResults = [];
+          if (await isFeatureEnabled(supabase, 'social_scheduled_send')) {
+            const { data: dueSocial } = await supabase
+              .from('social_posts')
+              .select('*')
+              .eq('statut', 'programmé')
+              .lte('scheduled_at', new Date().toISOString())
+              .limit(5);
+            const MAKE_WEBHOOK_URL = process.env.MAKE_SOCIAL_WEBHOOK_URL;
+            for (const post of dueSocial || []) {
+              try {
+                if (!MAKE_WEBHOOK_URL) throw new Error('MAKE_SOCIAL_WEBHOOK_URL manquant');
+                const makeRes = await fetch(MAKE_WEBHOOK_URL, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({
+                    subject: post.subject, facebook_text: post.facebook_text, instagram_text: post.instagram_text,
+                    image_url: post.image_url, schedule_at: null, sent_at: new Date().toISOString()
+                  })
+                });
+                if (!makeRes.ok) throw new Error(`Make.com ${makeRes.status}`);
+                await supabase.from('social_posts').update({ statut: 'envoyé', sent_at: new Date().toISOString() }).eq('id', post.id);
+                socialResults.push({ id: post.id, ok: true });
+              } catch (e) {
+                await supabase.from('social_posts').update({ statut: 'échec', error_message: e.message }).eq('id', post.id);
+                socialResults.push({ id: post.id, ok: false, error: e.message });
+              }
+            }
+          }
+
+          return res.status(200).json({ success: true, sent: results.filter(r=>r.ok).length, results, social_sent: socialResults.filter(r=>r.ok).length, socialResults });
         } catch(e) {
           return res.status(200).json({ success: false, error: e.message });
         }
@@ -2151,6 +2186,17 @@ function nlAbsUrl(path) {
   return /^https?:\/\//.test(path) ? path : `https://oradia.fr${path.startsWith('/') ? '' : '/'}${path}`;
 }
 
+// Consulte le registre de fonctionnalités. Si la table/migration n'existe pas
+// encore, ou si le flag n'est pas défini, on considère la feature active par
+// défaut (fail-open) pour ne jamais casser une fonctionnalité existante.
+async function isFeatureEnabled(supabase, key) {
+  try {
+    const { data, error } = await supabase.from('feature_flags').select('enabled').eq('key', key).maybeSingle();
+    if (error || !data) return true;
+    return data.enabled !== false;
+  } catch { return true; }
+}
+
 // Construit le HTML complet de l'email (newsletter ou promo) à partir d'un brouillon
 function buildCommunicationEmailHtml(draft) {
   const subject = draft.subject || '';
@@ -3092,8 +3138,26 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
       return res.status(200).json({ success: true, facebook_text, instagram_text, image_url, preview: true });
     }
 
-    // Envoyer au webhook Make.com
-    const payload = { subject, facebook_text, instagram_text, image_url, schedule_at: scheduleAt || null, sent_at: new Date().toISOString() };
+    // Si une date est choisie, on N'APPELLE PAS Make.com maintenant : Facebook
+    // programmerait son post correctement, mais Instagram (qui ne sait pas
+    // programmer nativement) publierait tout de suite, désynchronisant les
+    // deux réseaux. On enregistre donc la publication et c'est le cron
+    // cron-send-scheduled (toutes les 15 min) qui déclenchera les DEUX
+    // réseaux ensemble, exactement au moment dû.
+    if (scheduleAt) {
+      const sbSocial = createClient(
+        process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      const { error: insErr } = await sbSocial.from('social_posts').insert({
+        subject, facebook_text, instagram_text, image_url, scheduled_at: new Date(scheduleAt).toISOString()
+      });
+      if (insErr) return res.status(500).json({ error: 'Erreur enregistrement programmation : ' + insErr.message });
+      return res.status(200).json({ success: true, facebook_text, instagram_text, image_url, scheduled: true });
+    }
+
+    // Pas de date : publication immédiate, comportement inchangé.
+    const payload = { subject, facebook_text, instagram_text, image_url, schedule_at: null, sent_at: new Date().toISOString() };
     const makeRes = await fetch(MAKE_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -3489,8 +3553,52 @@ module.exports = async (req, res) => {
       return await handlePublishSocial(req, res);
     }
 
+    if (path === '/social-posts' || path === '/social-posts/') {
+      verifyAdminAuth(req);
+      const sbSocialList = createClient(
+        process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      if (req.method === 'GET') {
+        const { data, error } = await sbSocialList.from('social_posts').select('*').order('scheduled_at', { ascending: true });
+        if (error) return res.status(200).json({ success: true, posts: [] }); // migration pas encore exécutée
+        return res.status(200).json({ success: true, posts: data || [] });
+      }
+      if (req.method === 'DELETE') {
+        const id = urlParams.get('id');
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { error } = await sbSocialList.from('social_posts').delete().eq('id', id).eq('statut', 'programmé');
+        if (error) return res.status(500).json({ error: error.message });
+        return res.status(200).json({ success: true });
+      }
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
     if (path === '/sync-brevo-unsubscribes' || path === '/sync-brevo-unsubscribes/') {
       return await handleSyncBrevoUnsubscribes(req, res);
+    }
+
+    // ── Registre de fonctionnalités : lister / activer / désactiver ──
+    if (path === '/features' || path === '/features/') {
+      verifyAdminAuth(req);
+      const sbFeat = createClient(
+        process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      if (req.method === 'GET') {
+        const { data, error } = await sbFeat.from('feature_flags').select('*').order('category').order('label');
+        if (error) return res.status(200).json({ success: true, features: [] }); // migration pas encore exécutée
+        return res.status(200).json({ success: true, features: data || [] });
+      }
+      if (req.method === 'POST') {
+        const body = await parseBody(req);
+        const key = String(body.key || '').trim();
+        if (!key || typeof body.enabled !== 'boolean') return res.status(400).json({ error: 'key et enabled (boolean) requis' });
+        const { error } = await sbFeat.from('feature_flags').update({ enabled: body.enabled, updated_at: new Date().toISOString() }).eq('key', key);
+        if (error) return res.status(500).json({ error: error.message });
+        return res.status(200).json({ success: true });
+      }
+      return res.status(405).json({ error: 'Method not allowed' });
     }
 
     if (path === '/env-status' || path === '/env-status/') {
@@ -3503,6 +3611,13 @@ module.exports = async (req, res) => {
     if (path === '/generate-audio' || path === '/generate-audio/') {
       verifyAdminAuth(req);
       if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+      const sbAudioFlag = createClient(
+        process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      if (!(await isFeatureEnabled(sbAudioFlag, 'audio_livret_prototype'))) {
+        return res.status(403).json({ error: 'Fonctionnalité désactivée depuis le registre de fonctionnalités' });
+      }
       const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
       if (!ELEVENLABS_API_KEY) return res.status(500).json({ error: 'ELEVENLABS_API_KEY non configurée' });
 
@@ -3683,6 +3798,9 @@ module.exports = async (req, res) => {
         process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
         process.env.SUPABASE_SERVICE_ROLE_KEY
       );
+      if (!(await isFeatureEnabled(sbPublic, 'testimonials_public'))) {
+        return res.status(200).json({ success: true, testimonials: [] });
+      }
       const { data, error } = await sbPublic
         .from('support_messages')
         .select('name, message, publication, published_at')
@@ -3710,6 +3828,9 @@ module.exports = async (req, res) => {
         process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
         process.env.SUPABASE_SERVICE_ROLE_KEY
       );
+      if (!(await isFeatureEnabled(sbSync, 'synchronicity_study_public'))) {
+        return res.status(200).json({ success: true, data: { total: 0, avgScore: null, scoreDistrib: [], typeCounts: {}, resonanceCounts: {} } });
+      }
       let { data: rows, error: sErr } = await sbSync
         .from('synchronicity_stats')
         .select('score_synchronicites, types_synchronicites, resonance_tirage, qrng_source');
@@ -3750,6 +3871,7 @@ module.exports = async (req, res) => {
       const action = req.method === 'GET' ? urlParams.get('action') : refBody.action;
 
       if (action === 'convert' && req.method === 'POST') {
+        if (!(await isFeatureEnabled(sbRef, 'referral'))) return res.status(200).json({ success: false, reason: 'feature_disabled' });
         const code = String(refBody.code || '').trim().slice(0, 64);
         if (!code) return res.status(400).json({ error: 'code requis' });
         const { error } = await sbRef.from('referral_conversions').insert({ code });

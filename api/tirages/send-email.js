@@ -9,6 +9,17 @@
 
 const { createClient } = require('@supabase/supabase-js');
 
+// Consulte le registre de fonctionnalités (dashboard admin). Fail-open si la
+// table n'existe pas encore ou si le flag n'est pas défini, pour ne jamais
+// casser une fonctionnalité existante par défaut.
+async function isFeatureEnabled(supabase, key) {
+  try {
+    const { data, error } = await supabase.from('feature_flags').select('enabled').eq('key', key).maybeSingle();
+    if (error || !data) return true;
+    return data.enabled !== false;
+  } catch { return true; }
+}
+
 // Crée un client Supabase authentifié AVEC LE TOKEN DE L'UTILISATEUR (pas la clé service-role).
 // Cela garantit que les policies RLS (auth.uid() = user_id) s'appliquent réellement :
 // chaque personne ne peut lire/écrire QUE ses propres tirages, vérifié au niveau base de données.
@@ -829,6 +840,10 @@ async function handleCronCheckin(req, res) {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
+  if (!(await isFeatureEnabled(supabase, 'checkin_email_j3'))) {
+    return res.status(200).json({ success: true, sent: 0, failed: 0, skipped_reason: 'feature_disabled' });
+  }
+
   // Fenêtre J+3 à J+4 pour éviter d'envoyer rétroactivement à d'anciens tirages
   const from = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString();
   const to   = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
@@ -1092,6 +1107,10 @@ async function handleCronPromoTirage(req, res) {
   const { createClient } = require('@supabase/supabase-js');
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  if (!(await isFeatureEnabled(supabase, 'promo_email_j7'))) {
+    return res.status(200).json({ success: true, sent: 0, skipped: 0, failed: 0, skipped_reason: 'feature_disabled' });
+  }
 
   // Séquence post-tirage en 3 temps : J0 résultat (collect-email), J+3 check-in
   // (cron-checkin), J+7 offre abonnement (ici — anciennement envoyée à 24h).
