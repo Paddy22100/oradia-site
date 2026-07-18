@@ -764,7 +764,8 @@ function buildPromoTirageEmailHtml(isSubscribed = false) {
 }
 
 // ============ EMAIL CHECK-IN J+3 ============
-function buildCheckinEmailHtml() {
+function buildCheckinEmailHtml(isSubscribed = false) {
+  const bandeau = 'https://oradia.fr/images/medias/bandea_rappel_abonnement_tore.png';
   const paragraphs = [
     `Il y a trois jours, vous avez fait un tirage du Tore avec une question en tête.`,
     `Je vous écris juste pour vous demander : avez-vous remarqué quelque chose depuis ? Un événement, une rencontre, une pensée récurrente qui fait écho à ce que les cartes vous ont dit ?`,
@@ -782,17 +783,41 @@ function buildCheckinEmailHtml() {
 <style>@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');</style>
 </head>
 <body style="margin:0; padding:0; background-color:#040d1c;">
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#040d1c" style="background-color:#040d1c;">
+<table width="100%" cellpadding="0" cellspacing="0" background="https://oradia.fr/images/oradia-hero-4k.webp" bgcolor="#040d1c" style="background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat; background-color:#040d1c;">
 <tr><td align="center" style="padding:32px 12px;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.96) 100%); max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
-  <tr><td style="padding:36px 32px 0; text-align:center;">
-    <p style="margin:0 0 20px;color:#d4af37;font-family:Georgia,serif;font-size:13px;letter-spacing:0.35em;text-transform:uppercase;opacity:0.7;">ORADIA</p>
+  <tr><td style="padding:0; line-height:0;">
+    <img src="${bandeau}" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+  </td></tr>
+  <tr><td style="padding:30px 32px 0;">
     <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:22px; margin:0 0 20px; text-align:left;">Trois jours ont passé…</h2>
   </td></tr>
   ${bodyRows}
   <tr><td style="padding:8px 32px 40px; text-align:center;">
     <a href="https://oradia.fr/tore.html" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">Refaire un tirage</a>
   </td></tr>
+  <tr><td style="padding:0 24px 16px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.35);border-radius:14px;">
+      <tr><td style="padding:0;line-height:0;font-size:0;">
+        <img src="https://oradia.fr/images/medias/banniere-facebook.webp" alt="Oracle Oradia — Précommandes ouvertes" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:14px 14px 0 0;">
+      </td></tr>
+      <tr><td style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));padding:24px 32px;text-align:center;border-radius:0 0 14px 14px;">
+        <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Précommandes ouvertes</p>
+        <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">L'Oracle Oradia</p>
+        <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">64 cartes · Livret · Conte initiatique · Pièce artisanale</p>
+        <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">Précommander</a>
+      </td></tr>
+    </table>
+  </td></tr>
+  ${isSubscribed ? '' : `<tr><td style="padding:0 24px 16px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.2);border-radius:14px;">
+      <tr><td style="padding:20px 24px;text-align:center;">
+        <p style="margin:0 0 6px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">Au fait : tu n'es pas inscrit·e à la newsletter Oradia. Cet email t'a simplement été envoyé suite à ton tirage sur le Tore.</p>
+        <p style="margin:0 0 14px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">Si tu veux recevoir mes prochains messages (réflexions, actualités, avant-premières), tu peux t'inscrire ici :</p>
+        <a href="https://oradia.fr/#footer-newsletter-section" style="display:inline-block;background:rgba(212,175,55,0.12);color:#f0c75e;text-decoration:none;padding:10px 24px;border-radius:50px;font-weight:700;font-size:12px;letter-spacing:0.05em;font-family:Georgia,serif;border:1px solid rgba(212,175,55,0.35);">S'inscrire à la newsletter</a>
+      </td></tr>
+    </table>
+  </td></tr>`}
   <tr><td style="padding:36px 32px 28px; border-top:1px solid rgba(212,175,55,0.15); text-align:center;">
     <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
     <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
@@ -811,7 +836,8 @@ async function sendCheckinEmail(email) {
   const { createClient } = require('@supabase/supabase-js');
   const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-  const html = buildCheckinEmailHtml();
+  const alreadySub = await isBrevoSubscribed(email);
+  const html = buildCheckinEmailHtml(alreadySub);
   const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
