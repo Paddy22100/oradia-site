@@ -1342,6 +1342,28 @@ async function handleData(req, res) {
       return res.status(200).json({ success: true });
     }
 
+    // ── Publier / dépublier un témoignage sur oracle.html (modération manuelle) ──
+    if (section === 'support-publish') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
+      const body = await parseBody(req);
+      const { id, published } = body;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      if (published) {
+        // Refuse de publier si l'auteur a explicitement refusé (publication='non') —
+        // même côté admin, on ne contourne pas ce choix.
+        const { data: msg } = await supabase.from('support_messages').select('publication').eq('id', id).maybeSingle();
+        if (msg?.publication === 'non') {
+          return res.status(403).json({ error: "L'auteur a refusé toute publication publique de ce témoignage." });
+        }
+      }
+      const { error } = await supabase.from('support_messages')
+        .update({ published: !!published, published_at: published ? new Date().toISOString() : null })
+        .eq('id', id)
+        .eq('type', 'temoignage');
+      if (error) throw error;
+      return res.status(200).json({ success: true });
+    }
+
     // ── Réponse à un message support, envoyée via Brevo depuis le dashboard ──
     if (section === 'support-reply') {
       if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
@@ -3594,11 +3616,42 @@ module.exports = async (req, res) => {
       return await handleData(req, res);
     }
 
+    if (path === '/support-publish' || path === '/support-publish/') {
+      // Publier/dépublier un témoignage — délégué à handleData avec section=support-publish
+      if (!req.query) req.query = {};
+      req.query.section = 'support-publish';
+      return await handleData(req, res);
+    }
+
     if (path === '/support-reply' || path === '/support-reply/') {
       // Répondre à un message support via Brevo — délégué à handleData avec section=support-reply
       if (!req.query) req.query = {};
       req.query.section = 'support-reply';
       return await handleData(req, res);
+    }
+
+    // ── Témoignages publiés — endpoint PUBLIC, pas d'auth admin (lu par oracle.html) ──
+    if (path === '/testimonials' || path === '/testimonials/') {
+      if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+      const sbPublic = createClient(
+        process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      const { data, error } = await sbPublic
+        .from('support_messages')
+        .select('name, message, publication, published_at')
+        .eq('type', 'temoignage')
+        .eq('published', true)
+        .neq('publication', 'non') // respecte le refus explicite de publication de l'auteur
+        .order('published_at', { ascending: false })
+        .limit(12);
+      if (error) return res.status(500).json({ error: error.message });
+      const testimonials = (data || []).map(t => ({
+        name: t.publication === 'anonyme' ? null : (t.name || null),
+        message: t.message
+      }));
+      res.setHeader('Cache-Control', 'public, max-age=300, s-maxage=300');
+      return res.status(200).json({ success: true, testimonials });
     }
 
     if (

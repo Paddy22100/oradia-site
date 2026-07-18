@@ -491,7 +491,7 @@
         <div class="gold-divider mx-auto"></div>
       </div>
       
-      <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="testimonials-grid">
         <!-- Témoignage 1 -->
         <div class="bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl p-6 hover:border-gold/40 transition-all duration-300">
           <div class="flex items-center gap-1 mb-4">
@@ -673,6 +673,38 @@
   <script src="components/header-manager.js" defer></script>
   <script src="components/footer-manager.js" defer></script>
   <script src="js/newsletter-inline.js" defer></script>
+  <script>
+    // Témoignages modérés depuis le dashboard : ajoutés en tête de la grille,
+    // les 3 témoignages écrits en dur restent affichés en complément.
+    (function () {
+      fetch('/api/admin/testimonials')
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          const list = data && data.success ? data.testimonials : [];
+          if (!list || !list.length) return;
+          const grid = document.getElementById('testimonials-grid');
+          if (!grid) return;
+          const esc = s => String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+          const stars = '<i class="fas fa-star text-gold text-sm"></i>'.repeat(5);
+          const cardsHtml = list.map(t => `
+            <div class="bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl p-6 hover:border-gold/40 transition-all duration-300">
+              <div class="flex items-center gap-1 mb-4">${stars}</div>
+              <p class="text-light-gold/90 text-sm leading-relaxed mb-4 italic">"${esc(t.message)}"</p>
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-full bg-gold/20 flex items-center justify-center">
+                  <i class="fas fa-user text-gold text-sm"></i>
+                </div>
+                <div>
+                  <p class="text-gold font-semibold text-sm">${t.name ? esc(t.name) : 'Anonyme'}</p>
+                  <p class="text-light-gold/60 text-xs">Utilisateur·rice</p>
+                </div>
+              </div>
+            </div>`).join('');
+          grid.insertAdjacentHTML('afterbegin', cardsHtml);
+        })
+        .catch(() => {});
+    })();
+  </script>
 
   <script>
     // Adapter le CTA principal selon l'éligibilité de l'utilisateur (#3)
