@@ -26,6 +26,20 @@ function setCORS(res) {
   Object.entries(corsHeaders).forEach(([k, v]) => res.setHeader(k, v));
 }
 
+// Vérifie si un email est déjà abonné à la liste newsletter Brevo.
+// En cas d'erreur/timeout, retourne false pour ne pas bloquer l'envoi.
+async function isBrevoSubscribed(email) {
+  try {
+    const r = await fetch(`https://api.brevo.com/v3/contacts/${encodeURIComponent(email)}`, {
+      headers: { 'api-key': BREVO_API_KEY }
+    });
+    if (!r.ok) return false;
+    const contact = await r.json();
+    const listId = parseInt(process.env.BREVO_NEWSLETTER_LIST_ID || '5');
+    return Array.isArray(contact.listIds) && contact.listIds.includes(listId);
+  } catch { return false; }
+}
+
 // ============ ACTIVATION ============
 async function handleActivation(req, res) {
   let body;
@@ -119,7 +133,8 @@ async function handleClose(req, res) {
   for (const win of windows) {
     try {
       // response_token disponible seulement après migration synchronicity
-      const emailHTML = buildClosingEmail(win, win.response_token || null);
+      const alreadySub = await isBrevoSubscribed(win.email);
+      const emailHTML = buildClosingEmail(win, win.response_token || null, alreadySub);
 
       await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
@@ -130,7 +145,7 @@ async function handleClose(req, res) {
         body: JSON.stringify({
           sender: { name: FROM_NAME, email: FROM_EMAIL },
           to: [{ email: win.email }],
-          subject: `Rudy d'Oradia - Votre fenêtre d'observation se referme — qu'avez-vous perçu ?`,
+          subject: `Rudy d'Oradia - Votre fenêtre d'observation se referme, qu'avez-vous perçu ?`,
           htmlContent: emailHTML,
         }),
       });
@@ -202,7 +217,7 @@ async function handleSurvey(req, res) {
 // ============ EMAIL TEMPLATES ============
 // Plus d'email d'activation - les données sont incluses dans l'email du tirage
 
-function buildClosingEmail(win, responseToken) {
+function buildClosingEmail(win, responseToken, isSubscribed = false) {
   const attentionHTML = (win.attention_points || [])
     .map(p => `<li style="margin-bottom:10px;color:#e9e7df;line-height:1.7;">${escapeHtml(p)}</li>`)
     .join('');
@@ -219,7 +234,7 @@ function buildClosingEmail(win, responseToken) {
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 </head>
 <body style="margin:0;padding:0;width:100%;background:#050a14;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="width:100%;min-width:100%;background:#050a14;margin:0;padding:0;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" background="https://oradia.fr/images/oradia-hero-4k.webp" style="width:100%;min-width:100%;background-image:url('https://oradia.fr/images/oradia-hero-4k.webp');background-size:cover;background-position:center;background-repeat:no-repeat;background-color:#050a14;margin:0;padding:0;">
     <tr>
       <td align="center" style="padding:48px 20px;">
 
@@ -239,8 +254,8 @@ function buildClosingEmail(win, responseToken) {
           <!-- Titre principal -->
           <tr>
             <td align="center" style="padding:32px 40px 24px 40px;">
-              <h1 style="margin:0;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:32px;font-weight:300;line-height:1.2;letter-spacing:2px;text-transform:uppercase;">
-                Votre fenêtre se referme
+              <h1 style="margin:0;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:300;line-height:1.3;letter-spacing:1px;text-transform:uppercase;">
+                Votre fenêtre d'observation se referme, qu'avez-vous perçu ?
               </h1>
               <div style="width:60px;height:1px;background:linear-gradient(90deg, transparent 0%, #d4af37 50%, transparent 100%);margin:20px auto;"></div>
               <p style="margin:0;color:#d8bf72;font-family:'Lora',Georgia,serif;font-size:15px;font-style:italic;line-height:1.6;letter-spacing:0.5px;">
@@ -326,6 +341,13 @@ function buildClosingEmail(win, responseToken) {
                   <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:'Lora',Georgia,serif;">Précommander</a>
                 </td></tr>
               </table>
+
+              ${isSubscribed ? '' : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" background="https://oradia.fr/images/medias/newsletter_image.webp" style="margin:0 0 24px;border:1px solid rgba(212,175,55,0.3);border-radius:14px;background-image:url('https://oradia.fr/images/medias/newsletter_image.webp');background-size:cover;background-position:center top;">
+                <tr><td style="padding:32px 28px;text-align:center;background:linear-gradient(135deg,rgba(4,14,30,0.88) 0%,rgba(5,20,40,0.82) 100%);border-radius:13px;">
+                  <p style="margin:0 0 18px;color:#c8c0a8;font-family:'Lora',Georgia,serif;font-size:13px;line-height:1.75;">Au fait : tu n'es pas inscrit·e à la newsletter Oradia, cet email t'a simplement été envoyé suite à ta fenêtre d'observation. Pour recevoir mes prochains messages :</p>
+                  <a href="https://oradia.fr/#footer-newsletter-section" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:'Lora',Georgia,serif;">S'inscrire à la newsletter</a>
+                </td></tr>
+              </table>`}
 
               <p style="margin:0 0 6px;color:#c8c0a8;font-size:13px;font-style:italic;opacity:0.7;font-family:Georgia,serif;">Avec gratitude,</p>
               <p style="margin:0 0 4px;color:#d4af37;font-size:52px;font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive;font-weight:700;line-height:1.1;letter-spacing:0.01em;">Rudy</p>
@@ -441,7 +463,7 @@ export default async function handler(req, res) {
         body: JSON.stringify({
           sender: { name: FROM_NAME, email: FROM_EMAIL },
           to: [{ email: 'contact@oradia.fr' }],
-          subject: '[TEST] Votre fenêtre d\'observation se referme — qu\'avez-vous perçu ?',
+          subject: '[TEST] Votre fenêtre d\'observation se referme, qu\'avez-vous perçu ?',
           htmlContent: emailHTML
         })
       });
@@ -480,14 +502,15 @@ export default async function handler(req, res) {
         .maybeSingle();
       if (fetchErr || !win) return res.status(404).json({ error: 'Fenêtre introuvable' });
 
-      const emailHTML = buildClosingEmail(win, win.response_token || null);
+      const alreadySubManual = await isBrevoSubscribed(win.email);
+      const emailHTML = buildClosingEmail(win, win.response_token || null, alreadySubManual);
       const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
         headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sender: { name: FROM_NAME, email: FROM_EMAIL },
           to: [{ email: win.email }],
-          subject: `Rudy d'Oradia - Votre fenêtre d'observation se referme — qu'avez-vous perçu ?`,
+          subject: `Rudy d'Oradia - Votre fenêtre d'observation se referme, qu'avez-vous perçu ?`,
           htmlContent: emailHTML,
         })
       });
