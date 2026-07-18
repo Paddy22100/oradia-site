@@ -3493,8 +3493,48 @@ module.exports = async (req, res) => {
 
     if (path === '/env-status' || path === '/env-status/') {
       verifyAdminAuth(req);
-      const VARS = ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','STRIPE_SECRET_KEY','STRIPE_WEBHOOK_SECRET','BREVO_API_KEY','ANTHROPIC_API_KEY','ADMIN_SESSION_SECRET','ADMIN_EMAIL','ADMIN_PASSWORD_HASH','CRON_SECRET','VERCEL_TOKEN','GITHUB_TOKEN'];
+      const VARS = ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','STRIPE_SECRET_KEY','STRIPE_WEBHOOK_SECRET','BREVO_API_KEY','ANTHROPIC_API_KEY','ADMIN_SESSION_SECRET','ADMIN_EMAIL','ADMIN_PASSWORD_HASH','CRON_SECRET','VERCEL_TOKEN','GITHUB_TOKEN','ELEVENLABS_API_KEY'];
       return res.status(200).json(Object.fromEntries(VARS.map(k => [k, !!process.env[k]])));
+    }
+
+    // ── Prototype livret audio : texte → synthèse vocale (ElevenLabs) ──
+    if (path === '/generate-audio' || path === '/generate-audio/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+      const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
+      if (!ELEVENLABS_API_KEY) return res.status(500).json({ error: 'ELEVENLABS_API_KEY non configurée' });
+
+      const body = await parseBody(req);
+      const text = String(body.text || '').trim();
+      if (!text) return res.status(400).json({ error: 'text requis' });
+      if (text.length > 4500) return res.status(400).json({ error: `Texte trop long (${text.length} caractères, max 4500 par génération pour rester dans le quota gratuit)` });
+      // "Rachel" — voix multilingue par défaut d'ElevenLabs, adaptée au français.
+      // Personnalisable : passer un autre voice_id depuis le dashboard.
+      const voiceId = String(body.voice_id || '21m00Tcm4TlvDq8ikWAM').trim();
+
+      const ttsRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'xi-api-key': ELEVENLABS_API_KEY, 'Accept': 'audio/mpeg' },
+        body: JSON.stringify({ text, model_id: 'eleven_multilingual_v2', voice_settings: { stability: 0.5, similarity_boost: 0.75 } })
+      });
+      if (!ttsRes.ok) {
+        const errText = await ttsRes.text().catch(() => '');
+        return res.status(502).json({ error: `Erreur ElevenLabs (${ttsRes.status}) : ${errText.slice(0, 300)}` });
+      }
+      const audioBuffer = Buffer.from(await ttsRes.arrayBuffer());
+
+      const sbAudio = createClient(
+        process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      const filename = `audio_${Date.now()}.mp3`;
+      const { error: upErr } = await sbAudio.storage
+        .from('newsletter-uploads')
+        .upload(filename, audioBuffer, { contentType: 'audio/mpeg', upsert: false });
+      if (upErr) return res.status(500).json({ error: 'Génération réussie mais échec de l\'hébergement : ' + upErr.message });
+      const { data: { publicUrl } } = sbAudio.storage.from('newsletter-uploads').getPublicUrl(filename);
+
+      return res.status(200).json({ success: true, url: publicUrl, characters_used: text.length });
     }
 
     if (path === '/unsubscribe' || path === '/unsubscribe/') {
