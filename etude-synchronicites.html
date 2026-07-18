@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+  <title>L'étude des synchronicités — Oradia</title>
+  <meta name="description" content="Une étude ouverte sur les synchronicités observées après un tirage du Tore : hasard quantique vérifiable, données brutes, méthodologie transparente." />
+  <link rel="canonical" href="https://oradia.fr/etude-synchronicites.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="L'étude des synchronicités — Oradia" />
+  <meta property="og:description" content="Que se passe-t-il après un tirage tiré au hasard quantique vérifiable ? Une étude ouverte, transparente, en cours." />
+  <meta property="og:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg" />
+  <meta property="og:locale" content="fr_FR" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="responsive.css">
+  <script src="security.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#0a192f', 'gold': '#d4af37', 'light-gold': '#f5e7a1',
+            'dark-blue': '#051428', 'celtic-blue': '#1a365d'
+          },
+          fontFamily: { 'cormorant': ['Cormorant Garamond', 'serif'], 'cinzel': ['Cinzel', 'serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    .gold-gradient { background: linear-gradient(135deg,#d4af37,#f4e4c1); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .gold-divider { width: 60px; height: 1px; background: linear-gradient(90deg,transparent,#d4af37,transparent); }
+    .stat-card { background: linear-gradient(145deg, rgba(26,54,93,0.4), rgba(5,20,40,0.7)); border: 1px solid rgba(212,175,55,0.2); }
+    .bar-track { background: rgba(255,255,255,0.05); border-radius: 999px; overflow: hidden; }
+    .bar-fill { background: linear-gradient(90deg,#d4af37aa,#d4af37); border-radius: 999px; transition: width 1s ease-out; }
+  </style>
+</head>
+<body class="bg-night-blue text-light-gold font-cormorant">
+
+  <div id="header-placeholder"></div>
+
+  <main class="px-4 sm:px-6 lg:px-8 py-16 max-w-4xl mx-auto">
+
+    <!-- En-tête -->
+    <div class="text-center mb-16">
+      <p class="text-gold/50 text-xs uppercase tracking-[0.35em] mb-4">Étude ouverte, en cours</p>
+      <h1 class="cinzel text-3xl sm:text-4xl md:text-5xl font-bold mb-6 gold-gradient">L'étude des synchronicités</h1>
+      <div class="gold-divider mx-auto mb-6"></div>
+      <p class="text-light-gold/70 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
+        Le Tore ne tire pas ses cartes au hasard du logiciel. Il utilise un générateur de nombres <strong class="text-gold">quantique vérifiable</strong> (ANU QRNG, Université Nationale Australienne). Après chaque tirage, nous invitons chacun à observer et rapporter ce qui se passe dans les jours qui suivent — sans obligation, sans promesse de résultat.
+      </p>
+      <p class="text-light-gold/50 text-sm mt-6 max-w-2xl mx-auto italic">
+        Ces chiffres ne prouvent rien scientifiquement à eux seuls — l'échantillon est encore modeste. Ils sont publiés tels quels, mis à jour en continu, sans filtrage des résultats qui ne nous arrangeraient pas.
+      </p>
+    </div>
+
+    <!-- Chargement -->
+    <div id="etude-loading" class="text-center py-16">
+      <i class="fas fa-spinner fa-spin text-gold/40 text-2xl"></i>
+    </div>
+
+    <!-- Contenu (rempli en JS) -->
+    <div id="etude-content" class="hidden">
+
+      <!-- Chiffres clés -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-16">
+        <div class="stat-card rounded-2xl p-6 text-center">
+          <p class="text-3xl font-bold text-gold" id="stat-total">—</p>
+          <p class="text-light-gold/50 text-xs uppercase tracking-wider mt-2">Retours étudiés</p>
+        </div>
+        <div class="stat-card rounded-2xl p-6 text-center">
+          <p class="text-3xl font-bold text-gold" id="stat-avg">—</p>
+          <p class="text-light-gold/50 text-xs uppercase tracking-wider mt-2">Score moyen / 10</p>
+        </div>
+        <div class="stat-card rounded-2xl p-6 text-center col-span-2 sm:col-span-1">
+          <p class="text-3xl font-bold text-gold" id="stat-resonance">—</p>
+          <p class="text-light-gold/50 text-xs uppercase tracking-wider mt-2">Résonance ressentie</p>
+        </div>
+      </div>
+
+      <!-- Distribution des scores -->
+      <div class="mb-16">
+        <h2 class="cinzel text-xl sm:text-2xl font-bold gold-gradient mb-2">Intensité des synchronicités ressenties</h2>
+        <p class="text-light-gold/50 text-sm mb-6">De 1 (aucune) à 10 (très marquante) — répartition des réponses.</p>
+        <div id="score-distrib" class="flex items-end gap-1.5 h-40"></div>
+        <div class="flex justify-between text-light-gold/30 text-xs mt-2"><span>1</span><span>10</span></div>
+      </div>
+
+      <!-- Types de synchronicités -->
+      <div class="mb-16">
+        <h2 class="cinzel text-xl sm:text-2xl font-bold gold-gradient mb-2">Ce que les gens observent</h2>
+        <p class="text-light-gold/50 text-sm mb-6">Plusieurs réponses possibles par personne.</p>
+        <div id="type-breakdown" class="space-y-4"></div>
+      </div>
+
+      <!-- Méthodologie -->
+      <div class="stat-card rounded-2xl p-6 sm:p-8 mb-8">
+        <h2 class="cinzel text-lg font-bold text-gold mb-4"><i class="fas fa-flask mr-2 opacity-60"></i>Méthodologie</h2>
+        <ul class="text-light-gold/70 text-sm leading-relaxed space-y-3 list-none">
+          <li><i class="fas fa-check text-gold/50 mr-2"></i>Seuls les tirages utilisant le générateur quantique ANU (pas de repli logiciel) sont comptabilisés ici, pour ne pas mélanger hasard vérifié et pseudo-hasard.</li>
+          <li><i class="fas fa-check text-gold/50 mr-2"></i>Le questionnaire est envoyé automatiquement à la fin de la fenêtre d'observation choisie par chaque personne (7 à 21 jours après le tirage), jamais avant.</li>
+          <li><i class="fas fa-check text-gold/50 mr-2"></i>Aucune donnée identifiante n'est publiée ici — seuls des agrégats anonymisés.</li>
+          <li><i class="fas fa-check text-gold/50 mr-2"></i>Répondre au questionnaire est facultatif et n'affecte jamais l'accès au service.</li>
+        </ul>
+      </div>
+
+    </div>
+
+    <!-- CTA -->
+    <div class="text-center mt-16">
+      <a href="/tore.html" class="inline-flex items-center gap-2 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-8 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300">
+        <i class="fas fa-moon"></i> Faire un tirage et contribuer à l'étude
+      </a>
+    </div>
+
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="components/header-manager.js" defer></script>
+  <script src="components/footer-manager.js" defer></script>
+  <script src="js/page-tracker.js" defer></script>
+  <script>
+    (function () {
+      const TYPE_LABELS = {
+        rencontres: 'Rencontres ou personnes inattendues',
+        intuitions: 'Pensées / intuitions qui se sont réalisées',
+        timing: 'Coïncidences de timing remarquables',
+        reves: 'Rêves en lien avec l\'intention',
+        signes: 'Signes dans l\'environnement (symboles, animaux, mots)',
+        aucune: 'Aucune en particulier'
+      };
+      const RESONANCE_LABELS = { fort: 'Fortement', plutot_oui: 'Plutôt oui', peu: 'Peu', non: 'Pas du tout' };
+
+      fetch('/api/admin/synchronicity-public')
+        .then(r => r.json())
+        .then(res => {
+          document.getElementById('etude-loading').classList.add('hidden');
+          document.getElementById('etude-content').classList.remove('hidden');
+          const d = res.data || {};
+
+          document.getElementById('stat-total').textContent = d.total || 0;
+          document.getElementById('stat-avg').textContent = d.avgScore != null ? d.avgScore : '—';
+
+          const resCounts = d.resonanceCounts || {};
+          const resTotal = Object.values(resCounts).reduce((a, b) => a + b, 0);
+          const topRes = Object.entries(resCounts).sort((a, b) => b[1] - a[1])[0];
+          document.getElementById('stat-resonance').textContent = (topRes && resTotal > 0)
+            ? `${Math.round(topRes[1] / resTotal * 100)}%`
+            : '—';
+          const resSub = document.querySelector('#stat-resonance').nextElementSibling;
+          if (topRes && resTotal > 0 && resSub) resSub.textContent = `« ${RESONANCE_LABELS[topRes[0]] || topRes[0]} »`;
+
+          // Distribution des scores
+          const distrib = d.scoreDistrib || [];
+          const maxCount = Math.max(...distrib.map(s => s.count), 1);
+          document.getElementById('score-distrib').innerHTML = distrib.map(s => `
+            <div class="flex-1 flex flex-col items-center justify-end h-full gap-1">
+              <span class="text-gold/40 text-xs">${s.count > 0 ? s.count : ''}</span>
+              <div class="w-full bar-fill" style="height:${Math.max(s.count / maxCount * 100, s.count > 0 ? 4 : 1)}%"></div>
+            </div>`).join('');
+
+          // Types
+          const types = Object.entries(d.typeCounts || {}).sort((a, b) => b[1] - a[1]);
+          const maxType = Math.max(...types.map(t => t[1]), 1);
+          document.getElementById('type-breakdown').innerHTML = types.length === 0
+            ? '<p class="text-light-gold/30 italic text-sm">Pas encore assez de données.</p>'
+            : types.map(([key, count]) => `
+              <div>
+                <div class="flex justify-between text-sm mb-1.5">
+                  <span class="text-light-gold/80">${TYPE_LABELS[key] || key}</span>
+                  <span class="text-gold font-semibold">${count}</span>
+                </div>
+                <div class="bar-track h-2"><div class="bar-fill h-full" style="width:${Math.max(count / maxType * 100, 3)}%"></div></div>
+              </div>`).join('');
+        })
+        .catch(() => {
+          document.getElementById('etude-loading').innerHTML = '<p class="text-light-gold/40 text-sm">Impossible de charger les données pour le moment.</p>';
+        });
+    })();
+  </script>
+</body>
+</html>

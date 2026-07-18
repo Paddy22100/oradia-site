@@ -3658,6 +3658,44 @@ module.exports = async (req, res) => {
       return res.status(200).json({ success: true, testimonials });
     }
 
+    // ── Étude des synchronicités — statistiques PUBLIQUES anonymisées ──
+    // Page etude-synchronicites.html. Ne renvoie QUE des agrégats (aucun texte
+    // libre, aucun champ nominatif) — les témoignages restent réservés au
+    // dashboard admin, non modérés pour une diffusion publique.
+    if (path === '/synchronicity-public' || path === '/synchronicity-public/') {
+      if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+      const sbSync = createClient(
+        process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      let { data: rows, error: sErr } = await sbSync
+        .from('synchronicity_stats')
+        .select('score_synchronicites, types_synchronicites, resonance_tirage, qrng_source');
+      if (sErr) {
+        // Table/colonne absente (migration non exécutée) : renvoyer un jeu vide plutôt qu'une 500
+        return res.status(200).json({ success: true, data: { total: 0, avgScore: null, scoreDistrib: [], typeCounts: {}, resonanceCounts: {} } });
+      }
+      // Validité scientifique : uniquement les tirages 100% quantiques (ANU)
+      const anuRows = (rows || []).filter(r => r.qrng_source === 'anu');
+      const avgScore = anuRows.length > 0
+        ? (anuRows.reduce((s, r) => s + (r.score_synchronicites || 0), 0) / anuRows.length).toFixed(1)
+        : null;
+      const scoreDistrib = Array.from({ length: 10 }, (_, i) => ({
+        score: i + 1,
+        count: anuRows.filter(r => r.score_synchronicites === i + 1).length
+      }));
+      const typeCounts = {};
+      anuRows.forEach(r => (r.types_synchronicites || []).forEach(t => { typeCounts[t] = (typeCounts[t] || 0) + 1; }));
+      const resonanceCounts = { fort: 0, plutot_oui: 0, peu: 0, non: 0 };
+      anuRows.forEach(r => { if (r.resonance_tirage && resonanceCounts[r.resonance_tirage] !== undefined) resonanceCounts[r.resonance_tirage]++; });
+
+      res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=1800');
+      return res.status(200).json({
+        success: true,
+        data: { total: anuRows.length, avgScore, scoreDistrib, typeCounts, resonanceCounts }
+      });
+    }
+
     // ── Parrainage — endpoints PUBLICS, pas d'auth admin ──
     // action=convert : un filleul vient de compléter son 1er tirage via un lien de parrainage
     // action=claim : le détenteur d'un code vient réclamer les bonus de ses filleuls convertis
