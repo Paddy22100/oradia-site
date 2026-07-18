@@ -3714,12 +3714,21 @@ module.exports = async (req, res) => {
         const sessionId = String(body.session_id || '').slice(0, 100);
         const userAgent = String(body.user_agent || '').slice(0, 500);
         const isNewVisitor = body.is_new_visitor === true;
-        if (!pagePath || !sessionId) return res.status(204).end();
+        // Étape nommée du funnel de conversion (facultatif) — voir funnel_events.
+        const FUNNEL_EVENTS = ['intention_saisie', 'tirage_lance', 'analyse_affichee', 'email_laisse'];
+        const event = FUNNEL_EVENTS.includes(String(body.event || '')) ? body.event : null;
+        if (!sessionId || (!pagePath && !event)) return res.status(204).end();
         // Filtrer les bots connus côté serveur
         const BOT_PATTERN = /bot|crawler|spider|crawling|googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex|sogou|facebot|ia_archiver|semrush|ahrefs|mj12bot|dotbot/i;
         if (BOT_PATTERN.test(userAgent)) return res.status(204).end();
         const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
-        await sb.from('page_views').insert({ path: pagePath, referrer: referrer || null, session_id: sessionId, user_agent: userAgent || null, is_new_visitor: isNewVisitor });
+        if (pagePath) {
+          await sb.from('page_views').insert({ path: pagePath, referrer: referrer || null, session_id: sessionId, user_agent: userAgent || null, is_new_visitor: isNewVisitor });
+        }
+        if (event) {
+          await sb.from('funnel_events').insert({ session_id: sessionId, event_name: event, path: pagePath || null }).select().single()
+            .then(() => {}, () => {}); // ignore silencieusement si la migration n'est pas encore exécutée
+        }
       } catch (_) { /* le tracking ne doit jamais faire échouer la requête côté visiteur */ }
       return res.status(204).end();
     }
@@ -3951,11 +3960,33 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
         return res.status(502).json({ error: 'Erreur lors de l\'analyse IA', details: lastErr });
       }
 
+      // ── Funnel de conversion : visite tore → intention → tirage → analyse → email → abonnement ──
+      // S'appuie sur page_views (déjà en place) + funnel_events (nouvelle table, dégrade
+      // proprement si la migration n'a pas encore été exécutée).
+      let funnel = null;
+      try {
+        const [{ data: toreViews }, { data: events }, { count: newSubs }] = await Promise.all([
+          sb.from('page_views').select('session_id').gte('created_at', since).ilike('path', '%tore.html%'),
+          sb.from('funnel_events').select('session_id, event_name').gte('created_at', since),
+          sb.from('tore_subscriptions').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('status', 'active')
+        ]);
+        const distinctCount = (rows, filterFn) => new Set((rows || []).filter(filterFn || (() => true)).map(r => r.session_id)).size;
+        funnel = {
+          visites:            new Set((toreViews || []).map(r => r.session_id)).size,
+          intentions_saisies: distinctCount(events, e => e.event_name === 'intention_saisie'),
+          tirages_lances:     distinctCount(events, e => e.event_name === 'tirage_lance'),
+          analyses_affichees: distinctCount(events, e => e.event_name === 'analyse_affichee'),
+          emails_laisses:     distinctCount(events, e => e.event_name === 'email_laisse'),
+          abonnements:        newSubs || 0
+        };
+      } catch (_) { /* migration funnel_events pas encore exécutée — on omet simplement le funnel */ }
+
       if (req.method !== 'GET') return res.status(405).end();
       return res.status(200).json({
         success: true,
         range,
         traffic,
+        funnel,
         logs_stats: { errors, warnings, total: (logs||[]).length }
       });
     }

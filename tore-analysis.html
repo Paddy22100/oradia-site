@@ -1399,6 +1399,7 @@
                 displayDetailedAnalysis(analysis);
                 displaySynthesis(analysis.synthesis);
             }
+            window.oradiaTrackEvent?.('analyse_affichee');
         }
 
         async function generateAIAnalysis(cards, intention) {
@@ -2204,6 +2205,7 @@
                     btn.style.opacity = '1';
                     btn.style.cursor = 'default';
                     btn.style.pointerEvents = 'none';
+                    window.oradiaTrackEvent?.('email_laisse');
                 } else {
                     throw new Error('Erreur serveur');
                 }

@@ -32,5 +32,18 @@
     } else {
       fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(function () {});
     }
+
+    // Suivi du funnel de conversion (étapes nommées, sans cookie tiers) :
+    // window.oradiaTrackEvent('intention_saisie' | 'tirage_lance' | 'analyse_affichee' | 'email_laisse')
+    window.oradiaTrackEvent = function (eventName) {
+      try {
+        var evPayload = JSON.stringify({ event: eventName, session_id: sessionId, path: location.pathname });
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(url, new Blob([evPayload], { type: 'application/json' }));
+        } else {
+          fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: evPayload, keepalive: true }).catch(function () {});
+        }
+      } catch (e) {}
+    };
   } catch (e) { /* tracking ne doit jamais casser la page */ }
 })();

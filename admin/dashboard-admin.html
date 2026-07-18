@@ -2302,6 +2302,15 @@
                     <div id="analytics-top-referrers" class="space-y-2 text-sm"></div>
                 </div>
             </div>
+
+            <!-- Funnel de conversion -->
+            <div class="stat-card rounded-2xl p-6">
+                <h4 class="text-gold font-semibold mb-1 flex items-center gap-2"><i class="fas fa-filter text-gold/60"></i> Funnel de conversion — Tirage Tore</h4>
+                <p class="text-gold/40 text-xs mb-4">Étapes du parcours sur la période sélectionnée. Mesuré en interne (pas de cookie tiers) — les abonnements ne sont pas strictement chaînés aux visites (dates de conversion parfois différées).</p>
+                <div id="analytics-funnel" class="space-y-3">
+                    <p class="text-gold/30 italic text-sm text-center py-4">Chargement…</p>
+                </div>
+            </div>
         </section>
         </div><!-- /tab-analytics -->
 
@@ -7126,6 +7135,41 @@
 
         // ── SYNCHRONICITÉS (#31) ──────────────────────────────────────────────────
         // Entonnoir + donut du taux de réponse pour l'onglet Retour fenêtre
+        function renderFunnel(funnel) {
+            const el = document.getElementById('analytics-funnel');
+            if (!el) return;
+            if (!funnel) {
+                el.innerHTML = '<p class="text-gold/30 italic text-sm text-center py-4">Migration en attente (supabase-migration-funnel-events.sql) — le funnel apparaîtra une fois exécutée dans Supabase.</p>';
+                return;
+            }
+            const steps = [
+                { label: 'Visites tore.html',        value: funnel.visites,            color: '#d4af37', icon: 'fa-eye' },
+                { label: 'Intentions saisies',        value: funnel.intentions_saisies, color: '#f0c75e', icon: 'fa-pen' },
+                { label: 'Tirages lancés',             value: funnel.tirages_lances,     color: '#a78bfa', icon: 'fa-play' },
+                { label: 'Analyses affichées',         value: funnel.analyses_affichees, color: '#60a5fa', icon: 'fa-sparkles' },
+                { label: 'Emails laissés',             value: funnel.emails_laisses,     color: '#5eead4', icon: 'fa-envelope' },
+                { label: 'Nouveaux abonnements',       value: funnel.abonnements,        color: '#4ade80', icon: 'fa-crown' }
+            ];
+            const max = Math.max(steps[0].value, 1);
+            if (steps[0].value === 0) {
+                el.innerHTML = '<p class="text-gold/30 italic text-sm text-center py-4">Aucune visite sur tore.html pour cette période.</p>';
+                return;
+            }
+            el.innerHTML = steps.map((s, i) => {
+                const pct = Math.round((s.value / max) * 100);
+                const prevPct = i > 0 && steps[i-1].value > 0 ? Math.round((s.value / steps[i-1].value) * 100) : null;
+                return `<div>
+                    <div class="flex items-center justify-between text-xs mb-1">
+                        <span class="text-light-gold/70"><i class="fas ${s.icon} mr-1.5" style="color:${s.color}"></i>${s.label}</span>
+                        <span class="font-semibold" style="color:${s.color}">${s.value}<span class="text-light-gold/30 font-normal ml-1">(${pct}% du total${prevPct != null ? ` · ${prevPct}% de l'étape préc.` : ''})</span></span>
+                    </div>
+                    <div class="h-2.5 rounded-full bg-white/5 overflow-hidden">
+                        <div class="h-full rounded-full transition-all duration-700" style="width:${Math.max(pct, s.value > 0 ? 3 : 0)}%;background:linear-gradient(90deg,${s.color}66,${s.color})"></div>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
         function renderObsVisuals({ total, active, closed, mailsSent, questionnaires }) {
             const funnel = document.getElementById('obsFunnel');
             if (funnel) {
@@ -8752,6 +8796,8 @@
 
                 // Graphique pages vues / jour (courbe + zone dégradée, style Vercel Analytics)
                 renderDailyViewsChart(t.daily_views || []);
+
+                renderFunnel(data.funnel);
 
                 // Graphique donut nouveaux vs anciens visiteurs
                 renderVisitorTypeChart(t.new_visitors || 0, t.returning_visitors || 0);
