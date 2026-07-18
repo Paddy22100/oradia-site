@@ -2198,7 +2198,9 @@ function buildCommunicationEmailHtml(draft) {
     <tr><td style="padding:8px 20px 8px; text-align:center;">
       <table cellpadding="0" cellspacing="0" style="margin:0 auto; max-width:600px; width:100%; border-radius:14px; overflow:hidden; border:1px solid rgba(212,175,55,0.22); box-shadow:0 6px 28px rgba(0,0,0,0.45);">
         <tr><td style="padding:0; line-height:0;">
-          <img src="${nlAbsUrl(img.path)}" alt="${nlEscHtml(img.name || '')}" width="600" style="display:block; width:100%; height:auto;">
+          <a href="${nlAbsUrl(img.path)}" target="_blank" style="display:block; line-height:0;">
+            <img src="${nlAbsUrl(img.path)}" alt="${nlEscHtml(img.name || '')}" width="600" style="display:block; width:100%; height:auto;">
+          </a>
         </td></tr>
       </table>
     </td></tr>

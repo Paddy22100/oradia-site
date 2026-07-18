@@ -1521,7 +1521,13 @@
 
                 <div id="nl-generate-grid" class="grid grid-cols-1 lg:grid-cols-2 gap-8">
                     <div id="nl-params-col" class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6">
-                        <h4 class="cormorant text-xl text-gold mb-5">Paramètres</h4>
+                        <div class="flex items-center justify-between mb-5">
+                            <h4 class="cormorant text-xl text-gold">Paramètres</h4>
+                            <button type="button" id="nl-back-to-content-btn" onclick="nlExpandContentCol(true)"
+                                class="hidden text-xs text-gold/50 hover:text-gold border border-gold/20 hover:border-gold/40 rounded px-2 py-1 transition">
+                                <i class="fas fa-arrow-left mr-1"></i>Retour au contenu
+                            </button>
+                        </div>
 
                         <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Type de communication</label>
                         <div class="grid grid-cols-2 gap-3 mb-4">
@@ -4862,10 +4868,12 @@
                     btn.onclick = () => nlExpandContentCol(false);
                     document.getElementById('nl-content-col').querySelector('.flex.items-center.justify-between').appendChild(btn);
                 }
+                document.getElementById('nl-back-to-content-btn')?.classList.add('hidden');
             } else {
                 paramsCol.classList.remove('hidden');
                 contentCol.classList.remove('lg:col-span-2');
                 document.getElementById('nl-params-toggle-btn')?.remove();
+                document.getElementById('nl-back-to-content-btn')?.classList.remove('hidden');
             }
         }
 
