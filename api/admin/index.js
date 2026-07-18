@@ -3658,6 +3658,45 @@ module.exports = async (req, res) => {
       return res.status(200).json({ success: true, testimonials });
     }
 
+    // ── Parrainage — endpoints PUBLICS, pas d'auth admin ──
+    // action=convert : un filleul vient de compléter son 1er tirage via un lien de parrainage
+    // action=claim : le détenteur d'un code vient réclamer les bonus de ses filleuls convertis
+    if (path === '/referral' || path === '/referral/') {
+      const sbRef = createClient(
+        process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      const refBody = req.method === 'POST' ? await parseBody(req) : {};
+      const action = req.method === 'GET' ? urlParams.get('action') : refBody.action;
+
+      if (action === 'convert' && req.method === 'POST') {
+        const code = String(refBody.code || '').trim().slice(0, 64);
+        if (!code) return res.status(400).json({ error: 'code requis' });
+        const { error } = await sbRef.from('referral_conversions').insert({ code });
+        if (error) return res.status(200).json({ success: false }); // dégrade en silence si migration absente
+        return res.status(200).json({ success: true });
+      }
+
+      if (action === 'claim' && req.method === 'GET') {
+        const code = String(urlParams.get('code') || '').trim().slice(0, 64);
+        if (!code) return res.status(400).json({ error: 'code requis' });
+        const { data: pending, error } = await sbRef
+          .from('referral_conversions')
+          .select('id')
+          .eq('code', code)
+          .is('claimed_at', null)
+          .limit(50);
+        if (error) return res.status(200).json({ success: true, claimed: 0 });
+        if (!pending || pending.length === 0) return res.status(200).json({ success: true, claimed: 0 });
+        await sbRef.from('referral_conversions')
+          .update({ claimed_at: new Date().toISOString() })
+          .in('id', pending.map(p => p.id));
+        return res.status(200).json({ success: true, claimed: pending.length });
+      }
+
+      return res.status(400).json({ error: 'Action invalide' });
+    }
+
     if (
       path === '/mondial-relay-pickup-points' || path === '/mondial-relay-pickup-points/' ||
       // vercel.json réécrit /api/mondial-relay/pickup-points (route PUBLIQUE utilisée par livraison.html)

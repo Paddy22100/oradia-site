@@ -744,6 +744,20 @@
             </button>
         </div>
 
+        <!-- Parrainage : offrir un tirage à un proche -->
+        <div class="max-w-lg mx-auto mb-16 fade-in-up text-center" style="padding:24px 20px;background:rgba(5,20,40,0.5);border:1px solid rgba(212,175,55,0.2);border-radius:16px;">
+            <p style="color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:19px;font-weight:600;margin:0 0 8px;">Offrez un tirage à un proche</p>
+            <p style="color:rgba(212,175,55,0.6);font-family:'Cormorant Garamond',Georgia,serif;font-size:13.5px;line-height:1.6;margin:0 0 16px;">Partagez votre lien : la personne qui l'utilise reçoit 1 tirage gratuit en plus, et vous aussi.</p>
+            <div style="display:flex;gap:8px;max-width:380px;margin:0 auto;">
+                <input id="referral-link-input" type="text" readonly
+                    style="flex:1;background:rgba(5,20,40,0.8);border:1px solid rgba(212,175,55,0.3);border-radius:10px;color:#e8d9b0;font-family:Georgia,serif;font-size:12.5px;padding:10px 12px;outline:none;">
+                <button onclick="copyReferralLink(this)"
+                    style="flex-shrink:0;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#051428;border:none;border-radius:10px;padding:0 16px;font-family:Georgia,serif;font-size:13px;font-weight:700;cursor:pointer;">
+                    Copier
+                </button>
+            </div>
+        </div>
+
         <!-- Bloc conversion Tore "tirages épuisés" — affiché dynamiquement -->
         <div id="tore-conversion-block" class="mb-16 fade-in-up" style="display:none; animation-delay:0.15s">
 
@@ -2324,6 +2338,25 @@
 })();
 </script>
 
+<script src="js/referral.js" defer></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const input = document.getElementById('referral-link-input');
+        if (input && window.oradiaReferral) input.value = window.oradiaReferral.buildShareLink();
+    });
+    function copyReferralLink(btn) {
+        const input = document.getElementById('referral-link-input');
+        if (!input) return;
+        navigator.clipboard.writeText(input.value).then(() => {
+            const orig = btn.textContent;
+            btn.textContent = 'Copié ✓';
+            setTimeout(() => { btn.textContent = orig; }, 2000);
+        }).catch(() => {
+            input.select();
+            document.execCommand('copy');
+        });
+    }
+</script>
 <script src="js/page-tracker.js" defer></script>
 </body>
 </html>

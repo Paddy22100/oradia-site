@@ -274,6 +274,13 @@
 
   <!-- Script Freemium Tracker -->
   <script src="js/freemium-tracker.js" defer></script>
+  <script src="js/referral.js" defer></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function () {
+      window.oradiaReferral?.captureReferredBy();
+      window.oradiaReferral?.claimPendingBonuses();
+    });
+  </script>
   <script src="js/tirages-storage.js"></script>
   <!-- Client QRNG — tirage quantique via ANU -->
   <script src="js/qrng-client.js" defer></script>
@@ -4437,6 +4444,7 @@ function showToreAnalysisCTA() {
 
   // Enregistrer le tirage Tore complété
   if (window.freemiumTracker) window.freemiumTracker.recordToreDraw();
+  window.oradiaReferral?.markConversionIfNeeded();
 
   // Collecter les cartes retournées
   const cards = [];

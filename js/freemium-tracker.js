@@ -278,10 +278,22 @@ class FreemiumTracker {
         return false;
     }
 
+    // Tirages bonus gagnés via le parrainage (voir js/referral.js) — s'ajoutent
+    // aux 2 tirages gratuits de base, jamais un remplacement.
+    getBonusDraws() {
+        return parseInt(localStorage.getItem('oradia_tore_bonus_draws') || '0', 10);
+    }
+
+    addBonusDraws(n) {
+        if (!n || n <= 0) return;
+        const current = this.getBonusDraws();
+        localStorage.setItem('oradia_tore_bonus_draws', String(current + n));
+    }
+
     canDrawTore() {
         if (this.isSubscribed()) return true;
         const used = parseInt(localStorage.getItem('oradia_tore_lifetime_draws') || '0', 10);
-        return used < 2;
+        return used < (2 + this.getBonusDraws());
     }
 
     recordToreDraw() {
@@ -294,7 +306,7 @@ class FreemiumTracker {
         const used = parseInt(
             localStorage.getItem('oradia_tore_lifetime_draws') || '0', 10
         );
-        return Math.max(0, 2 - used);
+        return Math.max(0, 2 + this.getBonusDraws() - used);
     }
 
     showToreLimitReached() {
