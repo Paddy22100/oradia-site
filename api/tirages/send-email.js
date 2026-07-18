@@ -651,6 +651,21 @@ async function handleCollectEmail(req, res) {
     }, { onConflict: 'email', ignoreDuplicates: false });
 
     // La promo part 24h après via le cron job quotidien
+
+    // 3b. Avec consentement, inscrire aussi dans newsletter_contacts — c'est la table
+    // que lit le dashboard (Contacts > Inscrits Newsletter). Sans ça, ces personnes
+    // consentantes recevaient bien la newsletter (Brevo liste 5) mais restaient
+    // invisibles dans le suivi admin.
+    if (consentMarketing) {
+      await supabase.from('newsletter_contacts').upsert({
+        email,
+        source: 'tore',
+        status: 'active',
+        brevo_synced: true,
+        brevo_synced_at: new Date().toISOString(),
+        metadata: { page: 'tore-analysis', subscribed_at: new Date().toISOString() }
+      }, { onConflict: 'email' });
+    }
   } catch (e) { console.error('[collect-email] Supabase error:', e.message); }
 
   return res.status(200).json({ success: true });

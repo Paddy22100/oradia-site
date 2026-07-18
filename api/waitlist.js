@@ -598,6 +598,11 @@ module.exports = async (req, res) => {
 
     // body est déjà parsé plus haut
     const email = String(body.email || '').trim().toLowerCase();
+    // Source d'inscription : reçue du client (utile pour mesurer quelle page convertit),
+    // repliée sur 'site' si absente ou invalide plutôt que codée en dur.
+    const ALLOWED_SOURCES = ['precommande-oracle', 'footer-newsletter', 'tore', 'oracle', 'blog', 'inline', 'site'];
+    const rawSource = String(body.source || 'site').trim().toLowerCase();
+    const source = ALLOWED_SOURCES.includes(rawSource) ? rawSource : 'site';
 
     if (!isValidEmail(email)) {
       return res.status(400).json({
@@ -615,10 +620,10 @@ module.exports = async (req, res) => {
       .upsert(
         {
           email,
-          source: 'precommande-oracle',
+          source,
           status: 'active',
           metadata: {
-            page: 'precommande-oracle',
+            page: source,
             subscribed_at: new Date().toISOString()
           }
         },
