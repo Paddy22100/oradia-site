@@ -1416,6 +1416,25 @@
             `;
 
             try {
+                // Récupération : si l'analyse a déjà été générée et stockée lors d'une
+                // visite précédente de cette page (onglet fermé/rechargé pendant ou après
+                // l'attente), on la réutilise directement au lieu de refaire un appel IA
+                // (coûteux et qui produirait un texte différent à chaque tentative).
+                const cachedRaw = sessionStorage.getItem('tore_analysis_data');
+                if (cachedRaw) {
+                    try {
+                        const cached = JSON.parse(cachedRaw);
+                        if (cached && cached.analysis) {
+                            const fullText = cached.analysis;
+                            const obsData = parseObservationSection(fullText);
+                            const mainText = obsData ? fullText.slice(0, fullText.toLowerCase().indexOf('## fenêtre d\'observation')).trim() : fullText;
+                            displayAIAnalysisText(mainText);
+                            if (obsData) injectObservationWindow(obsData.text, obsData.days, obsData.points);
+                            return true;
+                        }
+                    } catch (_) { /* cache invalide, on refait un appel normal */ }
+                }
+
                 // Vérifier d'abord si une analyse a été préchargée
                 const preloadedData = sessionStorage.getItem('preloaded_analysis');
                 let data;
@@ -1470,6 +1489,17 @@
                     });
                     data = await resp.json();
                     if (!resp.ok || !data.success || !data.analysis) throw new Error(data.error || 'Analyse indisponible');
+                    // Sauvegarde pour récupération : si l'onglet est fermé/rechargé après
+                    // ce point, la prochaine visite réutilisera ce résultat au lieu de
+                    // relancer un appel IA (voir le cache en haut de cette fonction).
+                    try {
+                        sessionStorage.setItem('tore_analysis_data', JSON.stringify({
+                            analysis: data.analysis,
+                            synthesis: data.synthesis || '',
+                            advice: data.advice || '',
+                            timestamp: Date.now()
+                        }));
+                    } catch (_) {}
                 }
 
                 const fullText = data.analysis;
