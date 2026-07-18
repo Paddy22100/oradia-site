@@ -469,7 +469,11 @@ async function handleData(req, res) {
           }
           await logSystemEvent(supabase, { level: 'info', source: 'cron-relance', method: 'GET', path: '/api/admin/data', status_code: 200, message: `Relances envoyées : ${results.filter(r=>r.ok).length}/${results.length}`, details: results });
 
-          // Déclencher les promos tirage 24h après (fire-and-forget)
+          // Séquence post-tirage : check-in J+3 puis promo abonnement J+7 (fire-and-forget)
+          try {
+            const checkinUrl = `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}/api/tirages/send-email?action=cron-checkin&cron_secret=${process.env.CRON_SECRET}`;
+            fetch(checkinUrl, { method: 'GET' }).catch(e => console.error('[cron-relance] checkin fire error:', e.message));
+          } catch(e) { console.error('[cron-relance] checkin launch error:', e.message); }
           try {
             const promoUrl = `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}/api/tirages/send-email?action=cron-promo-tirage&cron_secret=${process.env.CRON_SECRET}`;
             fetch(promoUrl, { method: 'GET' }).catch(e => console.error('[cron-relance] promo-tirage fire error:', e.message));

@@ -743,6 +743,113 @@ function buildPromoTirageEmailHtml() {
 </body></html>`;
 }
 
+// ============ EMAIL CHECK-IN J+3 ============
+function buildCheckinEmailHtml() {
+  const paragraphs = [
+    `Il y a trois jours, vous avez fait un tirage du Tore avec une question en tête.`,
+    `Je vous écris juste pour vous demander : avez-vous remarqué quelque chose depuis ? Un événement, une rencontre, une pensée récurrente qui fait écho à ce que les cartes vous ont dit ?`,
+    `Ce n'est pas une question rhétorique. C'est souvent dans les jours qui suivent un tirage que les synchronicités se révèlent, si on prend le temps de les observer.`,
+    `Si vous voulez, vous pouvez refaire un tirage sur oradia.fr pour continuer d'explorer.`
+  ];
+  const bodyRows = paragraphs.map(p => `
+  <tr><td style="padding:0 32px 20px;">
+    <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:justify;">${p}</div>
+  </td></tr>`).join('');
+
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<style>@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');</style>
+</head>
+<body style="margin:0; padding:0; background-color:#040d1c;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#040d1c" style="background-color:#040d1c;">
+<tr><td align="center" style="padding:32px 12px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.96) 100%); max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
+  <tr><td style="padding:36px 32px 0; text-align:center;">
+    <p style="margin:0 0 20px;color:#d4af37;font-family:Georgia,serif;font-size:13px;letter-spacing:0.35em;text-transform:uppercase;opacity:0.7;">ORADIA</p>
+    <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:22px; margin:0 0 20px; text-align:left;">Trois jours ont passé…</h2>
+  </td></tr>
+  ${bodyRows}
+  <tr><td style="padding:8px 32px 40px; text-align:center;">
+    <a href="https://oradia.fr/tore.html" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">Refaire un tirage</a>
+  </td></tr>
+  <tr><td style="padding:36px 32px 28px; border-top:1px solid rgba(212,175,55,0.15); text-align:center;">
+    <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
+    <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
+    <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
+    <p style="margin:0 0 20px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
+    <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car tu as fait un tirage du Tore sur oradia.fr.</p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+async function sendCheckinEmail(email) {
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const { createClient } = require('@supabase/supabase-js');
+  const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  const html = buildCheckinEmailHtml();
+  const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+    body: JSON.stringify({
+      sender: { name: "Rudy d'Oradia", email: 'contact@oradia.fr' },
+      to: [{ email }],
+      subject: "Rudy d'Oradia — Trois jours ont passé, avez-vous remarqué quelque chose ?",
+      htmlContent: html
+    })
+  });
+  if (!brevoRes.ok) {
+    const err = await brevoRes.json().catch(() => ({}));
+    throw new Error(`Brevo error: ${err.message || brevoRes.status}`);
+  }
+  await supabase.from('tore_emails').update({ checkin_sent_at: new Date().toISOString() }).eq('email', email);
+  return { sent: true };
+}
+
+// ============ CRON : envoyer le check-in J+3 ============
+async function handleCronCheckin(req, res) {
+  const secret = req.query.cron_secret || '';
+  if (secret !== process.env.CRON_SECRET) {
+    return res.status(401).json({ error: 'Unauthorized' });
+  }
+  const { createClient } = require('@supabase/supabase-js');
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+  // Fenêtre J+3 à J+4 pour éviter d'envoyer rétroactivement à d'anciens tirages
+  const from = new Date(Date.now() - 4 * 24 * 60 * 60 * 1000).toISOString();
+  const to   = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString();
+  const { data: targets, error } = await supabase
+    .from('tore_emails')
+    .select('email')
+    .is('checkin_sent_at', null)
+    .gte('created_at', from)
+    .lt('created_at', to)
+    .limit(50);
+
+  if (error) {
+    console.error('[cron-checkin] Supabase error:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+
+  let sent = 0, failed = 0;
+  for (const row of targets || []) {
+    try {
+      await sendCheckinEmail(row.email);
+      sent++;
+    } catch (e) {
+      console.error('[cron-checkin] Failed for', row.email, e.message);
+      failed++;
+    }
+  }
+  console.log(`[cron-checkin] sent=${sent} failed=${failed}`);
+  return res.status(200).json({ success: true, sent, failed });
+}
+
 async function sendPromoTirageEmail(email) {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const { createClient } = require('@supabase/supabase-js');
@@ -790,6 +897,28 @@ async function handleSendPromoPreview(req, res) {
       sender: { name: "Rudy d'ORADIA", email: 'contact@oradia.fr' },
       to: [{ email: targetEmail }],
       subject: "[TEST] Rudy d'ORADIA — Et si tu allais plus loin avec le Tore ?",
+      htmlContent: html
+    })
+  });
+  if (!brevoRes.ok) {
+    const err = await brevoRes.json().catch(() => ({}));
+    return res.status(500).json({ success: false, error: err.message || 'Erreur Brevo' });
+  }
+  return res.status(200).json({ success: true, sent_to: targetEmail });
+}
+
+async function handleCheckinPreview(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const body = await parseJsonBody(req);
+  const targetEmail = body.email || 'contact@oradia.fr';
+  const html = buildCheckinEmailHtml();
+  const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+    body: JSON.stringify({
+      sender: { name: "Rudy d'ORADIA", email: 'contact@oradia.fr' },
+      to: [{ email: targetEmail }],
+      subject: "[TEST] Rudy d'ORADIA — Trois jours ont passé, avez-vous remarqué quelque chose ?",
       htmlContent: html
     })
   });
@@ -958,8 +1087,9 @@ async function handleCronPromoTirage(req, res) {
   const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
   const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
-  // Cherche les emails créés il y a plus de 24h, sans promo envoyée
-  const cutoff = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+  // Séquence post-tirage en 3 temps : J0 résultat (collect-email), J+3 check-in
+  // (cron-checkin), J+7 offre abonnement (ici — anciennement envoyée à 24h).
+  const cutoff = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
   const { data: targets, error } = await supabase
     .from('tore_emails')
     .select('email')
@@ -1000,10 +1130,12 @@ export default async function handler(req, res) {
     case 'collect-email':      return handleCollectEmail(req, res);
     case 'check-brevo':        return handleCheckBrevo(req, res);
     case 'send-promo-preview': return handleSendPromoPreview(req, res);
+    case 'send-checkin-preview': return handleCheckinPreview(req, res);
     case 'send-promo-manual':  return handleSendPromoManual(req, res);
     case 'list-tore-emails':   return handleListToreEmails(req, res);
     case 'import-tore-history': return handleImportToreHistory(req, res);
     case 'cron-promo-tirage':  return handleCronPromoTirage(req, res);
+    case 'cron-checkin':       return handleCronCheckin(req, res);
     case 'send-email':
     default:                 return handleSendEmail(req, res);
   }

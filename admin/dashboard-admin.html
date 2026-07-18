@@ -2580,11 +2580,22 @@
                     </button>
                 </div>
 
+                <!-- Check-in J+3 -->
+                <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-gold font-semibold text-sm">Check-in J+3 (synchronicité observée ?)</p>
+                        <p class="text-gold/40 text-xs mt-0.5">Envoyé 3 jours après tirage freemium · 2ᵉ étape de la séquence post-tirage</p>
+                    </div>
+                    <button onclick="sendMailTest('checkin-tirage')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
+                        <i class="fas fa-paper-plane text-xs"></i> Envoyer test
+                    </button>
+                </div>
+
                 <!-- Promo tirage / abonnement 5€ -->
                 <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
                     <div>
                         <p class="text-gold font-semibold text-sm">Promo abonnement Tore (5€ le 1er mois)</p>
-                        <p class="text-gold/40 text-xs mt-0.5">Envoyé 24h après tirage freemium · bandeau_rappel_abonnement_tore</p>
+                        <p class="text-gold/40 text-xs mt-0.5">Envoyé 7 jours après tirage freemium · 3ᵉ étape de la séquence post-tirage</p>
                     </div>
                     <button onclick="sendMailTest('promo-tirage')" class="mail-test-btn flex-shrink-0 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2">
                         <i class="fas fa-paper-plane text-xs"></i> Envoyer test
@@ -6001,6 +6012,12 @@
                     res = await adminFetch('/api/fenetre/test-preview', { method: 'POST' });
                 } else if (type === 'promo-tirage') {
                     res = await adminFetch('/api/tirages/send-email?action=send-promo-preview', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email: 'contact@oradia.fr' })
+                    });
+                } else if (type === 'checkin-tirage') {
+                    res = await adminFetch('/api/tirages/send-email?action=send-checkin-preview', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ email: 'contact@oradia.fr' })
