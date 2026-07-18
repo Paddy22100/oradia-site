@@ -737,11 +737,11 @@ function buildPromoTirageEmailHtml(isSubscribed = false) {
     </table>
   </td></tr>
   ${isSubscribed ? '' : `<tr><td style="padding:0 24px 16px;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.2);border-radius:14px;">
-      <tr><td style="padding:20px 24px;text-align:center;">
+    <table width="100%" cellpadding="0" cellspacing="0" background="https://oradia.fr/images/medias/newsletter_image.webp" style="border:1px solid rgba(212,175,55,0.3);border-radius:14px;background-image:url('https://oradia.fr/images/medias/newsletter_image.webp');background-size:cover;background-position:center top;">
+      <tr><td style="padding:30px 24px;text-align:center;background:linear-gradient(135deg,rgba(4,14,30,0.88) 0%,rgba(5,20,40,0.82) 100%);border-radius:13px;">
         <p style="margin:0 0 6px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">Au fait : tu n'es pas inscrit·e à la newsletter Oradia. Cet email t'a simplement été envoyé suite à ton tirage sur le Tore.</p>
-        <p style="margin:0 0 14px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">Si tu veux recevoir mes prochains messages (réflexions, actualités, avant-premières), tu peux t'inscrire ici :</p>
-        <a href="https://oradia.fr/#footer-newsletter-section" style="display:inline-block;background:rgba(212,175,55,0.12);color:#f0c75e;text-decoration:none;padding:10px 24px;border-radius:50px;font-weight:700;font-size:12px;letter-spacing:0.05em;font-family:Georgia,serif;border:1px solid rgba(212,175,55,0.35);">S'inscrire à la newsletter</a>
+        <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">Si tu veux recevoir mes prochains messages (réflexions, actualités, avant-premières), tu peux t'inscrire ici :</p>
+        <a href="https://oradia.fr/#footer-newsletter-section" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">S'inscrire à la newsletter</a>
       </td></tr>
     </table>
   </td></tr>`}
@@ -810,11 +810,11 @@ function buildCheckinEmailHtml(isSubscribed = false) {
     </table>
   </td></tr>
   ${isSubscribed ? '' : `<tr><td style="padding:0 24px 16px;">
-    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.2);border-radius:14px;">
-      <tr><td style="padding:20px 24px;text-align:center;">
+    <table width="100%" cellpadding="0" cellspacing="0" background="https://oradia.fr/images/medias/newsletter_image.webp" style="border:1px solid rgba(212,175,55,0.3);border-radius:14px;background-image:url('https://oradia.fr/images/medias/newsletter_image.webp');background-size:cover;background-position:center top;">
+      <tr><td style="padding:30px 24px;text-align:center;background:linear-gradient(135deg,rgba(4,14,30,0.88) 0%,rgba(5,20,40,0.82) 100%);border-radius:13px;">
         <p style="margin:0 0 6px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">Au fait : tu n'es pas inscrit·e à la newsletter Oradia. Cet email t'a simplement été envoyé suite à ton tirage sur le Tore.</p>
-        <p style="margin:0 0 14px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">Si tu veux recevoir mes prochains messages (réflexions, actualités, avant-premières), tu peux t'inscrire ici :</p>
-        <a href="https://oradia.fr/#footer-newsletter-section" style="display:inline-block;background:rgba(212,175,55,0.12);color:#f0c75e;text-decoration:none;padding:10px 24px;border-radius:50px;font-weight:700;font-size:12px;letter-spacing:0.05em;font-family:Georgia,serif;border:1px solid rgba(212,175,55,0.35);">S'inscrire à la newsletter</a>
+        <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">Si tu veux recevoir mes prochains messages (réflexions, actualités, avant-premières), tu peux t'inscrire ici :</p>
+        <a href="https://oradia.fr/#footer-newsletter-section" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">S'inscrire à la newsletter</a>
       </td></tr>
     </table>
   </td></tr>`}
