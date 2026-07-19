@@ -6724,12 +6724,15 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
     }
   }
 
-  // Un nouveau tirage commence : purger l'analyse mise en cache du tirage précédent.
-  // Sans ça, tore-analysis.html (qui réutilise tore_analysis_data pour survivre à un
-  // rechargement d'onglet pendant le MÊME tirage) réaffiche par erreur l'analyse du
-  // tirage précédent quand deux tirages sont faits à la suite dans le même onglet
-  // (typiquement un membre abonné qui enchaîne plusieurs tirages sans fermer l'onglet).
+  // Un nouveau tirage commence : purger toute analyse mise en cache du tirage précédent.
+  // tore_analysis_data survit à un rechargement d'onglet PENDANT le même tirage, et
+  // preloaded_analysis est le résultat préchargé pendant l'animation qui n'est effacé
+  // que si l'utilisateur arrive sur tore-analysis.html — sans ce nettoyage, l'une ou
+  // l'autre clé peut faire réafficher l'analyse du tirage précédent si deux tirages
+  // sont faits à la suite dans le même onglet sans être passé par la page d'analyse
+  // entre les deux (typiquement un abonné qui enchaîne plusieurs tirages).
   sessionStorage.removeItem('tore_analysis_data');
+  sessionStorage.removeItem('preloaded_analysis');
 
   // Sauvegarder l'intention et le genre dans sessionStorage
   sessionStorage.setItem('tore_intention', intentionValue);
