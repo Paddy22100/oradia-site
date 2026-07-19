@@ -3679,14 +3679,22 @@ module.exports = async (req, res) => {
       const BREVO_API_KEY = process.env.BREVO_API_KEY;
       if (!BREVO_API_KEY) return res.status(500).json({ error: 'BREVO_API_KEY non configurée' });
 
-      // Récupérer les 20 dernières campagnes envoyées avec leurs statistiques
-      const campRes = await fetch('https://api.brevo.com/v3/emailCampaigns?status=sent&limit=20&sort=desc&statistics=globalStats', {
+      // Récupérer les 20 dernières campagnes envoyées (les statistiques sont
+      // incluses par défaut dans la réponse — le paramètre statistics=...
+      // provoquait des 503 côté Brevo).
+      let campRes = await fetch('https://api.brevo.com/v3/emailCampaigns?status=sent&limit=20&sort=desc', {
         headers: { 'api-key': BREVO_API_KEY }
       });
+      if (!campRes.ok) {
+        // Nouvelle tentative minimale (certains paramètres combinés déclenchent des 5xx transitoires)
+        campRes = await fetch('https://api.brevo.com/v3/emailCampaigns?status=sent', {
+          headers: { 'api-key': BREVO_API_KEY }
+        });
+      }
       if (!campRes.ok) return res.status(502).json({ error: `Brevo ${campRes.status}` });
       const campData = await campRes.json();
       const campaigns = (campData.campaigns || []).map(c => {
-        const g = c.statistics?.globalStats || {};
+        const g = c.statistics?.globalStats || (Array.isArray(c.statistics?.campaignStats) ? c.statistics.campaignStats[0] : null) || {};
         const delivered = g.delivered || 0;
         return {
           id: c.id,
