@@ -288,11 +288,25 @@ export default async function handler(req, res) {
     });
   }
 
+  // Noms d'affichage des familles — le prompt recevait les clés techniques
+  // (emotions, revelations, memoire_cosmos...) et l'IA les recopiait telles
+  // quelles dans l'analyse, sans accents ni majuscules.
+  const FAMILY_LABELS = {
+    emotions: 'Émotions',
+    besoins: 'Besoins',
+    transmutation: 'Transmutation',
+    actions: 'Actions',
+    archetypes: 'Archétypes',
+    revelations: 'Révélations',
+    memoire_cosmos: 'Mémoire Cosmos'
+  };
+
   // Construction du prompt
   const cardsDescription = cards.map((c, i) => {
     const bridge = c.bridgeCard ? ` (passerelle: ${c.bridgeCard.name})` : '';
     const polarity = c.polarity ? ` [${c.polarity}]` : '';
-    return `${i + 1}. ${c.family}: ${c.name}${polarity}${bridge}`;
+    const famLabel = FAMILY_LABELS[c.family] || c.family;
+    return `${i + 1}. Famille ${famLabel}: ${c.name}${polarity}${bridge}`;
   }).join('\n');
 
   const genderInstruction = gender === 'homme'
