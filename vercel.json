@@ -59,6 +59,8 @@
     { "src": "/blog/oracle-developpement-personnel",    "dest": "/blog/oracle-developpement-personnel.html" },
     { "src": "/blog/adaptome-strategies-survie",        "dest": "/blog/adaptome-strategies-survie.html" },
     { "src": "/blog/guidance-spirituelle-voyance",      "dest": "/blog/guidance-spirituelle-voyance.html" },
+    { "src": "/blog/oracle-tirage-quantique",           "dest": "/blog/oracle-tirage-quantique.html" },
+    { "src": "/blog/oracle-synchronicites",             "dest": "/blog/oracle-synchronicites.html" },
     { "src": "/guidance",                        "dest": "/guidance.html" },
     { "src": "/guidance-confirmation",          "dest": "/guidance-confirmation.html" },
     { "src": "/oracle",                        "dest": "/oracle.html" },

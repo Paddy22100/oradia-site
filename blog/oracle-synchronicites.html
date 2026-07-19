@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Synchronicités après un tirage d'oracle : ce que nous observons vraiment — Oradia</title>
+  <meta name="description" content="Que se passe-t-il dans les jours qui suivent un tirage d'oracle ? Oradia mène une étude ouverte sur les synchronicités, avec des données publiées sans filtrage. Voici la démarche.">
+  <link rel="canonical" href="https://oradia.fr/blog/oracle-synchronicites">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://oradia.fr/blog/oracle-synchronicites">
+  <meta property="og:title" content="Synchronicités après un tirage d'oracle : ce que nous observons vraiment">
+  <meta property="og:description" content="Une étude ouverte sur les coïncidences signifiantes observées après un tirage au hasard quantique. Méthode, honnêteté, premières observations.">
+  <meta property="og:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg">
+  <meta property="og:site_name" content="Oradia">
+  <meta property="og:locale" content="fr_FR">
+  <meta name="author" content="Rudy Boucheron">
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    "headline": "Synchronicités après un tirage d'oracle : ce que nous observons vraiment",
+    "description": "Une étude ouverte sur les coïncidences signifiantes observées après un tirage au hasard quantique. Méthode, honnêteté, premières observations.",
+    "author": { "@type": "Person", "name": "Rudy Boucheron", "url": "https://oradia.fr/a-propos.html" },
+    "publisher": { "@type": "Organization", "name": "Oradia", "url": "https://oradia.fr" },
+    "datePublished": "2026-07-19",
+    "dateModified": "2026-07-19",
+    "url": "https://oradia.fr/blog/oracle-synchronicites",
+    "inLanguage": "fr"
+  }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #040d1c; color: #c8c0a8; font-family: 'Lora', Georgia, serif; min-height: 100vh; }
+    a { color: inherit; text-decoration: none; }
+    .site-header { padding: 20px 32px; border-bottom: 1px solid rgba(212,175,55,0.12); display: flex; align-items: center; justify-content: space-between; }
+    .logo { display: flex; align-items: center; gap: 8px; }
+    .logo img { width: 40px; height: 40px; border-radius: 50%; }
+    .logo span { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 26px; font-weight: 600; letter-spacing: 0.12em; background: linear-gradient(135deg, #d4af37, #f5e7a1, #d4af37); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+    .header-nav { display: flex; gap: 24px; font-size: 14px; }
+    .header-nav a { color: rgba(212,175,55,0.7); transition: color 0.2s; }
+    .header-nav a:hover { color: #d4af37; }
+    main { max-width: 700px; margin: 0 auto; padding: 48px 24px 96px; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: rgba(212,175,55,0.5); margin-bottom: 40px; transition: color 0.2s; letter-spacing: 0.05em; }
+    .back-link:hover { color: #d4af37; }
+    .article-meta { font-size: 12px; color: rgba(212,175,55,0.4); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 16px; }
+    h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(28px, 4.5vw, 42px); font-weight: 300; color: #f0c75e; line-height: 1.25; margin-bottom: 40px; }
+    .article-body { font-size: 16.5px; line-height: 1.85; color: #c8c0a8; }
+    .article-body p { margin-bottom: 24px; }
+    .article-body h2 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(20px, 3vw, 26px); font-weight: 400; color: #f0c75e; margin: 48px 0 20px; line-height: 1.3; }
+    .article-body em { font-style: italic; color: rgba(200,192,168,0.85); }
+    .article-body strong { font-weight: 600; color: #d4af37; }
+    .article-body a { color: #d4af37; border-bottom: 1px solid rgba(212,175,55,0.35); }
+    .article-body hr { border: none; border-top: 1px solid rgba(212,175,55,0.12); margin: 40px 0; }
+    .cta-block { margin-top: 64px; padding: 40px; background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.15); border-radius: 12px; text-align: center; }
+    .cta-block p { font-size: 15px; color: rgba(200,192,168,0.7); margin-bottom: 24px; line-height: 1.7; font-style: italic; }
+    .cta-btn { display: inline-block; background: linear-gradient(135deg, #d4af37, #f5e7a1); color: #0a1628; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 16px; font-weight: 600; padding: 14px 36px; border-radius: 50px; letter-spacing: 0.05em; transition: opacity 0.2s; }
+    .cta-btn:hover { opacity: 0.88; }
+    .site-footer { border-top: 1px solid rgba(212,175,55,0.1); padding: 40px 32px; text-align: center; }
+    .site-footer a { color: rgba(212,175,55,0.5); font-size: 13px; }
+    .site-footer a:hover { color: #d4af37; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a href="/" class="logo"><img src="/images/logo-hd-v2.webp" alt="O"><span>RADIA</span></a>
+    <nav class="header-nav">
+      <a href="/oracle.html">Oracle</a>
+      <a href="/tore.html">Tirage</a>
+      <a href="/a-propos.html">À propos</a>
+    </nav>
+  </header>
+
+  <main>
+    <a href="/blog" class="back-link">← Retour au blog</a>
+    <p class="article-meta">7 min de lecture &nbsp;·&nbsp; Oradia</p>
+    <h1>Synchronicités après un tirage d'oracle : ce que nous observons vraiment</h1>
+
+    <div class="article-body">
+      <p>Vous tirez une carte qui parle de rupture nécessaire. Trois jours plus tard, une conversation que vous repoussiez depuis des mois se déclenche toute seule. Coïncidence ? Probablement. Et pourtant, quelque chose en vous refuse de balayer l'événement d'un revers de main.</p>
+      <p>Ce genre d'expérience porte un nom depuis Carl Gustav Jung : la <strong>synchronicité</strong>, qu'il définissait comme une coïncidence temporelle entre un état intérieur et un événement extérieur, reliés par le sens plutôt que par la causalité.</p>
+      <p>Le concept est fascinant et glissant à la fois. Fascinant, parce que presque tout le monde a vécu au moins une coïncidence troublante. Glissant, parce qu'il est impossible à prouver et facile à fantasmer. Notre cerveau est une machine à détecter des motifs, y compris là où il n'y en a pas.</p>
+      <p>Alors, que faire de sérieux avec ça ?</p>
+
+      <hr>
+
+      <h2>Le problème des récits de synchronicités</h2>
+      <p>Les témoignages de synchronicités souffrent de trois biais bien documentés.</p>
+      <p>Le <strong>biais de confirmation</strong> : on remarque les coïncidences qui confirment ce qu'on espérait, on oublie les cent fois où rien ne s'est passé. Le <strong>biais de sélection</strong> : seules les histoires spectaculaires circulent, jamais les tirages suivis de rien. Et l'<strong>effet Barnum</strong> : plus un message est vague, plus il semble s'appliquer précisément à notre vie.</p>
+      <p>La plupart des sites d'oracle ignorent ces biais, ou pire, les exploitent. Nous avons choisi une autre voie : les regarder en face et construire une démarche qui en tienne compte.</p>
+
+      <h2>Une étude ouverte, avec des règles strictes</h2>
+      <p>Depuis 2026, Oradia mène une étude continue sur les synchronicités rapportées après un tirage du Tore. Voici les règles que nous nous imposons :</p>
+      <p><strong>Un hasard authentique.</strong> Seuls les tirages effectués avec le générateur quantique de l'Université Nationale Australienne sont comptabilisés. Si un tirage a utilisé le moindre octet de hasard simulé, il est exclu. Nous avons expliqué pourquoi dans <a href="/blog/oracle-tirage-quantique">un article dédié au tirage quantique</a>.</p>
+      <p><strong>Une fenêtre d'observation définie à l'avance.</strong> Après son tirage, chaque personne choisit une période de 7 à 21 jours pendant laquelle elle s'engage simplement à rester attentive. Le questionnaire n'est envoyé qu'à la clôture de cette fenêtre, jamais avant. On ne demande pas « avez-vous vécu quelque chose d'extraordinaire ? » à chaud, on demande une observation posée, à froid.</p>
+      <p><strong>Des résultats publiés sans filtrage.</strong> Les scores moyens, la répartition des intensités ressenties, les types d'observations rapportées : tout est visible sur <a href="/etude-synchronicites.html">la page publique de l'étude</a>, y compris si les chiffres ne nous arrangent pas. Un mois où personne ne rapporte rien sera affiché comme tel.</p>
+      <p><strong>Aucune promesse.</strong> Répondre est facultatif, anonymisé, et nous disons clairement que cet échantillon ne prouve rien à lui seul. C'est une collecte d'observations, pas une démonstration.</p>
+
+      <hr>
+
+      <h2>Ce que les gens rapportent</h2>
+      <p>Sans dévoiler des chiffres qui évoluent en continu (ils sont sur la page de l'étude), les catégories d'observations les plus fréquentes sont parlantes : des <em>coïncidences de timing</em> (un appel, une proposition, une rencontre qui tombe précisément dans la fenêtre), des <em>pensées ou intuitions qui se réalisent</em>, des <em>signes récurrents dans l'environnement</em>, et des <em>rêves en lien avec l'intention posée</em>.</p>
+      <p>Une observation nous frappe particulièrement : beaucoup de personnes rapportent que le simple fait d'avoir défini une fenêtre d'observation a changé leur qualité d'attention. Elles ont remarqué des choses qu'elles n'auraient pas remarquées autrement. Est-ce une synchronicité ou une attention affûtée ? Peut-être que la question est mal posée : peut-être que l'attention affûtée est précisément la porte d'entrée.</p>
+
+      <h2>L'hypothèse la plus prudente reste intéressante</h2>
+      <p>Même dans la lecture la plus sceptique, où aucune synchronicité « objective » n'existerait, le dispositif fait quelque chose de réel : il transforme une question floue en intention formulée, puis en période d'attention consciente. C'est exactement le mécanisme que la psychologie de l'attention décrit : ce qu'on cherche activement, on le trouve plus souvent, parce qu'on le voit enfin.</p>
+      <p>Et dans la lecture la plus ouverte, celle de Jung et de Pauli, les coïncidences signifiantes seraient une propriété du réel que notre science ne sait pas encore décrire. Nous ne tranchons pas. Nous observons, nous publions, et nous laissons chacun se faire son avis sur des données honnêtes plutôt que sur des promesses.</p>
+      <p>C'est, à notre connaissance, la seule étude de ce type menée par un oracle en ligne francophone. Elle grandit à chaque tirage.</p>
+    </div>
+
+    <div class="cta-block">
+      <p>Faites un tirage, choisissez votre fenêtre d'observation,<br>et contribuez à l'étude si le cœur vous en dit.</p>
+      <a href="/tore.html" class="cta-btn">Faire un tirage et observer</a>
+    </div>
+  </main>
+
+  <footer class="site-footer">
+    <a href="/">oradia.fr</a>
+  </footer>
+</body>
+</html>
