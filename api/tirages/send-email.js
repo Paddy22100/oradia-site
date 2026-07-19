@@ -932,6 +932,16 @@ async function sendPromoTirageEmail(email) {
 // ============ ACTION : envoyer email promo de test (admin) ============
 async function handleSendPromoPreview(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const authHeader = req.headers.authorization || '';
+  const rawToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  if (!rawToken) return res.status(401).json({ error: 'Non autorisé' });
+  try {
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(rawToken, process.env.ADMIN_SESSION_SECRET);
+    if (decoded.type !== 'admin') throw new Error('type invalide');
+  } catch (_) {
+    return res.status(401).json({ error: 'Non autorisé' });
+  }
   const body = await parseJsonBody(req);
   const targetEmail = body.email || 'contact@oradia.fr';
   const html = buildPromoTirageEmailHtml();
@@ -954,6 +964,16 @@ async function handleSendPromoPreview(req, res) {
 
 async function handleCheckinPreview(req, res) {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const authHeader = req.headers.authorization || '';
+  const rawToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+  if (!rawToken) return res.status(401).json({ error: 'Non autorisé' });
+  try {
+    const jwt = require('jsonwebtoken');
+    const decoded = jwt.verify(rawToken, process.env.ADMIN_SESSION_SECRET);
+    if (decoded.type !== 'admin') throw new Error('type invalide');
+  } catch (_) {
+    return res.status(401).json({ error: 'Non autorisé' });
+  }
   const body = await parseJsonBody(req);
   const targetEmail = body.email || 'contact@oradia.fr';
   const html = buildCheckinEmailHtml();
