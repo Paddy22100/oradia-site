@@ -2783,6 +2783,19 @@
 
         <!-- ══ ONGLET : PARAMÈTRES ══ -->
         <div id="tab-settings" class="tab-panel">
+
+        <div class="flex gap-2 mb-8 border-b border-gold/15 pb-px">
+            <button onclick="showSettingsSubTab('features')" id="settings-subtab-btn-features"
+                class="px-4 py-2.5 text-sm font-medium border-b-2 border-gold text-gold transition">
+                <i class="fas fa-sliders-h mr-1.5"></i>Fonctionnalités
+            </button>
+            <button onclick="showSettingsSubTab('system')" id="settings-subtab-btn-system"
+                class="px-4 py-2.5 text-sm font-medium border-b-2 border-transparent text-light-gold/50 hover:text-gold transition">
+                <i class="fas fa-server mr-1.5"></i>Paramètres système
+            </button>
+        </div>
+
+        <div id="settings-subtab-features">
         <section class="mb-10">
             <div class="mb-6 flex items-center justify-between">
                 <div>
@@ -2796,6 +2809,9 @@
             </div>
         </section>
 
+        </div><!-- /settings-subtab-features -->
+
+        <div id="settings-subtab-system" class="hidden">
         <section class="mb-10">
             <div class="mb-6">
                 <h3 class="cormorant text-2xl font-bold text-gold">Paramètres système</h3>
@@ -2858,6 +2874,7 @@
                 </div>
             </div>
         </section>
+        </div><!-- /settings-subtab-system -->
         </div><!-- /tab-settings -->
 
     </main>
@@ -8067,6 +8084,20 @@
                 show('Erreur : ' + e.message, 'text-red-400/80');
             }
             setTimeout(() => { if (statusEl) statusEl.classList.add('hidden'); }, 6000);
+        }
+
+        // ── Sous-onglets Réglages ──
+        function showSettingsSubTab(name) {
+            document.getElementById('settings-subtab-features')?.classList.toggle('hidden', name !== 'features');
+            document.getElementById('settings-subtab-system')?.classList.toggle('hidden', name !== 'system');
+            document.getElementById('settings-subtab-btn-features')?.classList.toggle('border-gold', name === 'features');
+            document.getElementById('settings-subtab-btn-features')?.classList.toggle('text-gold', name === 'features');
+            document.getElementById('settings-subtab-btn-features')?.classList.toggle('border-transparent', name !== 'features');
+            document.getElementById('settings-subtab-btn-features')?.classList.toggle('text-light-gold/50', name !== 'features');
+            document.getElementById('settings-subtab-btn-system')?.classList.toggle('border-gold', name === 'system');
+            document.getElementById('settings-subtab-btn-system')?.classList.toggle('text-gold', name === 'system');
+            document.getElementById('settings-subtab-btn-system')?.classList.toggle('border-transparent', name !== 'system');
+            document.getElementById('settings-subtab-btn-system')?.classList.toggle('text-light-gold/50', name !== 'system');
         }
 
         // ── Registre de fonctionnalités ──
