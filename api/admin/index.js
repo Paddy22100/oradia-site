@@ -1040,7 +1040,16 @@ async function handleData(req, res) {
 
         let subject, html;
 
-        if (type === 'newsletter-confirm') {
+        if (type === 'free-sub-welcome') {
+          // Réutilise le vrai template d'accès (abonnement gratuit manuel) avec des données d'exemple
+          subject = "[TEST] Rudy d'Oradia - Votre accès au Tore est activé";
+          html = buildFreeSubscriptionWelcomeHtml({
+            email: 'contact@oradia.fr',
+            fullName: 'Rudy Boucheron',
+            accessCode: 'ADMIN-EXEMPLE123',
+            expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
+          });
+        } else if (type === 'newsletter-confirm') {
           subject = "[TEST] Rudy d'Oradia - Bienvenue dans l'univers ORADIA";
           html = wrap(
             headerCell('Bienvenue', 'ORADIA') +
