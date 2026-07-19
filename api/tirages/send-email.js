@@ -684,7 +684,7 @@ async function handleCollectEmail(req, res) {
 
 // ============ EMAIL PROMO ABONNEMENT TORE ============
 function buildPromoTirageEmailHtml(isSubscribed = false) {
-  const bandeau = 'https://oradia.fr/images/medias/bandea_rappel_abonnement_tore.png';
+  const bandeau = 'https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp';
   const paragraphs = [
     `Vous avez fait votre premier tirage du Tore. Si quelque chose vous a touché là-dedans, c'est que la connexion était réelle.`,
     `Les deux tirages gratuits donnent un aperçu. L'abonnement Tore ouvre quelque chose de plus profond : des tirages illimités, des fenêtres d'observation pour suivre les synchronicités dans le temps, un accès à votre historique personnel, et bientôt des analyses personnalisées poussées...`,
@@ -764,7 +764,7 @@ function buildPromoTirageEmailHtml(isSubscribed = false) {
 
 // ============ EMAIL CHECK-IN J+3 ============
 function buildCheckinEmailHtml(isSubscribed = false) {
-  const bandeau = 'https://oradia.fr/images/medias/bandea_rappel_abonnement_tore.png';
+  const bandeau = 'https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp';
   const paragraphs = [
     `Il y a trois jours, vous avez fait un tirage du Tore avec une question en tête.`,
     `Je vous écris juste pour vous demander : avez-vous remarqué quelque chose depuis ? Un événement, une rencontre, une pensée récurrente qui fait écho à ce que les cartes vous ont dit ?`,

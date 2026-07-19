@@ -139,6 +139,18 @@
             .stat-card { padding: 12px !important; }
             table { font-size: 12.5px; }
             h3.cormorant { font-size: 1.4rem !important; }
+            /* Tableaux larges : défilement horizontal au doigt plutôt que débordement */
+            .tab-panel table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+            /* Rangées de boutons/filtres : passage à la ligne au lieu de déborder */
+            .tab-panel .flex:not(.flex-col) { flex-wrap: wrap; }
+            /* Modales : jamais plus larges que l'écran */
+            [id$="Modal"], [id$="-modal"] > div, .fixed.inset-0 > div { max-width: 100vw; }
+        }
+        @media (max-width: 640px) {
+            /* Grilles de stats à 3+ colonnes : 2 colonnes sur mobile */
+            .grid-cols-3, .grid-cols-4, .grid-cols-5, .grid-cols-6 {
+                grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            }
         }
         html, body { overflow-x: hidden; max-width: 100vw; }
 
@@ -1945,6 +1957,26 @@
 
             <!-- TAB ENVOYÉES -->
             <div id="nl-tab-sent" class="nl-tab-content hidden">
+                <!-- Statistiques Brevo (ouvertures, clics) -->
+                <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6 mb-6">
+                    <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                        <div>
+                            <h4 class="cormorant text-xl text-gold">Impact des campagnes</h4>
+                            <p class="text-light-gold/40 text-xs mt-0.5">Ouvertures et clics mesurés par Brevo sur les dernières campagnes envoyées.</p>
+                        </div>
+                        <div class="flex gap-2">
+                            <button onclick="nlLoadCampaignStats()" class="text-xs bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-2 hover:bg-gold/25 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
+                            <button onclick="nlAnalyzeCampaignStats()" id="nl-stats-analyze-btn" class="text-xs bg-gradient-to-r from-purple-600/70 to-pink-600/70 text-white rounded-lg px-3 py-2 hover:from-purple-500/70 hover:to-pink-500/70 transition"><i class="fas fa-wand-magic-sparkles mr-1"></i>Analyse IA</button>
+                        </div>
+                    </div>
+                    <div id="nl-campaign-stats" class="space-y-2">
+                        <p class="text-gold/30 italic text-center py-4 text-sm">Clique sur Actualiser pour charger les statistiques.</p>
+                    </div>
+                    <div id="nl-stats-analysis" class="hidden mt-5 border-t border-gold/15 pt-5">
+                        <p class="text-gold/60 text-xs uppercase tracking-widest mb-3"><i class="fas fa-lightbulb mr-1"></i>Pistes d'amélioration (IA)</p>
+                        <div id="nl-stats-analysis-content" class="text-light-gold/80 text-sm leading-relaxed whitespace-pre-wrap"></div>
+                    </div>
+                </div>
                 <div id="nl-sent-list" class="space-y-3">
                     <p class="text-gold/30 italic text-center py-8">Chargement…</p>
                 </div>
@@ -4718,7 +4750,7 @@
             if (name === 'drafts') nlRenderDrafts();
             if (name === 'ideas') nlRenderIdeas();
             if (name === 'scheduled') nlRenderScheduled();
-            if (name === 'sent') nlRenderSent();
+            if (name === 'sent') { nlRenderSent(); nlLoadCampaignStats(); }
             if (name === 'testers') nlLoadTesters();
         }
 
@@ -8084,6 +8116,57 @@
                 show('Erreur : ' + e.message, 'text-red-400/80');
             }
             setTimeout(() => { if (statusEl) statusEl.classList.add('hidden'); }, 6000);
+        }
+
+        // ── Statistiques campagnes newsletter (Brevo) ──
+        function nlRenderCampaignStats(campaigns) {
+            const el = document.getElementById('nl-campaign-stats');
+            if (!el) return;
+            if (!campaigns.length) {
+                el.innerHTML = '<p class="text-gold/30 italic text-center py-4 text-sm">Aucune campagne envoyée trouvée sur Brevo.</p>';
+                return;
+            }
+            el.innerHTML = campaigns.map(c => `
+                <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-xl px-4 py-3 flex items-center gap-4 flex-wrap">
+                    <div class="flex-1 min-w-[180px]">
+                        <p class="text-light-gold text-sm font-semibold truncate">${c.subject || c.name}</p>
+                        <p class="text-light-gold/35 text-xs">${c.sentDate ? new Date(c.sentDate).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : ''} · ${c.delivered} délivrés</p>
+                    </div>
+                    <div class="text-center"><p class="text-gold font-bold text-sm">${c.openRate}%</p><p class="text-light-gold/35 text-[10px] uppercase tracking-wider">Ouverture</p></div>
+                    <div class="text-center"><p class="text-gold font-bold text-sm">${c.clickRate}%</p><p class="text-light-gold/35 text-[10px] uppercase tracking-wider">Clic</p></div>
+                    <div class="text-center"><p class="${c.unsubscriptions > 0 ? 'text-red-400/80' : 'text-light-gold/50'} font-bold text-sm">${c.unsubscriptions}</p><p class="text-light-gold/35 text-[10px] uppercase tracking-wider">Désinscr.</p></div>
+                </div>`).join('');
+        }
+        async function nlLoadCampaignStats() {
+            const el = document.getElementById('nl-campaign-stats');
+            if (el) el.innerHTML = '<p class="text-gold/30 italic text-center py-4 text-sm">Chargement des statistiques Brevo…</p>';
+            try {
+                const res = await adminFetch('/api/admin/newsletter-stats');
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                nlRenderCampaignStats(data.campaigns || []);
+            } catch (e) {
+                if (el) el.innerHTML = `<p class="text-red-400/70 text-center py-4 text-sm">Erreur : ${e.message}</p>`;
+            }
+        }
+        async function nlAnalyzeCampaignStats() {
+            const btn = document.getElementById('nl-stats-analyze-btn');
+            const zone = document.getElementById('nl-stats-analysis');
+            const content = document.getElementById('nl-stats-analysis-content');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Analyse…'; }
+            try {
+                const res = await adminFetch('/api/admin/newsletter-stats?action=analyze', { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                nlRenderCampaignStats(data.campaigns || []);
+                if (content) content.textContent = data.analysis || 'Aucune analyse générée.';
+                if (zone) zone.classList.remove('hidden');
+            } catch (e) {
+                if (content) content.textContent = 'Erreur : ' + e.message;
+                if (zone) zone.classList.remove('hidden');
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-wand-magic-sparkles mr-1"></i>Analyse IA'; }
+            }
         }
 
         // ── Sous-onglets Réglages ──

@@ -294,13 +294,14 @@
             container.innerHTML = recent.map(t => {
                 const date = new Date(t.date).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
                 return `
-                    <div class="bg-[rgba(26,54,93,0.5)] rounded-xl p-5 border border-gold/20 mb-3 card-hover">
+                    <a href="tirages.html" class="block bg-[rgba(26,54,93,0.5)] rounded-xl p-5 border border-gold/20 mb-3 card-hover cursor-pointer hover:border-gold/50 transition-colors" title="Voir le détail dans l'historique">
                         <div class="flex justify-between items-start mb-2">
                             <p class="text-gold font-semibold">${t.type || 'Tirage Tore'}</p>
                             <span class="text-light-gold/50 text-xs">${date}</span>
                         </div>
                         ${t.intention ? `<p class="text-light-gold/70 text-sm"><span class="text-gold/60">Intention :</span> ${t.intention}</p>` : ''}
-                    </div>`;
+                        <p class="text-gold/50 text-xs mt-2"><i class="fas fa-arrow-right mr-1"></i>Voir le détail complet</p>
+                    </a>`;
             }).join('');
         })();
 

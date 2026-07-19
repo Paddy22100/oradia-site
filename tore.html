@@ -2371,6 +2371,11 @@
   .tore-card-inner { transition: none !important; }
   .tore-card.flipping .tore-card-inner,
   .tore-card.flipped .tore-card-inner { transform: none !important; transition: none !important; }
+  /* Sans rotation 3D, garder un fondu croisé perceptible (sinon la carte
+     "saute" instantanément — vécu comme un flip cassé sur smartphone,
+     où l'économiseur de batterie active souvent prefers-reduced-motion). */
+  .tore-card.flipped .tore-card-back { transition: opacity 0.55s ease, visibility 0s linear 0.55s !important; }
+  .tore-card.flipped .tore-card-front { transition: opacity 0.55s ease 0.1s !important; }
   .tore-coin,
   .tore-coin.spin,
   .tore-coin.glow,
@@ -2517,7 +2522,7 @@
 
   width: clamp(70px, 14vw, 110px);
 
-  height: clamp(110px, 22vw, 170px);
+  height: clamp(105px, 21vw, 165px); /* = largeur x 1,5 (ratio 2:3 des cartes) */
 
   margin-left: clamp(-55px, -7vw, -35px);
 
@@ -2574,7 +2579,7 @@
 @media (max-width: 480px) {
   .tore-fan-card {
     width: clamp(52px, 15vw, 78px);
-    height: clamp(82px, 24vw, 124px);
+    height: clamp(78px, 22.5vw, 117px); /* = largeur x 1,5 (ratio 2:3 des cartes) */
     margin-left: clamp(-39px, -7.5vw, -28px);
   }
   .tore-fan-card:nth-child(1) { transform: rotate(-22deg) translateX(-56px); }
@@ -2671,7 +2676,9 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
 
   width: 80%;
 
-  aspect-ratio: 64 / 90;
+  /* Ratio réel des visuels de cartes (944x1417 ≈ 2:3) — l'ancien 64/90
+     laissait des bandes vides dans le cadre doré (image en "contain"). */
+  aspect-ratio: 2 / 3;
 
   border-radius: 10px;
 
@@ -5534,7 +5541,7 @@ function closeToreExitModal(){
           setTimeout(() => {
             card.classList.remove('just-flipped');
             showGuideMessage(famKey, data);
-          }, prefersReduced ? 100 : 1000);
+          }, prefersReduced ? 700 : 1000); // 700ms : laisser le fondu croisé (0.55s) se terminer
         };
 
         if (prefersReduced) {

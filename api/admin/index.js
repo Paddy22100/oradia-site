@@ -664,12 +664,14 @@ async function handleData(req, res) {
       }
 
       if (action === 'create' && email) {
+        const finalAccessCode = accessCode || ('ADMIN-' + Date.now().toString(36).toUpperCase());
+        const cleanEmail = email.toLowerCase().trim();
         const { error } = await supabase
           .from('tore_subscriptions')
           .upsert({
-            email: email.toLowerCase().trim(),
+            email: cleanEmail,
             full_name: fullName || '',
-            access_code: accessCode || ('ADMIN-' + Date.now().toString(36).toUpperCase()),
+            access_code: finalAccessCode,
             expires_at: expiresAt || null,
             status: 'active',
             is_free: !!isFree,
@@ -677,7 +679,28 @@ async function handleData(req, res) {
             updated_at: new Date().toISOString()
           }, { onConflict: 'email' });
         if (error) throw error;
-        return res.status(200).json({ success: true, emailSent: false });
+
+        // Abonnement gratuit créé manuellement : envoyer automatiquement au membre
+        // ses informations d'accès. Le mot de passe n'est jamais connu du serveur
+        // (Supabase Auth) — le membre le crée lui-même à l'inscription.
+        let welcomeEmailSent = false;
+        if (isFree && process.env.BREVO_API_KEY) {
+          try {
+            const html = buildFreeSubscriptionWelcomeHtml({ email: cleanEmail, fullName: fullName || '', accessCode: finalAccessCode, expiresAt: expiresAt || null });
+            const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+              body: JSON.stringify({
+                sender: { name: "Rudy d'Oradia", email: 'contact@oradia.fr' },
+                to: [{ email: cleanEmail }],
+                subject: "Rudy d'Oradia - Votre accès au Tore est activé",
+                htmlContent: html
+              })
+            });
+            welcomeEmailSent = r.ok;
+          } catch (e) { console.error('[subscriptions/create] welcome email error:', e.message); }
+        }
+        return res.status(200).json({ success: true, emailSent: welcomeEmailSent });
       }
 
       if (action === 'revoke' && subscriptionId) {
@@ -2175,6 +2198,69 @@ function buildGeneratePrompt(body) {
   ].filter(Boolean).join('\n');
 }
 
+// Email de bienvenue envoyé automatiquement quand un abonnement Tore GRATUIT
+// est créé manuellement depuis le dashboard. Modèle visuel des newsletters
+// (fond oradia-hero-4k + carte sombre), bandeau rappel abonnement en tête.
+function buildFreeSubscriptionWelcomeHtml({ email, fullName, accessCode, expiresAt }) {
+  const bandeau = 'https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp';
+  const prenom = (fullName || '').trim().split(/\s+/)[0] || '';
+  const expiryLine = expiresAt
+    ? `<p style="margin:14px 0 0;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:12px;font-style:italic;">Accès valable jusqu'au ${new Date(expiresAt).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}.</p>`
+    : '';
+  const paragraphs = [
+    `${prenom ? prenom + ', v' : 'V'}otre accès à l'espace Tore vient d'être activé. Vous pouvez dès maintenant profiter de tirages illimités, des fenêtres d'observation et de votre historique personnel.`,
+    `Voici vos informations d'accès :`
+  ];
+  const bodyRows = paragraphs.map(p => `
+  <tr><td style="padding:0 32px 20px;">
+    <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:justify;">${p}</div>
+  </td></tr>`).join('');
+
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+<style>@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');</style>
+</head>
+<body style="margin:0; padding:0; background-color:#040d1c;">
+<table width="100%" cellpadding="0" cellspacing="0" background="https://oradia.fr/images/oradia-hero-4k.webp" bgcolor="#040d1c" style="background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat; background-color:#040d1c;">
+<tr><td align="center" style="padding:32px 12px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.96) 100%); max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
+  <tr><td style="padding:0; line-height:0;">
+    <img src="${bandeau}" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+  </td></tr>
+  <tr><td style="padding:30px 32px 0;">
+    <h2 style="color:#d4af37; font-family:Georgia,serif; font-size:24px; margin:0 0 20px;">Bienvenue dans l'espace Tore</h2>
+  </td></tr>
+  ${bodyRows}
+  <tr><td style="padding:0 32px 24px;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.07);border:1px solid rgba(212,175,55,0.3);border-radius:14px;">
+      <tr><td style="padding:24px 28px;">
+        <p style="margin:0 0 10px;color:#c8c0a8;font-family:Georgia,serif;font-size:14px;"><span style="color:rgba(212,175,55,0.6);text-transform:uppercase;font-size:11px;letter-spacing:0.15em;">Identifiant</span><br><strong style="color:#f0c75e;font-size:16px;">${nlEscHtml(email)}</strong></p>
+        <p style="margin:0;color:#c8c0a8;font-family:Georgia,serif;font-size:14px;"><span style="color:rgba(212,175,55,0.6);text-transform:uppercase;font-size:11px;letter-spacing:0.15em;">Code d'accès</span><br><strong style="color:#f0c75e;font-size:16px;letter-spacing:0.08em;">${nlEscHtml(accessCode)}</strong></p>
+        ${expiryLine}
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:0 32px 24px;">
+    <div style="color:#c8c0a8; font-size:14px; line-height:1.8; font-family:Georgia,serif;">Votre mot de passe est personnel : vous le créez vous-même lors de votre première connexion, en vous inscrivant avec cette adresse email. Personne d'autre que vous ne le connaît, pas même moi.</div>
+  </td></tr>
+  <tr><td style="padding:4px 32px 40px; text-align:center;">
+    <a href="https://oradia.fr/inscription" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">Créer mon mot de passe et accéder au Tore</a>
+    <p style="margin:14px 0 0;color:rgba(212,175,55,0.45);font-family:Georgia,serif;font-size:12px;">Déjà un compte ? <a href="https://oradia.fr/connexion" style="color:#d4af37;">Connectez-vous directement</a>.</p>
+  </td></tr>
+  <tr><td style="padding:36px 32px 28px; border-top:1px solid rgba(212,175,55,0.15); text-align:center;">
+    <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
+    <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
+    <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
+    <p style="margin:0 0 20px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
+    <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car un accès à l'espace Tore a été créé pour toi sur oradia.fr.</p>
+  </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
 function nlEscHtml(s) {
   return String(s ?? '')
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
@@ -3576,6 +3662,72 @@ module.exports = async (req, res) => {
 
     if (path === '/sync-brevo-unsubscribes' || path === '/sync-brevo-unsubscribes/') {
       return await handleSyncBrevoUnsubscribes(req, res);
+    }
+
+    // ── Statistiques des campagnes newsletter (Brevo) + analyse IA ──
+    if (path === '/newsletter-stats' || path === '/newsletter-stats/') {
+      verifyAdminAuth(req);
+      const BREVO_API_KEY = process.env.BREVO_API_KEY;
+      if (!BREVO_API_KEY) return res.status(500).json({ error: 'BREVO_API_KEY non configurée' });
+
+      // Récupérer les 20 dernières campagnes envoyées avec leurs statistiques
+      const campRes = await fetch('https://api.brevo.com/v3/emailCampaigns?status=sent&limit=20&sort=desc&statistics=globalStats', {
+        headers: { 'api-key': BREVO_API_KEY }
+      });
+      if (!campRes.ok) return res.status(502).json({ error: `Brevo ${campRes.status}` });
+      const campData = await campRes.json();
+      const campaigns = (campData.campaigns || []).map(c => {
+        const g = c.statistics?.globalStats || {};
+        const delivered = g.delivered || 0;
+        return {
+          id: c.id,
+          name: c.name,
+          subject: c.subject,
+          sentDate: c.sentDate,
+          delivered,
+          uniqueViews: g.uniqueViews || 0,
+          uniqueClicks: g.uniqueClicks || 0,
+          unsubscriptions: g.unsubscriptions || 0,
+          softBounces: g.softBounces || 0,
+          hardBounces: g.hardBounces || 0,
+          openRate: delivered ? Math.round((g.uniqueViews || 0) / delivered * 1000) / 10 : 0,
+          clickRate: delivered ? Math.round((g.uniqueClicks || 0) / delivered * 1000) / 10 : 0
+        };
+      });
+
+      // action=analyze : envoyer les stats à Claude pour des pistes d'amélioration
+      if (urlParams.get('action') === 'analyze' && req.method === 'POST') {
+        const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+        if (!ANTHROPIC_API_KEY) return res.status(500).json({ error: 'ANTHROPIC_API_KEY non configurée' });
+        const statsText = campaigns.map(c =>
+          `- "${c.subject}" (${(c.sentDate || '').slice(0, 10)}) : ${c.delivered} délivrés, ${c.openRate}% ouverture, ${c.clickRate}% clic, ${c.unsubscriptions} désinscriptions`
+        ).join('\n');
+        const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+          body: JSON.stringify({
+            model: 'claude-haiku-4-5',
+            max_tokens: 1200,
+            messages: [{
+              role: 'user',
+              content: `Tu es consultant email marketing pour Oradia, un oracle de développement personnel (audience francophone, univers spirituel bienveillant, newsletter hebdomadaire, liste modeste en croissance).
+
+Voici les statistiques réelles des dernières campagnes newsletter (référence marché : ~35-40% d'ouverture, ~2-4% de clic pour ce type de niche) :
+${statsText}
+
+Analyse ces chiffres et donne :
+1. Un constat honnête en 2-3 phrases (tendances, points forts, points faibles)
+2. Les 3 pistes d'amélioration les plus impactantes, concrètes et actionnables (objets d'email, moment d'envoi, contenu, segmentation...)
+Réponds en français, sans tiret long, format markdown compact.`
+            }]
+          })
+        });
+        if (!aiRes.ok) return res.status(502).json({ error: `Anthropic ${aiRes.status}` });
+        const aiData = await aiRes.json();
+        return res.status(200).json({ success: true, analysis: aiData.content?.[0]?.text || '', campaigns });
+      }
+
+      return res.status(200).json({ success: true, campaigns });
     }
 
     // ── Registre de fonctionnalités : lister / activer / désactiver ──
