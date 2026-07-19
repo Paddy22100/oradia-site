@@ -6091,19 +6091,19 @@
                         body: JSON.stringify({ email: 'contact@oradia.fr' })
                     });
                 } else if (type === 'tore-expired') {
-                    res = await adminFetch('/api/admin?action=test-subscription-email', {
+                    res = await adminFetch('/api/admin/data?action=test-subscription-email', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ type: 'expired', email: 'contact@oradia.fr' })
                     });
                 } else if (type === 'tore-payment-failed') {
-                    res = await adminFetch('/api/admin?action=test-subscription-email', {
+                    res = await adminFetch('/api/admin/data?action=test-subscription-email', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ type: 'payment_failed', email: 'contact@oradia.fr' })
                     });
                 } else {
-                    res = await adminFetch('/api/admin?action=test-email', {
+                    res = await adminFetch('/api/admin/data?action=test-email', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify({ type })

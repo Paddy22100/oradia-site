@@ -687,9 +687,9 @@ function buildPromoTirageEmailHtml(isSubscribed = false) {
   const bandeau = 'https://oradia.fr/images/medias/bandea_rappel_abonnement_tore.png';
   const paragraphs = [
     `Vous avez fait votre premier tirage du Tore. Si quelque chose vous a touché là-dedans, c'est que la connexion était réelle.`,
-    `Les deux tirages gratuits donnent un aperçu. L'abonnement Tore ouvre quelque chose de plus profond : des tirages illimités, des fenêtres d'observation pour suivre les synchronicités dans le temps, un accès à votre historique personnel, et bientôt des analyses personnalisées...`,
+    `Les deux tirages gratuits donnent un aperçu. L'abonnement Tore ouvre quelque chose de plus profond : des tirages illimités, des fenêtres d'observation pour suivre les synchronicités dans le temps, un accès à votre historique personnel, et bientôt des analyses personnalisées poussées...`,
     `Ce n'est pas un outil de divertissement. C'est une pratique : celle de se retourner vers soi avec régularité, de noter ce qui résonne, d'observer comment les cartes parlent à travers les événements de votre vie.`,
-    `Si vous sentez que vous voulez aller plus loin, je vous invite à rejoindre l'espace Tore.`
+    `Si vous sentez que vous voulez aller plus loin, je vous invite à rejoindre l'aventure.`
   ];
 
   const bodyRows = paragraphs.map(p => `

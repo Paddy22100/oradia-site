@@ -270,28 +270,28 @@ function buildClosingEmail(win, responseToken, isSubscribed = false) {
 
               ${win.intention ? `<p style="margin:0 0 28px 0;color:#f5e7a1;font-family:'Lora',Georgia,serif;font-style:italic;font-size:15px;line-height:1.7;text-align:center;">«&nbsp;${escapeHtml(win.intention)}&nbsp;»</p>` : ''}
 
-              <p style="margin:0 0 20px 0;color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;">
+              <p style="margin:0 0 20px 0;color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;text-align:center;">
                 Voici quelques questions pour clore cette fenêtre avec conscience :
               </p>
 
               <!-- Encadré questions -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;background:rgba(17,24,43,0.6);border-left:3px solid #d4af37;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;background:rgba(17,24,43,0.6);border:1px solid rgba(212,175,55,0.25);border-radius:12px;">
                 <tr>
-                  <td style="padding:20px 24px;">
-                    <p style="margin:0 0 12px 0;color:#f5e7a1;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">Qu'est-ce qui a résonné, même discrètement, pendant ces jours&nbsp;?</p>
-                    <p style="margin:0 0 12px 0;color:#f5e7a1;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">Y a-t-il eu une conversation, une image, un moment qui a fait écho à votre intention&nbsp;?</p>
-                    <p style="margin:0;color:#f5e7a1;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">Si rien d'apparent n'est apparu — qu'est-ce qui, en vous, a peut-être bougé&nbsp;?</p>
+                  <td align="center" style="padding:26px 28px;text-align:center;">
+                    <p style="margin:0 0 16px 0;color:#f5e7a1;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">Qu'est-ce qui a résonné, même discrètement, pendant ces jours&nbsp;?</p>
+                    <p style="margin:0 0 16px 0;color:#f5e7a1;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">Y a-t-il eu une conversation, une image, un moment qui a fait écho à votre intention&nbsp;?</p>
+                    <p style="margin:0;color:#f5e7a1;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">Si rien d'apparent n'est apparu, qu'est-ce qui, en vous, a peut-être bougé&nbsp;?</p>
                   </td>
                 </tr>
               </table>
 
               ${attentionHTML ? `
               <!-- Encadré "Vous observiez" -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;background:rgba(5,10,20,0.6);border:1px solid rgba(212,175,55,0.2);">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;background:rgba(5,10,20,0.6);border:1px solid rgba(212,175,55,0.2);border-radius:12px;">
                 <tr>
-                  <td style="padding:20px 24px;">
-                    <p style="margin:0 0 12px;color:#d4af37;font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;">Vous observiez</p>
-                    <ul style="margin:0;padding-left:18px;">${attentionHTML}</ul>
+                  <td align="center" style="padding:22px 28px;text-align:center;">
+                    <p style="margin:0 0 14px;color:#d4af37;font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;">Vous observiez</p>
+                    <ul style="margin:0;padding:0;list-style:none;">${attentionHTML}</ul>
                   </td>
                 </tr>
               </table>` : ''}
@@ -342,13 +342,21 @@ function buildClosingEmail(win, responseToken, isSubscribed = false) {
                 </td></tr>
               </table>
 
-              ${isSubscribed ? '' : `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" background="https://oradia.fr/images/medias/newsletter_image.webp" style="margin:0 0 24px;border:1px solid rgba(212,175,55,0.3);border-radius:14px;background-image:url('https://oradia.fr/images/medias/newsletter_image.webp');background-size:cover;background-position:center top;">
-                <tr><td style="padding:32px 28px;text-align:center;background:linear-gradient(135deg,rgba(4,14,30,0.88) 0%,rgba(5,20,40,0.82) 100%);border-radius:13px;">
-                  <p style="margin:0 0 18px;color:#c8c0a8;font-family:'Lora',Georgia,serif;font-size:13px;line-height:1.75;">Au fait : tu n'es pas inscrit·e à la newsletter Oradia, cet email t'a simplement été envoyé suite à ta fenêtre d'observation. Pour recevoir mes prochains messages :</p>
-                  <a href="https://oradia.fr/#footer-newsletter-section" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:'Lora',Georgia,serif;">S'inscrire à la newsletter</a>
-                </td></tr>
-              </table>`}
+            </td>
+          </tr>
 
+          ${isSubscribed ? '' : `<tr><td style="padding:0 24px 16px;">
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" background="https://oradia.fr/images/medias/newsletter_image.webp" style="border:1px solid rgba(212,175,55,0.3);border-radius:14px;background-image:url('https://oradia.fr/images/medias/newsletter_image.webp');background-size:cover;background-position:center top;">
+              <tr><td align="center" style="padding:32px 28px;text-align:center;background:linear-gradient(135deg,rgba(4,14,30,0.88) 0%,rgba(5,20,40,0.82) 100%);border-radius:13px;">
+                <p style="margin:0 0 18px;color:#c8c0a8;font-family:'Lora',Georgia,serif;font-size:13px;line-height:1.75;">Au fait : tu n'es pas inscrit·e à la newsletter Oradia, cet email t'a simplement été envoyé suite à ta fenêtre d'observation. Pour recevoir mes prochains messages :</p>
+                <a href="https://oradia.fr/#footer-newsletter-section" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 28px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:'Lora',Georgia,serif;">S'inscrire à la newsletter</a>
+              </td></tr>
+            </table>
+          </td></tr>`}
+
+          <!-- Signature -->
+          <tr>
+            <td align="center" style="padding:36px 40px 28px; border-top:1px solid rgba(212,175,55,0.15); text-align:center;">
               <p style="margin:0 0 6px;color:#c8c0a8;font-size:13px;font-style:italic;opacity:0.7;font-family:Georgia,serif;">Avec gratitude,</p>
               <p style="margin:0 0 4px;color:#d4af37;font-size:52px;font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive;font-weight:700;line-height:1.1;letter-spacing:0.01em;">Rudy</p>
               <p style="margin:0 0 16px;color:#c8c0a8;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.55;font-family:Georgia,serif;">Fondateur d'Oradia</p>
@@ -358,7 +366,6 @@ function buildClosingEmail(win, responseToken, isSubscribed = false) {
                 <span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent);vertical-align:middle;"></span>
               </p>
               <p style="margin:0;"><a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-size:13px;letter-spacing:0.08em;font-family:Georgia,serif;">oradia.fr</a></p>
-
             </td>
           </tr>
 
