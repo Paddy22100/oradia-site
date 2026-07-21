@@ -233,20 +233,23 @@ function buildClosingEmail(win, responseToken, isSubscribed = false) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600;700&family=Lora:ital,wght@0,400;0,600;1,400&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 </head>
-<body style="margin:0;padding:0;width:100%;background:#050a14;">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" background="https://oradia.fr/images/oradia-hero-4k.webp" style="width:100%;min-width:100%;background-image:url('https://oradia.fr/images/oradia-hero-4k.webp');background-size:cover;background-position:center;background-repeat:no-repeat;background-color:#050a14;margin:0;padding:0;">
+<body style="margin:0;padding:0;width:100%;background:#0a1830;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" background="https://oradia.fr/images/oradia-hero-4k.webp" style="width:100%;min-width:100%;background-image:url('https://oradia.fr/images/oradia-hero-4k.webp');background-size:cover;background-position:center;background-repeat:no-repeat;background-color:#0a1830;margin:0;padding:0;">
     <tr>
       <td align="center" style="padding:48px 20px;">
 
         <!-- Container principal -->
-        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:linear-gradient(135deg, #0a1628 0%, #051428 100%);border:1px solid rgba(212,175,55,0.3);box-shadow:0 8px 32px rgba(0,0,0,0.4);">
+        <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="max-width:600px;background:linear-gradient(160deg, #16294a 0%, #0d1d38 45%, #0a1830 100%);border:1px solid rgba(212,175,55,0.5);border-radius:18px;box-shadow:0 0 60px rgba(212,175,55,0.18), 0 12px 40px rgba(0,0,0,0.5);overflow:hidden;">
+
+          <!-- Filet lumineux supérieur -->
+          <tr><td style="height:3px;background:linear-gradient(90deg, transparent, #f0c75e 40%, #fff4d0 50%, #f0c75e 60%, transparent);line-height:3px;font-size:0;">&nbsp;</td></tr>
 
           <!-- Header avec image -->
           <tr>
             <td align="center" style="padding:0;position:relative;">
               <div style="position:relative;width:100%;height:200px;overflow:hidden;">
                 <img src="https://oradia.fr/images/medias/bandeau_mail_fenetre_observation.png" alt="Fenêtre d'observation — ORADIA" width="600" style="display:block;width:100%;height:auto;max-height:220px;object-fit:cover;border:0;">
-                <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(180deg, rgba(5,10,20,0) 0%, rgba(5,10,20,0.95) 100%);"></div>
+                <div style="position:absolute;top:0;left:0;right:0;bottom:0;background:linear-gradient(180deg, rgba(13,29,56,0) 0%, rgba(13,29,56,0.35) 60%, rgba(13,29,56,0.75) 100%);"></div>
               </div>
             </td>
           </tr>
@@ -254,10 +257,10 @@ function buildClosingEmail(win, responseToken, isSubscribed = false) {
           <!-- Titre principal -->
           <tr>
             <td align="center" style="padding:32px 40px 24px 40px;">
-              <h1 style="margin:0;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:300;line-height:1.3;letter-spacing:1px;text-transform:uppercase;">
+              <h1 style="margin:0;color:#ffe9a8;font-family:'Cormorant Garamond',Georgia,serif;font-size:28px;font-weight:400;line-height:1.3;letter-spacing:1px;text-transform:uppercase;text-shadow:0 0 24px rgba(240,199,94,0.45);">
                 Votre fenêtre d'observation se referme, qu'avez-vous perçu ?
               </h1>
-              <div style="width:60px;height:1px;background:linear-gradient(90deg, transparent 0%, #d4af37 50%, transparent 100%);margin:20px auto;"></div>
+              <div style="width:80px;height:2px;background:linear-gradient(90deg, transparent 0%, #f0c75e 50%, transparent 100%);margin:20px auto;border-radius:2px;"></div>
               <p style="margin:0;color:#d8bf72;font-family:'Lora',Georgia,serif;font-size:15px;font-style:italic;line-height:1.6;letter-spacing:0.5px;">
                 Ces ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} touchent à leur fin
               </p>
@@ -275,22 +278,22 @@ function buildClosingEmail(win, responseToken, isSubscribed = false) {
               </p>
 
               <!-- Encadré questions -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;background:rgba(17,24,43,0.6);border:1px solid rgba(212,175,55,0.25);border-radius:12px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 24px;background:linear-gradient(145deg, rgba(212,175,55,0.10), rgba(212,175,55,0.04));border:1px solid rgba(212,175,55,0.4);border-radius:14px;">
                 <tr>
                   <td align="center" style="padding:26px 28px;text-align:center;">
-                    <p style="margin:0 0 16px 0;color:#f5e7a1;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">Qu'est-ce qui a résonné, même discrètement, pendant ces jours&nbsp;?</p>
-                    <p style="margin:0 0 16px 0;color:#f5e7a1;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">Y a-t-il eu une conversation, une image, un moment qui a fait écho à votre intention&nbsp;?</p>
-                    <p style="margin:0;color:#f5e7a1;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">Si rien d'apparent n'est apparu, qu'est-ce qui, en vous, a peut-être bougé&nbsp;?</p>
+                    <p style="margin:0 0 16px 0;color:#fbe6b6;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">Qu'est-ce qui a résonné, même discrètement, pendant ces jours&nbsp;?</p>
+                    <p style="margin:0 0 16px 0;color:#fbe6b6;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">Y a-t-il eu une conversation, une image, un moment qui a fait écho à votre intention&nbsp;?</p>
+                    <p style="margin:0;color:#fbeeb6;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;font-style:italic;">Si rien d'apparent n'est apparu, qu'est-ce qui, en vous, a peut-être bougé&nbsp;?</p>
                   </td>
                 </tr>
               </table>
 
               ${attentionHTML ? `
               <!-- Encadré "Vous observiez" -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;background:rgba(5,10,20,0.6);border:1px solid rgba(212,175,55,0.2);border-radius:12px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;background:linear-gradient(145deg, rgba(26,54,93,0.5), rgba(212,175,55,0.05));border:1px solid rgba(212,175,55,0.3);border-radius:14px;">
                 <tr>
                   <td align="center" style="padding:22px 28px;text-align:center;">
-                    <p style="margin:0 0 14px;color:#d4af37;font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;">Vous observiez</p>
+                    <p style="margin:0 0 14px;color:#f0c75e;font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;">Vous observiez</p>
                     <ul style="margin:0;padding:0;list-style:none;">${attentionHTML}</ul>
                   </td>
                 </tr>
@@ -300,11 +303,11 @@ function buildClosingEmail(win, responseToken, isSubscribed = false) {
               ${responseToken ? `
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 16px;">
                 <tr>
-                  <td style="background:rgba(17,24,43,0.7);border:1px solid rgba(212,175,55,0.25);padding:20px 24px;text-align:center;">
-                    <p style="margin:0 0 14px;color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.7;">
+                  <td style="background:linear-gradient(145deg, rgba(42,82,152,0.28), rgba(212,175,55,0.06));border:1px solid rgba(212,175,55,0.35);border-radius:14px;padding:22px 24px;text-align:center;">
+                    <p style="margin:0 0 14px;color:#e8e4d4;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.7;">
                       Vos observations ont de la valeur. En répondant à 5 questions rapides,<br>vous contribuez à une étude sur les synchronicités et la rétrocausalité.
                     </p>
-                    <a href="https://oradia.fr/synchronicite.html?token=${responseToken}" style="display:inline-block;background:linear-gradient(135deg, #1a3a6e 0%, #2a5298 100%);color:#f5e7a1;font-family:'Lora',Georgia,serif;font-size:14px;font-weight:600;text-decoration:none;padding:14px 28px;border-radius:4px;letter-spacing:0.5px;border:1px solid rgba(100,149,237,0.4);">
+                    <a href="https://oradia.fr/synchronicite.html?token=${responseToken}" style="display:inline-block;background:linear-gradient(135deg, #3a6bb0 0%, #5a8fd8 100%);color:#ffffff;font-family:'Lora',Georgia,serif;font-size:14px;font-weight:600;text-decoration:none;padding:14px 28px;border-radius:8px;letter-spacing:0.5px;border:1px solid rgba(150,190,255,0.5);box-shadow:0 4px 16px rgba(90,143,216,0.35);">
                       Partager mon vécu (5 min)
                     </a>
                     <p style="margin:12px 0 0;color:#9ca3af;font-family:'Lora',Georgia,serif;font-size:11px;font-style:italic;">
