@@ -641,7 +641,11 @@ async function handleData(req, res) {
         req.on('error', reject);
       });
 
-      const { action, email, fullName, accessCode, expiresAt, subscriptionId, isFree } = body;
+      const { email, fullName, accessCode, expiresAt, subscriptionId, isFree } = body;
+      // L'action peut arriver dans le corps OU dans l'URL (?action=...). Les boutons
+      // "Envoyer test" du dashboard la passent en query — sans ce fallback, body.action
+      // restait undefined et aucun de ces envois de mail n'aboutissait.
+      const action = body.action || req.query?.action;
 
       // ── Action réservée aux tâches automatiques (cron quotidien) ──
       if (isCronRequest) {
