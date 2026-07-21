@@ -15,14 +15,11 @@
         <form id="${uid}-form" style="display:flex;flex-direction:column;gap:10px;text-align:left;">
           <input type="email" id="${uid}-email" required placeholder="Votre adresse email" aria-label="Votre adresse email"
             style="background:rgba(5,20,40,0.7);border:1px solid rgba(212,175,55,0.3);border-radius:10px;color:#e8d9b0;font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;padding:12px 16px;outline:none;width:100%;box-sizing:border-box;">
-          <label style="display:flex;align-items:flex-start;gap:8px;color:rgba(212,175,55,0.6);font-family:'Cormorant Garamond',Georgia,serif;font-size:12.5px;line-height:1.5;cursor:pointer;">
-            <input type="checkbox" id="${uid}-consent" required style="margin-top:3px;accent-color:#d4af37;flex-shrink:0;">
-            <span>J'accepte de recevoir la newsletter Oradia par email. Je peux me désinscrire à tout moment.</span>
-          </label>
           <button type="submit"
             style="background:linear-gradient(135deg,#d4af37,#f0c75e);color:#051428;font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-weight:700;padding:12px 18px;border:none;border-radius:10px;cursor:pointer;letter-spacing:0.5px;margin-top:4px;">
             S'inscrire
           </button>
+          <p style="margin:10px 0 0;color:rgba(212,175,55,0.5);font-family:'Cormorant Garamond',Georgia,serif;font-size:12px;line-height:1.5;">En vous inscrivant, vous acceptez de recevoir la newsletter Oradia. Désinscription à tout moment. <a href="/politique-confidentialite.html" style="color:rgba(212,175,55,0.75);text-decoration:underline;">Politique de confidentialité</a>.</p>
         </form>
         <p id="${uid}-msg" style="display:none;margin:14px 0 0;color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;"></p>
       </div>`;
@@ -32,8 +29,7 @@
     form.addEventListener('submit', async function (e) {
       e.preventDefault();
       const email = document.getElementById(uid + '-email').value.trim();
-      const consent = document.getElementById(uid + '-consent').checked;
-      if (!email || !consent) return;
+      if (!email) return;
       const btn = form.querySelector('button[type=submit]');
       btn.disabled = true;
       btn.textContent = 'Inscription…';
