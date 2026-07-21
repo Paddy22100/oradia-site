@@ -683,7 +683,7 @@ async function handleCollectEmail(req, res) {
 }
 
 // ============ EMAIL PROMO ABONNEMENT TORE ============
-function buildPromoTirageEmailHtml(isSubscribed = false) {
+function buildPromoTirageEmailHtml(isSubscribed = false, hidePreorder = false) {
   const bandeau = 'https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp';
   const paragraphs = [
     `Vous avez fait votre premier tirage du Tore. Si quelque chose vous a touché là-dedans, c'est que la connexion était réelle.`,
@@ -723,7 +723,7 @@ function buildPromoTirageEmailHtml(isSubscribed = false) {
   <tr><td style="padding:20px 32px 40px; text-align:center;">
     <a href="https://oradia.fr/tore-abonnement.html?discount=email24h" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">Accéder à l'abonnement</a>
   </td></tr>
-  <tr><td style="padding:0 24px 16px;">
+  ${hidePreorder ? '' : `<tr><td style="padding:0 24px 16px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.35);border-radius:14px;">
       <tr><td style="padding:0;line-height:0;font-size:0;">
         <img src="https://oradia.fr/images/medias/banniere-facebook.webp" alt="Oracle Oradia — Précommandes ouvertes" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:14px 14px 0 0;">
@@ -735,7 +735,7 @@ function buildPromoTirageEmailHtml(isSubscribed = false) {
         <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">Précommander</a>
       </td></tr>
     </table>
-  </td></tr>
+  </td></tr>`}
   ${isSubscribed ? '' : `<tr><td style="padding:0 24px 16px;">
     <table width="100%" cellpadding="0" cellspacing="0" background="https://oradia.fr/images/medias/newsletter_image.webp" style="border:1px solid rgba(212,175,55,0.3);border-radius:14px;background-image:url('https://oradia.fr/images/medias/newsletter_image.webp');background-size:cover;background-position:center top;">
       <tr><td style="padding:32px 28px;text-align:center;background:linear-gradient(135deg,rgba(4,14,30,0.88) 0%,rgba(5,20,40,0.82) 100%);border-radius:13px;">
@@ -763,7 +763,7 @@ function buildPromoTirageEmailHtml(isSubscribed = false) {
 }
 
 // ============ EMAIL CHECK-IN J+3 ============
-function buildCheckinEmailHtml(isSubscribed = false) {
+function buildCheckinEmailHtml(isSubscribed = false, hidePreorder = false) {
   const bandeau = 'https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp';
   const paragraphs = [
     `Il y a trois jours, vous avez fait un tirage du Tore avec une question en tête.`,
@@ -795,7 +795,7 @@ function buildCheckinEmailHtml(isSubscribed = false) {
   <tr><td style="padding:8px 32px 40px; text-align:center;">
     <a href="https://oradia.fr/tore.html" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:16px 40px; border-radius:50px; font-weight:700; font-size:16px; letter-spacing:0.05em;">Refaire un tirage</a>
   </td></tr>
-  <tr><td style="padding:0 24px 16px;">
+  ${hidePreorder ? '' : `<tr><td style="padding:0 24px 16px;">
     <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.35);border-radius:14px;">
       <tr><td style="padding:0;line-height:0;font-size:0;">
         <img src="https://oradia.fr/images/medias/banniere-facebook.webp" alt="Oracle Oradia — Précommandes ouvertes" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:14px 14px 0 0;">
@@ -807,7 +807,7 @@ function buildCheckinEmailHtml(isSubscribed = false) {
         <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">Précommander</a>
       </td></tr>
     </table>
-  </td></tr>
+  </td></tr>`}
   ${isSubscribed ? '' : `<tr><td style="padding:0 24px 16px;">
     <table width="100%" cellpadding="0" cellspacing="0" background="https://oradia.fr/images/medias/newsletter_image.webp" style="border:1px solid rgba(212,175,55,0.3);border-radius:14px;background-image:url('https://oradia.fr/images/medias/newsletter_image.webp');background-size:cover;background-position:center top;">
       <tr><td style="padding:32px 28px;text-align:center;background:linear-gradient(135deg,rgba(4,14,30,0.88) 0%,rgba(5,20,40,0.82) 100%);border-radius:13px;">
@@ -835,7 +835,8 @@ async function sendCheckinEmail(email) {
   const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
   const alreadySub = await isBrevoSubscribed(email);
-  const html = buildCheckinEmailHtml(alreadySub);
+  const hidePreorder = await hasCompletedPreorder(supabase, email);
+  const html = buildCheckinEmailHtml(alreadySub, hidePreorder);
   const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
@@ -903,8 +904,16 @@ async function sendPromoTirageEmail(email) {
   const { createClient } = require('@supabase/supabase-js');
   const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
 
+  // Ne pas promouvoir l'abonnement à quelqu'un qui est déjà abonné au Tore.
+  // On marque quand même promo_sent_at pour ne pas re-tenter à chaque cron.
+  if (await hasActiveToreSubscription(supabase, email)) {
+    await supabase.from('tore_emails').update({ promo_sent_at: new Date().toISOString() }).eq('email', email);
+    return { skipped: true, reason: 'abonne_tore_actif' };
+  }
+
   const alreadySub = await isBrevoSubscribed(email);
-  const html = buildPromoTirageEmailHtml(alreadySub);
+  const hidePreorder = await hasCompletedPreorder(supabase, email);
+  const html = buildPromoTirageEmailHtml(alreadySub, hidePreorder);
   const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
@@ -1130,6 +1139,24 @@ async function isBrevoSubscribed(email) {
     const contact = await r.json();
     const listId = parseInt(process.env.BREVO_NEWSLETTER_LIST_ID || '5');
     return Array.isArray(contact.listIds) && contact.listIds.includes(listId);
+  } catch { return false; }
+}
+
+// Vrai si l'email a un abonnement Tore actif (pour ne pas lui promouvoir l'abonnement).
+async function hasActiveToreSubscription(supabase, email) {
+  try {
+    const { data } = await supabase.from('tore_subscriptions')
+      .select('id').eq('email', email).eq('status', 'active').limit(1);
+    return Array.isArray(data) && data.length > 0;
+  } catch { return false; }
+}
+
+// Vrai si l'email a déjà une précommande payée (pour masquer la pub précommande).
+async function hasCompletedPreorder(supabase, email) {
+  try {
+    const { data } = await supabase.from('preorders')
+      .select('id').eq('email', email).in('paid_status', ['completed', 'paid']).limit(1);
+    return Array.isArray(data) && data.length > 0;
   } catch { return false; }
 }
 
