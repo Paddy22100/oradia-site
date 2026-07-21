@@ -148,5 +148,35 @@
         <changefreq>monthly</changefreq>
         <priority>0.7</priority>
     </url>
+    <url>
+        <loc>https://oradia.fr/blog/tirage-gratuit-sans-inscription</loc>
+        <lastmod>2026-07-21</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://oradia.fr/blog/fenetre-observation</loc>
+        <lastmod>2026-07-21</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://oradia.fr/blog/formuler-son-intention</loc>
+        <lastmod>2026-07-21</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://oradia.fr/blog/jung-pauli-synchronicites</loc>
+        <lastmod>2026-07-21</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
+        <loc>https://oradia.fr/blog/oracle-en-ligne-ou-physique</loc>
+        <lastmod>2026-07-21</lastmod>
+        <changefreq>monthly</changefreq>
+        <priority>0.7</priority>
+    </url>
 
 </urlset>
