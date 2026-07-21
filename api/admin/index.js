@@ -514,16 +514,26 @@ async function handleData(req, res) {
             fetch(promoUrl, { method: 'GET' }).catch(e => console.error('[cron-relance] promo-tirage fire error:', e.message));
           } catch(e) { console.error('[cron-relance] promo-tirage launch error:', e.message); }
 
-          // Déclencher l'email de clôture des fenêtres d'observation arrivées à terme (fire-and-forget)
+          // Déclencher l'email de clôture des fenêtres d'observation arrivées à terme.
+          // AWAIT volontaire (et non fire-and-forget) : sur Vercel, un appel non attendu
+          // peut être coupé avant de partir une fois la réponse envoyée. On attend donc
+          // la fin de l'envoi pour garantir que les mails de clôture partent réellement.
+          // Bénéfice secondaire : maintenir la fonction en vie fiabilise aussi les deux
+          // appels fire-and-forget ci-dessus (checkin J+3, promo J+7).
+          let fenetreCloseResult = null;
           try {
             const fenetreUrl = `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}/api/fenetre/close`;
-            fetch(fenetreUrl, {
+            const fr = await fetch(fenetreUrl, {
               method: 'POST',
               headers: { 'Authorization': `Bearer ${process.env.CRON_SECRET}` }
-            }).catch(e => console.error('[cron-relance] fenetre-close fire error:', e.message));
-          } catch(e) { console.error('[cron-relance] fenetre-close launch error:', e.message); }
+            });
+            fenetreCloseResult = await fr.json().catch(() => ({ status: fr.status }));
+          } catch(e) {
+            console.error('[cron-relance] fenetre-close error:', e.message);
+            fenetreCloseResult = { error: e.message };
+          }
 
-          return res.status(200).json({ success: true, sent: results.filter(r=>r.ok).length, total: results.length, results });
+          return res.status(200).json({ success: true, sent: results.filter(r=>r.ok).length, total: results.length, results, fenetre_close: fenetreCloseResult });
         } catch(e) {
           return res.status(200).json({ success: false, error: e.message });
         }
