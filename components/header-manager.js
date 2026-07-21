@@ -1,6 +1,6 @@
 class HeaderManager {
   constructor() {
-    this.templateUrl = 'components/header-template.html';
+    this.templateUrl = '/components/header-template.html';
     this.currentPage = this.detectCurrentPage();
     this.init();
   }

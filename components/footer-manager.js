@@ -1,6 +1,6 @@
 class FooterManager {
   constructor() {
-    this.templateUrl = 'components/footer-template.html';
+    this.templateUrl = '/components/footer-template.html';
     this.init();
   }
   
