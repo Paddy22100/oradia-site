@@ -31,31 +31,49 @@
     }
   </script>
   <style>
+    body {
+      background:
+        radial-gradient(ellipse 90% 45% at 50% 0%, rgba(212,175,55,0.08), transparent 60%),
+        radial-gradient(ellipse 60% 40% at 85% 110%, rgba(26,54,93,0.5), transparent 65%),
+        #0a192f;
+      background-attachment: fixed;
+    }
     .gold-gradient { background: linear-gradient(135deg,#d4af37,#f4e4c1); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
     .gold-divider { width: 60px; height: 1px; background: linear-gradient(90deg,transparent,#d4af37,transparent); }
-    .stat-card { background: linear-gradient(145deg, rgba(26,54,93,0.4), rgba(5,20,40,0.7)); border: 1px solid rgba(212,175,55,0.2); }
-    .bar-track { background: rgba(255,255,255,0.05); border-radius: 999px; overflow: hidden; }
-    .bar-fill { background: linear-gradient(90deg,#d4af37aa,#d4af37); border-radius: 999px; transition: width 1s ease-out; }
+    .stat-card { background: linear-gradient(145deg, rgba(26,54,93,0.55), rgba(5,20,40,0.8)); border: 1px solid rgba(212,175,55,0.28); box-shadow: 0 8px 30px rgba(0,0,0,0.35); transition: transform .3s ease, box-shadow .3s ease; }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(212,175,55,0.12); }
+    .bar-track { background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; }
+    .bar-fill { background: linear-gradient(90deg,#d4af37aa,#f0c75e); border-radius: 999px; transition: width 1s ease-out; box-shadow: 0 0 12px rgba(212,175,55,0.35); }
+    /* Bandeau visuel d'en-tête */
+    .etude-hero { position: relative; border-radius: 24px; overflow: hidden; border: 1px solid rgba(212,175,55,0.25); box-shadow: 0 0 60px rgba(212,175,55,0.12), 0 16px 48px rgba(0,0,0,0.5); }
+    .etude-hero-bg { position: absolute; inset: 0; background-image: url('/images/oradia-hero-4k.webp'); background-size: cover; background-position: center; }
+    .etude-hero-veil { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,25,47,0.72) 0%, rgba(5,20,40,0.9) 100%); }
+    .big-stat { font-size: clamp(2.2rem, 6vw, 3rem); line-height: 1; }
   </style>
 </head>
 <body class="bg-night-blue text-light-gold font-cormorant">
 
   <div id="header-placeholder"></div>
 
-  <main class="px-4 sm:px-6 lg:px-8 py-16 max-w-4xl mx-auto">
+  <main class="px-4 sm:px-6 lg:px-8 py-12 sm:py-16 max-w-4xl mx-auto">
 
-    <!-- En-tête -->
-    <div class="text-center mb-16">
-      <p class="text-gold/50 text-xs uppercase tracking-[0.35em] mb-4">Étude ouverte, en cours</p>
-      <h1 class="cinzel text-3xl sm:text-4xl md:text-5xl font-bold mb-6 gold-gradient">L'étude des synchronicités</h1>
-      <div class="gold-divider mx-auto mb-6"></div>
-      <p class="text-light-gold/70 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
-        Le Tore ne tire pas ses cartes au hasard du logiciel. Il utilise un générateur de nombres <strong class="text-gold">quantique vérifiable</strong> (ANU QRNG, Université Nationale Australienne). Après chaque tirage, nous invitons chacun à observer et rapporter ce qui se passe dans les jours qui suivent — sans obligation, sans promesse de résultat.
-      </p>
-      <p class="text-light-gold/50 text-sm mt-6 max-w-2xl mx-auto italic">
-        Ces chiffres ne prouvent rien scientifiquement à eux seuls — l'échantillon est encore modeste. Ils sont publiés tels quels, mis à jour en continu, sans filtrage des résultats qui ne nous arrangeraient pas.
-      </p>
+    <!-- Bandeau visuel d'en-tête -->
+    <div class="etude-hero mb-14 sm:mb-16">
+      <div class="etude-hero-bg"></div>
+      <div class="etude-hero-veil"></div>
+      <div class="relative z-10 text-center px-6 py-16 sm:py-20">
+        <p class="text-gold/60 text-xs uppercase tracking-[0.35em] mb-5">Étude ouverte, en cours</p>
+        <h1 class="cinzel text-3xl sm:text-4xl md:text-5xl font-bold mb-5 gold-gradient" style="text-shadow:0 0 40px rgba(212,175,55,0.25);">L'étude des synchronicités</h1>
+        <div class="gold-divider mx-auto mb-6"></div>
+        <p class="text-light-gold/85 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
+          Les cartes ne sont pas tirées au hasard du logiciel. L'oracle Oradia utilise un générateur de nombres <strong class="text-gold">quantique vérifiable</strong> (ANU QRNG, Université Nationale Australienne). Après chaque tirage, j'invite chacun à observer et rapporter ce qui se passe dans les jours qui suivent, sans obligation ni promesse de résultat.
+        </p>
+      </div>
     </div>
+
+    <p class="text-light-gold/50 text-sm mb-14 max-w-2xl mx-auto italic text-center">
+      Ces chiffres ne prouvent rien scientifiquement à eux seuls, l'échantillon est encore modeste. Ils sont publiés tels quels, mis à jour en continu, sans filtrage des résultats qui ne m'arrangeraient pas.
+    </p>
 
     <!-- Chargement -->
     <div id="etude-loading" class="text-center py-16">
@@ -68,15 +86,15 @@
       <!-- Chiffres clés -->
       <div class="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-16">
         <div class="stat-card rounded-2xl p-6 text-center">
-          <p class="text-3xl font-bold text-gold" id="stat-total">—</p>
+          <p class="big-stat font-bold text-gold" id="stat-total">—</p>
           <p class="text-light-gold/50 text-xs uppercase tracking-wider mt-2">Retours étudiés</p>
         </div>
         <div class="stat-card rounded-2xl p-6 text-center">
-          <p class="text-3xl font-bold text-gold" id="stat-avg">—</p>
+          <p class="big-stat font-bold text-gold" id="stat-avg">—</p>
           <p class="text-light-gold/50 text-xs uppercase tracking-wider mt-2">Score moyen / 10</p>
         </div>
         <div class="stat-card rounded-2xl p-6 text-center col-span-2 sm:col-span-1">
-          <p class="text-3xl font-bold text-gold" id="stat-resonance">—</p>
+          <p class="big-stat font-bold text-gold" id="stat-resonance">—</p>
           <p class="text-light-gold/50 text-xs uppercase tracking-wider mt-2">Résonance ressentie</p>
         </div>
       </div>
