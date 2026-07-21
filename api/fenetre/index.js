@@ -262,7 +262,7 @@ function buildClosingEmail(win, responseToken, isSubscribed = false) {
               </h1>
               <div style="width:80px;height:2px;background:linear-gradient(90deg, transparent 0%, #f0c75e 50%, transparent 100%);margin:20px auto;border-radius:2px;"></div>
               <p style="margin:0;color:#d8bf72;font-family:'Lora',Georgia,serif;font-size:15px;font-style:italic;line-height:1.6;letter-spacing:0.5px;">
-                Ces ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} touchent à leur fin
+Vos ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} d'observation viennent de s'achever
               </p>
             </td>
           </tr>
