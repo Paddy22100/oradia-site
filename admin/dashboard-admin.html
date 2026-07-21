@@ -5060,23 +5060,33 @@
         // Récupère les articles réellement publiés sur /blog (titre + chapeau + lien)
         // pour les injecter comme matière à la génération de newsletter.
         async function nlFetchBlogArticles() {
+            const items = [];
+            // 1. Articles statiques (parse du HTML de /blog)
             try {
                 const res = await fetch('/blog', { cache: 'no-store' });
-                if (!res.ok) return '';
-                const html = await res.text();
-                const doc = new DOMParser().parseFromString(html, 'text/html');
-                const cards = [...doc.querySelectorAll('.article-card')];
-                const items = cards.map(c => {
-                    const a = c.querySelector('.article-title a');
-                    const chapeau = c.querySelector('.article-chapeau');
-                    if (!a) return null;
-                    const href = a.getAttribute('href') || '';
-                    const url = href.startsWith('http') ? href : ('https://oradia.fr' + href);
-                    return `• ${a.textContent.trim()}\n  ${chapeau ? chapeau.textContent.trim() : ''}\n  Lien : ${url}`;
-                }).filter(Boolean);
-                if (!items.length) return '';
-                return `Articles actuellement publiés sur le blog Oradia (utilise-les comme matière : tu peux résumer, citer, ou inviter à lire l'un d'eux avec son lien) :\n\n${items.join('\n\n')}`;
-            } catch (_) { return ''; }
+                if (res.ok) {
+                    const doc = new DOMParser().parseFromString(await res.text(), 'text/html');
+                    [...doc.querySelectorAll('.article-card')].forEach(c => {
+                        const a = c.querySelector('.article-title a');
+                        const chapeau = c.querySelector('.article-chapeau');
+                        if (!a) return;
+                        const href = a.getAttribute('href') || '';
+                        const url = href.startsWith('http') ? href : ('https://oradia.fr' + href);
+                        items.push(`• ${a.textContent.trim()}\n  ${chapeau ? chapeau.textContent.trim() : ''}\n  Lien : ${url}`);
+                    });
+                }
+            } catch (_) {}
+            // 2. Articles gérés depuis le dashboard (base) — absents du HTML brut,
+            //    récupérés via l'API pour être aussi disponibles comme matière.
+            try {
+                const resDb = await adminFetch('/api/admin/blog?action=public-list');
+                const dataDb = await resDb.json();
+                (dataDb.articles || []).forEach(a => {
+                    items.push(`• ${a.title}\n  ${a.description || ''}\n  Lien : https://oradia.fr/blog/${a.slug}`);
+                });
+            } catch (_) {}
+            if (!items.length) return '';
+            return `Articles actuellement publiés sur le blog Oradia (utilise-les comme matière : tu peux résumer, citer, ou inviter à lire l'un d'eux avec son lien) :\n\n${items.join('\n\n')}`;
         }
 
         function nlGetCustomSources() {

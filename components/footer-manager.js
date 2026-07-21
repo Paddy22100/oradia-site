@@ -29,10 +29,27 @@ class FooterManager {
     if (placeholder) {
       placeholder.innerHTML = this.template;
       this.initNewsletterForm();
+      this.initBackToTop();
       console.log('FooterManager: Template injecté avec succès');
     } else {
       console.error('FooterManager: Placeholder non trouvé!');
     }
+  }
+
+  // Bouton « remonter en haut » — ajouté uniquement si la page n'en a pas déjà un.
+  initBackToTop() {
+    if (document.getElementById('backToTop')) return;
+    const btn = document.createElement('button');
+    btn.id = 'backToTop';
+    btn.setAttribute('aria-label', 'Remonter en haut');
+    btn.className = 'fixed bottom-6 right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-50 backdrop-blur-sm';
+    btn.innerHTML = '<i class="fas fa-arrow-up text-sm"></i>';
+    document.body.appendChild(btn);
+    window.addEventListener('scroll', () => {
+      if (window.scrollY > 400) { btn.classList.remove('opacity-0'); btn.classList.add('opacity-100'); }
+      else { btn.classList.add('opacity-0'); btn.classList.remove('opacity-100'); }
+    });
+    btn.addEventListener('click', () => window.scrollTo({ top: 0, behavior: 'smooth' }));
   }
 
   initNewsletterForm() {
