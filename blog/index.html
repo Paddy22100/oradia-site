@@ -183,7 +183,12 @@
       const el = document.getElementById('db-articles');
       if (!el || !d.articles || !d.articles.length) return;
       const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      el.innerHTML = d.articles.map(a => `
+      // Slugs déjà affichés en statique : on évite de les afficher deux fois
+      const existing = new Set([...document.querySelectorAll('.article-card a[href^="/blog/"]')]
+        .map(a => a.getAttribute('href').split('/').pop()));
+      const fresh = d.articles.filter(a => !existing.has(a.slug));
+      if (!fresh.length) return;
+      el.innerHTML = fresh.map(a => `
         <article class="article-card">
           <p class="article-meta">${(a.read_minutes||5)} min de lecture</p>
           <h2 class="article-title"><a href="/blog/${esc(a.slug)}">${esc(a.title)}</a></h2>
