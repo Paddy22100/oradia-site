@@ -4438,11 +4438,43 @@ Réponds en français, sans tiret long, format markdown compact.`
         });
         let newVisitors = 0, returningVisitors = 0;
         Object.values(sessionIsNew).forEach(isNew => { if (isNew) newVisitors++; else returningVisitors++; });
-        return { total_views: v.length, unique_visitors: uniqueSessions, top_pages: topPages, top_referrers: topReferrers, daily_views: dailyViews, bounce_rate: bounceRate, pages_per_visit: pagesPerVisit, new_visitors: newVisitors, returning_visitors: returningVisitors };
+
+        // ── Répartition par appareil (depuis le user-agent) ──
+        const devices = { mobile: 0, tablette: 0, ordinateur: 0 };
+        // Une session = un appareil : on classe sur la 1re vue rencontrée par session.
+        const sessionDevice = {};
+        v.forEach(r => {
+          if (sessionDevice[r.session_id]) return;
+          const ua = r.user_agent || '';
+          let d = 'ordinateur';
+          if (/iPad|Tablet|PlayBook|Silk|(Android(?!.*Mobile))/i.test(ua)) d = 'tablette';
+          else if (/Mobi|Android|iPhone|iPod|IEMobile|BlackBerry|Opera Mini/i.test(ua)) d = 'mobile';
+          sessionDevice[r.session_id] = d;
+        });
+        Object.values(sessionDevice).forEach(d => { devices[d] = (devices[d] || 0) + 1; });
+
+        // ── Affluence par heure (0-23) et par jour de semaine (lun-dim) ──
+        const byHour = Array(24).fill(0);
+        const byWeekday = Array(7).fill(0); // 0 = lundi … 6 = dimanche
+        v.forEach(r => {
+          const dt = new Date(r.created_at);
+          byHour[dt.getHours()]++;
+          byWeekday[(dt.getDay() + 6) % 7]++; // convertit dim=0 en fin de semaine
+        });
+
+        // ── Pages d'entrée (1re page de chaque session) ──
+        const firstBySession = {};
+        // v est trié du plus récent au plus ancien : on garde la plus ancienne vue par session
+        v.forEach(r => { firstBySession[r.session_id] = r.path; });
+        const landingCounts = {};
+        Object.values(firstBySession).forEach(p => { landingCounts[p] = (landingCounts[p] || 0) + 1; });
+        const landingPages = Object.entries(landingCounts).sort((a,b) => b[1]-a[1]).slice(0,8).map(([path,count]) => ({path,count}));
+
+        return { total_views: v.length, unique_visitors: uniqueSessions, top_pages: topPages, top_referrers: topReferrers, daily_views: dailyViews, bounce_rate: bounceRate, pages_per_visit: pagesPerVisit, new_visitors: newVisitors, returning_visitors: returningVisitors, devices, by_hour: byHour, by_weekday: byWeekday, landing_pages: landingPages };
       };
 
       // ── Trafic réel (pages vues du site, via js/page-tracker.js) ──
-      const { data: views } = await sb.from('page_views').select('created_at,path,referrer,session_id,is_new_visitor').gte('created_at', since).not('path', 'like', '/admin%').order('created_at', { ascending: false }).limit(20000);
+      const { data: views } = await sb.from('page_views').select('created_at,path,referrer,session_id,is_new_visitor,user_agent').gte('created_at', since).not('path', 'like', '/admin%').order('created_at', { ascending: false }).limit(20000);
       const { data: prevViews } = await sb.from('page_views').select('created_at,session_id').gte('created_at', prevSince).lt('created_at', since).not('path', 'like', '/admin%').limit(20000);
       const traffic = computeTraffic(views);
       const prevTraffic = computeTraffic(prevViews);
@@ -4468,6 +4500,11 @@ Voici les statistiques de trafic réelles des ${days} derniers jours (comparées
 - Taux de rebond (visite d'une seule page) : ${traffic.bounce_rate != null ? traffic.bounce_rate.toFixed(0) + '%' : 'N/A'}
 - Pages les plus consultées : ${traffic.top_pages.map(p => `${p.path} (${p.count})`).join(', ') || 'aucune donnée'}
 - Provenance des visiteurs : ${traffic.top_referrers.map(r => `${r.referrer} (${r.count})`).join(', ') || 'aucune donnée'}
+- Pages d'entrée (1re page de la visite) : ${(traffic.landing_pages||[]).map(p => `${p.path} (${p.count})`).join(', ') || 'aucune donnée'}
+- Appareils : mobile ${traffic.devices?.mobile||0}, ordinateur ${traffic.devices?.ordinateur||0}, tablette ${traffic.devices?.tablette||0}
+- Nouveaux vs récurrents : ${traffic.new_visitors} nouveaux / ${traffic.returning_visitors} récurrents
+- Affluence par jour (lun→dim) : ${(traffic.by_weekday||[]).join(', ')}
+- Affluence par heure (0h→23h) : ${(traffic.by_hour||[]).join(', ')}
 - Erreurs techniques sur la période : ${errors}
 
 Analyse ces chiffres et donne-moi, en français, de façon concise et actionnable (utilise des puces, pas de blabla) :

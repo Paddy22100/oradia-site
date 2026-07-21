@@ -2430,6 +2430,24 @@
                 </div>
             </div>
 
+            <!-- Comportement des visiteurs -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                <div class="stat-card rounded-2xl p-6">
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-mobile-screen text-gold/60"></i> Appareils</h4>
+                    <div id="analytics-devices" class="space-y-3 text-sm"></div>
+                </div>
+                <div class="stat-card rounded-2xl p-6">
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-door-open text-gold/60"></i> Pages d'entrée</h4>
+                    <p class="text-light-gold/35 text-xs mb-3 -mt-2">Par où les visiteurs arrivent sur le site.</p>
+                    <div id="analytics-landing" class="space-y-2 text-sm"></div>
+                </div>
+                <div class="stat-card rounded-2xl p-6">
+                    <h4 class="text-gold font-semibold mb-4 flex items-center gap-2"><i class="fas fa-clock text-gold/60"></i> Affluence</h4>
+                    <p class="text-light-gold/35 text-xs mb-2 -mt-2">Quand publier / envoyer la newsletter.</p>
+                    <div id="analytics-timing"></div>
+                </div>
+            </div>
+
             <!-- Funnel de conversion -->
             <div class="stat-card rounded-2xl p-6">
                 <h4 class="text-gold font-semibold mb-1 flex items-center gap-2"><i class="fas fa-filter text-gold/60"></i> Funnel de conversion — Tirage Tore</h4>
@@ -9479,6 +9497,65 @@
                                     <div class="h-full bg-gold/50 rounded-full" style="width:${(r.count/max*100).toFixed(0)}%"></div>
                                 </div>
                             </div>`).join('');
+                }
+
+                // Appareils
+                const devEl = document.getElementById('analytics-devices');
+                if (devEl) {
+                    const dv = t.devices || { mobile:0, ordinateur:0, tablette:0 };
+                    const totalDv = (dv.mobile||0) + (dv.ordinateur||0) + (dv.tablette||0);
+                    const rows = [
+                        { label:'Mobile', icon:'fa-mobile-screen', n: dv.mobile||0 },
+                        { label:'Ordinateur', icon:'fa-desktop', n: dv.ordinateur||0 },
+                        { label:'Tablette', icon:'fa-tablet-screen-button', n: dv.tablette||0 }
+                    ];
+                    devEl.innerHTML = totalDv === 0
+                        ? '<p class="text-gold/30 italic text-xs">Aucune donnée.</p>'
+                        : rows.map(r => {
+                            const pct = totalDv ? Math.round(r.n/totalDv*100) : 0;
+                            return `<div class="flex items-center gap-2">
+                                <i class="fas ${r.icon} text-gold/50 w-4 text-center"></i>
+                                <span class="text-light-gold/70 text-xs flex-1">${r.label}</span>
+                                <span class="text-gold font-semibold text-xs w-10 text-right">${pct}%</span>
+                                <div class="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden flex-shrink-0"><div class="h-full bg-gold/50 rounded-full" style="width:${pct}%"></div></div>
+                            </div>`;
+                        }).join('');
+                }
+
+                // Pages d'entrée
+                const landEl = document.getElementById('analytics-landing');
+                if (landEl) {
+                    const lp = t.landing_pages || [];
+                    const maxL = Math.max(...lp.map(p => p.count), 1);
+                    landEl.innerHTML = lp.length === 0
+                        ? '<p class="text-gold/30 italic text-xs">Aucune donnée.</p>'
+                        : lp.map(p => `
+                            <div class="flex items-center gap-2">
+                                <span class="text-gold/60 text-xs truncate flex-1" title="${p.path}">${p.path}</span>
+                                <span class="text-gold/40 text-xs w-8 text-right">${p.count}</span>
+                                <div class="w-16 h-1.5 bg-white/5 rounded-full overflow-hidden flex-shrink-0"><div class="h-full bg-teal-400/50 rounded-full" style="width:${(p.count/maxL*100).toFixed(0)}%"></div></div>
+                            </div>`).join('');
+                }
+
+                // Affluence (jour de semaine + heures)
+                const timeEl = document.getElementById('analytics-timing');
+                if (timeEl) {
+                    const wd = t.by_weekday || [], hr = t.by_hour || [];
+                    const jours = ['L','M','M','J','V','S','D'];
+                    const maxW = Math.max(...wd, 1), maxH = Math.max(...hr, 1);
+                    const bestDay = wd.length ? jours[wd.indexOf(Math.max(...wd))] : '—';
+                    const bestHour = hr.length ? hr.indexOf(Math.max(...hr)) : null;
+                    const daysBar = wd.map((n,i) => `<div class="flex flex-col items-center gap-1 flex-1">
+                        <div class="w-full bg-white/5 rounded-sm flex items-end" style="height:44px;"><div class="w-full bg-gold/50 rounded-sm" style="height:${Math.max(n/maxW*100, n>0?8:0)}%"></div></div>
+                        <span class="text-light-gold/40 text-[10px]">${jours[i]}</span>
+                    </div>`).join('');
+                    const hoursBar = hr.map((n,i) => `<div class="flex-1 bg-teal-400/40 rounded-sm" style="height:${Math.max(n/maxH*100, n>0?6:0)}%;" title="${i}h : ${n}"></div>`).join('');
+                    timeEl.innerHTML = `
+                        <p class="text-light-gold/50 text-[11px] uppercase tracking-wider mb-1">Par jour</p>
+                        <div class="flex items-end gap-1 mb-3">${daysBar}</div>
+                        <p class="text-light-gold/50 text-[11px] uppercase tracking-wider mb-1">Par heure (0→23h)</p>
+                        <div class="flex items-end gap-px h-10 mb-2">${hoursBar}</div>
+                        <p class="text-gold/60 text-xs">Pic : <strong>${bestDay}</strong>${bestHour!=null?` · vers <strong>${bestHour}h</strong>`:''}</p>`;
                 }
             } catch(e) {
                 console.error('[analytics]', e);
