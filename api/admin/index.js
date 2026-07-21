@@ -4253,9 +4253,11 @@ Réponds en français, sans tiret long, format markdown compact.`
         const FUNNEL_EVENTS = ['intention_saisie', 'tirage_lance', 'analyse_affichee', 'email_laisse'];
         const event = FUNNEL_EVENTS.includes(String(body.event || '')) ? body.event : null;
         if (!sessionId || (!pagePath && !event)) return res.status(204).end();
-        // Filtrer les bots connus côté serveur
-        const BOT_PATTERN = /bot|crawler|spider|crawling|googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex|sogou|facebot|ia_archiver|semrush|ahrefs|mj12bot|dotbot/i;
-        if (BOT_PATTERN.test(userAgent)) return res.status(204).end();
+        // Filtrer les bots connus côté serveur (user-agent)
+        const BOT_PATTERN = /bot|crawler|spider|crawling|scraper|headless|phantom|puppeteer|playwright|selenium|webdriver|googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex|sogou|facebot|facebookexternalhit|ia_archiver|semrush|ahrefs|mj12bot|dotbot|petalbot|bytespider|gptbot|ccbot|claudebot|anthropic|amazonbot|applebot|archive\.org|python-requests|python-urllib|go-http|node-fetch|axios|okhttp|curl|wget|libwww|httpclient|scrapy|masscan|zgrab|censys|nuclei|uptimerobot|pingdom|statuscake|newrelic|datadog|site24x7|monitis|lighthouse|pagespeed|gtmetrix|headlesschrome/i;
+        // Rejeter aussi les user-agents vides ou trop courts (typique des scripts sans navigateur)
+        // et le drapeau headless envoyé par le tracker client.
+        if (!userAgent || userAgent.length < 15 || BOT_PATTERN.test(userAgent) || body.headless === true) return res.status(204).end();
         const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
         if (pagePath) {
           await sb.from('page_views').insert({ path: pagePath, referrer: referrer || null, session_id: sessionId, user_agent: userAgent || null, is_new_visitor: isNewVisitor });

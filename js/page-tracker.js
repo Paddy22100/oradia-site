@@ -7,6 +7,20 @@
     if (sessionStorage.getItem('oradia_auth')) return;
     if (localStorage.getItem('oradia_admin_device')) return;
 
+    // Détection de navigateur automatisé / headless (Puppeteer, Playwright, Selenium…) :
+    // ces marqueurs techniques ne sont presque jamais présents chez un humain.
+    function isAutomated() {
+      try {
+        if (navigator.webdriver === true) return true;                         // drapeau standard du WebDriver
+        if (/HeadlessChrome/i.test(navigator.userAgent || '')) return true;    // Chrome headless par défaut
+        if (window.__nightmare || window._phantom || window.callPhantom) return true;
+        if (navigator.languages && navigator.languages.length === 0) return true; // headless : langues souvent vides
+      } catch (e) {}
+      return false;
+    }
+    var automated = isAutomated();
+    if (automated) return; // on ne compte pas du tout ce trafic
+
     var KEY = 'oradia_session_id';
     var sessionId = sessionStorage.getItem(KEY);
     if (!sessionId) {
