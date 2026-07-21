@@ -4032,9 +4032,19 @@ Réponds en français, sans tiret long, format markdown compact.`
       const resonanceCounts = { fort: 0, plutot_oui: 0, peu: 0, non: 0 };
       anuRows.forEach(r => { if (r.resonance_tirage && resonanceCounts[r.resonance_tirage] !== undefined) resonanceCounts[r.resonance_tirage]++; });
 
+      // Compteur public de tirages réalisés (preuve sociale). funnel_events compte
+      // TOUS les tirages lancés, y compris les visiteurs anonymes. Dégrade en null
+      // si la table n'existe pas — le front n'affiche le compteur que s'il est présent.
+      let totalTirages = null;
+      try {
+        const { count } = await sbSync.from('funnel_events').select('*', { count: 'exact', head: true }).eq('event_name', 'tirage_lance');
+        if (typeof count === 'number') totalTirages = count;
+      } catch (_) {}
+
       res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=1800');
       return res.status(200).json({
         success: true,
+        totalTirages,
         data: { total: anuRows.length, avgScore, scoreDistrib, typeCounts, resonanceCounts }
       });
     }
