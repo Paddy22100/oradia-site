@@ -13,7 +13,7 @@
         <p style="margin:0 0 8px;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:600;">${title}</p>
         <p style="margin:0 0 18px;color:rgba(212,175,55,0.65);font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;line-height:1.6;">${text}</p>
         <form id="${uid}-form" style="display:flex;flex-direction:column;gap:10px;text-align:left;">
-          <input type="email" id="${uid}-email" required placeholder="Votre adresse email"
+          <input type="email" id="${uid}-email" required placeholder="Votre adresse email" aria-label="Votre adresse email"
             style="background:rgba(5,20,40,0.7);border:1px solid rgba(212,175,55,0.3);border-radius:10px;color:#e8d9b0;font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;padding:12px 16px;outline:none;width:100%;box-sizing:border-box;">
           <label style="display:flex;align-items:flex-start;gap:8px;color:rgba(212,175,55,0.6);font-family:'Cormorant Garamond',Georgia,serif;font-size:12.5px;line-height:1.5;cursor:pointer;">
             <input type="checkbox" id="${uid}-consent" required style="margin-top:3px;accent-color:#d4af37;flex-shrink:0;">
