@@ -77,6 +77,9 @@
 
     <div class="article-list">
 
+      <!-- Articles gérés depuis le dashboard (base de données), insérés ici -->
+      <div id="db-articles"></div>
+
       <article class="article-card">
         <p class="article-meta">5 min de lecture</p>
         <h2 class="article-title"><a href="/blog/tirage-gratuit-sans-inscription">Tirage d'oracle gratuit sans inscription : à quoi s'attendre vraiment</a></h2>
@@ -173,6 +176,23 @@
 
   <div id="footer-placeholder"></div>
 <script src="/js/page-tracker.js" defer></script>
+<script>
+  // Articles publiés depuis le dashboard (base) — ajoutés en tête de liste
+  (function(){
+    fetch('/api/admin/blog?action=public-list').then(r=>r.json()).then(d=>{
+      const el = document.getElementById('db-articles');
+      if (!el || !d.articles || !d.articles.length) return;
+      const esc = s => (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      el.innerHTML = d.articles.map(a => `
+        <article class="article-card">
+          <p class="article-meta">${(a.read_minutes||5)} min de lecture</p>
+          <h2 class="article-title"><a href="/blog/${esc(a.slug)}">${esc(a.title)}</a></h2>
+          ${a.description ? `<p class="article-chapeau">${esc(a.description)}</p>` : ''}
+          <a href="/blog/${esc(a.slug)}" class="article-link">Lire l'article</a>
+        </article>`).join('');
+    }).catch(()=>{});
+  })();
+</script>
   <script src="/components/header-manager.js" defer></script>
   <script src="/components/footer-manager.js" defer></script>
 </body>

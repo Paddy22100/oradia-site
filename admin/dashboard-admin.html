@@ -381,6 +381,10 @@
             </div>
 
             <p class="text-gold/50 text-xs uppercase tracking-widest px-5 mt-5 mb-2">Contenu</p>
+            <div class="nav-item" onclick="showTab('blog')" id="nav-blog">
+                <i class="fas fa-feather w-4 text-center"></i>
+                <span>Blog</span>
+            </div>
             <div class="nav-item" onclick="showTab('newsletter')" id="nav-newsletter">
                 <i class="fas fa-bullhorn w-4 text-center"></i>
                 <span>Newsletter &amp; Réseaux</span>
@@ -1449,6 +1453,91 @@
             </div>
         </section>
         </div><!-- /tab-journal -->
+
+        <!-- ══ ONGLET : BLOG ══ -->
+        <div id="tab-blog" class="tab-panel">
+        <section class="mb-10">
+            <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+                <div>
+                    <h3 class="cormorant text-2xl font-bold text-gold">Blog</h3>
+                    <p class="text-light-gold/50 text-sm mt-1">Créez, modifiez et publiez des articles. Les articles publiés apparaissent automatiquement sur oradia.fr/blog.</p>
+                </div>
+                <button onclick="blogNewArticle()" class="bg-gold text-night-blue font-semibold rounded-lg px-4 py-2 text-sm hover:bg-light-gold transition"><i class="fas fa-plus mr-1"></i>Nouvel article</button>
+            </div>
+
+            <!-- Liste des articles -->
+            <div id="blog-list-view">
+                <div id="blog-list" class="space-y-3">
+                    <p class="text-light-gold/40 text-sm text-center py-8">Chargement…</p>
+                </div>
+            </div>
+
+            <!-- Éditeur d'article -->
+            <div id="blog-editor-view" class="hidden">
+                <button onclick="blogCloseEditor()" class="text-gold/60 hover:text-gold text-sm mb-4"><i class="fas fa-arrow-left mr-1"></i>Retour à la liste</button>
+                <input type="hidden" id="blog-id">
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-2 space-y-4">
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Titre *</label>
+                            <input type="text" id="blog-title" oninput="blogSyncSlug()" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2.5 focus:outline-none focus:border-gold" placeholder="Le titre de l'article">
+                        </div>
+                        <div>
+                            <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Résumé (chapeau / meta description)</label>
+                            <textarea id="blog-description" rows="2" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-2.5 text-sm focus:outline-none focus:border-gold resize-y" placeholder="Une ou deux phrases qui donnent envie de lire (affiché sur la liste du blog et dans Google)."></textarea>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="block text-xs uppercase tracking-widest text-gold/60">Contenu de l'article</label>
+                                <div class="flex gap-1">
+                                    <button type="button" onclick="blogFormat('h2')" class="text-xs bg-white/5 border border-gold/20 text-gold/70 rounded px-2 py-1 hover:bg-white/10" title="Sous-titre">H2</button>
+                                    <button type="button" onclick="blogFormat('h3')" class="text-xs bg-white/5 border border-gold/20 text-gold/70 rounded px-2 py-1 hover:bg-white/10" title="Petit titre">H3</button>
+                                    <button type="button" onclick="blogFormat('bold')" class="text-xs bg-white/5 border border-gold/20 text-gold/70 rounded px-2 py-1 hover:bg-white/10" title="Gras"><b>B</b></button>
+                                    <button type="button" onclick="blogFormat('italic')" class="text-xs bg-white/5 border border-gold/20 text-gold/70 rounded px-2 py-1 hover:bg-white/10" title="Italique"><i>I</i></button>
+                                    <button type="button" onclick="blogFormat('insertUnorderedList')" class="text-xs bg-white/5 border border-gold/20 text-gold/70 rounded px-2 py-1 hover:bg-white/10" title="Liste"><i class="fas fa-list-ul"></i></button>
+                                    <button type="button" onclick="blogInsertLink()" class="text-xs bg-white/5 border border-gold/20 text-gold/70 rounded px-2 py-1 hover:bg-white/10" title="Lien"><i class="fas fa-link"></i></button>
+                                    <button type="button" onclick="document.getElementById('blog-inline-image').click()" class="text-xs bg-white/5 border border-gold/20 text-gold/70 rounded px-2 py-1 hover:bg-white/10" title="Insérer une image"><i class="fas fa-image"></i></button>
+                                    <input type="file" id="blog-inline-image" accept="image/*" class="hidden" onchange="blogInsertInlineImage(this)">
+                                </div>
+                            </div>
+                            <div id="blog-content" contenteditable="true" class="w-full min-h-[360px] bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-3 focus:outline-none focus:border-gold leading-relaxed" style="font-size:15px;"></div>
+                            <p class="text-light-gold/30 text-xs mt-1">Sélectionne du texte puis utilise les boutons de mise en forme. Les images sont hébergées automatiquement.</p>
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        <div class="stat-card rounded-xl p-4">
+                            <label class="block text-xs uppercase tracking-widest text-gold/60 mb-2">Image de couverture</label>
+                            <div id="blog-cover-preview" class="hidden mb-2"><img id="blog-cover-img" src="" class="w-full rounded-lg border border-gold/20"></div>
+                            <button type="button" onclick="document.getElementById('blog-cover-file').click()" class="w-full text-xs bg-gold/10 border border-gold/30 text-gold rounded-lg px-3 py-2 hover:bg-gold/20 transition"><i class="fas fa-upload mr-1"></i>Choisir une image</button>
+                            <input type="file" id="blog-cover-file" accept="image/*" class="hidden" onchange="blogUploadCover(this)">
+                            <input type="hidden" id="blog-cover-url">
+                            <p id="blog-cover-status" class="text-xs mt-1 hidden"></p>
+                        </div>
+                        <div class="stat-card rounded-xl p-4 space-y-3">
+                            <div>
+                                <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Lien de l'article (slug)</label>
+                                <div class="flex items-center gap-1 text-xs">
+                                    <span class="text-light-gold/40">/blog/</span>
+                                    <input type="text" id="blog-slug" class="flex-1 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded px-2 py-1.5 focus:outline-none focus:border-gold" placeholder="mon-article">
+                                </div>
+                            </div>
+                            <div>
+                                <label class="block text-xs uppercase tracking-widest text-gold/60 mb-1">Temps de lecture (min)</label>
+                                <input type="number" id="blog-read" value="5" min="1" max="60" class="w-24 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded px-2 py-1.5 text-sm focus:outline-none focus:border-gold">
+                            </div>
+                            <label class="flex items-center gap-2 cursor-pointer text-sm text-light-gold pt-1">
+                                <input type="checkbox" id="blog-published" class="accent-gold w-4 h-4 rounded">
+                                Publié (visible sur le site)
+                            </label>
+                        </div>
+                        <button onclick="blogSave()" id="blog-save-btn" class="w-full bg-gold text-night-blue font-bold rounded-lg py-3 hover:bg-light-gold transition"><i class="fas fa-save mr-1"></i>Enregistrer</button>
+                        <a id="blog-preview-link" href="#" target="_blank" class="hidden w-full text-center text-xs text-gold/60 hover:text-gold"><i class="fas fa-external-link-alt mr-1"></i>Voir l'article sur le site</a>
+                        <p id="blog-editor-status" class="text-sm text-center hidden"></p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        </div><!-- /tab-blog -->
 
         <!-- ══ ONGLET : NEWSLETTER ══ -->
         <div id="tab-newsletter" class="tab-panel">
@@ -2931,6 +3020,7 @@
             donors:             'Dons',
             waitlist:           'Contacts',
             'nl-subscribers':   'Newsletter — Abonnés',
+            blog:               'Blog',
             newsletter:         'Newsletter & Réseaux',
             planning:           'Planning éditorial',
             mails:              'Mails du site',
@@ -2975,6 +3065,181 @@
             if (name === 'planning')       loadPlanning();
             if (name === 'exports')        renderExports();
             if (name === 'settings')       { loadSettings(); loadFeatureFlags(); }
+            if (name === 'blog')           blogLoadList();
+        }
+
+        // ══════════ GESTION DU BLOG ══════════
+        async function blogLoadList() {
+            const el = document.getElementById('blog-list');
+            document.getElementById('blog-list-view').classList.remove('hidden');
+            document.getElementById('blog-editor-view').classList.add('hidden');
+            if (el) el.innerHTML = '<p class="text-light-gold/40 text-sm text-center py-8">Chargement…</p>';
+            try {
+                const res = await adminFetch('/api/admin/blog');
+                const data = await res.json();
+                const arts = data.articles || [];
+                if (!arts.length) {
+                    el.innerHTML = `<div class="border border-dashed border-gold/20 rounded-xl p-8 text-center">
+                        <p class="text-light-gold/40 text-sm">Aucun article géré ici pour l'instant.</p>
+                        <p class="text-light-gold/25 text-xs mt-1">Clique sur « Nouvel article » pour commencer. (Les 13 articles historiques restent en ligne, gérés en code.)</p>
+                    </div>`;
+                    return;
+                }
+                el.innerHTML = arts.map(a => `
+                    <div class="stat-card rounded-xl p-4 flex items-center gap-4 flex-wrap">
+                        ${a.cover_image ? `<img src="${a.cover_image}" class="w-16 h-12 object-cover rounded-lg border border-gold/20 shrink-0">` : '<div class="w-16 h-12 rounded-lg bg-white/5 flex items-center justify-center shrink-0"><i class="fas fa-feather text-gold/30"></i></div>'}
+                        <div class="flex-1 min-w-[160px]">
+                            <p class="text-light-gold font-semibold text-sm">${blogEsc(a.title)}</p>
+                            <p class="text-light-gold/40 text-xs mt-0.5">/blog/${blogEsc(a.slug)} · ${(a.read_minutes||5)} min</p>
+                        </div>
+                        <span class="text-xs px-2 py-1 rounded-full ${a.published ? 'bg-green-500/15 text-green-300' : 'bg-white/5 text-light-gold/40'}">${a.published ? 'Publié' : 'Brouillon'}</span>
+                        <div class="flex gap-2 shrink-0">
+                            <button onclick="blogEdit('${a.id}')" class="text-xs bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/25 transition">Modifier</button>
+                            <button onclick="blogDelete('${a.id}','${blogEsc(a.title)}')" class="text-xs bg-red-500/10 text-red-300/80 border border-red-500/25 rounded-lg px-3 py-1.5 hover:bg-red-500/20 transition">Suppr.</button>
+                        </div>
+                    </div>`).join('');
+            } catch(e) {
+                el.innerHTML = `<p class="text-red-400/70 text-sm text-center py-8">Erreur : ${e.message}</p>`;
+            }
+        }
+        function blogEsc(s){ return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); }
+
+        function blogOpenEditor() {
+            document.getElementById('blog-list-view').classList.add('hidden');
+            document.getElementById('blog-editor-view').classList.remove('hidden');
+            document.getElementById('blog-editor-status').classList.add('hidden');
+        }
+        function blogCloseEditor() { blogLoadList(); }
+
+        function blogNewArticle() {
+            document.getElementById('blog-id').value = '';
+            document.getElementById('blog-title').value = '';
+            document.getElementById('blog-description').value = '';
+            document.getElementById('blog-slug').value = '';
+            document.getElementById('blog-read').value = 5;
+            document.getElementById('blog-published').checked = false;
+            document.getElementById('blog-content').innerHTML = '';
+            document.getElementById('blog-cover-url').value = '';
+            document.getElementById('blog-cover-preview').classList.add('hidden');
+            document.getElementById('blog-preview-link').classList.add('hidden');
+            document.getElementById('blog-slug').dataset.auto = '1';
+            blogOpenEditor();
+        }
+
+        async function blogEdit(id) {
+            try {
+                const res = await adminFetch('/api/admin/blog?action=get-admin&id=' + encodeURIComponent(id));
+                const data = await res.json();
+                const a = data.article;
+                if (!a) throw new Error('Article introuvable');
+                document.getElementById('blog-id').value = a.id;
+                document.getElementById('blog-title').value = a.title || '';
+                document.getElementById('blog-description').value = a.description || '';
+                document.getElementById('blog-slug').value = a.slug || '';
+                document.getElementById('blog-slug').dataset.auto = '0';
+                document.getElementById('blog-read').value = a.read_minutes || 5;
+                document.getElementById('blog-published').checked = !!a.published;
+                document.getElementById('blog-content').innerHTML = a.content_html || '';
+                document.getElementById('blog-cover-url').value = a.cover_image || '';
+                if (a.cover_image) { document.getElementById('blog-cover-img').src = a.cover_image; document.getElementById('blog-cover-preview').classList.remove('hidden'); }
+                else document.getElementById('blog-cover-preview').classList.add('hidden');
+                const pl = document.getElementById('blog-preview-link');
+                pl.href = '/blog/' + a.slug; pl.classList.remove('hidden');
+                blogOpenEditor();
+            } catch(e) { show('Erreur : ' + e.message, 'text-red-400/80'); }
+        }
+
+        function blogSlugify(s){ return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-+|-+$/g,'').slice(0,80); }
+        function blogSyncSlug() {
+            const slugEl = document.getElementById('blog-slug');
+            if (slugEl.dataset.auto === '1') slugEl.value = blogSlugify(document.getElementById('blog-title').value);
+        }
+
+        function blogFormat(cmd) {
+            document.getElementById('blog-content').focus();
+            if (cmd === 'h2' || cmd === 'h3') document.execCommand('formatBlock', false, cmd.toUpperCase());
+            else document.execCommand(cmd, false, null);
+        }
+        function blogInsertLink() {
+            const url = prompt('URL du lien :', 'https://');
+            if (url) { document.getElementById('blog-content').focus(); document.execCommand('createLink', false, url); }
+        }
+
+        async function blogUploadImageFile(file) {
+            const dataUrl = await new Promise((resolve, reject) => {
+                const r = new FileReader(); r.onload = () => resolve(r.result); r.onerror = reject; r.readAsDataURL(file);
+            });
+            const res = await adminFetch('/api/admin/blog?action=upload-image', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ image: dataUrl })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Échec upload');
+            return data.url;
+        }
+
+        async function blogUploadCover(input) {
+            const file = input.files[0]; if (!file) return;
+            const st = document.getElementById('blog-cover-status');
+            st.className = 'text-xs mt-1 text-light-gold/50'; st.textContent = 'Envoi…'; st.classList.remove('hidden');
+            try {
+                const url = await blogUploadImageFile(file);
+                document.getElementById('blog-cover-url').value = url;
+                document.getElementById('blog-cover-img').src = url;
+                document.getElementById('blog-cover-preview').classList.remove('hidden');
+                st.classList.add('hidden');
+            } catch(e) { st.className = 'text-xs mt-1 text-red-400/80'; st.textContent = e.message; }
+            input.value = '';
+        }
+
+        async function blogInsertInlineImage(input) {
+            const file = input.files[0]; if (!file) return;
+            try {
+                const url = await blogUploadImageFile(file);
+                document.getElementById('blog-content').focus();
+                document.execCommand('insertHTML', false, `<img src="${url}" alt="">`);
+            } catch(e) { show('Erreur image : ' + e.message, 'text-red-400/80'); }
+            input.value = '';
+        }
+
+        async function blogSave() {
+            const btn = document.getElementById('blog-save-btn');
+            const st = document.getElementById('blog-editor-status');
+            const payload = {
+                id: document.getElementById('blog-id').value || undefined,
+                title: document.getElementById('blog-title').value.trim(),
+                slug: document.getElementById('blog-slug').value.trim(),
+                description: document.getElementById('blog-description').value.trim(),
+                cover_image: document.getElementById('blog-cover-url').value.trim(),
+                content_html: document.getElementById('blog-content').innerHTML.trim(),
+                read_minutes: parseInt(document.getElementById('blog-read').value) || 5,
+                published: document.getElementById('blog-published').checked
+            };
+            if (!payload.title) { st.className = 'text-sm text-center text-red-400/80'; st.textContent = 'Le titre est requis.'; st.classList.remove('hidden'); return; }
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Enregistrement…';
+            try {
+                const res = await adminFetch('/api/admin/blog', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                document.getElementById('blog-id').value = data.id;
+                document.getElementById('blog-slug').dataset.auto = '0';
+                const pl = document.getElementById('blog-preview-link');
+                pl.href = '/blog/' + data.slug; pl.classList.remove('hidden');
+                st.className = 'text-sm text-center text-green-400'; st.textContent = payload.published ? '✓ Article enregistré et publié' : '✓ Brouillon enregistré';
+                st.classList.remove('hidden');
+            } catch(e) {
+                st.className = 'text-sm text-center text-red-400/80'; st.textContent = 'Erreur : ' + e.message; st.classList.remove('hidden');
+            } finally {
+                btn.disabled = false; btn.innerHTML = '<i class="fas fa-save mr-1"></i>Enregistrer';
+            }
+        }
+
+        async function blogDelete(id, title) {
+            if (!confirm('Supprimer définitivement l\'article « ' + title + ' » ?')) return;
+            try {
+                const res = await adminFetch('/api/admin/blog?id=' + encodeURIComponent(id), { method: 'DELETE' });
+                if (!res.ok) throw new Error((await res.json().catch(()=>({}))).error || 'Erreur');
+                blogLoadList();
+            } catch(e) { show('Erreur : ' + e.message, 'text-red-400/80'); }
         }
 
         function showTabWithFilter(tabName, filterType, navId) {

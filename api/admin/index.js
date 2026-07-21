@@ -3752,6 +3752,106 @@ Réponds en français, sans tiret long, format markdown compact.`
     }
 
     // ── Registre de fonctionnalités : lister / activer / désactiver ──
+    // ── Blog : CRUD des articles gérés depuis le dashboard ──
+    if (path === '/blog' || path === '/blog/') {
+      const sbBlog = createClient(
+        process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+        process.env.SUPABASE_SERVICE_ROLE_KEY
+      );
+      const blogAction = urlParams.get('action') || '';
+
+      // ── Lectures PUBLIQUES (pas d'auth) ──
+      if (req.method === 'GET' && blogAction === 'public-list') {
+        const { data, error } = await sbBlog.from('blog_articles')
+          .select('slug, title, description, cover_image, read_minutes, published_at')
+          .eq('published', true).order('published_at', { ascending: false });
+        if (error) return res.status(200).json({ success: true, articles: [] });
+        res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=120');
+        return res.status(200).json({ success: true, articles: data || [] });
+      }
+      if (req.method === 'GET' && blogAction === 'get' && urlParams.get('slug')) {
+        const { data, error } = await sbBlog.from('blog_articles')
+          .select('slug, title, description, cover_image, content_html, read_minutes, published_at')
+          .eq('slug', urlParams.get('slug')).eq('published', true).maybeSingle();
+        if (error || !data) return res.status(404).json({ error: 'Article introuvable' });
+        res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=120');
+        return res.status(200).json({ success: true, article: data });
+      }
+
+      // ── Le reste exige l'authentification admin ──
+      verifyAdminAuth(req);
+
+      if (req.method === 'GET' && blogAction === 'get-admin' && urlParams.get('id')) {
+        const { data, error } = await sbBlog.from('blog_articles').select('*').eq('id', urlParams.get('id')).maybeSingle();
+        if (error || !data) return res.status(404).json({ error: 'Article introuvable' });
+        return res.status(200).json({ success: true, article: data });
+      }
+      if (req.method === 'GET') {
+        const { data, error } = await sbBlog.from('blog_articles')
+          .select('id, slug, title, description, cover_image, read_minutes, published, created_at, updated_at, published_at')
+          .order('updated_at', { ascending: false });
+        if (error) return res.status(200).json({ success: true, articles: [] });
+        return res.status(200).json({ success: true, articles: data || [] });
+      }
+
+      if (req.method === 'POST' && blogAction === 'upload-image') {
+        const body = await parseBody(req);
+        const dataUrl = String(body.image || '');
+        const m = dataUrl.match(/^data:(image\/[a-z+]+);base64,(.+)$/i);
+        if (!m) return res.status(400).json({ error: 'Image invalide (attendu data URL base64)' });
+        const ext = (m[1].split('/')[1] || 'png').replace('jpeg', 'jpg');
+        const buffer = Buffer.from(m[2], 'base64');
+        if (buffer.length > 5 * 1024 * 1024) return res.status(400).json({ error: 'Image trop lourde (max 5 Mo)' });
+        const filename = `article_${Date.now()}.${ext}`;
+        const { error: upErr } = await sbBlog.storage.from('blog-images').upload(filename, buffer, { contentType: m[1], upsert: false });
+        if (upErr) return res.status(500).json({ error: 'Échec upload : ' + upErr.message });
+        const { data: { publicUrl } } = sbBlog.storage.from('blog-images').getPublicUrl(filename);
+        return res.status(200).json({ success: true, url: publicUrl });
+      }
+
+      if (req.method === 'POST') {
+        const body = await parseBody(req);
+        const slugify = (s) => String(s || '').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '')
+          .replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 80);
+        const title = String(body.title || '').trim();
+        if (!title) return res.status(400).json({ error: 'Titre requis' });
+        const slug = slugify(body.slug || title);
+        if (!slug) return res.status(400).json({ error: 'Slug invalide' });
+        const now = new Date().toISOString();
+        const record = {
+          slug, title,
+          description: String(body.description || '').trim() || null,
+          cover_image: String(body.cover_image || '').trim() || null,
+          content_html: String(body.content_html || ''),
+          read_minutes: parseInt(body.read_minutes) || 5,
+          published: !!body.published,
+          updated_at: now
+        };
+        if (body.published) record.published_at = body.published_at || now;
+
+        if (body.id) {
+          const { error } = await sbBlog.from('blog_articles').update(record).eq('id', body.id);
+          if (error) return res.status(500).json({ error: error.message });
+          return res.status(200).json({ success: true, id: body.id, slug });
+        } else {
+          record.created_at = now;
+          const { data, error } = await sbBlog.from('blog_articles').insert(record).select('id').single();
+          if (error) return res.status(500).json({ error: error.message.includes('duplicate') ? 'Un article avec ce slug existe déjà' : error.message });
+          return res.status(200).json({ success: true, id: data.id, slug });
+        }
+      }
+
+      if (req.method === 'DELETE') {
+        const id = urlParams.get('id');
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { error } = await sbBlog.from('blog_articles').delete().eq('id', id);
+        if (error) return res.status(500).json({ error: error.message });
+        return res.status(200).json({ success: true });
+      }
+
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
     if (path === '/features' || path === '/features/') {
       verifyAdminAuth(req);
       const sbFeat = createClient(

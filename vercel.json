@@ -68,6 +68,8 @@
     { "src": "/blog/formuler-son-intention",            "dest": "/blog/formuler-son-intention.html" },
     { "src": "/blog/jung-pauli-synchronicites",         "dest": "/blog/jung-pauli-synchronicites.html" },
     { "src": "/blog/oracle-en-ligne-ou-physique",       "dest": "/blog/oracle-en-ligne-ou-physique.html" },
+    { "src": "/blog/article",                           "dest": "/blog/article.html" },
+    { "src": "/blog/([^/.]+)",                          "dest": "/blog/article.html" },
     { "src": "/guidance",                        "dest": "/guidance.html" },
     { "src": "/guidance-confirmation",          "dest": "/guidance-confirmation.html" },
     { "src": "/oracle",                        "dest": "/oracle.html" },

@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title id="a-title">Article — Oradia</title>
+  <meta name="description" id="a-desc" content="">
+  <link rel="canonical" id="a-canonical" href="https://oradia.fr/blog">
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Oradia">
+  <meta property="og:locale" content="fr_FR">
+  <meta name="author" content="Rudy Boucheron">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300;1,400&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="/style.css">
+  <script src="/security.js"></script>
+  <script>
+    tailwind.config = { theme: { extend: {
+      colors: { 'night-blue':'#0a192f','gold':'#d4af37','light-gold':'#f5e7a1','dark-blue':'#051428','celtic-blue':'#1a365d' },
+      fontFamily: { 'cormorant':['Cormorant Garamond','serif'],'cinzel':['Cinzel','serif'] }
+    } } };
+  </script>
+  <style>
+    body { background: #040d1c; color: #c8c0a8; font-family: 'Lora', Georgia, serif; }
+    .blog-main { max-width: 700px; margin: 0 auto; padding: 48px 24px 96px; }
+    .back-link { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: rgba(212,175,55,0.5); margin-bottom: 40px; letter-spacing: 0.05em; }
+    .back-link:hover { color: #d4af37; }
+    .a-meta { font-size: 12px; color: rgba(212,175,55,0.4); letter-spacing: 0.2em; text-transform: uppercase; margin-bottom: 16px; }
+    .a-cover { width: 100%; border-radius: 14px; border: 1px solid rgba(212,175,55,0.2); margin: 0 0 32px; display: block; }
+    h1.a-h1 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(28px, 4.5vw, 42px); font-weight: 300; color: #f0c75e; line-height: 1.25; margin-bottom: 40px; }
+    .a-body { font-size: 16.5px; line-height: 1.85; color: #c8c0a8; }
+    .a-body p { margin-bottom: 24px; }
+    .a-body h2 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: clamp(20px, 3vw, 26px); font-weight: 400; color: #f0c75e; margin: 48px 0 20px; line-height: 1.3; }
+    .a-body h3 { font-family: 'Cormorant Garamond', Georgia, serif; font-size: 20px; font-weight: 600; color: #f0c75e; margin: 32px 0 14px; }
+    .a-body em { font-style: italic; color: rgba(200,192,168,0.85); }
+    .a-body strong { font-weight: 600; color: #d4af37; }
+    .a-body a { color: #d4af37; border-bottom: 1px solid rgba(212,175,55,0.35); }
+    .a-body img { max-width: 100%; height: auto; border-radius: 12px; margin: 24px 0; border: 1px solid rgba(212,175,55,0.18); }
+    .a-body ul, .a-body ol { margin: 0 0 24px 22px; }
+    .a-body li { margin-bottom: 8px; }
+    .a-body blockquote { border-left: 3px solid rgba(212,175,55,0.4); padding: 8px 0 8px 20px; margin: 0 0 24px; font-style: italic; color: rgba(245,231,161,0.85); }
+    .a-body hr { border: none; border-top: 1px solid rgba(212,175,55,0.12); margin: 40px 0; }
+    .cta-block { margin-top: 64px; padding: 40px; background: rgba(212,175,55,0.05); border: 1px solid rgba(212,175,55,0.15); border-radius: 12px; text-align: center; }
+    .cta-block p { font-size: 15px; color: rgba(200,192,168,0.7); margin-bottom: 24px; line-height: 1.7; font-style: italic; }
+    .cta-btn { display: inline-block; background: linear-gradient(135deg, #d4af37, #f5e7a1); color: #0a1628; font-family: 'Cormorant Garamond', Georgia, serif; font-size: 16px; font-weight: 600; padding: 14px 36px; border-radius: 50px; letter-spacing: 0.05em; }
+  </style>
+</head>
+<body>
+  <div id="header-placeholder"></div>
+
+  <main class="blog-main">
+    <a href="/blog" class="back-link">← Retour au blog</a>
+    <div id="a-loading" class="text-center py-20 text-gold/40"><i class="fas fa-spinner fa-spin text-2xl"></i></div>
+    <article id="a-content" class="hidden">
+      <p class="a-meta" id="a-readmeta"></p>
+      <img id="a-cover" class="a-cover hidden" alt="">
+      <h1 class="a-h1" id="a-h1"></h1>
+      <div class="a-body" id="a-body"></div>
+      <div class="cta-block">
+        <p>Vos premiers tirages sont gratuits, sans inscription.</p>
+        <a href="/tore.html" class="cta-btn">Faire un tirage</a>
+      </div>
+    </article>
+    <div id="a-notfound" class="hidden text-center py-20">
+      <p class="text-light-gold/60 mb-6">Cet article n'existe pas ou n'est plus disponible.</p>
+      <a href="/blog" class="cta-btn">Voir tous les articles</a>
+    </div>
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="/components/header-manager.js" defer></script>
+  <script src="/components/footer-manager.js" defer></script>
+  <script src="/js/page-tracker.js" defer></script>
+  <script>
+    (function () {
+      // Slug = dernier segment de l'URL (/blog/mon-article) ou ?slug=
+      const params = new URLSearchParams(location.search);
+      let slug = params.get('slug');
+      if (!slug) {
+        const seg = location.pathname.replace(/\/$/, '').split('/').pop();
+        slug = (seg && seg !== 'article' && seg !== 'article.html') ? seg.replace(/\.html$/, '') : '';
+      }
+      const show = (id) => document.getElementById(id).classList.remove('hidden');
+      const hide = (id) => document.getElementById(id).classList.add('hidden');
+      if (!slug) { hide('a-loading'); show('a-notfound'); return; }
+
+      fetch('/api/admin/blog?action=get&slug=' + encodeURIComponent(slug))
+        .then(r => r.ok ? r.json() : Promise.reject())
+        .then(d => {
+          const a = d.article;
+          if (!a) throw new Error('none');
+          document.getElementById('a-h1').textContent = a.title;
+          document.getElementById('a-title').textContent = a.title + ' — Oradia';
+          document.getElementById('a-desc').setAttribute('content', a.description || '');
+          document.getElementById('a-canonical').setAttribute('href', 'https://oradia.fr/blog/' + a.slug);
+          const dateStr = a.published_at ? new Date(a.published_at).toLocaleDateString('fr-FR', { day:'numeric', month:'long', year:'numeric' }) : '';
+          document.getElementById('a-readmeta').textContent = [(a.read_minutes || 5) + ' min de lecture', dateStr, 'Oradia'].filter(Boolean).join('  ·  ');
+          if (a.cover_image) { const c = document.getElementById('a-cover'); c.src = a.cover_image; c.alt = a.title; c.classList.remove('hidden'); }
+          document.getElementById('a-body').innerHTML = a.content_html || '';
+          hide('a-loading'); show('a-content');
+        })
+        .catch(() => { hide('a-loading'); show('a-notfound'); });
+    })();
+  </script>
+</body>
+</html>
