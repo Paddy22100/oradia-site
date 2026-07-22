@@ -380,50 +380,54 @@ async function handleData(req, res) {
       const getAction = req.query?.action;
       if (getAction === 'cron-send-scheduled') {
         try {
-          if (!(await isFeatureEnabled(supabase, 'newsletter_scheduled_send'))) {
-            return res.status(200).json({ success: true, sent: 0, skipped_reason: 'feature_disabled' });
-          }
-          const { data: due } = await supabase
-            .from('newsletter_drafts')
-            .select('*')
-            .neq('statut', 'envoyé')
-            .not('scheduled_at', 'is', null)
-            .lte('scheduled_at', new Date().toISOString())
-            .limit(5);
-          if (!due || due.length === 0) return res.status(200).json({ success: true, sent: 0 });
-          const BREVO_API_KEY = process.env.BREVO_API_KEY;
-          if (!BREVO_API_KEY) return res.status(200).json({ success: false, error: 'BREVO_API_KEY manquante' });
+          // ── Newsletters programmées ──
+          // Ce bloc est indépendant du bloc « publications sociales » plus bas :
+          // il ne doit JAMAIS provoquer de return prématuré, sinon un post social
+          // programmé sans newsletter due au même moment ne partirait jamais.
           const results = [];
-          for (const draft of due) {
-            try {
-              const finalSubject = draft.subject || 'Oradia';
-              const html = buildCommunicationEmailHtml({ ...draft, subject: finalSubject });
-              const campRes = await fetch('https://api.brevo.com/v3/emailCampaigns', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
-                body: JSON.stringify({
-                  name: `${draft.type === 'promo' ? 'Promo' : 'Newsletter'} — ${finalSubject} — ${new Date().toISOString()}`,
-                  subject: finalSubject,
-                  sender: { name: 'Oradia', email: 'contact@oradia.fr' },
-                  htmlContent: html,
-                  recipients: { listIds: [5] }
-                })
-              });
-              if (!campRes.ok) { results.push({ id: draft.id, ok: false }); continue; }
-              const camp = await campRes.json();
-              await fetch(`https://api.brevo.com/v3/emailCampaigns/${camp.id}/sendNow`, {
-                method: 'POST', headers: { 'api-key': BREVO_API_KEY }
-              });
-              await supabase.from('newsletter_drafts')
-                .update({ statut: 'envoyé', sent_at: new Date().toISOString(), scheduled_at: null })
-                .eq('id', draft.id);
-              // Tracer la dernière newsletter par contact (colonne optionnelle)
-              await supabase.from('newsletter_contacts')
-                .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
-                .eq('status', 'active')
-                .eq('brevo_synced', true);
-              results.push({ id: draft.id, ok: true });
-            } catch(e) { results.push({ id: draft.id, ok: false, error: e.message }); }
+          if (await isFeatureEnabled(supabase, 'newsletter_scheduled_send')) {
+            const { data: due } = await supabase
+              .from('newsletter_drafts')
+              .select('*')
+              .neq('statut', 'envoyé')
+              .not('scheduled_at', 'is', null)
+              .lte('scheduled_at', new Date().toISOString())
+              .limit(5);
+            const BREVO_API_KEY = process.env.BREVO_API_KEY;
+            if ((due && due.length > 0) && !BREVO_API_KEY) {
+              results.push({ ok: false, error: 'BREVO_API_KEY manquante' });
+            }
+            for (const draft of (BREVO_API_KEY ? (due || []) : [])) {
+              try {
+                const finalSubject = draft.subject || 'Oradia';
+                const html = buildCommunicationEmailHtml({ ...draft, subject: finalSubject });
+                const campRes = await fetch('https://api.brevo.com/v3/emailCampaigns', {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+                  body: JSON.stringify({
+                    name: `${draft.type === 'promo' ? 'Promo' : 'Newsletter'} — ${finalSubject} — ${new Date().toISOString()}`,
+                    subject: finalSubject,
+                    sender: { name: 'Oradia', email: 'contact@oradia.fr' },
+                    htmlContent: html,
+                    recipients: { listIds: [5] }
+                  })
+                });
+                if (!campRes.ok) { results.push({ id: draft.id, ok: false }); continue; }
+                const camp = await campRes.json();
+                await fetch(`https://api.brevo.com/v3/emailCampaigns/${camp.id}/sendNow`, {
+                  method: 'POST', headers: { 'api-key': BREVO_API_KEY }
+                });
+                await supabase.from('newsletter_drafts')
+                  .update({ statut: 'envoyé', sent_at: new Date().toISOString(), scheduled_at: null })
+                  .eq('id', draft.id);
+                // Tracer la dernière newsletter par contact (colonne optionnelle)
+                await supabase.from('newsletter_contacts')
+                  .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
+                  .eq('status', 'active')
+                  .eq('brevo_synced', true);
+                results.push({ id: draft.id, ok: true });
+              } catch(e) { results.push({ id: draft.id, ok: false, error: e.message }); }
+            }
           }
           // ── Publications sociales programmées (Facebook + Instagram, envoyées
           // ensemble pour rester synchronisées — voir handlePublishSocial) ──
