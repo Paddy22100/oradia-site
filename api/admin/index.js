@@ -405,7 +405,10 @@ async function handleData(req, res) {
                   name: `${draft.type === 'promo' ? 'Promo' : 'Newsletter'} — ${finalSubject} — ${new Date().toISOString()}`,
                   subject: finalSubject,
                   sender: { name: 'Oradia', email: 'contact@oradia.fr' },
-                  htmlContent: html,
+                  // Campagne (un seul HTML pour toute la liste) : on ne peut pas injecter
+                  // un token par destinataire, donc on utilise la variable native Brevo
+                  // {{ unsubscribe }} — le désabonnement remonte ensuite via le webhook Brevo.
+                  htmlContent: html.replace('{unsubscribe}', '{{ unsubscribe }}'),
                   recipients: { listIds: [5] }
                 })
               });
@@ -3048,7 +3051,10 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
             name: `${draft.type === 'promo' ? 'Promo' : 'Newsletter'} — ${finalSubject} — ${new Date().toISOString()}`,
             subject: finalSubject,
             sender: { name: 'Oradia', email: 'contact@oradia.fr' },
-            htmlContent: html,
+            // Campagne (un seul HTML pour toute la liste) : on ne peut pas injecter
+            // un token par destinataire, donc on utilise la variable native Brevo
+            // {{ unsubscribe }} — le désabonnement remonte ensuite via le webhook Brevo.
+            htmlContent: html.replace('{unsubscribe}', '{{ unsubscribe }}'),
             recipients: { listIds: [5] }
           })
         });
@@ -3963,9 +3969,14 @@ Réponds en français, sans tiret long, format markdown compact.`
         process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
         process.env.SUPABASE_SERVICE_ROLE_KEY
       );
+      // Match insensible à la casse : les contacts importés de Brevo ou ajoutés
+      // manuellement peuvent être stockés avec des majuscules, alors que `email`
+      // est normalisé en minuscules. On échappe les jokers SQL (_ et %, qui sont
+      // des caractères valides dans une adresse) pour éviter tout sur-appariement.
+      const emailPattern = email.replace(/[\\%_]/g, (c) => '\\' + c);
       await sb.from('newsletter_contacts')
         .update({ status: 'unsubscribed', brevo_synced: false, unsubscribed_at: new Date().toISOString() })
-        .eq('email', email);
+        .ilike('email', emailPattern);
       const BREVO_API_KEY = process.env.BREVO_API_KEY;
       if (BREVO_API_KEY) {
         await fetch('https://api.brevo.com/v3/contacts/lists/5/contacts/remove', {
@@ -4625,7 +4636,11 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
           brevo_synced: false,
           unsubscribed_at: new Date().toISOString()
         };
-        const { error } = await sb.from('newsletter_contacts').update(updates).eq('email', email);
+        // Match insensible à la casse (voir endpoint /unsubscribe) : indispensable
+        // pour que les désinscriptions de campagne Brevo remontent bien dans Supabase,
+        // même si le contact y est stocké avec des majuscules.
+        const emailPattern = email.replace(/[\\%_]/g, (c) => '\\' + c);
+        const { error } = await sb.from('newsletter_contacts').update(updates).ilike('email', emailPattern);
         if (error) {
           console.error('[brevo-webhook] update error:', error.message);
           return res.status(500).json({ error: 'db error' });
