@@ -405,7 +405,10 @@ async function handleData(req, res) {
                   name: `${draft.type === 'promo' ? 'Promo' : 'Newsletter'} — ${finalSubject} — ${new Date().toISOString()}`,
                   subject: finalSubject,
                   sender: { name: 'Oradia', email: 'contact@oradia.fr' },
-                  htmlContent: html,
+                  // Campagne (un seul HTML pour toute la liste) : on ne peut pas injecter
+                  // un token par destinataire, donc on utilise la variable native Brevo
+                  // {{ unsubscribe }} — le désabonnement remonte ensuite via le webhook Brevo.
+                  htmlContent: html.replace('{unsubscribe}', '{{ unsubscribe }}'),
                   recipients: { listIds: [5] }
                 })
               });
@@ -3048,7 +3051,10 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
             name: `${draft.type === 'promo' ? 'Promo' : 'Newsletter'} — ${finalSubject} — ${new Date().toISOString()}`,
             subject: finalSubject,
             sender: { name: 'Oradia', email: 'contact@oradia.fr' },
-            htmlContent: html,
+            // Campagne (un seul HTML pour toute la liste) : on ne peut pas injecter
+            // un token par destinataire, donc on utilise la variable native Brevo
+            // {{ unsubscribe }} — le désabonnement remonte ensuite via le webhook Brevo.
+            htmlContent: html.replace('{unsubscribe}', '{{ unsubscribe }}'),
             recipients: { listIds: [5] }
           })
         });
