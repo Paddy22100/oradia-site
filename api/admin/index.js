@@ -956,37 +956,44 @@ async function handleData(req, res) {
           .eq('id', contact.id);
         if (updErr) throw updErr;
 
-        // Désinscription réelle dans Brevo : on blackliste l'email (emailBlacklisted:true).
-        // C'est la vraie désinscription — elle bloque tous les futurs envois, quelle que soit
-        // la liste. On retire aussi de la liste 5 (best-effort) pour garder les compteurs propres.
+        // Désinscription réelle dans Brevo : blacklist (emailBlacklisted:true) ET retrait
+        // de la liste 5. Ce qui compte à l'envoi, c'est l'appartenance à la liste 5 (les
+        // campagnes ciblent listIds:[5]). On vérifie donc EXPLICITEMENT les deux appels.
         let brevoRemoved = false;
-        let brevoDetail = null;
+        let blacklistStatus = null, blacklistBody = '';
+        let listStatus = null, listBody = '';
         const BREVO_API_KEY = process.env.BREVO_API_KEY;
         if (contact.email && BREVO_API_KEY) {
+          // 1) Blacklist
           try {
             const rb = await fetch(`https://api.brevo.com/v3/contacts/${encodeURIComponent(contact.email)}`, {
               method: 'PUT',
               headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
               body: JSON.stringify({ emailBlacklisted: true })
             });
-            // 204 = OK ; 404 = contact inexistant côté Brevo (donc déjà "non contactable")
-            brevoRemoved = rb.ok || rb.status === 204 || rb.status === 404;
-            if (!brevoRemoved) brevoDetail = `blacklist ${rb.status}: ${(await rb.text().catch(() => '')).slice(0, 200)}`;
-          } catch (e) {
-            brevoDetail = 'blacklist exception: ' + e.message;
-            console.error('Brevo blacklist error for', contact.email, e.message);
-          }
-          // Retrait de la liste 5 (best-effort, on n'échoue pas dessus)
+            blacklistStatus = rb.status;
+            if (!(rb.ok || rb.status === 204)) blacklistBody = (await rb.text().catch(() => '')).slice(0, 300);
+          } catch (e) { blacklistStatus = 'exception'; blacklistBody = e.message; }
+          // 2) Retrait de la liste 5
           try {
-            await fetch('https://api.brevo.com/v3/contacts/lists/5/contacts/remove', {
+            const rl = await fetch('https://api.brevo.com/v3/contacts/lists/5/contacts/remove', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
               body: JSON.stringify({ emails: [contact.email] })
             });
-          } catch (_) {}
-        } else if (!BREVO_API_KEY) {
-          brevoDetail = 'BREVO_API_KEY absente côté serveur';
+            listStatus = rl.status;
+            listBody = (await rl.text().catch(() => '')).slice(0, 300);
+          } catch (e) { listStatus = 'exception'; listBody = e.message; }
+
+          // Succès si le blacklist a pris (204/OK ou 404 = déjà absent) OU si le retrait a réussi.
+          const blOk = blacklistStatus === 204 || blacklistStatus === 200 || blacklistStatus === 404;
+          const listOk = listStatus === 201 || listStatus === 204 || listStatus === 200;
+          brevoRemoved = blOk || listOk;
         }
+        const brevoDetail = BREVO_API_KEY
+          ? `blacklist=${blacklistStatus}${blacklistBody ? '('+blacklistBody+')' : ''} · liste5-remove=${listStatus}${listBody ? '('+listBody+')' : ''}`
+          : 'BREVO_API_KEY absente côté serveur';
+        await logSystemEvent(supabase, { level: brevoRemoved ? 'info' : 'error', source: 'unsubscribe-contact', method: 'POST', path: '/api/admin/data', status_code: 200, message: `Désinscription ${contact.email} — ${brevoRemoved ? 'OK' : 'ÉCHEC Brevo'}`, details: { brevoDetail } });
 
         return res.status(200).json({ success: true, brevoRemoved, brevoDetail });
       }
