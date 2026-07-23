@@ -258,6 +258,20 @@ async function sendWaitlistConfirmationEmail(email) {
                 Merci de rejoindre la communauté ORADIA. Tu recevras nos inspirations, actualités de l'Oracle et avant-premières directement dans ta boîte mail.
               </p>
 
+              <!-- Astuce : retrouver nos mails -->
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;" bgcolor="#0e1a2e">
+                <tr>
+                  <td style="padding:16px 20px;border-left:3px solid #d4af37;">
+                    <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:12px;font-weight:bold;letter-spacing:1px;text-transform:uppercase;">
+                      📬 Pour ne rien manquer
+                    </p>
+                    <p style="margin:0;color:#c9ccd1;font-family:Georgia,serif;font-size:13px;line-height:1.75;">
+                      Certaines messageries (comme Gmail) classent nos emails dans l'onglet <strong style="color:#e8e9eb;">Promotions</strong> ou dans les indésirables. Si tu ne nous vois pas dans ta boîte principale, pense à y jeter un œil, puis ajoute <a href="mailto:contact@oradia.fr" style="color:#d4af37;text-decoration:none;">contact@oradia.fr</a> à tes contacts pour recevoir nos messages à coup sûr.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+
               <!-- Encart précommande -->
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;" bgcolor="#0f1d35">
                 <tr>
