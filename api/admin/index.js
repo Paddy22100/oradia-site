@@ -936,23 +936,39 @@ async function handleData(req, res) {
           .eq('id', contact.id);
         if (updErr) throw updErr;
 
-        // Retire de la liste Brevo 5 (le contact reste dans Brevo mais n'est plus dans la newsletter)
+        // Désinscription réelle dans Brevo : on blackliste l'email (emailBlacklisted:true).
+        // C'est la vraie désinscription — elle bloque tous les futurs envois, quelle que soit
+        // la liste. On retire aussi de la liste 5 (best-effort) pour garder les compteurs propres.
         let brevoRemoved = false;
+        let brevoDetail = null;
         const BREVO_API_KEY = process.env.BREVO_API_KEY;
         if (contact.email && BREVO_API_KEY) {
           try {
-            const r = await fetch('https://api.brevo.com/v3/contacts/lists/5/contacts/remove', {
+            const rb = await fetch(`https://api.brevo.com/v3/contacts/${encodeURIComponent(contact.email)}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+              body: JSON.stringify({ emailBlacklisted: true })
+            });
+            // 204 = OK ; 404 = contact inexistant côté Brevo (donc déjà "non contactable")
+            brevoRemoved = rb.ok || rb.status === 204 || rb.status === 404;
+            if (!brevoRemoved) brevoDetail = `blacklist ${rb.status}: ${(await rb.text().catch(() => '')).slice(0, 200)}`;
+          } catch (e) {
+            brevoDetail = 'blacklist exception: ' + e.message;
+            console.error('Brevo blacklist error for', contact.email, e.message);
+          }
+          // Retrait de la liste 5 (best-effort, on n'échoue pas dessus)
+          try {
+            await fetch('https://api.brevo.com/v3/contacts/lists/5/contacts/remove', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
               body: JSON.stringify({ emails: [contact.email] })
             });
-            brevoRemoved = r.ok || r.status === 404;
-          } catch (e) {
-            console.error('Brevo unsubscribe error for', contact.email, e.message);
-          }
+          } catch (_) {}
+        } else if (!BREVO_API_KEY) {
+          brevoDetail = 'BREVO_API_KEY absente côté serveur';
         }
 
-        return res.status(200).json({ success: true, brevoRemoved });
+        return res.status(200).json({ success: true, brevoRemoved, brevoDetail });
       }
 
       // ── Contacts newsletter : suppression ──

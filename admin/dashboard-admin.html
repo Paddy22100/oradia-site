@@ -4387,7 +4387,7 @@
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Erreur');
                 if (!data.brevoRemoved) {
-                    alert("Contact marqué comme désabonné dans le dashboard. Attention : le retrait de la liste Brevo n'a pas pu être confirmé — vérifie manuellement dans Brevo.");
+                    alert("Contact marqué comme désabonné dans le dashboard.\n\nAttention : la désinscription Brevo n'a pas pu être confirmée" + (data.brevoDetail ? "\n(" + data.brevoDetail + ")" : "") + "\n\nVérifie manuellement dans Brevo.");
                 }
                 loadWaitlist(currentData.waitlistPagination?.page || 1);
             } catch (e) {
