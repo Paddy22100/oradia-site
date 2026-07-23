@@ -206,42 +206,46 @@ async function sendWaitlistConfirmationEmail(email) {
   <!--[if mso]>
   <noscript><xml><o:OfficeDocumentSettings><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
   <![endif]-->
+  <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap');
     @media only screen and (max-width:620px) {
       .container { width:100% !important; }
-      .pad { padding:24px 20px !important; }
-      .pad-body { padding:0 20px 24px !important; }
-      .h1 { font-size:28px !important; }
-      .btn-preorder { padding:13px 20px !important; font-size:14px !important; }
-      .btn-tirage td { display:block !important; text-align:center !important; padding:0 0 8px !important; }
+      .pad { padding:30px 22px 18px !important; }
+      .pad-body { padding:0 22px !important; }
+      .pad-box { padding:0 22px 24px !important; }
+      .h1 { font-size:30px !important; }
+      .btn-preorder, .btn-tirage { padding:14px 28px !important; font-size:14px !important; }
     }
   </style>
 </head>
-<body style="margin:0;padding:0;background-color:#050a14;background-image:url('https://oradia.fr/images/oradia-hero-4k.png');background-size:cover;background-position:center top;" bgcolor="#050a14">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" background="https://oradia.fr/images/oradia-hero-4k.png" bgcolor="#050a14" style="background-color:#050a14;background-image:url('https://oradia.fr/images/oradia-hero-4k.png');background-size:cover;background-position:center top;">
+<body style="margin:0; padding:0; background-color:#040d1c;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" background="https://oradia.fr/images/oradia-hero-4k.webp" bgcolor="#040d1c" style="background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat; background-color:#040d1c;">
     <tr>
-      <td align="center" style="padding:32px 16px;background-color:rgba(5,10,20,0.72);" bgcolor="#050a14">
+      <td align="center" style="padding:32px 12px;">
 
-        <!--[if mso]><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
-        <table class="container" role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;" bgcolor="#0a1628">
+        <!--[if mso]><table role="presentation" width="700" cellpadding="0" cellspacing="0" border="0"><tr><td><![endif]-->
+        <table class="container" role="presentation" width="700" cellpadding="0" cellspacing="0" border="0" style="width:100%; max-width:700px; margin:0 auto; background:linear-gradient(135deg, rgba(10,25,47,0.97) 0%, rgba(5,20,40,0.98) 100%); border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);" bgcolor="#0a1628">
 
-          <!-- Image header -->
+          <!-- Bandeau newsletter -->
           <tr>
-            <td style="padding:0;line-height:0;font-size:0;">
-              <img src="https://oradia.fr/images/medias/apercu_stripe.jpg" alt="Oracle ORADIA" width="600" height="220" style="display:block;width:100%;height:220px;object-fit:cover;border:0;">
+            <td style="padding:0; line-height:0; font-size:0;">
+              <img src="https://oradia.fr/images/medias/bandeau_newsletter.webp" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px; border:0;">
             </td>
           </tr>
 
           <!-- Titre -->
           <tr>
-            <td class="pad" align="center" style="padding:32px 40px 20px;" bgcolor="#0a1628">
-              <h1 class="h1" style="margin:0;color:#f0c75e;font-family:Georgia,serif;font-size:34px;font-weight:400;line-height:1.2;letter-spacing:2px;text-transform:uppercase;">
+            <td class="pad" align="center" style="padding:34px 40px 20px;">
+              <h1 class="h1" style="margin:0; color:#d4af37; font-family:Georgia,serif; font-size:34px; font-weight:400; line-height:1.2; letter-spacing:2px; text-transform:uppercase;">
                 Bienvenue
               </h1>
-              <table role="presentation" width="60" cellpadding="0" cellspacing="0" border="0" style="margin:16px auto 14px;">
-                <tr><td height="1" bgcolor="#d4af37" style="line-height:1px;font-size:1px;">&nbsp;</td></tr>
-              </table>
-              <p style="margin:0;color:#d8bf72;font-family:Georgia,serif;font-size:14px;font-style:italic;line-height:1.6;">
+              <p style="margin:18px 0 0; line-height:1;">
+                <span style="display:inline-block; width:48px; height:1px; background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4)); vertical-align:middle;"></span>
+                <span style="display:inline-block; width:6px; height:6px; background:#d4af37; border-radius:50%; opacity:0.55; vertical-align:middle; margin:0 10px;"></span>
+                <span style="display:inline-block; width:48px; height:1px; background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent); vertical-align:middle;"></span>
+              </p>
+              <p style="margin:14px 0 0; color:#d8bf72; font-family:Georgia,serif; font-size:14px; font-style:italic; line-height:1.6;">
                 Ton inscription est confirmée
               </p>
             </td>
@@ -249,85 +253,80 @@ async function sendWaitlistConfirmationEmail(email) {
 
           <!-- Corps -->
           <tr>
-            <td class="pad-body" style="padding:0 40px 32px;" bgcolor="#0a1628">
-
-              <p style="margin:0 0 20px;color:#e8e9eb;font-family:Georgia,serif;font-size:15px;line-height:1.8;">
+            <td class="pad-body" style="padding:0 40px;">
+              <p style="margin:0 0 18px; color:#e8e2cf; font-family:Georgia,serif; font-size:16px; line-height:1.8; text-align:justify;">
                 Cher(e) ami(e),
               </p>
-              <p style="margin:0 0 24px;color:#d1d5db;font-family:Georgia,serif;font-size:14px;line-height:1.9;">
+              <p style="margin:0 0 28px; color:#c8c0a8; font-family:Georgia,serif; font-size:16px; line-height:1.8; text-align:justify;">
                 Merci de rejoindre la communauté ORADIA. Tu recevras nos inspirations, actualités de l'Oracle et avant-premières directement dans ta boîte mail.
               </p>
+            </td>
+          </tr>
 
-              <!-- Encart précommande -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;" bgcolor="#0f1d35">
+          <!-- Encart précommande -->
+          <tr>
+            <td class="pad-box" style="padding:0 32px 26px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06)); border:1px solid rgba(212,175,55,0.35); border-radius:14px; overflow:hidden;" bgcolor="#0f1d35">
                 <tr>
-                  <td style="padding:2px;border:1px solid #8a6d20;">
-                    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#0f1d35">
-                      <tr>
-                        <td align="center" style="padding:22px 24px;">
-                          <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:11px;font-weight:bold;letter-spacing:2px;text-transform:uppercase;">
-                            Édition limitée
-                          </p>
-                          <p style="margin:0 0 18px;color:#e8e9eb;font-family:Georgia,serif;font-size:14px;line-height:1.7;">
-                            L'Oracle physique ORADIA est en précommande.<br>Rejoins la première édition avant le 30 septembre 2026.
-                          </p>
-                          <a href="https://oradia.fr/precommande-oracle.html" class="btn-preorder" style="display:inline-block;background-color:#d4af37;color:#0a1628;font-family:Georgia,serif;font-size:14px;font-weight:bold;text-decoration:none;padding:14px 32px;letter-spacing:0.5px;">
-                            Précommander l'Oracle physique
-                          </a>
-                        </td>
-                      </tr>
-                    </table>
+                  <td align="center" style="padding:26px 28px;">
+                    <p style="margin:0 0 8px; color:#d4af37; font-family:Georgia,serif; font-size:12px; font-weight:700; letter-spacing:2px; text-transform:uppercase;">
+                      Édition limitée
+                    </p>
+                    <p style="margin:0 0 20px; color:#c8c0a8; font-family:Georgia,serif; font-size:14px; line-height:1.7;">
+                      L'Oracle physique ORADIA est en précommande.<br>Rejoins la première édition avant le 30 septembre 2026.
+                    </p>
+                    <a href="https://oradia.fr/precommande-oracle.html" class="btn-preorder" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; font-family:Georgia,serif; font-size:15px; font-weight:700; text-decoration:none; padding:15px 38px; border-radius:50px; letter-spacing:0.05em;">
+                      Précommander l'Oracle physique
+                    </a>
                   </td>
                 </tr>
               </table>
+            </td>
+          </tr>
 
-              <!-- CTA tirage -->
-              <p style="margin:0 0 14px;color:#9ca3af;font-family:Georgia,serif;font-size:13px;text-align:center;">
+          <!-- CTA tirage -->
+          <tr>
+            <td style="padding:0 40px 16px; text-align:center;">
+              <p style="margin:0; color:#9ca3af; font-family:Georgia,serif; font-size:14px; line-height:1.7;">
                 Tu peux aussi faire un tirage en ligne dès maintenant avec La Boussole Intérieure.
               </p>
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 32px;">
-                <tr>
-                  <td align="center">
-                    <table class="btn-tirage" role="presentation" cellpadding="0" cellspacing="0" border="0" style="border:1px solid #8a6d20;background-color:#0f1d35;">
-                      <tr>
-                        <td style="padding:11px 14px;vertical-align:middle;">
-                          <img src="https://oradia.fr/images/logo-hd-v2.webp" width="28" height="28" alt="" style="display:block;border-radius:50%;">
-                        </td>
-                        <td style="padding:11px 18px 11px 4px;vertical-align:middle;">
-                          <a href="https://oradia.fr/tore.html" style="color:#d4af37;font-family:Georgia,serif;font-size:14px;font-weight:bold;text-decoration:none;letter-spacing:0.5px;white-space:nowrap;">
-                            Faire un tirage maintenant
-                          </a>
-                        </td>
-                      </tr>
-                    </table>
-                  </td>
-                </tr>
-              </table>
+            </td>
+          </tr>
+          <tr>
+            <td align="center" style="padding:0 40px 30px;">
+              <a href="https://oradia.fr/tore.html" class="btn-tirage" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; font-family:Georgia,serif; font-size:15px; font-weight:700; text-decoration:none; padding:15px 40px; border-radius:50px; letter-spacing:0.05em;">
+                Faire un tirage maintenant
+              </a>
+            </td>
+          </tr>
 
-              <!-- Séparateur -->
-              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;">
-                <tr><td height="1" bgcolor="#3a3010" style="line-height:1px;font-size:1px;">&nbsp;</td></tr>
-              </table>
+          <!-- Séparateur -->
+          <tr>
+            <td style="padding:4px 40px; text-align:center;">
+              <span style="display:inline-block; width:48px; height:1px; background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4)); vertical-align:middle;"></span>
+              <span style="display:inline-block; width:6px; height:6px; background:#d4af37; border-radius:50%; opacity:0.55; vertical-align:middle; margin:0 10px;"></span>
+              <span style="display:inline-block; width:48px; height:1px; background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent); vertical-align:middle;"></span>
+            </td>
+          </tr>
 
-              <p style="margin:0 0 6px;color:#d1d5db;font-family:Georgia,serif;font-size:13px;line-height:1.8;">
-                Avec gratitude,
-              </p>
-              <p style="margin:0;color:#d8bf72;font-family:Georgia,serif;font-size:17px;font-weight:bold;letter-spacing:1px;">
-                Rudy Boucheron
-              </p>
-
+          <!-- Signature -->
+          <tr>
+            <td align="center" style="padding:24px 32px 32px;">
+              <p style="margin:0 0 6px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">Avec gratitude,</p>
+              <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
+              <p style="margin:0; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
             </td>
           </tr>
 
           <!-- Footer -->
           <tr>
-            <td align="center" style="padding:24px 40px;" bgcolor="#040c1a">
-              <p style="margin:0 0 8px;color:#9ca3af;font-family:Georgia,serif;font-size:12px;line-height:1.6;">
-                <a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;">oradia.fr</a>
+            <td align="center" style="padding:26px 40px; border-top:1px solid rgba(212,175,55,0.15);">
+              <p style="margin:0 0 8px; color:#c8c0a8; font-family:Georgia,serif; font-size:13px; line-height:1.6; opacity:0.85;">
+                <a href="https://oradia.fr" style="color:#d4af37; text-decoration:none;">oradia.fr</a>
                 &nbsp;&middot;&nbsp;
-                <a href="mailto:contact@oradia.fr" style="color:#d4af37;text-decoration:none;">contact@oradia.fr</a>
+                <a href="mailto:contact@oradia.fr" style="color:#d4af37; text-decoration:none;">contact@oradia.fr</a>
               </p>
-              <p style="margin:0;color:#6b7280;font-family:Georgia,serif;font-size:11px;line-height:1.5;">
+              <p style="margin:0; color:#c8c0a8; font-family:Georgia,serif; font-size:11px; line-height:1.5; opacity:0.45;">
                 ORADIA - La Boussole Intérieure<br>Révéler. Transmuter. Relier.
               </p>
             </td>
