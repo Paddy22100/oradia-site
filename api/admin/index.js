@@ -54,6 +54,24 @@ async function logSystemEvent(sb, { level='info', source, method, path, status_c
 // Si un contact perd la catégorie "general", il est retiré de la liste 5.
 async function syncContactToBrevo(supabase, BREVO_API_KEY, contact) {
   if (!BREVO_API_KEY || !contact?.email) return;
+  // Un contact désinscrit ne doit JAMAIS être (ré)ajouté à la liste 5. On le blackliste
+  // et on le retire de la liste, quelle que soit sa catégorie. La désinscription locale
+  // est toujours prioritaire sur la synchronisation.
+  if (contact.status === 'unsubscribed') {
+    try {
+      await fetch(`https://api.brevo.com/v3/contacts/${encodeURIComponent(contact.email)}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+        body: JSON.stringify({ emailBlacklisted: true })
+      });
+      await fetch('https://api.brevo.com/v3/contacts/lists/5/contacts/remove', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+        body: JSON.stringify({ emails: [contact.email] })
+      });
+    } catch (e) { console.error('Brevo unsub-sync error for', contact.email, e.message); }
+    return;
+  }
   const isGeneral = (contact.tags || []).includes('general');
   try {
     if (isGeneral) {
@@ -4078,19 +4096,55 @@ Réponds en français, sans tiret long, format markdown compact.`
       const now = new Date().toISOString();
       const brevoEmailSet = new Set(brevoContacts.map(c => (c.email || '').toLowerCase().trim()));
 
+      // Contacts déjà désinscrits localement : la désinscription locale prime, on ne les
+      // réactive JAMAIS même s'ils sont encore présents dans la liste Brevo 5.
+      const { data: localUnsub } = await sb.from('newsletter_contacts')
+        .select('email').eq('status', 'unsubscribed');
+      const localUnsubSet = new Set((localUnsub || []).map(c => (c.email || '').toLowerCase().trim()));
+
       // Upsert dans Supabase — les contacts blacklistés passent en unsubscribed
       let pulled = 0;
+      const toReblacklist = [];
       if (brevoContacts.length > 0) {
-        const rows = brevoContacts.map(c => ({
-          email: (c.email || '').toLowerCase().trim(),
-          status: c.emailBlacklisted ? 'unsubscribed' : 'active',
-          brevo_synced: !c.emailBlacklisted,
-          brevo_synced_at: now,
-          source: 'brevo-sync'
-        })).filter(r => r.email);
+        const rows = brevoContacts.map(c => {
+          const email = (c.email || '').toLowerCase().trim();
+          // Désinscrit localement mais pas encore blacklisté côté Brevo → on garde
+          // unsubscribed et on planifie un re-blacklist pour aligner Brevo.
+          if (localUnsubSet.has(email) && !c.emailBlacklisted) {
+            toReblacklist.push(email);
+            return { email, status: 'unsubscribed', brevo_synced: false, brevo_synced_at: now, source: 'brevo-sync' };
+          }
+          return {
+            email,
+            status: c.emailBlacklisted ? 'unsubscribed' : 'active',
+            brevo_synced: !c.emailBlacklisted,
+            brevo_synced_at: now,
+            source: 'brevo-sync'
+          };
+        }).filter(r => r.email);
         const { error } = await sb.from('newsletter_contacts')
           .upsert(rows, { onConflict: 'email' });
         if (!error) pulled = rows.length;
+      }
+
+      // Aligne Brevo : blackliste + retire de la liste 5 les désinscrits locaux encore actifs côté Brevo
+      if (toReblacklist.length > 0) {
+        for (const email of toReblacklist) {
+          try {
+            await fetch(`https://api.brevo.com/v3/contacts/${encodeURIComponent(email)}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+              body: JSON.stringify({ emailBlacklisted: true })
+            });
+          } catch (_) {}
+        }
+        try {
+          await fetch('https://api.brevo.com/v3/contacts/lists/5/contacts/remove', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+            body: JSON.stringify({ emails: toReblacklist })
+          });
+        } catch (_) {}
       }
 
       // ── 2. Supabase → Brevo : contacts actifs non encore synchro ──
