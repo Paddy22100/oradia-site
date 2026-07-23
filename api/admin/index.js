@@ -531,9 +531,11 @@ async function handleData(req, res) {
               headers: { 'Authorization': `Bearer ${process.env.CRON_SECRET}` }
             });
             fenetreCloseResult = await fr.json().catch(() => ({ status: fr.status }));
+            await logSystemEvent(supabase, { level: 'info', source: 'cron-relance', method: 'POST', path: '/api/fenetre/close', status_code: fr.status, message: `Fenêtres clôturées : ${fenetreCloseResult?.processed ?? '?'} mail(s) questionnaire envoyé(s)`, details: fenetreCloseResult });
           } catch(e) {
             console.error('[cron-relance] fenetre-close error:', e.message);
             fenetreCloseResult = { error: e.message };
+            await logSystemEvent(supabase, { level: 'error', source: 'cron-relance', method: 'POST', path: '/api/fenetre/close', status_code: 500, message: `Échec clôture fenêtres : ${e.message}`, details: null });
           }
 
           return res.status(200).json({ success: true, sent: results.filter(r=>r.ok).length, total: results.length, results, fenetre_close: fenetreCloseResult });

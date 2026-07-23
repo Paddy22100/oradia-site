@@ -108,17 +108,20 @@ async function handleClose(req, res) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
-  // Récupérer les fenêtres arrivées à terme dans les 48 dernières heures, email non envoyé.
-  // Le filtre gte(closes_at, cutoff) évite d'envoyer rétroactivement aux anciennes fenêtres.
+  // Récupérer les fenêtres arrivées à terme dans les 96 dernières heures, email non envoyé.
+  // Fenêtre de 96h (4 jours) : tolère qu'un passage quotidien du cron soit manqué sans
+  // perdre définitivement l'envoi. Le filtre gte(closes_at, cutoff) évite quand même
+  // d'envoyer rétroactivement aux fenêtres fermées depuis longtemps (le texte du mail
+  // dit « vos jours viennent de s'achever », il ne doit pas partir des semaines trop tard).
   const now = new Date();
-  const cutoff48h = new Date(now.getTime() - 48 * 60 * 60 * 1000).toISOString();
+  const cutoffWindow = new Date(now.getTime() - 96 * 60 * 60 * 1000).toISOString();
   const { data: windows, error } = await supabase
     .from('observation_windows')
     .select('*, response_token')
     .lte('closes_at', now.toISOString())
-    .gte('closes_at', cutoff48h)
+    .gte('closes_at', cutoffWindow)
     .is('closing_email_sent_at', null)
-    .limit(20);
+    .limit(50);
 
   if (error) {
     console.error('[fenetre] Supabase error:', error);
