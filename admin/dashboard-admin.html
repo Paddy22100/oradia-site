@@ -4067,9 +4067,9 @@
                             <button data-email="${escapeHtmlFront(item.email || '')}" onclick="viewTirages(this.dataset.email)" class="text-gold/60 hover:text-gold transition" title="Voir les tirages">
                                 <i class="fas fa-layer-group"></i>
                             </button>
-                            ${item.status !== 'unsubscribed' ? `<button onclick="unsubscribeContact('${item.id}', this.dataset.email)" data-email="${escapeHtmlFront(item.email || '')}" class="text-orange-300/70 hover:text-orange-300 transition" title="Désinscrire de la newsletter">
+                            <button onclick="unsubscribeContact('${item.id}', this.dataset.email)" data-email="${escapeHtmlFront(item.email || '')}" class="${item.status === 'unsubscribed' ? 'text-gold/40 hover:text-gold/70' : 'text-orange-300/70 hover:text-orange-300'} transition" title="${item.status === 'unsubscribed' ? 'Re-forcer la désinscription Brevo' : 'Désinscrire de la newsletter'}">
                                 <i class="fas fa-envelope-open-text"></i>
-                            </button>` : ''}
+                            </button>
                             <button onclick="deleteContact('${item.id}')" class="text-red-400/70 hover:text-red-400 transition" title="Supprimer">
                                 <i class="fas fa-trash"></i>
                             </button>
