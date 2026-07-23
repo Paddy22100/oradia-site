@@ -4067,6 +4067,9 @@
                             <button data-email="${escapeHtmlFront(item.email || '')}" onclick="viewTirages(this.dataset.email)" class="text-gold/60 hover:text-gold transition" title="Voir les tirages">
                                 <i class="fas fa-layer-group"></i>
                             </button>
+                            ${item.status !== 'unsubscribed' ? `<button onclick="unsubscribeContact('${item.id}', this.dataset.email)" data-email="${escapeHtmlFront(item.email || '')}" class="text-orange-300/70 hover:text-orange-300 transition" title="Désinscrire de la newsletter">
+                                <i class="fas fa-envelope-open-text"></i>
+                            </button>` : ''}
                             <button onclick="deleteContact('${item.id}')" class="text-red-400/70 hover:text-red-400 transition" title="Supprimer">
                                 <i class="fas fa-trash"></i>
                             </button>
@@ -4366,6 +4369,25 @@
                 if (!res.ok) throw new Error(data.error || 'Erreur');
                 if (!data.brevoDeleted) {
                     alert("Contact supprimé du dashboard. Attention : il n'a pas pu être supprimé de Brevo automatiquement — pense à le retirer manuellement de tes listes Brevo.");
+                }
+                loadWaitlist(currentData.waitlistPagination?.page || 1);
+            } catch (e) {
+                alert('Erreur : ' + e.message);
+            }
+        }
+
+        async function unsubscribeContact(id, email) {
+            if (!confirm(`Désinscrire ${email || 'ce contact'} de la newsletter ?\n\nLe contact est conservé dans le dashboard mais ne recevra plus les newsletters (retiré de la liste Brevo).`)) return;
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'unsubscribe-contact', id, email })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                if (!data.brevoRemoved) {
+                    alert("Contact marqué comme désabonné dans le dashboard. Attention : le retrait de la liste Brevo n'a pas pu être confirmé — vérifie manuellement dans Brevo.");
                 }
                 loadWaitlist(currentData.waitlistPagination?.page || 1);
             } catch (e) {

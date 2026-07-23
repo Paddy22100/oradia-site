@@ -911,6 +911,50 @@ async function handleData(req, res) {
         return res.status(200).json({ success: true });
       }
 
+      // ── Contacts newsletter : désinscription manuelle (garde le contact, le retire de la liste 5) ──
+      if (action === 'unsubscribe-contact') {
+        const { id, email } = body;
+        if (!id && !email) return res.status(400).json({ error: 'id ou email requis' });
+
+        let q = supabase.from('newsletter_contacts').select('id, email, tags');
+        q = id ? q.eq('id', id) : q.eq('email', (email || '').toLowerCase().trim());
+        const { data: contact, error: fetchErr } = await q.maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (!contact) return res.status(404).json({ error: 'Contact introuvable' });
+
+        // Retire la catégorie "general" (elle est ce qui déclenche l'appartenance à la liste 5)
+        const newTags = (contact.tags || []).filter(t => t !== 'general');
+
+        const { error: updErr } = await supabase
+          .from('newsletter_contacts')
+          .update({
+            status: 'unsubscribed',
+            brevo_synced: false,
+            unsubscribed_at: new Date().toISOString(),
+            tags: newTags
+          })
+          .eq('id', contact.id);
+        if (updErr) throw updErr;
+
+        // Retire de la liste Brevo 5 (le contact reste dans Brevo mais n'est plus dans la newsletter)
+        let brevoRemoved = false;
+        const BREVO_API_KEY = process.env.BREVO_API_KEY;
+        if (contact.email && BREVO_API_KEY) {
+          try {
+            const r = await fetch('https://api.brevo.com/v3/contacts/lists/5/contacts/remove', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+              body: JSON.stringify({ emails: [contact.email] })
+            });
+            brevoRemoved = r.ok || r.status === 404;
+          } catch (e) {
+            console.error('Brevo unsubscribe error for', contact.email, e.message);
+          }
+        }
+
+        return res.status(200).json({ success: true, brevoRemoved });
+      }
+
       // ── Contacts newsletter : suppression ──
       if (action === 'delete-contact') {
         const { id } = body;
