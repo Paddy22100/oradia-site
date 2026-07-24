@@ -2400,9 +2400,14 @@
             <div class="stat-card rounded-2xl p-6 mb-6">
                 <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
                     <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-brain text-gold/60"></i> Analyse IA du trafic</h4>
-                    <button onclick="analyzeTrafficWithAI()" id="btn-ai-traffic" class="flex items-center gap-2 bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold px-4 py-2 rounded-xl text-sm font-medium transition">
-                        <i class="fas fa-lightbulb"></i> Analyser et obtenir des recommandations
-                    </button>
+                    <div class="flex items-center gap-2 flex-wrap">
+                        <button onclick="copyAnalysis()" id="btn-copy-analysis" class="hidden items-center gap-2 bg-white/5 hover:bg-white/10 border border-gold/20 text-gold/80 px-4 py-2 rounded-xl text-sm font-medium transition">
+                            <i class="fas fa-copy"></i> Copier
+                        </button>
+                        <button onclick="analyzeTrafficWithAI()" id="btn-ai-traffic" class="flex items-center gap-2 bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold px-4 py-2 rounded-xl text-sm font-medium transition">
+                            <i class="fas fa-lightbulb"></i> Analyser et obtenir des recommandations
+                        </button>
+                    </div>
                 </div>
                 <p class="text-gold/40 text-xs mb-3 italic">Analyse les statistiques de la période sélectionnée et propose des actions concrètes pour améliorer le trafic et la conversion.</p>
                 <div id="analytics-ai-result" class="text-gold/80 text-sm leading-relaxed whitespace-pre-line hidden bg-white/5 border border-gold/10 rounded-xl p-4"></div>
@@ -9564,19 +9569,54 @@
 
         async function analyzeTrafficWithAI() {
             const btn = document.getElementById('btn-ai-traffic');
+            const copyBtn = document.getElementById('btn-copy-analysis');
             const result = document.getElementById('analytics-ai-result');
             const range = document.getElementById('analytics-range')?.value || '7d';
             if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Analyse en cours…'; }
+            if (copyBtn) { copyBtn.classList.add('hidden'); copyBtn.classList.remove('flex'); }
             if (result) { result.classList.remove('hidden'); result.textContent = 'Analyse des statistiques en cours…'; }
             try {
                 const res = await adminFetch(`/api/admin/analytics?range=${range}`, { method: 'POST' });
                 const data = await res.json();
                 if (!res.ok || !data.success) throw new Error(data.error || 'Erreur inconnue');
                 if (result) result.textContent = data.analysis;
+                // Le bouton Copier n'apparaît qu'une fois une analyse disponible
+                if (copyBtn && data.analysis) { copyBtn.classList.remove('hidden'); copyBtn.classList.add('flex'); }
             } catch(e) {
                 if (result) result.innerHTML = `<span class="text-red-400">Erreur : ${e.message}</span>`;
             } finally {
                 if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-lightbulb"></i> Analyser et obtenir des recommandations'; }
+            }
+        }
+
+        async function copyAnalysis() {
+            const btn = document.getElementById('btn-copy-analysis');
+            const result = document.getElementById('analytics-ai-result');
+            const text = result?.textContent?.trim();
+            if (!text) return;
+            const done = (ok) => {
+                if (!btn) return;
+                btn.innerHTML = ok ? '<i class="fas fa-check"></i> Copié !' : '<i class="fas fa-triangle-exclamation"></i> Échec';
+                setTimeout(() => { btn.innerHTML = '<i class="fas fa-copy"></i> Copier'; }, 2000);
+            };
+            try {
+                if (navigator.clipboard && window.isSecureContext) {
+                    await navigator.clipboard.writeText(text);
+                    done(true);
+                } else {
+                    // Repli pour contextes non sécurisés / navigateurs anciens
+                    const ta = document.createElement('textarea');
+                    ta.value = text;
+                    ta.style.position = 'fixed';
+                    ta.style.opacity = '0';
+                    document.body.appendChild(ta);
+                    ta.focus(); ta.select();
+                    const ok = document.execCommand('copy');
+                    document.body.removeChild(ta);
+                    done(ok);
+                }
+            } catch(e) {
+                done(false);
             }
         }
 

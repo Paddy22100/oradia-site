@@ -5303,6 +5303,12 @@ function closeToreExitModal(){
     boardWrap.classList.remove('hidden');
     document.body.classList.add('tore-playing');
 
+    // Funnel : une seule fois par session, au lancement effectif du tirage
+    if (!window._trackedTirageLance) {
+      window._trackedTirageLance = true;
+      window.oradiaTrackEvent?.('tirage_lance');
+    }
+
     // Rendre les barres visibles en premier pour mesurer leur hauteur réelle
     boardReady = false;
     if (boardHost) boardHost.style.pointerEvents = 'none';

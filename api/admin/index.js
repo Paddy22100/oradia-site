@@ -4279,7 +4279,27 @@ Réponds en français, sans tiret long, format markdown compact.`
         // Rejeter aussi les user-agents vides ou trop courts (typique des scripts sans navigateur)
         // et le drapeau headless envoyé par le tracker client.
         if (!userAgent || userAgent.length < 15 || BOT_PATTERN.test(userAgent) || body.headless === true) return res.status(204).end();
+        // ── Erreur JS côté client (envoyée par js/page-tracker.js) ──
+        // On la journalise dans system_logs (source=client) pour que le dashboard
+        // mesure aussi les vrais bugs UX, en plus des erreurs serveur.
+        const clientError = String(body.client_error || '').slice(0, 300);
         const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+        if (clientError) {
+          await logSystemEvent(sb, {
+            level: 'error',
+            source: 'client',
+            method: 'JS',
+            path: pagePath || null,
+            message: clientError,
+            details: {
+              error_source: String(body.error_source || '').slice(0, 300),
+              line: body.error_line || null,
+              col: body.error_col || null,
+              user_agent: userAgent || null
+            }
+          });
+          return res.status(204).end();
+        }
         if (pagePath) {
           await sb.from('page_views').insert({ path: pagePath, referrer: referrer || null, session_id: sessionId, user_agent: userAgent || null, is_new_visitor: isNewVisitor });
         }
@@ -4503,10 +4523,48 @@ Réponds en français, sans tiret long, format markdown compact.`
       traffic.views_change_pct = pctChange(traffic.total_views, prevTraffic.total_views);
       traffic.visitors_change_pct = pctChange(traffic.unique_visitors, prevTraffic.unique_visitors);
 
-      // ── Santé technique (erreurs API, depuis system_logs) ──
-      const { data: logs } = await sb.from('system_logs').select('level').gte('created_at', since);
+      // ── Santé technique (erreurs, depuis system_logs) ──
+      // On distingue les erreurs serveur (API) des erreurs JS côté client
+      // (source=client, envoyées par js/page-tracker.js) : ce ne sont pas les mêmes
+      // bugs et l'analyse doit les traiter différemment.
+      const { data: logs } = await sb.from('system_logs').select('level,source').gte('created_at', since);
       const errors = (logs || []).filter(l => l.level === 'error').length;
+      const clientErrors = (logs || []).filter(l => l.level === 'error' && l.source === 'client').length;
+      const serverErrors = errors - clientErrors;
       const warnings = (logs || []).filter(l => l.level === 'warning').length;
+
+      // ── Funnel de conversion + conversions réelles de la période ──
+      // Calculé AVANT l'analyse IA pour que le prompt dispose des vrais chiffres de
+      // conversion (sinon l'IA parle de conversion à l'aveugle). Dégrade proprement
+      // si une table/migration manque.
+      let funnel = null;
+      try {
+        const [{ data: toreViews }, { data: events }, { count: newSubs }] = await Promise.all([
+          sb.from('page_views').select('session_id').gte('created_at', since).ilike('path', '%tore.html%'),
+          sb.from('funnel_events').select('session_id, event_name').gte('created_at', since),
+          sb.from('tore_subscriptions').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('status', 'active')
+        ]);
+        const distinctCount = (rows, filterFn) => new Set((rows || []).filter(filterFn || (() => true)).map(r => r.session_id)).size;
+        funnel = {
+          visites:            new Set((toreViews || []).map(r => r.session_id)).size,
+          intentions_saisies: distinctCount(events, e => e.event_name === 'intention_saisie'),
+          tirages_lances:     distinctCount(events, e => e.event_name === 'tirage_lance'),
+          analyses_affichees: distinctCount(events, e => e.event_name === 'analyse_affichee'),
+          emails_laisses:     distinctCount(events, e => e.event_name === 'email_laisse'),
+          abonnements:        newSubs || 0
+        };
+      } catch (_) { /* migration funnel_events pas encore exécutée — on omet simplement le funnel */ }
+
+      // ── Conversions réelles de la période (précommandes, dons, inscriptions newsletter) ──
+      const conversions = {};
+      await Promise.all([
+        sb.from('preorders').select('*', { count: 'exact', head: true }).gte('created_at', since)
+          .then(({ count }) => { conversions.precommandes = count || 0; }, () => { conversions.precommandes = null; }),
+        sb.from('donors').select('*', { count: 'exact', head: true }).gte('created_at', since)
+          .then(({ count }) => { conversions.dons = count || 0; }, () => { conversions.dons = null; }),
+        sb.from('newsletter_contacts').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('status', 'active')
+          .then(({ count }) => { conversions.inscriptions_newsletter = count || 0; }, () => { conversions.inscriptions_newsletter = null; })
+      ]);
 
       if (req.method === 'POST') {
         if (!process.env.ANTHROPIC_API_KEY) {
@@ -4526,14 +4584,36 @@ Voici les statistiques de trafic réelles des ${days} derniers jours (comparées
 - Nouveaux vs récurrents : ${traffic.new_visitors} nouveaux / ${traffic.returning_visitors} récurrents
 - Affluence par jour (lun→dim) : ${(traffic.by_weekday||[]).join(', ')}
 - Affluence par heure (0h→23h) : ${(traffic.by_hour||[]).join(', ')}
-- Erreurs techniques sur la période : ${errors}
+
+Tunnel de conversion du tirage en ligne (visiteurs distincts à chaque étape) :
+${funnel ? `- Visites de la page de tirage (tore.html) : ${funnel.visites}
+- Intention saisie : ${funnel.intentions_saisies}
+- Tirage lancé : ${funnel.tirages_lances}
+- Analyse affichée : ${funnel.analyses_affichees}
+- Email laissé : ${funnel.emails_laisses}
+- Nouveaux abonnements Tore sur la période : ${funnel.abonnements}` : '- Données de tunnel indisponibles sur la période.'}
+
+Conversions réelles de la période :
+- Précommandes de l'oracle physique : ${conversions.precommandes == null ? 'N/A' : conversions.precommandes}
+- Dons libres : ${conversions.dons == null ? 'N/A' : conversions.dons}
+- Nouvelles inscriptions newsletter : ${conversions.inscriptions_newsletter == null ? 'N/A' : conversions.inscriptions_newsletter}
+
+Santé technique (erreurs journalisées, pas forcément visibles par le visiteur) :
+- Erreurs serveur (API) : ${serverErrors}
+- Erreurs JavaScript côté client (bugs réellement rencontrés dans le navigateur) : ${clientErrors}
+- Avertissements : ${warnings}
 
 Analyse ces chiffres et donne-moi, en français, de façon concise et actionnable (utilise des puces, pas de blabla) :
 1. Ce qui va bien
 2. Ce qui est préoccupant ou à surveiller
 3. 3 à 5 actions concrètes et priorisées pour améliorer le trafic et la conversion du site, en tenant compte du contexte (petit site indépendant, trafic encore faible, donc ne suggère pas d'analyses nécessitant un grand volume de données)
 
-Sois honnête si les données sont trop limitées pour conclure quoi que ce soit de fiable — dans ce cas dis-le clairement plutôt que d'inventer des tendances.`;
+Consignes d'interprétation importantes :
+- Le tunnel ci-dessus montre où les visiteurs décrochent : concentre les recommandations sur la plus grosse fuite entre deux étapes, pas sur des généralités.
+- Ne confonds pas erreurs serveur et erreurs client : les erreurs serveur sont des incidents d'API (souvent invisibles pour le visiteur), les erreurs client sont des bugs JS vécus dans le navigateur (impact UX direct). Si les deux sont à 0 ou très faibles, ne dramatise pas une « catastrophe technique ».
+- Priorise les actions sur les leviers déjà en place plutôt que d'en réinventer : le site a déjà un blog (SEO de contenu), des CTA en page d'accueil, et un suivi de conversion first-party. Ne recommande pas d'« ajouter Google Analytics / Pixel Facebook » ni d'« écrire des articles » sans vérifier ce qui existe déjà.
+
+Sois honnête si les données sont trop limitées pour conclure quoi que ce soit de fiable — dans ce cas dis-le clairement plutôt que d'inventer des tendances. À ce volume de trafic, rappelle que le taux de rebond et le mix de canaux sont peu significatifs.`;
 
         const models = [process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5', 'claude-3-5-haiku-20241022'];
         let lastErr;
@@ -4555,34 +4635,16 @@ Sois honnête si les données sont trop limitées pour conclure quoi que ce soit
         return res.status(502).json({ error: 'Erreur lors de l\'analyse IA', details: lastErr });
       }
 
-      // ── Funnel de conversion : visite tore → intention → tirage → analyse → email → abonnement ──
-      // S'appuie sur page_views (déjà en place) + funnel_events (nouvelle table, dégrade
-      // proprement si la migration n'a pas encore été exécutée).
-      let funnel = null;
-      try {
-        const [{ data: toreViews }, { data: events }, { count: newSubs }] = await Promise.all([
-          sb.from('page_views').select('session_id').gte('created_at', since).ilike('path', '%tore.html%'),
-          sb.from('funnel_events').select('session_id, event_name').gte('created_at', since),
-          sb.from('tore_subscriptions').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('status', 'active')
-        ]);
-        const distinctCount = (rows, filterFn) => new Set((rows || []).filter(filterFn || (() => true)).map(r => r.session_id)).size;
-        funnel = {
-          visites:            new Set((toreViews || []).map(r => r.session_id)).size,
-          intentions_saisies: distinctCount(events, e => e.event_name === 'intention_saisie'),
-          tirages_lances:     distinctCount(events, e => e.event_name === 'tirage_lance'),
-          analyses_affichees: distinctCount(events, e => e.event_name === 'analyse_affichee'),
-          emails_laisses:     distinctCount(events, e => e.event_name === 'email_laisse'),
-          abonnements:        newSubs || 0
-        };
-      } catch (_) { /* migration funnel_events pas encore exécutée — on omet simplement le funnel */ }
-
+      // Le funnel et les conversions sont calculés plus haut (avant l'analyse IA)
+      // pour être partagés entre la réponse GET et le prompt POST.
       if (req.method !== 'GET') return res.status(405).end();
       return res.status(200).json({
         success: true,
         range,
         traffic,
         funnel,
-        logs_stats: { errors, warnings, total: (logs||[]).length }
+        conversions,
+        logs_stats: { errors, server_errors: serverErrors, client_errors: clientErrors, warnings, total: (logs||[]).length }
       });
     }
 

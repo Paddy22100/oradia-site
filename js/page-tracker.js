@@ -59,5 +59,48 @@
         }
       } catch (e) {}
     };
+
+    // ── Capture des erreurs JS côté client (first-party, sans outil tiers) ──
+    // Objectif : rendre les vrais bugs UX mesurables dans le dashboard admin
+    // (table system_logs). Plafonné à 5 erreurs par session et dédupliqué pour
+    // ne pas saturer la base ni le quota — une erreur en boucle ne compte qu'une fois.
+    var errSent = 0;
+    var errSeen = {};
+    var ERR_MAX = 5;
+    function reportClientError(message, sourceFile, lineno, colno) {
+      try {
+        if (errSent >= ERR_MAX) return;
+        var msg = String(message || '').slice(0, 300);
+        if (!msg) return;
+        var sig = msg + '@' + (sourceFile || '') + ':' + (lineno || 0);
+        if (errSeen[sig]) return; // déjà signalée dans cette session
+        errSeen[sig] = true;
+        errSent++;
+        var errPayload = JSON.stringify({
+          client_error: msg,
+          error_source: String(sourceFile || '').slice(0, 300),
+          error_line: lineno || null,
+          error_col: colno || null,
+          session_id: sessionId,
+          path: location.pathname,
+          user_agent: navigator.userAgent || ''
+        });
+        if (navigator.sendBeacon) {
+          navigator.sendBeacon(url, new Blob([errPayload], { type: 'application/json' }));
+        } else {
+          fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: errPayload, keepalive: true }).catch(function () {});
+        }
+      } catch (e) {}
+    }
+    window.addEventListener('error', function (e) {
+      // Ignore les erreurs de chargement de ressources (img/script) : bruit peu actionnable
+      if (e && e.target && (e.target.tagName === 'IMG' || e.target.tagName === 'SCRIPT' || e.target.tagName === 'LINK')) return;
+      reportClientError(e && e.message, e && e.filename, e && e.lineno, e && e.colno);
+    });
+    window.addEventListener('unhandledrejection', function (e) {
+      var reason = e && e.reason;
+      var msg = reason && reason.message ? reason.message : reason;
+      reportClientError('[promise] ' + msg, '', 0, 0);
+    });
   } catch (e) { /* tracking ne doit jamais casser la page */ }
 })();
