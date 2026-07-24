@@ -263,6 +263,24 @@ async function sendWaitlistConfirmationEmail(email) {
             </td>
           </tr>
 
+          <!-- Astuce : retrouver nos mails -->
+          <tr>
+            <td class="pad-box" style="padding:0 32px 26px;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="background:rgba(212,175,55,0.05); border:1px solid rgba(212,175,55,0.18); border-left:3px solid #d4af37; border-radius:12px; overflow:hidden;" bgcolor="#0e1a2e">
+                <tr>
+                  <td style="padding:18px 22px;">
+                    <p style="margin:0 0 6px; color:#d4af37; font-family:Georgia,serif; font-size:12px; font-weight:700; letter-spacing:1.5px; text-transform:uppercase;">
+                      📬 Pour ne rien manquer
+                    </p>
+                    <p style="margin:0; color:#c8c0a8; font-family:Georgia,serif; font-size:13px; line-height:1.75; text-align:justify;">
+                      Certaines messageries (comme Gmail) classent nos emails dans l'onglet <strong style="color:#e8e2cf;">Promotions</strong> ou dans les indésirables. Si tu ne nous vois pas dans ta boîte principale, pense à y jeter un œil, puis ajoute <a href="mailto:contact@oradia.fr" style="color:#d4af37; text-decoration:none;">contact@oradia.fr</a> à tes contacts pour recevoir nos messages à coup sûr.
+                    </p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
+
           <!-- Encart précommande -->
           <tr>
             <td class="pad-box" style="padding:0 32px 26px;">
