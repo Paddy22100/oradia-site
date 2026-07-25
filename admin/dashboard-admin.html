@@ -4384,7 +4384,7 @@
             document.getElementById('contactModalTitle').textContent = item ? 'Modifier le contact' : 'Ajouter un contact';
             document.getElementById('contactModalId').value = item?.id || '';
             document.getElementById('contactModalEmail').value = item?.email || '';
-            document.getElementById('contactModalEmail').disabled = !!item;
+            document.getElementById('contactModalEmail').disabled = false;
             document.getElementById('contactModalName').value = item?.full_name || '';
             document.getElementById('contactModalNotes').value = item?.notes || '';
             document.getElementById('contactModalPhone').value = item?.phone || '';
@@ -4481,7 +4481,7 @@
             try {
                 const action = id ? 'update-contact' : 'add-contact';
                 const body = id
-                    ? { action, id, full_name, notes, phone, company, address, tags: contactModalTags }
+                    ? { action, id, email, full_name, notes, phone, company, address, tags: contactModalTags }
                     : { action, email, full_name, notes, phone, company, address, tags: contactModalTags };
                 const res = await adminFetch('/api/admin/data', {
                     method: 'POST',

@@ -1135,15 +1135,54 @@ async function handleData(req, res) {
         if (body.company !== undefined) updates.company = (body.company || '').trim() || null;
         if (body.address !== undefined) updates.address = (body.address || '').trim() || null;
 
+        // Changement d'adresse email : validation + déplacement dans Brevo (liste 5)
+        let oldEmail = null;
+        if (body.email !== undefined) {
+          const newEmail = (body.email || '').trim().toLowerCase();
+          if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+            return res.status(400).json({ error: 'Adresse email invalide' });
+          }
+          const { data: cur } = await supabase
+            .from('newsletter_contacts').select('email').eq('id', id).maybeSingle();
+          if (cur && cur.email && newEmail !== cur.email.toLowerCase()) {
+            // Refuser si l'email est déjà utilisé par un autre contact
+            const { data: dup } = await supabase
+              .from('newsletter_contacts').select('id').eq('email', newEmail).neq('id', id).limit(1);
+            if (Array.isArray(dup) && dup.length > 0) {
+              return res.status(409).json({ error: 'Cet email est déjà utilisé par un autre contact' });
+            }
+            updates.email = newEmail;
+            oldEmail = cur.email;
+          }
+        }
+
         const { data, error } = await supabase
           .from('newsletter_contacts')
           .update(updates)
           .eq('id', id)
           .select()
           .single();
-        if (error) throw error;
-        if (updates.tags !== undefined) await syncContactToBrevo(supabase, process.env.BREVO_API_KEY, data);
-        return res.status(200).json({ success: true });
+        if (error) {
+          if (error.code === '23505') return res.status(409).json({ error: 'Cet email est déjà utilisé par un autre contact' });
+          throw error;
+        }
+
+        // Déplacement Brevo si l'email a changé : on retire l'ancien de la liste 5,
+        // puis on (re)synchronise le nouveau selon son statut/catégorie.
+        const BREVO_API_KEY = process.env.BREVO_API_KEY;
+        if (oldEmail && BREVO_API_KEY) {
+          try {
+            await fetch('https://api.brevo.com/v3/contacts/lists/5/contacts/remove', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+              body: JSON.stringify({ emails: [oldEmail] })
+            });
+          } catch (_) {}
+        }
+        if (oldEmail || updates.tags !== undefined) {
+          await syncContactToBrevo(supabase, BREVO_API_KEY, data);
+        }
+        return res.status(200).json({ success: true, emailChanged: !!oldEmail });
       }
 
       // ── Contacts newsletter : désinscription manuelle (garde le contact, le retire de la liste 5) ──
