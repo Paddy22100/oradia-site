@@ -419,6 +419,10 @@
                 <i class="fas fa-eye w-4 text-center"></i>
                 <span>Retour fenêtres</span>
             </div>
+            <div class="nav-item" onclick="showTab('etude')" id="nav-etude">
+                <i class="fas fa-atom w-4 text-center"></i>
+                <span>Étude rétrocausalité</span>
+            </div>
 
             <p class="text-gold/50 text-xs uppercase tracking-widest px-5 mt-5 mb-2">Administratif</p>
             <div class="nav-item" onclick="showTab('comptabilite')" id="nav-comptabilite">
@@ -2363,6 +2367,96 @@
         </div><!-- /tab-monitoring -->
 
         <!-- ══ ONGLET : ANALYTIQUES ══ -->
+        <div id="tab-etude" class="tab-panel">
+        <section class="mb-10">
+            <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
+                <div>
+                    <h3 class="cormorant text-2xl font-bold text-gold">Le passé et le futur influencent-ils le présent ?</h3>
+                    <p class="text-light-gold/50 text-sm mt-1">Étude : nombres quantiques tirés à l'avance (passé) vs en direct (présent) vs après le tirage (futur)</p>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="downloadRetroProtocol()" id="btn-retro-pdf" class="flex items-center gap-2 bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/25 transition">
+                        <i class="fas fa-file-pdf"></i> Protocole (PDF)
+                    </button>
+                    <button onclick="loadExperiment()" class="bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-lg px-4 py-2 text-sm hover:bg-teal-500/30 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
+                </div>
+            </div>
+
+            <div id="retro-warning" class="hidden text-amber-300/90 text-sm bg-amber-500/10 border border-amber-500/25 rounded-lg px-4 py-3 mb-6"></div>
+
+            <!-- Avancement -->
+            <div class="stat-card rounded-2xl p-6 mb-6">
+                <div class="flex items-center justify-between mb-2 flex-wrap gap-2">
+                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-flask text-gold/60"></i> Avancement de l'étude</h4>
+                    <span class="text-gold/60 text-sm"><span id="retro-n" class="text-gold font-bold">0</span> / <span id="retro-target">—</span> tirages valides</span>
+                </div>
+                <div class="w-full h-3 rounded-full bg-white/10 overflow-hidden mb-2">
+                    <div id="retro-progress-bar" class="h-full rounded-full bg-gradient-to-r from-teal-400 to-gold transition-all duration-500" style="width:0%"></div>
+                </div>
+                <div class="flex justify-between text-xs text-gold/40">
+                    <span>Seuls les tirages 100 % quantiques (ANU) sont comptés</span>
+                    <span id="retro-progress-pct">0 %</span>
+                </div>
+            </div>
+
+            <!-- Deux jauges : passé et futur -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                <!-- PASSÉ -->
+                <div class="stat-card rounded-2xl p-6">
+                    <h4 class="text-gold font-semibold mb-1 flex items-center gap-2"><i class="fas fa-backward text-gold/60"></i> Le passé → le présent</h4>
+                    <p class="text-gold/40 text-xs mb-4 italic">Nombre <strong class="text-gold/70">pré-tiré</strong> (scellé <em>avant</em> l'intention) vs tirage du moment.</p>
+                    <div class="flex items-end gap-2 mb-2">
+                        <span class="text-4xl font-bold text-teal-300" id="retro-past-rate">—</span>
+                        <span class="text-gold/50 text-sm mb-1">de correspondance</span>
+                    </div>
+                    <div class="relative w-full h-3 rounded-full bg-white/10 overflow-hidden mb-1">
+                        <div id="retro-past-bar" class="h-full bg-teal-400 transition-all duration-500" style="width:50%"></div>
+                        <div class="absolute top-0 bottom-0 left-1/2 w-px bg-white/70"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gold/40 mb-3"><span>0 %</span><span class="text-white/60">hasard&nbsp;50 %</span><span>100 %</span></div>
+                    <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                        <div class="bg-white/5 rounded-lg py-2"><div class="text-gold font-bold" id="retro-past-n">0</div><div class="text-gold/40">tirages</div></div>
+                        <div class="bg-white/5 rounded-lg py-2"><div class="font-bold text-light-gold" id="retro-past-z">—</div><div class="text-gold/40">z-score</div></div>
+                        <div class="bg-white/5 rounded-lg py-2"><div class="font-bold text-light-gold" id="retro-past-p">—</div><div class="text-gold/40">p-value</div></div>
+                    </div>
+                    <p class="text-xs mt-3 text-gold/60" id="retro-past-verdict"></p>
+                </div>
+                <!-- FUTUR -->
+                <div class="stat-card rounded-2xl p-6">
+                    <h4 class="text-gold font-semibold mb-1 flex items-center gap-2"><i class="fas fa-forward text-gold/60"></i> Le futur → le présent</h4>
+                    <p class="text-gold/40 text-xs mb-4 italic">Nombre <strong class="text-gold/70">post-tiré</strong> (scellé <em>après</em> l'intention) vs tirage du moment.</p>
+                    <div class="flex items-end gap-2 mb-2">
+                        <span class="text-4xl font-bold text-purple-300" id="retro-future-rate">—</span>
+                        <span class="text-gold/50 text-sm mb-1">de correspondance</span>
+                    </div>
+                    <div class="relative w-full h-3 rounded-full bg-white/10 overflow-hidden mb-1">
+                        <div id="retro-future-bar" class="h-full bg-purple-400 transition-all duration-500" style="width:50%"></div>
+                        <div class="absolute top-0 bottom-0 left-1/2 w-px bg-white/70"></div>
+                    </div>
+                    <div class="flex justify-between text-xs text-gold/40 mb-3"><span>0 %</span><span class="text-white/60">hasard&nbsp;50 %</span><span>100 %</span></div>
+                    <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                        <div class="bg-white/5 rounded-lg py-2"><div class="text-gold font-bold" id="retro-future-n">0</div><div class="text-gold/40">tirages</div></div>
+                        <div class="bg-white/5 rounded-lg py-2"><div class="font-bold text-light-gold" id="retro-future-z">—</div><div class="text-gold/40">z-score</div></div>
+                        <div class="bg-white/5 rounded-lg py-2"><div class="font-bold text-light-gold" id="retro-future-p">—</div><div class="text-gold/40">p-value</div></div>
+                    </div>
+                    <p class="text-xs mt-3 text-gold/60" id="retro-future-verdict"></p>
+                </div>
+            </div>
+
+            <!-- Comment lire -->
+            <div class="stat-card rounded-2xl p-6 mb-6">
+                <h4 class="text-gold font-semibold mb-3 flex items-center gap-2"><i class="fas fa-circle-info text-gold/60"></i> Comment lire ces chiffres</h4>
+                <ul class="text-gold/70 text-sm leading-relaxed space-y-2 list-disc pl-5">
+                    <li>Si passé et futur n'influencent PAS le présent, les deux taux tournent autour de <strong>50 %</strong> (pur hasard) : c'est l'attendu, et un résultat scientifique valable.</li>
+                    <li>Un écart franc et <strong>stable</strong> par rapport à 50 %, avec une <strong>p-value &lt; 0,05</strong>, serait le signal recherché — à <strong>confirmer par réplication</strong> avant toute conclusion.</li>
+                    <li>Le <strong>z-score</strong> mesure l'ampleur de l'écart ; la <strong>p-value</strong>, la probabilité qu'il soit dû au hasard. Plus il y a de tirages, plus c'est fiable.</li>
+                    <li>Tout est détaillé (pour un scientifique <em>et</em> un profane) dans le <strong>protocole PDF</strong> téléchargeable ci-dessus.</li>
+                </ul>
+                <p class="text-gold/40 text-xs mt-4" id="retro-prereg-note"></p>
+            </div>
+        </section>
+        </div>
+
         <div id="tab-analytics" class="tab-panel">
         <section class="mb-10">
             <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
@@ -3082,6 +3176,7 @@
             temoignages:        'Témoignages',
             analytics:          'Analytiques — Stats & IA',
             synchronicity:      'Retour fenêtres d\'observation',
+            etude:              'Étude rétrocausalité',
             comptabilite:       'Comptabilité',
             exports:            'Exports CSV',
             journal:            'Journal admin',
@@ -3114,6 +3209,7 @@
             if (name === 'monitoring')     { loadMonitoring(); loadSurveillanceLogs(); }
             if (name === 'guidances')      loadGuidances();
             if (name === 'analytics')      loadAnalytics();
+            if (name === 'etude')          loadExperiment();
             if (name === 'comptabilite')   { loadComptabilite(); loadCosts(); }
             if (name === 'insights')       loadIntentionsList();
             if (name === 'planning')       loadPlanning();
@@ -9486,6 +9582,131 @@
                     ${dots}
                     ${xLabels}
                 </svg>`;
+        }
+
+        // ── ÉTUDE RÉTROCAUSALITÉ ────────────────────────────────────────────────────
+        let _retroData = null;
+
+        async function loadExperiment() {
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            const fmtPct = (r) => (r == null ? '—' : (r * 100).toFixed(1) + ' %');
+            try {
+                const res = await adminFetch('/api/admin/experiment-stats');
+                const d = await res.json();
+                _retroData = d;
+
+                const warn = document.getElementById('retro-warning');
+                if (warn) {
+                    let msg = '';
+                    if (d.success === false && d.error) msg = '⚠️ ' + d.error;
+                    else if ((d.n_total || 0) === 0) msg = 'Aucun tirage quantique valide enregistré pour l\'instant. Les chiffres se rempliront au fur et à mesure des tirages (uniquement ceux 100 % ANU).';
+                    warn.textContent = msg;
+                    warn.classList.toggle('hidden', !msg);
+                }
+
+                // Avancement
+                set('retro-n', d.n_total ?? 0);
+                set('retro-target', d.target_n ?? '—');
+                const pp = d.progress_pct ?? 0;
+                set('retro-progress-pct', pp + ' %');
+                const pbar = document.getElementById('retro-progress-bar');
+                if (pbar) pbar.style.width = Math.min(100, pp) + '%';
+
+                // Un bras (passé ou futur)
+                const renderArm = (arm, key, color) => {
+                    const a = d[key] || { n: 0 };
+                    set(`retro-${key}-rate`, a.rate == null ? '—' : fmtPct(a.rate));
+                    set(`retro-${key}-n`, a.n ?? 0);
+                    set(`retro-${key}-z`, a.z == null ? '—' : a.z.toFixed(2));
+                    set(`retro-${key}-p`, a.p == null ? '—' : (a.p < 0.001 ? '<0.001' : a.p.toFixed(3)));
+                    const bar = document.getElementById(`retro-${key}-bar`);
+                    if (bar) bar.style.width = (a.rate == null ? 50 : Math.max(0, Math.min(100, a.rate * 100))) + '%';
+                    const verdict = document.getElementById(`retro-${key}-verdict`);
+                    if (verdict) {
+                        if (!a.n) { verdict.textContent = 'En attente de données.'; verdict.className = 'text-xs mt-3 text-gold/40'; }
+                        else if (a.significant) { verdict.textContent = '⚠ Écart significatif (p < 0,05) — à confirmer par réplication avant toute conclusion.'; verdict.className = 'text-xs mt-3 text-amber-300'; }
+                        else { verdict.textContent = '✓ Conforme au hasard pour l\'instant (aucun effet détecté).'; verdict.className = 'text-xs mt-3 text-teal-300/80'; }
+                    }
+                };
+                renderArm(d.past, 'past');
+                renderArm(d.future, 'future');
+
+                const note = document.getElementById('retro-prereg-note');
+                if (note) {
+                    note.textContent = d.registered_at
+                        ? `Hypothèses pré-enregistrées le ${new Date(d.registered_at).toLocaleDateString('fr-FR')} · seuil α = ${d.alpha} · objectif ${d.target_n} tirages · ${d.pool_available ?? 0} nombres scellés en réserve.`
+                        : '';
+                }
+            } catch (e) {
+                const warn = document.getElementById('retro-warning');
+                if (warn) { warn.textContent = 'Erreur de chargement : ' + e.message; warn.classList.remove('hidden'); }
+            }
+        }
+
+        function downloadRetroProtocol() {
+            if (!window.jspdf?.jsPDF) { alert('Librairie PDF non chargée — recharge la page.'); return; }
+            const d = _retroData || {};
+            const { jsPDF } = window.jspdf;
+            const doc = new jsPDF({ unit: 'mm', format: 'a4' });
+            const M = 18, W = 210, maxW = W - 2 * M;
+            let y = M;
+            const bottom = 297 - M;
+            const need = (h) => { if (y + h > bottom) { doc.addPage(); y = M; } };
+            const P = (text, o = {}) => {
+                const size = o.size || 10.5, lh = o.lh || 5, color = o.color || [40, 40, 55];
+                doc.setFont('helvetica', o.style || 'normal'); doc.setFontSize(size); doc.setTextColor(...color);
+                const lines = doc.splitTextToSize(text, maxW);
+                for (const ln of lines) { need(lh); doc.text(ln, M, y); y += lh; }
+                y += (o.after == null ? 2 : o.after);
+            };
+            const H = (text, o = {}) => { need(12); y += 3; P(text, { size: o.size || 14, style: 'bold', color: [150, 110, 20], lh: 6.5, after: 2.5 }); };
+            const rule = () => { need(4); doc.setDrawColor(210, 190, 120); doc.line(M, y, W - M, y); y += 4; };
+
+            // En-tête
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(150, 110, 20);
+            doc.text('ORADIA — Protocole d\'étude', M, y); y += 8;
+            doc.setFontSize(13); doc.setTextColor(80, 80, 100);
+            doc.text('Le passé et le futur influencent-ils le présent ?', M, y); y += 7;
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(120, 120, 130);
+            doc.text(`Document généré le ${new Date().toLocaleDateString('fr-FR')} · données en direct du tableau de bord Oradia`, M, y); y += 4;
+            rule();
+
+            // PARTIE 1 — POUR TOUS
+            H('1. En clair (pour tous)');
+            P('Le hasard quantique de l\'ANU (Australian National University) est un « dé cosmique » impossible à truquer : chaque nombre provient de fluctuations quantiques du vide. Nous nous en servons pour poser une question simple mais vertigineuse : un nombre tiré à un autre moment que le tirage peut-il « coller » au tirage mieux que le pur hasard ?', {});
+            P('Le jeu du pari à l\'envers (tester le FUTUR → présent) : imaginez que vous choisissiez une carte entre 1 et 64 maintenant. Ce n\'est qu\'APRÈS votre choix que le dé cosmique tire la carte « gagnante ». Normalement, tomber pile dessus, c\'est 1 chance sur 64. Si, sur des milliers de tirages, les gens tombent bien plus souvent que 1 sur 64 sur une carte décidée APRÈS eux, cela voudrait dire que leur choix du présent était déjà accordé à un futur qui n\'existait pas encore.', {});
+            P('Tester le PASSÉ → présent : c\'est le même jeu, mais la carte « gagnante » est scellée AVANT le tirage (générée la veille, mise dans une enveloppe numérique datée et infalsifiable). Si le tirage du présent correspond à ce nombre du passé mieux que le hasard, c\'est que le passé « touche » le présent.', {});
+            P('Dans les deux cas, pour le consultant, rien ne change : il tire normalement. Toute la mesure se fait en coulisses.', { after: 3 });
+
+            // PARTIE 2 — SCIENTIFIQUE
+            H('2. Protocole scientifique');
+            P('Conception : pour chaque consultation valide, trois bits (0/1) sont dérivés de nombres quantiques ANU (octet ≥ 128 → 1, sinon 0) :', { after: 1 });
+            P('• PRÉ-TIRÉ (passé) : bit scellé AVANT l\'intention, engagé par un hash SHA-256 horodaté (preuve d\'antériorité et de non-altération).', { lh: 5, after: 0.5 });
+            P('• EN DIRECT (présent) : bit généré au moment du tirage — l\'acte « présent », horodaté (intention_at).', { lh: 5, after: 0.5 });
+            P('• POST-TIRÉ (futur) : bit scellé APRÈS l\'intention, révélé plus tard, également engagé par hash horodaté.', { lh: 5, after: 2 });
+            P('Hypothèses (pré-enregistrées AVANT toute donnée) :', { style: 'bold', after: 1 });
+            P(d.hypotheses || 'H1 (passé→présent) : taux de correspondance pré-tiré/présent ≠ 50 %. H2 (futur→présent) : taux post-tiré/présent ≠ 50 %. H0 : les deux = 50 % (aucun effet).', { after: 2 });
+            P('Métrique principale : taux de correspondance de bits, test binomial bilatéral comparé à la baseline marginale (le taux de correspondance attendu compte tenu de la proportion de 1 de chaque flux — neutralise tout biais d\'un flux).', {});
+            P('Contrôle : comparaison à la baseline marginale + ré-appariement (permutation) des tirages entre eux. Aucune fausse lecture n\'est jamais donnée à un consultant : le contrôle est purement statistique, a posteriori.', {});
+            P('Validité : seuls les tirages 100 % quantiques (ANU) sont retenus ; tout tirage reposant sur le repli cryptographique est exclu. Règle d\'arrêt : objectif de N fixé à l\'avance (pas d\'arrêt opportuniste). Analyse bilatérale, seuil α = ' + (d.alpha ?? 0.05) + '.', { after: 3 });
+
+            // PARTIE 3 — RÉSULTATS EN DIRECT
+            H('3. Résultats en direct');
+            const pastA = d.past || {}, futA = d.future || {};
+            const line = (label, a) => {
+                if (!a || !a.n) { P(`${label} : en attente de données.`, { lh: 5, after: 1 }); return; }
+                P(`${label} : ${a.n} tirages · correspondance ${(a.rate*100).toFixed(1)} % (hasard attendu ${(a.baseline*100).toFixed(1)} %) · z = ${a.z.toFixed(2)} · p = ${a.p < 0.001 ? '<0.001' : a.p.toFixed(3)} · ${a.significant ? 'écart significatif (à répliquer)' : 'conforme au hasard'}.`, { lh: 5, after: 1.5 });
+            };
+            P(`Tirages valides accumulés : ${d.n_total ?? 0} / ${d.target_n ?? '—'} (objectif).`, { after: 1.5 });
+            line('Passé → présent (pré-tiré vs direct)', pastA);
+            line('Futur → présent (post-tiré vs direct)', futA);
+            if (d.registered_at) P(`Pré-enregistrement figé le ${new Date(d.registered_at).toLocaleDateString('fr-FR')}. Réserve de nombres scellés : ${d.pool_available ?? 0}.`, { after: 3 });
+
+            // PARTIE 4 — HONNÊETÉ
+            H('4. Limites et honnêteté scientifique');
+            P('Ce domaine (rétrocausalité, psychokinèse rétroactive) est très contesté et son historique de réplication est mauvais (ex. Bem, 2011, non répliqué). Le résultat le plus probable est nul — et c\'est un résultat valable. Un écart, même significatif, ne « prouverait » rien à lui seul : seule une réplication indépendante, sur un protocole pré-enregistré comme celui-ci, aurait une valeur probante. Sous la physique standard, les trois bits sont indépendants et se correspondent à 50 %, quel que soit l\'ordre temporel. Ce document et ses chiffres sont générés automatiquement et sans sélection : ils reflètent l\'état réel de l\'étude à la date indiquée.', { after: 2 });
+
+            doc.save(`oradia-protocole-retrocausalite-${new Date().toISOString().slice(0, 10)}.pdf`);
         }
 
         async function loadQrngQuota() {
