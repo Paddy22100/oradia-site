@@ -4456,6 +4456,46 @@ Réponds en français, sans tiret long, format markdown compact.`
       return res.status(405).end();
     }
 
+    // ── Compteur de quota quantique ANU (onglet Analytique) ──
+    // Compte les appels à l'API ANU du mois en cours (source : table qrng_usage,
+    // alimentée par api/qrng.js). Un appel 'anu' = 1 requête qui consomme le quota.
+    if (path === '/qrng-stats' || path === '/qrng-stats/') {
+      verifyAdminAuth(req);
+      if (req.method !== 'GET') return res.status(405).end();
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+      const now = new Date();
+      const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
+      // Quota mensuel du plan ANU — configurable via ANU_MONTHLY_QUOTA (défaut : 100, plan gratuit).
+      const quota = parseInt(process.env.ANU_MONTHLY_QUOTA || '100', 10);
+      try {
+        const [anuRes, fbRes, recentRes] = await Promise.all([
+          sb.from('qrng_usage').select('*', { count: 'exact', head: true }).eq('outcome', 'anu').gte('created_at', monthStart),
+          sb.from('qrng_usage').select('*', { count: 'exact', head: true }).eq('outcome', 'fallback').gte('created_at', monthStart),
+          sb.from('qrng_usage').select('created_at,reason,status_code').eq('outcome', 'fallback').order('created_at', { ascending: false }).limit(5)
+        ]);
+        if (anuRes.error) throw anuRes.error;
+        const anu = anuRes.count || 0;
+        const fallback = fbRes.count || 0;
+        return res.status(200).json({
+          success: true,
+          month: monthStart.slice(0, 7),
+          anu,
+          fallback,
+          total: anu + fallback,
+          quota,
+          quota_pct: quota > 0 ? Math.min(100, Math.round((anu / quota) * 100)) : null,
+          recent_fallbacks: recentRes.data || []
+        });
+      } catch (e) {
+        // Table absente (migration non exécutée) ou DB indisponible : on dégrade proprement.
+        return res.status(200).json({
+          success: false,
+          error: 'Table qrng_usage introuvable — exécute supabase-migration-qrng-usage.sql.',
+          month: monthStart.slice(0, 7), anu: 0, fallback: 0, total: 0, quota, quota_pct: 0, recent_fallbacks: []
+        });
+      }
+    }
+
     if (path === '/transactions' || path === '/transactions/') {
       verifyAdminAuth(req);
       const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);

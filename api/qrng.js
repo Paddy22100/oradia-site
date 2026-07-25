@@ -54,43 +54,80 @@ export default async function handler(req, res) {
 
   const count = Math.min(parseInt(req.query.count) || 6, 50);
 
+  let outcome = 'fallback';
+  let statusCode = null;
+  let reason = null;
+  let numbers = null;
+  let sourceLabel = 'crypto.getRandomValues (fallback)';
+  let methodLabel = 'cryptographic_prng';
+
   try {
+    // Clé absente = cause n°1 des fallbacks : on la détecte explicitement plutôt
+    // que d'envoyer un appel voué au 401, pour un diagnostic clair côté dashboard.
+    if (!process.env.ANU_QRNG_API_KEY) {
+      throw new Error('missing_api_key');
+    }
+
     const url = `https://api.quantumnumbers.anu.edu.au?length=${count}&type=uint8`;
 
+    // Timeout porté à 8 s : l'API ANU est souvent lente (5-15 s), 4 s la faisait
+    // expirer trop souvent et basculait à tort en fallback.
     const response = await fetch(url, {
       headers: {
         'x-api-key': process.env.ANU_QRNG_API_KEY,
         'Content-Type': 'application/json',
       },
-      signal: AbortSignal.timeout(4000),
+      signal: AbortSignal.timeout(8000),
     });
 
+    statusCode = response.status;
+
     if (!response.ok) {
-      throw new Error(`ANU API error: ${response.status}`);
+      throw new Error(`http_${response.status}`);
     }
 
     const data = await response.json();
+    if (!data || !Array.isArray(data.data)) {
+      throw new Error('invalid_response');
+    }
 
-    return res.status(200).json({
-      success: true,
-      numbers: data.data,
-      source: 'ANU Quantum Random Number Generator',
-      method: 'quantum_vacuum_fluctuations',
-    });
+    numbers = data.data;
+    outcome = 'anu';
+    sourceLabel = 'ANU Quantum Random Number Generator';
+    methodLabel = 'quantum_vacuum_fluctuations';
 
   } catch (err) {
+    // Raison du fallback, pour le compteur/diagnostic du dashboard
+    if (err && err.name === 'TimeoutError') reason = 'timeout';
+    else if (err && typeof err.message === 'string' && err.message) reason = err.message;
+    else reason = 'unknown';
+
     // Fallback gracieux : crypto.getRandomValues (non-quantique mais cryptographiquement sûr)
-    const fallback = Array.from(
+    numbers = Array.from(
       { length: count },
       () => crypto.getRandomValues(new Uint8Array(1))[0]
     );
-
-    return res.status(200).json({
-      success: true,
-      numbers: fallback,
-      source: 'crypto.getRandomValues (fallback)',
-      method: 'cryptographic_prng',
-      warning: 'ANU QRNG temporarily unavailable',
-    });
   }
+
+  // Journaliser l'usage (compteur de quota + diagnostic) sans jamais bloquer le tirage
+  try {
+    const { createClient } = require('@supabase/supabase-js');
+    const supabase = createClient(
+      process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+    await supabase.from('qrng_usage').insert({ outcome, status_code: statusCode, reason, count });
+  } catch (_) { /* table qrng_usage absente ou DB indisponible : on ne casse pas le tirage */ }
+
+  const payload = {
+    success: true,
+    numbers,
+    source: sourceLabel,
+    method: methodLabel,
+  };
+  if (outcome === 'fallback') {
+    payload.warning = 'ANU QRNG temporarily unavailable';
+    payload.fallback_reason = reason;
+  }
+  return res.status(200).json(payload);
 }

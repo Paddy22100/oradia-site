@@ -2400,6 +2400,33 @@
                 <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-light-gold" id="ana-top-page">—</div><p class="text-gold/50 text-xs mt-1">Page la + visitée</p></div>
             </div>
 
+            <!-- Quota quantique ANU -->
+            <div class="stat-card rounded-2xl p-6 mb-6">
+                <div class="flex items-center justify-between gap-3 mb-1 flex-wrap">
+                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-atom text-gold/60"></i> Quota quantique (ANU)</h4>
+                    <span class="text-gold/40 text-xs" id="qrng-month">—</span>
+                </div>
+                <p class="text-gold/40 text-xs mb-4 italic">Chaque tirage quantique consomme une requête sur le quota mensuel de l'API ANU. Au-delà, les tirages basculent en repli non quantique (exclus de l'étude).</p>
+
+                <div class="flex items-end justify-between gap-3 mb-2">
+                    <div><span class="text-3xl font-bold text-teal-300" id="qrng-anu">—</span><span class="text-gold/50 text-lg" id="qrng-quota-label"></span></div>
+                    <div class="text-right">
+                        <div class="text-sm"><span class="text-red-400 font-bold" id="qrng-fallback">—</span> <span class="text-gold/50 text-xs">fallback ce mois</span></div>
+                    </div>
+                </div>
+                <!-- Jauge de consommation -->
+                <div class="w-full h-2.5 rounded-full bg-white/10 overflow-hidden mb-1">
+                    <div id="qrng-bar" class="h-full rounded-full bg-gradient-to-r from-teal-400 to-teal-300 transition-all duration-500" style="width:0%"></div>
+                </div>
+                <div class="flex justify-between text-xs text-gold/40 mb-3">
+                    <span>Requêtes ANU consommées</span>
+                    <span id="qrng-pct">—</span>
+                </div>
+
+                <div id="qrng-warning" class="hidden text-amber-300/90 text-xs bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2 mb-3"></div>
+                <div id="qrng-fallback-reasons" class="text-gold/50 text-xs"></div>
+            </div>
+
             <!-- Analyse IA -->
             <div class="stat-card rounded-2xl p-6 mb-6">
                 <div class="flex items-center justify-between gap-3 mb-3 flex-wrap">
@@ -9461,8 +9488,58 @@
                 </svg>`;
         }
 
+        async function loadQrngQuota() {
+            const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
+            try {
+                const res = await adminFetch('/api/admin/qrng-stats');
+                const d = await res.json();
+                set('qrng-month', d.month || '');
+                set('qrng-anu', d.anu ?? 0);
+                set('qrng-quota-label', d.quota ? ' / ' + d.quota : '');
+                set('qrng-fallback', d.fallback ?? 0);
+                const pct = d.quota_pct ?? 0;
+                set('qrng-pct', d.quota ? pct + '%' : '—');
+                const bar = document.getElementById('qrng-bar');
+                if (bar) {
+                    bar.style.width = Math.min(100, pct) + '%';
+                    // Passe du turquoise à l'ambre puis au rouge à l'approche de la limite
+                    bar.className = 'h-full rounded-full transition-all duration-500 ' + (
+                        pct >= 90 ? 'bg-gradient-to-r from-red-500 to-red-400'
+                        : pct >= 70 ? 'bg-gradient-to-r from-amber-500 to-amber-400'
+                        : 'bg-gradient-to-r from-teal-400 to-teal-300');
+                }
+                const warn = document.getElementById('qrng-warning');
+                if (warn) {
+                    let msg = '';
+                    if (d.success === false && d.error) msg = '⚠️ ' + d.error;
+                    else if (d.total === 0) msg = 'Aucun tirage quantique enregistré ce mois-ci pour l\'instant.';
+                    else if (d.anu === 0 && d.fallback > 0) msg = '⚠️ Aucun tirage quantique valide ce mois : l\'API ANU ne répond pas (voir raisons ci-dessous). Vérifie la clé ANU_QRNG_API_KEY sur Vercel.';
+                    else if (pct >= 90) msg = '⚠️ Quota ANU presque atteint : les prochains tirages basculeront en repli non quantique.';
+                    warn.textContent = msg;
+                    warn.classList.toggle('hidden', !msg);
+                }
+                const reasons = document.getElementById('qrng-fallback-reasons');
+                if (reasons) {
+                    const list = d.recent_fallbacks || [];
+                    if (list.length) {
+                        const fr = { missing_api_key: 'clé API absente', timeout: 'délai dépassé', invalid_response: 'réponse invalide' };
+                        reasons.innerHTML = 'Derniers replis : ' + list.map(r => {
+                            const label = fr[r.reason] || r.reason || (r.status_code ? 'HTTP ' + r.status_code : 'inconnu');
+                            const t = new Date(r.created_at).toLocaleString('fr-FR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' });
+                            return `<span class="text-gold/60">${t}</span> · ${label}`;
+                        }).join(' &nbsp;|&nbsp; ');
+                    } else {
+                        reasons.innerHTML = '';
+                    }
+                }
+            } catch (e) {
+                set('qrng-anu', '—');
+            }
+        }
+
         async function loadAnalytics() {
             const range = document.getElementById('analytics-range')?.value || '7d';
+            loadQrngQuota();
             try {
                 const res = await adminFetch(`/api/admin/analytics?range=${range}`);
                 const data = await res.json();

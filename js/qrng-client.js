@@ -83,6 +83,10 @@ const QRNG = {
   // donc le tirage complet par beginDraw()/endDraw() pour savoir s'il est pur.
   beginDraw() {
     this._drawHadFallback = false;
+    // Économie de quota ANU : on ne précharge QU'AU lancement d'un vrai tirage
+    // (et non à chaque chargement de page). L'appel démarre pendant l'animation
+    // du lancer, donc les octets sont prêts quand les cartes en ont besoin.
+    if (this.cache.length < 10) this.prefetch();
   },
   // À appeler depuis un catch qui retombe sur Math.random() : contamine le tirage.
   markFallback() {
@@ -115,8 +119,9 @@ const QRNG = {
   },
 };
 
-// Pré-chargement anticipé dès le chargement de la page
-document.addEventListener('DOMContentLoaded', () => QRNG.prefetch());
+// NB : plus de préchargement automatique au chargement de page (il consommait le
+// quota ANU pour chaque visiteur, même sans tirage). Le préchargement est déclenché
+// par QRNG.beginDraw(), c.-à-d. uniquement quand l'utilisateur lance réellement un tirage.
 
 // Export pour usage en module ES si besoin
 if (typeof module !== 'undefined') module.exports = QRNG;
