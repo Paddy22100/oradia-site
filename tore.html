@@ -4492,6 +4492,26 @@ function showToreAnalysisCTA() {
   const qrngSource = (window.QRNG && QRNG.endDraw) ? QRNG.endDraw() : 'unknown';
   sessionStorage.setItem('tore_qrng_source', qrngSource);
 
+  // ── Étude rétrocausalité : enregistre le "présent" (octet live de CE tirage) ──
+  // Le serveur y adjoint le "passé" (nombre pré-scellé) ; le "futur" est résolu
+  // plus tard. Invisible pour l'utilisateur, best-effort (n'affecte jamais le tirage).
+  try {
+    if (window.QRNG && QRNG.lastByte != null) {
+      const _sid = sessionStorage.getItem('oradia_session_id') || null;
+      fetch('/api/admin/experiment-record', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          session_id: _sid,
+          present_byte: QRNG.lastByte,
+          qrng_source: qrngSource,
+          intention_at: new Date().toISOString()
+        }),
+        keepalive: true
+      }).catch(function () {});
+    }
+  } catch (_) {}
+
   // Enregistrer dans l'historique — Supabase (RLS par user_id) si connecté, sinon stockage local "invité"
   (async () => {
     try {

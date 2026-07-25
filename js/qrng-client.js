@@ -15,6 +15,7 @@ const QRNG = {
   loading: false,
   lastSource: null,     // source du dernier prefetch (info)
   lastDrawSource: null, // 'anu' | 'fallback' — pureté du DERNIER tirage complet
+  lastByte: null,       // dernier octet consommé — sert de valeur "présent" à l'étude
   _drawHadFallback: false,
   _prefetchPromise: null,
 
@@ -53,6 +54,7 @@ const QRNG = {
     if (this.cache.length > 0) {
       const byte = this.cache.shift();
       if (byte.source !== 'anu') this._drawHadFallback = true;
+      this.lastByte = byte.value; // "présent" pour l'étude rétrocausalité (octet live du tirage)
       return byte.value;
     }
     // Dernier recours : crypto local (NON quantique) → contamine le tirage

@@ -561,6 +561,61 @@ async function handleData(req, res) {
           return res.status(200).json({ success: false, error: e.message });
         }
       }
+      if (getAction === 'cron-retro-pool') {
+        // Étude rétrocausalité : (1) remplit le pool quantique pré-scellé si bas,
+        // (2) résout les "futurs" en attente (octet scellé APRÈS l'intention).
+        const sb = supabase;
+        try {
+          const crypto = require('crypto');
+          const out = { filled: 0, resolved: 0, source: null };
+
+          // (1) Remplissage — uniquement du vrai quantique ANU (sinon l'étude serait polluée)
+          const { count: available } = await sb.from('retro_pool').select('*', { count: 'exact', head: true }).is('consumed_at', null);
+          const LOW = 200, BATCH = 1024;
+          if ((available || 0) < LOW) {
+            let numbers = null;
+            try {
+              if (process.env.ANU_QRNG_API_KEY) {
+                const r = await fetch(`https://api.quantumnumbers.anu.edu.au?length=${BATCH}&type=uint8`, {
+                  headers: { 'x-api-key': process.env.ANU_QRNG_API_KEY, 'Content-Type': 'application/json' },
+                  signal: AbortSignal.timeout(8000)
+                });
+                out.source = r.status;
+                if (r.ok) { const d = await r.json(); if (Array.isArray(d.data)) numbers = d.data; }
+              } else { out.source = 'missing_api_key'; }
+            } catch (e) { out.source = e.name === 'TimeoutError' ? 'timeout' : e.message; }
+            if (numbers && numbers.length) {
+              const batchId = 'batch_' + Date.now().toString(36);
+              const batchHash = crypto.createHash('sha256').update(Buffer.from(numbers)).digest('hex');
+              const committedAt = new Date().toISOString();
+              const rows = numbers.map(v => ({ batch_id: batchId, batch_hash: batchHash, committed_at: committedAt, byte_value: v, bit_value: v >= 128 ? 1 : 0, qrng_source: 'anu' }));
+              for (let i = 0; i < rows.length; i += 500) { await sb.from('retro_pool').insert(rows.slice(i, i + 500)); }
+              out.filled = rows.length;
+            }
+          }
+
+          // (2) Résolution des "futurs" : chaque session sans future_bit reçoit le plus
+          //     ancien octet du pool scellé APRÈS son intention (donc un vrai "futur").
+          const { data: pend } = await sb.from('retro_sessions')
+            .select('id, intention_at').is('future_bit', null).neq('status', 'excluded')
+            .order('intention_at', { ascending: true }).limit(500);
+          for (const s of (pend || [])) {
+            const { data: fb } = await sb.from('retro_pool')
+              .select('id, bit_value, committed_at, batch_hash')
+              .is('consumed_at', null).gt('committed_at', s.intention_at)
+              .order('committed_at', { ascending: true }).limit(1);
+            if (fb && fb[0]) {
+              const b = fb[0];
+              await sb.from('retro_pool').update({ consumed_at: new Date().toISOString(), consumed_role: 'future', consumed_session: String(s.id) }).eq('id', b.id);
+              await sb.from('retro_sessions').update({ future_bit: b.bit_value, future_committed_at: b.committed_at, future_commit_hash: b.batch_hash, future_resolved_at: new Date().toISOString() }).eq('id', s.id);
+              out.resolved++;
+            }
+          }
+          return res.status(200).json({ success: true, ...out });
+        } catch (e) {
+          return res.status(200).json({ success: false, error: e.message });
+        }
+      }
       if (getAction === 'cron-fetch-logs') {
         const sb = supabase;
         try {
@@ -4431,6 +4486,50 @@ Réponds en français, sans tiret long, format markdown compact.`
             .then(() => {}, () => {}); // ignore silencieusement si la migration n'est pas encore exécutée
         }
       } catch (_) { /* le tracking ne doit jamais faire échouer la requête côté visiteur */ }
+      return res.status(204).end();
+    }
+
+    // ── Étude rétrocausalité : enregistrement d'une session (route PUBLIQUE, depuis tore.html) ──
+    // Reçoit le "présent" (octet live du tirage). Le serveur y adjoint le "passé"
+    // (octet du pool scellé AVANT l'intention). Le "futur" est résolu plus tard par le cron.
+    if (path === '/experiment-record' || path === '/experiment-record/') {
+      if (req.method !== 'POST') return res.status(405).end();
+      try {
+        const body = await parseBody(req);
+        const presentByte = parseInt(body.present_byte, 10);
+        if (!Number.isInteger(presentByte) || presentByte < 0 || presentByte > 255) return res.status(204).end();
+        const qrngSource = String(body.qrng_source || 'unknown').slice(0, 20);
+        const sessionId = String(body.session_id || '').slice(0, 100) || null;
+        let intentionAt = new Date();
+        if (body.intention_at) { const d = new Date(body.intention_at); if (!isNaN(d.getTime())) intentionAt = d; }
+        const presentBit = presentByte >= 128 ? 1 : 0;
+        const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+        // Assigner le "passé" : plus ancien octet du pool scellé AVANT l'intention
+        let pastBit = null, pastCommittedAt = null, pastHash = null;
+        try {
+          const { data: pb } = await sb.from('retro_pool')
+            .select('id, bit_value, committed_at, batch_hash')
+            .is('consumed_at', null)
+            .lt('committed_at', intentionAt.toISOString())
+            .order('committed_at', { ascending: true }).limit(1);
+          if (pb && pb[0]) {
+            const b = pb[0];
+            await sb.from('retro_pool').update({ consumed_at: new Date().toISOString(), consumed_role: 'past', consumed_session: sessionId }).eq('id', b.id);
+            pastBit = b.bit_value; pastCommittedAt = b.committed_at; pastHash = b.batch_hash;
+          }
+        } catch (_) { /* pool absent : session enregistrée sans "passé" */ }
+
+        // 'anu' = valide pour l'étude ; sinon exclue (repli crypto)
+        const status = qrngSource === 'anu' ? 'complete' : 'excluded';
+        await sb.from('retro_sessions').insert({
+          session_id: sessionId,
+          intention_at: intentionAt.toISOString(),
+          present_byte: presentByte, present_bit: presentBit,
+          past_bit: pastBit, past_committed_at: pastCommittedAt, past_commit_hash: pastHash,
+          qrng_source: qrngSource, status
+        });
+      } catch (_) { /* étude non bloquante : jamais d'erreur renvoyée au visiteur */ }
       return res.status(204).end();
     }
 
