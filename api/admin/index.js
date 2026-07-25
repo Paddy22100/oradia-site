@@ -1324,6 +1324,13 @@ async function handleData(req, res) {
         if (!BREVO_API_KEY) return res.status(500).json({ error: 'BREVO_API_KEY non configuré' });
         const type = body.type || 'payment_failed';
         const toEmail = body.email || 'contact@oradia.fr';
+        // Rappel de renouvellement (~3 jours avant échéance) : template dédié
+        if (type === 'renewal-reminder') {
+          const sample = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+          const ok = await sendRenewalReminderEmail(toEmail, sample);
+          if (!ok) return res.status(502).json({ error: 'Envoi Brevo échoué' });
+          return res.status(200).json({ success: true, email: toEmail, type });
+        }
         const isPaimentFailed = type === 'payment_failed';
         const subject = isPaimentFailed ? "Rudy d'Oradia - Votre paiement n'a pas abouti — renouveler votre accès" : "Rudy d'Oradia - Votre abonnement Le Tore est arrivé à échéance";
         const title = isPaimentFailed ? 'Paiement non abouti' : 'Votre accès a expiré';
@@ -2770,7 +2777,21 @@ function buildCommunicationEmailHtml(draft) {
       <span style="display:inline-block; width:5px; height:5px; background:#d4af37; border-radius:50%; opacity:0.45; vertical-align:middle; margin:0 8px;"></span>
       <span style="display:inline-block; width:32px; height:1px; background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent); vertical-align:middle;"></span>
     </p>
-    <p style="margin:0 0 20px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
+    <p style="margin:0 0 18px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 22px;">
+      <tr>
+        <td style="padding:0 8px;">
+          <a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank" style="text-decoration:none;">
+            <img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook Oradia" width="40" height="40" style="display:block; width:40px; height:40px; border:0;">
+          </a>
+        </td>
+        <td style="padding:0 8px;">
+          <a href="https://instagram.com/oradia_oracle_officiel" target="_blank" style="text-decoration:none;">
+            <img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram Oradia" width="40" height="40" style="display:block; width:40px; height:40px; border:0;">
+          </a>
+        </td>
+      </tr>
+    </table>
     <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Vous recevez cet email car vous êtes abonné·e aux communications Oradia.<br><a href="{unsubscribe}" style="color:#c8c0a8; text-decoration:underline;">Se désabonner</a></p>
   </td></tr>
 </table>
