@@ -312,11 +312,26 @@ async function sendSubscriptionEmail(toEmail, toName, type) {
     });
 }
 
+// Extrait l'ID d'abonnement d'une facture ou d'un objet abonnement, en gérant
+// à la fois l'ancien format (`invoice.subscription`, racine) et le nouveau
+// (API Stripe récente : `invoice.parent.subscription_details.subscription`,
+// ou au niveau des lignes de facture). Le champ racine `invoice.subscription`
+// a été retiré des versions d'API récentes.
+function getSubscriptionIdFromObject(object) {
+    if (!object) return null;
+    if (object.object === 'subscription' && object.id) return object.id;
+    const fromRoot = object.subscription;
+    const fromParent = object.parent?.subscription_details?.subscription;
+    const line = Array.isArray(object.lines?.data) ? object.lines.data[0] : null;
+    const fromLine = line?.subscription
+        || line?.parent?.subscription_item_details?.subscription
+        || line?.subscription_details?.subscription;
+    const id = fromRoot || fromParent || fromLine || null;
+    return (typeof id === 'string' ? id : id?.id) || null;
+}
+
 async function findToreSubscriptionRow(stripe, supabase, object) {
-    const subscriptionId =
-        object?.subscription ||
-        (object?.object === 'subscription' ? object.id : null) ||
-        null;
+    const subscriptionId = getSubscriptionIdFromObject(object);
     const customerId = object?.customer
         ? (typeof object.customer === 'string' ? object.customer : object.customer.id)
         : null;
@@ -371,13 +386,14 @@ async function processEvent(event) {
 
             // Ne traiter que les factures de renouvellement d'abonnement
             // (la toute première facture est déjà gérée via checkout.session.completed)
-            const isSubscriptionInvoice = !!invoice.subscription;
+            const invSubId = getSubscriptionIdFromObject(invoice);
+            const isSubscriptionInvoice = !!invSubId;
             if (!isSubscriptionInvoice) break;
             if (invoice.billing_reason === 'subscription_create') break;
 
             const row = await findToreSubscriptionRow(stripe, supabase, invoice);
             if (!row || !row.email) {
-                console.error('[webhook] invoice.payment_succeeded : abonnement introuvable, sub:', invoice.subscription);
+                console.error('[webhook] invoice.payment_succeeded : abonnement introuvable, sub:', invSubId);
                 break;
             }
 
@@ -389,7 +405,7 @@ async function processEvent(event) {
                 .update({
                     status: 'active',
                     expires_at: newExpireAt.toISOString(),
-                    stripe_subscription_id: invoice.subscription || null,
+                    stripe_subscription_id: invSubId || null,
                     stripe_customer_id: invoice.customer || null,
                     updated_at: new Date().toISOString()
                 })
@@ -419,7 +435,7 @@ async function processEvent(event) {
             const stripe = getStripeClient();
             const supabase = getSupabaseClient();
             const invoice = event.data.object;
-            if (!invoice.subscription) break;
+            if (!getSubscriptionIdFromObject(invoice)) break;
 
             const row = await findToreSubscriptionRow(stripe, supabase, invoice);
             if (!row || !row.email) break;
