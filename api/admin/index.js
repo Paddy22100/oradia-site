@@ -116,6 +116,142 @@ function buildUnsubUrl(email) {
   return `https://oradia.fr/unsubscribe.html?email=${encodeURIComponent(email)}&token=${token}`;
 }
 
+// Mail de rappel doux avant renouvellement d'abonnement Tore (une fois par cycle).
+async function sendRenewalReminderEmail(email, expiresAt) {
+  const BREVO_API_KEY = process.env.BREVO_API_KEY;
+  const senderEmail = process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr';
+  if (!BREVO_API_KEY) return false;
+  const dateStr = expiresAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#040d1c;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#040d1c" background="https://oradia.fr/images/oradia-hero-4k.webp" style="background-image:url('https://oradia.fr/images/oradia-hero-4k.webp');background-size:cover;background-position:center;">
+<tr><td align="center" style="padding:32px 12px;">
+<table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;margin:0 auto;background:linear-gradient(135deg,rgba(10,25,47,0.96),rgba(5,20,40,0.97));border:1px solid rgba(212,175,55,0.2);border-radius:16px;overflow:hidden;">
+  <tr><td style="padding:0;line-height:0;"><img src="https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp" alt="Le Tore" width="600" style="display:block;width:100%;height:auto;"></td></tr>
+  <tr><td style="padding:32px 40px 12px;">
+    <h1 style="margin:0 0 18px;color:#f0c75e;font-family:Georgia,serif;font-size:26px;font-weight:400;">Votre abonnement se renouvelle bientôt</h1>
+    <p style="margin:0 0 16px;color:#d1d5db;font-family:Georgia,serif;font-size:15px;line-height:1.8;">Bonjour,<br><br>Votre abonnement <strong style="color:#f0c75e;">Le Tore</strong> se renouvellera automatiquement le <strong style="color:#f0c75e;">${dateStr}</strong>. Vous n'avez rien à faire : vos tirages continuent sans interruption.</p>
+    <p style="margin:0 0 24px;color:#d1d5db;font-family:Georgia,serif;font-size:15px;line-height:1.8;">Pensez simplement à vérifier que votre moyen de paiement est toujours valide, pour éviter toute coupure d'accès.</p>
+  </td></tr>
+  <tr><td align="center" style="padding:0 40px 36px;">
+    <a href="https://oradia.fr/member/login.html?returnTo=abonnements.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:14px 36px;border-radius:50px;font-weight:700;font-size:15px;font-family:Georgia,serif;">Gérer mon abonnement</a>
+  </td></tr>
+  <tr><td align="center" style="padding:24px 40px;border-top:1px solid rgba(212,175,55,0.15);">
+    <p style="margin:0 0 6px;color:#c8c0a8;font-size:13px;font-style:italic;opacity:0.7;font-family:Georgia,serif;">Avec gratitude,</p>
+    <p style="margin:0;color:#d4af37;font-size:40px;font-family:'Dancing Script','Brush Script MT',cursive;line-height:1.1;">Rudy</p>
+    <p style="margin:12px 0 0;"><a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-size:12px;">oradia.fr</a></p>
+  </td></tr>
+</table></td></tr></table></body></html>`;
+  try {
+    const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+      method: 'POST',
+      headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        sender: { email: senderEmail, name: "Rudy d'Oradia" },
+        to: [{ email }],
+        replyTo: { email: 'contact@oradia.fr', name: "Rudy d'Oradia" },
+        subject: "Rudy d'Oradia - Votre abonnement Le Tore se renouvelle bientôt",
+        htmlContent: html
+      })
+    });
+    return r.ok;
+  } catch (e) { console.error('[renewal-reminder] envoi échoué:', e.message); return false; }
+}
+
+// Réconciliation Stripe → Supabase + rappel de renouvellement.
+// Filet de sécurité : lit la vérité côté Stripe (fin de période + statut) et l'aligne
+// dans tore_subscriptions, même si un événement webhook a été manqué. Envoie un rappel
+// doux quelques jours avant l'échéance (une seule fois par cycle de facturation).
+async function reconcileStripeSubscriptions(supabase) {
+  const out = { checked: 0, updated: 0, reminders: 0, errors: [] };
+  if (!process.env.STRIPE_SECRET_KEY) { out.errors.push('STRIPE_SECRET_KEY manquante'); return out; }
+  let stripe;
+  try { stripe = require('stripe')(process.env.STRIPE_SECRET_KEY); }
+  catch (e) { out.errors.push('stripe init: ' + e.message); return out; }
+
+  const REMINDER_DAYS = 3;
+  const now = Date.now();
+
+  // Parcours de tous les abonnements Stripe (client étendu pour récupérer l'email)
+  const subs = [];
+  try {
+    let startingAfter;
+    while (true) {
+      const page = await stripe.subscriptions.list({
+        status: 'all', limit: 100, expand: ['data.customer'],
+        ...(startingAfter ? { starting_after: startingAfter } : {})
+      });
+      subs.push(...page.data);
+      if (!page.has_more || page.data.length === 0) break;
+      startingAfter = page.data[page.data.length - 1].id;
+    }
+  } catch (e) { out.errors.push('list subs: ' + e.message); return out; }
+
+  for (const sub of subs) {
+    out.checked++;
+    try {
+      const customerId = (typeof sub.customer === 'object' ? sub.customer?.id : sub.customer) || null;
+      const email = (typeof sub.customer === 'object' ? sub.customer?.email : null) || null;
+      // Fin de période : racine (ancien format) ou items (API Stripe récente)
+      const periodEndUnix = sub.current_period_end || sub.items?.data?.[0]?.current_period_end || null;
+      const expiresAt = periodEndUnix ? new Date(periodEndUnix * 1000) : null;
+      const st = sub.status;
+      const mappedStatus = (st === 'active' || st === 'trialing') ? 'active'
+        : (st === 'past_due' || st === 'unpaid') ? 'payment_failed'
+        : (st === 'canceled') ? 'cancelled'
+        : null; // incomplete / paused : on ne touche pas
+      if (!mappedStatus) continue;
+
+      // Retrouver la ligne : sub id, puis customer id, puis email
+      const trySelect = async (col, val) => {
+        if (!val) return null;
+        const { data } = await supabase.from('tore_subscriptions')
+          .select('id, email, is_free, expires_at').eq(col, val).limit(1);
+        return Array.isArray(data) && data[0] ? data[0] : null;
+      };
+      const row = await trySelect('stripe_subscription_id', sub.id)
+        || await trySelect('stripe_customer_id', customerId)
+        || await trySelect('email', email);
+      if (!row) continue;
+
+      const currentExp = row.expires_at ? new Date(row.expires_at).getTime() : null;
+      if (expiresAt && currentExp !== expiresAt.getTime()) {
+        await supabase.from('tore_subscriptions').update({
+          status: mappedStatus,
+          expires_at: expiresAt.toISOString(),
+          stripe_subscription_id: sub.id,
+          stripe_customer_id: customerId,
+          updated_at: new Date().toISOString()
+        }).eq('id', row.id);
+        out.updated++;
+      }
+
+      // Rappel de renouvellement (une fois par cycle). Isolé dans un try : si la colonne
+      // renewal_reminder_for n'existe pas encore (migration non lancée), on saute sans casser.
+      if (mappedStatus === 'active' && !row.is_free && expiresAt && email && !sub.cancel_at_period_end) {
+        const daysLeft = (expiresAt.getTime() - now) / 86400000;
+        if (daysLeft > 0 && daysLeft <= REMINDER_DAYS) {
+          try {
+            const { data: rr } = await supabase.from('tore_subscriptions')
+              .select('renewal_reminder_for').eq('id', row.id).single();
+            const already = rr?.renewal_reminder_for
+              && Math.abs(new Date(rr.renewal_reminder_for).getTime() - expiresAt.getTime()) < 86400000;
+            if (!already) {
+              const ok = await sendRenewalReminderEmail(email, expiresAt);
+              if (ok) {
+                await supabase.from('tore_subscriptions')
+                  .update({ renewal_reminder_for: expiresAt.toISOString() }).eq('id', row.id);
+                out.reminders++;
+              }
+            }
+          } catch (colErr) { /* colonne absente : rappels inactifs jusqu'à migration */ }
+        }
+      }
+    } catch (e) { out.errors.push((sub.id || '?') + ': ' + e.message); }
+  }
+  return out;
+}
+
 // Convertit un tableau d'objets en CSV (échappement basique des guillemets/virgules)
 function rowsToCsv(rows) {
   if (!rows || rows.length === 0) return '';
@@ -556,7 +692,30 @@ async function handleData(req, res) {
             await logSystemEvent(supabase, { level: 'error', source: 'cron-relance', method: 'POST', path: '/api/fenetre/close', status_code: 500, message: `Échec clôture fenêtres : ${e.message}`, details: null });
           }
 
-          return res.status(200).json({ success: true, sent: results.filter(r=>r.ok).length, total: results.length, results, fenetre_close: fenetreCloseResult });
+          // Réconciliation des abonnements Stripe (filet de sécurité renouvellements) + rappels.
+          let reconcileResult = null;
+          try {
+            reconcileResult = await reconcileStripeSubscriptions(supabase);
+            await logSystemEvent(supabase, { level: reconcileResult.errors.length ? 'warn' : 'info', source: 'cron-relance', method: 'GET', path: '/api/admin/data', status_code: 200, message: `Réconciliation Stripe : ${reconcileResult.checked} vérifié(s), ${reconcileResult.updated} mis à jour, ${reconcileResult.reminders} rappel(s)`, details: reconcileResult });
+          } catch(e) {
+            reconcileResult = { error: e.message };
+            await logSystemEvent(supabase, { level: 'error', source: 'cron-relance', method: 'GET', path: '/api/admin/data', status_code: 500, message: `Échec réconciliation Stripe : ${e.message}`, details: null });
+          }
+
+          return res.status(200).json({ success: true, sent: results.filter(r=>r.ok).length, total: results.length, results, fenetre_close: fenetreCloseResult, reconcile: reconcileResult });
+        } catch(e) {
+          return res.status(200).json({ success: false, error: e.message });
+        }
+      }
+      // Réconciliation Stripe déclenchable seule (cron externe horaire ou test manuel).
+      if (getAction === 'cron-reconcile-subs') {
+        if ((req.query?.cron_secret || '') !== process.env.CRON_SECRET) {
+          return res.status(401).json({ error: 'Unauthorized' });
+        }
+        try {
+          const r = await reconcileStripeSubscriptions(supabase);
+          await logSystemEvent(supabase, { level: r.errors.length ? 'warn' : 'info', source: 'cron-reconcile-subs', method: 'GET', path: '/api/admin/data', status_code: 200, message: `Réconciliation Stripe : ${r.checked} vérifié(s), ${r.updated} mis à jour, ${r.reminders} rappel(s)`, details: r });
+          return res.status(200).json({ success: true, ...r });
         } catch(e) {
           return res.status(200).json({ success: false, error: e.message });
         }
