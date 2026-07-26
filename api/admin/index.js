@@ -4062,6 +4062,31 @@ module.exports = async (req, res) => {
         if (error) return res.status(500).json({ error: error.message });
         return res.status(200).json({ success: true });
       }
+      if (req.method === 'POST') {
+        const body = await parseBody(req);
+        // Publier immédiatement un post programmé (ex. rattrapage d'un post en retard)
+        if (body.action === 'publish-now' && body.id) {
+          const { data: post, error: fErr } = await sbSocialList.from('social_posts').select('*').eq('id', body.id).maybeSingle();
+          if (fErr) return res.status(500).json({ error: fErr.message });
+          if (!post) return res.status(404).json({ error: 'Post introuvable' });
+          const MAKE_WEBHOOK_URL = process.env.MAKE_SOCIAL_WEBHOOK_URL;
+          if (!MAKE_WEBHOOK_URL) return res.status(400).json({ error: 'MAKE_SOCIAL_WEBHOOK_URL manquant côté serveur' });
+          try {
+            const makeRes = await fetch(MAKE_WEBHOOK_URL, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ subject: post.subject, facebook_text: post.facebook_text, instagram_text: post.instagram_text, image_url: post.image_url, schedule_at: null, sent_at: new Date().toISOString() })
+            });
+            if (!makeRes.ok) throw new Error(`Make.com ${makeRes.status}`);
+            await sbSocialList.from('social_posts').update({ statut: 'envoyé', sent_at: new Date().toISOString() }).eq('id', post.id);
+            return res.status(200).json({ success: true });
+          } catch (e) {
+            await sbSocialList.from('social_posts').update({ statut: 'échec', error_message: e.message }).eq('id', post.id);
+            return res.status(502).json({ error: e.message });
+          }
+        }
+        return res.status(400).json({ error: 'Action inconnue' });
+      }
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
