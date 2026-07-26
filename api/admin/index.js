@@ -3200,6 +3200,19 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
         return res.status(200).json({ success: true });
       }
 
+      // Archiver / désarchiver une newsletter (sort de la liste de travail sans la supprimer)
+      if (action === 'set-archived') {
+        const { draft_id, archived } = body;
+        if (!draft_id) return res.status(400).json({ error: 'draft_id requis' });
+        const { error } = await supabase.from('newsletter_drafts')
+          .update({ archived: archived === true }).eq('id', draft_id);
+        if (error) {
+          if (error.code === '42703') return res.status(400).json({ error: 'Migration archived requise (colonne absente)' });
+          throw error;
+        }
+        return res.status(200).json({ success: true });
+      }
+
       // Renvoie la dernière newsletter envoyée aux inscrits actifs qui ne l'ont pas reçue
       // (last_newsletter_sent_at nul ou antérieur au sent_at du dernier envoi).
       if (action === 'resend-last') {
