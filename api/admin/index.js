@@ -159,6 +159,35 @@ async function sendRenewalReminderEmail(email, expiresAt) {
   } catch (e) { console.error('[renewal-reminder] envoi échoué:', e.message); return false; }
 }
 
+// Publie les posts sociaux programmés arrivés à échéance (Facebook + Instagram
+// ensemble via Make.com). Utilisé par le cron quotidien ET le cron horaire.
+async function sendDueSocialPosts(supabase) {
+  const out = { sent: 0, failed: 0, results: [] };
+  if (!(await isFeatureEnabled(supabase, 'social_scheduled_send'))) { out.skipped = 'feature_off'; return out; }
+  const { data: dueSocial } = await supabase
+    .from('social_posts').select('*')
+    .eq('statut', 'programmé')
+    .lte('scheduled_at', new Date().toISOString())
+    .limit(10);
+  const MAKE_WEBHOOK_URL = process.env.MAKE_SOCIAL_WEBHOOK_URL;
+  for (const post of dueSocial || []) {
+    try {
+      if (!MAKE_WEBHOOK_URL) throw new Error('MAKE_SOCIAL_WEBHOOK_URL manquant');
+      const makeRes = await fetch(MAKE_WEBHOOK_URL, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ subject: post.subject, facebook_text: post.facebook_text, instagram_text: post.instagram_text, image_url: post.image_url, schedule_at: null, sent_at: new Date().toISOString() })
+      });
+      if (!makeRes.ok) throw new Error(`Make.com ${makeRes.status}`);
+      await supabase.from('social_posts').update({ statut: 'envoyé', sent_at: new Date().toISOString() }).eq('id', post.id);
+      out.sent++; out.results.push({ id: post.id, ok: true });
+    } catch (e) {
+      await supabase.from('social_posts').update({ statut: 'échec', error_message: e.message }).eq('id', post.id);
+      out.failed++; out.results.push({ id: post.id, ok: false, error: e.message });
+    }
+  }
+  return out;
+}
+
 // Réconciliation Stripe → Supabase + rappel de renouvellement.
 // Filet de sécurité : lit la vérité côté Stripe (fin de période + statut) et l'aligne
 // dans tore_subscriptions, même si un événement webhook a été manqué. Envoie un rappel
@@ -585,35 +614,8 @@ async function handleData(req, res) {
           }
           // ── Publications sociales programmées (Facebook + Instagram, envoyées
           // ensemble pour rester synchronisées — voir handlePublishSocial) ──
-          let socialResults = [];
-          if (await isFeatureEnabled(supabase, 'social_scheduled_send')) {
-            const { data: dueSocial } = await supabase
-              .from('social_posts')
-              .select('*')
-              .eq('statut', 'programmé')
-              .lte('scheduled_at', new Date().toISOString())
-              .limit(5);
-            const MAKE_WEBHOOK_URL = process.env.MAKE_SOCIAL_WEBHOOK_URL;
-            for (const post of dueSocial || []) {
-              try {
-                if (!MAKE_WEBHOOK_URL) throw new Error('MAKE_SOCIAL_WEBHOOK_URL manquant');
-                const makeRes = await fetch(MAKE_WEBHOOK_URL, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    subject: post.subject, facebook_text: post.facebook_text, instagram_text: post.instagram_text,
-                    image_url: post.image_url, schedule_at: null, sent_at: new Date().toISOString()
-                  })
-                });
-                if (!makeRes.ok) throw new Error(`Make.com ${makeRes.status}`);
-                await supabase.from('social_posts').update({ statut: 'envoyé', sent_at: new Date().toISOString() }).eq('id', post.id);
-                socialResults.push({ id: post.id, ok: true });
-              } catch (e) {
-                await supabase.from('social_posts').update({ statut: 'échec', error_message: e.message }).eq('id', post.id);
-                socialResults.push({ id: post.id, ok: false, error: e.message });
-              }
-            }
-          }
+          const socialOut = await sendDueSocialPosts(supabase);
+          const socialResults = socialOut.results;
 
           return res.status(200).json({ success: true, sent: results.filter(r=>r.ok).length, results, social_sent: socialResults.filter(r=>r.ok).length, socialResults });
         } catch(e) {
@@ -704,6 +706,21 @@ async function handleData(req, res) {
           }
 
           return res.status(200).json({ success: true, sent: results.filter(r=>r.ok).length, total: results.length, results, fenetre_close: fenetreCloseResult, reconcile: reconcileResult });
+        } catch(e) {
+          return res.status(200).json({ success: false, error: e.message });
+        }
+      }
+      // Publication des posts sociaux dus, déclenchable seule (cron externe horaire).
+      if (getAction === 'cron-social-due') {
+        if ((req.query?.cron_secret || '') !== process.env.CRON_SECRET) {
+          return res.status(401).json({ error: 'Unauthorized' });
+        }
+        try {
+          const r = await sendDueSocialPosts(supabase);
+          if (r.sent || r.failed) {
+            await logSystemEvent(supabase, { level: r.failed ? 'warn' : 'info', source: 'cron-social-due', method: 'GET', path: '/api/admin/data', status_code: 200, message: `Posts sociaux : ${r.sent} publié(s), ${r.failed} échec(s)`, details: r });
+          }
+          return res.status(200).json({ success: true, ...r });
         } catch(e) {
           return res.status(200).json({ success: false, error: e.message });
         }
@@ -4084,6 +4101,23 @@ module.exports = async (req, res) => {
             await sbSocialList.from('social_posts').update({ statut: 'échec', error_message: e.message }).eq('id', post.id);
             return res.status(502).json({ error: e.message });
           }
+        }
+        // Marquer comme publié SANS renvoyer (cas d'un post deja en ligne via Make.com)
+        if (body.action === 'mark-published' && body.id) {
+          const { error } = await sbSocialList.from('social_posts')
+            .update({ statut: 'envoyé', sent_at: new Date().toISOString() }).eq('id', body.id);
+          if (error) return res.status(500).json({ error: error.message });
+          return res.status(200).json({ success: true });
+        }
+        // Archiver / desarchiver un post publie
+        if (body.action === 'set-archived' && body.id) {
+          const { error } = await sbSocialList.from('social_posts')
+            .update({ archived: body.archived === true }).eq('id', body.id);
+          if (error) {
+            if (error.code === '42703') return res.status(400).json({ error: 'Migration archived (social_posts) requise' });
+            return res.status(500).json({ error: error.message });
+          }
+          return res.status(200).json({ success: true });
         }
         return res.status(400).json({ error: 'Action inconnue' });
       }
