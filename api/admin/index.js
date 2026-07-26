@@ -3841,15 +3841,17 @@ module.exports = async (req, res) => {
       const BREVO_API_KEY = process.env.BREVO_API_KEY;
       if (!BREVO_API_KEY) return res.status(500).json({ error: 'BREVO_API_KEY non configurée' });
 
-      // Récupérer les 20 dernières campagnes envoyées (les statistiques sont
-      // incluses par défaut dans la réponse — le paramètre statistics=...
-      // provoquait des 503 côté Brevo).
-      let campRes = await fetch('https://api.brevo.com/v3/emailCampaigns?status=sent&limit=20&sort=desc', {
+      // Récupérer les 20 dernières campagnes envoyées avec leurs statistiques.
+      // IMPORTANT : depuis une évolution de l'API Brevo, les statistiques ne sont
+      // PLUS incluses par défaut — il faut explicitement demander statistics=globalStats,
+      // sinon chaque campagne revient avec 0 délivré / 0% partout (bug corrigé ici).
+      let campRes = await fetch('https://api.brevo.com/v3/emailCampaigns?status=sent&limit=20&sort=desc&statistics=globalStats', {
         headers: { 'api-key': BREVO_API_KEY }
       });
       if (!campRes.ok) {
-        // Nouvelle tentative minimale (certains paramètres combinés déclenchent des 5xx transitoires)
-        campRes = await fetch('https://api.brevo.com/v3/emailCampaigns?status=sent', {
+        // Repli : on retire limit/sort (source d'anciennes 503 transitoires) mais on
+        // GARDE statistics=globalStats, sans quoi les chiffres resteraient à zéro.
+        campRes = await fetch('https://api.brevo.com/v3/emailCampaigns?status=sent&statistics=globalStats', {
           headers: { 'api-key': BREVO_API_KEY }
         });
       }
