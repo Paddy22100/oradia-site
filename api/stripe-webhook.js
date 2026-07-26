@@ -127,6 +127,7 @@ async function sendToreSubscriptionEmail({ toEmail, toName, tempPassword, plan }
           <p style="margin:0 0 16px;color:#c8c0a8;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.55;font-family:Georgia,serif;">Fondateur d'Oradia</p>
           <p style="margin:0 0 12px;text-align:center;"><span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4));vertical-align:middle;"></span><span style="display:inline-block;width:5px;height:5px;background:#d4af37;border-radius:50%;opacity:0.45;vertical-align:middle;margin:0 8px;"></span><span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent);vertical-align:middle;"></span></p>
           <a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-size:13px;letter-spacing:0.08em;font-family:Georgia,serif;">oradia.fr</a>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:16px auto 0;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td></tr></table>
         </td></tr>
       </table>
     </td></tr>
@@ -295,6 +296,7 @@ async function sendSubscriptionEmail(toEmail, toName, type) {
 <p style="margin:0 0 16px;color:#c8c0a8;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.55;font-family:Georgia,serif;">Fondateur d'Oradia</p>
 <p style="margin:0 0 12px;text-align:center;"><span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4));vertical-align:middle;"></span><span style="display:inline-block;width:5px;height:5px;background:#d4af37;border-radius:50%;opacity:0.45;vertical-align:middle;margin:0 8px;"></span><span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent);vertical-align:middle;"></span></p>
 <a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-size:13px;letter-spacing:0.08em;font-family:Georgia,serif;">oradia.fr</a>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:16px auto 0;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td></tr></table>
 </td></tr>
 </table></td></tr></table></body></html>`;
 
@@ -312,11 +314,26 @@ async function sendSubscriptionEmail(toEmail, toName, type) {
     });
 }
 
+// Extrait l'ID d'abonnement d'une facture ou d'un objet abonnement, en gérant
+// à la fois l'ancien format (`invoice.subscription`, racine) et le nouveau
+// (API Stripe récente : `invoice.parent.subscription_details.subscription`,
+// ou au niveau des lignes de facture). Le champ racine `invoice.subscription`
+// a été retiré des versions d'API récentes.
+function getSubscriptionIdFromObject(object) {
+    if (!object) return null;
+    if (object.object === 'subscription' && object.id) return object.id;
+    const fromRoot = object.subscription;
+    const fromParent = object.parent?.subscription_details?.subscription;
+    const line = Array.isArray(object.lines?.data) ? object.lines.data[0] : null;
+    const fromLine = line?.subscription
+        || line?.parent?.subscription_item_details?.subscription
+        || line?.subscription_details?.subscription;
+    const id = fromRoot || fromParent || fromLine || null;
+    return (typeof id === 'string' ? id : id?.id) || null;
+}
+
 async function findToreSubscriptionRow(stripe, supabase, object) {
-    const subscriptionId =
-        object?.subscription ||
-        (object?.object === 'subscription' ? object.id : null) ||
-        null;
+    const subscriptionId = getSubscriptionIdFromObject(object);
     const customerId = object?.customer
         ? (typeof object.customer === 'string' ? object.customer : object.customer.id)
         : null;
@@ -371,13 +388,14 @@ async function processEvent(event) {
 
             // Ne traiter que les factures de renouvellement d'abonnement
             // (la toute première facture est déjà gérée via checkout.session.completed)
-            const isSubscriptionInvoice = !!invoice.subscription;
+            const invSubId = getSubscriptionIdFromObject(invoice);
+            const isSubscriptionInvoice = !!invSubId;
             if (!isSubscriptionInvoice) break;
             if (invoice.billing_reason === 'subscription_create') break;
 
             const row = await findToreSubscriptionRow(stripe, supabase, invoice);
             if (!row || !row.email) {
-                console.error('[webhook] invoice.payment_succeeded : abonnement introuvable, sub:', invoice.subscription);
+                console.error('[webhook] invoice.payment_succeeded : abonnement introuvable, sub:', invSubId);
                 break;
             }
 
@@ -389,7 +407,7 @@ async function processEvent(event) {
                 .update({
                     status: 'active',
                     expires_at: newExpireAt.toISOString(),
-                    stripe_subscription_id: invoice.subscription || null,
+                    stripe_subscription_id: invSubId || null,
                     stripe_customer_id: invoice.customer || null,
                     updated_at: new Date().toISOString()
                 })
@@ -419,7 +437,7 @@ async function processEvent(event) {
             const stripe = getStripeClient();
             const supabase = getSupabaseClient();
             const invoice = event.data.object;
-            if (!invoice.subscription) break;
+            if (!getSubscriptionIdFromObject(invoice)) break;
 
             const row = await findToreSubscriptionRow(stripe, supabase, invoice);
             if (!row || !row.email) break;
@@ -1023,6 +1041,7 @@ async function handleCalWebhook(req, res) {
           <p style="margin:0 0 16px;color:#c8c0a8;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.55;font-family:Georgia,serif;">Fondateur d'Oradia</p>
           <p style="margin:0 0 12px;text-align:center;"><span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4));vertical-align:middle;"></span><span style="display:inline-block;width:5px;height:5px;background:#d4af37;border-radius:50%;opacity:0.45;vertical-align:middle;margin:0 8px;"></span><span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent);vertical-align:middle;"></span></p>
           <a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-size:13px;letter-spacing:0.08em;font-family:Georgia,serif;">oradia.fr</a>
+          <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:16px auto 0;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td></tr></table>
         </td></tr>
       </table>
     </td></tr>
