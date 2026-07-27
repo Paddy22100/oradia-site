@@ -157,11 +157,14 @@
       };
       const RESONANCE_LABELS = { fort: 'Fortement', plutot_oui: 'Plutôt oui', peu: 'Peu', non: 'Pas du tout' };
 
-      fetch('/api/admin/synchronicity-public')
+      function loadEtudeData(isFirstLoad) {
+        fetch('/api/admin/synchronicity-public', { cache: 'no-store' })
         .then(r => r.json())
         .then(res => {
-          document.getElementById('etude-loading').classList.add('hidden');
-          document.getElementById('etude-content').classList.remove('hidden');
+          if (isFirstLoad) {
+            document.getElementById('etude-loading').classList.add('hidden');
+            document.getElementById('etude-content').classList.remove('hidden');
+          }
           const d = res.data || {};
 
           document.getElementById('stat-total').textContent = d.total || 0;
@@ -200,8 +203,16 @@
               </div>`).join('');
         })
         .catch(() => {
-          document.getElementById('etude-loading').innerHTML = '<p class="text-light-gold/40 text-sm">Impossible de charger les données pour le moment.</p>';
+          if (isFirstLoad) {
+            document.getElementById('etude-loading').innerHTML = '<p class="text-light-gold/40 text-sm">Impossible de charger les données pour le moment.</p>';
+          }
         });
+      }
+
+      loadEtudeData(true);
+      // Rafraîchit les chiffres en temps réel tant que la page reste ouverte,
+      // sans rechargement (silencieux — ne réaffiche pas le spinner de chargement).
+      setInterval(() => loadEtudeData(false), 2 * 60 * 1000);
     })();
   </script>
 </body>
