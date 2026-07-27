@@ -2293,6 +2293,9 @@ async function handleData(req, res) {
     const guidances30d   = guidanceRows.filter(r => now - new Date(r.created_at).getTime() < day30);
 
     const preordersTotal  = sumPreorders(paidPreorderRows);
+    // Part "livraison" des précommandes payées : cette somme est fléchée vers l'affranchissement,
+    // pas disponible pour financer la fabrication — on la retire pour obtenir la vraie cagnotte.
+    const preordersShippingTotal = paidPreorderRows.reduce((s, r) => s + ((parseInt(r.shipping_price_cents, 10) || 0) / 100), 0);
     const donorsTotal     = sumDonors(donorRows);
     const globalTotal     = preordersTotal + donorsTotal + singleDrawTotal + guidancesTotal + subscriptionsTotal;
     const totalContacts   = paidPreorderRows.length + donorRows.length + waitlistRows.length;
@@ -2301,6 +2304,9 @@ async function handleData(req, res) {
     // Frais Stripe estimés : 1,5% + 0,25€/transaction (cartes européennes)
     const stripeFee     = (total, count) => Math.max(0, total * 0.015 + 0.25 * count);
     const preordersNet  = preordersTotal  - stripeFee(preordersTotal,  paidPreorderRows.length);
+    // Cagnotte réellement disponible pour lancer la fabrication : net de frais Stripe
+    // ET hors part livraison (qui doit repartir en frais de port, pas financer la fabrication).
+    const preordersCagnotteFabrication = Math.max(0, preordersNet - preordersShippingTotal);
     const donorsNet     = donorsTotal     - stripeFee(donorsTotal,     donorRows.length);
     const singleDrawNet      = singleDrawTotal      - stripeFee(singleDrawTotal,      singleDrawCount);
     const guidancesNet       = guidancesTotal       - stripeFee(guidancesTotal,       guidanceRows.length);
@@ -2333,6 +2339,8 @@ async function handleData(req, res) {
           oraclesCount,
           total:        preordersTotal,
           net:          preordersNet,
+          shippingTotal:          preordersShippingTotal,
+          cagnotteFabrication:    preordersCagnotteFabrication,
           noEmail:      paidPreorderRows.filter(r => !r.email).length,
           averageBasket,
           abandoned:    abandonedPreorderRows.length
@@ -4635,7 +4643,8 @@ Réponds en français, sans tiret long, format markdown compact.`
         if (typeof count === 'number') totalTirages = count;
       } catch (_) {}
 
-      res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=1800');
+      // Pas de cache : la page publique de l'étude doit refléter les données en temps réel.
+      res.setHeader('Cache-Control', 'no-store');
       return res.status(200).json({
         success: true,
         totalTirages,
