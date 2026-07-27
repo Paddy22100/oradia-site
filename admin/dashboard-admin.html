@@ -7396,7 +7396,7 @@
                     <td class="px-5 py-3 text-light-gold/90 text-xs">${s.email || '—'}</td>
                     <td class="px-5 py-3 text-light-gold/75 text-xs">${s.full_name || '—'}</td>
                     <td class="px-5 py-3">${statusBadge}</td>
-                    <td class="px-5 py-3 text-light-gold/60 text-xs">${s.last_draw_date || '—'}</td>
+                    <td class="px-5 py-3 text-light-gold/60 text-xs">${s.real_last_draw ? new Date(s.real_last_draw).toLocaleDateString('fr-FR') : '—'}</td>
                     <td class="px-5 py-3 text-light-gold/60 text-xs">${s.expires_at ? new Date(s.expires_at).toLocaleDateString('fr-FR') : '<span class="text-light-gold/40">Illimité</span>'}</td>
                     <td class="px-5 py-3">
                         <div class="flex gap-2">
@@ -7464,7 +7464,7 @@
                 const fmtEur = (v) => v == null ? '<span class="text-gold/20">—</span>' : `${v.toFixed(2).replace('.', ',')} €`;
                 const firstPaymentCell = stripeId ? fmtEur(s.first_payment_eur) : '<span class="text-gold/20">—</span>';
                 const totalPaidCell = stripeId ? fmtEur(s.total_paid_eur) : '<span class="text-gold/20">—</span>';
-                const lastDraw  = s.last_draw_date || '—';
+                const lastDraw  = s.real_last_draw ? new Date(s.real_last_draw).toLocaleDateString('fr-FR') : '—';
                 const drawCount = s.daily_draw_count != null ? s.daily_draw_count : '—';
                 const emailEsc  = (s.email || '').replace(/'/g, "\\'");
                 return `

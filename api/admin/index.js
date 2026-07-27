@@ -1647,6 +1647,23 @@ async function handleData(req, res) {
         } catch (_) { /* Stripe indisponible : les colonnes Promo/Payé afficheront juste "?" */ }
       }
 
+      // "Dernier tirage" réel, calculé depuis la table tirages (via la même RPC que
+      // "Voir les tirages"), pour TOUS les abonnés — payants ET gratuits. Le champ
+      // last_draw_date de tore_subscriptions n'est renseigné que pour le plan
+      // "découverte" (limite 1/jour) et reste vide pour tous les autres, donnant
+      // l'impression à tort qu'ils n'ont jamais tiré. Plafonné et parallélisé.
+      const DRAW_CHECK_CAP = 100;
+      const drawTargets = rows.filter(r => r.email).slice(0, DRAW_CHECK_CAP);
+      await Promise.all(drawTargets.map(async (r) => {
+        try {
+          const { data: tirages } = await supabase.rpc('admin_get_tirages_by_email', { p_email: r.email });
+          if (Array.isArray(tirages) && tirages.length) {
+            const latest = tirages.reduce((a, b) => (new Date(a.created_at) > new Date(b.created_at) ? a : b));
+            r.real_last_draw = latest.created_at;
+          }
+        } catch (_) { /* RPC indisponible : on retombe sur last_draw_date (souvent vide hors plan découverte) */ }
+      }));
+
       const totalPages = Math.ceil((count || 0) / limit);
       return res.status(200).json({
         success: true,
