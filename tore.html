@@ -6511,9 +6511,15 @@ function showArrowForStep(stepIndex, isMatch) {
     const qMarks = (s.match(/\?/g) || []).length;
     if (qMarks >= 2) return true;
     // NB : \b ne fonctionne pas avec les caractères accentués en JS, d'où les (?:\s|$)
-    const re = /(^|[,;.?]\s*|\s(?:et|ou)\s+)(pourquoi\b|comment\b|est[- ]ce que|quand\b|où(?:\s|$)|qui\s|quelles?\s|quels?\s|combien\b|à quoi(?:\s|$)|vers quoi(?:\s|$)|qu'est[- ]ce)/g;
+    // "qui" est volontairement exclu de cette liste : après une virgule, "et" ou "ou",
+    // c'est presque toujours un pronom relatif dans un récit ("...et qui est mort...")
+    // et non une nouvelle question — il est traité séparément ci-dessous.
+    const re = /(^|[,;.?]\s*|\s(?:et|ou)\s+)(pourquoi\b|comment\b|est[- ]ce que|quand\b|où(?:\s|$)|quelles?\s|quels?\s|combien\b|à quoi(?:\s|$)|vers quoi(?:\s|$)|qu'est[- ]ce)/g;
     let count = 0;
     while (re.exec(s)) count++;
+    // "Qui" n'est compté comme amorce interrogative que s'il ouvre la phrase
+    // (ex. "Qui suis-je ?"), jamais en milieu de phrase où il est quasi toujours relatif.
+    if (/^qui\s/.test(s)) count++;
     return count >= 2;
   }
 
