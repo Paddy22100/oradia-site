@@ -206,7 +206,15 @@
             <span class="text-sm sm:text-base">Accéder aux précommandes</span>
           </a>
         </div>
-        
+
+        <!-- Preuve sociale : résonance immédiate moyenne (affichée seulement si assez de données) -->
+        <div id="resonance-social-proof" style="display:none;" class="mt-2">
+          <span style="display:inline-flex;align-items:center;gap:8px;background:rgba(10,25,47,0.6);border:1px solid rgba(212,175,55,0.25);border-radius:50px;padding:8px 18px;">
+            <i class="fas fa-star" style="color:rgba(212,175,55,0.75);font-size:12px;"></i>
+            <span id="resonance-social-proof-text" style="color:rgba(245,231,161,0.8);font-family:'Cormorant Garamond',Georgia,serif;font-size:13.5px;letter-spacing:0.02em;"></span>
+          </span>
+        </div>
+
       </div>
     </div>
   </section>
@@ -695,6 +703,25 @@
               </div>
             </div>`).join('');
           grid.insertAdjacentHTML('afterbegin', cardsHtml);
+        })
+        .catch(() => {});
+    })();
+  </script>
+
+  <script>
+    // Preuve sociale : moyenne de résonance immédiate — affichée seulement à partir
+    // d'un échantillon suffisant pour ne pas paraître fabriquée avec peu de données.
+    (function() {
+      const MIN_SAMPLE = 20;
+      fetch('/api/admin/synchronicity-public')
+        .then(r => r.json())
+        .then(res => {
+          const ri = res.resonanceImmediate || {};
+          if (ri.avgScore != null && ri.total >= MIN_SAMPLE) {
+            document.getElementById('resonance-social-proof-text').textContent =
+              `Résonance moyenne ressentie : ${ri.avgScore}/10 (${ri.total} lectures)`;
+            document.getElementById('resonance-social-proof').style.display = '';
+          }
         })
         .catch(() => {});
     })();

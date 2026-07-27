@@ -99,6 +99,22 @@
         </div>
       </div>
 
+      <!-- Résonance immédiate (distincte de l'étude des synchronicités) -->
+      <div class="mb-16">
+        <h2 class="cinzel text-xl sm:text-2xl font-bold gold-gradient mb-2">Résonance immédiate</h2>
+        <p class="text-light-gold/50 text-sm mb-6">Note donnée juste après la lecture, à chaud — « est-ce que cette analyse vous a parlé ? ». Différent des synchronicités ci-dessous, qui elles se mesurent dans les jours qui suivent.</p>
+        <div class="grid grid-cols-2 gap-4">
+          <div class="stat-card rounded-2xl p-6 text-center">
+            <p class="big-stat font-bold text-gold" id="stat-resonance-immediate">—</p>
+            <p class="text-light-gold/50 text-xs uppercase tracking-wider mt-2">Résonance moyenne / 10</p>
+          </div>
+          <div class="stat-card rounded-2xl p-6 text-center">
+            <p class="big-stat font-bold text-gold" id="stat-resonance-immediate-count">—</p>
+            <p class="text-light-gold/50 text-xs uppercase tracking-wider mt-2">Notes recueillies</p>
+          </div>
+        </div>
+      </div>
+
       <!-- Distribution des scores -->
       <div class="mb-16">
         <h2 class="cinzel text-xl sm:text-2xl font-bold gold-gradient mb-2">Intensité des synchronicités ressenties</h2>
@@ -169,6 +185,10 @@
 
           document.getElementById('stat-total').textContent = d.total || 0;
           document.getElementById('stat-avg').textContent = d.avgScore != null ? d.avgScore : '—';
+
+          const ri = res.resonanceImmediate || {};
+          document.getElementById('stat-resonance-immediate').textContent = ri.avgScore != null ? ri.avgScore : '—';
+          document.getElementById('stat-resonance-immediate-count').textContent = ri.total || 0;
 
           const resCounts = d.resonanceCounts || {};
           const resTotal = Object.values(resCounts).reduce((a, b) => a + b, 0);

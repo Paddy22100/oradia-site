@@ -702,6 +702,31 @@
             </div>
         </div>
 
+        <!-- Résonance immédiate : note à chaud, distincte de l'étude des synchronicités
+             (qui elle se mesure dans les jours suivants via le questionnaire post-fenêtre). -->
+        <div id="resonance-block" class="max-w-lg mx-auto mb-16 fade-in-up text-center" style="padding:28px 24px;background:rgba(5,20,40,0.55);border:1px solid rgba(212,175,55,0.25);border-radius:18px;">
+            <div id="resonance-form">
+                <p style="color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:19px;font-weight:600;margin:0 0 6px;">Cette lecture résonne-t-elle avec vous ?</p>
+                <p style="color:rgba(212,175,55,0.55);font-family:'Cormorant Garamond',Georgia,serif;font-size:13px;margin:0 0 20px;">De 1 (pas du tout) à 10 (totalement).</p>
+                <div style="display:flex;align-items:center;gap:14px;max-width:380px;margin:0 auto 8px;">
+                    <span style="color:rgba(212,175,55,0.4);font-family:Georgia,serif;font-size:12px;">1</span>
+                    <input id="resonance-slider" type="range" min="1" max="10" value="7" step="1"
+                        style="flex:1;accent-color:#d4af37;height:6px;cursor:pointer;">
+                    <span style="color:rgba(212,175,55,0.4);font-family:Georgia,serif;font-size:12px;">10</span>
+                </div>
+                <p style="color:#d4af37;font-family:'Cormorant Garamond',Georgia,serif;font-size:34px;font-weight:700;margin:8px 0 18px;" id="resonance-value">7</p>
+                <button id="resonance-submit-btn" onclick="submitResonanceImmediate()"
+                    style="background:linear-gradient(135deg,#d4af37,#f0c75e);color:#051428;border:none;border-radius:50px;padding:11px 32px;font-family:Georgia,serif;font-size:13.5px;font-weight:700;cursor:pointer;letter-spacing:0.03em;">
+                    Envoyer ma note
+                </button>
+            </div>
+            <div id="resonance-success" style="display:none;">
+                <p style="color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;font-weight:600;margin:0;">
+                    <i class="fas fa-check-circle" style="margin-right:6px;"></i>Merci, votre résonance a été enregistrée.
+                </p>
+            </div>
+        </div>
+
         <!-- Pastille "N tirages gratuits restants" — Palier 3 #19
              Affichée quand remaining >= 2, pour que l'utilisateur sache combien
              de tirages gratuits il lui reste sans attendre d'en être au dernier. -->
@@ -1866,6 +1891,48 @@
                 errEl.textContent = "L'activation a échoué. Veuillez réessayer.";
                 errEl.style.display = 'block';
             }
+        }
+
+        // ── Résonance immédiate ──
+        (function initResonanceSlider() {
+            const slider = document.getElementById('resonance-slider');
+            const valueEl = document.getElementById('resonance-value');
+            if (slider && valueEl) {
+                slider.addEventListener('input', () => { valueEl.textContent = slider.value; });
+            }
+        })();
+
+        async function submitResonanceImmediate() {
+            const slider = document.getElementById('resonance-slider');
+            const btn = document.getElementById('resonance-submit-btn');
+            const score = parseInt(slider.value, 10);
+            btn.disabled = true;
+            btn.textContent = 'Envoi…';
+
+            let userEmail = null;
+            try {
+                const sessStr = sessionStorage.getItem('oradia_session') || localStorage.getItem('oradia_session');
+                if (sessStr) { const s = JSON.parse(sessStr); userEmail = s.email || null; }
+            } catch (_) {}
+
+            const intention = sessionStorage.getItem('tore_intention') || '';
+            const cardsRaw = sessionStorage.getItem('tore_cards');
+            const cards = cardsRaw ? JSON.parse(cardsRaw) : [];
+
+            try {
+                await fetch('/api/fenetre/resonance', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        score, intention, cards,
+                        qrngSource: sessionStorage.getItem('tore_qrng_source') || 'unknown',
+                        email: userEmail
+                    })
+                });
+            } catch (_) { /* silencieux, ne bloque pas l'expérience */ }
+
+            document.getElementById('resonance-form').style.display = 'none';
+            document.getElementById('resonance-success').style.display = 'block';
         }
 
         function escapeClientHtml(text) {

@@ -217,6 +217,44 @@ async function handleSurvey(req, res) {
   return res.status(200).json({ success: true });
 }
 
+// ============ RÉSONANCE IMMÉDIATE ============
+// Note de 1 à 10 donnée juste après l'analyse du tirage — distincte de l'étude
+// des synchronicités (qui, elle, mesure ce qui est observé dans les jours suivants).
+// Anonyme, pas d'auth requise : même logique que l'activation de fenêtre.
+async function handleResonance(req, res) {
+  let body;
+  try {
+    if (req.body && typeof req.body === 'object') body = req.body;
+    else if (req.body && typeof req.body === 'string') body = JSON.parse(req.body);
+    else if (typeof req.json === 'function') body = await req.json();
+    else body = JSON.parse(await streamToString(req));
+  } catch {
+    return res.status(400).json({ success: false, message: 'Invalid JSON' });
+  }
+
+  const { score, intention, cards, qrngSource, email } = body;
+  const scoreInt = parseInt(score, 10);
+  if (!Number.isFinite(scoreInt) || scoreInt < 1 || scoreInt > 10) {
+    return res.status(400).json({ success: false, message: 'score requis (1 à 10)' });
+  }
+
+  const { error } = await supabase.from('resonance_immediate').insert({
+    score: scoreInt,
+    intention: (intention || '').slice(0, 2000),
+    cards: Array.isArray(cards) ? cards : [],
+    qrng_source: qrngSource === 'anu' ? 'anu' : 'fallback',
+    email: email || null,
+  });
+
+  if (error) {
+    // Migration pas encore exécutée : ne pas casser l'expérience utilisateur pour autant.
+    console.error('[fenetre/resonance] Supabase error:', error.message);
+    return res.status(200).json({ success: false, message: 'Non enregistré' });
+  }
+
+  return res.status(200).json({ success: true });
+}
+
 // ============ EMAIL TEMPLATES ============
 // Plus d'email d'activation - les données sont incluses dans l'email du tirage
 
@@ -435,6 +473,11 @@ export default async function handler(req, res) {
     if (path.includes('survey')) {
       if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
       return await handleSurvey(req, res);
+    }
+
+    if (path.includes('resonance')) {
+      if (req.method !== 'POST') return res.status(405).json({ success: false });
+      return await handleResonance(req, res);
     }
 
     // GET /api/fenetre/window?token=<uuid>
