@@ -1356,7 +1356,9 @@
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Email</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Nom</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Accès</th>
-                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider" title="Tarif promo 5€ le 1er mois appliqué ou non">Promo</th>
+                                <th class="px-5 py-4 text-center text-gold font-semibold text-xs uppercase tracking-wider" title="Tarif promo 5€ le 1er mois appliqué ou non">Promo</th>
+                                <th class="px-5 py-4 text-right text-gold font-semibold text-xs uppercase tracking-wider" title="Montant du premier prélèvement">1er paiement</th>
+                                <th class="px-5 py-4 text-right text-gold font-semibold text-xs uppercase tracking-wider" title="Total encaissé sur cet abonnement">Total payé</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Statut</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Dernier tirage</th>
                                 <th class="px-5 py-4 text-center text-gold font-semibold text-xs uppercase tracking-wider">Tirages/j</th>
@@ -7301,7 +7303,7 @@
             const status = document.getElementById('subStatusFilter')?.value || 'all';
             const plan   = document.getElementById('subPlanFilter')?.value || 'all';
             const tbody  = document.getElementById('subscriptionsTbody');
-            tbody.innerHTML = '<tr><td colspan="10" class="px-6 py-8 text-center text-gold/40"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="12" class="px-6 py-8 text-center text-gold/40"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</td></tr>';
             try {
                 const url = `/api/admin/data?section=subscriptions&page=${page}&limit=1000&status=${status}&plan=${plan}&q=${encodeURIComponent(q)}`;
                 const res = await adminFetch(url);
@@ -7378,7 +7380,7 @@
         function renderSubscriptions(subs, pagination) {
             const tbody = document.getElementById('subscriptionsTbody');
             if (!subs.length) {
-                tbody.innerHTML = '<tr><td colspan="10" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun abonnement</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="12" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun abonnement</td></tr>';
                 return;
             }
             tbody.innerHTML = subs.map(s => {
@@ -7398,10 +7400,13 @@
                 const promoBadge = !stripeId
                     ? '<span class="text-gold/20 text-xs">—</span>'
                     : s.promo_applied === true
-                        ? '<span class="bg-blue-500/15 text-blue-300 text-xs px-2 py-0.5 rounded-full" title="5€ le premier mois appliqué"><i class="fas fa-tag mr-1"></i>5€</span>'
+                        ? '<i class="fas fa-check-circle text-green-400" title="5€ le premier mois appliqué"></i>'
                         : s.promo_applied === false
-                            ? '<span class="bg-white/5 text-light-gold/40 text-xs px-2 py-0.5 rounded-full" title="Plein tarif dès le premier mois">8€</span>'
+                            ? '<i class="fas fa-times-circle text-red-400/70" title="Plein tarif dès le premier mois — promo non appliquée"></i>'
                             : '<span class="text-gold/20 text-xs" title="Impossible de vérifier auprès de Stripe">?</span>';
+                const fmtEur = (v) => v == null ? '<span class="text-gold/20">—</span>' : `${v.toFixed(2).replace('.', ',')} €`;
+                const firstPaymentCell = stripeId ? fmtEur(s.first_payment_eur) : '<span class="text-gold/20">—</span>';
+                const totalPaidCell = stripeId ? fmtEur(s.total_paid_eur) : '<span class="text-gold/20">—</span>';
                 const lastDraw  = s.last_draw_date || '—';
                 const drawCount = s.daily_draw_count != null ? s.daily_draw_count : '—';
                 const emailEsc  = (s.email || '').replace(/'/g, "\\'");
@@ -7410,7 +7415,9 @@
                     <td class="px-5 py-4 text-light-gold text-sm">${s.email || '—'}</td>
                     <td class="px-5 py-4 text-light-gold/80 text-sm">${s.full_name || '—'}</td>
                     <td class="px-5 py-4">${accessBadge}${s.is_free ? ' <span class="bg-purple-500/20 text-purple-300 text-xs px-2 py-0.5 rounded-full ml-1" title="Exclu des recettes en comptabilité">Gratuit</span>' : ''}</td>
-                    <td class="px-5 py-4">${promoBadge}</td>
+                    <td class="px-5 py-4 text-center">${promoBadge}</td>
+                    <td class="px-5 py-4 text-right text-light-gold/80 text-sm">${firstPaymentCell}</td>
+                    <td class="px-5 py-4 text-right text-light-gold/80 text-sm font-semibold">${totalPaidCell}</td>
                     <td class="px-5 py-4">${statusBadge}</td>
                     <td class="px-5 py-4 text-light-gold/60 text-xs">${lastDraw}</td>
                     <td class="px-5 py-4 text-light-gold/60 text-xs text-center">${drawCount}</td>

@@ -1622,11 +1622,13 @@ async function handleData(req, res) {
         expires_at_fr: s.expires_at ? fmt(s.expires_at) : 'Illimité'
       }));
 
-      // Détecte si le code promo (5€ le 1er mois) a été appliqué, en vérifiant
-      // la toute première facture Stripe de chaque abonnement (une remise "once"
-      // disparaît de subscription.discount après le 1er mois — la facture, elle,
-      // garde la preuve pour toujours). Plafonné et parallélisé pour ne jamais
-      // ralentir la page ; dégrade en "inconnu" (null) si Stripe ne répond pas.
+      // Détecte si le code promo (5€ le 1er mois) a été appliqué, combien a été
+      // payé au 1er prélèvement, et le total encaissé sur cet abonnement — le tout
+      // à partir des mêmes factures Stripe (un seul appel par abonné). La remise
+      // "once" disparaît de subscription.discount après le 1er mois : on regarde
+      // donc la facture elle-même, qui garde la preuve pour toujours. Plafonné et
+      // parallélisé pour ne jamais ralentir la page ; dégrade en "inconnu" (null)
+      // si Stripe ne répond pas.
       const PROMO_CHECK_CAP = 100;
       if (process.env.STRIPE_SECRET_KEY) {
         try {
@@ -1638,9 +1640,11 @@ async function handleData(req, res) {
               if (!invoices.data.length) { r.promo_applied = null; return; }
               const first = invoices.data.reduce((a, b) => (a.created < b.created ? a : b));
               r.promo_applied = !!(first.discount) || !!(first.total_discount_amounts && first.total_discount_amounts.length);
+              r.first_payment_eur = Math.round((first.amount_paid || 0)) / 100;
+              r.total_paid_eur = Math.round(invoices.data.reduce((sum, inv) => sum + (inv.amount_paid || 0), 0)) / 100;
             } catch (_) { r.promo_applied = null; }
           }));
-        } catch (_) { /* Stripe indisponible : la colonne Promo affichera juste "?" */ }
+        } catch (_) { /* Stripe indisponible : les colonnes Promo/Payé afficheront juste "?" */ }
       }
 
       const totalPages = Math.ceil((count || 0) / limit);
