@@ -4643,12 +4643,32 @@ Réponds en français, sans tiret long, format markdown compact.`
         if (typeof count === 'number') totalTirages = count;
       } catch (_) {}
 
+      // Résonance immédiate : note 1-10 donnée juste après l'analyse (distincte des
+      // synchronicités observées dans les jours suivants). Dégrade en jeu vide si la
+      // migration resonance_immediate n'a pas encore été exécutée.
+      let resonanceImmediate = { total: 0, avgScore: null, distrib: [] };
+      try {
+        const { data: resRows, error: resErr } = await sbSync
+          .from('resonance_immediate')
+          .select('score');
+        if (!resErr && Array.isArray(resRows)) {
+          const total = resRows.length;
+          const avg = total > 0 ? (resRows.reduce((s, r) => s + (r.score || 0), 0) / total).toFixed(1) : null;
+          const distrib = Array.from({ length: 10 }, (_, i) => ({
+            score: i + 1,
+            count: resRows.filter(r => r.score === i + 1).length
+          }));
+          resonanceImmediate = { total, avgScore: avg, distrib };
+        }
+      } catch (_) {}
+
       // Pas de cache : la page publique de l'étude doit refléter les données en temps réel.
       res.setHeader('Cache-Control', 'no-store');
       return res.status(200).json({
         success: true,
         totalTirages,
-        data: { total: anuRows.length, avgScore, scoreDistrib, typeCounts, resonanceCounts }
+        data: { total: anuRows.length, avgScore, scoreDistrib, typeCounts, resonanceCounts },
+        resonanceImmediate
       });
     }
 
