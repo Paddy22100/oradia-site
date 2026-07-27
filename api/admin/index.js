@@ -1656,12 +1656,15 @@ async function handleData(req, res) {
       const drawTargets = rows.filter(r => r.email).slice(0, DRAW_CHECK_CAP);
       await Promise.all(drawTargets.map(async (r) => {
         try {
-          const { data: tirages } = await supabase.rpc('admin_get_tirages_by_email', { p_email: r.email });
+          const { data: tirages, error: tErr } = await supabase.rpc('admin_get_tirages_by_email', { p_email: r.email });
+          if (tErr) { r.real_last_draw_debug = `rpc_error: ${tErr.message}`; return; }
           if (Array.isArray(tirages) && tirages.length) {
             const latest = tirages.reduce((a, b) => (new Date(a.created_at) > new Date(b.created_at) ? a : b));
             r.real_last_draw = latest.created_at;
+          } else {
+            r.real_last_draw_debug = 'rpc_ok_mais_zero_tirage';
           }
-        } catch (_) { /* RPC indisponible : on retombe sur last_draw_date (souvent vide hors plan découverte) */ }
+        } catch (e) { r.real_last_draw_debug = `exception: ${e.message}`; }
       }));
 
       const totalPages = Math.ceil((count || 0) / limit);
