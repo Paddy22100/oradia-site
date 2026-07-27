@@ -1622,6 +1622,27 @@ async function handleData(req, res) {
         expires_at_fr: s.expires_at ? fmt(s.expires_at) : 'Illimité'
       }));
 
+      // Détecte si le code promo (5€ le 1er mois) a été appliqué, en vérifiant
+      // la toute première facture Stripe de chaque abonnement (une remise "once"
+      // disparaît de subscription.discount après le 1er mois — la facture, elle,
+      // garde la preuve pour toujours). Plafonné et parallélisé pour ne jamais
+      // ralentir la page ; dégrade en "inconnu" (null) si Stripe ne répond pas.
+      const PROMO_CHECK_CAP = 100;
+      if (process.env.STRIPE_SECRET_KEY) {
+        try {
+          const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+          const toCheck = rows.filter(r => r.stripe_subscription_id).slice(0, PROMO_CHECK_CAP);
+          await Promise.all(toCheck.map(async (r) => {
+            try {
+              const invoices = await stripe.invoices.list({ subscription: r.stripe_subscription_id, limit: 100 });
+              if (!invoices.data.length) { r.promo_applied = null; return; }
+              const first = invoices.data.reduce((a, b) => (a.created < b.created ? a : b));
+              r.promo_applied = !!(first.discount) || !!(first.total_discount_amounts && first.total_discount_amounts.length);
+            } catch (_) { r.promo_applied = null; }
+          }));
+        } catch (_) { /* Stripe indisponible : la colonne Promo affichera juste "?" */ }
+      }
+
       const totalPages = Math.ceil((count || 0) / limit);
       return res.status(200).json({
         success: true,

@@ -1356,6 +1356,7 @@
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Email</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Nom</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Accès</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider" title="Tarif promo 5€ le 1er mois appliqué ou non">Promo</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Statut</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Dernier tirage</th>
                                 <th class="px-5 py-4 text-center text-gold font-semibold text-xs uppercase tracking-wider">Tirages/j</th>
@@ -7300,7 +7301,7 @@
             const status = document.getElementById('subStatusFilter')?.value || 'all';
             const plan   = document.getElementById('subPlanFilter')?.value || 'all';
             const tbody  = document.getElementById('subscriptionsTbody');
-            tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-8 text-center text-gold/40"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="10" class="px-6 py-8 text-center text-gold/40"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</td></tr>';
             try {
                 const url = `/api/admin/data?section=subscriptions&page=${page}&limit=1000&status=${status}&plan=${plan}&q=${encodeURIComponent(q)}`;
                 const res = await adminFetch(url);
@@ -7377,7 +7378,7 @@
         function renderSubscriptions(subs, pagination) {
             const tbody = document.getElementById('subscriptionsTbody');
             if (!subs.length) {
-                tbody.innerHTML = '<tr><td colspan="9" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun abonnement</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun abonnement</td></tr>';
                 return;
             }
             tbody.innerHTML = subs.map(s => {
@@ -7392,6 +7393,15 @@
                 const accessBadge = stripeId
                     ? `<span class="bg-green-500/15 text-green-300 text-xs px-2 py-0.5 rounded-full" title="${stripeId}"><i class="fas fa-credit-card mr-1"></i>Stripe</span>`
                     : '<span class="bg-gold/15 text-gold/70 text-xs px-2 py-0.5 rounded-full" title="Accès activé manuellement"><i class="fas fa-key mr-1"></i>Manuel</span>';
+                // Promo 5€/1er mois : détectée côté serveur sur la 1ère facture Stripe.
+                // null/undefined = pas d'abonnement Stripe (manuel/gratuit) ou vérif impossible.
+                const promoBadge = !stripeId
+                    ? '<span class="text-gold/20 text-xs">—</span>'
+                    : s.promo_applied === true
+                        ? '<span class="bg-blue-500/15 text-blue-300 text-xs px-2 py-0.5 rounded-full" title="5€ le premier mois appliqué"><i class="fas fa-tag mr-1"></i>5€</span>'
+                        : s.promo_applied === false
+                            ? '<span class="bg-white/5 text-light-gold/40 text-xs px-2 py-0.5 rounded-full" title="Plein tarif dès le premier mois">8€</span>'
+                            : '<span class="text-gold/20 text-xs" title="Impossible de vérifier auprès de Stripe">?</span>';
                 const lastDraw  = s.last_draw_date || '—';
                 const drawCount = s.daily_draw_count != null ? s.daily_draw_count : '—';
                 const emailEsc  = (s.email || '').replace(/'/g, "\\'");
@@ -7400,6 +7410,7 @@
                     <td class="px-5 py-4 text-light-gold text-sm">${s.email || '—'}</td>
                     <td class="px-5 py-4 text-light-gold/80 text-sm">${s.full_name || '—'}</td>
                     <td class="px-5 py-4">${accessBadge}${s.is_free ? ' <span class="bg-purple-500/20 text-purple-300 text-xs px-2 py-0.5 rounded-full ml-1" title="Exclu des recettes en comptabilité">Gratuit</span>' : ''}</td>
+                    <td class="px-5 py-4">${promoBadge}</td>
                     <td class="px-5 py-4">${statusBadge}</td>
                     <td class="px-5 py-4 text-light-gold/60 text-xs">${lastDraw}</td>
                     <td class="px-5 py-4 text-light-gold/60 text-xs text-center">${drawCount}</td>
@@ -9840,7 +9851,9 @@
 
             // PARTIE 4 — HONNÊETÉ
             H('4. Limites et honnêteté scientifique');
-            P('Ce domaine (rétrocausalité, psychokinèse rétroactive) est très contesté et son historique de réplication est mauvais (ex. Bem, 2011, non répliqué). Le résultat le plus probable est nul — et c\'est un résultat valable. Un écart, même significatif, ne « prouverait » rien à lui seul : seule une réplication indépendante, sur un protocole pré-enregistré comme celui-ci, aurait une valeur probante. Sous la physique standard, les trois bits sont indépendants et se correspondent à 50 %, quel que soit l\'ordre temporel. Ce document et ses chiffres sont générés automatiquement et sans sélection : ils reflètent l\'état réel de l\'étude à la date indiquée.', { after: 2 });
+            P('Ce domaine (rétrocausalité, psychokinèse rétroactive) est très contesté et son historique de réplication est mauvais (ex. Bem, 2011, non répliqué). Le résultat le plus probable est nul — et c\'est un résultat valable. Un écart, même significatif, ne « prouverait » rien à lui seul : seule une réplication indépendante, sur un protocole pré-enregistré comme celui-ci, aurait une valeur probante. Sous la physique standard, les trois bits sont indépendants et se correspondent à 50 %, quel que soit l\'ordre temporel. Ce document et ses chiffres sont générés automatiquement et sans sélection : ils reflètent l\'état réel de l\'étude à la date indiquée.', { after: 4 });
+
+            P(`© Oradia — Rudy Boucheron, ${new Date().getFullYear()}. Protocole et méthodologie originaux.`, { size: 8, style: 'italic', color: [150, 150, 160], after: 0 });
 
             doc.save(`oradia-protocole-retrocausalite-${new Date().toISOString().slice(0, 10)}.pdf`);
         }
