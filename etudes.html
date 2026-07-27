@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+  <title>Les études Oradia — deux expériences ouvertes en cours</title>
+  <meta name="description" content="Oradia mène deux études indépendantes et publiques : les synchronicités ressenties après un tirage, et une expérience statistique sur la rétrocausalité quantique. Découvrez ce qui les distingue." />
+  <link rel="canonical" href="https://oradia.fr/etudes.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Les études Oradia — deux expériences ouvertes en cours" />
+  <meta property="og:description" content="Deux études indépendantes, ouvertes et transparentes : les synchronicités ressenties, et le pari à l'envers sur la rétrocausalité." />
+  <meta property="og:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg" />
+  <meta property="og:locale" content="fr_FR" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="responsive.css">
+  <script src="security.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#0a192f', 'gold': '#d4af37', 'light-gold': '#f5e7a1',
+            'dark-blue': '#051428', 'celtic-blue': '#1a365d'
+          },
+          fontFamily: { 'cormorant': ['Cormorant Garamond', 'serif'], 'cinzel': ['Cinzel', 'serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background:
+        radial-gradient(ellipse 90% 45% at 50% 0%, rgba(212,175,55,0.08), transparent 60%),
+        radial-gradient(ellipse 60% 40% at 85% 110%, rgba(26,54,93,0.5), transparent 65%),
+        #0a192f;
+      background-attachment: fixed;
+    }
+    .gold-gradient { background: linear-gradient(135deg,#d4af37,#f4e4c1); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .gold-divider { width: 60px; height: 1px; background: linear-gradient(90deg,transparent,#d4af37,transparent); }
+    .stat-card { background: linear-gradient(145deg, rgba(26,54,93,0.55), rgba(5,20,40,0.8)); border: 1px solid rgba(212,175,55,0.28); box-shadow: 0 8px 30px rgba(0,0,0,0.35); transition: transform .3s ease, box-shadow .3s ease; }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(212,175,55,0.12); }
+    .etude-hero { position: relative; border-radius: 24px; overflow: hidden; border: 1px solid rgba(212,175,55,0.25); box-shadow: 0 0 60px rgba(212,175,55,0.12), 0 16px 48px rgba(0,0,0,0.5); }
+    .etude-hero-bg { position: absolute; inset: 0; background-image: url('/images/oradia-hero-4k.webp'); background-size: cover; background-position: center; }
+    .etude-hero-veil { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,25,47,0.72) 0%, rgba(5,20,40,0.9) 100%); }
+  </style>
+</head>
+<body class="bg-night-blue text-light-gold font-cormorant">
+
+  <div id="header-placeholder"></div>
+
+  <main class="px-4 sm:px-6 lg:px-8 py-12 sm:py-16 max-w-4xl mx-auto">
+
+    <!-- Bandeau visuel d'en-tête -->
+    <div class="etude-hero mb-14 sm:mb-16">
+      <div class="etude-hero-bg"></div>
+      <div class="etude-hero-veil"></div>
+      <div class="relative z-10 text-center px-6 py-16 sm:py-20">
+        <p class="text-gold/60 text-xs uppercase tracking-[0.35em] mb-5">Deux études ouvertes, en cours</p>
+        <h1 class="cinzel text-3xl sm:text-4xl md:text-5xl font-bold mb-5 gold-gradient" style="text-shadow:0 0 40px rgba(212,175,55,0.25);">Deux études, deux questions différentes</h1>
+        <div class="gold-divider mx-auto mb-6"></div>
+        <p class="text-light-gold/85 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
+          Oradia mène en parallèle deux expériences indépendantes, toutes deux fondées sur le même générateur de nombres <strong class="text-gold">quantique vérifiable</strong> (ANU QRNG). Elles ne posent pas la même question, ni de la même façon&nbsp;: voici laquelle regarder selon ce qui vous intéresse.
+        </p>
+      </div>
+    </div>
+
+    <!-- Les deux études -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+
+      <div class="stat-card rounded-2xl p-6 sm:p-8 flex flex-col">
+        <p class="text-gold text-sm uppercase tracking-wider mb-3"><i class="fas fa-sparkles mr-2 opacity-70"></i>Étude 1&nbsp;: Ressenti</p>
+        <h2 class="cinzel text-lg sm:text-xl font-bold text-light-gold mb-3">L'étude des synchronicités</h2>
+        <p class="text-light-gold/70 text-sm leading-relaxed mb-4 flex-1">
+          Après un tirage, on vous demande, dans les jours qui suivent et sans obligation, ce que vous avez observé&nbsp;: coïncidences, rencontres, signes. C'est une mesure du <strong class="text-light-gold">ressenti rapporté</strong>, recueillie par questionnaire.
+        </p>
+        <a href="/etude-synchronicites.html" class="inline-flex items-center justify-center gap-2 bg-gold/10 border border-gold/40 text-gold font-semibold text-sm py-2.5 px-5 rounded-full hover:bg-gold/20 transition-all">
+          Découvrir l'étude <i class="fas fa-arrow-right text-xs"></i>
+        </a>
+      </div>
+
+      <div class="stat-card rounded-2xl p-6 sm:p-8 flex flex-col">
+        <p class="text-gold text-sm uppercase tracking-wider mb-3"><i class="fas fa-atom mr-2 opacity-70"></i>Étude 2&nbsp;: Statistique</p>
+        <h2 class="cinzel text-lg sm:text-xl font-bold text-light-gold mb-3">Le passé et le futur influencent-ils le présent&nbsp;?</h2>
+        <p class="text-light-gold/70 text-sm leading-relaxed mb-4 flex-1">
+          Aucun ressenti à donner ici&nbsp;: on compare directement des <strong class="text-light-gold">nombres quantiques</strong> entre eux, un tirage au hasard scellé avant, et un autre après, pour voir s'ils se ressemblent plus que le pur hasard ne le permettrait.
+        </p>
+        <a href="/etude-retrocausalite.html" class="inline-flex items-center justify-center gap-2 bg-gold/10 border border-gold/40 text-gold font-semibold text-sm py-2.5 px-5 rounded-full hover:bg-gold/20 transition-all">
+          Découvrir l'étude <i class="fas fa-arrow-right text-xs"></i>
+        </a>
+      </div>
+
+    </div>
+
+    <p class="text-light-gold/50 text-sm mb-14 max-w-2xl mx-auto italic text-center">
+      Les deux études sont ouvertes, transparentes et publiées telles quelles, y compris si les résultats ne dépassent jamais le hasard, ce qui reste, à ce jour, le résultat le plus probable pour l'une comme pour l'autre.
+    </p>
+
+    <!-- CTA -->
+    <div class="text-center mt-8">
+      <a href="/tore.html" class="inline-flex items-center gap-2 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-8 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300">
+        <i class="fas fa-moon"></i> Faire un tirage et contribuer aux études
+      </a>
+    </div>
+
+    <p class="text-center text-light-gold/25 text-xs mt-10">© Oradia — Rudy Boucheron, <span id="copyright-year"></span>. Études et méthodologies originales.</p>
+    <script>document.getElementById('copyright-year').textContent = new Date().getFullYear();</script>
+
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="components/header-manager.js" defer></script>
+  <script src="components/footer-manager.js" defer></script>
+  <script src="js/page-tracker.js" defer></script>
+</body>
+</html>
