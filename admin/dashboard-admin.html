@@ -2494,6 +2494,21 @@
                 <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-light-gold" id="ana-top-page">—</div><p class="text-gold/50 text-xs mt-1">Page la + visitée</p></div>
             </div>
 
+            <!-- Résumé newsletter — le détail complet vit dans Newsletter & Réseaux -->
+            <div class="stat-card rounded-2xl p-6 mb-6">
+                <div class="flex items-center justify-between gap-3 mb-1 flex-wrap">
+                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-envelope-open-text text-gold/60"></i> Newsletter — Impact</h4>
+                    <button onclick="showTab('newsletter'); if (typeof nlShowTab === 'function') nlShowTab('sent');" class="text-xs text-gold/60 hover:text-gold transition underline underline-offset-2">Voir le détail →</button>
+                </div>
+                <p class="text-gold/40 text-xs mb-4 italic">Moyennes calculées sur les campagnes envoyées chargées (Brevo).</p>
+                <div id="ana-newsletter-summary" class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="text-center"><div class="text-2xl font-bold text-teal-300" id="ana-nl-open">—</div><p class="text-gold/50 text-xs mt-1">Ouverture moy.</p></div>
+                    <div class="text-center"><div class="text-2xl font-bold text-blue-300" id="ana-nl-click">—</div><p class="text-gold/50 text-xs mt-1">Clic moy.</p></div>
+                    <div class="text-center"><div class="text-2xl font-bold text-gold" id="ana-nl-count">—</div><p class="text-gold/50 text-xs mt-1">Campagnes (période chargée)</p></div>
+                    <div class="text-center"><div class="text-sm font-semibold text-light-gold truncate" id="ana-nl-last" title="">—</div><p class="text-gold/50 text-xs mt-1">Dernière envoyée</p></div>
+                </div>
+            </div>
+
             <!-- Quota quantique ANU -->
             <div class="stat-card rounded-2xl p-6 mb-6">
                 <div class="flex items-center justify-between gap-3 mb-1 flex-wrap">
@@ -9726,6 +9741,31 @@
             doc.save(`oradia-protocole-retrocausalite-${new Date().toISOString().slice(0, 10)}.pdf`);
         }
 
+        // Résumé newsletter affiché dans Analytiques — même source que le détail
+        // complet de Newsletter & Réseaux (/api/admin/newsletter-stats), juste condensé.
+        async function loadNewsletterSummaryForAnalytics() {
+            const set = (id, v, title) => { const el = document.getElementById(id); if (el) { el.textContent = v; if (title !== undefined) el.title = title; } };
+            try {
+                const res = await adminFetch('/api/admin/newsletter-stats');
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.error || 'Erreur');
+                const campaigns = data.campaigns || [];
+                set('ana-nl-count', campaigns.length);
+                if (campaigns.length === 0) {
+                    set('ana-nl-open', '—'); set('ana-nl-click', '—'); set('ana-nl-last', 'Aucune campagne');
+                    return;
+                }
+                const avg = (arr) => Math.round((arr.reduce((s, v) => s + v, 0) / arr.length) * 10) / 10;
+                set('ana-nl-open', avg(campaigns.map(c => c.openRate || 0)) + '%');
+                set('ana-nl-click', avg(campaigns.map(c => c.clickRate || 0)) + '%');
+                const last = campaigns[0]; // déjà trié du plus récent au plus ancien par l'API
+                const lastLabel = last ? `${(last.sentDate || '').slice(0, 10)} · ${last.openRate}% ouv.` : '—';
+                set('ana-nl-last', lastLabel, last ? last.subject : '');
+            } catch (e) {
+                set('ana-nl-open', '—'); set('ana-nl-click', '—'); set('ana-nl-count', '—'); set('ana-nl-last', 'Erreur');
+            }
+        }
+
         async function loadQrngQuota() {
             const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
             try {
@@ -9778,6 +9818,7 @@
         async function loadAnalytics() {
             const range = document.getElementById('analytics-range')?.value || '7d';
             loadQrngQuota();
+            loadNewsletterSummaryForAnalytics();
             try {
                 const res = await adminFetch(`/api/admin/analytics?range=${range}`);
                 const data = await res.json();

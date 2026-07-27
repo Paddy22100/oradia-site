@@ -367,7 +367,7 @@
             const date = t.date ? new Date(t.date).toLocaleDateString('fr-FR', { weekday:'long', day:'numeric', month:'long', year:'numeric' }) : '—';
 
             const cartesBadgesHtml = t.cartes ? t.cartes.map(c =>
-                `<span style="display:inline-block;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.45);color:#8b6914;border-radius:6px;padding:5px 13px;font-size:13px;font-family:'Cormorant Garamond',serif;margin:3px;">${c}</span>`
+                `<span style="display:inline-block;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.45);color:#8b6914;border-radius:20px;padding:5px 14px;font-size:13px;font-family:'Cormorant Garamond',serif;margin:3px;">${c}</span>`
             ).join('') : '';
 
             const interpretationsSection = t.interpretations && t.interpretations.length ? `
@@ -390,7 +390,10 @@
                     </div>
                 </div>` : '';
 
-            // Analyse IA complète (texte brut de l'API Claude)
+            // Analyse IA complète (texte brut de l'API Claude). Toujours un état visible
+            // (jamais une disparition silencieuse) : soit l'analyse, soit un message honnête
+            // expliquant pourquoi elle est absente (tirage invité au moment du tirage, ou
+            // analyse pas encore générée).
             const analyseIaSection = t.analyseIa ? (() => {
                 // Convertir les titres Markdown ## en sections visuelles
                 const sections = t.analyseIa.split(/\n#{1,3}\s+/).filter(Boolean);
@@ -404,15 +407,33 @@
                 }
                 // Structure avec sections
                 return `<div class="hr"></div>` + sections.map((s, i) => {
-                    const lines = s.split('\n');
-                    const title = i === 0 ? 'Analyse de l\'Oracle' : lines[0].trim();
-                    const body = (i === 0 ? lines.join('\n') : lines.slice(1).join('\n')).trim();
+                    // Cas particulier : quand l'analyse commence DIRECTEMENT par "## Titre"
+                    // (sans texte avant), le split ci-dessus ne le détecte pas comme délimiteur
+                    // (il n'y a pas de \n devant) — le titre reste donc collé en tête du segment.
+                    // On l'extrait ici pour ne jamais le laisser fuir tel quel dans le corps.
+                    const leadingHeading = s.match(/^#{1,3}\s+(.+)/);
+                    let title, body;
+                    if (leadingHeading) {
+                        title = leadingHeading[1].trim();
+                        body = s.slice(leadingHeading[0].length).trim();
+                    } else if (i === 0) {
+                        title = 'Analyse de l\'Oracle';
+                        body = s.trim();
+                    } else {
+                        const lines = s.split('\n');
+                        title = lines[0].trim();
+                        body = lines.slice(1).join('\n').trim();
+                    }
                     return `<div style="margin-bottom:18px;padding:16px 20px;background:${i%2===0?'#fffdf6':'#f9f7f0'};border-left:3px solid #d4af37;border-radius:0 10px 10px 0;">
                         <p class="sl">${title}</p>
                         <p style="color:#2d2a1e;font-size:14px;line-height:1.85;">${body}</p>
                     </div>`;
                 }).join('');
-            })() : '';
+            })() : `<div class="hr"></div>
+                    <div style="padding:18px 20px;background:#faf8f2;border:1px dashed rgba(212,175,55,0.4);border-radius:12px;">
+                        <p class="sl">Analyse de l'Oracle</p>
+                        <p style="color:#6b6350;font-size:13.5px;line-height:1.8;font-style:italic;">Aucune analyse enregistrée pour ce tirage. Cela arrive quand le tirage a été effectué sans être connecté à ton espace membre, ou si l'analyse n'a pas été consultée jusqu'au bout au moment du tirage.</p>
+                    </div>`;
 
             const syntheseSection = t.synthese ? `
                 <div class="hr"></div>
@@ -439,21 +460,24 @@
             const html = `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="UTF-8">
 <title>Oracle Oradia — ${t.type || 'Tirage'}</title>
-<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;1,400&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
 <style>
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'Lora',Georgia,serif;background:#f4f0e8;color:#2d2a1e;padding:28px 16px;}
   .page{max-width:640px;margin:0 auto;}
-  .card{background:#fff;border-radius:0;overflow:hidden;box-shadow:0 6px 40px rgba(150,110,20,0.14);border:1px solid rgba(212,175,55,0.3);}
+  .card{background:#fff;border-radius:18px;overflow:hidden;box-shadow:0 10px 44px rgba(150,110,20,0.16);border:1px solid rgba(212,175,55,0.35);}
 
-  /* En-tête sombre — calqué sur le mail d'analyse */
-  .card-header{background:linear-gradient(150deg,#07142a 0%,#0a192f 60%,#112240 100%);padding:32px 36px 24px;text-align:center;}
+  /* En-tête sombre — même langage visuel que le mail de bienvenue */
+  .card-header{background:linear-gradient(150deg,#07142a 0%,#0a192f 60%,#112240 100%);padding:34px 36px 26px;text-align:center;}
   .logo-row{display:flex;align-items:center;justify-content:center;gap:14px;margin-bottom:18px;}
   .logo-row img{width:50px;height:50px;border-radius:50%;border:1.5px solid rgba(212,175,55,0.5);}
   .brand{font-size:28px;font-weight:700;letter-spacing:.32em;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;}
   .oracle-label{font-size:9.5px;color:rgba(212,175,55,0.45);letter-spacing:.45em;text-transform:uppercase;margin-top:3px;}
-  .header-divider{width:56px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:14px auto 16px;}
-  .header-tagline{font-size:12px;color:rgba(212,175,55,0.5);font-style:italic;letter-spacing:.04em;}
+  .header-tagline{font-size:12px;color:rgba(212,175,55,0.5);font-style:italic;letter-spacing:.04em;margin-top:16px;}
+
+  /* Séparateur pointillé or — identique au mail de bienvenue */
+  .dot-divider{position:relative;height:1px;margin:16px auto 0;width:120px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.5),transparent);}
+  .dot-divider::after{content:'';position:absolute;left:50%;top:50%;width:6px;height:6px;background:#d4af37;border-radius:50%;transform:translate(-50%,-50%);opacity:.7;}
 
   /* Bandeau méta — date, type, membre */
   .tirage-meta{background:#02061a;padding:14px 36px;display:flex;justify-content:space-between;align-items:center;}
@@ -462,15 +486,23 @@
   .tirage-member{font-size:11.5px;color:rgba(212,175,55,0.48);}
 
   /* Corps */
-  .card-body{padding:28px 36px;}
+  .card-body{padding:30px 36px;}
   .sl{font-family:'Cormorant Garamond',serif;font-size:10.5px;text-transform:uppercase;letter-spacing:.16em;color:#b8922e;margin-bottom:10px;font-weight:700;}
-  .hr{height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.22),transparent);margin:22px 0;}
-  .intention-box{padding:14px 18px;background:#fffbf0;border-left:3px solid #d4af37;border-radius:0 8px 8px 0;margin-bottom:20px;}
+  .hr{position:relative;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.3),transparent);margin:24px 0;}
+  .hr::after{content:'';position:absolute;left:50%;top:50%;width:6px;height:6px;background:#d4af37;border-radius:50%;transform:translate(-50%,-50%);opacity:.65;}
+  .intention-box{padding:14px 18px;background:#fffbf0;border-left:3px solid #d4af37;border-radius:0 10px 10px 0;margin-bottom:20px;}
   .intention-text{font-size:14.5px;font-style:italic;color:#3d3520;line-height:1.7;}
+  .card-body p{text-align:justify;}
+
+  /* Signature — identique au mail de bienvenue */
+  .signature{padding:26px 36px 8px;text-align:center;}
+  .signature-thanks{font-size:12px;color:#8a7550;font-style:italic;opacity:.8;margin-bottom:2px;}
+  .signature-name{font-size:40px;font-family:'Dancing Script',cursive;color:#b8922e;font-weight:700;line-height:1.1;}
+  .signature-title{font-size:10px;color:#8a7550;letter-spacing:.2em;text-transform:uppercase;opacity:.65;margin-top:2px;}
 
   /* Pied de page */
-  .card-footer{background:#07142a;padding:18px 36px;text-align:center;border-top:1px solid rgba(212,175,55,0.18);}
-  .card-footer p{font-size:10.5px;color:rgba(212,175,55,0.35);letter-spacing:.06em;}
+  .card-footer{background:#07142a;padding:16px 36px 18px;text-align:center;border-top:1px solid rgba(212,175,55,0.18);}
+  .card-footer p{font-size:10.5px;color:rgba(212,175,55,0.35);letter-spacing:.06em;text-align:center;}
 
   @media print{
     body{background:#fff;padding:0;}
@@ -481,7 +513,7 @@
 <div class="page">
   <div class="card">
 
-    <!-- En-tête — calqué sur mail d'analyse -->
+    <!-- En-tête -->
     <div class="card-header">
       <div class="logo-row">
         <img src="../images/logo-hd-v2.webp" alt="Oradia" onerror="this.style.display='none'">
@@ -490,8 +522,8 @@
           <div class="oracle-label">Oracle intérieur</div>
         </div>
       </div>
-      <div class="header-divider"></div>
       <p class="header-tagline">Révéler · Transmuter · Relier</p>
+      <div class="dot-divider"></div>
     </div>
 
     <!-- Bandeau méta -->
@@ -515,7 +547,7 @@
       ${cartesBadgesHtml ? `
         <div style="margin-bottom:20px;">
           <p class="sl">Cartes tirées</p>
-          <div style="display:flex;flex-wrap:wrap;gap:5px;">${cartesBadgesHtml}</div>
+          <div style="display:flex;flex-wrap:wrap;gap:6px;">${cartesBadgesHtml}</div>
         </div>` : ''}
 
       ${analyseIaSection}
@@ -524,6 +556,13 @@
       ${syntheseSection}
       ${observationSection}
 
+    </div>
+
+    <!-- Signature -->
+    <div class="signature">
+      <p class="signature-thanks">Avec gratitude,</p>
+      <p class="signature-name">Rudy</p>
+      <p class="signature-title">Fondateur d'Oradia</p>
     </div>
 
     <!-- Pied de page -->
