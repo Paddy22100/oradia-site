@@ -2298,6 +2298,13 @@
                     btn.style.cursor = 'default';
                     btn.style.pointerEvents = 'none';
                     window.oradiaTrackEvent?.('email_laisse');
+
+                    // Filet de sécurité : si la synchronisation de l'historique avait
+                    // échoué au moment de l'affichage (syncTirageToHistory), on a ici
+                    // les mêmes données sous la main (analysis/synthesis) — on retente,
+                    // pour que ce qui part par email soit aussi retrouvable dans
+                    // l'espace membre, pas seulement dans la boîte mail.
+                    if (analysis || synthesis) syncTirageToHistory({ analysis, synthesis });
                 } else {
                     throw new Error('Erreur serveur');
                 }

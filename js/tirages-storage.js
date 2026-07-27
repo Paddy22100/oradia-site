@@ -31,7 +31,8 @@
   }
 
   function isAuthenticated() {
-    return !!getAccessToken();
+    const sess = getSession();
+    return !!(sess && (sess.access_token || sess.refresh_token));
   }
 
   // Met à jour l'access_token (et refresh_token) dans les deux emplacements
@@ -72,6 +73,16 @@
     return null;
   }
 
+  // Renvoie un access_token utilisable : celui déjà en session, ou sinon
+  // (session avec refresh_token mais access_token absent/vidé) tente un
+  // renouvellement avant de renoncer — sans ça, une session qui n'a plus
+  // qu'un refresh_token valide échouerait à tort au premier essai.
+  async function getValidToken() {
+    const token = getAccessToken();
+    if (token) return token;
+    return refreshAccessToken();
+  }
+
   // ---- Stockage local (invités uniquement) ----
   function loadGuestTirages() {
     try { return JSON.parse(localStorage.getItem(GUEST_KEY) || '[]'); }
@@ -90,7 +101,7 @@
 
   // ---- API distante (membres connectés — Supabase + RLS) ----
   async function apiList() {
-    let token = getAccessToken();
+    let token = await getValidToken();
     if (!token) return [];
     try {
       let resp = await fetch(`${API_BASE}?action=list`, {
@@ -114,7 +125,7 @@
 
   // Retourne l'id du tirage enregistré (Supabase) en cas de succès, ou null sinon.
   async function apiSave(entry) {
-    let token = getAccessToken();
+    let token = await getValidToken();
     if (!token) return null;
     try {
       let resp = await fetch(`${API_BASE}?action=save`, {
@@ -144,7 +155,7 @@
   // Complète un tirage déjà enregistré (analyse IA, synthèse, fenêtre d'observation)
   // une fois ces données disponibles sur tore-analysis.html.
   async function apiUpdate(id, fields) {
-    let token = getAccessToken();
+    let token = await getValidToken();
     if (!token) return false;
     const body = JSON.stringify(Object.assign({ id }, fields));
     try {
