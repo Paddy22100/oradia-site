@@ -239,10 +239,11 @@
     /* Titres de section */
     .section-title {
       font-family: 'Cinzel', serif;
-      font-size: clamp(1.5rem, 3vw, 2.5rem);
+      font-size: clamp(1.15rem, 5vw, 2.5rem);
       font-weight: 700;
       color: #d4af37;
       letter-spacing: 0.05em;
+      text-wrap: balance;
     }
 
     /* Grille cartes */
@@ -395,9 +396,10 @@
     .analysis-card .card-header h3 {
       color: #d4af37 !important;
       font-family: 'Cinzel', serif;
-      font-size: 1.2rem;
+      font-size: clamp(1rem, 4vw, 1.2rem);
       font-weight: 700;
       letter-spacing: 0.06em;
+      text-wrap: balance;
     }
     .analysis-card .card-body {
       color: #f0ead6;
@@ -776,11 +778,11 @@
         <div class="max-w-lg mx-auto mb-16 fade-in-up text-center" style="padding:24px 20px;background:rgba(5,20,40,0.5);border:1px solid rgba(212,175,55,0.2);border-radius:16px;">
             <p style="color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:19px;font-weight:600;margin:0 0 8px;">Offrez un tirage à un proche</p>
             <p style="color:rgba(212,175,55,0.6);font-family:'Cormorant Garamond',Georgia,serif;font-size:13.5px;line-height:1.6;margin:0 0 16px;">Partagez votre lien : la personne qui l'utilise reçoit 1 tirage gratuit en plus, et vous aussi.</p>
-            <div style="display:flex;gap:8px;max-width:380px;margin:0 auto;">
+            <div style="display:flex;flex-wrap:wrap;gap:8px;max-width:380px;width:100%;margin:0 auto;box-sizing:border-box;">
                 <input id="referral-link-input" type="text" readonly
-                    style="flex:1;background:rgba(5,20,40,0.8);border:1px solid rgba(212,175,55,0.3);border-radius:10px;color:#e8d9b0;font-family:Georgia,serif;font-size:12.5px;padding:10px 12px;outline:none;">
+                    style="flex:1 1 160px;min-width:0;width:100%;background:rgba(5,20,40,0.8);border:1px solid rgba(212,175,55,0.3);border-radius:10px;color:#e8d9b0;font-family:Georgia,serif;font-size:12.5px;padding:10px 12px;outline:none;box-sizing:border-box;">
                 <button onclick="copyReferralLink(this)"
-                    style="flex-shrink:0;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#051428;border:none;border-radius:10px;padding:0 16px;font-family:Georgia,serif;font-size:13px;font-weight:700;cursor:pointer;">
+                    style="flex-shrink:0;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#051428;border:none;border-radius:10px;padding:0 16px;font-family:Georgia,serif;font-size:13px;font-weight:700;cursor:pointer;min-height:38px;">
                     Copier
                 </button>
             </div>
@@ -788,7 +790,7 @@
 
         <!-- Lien vers les études (synchronicités + rétrocausalité) -->
         <div class="max-w-lg mx-auto mb-16 fade-in-up text-center" style="padding:20px 20px;">
-            <p style="color:rgba(212,175,55,0.7);font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;line-height:1.7;margin:0 0 12px;">Curieux de savoir ce que d'autres observent dans les jours qui suivent un tirage, ou si le passé et le futur ont un lien avec lui ?</p>
+            <p style="color:rgba(212,175,55,0.7);font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;line-height:1.7;margin:0 0 12px;">Envie de savoir ce que d'autres observent dans les jours qui suivent un tirage, ou si le passé et le futur ont un lien avec lui ?</p>
             <a href="/etudes.html" style="display:inline-flex;align-items:center;gap:8px;color:#d4af37;text-decoration:none;font-family:'Cormorant Garamond',Georgia,serif;font-size:17px;font-weight:600;border-bottom:1px solid rgba(212,175,55,0.35);padding-bottom:2px;">
                 Découvrir les études <i class="fas fa-arrow-right" style="font-size:12px;"></i>
             </a>
