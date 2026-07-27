@@ -384,10 +384,41 @@
 
                 console.log('Account created successfully:', data);
 
+                // Établir une vraie session Supabase (access_token) en se connectant
+                // immédiatement avec les identifiants qui viennent d'être créés.
+                // Indispensable pour que les tirages effectués après l'inscription
+                // soient enregistrés côté serveur (table `tirages`) et pas seulement
+                // dans le stockage local "invité" de cet appareil — sans ce token,
+                // OradiaTirageStorage.isAuthenticated() reste faux pour toujours.
+                let sessionObj = { email, name };
+                try {
+                    const loginResp = await fetch('/api/auth/login', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, password })
+                    });
+                    const loginData = await loginResp.json();
+                    if (loginData.success && !loginData.mfa_required) {
+                        sessionObj = {
+                            email,
+                            name: loginData.user?.name || name,
+                            subscribed: loginData.user?.subscribed || false,
+                            id: loginData.user?.id || null,
+                            access_token: loginData.session?.access_token || null,
+                            refresh_token: loginData.session?.refresh_token || null
+                        };
+                    }
+                } catch (loginError) {
+                    console.warn('Connexion automatique après inscription échouée (non-bloquant):', loginError.message);
+                }
+
                 // Sauvegarder en local pour compatibilité
                 localStorage.setItem('userEmail', email);
                 localStorage.setItem('userName', name);
-                sessionStorage.setItem('oradia_member_session', JSON.stringify({ email, name }));
+                localStorage.setItem('isLoggedIn', 'true');
+                const sessionData = JSON.stringify(sessionObj);
+                sessionStorage.setItem('oradia_member_session', sessionData);
+                localStorage.setItem('oradia_member_session', sessionData);
 
                 // Inscription newsletter si case cochée
                 if (document.getElementById('newsletter').checked) {

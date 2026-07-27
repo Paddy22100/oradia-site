@@ -6633,6 +6633,39 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
 
 
 
+// Invite un abonné reconnu par email (mais sans access_token Supabase valide en
+// session locale) à se reconnecter, pour que ses PROCHAINS tirages soient bien
+// enregistrés côté serveur — affiché une seule fois par session d'onglet,
+// jamais bloquant pour le tirage en cours.
+function maybePromptToreReconnect() {
+  try {
+    if (sessionStorage.getItem('tore_reco_prompt_shown')) return;
+    const sessStr = sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session');
+    if (!sessStr) return;
+    const sess = JSON.parse(sessStr);
+    if (!sess.email || sess.access_token) return;
+    sessionStorage.setItem('tore_reco_prompt_shown', '1');
+
+    const bar = document.createElement('div');
+    bar.setAttribute('role', 'status');
+    bar.style.cssText = 'position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:9999;max-width:92vw;width:460px;background:#1a1410;border:1px solid rgba(212,175,55,0.4);border-radius:12px;padding:16px 18px;box-shadow:0 8px 30px rgba(0,0,0,0.5);font-family:Lora,serif;color:#f0e6d2;';
+    bar.innerHTML =
+      '<div style="display:flex;align-items:flex-start;gap:12px;">' +
+        '<div style="flex:1;font-size:13px;line-height:1.5;">' +
+          '<strong style="color:#d4af37;">Vos tirages sont-ils bien sauvegardés ?</strong><br>' +
+          'Reconnectez-vous pour les retrouver dans votre espace membre.' +
+        '</div>' +
+        '<button type="button" id="toreRecoClose" aria-label="Fermer" style="background:none;border:none;color:rgba(240,230,210,0.5);cursor:pointer;font-size:18px;line-height:1;padding:0 0 0 8px;">&times;</button>' +
+      '</div>' +
+      '<div style="margin-top:10px;text-align:right;">' +
+        '<a href="/member/login.html?returnTo=%2Ftore.html" style="display:inline-block;background:#d4af37;color:#1a1410;font-weight:600;font-size:12px;padding:7px 14px;border-radius:6px;text-decoration:none;">Se reconnecter</a>' +
+      '</div>';
+    document.body.appendChild(bar);
+    bar.querySelector('#toreRecoClose')?.addEventListener('click', () => bar.remove());
+    setTimeout(() => { if (bar.isConnected) bar.remove(); }, 20000);
+  } catch (e) {}
+}
+
  form?.addEventListener('submit', async (e) => {
   e.preventDefault();
   // Empêcher le double-submit
@@ -6756,6 +6789,13 @@ document.getElementById('tore-to-analysis')?.addEventListener('click', () => {
       }
     }
   }
+
+  // Un abonné reconnu via email (isSubscribed) mais dont la session locale n'a
+  // pas de vrai access_token Supabase verra ce tirage autorisé mais SANS
+  // sauvegarde serveur (OradiaTirageStorage.isAuthenticated() restera faux).
+  // On l'invite activement à se reconnecter pour que ses PROCHAINS tirages
+  // soient bien enregistrés — celui-ci démarre quand même, sans être bloqué.
+  if (isSubscribed) maybePromptToreReconnect();
 
   // Un nouveau tirage commence : purger toute analyse mise en cache du tirage précédent.
   // tore_analysis_data survit à un rechargement d'onglet PENDANT le même tirage, et
