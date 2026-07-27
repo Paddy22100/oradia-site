@@ -114,6 +114,9 @@ p {
         border-top: 1px solid rgba(212, 175, 55, 0.3);
         max-height: 70vh;
         overflow-y: auto;
+        -webkit-overflow-scrolling: touch; /* sans ça, Safari iOS ne défile pas dans ce menu :
+                                               le bouton Déconnexion (en bas de liste) devient
+                                               inaccessible dès que le contenu dépasse 70vh. */
     }
     
     #mobileMenu a {
