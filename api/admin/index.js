@@ -2059,11 +2059,53 @@ async function handleData(req, res) {
         }
       }
 
+      // État de la clé ANU (QRNG quantique) : lecture des derniers appels loggés par
+      // /api/qrng.js (table qrng_usage), sans jamais consommer de quota nous-mêmes
+      // (aucun appel actif à l'API ANU depuis le dashboard).
+      let anuHealth = null;
+      try {
+        const keyConfigured = !!process.env.ANU_QRNG_API_KEY;
+        const now = Date.now();
+        const since24h = new Date(now - 24 * 3600 * 1000).toISOString();
+        const since7d = new Date(now - 7 * 24 * 3600 * 1000).toISOString();
+
+        const { data: recentRows } = await supabase
+          .from('qrng_usage')
+          .select('outcome, status_code, reason, created_at')
+          .gte('created_at', since7d)
+          .order('created_at', { ascending: false })
+          .limit(500);
+
+        const rows7d = recentRows || [];
+        const rows24h = rows7d.filter(r => r.created_at >= since24h);
+        const count = (rows, outcome) => rows.filter(r => r.outcome === outcome).length;
+        const mostRecent = rows7d[0] || null;
+
+        let status;
+        if (!keyConfigured) status = 'no_key';
+        else if (rows24h.length === 0 && rows7d.length === 0) status = 'unknown';
+        else if (rows24h.length > 0 && count(rows24h, 'anu') === 0 && count(rows24h, 'fallback') > 0) status = 'down';
+        else if (rows24h.length > 0 && count(rows24h, 'fallback') > 0) status = 'degraded';
+        else if (rows24h.length > 0 && count(rows24h, 'anu') > 0) status = 'ok';
+        else status = 'unknown'; // aucun tirage dans les 24h mais un historique 7j existe
+
+        anuHealth = {
+          status,
+          keyConfigured,
+          last24h: { anu: count(rows24h, 'anu'), fallback: count(rows24h, 'fallback'), total: rows24h.length },
+          last7d:  { anu: count(rows7d, 'anu'),  fallback: count(rows7d, 'fallback'),  total: rows7d.length },
+          mostRecent
+        };
+      } catch (e) {
+        anuHealth = { status: 'unknown', error: e.message };
+      }
+
       return res.status(200).json({
         success: true,
         data: {
           audits: auditRows || [],
-          uptime
+          uptime,
+          anuHealth
         }
       });
     }

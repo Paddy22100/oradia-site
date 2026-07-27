@@ -2387,6 +2387,14 @@
                 <div id="uptimeContent" class="space-y-3 text-sm">—</div>
             </div>
 
+            <!-- État de la clé ANU (tirage quantique) -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5 mb-6">
+                <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fas fa-atom"></i> État de la clé ANU (tirage quantique)
+                </h4>
+                <div id="anuHealthContent" class="text-sm">—</div>
+            </div>
+
             <!-- Logs système en temps réel -->
             <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5 mt-4">
                 <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
@@ -8326,6 +8334,7 @@
             setEl('auditTopIssues', '<span class="animate-pulse">…</span>');
             setEl('auditHistory', '<span class="animate-pulse">…</span>');
             setEl('uptimeContent', '<span class="animate-pulse">…</span>');
+            setEl('anuHealthContent', '<span class="animate-pulse">…</span>');
 
             const scoreColor = s => s >= 80 ? '#22c55e' : s >= 60 ? '#f59e0b' : '#ef4444';
             const scoreGrade = s => s >= 90 ? 'A' : s >= 80 ? 'B' : s >= 60 ? 'C' : s >= 40 ? 'D' : 'F';
@@ -8437,12 +8446,65 @@
                         `).join(''));
                 }
 
+                // État clé ANU (tirage quantique)
+                const anu = d.anuHealth;
+                if (!anu) {
+                    setEl('anuHealthContent', '<p class="text-light-gold/40 text-sm">Aucune donnée disponible.</p>');
+                } else {
+                    const STATUS_UI = {
+                        ok:       { color: '#22c55e', label: 'Fonctionne',            icon: 'fa-circle-check' },
+                        degraded: { color: '#f59e0b', label: 'Dégradé (repli partiel)', icon: 'fa-triangle-exclamation' },
+                        down:     { color: '#ef4444', label: 'Hors service (repli total)', icon: 'fa-circle-xmark' },
+                        no_key:   { color: '#ef4444', label: 'Clé ANU absente',        icon: 'fa-key' },
+                        unknown:  { color: '#6b7280', label: 'Pas assez de données récentes', icon: 'fa-question-circle' },
+                    };
+                    const ui = STATUS_UI[anu.status] || STATUS_UI.unknown;
+                    if (anu.status === 'down' || anu.status === 'no_key') alertCount += 1;
+
+                    const reasonLabels = {
+                        missing_api_key: 'clé API absente',
+                        timeout: 'délai dépassé (API ANU lente)',
+                        invalid_response: 'réponse invalide',
+                    };
+                    const reasonText = (r) => reasonLabels[r] || (r && r.startsWith('http_') ? `erreur ${r.replace('http_','')}` : (r || '—'));
+
+                    setEl('anuHealthContent', `
+                        <div class="flex items-center gap-3 mb-4">
+                            <div style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:${ui.color}22;color:${ui.color};">
+                                <i class="fas ${ui.icon}"></i>
+                            </div>
+                            <div>
+                                <div class="font-semibold" style="color:${ui.color};">${ui.label}</div>
+                                <div class="text-light-gold/40 text-xs">${anu.keyConfigured ? 'Clé ANU_QRNG_API_KEY configurée' : 'Variable ANU_QRNG_API_KEY absente sur Vercel'}</div>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-3 text-center">
+                                <div class="text-light-gold/40 text-xs uppercase mb-1">Dernières 24h</div>
+                                <div class="text-teal-300 font-bold">${anu.last24h.anu} ⚛ ANU</div>
+                                <div class="text-orange-300/80 text-xs">${anu.last24h.fallback} repli${anu.last24h.fallback > 1 ? 's' : ''}</div>
+                            </div>
+                            <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-3 text-center">
+                                <div class="text-light-gold/40 text-xs uppercase mb-1">7 derniers jours</div>
+                                <div class="text-teal-300 font-bold">${anu.last7d.anu} ⚛ ANU</div>
+                                <div class="text-orange-300/80 text-xs">${anu.last7d.fallback} repli${anu.last7d.fallback > 1 ? 's' : ''}</div>
+                            </div>
+                        </div>
+                        ${anu.mostRecent ? `
+                        <div class="text-light-gold/50 text-xs border-t border-gold/10 pt-3">
+                            Dernier appel : <span class="${anu.mostRecent.outcome === 'anu' ? 'text-teal-300' : 'text-orange-300'}">${anu.mostRecent.outcome === 'anu' ? '⚛ ANU' : 'repli'}</span>
+                            — ${new Date(anu.mostRecent.created_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
+                            ${anu.mostRecent.outcome !== 'anu' ? `<span class="text-red-300/70"> (${reasonText(anu.mostRecent.reason)})</span>` : ''}
+                        </div>` : '<p class="text-light-gold/30 text-xs italic border-t border-gold/10 pt-3">Aucun appel enregistré sur les 7 derniers jours.</p>'}
+                    `);
+                }
+
                 if (badge) badge.textContent = alertCount > 0 ? alertCount : '';
 
 
             } catch (e) {
                 console.error('[Admin] loadMonitoring error:', e);
-                ['auditGlobalScore','auditSummary','auditScores','auditTopIssues','auditHistory','uptimeContent','supabaseStatusContent'].forEach(id =>
+                ['auditGlobalScore','auditSummary','auditScores','auditTopIssues','auditHistory','uptimeContent','anuHealthContent'].forEach(id =>
                     setEl(id, '<span class="text-red-400 text-xs">Erreur de chargement</span>'));
             }
         }
