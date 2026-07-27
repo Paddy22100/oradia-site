@@ -408,7 +408,7 @@
                 setTimeout(() => {
                     if (subscribeToTore) {
                         // Rediriger vers Stripe pour l'abonnement Tore
-                        window.location.href = '/tore-abonnement.html?registered=1&email=' + encodeURIComponent(email);
+                        window.location.href = '/tore-abonnement.html?registered=1&discount=email24h&email=' + encodeURIComponent(email);
                     } else {
                         window.location.href = 'abonnements.html';
                     }

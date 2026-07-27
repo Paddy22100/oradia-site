@@ -367,6 +367,10 @@
     const urlParams = new URLSearchParams(window.location.search);
     const justRegistered = urlParams.get('registered') === '1';
     let registeredEmail = (urlParams.get('email') || '').trim();
+    // Capturé une seule fois ICI, avant tout nettoyage d'URL ci-dessous — sinon le
+    // replaceState() du flow post-inscription effacerait ?discount= avant qu'il soit lu
+    // (au chargement pour l'affichage du prix, et au clic pour le checkout).
+    const urlDiscount = urlParams.get('discount');
     if (justRegistered) {
         document.getElementById('registered-msg').style.display = 'block';
         window.history.replaceState({}, '', '/tore-abonnement.html');
@@ -390,7 +394,6 @@
         btnC.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Chargement…';
 
         try {
-            const urlDiscount = new URLSearchParams(window.location.search).get('discount');
             const promoCode = urlDiscount === 'email24h' ? 'promo_1TtZP25oaKXBczQqQEQ85oV7' : null;
             const res = await fetch('/api/create-checkout-session', {
                 method: 'POST',
@@ -412,7 +415,7 @@
 
     document.getElementById('btn-complet').addEventListener('click', () => handleCheckout('tore-complet'));
 
-    if (new URLSearchParams(window.location.search).get('discount') === 'email24h') {
+    if (urlDiscount === 'email24h') {
         document.getElementById('price-normal').style.display = 'none';
         document.getElementById('price-promo').style.display = 'block';
     }
