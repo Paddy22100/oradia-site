@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Cormorant+Garamond:ital,wght@0,400;0,600;1,400&display=swap" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=5" />
+  <title>Le passé et le futur influencent-ils le présent ? — Oradia</title>
+  <meta name="description" content="Une étude ouverte : un nombre quantique tiré avant votre intention (passé) et un autre tiré après (futur) correspondent-ils à votre tirage du moment plus souvent que le hasard ? Hasard quantique vérifiable, méthodologie transparente." />
+  <link rel="canonical" href="https://oradia.fr/etude-retrocausalite.html" />
+  <meta property="og:type" content="website" />
+  <meta property="og:title" content="Le passé et le futur influencent-ils le présent ? — Oradia" />
+  <meta property="og:description" content="Une expérience ouverte avec un vrai générateur quantique : le pari à l'envers, testé en direct." />
+  <meta property="og:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg" />
+  <meta property="og:locale" content="fr_FR" />
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="responsive.css">
+  <script src="security.js"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            'night-blue': '#0a192f', 'gold': '#d4af37', 'light-gold': '#f5e7a1',
+            'dark-blue': '#051428', 'celtic-blue': '#1a365d'
+          },
+          fontFamily: { 'cormorant': ['Cormorant Garamond', 'serif'], 'cinzel': ['Cinzel', 'serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    body {
+      background:
+        radial-gradient(ellipse 90% 45% at 50% 0%, rgba(212,175,55,0.08), transparent 60%),
+        radial-gradient(ellipse 60% 40% at 85% 110%, rgba(26,54,93,0.5), transparent 65%),
+        #0a192f;
+      background-attachment: fixed;
+    }
+    .gold-gradient { background: linear-gradient(135deg,#d4af37,#f4e4c1); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+    .gold-divider { width: 60px; height: 1px; background: linear-gradient(90deg,transparent,#d4af37,transparent); }
+    .stat-card { background: linear-gradient(145deg, rgba(26,54,93,0.55), rgba(5,20,40,0.8)); border: 1px solid rgba(212,175,55,0.28); box-shadow: 0 8px 30px rgba(0,0,0,0.35); transition: transform .3s ease, box-shadow .3s ease; }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 12px 40px rgba(212,175,55,0.12); }
+    .bar-track { background: rgba(255,255,255,0.06); border-radius: 999px; overflow: hidden; }
+    .bar-fill { background: linear-gradient(90deg,#d4af37aa,#f0c75e); border-radius: 999px; transition: width 1s ease-out; box-shadow: 0 0 12px rgba(212,175,55,0.35); }
+    .etude-hero { position: relative; border-radius: 24px; overflow: hidden; border: 1px solid rgba(212,175,55,0.25); box-shadow: 0 0 60px rgba(212,175,55,0.12), 0 16px 48px rgba(0,0,0,0.5); }
+    .etude-hero-bg { position: absolute; inset: 0; background-image: url('/images/oradia-hero-4k.webp'); background-size: cover; background-position: center; }
+    .etude-hero-veil { position: absolute; inset: 0; background: linear-gradient(180deg, rgba(10,25,47,0.72) 0%, rgba(5,20,40,0.9) 100%); }
+    .big-stat { font-size: clamp(2.2rem, 6vw, 3rem); line-height: 1; }
+    .gauge-track { position: relative; }
+    .gauge-mark { position: absolute; top: 0; bottom: 0; left: 50%; width: 1px; background: rgba(255,255,255,0.6); }
+  </style>
+</head>
+<body class="bg-night-blue text-light-gold font-cormorant">
+
+  <div id="header-placeholder"></div>
+
+  <main class="px-4 sm:px-6 lg:px-8 py-12 sm:py-16 max-w-4xl mx-auto">
+
+    <!-- Bandeau visuel d'en-tête -->
+    <div class="etude-hero mb-14 sm:mb-16">
+      <div class="etude-hero-bg"></div>
+      <div class="etude-hero-veil"></div>
+      <div class="relative z-10 text-center px-6 py-16 sm:py-20">
+        <p class="text-gold/60 text-xs uppercase tracking-[0.35em] mb-5">Étude ouverte, en cours</p>
+        <h1 class="cinzel text-3xl sm:text-4xl md:text-5xl font-bold mb-5 gold-gradient" style="text-shadow:0 0 40px rgba(212,175,55,0.25);">Le passé et le futur influencent-ils le présent ?</h1>
+        <div class="gold-divider mx-auto mb-6"></div>
+        <p class="text-light-gold/85 text-base sm:text-lg leading-relaxed max-w-2xl mx-auto">
+          Cette expérience utilise le même générateur de nombres <strong class="text-gold">quantique vérifiable</strong> (ANU QRNG, Université Nationale Australienne) que vos tirages. Elle ne mesure pas ce que vous ressentez, mais compare des nombres quantiques entre eux — avant, pendant et après votre tirage — pour voir s'ils se ressemblent plus que le pur hasard ne le permettrait.
+        </p>
+      </div>
+    </div>
+
+    <!-- Le pari à l'envers, expliqué simplement -->
+    <div class="mb-16">
+      <h2 class="cinzel text-xl sm:text-2xl font-bold gold-gradient mb-6 text-center">Le jeu du « pari à l'envers »</h2>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div class="stat-card rounded-2xl p-6 sm:p-7">
+          <p class="text-gold text-sm uppercase tracking-wider mb-3"><i class="fas fa-backward mr-2 opacity-70"></i>Le passé, testé</p>
+          <p class="text-light-gold/80 text-sm leading-relaxed">
+            Un nombre quantique est tiré et <strong class="text-light-gold">scellé la veille</strong> — avant même que vous ne posiez votre intention. Le lendemain, vous tirez. Ce nombre d'hier correspond-il à votre tirage du jour plus souvent que le hasard&nbsp;?
+          </p>
+        </div>
+        <div class="stat-card rounded-2xl p-6 sm:p-7">
+          <p class="text-gold text-sm uppercase tracking-wider mb-3"><i class="fas fa-forward mr-2 opacity-70"></i>Le futur, testé</p>
+          <p class="text-light-gold/80 text-sm leading-relaxed">
+            Vous tirez <strong class="text-light-gold">maintenant</strong>, votre tirage est scellé. Juste après, un nouveau nombre quantique est généré — une cible qui n'existait pas encore au moment de votre tirage. Votre tirage l'avait-il « deviné » plus souvent que le hasard&nbsp;?
+          </p>
+        </div>
+      </div>
+      <p class="text-light-gold/50 text-sm mt-6 max-w-2xl mx-auto italic text-center">
+        Pour vous, rien ne change : vous tirez normalement. Toute la mesure se fait en coulisses, sur des nombres, jamais sur votre ressenti.
+      </p>
+    </div>
+
+    <p class="text-light-gold/50 text-sm mb-14 max-w-2xl mx-auto italic text-center">
+      Ces chiffres ne prouvent rien scientifiquement à eux seuls, l'échantillon est encore modeste. Le résultat le plus probable, honnêtement, est qu'aucun écart ne dépasse le hasard — et ce serait un résultat valable. Ils sont publiés tels quels, mis à jour en continu, sans filtrage des résultats qui ne m'arrangeraient pas.
+    </p>
+
+    <!-- Chargement -->
+    <div id="etude-loading" class="text-center py-16">
+      <i class="fas fa-spinner fa-spin text-gold/40 text-2xl"></i>
+    </div>
+
+    <!-- Contenu (rempli en JS) -->
+    <div id="etude-content" class="hidden">
+
+      <!-- Avancement -->
+      <div class="mb-16">
+        <div class="flex items-center justify-between mb-2 text-sm">
+          <span class="text-light-gold/60">Avancement de l'étude</span>
+          <span class="text-gold font-semibold"><span id="stat-n">0</span> / <span id="stat-target">—</span> tirages valides</span>
+        </div>
+        <div class="bar-track h-2.5"><div id="progress-bar" class="bar-fill h-full" style="width:0%"></div></div>
+        <p class="text-light-gold/40 text-xs mt-2">Seuls les tirages 100&nbsp;% quantiques (ANU) sont comptés.</p>
+      </div>
+
+      <!-- Deux jauges -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
+        <div class="stat-card rounded-2xl p-6 sm:p-7">
+          <p class="text-gold text-sm uppercase tracking-wider mb-1"><i class="fas fa-backward mr-2 opacity-70"></i>Passé → présent</p>
+          <p class="big-stat font-bold text-gold mb-3" id="past-rate">—</p>
+          <div class="gauge-track bar-track h-2.5 mb-1"><div id="past-bar" class="bar-fill h-full" style="width:50%"></div><div class="gauge-mark"></div></div>
+          <div class="flex justify-between text-light-gold/30 text-xs"><span>0%</span><span class="text-light-gold/50">hasard 50%</span><span>100%</span></div>
+          <p class="text-light-gold/50 text-xs mt-3" id="past-n">— tirages comparés</p>
+        </div>
+        <div class="stat-card rounded-2xl p-6 sm:p-7">
+          <p class="text-gold text-sm uppercase tracking-wider mb-1"><i class="fas fa-forward mr-2 opacity-70"></i>Futur → présent</p>
+          <p class="big-stat font-bold text-gold mb-3" id="future-rate">—</p>
+          <div class="gauge-track bar-track h-2.5 mb-1"><div id="future-bar" class="bar-fill h-full" style="width:50%"></div><div class="gauge-mark"></div></div>
+          <div class="flex justify-between text-light-gold/30 text-xs"><span>0%</span><span class="text-light-gold/50">hasard 50%</span><span>100%</span></div>
+          <p class="text-light-gold/50 text-xs mt-3" id="future-n">— tirages comparés</p>
+        </div>
+      </div>
+
+      <!-- Méthodologie -->
+      <div class="stat-card rounded-2xl p-6 sm:p-8 mb-8">
+        <h2 class="cinzel text-lg font-bold text-gold mb-4"><i class="fas fa-flask mr-2 opacity-60"></i>Méthodologie</h2>
+        <ul class="text-light-gold/70 text-sm leading-relaxed space-y-3 list-none">
+          <li><i class="fas fa-check text-gold/50 mr-2"></i>Seuls les tirages utilisant le générateur quantique ANU (pas de repli logiciel) sont comptabilisés, pour ne pas mélanger hasard vérifié et pseudo-hasard.</li>
+          <li><i class="fas fa-check text-gold/50 mr-2"></i>Chaque nombre « passé » ou « futur » est scellé par une empreinte cryptographique horodatée au moment de sa génération — preuve qu'il n'a pas pu être choisi ou modifié après coup.</li>
+          <li><i class="fas fa-check text-gold/50 mr-2"></i>Les critères d'analyse (métrique, seuil de signification, taille d'échantillon visée) ont été fixés avant toute collecte de données, pour ne pas ajuster la lecture après coup.</li>
+          <li><i class="fas fa-check text-gold/50 mr-2"></i>Aucune donnée identifiante n'est publiée ici — uniquement des agrégats anonymisés.</li>
+          <li><i class="fas fa-check text-gold/50 mr-2"></i>Ce domaine de recherche est scientifiquement débattu et son historique de réplication est mauvais. Un résultat nul serait le résultat le plus probable, et resterait un résultat valable.</li>
+        </ul>
+      </div>
+
+      <p class="text-center text-light-gold/40 text-xs mb-8">
+        Une étude compagnon existe aussi sur <a href="/etude-synchronicites.html" class="text-gold/70 hover:text-gold underline underline-offset-2">les synchronicités ressenties après un tirage</a>.
+      </p>
+
+    </div>
+
+    <!-- CTA -->
+    <div class="text-center mt-8">
+      <a href="/tore.html" class="inline-flex items-center gap-2 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3 px-8 rounded-full hover:shadow-lg hover:shadow-gold/30 transition-all duration-300">
+        <i class="fas fa-moon"></i> Faire un tirage et contribuer à l'étude
+      </a>
+    </div>
+
+  </main>
+
+  <div id="footer-placeholder"></div>
+
+  <script src="components/header-manager.js" defer></script>
+  <script src="components/footer-manager.js" defer></script>
+  <script src="js/page-tracker.js" defer></script>
+  <script>
+    (function () {
+      fetch('/api/admin/experiment-public')
+        .then(r => r.json())
+        .then(res => {
+          document.getElementById('etude-loading').classList.add('hidden');
+          document.getElementById('etude-content').classList.remove('hidden');
+
+          const fmtPct = (r) => (r == null ? '—' : (r * 100).toFixed(1) + '%');
+
+          document.getElementById('stat-n').textContent = res.n_total || 0;
+          document.getElementById('stat-target').textContent = res.target_n || '—';
+          const pct = res.progress_pct || 0;
+          document.getElementById('progress-bar').style.width = Math.min(100, pct) + '%';
+
+          const renderArm = (key, data) => {
+            const a = data || { n: 0 };
+            document.getElementById(`${key}-rate`).textContent = a.rate == null ? '—' : fmtPct(a.rate);
+            document.getElementById(`${key}-bar`).style.width = (a.rate == null ? 50 : Math.max(0, Math.min(100, a.rate * 100))) + '%';
+            document.getElementById(`${key}-n`).textContent = a.n ? `${a.n} tirages comparés` : 'En attente de données';
+          };
+          renderArm('past', res.past);
+          renderArm('future', res.future);
+        })
+        .catch(() => {
+          document.getElementById('etude-loading').innerHTML = '<p class="text-light-gold/40 text-sm">Impossible de charger les données pour le moment.</p>';
+        });
+    })();
+  </script>
+</body>
+</html>

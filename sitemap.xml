@@ -137,6 +137,12 @@
         <priority>0.7</priority>
     </url>
     <url>
+        <loc>https://oradia.fr/etude-retrocausalite.html</loc>
+        <lastmod>2026-07-27</lastmod>
+        <changefreq>weekly</changefreq>
+        <priority>0.7</priority>
+    </url>
+    <url>
         <loc>https://oradia.fr/seances-dinan</loc>
         <lastmod>2026-07-21</lastmod>
         <changefreq>monthly</changefreq>

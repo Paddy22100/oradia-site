@@ -4953,6 +4953,62 @@ Réponds en français, sans tiret long, format markdown compact.`
       }
     }
 
+    // ── Étude passé/présent/futur : version PUBLIQUE (route sans auth admin) ──
+    // Mêmes chiffres que /experiment-stats, mais accessible depuis la page publique
+    // etude-retrocausalite.html, sur le modèle de /synchronicity-public.
+    if (path === '/experiment-public' || path === '/experiment-public/') {
+      if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+      const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
+
+      if (!(await isFeatureEnabled(sb, 'retro_study_public'))) {
+        return res.status(200).json({ success: true, n_total: 0, target_n: 10000, progress_pct: 0, past: { n: 0 }, future: { n: 0 } });
+      }
+
+      const twoSidedP = (z) => {
+        const x = Math.abs(z) / Math.SQRT2;
+        const t = 1 / (1 + 0.3275911 * x);
+        const erf = 1 - (((((1.061405429 * t - 1.453152027) * t) + 1.421413741) * t - 0.284496736) * t + 0.254829592) * t * Math.exp(-x * x);
+        return Math.max(0, Math.min(1, 1 - erf));
+      };
+      const arm = (rows, key) => {
+        const valid = rows.filter(r => r.present_bit != null && r[key] != null);
+        const n = valid.length;
+        if (n === 0) return { n: 0, matches: 0, rate: null, baseline: null, deviation: null, z: null, p: null, significant: false };
+        let matches = 0, sumP = 0, sumO = 0;
+        for (const r of valid) { if (r.present_bit === r[key]) matches++; sumP += r.present_bit; sumO += r[key]; }
+        const pPresent = sumP / n, pOther = sumO / n;
+        const baseline = pPresent * pOther + (1 - pPresent) * (1 - pOther);
+        const rate = matches / n;
+        const se = Math.sqrt(baseline * (1 - baseline) / n) || 0;
+        const z = se > 0 ? (rate - baseline) / se : 0;
+        const p = twoSidedP(z);
+        return { n, matches, rate, baseline, deviation: rate - baseline, z, p, significant: p < 0.05 };
+      };
+
+      try {
+        const [sessRes, preRes] = await Promise.all([
+          sb.from('retro_sessions').select('present_bit,past_bit,future_bit').eq('status', 'complete').eq('qrng_source', 'anu').limit(200000),
+          sb.from('retro_preregistration').select('target_n,alpha,registered_at').order('registered_at', { ascending: true }).limit(1)
+        ]);
+        if (sessRes.error) throw sessRes.error;
+        const rows = sessRes.data || [];
+        const pre = (preRes.data && preRes.data[0]) || null;
+        const targetN = (pre && pre.target_n) || parseInt(process.env.RETRO_TARGET_N || '10000', 10);
+        res.setHeader('Cache-Control', 'public, max-age=1800, s-maxage=1800');
+        return res.status(200).json({
+          success: true,
+          n_total: rows.length,
+          target_n: targetN,
+          progress_pct: targetN > 0 ? Math.min(100, Math.round((rows.length / targetN) * 100)) : null,
+          registered_at: pre ? pre.registered_at : null,
+          past: arm(rows, 'past_bit'),
+          future: arm(rows, 'future_bit')
+        });
+      } catch (e) {
+        return res.status(200).json({ success: true, n_total: 0, target_n: parseInt(process.env.RETRO_TARGET_N || '10000', 10), progress_pct: 0, past: { n: 0 }, future: { n: 0 } });
+      }
+    }
+
     if (path === '/transactions' || path === '/transactions/') {
       verifyAdminAuth(req);
       const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
