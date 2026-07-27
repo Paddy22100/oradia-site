@@ -2074,37 +2074,13 @@
             syncTirageToHistory({ analysis: analysis.message, synthesis: analysis.synthesis });
         }
 
-        // Diagnostic temporaire : signale au dashboard admin (system_logs, via le
-        // même canal que la capture d'erreurs JS) pourquoi la sauvegarde de
-        // l'analyse a été sautée ou a échoué, pour identifier la vraie cause sans
-        // deviner à l'aveugle. À retirer une fois la cause confirmée et corrigée.
-        function reportSyncIssue(reason) {
-            try {
-                const payload = JSON.stringify({
-                    path: location.pathname,
-                    session_id: sessionStorage.getItem('oradia_session_id') || 'unknown',
-                    user_agent: navigator.userAgent || '',
-                    client_error: 'tirage_sync_failed: ' + reason
-                });
-                if (navigator.sendBeacon) {
-                    navigator.sendBeacon('/api/admin/track', new Blob([payload], { type: 'application/json' }));
-                } else {
-                    fetch('/api/admin/track', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: payload, keepalive: true }).catch(() => {});
-                }
-            } catch (e) {}
-        }
-
         // Complète le tirage déjà enregistré dans l'historique (Supabase, membre connecté)
         // avec l'analyse IA / synthèse / fenêtre d'observation, dès qu'elles sont disponibles.
         function syncTirageToHistory(fields) {
             try {
                 const id = sessionStorage.getItem('tore_tirage_id');
-                if (!id) { reportSyncIssue('no_tirage_id'); return; }
-                if (!window.OradiaTirageStorage) { reportSyncIssue('no_storage_module'); return; }
-                if (!window.OradiaTirageStorage.isAuthenticated()) { reportSyncIssue('not_authenticated'); return; }
-                window.OradiaTirageStorage.updateTirage(id, fields).then((ok) => {
-                    if (!ok) reportSyncIssue('update_returned_false (id=' + id + ')');
-                }).catch((e) => reportSyncIssue('update_threw: ' + (e && e.message)));
+                if (!id || !window.OradiaTirageStorage || !window.OradiaTirageStorage.isAuthenticated()) return;
+                window.OradiaTirageStorage.updateTirage(id, fields).catch(() => {});
             } catch (e) { reportSyncIssue('exception: ' + (e && e.message)); }
         }
 
