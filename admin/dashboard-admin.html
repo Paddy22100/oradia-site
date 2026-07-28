@@ -4280,6 +4280,9 @@
                             <button data-email="${escapeHtmlFront(item.email || '')}" onclick="viewTirages(this.dataset.email)" class="text-gold/60 hover:text-gold transition" title="Voir les tirages">
                                 <i class="fas fa-layer-group"></i>
                             </button>
+                            ${item.status === 'unsubscribed' ? `<button onclick="resubscribeContact('${item.id}', this.dataset.email)" data-email="${escapeHtmlFront(item.email || '')}" class="text-teal-300/70 hover:text-teal-300 transition" title="Réinscrire à la newsletter">
+                                <i class="fas fa-envelope-circle-check"></i>
+                            </button>` : ''}
                             <button onclick="unsubscribeContact('${item.id}', this.dataset.email)" data-email="${escapeHtmlFront(item.email || '')}" class="${item.status === 'unsubscribed' ? 'text-gold/40 hover:text-gold/70' : 'text-orange-300/70 hover:text-orange-300'} transition" title="${item.status === 'unsubscribed' ? 'Re-forcer la désinscription Brevo' : 'Désinscrire de la newsletter'}">
                                 <i class="fas fa-envelope-open-text"></i>
                             </button>
@@ -4582,6 +4585,25 @@
                 if (!res.ok) throw new Error(data.error || 'Erreur');
                 if (!data.brevoDeleted) {
                     alert("Contact supprimé du dashboard. Attention : il n'a pas pu être supprimé de Brevo automatiquement — pense à le retirer manuellement de tes listes Brevo.");
+                }
+                loadWaitlist(currentData.waitlistPagination?.page || 1);
+            } catch (e) {
+                alert('Erreur : ' + e.message);
+            }
+        }
+
+        async function resubscribeContact(id, email) {
+            if (!confirm(`Réinscrire ${email || 'ce contact'} à la newsletter ?\n\nRetire le blacklist Brevo et le rajoute à la liste newsletter.`)) return;
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'resubscribe-contact', id, email })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                if (!data.brevoRestored) {
+                    alert("La réinscription Brevo n'a pas pu être confirmée" + (data.brevoDetail ? "\n(" + data.brevoDetail + ")" : "") + "\n\nVérifie manuellement dans Brevo. Le statut local n'a pas été modifié tant que ce n'est pas confirmé côté Brevo.");
                 }
                 loadWaitlist(currentData.waitlistPagination?.page || 1);
             } catch (e) {

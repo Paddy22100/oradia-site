@@ -1269,6 +1269,70 @@ async function handleData(req, res) {
         return res.status(200).json({ success: true, brevoRemoved, brevoDetail });
       }
 
+      // ── Contacts newsletter : réinscription (annule un blacklist Brevo / statut unsubscribed) ──
+      if (action === 'resubscribe-contact') {
+        const { id, email } = body;
+        if (!id && !email) return res.status(400).json({ error: 'id ou email requis' });
+
+        let q = supabase.from('newsletter_contacts').select('id, email, tags');
+        q = id ? q.eq('id', id) : q.eq('email', (email || '').toLowerCase().trim());
+        const { data: contact, error: fetchErr } = await q.maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (!contact) return res.status(404).json({ error: 'Contact introuvable' });
+
+        // Remet la catégorie "general" si absente (c'est elle qui déclenche l'appartenance à la liste 5)
+        const newTags = (contact.tags || []).includes('general') ? contact.tags : [...(contact.tags || []), 'general'];
+
+        // Réinscription réelle dans Brevo : retire le blacklist ET rajoute à la liste 5.
+        let brevoRestored = false;
+        let unblacklistStatus = null, unblacklistBody = '';
+        let listStatus = null, listBody = '';
+        const BREVO_API_KEY = process.env.BREVO_API_KEY;
+        if (contact.email && BREVO_API_KEY) {
+          // 1) Retrait du blacklist
+          try {
+            const rb = await fetch(`https://api.brevo.com/v3/contacts/${encodeURIComponent(contact.email)}`, {
+              method: 'PUT',
+              headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+              body: JSON.stringify({ emailBlacklisted: false })
+            });
+            unblacklistStatus = rb.status;
+            if (!(rb.ok || rb.status === 204)) unblacklistBody = (await rb.text().catch(() => '')).slice(0, 300);
+          } catch (e) { unblacklistStatus = 'exception'; unblacklistBody = e.message; }
+          // 2) Ajout à la liste 5 (crée le contact dans Brevo si besoin)
+          try {
+            const rl = await fetch('https://api.brevo.com/v3/contacts', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+              body: JSON.stringify({ email: contact.email, listIds: [5], updateEnabled: true })
+            });
+            listStatus = rl.status;
+            if (!(rl.ok || rl.status === 204)) listBody = (await rl.text().catch(() => '')).slice(0, 300);
+          } catch (e) { listStatus = 'exception'; listBody = e.message; }
+
+          const unblOk = unblacklistStatus === 204 || unblacklistStatus === 200;
+          const listOk = listStatus === 201 || listStatus === 204 || listStatus === 200;
+          brevoRestored = unblOk && listOk;
+        }
+        const brevoDetail = BREVO_API_KEY
+          ? `unblacklist=${unblacklistStatus}${unblacklistBody ? '('+unblacklistBody+')' : ''} · liste5-add=${listStatus}${listBody ? '('+listBody+')' : ''}`
+          : 'BREVO_API_KEY absente côté serveur';
+
+        // Ne marque "active"/"brevo_synced" côté Supabase que si Brevo a bien confirmé,
+        // pour ne jamais afficher un statut local qui ne reflète pas la réalité Brevo.
+        if (brevoRestored || !BREVO_API_KEY) {
+          const { error: updErr } = await supabase
+            .from('newsletter_contacts')
+            .update({ status: 'active', brevo_synced: true, unsubscribed_at: null, tags: newTags })
+            .eq('id', contact.id);
+          if (updErr) throw updErr;
+        }
+
+        await logSystemEvent(supabase, { level: brevoRestored ? 'info' : 'error', source: 'resubscribe-contact', method: 'POST', path: '/api/admin/data', status_code: 200, message: `Réinscription ${contact.email} — ${brevoRestored ? 'OK' : 'ÉCHEC Brevo'}`, details: { brevoDetail } });
+
+        return res.status(200).json({ success: true, brevoRestored, brevoDetail });
+      }
+
       // ── Contacts newsletter : suppression ──
       if (action === 'delete-contact') {
         const { id } = body;
