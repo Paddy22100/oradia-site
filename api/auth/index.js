@@ -296,9 +296,6 @@ async function handleCheckNewsletter(req, res) {
 
   const BREVO_API_KEY = process.env.BREVO_API_KEY;
   const listId = parseInt(process.env.BREVO_NEWSLETTER_LIST_ID || '5', 10);
-  // DEBUG TEMPORAIRE (à retirer une fois le diagnostic terminé) : ?debug=1 renvoie le
-  // détail brut de la réponse Brevo pour comprendre un cas où subscribed est inattendu.
-  const debug = req.query?.debug === '1';
 
   if (BREVO_API_KEY) {
     try {
@@ -307,16 +304,11 @@ async function handleCheckNewsletter(req, res) {
       });
       if (r.ok) {
         const contact = await r.json();
+        // Un contact blocklisté (désinscrit) ne reçoit plus aucune campagne, même s'il
+        // apparaît encore dans la liste — on ne le considère donc pas comme abonné.
         const subscribed = !contact.emailBlacklisted && Array.isArray(contact.listIds) && contact.listIds.includes(listId);
         res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify(debug
-          ? { subscribed, debug: { status: r.status, listId, emailBlacklisted: contact.emailBlacklisted, listIds: contact.listIds } }
-          : { subscribed }));
-      }
-      if (debug) {
-        const bodyText = await r.text().catch(() => '');
-        res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify({ subscribed: false, debug: { status: r.status, body: bodyText.slice(0, 300), keyPresent: true } }));
+        return res.end(JSON.stringify({ subscribed }));
       }
       if (r.status === 404) {
         // Contact inconnu de Brevo : certainement pas abonné, réponse fiable.
@@ -324,16 +316,7 @@ async function handleCheckNewsletter(req, res) {
         return res.end(JSON.stringify({ subscribed: false }));
       }
       // Autre statut (401, 429, 5xx…) : tombe sur le repli Supabase ci-dessous.
-    } catch (e) {
-      if (debug) {
-        res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-        return res.end(JSON.stringify({ subscribed: false, debug: { exception: e.message, keyPresent: true } }));
-      }
-      /* tombe sur le repli Supabase ci-dessous */
-    }
-  } else if (debug) {
-    res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ subscribed: false, debug: { keyPresent: false } }));
+    } catch (_) { /* tombe sur le repli Supabase ci-dessous */ }
   }
 
   // Repli : table Supabase (peut être incomplète mais mieux que rien si Brevo est indisponible)
