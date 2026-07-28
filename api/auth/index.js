@@ -282,9 +282,11 @@ async function handleCheckSubscription(req, res) {
   }
 }
 
-// Vérifie si un email est inscrit à la newsletter (statut actif dans newsletter_contacts,
-// qui reflète la liste Brevo 5). Utilisé côté front pour masquer le bloc d'inscription
-// newsletter aux membres déjà abonnés (ex. footer de l'espace membre).
+// Vérifie si un email est inscrit à la newsletter. Interroge Brevo directement
+// (source de vérité — la table Supabase newsletter_contacts n'est qu'une copie
+// qui peut être incomplète pour des contacts ajoutés hors du formulaire du site),
+// avec repli sur newsletter_contacts si l'appel Brevo échoue. Utilisé côté front
+// pour masquer le bloc d'inscription newsletter aux membres déjà abonnés.
 async function handleCheckNewsletter(req, res) {
   const email = (req.query?.email || '').toLowerCase().trim();
   if (!email) {
@@ -292,24 +294,44 @@ async function handleCheckNewsletter(req, res) {
     return res.end(JSON.stringify({ subscribed: false, error: 'Email requis' }));
   }
 
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-  if (!supabaseUrl || !supabaseKey) {
-    res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ subscribed: false }));
+  const BREVO_API_KEY = process.env.BREVO_API_KEY;
+  const listId = parseInt(process.env.BREVO_NEWSLETTER_LIST_ID || '5', 10);
+
+  if (BREVO_API_KEY) {
+    try {
+      const r = await fetch(`https://api.brevo.com/v3/contacts/${encodeURIComponent(email)}`, {
+        headers: { 'api-key': BREVO_API_KEY }
+      });
+      if (r.ok) {
+        const contact = await r.json();
+        const subscribed = !contact.emailBlacklisted && Array.isArray(contact.listIds) && contact.listIds.includes(listId);
+        res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ subscribed }));
+      }
+      if (r.status === 404) {
+        // Contact inconnu de Brevo : certainement pas abonné, réponse fiable.
+        res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+        return res.end(JSON.stringify({ subscribed: false }));
+      }
+      // Autre statut (401, 429, 5xx…) : tombe sur le repli Supabase ci-dessous.
+    } catch (_) { /* tombe sur le repli Supabase ci-dessous */ }
   }
 
-  const supabase = createClient(supabaseUrl, supabaseKey);
-
+  // Repli : table Supabase (peut être incomplète mais mieux que rien si Brevo est indisponible)
   try {
+    const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    if (!supabaseUrl || !supabaseKey) {
+      res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+      return res.end(JSON.stringify({ subscribed: false }));
+    }
+    const supabase = createClient(supabaseUrl, supabaseKey);
     const { data } = await supabase
       .from('newsletter_contacts')
       .select('status, brevo_synced')
       .eq('email', email)
       .maybeSingle();
-
     const subscribed = !!data && data.status !== 'unsubscribed' && data.brevo_synced === true;
-
     res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ subscribed }));
   } catch (err) {
