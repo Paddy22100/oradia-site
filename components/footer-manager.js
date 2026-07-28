@@ -30,10 +30,36 @@ class FooterManager {
       placeholder.innerHTML = this.template;
       this.initNewsletterForm();
       this.initBackToTop();
+      this.hideNewsletterBlockIfSubscribedMember();
       console.log('FooterManager: Template injecté avec succès');
     } else {
       console.error('FooterManager: Placeholder non trouvé!');
     }
+  }
+
+  // Espace membre uniquement : masque le bloc « Restez dans l'univers ORADIA »
+  // si la personne connectée est déjà inscrite à la newsletter — inutile de le
+  // lui proposer à nouveau. N'a aucun effet pour un visiteur non connecté.
+  hideNewsletterBlockIfSubscribedMember() {
+    try {
+      let email = null;
+      const sess = sessionStorage.getItem('oradia_member_session');
+      if (sess) { try { email = JSON.parse(sess).email || null; } catch (_) {} }
+      if (!email && localStorage.getItem('isLoggedIn') === 'true') {
+        email = localStorage.getItem('userEmail');
+      }
+      if (!email) return;
+
+      fetch('/api/auth/check-newsletter?email=' + encodeURIComponent(email))
+        .then(r => r.ok ? r.json() : null)
+        .then(data => {
+          if (data && data.subscribed) {
+            const section = document.getElementById('footer-newsletter-section');
+            if (section) section.style.display = 'none';
+          }
+        })
+        .catch(() => {});
+    } catch (_) {}
   }
 
   // Bouton « remonter en haut » — ajouté uniquement si la page n'en a pas déjà un.

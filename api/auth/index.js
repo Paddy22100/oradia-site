@@ -282,6 +282,42 @@ async function handleCheckSubscription(req, res) {
   }
 }
 
+// Vérifie si un email est inscrit à la newsletter (statut actif dans newsletter_contacts,
+// qui reflète la liste Brevo 5). Utilisé côté front pour masquer le bloc d'inscription
+// newsletter aux membres déjà abonnés (ex. footer de l'espace membre).
+async function handleCheckNewsletter(req, res) {
+  const email = (req.query?.email || '').toLowerCase().trim();
+  if (!email) {
+    res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ subscribed: false, error: 'Email requis' }));
+  }
+
+  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+  if (!supabaseUrl || !supabaseKey) {
+    res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ subscribed: false }));
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseKey);
+
+  try {
+    const { data } = await supabase
+      .from('newsletter_contacts')
+      .select('status, brevo_synced')
+      .eq('email', email)
+      .maybeSingle();
+
+    const subscribed = !!data && data.status !== 'unsubscribed' && data.brevo_synced === true;
+
+    res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ subscribed }));
+  } catch (err) {
+    res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ subscribed: false }));
+  }
+}
+
 // ============ REFRESH SESSION ============
 // Renouvelle un access_token expiré à partir du refresh_token (Supabase Auth).
 // Permet aux membres connectés de longue date (session > 1h) de continuer à
@@ -606,6 +642,11 @@ module.exports = async (req, res) => {
     // GET /check-subscription - vérifie si l'URL contient "check-subscription"
     if (req.method === 'GET' && (path.includes('check-subscription') || fullUrl.includes('check-subscription'))) {
       return await handleCheckSubscription(req, res);
+    }
+
+    // GET /check-newsletter - vérifie si un email est inscrit à la newsletter (liste Brevo 5)
+    if (req.method === 'GET' && (path.includes('check-newsletter') || fullUrl.includes('check-newsletter'))) {
+      return await handleCheckNewsletter(req, res);
     }
 
     // POST routes
