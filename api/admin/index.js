@@ -2879,6 +2879,9 @@ function buildCommunicationEmailHtml(draft) {
       <img src="https://oradia.fr/images/medias/bandeau_newsletter.webp" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
     </a>
   </td></tr>
+  <tr><td style="padding:14px 32px; text-align:center; background:rgba(212,175,55,0.06); border-bottom:1px solid rgba(212,175,55,0.15);">
+    <a href="https://oradia.fr" target="_blank" style="color:#d4af37; text-decoration:none; font-size:13px; font-weight:700; letter-spacing:0.04em; font-family:Georgia,serif;">Pas le temps de tout lire ? <span style="text-decoration:underline;">Direction oradia.fr →</span></a>
+  </td></tr>
   <tr><td style="padding:30px 32px 0;">
     ${badgeHtml}
     ${displayTitle ? `<h2 style="color:#d4af37; font-family:Georgia,serif; font-size:24px; margin:0 0 20px;">${nlEscHtml(displayTitle)}</h2>` : ''}
