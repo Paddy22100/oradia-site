@@ -100,16 +100,19 @@
   }
 
   // ---- API distante (membres connectés — Supabase + RLS) ----
+  // global._lastApiListDebug : diagnostic temporaire (raison exacte d'une liste
+  // vide — succès avec 0 résultat, 401 persistant, erreur réseau...) exposé pour
+  // affichage sur member/tirages.html, à retirer une fois la cause confirmée.
   async function apiList() {
     let token = await getValidToken();
-    if (!token) return [];
+    if (!token) { global._lastApiListDebug = 'aucun token (ni access_token ni refresh_token exploitable)'; return []; }
     try {
       let resp = await fetch(`${API_BASE}?action=list`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       if (resp.status === 401) {
         token = await refreshAccessToken();
-        if (!token) return [];
+        if (!token) { global._lastApiListDebug = '401 puis échec du renouvellement via refresh_token'; return []; }
         resp = await fetch(`${API_BASE}?action=list`, {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -118,8 +121,16 @@
       // L'API renvoie du plus récent au plus ancien ; on inverse pour rester
       // compatible avec la convention historique localStorage (ordre chronologique
       // croissant), sur laquelle reposent les `.slice(-N).reverse()` du front existant.
-      if (data && data.success) return (data.tirages || []).slice().reverse();
-    } catch (e) { console.warn('Tirages: échec récupération historique distant', e); }
+      if (data && data.success) {
+        const tirages = data.tirages || [];
+        global._lastApiListDebug = `succès HTTP ${resp.status} — ${tirages.length} tirage(s) renvoyé(s) par le serveur`;
+        return tirages.slice().reverse();
+      }
+      global._lastApiListDebug = `HTTP ${resp.status}, success=${data && data.success} — ${data && data.message || data && data.error || 'pas de message'}`;
+    } catch (e) {
+      global._lastApiListDebug = 'exception JS : ' + e.message;
+      console.warn('Tirages: échec récupération historique distant', e);
+    }
     return [];
   }
 

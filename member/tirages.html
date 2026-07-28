@@ -269,7 +269,7 @@
                     if (sess) {
                         const hasToken = window.OradiaTirageStorage?.isAuthenticated?.();
                         debugReason = hasToken
-                            ? `authentifié (email=${sess.email || '?'}) — liste distante réellement vide ou requête échouée`
+                            ? `authentifié (email=${sess.email || '?'}) — ${window._lastApiListDebug || 'raison inconnue (voir js/tirages-storage.js)'}`
                             : `session présente mais sans access_token ni refresh_token (email=${sess.email || '?'}) — repli sur l'historique local, qui est vide`;
                     }
                 } catch (e) { debugReason = 'erreur diagnostic: ' + e.message; }
