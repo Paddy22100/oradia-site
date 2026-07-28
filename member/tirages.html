@@ -260,6 +260,20 @@
             if(info) info.textContent = n === 0 ? 'Aucun tirage enregistré' : `${n} tirage${n > 1 ? 's' : ''} enregistré${n > 1 ? 's' : ''}`;
 
             if (n === 0) {
+                // Diagnostic temporaire : distingue "vraiment aucun tirage" de "session
+                // sans token valide" (repli silencieux vers l'historique invité local,
+                // toujours vide sur un compte qui a réellement tiré côté serveur).
+                let debugReason = 'non authentifié (pas de session)';
+                try {
+                    const sess = JSON.parse(sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session') || 'null');
+                    if (sess) {
+                        const hasToken = window.OradiaTirageStorage?.isAuthenticated?.();
+                        debugReason = hasToken
+                            ? `authentifié (email=${sess.email || '?'}) — liste distante réellement vide ou requête échouée`
+                            : `session présente mais sans access_token ni refresh_token (email=${sess.email || '?'}) — repli sur l'historique local, qui est vide`;
+                    }
+                } catch (e) { debugReason = 'erreur diagnostic: ' + e.message; }
+
                 container.innerHTML = `
                     <div class="bg-[rgba(26,54,93,0.4)] rounded-xl p-10 border border-gold/20 text-center">
                         <i class="fas fa-infinity text-4xl text-gold/30 mb-4 block"></i>
@@ -267,6 +281,7 @@
                         <a href="../tore.html" class="inline-block bg-gold text-night-blue font-bold px-8 py-3 rounded-lg hover:bg-light-gold transition-colors">
                             Commencer mon premier tirage
                         </a>
+                        <p class="text-light-gold/20 text-xs mt-6" title="${debugReason}">(debug: ${debugReason})</p>
                     </div>`;
                 return;
             }
