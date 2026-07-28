@@ -217,17 +217,21 @@
                 </div>
             </section>
 
-            <!-- Pub précommandes -->
+            <!-- Pub précommandes — même bandeau que celui utilisé dans les newsletters -->
             <section class="mb-6 fade-in">
-                <div class="rounded-xl p-5 border border-gold/25 flex flex-col sm:flex-row items-center gap-5 bg-gradient-to-r from-[rgba(26,54,93,0.5)] to-[rgba(5,20,40,0.7)] hover:border-gold/40 transition-colors">
-                    <img src="../images/Coffret.webp" alt="Oracle Oradia physique" class="w-16 h-16 object-contain flex-shrink-0 rounded-lg">
-                    <div class="flex-1 text-center sm:text-left">
-                        <p class="text-gold font-semibold font-cormorant text-lg">L'Oracle Oradia en version physique</p>
-                        <p class="text-light-gold/70 text-sm">Précommandez le jeu de cartes et soutenez la naissance de cet outil de transformation.</p>
-                    </div>
-                    <a href="../precommande-oracle.html" class="flex-shrink-0 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-2.5 px-5 rounded-lg text-sm hover:from-light-gold hover:to-gold transition-all whitespace-nowrap">
-                        Précommander
+                <div class="rounded-xl overflow-hidden border border-gold/25 bg-gradient-to-r from-[rgba(26,54,93,0.5)] to-[rgba(5,20,40,0.7)] hover:border-gold/40 transition-colors">
+                    <a href="../precommande-oracle.html" class="block">
+                        <img src="../images/medias/bandeau_newsletter.webp" alt="Oradia — La Boussole Intérieure" class="w-full h-auto block">
                     </a>
+                    <div class="flex flex-col sm:flex-row items-center gap-5 p-5">
+                        <div class="flex-1 text-center sm:text-left">
+                            <p class="text-gold font-semibold font-cormorant text-lg">L'Oracle Oradia en version physique</p>
+                            <p class="text-light-gold/70 text-sm">Précommandez le jeu de cartes et soutenez la naissance de cet outil de transformation.</p>
+                        </div>
+                        <a href="../precommande-oracle.html" class="flex-shrink-0 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-2.5 px-5 rounded-lg text-sm hover:from-light-gold hover:to-gold transition-all whitespace-nowrap">
+                            Précommander
+                        </a>
+                    </div>
                 </div>
             </section>
 
@@ -261,6 +265,8 @@
             </a>
         </div>
     </div>
+
+    <div id="footer-placeholder"></div>
 
     <script>
         // Afficher le nom depuis la session
@@ -312,49 +318,6 @@
         });
     </script>
 <script src="../js/page-tracker.js" defer></script>
+<script src="../components/footer-manager.js" defer></script>
 </body>
 </html>
-
-<footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
-    <div class="container mx-auto max-w-6xl">
-      <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8">
-        <div>
-          <div class="flex items-center mb-4">
-            <img src="../images/logo-hd-v2.webp" alt="Oradia Logo" class="w-16 h-16 mr-4" />
-            <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
-          </div>
-          <p class="text-light-gold text-sm">L'oracle qui vous accompagne sur votre chemin personnel et révèle votre essence.</p>
-        </div>
-        <div>
-          <h4 class="cormorant text-xl text-gold mb-4">Navigation</h4>
-          <ul class="space-y-2">
-            <li><a href="../index.html#accueil" class="text-light-gold/70 hover:text-gold transition">Accueil</a></li>
-            <li><a href="../oracle.html" class="text-light-gold/70 hover:text-gold transition">Oracle</a></li>
-            <li><a href="../accompagnements.html" class="text-light-gold/70 hover:text-gold transition">Accompagnements</a></li>
-            <li><a href="../rendez-vous.html" class="text-light-gold/70 hover:text-gold transition">Rendez-vous</a></li>
-            <li><a href="../partenariats.html" class="text-light-gold/70 hover:text-gold transition">Partenariats</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
-          <ul class="space-y-2">
-            <li><a href="../cgu.html" class="text-light-gold hover:text-gold transition">Conditions Générales d'Utilisation</a></li>
-            <li><a href="../cgv.html" class="text-light-gold hover:text-gold transition">Conditions Générales de Vente</a></li>
-            <li><a href="../mentions-legales.html" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
-            <li><a href="../politique-confidentialite.html" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
-          </ul>
-        </div>
-        <div>
-          <h4 class="cormorant text-xl text-gold mb-4">Contact</h4>
-          <ul class="space-y-2">
-            <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><a id="dash-contact-link" class="text-light-gold hover:text-gold transition" href="/contact.html">Me contacter</a></li>
-            <script>(function(){var u='contact',d='oradia.fr';var el=document.getElementById('dash-contact-link');if(el){el.href='mailto:'+u+'@'+d;el.textContent=u+'@'+d;}})();</script>
-            <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><a href="https://instagram.com/oradia_oracle_officiel" target="_blank" rel="noopener" class="text-light-gold hover:text-gold transition">@oradia_oracle_officiel</a></li>
-          </ul>
-        </div>
-      </div>
-      <div class="pt-8 border-t border-gold/10 text-center">
-        <p class="text-light-gold text-sm">&copy; 2026 Oradia. Tous droits réservés.</p>
-      </div>
-    </div>
-  </footer>

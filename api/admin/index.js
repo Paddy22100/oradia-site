@@ -2875,7 +2875,9 @@ function buildCommunicationEmailHtml(draft) {
 <tr><td align="center" style="padding:32px 12px;">
 <table width="100%" cellpadding="0" cellspacing="0" style="background:linear-gradient(135deg, rgba(10,25,47,0.95) 0%, rgba(5,20,40,0.96) 100%); max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
   <tr><td style="padding:0; line-height:0;">
-    <img src="https://oradia.fr/images/medias/bandeau_newsletter.webp" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+    <a href="https://oradia.fr" target="_blank" style="display:block; line-height:0;">
+      <img src="https://oradia.fr/images/medias/bandeau_newsletter.webp" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+    </a>
   </td></tr>
   <tr><td style="padding:30px 32px 0;">
     ${badgeHtml}
@@ -3704,6 +3706,8 @@ Génère deux publications séparées :
 1. FACEBOOK (300-400 mots, ton inspirant et profond, peut contenir des paragraphes, emoji discrets, appel à l'action vers le site)
 2. INSTAGRAM (150-200 mots max, percutant, 5-8 hashtags pertinents en fin de texte, emojis bienvenus)
 
+Contrainte impérative de format : chaque texte doit COMMENCER par le lien "oradia.fr" sur sa propre ligne (avant même la première phrase), pour que le site soit immédiatement visible sans avoir à lire tout le post.
+
 Réponds UNIQUEMENT en JSON valide avec cette structure :
 {"facebook":"texte facebook","instagram":"texte instagram"}
 
@@ -3729,8 +3733,8 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
     }
 
     // Fallback si l'IA échoue
-    if (!facebook_text) facebook_text = `${subject}\n\n${textContent.substring(0, 400)}...\n\nPlus sur oradia.fr`;
-    if (!instagram_text) instagram_text = `${subject}\n\n${textContent.substring(0, 150)}...\n\n#oradia #oracle #developpementpersonnel #tore #conscience`;
+    if (!facebook_text) facebook_text = `oradia.fr\n\n${subject}\n\n${textContent.substring(0, 400)}...`;
+    if (!instagram_text) instagram_text = `oradia.fr\n\n${subject}\n\n${textContent.substring(0, 150)}...\n\n#oradia #oracle #developpementpersonnel #tore #conscience`;
     } // fin du bloc else (génération IA)
 
     const DEFAULT_IMAGE = 'https://oradia.fr/images/logo-hd-v2.webp';
