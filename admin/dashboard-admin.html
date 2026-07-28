@@ -10005,7 +10005,12 @@
                 const lastLabel = last ? `${(last.sentDate || '').slice(0, 10)} · ${last.openRate}% ouv.` : '—';
                 set('ana-nl-last', lastLabel, last ? last.subject : '');
             } catch (e) {
-                set('ana-nl-open', '—'); set('ana-nl-click', '—'); set('ana-nl-count', '—'); set('ana-nl-last', 'Erreur');
+                // Message d'erreur affiché directement (comme dans l'onglet Newsletter
+                // & Réseaux, même source), pas caché dans une infobulle qu'on ne pense
+                // pas forcément à survoler.
+                set('ana-nl-open', '—'); set('ana-nl-click', '—'); set('ana-nl-count', '—');
+                const msg = e.message || 'Erreur inconnue';
+                set('ana-nl-last', 'Erreur : ' + msg, msg);
             }
         }
 
