@@ -51,7 +51,9 @@
     // window.oradiaTrackEvent('intention_saisie' | 'tirage_lance' | 'analyse_affichee' | 'email_laisse')
     window.oradiaTrackEvent = function (eventName) {
       try {
-        var evPayload = JSON.stringify({ event: eventName, session_id: sessionId, path: location.pathname });
+        // user_agent requis : le endpoint /track applique le même filtre anti-bot aux
+        // événements qu'aux vues de page et rejette toute requête sans user-agent valide.
+        var evPayload = JSON.stringify({ event: eventName, session_id: sessionId, path: location.pathname, user_agent: navigator.userAgent || '' });
         if (navigator.sendBeacon) {
           navigator.sendBeacon(url, new Blob([evPayload], { type: 'application/json' }));
         } else {
