@@ -309,6 +309,25 @@
 
 <style>
 
+  /* Exemples d'intention cliquables (chips) */
+  .tore-intention-chip {
+    background: rgba(212,175,55,0.06);
+    border: 1px solid rgba(212,175,55,0.28);
+    color: rgba(232,217,176,0.9);
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(12px, 1.3vw, 14px);
+    line-height: 1.3;
+    padding: 6px 14px;
+    border-radius: 999px;
+    cursor: pointer;
+    transition: background 0.2s, border-color 0.2s, transform 0.15s;
+  }
+  .tore-intention-chip:hover {
+    background: rgba(212,175,55,0.14);
+    border-color: rgba(212,175,55,0.55);
+    transform: translateY(-1px);
+  }
+
   /* Mode immersif : cacher footer, autres sections et le bouton scroll-top */
   body.hide-immersive-tore > footer,
   body.hide-immersive-tore > section:not(#tore-immersif) {
@@ -2951,6 +2970,18 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
                     required></textarea>
           <div class="absolute bottom-3 right-4 text-gold/40 text-xs">
             <span id="char-count">0</span> caractères
+          </div>
+        </div>
+
+        <!-- Exemples d'intention cliquables : réduisent l'effet « page blanche »,
+             garantissent une formulation valide et augmentent le taux de saisie. -->
+        <div class="text-center" style="margin:0;">
+          <p style="font-size:clamp(11px,1.2vw,13px);color:rgba(212,175,55,0.55);font-style:italic;margin:0 0 8px;">Pas d'idée&nbsp;? Inspirez-vous d'un exemple&nbsp;:</p>
+          <div class="flex flex-wrap justify-center gap-2" id="tore-intention-examples">
+            <button type="button" onclick="fillIntention(this)" class="tore-intention-chip">Comment avancer sereinement en ce moment&nbsp;?</button>
+            <button type="button" onclick="fillIntention(this)" class="tore-intention-chip">Quelle est la prochaine étape sur mon chemin&nbsp;?</button>
+            <button type="button" onclick="fillIntention(this)" class="tore-intention-chip">Pourquoi cette situation se répète-t-elle&nbsp;?</button>
+            <button type="button" onclick="fillIntention(this)" class="tore-intention-chip">Quel choix me correspond vraiment&nbsp;?</button>
           </div>
         </div>
 
@@ -6570,6 +6601,18 @@ function showArrowForStep(stepIndex, isMatch) {
   
   // Exécuter la configuration
   setupIntentionValidation();
+
+  // Remplit le champ d'intention depuis un exemple cliquable, puis déclenche la
+  // validation (l'écouteur 'input' met à jour le bouton et le funnel). Exposé sur
+  // window car appelé par les onclick inline des chips.
+  window.fillIntention = function (btn) {
+    const input = el('tore-intention-input');
+    if (!input || !btn) return;
+    input.value = (btn.textContent || '').replace(/\u00a0/g, ' ').trim();
+    input.dispatchEvent(new Event('input', { bubbles: true }));
+    input.focus();
+    try { input.setSelectionRange(input.value.length, input.value.length); } catch (e) {}
+  };
 
   // Forcer le scroll molette sur la page formulaire (contourne tout overflow:hidden intermédiaire)
   document.addEventListener('wheel', function(e) {
