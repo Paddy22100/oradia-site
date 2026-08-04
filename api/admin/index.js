@@ -5407,13 +5407,29 @@ Réponds en français, sans tiret long, format markdown compact.`
           sb.from('funnel_events').select('session_id, event_name').gte('created_at', since),
           sb.from('tore_subscriptions').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('status', 'active')
         ]);
-        const distinctCount = (rows, filterFn) => new Set((rows || []).filter(filterFn || (() => true)).map(r => r.session_id)).size;
+        // Funnel CHAÎNÉ : chaque étape ne compte que les sessions ayant franchi
+        // cette étape ET toutes les précédentes. Sans chaînage, les compteurs
+        // étaient indépendants par événement, ce qui pouvait produire des taux
+        // « % de l'étape préc. » incohérents (voire > 100 %). On garantit ici une
+        // décroissance monotone et de vrais taux de conversion.
+        const sessionsFor = (name) => new Set((events || []).filter(e => e.event_name === name).map(e => e.session_id));
+        const visitSessions = new Set((toreViews || []).map(r => r.session_id));
+        // Intersection cumulative : on ne garde que les sessions déjà présentes à l'étape précédente.
+        const chain = (prevSet, curSet) => { const r = new Set(); for (const s of curSet) if (prevSet.has(s)) r.add(s); return r; };
+        const sIntention = chain(visitSessions, sessionsFor('intention_saisie'));
+        const sTirage    = chain(sIntention,    sessionsFor('tirage_lance'));
+        const sAnalyse   = chain(sTirage,       sessionsFor('analyse_affichee'));
+        const sEmail     = chain(sAnalyse,      sessionsFor('email_laisse'));
         funnel = {
-          visites:            new Set((toreViews || []).map(r => r.session_id)).size,
-          intentions_saisies: distinctCount(events, e => e.event_name === 'intention_saisie'),
-          tirages_lances:     distinctCount(events, e => e.event_name === 'tirage_lance'),
-          analyses_affichees: distinctCount(events, e => e.event_name === 'analyse_affichee'),
-          emails_laisses:     distinctCount(events, e => e.event_name === 'email_laisse'),
+          visites:            visitSessions.size,
+          intentions_saisies: sIntention.size,
+          tirages_lances:     sTirage.size,
+          analyses_affichees: sAnalyse.size,
+          emails_laisses:     sEmail.size,
+          // Les abonnements viennent d'une autre table (tore_subscriptions) : la
+          // souscription passe par une redirection Stripe qui perd le session_id,
+          // donc cette étape n'est PAS chaînable par session — on la présente comme
+          // une conversion de la période, pas comme un sous-ensemble des emails.
           abonnements:        newSubs || 0
         };
       } catch (_) { /* migration funnel_events pas encore exécutée — on omet simplement le funnel */ }
