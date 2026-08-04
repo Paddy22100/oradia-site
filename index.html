@@ -324,26 +324,6 @@
                     <span>Hasard quantique vérifiable</span>
                 </div>
             </div>
-
-            <!-- Preuve sociale : compteur de tirages (affiché seulement si significatif) -->
-            <p id="home-tirage-counter" class="hidden lora text-sm text-light-gold/70 mt-5"></p>
-            <script>
-              (function(){
-                fetch('/api/admin/synchronicity-public')
-                  .then(r => r.json())
-                  .then(d => {
-                    const n = d && d.totalTirages;
-                    if (typeof n === 'number' && n >= 30) {
-                      const el = document.getElementById('home-tirage-counter');
-                      if (el) {
-                        el.innerHTML = '<i class="fas fa-star text-gold mr-1"></i>Déjà <strong class="text-gold">' + n.toLocaleString('fr-FR') + '</strong> tirages réalisés sur Oradia';
-                        el.classList.remove('hidden');
-                      }
-                    }
-                  })
-                  .catch(function(){});
-              })();
-            </script>
         </div>
     </div>
 </section>

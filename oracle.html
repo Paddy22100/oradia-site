@@ -214,9 +214,9 @@
 
         <!-- Preuve sociale : résonance immédiate moyenne (affichée seulement si assez de données) -->
         <div id="resonance-social-proof" style="display:none;" class="mt-2">
-          <span style="display:inline-flex;align-items:center;gap:9px;background:rgba(10,25,47,0.82);border:1px solid rgba(212,175,55,0.45);box-shadow:0 4px 18px rgba(212,175,55,0.12);border-radius:50px;padding:10px 22px;backdrop-filter:blur(2px);">
-            <i class="fas fa-star" style="color:#f0c75e;font-size:14px;"></i>
-            <span id="resonance-social-proof-text" style="color:#f5e7a1;font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;letter-spacing:0.02em;"></span>
+          <span style="display:inline-flex;align-items:center;gap:9px;background:rgba(10,25,47,0.82);border:1px solid rgba(212,175,55,0.45);box-shadow:0 4px 18px rgba(212,175,55,0.12);border-radius:16px;padding:10px 20px;backdrop-filter:blur(2px);max-width:100%;">
+            <i class="fas fa-star" style="color:#f0c75e;font-size:14px;flex-shrink:0;"></i>
+            <span id="resonance-social-proof-text" style="color:#f5e7a1;font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;letter-spacing:0.02em;"></span>
           </span>
         </div>
 
@@ -755,7 +755,7 @@
           const ri = res.resonanceImmediate || {};
           if (ri.avgScore != null && ri.total >= MIN_SAMPLE) {
             document.getElementById('resonance-social-proof-text').innerHTML =
-              `<strong style="font-weight:700;color:#fff5d9;">${ri.avgScore}/10</strong> de satisfaction après tirage · ${ri.total} avis`;
+              `<strong style="font-weight:700;color:#fff5d9;">${ri.avgScore}/10</strong> de satisfaction après tirage`;
             document.getElementById('resonance-social-proof').style.display = '';
           }
         })
