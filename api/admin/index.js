@@ -26,6 +26,10 @@ try {
 // Tables exportables (récap mensuel preorders/donors/tirages)
 const EXPORTABLE_TABLES = ['preorders', 'donors', 'tirages'];
 
+// Sources de hasard considérées comme quantique vérifié (valides pour l'étude scientifique).
+// Toute autre valeur (fallback crypto, unknown) est exclue des statistiques de synchronicité.
+const QUANTUM_SOURCES = ['anu', 'outshift'];
+
 // Comptes à ne jamais compter dans la comptabilité (audit/test + compte personnel du fondateur)
 const ACCOUNTING_EXCLUDED_EMAILS = ['boucheron.r89@gmail.com', 'audit@oradia.fr', 'contact@oradia.fr'];
 
@@ -747,26 +751,55 @@ async function handleData(req, res) {
           const crypto = require('crypto');
           const out = { filled: 0, resolved: 0, source: null };
 
-          // (1) Remplissage — uniquement du vrai quantique ANU (sinon l'étude serait polluée)
+          // (1) Remplissage — uniquement du vrai quantique (ANU ou Outshift/Cisco),
+          //     jamais de pseudo-hasard local (sinon l'étude serait polluée).
           const { count: available } = await sb.from('retro_pool').select('*', { count: 'exact', head: true }).is('consumed_at', null);
           const LOW = 200, BATCH = 1024;
+          const OUTSHIFT_BATCH = 1000; // limite documentée par Outshift : 1000 blocs max par appel
           if ((available || 0) < LOW) {
             let numbers = null;
-            try {
-              if (process.env.ANU_QRNG_API_KEY) {
-                const r = await fetch(`https://api.quantumnumbers.anu.edu.au?length=${BATCH}&type=uint8`, {
-                  headers: { 'x-api-key': process.env.ANU_QRNG_API_KEY, 'Content-Type': 'application/json' },
+            let poolSource = null;
+
+            // Source 1 : Outshift QRNG (Cisco) — priorité (quota bien plus généreux que le plan gratuit ANU)
+            if (process.env.OUTSHIFT_QRNG_API_KEY) {
+              try {
+                const r = await fetch('https://api.qrng.outshift.com/api/v1/random_numbers', {
+                  method: 'POST',
+                  headers: { 'x-id-api-key': process.env.OUTSHIFT_QRNG_API_KEY, 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ encoding: 'raw', format: 'decimal', bits_per_block: 8, number_of_blocks: OUTSHIFT_BATCH }),
                   signal: AbortSignal.timeout(8000)
                 });
-                out.source = r.status;
-                if (r.ok) { const d = await r.json(); if (Array.isArray(d.data)) numbers = d.data; }
-              } else { out.source = 'missing_api_key'; }
-            } catch (e) { out.source = e.name === 'TimeoutError' ? 'timeout' : e.message; }
+                out.source = `outshift_${r.status}`;
+                if (r.ok) {
+                  const d = await r.json();
+                  const raw = d?.random_numbers ?? d?.data ?? d?.numbers ?? d?.blocks;
+                  const parsed = Array.isArray(raw)
+                    ? raw.map(v => (typeof v === 'object' && v !== null ? Number(v.decimal ?? v.value) : Number(v)))
+                    : null;
+                  if (parsed && parsed.length && !parsed.some(Number.isNaN)) { numbers = parsed; poolSource = 'outshift'; }
+                }
+              } catch (e) { out.source = 'outshift_' + (e.name === 'TimeoutError' ? 'timeout' : e.message); }
+            }
+
+            // Source 2 : ANU, tentée si Outshift a échoué (ou n'est pas configuré)
+            if (!numbers) {
+              try {
+                if (process.env.ANU_QRNG_API_KEY) {
+                  const r = await fetch(`https://api.quantumnumbers.anu.edu.au?length=${BATCH}&type=uint8`, {
+                    headers: { 'x-api-key': process.env.ANU_QRNG_API_KEY, 'Content-Type': 'application/json' },
+                    signal: AbortSignal.timeout(8000)
+                  });
+                  out.source = r.status;
+                  if (r.ok) { const d = await r.json(); if (Array.isArray(d.data)) { numbers = d.data; poolSource = 'anu'; } }
+                } else { out.source = 'missing_api_key'; }
+              } catch (e) { out.source = e.name === 'TimeoutError' ? 'timeout' : e.message; }
+            }
+
             if (numbers && numbers.length) {
               const batchId = 'batch_' + Date.now().toString(36);
               const batchHash = crypto.createHash('sha256').update(Buffer.from(numbers)).digest('hex');
               const committedAt = new Date().toISOString();
-              const rows = numbers.map(v => ({ batch_id: batchId, batch_hash: batchHash, committed_at: committedAt, byte_value: v, bit_value: v >= 128 ? 1 : 0, qrng_source: 'anu' }));
+              const rows = numbers.map(v => ({ batch_id: batchId, batch_hash: batchHash, committed_at: committedAt, byte_value: v, bit_value: v >= 128 ? 1 : 0, qrng_source: poolSource }));
               for (let i = 0; i < rows.length; i += 500) { await sb.from('retro_pool').insert(rows.slice(i, i + 500)); }
               out.filled = rows.length;
             }
@@ -2036,7 +2069,8 @@ async function handleData(req, res) {
         }
       }
 
-      // Fenêtres d'observation activées ce mois-ci → proxy du nombre d'appels QRNG (ANU).
+      // Fenêtres d'observation activées ce mois-ci → proxy du nombre d'appels QRNG
+      // (sources quantiques vérifiées : ANU ou Outshift/Cisco).
       let qrngAnu = 0, qrngFallback = 0;
       {
         const { data: obsRows, error } = await supabase
@@ -2044,8 +2078,8 @@ async function handleData(req, res) {
           .select('qrng_source')
           .gte('created_at', startOfMonth);
         if (!error) {
-          qrngAnu = (obsRows || []).filter(r => r.qrng_source === 'anu').length;
-          qrngFallback = (obsRows || []).filter(r => r.qrng_source && r.qrng_source !== 'anu').length;
+          qrngAnu = (obsRows || []).filter(r => QUANTUM_SOURCES.includes(r.qrng_source)).length;
+          qrngFallback = (obsRows || []).filter(r => r.qrng_source && !QUANTUM_SOURCES.includes(r.qrng_source)).length;
         }
       }
 
@@ -2150,12 +2184,14 @@ async function handleData(req, res) {
         }
       }
 
-      // État de la clé ANU (QRNG quantique) : lecture des derniers appels loggés par
-      // /api/qrng.js (table qrng_usage), sans jamais consommer de quota nous-mêmes
-      // (aucun appel actif à l'API ANU depuis le dashboard).
+      // État des sources quantiques (ANU + Outshift) : lecture des derniers appels loggés
+      // par /api/qrng.js (table qrng_usage), sans jamais consommer de quota nous-mêmes
+      // (aucun appel actif aux API quantiques depuis le dashboard).
       let anuHealth = null;
       try {
-        const keyConfigured = !!process.env.ANU_QRNG_API_KEY;
+        const anuKeyConfigured = !!process.env.ANU_QRNG_API_KEY;
+        const outshiftKeyConfigured = !!process.env.OUTSHIFT_QRNG_API_KEY;
+        const keyConfigured = anuKeyConfigured || outshiftKeyConfigured;
         const now = Date.now();
         const since24h = new Date(now - 24 * 3600 * 1000).toISOString();
         const since7d = new Date(now - 7 * 24 * 3600 * 1000).toISOString();
@@ -2170,21 +2206,41 @@ async function handleData(req, res) {
         const rows7d = recentRows || [];
         const rows24h = rows7d.filter(r => r.created_at >= since24h);
         const count = (rows, outcome) => rows.filter(r => r.outcome === outcome).length;
+        const countQuantum = (rows) => rows.filter(r => QUANTUM_SOURCES.includes(r.outcome)).length;
         const mostRecent = rows7d[0] || null;
 
         let status;
         if (!keyConfigured) status = 'no_key';
         else if (rows24h.length === 0 && rows7d.length === 0) status = 'unknown';
-        else if (rows24h.length > 0 && count(rows24h, 'anu') === 0 && count(rows24h, 'fallback') > 0) status = 'down';
+        else if (rows24h.length > 0 && countQuantum(rows24h) === 0 && count(rows24h, 'fallback') > 0) status = 'down';
         else if (rows24h.length > 0 && count(rows24h, 'fallback') > 0) status = 'degraded';
-        else if (rows24h.length > 0 && count(rows24h, 'anu') > 0) status = 'ok';
+        else if (rows24h.length > 0 && countQuantum(rows24h) > 0) status = 'ok';
         else status = 'unknown'; // aucun tirage dans les 24h mais un historique 7j existe
+
+        // Statut individuel par source : configurée + dernier succès observé dans qrng_usage.
+        const sourceStatus = (key, envConfigured) => {
+          const last24 = count(rows24h, key);
+          const last7 = count(rows7d, key);
+          const lastRow = rows7d.find(r => r.outcome === key) || null; // rows7d trié desc par created_at
+          let st;
+          if (!envConfigured) st = 'no_key';
+          else if (last24 > 0) st = 'ok';
+          else if (rows7d.length === 0) st = 'unknown';
+          else st = 'down'; // clé configurée, appels récents existants, mais aucun succès sur cette source en 24h
+          return { status: st, keyConfigured: envConfigured, last24h: last24, last7d: last7, lastSuccessAt: lastRow?.created_at || null };
+        };
 
         anuHealth = {
           status,
           keyConfigured,
-          last24h: { anu: count(rows24h, 'anu'), fallback: count(rows24h, 'fallback'), total: rows24h.length },
-          last7d:  { anu: count(rows7d, 'anu'),  fallback: count(rows7d, 'fallback'),  total: rows7d.length },
+          anuKeyConfigured,
+          outshiftKeyConfigured,
+          sources: {
+            anu: sourceStatus('anu', anuKeyConfigured),
+            outshift: sourceStatus('outshift', outshiftKeyConfigured),
+          },
+          last24h: { anu: count(rows24h, 'anu'), outshift: count(rows24h, 'outshift'), fallback: count(rows24h, 'fallback'), total: rows24h.length },
+          last7d:  { anu: count(rows7d, 'anu'),  outshift: count(rows7d, 'outshift'),  fallback: count(rows7d, 'fallback'),  total: rows7d.length },
           mostRecent
         };
       } catch (e) {
@@ -2293,18 +2349,19 @@ async function handleData(req, res) {
       }));
 
       // Répartition de la source du tirage (validité scientifique)
-      // Seuls les 'anu' (100% quantique) sont valides pour l'étude.
+      // Seules les sources quantiques vérifiées (ANU, Outshift) sont valides pour l'étude.
       const qrngBreakdown = {
         anu:      rows.filter(r => r.qrng_source === 'anu').length,
+        outshift: rows.filter(r => r.qrng_source === 'outshift').length,
         fallback: rows.filter(r => r.qrng_source === 'fallback').length,
         unknown:  rows.filter(r => !r.qrng_source || r.qrng_source === 'unknown').length,
         migrationPending: qrngMissing  // avertit le dashboard
       };
       // VALIDITÉ SCIENTIFIQUE : toutes les statistiques ci-dessous sont calculées
-      // UNIQUEMENT sur les tirages 100% quantiques (ANU). Les réponses 'fallback'
-      // et 'unknown' sont exclues car elles ne sont pas valides pour l'étude.
+      // UNIQUEMENT sur les tirages 100% quantiques (ANU ou Outshift). Les réponses
+      // 'fallback' et 'unknown' sont exclues car elles ne sont pas valides pour l'étude.
       // qrngBreakdown (ci-dessus) conserve le décompte complet pour la bannière.
-      const anuRows = rows.filter(r => r.qrng_source === 'anu');
+      const anuRows = rows.filter(r => QUANTUM_SOURCES.includes(r.qrng_source));
 
       // Score moyen calculé UNIQUEMENT sur les tirages quantiques purs
       const avgScoreAnu = anuRows.length > 0
@@ -4901,8 +4958,8 @@ Réponds en français, sans tiret long, format markdown compact.`
         // Table/colonne absente (migration non exécutée) : renvoyer un jeu vide plutôt qu'une 500
         return res.status(200).json({ success: true, data: { total: 0, avgScore: null, scoreDistrib: [], typeCounts: {}, resonanceCounts: {} } });
       }
-      // Validité scientifique : uniquement les tirages 100% quantiques (ANU)
-      const anuRows = (rows || []).filter(r => r.qrng_source === 'anu');
+      // Validité scientifique : uniquement les tirages 100% quantiques (ANU ou Outshift)
+      const anuRows = (rows || []).filter(r => QUANTUM_SOURCES.includes(r.qrng_source));
       const avgScore = anuRows.length > 0
         ? (anuRows.reduce((s, r) => s + (r.score_synchronicites || 0), 0) / anuRows.length).toFixed(1)
         : null;
@@ -5125,8 +5182,8 @@ Réponds en français, sans tiret long, format markdown compact.`
           }
         } catch (_) { /* pool absent : session enregistrée sans "passé" */ }
 
-        // 'anu' = valide pour l'étude ; sinon exclue (repli crypto)
-        const status = qrngSource === 'anu' ? 'complete' : 'excluded';
+        // source quantique vérifiée (ANU, Outshift) = valide pour l'étude ; sinon exclue (repli crypto)
+        const status = QUANTUM_SOURCES.includes(qrngSource) ? 'complete' : 'excluded';
         await sb.from('retro_sessions').insert({
           session_id: sessionId,
           intention_at: intentionAt.toISOString(),
@@ -5169,21 +5226,26 @@ Réponds en français, sans tiret long, format markdown compact.`
       const sb = createClient(process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co', process.env.SUPABASE_SERVICE_ROLE_KEY);
       const now = new Date();
       const monthStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), 1)).toISOString();
-      // Quota mensuel du plan ANU — configurable via ANU_MONTHLY_QUOTA (défaut : 100, plan gratuit).
+      // Quota mensuel combiné (ANU + Outshift) — configurable via ANU_MONTHLY_QUOTA (défaut : 100, plan gratuit).
       const quota = parseInt(process.env.ANU_MONTHLY_QUOTA || '100', 10);
       try {
-        const [anuRes, fbRes, recentRes] = await Promise.all([
+        const [anuOnlyRes, outshiftRes, fbRes, recentRes] = await Promise.all([
           sb.from('qrng_usage').select('*', { count: 'exact', head: true }).eq('outcome', 'anu').gte('created_at', monthStart),
+          sb.from('qrng_usage').select('*', { count: 'exact', head: true }).eq('outcome', 'outshift').gte('created_at', monthStart),
           sb.from('qrng_usage').select('*', { count: 'exact', head: true }).eq('outcome', 'fallback').gte('created_at', monthStart),
           sb.from('qrng_usage').select('created_at,reason,status_code').eq('outcome', 'fallback').order('created_at', { ascending: false }).limit(5)
         ]);
-        if (anuRes.error) throw anuRes.error;
-        const anu = anuRes.count || 0;
+        if (anuOnlyRes.error) throw anuOnlyRes.error;
+        const anuOnly = anuOnlyRes.count || 0;
+        const outshiftOnly = outshiftRes.count || 0;
+        const anu = anuOnly + outshiftOnly; // total quantique (ANU + Outshift) ; champ 'anu' conservé pour compat dashboard
         const fallback = fbRes.count || 0;
         return res.status(200).json({
           success: true,
           month: monthStart.slice(0, 7),
           anu,
+          anu_only: anuOnly,
+          outshift: outshiftOnly,
           fallback,
           total: anu + fallback,
           quota,

@@ -12,6 +12,9 @@ const supabase = createClient(
   process.env.SUPABASE_SERVICE_ROLE_KEY
 );
 
+// Sources de hasard considérées comme quantique vérifié (valides pour l'étude scientifique).
+const QUANTUM_SOURCES = ['anu', 'outshift'];
+
 const BREVO_API_KEY = process.env.BREVO_API_KEY;
 const FROM_EMAIL = 'oracle@oradia.fr';
 const FROM_NAME = 'Oracle Oradia';
@@ -63,9 +66,9 @@ async function handleActivation(req, res) {
     return res.status(400).json({ success: false, message: 'email et durationDays requis' });
   }
 
-  // Normaliser la source du tirage : 'anu' (quantique pur) sinon 'fallback'.
-  // Seuls les tirages 'anu' sont valides pour l'étude scientifique.
-  const normalizedQrngSource = qrngSource === 'anu' ? 'anu' : 'fallback';
+  // Normaliser la source du tirage : source quantique vérifiée (ANU, Outshift) telle
+  // quelle, sinon 'fallback'. Seules les sources quantiques sont valides pour l'étude.
+  const normalizedQrngSource = QUANTUM_SOURCES.includes(qrngSource) ? qrngSource : 'fallback';
 
   const closesAt = new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000);
 
@@ -242,7 +245,7 @@ async function handleResonance(req, res) {
     score: scoreInt,
     intention: (intention || '').slice(0, 2000),
     cards: Array.isArray(cards) ? cards : [],
-    qrng_source: qrngSource === 'anu' ? 'anu' : 'fallback',
+    qrng_source: QUANTUM_SOURCES.includes(qrngSource) ? qrngSource : 'fallback',
     email: email || null,
   });
 

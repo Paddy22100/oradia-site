@@ -2261,7 +2261,7 @@
                     <div class="text-light-gold/40 text-xs" id="syncTotalAll"></div>
                 </div>
                 <div class="stat-card rounded-xl p-5">
-                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Score moyen (ANU)</div>
+                    <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Score moyen (quantique)</div>
                     <div class="text-2xl font-bold text-gold" id="syncAvgScore">—</div>
                     <div class="text-light-gold/40 text-xs">/ 10</div>
                 </div>
@@ -2283,12 +2283,12 @@
                         <div class="text-gold text-sm font-semibold uppercase tracking-wider mb-1">
                             <i class="fas fa-atom mr-1"></i> Source du tirage — validité scientifique
                         </div>
-                        <div class="text-light-gold/50 text-xs">Seuls les tirages 100 % quantiques (ANU) sont valides pour l'étude.</div>
+                        <div class="text-light-gold/50 text-xs">Seuls les tirages 100 % quantiques (ANU ou Outshift) sont valides pour l'étude.</div>
                     </div>
                     <div class="flex gap-5 text-center">
                         <div>
                             <div class="text-2xl font-bold text-teal-300" id="syncQrngAnu">—</div>
-                            <div class="text-light-gold/40 text-xs uppercase">ANU (valides)</div>
+                            <div class="text-light-gold/40 text-xs uppercase">Quantique (valides)</div>
                         </div>
                         <div>
                             <div class="text-2xl font-bold text-red-400" id="syncQrngFallback">—</div>
@@ -2300,7 +2300,7 @@
                         </div>
                         <div>
                             <div class="text-2xl font-bold text-gold" id="syncAvgScoreAnu">—</div>
-                            <div class="text-light-gold/40 text-xs uppercase">Score moyen ANU</div>
+                            <div class="text-light-gold/40 text-xs uppercase">Score moyen quantique</div>
                         </div>
                     </div>
                 </div>
@@ -2387,10 +2387,10 @@
                 <div id="uptimeContent" class="space-y-3 text-sm">—</div>
             </div>
 
-            <!-- État de la clé ANU (tirage quantique) -->
+            <!-- État des sources quantiques (ANU + Outshift) -->
             <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5 mb-6">
                 <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider flex items-center gap-2">
-                    <i class="fas fa-atom"></i> État de la clé ANU (tirage quantique)
+                    <i class="fas fa-atom"></i> État des sources quantiques (ANU + Outshift)
                 </h4>
                 <div id="anuHealthContent" class="text-sm">—</div>
             </div>
@@ -2447,7 +2447,7 @@
                     <div id="retro-progress-bar" class="h-full rounded-full bg-gradient-to-r from-teal-400 to-gold transition-all duration-500" style="width:0%"></div>
                 </div>
                 <div class="flex justify-between text-xs text-gold/40">
-                    <span>Seuls les tirages 100 % quantiques (ANU) sont comptés</span>
+                    <span>Seuls les tirages 100 % quantiques (ANU ou Outshift) sont comptés</span>
                     <span id="retro-progress-pct">0 %</span>
                 </div>
             </div>
@@ -2562,13 +2562,13 @@
                 </div>
             </div>
 
-            <!-- Quota quantique ANU -->
+            <!-- Quota quantique (ANU + Outshift) -->
             <div class="stat-card rounded-2xl p-6 mb-6">
                 <div class="flex items-center justify-between gap-3 mb-1 flex-wrap">
-                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-atom text-gold/60"></i> Quota quantique (ANU)</h4>
+                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-atom text-gold/60"></i> Quota quantique (ANU + Outshift)</h4>
                     <span class="text-gold/40 text-xs" id="qrng-month">—</span>
                 </div>
-                <p class="text-gold/40 text-xs mb-4 italic">Chaque tirage quantique consomme une requête sur le quota mensuel de l'API ANU. Au-delà, les tirages basculent en repli non quantique (exclus de l'étude).</p>
+                <p class="text-gold/40 text-xs mb-4 italic">Chaque tirage quantique consomme une requête sur le quota mensuel de l'API active (ANU ou, en secours, Outshift). Au-delà, les tirages basculent en repli non quantique (exclus de l'étude).</p>
 
                 <div class="flex items-end justify-between gap-3 mb-2">
                     <div><span class="text-3xl font-bold text-teal-300" id="qrng-anu">—</span><span class="text-gold/50 text-lg" id="qrng-quota-label"></span></div>
@@ -2581,7 +2581,7 @@
                     <div id="qrng-bar" class="h-full rounded-full bg-gradient-to-r from-teal-400 to-teal-300 transition-all duration-500" style="width:0%"></div>
                 </div>
                 <div class="flex justify-between text-xs text-gold/40 mb-3">
-                    <span>Requêtes ANU consommées</span>
+                    <span>Requêtes quantiques consommées</span>
                     <span id="qrng-pct">—</span>
                 </div>
 
@@ -2810,7 +2810,7 @@
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
                     <div class="stat-card rounded-xl p-5">
-                        <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Appels QRNG (ANU)</div>
+                        <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Appels QRNG (ANU + Outshift)</div>
                         <div class="text-2xl font-bold text-teal-300" id="costsQrngAnu">—</div>
                         <div class="text-light-gold/40 text-xs" id="costsQrngFallback"></div>
                     </div>
@@ -8157,9 +8157,9 @@
                     ? `sur ${d.totalAll} reçues · ${excluded} exclue(s)`
                     : (d.totalAll ? `${d.totalAll} reçue(s)` : ''));
 
-                // Validité scientifique : source du tirage (QRNG)
-                const qb = d.qrngBreakdown || { anu: 0, fallback: 0, unknown: 0 };
-                setEl('syncQrngAnu',      qb.anu);
+                // Validité scientifique : source du tirage (QRNG) — ANU + Outshift comptent comme quantique
+                const qb = d.qrngBreakdown || { anu: 0, outshift: 0, fallback: 0, unknown: 0 };
+                setEl('syncQrngAnu',      (qb.anu || 0) + (qb.outshift || 0));
                 setEl('syncQrngFallback', qb.fallback);
                 setEl('syncQrngUnknown',  qb.unknown);
                 setEl('syncAvgScoreAnu',  d.avgScoreAnu !== null && d.avgScoreAnu !== undefined ? d.avgScoreAnu : '—');
@@ -8265,6 +8265,7 @@
                 // Témoignages — avec badge source quantique par réponse
                 const qrngBadge = (src) => {
                     if (src === 'anu')      return '<span title="Tirage 100% quantique ANU — valide pour l\'étude" style="font-size:10px;padding:2px 7px;border-radius:99px;background:rgba(94,234,212,0.15);color:#5eead4;border:1px solid rgba(94,234,212,0.35);">⚛ ANU</span>';
+                    if (src === 'outshift') return '<span title="Tirage 100% quantique Outshift/Cisco — valide pour l\'étude" style="font-size:10px;padding:2px 7px;border-radius:99px;background:rgba(94,234,212,0.15);color:#5eead4;border:1px solid rgba(94,234,212,0.35);">⚛ Outshift</span>';
                     if (src === 'fallback') return '<span title="Tirage avec fallback crypto — exclu des stats scientifiques" style="font-size:10px;padding:2px 7px;border-radius:99px;background:rgba(248,113,113,0.15);color:#f87171;border:1px solid rgba(248,113,113,0.35);">⚠ Fallback</span>';
                     return '<span title="Source inconnue (tirage antérieur à la migration)" style="font-size:10px;padding:2px 7px;border-radius:99px;background:rgba(156,163,175,0.15);color:#9ca3af;border:1px solid rgba(156,163,175,0.25);">? Inconnu</span>';
                 };
@@ -8487,7 +8488,7 @@
                         `).join(''));
                 }
 
-                // État clé ANU (tirage quantique)
+                // État des sources quantiques (ANU + Outshift)
                 const anu = d.anuHealth;
                 if (!anu) {
                     setEl('anuHealthContent', '<p class="text-light-gold/40 text-sm">Aucune donnée disponible.</p>');
@@ -8496,7 +8497,7 @@
                         ok:       { color: '#22c55e', label: 'Fonctionne',            icon: 'fa-circle-check' },
                         degraded: { color: '#f59e0b', label: 'Dégradé (repli partiel)', icon: 'fa-triangle-exclamation' },
                         down:     { color: '#ef4444', label: 'Hors service (repli total)', icon: 'fa-circle-xmark' },
-                        no_key:   { color: '#ef4444', label: 'Clé ANU absente',        icon: 'fa-key' },
+                        no_key:   { color: '#ef4444', label: 'Aucune clé quantique configurée', icon: 'fa-key' },
                         unknown:  { color: '#6b7280', label: 'Pas assez de données récentes', icon: 'fa-question-circle' },
                     };
                     const ui = STATUS_UI[anu.status] || STATUS_UI.unknown;
@@ -8509,6 +8510,30 @@
                     };
                     const reasonText = (r) => reasonLabels[r] || (r && r.startsWith('http_') ? `erreur ${r.replace('http_','')}` : (r || '—'));
 
+                    const SOURCE_STATUS_UI = {
+                        ok:      { color: '#22c55e', label: 'Active',            icon: 'fa-circle-check' },
+                        down:    { color: '#ef4444', label: 'Configurée mais en échec', icon: 'fa-circle-xmark' },
+                        no_key:  { color: '#6b7280', label: 'Non configurée',    icon: 'fa-key' },
+                        unknown: { color: '#6b7280', label: 'Pas de données récentes', icon: 'fa-question-circle' },
+                    };
+                    const sourceRow = (name, s) => {
+                        const sui = SOURCE_STATUS_UI[s.status] || SOURCE_STATUS_UI.unknown;
+                        const lastSuccess = s.lastSuccessAt
+                            ? new Date(s.lastSuccessAt).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })
+                            : 'jamais (7 derniers jours)';
+                        return `
+                            <div class="flex items-center justify-between gap-2 bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg px-3 py-2">
+                                <div class="flex items-center gap-2">
+                                    <i class="fas ${sui.icon}" style="color:${sui.color};"></i>
+                                    <span class="text-light-gold/80 text-sm font-medium">${name}</span>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-xs font-semibold" style="color:${sui.color};">${sui.label}</div>
+                                    <div class="text-light-gold/30 text-[10px]">${s.keyConfigured ? `dernier succès : ${lastSuccess}` : 'clé absente sur Vercel'}</div>
+                                </div>
+                            </div>`;
+                    };
+
                     setEl('anuHealthContent', `
                         <div class="flex items-center gap-3 mb-4">
                             <div style="display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:50%;background:${ui.color}22;color:${ui.color};">
@@ -8516,26 +8541,30 @@
                             </div>
                             <div>
                                 <div class="font-semibold" style="color:${ui.color};">${ui.label}</div>
-                                <div class="text-light-gold/40 text-xs">${anu.keyConfigured ? 'Clé ANU_QRNG_API_KEY configurée' : 'Variable ANU_QRNG_API_KEY absente sur Vercel'}</div>
+                                <div class="text-light-gold/40 text-xs">${anu.keyConfigured ? 'Au moins une clé quantique configurée (ANU_QRNG_API_KEY / OUTSHIFT_QRNG_API_KEY)' : 'Aucune variable ANU_QRNG_API_KEY / OUTSHIFT_QRNG_API_KEY sur Vercel'}</div>
                             </div>
+                        </div>
+                        <div class="space-y-2 mb-4">
+                            ${anu.sources ? sourceRow('ANU Quantum Random Numbers', anu.sources.anu) : ''}
+                            ${anu.sources ? sourceRow('Outshift QRNG (Cisco)', anu.sources.outshift) : ''}
                         </div>
                         <div class="grid grid-cols-2 gap-3 mb-4">
                             <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-3 text-center">
                                 <div class="text-light-gold/40 text-xs uppercase mb-1">Dernières 24h</div>
-                                <div class="text-teal-300 font-bold">${anu.last24h.anu} ⚛ ANU</div>
+                                <div class="text-teal-300 font-bold">${anu.last24h.anu} ⚛ ANU · ${anu.last24h.outshift} ⚛ Outshift</div>
                                 <div class="text-orange-300/80 text-xs">${anu.last24h.fallback} repli${anu.last24h.fallback > 1 ? 's' : ''}</div>
                             </div>
                             <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-3 text-center">
                                 <div class="text-light-gold/40 text-xs uppercase mb-1">7 derniers jours</div>
-                                <div class="text-teal-300 font-bold">${anu.last7d.anu} ⚛ ANU</div>
+                                <div class="text-teal-300 font-bold">${anu.last7d.anu} ⚛ ANU · ${anu.last7d.outshift} ⚛ Outshift</div>
                                 <div class="text-orange-300/80 text-xs">${anu.last7d.fallback} repli${anu.last7d.fallback > 1 ? 's' : ''}</div>
                             </div>
                         </div>
                         ${anu.mostRecent ? `
                         <div class="text-light-gold/50 text-xs border-t border-gold/10 pt-3">
-                            Dernier appel : <span class="${anu.mostRecent.outcome === 'anu' ? 'text-teal-300' : 'text-orange-300'}">${anu.mostRecent.outcome === 'anu' ? '⚛ ANU' : 'repli'}</span>
+                            Dernier appel : <span class="${anu.mostRecent.outcome !== 'fallback' ? 'text-teal-300' : 'text-orange-300'}">${anu.mostRecent.outcome !== 'fallback' ? '⚛ ' + anu.mostRecent.outcome.toUpperCase() : 'repli'}</span>
                             — ${new Date(anu.mostRecent.created_at).toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' })}
-                            ${anu.mostRecent.outcome !== 'anu' ? `<span class="text-red-300/70"> (${reasonText(anu.mostRecent.reason)})</span>` : ''}
+                            ${anu.mostRecent.outcome === 'fallback' ? `<span class="text-red-300/70"> (${reasonText(anu.mostRecent.reason)})</span>` : ''}
                         </div>` : '<p class="text-light-gold/30 text-xs italic border-t border-gold/10 pt-3">Aucun appel enregistré sur les 7 derniers jours.</p>'}
                     `);
                 }
@@ -9913,7 +9942,7 @@
                 if (warn) {
                     let msg = '';
                     if (d.success === false && d.error) msg = '⚠️ ' + d.error;
-                    else if ((d.n_total || 0) === 0) msg = 'Aucun tirage quantique valide enregistré pour l\'instant. Les chiffres se rempliront au fur et à mesure des tirages (uniquement ceux 100 % ANU).';
+                    else if ((d.n_total || 0) === 0) msg = 'Aucun tirage quantique valide enregistré pour l\'instant. Les chiffres se rempliront au fur et à mesure des tirages (uniquement ceux 100 % ANU ou Outshift).';
                     warn.textContent = msg;
                     warn.classList.toggle('hidden', !msg);
                 }
@@ -9987,14 +10016,14 @@
 
             // PARTIE 1 — POUR TOUS
             H('1. En clair (pour tous)');
-            P('Le hasard quantique de l\'ANU (Australian National University) est un « dé cosmique » impossible à truquer : chaque nombre provient de fluctuations quantiques du vide. Nous nous en servons pour poser une question simple mais vertigineuse : un nombre tiré à un autre moment que le tirage peut-il « coller » au tirage mieux que le pur hasard ?', {});
+            P('Le hasard quantique (généré par le laboratoire d\'optique quantique de l\'ANU, ou en secours par le matériel quantique Outshift/Cisco) est un « dé cosmique » impossible à truquer : chaque nombre provient de fluctuations quantiques du vide ou d\'un phénomène quantique physique équivalent. Nous nous en servons pour poser une question simple mais vertigineuse : un nombre tiré à un autre moment que le tirage peut-il « coller » au tirage mieux que le pur hasard ?', {});
             P('Le jeu du pari à l\'envers (tester le FUTUR → présent) : imaginez que vous choisissiez une carte entre 1 et 64 maintenant. Ce n\'est qu\'APRÈS votre choix que le dé cosmique tire la carte « gagnante ». Normalement, tomber pile dessus, c\'est 1 chance sur 64. Si, sur des milliers de tirages, les gens tombent bien plus souvent que 1 sur 64 sur une carte décidée APRÈS eux, cela voudrait dire que leur choix du présent était déjà accordé à un futur qui n\'existait pas encore.', {});
             P('Tester le PASSÉ → présent : c\'est le même jeu, mais la carte « gagnante » est scellée AVANT le tirage (générée la veille, mise dans une enveloppe numérique datée et infalsifiable). Si le tirage du présent correspond à ce nombre du passé mieux que le hasard, c\'est que le passé « touche » le présent.', {});
             P('Dans les deux cas, pour le consultant, rien ne change : il tire normalement. Toute la mesure se fait en coulisses.', { after: 3 });
 
             // PARTIE 2 — SCIENTIFIQUE
             H('2. Protocole scientifique');
-            P('Conception : pour chaque consultation valide, trois bits (0/1) sont dérivés de nombres quantiques ANU (octet ≥ 128 → 1, sinon 0) :', { after: 1 });
+            P('Conception : pour chaque consultation valide, trois bits (0/1) sont dérivés de nombres quantiques vérifiés — ANU ou, en secours, Outshift/Cisco (octet ≥ 128 → 1, sinon 0) :', { after: 1 });
             P('• PRÉ-TIRÉ (passé) : bit scellé AVANT l\'intention, engagé par un hash SHA-256 horodaté (preuve d\'antériorité et de non-altération).', { lh: 5, after: 0.5 });
             P('• EN DIRECT (présent) : bit généré au moment du tirage — l\'acte « présent », horodaté (intention_at).', { lh: 5, after: 0.5 });
             P('• POST-TIRÉ (futur) : bit scellé APRÈS l\'intention, révélé plus tard, également engagé par hash horodaté.', { lh: 5, after: 2 });
@@ -10002,7 +10031,7 @@
             P(d.hypotheses || 'H1 (passé→présent) : taux de correspondance pré-tiré/présent ≠ 50 %. H2 (futur→présent) : taux post-tiré/présent ≠ 50 %. H0 : les deux = 50 % (aucun effet).', { after: 2 });
             P('Métrique principale : taux de correspondance de bits, test binomial bilatéral comparé à la baseline marginale (le taux de correspondance attendu compte tenu de la proportion de 1 de chaque flux — neutralise tout biais d\'un flux).', {});
             P('Contrôle : comparaison à la baseline marginale + ré-appariement (permutation) des tirages entre eux. Aucune fausse lecture n\'est jamais donnée à un consultant : le contrôle est purement statistique, a posteriori.', {});
-            P('Validité : seuls les tirages 100 % quantiques (ANU) sont retenus ; tout tirage reposant sur le repli cryptographique est exclu. Règle d\'arrêt : objectif de N fixé à l\'avance (pas d\'arrêt opportuniste). Analyse bilatérale, seuil α = ' + (d.alpha ?? 0.05) + '.', { after: 3 });
+            P('Validité : seuls les tirages 100 % quantiques (ANU ou Outshift) sont retenus ; tout tirage reposant sur le repli cryptographique est exclu. Règle d\'arrêt : objectif de N fixé à l\'avance (pas d\'arrêt opportuniste). Analyse bilatérale, seuil α = ' + (d.alpha ?? 0.05) + '.', { after: 3 });
 
             // PARTIE 3 — RÉSULTATS EN DIRECT
             H('3. Résultats en direct');
@@ -10080,8 +10109,8 @@
                     let msg = '';
                     if (d.success === false && d.error) msg = '⚠️ ' + d.error;
                     else if (d.total === 0) msg = 'Aucun tirage quantique enregistré ce mois-ci pour l\'instant.';
-                    else if (d.anu === 0 && d.fallback > 0) msg = '⚠️ Aucun tirage quantique valide ce mois : l\'API ANU ne répond pas (voir raisons ci-dessous). Vérifie la clé ANU_QRNG_API_KEY sur Vercel.';
-                    else if (pct >= 90) msg = '⚠️ Quota ANU presque atteint : les prochains tirages basculeront en repli non quantique.';
+                    else if (d.anu === 0 && d.fallback > 0) msg = '⚠️ Aucun tirage quantique valide ce mois : ni ANU ni Outshift ne répondent (voir raisons ci-dessous). Vérifie les clés ANU_QRNG_API_KEY / OUTSHIFT_QRNG_API_KEY sur Vercel.';
+                    else if (pct >= 90) msg = '⚠️ Quota quantique presque atteint : les prochains tirages basculeront en repli non quantique.';
                     warn.textContent = msg;
                     warn.classList.toggle('hidden', !msg);
                 }

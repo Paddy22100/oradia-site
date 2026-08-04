@@ -13,7 +13,7 @@ Il décrit l'architecture du projet, les règles à respecter, et les audits à 
 - **Paiement** : Stripe (single-draw à 3,90€)
 - **Emails** : Brevo (transactionnel + newsletter, list ID 5)
 - **IA** : Anthropic API (claude-haiku-4-5, streaming)
-- **QRNG** : ANU Quantum Random Numbers API
+- **QRNG** : ANU Quantum Random Numbers API (source principale), Outshift QRNG/Cisco (source de secours), repli crypto local en dernier recours
 - **Repo GitHub** : Paddy22100/oradia-site
 - **IDE** : Devin Desktop (SWE-1.5)
 

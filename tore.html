@@ -282,7 +282,7 @@
     });
   </script>
   <script src="js/tirages-storage.js"></script>
-  <!-- Client QRNG — tirage quantique via ANU -->
+  <!-- Client QRNG — tirage quantique via ANU (Outshift en secours) -->
   <script src="js/qrng-client.js" defer></script>
 
 </head>
@@ -3008,7 +3008,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
               </div>
               <div class="quantum-badge-text">
                 <span class="quantum-label">Tirage quantique</span>
-                <span class="quantum-sublabel">Vraie indétermination · ANU Lab, Australie</span>
+                <span class="quantum-sublabel">Vraie indétermination · matériel quantique vérifié</span>
               </div>
               <button type="button" class="quantum-learn-more" onclick="document.getElementById('quantum-explication').classList.toggle('open')">
                 En savoir plus
@@ -3050,13 +3050,13 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
               <div class="quantum-source">
                 <div class="quantum-source-logo">🔬</div>
                 <div>
-                  <strong>Source : Laboratoire de Physique Quantique de l'ANU</strong><br>
-                  <span>Australian National University, Canberra, Australie</span>
+                  <strong>Source : générateurs de nombres quantiques vérifiés</strong><br>
+                  <span>Laboratoire d'optique quantique de l'ANU (Australian National University, Canberra), avec Outshift QRNG (matériel quantique Cisco) comme source de secours</span>
                   <p>
-                    Chaque tirage utilise des nombres générés en temps réel par ce laboratoire,
-                    à partir de la mesure des <em>fluctuations du vide quantique</em> : l'énergie
-                    minimale irréductible de l'univers, là où des particules apparaissent et
-                    disparaissent spontanément, sans cause antérieure mesurable.
+                    Chaque tirage utilise des nombres générés en temps réel par l'un de ces laboratoires,
+                    à partir de la mesure des <em>fluctuations du vide quantique</em> ou d'un phénomène
+                    quantique physique équivalent : l'énergie minimale irréductible de l'univers, là où
+                    des particules apparaissent et disparaissent spontanément, sans cause antérieure mesurable.
                   </p>
                 </div>
               </div>
@@ -4486,9 +4486,9 @@ function showToreAnalysisCTA() {
   const intention = sessionStorage.getItem('tore_intention') || '';
   sessionStorage.setItem('tore_cards', JSON.stringify(cards));
 
-  // Clore le suivi de pureté QRNG : 'anu' (100% quantique) ou 'fallback'.
+  // Clore le suivi de pureté QRNG : 'anu' | 'outshift' (100% quantique) ou 'fallback'.
   // Stocké pour transmission à l'activation de la fenêtre d'observation
-  // (les statistiques scientifiques n'utilisent QUE les tirages 'anu').
+  // (les statistiques scientifiques n'utilisent QUE les tirages quantiques purs).
   const qrngSource = (window.QRNG && QRNG.endDraw) ? QRNG.endDraw() : 'unknown';
   sessionStorage.setItem('tore_qrng_source', qrngSource);
 
