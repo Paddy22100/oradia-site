@@ -6823,7 +6823,7 @@ function maybePromptToreReconnect() {
   enterImmersiveTore();
   toreHasStarted = true;
   results.classList.add('hidden');
-  window.oradiaTrackEvent?.('tirage_lance');
+  // (le funnel 'tirage_lance' est déclenché une seule fois par session dans buildBoardTore())
 
   // Le tirage gratuit (localStorage) est enregistré à la COMPLÉTION du tirage
   // dans showToreAnalysisCTA(), pas ici — sinon un même tirage serait compté deux fois.

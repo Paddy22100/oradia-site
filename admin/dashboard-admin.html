@@ -7967,7 +7967,9 @@
                 { label: 'Tirages lancés',             value: funnel.tirages_lances,     color: '#a78bfa', icon: 'fa-play' },
                 { label: 'Analyses affichées',         value: funnel.analyses_affichees, color: '#60a5fa', icon: 'fa-sparkles' },
                 { label: 'Emails laissés',             value: funnel.emails_laisses,     color: '#5eead4', icon: 'fa-envelope' },
-                { label: 'Nouveaux abonnements',       value: funnel.abonnements,        color: '#4ade80', icon: 'fa-crown' }
+                // Étape non chaînée par session (source : tore_subscriptions, redirection
+                // Stripe qui perd le session_id) — on n'affiche donc pas de « % de l'étape préc. »
+                { label: 'Nouveaux abonnements',       value: funnel.abonnements,        color: '#4ade80', icon: 'fa-crown', unchained: true }
             ];
             const max = Math.max(steps[0].value, 1);
             if (steps[0].value === 0) {
@@ -7976,7 +7978,7 @@
             }
             el.innerHTML = steps.map((s, i) => {
                 const pct = Math.round((s.value / max) * 100);
-                const prevPct = i > 0 && steps[i-1].value > 0 ? Math.round((s.value / steps[i-1].value) * 100) : null;
+                const prevPct = i > 0 && !s.unchained && steps[i-1].value > 0 ? Math.round((s.value / steps[i-1].value) * 100) : null;
                 return `<div>
                     <div class="flex items-center justify-between text-xs mb-1">
                         <span class="text-light-gold/70"><i class="fas ${s.icon} mr-1.5" style="color:${s.color}"></i>${s.label}</span>
