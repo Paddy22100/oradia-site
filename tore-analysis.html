@@ -775,15 +775,46 @@
         </div>
 
         <!-- Parrainage : offrir un tirage à un proche -->
-        <div class="max-w-lg mx-auto mb-16 fade-in-up text-center" style="padding:24px 20px;background:rgba(5,20,40,0.5);border:1px solid rgba(212,175,55,0.2);border-radius:16px;">
-            <p style="color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:19px;font-weight:600;margin:0 0 8px;">Offrez un tirage à un proche</p>
-            <p style="color:rgba(212,175,55,0.6);font-family:'Cormorant Garamond',Georgia,serif;font-size:13.5px;line-height:1.6;margin:0 0 16px;">Partagez votre lien : la personne qui l'utilise reçoit 1 tirage gratuit en plus, et vous aussi.</p>
-            <div style="display:flex;flex-wrap:wrap;gap:8px;max-width:380px;width:100%;margin:0 auto;box-sizing:border-box;">
+        <div class="max-w-lg mx-auto mb-16 fade-in-up text-center" style="position:relative;overflow:hidden;padding:44px 24px 28px;background:linear-gradient(160deg,rgba(10,25,47,0.85),rgba(5,20,40,0.6));border:1px solid rgba(212,175,55,0.28);border-radius:20px;box-shadow:0 8px 32px rgba(0,0,0,0.25);">
+            <!-- lueur décorative -->
+            <div aria-hidden="true" style="position:absolute;top:-40px;left:50%;transform:translateX(-50%);width:200px;height:200px;background:radial-gradient(circle,rgba(240,199,94,0.18),transparent 70%);pointer-events:none;"></div>
+
+            <!-- badge cadeau -->
+            <div style="position:relative;width:78px;height:78px;margin:0 auto 16px;display:flex;align-items:center;justify-content:center;border-radius:50%;background:radial-gradient(circle,rgba(240,199,94,0.16),rgba(212,175,55,0.04));border:1px solid rgba(212,175,55,0.3);box-shadow:0 0 26px rgba(240,199,94,0.15);">
+                <svg width="44" height="44" viewBox="0 0 64 64" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="oradiaGiftGrad" x1="12" y1="20" x2="52" y2="56" gradientUnits="userSpaceOnUse">
+                            <stop stop-color="#f6d783"/>
+                            <stop offset="1" stop-color="#c9982e"/>
+                        </linearGradient>
+                    </defs>
+                    <rect x="14" y="30" width="36" height="22" rx="3" fill="url(#oradiaGiftGrad)"/>
+                    <rect x="10" y="24" width="44" height="9" rx="2.5" fill="#f6d783"/>
+                    <rect x="29" y="24" width="6" height="28" fill="#051428" opacity="0.5"/>
+                    <path d="M32 24 C 22 24 15 13 22 11 C 29 9 32 20 32 24 Z" fill="url(#oradiaGiftGrad)"/>
+                    <path d="M32 24 C 42 24 49 13 42 11 C 35 9 32 20 32 24 Z" fill="url(#oradiaGiftGrad)"/>
+                    <circle cx="32" cy="23" r="3.4" fill="#c9982e"/>
+                </svg>
+            </div>
+
+            <p style="color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:22px;font-weight:700;letter-spacing:0.3px;margin:0 0 8px;">Offrez un tirage à un proche</p>
+            <p style="color:rgba(212,175,55,0.65);font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;line-height:1.6;margin:0 auto 16px;max-width:340px;">Partagez votre lien. La personne qui l'utilise reçoit un tirage gratuit — et vous aussi.</p>
+
+            <!-- réciprocité -->
+            <div style="display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin:0 0 18px;">
+                <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.22);border-radius:999px;padding:5px 12px;color:#e8d9b0;font-family:'Cormorant Garamond',Georgia,serif;font-size:13px;font-weight:600;"><i class="fas fa-gift" style="color:#f0c75e;font-size:11px;"></i> +1 pour votre proche</span>
+                <span style="display:inline-flex;align-items:center;gap:6px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.22);border-radius:999px;padding:5px 12px;color:#e8d9b0;font-family:'Cormorant Garamond',Georgia,serif;font-size:13px;font-weight:600;"><i class="fas fa-star" style="color:#f0c75e;font-size:11px;"></i> +1 pour vous</span>
+            </div>
+
+            <div style="display:flex;flex-wrap:wrap;gap:8px;max-width:400px;width:100%;margin:0 auto;box-sizing:border-box;">
                 <input id="referral-link-input" type="text" readonly
-                    style="flex:1 1 160px;min-width:0;width:100%;background:rgba(5,20,40,0.8);border:1px solid rgba(212,175,55,0.3);border-radius:10px;color:#e8d9b0;font-family:Georgia,serif;font-size:12.5px;padding:10px 12px;outline:none;box-sizing:border-box;">
+                    style="flex:1 1 180px;min-width:0;width:100%;background:rgba(5,20,40,0.85);border:1px solid rgba(212,175,55,0.3);border-radius:10px;color:#e8d9b0;font-family:Georgia,serif;font-size:12.5px;padding:11px 12px;outline:none;box-sizing:border-box;text-align:center;">
                 <button onclick="copyReferralLink(this)"
-                    style="flex-shrink:0;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#051428;border:none;border-radius:10px;padding:0 16px;font-family:Georgia,serif;font-size:13px;font-weight:700;cursor:pointer;min-height:38px;">
-                    Copier
+                    style="flex:1 1 auto;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#051428;border:none;border-radius:10px;padding:0 20px;font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;font-weight:700;cursor:pointer;min-height:42px;transition:transform 0.15s;box-shadow:0 3px 12px rgba(212,175,55,0.25);" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
+                    <i class="fas fa-copy" style="margin-right:6px;font-size:12px;"></i>Copier
+                </button>
+                <button id="referral-share-btn" onclick="shareReferralLink(this)" style="display:none;flex:1 1 auto;background:transparent;color:#f0c75e;border:1px solid rgba(212,175,55,0.5);border-radius:10px;padding:0 20px;font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;font-weight:700;cursor:pointer;min-height:42px;">
+                    <i class="fas fa-share-nodes" style="margin-right:6px;font-size:12px;"></i>Partager
                 </button>
             </div>
         </div>
@@ -2430,18 +2461,36 @@
     document.addEventListener('DOMContentLoaded', function () {
         const input = document.getElementById('referral-link-input');
         if (input && window.oradiaReferral) input.value = window.oradiaReferral.buildShareLink();
+        // Sur mobile, proposer le partage natif (Messages, WhatsApp…) en plus du copier-coller.
+        if (navigator.share) {
+            const sb = document.getElementById('referral-share-btn');
+            if (sb) sb.style.display = '';
+        }
     });
     function copyReferralLink(btn) {
         const input = document.getElementById('referral-link-input');
         if (!input) return;
         navigator.clipboard.writeText(input.value).then(() => {
-            const orig = btn.textContent;
-            btn.textContent = 'Copié ✓';
-            setTimeout(() => { btn.textContent = orig; }, 2000);
+            const orig = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check" style="margin-right:6px;font-size:12px;"></i>Copié';
+            setTimeout(() => { btn.innerHTML = orig; }, 2000);
         }).catch(() => {
             input.select();
             document.execCommand('copy');
         });
+    }
+    function shareReferralLink(btn) {
+        const input = document.getElementById('referral-link-input');
+        if (!input) return;
+        if (navigator.share) {
+            navigator.share({
+                title: 'Oradia — Tirage du Tore',
+                text: 'Je t\'offre un tirage gratuit du Tore sur Oradia 🎁',
+                url: input.value
+            }).catch(() => {});
+        } else {
+            copyReferralLink(btn);
+        }
     }
 </script>
 <script src="js/page-tracker.js" defer></script>
