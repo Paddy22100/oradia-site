@@ -11,6 +11,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail } = require('../../lib/brevo-order-email.js');
+const { estimateStripeFees, getStripeFeesForPeriod, getMonthlyStripeFees, ESTIMATE_RATE, ESTIMATE_FIXED_EUR } = require('../../lib/stripe-fees.js');
 
 // Manifest statique des illustrations du Tore (généré une fois, fichier unique et léger —
 // ne pas remplacer par un fs.readdir sur /images, ça ferait bundler tout le dossier (350+ Mo)
@@ -874,10 +875,30 @@ async function handleData(req, res) {
           const recBIC = recetteRows.filter(t => t.source === 'precommande' || t.source === 'abonnement').reduce((s,t) => s + parseFloat(t.amount), 0);
           const recBNC = totalRecettes - recBIC;
           const urssaf = recBIC * 0.123 + recBNC * 0.211;
+          // Frais Stripe réels du mois (balance transactions), pas une estimation par taux :
+          // le taux dépend de la carte du client et Stripe prélève aussi des frais hors
+          // encaissement. Repli sur l'estimation seulement si l'API est injoignable.
+          // Construit à partir des composantes date, pas d'un toISOString() : sur un serveur
+          // décalé par rapport à UTC, new Date(y, m, 1).toISOString() bascule sur le mois
+          // précédent et on irait chercher le mauvais relevé Stripe.
+          const monthRef = new Date(now.getFullYear(), now.getMonth() + offset, 1);
+          const monthKey = `${monthRef.getFullYear()}-${String(monthRef.getMonth() + 1).padStart(2, '0')}`;
+          const feesResult = await getMonthlyStripeFees(supabase, monthKey, { forceRefresh: testCurrentMonth });
           const STRIPE_SOURCES = ['precommande', 'abonnement', 'don', 'guidance'];
           const stripeRows = recetteRows.filter(t => STRIPE_SOURCES.includes(t.source));
-          const stripeFeesEstimate = stripeRows.reduce((s,t) => s + parseFloat(t.amount) * 0.014 + 0.25, 0);
-          const tresorerieReelle = totalRecettes - stripeFeesEstimate - totalDepenses;
+          const feesAreReal = feesResult.ok;
+          const stripeFees = feesAreReal
+            ? feesResult.feesEur
+            : estimateStripeFees(stripeRows.reduce((s,t) => s + parseFloat(t.amount), 0), stripeRows.length);
+          const feesLabel = feesAreReal
+            ? `Frais Stripe réels (relevé Stripe${feesResult.chargeCount ? `, ${feesResult.chargeCount} paiement${feesResult.chargeCount > 1 ? 's' : ''}` : ''})`
+            : `Frais Stripe estimés (${(ESTIMATE_RATE*100).toLocaleString('fr-FR')}% + ${ESTIMATE_FIXED_EUR.toFixed(2).replace('.',',')}€/transaction)`;
+          const feesNote = feesAreReal
+            ? ''
+            : `<p style="margin:6px 0 0;color:#f87171;font-size:11.5px;font-style:italic;">⚠️ Relevé Stripe indisponible (${feesResult.error}) — chiffre estimé, à revérifier.</p>`;
+          // Ce qui reste vraiment en caisse : les cotisations URSSAF sont un décaissement
+          // au même titre que les frais Stripe, les ignorer donnait un « net » trop flatteur.
+          const tresorerieReelle = totalRecettes - stripeFees - totalDepenses - urssaf;
           const fmt = v => new Intl.NumberFormat('fr-FR', { style:'currency', currency:'EUR' }).format(v);
           const byCategory = {};
           recetteRows.forEach(t => { byCategory[t.category||t.source] = (byCategory[t.category||t.source]||0) + parseFloat(t.amount); });
@@ -889,7 +910,13 @@ async function handleData(req, res) {
           const { count: errors } = await supabase.from('system_logs').select('*',{count:'exact',head:true}).eq('level','error').gte('created_at', monthStart).lt('created_at', monthEnd);
           const catRows = Object.entries(byCategory).sort((a,b)=>b[1]-a[1]).map(([cat,amt]) => `<tr><td style="padding:6px 12px;color:#d1c9b0;">${cat}</td><td style="padding:6px 12px;text-align:right;color:#f0c75e;font-weight:600;">${fmt(amt)}</td></tr>`).join('');
           const cap = s => s.charAt(0).toUpperCase()+s.slice(1);
-          const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#050a14;font-family:Georgia,serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#050a14;padding:40px 20px;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#0a1628;border:1px solid rgba(212,175,55,0.25);border-radius:6px;"><tr><td style="padding:40px 40px 24px;border-bottom:1px solid rgba(212,175,55,0.1);"><p style="margin:0 0 4px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Rapport mensuel</p><h1 style="margin:0;color:#f0c75e;font-size:26px;font-weight:300;">ORADIA — ${cap(monthLabel)}</h1></td></tr><tr><td style="padding:32px 40px;"><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Comptabilité</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:12px;"><table width="100%">${catRows||'<tr><td style="padding:6px;color:#d1c9b0;">Aucune transaction ce mois</td></tr>'}</table></td></tr><tr><td style="padding:4px 12px;border-top:1px solid rgba(212,175,55,0.1);"><table width="100%"><tr><td style="padding:8px 0;color:#d1c9b0;font-size:13px;">Total recettes</td><td style="text-align:right;color:#4ade80;font-weight:700;">${fmt(totalRecettes)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">Total dépenses</td><td style="text-align:right;color:#f87171;">${fmt(totalDepenses)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;font-weight:600;">Résultat net</td><td style="text-align:right;color:#f0c75e;font-weight:700;">${fmt(totalRecettes-totalDepenses)}</td></tr></table></td></tr></table><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">URSSAF (micro-entrepreneur)</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%"><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">BIC 12,3% sur ${fmt(recBIC)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recBIC*0.123)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">BNC 21,1% sur ${fmt(recBNC)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recBNC*0.211)}</td></tr><tr><td style="padding:8px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Total cotisations estimées</td><td style="text-align:right;color:#f0c75e;font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">${fmt(urssaf)}</td></tr></table></td></tr></table><div style="background:rgba(248,113,113,0.07);border:1px solid rgba(248,113,113,0.25);border-radius:4px;padding:14px 16px;margin-bottom:28px;"><p style="margin:0 0 6px;color:#f87171;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">⚠️ Ce que vous devez déclarer à l'URSSAF</p><p style="margin:0 0 8px;color:#d1c9b0;font-size:12.5px;line-height:1.6;">Le montant brut encaissé par le client — <strong>pas</strong> le net après commission Stripe. Les frais Stripe ne sont pas déductibles en micro-entreprise (l'abattement forfaitaire joue déjà ce rôle au moment de l'impôt sur le revenu).</p><p style="margin:0;color:#e8c96a;font-size:13px;font-weight:600;">Montant à déclarer ce mois-ci : ${fmt(totalRecettes)} (et non ${fmt(tresorerieReelle)})</p></div><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Trésorerie réelle (information seule)</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%"><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">Frais Stripe estimés (1,4% + 0,25€/transaction)</td><td style="text-align:right;color:#f87171;">− ${fmt(stripeFeesEstimate)}</td></tr><tr><td style="padding:8px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Trésorerie réelle estimée</td><td style="text-align:right;color:#2dd4bf;font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">${fmt(tresorerieReelle)}</td></tr></table></td></tr></table><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Activité du site</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%"><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Pages vues</td><td style="text-align:right;color:#2dd4bf;font-weight:600;">${totalViews}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Visiteurs uniques</td><td style="text-align:right;color:#2dd4bf;font-weight:600;">${uniqueVisitors}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Abonnés Tore actifs</td><td style="text-align:right;color:#f0c75e;font-weight:600;">${activeSubs||0}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Nouveaux contacts</td><td style="text-align:right;color:#f0c75e;font-weight:600;">+${newContacts||0}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Erreurs techniques</td><td style="text-align:right;color:${(errors||0)>0?'#f87171':'#4ade80'};font-weight:600;">${errors||0}</td></tr></table></td></tr></table><p style="margin:0;color:rgba(212,175,55,0.3);font-size:11px;text-align:center;font-style:italic;">Rapport automatique · oradia.fr/admin</p></td></tr></table></td></tr></table></body></html>`;
+          const feeLine = (label, value) => `<tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">${label}</td><td style="text-align:right;color:#f87171;">− ${fmt(value)}</td></tr>`;
+          const stripeDetailRows = feesAreReal
+            ? feeLine('Commissions sur encaissements', feesResult.processingFeesEur)
+              + (feesResult.otherFeesEur > 0 ? feeLine('Autres frais Stripe (Billing, litiges, change)', feesResult.otherFeesEur) : '')
+              + (feesResult.refundCount > 0 ? `<tr><td style="padding:4px 0;color:rgba(209,201,176,0.6);font-size:12px;font-style:italic;" colspan="2">${feesResult.refundCount} remboursement${feesResult.refundCount>1?'s':''} sur la période (les commissions Stripe ne sont pas restituées)</td></tr>` : '')
+            : feeLine(`Estimation sur ${stripeRows.length} encaissement${stripeRows.length > 1 ? 's' : ''}`, stripeFees);
+          const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#050a14;font-family:Georgia,serif;"><table width="100%" cellpadding="0" cellspacing="0" style="background:#050a14;padding:40px 20px;"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="max-width:600px;background:#0a1628;border:1px solid rgba(212,175,55,0.25);border-radius:6px;"><tr><td style="padding:40px 40px 24px;border-bottom:1px solid rgba(212,175,55,0.1);"><p style="margin:0 0 4px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Rapport mensuel</p><h1 style="margin:0;color:#f0c75e;font-size:26px;font-weight:300;">ORADIA — ${cap(monthLabel)}</h1></td></tr><tr><td style="padding:32px 40px;"><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Comptabilité</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:12px;"><table width="100%">${catRows||'<tr><td style="padding:6px;color:#d1c9b0;">Aucune transaction ce mois</td></tr>'}</table></td></tr><tr><td style="padding:4px 12px;border-top:1px solid rgba(212,175,55,0.1);"><table width="100%"><tr><td style="padding:8px 0;color:#d1c9b0;font-size:13px;">Recettes encaissées (brut)</td><td style="text-align:right;color:#4ade80;font-weight:700;">${fmt(totalRecettes)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">${feesLabel}</td><td style="text-align:right;color:#f87171;">− ${fmt(stripeFees)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">Dépenses</td><td style="text-align:right;color:#f87171;">− ${fmt(totalDepenses)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">Cotisations URSSAF estimées</td><td style="text-align:right;color:#f87171;">− ${fmt(urssaf)}</td></tr><tr><td style="padding:10px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Résultat net — ce qu'il vous reste</td><td style="text-align:right;color:${tresorerieReelle>=0?'#2dd4bf':'#f87171'};font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">${fmt(tresorerieReelle)}</td></tr></table></td></tr></table><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">URSSAF (micro-entrepreneur)</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%"><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">BIC 12,3% sur ${fmt(recBIC)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recBIC*0.123)}</td></tr><tr><td style="padding:4px 0;color:#d1c9b0;font-size:13px;">BNC 21,1% sur ${fmt(recBNC)}</td><td style="text-align:right;color:#e8c96a;">${fmt(recBNC*0.211)}</td></tr><tr><td style="padding:8px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Total cotisations estimées</td><td style="text-align:right;color:#f0c75e;font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">${fmt(urssaf)}</td></tr></table></td></tr></table><div style="background:rgba(248,113,113,0.07);border:1px solid rgba(248,113,113,0.25);border-radius:4px;padding:14px 16px;margin-bottom:28px;"><p style="margin:0 0 6px;color:#f87171;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;">⚠️ Ce que vous devez déclarer à l'URSSAF</p><p style="margin:0 0 8px;color:#d1c9b0;font-size:12.5px;line-height:1.6;">Le montant brut encaissé par le client — <strong>pas</strong> le net après commission Stripe. Les frais Stripe ne sont pas déductibles en micro-entreprise (l'abattement forfaitaire joue déjà ce rôle au moment de l'impôt sur le revenu).</p><p style="margin:0;color:#e8c96a;font-size:13px;font-weight:600;">Montant à déclarer ce mois-ci : ${fmt(totalRecettes)} — et non ${fmt(totalRecettes - stripeFees)}, qui est le net une fois Stripe passé.</p></div><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Détail des frais Stripe</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%">${stripeDetailRows}<tr><td style="padding:8px 0 4px;color:#f0c75e;font-size:14px;font-weight:600;border-top:1px solid rgba(212,175,55,0.15);">Total prélevé par Stripe</td><td style="text-align:right;color:#f87171;font-weight:700;font-size:16px;border-top:1px solid rgba(212,175,55,0.15);">− ${fmt(stripeFees)}</td></tr></table>${feesNote}</td></tr></table><p style="margin:0 0 12px;color:rgba(212,175,55,0.5);font-size:11px;letter-spacing:0.35em;text-transform:uppercase;">Activité du site</p><table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05);border-radius:4px;margin-bottom:28px;"><tr><td style="padding:16px 12px;"><table width="100%"><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Pages vues</td><td style="text-align:right;color:#2dd4bf;font-weight:600;">${totalViews}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Visiteurs uniques</td><td style="text-align:right;color:#2dd4bf;font-weight:600;">${uniqueVisitors}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Abonnés Tore actifs</td><td style="text-align:right;color:#f0c75e;font-weight:600;">${activeSubs||0}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Nouveaux contacts</td><td style="text-align:right;color:#f0c75e;font-weight:600;">+${newContacts||0}</td></tr><tr><td style="padding:3px 0;color:#d1c9b0;font-size:13px;">Erreurs techniques</td><td style="text-align:right;color:${(errors||0)>0?'#f87171':'#4ade80'};font-weight:600;">${errors||0}</td></tr></table></td></tr></table><p style="margin:0;color:rgba(212,175,55,0.3);font-size:11px;text-align:center;font-style:italic;">Rapport automatique · oradia.fr/admin</p></td></tr></table></td></tr></table></body></html>`;
           const r = await fetch('https://api.brevo.com/v3/smtp/email', { method:'POST', headers:{'Content-Type':'application/json','api-key':BREVO_API_KEY}, body: JSON.stringify({ sender:{email:'contact@oradia.fr',name:'ORADIA Dashboard'}, to:[{email:adminEmail}], subject:`📊 Rapport mensuel ORADIA — ${cap(monthLabel)}`, htmlContent: html }) });
           return res.status(200).json({ success: r.ok, status: r.status });
         } catch(e) { return res.status(200).json({ success: false, error: e.message }); }
@@ -2452,8 +2479,11 @@ async function handleData(req, res) {
     const totalContacts   = paidPreorderRows.length + donorRows.length + waitlistRows.length;
     const averageBasket   = paidPreorderRows.length > 0 ? preordersTotal / paidPreorderRows.length : 0;
 
-    // Frais Stripe estimés : 1,5% + 0,25€/transaction (cartes européennes)
-    const stripeFee     = (total, count) => Math.max(0, total * 0.015 + 0.25 * count);
+    // Estimation partagée (lib/stripe-fees.js) — ces compteurs portent sur des fenêtres
+    // glissantes (jour / 7j / 30j) qui ne correspondent à aucun relevé Stripe mensuel.
+    // Les chiffres comptables du rapport mensuel et de l'onglet Comptabilité, eux,
+    // utilisent les frais réels lus dans les balance transactions.
+    const stripeFee     = (total, count) => estimateStripeFees(total, count);
     const preordersNet  = preordersTotal  - stripeFee(preordersTotal,  paidPreorderRows.length);
     // Cagnotte réellement disponible pour lancer la fabrication : net de frais Stripe
     // ET hors part livraison (qui doit repartir en frais de port, pas financer la fabrication).
@@ -2823,6 +2853,81 @@ function nlAbsUrl(path) {
   return /^https?:\/\//.test(path) ? path : `https://oradia.fr${path.startsWith('/') ? '' : '/'}${path}`;
 }
 
+// ── Corrections typographiques du corps des communications ────────────────────
+// Le texte vient du générateur IA puis d'une retouche à la main : il manque
+// régulièrement le point final d'un paragraphe, et les espaces insécables que la
+// typographie française impose devant ; : ! ? et à l'intérieur des guillemets.
+// La correction se fait au rendu (et pas à la génération) pour que l'aperçu du
+// dashboard, l'envoi de test et l'envoi réel affichent toujours la même chose,
+// quelle que soit la façon dont le brouillon a été écrit ou modifié.
+const NL_NBSP = '\u00a0'; // insécable classique — le fin (U+202F) passe mal dans certains clients mail
+
+// Met de côté ce qui ne doit jamais être retouché : balises, entités HTML, URLs
+// et adresses email. Sans ça, le « : » de « https:// » serait traité comme une
+// ponctuation double et le « ; » de « &amp; » comme une fin de proposition.
+function nlShieldMarkup(html) {
+  const shielded = [];
+  const text = String(html).replace(
+    /(<[^>]+>)|(&(?:[a-zA-Z][a-zA-Z0-9]*|#\d+);)|((?:https?:\/\/|mailto:)[^\s<]+)|([\w.+-]+@[\w-]+\.[\w.-]+)/g,
+    (match, tag, entity) => {
+      shielded.push({ text: match, kind: tag ? 'tag' : entity ? 'entity' : 'link' });
+      return `\u0000${shielded.length - 1}\u0000`;
+    }
+  );
+  return { text, shielded };
+}
+
+function nlUnshieldMarkup(text, shielded) {
+  return text.replace(/\u0000(\d+)\u0000/g, (_, i) => shielded[Number(i)].text);
+}
+
+// Ajoute le point final manquant. Opère sur le dernier fragment de texte réel :
+// un paragraphe qui finit par « …</strong> » doit recevoir son point avant la
+// balise fermante, pas après.
+function nlAddFinalPeriod(text, shielded) {
+  const parts = text.split(/(\u0000\d+\u0000)/);
+  for (let i = parts.length - 1; i >= 0; i--) {
+    const placeholder = parts[i].match(/^\u0000(\d+)\u0000$/);
+    if (placeholder) {
+      // Une balise fermante ne compte pas comme fin de paragraphe : on continue
+      // à remonter. Une URL ou une entité, si — on ne colle pas un point derrière.
+      if (shielded[Number(placeholder[1])].kind === 'tag') continue;
+      return text;
+    }
+    const trimmed = parts[i].replace(/\s+$/, '');
+    if (!trimmed) continue;
+    // Déjà ponctué, ou terminé par un guillemet / une parenthèse / un tiret : rien à faire.
+    if (/[.!?…:;»"')\]\-–—]$/.test(trimmed)) return text;
+    // Se termine par autre chose qu'une lettre ou un chiffre (emoji, symbole) : on s'abstient.
+    if (!/[\p{L}\p{N}]$/u.test(trimmed)) return text;
+    // Signature ou libellé court (« Rudy », « Bonne lecture ») : pas un paragraphe à ponctuer.
+    if (trimmed.trim().split(/\s+/).length < 3) return text;
+    parts[i] = trimmed + '.';
+    return parts.join('');
+  }
+  return text;
+}
+
+/**
+ * Nettoyage typographique d'un fragment de HTML déjà rendu.
+ * @param {string} html fragment produit par renderPara
+ * @param {{addFinalPeriod?: boolean}} [options] le point final ne s'applique qu'aux
+ *        paragraphes courants — les puces d'une liste sont souvent des fragments
+ *        volontairement non ponctués.
+ */
+function nlFixTypography(html, { addFinalPeriod = false } = {}) {
+  const { text, shielded } = nlShieldMarkup(html);
+  let out = text
+    .replace(/[ \t]{2,}/g, ' ')                                                  // espaces multiples
+    .replace(/[ \u00a0\u202f]+([,.])/g, '$1')                                    // pas d'espace avant , et .
+    .replace(/([^\s\u00a0\u202f])[ \u00a0\u202f]*([;:!?]+)/g, `$1${NL_NBSP}$2`)  // insécable avant ponctuation double
+    .replace(/«[ \u00a0\u202f]*/g, `«${NL_NBSP}`)                                // « ouvrant collé par une insécable
+    .replace(/[ \u00a0\u202f]*»/g, `${NL_NBSP}»`)                                // » fermant idem
+    .replace(/([,;:!?])([\p{L}«"'(])/gu, '$1 $2');                               // espace manquant après la ponctuation
+  if (addFinalPeriod) out = nlAddFinalPeriod(out, shielded);
+  return nlUnshieldMarkup(out, shielded);
+}
+
 // Consulte le registre de fonctionnalités. Si la table/migration n'existe pas
 // encore, ou si le flag n'est pas défini, on considère la feature active par
 // défaut (fail-open) pour ne jamais casser une fonctionnalité existante.
@@ -2853,11 +2958,25 @@ function buildCommunicationEmailHtml(draft) {
   // Répartit les images sélectionnées dans le corps du texte (entre les paragraphes)
   // au lieu de les empiler en haut de l'email, pour aérer la lecture.
   const isHtml = /<[a-z][\s\S]*>/i.test(content);
-  // Isole les blocs <ul>/<ol> comme paragraphes à part entière (au lieu de les laisser
-  // fusionnés avec le texte autour), pour que les listes à puces du générateur survivent
-  // jusqu'à l'email final au lieu d'être effacées par le filtre de balises ci-dessous.
+  // Normalise les frontières de paragraphes AVANT le découpage ci-dessous, qui ne sait
+  // couper que sur « </p><p> ».
+  //
+  // L'éditeur du dashboard est un contenteditable : le texte généré arrive en <p>, mais
+  // chaque ligne ajoutée ensuite à la main crée un <div> (comportement de Chrome et Edge
+  // sur la touche Entrée), ou un double <br> si la ligne a été saisie avec Maj+Entrée.
+  // Ces blocs-là ne correspondant pas au motif de découpage, ils étaient absorbés par le
+  // paragraphe précédent et leurs balises retirées par le filtre : dans le même email,
+  // les paragraphes venant du générateur restaient aérés pendant que ceux écrits à la
+  // main se retrouvaient collés au précédent. D'où l'irrégularité de mise en page.
+  //
+  // On isole aussi les blocs <ul>/<ol> comme paragraphes à part entière, pour que les
+  // listes à puces survivent jusqu'à l'email final au lieu d'être aplaties.
   const normalizedContent = isHtml
-    ? content.replace(/\s*(<ul[\s\S]*?<\/ul>|<ol[\s\S]*?<\/ol>)\s*/gi, '</p><p>$1</p><p>')
+    ? content
+        .replace(/<div[^>]*>/gi, '<p>')
+        .replace(/<\/div>/gi, '</p>')
+        .replace(/(?:<br\s*\/?>\s*){2,}/gi, '</p><p>')
+        .replace(/\s*(<ul[\s\S]*?<\/ul>|<ol[\s\S]*?<\/ol>)\s*/gi, '</p><p>$1</p><p>')
     : content;
   const paragraphs = isHtml
     ? normalizedContent.split(/<\/p>\s*<p[^>]*>/i).map(p => p.replace(/^<p[^>]*>/i, '').replace(/<\/p>$/i, '').trim()).filter(Boolean)
@@ -2893,14 +3012,18 @@ function buildCommunicationEmailHtml(draft) {
     const isList = /^<(ul|ol)[\s>]/i.test(para.trim());
     if (isList) {
       // Styles inline sur ul/ol/li — les clients mail ignorent le CSS externe
-      const styledList = renderPara(para)
+      const styledList = nlFixTypography(renderPara(para))
         .replace(/<ul[^>]*>/i, '<ul style="margin:0; padding-left:22px; color:#c8c0a8; font-size:16px; line-height:1.85; font-family:Georgia,serif;">')
         .replace(/<ol[^>]*>/i, '<ol style="margin:0; padding-left:22px; color:#c8c0a8; font-size:16px; line-height:1.85; font-family:Georgia,serif;">')
         .replace(/<li[^>]*>/gi, '<li style="margin-bottom:8px; padding-left:4px;">');
       return `<tr><td style="padding:0 32px 20px;">${styledList}</td></tr>`;
     }
+    // Ferré à gauche, plus justifié : la colonne d'un email est étroite (et se réduit
+    // encore sur mobile) et aucun client mail n'y applique la césure française. Justifier
+    // y creuse des blancs irréguliers d'une ligne à l'autre, avec en prime une dernière
+    // ligne toujours ferrée à gauche — d'où l'aspect bancal du texte.
     return `<tr><td style="padding:0 32px 20px;">
-    <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:justify;">${renderPara(para)}</div>
+    <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:left;">${nlFixTypography(renderPara(para), { addFinalPeriod: true })}</div>
   </td></tr>`;
   };
 
@@ -5227,20 +5350,34 @@ Réponds en français, sans tiret long, format markdown compact.`
         const urssafBNC = recettesServicesBNC * URSSAF_RATE_BNC;
         const urssaf = urssafBIC + urssafBNC;
 
-        // Estimation des frais Stripe (1,4% + 0,25€/transaction), à titre informatif uniquement —
+        // Frais Stripe réels (balance transactions), à titre informatif uniquement —
         // n'affecte jamais le calcul URSSAF (qui se base sur le montant brut encaissé, conformément
-        // au régime micro-entrepreneur). Ne s'applique qu'aux recettes encaissées via Stripe.
+        // au régime micro-entrepreneur). Repli sur l'estimation si l'API Stripe est injoignable.
         const STRIPE_SOURCES = ['precommande', 'abonnement', 'don', 'guidance'];
         const stripeRows = recetteRows.filter(t => STRIPE_SOURCES.includes(t.source));
-        const stripeFeesEstimate = stripeRows.reduce((s, t) => s + parseFloat(t.amount) * 0.014 + 0.25, 0);
-        const tresorerieReelleEstimee = recettes - stripeFeesEstimate - depenses;
+        const feesResult = month
+          ? await getMonthlyStripeFees(sb, `${year}-${month.padStart(2,'0')}`)
+          : await getStripeFeesForPeriod(`${dateFrom}T00:00:00.000Z`, new Date(Date.parse(`${dateTo}T00:00:00.000Z`) + 86400000));
+        const stripeFeesAreReal = feesResult.ok;
+        const stripeFees = stripeFeesAreReal
+          ? feesResult.feesEur
+          : estimateStripeFees(stripeRows.reduce((s, t) => s + parseFloat(t.amount), 0), stripeRows.length);
+        // Ce qui reste vraiment : l'URSSAF est un décaissement au même titre que Stripe.
+        const tresorerieReelleEstimee = recettes - stripeFees - depenses - urssaf;
 
         return res.status(200).json({
           success: true,
           data: data || [],
           summary: {
             recettes, depenses, net: recettes - depenses, urssaf,
-            stripeFeesEstimate, tresorerieReelleEstimee,
+            stripeFees, stripeFeesAreReal,
+            stripeFeesError: stripeFeesAreReal ? null : feesResult.error,
+            stripeFeesDetail: stripeFeesAreReal
+              ? { processing: feesResult.processingFeesEur, other: feesResult.otherFeesEur, chargeCount: feesResult.chargeCount, refundCount: feesResult.refundCount }
+              : null,
+            // Conservé pour compatibilité avec le dashboard déjà déployé.
+            stripeFeesEstimate: stripeFees,
+            tresorerieReelleEstimee,
             breakdown: {
               recettesVentesBIC, recettesServicesBNC,
               urssafBIC, urssafBNC,

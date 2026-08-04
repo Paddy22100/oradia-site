@@ -2701,6 +2701,7 @@
                 <div class="stat-card rounded-xl p-4 text-center">
                     <div class="text-2xl font-bold text-teal-300" id="compta-net">—</div>
                     <p class="text-gold/50 text-xs mt-1">Résultat net</p>
+                    <p class="text-gold/30 text-xs">après Stripe et URSSAF</p>
                 </div>
                 <div class="stat-card rounded-xl p-4 text-center border border-orange-500/20">
                     <div class="text-2xl font-bold text-orange-400" id="compta-urssaf">—</div>
@@ -2709,15 +2710,16 @@
                 </div>
             </div>
 
-            <!-- Trésorerie réelle (après frais Stripe estimés) — purement informatif, n'affecte pas l'URSSAF -->
+            <!-- Détail des frais Stripe — lus dans les balance transactions, pas estimés.
+                 Purement informatif : l'URSSAF se calcule sur le brut encaissé. -->
             <div class="bg-white/3 border border-gold/10 rounded-xl p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
                 <div>
-                    <p class="text-gold/60 text-xs uppercase tracking-widest mb-1">Trésorerie réelle estimée <span class="text-gold/30 normal-case">(après frais Stripe ~1,4% + 0,25€/transaction)</span></p>
-                    <p class="text-light-gold/40 text-xs italic">Information seule — l'URSSAF se calcule sur le montant brut encaissé, pas sur ce montant.</p>
+                    <p class="text-gold/60 text-xs uppercase tracking-widest mb-1">Frais Stripe <span class="text-gold/30 normal-case" id="compta-stripe-source">—</span></p>
+                    <p class="text-light-gold/40 text-xs italic">Déjà déduits du résultat net ci-dessus. L'URSSAF, elle, se calcule sur le montant brut encaissé.</p>
                 </div>
                 <div class="text-right">
-                    <p class="text-xs text-red-400/70" id="compta-stripe-fees">—</p>
-                    <p class="text-lg font-bold text-blue-300" id="compta-tresorerie-reelle">—</p>
+                    <p class="text-lg font-bold text-red-400/90" id="compta-stripe-fees">—</p>
+                    <p class="text-xs text-gold/40" id="compta-stripe-detail"></p>
                 </div>
             </div>
 
@@ -10380,7 +10382,10 @@
                 } catch(_) {}
             }
             const depensesTotal = (s.depenses || 0) + costsMonthlyEur;
-            const netTotal = (s.recettes || 0) - depensesTotal;
+            // Le résultat net doit refléter ce qui reste vraiment : les frais Stripe et les
+            // cotisations URSSAF sortent de la caisse au même titre que les dépenses.
+            const stripeFeesTotal = s.stripeFees ?? s.stripeFeesEstimate ?? 0;
+            const netTotal = (s.recettes || 0) - stripeFeesTotal - depensesTotal - (s.urssaf || 0);
 
             setEl('compta-recettes', fmt(s.recettes));
             const depensesEl = document.getElementById('compta-depenses');
@@ -10388,14 +10393,20 @@
             setEl('compta-net', fmt(netTotal));
             setEl('compta-urssaf', fmt(s.urssaf));
             const b = s.breakdown;
-            setEl('compta-stripe-fees', `− ${fmt(s.stripeFeesEstimate)} de frais Stripe estimés`);
-            setEl('compta-tresorerie-reelle', fmt((s.tresorerieReelleEstimee||0) - costsMonthlyEur));
+            setEl('compta-stripe-fees', `− ${fmt(stripeFeesTotal)}`);
+            const sd = s.stripeFeesDetail;
+            setEl('compta-stripe-source', s.stripeFeesAreReal
+                ? `(relevé Stripe réel${sd?.chargeCount ? ` — ${sd.chargeCount} paiement${sd.chargeCount > 1 ? 's' : ''}` : ''})`
+                : `(estimation — relevé Stripe indisponible${s.stripeFeesError ? ` : ${s.stripeFeesError}` : ''})`);
+            setEl('compta-stripe-detail', sd && sd.other > 0
+                ? `dont ${fmt(sd.other)} de frais hors encaissement`
+                : '');
             const urssafDetailEl = document.getElementById('compta-urssaf-detail');
             if (urssafDetailEl && b) {
                 urssafDetailEl.innerHTML = `BIC ventes ${(b.tauxBIC*100).toFixed(1)}% : ${fmt(b.urssafBIC)}<br>BNC services ${(b.tauxBNC*100).toFixed(1)}% : ${fmt(b.urssafBNC)}`;
             }
             const transactions = data.data || [];
-            _comptaCache = { year, month, transactions, summary: s, costsMonthlyEur, depensesTotal, netTotal };
+            _comptaCache = { year, month, transactions, summary: s, costsMonthlyEur, depensesTotal, netTotal, stripeFeesTotal };
             if (!list) return;
             if (transactions.length === 0) { list.innerHTML = '<p class="text-gold/30 text-sm italic text-center py-8">Aucune transaction. Cliquez sur "Resynchroniser l\'historique" pour charger les données existantes.</p>'; return; }
             list.innerHTML = transactions.map(t => {
@@ -10420,7 +10431,7 @@
 
         function exportComptaPDF() {
             if (!_comptaCache) { alert('Chargez d\'abord les données de comptabilité.'); return; }
-            const { year, month, transactions, summary: s, costsMonthlyEur, depensesTotal, netTotal } = _comptaCache;
+            const { year, month, transactions, summary: s, costsMonthlyEur, depensesTotal, netTotal, stripeFeesTotal } = _comptaCache;
             const fmt = v => new Intl.NumberFormat('fr-FR', { style: 'currency', currency: 'EUR' }).format(v || 0);
             const moisNoms = ['','Janvier','Février','Mars','Avril','Mai','Juin','Juillet','Août','Septembre','Octobre','Novembre','Décembre'];
             const periodeLabel = month ? `${moisNoms[parseInt(month)]} ${year}` : `Année ${year}`;
@@ -10443,12 +10454,13 @@
   body { font-family: Georgia, serif; color: #1a1a2e; padding: 32px 40px; font-size: 12px; }
   h1 { font-size: 22px; font-weight: bold; margin-bottom: 4px; }
   .subtitle { color: #555; font-size: 13px; margin-bottom: 24px; }
-  .kpis { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 28px; }
+  .kpis { display: grid; grid-template-columns: repeat(5,1fr); gap: 12px; margin-bottom: 28px; }
   .kpi { border: 1px solid #ddd; border-radius: 8px; padding: 12px 14px; text-align: center; }
   .kpi .label { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: #777; margin-bottom: 4px; }
   .kpi .val { font-size: 16px; font-weight: bold; }
   .kpi.recettes .val { color: #166534; }
   .kpi.depenses .val { color: #991b1b; }
+  .kpi.stripe .val { color: #991b1b; }
   .kpi.net .val { color: #0f766e; }
   .kpi.urssaf .val { color: #92400e; }
   h2 { font-size: 13px; font-weight: bold; text-transform: uppercase; letter-spacing: .08em; color: #555; margin: 20px 0 8px; border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
@@ -10464,9 +10476,10 @@
 <p class="subtitle">Période : ${periodeLabel} · Généré le ${new Date().toLocaleDateString('fr-FR', { day:'2-digit', month:'long', year:'numeric' })}</p>
 <div class="kpis">
   <div class="kpi recettes"><div class="label">Recettes brutes</div><div class="val">${fmt(s.recettes)}</div></div>
+  <div class="kpi stripe"><div class="label">Frais Stripe${s.stripeFeesAreReal ? '' : ' (estimés)'}</div><div class="val">− ${fmt(stripeFeesTotal)}</div></div>
   <div class="kpi depenses"><div class="label">Dépenses</div><div class="val">${fmt(depensesTotal)}</div></div>
-  <div class="kpi net"><div class="label">Résultat net</div><div class="val">${fmt(netTotal)}</div></div>
   <div class="kpi urssaf"><div class="label">URSSAF estimé</div><div class="val">${fmt(s.urssaf)}</div></div>
+  <div class="kpi net"><div class="label">Résultat net</div><div class="val">${fmt(netTotal)}</div></div>
 </div>
 <h2>Recettes (${recettes.length})</h2>
 ${recettes.length ? `<table><thead><tr><th>Date</th><th>Description</th><th>Catégorie</th><th style="text-align:right">Montant</th></tr></thead><tbody>${recettes.map(row).join('')}</tbody></table>` : '<p class="empty">Aucune recette sur la période.</p>'}
