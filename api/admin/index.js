@@ -129,7 +129,7 @@ async function sendRenewalReminderEmail(email, expiresAt) {
   const dateStr = expiresAt.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#040d1c;">
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#040d1c" style="background-color:#040d1c;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#040d1c" background="https://oradia.fr/images/oradia-hero-4k.webp" style="background-color:#040d1c; background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat;">
 <tr><td align="center" style="padding:32px 12px;">
 <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#0a192f" style="max-width:600px;margin:0 auto;background-color:#0a192f;border:1px solid rgba(212,175,55,0.2);border-radius:16px;overflow:hidden;">
   <tr><td style="padding:0;line-height:0;"><img src="https://oradia.fr/images/medias/bandeau_rappel_abonnement_tore.webp" alt="Le Tore" width="600" style="display:block;width:100%;height:auto;"></td></tr>
@@ -2853,19 +2853,20 @@ function buildFreeSubscriptionWelcomeHtml({ email, fullName, accessCode, expires
     <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:justify;">${p}</div>
   </td></tr>`).join('');
 
-  // Fond en couleur pleine, sans image ni police distante : le conteneur du texte reposait
-  // sur un dégradé semi-transparent (rgba) posé au-dessus d'une image de fond. Or ni Gmail
-  // (web et mobile) ni Outlook ne gèrent les dégradés CSS sur une <table> : le conteneur
-  // restait transparent et, dès que le destinataire chargeait les images — ou transférait
-  // le message —, la photo de fond remontait derrière le texte, qui devenait illisible.
-  // La couleur est portée à la fois par l'attribut bgcolor (Outlook) et par background-color.
+  // L'image de fond reste sur la table extérieure — elle habille les marges de chaque côté
+  // de la carte. C'est la carte elle-même qui devait changer : elle reposait sur un dégradé
+  // semi-transparent (rgba), or ni Gmail (web et mobile) ni Outlook ne gèrent les dégradés
+  // CSS sur une <table>. Le conteneur restait donc transparent et, dès que le destinataire
+  // chargeait les images — ou transférait le message —, la photo remontait derrière le texte,
+  // qui devenait illisible. La carte a maintenant un fond opaque, porté à la fois par
+  // l'attribut bgcolor (Outlook) et par background-color : l'image ne peut plus la traverser.
   // Les liens Google Fonts sont retirés au passage : aucun client mail ne charge de feuille
   // de style externe, et ces requêtes distantes pèsent dans le score anti-spam.
   return `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body style="margin:0; padding:0; background-color:#040d1c;">
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#040d1c" style="background-color:#040d1c;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#040d1c" background="https://oradia.fr/images/oradia-hero-4k.webp" style="background-color:#040d1c; background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat;">
 <tr><td align="center" style="padding:32px 12px;">
 <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#0a192f" style="background-color:#0a192f; max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
   <tr><td style="padding:0; line-height:0;">
@@ -3075,9 +3076,21 @@ function buildCommunicationEmailHtml(draft) {
         .replace(/(?:<br\s*\/?>\s*){2,}/gi, '</p><p>')
         .replace(/\s*(<ul[\s\S]*?<\/ul>|<ol[\s\S]*?<\/ol>)\s*/gi, '</p><p>$1</p><p>')
     : content;
+  // Un paragraphe sans aucun texte visible ne doit pas produire de ligne dans l'email.
+  // L'éditeur en crée en permanence — une ligne vide laissée entre deux paragraphes y
+  // arrive sous la forme <div><br></div> ou <p>&nbsp;</p>. À l'écran elle vaut une simple
+  // ligne vide, mais rendue en paragraphe à part entière elle ajoutait sa marge basse de
+  // 20px à celle du paragraphe précédent : d'où des écarts deux fois plus grands à
+  // certains endroits, et une mise en page qui ne correspondait pas à celle du dashboard.
+  // L'espacement entre paragraphes est désormais le même partout, quelle que soit la
+  // façon dont le brouillon a été saisi.
+  const hasVisibleText = (p) => String(p)
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;|&#160;/gi, ' ')
+    .trim().length > 0;
   const paragraphs = isHtml
-    ? normalizedContent.split(/<\/p>\s*<p[^>]*>/i).map(p => p.replace(/^<p[^>]*>/i, '').replace(/<\/p>$/i, '').trim()).filter(Boolean)
-    : normalizedContent.split(/\n+/).map(p => p.trim()).filter(Boolean);
+    ? normalizedContent.split(/<\/p>\s*<p[^>]*>/i).map(p => p.replace(/^<p[^>]*>/i, '').replace(/<\/p>$/i, '').trim()).filter(hasVisibleText)
+    : normalizedContent.split(/\n+/).map(p => p.trim()).filter(hasVisibleText);
   // Rendu d'un paragraphe : autorise b/strong/i/em/u/br/ul/ol/li/a, échappe le reste
   const renderPara = (para) => isHtml
     ? nlStyleLinks(para.replace(/<(?!\/?(?:b|strong|i|em|u|br|ul|ol|li|a)\b)[^>]*>/gi, ''))
@@ -3148,19 +3161,20 @@ function buildCommunicationEmailHtml(draft) {
     while (imgIdx < totalImagesAll) { bodyRows += imageRow(allImages[imgIdx++]); }
   }
 
-  // Fond en couleur pleine, sans image ni police distante : le conteneur du texte reposait
-  // sur un dégradé semi-transparent (rgba) posé au-dessus d'une image de fond. Or ni Gmail
-  // (web et mobile) ni Outlook ne gèrent les dégradés CSS sur une <table> : le conteneur
-  // restait transparent et, dès que le destinataire chargeait les images — ou transférait
-  // le message —, la photo de fond remontait derrière le texte, qui devenait illisible.
-  // La couleur est portée à la fois par l'attribut bgcolor (Outlook) et par background-color.
+  // L'image de fond reste sur la table extérieure — elle habille les marges de chaque côté
+  // de la carte. C'est la carte elle-même qui devait changer : elle reposait sur un dégradé
+  // semi-transparent (rgba), or ni Gmail (web et mobile) ni Outlook ne gèrent les dégradés
+  // CSS sur une <table>. Le conteneur restait donc transparent et, dès que le destinataire
+  // chargeait les images — ou transférait le message —, la photo remontait derrière le texte,
+  // qui devenait illisible. La carte a maintenant un fond opaque, porté à la fois par
+  // l'attribut bgcolor (Outlook) et par background-color : l'image ne peut plus la traverser.
   // Les liens Google Fonts sont retirés au passage : aucun client mail ne charge de feuille
   // de style externe, et ces requêtes distantes pèsent dans le score anti-spam.
   return `<!DOCTYPE html>
 <html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 <body style="margin:0; padding:0; background-color:#040d1c;">
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#040d1c" style="background-color:#040d1c;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#040d1c" background="https://oradia.fr/images/oradia-hero-4k.webp" style="background-color:#040d1c; background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat;">
 <tr><td align="center" style="padding:32px 12px;">
 <table width="100%" cellpadding="0" cellspacing="0" bgcolor="#0a192f" style="background-color:#0a192f; max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
   <tr><td style="padding:0; line-height:0;">
@@ -3287,6 +3301,163 @@ function nlBulkHeaders(email) {
     'List-Unsubscribe': `<${buildOneClickUnsubUrl(email)}>`,
     'List-Unsubscribe-Post': 'List-Unsubscribe=One-Click'
   };
+}
+
+// ── Envoi ciblé : campagne Brevo plutôt qu'API transactionnelle ───────────────
+// Les envois ciblés (par catégorie, ou « ceux qui ne l'ont pas encore reçu ») partaient par
+// l'API transactionnelle, un email à la fois. Or Brevo — comme Gmail et Yahoo — sépare le
+// flux transactionnel (reçus, mots de passe, alertes) du flux marketing : y faire passer une
+// newsletter dégrade la réputation des deux, et c'est l'une des causes du classement en spam.
+// Une campagne ne pouvant viser qu'une liste, on en crée une temporaire, on y verse les
+// contacts ciblés, on envoie, et les listes des envois précédents sont nettoyées au passage.
+//
+// Toute défaillance AVANT le déclenchement de la campagne renvoie sentNothing:true : l'appelant
+// retombe alors sur l'envoi transactionnel, c'est-à-dire le comportement d'avant. Une fois la
+// campagne déclenchée, aucun repli n'est possible sans risquer un double envoi.
+const NL_TEMP_LIST_PREFIX = '[auto] Ciblage';
+
+// Brevo n'expose pas la date de création d'une liste : on l'inscrit dans le nom, et on
+// supprime ici les listes temporaires de plus de 7 jours. Jamais bloquant.
+async function nlPurgeTempLists(api, folderId) {
+  const r = await api(`/contacts/folders/${folderId}/lists?limit=50&offset=0`);
+  if (!r.ok) return;
+  const lists = (await r.json()).lists || [];
+  const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+  const namePattern = new RegExp(`^${NL_TEMP_LIST_PREFIX.replace(/[[\]]/g, '\\$&')} (\\d{4}-\\d{2}-\\d{2})`);
+  for (const l of lists) {
+    const m = String(l.name || '').match(namePattern);
+    if (m && Date.parse(m[1]) < cutoff) {
+      await api(`/contacts/lists/${l.id}`, { method: 'DELETE' }).catch(() => {});
+    }
+  }
+}
+
+async function nlWaitForProcess(api, processId, deadline) {
+  while (Date.now() < deadline) {
+    const r = await api(`/processes/${processId}`);
+    if (r.ok) {
+      const status = (await r.json()).status;
+      if (status === 'completed') return true;
+      if (status === 'failed') return false;
+    }
+    await new Promise(resolve => setTimeout(resolve, 1200));
+  }
+  return false;
+}
+
+async function nlSendTargetedCampaign({ BREVO_API_KEY, emails, subject, html, type, deadline }) {
+  const api = (path, options = {}) => fetch(`https://api.brevo.com/v3${path}`, {
+    ...options,
+    headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY, ...(options.headers || {}) }
+  });
+  const fail = (stage, error) => ({ ok: false, stage, error: String(error).slice(0, 300), sentNothing: true });
+  let listId = null;
+  const dropList = async () => { if (listId) await api(`/contacts/lists/${listId}`, { method: 'DELETE' }).catch(() => {}); };
+
+  try {
+    // 1. Dossier d'accueil : celui de la liste newsletter, sinon le premier disponible.
+    let folderId = null;
+    const listRes = await api('/contacts/lists/5');
+    if (listRes.ok) folderId = (await listRes.json()).folderId ?? null;
+    if (!folderId) {
+      const foldersRes = await api('/contacts/folders?limit=1&offset=0');
+      if (foldersRes.ok) folderId = (await foldersRes.json()).folders?.[0]?.id ?? null;
+    }
+    if (!folderId) return fail('folder', 'Aucun dossier de contacts Brevo accessible');
+
+    await nlPurgeTempLists(api, folderId).catch(() => {});
+
+    const stamp = new Date().toISOString().slice(0, 10);
+    const name = `${NL_TEMP_LIST_PREFIX} ${stamp} — ${subject}`.slice(0, 90);
+    const createRes = await api('/contacts/lists', { method: 'POST', body: JSON.stringify({ name, folderId }) });
+    if (!createRes.ok) return fail('list', await createRes.text());
+    listId = (await createRes.json()).id;
+
+    // 2. Import des contacts ciblés. `updateExistingContacts:false` et l'absence délibérée
+    //    de emailBlacklist / smsBlacklist sont la garantie qu'un import ne réécrit jamais le
+    //    statut d'un contact déjà connu de Brevo : personne ne peut être réabonné à son insu.
+    const importRes = await api('/contacts/import', {
+      method: 'POST',
+      body: JSON.stringify({
+        listIds: [listId],
+        updateExistingContacts: false,
+        emptyContactsAttributes: false,
+        disableNotification: true,
+        jsonBody: emails.map(email => ({ email }))
+      })
+    });
+    if (!importRes.ok) { await dropList(); return fail('import', await importRes.text()); }
+    const processId = (await importRes.json().catch(() => ({})))?.processId ?? null;
+    if (processId && !(await nlWaitForProcess(api, processId, deadline))) {
+      await dropList();
+      return fail('import', "L'import des contacts n'a pas abouti dans le temps imparti");
+    }
+
+    // 3. Vérification avant tir. L'import est asynchrone et sa sémantique dépend du plan
+    //    Brevo : si la liste est restée vide, la campagne partirait dans le vide. On préfère
+    //    repasser en transactionnel plutôt que de croire un envoi parti alors qu'il ne l'est pas.
+    const checkRes = await api(`/contacts/lists/${listId}`);
+    const subscribers = checkRes.ok ? ((await checkRes.json()).uniqueSubscribers ?? 0) : 0;
+    if (!subscribers) { await dropList(); return fail('verify', 'La liste temporaire est vide après import'); }
+
+    const campRes = await api('/emailCampaigns', {
+      method: 'POST',
+      body: JSON.stringify({
+        name: `${type === 'promo' ? 'Promo' : 'Newsletter'} ciblée — ${subject} — ${new Date().toISOString()}`,
+        subject,
+        sender: { name: 'Oradia', email: 'contact@oradia.fr' },
+        replyTo: 'contact@oradia.fr',
+        htmlContent: html.replace('{unsubscribe}', '{{ unsubscribe }}'),
+        recipients: { listIds: [listId] }
+      })
+    });
+    if (!campRes.ok) { await dropList(); return fail('campaign', await campRes.text()); }
+    const campaignId = (await campRes.json()).id;
+
+    const sendRes = await api(`/emailCampaigns/${campaignId}/sendNow`, { method: 'POST' });
+    if (!sendRes.ok) {
+      // La campagne existe mais n'est pas partie : elle reste en brouillon dans Brevo, prête
+      // à être envoyée à la main. Pas de repli transactionnel ici — le doute sur ce qui est
+      // réellement parti interdit tout second envoi automatique.
+      return { ok: false, stage: 'send', error: String(await sendRes.text()).slice(0, 300), sentNothing: false, campaignId };
+    }
+    return { ok: true, campaignId, listId, subscribers };
+  } catch (e) {
+    await dropList();
+    return fail('exception', e.message);
+  }
+}
+
+// Traçage post-envoi, commun aux deux canaux (campagne ou transactionnel) : quels contacts
+// ont reçu quoi, et passage du brouillon à l'état « envoyé ».
+async function nlMarkSent(supabase, { emails, subject, draftId, excludeAlreadySent, sent, failedEmails = [] }) {
+  if (emails.length > 0) {
+    if (excludeAlreadySent) {
+      await supabase
+        .from('newsletter_contacts')
+        .update({ precommande_launch_sent_at: new Date().toISOString() })
+        .in('email', emails);
+    }
+    // Colonne optionnelle — ignoré silencieusement si la migration last-newsletter
+    // n'a pas été exécutée.
+    try {
+      await supabase
+        .from('newsletter_contacts')
+        .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: subject })
+        .in('email', emails);
+    } catch (_) {}
+  }
+  await supabase
+    .from('newsletter_drafts')
+    .update({
+      statut: 'envoyé',
+      sent_at: new Date().toISOString(),
+      subject,
+      sent_count: sent,
+      failed_count: failedEmails.length,
+      failed_emails: failedEmails
+    })
+    .eq('id', draftId);
 }
 
 function nlSupabase() {
@@ -3703,6 +3874,35 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
           return res.status(200).json({ success: true, sent: 0, message: 'Tous les inscrits actifs ont déjà reçu cette newsletter' });
         }
 
+        // Même canal marketing que la diffusion ciblée, avec le même repli transactionnel.
+        let resendFallbackReason = null;
+        if (await isFeatureEnabled(supabase, 'newsletter_campagne_ciblee')) {
+          const campaign = await nlSendTargetedCampaign({
+            BREVO_API_KEY, emails: targets, subject: finalSubject, html,
+            type: lastDraft.type, deadline: Date.now() + 15000
+          });
+          if (campaign.ok) {
+            await supabase
+              .from('newsletter_contacts')
+              .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
+              .in('email', targets);
+            return res.status(200).json({
+              success: true, channel: 'campagne', campaignId: campaign.campaignId,
+              subject: finalSubject, sent: targets.length, failed: 0, failedEmails: [],
+              message: `Campagne envoyée à ${campaign.subscribers} contact(s) sur ${targets.length} ciblé(s).`
+            });
+          }
+          if (!campaign.sentNothing) {
+            return res.status(502).json({
+              error: `La campagne a été créée dans Brevo mais son envoi n'a pas démarré (${campaign.error}). `
+                + `Aucun repli automatique n'est tenté pour ne pas risquer un double envoi : `
+                + `retrouve la campagne dans Brevo → Campagnes et lance-la à la main.`
+            });
+          }
+          resendFallbackReason = `${campaign.stage} : ${campaign.error}`;
+          console.warn('[newsletter] resend-last : repli transactionnel —', resendFallbackReason);
+        }
+
         let sent = 0;
         const sentEmails = [];
         const failedEmails = [];
@@ -3735,7 +3935,7 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
             .in('email', sentEmails);
         }
 
-        return res.status(200).json({ success: true, subject: finalSubject, sent, failed: failedEmails.length, failedEmails });
+        return res.status(200).json({ success: true, channel: 'transactionnel', fallbackReason: resendFallbackReason, subject: finalSubject, sent, failed: failedEmails.length, failedEmails });
       }
 
       if (action === 'send') {
@@ -3776,10 +3976,9 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
           return res.status(200).json({ success: true });
         }
 
-        // Diffusion ciblée : envoi direct aux contacts portant une (ou plusieurs) catégorie(s),
-        // sans passer par les listes Brevo (gestion des catégories uniquement via le dashboard).
-        // exclude_already_sent force aussi ce chemin (même sans catégorie) pour permettre le
-        // suivi par contact (precommande_launch_sent_at) — la campagne Brevo native ne le permet pas.
+        // Diffusion ciblée : aux contacts portant une (ou plusieurs) catégorie(s), les catégories
+        // restant gérées uniquement dans le dashboard. exclude_already_sent emprunte le même
+        // chemin (même sans catégorie) pour permettre le suivi par contact.
         if ((Array.isArray(target_tags) && target_tags.length > 0) || exclude_already_sent) {
           let contactsQuery = supabase.from('newsletter_contacts').select('email').eq('status', 'active');
           if (Array.isArray(target_tags) && target_tags.length > 0) contactsQuery = contactsQuery.overlaps('tags', target_tags);
@@ -3792,8 +3991,54 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
             return res.status(400).json({ error: exclude_already_sent ? 'Tous les contacts actifs ont déjà reçu cet email.' : 'Aucun contact actif ne correspond à cette/ces catégorie(s)' });
           }
 
-          // Envoi individuel par lots (un email par destinataire, pas de diffusion groupée
-          // visible) pour rester dans le temps d'exécution de la fonction serverless.
+          // Canal marketing d'abord : une campagne Brevo, comme pour la diffusion à la liste
+          // complète. Le drapeau `newsletter_campagne_ciblee` permet de revenir à l'ancien
+          // canal depuis Supabase sans redéploiement (drapeau absent = campagne active).
+          let fallbackReason = null;
+          if (await isFeatureEnabled(supabase, 'newsletter_campagne_ciblee')) {
+            const campaign = await nlSendTargetedCampaign({
+              BREVO_API_KEY,
+              emails,
+              subject: finalSubject,
+              html,
+              type: draft.type,
+              deadline: Date.now() + 15000
+            });
+
+            if (campaign.ok) {
+              await nlMarkSent(supabase, {
+                emails, subject: finalSubject, draftId: draft_id,
+                excludeAlreadySent: exclude_already_sent, sent: emails.length
+              });
+              return res.status(200).json({
+                success: true,
+                channel: 'campagne',
+                campaignId: campaign.campaignId,
+                recipients: emails.length,
+                sent: emails.length,
+                failed: 0,
+                failedEmails: [],
+                // Écart normal : un contact désinscrit ou blacklisté côté Brevo est ciblé
+                // par la requête Supabase mais exclu de la liste — donc de l'envoi.
+                message: `Campagne envoyée à ${campaign.subscribers} contact(s) sur ${emails.length} ciblé(s).`
+              });
+            }
+
+            if (!campaign.sentNothing) {
+              return res.status(502).json({
+                error: `La campagne a été créée dans Brevo mais son envoi n'a pas démarré (${campaign.error}). `
+                  + `Aucun repli automatique n'est tenté pour ne pas risquer un double envoi : `
+                  + `retrouve la campagne dans Brevo → Campagnes et lance-la à la main.`
+              });
+            }
+
+            // Rien n'est parti : on reprend l'envoi transactionnel, à l'identique d'avant.
+            fallbackReason = `${campaign.stage} : ${campaign.error}`;
+            console.warn('[newsletter] campagne ciblée impossible, repli transactionnel —', fallbackReason);
+          }
+
+          // Repli : envoi individuel par lots (un email par destinataire, pas de diffusion
+          // groupée visible) pour rester dans le temps d'exécution de la fonction serverless.
           // On continue même en cas d'échecs isolés, mais on s'arrête si Brevo
           // signale un quota dépassé (402, plan gratuit = 300 emails/jour).
           const BATCH_SIZE = 10;
@@ -3837,38 +4082,15 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
 
           const failed = failedEmails.length;
 
-          if (exclude_already_sent && sentEmails.length > 0) {
-            await supabase
-              .from('newsletter_contacts')
-              .update({ precommande_launch_sent_at: new Date().toISOString() })
-              .in('email', sentEmails);
-          }
-
-          // Tracer la dernière newsletter reçue par contact (colonne optionnelle —
-          // ignoré silencieusement si la migration last-newsletter n'est pas exécutée)
-          if (sentEmails.length > 0) {
-            try {
-              await supabase
-                .from('newsletter_contacts')
-                .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
-                .in('email', sentEmails);
-            } catch (_) {}
-          }
-
-          await supabase
-            .from('newsletter_drafts')
-            .update({
-              statut: 'envoyé',
-              sent_at: new Date().toISOString(),
-              subject: finalSubject,
-              sent_count: sent,
-              failed_count: failed,
-              failed_emails: failedEmails
-            })
-            .eq('id', draft_id);
+          await nlMarkSent(supabase, {
+            emails: sentEmails, subject: finalSubject, draftId: draft_id,
+            excludeAlreadySent: exclude_already_sent, sent, failedEmails
+          });
 
           return res.status(200).json({
             success: true,
+            channel: 'transactionnel',
+            fallbackReason,
             recipients: emails.length,
             sent,
             failed,
