@@ -1889,7 +1889,7 @@
                         <!-- Éditeur riche -->
                         <div id="nl-content-editor" contenteditable="true" spellcheck="true" lang="fr"
                             class="hidden w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-b-lg px-4 py-3 text-sm focus:outline-none focus:border-gold"
-                            style="min-height:320px; line-height:1.8; white-space:pre-wrap; outline:none;"
+                            style="min-height:320px; line-height:1.8; white-space:pre-wrap; text-align:justify; outline:none;"
                             oninput="nlSyncEditor()"></div>
                         <!-- Textarea caché pour compatibilité avec le code existant -->
                         <textarea id="nl-content" class="hidden"></textarea>
@@ -6488,6 +6488,11 @@
                         nlStatus('warning', `Limite quotidienne Brevo atteinte (plan gratuit = 300 emails/jour) : ${data.sent || 0} envoyé(s) sur ${data.recipients || 0}, le reste sera à renvoyer demain (recochez la case et relancez).${data.failed ? ` (${data.failed} échec(s) au total)` : ''}`);
                     } else if (data.failed) {
                         nlStatus('warning', `Newsletter envoyée : ${data.sent || 0} réussi(s), ${data.failed} échec(s) sur ${data.recipients || 0} contact(s).`);
+                    } else if (data.message) {
+                        // Envoi par campagne Brevo : le nombre réellement touché peut être
+                        // inférieur au ciblage (contacts désinscrits côté Brevo), le serveur
+                        // renvoie donc le détail des deux chiffres.
+                        nlStatus('success', `${data.message} ✓`);
                     } else {
                         nlStatus('success', `Newsletter envoyée à ${data.sent ?? data.recipients ?? 0} contact(s) ✓`);
                     }
