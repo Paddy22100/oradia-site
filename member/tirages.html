@@ -371,9 +371,9 @@
                 if (t.passerelles && t.passerelles.length > 0) {
                     const items = t.passerelles.map(p =>
                         `<div style="display:inline-flex;align-items:center;gap:6px;background:rgba(212,175,55,0.08);border:1px solid rgba(212,175,55,0.25);border-radius:6px;padding:4px 10px;font-size:12px;">
-                            <span style="color:rgba(245,231,161,0.6);">${p.carte}</span>
+                            <span class="carte-badge-hover" data-carte="${(p.carte||'').replace(/"/g,'&quot;')}" style="color:rgba(245,231,161,0.6);cursor:default;">${p.carte}</span>
                             <span style="color:rgba(212,175,55,0.5);">→</span>
-                            <span style="color:#d4af37;font-weight:600;">${p.passerelle}</span>
+                            <span class="carte-badge-hover" data-carte="${(p.passerelle||'').replace(/"/g,'&quot;')}" style="color:#d4af37;font-weight:600;cursor:default;">${p.passerelle}</span>
                         </div>`
                     ).join('');
                     passerellesHtml = `
