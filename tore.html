@@ -328,6 +328,27 @@
     transform: translateY(-1px);
   }
 
+  /* Checklist de validation en temps réel */
+  .tore-checklist {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 5px 18px;
+    margin: 2px 0 0;
+  }
+  .tore-check {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    font-family: 'Cormorant Garamond', Georgia, serif;
+    font-size: clamp(12px, 1.2vw, 14px);
+    color: rgba(212,175,55,0.42);
+    transition: color 0.2s;
+  }
+  .tore-check .chk-ico { font-size: 8px; transition: color 0.2s; }
+  .tore-check.is-ok { color: rgba(147,214,164,0.95); }
+  .tore-check.is-ko { color: rgba(252,165,165,0.9); }
+
   /* Mode immersif : cacher footer, autres sections et le bouton scroll-top */
   body.hide-immersive-tore > footer,
   body.hide-immersive-tore > section:not(#tore-immersif) {
@@ -2931,6 +2952,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
           Tirage du TORE
         </h1>
         <p class="text-light-gold/80" style="font-size:clamp(13px,1.6vw,18px);margin-top:clamp(4px,1vh,12px);">7 cartes pour une guidance complète</p>
+        <div id="tore-freemium-badge" style="display:none;margin-top:clamp(8px,1.4vh,14px);"></div>
         <div class="w-24 h-px bg-gradient-to-r from-transparent via-gold to-transparent mx-auto" style="margin-top:clamp(6px,1.5vh,20px);"></div>
       </div>
 
@@ -2971,6 +2993,15 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
           <div class="absolute bottom-3 right-4 text-gold/40 text-xs">
             <span id="char-count">0</span> caractères
           </div>
+        </div>
+
+        <!-- Checklist de validation en temps réel : montre à l'utilisateur ce qui
+             manque pour activer le bouton (réduit l'abandon face au bouton grisé). -->
+        <div id="tore-intention-checklist" class="tore-checklist" aria-live="polite">
+          <span class="tore-check" id="chk-open"><i class="chk-ico fas fa-circle"></i>Une question ouverte (Comment, Pourquoi, Quelle…)</span>
+          <span class="tore-check" id="chk-q"><i class="chk-ico fas fa-circle"></i>Se termine par «&nbsp;?&nbsp;»</span>
+          <span class="tore-check" id="chk-single"><i class="chk-ico fas fa-circle"></i>Une seule question</span>
+          <span class="tore-check" id="chk-gender"><i class="chk-ico fas fa-circle"></i>Vous avez indiqué qui vous êtes</span>
         </div>
 
         <!-- Exemples d'intention cliquables : réduisent l'effet « page blanche »,
@@ -6572,6 +6603,39 @@ function showArrowForStep(stepIndex, isMatch) {
     return !!document.querySelector('.tore-gender-btn.selected');
   }
 
+  // Met à jour un item de la checklist : 'ok' (vert), 'ko' (rouge) ou 'pending' (neutre).
+  function setChk(id, state) {
+    const item = document.getElementById(id);
+    if (!item) return;
+    item.classList.remove('is-ok', 'is-ko');
+    const ico = item.querySelector('.chk-ico');
+    if (state === 'ok') {
+      item.classList.add('is-ok');
+      if (ico) ico.className = 'chk-ico fas fa-check-circle';
+    } else if (state === 'ko') {
+      item.classList.add('is-ko');
+      if (ico) ico.className = 'chk-ico fas fa-times-circle';
+    } else {
+      if (ico) ico.className = 'chk-ico fas fa-circle';
+    }
+  }
+
+  // Met à jour la checklist de validation visible sous le champ.
+  function updateChecklist(rawValue, multiple) {
+    const raw = (rawValue || '').trim();
+    const has = raw.length > 0;
+    const lower = raw.toLowerCase();
+    const closedStarters = ['est-ce que','peux-tu','puis-je','as-tu','avez-vous','es-tu','êtes-vous','dois-je','peut-on','sera-t-il','serait-il'];
+    const openStarters = ['comment','pourquoi','quel ','quelle ','quels ','quelles ','quoi','de quelle manière','dans quelle mesure','à quoi','vers quoi'];
+    const endsQ = raw.endsWith('?');
+    const openForm = has && !closedStarters.some(p => lower.startsWith(p)) && (openStarters.some(p => lower.startsWith(p)) || raw.split(/\s+/).length >= 3);
+    const single = has && !multiple;
+    setChk('chk-open',   !has ? 'pending' : (openForm ? 'ok' : 'ko'));
+    setChk('chk-q',      !has ? 'pending' : (endsQ ? 'ok' : 'ko'));
+    setChk('chk-single', !has ? 'pending' : (single ? 'ok' : 'ko'));
+    setChk('chk-gender', isGenderSelected() ? 'ok' : 'pending');
+  }
+
   function updateSubmitBtn() {
     const input = el('tore-intention-input');
     const btn = el('tore-submit-btn');
@@ -6579,6 +6643,7 @@ function showArrowForStep(stepIndex, isMatch) {
     const multiple = hasMultipleQuestions(input.value);
     const valid = isOpenQuestion(input.value) && !multiple && isGenderSelected();
     btn.disabled = !valid;
+    updateChecklist(input.value, multiple);
     showIntentionHint(multiple
       ? 'Votre intention contient plusieurs questions. Le Tore répond à UNE question à la fois : choisissez celle qui compte le plus et reformulez.'
       : '');
@@ -6621,13 +6686,44 @@ function showArrowForStep(stepIndex, isMatch) {
   }, { passive: true });
 
 
-  // Compteur de tirages gratuits restants
+  // Compteur de tirages gratuits restants + badge d'accroche en haut de page
   (function() {
     if (!window.freemiumTracker) return;
+
+    // Pastille dorée réutilisable pour le badge d'accroche.
+    function pill(icon, text) {
+      return '<span style="display:inline-flex;align-items:center;gap:7px;'
+        + 'background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.32);'
+        + 'border-radius:999px;padding:6px 16px;color:#f0c75e;'
+        + 'font-family:\'Cormorant Garamond\',Georgia,serif;font-size:clamp(13px,1.4vw,15px);'
+        + 'font-weight:600;box-shadow:0 0 20px rgba(240,199,94,0.08);">'
+        + '<i class="fas ' + icon + '" style="font-size:12px;"></i>' + text + '</span>';
+    }
+
+    const badge = document.getElementById('tore-freemium-badge');
     const isSubscribed = window.freemiumTracker.isSubscribed();
-    if (isSubscribed) return;
+
+    if (isSubscribed) {
+      if (badge) { badge.style.display = 'block'; badge.innerHTML = pill('fa-infinity', 'Accès illimité à vos tirages'); }
+      return;
+    }
+
     const remaining = window.freemiumTracker.getRemainingToreDraws?.() ?? null;
     if (remaining === null) return;
+
+    // Badge d'accroche (haut de page)
+    if (badge) {
+      badge.style.display = 'block';
+      if (remaining >= 2) {
+        badge.innerHTML = pill('fa-gift', '2 tirages gratuits — sans inscription');
+      } else if (remaining === 1) {
+        badge.innerHTML = pill('fa-gift', '1 tirage gratuit restant');
+      } else {
+        badge.innerHTML = pill('fa-lock-open', '<a href="/tore-abonnement.html?discount=email24h" style="color:inherit;text-decoration:underline;">Tirages gratuits épuisés · abonnement 5€ le 1er mois</a>');
+      }
+    }
+
+    // Compteur détaillé sous le bouton (inchangé)
     const counterEl = document.getElementById('tore-draws-remaining');
     if (!counterEl) return;
     if (remaining === 0) {
@@ -6641,7 +6737,6 @@ function showArrowForStep(stepIndex, isMatch) {
       counterEl.style.display = 'block';
       counterEl.textContent = '✦ Il vous reste 1 tirage gratuit';
     }
-    // remaining === 2 : rien afficher
   })();
 
 
