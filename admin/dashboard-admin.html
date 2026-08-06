@@ -1332,6 +1332,12 @@
                 </div>
             </div>
 
+            <!-- Alerte : abonnés dont le mot de passe provisoire n'a pas été changé depuis 3j+ -->
+            <div id="pwAlertBanner" class="hidden mb-4 bg-red-500/10 border border-red-500/40 rounded-xl p-4">
+                <p class="text-red-300 text-sm font-semibold mb-2"><i class="fas fa-triangle-exclamation mr-2"></i><span id="pwAlertCount">0</span> abonné(s) n'ont pas changé leur mot de passe provisoire depuis plus de 3 jours — accès potentiellement bloqué :</p>
+                <ul id="pwAlertList" class="text-red-200/90 text-xs space-y-1 pl-6 list-disc"></ul>
+            </div>
+
             <!-- Filtres -->
             <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-4 mb-4">
                 <div class="flex flex-wrap gap-3">
@@ -3060,6 +3066,22 @@
                     </button>
                 </div>
 
+                <!-- Check-in J+7 : pas de tirage depuis le paiement -->
+                <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
+                    <div>
+                        <p class="text-gold font-semibold text-sm">Rappel "pas de tirage" (J+7)</p>
+                        <p class="text-gold/40 text-xs mt-0.5">Envoyé aux abonnés sans tirage 7j après leur paiement</p>
+                    </div>
+                    <div class="flex gap-2 flex-shrink-0">
+                        <button onclick="sendMailTest('tore-checkin')" class="mail-test-btn bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2" title="Version avec mot de passe provisoire (pas encore changé)">
+                            <i class="fas fa-paper-plane text-xs"></i> Test (mdp non changé)
+                        </button>
+                        <button onclick="sendMailTest('tore-checkin', 'changed')" class="mail-test-btn bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-2 text-sm hover:bg-gold/25 transition flex items-center gap-2" title="Version sans mot de passe (déjà changé)">
+                            <i class="fas fa-paper-plane text-xs"></i> Test (mdp changé)
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Lien de désinscription -->
                 <div class="stat-card rounded-xl p-4 flex items-center justify-between gap-4">
                     <div class="flex-1 min-w-0">
@@ -3631,6 +3653,7 @@
             'upgrade_plan':       'Plan abonnement modifié',
             'resend_code':        'Code abonnement renvoyé',
             'repair-access':      'Accès abonné réparé',
+            'send-checkin-email': 'Rappel tirage envoyé',
             'abandon-relance':    'Relance email client',
             'import-transactions':'Transactions importées',
             'test-email':         'Email de test envoyé',
@@ -6587,7 +6610,7 @@
             if (imageUrl) {
                 const check = await nlCheckImageAspectRatio(imageUrl);
                 if (!check.ok) {
-                    return nlSocialStatus('error', `⚠️ Ratio d'image non supporté par Instagram/Facebook (${check.ratio.toFixed(2)}:1, doit être entre 0.8:1 et 1.91:1). Choisis une image plus au format paysage/carré, ou vide le champ image pour utiliser l'image générée automatiquement.`);
+                    nlSocialStatus('info', `Image au ratio ${check.ratio.toFixed(2)}:1 hors des bornes Instagram/Facebook — recadrage automatique (fond flou, sans déformation) appliqué avant l'envoi...`);
                 }
             }
 
@@ -6750,7 +6773,7 @@
             }
         }
 
-        async function sendMailTest(type) {
+        async function sendMailTest(type, mode) {
             const btn = event.currentTarget;
             const orig = btn.innerHTML;
             const feedback = document.getElementById('mail-test-feedback');
@@ -6795,7 +6818,7 @@
                     res = await adminFetch('/api/admin/data?action=test-email', {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ type })
+                        body: JSON.stringify({ type, mode })
                     });
                 }
                 const data = await res.json();
@@ -7512,8 +7535,26 @@
             }).join('');
         }
 
+        function renderPwAlertBanner(subs) {
+            const banner = document.getElementById('pwAlertBanner');
+            if (!banner) return;
+            const threeDaysAgo = new Date(Date.now() - 3 * 24 * 60 * 60 * 1000);
+            const atRisk = subs.filter(s =>
+                s.status === 'active' && s.must_change_password === true &&
+                s.created_at && new Date(s.created_at) <= threeDaysAgo
+            );
+            if (!atRisk.length) { banner.classList.add('hidden'); return; }
+            document.getElementById('pwAlertCount').textContent = atRisk.length;
+            document.getElementById('pwAlertList').innerHTML = atRisk.map(s => {
+                const days = Math.floor((Date.now() - new Date(s.created_at).getTime()) / 86400000);
+                return `<li>${s.full_name || s.email} (${s.email}) — abonné depuis ${days} jour(s)</li>`;
+            }).join('');
+            banner.classList.remove('hidden');
+        }
+
         function renderSubscriptions(subs, pagination) {
             const tbody = document.getElementById('subscriptionsTbody');
+            renderPwAlertBanner(subs);
             if (!subs.length) {
                 tbody.innerHTML = '<tr><td colspan="12" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun abonnement</td></tr>';
                 return;
@@ -7530,6 +7571,14 @@
                 const accessBadge = stripeId
                     ? `<span class="bg-green-500/15 text-green-300 text-xs px-2 py-0.5 rounded-full" title="${stripeId}"><i class="fas fa-credit-card mr-1"></i>Stripe</span>`
                     : '<span class="bg-gold/15 text-gold/70 text-xs px-2 py-0.5 rounded-full" title="Accès activé manuellement"><i class="fas fa-key mr-1"></i>Manuel</span>';
+                // Indicateur mot de passe provisoire — seulement pertinent pour les comptes
+                // créés avec un mot de passe provisoire (flux Stripe). true/false = suivi
+                // par ce système ; null = compte créé avant sa mise en place (non suivi).
+                const pwBadge = !stripeId ? '' : s.must_change_password === true
+                    ? ' <span class="bg-red-500/15 text-red-300 text-xs px-2 py-0.5 rounded-full ml-1" title="Mot de passe provisoire jamais changé"><i class="fas fa-triangle-exclamation mr-1"></i>MDP non changé</span>'
+                    : s.must_change_password === false
+                        ? ' <span class="bg-green-500/15 text-green-300 text-xs px-2 py-0.5 rounded-full ml-1" title="Mot de passe définitif défini par l\'abonné"><i class="fas fa-check mr-1"></i>MDP changé</span>'
+                        : ' <span class="bg-gold/10 text-gold/40 text-xs px-2 py-0.5 rounded-full ml-1" title="Compte créé avant la mise en place de ce suivi">MDP non suivi</span>';
                 // Promo 5€/1er mois : détectée côté serveur sur la 1ère facture Stripe.
                 // null/undefined = pas d'abonnement Stripe (manuel/gratuit) ou vérif impossible.
                 const promoBadge = !stripeId
@@ -7549,7 +7598,7 @@
                 <tr class="hover:bg-gold/5 transition">
                     <td class="px-5 py-4 text-light-gold text-sm">${s.email || '—'}</td>
                     <td class="px-5 py-4 text-light-gold/80 text-sm">${s.full_name || '—'}</td>
-                    <td class="px-5 py-4">${accessBadge}${s.is_free ? ' <span class="bg-purple-500/20 text-purple-300 text-xs px-2 py-0.5 rounded-full ml-1" title="Exclu des recettes en comptabilité">Gratuit</span>' : ''}</td>
+                    <td class="px-5 py-4">${accessBadge}${pwBadge}${s.is_free ? ' <span class="bg-purple-500/20 text-purple-300 text-xs px-2 py-0.5 rounded-full ml-1" title="Exclu des recettes en comptabilité">Gratuit</span>' : ''}</td>
                     <td class="px-5 py-4 text-center">${promoBadge}</td>
                     <td class="px-5 py-4 text-right text-light-gold/80 text-sm">${firstPaymentCell}</td>
                     <td class="px-5 py-4 text-right text-light-gold/80 text-sm font-semibold">${totalPaidCell}</td>
@@ -7565,6 +7614,7 @@
                             </button>
                             <button onclick="editExpiry('${s.id}','${s.expires_at ? s.expires_at.split('T')[0] : ''}')" title="Modifier la date d'expiration" class="text-blue-400/70 hover:text-blue-400 border border-blue-400/20 hover:border-blue-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-calendar-alt"></i></button>
                             <button onclick="repairAccess('${s.id}','${emailEsc}')" title="Réparer l'accès (compte/mot de passe cassé)" class="text-purple-400/70 hover:text-purple-400 border border-purple-400/20 hover:border-purple-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-wrench"></i></button>
+                            <button onclick="sendCheckinReminder('${s.id}','${emailEsc}')" title="Envoyer le rappel 'vous n'avez pas fait de tirage'" class="text-orange-400/70 hover:text-orange-400 border border-orange-400/20 hover:border-orange-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-paper-plane"></i></button>
                             ${isActive ? `<button onclick="revokeSubscription('${s.id}')" title="Révoquer" class="text-red-400/50 hover:text-red-400 border border-red-400/20 hover:border-red-400/40 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-ban"></i></button>` : ''}
                         </div>
                     </td>
@@ -7714,6 +7764,23 @@
                 alert(json.mode === 'temp-password'
                     ? `Compte créé — un email avec un mot de passe provisoire a été envoyé à ${email}.`
                     : `Un lien pour définir un nouveau mot de passe a été envoyé à ${email}.`);
+            } catch(e) { alert('Erreur : ' + e.message); }
+        }
+
+        async function sendCheckinReminder(id, email) {
+            if (!confirm(`Envoyer le mail "vous n'avez pas fait de tirage" à ${email} ?\n\nEnvoyé même si un tirage a été fait depuis ou si le mail a déjà été envoyé — décision volontaire.`)) return;
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'send-checkin-email', subscriptionId: id })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error);
+                alert(json.hadTempPassword
+                    ? `Mail envoyé à ${email} avec un nouveau mot de passe provisoire (il n'avait pas encore changé le sien).`
+                    : `Mail envoyé à ${email}.`);
+                await loadSubscriptions(subPage);
             } catch(e) { alert('Erreur : ' + e.message); }
         }
 

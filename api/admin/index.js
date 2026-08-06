@@ -11,10 +11,78 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail } = require('../../lib/brevo-order-email.js');
-const { sendToreSubscriptionEmail, sendSubscriptionEmail } = require('../../lib/tore-subscription-email.js');
+const { sendToreSubscriptionEmail, sendSubscriptionEmail, sendToreCheckinReminderEmail } = require('../../lib/tore-subscription-email.js');
 const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
 const { sendGuidanceConfirmationEmail } = require('../../lib/guidance-email.js');
 const { estimateStripeFees, getStripeFeesForPeriod, getMonthlyStripeFees, ESTIMATE_RATE, ESTIMATE_FIXED_EUR } = require('../../lib/stripe-fees.js');
+const sharp = require('sharp');
+
+// Instagram/Facebook rejettent les images dont le ratio largeur/hauteur sort de [0.8, 1.91]
+// (erreur Graph API 36003). Plutôt que de bloquer la publication, on recadre en douceur :
+// fond flou (extrait de l'image elle-même) qui comble les bords, sujet original intact au
+// centre, sans déformation ni recadrage du sujet. Retourne null si le ratio est déjà correct
+// (aucun traitement nécessaire) ou en cas d'erreur (on republie alors l'image d'origine).
+async function normalizeImageForSocial(imageUrl) {
+  try {
+    const resp = await fetch(imageUrl);
+    if (!resp.ok) return null;
+    const buf = Buffer.from(await resp.arrayBuffer());
+    const meta = await sharp(buf).metadata();
+    if (!meta.width || !meta.height) return null;
+    const ratio = meta.width / meta.height;
+    if (ratio >= 0.8 && ratio <= 1.91) return null;
+
+    let targetW, targetH;
+    if (ratio < 0.8) {
+      targetH = meta.height;
+      targetW = Math.round(targetH * 0.82);
+    } else {
+      targetW = meta.width;
+      targetH = Math.round(targetW / 1.88);
+    }
+
+    const background = await sharp(buf)
+      .resize(targetW, targetH, { fit: 'cover' })
+      .blur(45)
+      .modulate({ brightness: 0.55 })
+      .toBuffer();
+
+    const foreground = await sharp(buf)
+      .resize(targetW, targetH, { fit: 'contain', background: { r: 0, g: 0, b: 0, alpha: 0 } })
+      .toBuffer();
+
+    return await sharp(background)
+      .composite([{ input: foreground, gravity: 'center' }])
+      .jpeg({ quality: 88 })
+      .toBuffer();
+  } catch (e) {
+    console.error('[normalizeImageForSocial] erreur:', e.message);
+    return null;
+  }
+}
+
+// Normalise l'image si besoin et la republie dans Supabase Storage (bucket newsletter-uploads,
+// déjà utilisé pour les autres images de newsletter) ; renvoie l'URL à utiliser pour la
+// publication (URL republiée si recadrage effectué, sinon l'URL d'origine inchangée).
+async function ensureSafeSocialImageUrl(imageUrl) {
+  if (!imageUrl) return imageUrl;
+  const normalized = await normalizeImageForSocial(imageUrl);
+  if (!normalized) return imageUrl;
+  try {
+    const sb = createClient(
+      process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+    const filename = `social_${Date.now()}.jpg`;
+    const { error: upErr } = await sb.storage.from('newsletter-uploads').upload(filename, normalized, { contentType: 'image/jpeg', upsert: false });
+    if (upErr) throw new Error(upErr.message);
+    const { data: { publicUrl } } = sb.storage.from('newsletter-uploads').getPublicUrl(filename);
+    return publicUrl;
+  } catch (e) {
+    console.error('[ensureSafeSocialImageUrl] upload échoué, image d\'origine conservée:', e.message);
+    return imageUrl;
+  }
+}
 
 // Manifest statique des illustrations du Tore (généré une fois, fichier unique et léger —
 // ne pas remplacer par un fs.readdir sur /images, ça ferait bundler tout le dossier (350+ Mo)
@@ -286,6 +354,120 @@ async function reconcileStripeSubscriptions(supabase) {
         }
       }
     } catch (e) { out.errors.push((sub.id || '?') + ': ' + e.message); }
+  }
+  return out;
+}
+
+// Cherche un utilisateur Supabase Auth par email (l'API Admin n'a pas de lookup direct
+// par email, seulement par id — on parcourt donc les pages de listUsers). Même approche
+// que la branche "email non confirmé" de handleLogin (api/auth/index.js).
+async function findAuthUserByEmail(supabase, email) {
+  for (let page = 1; page <= 20; page++) {
+    const { data, error } = await supabase.auth.admin.listUsers({ page, perPage: 200 });
+    if (error || !data?.users?.length) return null;
+    const found = data.users.find(u => u.email === email);
+    if (found) return found;
+    if (data.users.length < 200) return null; // dernière page
+  }
+  return null;
+}
+
+// Envoie le mail de check-in "vous n'avez pas fait de tirage" pour UN abonné Tore.
+// Réutilisé par le cron quotidien (nouveaux abonnés à J+7), par le renvoi manuel
+// depuis l'onglet Abonnements et par le bouton de test de l'onglet Mails.
+// force=true : ignore les gardes-fous "déjà envoyé" / "a bien fait un tirage" — utilisé
+// pour un renvoi manuel volontaire (ex: Rudy soupçonne un problème malgré tout).
+async function sendToreCheckinForSubscription(supabase, subscriptionId, { force = false } = {}) {
+  const { data: sub, error: fetchErr } = await supabase
+    .from('tore_subscriptions')
+    .select('id, email, full_name, plan, created_at, must_change_password, checkin_email_sent_at, status')
+    .eq('id', subscriptionId)
+    .single();
+  if (fetchErr || !sub?.email) return { sent: false, reason: 'not_found' };
+
+  if (!force && sub.checkin_email_sent_at) return { sent: false, reason: 'already_sent' };
+
+  let hasDraw = false;
+  try {
+    const { data: tirages } = await supabase.rpc('admin_get_tirages_by_email', { p_email: sub.email });
+    if (Array.isArray(tirages) && sub.created_at) {
+      hasDraw = tirages.some(t => t.created_at && new Date(t.created_at) > new Date(sub.created_at));
+    }
+  } catch (e) { console.error('[checkin] tirages lookup error:', e.message); }
+
+  if (hasDraw && !force) {
+    // Pas de souci détecté : on marque quand même comme "traité" pour ne pas
+    // réévaluer cet abonné chaque jour indéfiniment.
+    await supabase.from('tore_subscriptions').update({ checkin_email_sent_at: new Date().toISOString() }).eq('id', sub.id)
+      .then(({ error }) => { if (error) console.error('[checkin] marquage has_draw échoué (migration appliquée ?):', error.message); });
+    return { sent: false, reason: 'has_draw' };
+  }
+
+  // Mot de passe provisoire toujours pas changé : on en régénère un nouveau (l'ancien
+  // n'a jamais été stocké en clair côté serveur) pour pouvoir le rappeler dans l'email.
+  let tempPassword = null;
+  if (sub.must_change_password) {
+    const authUser = await findAuthUserByEmail(supabase, sub.email);
+    if (authUser) {
+      tempPassword = crypto.randomBytes(8).toString('hex');
+      const { error: updErr } = await supabase.auth.admin.updateUserById(authUser.id, {
+        password: tempPassword,
+        user_metadata: { ...authUser.user_metadata, must_change_password: true }
+      });
+      if (updErr) {
+        console.error('[checkin] régénération mot de passe échouée:', updErr.message);
+        tempPassword = null;
+      }
+    }
+  }
+
+  const emailSent = await sendToreCheckinReminderEmail({
+    toEmail: sub.email,
+    toName: sub.full_name || '',
+    tempPassword
+  });
+
+  const { error: markErr } = await supabase
+    .from('tore_subscriptions')
+    .update({ checkin_email_sent_at: new Date().toISOString() })
+    .eq('id', sub.id);
+  if (markErr) console.error('[checkin] marquage checkin_email_sent_at échoué (migration appliquée ?):', markErr.message);
+
+  return { sent: emailSent, reason: emailSent ? 'ok' : 'brevo_error', hadTempPassword: !!tempPassword };
+}
+
+// Cron quotidien : trouve les abonnés Tore payants actifs depuis 7 jours ou plus, jamais
+// notifiés (checkin_email_sent_at IS NULL), et déclenche sendToreCheckinForSubscription
+// pour chacun. Dégrade proprement si la migration must_change_password/checkin_email_sent_at
+// n'a pas encore été appliquée (colonne absente → erreur récupérée, cron marqué en échec
+// mais sans planter le reste des tâches quotidiennes).
+async function sendToreCheckinReminders(supabase) {
+  const out = { checked: 0, sent: 0, skipped_has_draw: 0, already_sent: 0, errors: [] };
+  const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
+
+  const { data: rows, error } = await supabase
+    .from('tore_subscriptions')
+    .select('id')
+    .eq('status', 'active')
+    .not('stripe_subscription_id', 'is', null)
+    .is('checkin_email_sent_at', null)
+    .lte('created_at', sevenDaysAgo)
+    .limit(200);
+
+  if (error) {
+    out.errors.push('select: ' + error.message + ' (migration supabase-migration-tore-checkin.sql appliquée ?)');
+    return out;
+  }
+
+  for (const row of rows || []) {
+    out.checked++;
+    try {
+      const r = await sendToreCheckinForSubscription(supabase, row.id);
+      if (r.sent) out.sent++;
+      else if (r.reason === 'has_draw') out.skipped_has_draw++;
+      else if (r.reason === 'already_sent') out.already_sent++;
+      else if (r.reason !== 'ok') out.errors.push(`${row.id}: ${r.reason}`);
+    } catch (e) { out.errors.push(`${row.id}: ${e.message}`); }
   }
   return out;
 }
@@ -713,7 +895,30 @@ async function handleData(req, res) {
             await logSystemEvent(supabase, { level: 'error', source: 'cron-relance', method: 'GET', path: '/api/admin/data', status_code: 500, message: `Échec réconciliation Stripe : ${e.message}`, details: null });
           }
 
-          return res.status(200).json({ success: true, sent: results.filter(r=>r.ok).length, total: results.length, results, fenetre_close: fenetreCloseResult, reconcile: reconcileResult });
+          // Check-in J+7 : abonnés Tore payants sans tirage depuis leur paiement.
+          let checkinResult = null;
+          try {
+            checkinResult = await sendToreCheckinReminders(supabase);
+            await logSystemEvent(supabase, { level: checkinResult.errors.length ? 'warn' : 'info', source: 'cron-relance', method: 'GET', path: '/api/admin/data', status_code: 200, message: `Check-in Tore J+7 : ${checkinResult.checked} vérifié(s), ${checkinResult.sent} mail(s) envoyé(s)`, details: checkinResult });
+          } catch(e) {
+            checkinResult = { error: e.message };
+            await logSystemEvent(supabase, { level: 'error', source: 'cron-relance', method: 'GET', path: '/api/admin/data', status_code: 500, message: `Échec check-in Tore J+7 : ${e.message}`, details: null });
+          }
+
+          return res.status(200).json({ success: true, sent: results.filter(r=>r.ok).length, total: results.length, results, fenetre_close: fenetreCloseResult, reconcile: reconcileResult, tore_checkin: checkinResult });
+        } catch(e) {
+          return res.status(200).json({ success: false, error: e.message });
+        }
+      }
+      // Check-in Tore J+7 déclenchable seul (cron externe quotidien ou test manuel).
+      if (getAction === 'cron-tore-checkin') {
+        if ((req.query?.cron_secret || '') !== process.env.CRON_SECRET) {
+          return res.status(401).json({ error: 'Unauthorized' });
+        }
+        try {
+          const r = await sendToreCheckinReminders(supabase);
+          await logSystemEvent(supabase, { level: r.errors.length ? 'warn' : 'info', source: 'cron-tore-checkin', method: 'GET', path: '/api/admin/data', status_code: 200, message: `Check-in Tore J+7 : ${r.checked} vérifié(s), ${r.sent} mail(s) envoyé(s)`, details: r });
+          return res.status(200).json({ success: true, ...r });
         } catch(e) {
           return res.status(200).json({ success: false, error: e.message });
         }
@@ -1125,6 +1330,16 @@ async function handleData(req, res) {
           mode = 'temp-password';
         }
 
+        // Séparé (colonne ajoutée par une migration facultative) : si absente, ne bloque
+        // pas la réparation d'accès, juste l'indicateur dashboard reste inactif.
+        if (mode === 'temp-password') {
+          const { error: mcpErr } = await supabase
+            .from('tore_subscriptions')
+            .update({ must_change_password: true })
+            .eq('id', subscriptionId);
+          if (mcpErr) console.error('[repair-access] must_change_password update (migration appliquée ?):', mcpErr.message);
+        }
+
         const emailSent = await sendToreSubscriptionEmail({
           toEmail: cleanEmail,
           toName: sub.full_name || '',
@@ -1134,6 +1349,19 @@ async function handleData(req, res) {
         });
 
         return res.status(200).json({ success: true, emailSent, mode });
+      }
+
+      // Renvoi manuel du mail de check-in "vous n'avez pas fait de tirage" pour UN abonné
+      // (bouton dédié dans l'onglet Abonnements). force=true : envoie même si déjà notifié
+      // ou même si un tirage a depuis été détecté — décision volontaire de l'admin.
+      if (action === 'send-checkin-email' && subscriptionId) {
+        try {
+          const r = await sendToreCheckinForSubscription(supabase, subscriptionId, { force: true });
+          if (!r.sent) return res.status(502).json({ error: `Envoi échoué (${r.reason})` });
+          return res.status(200).json({ success: true, ...r });
+        } catch (e) {
+          return res.status(500).json({ error: e.message });
+        }
       }
 
       // Marquer une précommande comme expédiée — envoie automatiquement
@@ -1657,6 +1885,16 @@ async function handleData(req, res) {
             jitsiUrl: 'https://meet.jit.si/oradia-exemple'
           });
           if (!emailSentGuidance) return res.status(502).json({ error: 'Envoi Brevo échoué' });
+          return res.status(200).json({ success: true, sentTo: dest, type });
+        } else if (type === 'tore-checkin') {
+          // body.mode === 'changed' → mot de passe déjà changé (pas de rappel de connexion).
+          // Par défaut → mot de passe encore provisoire (avec rappel de connexion + mdp).
+          const emailSentCheckin = await sendToreCheckinReminderEmail({
+            toEmail: dest,
+            toName: 'Prénom Nom (exemple)',
+            tempPassword: body.mode === 'changed' ? null : 'ExempleMdp123'
+          });
+          if (!emailSentCheckin) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, sentTo: dest, type });
         } else {
           return res.status(400).json({ error: `Type de mail inconnu : ${type}` });
@@ -4406,12 +4644,16 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
     } // fin du bloc else (génération IA)
 
     const DEFAULT_IMAGE = 'https://oradia.fr/images/logo-hd-v2.webp';
-    const image_url = imageUrl || DEFAULT_IMAGE;
+    let image_url = imageUrl || DEFAULT_IMAGE;
 
     // Mode aperçu : retourne le texte sans envoyer à Make.com
     if (previewOnly) {
       return res.status(200).json({ success: true, facebook_text, instagram_text, image_url, preview: true });
     }
+
+    // Recadrage automatique si le ratio est hors des bornes acceptées par Instagram/Facebook
+    // (voir ensureSafeSocialImageUrl) — évite l'erreur Graph API 36003 sans bloquer l'envoi.
+    image_url = await ensureSafeSocialImageUrl(image_url);
 
     // Si une date est choisie, on N'APPELLE PAS Make.com maintenant : Facebook
     // programmerait son post correctement, mais Instagram (qui ne sait pas

@@ -570,6 +570,40 @@ async function handleSaveBirthInfo(req, res) {
   return res.end(JSON.stringify({ success: true }));
 }
 
+// ============ MARQUER LE MOT DE PASSE PROVISOIRE COMME CHANGÉ ============
+// Appelé depuis member/login.html juste après que l'abonné a défini son mot de passe
+// définitif (sb.auth.updateUser). Synchronise l'indicateur côté tore_subscriptions,
+// utilisé par le dashboard admin (badge + alerte) sans avoir à interroger l'API Admin
+// Auth à chaque affichage.
+async function handleMarkPasswordChanged(req, res) {
+  const body = await new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', c => data += c);
+    req.on('end', () => { try { resolve(data ? JSON.parse(data) : {}); } catch { resolve({}); } });
+    req.on('error', reject);
+  });
+  const email = (body.email || '').trim().toLowerCase();
+  if (!email || !email.includes('@')) {
+    res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, error: 'Email invalide' }));
+  }
+  const supabase = createClient(
+    process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+  const { error } = await supabase
+    .from('tore_subscriptions')
+    .update({ must_change_password: false, updated_at: new Date().toISOString() })
+    .eq('email', email);
+  if (error) {
+    // Ne bloque jamais le flux de connexion pour un souci d'indicateur dashboard —
+    // journalise et répond quand même succès côté client.
+    console.error('[mark-password-changed] update error:', error.message);
+  }
+  res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+  return res.end(JSON.stringify({ success: true }));
+}
+
 // ============ FORGOT PASSWORD ============
 async function handleForgotPassword(req, res) {
   const body = await new Promise((resolve, reject) => {
@@ -719,6 +753,11 @@ module.exports = async (req, res) => {
     // POST /save-birth-info — enregistre date/lieu de naissance (profil membre)
     if (path.includes('save-birth-info') || fullUrl.includes('save-birth-info')) {
       return await handleSaveBirthInfo(req, res);
+    }
+
+    // POST /mark-password-changed — synchronise l'indicateur dashboard après changement de mdp
+    if (path.includes('mark-password-changed') || fullUrl.includes('mark-password-changed')) {
+      return await handleMarkPasswordChanged(req, res);
     }
 
     // Route non reconnue

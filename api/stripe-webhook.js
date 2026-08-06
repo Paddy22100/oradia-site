@@ -358,6 +358,15 @@ async function activateToreSubscription(supabase, { email, fullName, plan, strip
 
     if (subError) console.error('[webhook] tore_subscriptions upsert error:', subError.message);
 
+    // Séparé de l'upsert principal (colonne ajoutée par une migration facultative) :
+    // si elle n'a pas encore été appliquée, on ne veut pas faire échouer la création
+    // du compte/abonnement pour autant — juste dégrader l'indicateur dashboard.
+    const { error: mcpErr } = await supabase
+        .from('tore_subscriptions')
+        .update({ must_change_password: !!tempPassword })
+        .eq('email', email);
+    if (mcpErr) console.error('[webhook] must_change_password update (migration appliquée ?):', mcpErr.message);
+
     if (!isAccountingExcluded(email)) {
         await supabase.from('transactions').insert({
             date: new Date().toISOString().split('T')[0],

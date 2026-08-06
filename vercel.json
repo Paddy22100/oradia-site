@@ -35,7 +35,7 @@
       "dest": "/api/admin/index.js"
     },
     {
-      "src": "/api/auth/(login|forgot-password|check-subscription|check-newsletter|refresh-session|consume-tore-draw|check-tore-draw|save-tore-email|save-guidance-tore|save-birth-info)(.*)",
+      "src": "/api/auth/(login|forgot-password|check-subscription|check-newsletter|refresh-session|consume-tore-draw|check-tore-draw|save-tore-email|save-guidance-tore|save-birth-info|mark-password-changed)(.*)",
       "dest": "/api/auth/index.js"
     },
     {
