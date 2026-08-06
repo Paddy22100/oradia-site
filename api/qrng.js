@@ -16,7 +16,7 @@ export default async function handler(req, res) {
     );
 
     try {
-      const { email } = req.body;
+      const email = (req.body.email || '').trim().toLowerCase();
       if (!email) {
         return res.status(400).json({ error: 'Email required' });
       }
@@ -24,7 +24,7 @@ export default async function handler(req, res) {
       const { data: sub } = await supabase
         .from('tore_subscriptions')
         .select('status, expires_at')
-        .eq('email', email)
+        .ilike('email', email)
         .single();
 
       if (!sub) {

@@ -273,7 +273,7 @@ async function findToreSubscriptionRow(stripe, supabase, object) {
         const { data } = await supabase
             .from('tore_subscriptions')
             .select('id, email, is_free')
-            .eq('email', email)
+            .ilike('email', email)
             .maybeSingle();
         if (data) return data;
         // Pas de ligne existante mais un email résolu : on peut quand même
@@ -293,10 +293,15 @@ async function findToreSubscriptionRow(stripe, supabase, object) {
 async function activateToreSubscription(supabase, { email, fullName, plan, stripeCustomerId, stripeSubscriptionId, amountTotalCents, sourceRef }) {
     if (!email) { console.error('[webhook] activateToreSubscription: email manquant'); return; }
 
+    // .ilike() (insensible à la casse) : email arrive normalisé en minuscules, mais une
+    // ligne déjà en base a pu être créée avant cette normalisation (ex: capturée telle
+    // quelle depuis un formulaire). Sans ça, une ligne existante avec une majuscule ne
+    // serait pas détectée ici, et l'upsert plus bas (onConflict: 'email', contrainte
+    // Postgres sensible à la casse) créerait un doublon au lieu de la mettre à jour.
     const { data: existingRow } = await supabase
         .from('tore_subscriptions')
-        .select('id')
-        .eq('email', email)
+        .select('id, email')
+        .ilike('email', email)
         .single();
 
     let tempPassword = null;
@@ -341,31 +346,38 @@ async function activateToreSubscription(supabase, { email, fullName, plan, strip
     const expireAt = new Date();
     expireAt.setMonth(expireAt.getMonth() + 1);
 
-    const { error: subError } = await supabase
-        .from('tore_subscriptions')
-        .upsert({
-            email,
-            full_name:    fullName || '',
-            access_code:  accessCode,
-            status:       'active',
-            expires_at:   expireAt.toISOString(),
-            plan:         plan || 'complet',
-            stripe_customer_id:     stripeCustomerId || null,
-            stripe_subscription_id: stripeSubscriptionId || null,
-            created_at:   new Date().toISOString(),
-            updated_at:   new Date().toISOString()
-        }, { onConflict: 'email' });
+    const subPayload = {
+        email,
+        full_name:    fullName || '',
+        access_code:  accessCode,
+        status:       'active',
+        expires_at:   expireAt.toISOString(),
+        plan:         plan || 'complet',
+        stripe_customer_id:     stripeCustomerId || null,
+        stripe_subscription_id: stripeSubscriptionId || null,
+        created_at:   new Date().toISOString(),
+        updated_at:   new Date().toISOString()
+    };
+
+    // Si une ligne existante a été trouvée (même avec une casse différente), on cible sa
+    // mise à jour par id — jamais par email — pour ne pas dépendre de la contrainte
+    // d'unicité Postgres (sensible à la casse) et éviter de créer un doublon.
+    const { data: savedRow, error: subError } = existingRow
+        ? await supabase.from('tore_subscriptions').update(subPayload).eq('id', existingRow.id).select('id').single()
+        : await supabase.from('tore_subscriptions').upsert(subPayload, { onConflict: 'email' }).select('id').single();
 
     if (subError) console.error('[webhook] tore_subscriptions upsert error:', subError.message);
 
     // Séparé de l'upsert principal (colonne ajoutée par une migration facultative) :
     // si elle n'a pas encore été appliquée, on ne veut pas faire échouer la création
     // du compte/abonnement pour autant — juste dégrader l'indicateur dashboard.
-    const { error: mcpErr } = await supabase
-        .from('tore_subscriptions')
-        .update({ must_change_password: !!tempPassword })
-        .eq('email', email);
-    if (mcpErr) console.error('[webhook] must_change_password update (migration appliquée ?):', mcpErr.message);
+    if (savedRow?.id) {
+        const { error: mcpErr } = await supabase
+            .from('tore_subscriptions')
+            .update({ must_change_password: !!tempPassword })
+            .eq('id', savedRow.id);
+        if (mcpErr) console.error('[webhook] must_change_password update (migration appliquée ?):', mcpErr.message);
+    }
 
     if (!isAccountingExcluded(email)) {
         await supabase.from('transactions').insert({
@@ -453,9 +465,10 @@ async function processEvent(event) {
                 if (row && row.id) break; // déjà activé normalement, rien à faire ici
 
                 const subscription = await stripe.subscriptions.retrieve(invSubId).catch(() => null);
-                const email = invoice.customer_email
+                const email = (invoice.customer_email
                     || subscription?.metadata?.email
-                    || await resolveCustomerEmail(stripe, invoice);
+                    || await resolveCustomerEmail(stripe, invoice)
+                    || '').trim().toLowerCase() || null;
 
                 if (!email) {
                     console.error('[webhook] Fallback activation impossible : email introuvable pour sub', invSubId);
@@ -593,11 +606,16 @@ async function processEvent(event) {
                 
                 // Extraction robuste des données avec fallbacks
                 const extractedData = {
-                    // Email avec fallbacks multiples
-                    email: session.customer_details?.email || 
-                           session.customer_email || 
-                           session.metadata?.email || 
-                           null,
+                    // Email avec fallbacks multiples — normalisé en minuscules dès l'extraction :
+                    // session.metadata.email vient tel quel du formulaire frontend (non
+                    // normalisé), et tore_subscriptions est une table Postgres classique où
+                    // .eq('email', ...) est sensible à la casse. Sans cette normalisation, un
+                    // client dont l'email contient une majuscule apparaissait "non abonné" à
+                    // la connexion malgré un paiement réel.
+                    email: (session.customer_details?.email ||
+                           session.customer_email ||
+                           session.metadata?.email ||
+                           '').trim().toLowerCase() || null,
                     
                     // Offer depuis metadata (plus de fallback items)
                     offer: session.metadata?.offer || null,

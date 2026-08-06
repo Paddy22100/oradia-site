@@ -653,7 +653,7 @@ async function handleCollectEmail(req, res) {
     const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
     // Vérifier si email déjà connu pour ne pas renvoyer la promo
-    const { data: existing } = await supabase.from('tore_emails').select('email, promo_sent_at').eq('email', email).single();
+    const { data: existing } = await supabase.from('tore_emails').select('email, promo_sent_at').ilike('email', email).single();
     isNewEmail = !existing;
     const promoAlreadySent = existing?.promo_sent_at;
     await supabase.from('tore_emails').upsert({
@@ -854,7 +854,7 @@ async function sendCheckinEmail(email) {
     const err = await brevoRes.json().catch(() => ({}));
     throw new Error(`Brevo error: ${err.message || brevoRes.status}`);
   }
-  await supabase.from('tore_emails').update({ checkin_sent_at: new Date().toISOString() }).eq('email', email);
+  await supabase.from('tore_emails').update({ checkin_sent_at: new Date().toISOString() }).ilike('email', email);
   return { sent: true };
 }
 
@@ -910,7 +910,7 @@ async function sendPromoTirageEmail(email) {
   // Ne pas promouvoir l'abonnement à quelqu'un qui est déjà abonné au Tore.
   // On marque quand même promo_sent_at pour ne pas re-tenter à chaque cron.
   if (await hasActiveToreSubscription(supabase, email)) {
-    await supabase.from('tore_emails').update({ promo_sent_at: new Date().toISOString() }).eq('email', email);
+    await supabase.from('tore_emails').update({ promo_sent_at: new Date().toISOString() }).ilike('email', email);
     return { skipped: true, reason: 'abonne_tore_actif' };
   }
 
@@ -936,7 +936,7 @@ async function sendPromoTirageEmail(email) {
   // Marquer comme envoyé dans tore_emails
   await supabase.from('tore_emails')
     .update({ promo_sent_at: new Date().toISOString() })
-    .eq('email', email);
+    .ilike('email', email);
 
   return { sent: true };
 }
@@ -1045,7 +1045,7 @@ async function handleSendPromoManual(req, res) {
   const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
   await supabase.from('tore_emails')
     .update({ promo_sent_at: new Date().toISOString(), promo_skipped: false })
-    .eq('email', email);
+    .ilike('email', email);
 
   return res.status(200).json({ success: true, sent_to: email });
 }
@@ -1149,7 +1149,7 @@ async function isBrevoSubscribed(email) {
 async function hasActiveToreSubscription(supabase, email) {
   try {
     const { data } = await supabase.from('tore_subscriptions')
-      .select('id').eq('email', email).eq('status', 'active').limit(1);
+      .select('id').ilike('email', email).eq('status', 'active').limit(1);
     return Array.isArray(data) && data.length > 0;
   } catch { return false; }
 }
@@ -1158,7 +1158,7 @@ async function hasActiveToreSubscription(supabase, email) {
 async function hasCompletedPreorder(supabase, email) {
   try {
     const { data } = await supabase.from('preorders')
-      .select('id').eq('email', email).in('paid_status', ['completed', 'paid']).limit(1);
+      .select('id').ilike('email', email).in('paid_status', ['completed', 'paid']).limit(1);
     return Array.isArray(data) && data.length > 0;
   } catch { return false; }
 }

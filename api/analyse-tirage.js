@@ -194,7 +194,7 @@ async function checkAndIncrementDrawCount(email) {
     const { data: sub, error } = await supabase
       .from('tore_subscriptions')
       .select('status, expires_at, monthly_draws_count, monthly_draws_reset_at')
-      .eq('email', email)
+      .ilike('email', email)
       .maybeSingle();
 
     if (error || !sub) return { allowed: true }; // pas d'abonnement → freemium, pas de limite serveur
@@ -231,7 +231,7 @@ async function checkAndIncrementDrawCount(email) {
         monthly_draws_count:    currentCount + 1,
         monthly_draws_reset_at: needsReset ? firstOfMonth : sub.monthly_draws_reset_at,
       })
-      .eq('email', email);
+      .ilike('email', email);
 
     return { allowed: true, count: currentCount + 1 };
 

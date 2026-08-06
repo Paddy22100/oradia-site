@@ -1561,7 +1561,7 @@ async function handleData(req, res) {
           if (cur && cur.email && newEmail !== cur.email.toLowerCase()) {
             // Refuser si l'email est déjà utilisé par un autre contact
             const { data: dup } = await supabase
-              .from('newsletter_contacts').select('id').eq('email', newEmail).neq('id', id).limit(1);
+              .from('newsletter_contacts').select('id').ilike('email', newEmail).neq('id', id).limit(1);
             if (Array.isArray(dup) && dup.length > 0) {
               return res.status(409).json({ error: 'Cet email est déjà utilisé par un autre contact' });
             }
@@ -1605,7 +1605,7 @@ async function handleData(req, res) {
         if (!id && !email) return res.status(400).json({ error: 'id ou email requis' });
 
         let q = supabase.from('newsletter_contacts').select('id, email, tags');
-        q = id ? q.eq('id', id) : q.eq('email', (email || '').toLowerCase().trim());
+        q = id ? q.eq('id', id) : q.ilike('email', (email || '').toLowerCase().trim());
         const { data: contact, error: fetchErr } = await q.maybeSingle();
         if (fetchErr) throw fetchErr;
         if (!contact) return res.status(404).json({ error: 'Contact introuvable' });
@@ -1672,7 +1672,7 @@ async function handleData(req, res) {
         if (!id && !email) return res.status(400).json({ error: 'id ou email requis' });
 
         let q = supabase.from('newsletter_contacts').select('id, email, tags');
-        q = id ? q.eq('id', id) : q.eq('email', (email || '').toLowerCase().trim());
+        q = id ? q.eq('id', id) : q.ilike('email', (email || '').toLowerCase().trim());
         const { data: contact, error: fetchErr } = await q.maybeSingle();
         if (fetchErr) throw fetchErr;
         if (!contact) return res.status(404).json({ error: 'Contact introuvable' });
@@ -5035,15 +5035,22 @@ async function handleSubscriptions(req, res) {
       const { action, email, full_name } = body;
 
       if (action === 'activate' && email) {
-        const { error } = await supabase
-          .from('tore_subscriptions')
-          .upsert({
-            email: email.toLowerCase().trim(),
-            full_name: full_name || '',
-            status: 'active',
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString()
-          }, { onConflict: 'email' });
+        const cleanEmail = email.toLowerCase().trim();
+        // Cherche une ligne existante avant d'upsert : la contrainte d'unicité Postgres sur
+        // email est sensible à la casse, un onConflict direct créerait un doublon si la
+        // ligne existante a été enregistrée avec une casse différente.
+        const { data: existing } = await supabase
+          .from('tore_subscriptions').select('id').ilike('email', cleanEmail).single();
+        const payload = {
+          email: cleanEmail,
+          full_name: full_name || '',
+          status: 'active',
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString()
+        };
+        const { error } = existing
+          ? await supabase.from('tore_subscriptions').update(payload).eq('id', existing.id)
+          : await supabase.from('tore_subscriptions').upsert(payload, { onConflict: 'email' });
         if (error) throw error;
         return res.status(200).json({ success: true, message: `Abonnement activé pour ${email}` });
       }
@@ -5052,7 +5059,7 @@ async function handleSubscriptions(req, res) {
         const { error } = await supabase
           .from('tore_subscriptions')
           .update({ status: 'revoked', updated_at: new Date().toISOString() })
-          .eq('email', email.toLowerCase().trim());
+          .ilike('email', email.toLowerCase().trim());
         if (error) throw error;
         return res.status(200).json({ success: true, message: `Abonnement révoqué pour ${email}` });
       }

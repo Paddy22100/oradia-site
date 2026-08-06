@@ -485,7 +485,11 @@ module.exports = async (req, res) => {
     // ===== SIGNUP : création de compte Supabase =====
     if (body && body.action === 'signup') {
       try {
-        const { email, password, name, birthdate, _hp } = body;
+        const { password, name, birthdate, _hp } = body;
+        // Normalisé ici : cet email finit dans tore_subscriptions (table Postgres classique,
+        // comparaison .eq sensible à la casse) — non normalisé, un compte auto-inscrit avec
+        // une majuscule pourrait ensuite apparaître "non abonné" ou créer une ligne en double.
+        const email = String(body.email || '').trim().toLowerCase();
 
         // ── Honeypot : si le champ caché est rempli → bot silencieux ──
         if (_hp && String(_hp).trim().length > 0) {
@@ -552,24 +556,33 @@ module.exports = async (req, res) => {
           });
         }
 
-        // Créer l'entrée dans tore_subscriptions
+        // Créer l'entrée dans tore_subscriptions (sauf si une ligne existe déjà pour cet
+        // email, même avec une casse différente — évite un doublon silencieux, par
+        // exemple si un abonnement Stripe existait déjà pour cette adresse).
         try {
-          const { error: subError } = await supabase
-            .from('tore_subscriptions')
-            .insert({
-              email: email,
-              full_name: name,
-              birthdate: birthdate || null,
-              status: 'active', // Les comptes créés manuellement sont actifs par défaut
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            });
-          
-          if (subError) {
-            console.error('[Signup] tore_subscriptions insert error:', subError.message);
-            // Ne pas bloquer la création du compte pour cette erreur
+          const { data: existingSub } = await supabase
+            .from('tore_subscriptions').select('id').ilike('email', email).maybeSingle();
+
+          if (existingSub) {
+            console.log('[Signup] tore_subscriptions entry already exists for:', email);
           } else {
-            console.log('[Signup] tore_subscriptions entry created for:', email);
+            const { error: subError } = await supabase
+              .from('tore_subscriptions')
+              .insert({
+                email: email,
+                full_name: name,
+                birthdate: birthdate || null,
+                status: 'active', // Les comptes créés manuellement sont actifs par défaut
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+
+            if (subError) {
+              console.error('[Signup] tore_subscriptions insert error:', subError.message);
+              // Ne pas bloquer la création du compte pour cette erreur
+            } else {
+              console.log('[Signup] tore_subscriptions entry created for:', email);
+            }
           }
         } catch (subError) {
           console.error('[Signup] tore_subscriptions exception:', subError.message);
@@ -673,7 +686,7 @@ module.exports = async (req, res) => {
         brevo_synced_at: contactAdded ? new Date().toISOString() : undefined,
         precommande_launch_sent_at: new Date().toISOString()
       })
-      .eq('email', email)
+      .ilike('email', email)
       .is('precommande_launch_sent_at', null)
       .then(({ error }) => { if (error) console.warn('[Waitlist] update brevo_synced failed:', error.message); });
 
