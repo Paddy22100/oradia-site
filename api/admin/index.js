@@ -5925,7 +5925,7 @@ Réponds en français, sans tiret long, format markdown compact.`
           fallback,
           total: anu + fallback,
           quota,
-          quota_pct: quota > 0 ? Math.min(100, Math.round((anu / quota) * 100)) : null,
+          quota_pct: quota > 0 ? Math.min(100, Math.round((anuOnly / quota) * 100)) : null,
           recent_fallbacks: recentRes.data || []
         });
       } catch (e) {

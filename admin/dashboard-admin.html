@@ -2568,30 +2568,36 @@
                 </div>
             </div>
 
-            <!-- Quota quantique (ANU + Outshift) -->
+            <!-- Usage quantique (ANU + Outshift) -->
             <div class="stat-card rounded-2xl p-6 mb-6">
                 <div class="flex items-center justify-between gap-3 mb-1 flex-wrap">
-                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-atom text-gold/60"></i> Quota quantique (ANU + Outshift)</h4>
+                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-atom text-gold/60"></i> Usage quantique du mois</h4>
                     <span class="text-gold/40 text-xs" id="qrng-month">—</span>
                 </div>
-                <p class="text-gold/40 text-xs mb-4 italic">Chaque tirage quantique consomme une requête sur le quota mensuel de l'API active (ANU ou, en secours, Outshift). Au-delà, les tirages basculent en repli non quantique (exclus de l'étude).</p>
+                <p class="text-gold/40 text-xs mb-4 italic">ANU (plan gratuit, quota mensuel limité) est en secours ; Outshift (quota bien plus large, remis à zéro chaque jour) est la source principale.</p>
 
+                <!-- ANU : quota réel, jauge pertinente -->
                 <div class="flex items-end justify-between gap-3 mb-2">
-                    <div><span class="text-3xl font-bold text-teal-300" id="qrng-anu">—</span><span class="text-gold/50 text-lg" id="qrng-quota-label"></span></div>
+                    <div><span class="text-3xl font-bold text-teal-300" id="qrng-anu">—</span><span class="text-gold/50 text-lg" id="qrng-quota-label"></span> <span class="text-gold/40 text-xs uppercase ml-1">ANU</span></div>
                     <div class="text-right">
                         <div class="text-sm"><span class="text-red-400 font-bold" id="qrng-fallback">—</span> <span class="text-gold/50 text-xs">fallback ce mois</span></div>
                     </div>
                 </div>
-                <!-- Jauge de consommation -->
                 <div class="w-full h-2.5 rounded-full bg-white/10 overflow-hidden mb-1">
                     <div id="qrng-bar" class="h-full rounded-full bg-gradient-to-r from-teal-400 to-teal-300 transition-all duration-500" style="width:0%"></div>
                 </div>
                 <div class="flex justify-between text-xs text-gold/40 mb-3">
-                    <span>Requêtes quantiques consommées</span>
+                    <span>Quota ANU consommé</span>
                     <span id="qrng-pct">—</span>
                 </div>
 
-                <div id="qrng-warning" class="hidden text-amber-300/90 text-xs bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2 mb-3"></div>
+                <!-- Outshift : simple compteur d'usage, pas de quota fixe pertinent -->
+                <div class="flex items-center justify-between gap-3 pt-3 border-t border-gold/10">
+                    <span class="text-gold/50 text-xs uppercase">Outshift (source principale)</span>
+                    <span class="text-lg font-bold text-teal-300" id="qrng-outshift">—</span>
+                </div>
+
+                <div id="qrng-warning" class="hidden text-amber-300/90 text-xs bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2 mb-3 mt-3"></div>
                 <div id="qrng-fallback-reasons" class="text-gold/50 text-xs"></div>
             </div>
 
@@ -10209,8 +10215,9 @@
                 const res = await adminFetch('/api/admin/qrng-stats');
                 const d = await res.json();
                 set('qrng-month', d.month || '');
-                set('qrng-anu', d.anu ?? 0);
+                set('qrng-anu', d.anu_only ?? 0);
                 set('qrng-quota-label', d.quota ? ' / ' + d.quota : '');
+                set('qrng-outshift', d.outshift ?? 0);
                 set('qrng-fallback', d.fallback ?? 0);
                 const pct = d.quota_pct ?? 0;
                 set('qrng-pct', d.quota ? pct + '%' : '—');
@@ -10229,7 +10236,7 @@
                     if (d.success === false && d.error) msg = '⚠️ ' + d.error;
                     else if (d.total === 0) msg = 'Aucun tirage quantique enregistré ce mois-ci pour l\'instant.';
                     else if (d.anu === 0 && d.fallback > 0) msg = '⚠️ Aucun tirage quantique valide ce mois : ni ANU ni Outshift ne répondent (voir raisons ci-dessous). Vérifie les clés ANU_QRNG_API_KEY / OUTSHIFT_QRNG_API_KEY sur Vercel.';
-                    else if (pct >= 90) msg = '⚠️ Quota quantique presque atteint : les prochains tirages basculeront en repli non quantique.';
+                    else if (pct >= 90) msg = '⚠️ Quota ANU (secours) presque atteint — sans impact tant qu\'Outshift répond, mais à surveiller si Outshift tombe en panne prolongée.';
                     warn.textContent = msg;
                     warn.classList.toggle('hidden', !msg);
                 }
