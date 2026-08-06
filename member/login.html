@@ -262,6 +262,46 @@
             setTimeout(() => { window.location.href = returnTo || '../index.html'; }, 1400);
         }
 
+        // Pont pour les liens de connexion Supabase (magiclink / recovery) — utilisé par le
+        // bouton admin "Se connecter en tant que" et par les liens de réparation d'accès.
+        // Ces liens redirigent ici avec une session Supabase native dans le hash de l'URL
+        // (#access_token=...). Le site n'utilise pas cette session native : chaque page membre
+        // vérifie sa propre clé sessionStorage `oradia_member_session`, écrite uniquement par
+        // completLogin() ci-dessus. Sans ce pont, l'utilisateur atterrit avec une session
+        // Supabase valide que le reste du site ignore totalement, et se fait renvoyer vers
+        // cette page de connexion comme s'il n'était pas connecté.
+        (async function bridgeSupabaseRedirectSession() {
+            if (!window.location.hash.includes('access_token')) return;
+            try {
+                const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                const { data: { session } } = await sb.auth.getSession();
+                if (!session?.user) return;
+
+                let subscribed = false;
+                try {
+                    const subRes = await fetch('/api/auth/check-subscription?email=' + encodeURIComponent(session.user.email));
+                    const subData = await subRes.json();
+                    subscribed = !!subData.subscribed;
+                } catch (_) {}
+
+                const user = {
+                    email: session.user.email,
+                    name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
+                    id: session.user.id,
+                    subscribed
+                };
+                const sessionObj = JSON.stringify({
+                    ...user,
+                    access_token: session.access_token,
+                    refresh_token: session.refresh_token
+                });
+                history.replaceState({}, document.title, window.location.pathname + window.location.search);
+                completLogin(user, sessionObj, false);
+            } catch (e) {
+                console.error('Bridge session Supabase:', e);
+            }
+        })();
+
         // Œil mot de passe
         document.getElementById('togglePw').addEventListener('click', function() {
             const inp = document.getElementById('password');

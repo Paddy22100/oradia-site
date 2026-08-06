@@ -1390,7 +1390,10 @@ async function handleData(req, res) {
         const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
           type: 'magiclink',
           email: sub.email,
-          options: { redirectTo: 'https://oradia.fr/member/dashboard.html' }
+          // Passe par login.html, qui sait convertir la session Supabase native du lien en
+          // session maison (oradia_member_session) — sans ça, les pages membre ne
+          // reconnaissent pas l'utilisateur comme connecté et le renvoient se connecter.
+          options: { redirectTo: 'https://oradia.fr/member/login.html?returnTo=dashboard.html' }
         });
         if (linkErr || !linkData?.properties?.action_link) {
           return res.status(500).json({ error: linkErr?.message || 'Lien introuvable — le compte existe-t-il ?' });
