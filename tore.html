@@ -94,19 +94,17 @@
 
       color:#f5e7a1;
 
-      /* Empêche le pull-to-refresh natif (mobile) de recharger la page
-         sans passer par le modal d'abandon de tirage */
-      overscroll-behavior-y: contain;
-
     }
 
-    /* Empêche la sélection de texte bleue lors des clics rapides — uniquement
-       pendant le tirage actif (cartes, plateau). Certains navigateurs intégrés
-       (WebView Messenger/Facebook/Instagram) bloquent le scroll tactile de toute
-       la page quand user-select:none est posé sans condition sur <body> : on ne
-       l'applique donc plus pendant la saisie de l'intention, où le scroll doit
-       rester utilisable. */
+    /* Pull-to-refresh (overscroll-behavior-y) et sélection de texte bleue
+       (user-select) : bloqués uniquement pendant le tirage actif (cartes,
+       plateau). Les deux ont des bugs connus sur certains navigateurs mobiles
+       (WebView Messenger/Facebook/Instagram, certains Android) qui cassent le
+       scroll tactile normal quand ils sont posés sans condition sur tout le
+       <body> : on ne les applique donc plus pendant la saisie de l'intention,
+       où le scroll doit rester utilisable. */
     body.tore-playing {
+      overscroll-behavior-y: contain;
       -webkit-user-select: none;
       user-select: none;
     }
