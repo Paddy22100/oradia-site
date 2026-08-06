@@ -6511,6 +6511,21 @@
             }
         }
 
+        function nlCheckImageAspectRatio(url) {
+            return new Promise((resolve) => {
+                if (!url) return resolve({ ok: true });
+                const img = new Image();
+                img.crossOrigin = 'anonymous';
+                img.onload = () => {
+                    const ratio = img.naturalWidth / img.naturalHeight;
+                    // Instagram et Facebook exigent un ratio entre 4:5 (0.8) et 1.91:1
+                    resolve({ ok: ratio >= 0.8 && ratio <= 1.91, ratio });
+                };
+                img.onerror = () => resolve({ ok: true }); // on ne bloque pas si l'image ne charge pas ici
+                img.src = url;
+            });
+        }
+
         function nlFillSocialPreview(data, imageUrl) {
             document.getElementById('nl-social-preview')?.classList.remove('hidden');
             const fbEl = document.getElementById('nl-social-fb-text');
@@ -6568,6 +6583,14 @@
             const editedFb = document.getElementById('nl-social-fb-text')?.value.trim() || '';
             const editedIg = document.getElementById('nl-social-ig-text')?.value.trim() || '';
             const btn = document.getElementById('nl-btn-social');
+
+            if (imageUrl) {
+                const check = await nlCheckImageAspectRatio(imageUrl);
+                if (!check.ok) {
+                    return nlSocialStatus('error', `⚠️ Ratio d'image non supporté par Instagram/Facebook (${check.ratio.toFixed(2)}:1, doit être entre 0.8:1 et 1.91:1). Choisis une image plus au format paysage/carré, ou vide le champ image pour utiliser l'image générée automatiquement.`);
+                }
+            }
+
             btn.disabled = true;
             btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Envoi...';
             try {
