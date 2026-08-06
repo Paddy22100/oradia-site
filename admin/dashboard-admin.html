@@ -865,12 +865,17 @@
                 
                 <!-- Waitlist non synchronisée -->
                 <div class="stat-card rounded-2xl p-4">
-                    <div class="flex items-center gap-3">
-                        <i class="fas fa-sync text-orange-500"></i>
-                        <div>
-                            <div class="text-lg font-bold text-gold" id="waitlistNotSynced">-</div>
-                            <p class="text-light-gold text-sm">Contacts non sync Brevo</p>
+                    <div class="flex items-center gap-3 justify-between w-full">
+                        <div class="flex items-center gap-3">
+                            <i class="fas fa-sync text-orange-500"></i>
+                            <div>
+                                <div class="text-lg font-bold text-gold" id="waitlistNotSynced">-</div>
+                                <p class="text-light-gold text-sm">Contacts non sync Brevo</p>
+                            </div>
                         </div>
+                        <button id="syncBrevoContactsBtn" onclick="syncBrevoContacts()" title="Synchroniser maintenant" class="text-orange-400/70 hover:text-orange-400 border border-orange-400/20 hover:border-orange-400/50 rounded-lg px-2 py-1.5 text-xs transition flex-shrink-0">
+                            <i class="fas fa-rotate"></i>
+                        </button>
                     </div>
                 </div>
             </div>
@@ -3970,6 +3975,25 @@
             } else if (pagEl) {
                 pagEl.innerHTML = '';
             }
+        }
+
+        async function syncBrevoContacts() {
+            const btn = document.getElementById('syncBrevoContactsBtn');
+            if (!btn) return;
+            const orig = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+            try {
+                const res = await adminFetch('/api/admin/sync-brevo', { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.error || 'Erreur');
+                btn.innerHTML = '<i class="fas fa-check"></i>';
+                if (typeof loadOverview === 'function') loadOverview();
+            } catch (e) {
+                btn.innerHTML = '<i class="fas fa-exclamation-triangle"></i>';
+                console.error('sync-brevo error:', e.message);
+            }
+            setTimeout(() => { if (btn) { btn.disabled = false; btn.innerHTML = orig; } }, 3000);
         }
 
         async function syncBrevoUnsubscribes() {

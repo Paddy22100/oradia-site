@@ -379,33 +379,41 @@ async function activateToreSubscription(supabase, { email, fullName, plan, strip
         }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (abonnement):', error.message); });
     }
 
+    // Contact Brevo créé/mis à jour AVANT l'écriture Supabase, pour pouvoir refléter le
+    // résultat réel dans brevo_synced (au lieu de le laisser bloqué à false indéfiniment,
+    // ce qui gonflait à tort le compteur "Contacts non sync Brevo" du dashboard).
+    let brevoContactSynced = false;
+    if (process.env.BREVO_API_KEY) {
+        const nameParts = (fullName || '').trim().split(' ');
+        try {
+            const brevoRes = await fetch('https://api.brevo.com/v3/contacts', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+                body: JSON.stringify({
+                    email,
+                    attributes: {
+                        PRENOM: nameParts[0] || '',
+                        NOM:    nameParts.slice(1).join(' ') || ''
+                    },
+                    listIds: [5],
+                    updateEnabled: true
+                })
+            });
+            brevoContactSynced = brevoRes.ok || brevoRes.status === 409; // 409 = déjà présent
+        } catch (e) { console.error('[webhook] Brevo add to list 5:', e.message); }
+    }
+
     await supabase.from('newsletter_contacts').upsert({
         email,
         full_name: fullName || '',
         source:   'abonnement-tore',
         tags:     ['abonne-tore'],
         status:   'active',
-        brevo_synced: false
+        brevo_synced: brevoContactSynced,
+        ...(brevoContactSynced ? { brevo_synced_at: new Date().toISOString() } : {})
     }, { onConflict: 'email', ignoreDuplicates: false }).catch(e =>
         console.error('[webhook] newsletter_contacts upsert:', e.message)
     );
-
-    if (process.env.BREVO_API_KEY) {
-        const nameParts = (fullName || '').trim().split(' ');
-        await fetch('https://api.brevo.com/v3/contacts', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
-            body: JSON.stringify({
-                email,
-                attributes: {
-                    PRENOM: nameParts[0] || '',
-                    NOM:    nameParts.slice(1).join(' ') || ''
-                },
-                listIds: [5],
-                updateEnabled: true
-            })
-        }).catch(e => console.error('[webhook] Brevo add to list 5:', e.message));
-    }
 
     await sendToreSubscriptionEmail({
         toEmail:  email,
