@@ -59,13 +59,20 @@ async function handleLogin(req, res) {
     req.on('error', reject);
   });
 
-  const { email, password } = body;
+  const { password } = body;
+  // tore_subscriptions est une table Postgres classique (comparaison .eq sensible à la
+  // casse) alors que Supabase Auth normalise déjà les emails en minuscules pour
+  // l'authentification elle-même. Sans cette normalisation ici, un abonné dont l'email
+  // est stocké avec une majuscule (ex: capturé tel quel depuis Stripe) se connecte
+  // normalement mais la vérification d'abonnement actif échoue silencieusement — il se
+  // voit alors affiché comme non-abonné alors qu'il a bien payé.
+  const email = (body.email || '').trim().toLowerCase();
 
   if (!email || !password) {
     res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ 
-      success: false, 
-      error: 'Email et mot de passe requis' 
+    return res.end(JSON.stringify({
+      success: false,
+      error: 'Email et mot de passe requis'
     }));
   }
 
@@ -150,7 +157,7 @@ async function handleLogin(req, res) {
         const { data: subData2 } = await supabase
           .from('tore_subscriptions')
           .select('status, expires_at')
-          .eq('email', email)
+          .ilike('email', email)
           .eq('status', 'active')
           .single();
         if (subData2) {
@@ -194,7 +201,7 @@ async function handleLogin(req, res) {
     const { data: subData } = await supabase
       .from('tore_subscriptions')
       .select('status, expires_at')
-      .eq('email', email)
+      .ilike('email', email)
       .eq('status', 'active')
       .single();
     if (subData) {
@@ -258,7 +265,7 @@ async function handleCheckSubscription(req, res) {
     const { data: subData } = await supabase
       .from('tore_subscriptions')
       .select('status, expires_at, created_at, birth_date, birth_place')
-      .eq('email', email)
+      .ilike('email', email)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(1)
@@ -404,7 +411,7 @@ async function handleConsumeToreDraw(req, res) {
     req.on('error', reject);
   });
 
-  const { email } = body;
+  const email = (body.email || '').trim().toLowerCase();
   if (!email) {
     res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ error: 'Email required' }));
@@ -424,7 +431,7 @@ async function handleConsumeToreDraw(req, res) {
     const { data: sub } = await supabase
       .from('tore_subscriptions')
       .select('id, status, expires_at')
-      .eq('email', email)
+      .ilike('email', email)
       .single();
 
     if (!sub) {
@@ -456,7 +463,7 @@ async function handleCheckToreDraw(req, res) {
     req.on('error', reject);
   });
 
-  const { email } = body;
+  const email = (body.email || '').trim().toLowerCase();
   if (!email) {
     res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ allowed: false, error: 'Email requis' }));
@@ -468,7 +475,7 @@ async function handleCheckToreDraw(req, res) {
   const { data: sub } = await supabase
     .from('tore_subscriptions')
     .select('id, status, expires_at, plan, daily_draw_count, last_draw_date')
-    .eq('email', email)
+    .ilike('email', email)
     .eq('status', 'active')
     .maybeSingle();
 
@@ -561,7 +568,7 @@ async function handleSaveBirthInfo(req, res) {
   const { error } = await supabase
     .from('tore_subscriptions')
     .update({ birth_date: birthDate || null, birth_place: birthPlace || null, updated_at: new Date().toISOString() })
-    .eq('email', email);
+    .ilike('email', email);
   if (error) {
     res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ success: false, error: error.message }));
@@ -594,7 +601,7 @@ async function handleMarkPasswordChanged(req, res) {
   const { error } = await supabase
     .from('tore_subscriptions')
     .update({ must_change_password: false, updated_at: new Date().toISOString() })
-    .eq('email', email);
+    .ilike('email', email);
   if (error) {
     // Ne bloque jamais le flux de connexion pour un souci d'indicateur dashboard —
     // journalise et répond quand même succès côté client.
