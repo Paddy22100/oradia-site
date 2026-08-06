@@ -5725,7 +5725,7 @@ Réponds en français, sans tiret long, format markdown compact.`
 
       try {
         const [sessRes, preRes, poolRes] = await Promise.all([
-          sb.from('retro_sessions').select('present_bit,past_bit,future_bit').eq('status', 'complete').eq('qrng_source', 'anu').limit(200000),
+          sb.from('retro_sessions').select('present_bit,past_bit,future_bit').eq('status', 'complete').in('qrng_source', QUANTUM_SOURCES).limit(200000),
           sb.from('retro_preregistration').select('*').order('registered_at', { ascending: true }).limit(1),
           sb.from('retro_pool').select('*', { count: 'exact', head: true }).is('consumed_at', null)
         ]);
@@ -5789,7 +5789,7 @@ Réponds en français, sans tiret long, format markdown compact.`
 
       try {
         const [sessRes, preRes] = await Promise.all([
-          sb.from('retro_sessions').select('present_bit,past_bit,future_bit').eq('status', 'complete').eq('qrng_source', 'anu').limit(200000),
+          sb.from('retro_sessions').select('present_bit,past_bit,future_bit').eq('status', 'complete').in('qrng_source', QUANTUM_SOURCES).limit(200000),
           sb.from('retro_preregistration').select('target_n,alpha,registered_at').order('registered_at', { ascending: true }).limit(1)
         ]);
         if (sessRes.error) throw sessRes.error;

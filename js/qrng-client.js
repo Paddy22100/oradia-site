@@ -135,5 +135,13 @@ const QRNG = {
 // quota ANU pour chaque visiteur, même sans tirage). Le préchargement est déclenché
 // par QRNG.beginDraw(), c.-à-d. uniquement quand l'utilisateur lance réellement un tirage.
 
+// Exposer explicitement sur window : un `const` top-level dans un script classique
+// ne devient PAS une propriété de `window`, seulement une variable de script. Le
+// code appelant (tore.html, etc.) teste `window.QRNG` avant d'appeler beginDraw()/
+// endDraw() — sans cette ligne, ces vérifications échouent silencieusement et le
+// suivi de pureté retombe toujours sur 'unknown', même quand le tirage est bien
+// quantique.
+if (typeof window !== 'undefined') window.QRNG = QRNG;
+
 // Export pour usage en module ES si besoin
 if (typeof module !== 'undefined') module.exports = QRNG;
