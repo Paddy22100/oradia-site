@@ -1374,6 +1374,30 @@ async function handleData(req, res) {
         }
       }
 
+      // "Se connecter en tant que" un abonné, pour tester son espace membre sans jamais
+      // manipuler ni afficher de mot de passe. Génère un lien de connexion à usage unique
+      // (magiclink) — le lien lui-même est sensible (il connecte quiconque le possède),
+      // donc il n'est renvoyé qu'une fois au dashboard et jamais stocké côté serveur.
+      if (action === 'login-as' && subscriptionId) {
+        const { data: sub, error: subFetchError } = await supabase
+          .from('tore_subscriptions')
+          .select('email')
+          .eq('id', subscriptionId)
+          .single();
+        if (subFetchError || !sub?.email) {
+          return res.status(404).json({ error: 'Abonnement introuvable' });
+        }
+        const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
+          type: 'magiclink',
+          email: sub.email,
+          options: { redirectTo: 'https://oradia.fr/member/dashboard.html' }
+        });
+        if (linkErr || !linkData?.properties?.action_link) {
+          return res.status(500).json({ error: linkErr?.message || 'Lien introuvable — le compte existe-t-il ?' });
+        }
+        return res.status(200).json({ success: true, link: linkData.properties.action_link });
+      }
+
       // Marquer une précommande comme expédiée — envoie automatiquement
       // l'email "commande en chemin" au client (remplace l'ancien envoi manuel).
       if (action === 'mark-shipped' && body.orderId && body.trackingNumber) {
