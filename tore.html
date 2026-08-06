@@ -349,7 +349,8 @@
     gap: 7px;
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-size: clamp(12px, 1.2vw, 14px);
-    color: rgba(212,175,55,0.42);
+    color: rgba(245,231,161,0.8);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
     transition: color 0.2s;
   }
   .tore-check .chk-ico { font-size: 14px; transition: color 0.2s; }
@@ -2988,7 +2989,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
                            focus:outline-none transition-all duration-300
                            placeholder:text-light-gold/30 placeholder:italic
                            resize-none"
-                    style="background: rgba(10,25,47,0.7); border: 1px solid rgba(212,175,55,0.35); backdrop-filter: blur(12px); min-height: clamp(64px,10vh,120px); padding: clamp(8px,1.2vh,18px); font-size: clamp(13px,1.4vw,17px);"
+                    style="background: rgba(10,25,47,0.7); border: 1px solid rgba(212,175,55,0.35); backdrop-filter: blur(12px); min-height: clamp(92px,16vh,140px); padding: clamp(8px,1.2vh,18px); font-size: clamp(13px,1.4vw,17px);"
                     placeholder="Comment puis-je avancer sur mon chemin ? Quelle est la prochaine étape pour moi ?"
                     required></textarea>
         </div>
@@ -3005,7 +3006,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
         <!-- Exemples d'intention cliquables : réduisent l'effet « page blanche »,
              garantissent une formulation valide et augmentent le taux de saisie. -->
         <div class="text-center" style="margin:0;">
-          <p style="font-size:clamp(11px,1.2vw,13px);color:rgba(212,175,55,0.55);font-style:italic;margin:0 0 8px;">Pas d'idée&nbsp;? Inspirez-vous d'un exemple&nbsp;:</p>
+          <p style="font-size:clamp(11px,1.2vw,13px);color:rgba(245,231,161,0.75);text-shadow:0 1px 3px rgba(0,0,0,0.6);font-style:italic;margin:0 0 8px;">Pas d'idée&nbsp;? Inspirez-vous d'un exemple&nbsp;:</p>
           <div class="flex flex-wrap justify-center gap-2" id="tore-intention-examples">
             <button type="button" onclick="fillIntention(this)" class="tore-intention-chip">Comment avancer sereinement en ce moment&nbsp;?</button>
             <button type="button" onclick="fillIntention(this)" class="tore-intention-chip">Quelle est la prochaine étape sur mon chemin&nbsp;?</button>
