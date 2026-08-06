@@ -3264,7 +3264,13 @@ function nlStyleLinks(html) {
 function nlForceOpaqueCells(html, color) {
   return String(html).replace(/<td((?:\s+[a-zA-Z-]+\s*=\s*"[^"]*")*)\s*>/gi, (full, attrs) => {
     if (/\bbgcolor\s*=/i.test(attrs) || /linear-gradient/i.test(attrs)) return full;
-    return `<td bgcolor="${color}"${attrs}>`;
+    // bgcolor seul suffit pour Outlook desktop (moteur Word), mais l'app mobile
+    // Outlook/Hotmail l'ignore et n'honore que le CSS inline : les deux sont donc
+    // nécessaires, jamais l'un sans l'autre.
+    const withBg = /\bstyle\s*=\s*"([^"]*)"/i.test(attrs)
+      ? attrs.replace(/\bstyle\s*=\s*"([^"]*)"/i, (m, css) => `style="background-color:${color};${css}"`)
+      : `${attrs} style="background-color:${color};"`;
+    return `<td bgcolor="${color}"${withBg}>`;
   });
 }
 
