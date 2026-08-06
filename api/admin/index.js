@@ -431,9 +431,15 @@ async function sendToreCheckinForSubscription(supabase, subscriptionId, { force 
     tempPassword
   });
 
+  // Si un nouveau mot de passe provisoire a été émis, synchroniser l'indicateur
+  // dashboard (sinon il restait bloqué à son ancienne valeur — true ou NULL — alors
+  // que le compte Auth, lui, était bien à jour : le badge/l'alerte mentaient).
+  const updatePayload = { checkin_email_sent_at: new Date().toISOString() };
+  if (tempPassword) updatePayload.must_change_password = true;
+
   const { error: markErr } = await supabase
     .from('tore_subscriptions')
-    .update({ checkin_email_sent_at: new Date().toISOString() })
+    .update(updatePayload)
     .eq('id', sub.id);
   if (markErr) console.error('[checkin] marquage checkin_email_sent_at échoué (migration appliquée ?):', markErr.message);
 
