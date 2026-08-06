@@ -10165,14 +10165,14 @@
 
             // PARTIE 1 — POUR TOUS
             H('1. En clair (pour tous)');
-            P('Le hasard quantique (généré par le laboratoire d\'optique quantique de l\'ANU, ou en secours par le matériel quantique Outshift/Cisco) est un « dé cosmique » impossible à truquer : chaque nombre provient de fluctuations quantiques du vide ou d\'un phénomène quantique physique équivalent. Nous nous en servons pour poser une question simple mais vertigineuse : un nombre tiré à un autre moment que le tirage peut-il « coller » au tirage mieux que le pur hasard ?', {});
+            P('Le hasard quantique (généré par le matériel quantique Outshift/Cisco, ou en secours par le laboratoire d\'optique quantique de l\'ANU) est un « dé cosmique » impossible à truquer : chaque nombre provient de fluctuations quantiques du vide ou d\'un phénomène quantique physique équivalent. Nous nous en servons pour poser une question simple mais vertigineuse : un nombre tiré à un autre moment que le tirage peut-il « coller » au tirage mieux que le pur hasard ?', {});
             P('Le jeu du pari à l\'envers (tester le FUTUR → présent) : imaginez que vous choisissiez une carte entre 1 et 64 maintenant. Ce n\'est qu\'APRÈS votre choix que le dé cosmique tire la carte « gagnante ». Normalement, tomber pile dessus, c\'est 1 chance sur 64. Si, sur des milliers de tirages, les gens tombent bien plus souvent que 1 sur 64 sur une carte décidée APRÈS eux, cela voudrait dire que leur choix du présent était déjà accordé à un futur qui n\'existait pas encore.', {});
             P('Tester le PASSÉ → présent : c\'est le même jeu, mais la carte « gagnante » est scellée AVANT le tirage (générée la veille, mise dans une enveloppe numérique datée et infalsifiable). Si le tirage du présent correspond à ce nombre du passé mieux que le hasard, c\'est que le passé « touche » le présent.', {});
             P('Dans les deux cas, pour le consultant, rien ne change : il tire normalement. Toute la mesure se fait en coulisses.', { after: 3 });
 
             // PARTIE 2 — SCIENTIFIQUE
             H('2. Protocole scientifique');
-            P('Conception : pour chaque consultation valide, trois bits (0/1) sont dérivés de nombres quantiques vérifiés — ANU ou, en secours, Outshift/Cisco (octet ≥ 128 → 1, sinon 0) :', { after: 1 });
+            P('Conception : pour chaque consultation valide, trois bits (0/1) sont dérivés de nombres quantiques vérifiés — Outshift/Cisco ou, en secours, ANU (octet ≥ 128 → 1, sinon 0) :', { after: 1 });
             P('• PRÉ-TIRÉ (passé) : bit scellé AVANT l\'intention, engagé par un hash SHA-256 horodaté (preuve d\'antériorité et de non-altération).', { lh: 5, after: 0.5 });
             P('• EN DIRECT (présent) : bit généré au moment du tirage — l\'acte « présent », horodaté (intention_at).', { lh: 5, after: 0.5 });
             P('• POST-TIRÉ (futur) : bit scellé APRÈS l\'intention, révélé plus tard, également engagé par hash horodaté.', { lh: 5, after: 2 });
