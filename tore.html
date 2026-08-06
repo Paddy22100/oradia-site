@@ -98,10 +98,17 @@
          sans passer par le modal d'abandon de tirage */
       overscroll-behavior-y: contain;
 
-      /* Empêche la sélection de texte bleue lors des clics rapides */
+    }
+
+    /* Empêche la sélection de texte bleue lors des clics rapides — uniquement
+       pendant le tirage actif (cartes, plateau). Certains navigateurs intégrés
+       (WebView Messenger/Facebook/Instagram) bloquent le scroll tactile de toute
+       la page quand user-select:none est posé sans condition sur <body> : on ne
+       l'applique donc plus pendant la saisie de l'intention, où le scroll doit
+       rester utilisable. */
+    body.tore-playing {
       -webkit-user-select: none;
       user-select: none;
-
     }
 
     /* Réactiver la sélection dans les champs de saisie et le guide carte */
