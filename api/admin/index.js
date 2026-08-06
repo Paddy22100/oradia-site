@@ -405,8 +405,12 @@ async function sendToreCheckinForSubscription(supabase, subscriptionId, { force 
 
   // Mot de passe provisoire toujours pas changé : on en régénère un nouveau (l'ancien
   // n'a jamais été stocké en clair côté serveur) pour pouvoir le rappeler dans l'email.
+  // must_change_password === false est le SEUL cas où on sait avec certitude que l'abonné
+  // a déjà défini son propre mot de passe — true ou NULL (compte créé avant ce suivi,
+  // typiquement les abonnés les plus à risque) sont traités de la même façon : mieux vaut
+  // fournir un accès qui marche à quelqu'un qui n'en avait pas besoin que l'inverse.
   let tempPassword = null;
-  if (sub.must_change_password) {
+  if (sub.must_change_password !== false) {
     const authUser = await findAuthUserByEmail(supabase, sub.email);
     if (authUser) {
       tempPassword = crypto.randomBytes(8).toString('hex');
