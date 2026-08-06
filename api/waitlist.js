@@ -472,6 +472,9 @@ async function sendSignupConfirmationEmail(email, name) {
   }
 }
 
+// Exposé pour réutilisation par le bouton "Envoyer test" du dashboard admin
+// (onglet Mails), afin que le test envoie exactement le même email que celui
+// réellement reçu lors d'une inscription newsletter.
 module.exports = async (req, res) => {
   try {
     setCORS(req, res);
@@ -689,3 +692,5 @@ module.exports = async (req, res) => {
     });
   }
 };
+
+module.exports.sendWaitlistConfirmationEmail = sendWaitlistConfirmationEmail;

@@ -11,7 +11,9 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail } = require('../../lib/brevo-order-email.js');
-const { sendToreSubscriptionEmail } = require('../../lib/tore-subscription-email.js');
+const { sendToreSubscriptionEmail, sendSubscriptionEmail } = require('../../lib/tore-subscription-email.js');
+const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
+const { sendGuidanceConfirmationEmail } = require('../../lib/guidance-email.js');
 const { estimateStripeFees, getStripeFeesForPeriod, getMonthlyStripeFees, ESTIMATE_RATE, ESTIMATE_FIXED_EUR } = require('../../lib/stripe-fees.js');
 
 // Manifest statique des illustrations du Tore (généré une fois, fichier unique et léger —
@@ -1582,21 +1584,12 @@ async function handleData(req, res) {
           if (!ok) return res.status(502).json({ error: 'Envoi Brevo échoué' });
           return res.status(200).json({ success: true, email: toEmail, type });
         }
-        const isPaimentFailed = type === 'payment_failed';
-        const subject = isPaimentFailed ? "Rudy d'Oradia - Votre paiement n'a pas abouti — renouveler votre accès" : "Rudy d'Oradia - Votre abonnement Le Tore est arrivé à échéance";
-        const title = isPaimentFailed ? 'Paiement non abouti' : 'Votre accès a expiré';
-        const subtitle = isPaimentFailed ? 'Un problème est survenu lors du renouvellement' : 'Renouvelez votre abonnement pour continuer';
-        const bodyText = isPaimentFailed
-          ? `Bonjour,<br><br>Nous n'avons pas pu renouveler votre abonnement <strong style="color:#f0c75e;">Le Tore</strong> — votre moyen de paiement n'a pas été accepté.<br><br>Pour continuer à accéder à vos tirages, veuillez mettre à jour votre paiement.`
-          : `Bonjour,<br><br>Votre abonnement <strong style="color:#f0c75e;">Le Tore</strong> est arrivé à échéance et votre accès a été suspendu.<br><br>Renouvelez votre abonnement pour retrouver votre espace et continuer vos tirages.`;
-        const html = `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background-color:#050a14;background-image:url('https://oradia.fr/images/oradia-hero-4k.png');background-size:cover;background-position:center;" bgcolor="#050a14"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" bgcolor="#050a14" background="https://oradia.fr/images/oradia-hero-4k.png"><tr><td align="center" style="padding:32px 16px;background-image:url('https://oradia.fr/images/oradia-hero-4k.png');background-size:cover;background-position:center;"><table role="presentation" width="600" cellpadding="0" cellspacing="0" border="0" style="width:600px;max-width:600px;" bgcolor="#0a1628"><tr><td style="padding:0;line-height:0;font-size:0;"><img src="https://oradia.fr/images/medias/apercu_stripe.jpg" alt="Oracle ORADIA" width="600" height="220" style="display:block;width:100%;height:220px;object-fit:cover;border:0;"></td></tr><tr><td align="center" style="padding:32px 40px 20px;" bgcolor="#0a1628"><h1 style="margin:0;color:#f0c75e;font-family:Georgia,serif;font-size:32px;font-weight:400;line-height:1.2;letter-spacing:2px;text-transform:uppercase;">${title}</h1><table role="presentation" width="60" cellpadding="0" cellspacing="0" border="0" style="margin:16px auto 14px;"><tr><td height="1" bgcolor="#d4af37" style="line-height:1px;font-size:1px;">&nbsp;</td></tr></table><p style="margin:0;color:#d8bf72;font-family:Georgia,serif;font-size:14px;font-style:italic;line-height:1.6;">${subtitle}</p></td></tr><tr><td style="padding:0 40px 32px;" bgcolor="#0a1628"><p style="margin:0 0 24px;color:#d1d5db;font-family:Georgia,serif;font-size:15px;line-height:1.8;">${bodyText}</p><table role="presentation" cellpadding="0" cellspacing="0" border="0" style="margin:0 auto;"><tr><td style="border-radius:6px;" bgcolor="#d4af37"><a href="https://oradia.fr/member/login.html?returnTo=abonnements.html%3FfromEmail%3D1" style="display:inline-block;padding:15px 32px;color:#0a1628;font-family:Georgia,serif;font-size:14px;font-weight:bold;letter-spacing:1px;text-decoration:none;text-transform:uppercase;border-radius:6px;">Renouveler mon abonnement</a></td></tr></table></td></tr><tr><td style="padding:0 40px;" bgcolor="#0a1628"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td height="1" bgcolor="#3a3010" style="line-height:1px;font-size:1px;">&nbsp;</td></tr></table></td></tr><tr><td align="center" style="padding:28px 40px 32px;" bgcolor="#0a1628"><p style="margin:0 0 6px;color:#9ca3af;font-family:Georgia,serif;font-size:13px;font-style:italic;">Avec toute ma gratitude,</p><p style="margin:0 0 4px;color:#f0c75e;font-family:Georgia,serif;font-size:26px;font-weight:bold;letter-spacing:1px;">Rudy</p><p style="margin:0 0 16px;color:#d8bf72;font-family:Georgia,serif;font-size:13px;font-style:italic;">Fondateur d'ORADIA</p><a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-family:Georgia,serif;font-size:13px;letter-spacing:1px;border-bottom:1px solid #8a6d20;padding-bottom:2px;">oradia.fr</a></td></tr><tr><td align="center" style="padding:20px 40px;" bgcolor="#040c1a"><p style="margin:0 0 8px;color:#9ca3af;font-family:Georgia,serif;font-size:12px;line-height:1.6;"><a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;">oradia.fr</a> &nbsp;&middot;&nbsp; <a href="mailto:contact@oradia.fr" style="color:#d4af37;text-decoration:none;">contact@oradia.fr</a></p><p style="margin:0;color:#6b7280;font-family:Georgia,serif;font-size:11px;line-height:1.5;">ORADIA — La Boussole Intérieure<br>Révéler. Transmuter. Relier.</p></td></tr></table></td></tr></table></body></html>`;
-        const senderEmail = process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr';
-        const r = await fetch('https://api.brevo.com/v3/smtp/email', {
-          method: 'POST',
-          headers: { 'api-key': BREVO_API_KEY, 'Content-Type': 'application/json' },
-          body: JSON.stringify({ sender: { email: senderEmail, name: "Rudy d'Oradia" }, to: [{ email: toEmail }], subject, htmlContent: html })
-        });
-        if (!r.ok) { const t = await r.text(); throw new Error(`Brevo ${r.status}: ${t}`); }
+        // Réutilise le VRAI template (lib/tore-subscription-email.js), partagé avec le
+        // webhook Stripe — avant ce correctif, ce test envoyait une copie figée du
+        // template, qui divergeait au fil des évolutions du vrai email envoyé aux abonnés.
+        // type attendu ici : 'payment_failed' ou 'expired' (mappé sur 'cancelled').
+        const emailSentSub = await sendSubscriptionEmail(toEmail, body.name || '', type === 'payment_failed' ? 'payment_failed' : 'cancelled');
+        if (!emailSentSub) return res.status(502).json({ error: 'Envoi Brevo échoué' });
         return res.status(200).json({ success: true, email: toEmail, type });
       }
 
@@ -1606,13 +1599,21 @@ async function handleData(req, res) {
         const type = body.type || '';
         const dest = 'contact@oradia.fr';
         const senderEmail = process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr';
-        const emailStyle = `background:#050a14;padding:48px 20px;`;
-        const containerStyle = `max-width:580px;background:linear-gradient(135deg,#0a1628,#051428);border:1px solid rgba(212,175,55,0.3);`;
-        const headerCell = (label, title) => `<tr><td align="center" style="padding:48px 40px 24px;"><p style="margin:0 0 6px;color:rgba(212,175,55,0.5);font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.45em;text-transform:uppercase;">${label}</p><h1 style="margin:0;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:36px;font-weight:300;letter-spacing:2px;">${title}</h1><div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:20px auto;"></div></td></tr>`;
-        const para = (text) => `<p style="color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;margin-bottom:20px;">${text}</p>`;
-        const cta = (label, href) => `<table cellpadding="0" cellspacing="0" border="0" style="margin:24px auto 0;"><tr><td style="border-radius:4px;background:linear-gradient(135deg,#d4af37,#f0c75e);"><a href="${href}" style="display:inline-block;padding:15px 36px;color:#0a1628;font-family:'Lora',Georgia,serif;font-size:14px;font-weight:700;text-decoration:none;letter-spacing:0.5px;">${label}</a></td></tr></table>`;
-        const footerCell = `<tr><td align="center" style="padding:20px 40px;background:rgba(5,10,20,0.6);border-top:1px solid rgba(212,175,55,0.15);"><table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 12px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td></tr></table><p style="margin:0;color:#9ca3af;font-family:'Lora',Georgia,serif;font-size:11px;line-height:1.6;"><a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;">oradia.fr</a> · <a href="mailto:contact@oradia.fr" style="color:#d4af37;text-decoration:none;">contact@oradia.fr</a><br>ORADIA – La Boussole Intérieure · Révéler. Transmuter. Relier.</p></td></tr>`;
-        const wrap = (rows) => `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head><body style="margin:0;padding:0;background:#050a14;"><table width="100%" cellpadding="0" cellspacing="0" style="${emailStyle}"><tr><td align="center"><table width="100%" cellpadding="0" cellspacing="0" style="${containerStyle}">${rows}${footerCell}</table></td></tr></table></body></html>`;
+
+        // "Confirmation abonnement Tore" : réutilise le VRAI template envoyé aux abonnés
+        // (lib/tore-subscription-email.js), avec des données d'exemple. Avant ce correctif,
+        // ce bouton envoyait une copie figée et obsolète du template, sans rapport avec ce
+        // que les abonnés reçoivent réellement — corrigé pour que le test reflète la réalité.
+        if (type === 'tore-payment') {
+          const emailSent = await sendToreSubscriptionEmail({
+            toEmail: dest,
+            toName: 'Prénom Nom (exemple)',
+            tempPassword: body.mode === 'existing' ? null : 'ExempleMdp123',
+            plan: body.plan === 'decouverte' ? 'decouverte' : 'complet'
+          });
+          if (!emailSent) return res.status(502).json({ error: 'Envoi Brevo échoué' });
+          return res.status(200).json({ success: true, sentTo: dest, type });
+        }
 
         let subject, html;
 
@@ -1626,29 +1627,37 @@ async function handleData(req, res) {
             expiresAt: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString()
           });
         } else if (type === 'newsletter-confirm') {
-          subject = "[TEST] Rudy d'Oradia - Bienvenue dans l'univers ORADIA";
-          html = wrap(
-            headerCell('Bienvenue', 'ORADIA') +
-            `<tr><td style="padding:0 40px 40px;">${para('Bienvenue dans l\'univers Oradia ✨')}${para('Votre inscription est confirmée. Vous recevrez les prochaines inspirations d\'ORADIA directement dans votre boîte mail.')}${cta('Explorer ORADIA', 'https://oradia.fr')}</td></tr>`
-          );
-        } else if (type === 'tore-payment') {
-          subject = "[TEST] Rudy d'Oradia - Bienvenue dans Le Tore — Votre abonnement est actif";
-          html = wrap(
-            headerCell('Abonnement activé', 'Le Tore') +
-            `<tr><td style="padding:0 40px 40px;">${para('Votre abonnement au Tore est maintenant actif. Vous avez accès illimité à l\'expérience complète d\'Oradia.')}${para('<strong style="color:#f0c75e;">Accès direct :</strong> Rendez-vous sur la page Tore et connectez-vous à votre espace membre pour commencer votre exploration.')}${cta('Accéder au Tore', 'https://oradia.fr/tore.html')}</td></tr>`
-          );
+          // Réutilise le VRAI template (api/waitlist.js), au lieu d'une copie générique
+          // qui ne reflétait plus l'email réellement envoyé (bandeau, encart précommande, etc.)
+          const emailSentNl = await sendWaitlistConfirmationEmail(dest);
+          if (!emailSentNl) return res.status(502).json({ error: 'Envoi Brevo échoué' });
+          return res.status(200).json({ success: true, sentTo: dest, type });
         } else if (type === 'preorder-confirm') {
-          subject = "[TEST] Rudy d'Oradia - Votre précommande est confirmée";
-          html = wrap(
-            headerCell('Précommande confirmée', 'Oracle ORADIA') +
-            `<tr><td style="padding:0 40px 40px;">${para('Merci pour votre précommande de l\'Oracle ORADIA. Votre soutien contribue directement à la création de ce projet.')}${para('Vous recevrez un email de suivi dès que l\'oracle sera prêt à être expédié. Livraison estimée : automne 2025.')}${cta('Suivre ma précommande', 'https://oradia.fr')}</td></tr>`
-          );
+          // Réutilise le VRAI template (lib/brevo-order-email.js), partagé avec le webhook
+          // Stripe — avant ce correctif, ce test envoyait une copie générique sans rapport
+          // avec l'email réellement reçu après une précommande.
+          const emailSentPre = await sendBrevoEmail({
+            toEmail: dest,
+            toName: 'Prénom Nom (exemple)',
+            offer: 'Standard - Oracle Oradia',
+            amountTotal: '38.00'
+          });
+          if (!emailSentPre) return res.status(502).json({ error: 'Envoi Brevo échoué' });
+          return res.status(200).json({ success: true, sentTo: dest, type });
         } else if (type === 'guidance-confirm') {
-          subject = "[TEST] Rudy d'Oradia - Votre guidance est confirmée";
-          html = wrap(
-            headerCell('Guidance confirmée', 'Séance 1h') +
-            `<tr><td style="padding:0 40px 40px;">${para('Votre séance de guidance est confirmée. Un lien Jitsi vous sera envoyé le jour J.')}${para('<strong style="color:#f0c75e;">Rappel :</strong> La séance se déroule en visio, à l\'heure convenue. Prévoyez un espace calme.')}${cta('oradia.fr', 'https://oradia.fr')}</td></tr>`
-          );
+          // Réutilise le VRAI template (lib/guidance-email.js), partagé avec le webhook
+          // Cal.com — avant ce correctif, ce test envoyait une copie générique sans le
+          // lien Jitsi, la date, ni la mise en page réelle.
+          const sampleDate = new Date(Date.now() + 3 * 24 * 60 * 60 * 1000);
+          const emailSentGuidance = await sendGuidanceConfirmationEmail({
+            clientEmail: dest,
+            clientName: 'Prénom Nom (exemple)',
+            duration: 60,
+            dateStr: sampleDate.toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'short', timeZone: 'Europe/Paris' }),
+            jitsiUrl: 'https://meet.jit.si/oradia-exemple'
+          });
+          if (!emailSentGuidance) return res.status(502).json({ error: 'Envoi Brevo échoué' });
+          return res.status(200).json({ success: true, sentTo: dest, type });
         } else {
           return res.status(400).json({ error: `Type de mail inconnu : ${type}` });
         }

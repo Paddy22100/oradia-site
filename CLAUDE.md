@@ -97,6 +97,33 @@ Quand je te demande de faire un audit ou de "tout vérifier", exécute les véri
 - [ ] Vérifier que la clé API Brevo n'est utilisée que côté serveur
 - [ ] Identifier le template email post-tirage et vérifier que les variables dynamiques injectées (données du tirage) correspondent aux clés disponibles dans sessionStorage/response API
 - [ ] Vérifier que la liste newsletter utilise bien le list ID `5`
+- [ ] **Zéro duplication de template email** — voir règle ci-dessous, à vérifier pour tout nouveau type d'email ou modification d'un template existant
+
+#### Règle : un template email = une seule fonction, jamais une copie
+
+Chaque email transactionnel (confirmation abonnement, paiement échoué, précommande,
+guidance, newsletter, etc.) doit exister en **un seul exemplaire**, sous forme de
+fonction exportée dans `lib/` (ex. `lib/tore-subscription-email.js`,
+`lib/guidance-email.js`, `lib/brevo-order-email.js`, ou une fonction exportée
+d'`api/waitlist.js`). Cette même fonction doit être appelée :
+
+1. par le code qui envoie réellement l'email au client (webhook Stripe, webhook
+   Cal.com, inscription newsletter, etc.) ;
+2. par le bouton "Envoyer test" correspondant dans l'onglet Mails du dashboard
+   admin (`action=test-email` / `action=test-subscription-email` dans
+   `api/admin/index.js`).
+
+**Ne jamais** écrire une deuxième version du HTML directement dans le handler de
+test — même "juste pour prévisualiser". Cause identifiée en 2026-08 : plusieurs
+boutons de test avaient fini par envoyer une copie figée et obsolète, différente
+de l'email réellement reçu par les clients, ce qui a rendu le diagnostic d'un bug
+de production (abonnés sans accès) très difficile à repérer depuis le dashboard.
+
+Avant d'ajouter un nouveau type d'email ou un nouveau bouton de test : créer/
+réutiliser la fonction partagée d'abord, appeler cette fonction des deux côtés
+avec des données d'exemple pour le test. Si un audit trouve un bouton de test qui
+construit son propre HTML au lieu d'appeler une fonction partagée, c'est un
+problème à signaler en priorité (catégorie "Problèmes importants").
 
 ### 5. LOGIQUE FREEMIUM — localStorage
 
