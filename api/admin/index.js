@@ -2932,6 +2932,21 @@ function nlStyleLinks(html) {
   });
 }
 
+// Le webmail Hotmail / Outlook.com a un comportement différent du reste (y compris
+// d'Outlook de bureau) : il ignore bgcolor et background-color posés sur une <table>
+// et ne respecte que ce qui est déclaré directement sur chaque <td>. La carte de
+// contenu n'avait son fond opaque que sur la <table> elle-même — invisible pour ce
+// client précis, qui laissait alors transparaître l'image de fond de la table
+// extérieure derrière le texte. On force donc bgcolor sur chaque cellule de la carte,
+// sauf celles qui portent déjà un dégradé doré volontaire (boutons, séparateurs) —
+// leur fond de secours doit rester doré, pas la couleur sombre de la carte.
+function nlForceOpaqueCells(html, color) {
+  return String(html).replace(/<td((?:\s+[a-zA-Z-]+\s*=\s*"[^"]*")*)\s*>/gi, (full, attrs) => {
+    if (/\bbgcolor\s*=/i.test(attrs) || /linear-gradient/i.test(attrs)) return full;
+    return `<td bgcolor="${color}"${attrs}>`;
+  });
+}
+
 // ── Corrections typographiques du corps des communications ────────────────────
 // Le texte vient du générateur IA puis d'une retouche à la main : il manque
 // régulièrement le point final d'un paragraphe, et les espaces insécables que la
@@ -3170,13 +3185,12 @@ function buildCommunicationEmailHtml(draft) {
   // l'attribut bgcolor (Outlook) et par background-color : l'image ne peut plus la traverser.
   // Les liens Google Fonts sont retirés au passage : aucun client mail ne charge de feuille
   // de style externe, et ces requêtes distantes pèsent dans le score anti-spam.
-  return `<!DOCTYPE html>
-<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-<body style="margin:0; padding:0; background-color:#040d1c;">
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#040d1c" background="https://oradia.fr/images/oradia-hero-4k.webp" style="background-color:#040d1c; background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat;">
-<tr><td align="center" style="padding:32px 12px;">
-<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#0a192f" style="background-color:#0a192f; max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
+  // Le contenu de la carte est construit à part pour lui appliquer nlForceOpaqueCells :
+  // un fond opaque forcé sur chaque cellule, nécessaire pour Hotmail/Outlook.com qui
+  // ignore le fond posé sur la <table> elle-même (voir le commentaire de la fonction).
+  // La table extérieure, elle, n'est pas concernée par ce traitement : c'est
+  // précisément là que l'image de fond doit rester visible, sur les marges.
+  const cardInner = nlForceOpaqueCells(`
   <tr><td style="padding:0; line-height:0;">
     <a href="https://oradia.fr" target="_blank" style="display:block; line-height:0;">
       <img src="https://oradia.fr/images/medias/bandeau_newsletter.webp" alt="Oradia — La Boussole Intérieure" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
@@ -3254,7 +3268,16 @@ function buildCommunicationEmailHtml(draft) {
       </tr>
     </table>
     <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Vous recevez cet email car vous êtes abonné·e aux communications Oradia.<br><a href="{unsubscribe}" style="color:#c8c0a8; text-decoration:underline;">Se désabonner</a></p>
-  </td></tr>
+  </td></tr>`, '#0a192f');
+
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+</head>
+<body style="margin:0; padding:0; background-color:#040d1c;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#040d1c" background="https://oradia.fr/images/oradia-hero-4k.webp" style="background-color:#040d1c; background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat;">
+<tr><td align="center" style="padding:32px 12px;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#0a192f" style="background-color:#0a192f; max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
+${cardInner}
 </table>
 </td></tr></table>
 </td></tr></table>
