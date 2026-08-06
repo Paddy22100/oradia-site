@@ -3630,6 +3630,7 @@
             'set-expiry':         'Expiration abonnement modifiée',
             'upgrade_plan':       'Plan abonnement modifié',
             'resend_code':        'Code abonnement renvoyé',
+            'repair-access':      'Accès abonné réparé',
             'abandon-relance':    'Relance email client',
             'import-transactions':'Transactions importées',
             'test-email':         'Email de test envoyé',
@@ -7454,6 +7455,7 @@
                         <div class="flex gap-2">
                             <button onclick="viewTirages('${emailEsc}')" title="Voir les tirages" class="text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-layer-group"></i></button>
                             <button onclick="editExpiry('${s.id}','${s.expires_at ? s.expires_at.split('T')[0] : ''}')" title="Modifier l'échéance" class="text-blue-400/70 hover:text-blue-400 border border-blue-400/20 hover:border-blue-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-calendar-alt"></i></button>
+                            <button onclick="repairAccess('${s.id}','${emailEsc}')" title="Réparer l'accès (compte/mot de passe cassé)" class="text-purple-400/70 hover:text-purple-400 border border-purple-400/20 hover:border-purple-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-wrench"></i></button>
                             ${isActive ? `<button onclick="revokeSubscription('${s.id}')" title="Révoquer" class="text-red-400/60 hover:text-red-400 border border-red-400/20 hover:border-red-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-ban"></i></button>` : ''}
                         </div>
                     </td>
@@ -7480,6 +7482,7 @@
                         <div class="flex gap-2">
                             <button onclick="viewTirages('${emailEsc}')" title="Voir les tirages" class="text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-layer-group"></i></button>
                             <button onclick="editExpiry('${s.id}','${s.expires_at ? s.expires_at.split('T')[0] : ''}')" title="Modifier l'échéance" class="text-blue-400/70 hover:text-blue-400 border border-blue-400/20 hover:border-blue-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-calendar-alt"></i></button>
+                            <button onclick="repairAccess('${s.id}','${emailEsc}')" title="Réparer l'accès (compte/mot de passe cassé)" class="text-purple-400/70 hover:text-purple-400 border border-purple-400/20 hover:border-purple-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-wrench"></i></button>
                         </div>
                     </td>
                 </tr>`;
@@ -7538,6 +7541,7 @@
                                 <i class="fas fa-layer-group"></i>
                             </button>
                             <button onclick="editExpiry('${s.id}','${s.expires_at ? s.expires_at.split('T')[0] : ''}')" title="Modifier la date d'expiration" class="text-blue-400/70 hover:text-blue-400 border border-blue-400/20 hover:border-blue-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-calendar-alt"></i></button>
+                            <button onclick="repairAccess('${s.id}','${emailEsc}')" title="Réparer l'accès (compte/mot de passe cassé)" class="text-purple-400/70 hover:text-purple-400 border border-purple-400/20 hover:border-purple-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-wrench"></i></button>
                             ${isActive ? `<button onclick="revokeSubscription('${s.id}')" title="Révoquer" class="text-red-400/50 hover:text-red-400 border border-red-400/20 hover:border-red-400/40 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-ban"></i></button>` : ''}
                         </div>
                     </td>
@@ -7667,6 +7671,26 @@
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.error);
                 alert(json.emailSent ? 'Code renvoyé avec succès.' : 'Abonnement trouvé mais email non envoyé (vérifiez la config Brevo).');
+            } catch(e) { alert('Erreur : ' + e.message); }
+        }
+
+        async function repairAccess(id, email) {
+            if (!confirm(`Réparer l'accès de ${email} ?\n\nSi son compte n'existe pas, il sera créé avec un nouveau mot de passe provisoire (envoyé par email). S'il existe déjà, un lien de réinitialisation à usage unique lui sera envoyé.`)) return;
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'repair-access', subscriptionId: id })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error);
+                if (!json.emailSent) {
+                    alert('Accès réparé côté compte, mais l\'email n\'a pas pu être envoyé (vérifiez la config Brevo). Vous pouvez relancer cette action.');
+                    return;
+                }
+                alert(json.mode === 'temp-password'
+                    ? `Compte créé — un email avec un mot de passe provisoire a été envoyé à ${email}.`
+                    : `Un lien pour définir un nouveau mot de passe a été envoyé à ${email}.`);
             } catch(e) { alert('Erreur : ' + e.message); }
         }
 

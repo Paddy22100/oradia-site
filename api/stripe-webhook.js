@@ -1,6 +1,7 @@
 const { createClient } = require('@supabase/supabase-js');
 const crypto = require('crypto');
 const { sendBrevoEmail } = require('../lib/brevo-order-email.js');
+const { sendToreSubscriptionEmail } = require('../lib/tore-subscription-email.js');
 
 // Comptes à ne jamais compter dans la comptabilité (audit/test + compte personnel du fondateur)
 const ACCOUNTING_EXCLUDED_EMAILS = ['boucheron.r89@gmail.com', 'audit@oradia.fr', 'contact@oradia.fr'];
@@ -36,108 +37,6 @@ function validateEnvironment() {
     if (!process.env.STRIPE_SECRET_KEY.startsWith('sk_')) {
         throw new Error('Invalid STRIPE_SECRET_KEY format');
     }
-}
-
-async function sendToreSubscriptionEmail({ toEmail, toName, tempPassword, plan }) {
-    try {
-        if (!process.env.BREVO_API_KEY || !process.env.BREVO_SENDER_EMAIL) return false;
-        
-        // Section mot de passe (uniquement pour nouveaux utilisateurs)
-        const passwordSection = tempPassword ? `
-          <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.12);border:2px solid rgba(212,175,55,0.5);border-radius:4px;margin-bottom:28px;">
-            <tr><td align="center" style="padding:28px;">
-              <p style="margin:0 0 12px;color:rgba(212,175,55,0.7);font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;">Votre mot de passe temporaire</p>
-              <p style="margin:0;color:#f0c75e;font-family:'Courier New',monospace;font-size:28px;font-weight:700;letter-spacing:0.2em;padding:12px 20px;background:rgba(0,0,0,0.3);border-radius:4px;">${tempPassword}</p>
-              <p style="margin:12px 0 0;color:rgba(212,175,55,0.5);font-family:'Lora',Georgia,serif;font-size:12px;">Vous pourrez le modifier dans votre espace membre</p>
-            </td></tr>
-          </table>
-        ` : `
-          <table width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.08);border:1.5px solid rgba(212,175,55,0.4);border-radius:4px;margin-bottom:28px;">
-            <tr><td align="center" style="padding:28px;">
-              <p style="margin:0 0 10px;color:rgba(212,175,55,0.6);font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.3em;text-transform:uppercase;">Vos accès</p>
-              <p style="margin:0;color:#f0c75e;font-family:'Lora',Georgia,serif;font-size:16px;line-height:1.6;">
-                Connectez-vous avec votre email et votre mot de passe
-              </p>
-            </td></tr>
-          </table>
-        `;
-        
-        const textPassword = tempPassword ? 
-            `\nVotre mot de passe temporaire : ${tempPassword}\nVous pourrez le modifier dans votre espace membre.\n` : 
-            `\nConnectez-vous avec votre email et votre mot de passe.\n`;
-        
-        const response = await fetch('https://api.brevo.com/v3/smtp/email', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
-            body: JSON.stringify({
-                sender:    { email: process.env.BREVO_SENDER_EMAIL, name: process.env.BREVO_SENDER_NAME || 'ORADIA' },
-                to:        [{ email: toEmail, name: toName }],
-                replyTo:   { email: 'contact@oradia.fr', name: 'Oradia' },
-                subject:   plan === 'decouverte'
-                    ? "Rudy d'Oradia - Bienvenue dans Le Tore — Formule Découverte activée"
-                    : "Rudy d'Oradia - Bienvenue dans Le Tore — Votre abonnement est actif",
-                htmlContent: `<!DOCTYPE html><html lang="fr"><head><meta charset="UTF-8"></head>
-<body style="margin:0;padding:0;background:#050a14;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background:#050a14;padding:48px 20px;">
-    <tr><td align="center">
-      <table width="100%" cellpadding="0" cellspacing="0" style="max-width:580px;background:linear-gradient(135deg,#0a1628,#051428);border:1px solid rgba(212,175,55,0.3);border-radius:4px;">
-        <tr><td align="center" style="padding:48px 40px 24px;">
-          <p style="margin:0 0 6px;color:rgba(212,175,55,0.5);font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.45em;text-transform:uppercase;">Abonnement activé</p>
-          <h1 style="margin:0;color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:38px;font-weight:300;letter-spacing:2px;">Le Tore</h1>
-          <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:20px auto;"></div>
-        </td></tr>
-        <tr><td style="padding:0 40px 32px;">
-          <p style="color:#e8e9eb;font-family:'Lora',Georgia,serif;font-size:16px;line-height:1.8;">${toName ? toName + ',' : 'Bienvenue,'}</p>
-          <p style="color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;margin-bottom:32px;">Votre abonnement au Tore est maintenant actif. Vous avez accès illimité à l'expérience complète d'Oradia.</p>
-          
-          ${passwordSection}
-          
-          <p style="color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.8;margin-bottom:24px;">
-            <strong style="color:#f0c75e;">Accès direct :</strong> Rendez-vous sur la page Tore et connectez-vous à votre espace membre pour commencer votre exploration.
-          </p>
-          
-          <table width="100%" cellpadding="0" cellspacing="0" style="margin:32px 0;">
-            <tr><td align="center">
-              <a href="https://oradia.fr/tore.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a1628;font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;font-weight:600;text-decoration:none;padding:16px 40px;border-radius:50px;letter-spacing:0.5px;">
-                Accéder au Tore
-              </a>
-            </td></tr>
-          </table>
-          
-          <p style="color:rgba(212,175,55,0.6);font-family:'Lora',Georgia,serif;font-size:13px;line-height:1.6;margin-top:24px;">
-            Votre abonnement se renouvelle automatiquement chaque mois. Vous pouvez le gérer à tout moment depuis votre espace membre.
-          </p>
-        </td></tr>
-        <tr><td style="padding:0 24px 16px;">
-          <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.35);border-radius:14px;">
-            <tr><td style="padding:0;line-height:0;font-size:0;">
-              <img src="https://oradia.fr/images/medias/banniere-facebook.webp" alt="Oracle Oradia — Précommandes ouvertes" width="600" style="display:block;width:100%;height:auto;border:0;border-radius:14px 14px 0 0;">
-            </td></tr>
-            <tr><td style="background:linear-gradient(135deg,rgba(212,175,55,0.12),rgba(212,175,55,0.06));padding:24px 32px;text-align:center;border-radius:0 0 14px 14px;">
-              <p style="margin:0 0 6px;color:rgba(212,175,55,0.55);font-family:Georgia,serif;font-size:11px;letter-spacing:0.4em;text-transform:uppercase;">Précommandes ouvertes</p>
-              <p style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:20px;font-weight:600;">L'Oracle Oradia</p>
-              <p style="margin:0 0 16px;color:#c8c0a8;font-family:Georgia,serif;font-size:13px;line-height:1.6;">64 cartes · Livret · Conte initiatique · Pièce artisanale</p>
-              <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:12px 32px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">Précommander</a>
-            </td></tr>
-          </table>
-        </td></tr>
-        <tr><td align="center" style="padding:36px 32px 28px;border-top:1px solid rgba(212,175,55,0.15);">
-          <p style="margin:0 0 6px;color:#c8c0a8;font-size:13px;font-style:italic;opacity:0.7;font-family:Georgia,serif;">Avec gratitude,</p>
-          <p style="margin:0 0 4px;color:#d4af37;font-size:52px;font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive;font-weight:700;line-height:1.1;letter-spacing:0.01em;">Rudy</p>
-          <p style="margin:0 0 16px;color:#c8c0a8;font-size:11px;letter-spacing:0.2em;text-transform:uppercase;opacity:0.55;font-family:Georgia,serif;">Fondateur d'Oradia</p>
-          <p style="margin:0 0 12px;text-align:center;"><span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4));vertical-align:middle;"></span><span style="display:inline-block;width:5px;height:5px;background:#d4af37;border-radius:50%;opacity:0.45;vertical-align:middle;margin:0 8px;"></span><span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent);vertical-align:middle;"></span></p>
-          <a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-size:13px;letter-spacing:0.08em;font-family:Georgia,serif;">oradia.fr</a>
-          <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:16px auto 0;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td></tr></table>
-        </td></tr>
-      </table>
-    </td></tr>
-  </table>
-</body></html>`,
-                textContent: `Bienvenue dans Le Tore\n\nVotre abonnement est maintenant actif.${textPassword}\nAccéder au Tore : https://oradia.fr/tore.html\n\nVotre abonnement se renouvelle automatiquement chaque mois.\n\nOradia — oradia.fr`
-            })
-        });
-        return response.ok;
-    } catch(e) { console.error('sendToreSubscriptionEmail error:', e.message); return false; }
 }
 
 
@@ -246,15 +145,27 @@ async function sendSubscriptionEmail(toEmail, toName, type) {
     const senderEmail = process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr';
     if (!BREVO_API_KEY || !senderEmail) return;
 
-    const isPaimentFailed = type === 'payment_failed';
-    const subject = isPaimentFailed
+    // 'payment_failed'        → échec sur un abonnement déjà actif (renouvellement mensuel)
+    // 'payment_failed_first'  → échec du tout premier prélèvement d'un abonné qui a déjà un
+    //                           compte existant (ex : réabonnement) — copie adaptée pour ne
+    //                           pas parler de "renouvellement" à quelqu'un qui vient de s'inscrire
+    // 'cancelled'              → abonnement annulé / expiré
+    const isFirstPaymentFailed = type === 'payment_failed_first';
+    const isPaimentFailed = type === 'payment_failed' || isFirstPaymentFailed;
+    const subject = isFirstPaymentFailed
+        ? "Rudy d'Oradia - Votre paiement n'a pas abouti — activer votre accès"
+        : isPaimentFailed
         ? "Rudy d'Oradia - Votre paiement n'a pas abouti — renouveler votre accès"
         : "Rudy d'Oradia - Votre abonnement Le Tore est arrivé à échéance";
     const title = isPaimentFailed ? 'Paiement non abouti' : 'Votre accès a expiré';
-    const subtitle = isPaimentFailed
+    const subtitle = isFirstPaymentFailed
+        ? 'Un problème est survenu lors de votre paiement'
+        : isPaimentFailed
         ? 'Un problème est survenu lors du renouvellement'
         : 'Renouvelez votre abonnement pour continuer';
-    const bodyText = isPaimentFailed
+    const bodyText = isFirstPaymentFailed
+        ? `Bonjour${toName ? ' ' + toName : ''},<br><br>Nous n'avons pas pu confirmer votre paiement pour l'abonnement <strong style="color:#f0c75e;">Le Tore</strong> — votre moyen de paiement n'a pas été accepté.<br><br>Nous retentons automatiquement le prélèvement dans les prochains jours. Vous pouvez aussi mettre à jour votre moyen de paiement dès maintenant depuis votre espace membre.`
+        : isPaimentFailed
         ? `Bonjour${toName ? ' ' + toName : ''},<br><br>Nous n'avons pas pu renouveler votre abonnement <strong style="color:#f0c75e;">Le Tore</strong> — votre moyen de paiement n'a pas été accepté.<br><br>Pour continuer à accéder à vos tirages, veuillez mettre à jour votre paiement.`
         : `Bonjour${toName ? ' ' + toName : ''},<br><br>Votre abonnement <strong style="color:#f0c75e;">Le Tore</strong> est arrivé à échéance et votre accès a été suspendu.<br><br>Renouvelez votre abonnement pour retrouver votre espace et continuer vos tirages.`;
 
@@ -372,6 +283,129 @@ async function findToreSubscriptionRow(stripe, supabase, object) {
     return null;
 }
 
+// Active un abonnement Tore : crée le compte membre (si nécessaire), enregistre
+// la ligne tore_subscriptions, ajoute le contact newsletter et envoie l'email de
+// bienvenue. Appelée à la fois par checkout.session.completed (cas normal) et en
+// filet de sécurité par invoice.payment_succeeded (cas d'un 1er prélèvement qui a
+// d'abord échoué puis réussi via une nouvelle tentative automatique de Stripe,
+// sans repasser par checkout.session.completed).
+async function activateToreSubscription(supabase, { email, fullName, plan, stripeCustomerId, stripeSubscriptionId, amountTotalCents, sourceRef }) {
+    if (!email) { console.error('[webhook] activateToreSubscription: email manquant'); return; }
+
+    const { data: existingRow } = await supabase
+        .from('tore_subscriptions')
+        .select('id')
+        .eq('email', email)
+        .single();
+
+    let tempPassword = null;
+    let resetLink = null;
+
+    if (!existingRow) {
+        tempPassword = crypto.randomBytes(8).toString('hex');
+        const { error: authError } = await supabase.auth.admin.createUser({
+            email,
+            password: tempPassword,
+            email_confirm: true,
+            user_metadata: {
+                full_name: fullName || '',
+                subscription_type: 'tore',
+                subscription_active: true,
+                must_change_password: true
+            }
+        });
+
+        if (authError) {
+            console.error('[webhook] Supabase Auth createUser error:', authError.message);
+            // On ne sait pas si le mot de passe généré ici correspond réellement au
+            // compte (ex: livraison en double du webhook, compte déjà créé par un
+            // appel concurrent) — ne jamais envoyer un mot de passe qui pourrait être
+            // faux. On propose à la place un lien de réinitialisation sécurisé.
+            tempPassword = null;
+            try {
+                const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
+                    type: 'recovery',
+                    email,
+                    options: { redirectTo: 'https://oradia.fr/member/reset-password.html' }
+                });
+                if (linkErr) console.error('[webhook] generateLink error:', linkErr.message);
+                else resetLink = linkData?.properties?.action_link || null;
+            } catch (e) {
+                console.error('[webhook] generateLink exception:', e.message);
+            }
+        }
+    }
+
+    const accessCode = 'TORE-' + Date.now().toString(36).toUpperCase();
+    const expireAt = new Date();
+    expireAt.setMonth(expireAt.getMonth() + 1);
+
+    const { error: subError } = await supabase
+        .from('tore_subscriptions')
+        .upsert({
+            email,
+            full_name:    fullName || '',
+            access_code:  accessCode,
+            status:       'active',
+            expires_at:   expireAt.toISOString(),
+            plan:         plan || 'complet',
+            stripe_customer_id:     stripeCustomerId || null,
+            stripe_subscription_id: stripeSubscriptionId || null,
+            created_at:   new Date().toISOString(),
+            updated_at:   new Date().toISOString()
+        }, { onConflict: 'email' });
+
+    if (subError) console.error('[webhook] tore_subscriptions upsert error:', subError.message);
+
+    if (!isAccountingExcluded(email)) {
+        await supabase.from('transactions').insert({
+            date: new Date().toISOString().split('T')[0],
+            type: 'recette',
+            category: 'abonnement',
+            description: `Abonnement Tore ${plan || 'complet'} — ${fullName || email}`,
+            amount: (amountTotalCents || 0) / 100,
+            source: 'abonnement',
+            source_ref: sourceRef
+        }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (abonnement):', error.message); });
+    }
+
+    await supabase.from('newsletter_contacts').upsert({
+        email,
+        full_name: fullName || '',
+        source:   'abonnement-tore',
+        tags:     ['abonne-tore'],
+        status:   'active',
+        brevo_synced: false
+    }, { onConflict: 'email', ignoreDuplicates: false }).catch(e =>
+        console.error('[webhook] newsletter_contacts upsert:', e.message)
+    );
+
+    if (process.env.BREVO_API_KEY) {
+        const nameParts = (fullName || '').trim().split(' ');
+        await fetch('https://api.brevo.com/v3/contacts', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+            body: JSON.stringify({
+                email,
+                attributes: {
+                    PRENOM: nameParts[0] || '',
+                    NOM:    nameParts.slice(1).join(' ') || ''
+                },
+                listIds: [5],
+                updateEnabled: true
+            })
+        }).catch(e => console.error('[webhook] Brevo add to list 5:', e.message));
+    }
+
+    await sendToreSubscriptionEmail({
+        toEmail:  email,
+        toName:   fullName || '',
+        tempPassword: existingRow ? null : tempPassword,
+        resetLink,
+        plan: plan || 'complet'
+    });
+}
+
 // Fonction séparée pour le traitement asynchrone
 async function processEvent(event) {
     switch (event.type) {
@@ -386,14 +420,44 @@ async function processEvent(event) {
             const supabase = getSupabaseClient();
             const invoice = event.data.object;
 
-            // Ne traiter que les factures de renouvellement d'abonnement
-            // (la toute première facture est déjà gérée via checkout.session.completed)
             const invSubId = getSubscriptionIdFromObject(invoice);
-            const isSubscriptionInvoice = !!invSubId;
-            if (!isSubscriptionInvoice) break;
-            if (invoice.billing_reason === 'subscription_create') break;
+            if (!invSubId) break;
 
             const row = await findToreSubscriptionRow(stripe, supabase, invoice);
+
+            if (invoice.billing_reason === 'subscription_create') {
+                // Normalement déjà géré par checkout.session.completed (Stripe envoie
+                // les deux événements pour la 1ère facture). On ne recrée / ne prolonge
+                // que si AUCUNE ligne n'existe encore pour cet abonnement — cas où
+                // checkout.session.completed n'a jamais abouti (ex : 1er prélèvement
+                // échoué puis réussi via une nouvelle tentative automatique de Stripe,
+                // sans repasser par le tunnel de paiement).
+                if (row && row.id) break; // déjà activé normalement, rien à faire ici
+
+                const subscription = await stripe.subscriptions.retrieve(invSubId).catch(() => null);
+                const email = invoice.customer_email
+                    || subscription?.metadata?.email
+                    || await resolveCustomerEmail(stripe, invoice);
+
+                if (!email) {
+                    console.error('[webhook] Fallback activation impossible : email introuvable pour sub', invSubId);
+                    break;
+                }
+
+                await activateToreSubscription(supabase, {
+                    email,
+                    fullName: subscription?.metadata?.full_name || invoice.customer_name || '',
+                    plan: subscription?.metadata?.plan || 'complet',
+                    stripeCustomerId: invoice.customer || null,
+                    stripeSubscriptionId: invSubId,
+                    amountTotalCents: invoice.amount_paid || 0,
+                    sourceRef: invoice.id
+                });
+                console.log(`[webhook] Abonnement Tore activé en filet de sécurité (invoice.payment_succeeded) pour ${email}`);
+                break;
+            }
+
+            // Renouvellement normal (facture périodique, hors 1ère facture)
             if (!row || !row.email) {
                 console.error('[webhook] invoice.payment_succeeded : abonnement introuvable, sub:', invSubId);
                 break;
@@ -442,6 +506,21 @@ async function processEvent(event) {
             const row = await findToreSubscriptionRow(stripe, supabase, invoice);
             if (!row || !row.email) break;
 
+            const isFirstPayment = invoice.billing_reason === 'subscription_create';
+
+            // Un tout nouvel abonné (aucune ligne tore_subscriptions existante) n'a
+            // encore aucun accès à perdre : Stripe va retenter automatiquement le
+            // prélèvement dans les jours qui suivent (Smart Retries). Le prévenir
+            // maintenant avec un email de "paiement non abouti" est prématuré et
+            // trompeur (il n'a jamais eu d'accès à "renouveler"). On se contente de
+            // journaliser ; l'activation se fera normalement via checkout.session.completed
+            // ou, en filet de sécurité, via invoice.payment_succeeded si le prélèvement finit
+            // par réussir.
+            if (isFirstPayment && !row.id) {
+                console.log(`[webhook] 1er prélèvement échoué pour un nouvel abonné (${row.email}) — pas d'email, en attente d'une nouvelle tentative Stripe`);
+                break;
+            }
+
             const { error: failError } = await supabase
                 .from('tore_subscriptions')
                 .update({
@@ -454,7 +533,7 @@ async function processEvent(event) {
                 console.error('[webhook] Échec mise à jour statut payment_failed:', failError.message);
             } else {
                 console.log(`[webhook] Échec de paiement signalé pour l'abonnement Tore de ${row.email}`);
-                sendSubscriptionEmail(row.email, row.full_name, 'payment_failed').catch(e => console.error('[webhook] Email échec paiement:', e.message));
+                sendSubscriptionEmail(row.email, row.full_name, isFirstPayment ? 'payment_failed_first' : 'payment_failed').catch(e => console.error('[webhook] Email échec paiement:', e.message));
             }
             break;
         }
@@ -467,6 +546,7 @@ async function processEvent(event) {
 
             const row = await findToreSubscriptionRow(stripe, supabase, subscription);
             if (!row || !row.email) break;
+            if (!row.id) break; // jamais eu de ligne active — rien à annuler, rien à notifier
 
             const { error: cancelError } = await supabase
                 .from('tore_subscriptions')
@@ -573,118 +653,15 @@ async function processEvent(event) {
 
                 // ── Gestion abonnement Tore ──────────────────────────────────────
                 if (extractedData.offer === 'tore-subscription') {
-
-                    // 1. Créer ou mettre à jour l'utilisateur dans Supabase Auth
-                    const tempPassword = crypto.randomBytes(8).toString('hex'); // Mot de passe temporaire
-                    
-                    // Vérifier si l'utilisateur existe déjà
-                    const { data: existingUsers } = await supabase
-                        .from('tore_subscriptions')
-                        .select('id')
-                        .eq('email', extractedData.email)
-                        .single();
-
-                    if (!existingUsers) {
-                        // Créer l'utilisateur dans Supabase Auth
-                        const { data: authUser, error: authError } = await supabase.auth.admin.createUser({
-                            email: extractedData.email,
-                            password: tempPassword,
-                            email_confirm: true,
-                            user_metadata: {
-                                full_name: extractedData.full_name || '',
-                                subscription_type: 'tore',
-                                subscription_active: true
-                            }
-                        });
-
-                        if (authError) {
-                            console.error('Supabase Auth user creation error:', authError.message);
-                        } else {
-                            console.log('Supabase Auth user created:', authUser.user.id);
-                        }
-                    }
-
-                    // 2. Enregistrer l'abonnement dans la table
-                    const accessCode = 'TORE-' + Date.now().toString(36).toUpperCase();
-                    // Calculer la date d'expiration (1 mois après aujourd'hui)
-                    const expireAt = new Date();
-                    expireAt.setMonth(expireAt.getMonth() + 1);
-                    
-                    const subPlan = session.metadata?.plan || 'complet';
-
-                    const { error: subError } = await supabase
-                        .from('tore_subscriptions')
-                        .upsert({
-                            email:        extractedData.email,
-                            full_name:    extractedData.full_name || '',
-                            access_code:  accessCode,
-                            status:       'active',
-                            expires_at:   expireAt.toISOString(),
-                            plan:         subPlan,
-                            // Identifiants Stripe stockés pour fiabiliser la corrélation lors
-                            // des renouvellements/annulations (plus robuste qu'une recherche
-                            // par email, qui peut échouer si le client change d'adresse côté Stripe)
-                            stripe_customer_id:     session.customer || null,
-                            stripe_subscription_id: session.subscription || null,
-                            created_at:   new Date().toISOString(),
-                            updated_at:   new Date().toISOString()
-                        }, { onConflict: 'email' });
-
-                    if (subError) console.error('tore_subscriptions upsert error:', subError.message);
-
-                    // Enregistrement automatique de la recette (souscription initiale)
-                    if (!isAccountingExcluded(extractedData.email)) {
-                    await supabase.from('transactions').insert({
-                        date: new Date().toISOString().split('T')[0],
-                        type: 'recette',
-                        category: 'abonnement',
-                        description: `Abonnement Tore ${subPlan} — ${extractedData.full_name || extractedData.email}`,
-                        amount: (extractedData.amount_total || 0) / 100,
-                        source: 'abonnement',
-                        source_ref: sessionId
-                    }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (abonnement):', error.message); });
-                    }
-
-                    // 3. Ajouter aux contacts newsletter (Supabase + Brevo list 5)
-                    if (extractedData.email) {
-                        await supabase.from('newsletter_contacts').upsert({
-                            email:    extractedData.email,
-                            full_name: extractedData.full_name || '',
-                            source:   'abonnement-tore',
-                            tags:     ['abonne-tore'],
-                            status:   'active',
-                            brevo_synced: false
-                        }, { onConflict: 'email', ignoreDuplicates: false }).catch(e =>
-                            console.error('[webhook] newsletter_contacts upsert:', e.message)
-                        );
-
-                        if (process.env.BREVO_API_KEY) {
-                            const nameParts = (extractedData.full_name || '').trim().split(' ');
-                            await fetch('https://api.brevo.com/v3/contacts', {
-                                method: 'POST',
-                                headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
-                                body: JSON.stringify({
-                                    email: extractedData.email,
-                                    attributes: {
-                                        PRENOM: nameParts[0] || '',
-                                        NOM:    nameParts.slice(1).join(' ') || ''
-                                    },
-                                    listIds: [5],
-                                    updateEnabled: true
-                                })
-                            }).catch(e => console.error('[webhook] Brevo add to list 5:', e.message));
-                        }
-                    }
-
-                    // Email Brevo de confirmation d'abonnement avec mot de passe temporaire
-                    if (extractedData.email) {
-                        await sendToreSubscriptionEmail({
-                            toEmail:      extractedData.email,
-                            toName:       extractedData.full_name || '',
-                            tempPassword: existingUsers ? null : tempPassword,
-                            plan:         subPlan
-                        });
-                    }
+                    await activateToreSubscription(supabase, {
+                        email: extractedData.email,
+                        fullName: extractedData.full_name,
+                        plan: session.metadata?.plan || 'complet',
+                        stripeCustomerId: session.customer || null,
+                        stripeSubscriptionId: session.subscription || null,
+                        amountTotalCents: extractedData.amount_total,
+                        sourceRef: sessionId
+                    });
 
                     console.log(`[webhook] Tore subscription traitée: ${sessionId}`);
                     return;

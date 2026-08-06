@@ -11,6 +11,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail } = require('../../lib/brevo-order-email.js');
+const { sendToreSubscriptionEmail } = require('../../lib/tore-subscription-email.js');
 const { estimateStripeFees, getStripeFeesForPeriod, getMonthlyStripeFees, ESTIMATE_RATE, ESTIMATE_FIXED_EUR } = require('../../lib/stripe-fees.js');
 
 // Manifest statique des illustrations du Tore (généré une fois, fichier unique et léger —
@@ -1062,6 +1063,75 @@ async function handleData(req, res) {
 
       if (action === 'resend_code' && subscriptionId) {
         return res.status(200).json({ success: true, emailSent: false, message: 'Fonction email non configurée' });
+      }
+
+      // ── Réparer l'accès d'un abonné (compte Supabase Auth manquant ou cassé) ──
+      // Cas typique : un paiement Stripe a bien abouti mais le webhook n'a jamais
+      // créé le compte membre (ou l'a créé avec un mot de passe qui n'a pas pu être
+      // communiqué au client). On ne touche pas à l'abonnement lui-même (déjà actif
+      // dans tore_subscriptions, sinon il ne serait pas listé ici) — on répare
+      // uniquement l'accès au compte :
+      //   - le compte Supabase Auth n'existe pas encore → on le crée avec un mot de
+      //     passe provisoire (comme au premier abonnement) et on l'envoie par email
+      //   - le compte existe déjà → on génère un lien de réinitialisation à usage
+      //     unique (jamais de mot de passe en clair pour un compte qui existe déjà,
+      //     on ne peut pas savoir si le mot de passe qu'on enverrait serait le bon)
+      if (action === 'repair-access' && subscriptionId) {
+        const { data: sub, error: subFetchError } = await supabase
+          .from('tore_subscriptions')
+          .select('email, full_name, plan')
+          .eq('id', subscriptionId)
+          .single();
+        if (subFetchError || !sub?.email) {
+          return res.status(404).json({ error: 'Abonnement introuvable' });
+        }
+
+        const cleanEmail = sub.email.toLowerCase().trim();
+        let tempPassword = null;
+        let resetLink = null;
+        let mode = null;
+
+        // On tente d'abord un lien de récupération : s'il réussit, le compte existe déjà.
+        const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
+          type: 'recovery',
+          email: cleanEmail,
+          options: { redirectTo: 'https://oradia.fr/member/reset-password.html' }
+        });
+
+        if (!linkErr && linkData?.properties?.action_link) {
+          resetLink = linkData.properties.action_link;
+          mode = 'reset-link';
+        } else {
+          // Le compte n'existe probablement pas encore : on le crée avec un mot de
+          // passe provisoire, à changer obligatoirement à la 1ère connexion.
+          tempPassword = crypto.randomBytes(8).toString('hex');
+          const { error: createErr } = await supabase.auth.admin.createUser({
+            email: cleanEmail,
+            password: tempPassword,
+            email_confirm: true,
+            user_metadata: {
+              full_name: sub.full_name || '',
+              subscription_type: 'tore',
+              subscription_active: true,
+              must_change_password: true
+            }
+          });
+          if (createErr) {
+            console.error('[repair-access] createUser error:', createErr.message);
+            return res.status(500).json({ error: `Impossible de créer ou récupérer le compte : ${createErr.message}` });
+          }
+          mode = 'temp-password';
+        }
+
+        const emailSent = await sendToreSubscriptionEmail({
+          toEmail: cleanEmail,
+          toName: sub.full_name || '',
+          tempPassword,
+          resetLink,
+          plan: sub.plan || 'complet'
+        });
+
+        return res.status(200).json({ success: true, emailSent, mode });
       }
 
       // Marquer une précommande comme expédiée — envoie automatiquement

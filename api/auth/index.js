@@ -167,7 +167,8 @@ async function handleLogin(req, res) {
           email: authData2.user.email,
           name: authData2.user.user_metadata?.full_name || email.split('@')[0],
           id: authData2.user.id,
-          subscribed: subscribed2
+          subscribed: subscribed2,
+          must_change_password: authData2.user.user_metadata?.must_change_password === true
         },
         session: {
           access_token: authData2.session.access_token,
@@ -224,7 +225,8 @@ async function handleLogin(req, res) {
       email: authData.user.email,
       name: authData.user.user_metadata?.full_name || email.split('@')[0],
       id: authData.user.id,
-      subscribed
+      subscribed,
+      must_change_password: authData.user.user_metadata?.must_change_password === true
     },
     session: {
       access_token: authData.session.access_token,
