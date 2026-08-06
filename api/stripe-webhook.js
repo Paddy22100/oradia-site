@@ -307,6 +307,23 @@ async function activateToreSubscription(supabase, { email, fullName, plan, strip
     let tempPassword = null;
     let resetLink = null;
 
+    // Génère un lien de réinitialisation à usage unique — sûr dans tous les cas car il
+    // ne révèle jamais un mot de passe qui pourrait ne pas être le bon.
+    async function generateSafeResetLink() {
+        try {
+            const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
+                type: 'recovery',
+                email,
+                options: { redirectTo: 'https://oradia.fr/member/reset-password.html' }
+            });
+            if (linkErr) console.error('[webhook] generateLink error:', linkErr.message);
+            else return linkData?.properties?.action_link || null;
+        } catch (e) {
+            console.error('[webhook] generateLink exception:', e.message);
+        }
+        return null;
+    }
+
     if (!existingRow) {
         tempPassword = crypto.randomBytes(8).toString('hex');
         const { error: authError } = await supabase.auth.admin.createUser({
@@ -328,18 +345,15 @@ async function activateToreSubscription(supabase, { email, fullName, plan, strip
             // appel concurrent) — ne jamais envoyer un mot de passe qui pourrait être
             // faux. On propose à la place un lien de réinitialisation sécurisé.
             tempPassword = null;
-            try {
-                const { data: linkData, error: linkErr } = await supabase.auth.admin.generateLink({
-                    type: 'recovery',
-                    email,
-                    options: { redirectTo: 'https://oradia.fr/member/reset-password.html' }
-                });
-                if (linkErr) console.error('[webhook] generateLink error:', linkErr.message);
-                else resetLink = linkData?.properties?.action_link || null;
-            } catch (e) {
-                console.error('[webhook] generateLink exception:', e.message);
-            }
+            resetLink = await generateSafeResetLink();
         }
+    } else {
+        // Une ligne tore_subscriptions existante ne garantit PAS que le client connaît
+        // encore son mot de passe (ligne créée manuellement, très ancienne, ou compte
+        // jamais vraiment utilisé) : plutôt que de supposer qu'il le connaît et de ne
+        // rien lui envoyer d'actionnable, on lui propose systématiquement un lien de
+        // réinitialisation sécurisé, comme le fait déjà le bouton « Réparer l'accès ».
+        resetLink = await generateSafeResetLink();
     }
 
     const accessCode = 'TORE-' + Date.now().toString(36).toUpperCase();
@@ -374,7 +388,7 @@ async function activateToreSubscription(supabase, { email, fullName, plan, strip
     if (savedRow?.id) {
         const { error: mcpErr } = await supabase
             .from('tore_subscriptions')
-            .update({ must_change_password: !!tempPassword })
+            .update({ must_change_password: !!(tempPassword || resetLink) })
             .eq('id', savedRow.id);
         if (mcpErr) console.error('[webhook] must_change_password update (migration appliquée ?):', mcpErr.message);
     }
@@ -430,7 +444,7 @@ async function activateToreSubscription(supabase, { email, fullName, plan, strip
     await sendToreSubscriptionEmail({
         toEmail:  email,
         toName:   fullName || '',
-        tempPassword: existingRow ? null : tempPassword,
+        tempPassword,
         resetLink,
         plan: plan || 'complet'
     });
