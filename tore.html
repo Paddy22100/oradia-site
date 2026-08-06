@@ -2999,7 +2999,6 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
           <span class="tore-check" id="chk-open"><i class="chk-ico fas fa-circle"></i>Une question ouverte (Comment, Pourquoi, Quelle…)</span>
           <span class="tore-check" id="chk-q"><i class="chk-ico fas fa-circle"></i>Se termine par «&nbsp;?&nbsp;»</span>
           <span class="tore-check" id="chk-single"><i class="chk-ico fas fa-circle"></i>Une seule question</span>
-          <span class="tore-check" id="chk-gender"><i class="chk-ico fas fa-circle"></i>Vous avez indiqué qui vous êtes</span>
         </div>
 
         <!-- Exemples d'intention cliquables : réduisent l'effet « page blanche »,
@@ -6631,7 +6630,6 @@ function showArrowForStep(stepIndex, isMatch) {
     setChk('chk-open',   !has ? 'pending' : (openForm ? 'ok' : 'ko'));
     setChk('chk-q',      !has ? 'pending' : (endsQ ? 'ok' : 'ko'));
     setChk('chk-single', !has ? 'pending' : (single ? 'ok' : 'ko'));
-    setChk('chk-gender', isGenderSelected() ? 'ok' : 'pending');
   }
 
   function updateSubmitBtn() {
