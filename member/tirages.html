@@ -887,10 +887,25 @@
                 }
 
                 const dateSlug = t.date ? new Date(t.date).toISOString().slice(0, 10) : 'tirage';
-                pdf.save(`oradia-tirage-${dateSlug}.pdf`);
+                // pdf.save() de jsPDF crée son <a download> SANS l'attacher au DOM et
+                // déclenche un clic synthétique (dispatchEvent) — certains navigateurs
+                // mobiles (Firefox Android notamment) n'honorent pas fiablement
+                // l'attribut download sur un clic non attaché/non "trusted". On
+                // reproduit le téléchargement nous-mêmes avec un <a> réellement
+                // inséré dans le DOM et un vrai .click(), pattern le plus robuste
+                // cross-navigateur pour déclencher un téléchargement de fichier.
+                const pdfBlob = pdf.output('blob');
+                const pdfUrl = URL.createObjectURL(pdfBlob);
+                const dlLink = document.createElement('a');
+                dlLink.href = pdfUrl;
+                dlLink.download = `oradia-tirage-${dateSlug}.pdf`;
+                document.body.appendChild(dlLink);
+                dlLink.click();
+                document.body.removeChild(dlLink);
+                setTimeout(() => URL.revokeObjectURL(pdfUrl), 60000);
             } catch (e) {
                 console.error('Erreur génération PDF', e);
-                alert("Le PDF n'a pas pu être généré. Réessaie dans un instant.");
+                alert("Le PDF n'a pas pu être généré : " + (e && e.message ? e.message : 'erreur inconnue') + ". Réessaie dans un instant, et si ça persiste, signale ce message.");
             } finally {
                 document.body.removeChild(iframe);
                 if (btnEl) { btnEl.innerHTML = btnOrigHtml; btnEl.disabled = false; }
