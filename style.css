@@ -17,6 +17,22 @@ h4, h5, h6 {
     background: rgba(5, 20, 40, 0.98);
 }
 
+/* ===== SCROLLBAR MASQUÉE SUR MOBILE ===== */
+/* Sur smartphone, la barre de défilement classique (non superposée) reste
+   visible en permanence sur le bord droit de l'écran — on la masque sans
+   empêcher le défilement. */
+@media (max-width: 1023px) {
+    html, body {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* Edge/IE historique */
+    }
+    html::-webkit-scrollbar, body::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
+    }
+}
+
 /* ===== RESET & FOND ===== */
 body {
     margin: 0; /* IMPORTANT pour que le fond soit plein écran */
