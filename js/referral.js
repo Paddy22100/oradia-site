@@ -74,11 +74,51 @@
     } catch (e) {}
   }
 
+  // Branche un input (readonly, pré-rempli avec le lien) + un bouton copier
+  // + un bouton partager (optionnel) sur la logique de parrainage. Utilisé
+  // par tore-analysis.html, la modale de fin de tirages gratuits et le
+  // tableau de bord membre — une seule implémentation, jamais une copie.
+  function wireShareUI(input, copyBtn, shareBtn) {
+    if (!input) return;
+    input.value = buildShareLink();
+
+    function doCopy() {
+      navigator.clipboard.writeText(input.value).then(function () {
+        if (!copyBtn) return;
+        const orig = copyBtn.innerHTML;
+        copyBtn.innerHTML = '<i class="fas fa-check" style="margin-right:6px;font-size:12px;"></i>Copié';
+        setTimeout(function () { copyBtn.innerHTML = orig; }, 2000);
+      }).catch(function () {
+        input.select();
+        document.execCommand('copy');
+      });
+    }
+
+    if (copyBtn) copyBtn.addEventListener('click', doCopy);
+
+    // Sur mobile, proposer le partage natif (Messages, WhatsApp…) en plus du copier-coller.
+    if (shareBtn) {
+      if (navigator.share) {
+        shareBtn.style.display = '';
+        shareBtn.addEventListener('click', function () {
+          navigator.share({
+            title: 'Oradia — Tirage du Tore',
+            text: 'Je t\'offre un tirage gratuit du Tore sur Oradia 🎁',
+            url: input.value
+          }).catch(function () {});
+        });
+      } else {
+        shareBtn.addEventListener('click', doCopy);
+      }
+    }
+  }
+
   window.oradiaReferral = {
     getOrCreateCode: getOrCreateCode,
     buildShareLink: buildShareLink,
     captureReferredBy: captureReferredBy,
     markConversionIfNeeded: markConversionIfNeeded,
-    claimPendingBonuses: claimPendingBonuses
+    claimPendingBonuses: claimPendingBonuses,
+    wireShareUI: wireShareUI
   };
 })();
