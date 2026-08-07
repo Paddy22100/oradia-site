@@ -5970,17 +5970,19 @@ Réponds en français, sans tiret long, format markdown compact.`
       // Quota mensuel combiné (ANU + Outshift) — configurable via ANU_MONTHLY_QUOTA (défaut : 100, plan gratuit).
       const quota = parseInt(process.env.ANU_MONTHLY_QUOTA || '100', 10);
       try {
-        const [anuOnlyRes, outshiftRes, fbRes, recentRes] = await Promise.all([
+        const [anuOnlyRes, outshiftRes, fbRes, recentRes, lastCallRes] = await Promise.all([
           sb.from('qrng_usage').select('*', { count: 'exact', head: true }).eq('outcome', 'anu').gte('created_at', monthStart),
           sb.from('qrng_usage').select('*', { count: 'exact', head: true }).eq('outcome', 'outshift').gte('created_at', monthStart),
           sb.from('qrng_usage').select('*', { count: 'exact', head: true }).eq('outcome', 'fallback').gte('created_at', monthStart),
-          sb.from('qrng_usage').select('created_at,reason,status_code').eq('outcome', 'fallback').order('created_at', { ascending: false }).limit(5)
+          sb.from('qrng_usage').select('created_at,reason,status_code').eq('outcome', 'fallback').order('created_at', { ascending: false }).limit(5),
+          sb.from('qrng_usage').select('created_at,outcome').order('created_at', { ascending: false }).limit(1)
         ]);
         if (anuOnlyRes.error) throw anuOnlyRes.error;
         const anuOnly = anuOnlyRes.count || 0;
         const outshiftOnly = outshiftRes.count || 0;
         const anu = anuOnly + outshiftOnly; // total quantique (ANU + Outshift) ; champ 'anu' conservé pour compat dashboard
         const fallback = fbRes.count || 0;
+        const lastCall = (lastCallRes.data && lastCallRes.data[0]) || null;
         return res.status(200).json({
           success: true,
           month: monthStart.slice(0, 7),
@@ -5991,7 +5993,8 @@ Réponds en français, sans tiret long, format markdown compact.`
           total: anu + fallback,
           quota,
           quota_pct: quota > 0 ? Math.min(100, Math.round((anuOnly / quota) * 100)) : null,
-          recent_fallbacks: recentRes.data || []
+          recent_fallbacks: recentRes.data || [],
+          last_call: lastCall ? { at: lastCall.created_at, outcome: lastCall.outcome } : null
         });
       } catch (e) {
         // Table absente (migration non exécutée) ou DB indisponible : on dégrade proprement.

@@ -2602,37 +2602,36 @@
                 </div>
             </div>
 
-            <!-- Usage quantique (ANU + Outshift) -->
-            <div class="stat-card rounded-2xl p-6 mb-6">
-                <div class="flex items-center justify-between gap-3 mb-1 flex-wrap">
-                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-atom text-gold/60"></i> Usage quantique du mois</h4>
+            <!-- Usage quantique (Outshift principal, ANU en secours) -->
+            <div class="stat-card rounded-2xl p-4 mb-6">
+                <div class="flex items-center justify-between gap-3 mb-2 flex-wrap">
+                    <h4 class="text-gold font-semibold flex items-center gap-2 text-sm"><i class="fas fa-atom text-gold/60"></i> Usage quantique du mois</h4>
                     <span class="text-gold/40 text-xs" id="qrng-month">—</span>
                 </div>
-                <p class="text-gold/40 text-xs mb-4 italic">ANU (plan gratuit, quota mensuel limité) est en secours ; Outshift (quota bien plus large, remis à zéro chaque jour) est la source principale.</p>
-
-                <!-- ANU : quota réel, jauge pertinente -->
-                <div class="flex items-end justify-between gap-3 mb-2">
-                    <div><span class="text-3xl font-bold text-teal-300" id="qrng-anu">—</span><span class="text-gold/50 text-lg" id="qrng-quota-label"></span> <span class="text-gold/40 text-xs uppercase ml-1">ANU</span></div>
-                    <div class="text-right">
-                        <div class="text-sm"><span class="text-red-400 font-bold" id="qrng-fallback">—</span> <span class="text-gold/50 text-xs">fallback ce mois</span></div>
+                <div class="flex items-end gap-6 flex-wrap">
+                    <!-- Outshift : source principale, mis en avant -->
+                    <div>
+                        <div class="text-3xl font-bold text-teal-300" id="qrng-outshift">—</div>
+                        <div class="text-gold/40 text-xs uppercase">Outshift (principale)</div>
+                    </div>
+                    <!-- ANU : secours, quota réel mais discret -->
+                    <div class="border-l border-gold/10 pl-6">
+                        <div><span class="text-lg font-bold text-gold/70" id="qrng-anu">—</span><span class="text-gold/40 text-sm" id="qrng-quota-label"></span></div>
+                        <div class="text-gold/40 text-xs uppercase">ANU (secours)</div>
+                        <div class="w-20 h-1.5 rounded-full bg-white/10 overflow-hidden mt-1"><div id="qrng-bar" class="h-full rounded-full bg-gradient-to-r from-teal-400 to-teal-300 transition-all duration-500" style="width:0%"></div></div>
+                    </div>
+                    <div class="border-l border-gold/10 pl-6">
+                        <div class="text-lg font-bold text-red-400" id="qrng-fallback">—</div>
+                        <div class="text-gold/40 text-xs uppercase">Fallback</div>
+                    </div>
+                    <div class="border-l border-gold/10 pl-6 ml-auto text-right">
+                        <div class="text-gold/40 text-xs uppercase">Dernière interrogation</div>
+                        <div class="text-sm text-gold/80" id="qrng-last-call">—</div>
                     </div>
                 </div>
-                <div class="w-full h-2.5 rounded-full bg-white/10 overflow-hidden mb-1">
-                    <div id="qrng-bar" class="h-full rounded-full bg-gradient-to-r from-teal-400 to-teal-300 transition-all duration-500" style="width:0%"></div>
-                </div>
-                <div class="flex justify-between text-xs text-gold/40 mb-3">
-                    <span>Quota ANU consommé</span>
-                    <span id="qrng-pct">—</span>
-                </div>
 
-                <!-- Outshift : simple compteur d'usage, pas de quota fixe pertinent -->
-                <div class="flex items-center justify-between gap-3 pt-3 border-t border-gold/10">
-                    <span class="text-gold/50 text-xs uppercase">Outshift (source principale)</span>
-                    <span class="text-lg font-bold text-teal-300" id="qrng-outshift">—</span>
-                </div>
-
-                <div id="qrng-warning" class="hidden text-amber-300/90 text-xs bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2 mb-3 mt-3"></div>
-                <div id="qrng-fallback-reasons" class="text-gold/50 text-xs"></div>
+                <div id="qrng-warning" class="hidden text-amber-300/90 text-xs bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2 mt-3"></div>
+                <div id="qrng-fallback-reasons" class="text-gold/50 text-xs mt-2"></div>
             </div>
 
             <!-- Analyse IA -->
@@ -10329,6 +10328,13 @@
                 set('qrng-quota-label', d.quota ? ' / ' + d.quota : '');
                 set('qrng-outshift', d.outshift ?? 0);
                 set('qrng-fallback', d.fallback ?? 0);
+                if (d.last_call) {
+                    const lc = new Date(d.last_call.at);
+                    const label = d.last_call.outcome === 'fallback' ? 'repli' : d.last_call.outcome.toUpperCase();
+                    set('qrng-last-call', lc.toLocaleString('fr-FR', { dateStyle: 'short', timeStyle: 'short' }) + ' · ' + label);
+                } else {
+                    set('qrng-last-call', 'jamais');
+                }
                 const pct = d.quota_pct ?? 0;
                 set('qrng-pct', d.quota ? pct + '%' : '—');
                 const bar = document.getElementById('qrng-bar');
