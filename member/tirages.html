@@ -9,7 +9,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../style.css">
     <script src="../js/member-header-fix.js" defer></script>
-    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -402,7 +404,7 @@
                                 <p style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;background:linear-gradient(135deg,#d4af37,#f4e4c1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:0 0 2px;">${t.type || 'Tirage Tore'}</p>
                                 <p style="color:rgba(245,231,161,0.45);font-size:12px;margin:0;text-transform:capitalize;">${date}</p>
                             </div>
-                            <button onclick="downloadPDF(${idx})" title="Télécharger ce tirage en PDF"
+                            <button onclick="downloadPDF(${idx}, this)" title="Télécharger ce tirage en PDF"
                                 style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.4);color:#d4af37;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;"
                                 onmouseover="this.style.background='rgba(212,175,55,0.22)'" onmouseout="this.style.background='rgba(212,175,55,0.1)'">
                                 <i class="fas fa-file-pdf"></i> Télécharger PDF
@@ -491,7 +493,7 @@
 
         // Téléchargement PDF élégant — Palier 3 #22 : design aligné sur le mail d'analyse,
         // ajout de la fenêtre d'observation et amélioration visuelle globale.
-        function downloadPDF(tirageIdx) {
+        async function downloadPDF(tirageIdx, btnEl) {
             // Réutilise les données déjà chargées (et sécurisées via RLS) au rendu de la liste —
             // évite un aller-retour réseau et reste cohérent avec ce qui est affiché à l'écran.
             const all = _tiragesCache.slice().reverse();
@@ -710,22 +712,69 @@
 
   </div>
 </div>
-<script>window.onload = function(){ window.print(); }<\/script>
 </body></html>`;
 
-            // Sur mobile, window.open('', '_blank') + document.write() est peu fiable :
-            // l'onglet s'ouvre parfois de façon asynchrone et le document.write arrive
-            // trop tard (ou le popup est bloqué) — l'onglet reste alors sur about:blank.
-            // Une URL Blob est une vraie page navigable, chargée normalement par le
-            // navigateur, donc bien plus robuste sur mobile.
-            const blob = new Blob([html], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const w = window.open(url, '_blank', 'width=780,height=960');
-            if (!w) {
-                // Popup bloqué : on retombe sur la navigation dans l'onglet courant.
-                window.location.href = url;
+            // window.open('', '_blank') + document.write() (Chrome mobile) et
+            // window.print() sur une page blob: (Firefox mobile) se sont révélés
+            // tous les deux peu fiables sur mobile — onglet about:blank dans un
+            // cas, aperçu d'impression vide dans l'autre. On génère donc un
+            // vrai fichier PDF côté client (html2canvas + jsPDF, déjà utilisés
+            // dans le dashboard admin) et on déclenche un téléchargement direct,
+            // sans passer par la boîte de dialogue d'impression du navigateur.
+            if (!window.html2canvas || !window.jspdf?.jsPDF) {
+                alert("Le générateur de PDF n'a pas fini de charger, réessaie dans un instant.");
+                return;
             }
-            setTimeout(() => URL.revokeObjectURL(url), 60000);
+
+            const btnOrigHtml = btnEl ? btnEl.innerHTML : null;
+            if (btnEl) { btnEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Génération…'; btnEl.disabled = true; }
+
+            // Rendu hors-écran dans un iframe isolé (mêmes styles que le mail,
+            // sans risque de collision avec les classes de la page tirages.html).
+            const iframe = document.createElement('iframe');
+            iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:680px;height:1px;border:0;opacity:0;pointer-events:none;';
+            document.body.appendChild(iframe);
+
+            try {
+                iframe.srcdoc = html;
+                await new Promise((resolve, reject) => {
+                    iframe.onload = resolve;
+                    setTimeout(() => reject(new Error('Le rendu du PDF a pris trop de temps.')), 10000);
+                });
+                // Laisse le temps aux polices web de se charger avant la capture.
+                await new Promise(resolve => setTimeout(resolve, 400));
+
+                const target = iframe.contentDocument.querySelector('.page') || iframe.contentDocument.body;
+                const canvas = await html2canvas(target, { scale: 2, useCORS: true, backgroundColor: '#f4f0e8' });
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const imgWidth = pageWidth;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+                let heightLeft = imgHeight;
+                let position = 0;
+                pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                const dateSlug = t.date ? new Date(t.date).toISOString().slice(0, 10) : 'tirage';
+                pdf.save(`oradia-tirage-${dateSlug}.pdf`);
+            } catch (e) {
+                console.error('Erreur génération PDF', e);
+                alert("Le PDF n'a pas pu être généré. Réessaie dans un instant.");
+            } finally {
+                document.body.removeChild(iframe);
+                if (btnEl) { btnEl.innerHTML = btnOrigHtml; btnEl.disabled = false; }
+            }
         }
 
         // Déconnexion
