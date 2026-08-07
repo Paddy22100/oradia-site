@@ -190,7 +190,8 @@ async function handleListTirages(req, res) {
     synthese: t.synthese,
     observationWindow: t.observation_window,
     analyseIa: t.analyse_ia || null,
-    pistes: t.pistes || null
+    pistes: t.pistes || null,
+    source: t.source || 'ponctuel'
   }));
 
   return res.status(200).json({ success: true, tirages });
@@ -1233,6 +1234,260 @@ async function handleCronPromoTirage(req, res) {
   return res.status(200).json({ success: true, sent, skipped, failed });
 }
 
+// ============ TIRAGES PROGRAMMÉS (réservés aux abonnés) ============
+// Configuration : GET/POST via session membre (Bearer token, comme handleUpdateTirage).
+// Exécution : GET/POST via cron externe (cron-job.org, toutes les heures), protégé par
+// CRON_SECRET — Vercel Hobby ne permet que des cron jobs quotidiens, insuffisant pour
+// une heure choisie par chaque abonné.
+
+async function handleGetSchedule(req, res) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  const supabase = getUserSupabaseClient(req);
+  if (!supabase) return res.status(401).json({ success: false, message: 'Authentification requise.' });
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) return res.status(401).json({ success: false, message: 'Session invalide ou expirée.' });
+
+  const { data, error } = await supabase
+    .from('tore_scheduled_draws')
+    .select('*')
+    .eq('user_id', userData.user.id)
+    .maybeSingle();
+
+  if (error) return res.status(500).json({ success: false, message: 'Impossible de récupérer la planification.' });
+  return res.status(200).json({ success: true, schedule: data || null });
+}
+
+async function handleSaveSchedule(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const supabase = getUserSupabaseClient(req);
+  if (!supabase) return res.status(401).json({ success: false, message: 'Authentification requise.' });
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) return res.status(401).json({ success: false, message: 'Session invalide ou expirée.' });
+
+  const body = await parseJsonBody(req);
+  const { frequency, dayOfWeek, dayOfMonth, hour, intention, gender, active } = body;
+
+  if (!['daily', 'weekly', 'monthly'].includes(frequency)) {
+    return res.status(400).json({ success: false, message: 'Fréquence invalide.' });
+  }
+  if (frequency === 'weekly' && !(Number.isInteger(dayOfWeek) && dayOfWeek >= 0 && dayOfWeek <= 6)) {
+    return res.status(400).json({ success: false, message: 'Jour de la semaine invalide.' });
+  }
+  if (frequency === 'monthly' && !(Number.isInteger(dayOfMonth) && dayOfMonth >= 1 && dayOfMonth <= 28)) {
+    return res.status(400).json({ success: false, message: 'Jour du mois invalide (1 à 28).' });
+  }
+  if (!(Number.isInteger(hour) && hour >= 0 && hour <= 23)) {
+    return res.status(400).json({ success: false, message: 'Heure invalide.' });
+  }
+  const cleanIntention = String(intention || '').trim();
+  if (!cleanIntention || cleanIntention.length > 500) {
+    return res.status(400).json({ success: false, message: 'Intention requise (500 caractères maximum).' });
+  }
+
+  const email = (userData.user.email || '').toLowerCase().trim();
+
+  // Réservé aux abonnés Tore actifs — vérifié avec le service_role (la session membre
+  // n'a pas accès en lecture aux abonnements des autres, mais peut lire son propre statut
+  // via le service_role côté serveur, jamais exposé au client).
+  const svcSupabase = createClient(
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+  const { data: sub } = await svcSupabase
+    .from('tore_subscriptions')
+    .select('status, expires_at')
+    .ilike('email', email)
+    .maybeSingle();
+  const isActiveSubscriber = sub && sub.status === 'active' && new Date(sub.expires_at) > new Date();
+  if (!isActiveSubscriber) {
+    return res.status(403).json({ success: false, message: 'Fonctionnalité réservée aux abonnés Tore.' });
+  }
+
+  const row = {
+    user_id: userData.user.id,
+    email,
+    full_name: userData.user.user_metadata?.full_name || '',
+    frequency,
+    day_of_week: frequency === 'weekly' ? dayOfWeek : null,
+    day_of_month: frequency === 'monthly' ? dayOfMonth : null,
+    hour,
+    intention: cleanIntention,
+    gender: (gender === 'homme' || gender === 'femme') ? gender : null,
+    active: active !== false,
+    updated_at: new Date().toISOString()
+  };
+
+  const { data, error } = await svcSupabase
+    .from('tore_scheduled_draws')
+    .upsert(row, { onConflict: 'user_id' })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('[save-schedule] error:', error.message);
+    return res.status(500).json({ success: false, message: 'Impossible d\'enregistrer la planification.' });
+  }
+  return res.status(200).json({ success: true, schedule: data });
+}
+
+async function handleDeleteSchedule(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const supabase = getUserSupabaseClient(req);
+  if (!supabase) return res.status(401).json({ success: false, message: 'Authentification requise.' });
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) return res.status(401).json({ success: false, message: 'Session invalide ou expirée.' });
+
+  const { error } = await supabase.from('tore_scheduled_draws').delete().eq('user_id', userData.user.id);
+  if (error) return res.status(500).json({ success: false, message: 'Impossible de supprimer la planification.' });
+  return res.status(200).json({ success: true });
+}
+
+// Composants horaires "Europe/Paris" — les crons Vercel/externes tournent en UTC.
+function getParisNow() {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Paris', hour: 'numeric', hour12: false,
+    weekday: 'short', day: 'numeric', month: 'numeric', year: 'numeric'
+  }).formatToParts(new Date());
+  const map = {};
+  parts.forEach(p => { map[p.type] = p.value; });
+  const weekdayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  return {
+    hour: parseInt(map.hour, 10) % 24,
+    weekday: weekdayMap[map.weekday],
+    dayOfMonth: parseInt(map.day, 10),
+    dateStr: `${map.year}-${String(map.month).padStart(2, '0')}-${String(map.day).padStart(2, '0')}`
+  };
+}
+
+async function generateScheduledAnalysis({ intention, cards, gender }) {
+  const { buildAnalysisPrompt, cleanAnalysisText, splitAnalysisSections } = require('../../lib/tore-analysis-prompt.js');
+  const prompt = buildAnalysisPrompt({ intention, cards, gender });
+  const models = [process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5', 'claude-haiku-4-5'];
+
+  for (const model of models) {
+    try {
+      const resp = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model, max_tokens: 1024, temperature: 0.7, messages: [{ role: 'user', content: prompt }] }),
+        signal: AbortSignal.timeout(25000)
+      });
+      if (!resp.ok) continue;
+      const data = await resp.json();
+      const raw = cleanAnalysisText(data.content?.[0]?.text || '');
+      if (!raw) continue;
+      return splitAnalysisSections(raw);
+    } catch (e) {
+      console.error('[run-scheduled-draws] Anthropic error:', e.message);
+    }
+  }
+  return null;
+}
+
+async function handleRunScheduledDraws(req, res) {
+  const secret = req.query.cron_secret || '';
+  if (secret !== process.env.CRON_SECRET) return res.status(401).json({ error: 'Unauthorized' });
+
+  const supabase = createClient(
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  const now = getParisNow();
+  const { data: due, error } = await supabase
+    .from('tore_scheduled_draws')
+    .select('*')
+    .eq('active', true)
+    .eq('hour', now.hour);
+
+  if (error) {
+    console.error('[run-scheduled-draws] fetch error:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+
+  const { drawSevenCards } = require('../../lib/tore-deck.js');
+  const { resolveCardImageUrl } = require('../../lib/tore-card-images.js');
+
+  let ran = 0, skipped = 0, failed = 0;
+
+  for (const sched of due || []) {
+    try {
+      // Anti-doublon (le cron externe peut tourner plusieurs fois dans la même heure)
+      if (sched.last_run_date === now.dateStr) { skipped++; continue; }
+      // Correspondance fréquence / jour
+      if (sched.frequency === 'weekly' && sched.day_of_week !== now.weekday) { continue; }
+      if (sched.frequency === 'monthly' && sched.day_of_month !== now.dayOfMonth) { continue; }
+
+      // Toujours réservé aux abonnés actifs — un abonnement peut avoir expiré depuis la
+      // dernière modification de la planification.
+      const { data: sub } = await supabase
+        .from('tore_subscriptions')
+        .select('status, expires_at')
+        .ilike('email', sched.email)
+        .maybeSingle();
+      const isActiveSubscriber = sub && sub.status === 'active' && new Date(sub.expires_at) > new Date();
+      if (!isActiveSubscriber) { skipped++; continue; }
+
+      const rawCards = drawSevenCards();
+      const cards = rawCards.map(c => ({ ...c, imgSrc: resolveCardImageUrl(c.name) || '' }));
+
+      const analysis = await generateScheduledAnalysis({ intention: sched.intention, cards, gender: sched.gender });
+      if (!analysis) { failed++; continue; }
+
+      // Enregistrer dans l'historique (source = programme, rétention séparée des tirages ponctuels)
+      const { error: insErr } = await supabase.from('tirages').insert({
+        user_id: sched.user_id,
+        type: 'Tirage Tore (programmé)',
+        source: 'programme',
+        intention: sched.intention,
+        cartes: cards.map(c => c.name),
+        passerelles: [],
+        interpretations: [],
+        synthese: analysis.synthesis || null,
+        analyse_ia: analysis.cards || null,
+        pistes: analysis.explore || null
+      });
+      if (insErr) console.error('[run-scheduled-draws] insert tirage error:', insErr.message);
+
+      // Envoi de l'email — réutilise le template existant (handleSendEmail) via un req/res
+      // synthétique, comme handleCollectEmail le fait déjà pour l'email J0.
+      await new Promise((resolve) => {
+        const fakeReq = {
+          method: 'POST',
+          body: {
+            email: sched.email,
+            intention: sched.intention,
+            cards,
+            analysis: analysis.cards,
+            pistes: analysis.explore,
+            synthesis: analysis.synthesis
+          }
+        };
+        const fakeRes = {
+          status() { return { json() { resolve(); } }; },
+          json() { resolve(); }
+        };
+        handleSendEmail(fakeReq, fakeRes).catch(() => resolve());
+      });
+
+      await supabase.from('tore_scheduled_draws')
+        .update({ last_run_at: new Date().toISOString(), last_run_date: now.dateStr })
+        .eq('id', sched.id);
+
+      ran++;
+    } catch (e) {
+      console.error('[run-scheduled-draws] Failed for', sched.email, e.message);
+      failed++;
+    }
+  }
+
+  console.log(`[run-scheduled-draws] ran=${ran} skipped=${skipped} failed=${failed}`);
+  return res.status(200).json({ success: true, ran, skipped, failed });
+}
+
 // ============ DISPATCH PRINCIPAL ============
 export default async function handler(req, res) {
   const action = req.query.action || 'send-email';
@@ -1250,6 +1505,10 @@ export default async function handler(req, res) {
     case 'import-tore-history': return handleImportToreHistory(req, res);
     case 'cron-promo-tirage':  return handleCronPromoTirage(req, res);
     case 'cron-checkin':       return handleCronCheckin(req, res);
+    case 'get-schedule':       return handleGetSchedule(req, res);
+    case 'save-schedule':      return handleSaveSchedule(req, res);
+    case 'delete-schedule':    return handleDeleteSchedule(req, res);
+    case 'run-scheduled-draws': return handleRunScheduledDraws(req, res);
     case 'send-email':
     default:                 return handleSendEmail(req, res);
   }

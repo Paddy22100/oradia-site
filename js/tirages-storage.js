@@ -192,6 +192,35 @@
     }
   }
 
+  // Requête authentifiée générique (gère le rafraîchissement du token comme apiUpdate),
+  // utilisée pour la configuration des tirages programmés (get/save/delete-schedule).
+  async function authFetch(action, { method = 'GET', body } = {}) {
+    let token = await getValidToken();
+    if (!token) return { success: false, message: 'Non authentifié.' };
+    const opts = { method, headers: { Authorization: `Bearer ${token}` } };
+    if (body !== undefined) {
+      opts.headers['Content-Type'] = 'application/json';
+      opts.body = JSON.stringify(body);
+    }
+    try {
+      let resp = await fetch(`${API_BASE}?action=${action}`, opts);
+      if (resp.status === 401) {
+        token = await refreshAccessToken();
+        if (!token) return { success: false, message: 'Session expirée.' };
+        opts.headers.Authorization = `Bearer ${token}`;
+        resp = await fetch(`${API_BASE}?action=${action}`, opts);
+      }
+      return await resp.json();
+    } catch (e) {
+      console.warn('Tirages: échec requête', action, e);
+      return { success: false, message: 'Erreur réseau.' };
+    }
+  }
+
+  function getSchedule() { return authFetch('get-schedule'); }
+  function saveSchedule(fields) { return authFetch('save-schedule', { method: 'POST', body: fields }); }
+  function deleteSchedule() { return authFetch('delete-schedule', { method: 'POST' }); }
+
   // ---- API publique unifiée ----
   // `loadTirages` est asynchrone : retourne l'historique distant pour un membre connecté,
   // ou l'historique local "invité" pour un visiteur non connecté.
@@ -230,6 +259,9 @@
     loadTirages,
     addTirage,
     updateTirage: apiUpdate,
+    getSchedule,
+    saveSchedule,
+    deleteSchedule,
     purgeLegacyGlobalHistory,
     // Exposés pour debug/tests uniquement
     _loadGuestTirages: loadGuestTirages,

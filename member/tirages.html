@@ -269,8 +269,110 @@
                 </a>
             </div>
 
+            <!-- Tirage automatique (abonnés) -->
+            <div id="autoDrawCard" class="hidden bg-gradient-to-br from-[rgba(26,54,93,0.55)] to-[rgba(5,20,40,0.75)] border border-gold/25 rounded-2xl p-5 mb-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-start gap-3">
+                    <div class="w-11 h-11 rounded-full bg-gold/10 border border-gold/30 flex items-center justify-center flex-shrink-0">
+                        <i class="fas fa-clock text-gold"></i>
+                    </div>
+                    <div>
+                        <p class="text-gold font-semibold cormorant text-lg leading-tight">Tirage automatique</p>
+                        <p id="autoDrawStatus" class="text-light-gold/60 text-sm mt-0.5">Recevez un tirage par email, sans y penser.</p>
+                    </div>
+                </div>
+                <button onclick="openScheduleModal()" class="flex-shrink-0 border border-gold/40 hover:bg-gold/10 text-gold text-sm font-semibold py-2.5 px-5 rounded-lg transition-colors">
+                    <i class="fas fa-sliders-h mr-2"></i><span id="autoDrawBtnLabel">Configurer</span>
+                </button>
+            </div>
+
+            <!-- Filtres ponctuel / programmé -->
+            <div id="sourceFilters" class="hidden flex items-center gap-2 mb-5 text-sm">
+                <button data-filter="all" onclick="setSourceFilter('all')" class="filter-btn active px-4 py-1.5 rounded-full border border-gold/20 text-light-gold/80">Tous</button>
+                <button data-filter="ponctuel" onclick="setSourceFilter('ponctuel')" class="filter-btn px-4 py-1.5 rounded-full border border-gold/20 text-light-gold/80">Ponctuels</button>
+                <button data-filter="programme" onclick="setSourceFilter('programme')" class="filter-btn px-4 py-1.5 rounded-full border border-gold/20 text-light-gold/80">Programmés</button>
+            </div>
+
             <section id="tiragesList"></section>
         </main>
+    </div>
+
+    <!-- Modal : configuration du tirage automatique -->
+    <div id="scheduleModal" class="hidden fixed inset-0 z-[200] flex items-end sm:items-center justify-center">
+        <div class="absolute inset-0 bg-black/70 detail-modal" onclick="closeScheduleModal()"></div>
+        <div class="relative w-full sm:max-w-md bg-gradient-to-b from-[#0f2444] to-[#051428] border border-gold/25 sm:rounded-2xl rounded-t-2xl max-h-[92vh] overflow-y-auto slide-in">
+            <div class="sticky top-0 bg-[#0a1c38]/95 backdrop-blur-sm border-b border-gold/15 px-5 py-4 flex items-center justify-between">
+                <p class="cormorant text-xl text-gold">Tirage automatique</p>
+                <button onclick="closeScheduleModal()" class="text-light-gold/50 hover:text-light-gold w-8 h-8 flex items-center justify-center rounded-full hover:bg-white/5">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <div class="px-5 py-5 space-y-5">
+                <p class="text-light-gold/60 text-sm leading-relaxed">Reçois automatiquement un tirage par email, avec une intention fixe de ton choix.</p>
+
+                <!-- Fréquence -->
+                <div>
+                    <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2">Fréquence</label>
+                    <div class="grid grid-cols-3 gap-2">
+                        <button type="button" data-freq="daily" onclick="setScheduleFrequency('daily')" class="freq-btn py-2.5 rounded-lg border border-gold/25 text-sm text-light-gold/80">Quotidien</button>
+                        <button type="button" data-freq="weekly" onclick="setScheduleFrequency('weekly')" class="freq-btn py-2.5 rounded-lg border border-gold/25 text-sm text-light-gold/80">Hebdo</button>
+                        <button type="button" data-freq="monthly" onclick="setScheduleFrequency('monthly')" class="freq-btn py-2.5 rounded-lg border border-gold/25 text-sm text-light-gold/80">Mensuel</button>
+                    </div>
+                </div>
+
+                <!-- Jour de la semaine (hebdo) -->
+                <div id="scheduleDayOfWeekWrap" class="hidden">
+                    <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2">Jour de la semaine</label>
+                    <select id="scheduleDayOfWeek" class="w-full bg-[rgba(10,25,47,0.7)] border border-gold/30 rounded-lg py-2.5 px-3 text-light-gold text-sm">
+                        <option value="1">Lundi</option>
+                        <option value="2">Mardi</option>
+                        <option value="3">Mercredi</option>
+                        <option value="4">Jeudi</option>
+                        <option value="5">Vendredi</option>
+                        <option value="6">Samedi</option>
+                        <option value="0">Dimanche</option>
+                    </select>
+                </div>
+
+                <!-- Jour du mois (mensuel) -->
+                <div id="scheduleDayOfMonthWrap" class="hidden">
+                    <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2">Jour du mois</label>
+                    <select id="scheduleDayOfMonth" class="w-full bg-[rgba(10,25,47,0.7)] border border-gold/30 rounded-lg py-2.5 px-3 text-light-gold text-sm"></select>
+                </div>
+
+                <!-- Heure -->
+                <div>
+                    <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2">Heure d'envoi</label>
+                    <select id="scheduleHour" class="w-full bg-[rgba(10,25,47,0.7)] border border-gold/30 rounded-lg py-2.5 px-3 text-light-gold text-sm"></select>
+                </div>
+
+                <!-- Intention fixe -->
+                <div>
+                    <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2">Intention fixe</label>
+                    <textarea id="scheduleIntention" rows="2" maxlength="500" placeholder="Comment appréhender au mieux cette journée ?" class="w-full bg-[rgba(10,25,47,0.7)] border border-gold/30 rounded-lg py-2.5 px-3 text-light-gold text-sm resize-none"></textarea>
+                    <div class="flex flex-wrap gap-2 mt-2">
+                        <button type="button" onclick="fillScheduleIntention(this)" class="text-xs border border-gold/25 text-light-gold/70 rounded-full px-3 py-1.5 hover:border-gold/50">Comment appréhender au mieux cette journée&nbsp;?</button>
+                        <button type="button" onclick="fillScheduleIntention(this)" class="text-xs border border-gold/25 text-light-gold/70 rounded-full px-3 py-1.5 hover:border-gold/50">Que dois-je traverser aujourd'hui&nbsp;?</button>
+                    </div>
+                </div>
+
+                <!-- Genre -->
+                <div>
+                    <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2">Vous êtes</label>
+                    <div class="flex gap-3">
+                        <button type="button" data-gender="homme" onclick="setScheduleGender('homme')" class="gender-btn flex-1 py-2.5 rounded-lg border border-gold/25 text-sm text-light-gold/80">Homme</button>
+                        <button type="button" data-gender="femme" onclick="setScheduleGender('femme')" class="gender-btn flex-1 py-2.5 rounded-lg border border-gold/25 text-sm text-light-gold/80">Femme</button>
+                    </div>
+                </div>
+
+                <p id="scheduleError" class="hidden text-red-300 text-xs bg-red-900/20 border border-red-400/25 rounded-lg px-3 py-2"></p>
+
+                <div class="flex flex-col gap-2 pt-1">
+                    <button onclick="saveSchedule()" id="scheduleSaveBtn" class="w-full bg-gold hover:bg-light-gold text-night-blue font-bold py-3 rounded-lg transition-colors">Activer le tirage automatique</button>
+                    <button onclick="deleteSchedule()" id="scheduleDeleteBtn" class="hidden w-full border border-red-400/30 text-red-300 hover:bg-red-900/20 font-semibold py-2.5 rounded-lg transition-colors text-sm">Désactiver</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- Mobile Menu -->
@@ -391,8 +493,12 @@
                 }
 
                 const tirageId = 'tirage-' + idx;
+                const source = t.source || 'ponctuel';
+                const sourceBadge = source === 'programme'
+                    ? `<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(88,190,255,0.1);border:1px solid rgba(88,190,255,0.35);color:#8fd0ff;border-radius:20px;padding:3px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-top:4px;"><i class="fas fa-clock"></i>Programmé</span>`
+                    : '';
                 return `
-                    <div class="tirage-card" id="${tirageId}" style="
+                    <div class="tirage-card" id="${tirageId}" data-source="${source}" style="
                         background:linear-gradient(145deg,rgba(26,54,93,0.65),rgba(5,20,40,0.85));
                         border:1px solid rgba(212,175,55,0.28);
                         border-radius:16px;
@@ -403,6 +509,7 @@
                             <div>
                                 <p style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;background:linear-gradient(135deg,#d4af37,#f4e4c1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:0 0 2px;">${t.type || 'Tirage Tore'}</p>
                                 <p style="color:rgba(245,231,161,0.45);font-size:12px;margin:0;text-transform:capitalize;">${date}</p>
+                                ${sourceBadge}
                             </div>
                             <button onclick="downloadPDF(${idx}, this)" title="Télécharger ce tirage en PDF"
                                 style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.4);color:#d4af37;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;"
@@ -800,6 +907,206 @@
             localStorage.removeItem('rememberMe');
             window.location.href = '../index.html';
         });
+
+        // ============ Tirage automatique (abonnés) ============
+        let _scheduleState = null; // planification actuelle chargée depuis le serveur, ou null
+        let _scheduleFrequency = 'daily';
+        let _scheduleGender = null;
+
+        function getMemberEmail() {
+            try {
+                const sess = JSON.parse(sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY) || '{}');
+                return sess.email || localStorage.getItem('userEmail') || '';
+            } catch (e) { return localStorage.getItem('userEmail') || ''; }
+        }
+
+        function populateHourSelect() {
+            const sel = document.getElementById('scheduleHour');
+            if (!sel || sel.options.length) return;
+            for (let h = 0; h < 24; h++) {
+                const opt = document.createElement('option');
+                opt.value = h;
+                opt.textContent = `${String(h).padStart(2, '0')}h00`;
+                sel.appendChild(opt);
+            }
+        }
+
+        function populateDayOfMonthSelect() {
+            const sel = document.getElementById('scheduleDayOfMonth');
+            if (!sel || sel.options.length) return;
+            for (let d = 1; d <= 28; d++) {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d + (d === 1 ? 'er' : '');
+                sel.appendChild(opt);
+            }
+        }
+
+        function setScheduleFrequency(freq) {
+            _scheduleFrequency = freq;
+            document.querySelectorAll('.freq-btn').forEach(b => {
+                const active = b.dataset.freq === freq;
+                b.style.borderColor = active ? '#d4af37' : 'rgba(212,175,55,0.25)';
+                b.style.background = active ? 'rgba(212,175,55,0.14)' : 'transparent';
+                b.style.color = active ? '#f0c75e' : '';
+            });
+            document.getElementById('scheduleDayOfWeekWrap').classList.toggle('hidden', freq !== 'weekly');
+            document.getElementById('scheduleDayOfMonthWrap').classList.toggle('hidden', freq !== 'monthly');
+        }
+
+        function setScheduleGender(g) {
+            _scheduleGender = g;
+            document.querySelectorAll('.gender-btn').forEach(b => {
+                const active = b.dataset.gender === g;
+                b.style.borderColor = active ? '#d4af37' : 'rgba(212,175,55,0.25)';
+                b.style.background = active ? 'rgba(212,175,55,0.14)' : 'transparent';
+                b.style.color = active ? '#f0c75e' : '';
+            });
+        }
+
+        function fillScheduleIntention(btn) {
+            const input = document.getElementById('scheduleIntention');
+            if (input) input.value = (btn.textContent || '').replace(/ /g, ' ').trim();
+        }
+
+        function scheduleSummaryText(s) {
+            const hourText = `${String(s.hour).padStart(2, '0')}h00`;
+            if (s.frequency === 'daily') return `Actif — tous les jours à ${hourText}`;
+            if (s.frequency === 'weekly') {
+                const days = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+                return `Actif — chaque ${days[s.day_of_week]} à ${hourText}`;
+            }
+            if (s.frequency === 'monthly') return `Actif — le ${s.day_of_month} de chaque mois à ${hourText}`;
+            return 'Actif';
+        }
+
+        function renderScheduleStatus() {
+            const statusEl = document.getElementById('autoDrawStatus');
+            const btnLabel = document.getElementById('autoDrawBtnLabel');
+            if (!statusEl) return;
+            if (_scheduleState && _scheduleState.active) {
+                statusEl.textContent = scheduleSummaryText(_scheduleState);
+                if (btnLabel) btnLabel.textContent = 'Modifier';
+            } else {
+                statusEl.textContent = 'Recevez un tirage par email, sans y penser.';
+                if (btnLabel) btnLabel.textContent = 'Configurer';
+            }
+        }
+
+        // Charge l'état (abonnement + planification existante) et affiche la carte
+        // "Tirage automatique" uniquement pour les abonnés Tore actifs.
+        async function initScheduledDraws() {
+            const email = getMemberEmail();
+            if (!email || !window.OradiaTirageStorage?.isAuthenticated?.()) return;
+
+            populateHourSelect();
+            populateDayOfMonthSelect();
+
+            try {
+                const r = await fetch('/api/auth/check-subscription?email=' + encodeURIComponent(email));
+                const d = await r.json();
+                if (!d.subscribed) return; // réservé aux abonnés — carte reste masquée
+            } catch (e) { return; }
+
+            document.getElementById('autoDrawCard')?.classList.remove('hidden');
+            document.getElementById('sourceFilters')?.classList.remove('hidden');
+
+            const res = await window.OradiaTirageStorage.getSchedule();
+            if (res && res.success) {
+                _scheduleState = res.schedule;
+                renderScheduleStatus();
+            }
+        }
+
+        function openScheduleModal() {
+            const modal = document.getElementById('scheduleModal');
+            if (!modal) return;
+
+            const s = _scheduleState;
+            setScheduleFrequency(s?.frequency || 'daily');
+            setScheduleGender(s?.gender || null);
+            document.getElementById('scheduleIntention').value = s?.intention || '';
+            document.getElementById('scheduleHour').value = s?.hour ?? 7;
+            document.getElementById('scheduleDayOfWeek').value = s?.day_of_week ?? 1;
+            document.getElementById('scheduleDayOfMonth').value = s?.day_of_month ?? 1;
+            document.getElementById('scheduleError')?.classList.add('hidden');
+            document.getElementById('scheduleDeleteBtn')?.classList.toggle('hidden', !(s && s.active));
+            document.getElementById('scheduleSaveBtn').textContent = (s && s.active) ? 'Enregistrer les modifications' : 'Activer le tirage automatique';
+
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeScheduleModal() {
+            document.getElementById('scheduleModal')?.classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        async function saveSchedule() {
+            const errEl = document.getElementById('scheduleError');
+            errEl.classList.add('hidden');
+
+            const intention = document.getElementById('scheduleIntention').value.trim();
+            if (!intention) {
+                errEl.textContent = 'Merci de saisir une intention.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            const payload = {
+                frequency: _scheduleFrequency,
+                hour: parseInt(document.getElementById('scheduleHour').value, 10),
+                intention,
+                gender: _scheduleGender,
+                active: true
+            };
+            if (_scheduleFrequency === 'weekly') payload.dayOfWeek = parseInt(document.getElementById('scheduleDayOfWeek').value, 10);
+            if (_scheduleFrequency === 'monthly') payload.dayOfMonth = parseInt(document.getElementById('scheduleDayOfMonth').value, 10);
+
+            const btn = document.getElementById('scheduleSaveBtn');
+            btn.disabled = true;
+            btn.textContent = 'Enregistrement...';
+
+            const res = await window.OradiaTirageStorage.saveSchedule(payload);
+
+            btn.disabled = false;
+            if (res && res.success) {
+                _scheduleState = res.schedule;
+                renderScheduleStatus();
+                closeScheduleModal();
+            } else {
+                errEl.textContent = (res && res.message) || 'Une erreur est survenue.';
+                errEl.classList.remove('hidden');
+                btn.textContent = 'Activer le tirage automatique';
+            }
+        }
+
+        async function deleteSchedule() {
+            const btn = document.getElementById('scheduleDeleteBtn');
+            btn.disabled = true;
+            btn.textContent = 'Désactivation...';
+            const res = await window.OradiaTirageStorage.deleteSchedule();
+            btn.disabled = false;
+            btn.textContent = 'Désactiver';
+            if (res && res.success) {
+                _scheduleState = null;
+                renderScheduleStatus();
+                closeScheduleModal();
+            }
+        }
+
+        // ============ Filtre ponctuel / programmé ============
+        function setSourceFilter(filter) {
+            document.querySelectorAll('#sourceFilters .filter-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.filter === filter);
+            });
+            document.querySelectorAll('#tiragesList .tirage-card').forEach(card => {
+                const show = filter === 'all' || card.dataset.source === filter;
+                card.style.display = show ? '' : 'none';
+            });
+        }
+
+        initScheduledDraws();
     </script>
 <script src="../js/page-tracker.js" defer></script>
 </body>
