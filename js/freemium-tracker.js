@@ -325,20 +325,25 @@ class FreemiumTracker {
                 #tore-limit-modal .tlm-email::placeholder { color:rgba(212,175,55,0.3); }
                 #tore-limit-modal .tlm-email:focus { border-color:rgba(212,175,55,0.65);box-shadow:0 0 0 3px rgba(212,175,55,0.1); }
                 #tore-limit-modal .tlm-close:hover { color:rgba(233,231,223,0.6) !important; }
-                #tore-limit-modal .tlm-offers-row { display:flex;gap:10px;margin-bottom:20px;align-items:stretch; }
-                #tore-limit-modal .tlm-offers-left { flex:1;display:flex;flex-direction:row;gap:10px;min-width:0; }
-                #tore-limit-modal .tlm-offers-left > div { flex:1;display:flex;flex-direction:column; }
-                #tore-limit-modal .tlm-preorder { width:190px;flex-shrink:0;border-radius:12px;overflow:hidden;text-decoration:none;position:relative;display:block;transition:transform 0.2s ease,box-shadow 0.2s ease;box-shadow:0 4px 20px rgba(0,0,0,0.4);min-height:210px; }
+                #tore-limit-modal .tlm-grid { display:flex;flex-wrap:wrap;gap:20px;margin-bottom:20px;align-items:stretch; }
+                #tore-limit-modal .tlm-col-left { flex:1 1 260px;min-width:240px;display:flex;flex-direction:column; }
+                #tore-limit-modal .tlm-col-right { flex:1 1 220px;min-width:200px;display:flex;flex-direction:column;gap:16px; }
+                #tore-limit-modal .tlm-preorder { width:100%;flex-shrink:0;border-radius:12px;overflow:hidden;text-decoration:none;position:relative;display:block;transition:transform 0.2s ease,box-shadow 0.2s ease;box-shadow:0 4px 20px rgba(0,0,0,0.4);min-height:190px; }
                 #tore-limit-modal .tlm-preorder:hover { transform:scale(1.02);box-shadow:0 8px 32px rgba(212,175,55,0.25); }
-                @media(max-width:440px){ #tore-limit-modal .tlm-preorder { width:130px; } }
-                @media(max-width:360px){ #tore-limit-modal .tlm-preorder { width:100px; } }
+                #tore-limit-modal .tlm-referral { flex:1;background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.25);border-radius:12px;padding:16px; }
             `;
             document.head.appendChild(style);
         }
 
         const modal = document.createElement('div');
         modal.id = 'tore-limit-modal';
-        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;background:url(\'/images/oradia-hero-4k.webp\') center/cover no-repeat;animation:toreModalFadeIn 0.35s ease;overflow-y:auto;';
+        // display:flex + align-items/justify-content:center clippe le haut d'un
+        // contenu qui dépasse la hauteur du viewport dans plusieurs navigateurs
+        // (le centrage flexbox calcule un décalage négatif hors de la zone
+        // scrollable). On centre via margin:auto sur la carte à la place —
+        // ça centre normalement quand il y a la place, et devient un simple
+        // défilement top-to-bottom sinon, sans jamais couper le contenu.
+        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;padding:24px 12px;background:url(\'/images/oradia-hero-4k.webp\') center/cover no-repeat;animation:toreModalFadeIn 0.35s ease;overflow-y:auto;';
         modal.style.setProperty('--tlm-bg', 'rgba(2,6,20,0.82)');
         // Overlay sombre sur l'image hero
         const bgOverlay = document.createElement('div');
@@ -346,7 +351,7 @@ class FreemiumTracker {
         modal.appendChild(bgOverlay);
         modal.innerHTML = `
             <div class="tlm-card" role="dialog" aria-modal="true" aria-label="Tirages offerts utilisés"
-                 style="position:relative;width:calc(100vw - 24px);max-width:600px;border-radius:0;overflow:hidden;
+                 style="position:relative;margin:auto;width:100%;max-width:min(880px, calc(100vw - 24px));border-radius:0;overflow:hidden;
                         border:1px solid rgba(212,175,55,0.25);
                         box-shadow:0 32px 90px rgba(0,0,0,0.8),0 0 60px rgba(212,175,55,0.06);
                         font-family:Georgia,'Times New Roman',serif;">
@@ -376,13 +381,11 @@ class FreemiumTracker {
                     <!-- Séparateur -->
                     <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);margin:0 auto 20px;"></div>
 
-                    <!-- Offres + pub côte à côte -->
-                    <div class="tlm-offers-row">
+                    <!-- Offre à gauche / précommande + parrainage à droite -->
+                    <div class="tlm-grid">
 
-                        <!-- Colonne gauche : 2 offres empilées -->
-                        <div class="tlm-offers-left">
-
-                            <!-- Complète — offre unique -->
+                        <!-- Colonne gauche : offre complète -->
+                        <div class="tlm-col-left">
                             <div style="flex:1;background:rgba(212,175,55,0.06);border:1.5px solid rgba(212,175,55,0.5);border-radius:14px;padding:20px 16px 16px;text-align:center;box-shadow:0 0 28px rgba(212,175,55,0.1);display:flex;flex-direction:column;">
                                 <p style="color:rgba(212,175,55,0.7);font-size:0.72rem;letter-spacing:2px;text-transform:uppercase;margin:0 0 8px;">Accès complet · Offre de lancement</p>
                                 <p style="margin:0 0 4px;line-height:1;">
@@ -407,47 +410,46 @@ class FreemiumTracker {
                             </div>
                         </div>
 
-                        <!-- Colonne droite : pub précommande -->
-                        <a href="/precommande-oracle.html" class="tlm-preorder">
-                            <img src="/images/medias/apercu_stripe.webp" alt="Oracle Oradia coffret physique"
-                                 style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
-                            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(3,8,20,0.96) 0%,rgba(3,8,20,0.5) 50%,rgba(3,8,20,0.15) 100%);"></div>
-                            <!-- Badge haut -->
-                            <div style="position:absolute;top:8px;left:0;right:0;text-align:center;">
-                                <span style="display:inline-block;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.6rem;letter-spacing:1.5px;text-transform:uppercase;padding:4px 9px;border-radius:50px;">Édition limitée</span>
-                            </div>
-                            <!-- Contenu bas -->
-                            <div style="position:absolute;bottom:0;left:0;right:0;padding:12px 10px;text-align:center;">
-                                <p style="margin:0 0 3px;color:#f5e7a1;font-size:0.9rem;font-weight:700;line-height:1.25;text-shadow:0 1px 4px rgba(0,0,0,0.8);">Tenez-le<br>entre vos mains</p>
-                                <p style="margin:0 0 8px;color:rgba(212,175,55,0.7);font-size:0.65rem;line-height:1.4;">64 cartes · Livret · Coffret</p>
-                                <span style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#050f23;font-size:0.75rem;font-weight:700;letter-spacing:0.5px;padding:6px 11px;border-radius:50px;box-shadow:0 2px 8px rgba(212,175,55,0.4);">
-                                    Je réserve · 38€
-                                </span>
-                            </div>
-                        </a>
-                    </div>
+                        <!-- Colonne droite : pub précommande + parrainage -->
+                        <div class="tlm-col-right">
+                            <a href="/precommande-oracle.html" class="tlm-preorder">
+                                <img src="/images/medias/apercu_stripe.webp" alt="Oracle Oradia coffret physique"
+                                     style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
+                                <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(3,8,20,0.96) 0%,rgba(3,8,20,0.5) 50%,rgba(3,8,20,0.15) 100%);"></div>
+                                <!-- Badge haut -->
+                                <div style="position:absolute;top:8px;left:0;right:0;text-align:center;">
+                                    <span style="display:inline-block;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.6rem;letter-spacing:1.5px;text-transform:uppercase;padding:4px 9px;border-radius:50px;">Édition limitée</span>
+                                </div>
+                                <!-- Contenu bas -->
+                                <div style="position:absolute;bottom:0;left:0;right:0;padding:12px 10px;text-align:center;">
+                                    <p style="margin:0 0 3px;color:#f5e7a1;font-size:0.9rem;font-weight:700;line-height:1.25;text-shadow:0 1px 4px rgba(0,0,0,0.8);">Tenez-le<br>entre vos mains</p>
+                                    <p style="margin:0 0 8px;color:rgba(212,175,55,0.7);font-size:0.65rem;line-height:1.4;">64 cartes · Livret · Coffret</p>
+                                    <span style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#050f23;font-size:0.75rem;font-weight:700;letter-spacing:0.5px;padding:6px 11px;border-radius:50px;box-shadow:0 2px 8px rgba(212,175,55,0.4);">
+                                        Je réserve · 38€
+                                    </span>
+                                </div>
+                            </a>
 
-                    <!-- Séparateur -->
-                    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);margin:20px auto;"></div>
-
-                    <!-- Parrainage : alternative gratuite au paiement -->
-                    <div style="text-align:center;margin-bottom:20px;">
-                        <p style="color:#f0c75e;font-family:Georgia,serif;font-size:1.05rem;font-weight:700;margin:0 0 6px;">
-                            <i class="fas fa-gift" style="margin-right:7px;font-size:0.9rem;"></i>Ou offrez un tirage à un proche
-                        </p>
-                        <p style="color:rgba(233,231,223,0.65);font-size:0.85rem;line-height:1.65;margin:0 auto 16px;max-width:380px;">
-                            Partagez votre lien : la personne qui l'utilise reçoit un tirage gratuit — et vous en gagnez un aussi.
-                        </p>
-                        <div style="display:flex;flex-wrap:wrap;gap:8px;max-width:400px;width:100%;margin:0 auto;box-sizing:border-box;">
-                            <input id="tlm-referral-link-input" type="text" readonly
-                                style="flex:1 1 180px;min-width:0;width:100%;background:rgba(5,20,40,0.85);border:1px solid rgba(212,175,55,0.3);border-radius:10px;color:#e8d9b0;font-family:Georgia,serif;font-size:12.5px;padding:12px;outline:none;box-sizing:border-box;text-align:center;">
-                            <button id="tlm-referral-copy-btn" class="tlm-secondary"
-                                style="flex:1 1 auto;background:transparent;color:#f0c75e;border:1px solid rgba(212,175,55,0.5);border-radius:10px;padding:0 18px;font-family:Georgia,serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">
-                                <i class="fas fa-copy" style="margin-right:6px;font-size:12px;"></i>Copier
-                            </button>
-                            <button id="tlm-referral-share-btn" class="tlm-secondary" style="display:none;flex:1 1 auto;background:transparent;color:#f0c75e;border:1px solid rgba(212,175,55,0.5);border-radius:10px;padding:0 18px;font-family:Georgia,serif;font-size:0.85rem;font-weight:700;cursor:pointer;min-height:44px;">
-                                <i class="fas fa-share-nodes" style="margin-right:6px;font-size:12px;"></i>Partager
-                            </button>
+                            <!-- Parrainage : alternative gratuite au paiement -->
+                            <div class="tlm-referral" style="text-align:center;">
+                                <p style="color:#f0c75e;font-family:Georgia,serif;font-size:0.95rem;font-weight:700;margin:0 0 6px;">
+                                    <i class="fas fa-gift" style="margin-right:6px;font-size:0.85rem;"></i>Offrez un tirage
+                                </p>
+                                <p style="color:rgba(233,231,223,0.65);font-size:0.78rem;line-height:1.55;margin:0 0 12px;">
+                                    Votre lien : un tirage gratuit pour vous deux.
+                                </p>
+                                <div style="display:flex;flex-direction:column;gap:8px;">
+                                    <input id="tlm-referral-link-input" type="text" readonly
+                                        style="width:100%;background:rgba(5,20,40,0.85);border:1px solid rgba(212,175,55,0.3);border-radius:10px;color:#e8d9b0;font-family:Georgia,serif;font-size:12px;padding:10px;outline:none;box-sizing:border-box;text-align:center;">
+                                    <button id="tlm-referral-copy-btn" class="tlm-secondary"
+                                        style="width:100%;background:transparent;color:#f0c75e;border:1px solid rgba(212,175,55,0.5);border-radius:10px;padding:10px;font-family:Georgia,serif;font-size:0.8rem;font-weight:700;cursor:pointer;">
+                                        <i class="fas fa-copy" style="margin-right:6px;font-size:11px;"></i>Copier
+                                    </button>
+                                    <button id="tlm-referral-share-btn" class="tlm-secondary" style="display:none;width:100%;background:transparent;color:#f0c75e;border:1px solid rgba(212,175,55,0.5);border-radius:10px;padding:10px;font-family:Georgia,serif;font-size:0.8rem;font-weight:700;cursor:pointer;">
+                                        <i class="fas fa-share-nodes" style="margin-right:6px;font-size:11px;"></i>Partager
+                                    </button>
+                                </div>
+                            </div>
                         </div>
                     </div>
 
