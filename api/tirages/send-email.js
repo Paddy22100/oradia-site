@@ -1431,11 +1431,17 @@ async function handleRunScheduledDraws(req, res) {
       const isActiveSubscriber = sub && sub.status === 'active' && new Date(sub.expires_at) > new Date();
       if (!isActiveSubscriber) { skipped++; continue; }
 
-      const rawCards = drawSevenCards();
-      const cards = rawCards.map(c => ({ ...c, imgSrc: resolveCardImageUrl(c.name) || '' }));
+      const { cards: rawCards, qrngSource } = await drawSevenCards();
+      const cards = rawCards.map(c => {
+        const card = { ...c, imgSrc: resolveCardImageUrl(c.name) || '' };
+        if (card.bridgeCard) card.bridgeCard = { ...card.bridgeCard, imgSrc: resolveCardImageUrl(card.bridgeCard.name) || '' };
+        return card;
+      });
 
       const analysis = await generateScheduledAnalysis({ intention: sched.intention, cards, gender: sched.gender });
       if (!analysis) { failed++; continue; }
+
+      const passerelles = cards.filter(c => c.bridgeCard).map(c => ({ carte: c.name, passerelle: c.bridgeCard.name }));
 
       // Enregistrer dans l'historique (source = programme, rétention séparée des tirages ponctuels)
       const { error: insErr } = await supabase.from('tirages').insert({
@@ -1444,13 +1450,33 @@ async function handleRunScheduledDraws(req, res) {
         source: 'programme',
         intention: sched.intention,
         cartes: cards.map(c => c.name),
-        passerelles: [],
+        passerelles,
         interpretations: [],
         synthese: analysis.synthesis || null,
         analyse_ia: analysis.cards || null,
         pistes: analysis.explore || null
       });
       if (insErr) console.error('[run-scheduled-draws] insert tirage error:', insErr.message);
+
+      // Alimente les études scientifiques (synchronicités) — uniquement si le tirage
+      // entier a utilisé une source quantique vérifiée (aucun octet en repli crypto),
+      // exactement la même règle que le tirage manuel (QUANTUM_SOURCES côté client
+      // et api/fenetre/index.js). Insertion directe : même forme que handleActivation.
+      const { parseObservationSection } = require('../../lib/tore-analysis-prompt.js');
+      const obs = parseObservationSection(analysis.observation);
+      if (obs && (qrngSource === 'anu' || qrngSource === 'outshift')) {
+        const closesAt = new Date(Date.now() + obs.days * 24 * 60 * 60 * 1000);
+        const { error: obsErr } = await supabase.from('observation_windows').insert({
+          email: sched.email,
+          intention: sched.intention,
+          cards: cards.map(c => ({ family: c.family, name: c.name })),
+          attention_points: obs.points,
+          duration_days: obs.days,
+          closes_at: closesAt.toISOString(),
+          qrng_source: qrngSource
+        });
+        if (obsErr) console.error('[run-scheduled-draws] insert observation_windows error:', obsErr.message);
+      }
 
       // Envoi de l'email — réutilise le template existant (handleSendEmail) via un req/res
       // synthétique, comme handleCollectEmail le fait déjà pour l'email J0.
@@ -1463,7 +1489,10 @@ async function handleRunScheduledDraws(req, res) {
             cards,
             analysis: analysis.cards,
             pistes: analysis.explore,
-            synthesis: analysis.synthesis
+            synthesis: analysis.synthesis,
+            observationDays: obs ? obs.days : null,
+            observationText: obs ? obs.text : '',
+            attentionPoints: obs ? obs.points : []
           }
         };
         const fakeRes = {
