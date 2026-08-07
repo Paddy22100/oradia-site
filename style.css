@@ -104,3 +104,15 @@ p {
         transparent
     );
 }
+
+/* ===== BOUTON "REMONTER EN HAUT" AU-DESSUS DE LA NAV MOBILE ===== */
+/* Sur les pages avec une barre de navigation fixe en bas (espace membre),
+   le bouton doit remonter pour ne pas recouvrir la dernière icône. */
+.back-to-top--above-mobile-nav {
+    bottom: 5.5rem;
+}
+@media (min-width: 1024px) {
+    .back-to-top--above-mobile-nav {
+        bottom: 1.5rem;
+    }
+}
