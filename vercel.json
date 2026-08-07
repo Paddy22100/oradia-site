@@ -6,14 +6,39 @@
     { "path": "/api/admin/data?action=cron-monthly-report", "schedule": "0 9 1 * *" },
     { "path": "/api/admin/data?action=cron-retro-pool", "schedule": "0 7 * * *" }
   ],
-    "redirects": [
-    {
-      "source": "/index.html",
-      "destination": "/",
-      "permanent": true
-    }
-  ],
   "routes": [
+    {
+      "src": "/index\\.html",
+      "status": 308,
+      "headers": { "Location": "/" }
+    },
+    {
+      "src": "/(.*)\\.html",
+      "headers": { "Cache-Control": "no-cache" },
+      "continue": true
+    },
+    {
+      "src": "/api/(.*)",
+      "headers": {
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "X-XSS-Protection": "1; mode=block"
+      },
+      "continue": true
+    },
+    {
+      "src": "/(.*)",
+      "headers": {
+        "Content-Security-Policy": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://js.stripe.com https://api.brevo.com https://cdnjs.cloudflare.com https://vercel.live https://cdn.jsdelivr.net https://app.cal.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' https://fonts.googleapis.com https://api.stripe.com https://m.stripe.com https://api.brevo.com https://vercel.live wss://vercel.live https://nxzetkdozynyutlbhxdx.supabase.co https://api.quantumnumbers.anu.edu.au https://app.cal.com https://cal.com https://image.pollinations.ai; frame-src 'self' https://js.stripe.com https://m.stripe.com https://vercel.live https://app.cal.com https://cal.com; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com; upgrade-insecure-requests",
+        "Strict-Transport-Security": "max-age=31536000; includeSubDomains; preload",
+        "X-Content-Type-Options": "nosniff",
+        "X-Frame-Options": "DENY",
+        "X-XSS-Protection": "1; mode=block",
+        "Referrer-Policy": "strict-origin-when-cross-origin",
+        "Permissions-Policy": "camera=(), microphone=(), geolocation=(), interest-cohort=()"
+      },
+      "continue": true
+    },
     {
       "src": "/api/stripe-webhook",
       "dest": "/api/stripe-webhook.js"
@@ -132,66 +157,5 @@
   },
   "env": {
     "NODE_ENV": "production"
-  },
-  "headers": [
-    {
-      "source": "/(.*).html",
-      "headers": [
-        {
-          "key": "Cache-Control",
-          "value": "no-cache"
-        }
-      ]
-    },
-    {
-      "source": "/api/(.*)",
-      "headers": [
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        }
-      ]
-    },
-    {
-      "source": "/(.*)",
-      "headers": [
-        {
-          "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.tailwindcss.com https://js.stripe.com https://api.brevo.com https://cdnjs.cloudflare.com https://vercel.live https://cdn.jsdelivr.net https://app.cal.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://cdnjs.cloudflare.com; font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com; img-src 'self' data: blob: https:; connect-src 'self' https://fonts.googleapis.com https://api.stripe.com https://m.stripe.com https://api.brevo.com https://vercel.live wss://vercel.live https://nxzetkdozynyutlbhxdx.supabase.co https://api.quantumnumbers.anu.edu.au https://app.cal.com https://cal.com https://image.pollinations.ai; frame-src 'self' https://js.stripe.com https://m.stripe.com https://vercel.live https://app.cal.com https://cal.com; object-src 'none'; base-uri 'self'; form-action 'self' https://checkout.stripe.com; upgrade-insecure-requests"
-        },
-        {
-          "key": "Strict-Transport-Security",
-          "value": "max-age=31536000; includeSubDomains; preload"
-        },
-        {
-          "key": "X-Content-Type-Options",
-          "value": "nosniff"
-        },
-        {
-          "key": "X-Frame-Options",
-          "value": "DENY"
-        },
-        {
-          "key": "X-XSS-Protection",
-          "value": "1; mode=block"
-        },
-        {
-          "key": "Referrer-Policy",
-          "value": "strict-origin-when-cross-origin"
-        },
-        {
-          "key": "Permissions-Policy",
-          "value": "camera=(), microphone=(), geolocation=(), interest-cohort=()"
-        }
-      ]
-    }
-  ]
+  }
 }
