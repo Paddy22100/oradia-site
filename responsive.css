@@ -82,23 +82,25 @@ p {
 
 /* ===== HEADER ET NAVIGATION ===== */
 
-/* Header mobile - exclut le header global partagé */
+/* Header mobile - exclut le header global partagé et le header de l'espace
+   membre (celui-ci a sa propre taille fixe, volontairement identique sur
+   les 6 pages membre, que la page charge responsive.css ou non). */
 @media (max-width: 1023px) {
-    header:not(.header-bg) {
+    header:not(.header-bg):not(.member-app-header) {
         padding: 0.75rem 0.75rem !important;
     }
-    
-    header:not(.header-bg) .flex {
+
+    header:not(.header-bg):not(.member-app-header) .flex {
         flex-wrap: nowrap;
     }
-    
-    /* Logo adaptatif - exclut le header global */
-    header:not(.header-bg) img {
+
+    /* Logo adaptatif - exclut le header global et le header membre */
+    header:not(.header-bg):not(.member-app-header) img {
         width: 1.75rem !important;
         height: 1.75rem !important;
     }
-    
-    header:not(.header-bg) .gold-gradient {
+
+    header:not(.header-bg):not(.member-app-header) .gold-gradient {
         font-size: 1rem !important;
     }
     
