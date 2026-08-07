@@ -726,9 +726,19 @@
 <script>window.onload = function(){ window.print(); }<\/script>
 </body></html>`;
 
-            const w = window.open('', '_blank', 'width=780,height=960');
-            w.document.write(html);
-            w.document.close();
+            // Sur mobile, window.open('', '_blank') + document.write() est peu fiable :
+            // l'onglet s'ouvre parfois de façon asynchrone et le document.write arrive
+            // trop tard (ou le popup est bloqué) — l'onglet reste alors sur about:blank.
+            // Une URL Blob est une vraie page navigable, chargée normalement par le
+            // navigateur, donc bien plus robuste sur mobile.
+            const blob = new Blob([html], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const w = window.open(url, '_blank', 'width=780,height=960');
+            if (!w) {
+                // Popup bloqué : on retombe sur la navigation dans l'onglet courant.
+                window.location.href = url;
+            }
+            setTimeout(() => URL.revokeObjectURL(url), 60000);
         }
 
         // Déconnexion
