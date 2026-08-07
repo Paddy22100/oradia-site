@@ -2103,8 +2103,8 @@
                 console.error('[displayDetailedAnalysis] Erreur stockage:', e);
             }
 
-            // Compléter le tirage enregistré dans l'historique avec l'analyse et la synthèse
-            syncTirageToHistory({ analysis: analysis.message, synthesis: analysis.synthesis });
+            // Compléter le tirage enregistré dans l'historique avec l'analyse, les pistes et la synthèse
+            syncTirageToHistory({ analysis: analysis.message, pistes: analysis.advice, synthesis: analysis.synthesis });
         }
 
         // Complète le tirage déjà enregistré dans l'historique (Supabase, membre connecté)
@@ -2247,6 +2247,7 @@
                 // Chercher l'analyse dans toutes les clés connues
                 let analysis = '';
                 let synthesis = '';
+                let pistes = '';
                 let cards = [];
 
                 // Essayer tore_analysis_data en premier
@@ -2256,6 +2257,7 @@
                         const d = JSON.parse(rawData);
                         analysis = d.analysis || d.message || '';
                         synthesis = d.synthesis || '';
+                        pistes = d.advice || '';
                         cards = d.cards || [];
                     } catch(_) {}
                 }
@@ -2272,6 +2274,7 @@
                                 if (typeof d === 'string') { analysis = d; break; }
                                 analysis = d.analysis || d.message || d.text || '';
                                 synthesis = d.synthesis || synthesis;
+                                pistes = d.advice || pistes;
                                 if (Array.isArray(d.cards)) cards = d.cards;
                                 if (analysis) break;
                             } catch(_) {
@@ -2310,6 +2313,7 @@
                         intention,
                         cards,
                         analysis,
+                        pistes,
                         synthesis,
                         observationDays,
                         observationText,
@@ -2337,7 +2341,7 @@
                     // les mêmes données sous la main (analysis/synthesis) — on retente,
                     // pour que ce qui part par email soit aussi retrouvable dans
                     // l'espace membre, pas seulement dans la boîte mail.
-                    if (analysis || synthesis) syncTirageToHistory({ analysis, synthesis });
+                    if (analysis || synthesis) syncTirageToHistory({ analysis, pistes, synthesis });
                 } else {
                     throw new Error('Erreur serveur');
                 }

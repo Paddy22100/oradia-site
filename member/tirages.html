@@ -425,6 +425,11 @@
                                 <p style="color:rgba(212,175,55,0.6);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;"><i class="fas fa-scroll" style="margin-right:6px;"></i>Analyse de l'Oracle</p>
                                 <p style="color:rgba(245,231,161,0.88);font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;line-height:1.85;white-space:pre-line;">${t.analyseIa.trim()}</p>
                             </div>` : ''}
+                            ${t.pistes ? `
+                            <div style="margin-top:16px;padding:16px 20px;background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.18);border-radius:12px;">
+                                <p style="color:rgba(212,175,55,0.6);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;"><i class="fas fa-compass" style="margin-right:6px;"></i>Pistes à explorer</p>
+                                <p style="color:rgba(245,231,161,0.8);font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-style:italic;line-height:1.85;white-space:pre-line;">${t.pistes.trim()}</p>
+                            </div>` : ''}
                             ${interpretationsHtml}
                             ${t.synthese ? `
                             <div style="margin-top:18px;padding:14px 18px;background:rgba(212,175,55,0.05);border-radius:10px;border:1px solid rgba(212,175,55,0.2);">
@@ -571,6 +576,13 @@
                         <p style="color:#6b6350;font-size:13.5px;line-height:1.8;font-style:italic;">Aucune analyse enregistrée pour ce tirage. Cela arrive quand le tirage a été effectué sans être connecté à ton espace membre, ou si l'analyse n'a pas été consultée jusqu'au bout au moment du tirage.</p>
                     </div>`;
 
+            const pistesSection = t.pistes ? `
+                <div class="hr"></div>
+                <div style="padding:18px 20px;background:#fffdf6;border:1px solid rgba(212,175,55,0.25);border-radius:12px;">
+                    <p class="sl">Pistes à explorer</p>
+                    <p style="color:#2d2a1e;font-size:14px;line-height:1.85;font-style:italic;white-space:pre-line;">${t.pistes.trim()}</p>
+                </div>` : '';
+
             const syntheseSection = t.synthese ? `
                 <div class="hr"></div>
                 <div style="padding:18px 20px;background:linear-gradient(135deg,rgba(212,175,55,0.07),rgba(212,175,55,0.02));border:1px solid rgba(212,175,55,0.28);border-radius:12px;">
@@ -690,6 +702,7 @@
       ${passerellesSection}
 
       ${analyseIaSection}
+      ${pistesSection}
       ${interpretationsSection}
       ${syntheseSection}
       ${observationSection}

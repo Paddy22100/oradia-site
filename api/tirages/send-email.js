@@ -66,7 +66,7 @@ async function handleSaveTirage(req, res) {
   }
 
   const body = await parseJsonBody(req);
-  const { type, intention, cards, cartes, passerelles, synthesis, observationWindow, interpretations, analysis } = body;
+  const { type, intention, cards, cartes, passerelles, synthesis, observationWindow, interpretations, analysis, pistes } = body;
 
   // Accepte deux formats : cartes "brutes" (avec bridgeCard imbriqué, format tore.html)
   // ou déjà aplaties (cartes / passerelles, format historique pré-calculé)
@@ -92,7 +92,8 @@ async function handleSaveTirage(req, res) {
     interpretations: interpretations || [],
     synthese: synthesis || null,
     observation_window: observationWindow || null,
-    analyse_ia: analysis || null
+    analyse_ia: analysis || null,
+    pistes: pistes || null
   };
 
   const { data, error } = await supabase.from('tirages').insert(row).select().single();
@@ -119,7 +120,7 @@ async function handleUpdateTirage(req, res) {
   }
 
   const body = await parseJsonBody(req);
-  const { id, synthesis, observationWindow, interpretations, analysis } = body;
+  const { id, synthesis, observationWindow, interpretations, analysis, pistes } = body;
 
   if (!id) {
     return res.status(400).json({ success: false, message: 'Identifiant du tirage requis.' });
@@ -128,6 +129,7 @@ async function handleUpdateTirage(req, res) {
   const updates = {};
   if (synthesis !== undefined) updates.synthese = synthesis;
   if (analysis !== undefined) updates.analyse_ia = analysis;
+  if (pistes !== undefined) updates.pistes = pistes;
   if (interpretations !== undefined) updates.interpretations = interpretations;
   if (observationWindow !== undefined) updates.observation_window = observationWindow;
 
@@ -187,7 +189,8 @@ async function handleListTirages(req, res) {
     interpretations: t.interpretations || [],
     synthese: t.synthese,
     observationWindow: t.observation_window,
-    analyseIa: t.analyse_ia || null
+    analyseIa: t.analyse_ia || null,
+    pistes: t.pistes || null
   }));
 
   return res.status(200).json({ success: true, tirages });
@@ -200,7 +203,7 @@ async function handleSendEmail(req, res) {
   }
 
   try {
-    const { email, intention, cards, analysis, synthesis, subscribeNewsletter,
+    const { email, intention, cards, analysis, synthesis, pistes, subscribeNewsletter,
             observationWindow: obsWinRaw, observationDays, observationText, attentionPoints } = req.body;
 
     // Normaliser la fenêtre d'observation : accepte l'ancien format objet OU les champs séparés
@@ -434,6 +437,17 @@ async function handleSendEmail(req, res) {
           </td>
         </tr>` : ''}
 
+        <!-- PISTES À EXPLORER -->
+        ${pistes ? `
+        <tr>
+          <td class="pad-sm" style="padding:4px 32px 16px;" bgcolor="#050a19">
+            <p style="margin:0 0 16px;color:#8a6d20;font-size:9px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; Pistes &#224; explorer &#10022;</p>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:2px solid #8a6d20;">
+              <tr><td style="padding:4px 0 4px 20px;">${formatAnalysis(pistes)}</td></tr>
+            </table>
+          </td>
+        </tr>` : ''}
+
         <!-- SYNTHÈSE -->
         ${synthesis ? `
         <tr>
@@ -533,6 +547,7 @@ VOS CARTES:
 ${cards.map(c => `- ${c.name} (${c.family})`).join('\n')}
 
 ${analysis ? `\nMESSAGE DE L'ORACLE:\n${analysis}\n` : ''}
+${pistes ? `\nPISTES À EXPLORER:\n${pistes}\n` : ''}
 ${synthesis ? `\nSYNTHÈSE:\n${synthesis}\n` : ''}
 
 Faire un nouveau tirage : https://oradia.fr/tore.html
