@@ -2463,6 +2463,35 @@
                 </div>
             </div>
 
+            <!-- Santé du pool pré-scellé : garantit qu'il existe bien un "passé" quantique
+                 disponible pour chaque nouveau tirage, et que le cron de remplissage tourne. -->
+            <div class="stat-card rounded-2xl p-6 mb-6">
+                <div class="flex items-center justify-between mb-1 flex-wrap gap-2">
+                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-database text-gold/60"></i> Stock du pool rétrocausalité</h4>
+                    <span id="pool-health-badge" class="text-xs font-semibold px-2.5 py-1 rounded-full">—</span>
+                </div>
+                <p class="text-gold/40 text-xs mb-4 italic">Nombres quantiques pré-scellés à l'avance, nécessaires pour garantir un "passé" à chaque nouveau tirage. Rempli automatiquement chaque jour (07h UTC).</p>
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                    <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-3 text-center">
+                        <div class="text-2xl font-bold text-teal-300" id="pool-available">—</div>
+                        <div class="text-light-gold/40 text-xs uppercase mt-1">En stock</div>
+                    </div>
+                    <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-3 text-center">
+                        <div class="text-2xl font-bold text-gold" id="pool-oldest-age">—</div>
+                        <div class="text-light-gold/40 text-xs uppercase mt-1">Plus vieux nombre</div>
+                    </div>
+                    <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-3 text-center">
+                        <div class="text-lg font-bold text-gold" id="pool-last-cron">—</div>
+                        <div class="text-light-gold/40 text-xs uppercase mt-1">Dernier remplissage</div>
+                    </div>
+                    <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-3 text-center">
+                        <div class="text-2xl font-bold" id="pool-recent-rate">—</div>
+                        <div class="text-light-gold/40 text-xs uppercase mt-1">"Passé" attribué (7j)</div>
+                    </div>
+                </div>
+                <div id="pool-health-warning" class="hidden text-amber-300/90 text-xs bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2"></div>
+            </div>
+
             <!-- Deux jauges : passé et futur -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
                 <!-- PASSÉ -->
@@ -10110,6 +10139,47 @@
                     else if ((d.n_total || 0) === 0) msg = 'Aucun tirage quantique valide enregistré pour l\'instant. Les chiffres se rempliront au fur et à mesure des tirages (uniquement ceux 100 % ANU ou Outshift).';
                     warn.textContent = msg;
                     warn.classList.toggle('hidden', !msg);
+                }
+
+                // Santé du pool pré-scellé
+                const ph = d.pool_health;
+                if (ph) {
+                    set('pool-available', ph.available ?? 0);
+                    set('pool-oldest-age', ph.oldest_age_hours == null ? '—' : (ph.oldest_age_hours >= 24 ? Math.round(ph.oldest_age_hours / 24) + 'j' : ph.oldest_age_hours.toFixed(0) + 'h'));
+                    set('pool-last-cron', ph.last_cron ? (ph.last_cron.age_hours < 1 ? '<1h' : ph.last_cron.age_hours.toFixed(0) + 'h') : 'jamais');
+                    const rate = ph.recent_sessions_7d > 0 ? Math.round((ph.recent_sessions_7d_with_past / ph.recent_sessions_7d) * 100) : null;
+                    const rateEl = document.getElementById('pool-recent-rate');
+                    if (rateEl) {
+                        rateEl.textContent = rate == null ? '—' : rate + '%';
+                        rateEl.className = 'text-2xl font-bold ' + (rate == null ? 'text-gold' : rate >= 90 ? 'text-teal-300' : rate >= 50 ? 'text-amber-300' : 'text-red-400');
+                    }
+
+                    const HEALTH_UI = {
+                        ok:          { color: '#22c55e', bg: 'rgba(34,197,94,0.15)', label: 'OK' },
+                        no_buffer:   { color: '#f59e0b', bg: 'rgba(245,158,11,0.15)', label: 'Stock trop récent' },
+                        cron_stale:  { color: '#f59e0b', bg: 'rgba(245,158,11,0.15)', label: 'Cron en retard' },
+                        cron_failed: { color: '#ef4444', bg: 'rgba(239,68,68,0.15)', label: 'Échec remplissage' },
+                        empty:       { color: '#ef4444', bg: 'rgba(239,68,68,0.15)', label: 'Stock épuisé' },
+                        unknown:     { color: '#6b7280', bg: 'rgba(107,114,128,0.15)', label: 'Inconnu' },
+                    };
+                    const hui = HEALTH_UI[ph.status] || HEALTH_UI.unknown;
+                    const badge = document.getElementById('pool-health-badge');
+                    if (badge) {
+                        badge.textContent = hui.label;
+                        badge.style.color = hui.color;
+                        badge.style.background = hui.bg;
+                        badge.style.border = `1px solid ${hui.color}40`;
+                    }
+                    const phWarn = document.getElementById('pool-health-warning');
+                    if (phWarn) {
+                        let wmsg = '';
+                        if (ph.status === 'empty') wmsg = '⚠️ Le pool est vide : les nouveaux tirages n\'auront pas de "passé" attribué tant qu\'il ne sera pas réalimenté. Vérifie les clés ANU_QRNG_API_KEY / OUTSHIFT_QRNG_API_KEY.';
+                        else if (ph.status === 'cron_failed') wmsg = '⚠️ Le dernier remplissage a échoué : ' + (ph.last_cron?.message || '');
+                        else if (ph.status === 'cron_stale') wmsg = `⚠️ Le cron de remplissage n'a pas tourné depuis ${ph.last_cron ? ph.last_cron.age_hours.toFixed(0) + 'h' : 'longtemps'} (attendu : toutes les 24h). Vérifie qu'il est toujours actif sur Vercel.`;
+                        else if (ph.status === 'no_buffer') wmsg = 'ℹ️ Le pool vient d\'être rempli — le plus vieux nombre en stock a moins de 20h. Normal juste après un remplissage, à surveiller si ça persiste.';
+                        phWarn.textContent = wmsg;
+                        phWarn.classList.toggle('hidden', !wmsg);
+                    }
                 }
 
                 // Avancement

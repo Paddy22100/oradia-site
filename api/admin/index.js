@@ -1023,6 +1023,9 @@ async function handleData(req, res) {
             }
           }
 
+          const wasLow = (available || 0) < LOW;
+          const fillFailed = wasLow && out.filled === 0;
+
           // (2) Résolution des "futurs" : chaque session sans future_bit reçoit le plus
           //     ancien octet du pool scellé APRÈS son intention (donc un vrai "futur").
           const { data: pend } = await sb.from('retro_sessions')
@@ -1040,8 +1043,24 @@ async function handleData(req, res) {
               out.resolved++;
             }
           }
+          // Traçabilité : chaque exécution du cron est journalisée (succès ou échec de
+          // remplissage), pour pouvoir vérifier après coup que le pool a bien été
+          // réalimenté chaque jour et détecter un décrochage silencieux.
+          await logSystemEvent(sb, {
+            level: fillFailed ? 'error' : 'info',
+            source: 'cron-retro-pool',
+            method: 'GET',
+            path: '/api/admin/data',
+            status_code: fillFailed ? 500 : 200,
+            message: fillFailed
+              ? `Échec remplissage pool rétrocausalité (stock avant : ${available || 0}, raison : ${out.source})`
+              : `Pool rétrocausalité : ${out.filled} ajouté(s) (${out.source || 'stock suffisant, pas de remplissage'}), ${out.resolved} futur(s) résolu(s)`,
+            details: { available_before: available || 0, ...out }
+          });
+
           return res.status(200).json({ success: true, ...out });
         } catch (e) {
+          await logSystemEvent(sb, { level: 'error', source: 'cron-retro-pool', method: 'GET', path: '/api/admin/data', status_code: 500, message: `Exception cron-retro-pool : ${e.message}` });
           return res.status(200).json({ success: false, error: e.message });
         }
       }
@@ -6016,15 +6035,39 @@ Réponds en français, sans tiret long, format markdown compact.`
       };
 
       try {
-        const [sessRes, preRes, poolRes] = await Promise.all([
+        const [sessRes, preRes, poolRes, poolOldestRes, poolNewestRes, lastCronRes, recentSessRes] = await Promise.all([
           sb.from('retro_sessions').select('present_bit,past_bit,future_bit').eq('status', 'complete').in('qrng_source', QUANTUM_SOURCES).limit(200000),
           sb.from('retro_preregistration').select('*').order('registered_at', { ascending: true }).limit(1),
-          sb.from('retro_pool').select('*', { count: 'exact', head: true }).is('consumed_at', null)
+          sb.from('retro_pool').select('*', { count: 'exact', head: true }).is('consumed_at', null),
+          sb.from('retro_pool').select('committed_at').is('consumed_at', null).order('committed_at', { ascending: true }).limit(1),
+          sb.from('retro_pool').select('committed_at').is('consumed_at', null).order('committed_at', { ascending: false }).limit(1),
+          sb.from('system_logs').select('created_at,level,message').eq('source', 'cron-retro-pool').order('created_at', { ascending: false }).limit(1),
+          sb.from('retro_sessions').select('past_bit').gte('created_at', new Date(Date.now() - 7 * 24 * 3600 * 1000).toISOString())
         ]);
         if (sessRes.error) throw sessRes.error;
         const rows = sessRes.data || [];
         const pre = (preRes.data && preRes.data[0]) || null;
         const targetN = (pre && pre.target_n) || parseInt(process.env.RETRO_TARGET_N || '10000', 10);
+
+        // Santé du pool : stock dispo + ancienneté du plus vieux nombre en stock (garantit
+        // qu'il existe bien un "passé" pré-scellé pour les nouveaux tirages) + dernier passage
+        // du cron de remplissage + taux réel de sessions ayant reçu un past_bit sur 7 jours.
+        const oldestCommittedAt = (poolOldestRes.data && poolOldestRes.data[0]?.committed_at) || null;
+        const newestCommittedAt = (poolNewestRes.data && poolNewestRes.data[0]?.committed_at) || null;
+        const lastCron = (lastCronRes.data && lastCronRes.data[0]) || null;
+        const recentSess = recentSessRes.data || [];
+        const recentWithPast = recentSess.filter(r => r.past_bit != null).length;
+        const poolAvailable = poolRes.count || 0;
+        const oldestAgeHours = oldestCommittedAt ? (Date.now() - new Date(oldestCommittedAt).getTime()) / 3600000 : null;
+        const lastCronAgeHours = lastCron ? (Date.now() - new Date(lastCron.created_at).getTime()) / 3600000 : null;
+
+        let poolHealth = 'unknown';
+        if (poolAvailable === 0) poolHealth = 'empty';
+        else if (lastCron && lastCron.level === 'error') poolHealth = 'cron_failed';
+        else if (lastCronAgeHours != null && lastCronAgeHours > 26) poolHealth = 'cron_stale';
+        else if (oldestAgeHours != null && oldestAgeHours < 20) poolHealth = 'no_buffer'; // pas encore un plein cycle de stock "veille"
+        else poolHealth = 'ok';
+
         return res.status(200).json({
           success: true,
           n_total: rows.length,
@@ -6033,6 +6076,16 @@ Réponds en français, sans tiret long, format markdown compact.`
           alpha: pre ? Number(pre.alpha) : 0.05,
           registered_at: pre ? pre.registered_at : null,
           hypotheses: pre ? pre.hypotheses : null,
+          pool_health: {
+            status: poolHealth,
+            available: poolAvailable,
+            oldest_committed_at: oldestCommittedAt,
+            oldest_age_hours: oldestAgeHours != null ? Math.round(oldestAgeHours * 10) / 10 : null,
+            newest_committed_at: newestCommittedAt,
+            last_cron: lastCron ? { at: lastCron.created_at, level: lastCron.level, message: lastCron.message, age_hours: Math.round(lastCronAgeHours * 10) / 10 } : null,
+            recent_sessions_7d: recentSess.length,
+            recent_sessions_7d_with_past: recentWithPast
+          },
           pool_available: poolRes.count || 0,
           past: arm(rows, 'past_bit'),
           future: arm(rows, 'future_bit')
