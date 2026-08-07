@@ -11,6 +11,7 @@
     <link rel="stylesheet" href="../responsive.css">
     <script src="../security.js"></script>
     <script src="../js/tirages-storage.js"></script>
+    <script src="../js/referral.js" defer></script>
     <script>
         // Vérifier la session utilisateur membre (pas admin)
         const SESSION_KEY = 'oradia_member_session';
@@ -236,6 +237,28 @@
                 </div>
             </section>
 
+            <!-- Parrainage : offrez un tirage, gagnez-en un -->
+            <section class="mb-6 fade-in">
+                <div class="rounded-xl border border-gold/25 bg-gradient-to-r from-[rgba(26,54,93,0.5)] to-[rgba(5,20,40,0.7)] p-5 sm:p-6">
+                    <div class="flex flex-col sm:flex-row items-center gap-5">
+                        <div class="flex-1 text-center sm:text-left">
+                            <p class="text-gold font-semibold font-cormorant text-lg"><i class="fas fa-gift mr-2"></i>Offrez un tirage à un proche</p>
+                            <p class="text-light-gold/70 text-sm">La personne qui utilise votre lien reçoit un tirage gratuit — et vous aussi.</p>
+                        </div>
+                        <div class="flex flex-wrap gap-2 w-full sm:w-auto sm:max-w-xs">
+                            <input id="dash-referral-link-input" type="text" readonly
+                                class="flex-1 min-w-0 bg-[rgba(5,20,40,0.7)] border border-gold/25 rounded-lg px-3 py-2.5 text-light-gold text-xs text-center outline-none">
+                            <button id="dash-referral-copy-btn" class="bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-2.5 px-4 rounded-lg text-sm hover:from-light-gold hover:to-gold transition-all whitespace-nowrap">
+                                <i class="fas fa-copy mr-1"></i>Copier
+                            </button>
+                            <button id="dash-referral-share-btn" style="display:none;" class="border border-gold/40 text-gold py-2.5 px-4 rounded-lg text-sm hover:bg-gold/10 transition-all whitespace-nowrap">
+                                <i class="fas fa-share-nodes mr-1"></i>Partager
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
             <!-- Derniers tirages -->
             <section class="mb-8">
                 <h3 class="cormorant text-2xl text-gold mb-4">Derniers tirages</h3>
@@ -316,6 +339,16 @@
         // Déconnexion
         document.querySelectorAll('#logoutBtn, #logoutBtnMobile').forEach(btn => {
             if(btn) btn.addEventListener('click', () => { logout(); });
+        });
+
+        // Lien de parrainage — attend que js/referral.js (chargé en defer) soit prêt.
+        document.addEventListener('DOMContentLoaded', function () {
+            if (!window.oradiaReferral) return;
+            window.oradiaReferral.wireShareUI(
+                document.getElementById('dash-referral-link-input'),
+                document.getElementById('dash-referral-copy-btn'),
+                document.getElementById('dash-referral-share-btn')
+            );
         });
     </script>
 <script src="../js/page-tracker.js" defer></script>

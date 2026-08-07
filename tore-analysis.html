@@ -809,11 +809,11 @@
             <div style="display:flex;flex-wrap:wrap;gap:8px;max-width:400px;width:100%;margin:0 auto;box-sizing:border-box;">
                 <input id="referral-link-input" type="text" readonly
                     style="flex:1 1 180px;min-width:0;width:100%;background:rgba(5,20,40,0.85);border:1px solid rgba(212,175,55,0.3);border-radius:10px;color:#e8d9b0;font-family:Georgia,serif;font-size:12.5px;padding:11px 12px;outline:none;box-sizing:border-box;text-align:center;">
-                <button onclick="copyReferralLink(this)"
+                <button id="referral-copy-btn"
                     style="flex:1 1 auto;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#051428;border:none;border-radius:10px;padding:0 20px;font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;font-weight:700;cursor:pointer;min-height:42px;transition:transform 0.15s;box-shadow:0 3px 12px rgba(212,175,55,0.25);" onmouseover="this.style.transform='translateY(-1px)'" onmouseout="this.style.transform='translateY(0)'">
                     <i class="fas fa-copy" style="margin-right:6px;font-size:12px;"></i>Copier
                 </button>
-                <button id="referral-share-btn" onclick="shareReferralLink(this)" style="display:none;flex:1 1 auto;background:transparent;color:#f0c75e;border:1px solid rgba(212,175,55,0.5);border-radius:10px;padding:0 20px;font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;font-weight:700;cursor:pointer;min-height:42px;">
+                <button id="referral-share-btn" style="display:none;flex:1 1 auto;background:transparent;color:#f0c75e;border:1px solid rgba(212,175,55,0.5);border-radius:10px;padding:0 20px;font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;font-weight:700;cursor:pointer;min-height:42px;">
                     <i class="fas fa-share-nodes" style="margin-right:6px;font-size:12px;"></i>Partager
                 </button>
             </div>
@@ -2463,39 +2463,13 @@
 <script src="js/referral.js" defer></script>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
-        const input = document.getElementById('referral-link-input');
-        if (input && window.oradiaReferral) input.value = window.oradiaReferral.buildShareLink();
-        // Sur mobile, proposer le partage natif (Messages, WhatsApp…) en plus du copier-coller.
-        if (navigator.share) {
-            const sb = document.getElementById('referral-share-btn');
-            if (sb) sb.style.display = '';
-        }
+        if (!window.oradiaReferral) return;
+        window.oradiaReferral.wireShareUI(
+            document.getElementById('referral-link-input'),
+            document.getElementById('referral-copy-btn'),
+            document.getElementById('referral-share-btn')
+        );
     });
-    function copyReferralLink(btn) {
-        const input = document.getElementById('referral-link-input');
-        if (!input) return;
-        navigator.clipboard.writeText(input.value).then(() => {
-            const orig = btn.innerHTML;
-            btn.innerHTML = '<i class="fas fa-check" style="margin-right:6px;font-size:12px;"></i>Copié';
-            setTimeout(() => { btn.innerHTML = orig; }, 2000);
-        }).catch(() => {
-            input.select();
-            document.execCommand('copy');
-        });
-    }
-    function shareReferralLink(btn) {
-        const input = document.getElementById('referral-link-input');
-        if (!input) return;
-        if (navigator.share) {
-            navigator.share({
-                title: 'Oradia — Tirage du Tore',
-                text: 'Je t\'offre un tirage gratuit du Tore sur Oradia 🎁',
-                url: input.value
-            }).catch(() => {});
-        } else {
-            copyReferralLink(btn);
-        }
-    }
 </script>
 <script src="js/page-tracker.js" defer></script>
 </body>
