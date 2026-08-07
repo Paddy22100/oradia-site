@@ -22,7 +22,15 @@
   }
 
   // À appeler au chargement de tore.html : mémorise le code de parrainage
-  // présent dans l'URL, une seule fois (le premier lien cliqué gagne).
+  // présent dans l'URL, une seule fois (le premier lien cliqué gagne), et
+  // crédite immédiatement le filleul de son tirage bonus.
+  //
+  // Auparavant, ce bonus n'était crédité qu'après que le filleul ait terminé
+  // UN tirage (voir markConversionIfNeeded) — mais un proche ayant déjà
+  // épuisé ses 2 tirages gratuits ne pouvait alors même pas commencer ce
+  // premier tirage : le lien semblait "ne pas fonctionner" (cas remonté par
+  // un membre en août 2026). Le bonus est donc désormais accordé dès la
+  // capture du lien, pour que le filleul puisse tirer immédiatement.
   function captureReferredBy() {
     try {
       const params = new URLSearchParams(location.search);
@@ -32,14 +40,15 @@
       if (ref === own) return; // on ne se parraine pas soi-même
       if (!localStorage.getItem('oradia_referred_by')) {
         localStorage.setItem('oradia_referred_by', ref);
+        if (window.freemiumTracker) window.freemiumTracker.addBonusDraws(1);
       }
     } catch (e) {}
   }
 
   // À appeler quand un tirage freemium se termine : si ce visiteur a été
   // parrainé et que la conversion n'a pas encore été enregistrée, on la
-  // déclare au serveur (pour que le parrain puisse la réclamer) et on
-  // crédite immédiatement le filleul.
+  // déclare au serveur pour que le parrain puisse réclamer son propre bonus
+  // (le bonus du filleul, lui, a déjà été crédité par captureReferredBy).
   function markConversionIfNeeded() {
     try {
       const referredBy = localStorage.getItem('oradia_referred_by');
@@ -50,7 +59,6 @@
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'convert', code: referredBy })
       }).catch(function () {});
-      if (window.freemiumTracker) window.freemiumTracker.addBonusDraws(1);
     } catch (e) {}
   }
 
