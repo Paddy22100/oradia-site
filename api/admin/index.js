@@ -2402,6 +2402,51 @@ async function handleData(req, res) {
       return res.status(200).json({ success: true });
     }
 
+    // ── Suppression définitive d'un message support/témoignage/suggestion ──
+    if (section === 'support-delete') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
+      const body = await parseBody(req);
+      const { id } = body;
+      if (!id) return res.status(400).json({ error: 'id requis' });
+      const { error } = await supabase.from('support_messages').delete().eq('id', id);
+      if (error) throw error;
+      return res.status(200).json({ success: true });
+    }
+
+    // ── Section parrainage — visibilité admin sur les liens utilisés ──
+    // Le parrainage fonctionne entièrement en localStorage côté visiteur (pas de compte
+    // requis) : referral_conversions est la SEULE trace côté serveur, une ligne par
+    // filleul ayant complété son premier tirage via un lien. Si la table n'existe pas
+    // (migration supabase-migration-referrals.sql non exécutée), le champ migrationOk
+    // le signale explicitement plutôt que d'afficher silencieusement "0".
+    if (section === 'referral-stats') {
+      const { data: rows, error } = await supabase
+        .from('referral_conversions')
+        .select('code, converted_at, claimed_at')
+        .order('converted_at', { ascending: false })
+        .limit(200);
+
+      if (error) {
+        return res.status(200).json({
+          success: true,
+          data: { migrationOk: false, error: error.message, total: 0, claimed: 0, pending: 0, recent: [] }
+        });
+      }
+
+      const total = rows.length;
+      const claimed = rows.filter(r => r.claimed_at).length;
+      return res.status(200).json({
+        success: true,
+        data: {
+          migrationOk: true,
+          total,
+          claimed,
+          pending: total - claimed,
+          recent: rows.slice(0, 20)
+        }
+      });
+    }
+
     // ── Section synchronicité — stats d'étude (#31) ──
     // ── Section coûts du site (temps réel + abonnements fixes) ──
     if (section === 'costs') {
@@ -5649,6 +5694,13 @@ Réponds en français, sans tiret long, format markdown compact.`
       // Répondre à un message support via Brevo — délégué à handleData avec section=support-reply
       if (!req.query) req.query = {};
       req.query.section = 'support-reply';
+      return await handleData(req, res);
+    }
+
+    if (path === '/support-delete' || path === '/support-delete/') {
+      // Suppression définitive — délégué à handleData avec section=support-delete
+      if (!req.query) req.query = {};
+      req.query.section = 'support-delete';
       return await handleData(req, res);
     }
 

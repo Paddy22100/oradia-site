@@ -2406,6 +2406,14 @@
                 <div id="anuHealthContent" class="text-sm">—</div>
             </div>
 
+            <!-- Parrainage : liens utilisés -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5 mb-6">
+                <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider flex items-center gap-2">
+                    <i class="fas fa-gift"></i> Parrainage — liens utilisés
+                </h4>
+                <div id="referralStatsContent" class="text-sm">—</div>
+            </div>
+
             <!-- Logs système en temps réel -->
             <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5 mt-4">
                 <div class="flex items-center justify-between mb-4 flex-wrap gap-2">
@@ -7951,6 +7959,7 @@
                             ${r.status !== 'replied'  ? `<button onclick="updateSupportMsg('${r.id}','replied')"  class="text-xs bg-green-500/10 text-green-300 border border-green-500/20 rounded-lg px-3 py-1 hover:bg-green-500/20 transition">Répondu</button>` : ''}
                             ${r.status !== 'archived' ? `<button onclick="updateSupportMsg('${r.id}','archived')" class="text-xs bg-light-gold/10 text-light-gold/50 border border-light-gold/10 rounded-lg px-3 py-1 hover:bg-light-gold/20 transition">Archiver</button>` : ''}
                             <button onclick="toggleSupportReply('${r.id}')" class="text-xs bg-blue-500/10 text-blue-300 border border-blue-500/20 rounded-lg px-3 py-1 hover:bg-blue-500/20 transition"><i class="fas fa-reply mr-1"></i>Répondre</button>
+                            <button onclick="deleteSupportMsg('${r.id}')" class="text-xs bg-red-500/10 text-red-300 border border-red-500/20 rounded-lg px-3 py-1 hover:bg-red-500/20 transition"><i class="fas fa-trash mr-1"></i>Supprimer</button>
                             ${r.type === 'temoignage' ? (
                                 r.publication === 'non'
                                     ? `<span class="text-xs text-light-gold/30 italic px-3 py-1" title="L'auteur a refusé toute publication publique">Publication refusée par l'auteur</span>`
@@ -7996,8 +8005,27 @@
                 });
                 const data = await res.json();
                 if (data.success) loadSupportMessages(supPage);
+                else alert('Erreur : ' + (data.error || 'échec de la mise à jour.'));
             } catch (e) {
                 console.error('[Admin] updateSupportMsg error:', e);
+                alert('Erreur réseau : ' + e.message);
+            }
+        }
+
+        async function deleteSupportMsg(id) {
+            if (!confirm('Supprimer définitivement ce message ? Cette action est irréversible.')) return;
+            try {
+                const res = await adminFetch('/api/admin/support-delete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                const data = await res.json();
+                if (data.success) loadSupportMessages(supPage);
+                else alert('Erreur : ' + (data.error || 'échec de la suppression.'));
+            } catch (e) {
+                console.error('[Admin] deleteSupportMsg error:', e);
+                alert('Erreur réseau : ' + e.message);
             }
         }
 
@@ -8561,6 +8589,40 @@
             }
         }
 
+        async function loadReferralStats() {
+            const el = document.getElementById('referralStatsContent');
+            if (!el) return;
+            el.innerHTML = '<span class="animate-pulse">…</span>';
+            try {
+                const res = await adminFetch('/api/admin/data?section=referral-stats');
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error);
+                const d = data.data;
+                if (!d.migrationOk) {
+                    el.innerHTML = `<p class="text-red-400">⚠ Table referral_conversions introuvable — la migration <code class="text-xs bg-black/30 px-1 rounded">supabase-migration-referrals.sql</code> n'a probablement pas été exécutée dans Supabase.</p>`;
+                    return;
+                }
+                if (d.total === 0) {
+                    el.innerHTML = `<p class="text-light-gold/40 italic">Aucun lien de parrainage utilisé pour l'instant.</p>`;
+                    return;
+                }
+                el.innerHTML = `
+                    <div class="grid grid-cols-3 gap-3 mb-4 text-center">
+                        <div class="bg-black/20 rounded-lg p-3"><div class="text-2xl font-bold text-gold">${d.total}</div><div class="text-xs text-light-gold/50 mt-1">Conversions totales</div></div>
+                        <div class="bg-black/20 rounded-lg p-3"><div class="text-2xl font-bold text-green-400">${d.claimed}</div><div class="text-xs text-light-gold/50 mt-1">Bonus parrain réclamés</div></div>
+                        <div class="bg-black/20 rounded-lg p-3"><div class="text-2xl font-bold text-yellow-400">${d.pending}</div><div class="text-xs text-light-gold/50 mt-1">En attente</div></div>
+                    </div>
+                    <div class="space-y-1 max-h-48 overflow-y-auto text-xs">
+                        ${d.recent.map(r => `<div class="flex justify-between border-b border-gold/10 py-1">
+                            <span class="text-light-gold/60">Code <code class="bg-black/20 px-1 rounded">${r.code}</code></span>
+                            <span class="text-light-gold/40">${new Date(r.converted_at).toLocaleDateString('fr-FR')} · ${r.claimed_at ? '<span class="text-green-400">réclamé</span>' : '<span class="text-yellow-400">en attente</span>'}</span>
+                        </div>`).join('')}
+                    </div>`;
+            } catch (e) {
+                el.innerHTML = `<p class="text-red-400">Erreur de chargement : ${e.message}</p>`;
+            }
+        }
+
         async function loadMonitoring() {
             const setEl = (id, html) => { const el = document.getElementById(id); if (el) el.innerHTML = html; };
             setEl('auditGlobalScore', '<span class="animate-pulse">…</span>');
@@ -8570,6 +8632,7 @@
             setEl('auditHistory', '<span class="animate-pulse">…</span>');
             setEl('uptimeContent', '<span class="animate-pulse">…</span>');
             setEl('anuHealthContent', '<span class="animate-pulse">…</span>');
+            loadReferralStats();
 
             const scoreColor = s => s >= 80 ? '#22c55e' : s >= 60 ? '#f59e0b' : '#ef4444';
             const scoreGrade = s => s >= 90 ? 'A' : s >= 80 ? 'B' : s >= 60 ? 'C' : s >= 40 ? 'D' : 'F';

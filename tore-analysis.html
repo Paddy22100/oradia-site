@@ -1914,6 +1914,15 @@
                 if (data.success) {
                     document.getElementById('obs-form-wrap').style.display = 'none';
                     document.getElementById('obs-success').style.display = 'block';
+                    // La fenêtre est déjà activée côté serveur avec la durée choisie —
+                    // les boutons 7/14/28 jours restaient cliquables après coup (ils sont
+                    // en dehors de #obs-form-wrap), ce qui laissait croire à tort qu'on
+                    // pouvait encore changer la durée alors que ça n'avait plus aucun effet.
+                    const durGroup = document.getElementById('obs-duration-group');
+                    if (durGroup) {
+                        durGroup.style.pointerEvents = 'none';
+                        durGroup.style.opacity = '0.5';
+                    }
                     window._obsWindowActivated = true;
                 } else {
                     throw new Error(data.message || 'Erreur inconnue');
