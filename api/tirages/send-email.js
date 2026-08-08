@@ -1362,12 +1362,14 @@ function getParisNow() {
   };
 }
 
-async function generateScheduledAnalysis({ intention, cards, gender }) {
+async function generateScheduledAnalysis({ intention, cards, gender, userEmail }) {
   const { buildAnalysisPrompt, cleanAnalysisText, splitAnalysisSections } = require('../../lib/tore-analysis-prompt.js');
+  const { logApiUsage } = require('../../lib/api-usage-tracker.js');
   const prompt = buildAnalysisPrompt({ intention, cards, gender });
   const models = [process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5', 'claude-haiku-4-5'];
 
   for (const model of models) {
+    const startTime = Date.now();
     try {
       const resp = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
@@ -1375,13 +1377,31 @@ async function generateScheduledAnalysis({ intention, cards, gender }) {
         body: JSON.stringify({ model, max_tokens: 1024, temperature: 0.7, messages: [{ role: 'user', content: prompt }] }),
         signal: AbortSignal.timeout(25000)
       });
-      if (!resp.ok) continue;
+      const duration = Date.now() - startTime;
+      if (!resp.ok) {
+        const err = await resp.json().catch(() => ({}));
+        logApiUsage({
+          apiName: 'anthropic-claude', modelName: model, requestTokens: null, responseTokens: null,
+          userEmail, status: 'error', errorMessage: err.error?.message || 'Unknown error', requestDurationMs: duration
+        }).catch(e => console.warn('[run-scheduled-draws] Erreur logging API error:', e.message));
+        continue;
+      }
       const data = await resp.json();
+      logApiUsage({
+        apiName: 'anthropic-claude', modelName: model,
+        requestTokens: data.usage?.input_tokens ?? null,
+        responseTokens: data.usage?.output_tokens ?? null,
+        userEmail, status: 'success', requestDurationMs: duration
+      }).catch(e => console.warn('[run-scheduled-draws] Erreur logging API usage:', e.message));
       const raw = cleanAnalysisText(data.content?.[0]?.text || '');
       if (!raw) continue;
       return splitAnalysisSections(raw);
     } catch (e) {
       console.error('[run-scheduled-draws] Anthropic error:', e.message);
+      logApiUsage({
+        apiName: 'anthropic-claude', modelName: model, requestTokens: null, responseTokens: null,
+        userEmail, status: 'error', errorMessage: e.message, requestDurationMs: Date.now() - startTime
+      }).catch(err => console.warn('[run-scheduled-draws] Erreur logging API exception:', err.message));
     }
   }
   return null;
@@ -1438,7 +1458,7 @@ async function handleRunScheduledDraws(req, res) {
         return card;
       });
 
-      const analysis = await generateScheduledAnalysis({ intention: sched.intention, cards, gender: sched.gender });
+      const analysis = await generateScheduledAnalysis({ intention: sched.intention, cards, gender: sched.gender, userEmail: sched.email });
       if (!analysis) { failed++; continue; }
 
       const passerelles = cards.filter(c => c.bridgeCard).map(c => ({ carte: c.name, passerelle: c.bridgeCard.name }));
