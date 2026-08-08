@@ -71,8 +71,16 @@ class FooterManager {
     const btn = document.createElement('button');
     btn.id = 'backToTop';
     btn.setAttribute('aria-label', 'Remonter en haut');
-    btn.className = 'fixed right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-40 backdrop-blur-sm'
+    btn.className = 'fixed right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 z-40 backdrop-blur-sm'
       + (hasMobileNav ? ' back-to-top--above-mobile-nav' : ' bottom-6');
+    // hover: uniquement pour les vrais pointeurs souris — sur tactile, le :hover
+    // Tailwind restait "collé" après un tap (bouton doré figé au lieu de redevenir sombre).
+    if (!document.getElementById('back-to-top-hover-style')) {
+      const style = document.createElement('style');
+      style.id = 'back-to-top-hover-style';
+      style.textContent = '@media (hover: hover) { #backToTop:hover { background: rgba(212,175,55,0.9) !important; color: #0a1a28 !important; transform: scale(1.05); } }';
+      document.head.appendChild(style);
+    }
     btn.innerHTML = '<i class="fas fa-arrow-up text-sm"></i>';
     document.body.appendChild(btn);
     window.addEventListener('scroll', () => {

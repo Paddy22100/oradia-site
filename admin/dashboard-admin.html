@@ -3716,8 +3716,10 @@
         const AUDIT_ROUTE_LABELS = {
             '/api/admin/sync-all':       'Synchronisation Brevo ↔ Supabase',
             '/api/admin/import-brevo':   'Import Brevo',
-            '/api/admin/support-update': 'Message support mis à jour',
-            '/api/admin/support-reply':  'Réponse support envoyée',
+            '/api/admin/data?section=support-update':  'Message support mis à jour',
+            '/api/admin/data?section=support-reply':   'Réponse support envoyée',
+            '/api/admin/data?section=support-delete':  'Message support supprimé',
+            '/api/admin/data?section=support-publish': 'Témoignage publié/dépublié',
             '/api/tirages/send-email':   'Action emails tirages',
         };
 
@@ -7998,7 +8000,7 @@
 
         async function updateSupportMsg(id, status) {
             try {
-                const res = await adminFetch('/api/admin/support-update', {
+                const res = await adminFetch('/api/admin/data?section=support-update', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id, status })
@@ -8015,7 +8017,7 @@
         async function deleteSupportMsg(id) {
             if (!confirm('Supprimer définitivement ce message ? Cette action est irréversible.')) return;
             try {
-                const res = await adminFetch('/api/admin/support-delete', {
+                const res = await adminFetch('/api/admin/data?section=support-delete', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id })
@@ -8033,7 +8035,7 @@
             if (publish && !confirm('Publier ce témoignage sur oracle.html ? Il sera visible par tous les visiteurs du site.')) return;
             if (btn) { btn.disabled = true; }
             try {
-                const res = await adminFetch('/api/admin/support-publish', {
+                const res = await adminFetch('/api/admin/data?section=support-publish', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id, published: publish })
@@ -8064,7 +8066,7 @@
             if (!message) { if (status) status.textContent = 'Message vide.'; return; }
             if (status) status.textContent = 'Envoi…';
             try {
-                const res = await adminFetch('/api/admin/support-reply', {
+                const res = await adminFetch('/api/admin/data?section=support-reply', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ id, email, message })
@@ -8603,19 +8605,21 @@
                     return;
                 }
                 if (d.total === 0) {
-                    el.innerHTML = `<p class="text-light-gold/40 italic">Aucun lien de parrainage utilisé pour l'instant.</p>`;
+                    el.innerHTML = `<p class="text-light-gold/40 italic">Aucun lien de parrainage n'a encore ramené de nouvel utilisateur.</p>`;
                     return;
                 }
                 el.innerHTML = `
-                    <div class="grid grid-cols-3 gap-3 mb-4 text-center">
-                        <div class="bg-black/20 rounded-lg p-3"><div class="text-2xl font-bold text-gold">${d.total}</div><div class="text-xs text-light-gold/50 mt-1">Conversions totales</div></div>
-                        <div class="bg-black/20 rounded-lg p-3"><div class="text-2xl font-bold text-green-400">${d.claimed}</div><div class="text-xs text-light-gold/50 mt-1">Bonus parrain réclamés</div></div>
-                        <div class="bg-black/20 rounded-lg p-3"><div class="text-2xl font-bold text-yellow-400">${d.pending}</div><div class="text-xs text-light-gold/50 mt-1">En attente</div></div>
+                    <div class="mb-3">
+                        <div class="bg-black/20 rounded-lg p-3 text-center">
+                            <div class="text-2xl font-bold text-gold">${d.total}</div>
+                            <div class="text-xs text-light-gold/50 mt-1">lien${d.total > 1 ? 's' : ''} de parrainage utilisé${d.total > 1 ? 's' : ''} — ${d.total > 1 ? 'ont' : 'a'} amené un nouvel utilisateur</div>
+                        </div>
                     </div>
+                    <div class="text-xs text-light-gold/40 mb-2">Dont ${d.claimed} bonus déjà réclamé${d.claimed > 1 ? 's' : ''} par le parrain, ${d.pending} pas encore réclamé${d.pending > 1 ? 's' : ''}.</div>
                     <div class="space-y-1 max-h-48 overflow-y-auto text-xs">
                         ${d.recent.map(r => `<div class="flex justify-between border-b border-gold/10 py-1">
-                            <span class="text-light-gold/60">Code <code class="bg-black/20 px-1 rounded">${r.code}</code></span>
-                            <span class="text-light-gold/40">${new Date(r.converted_at).toLocaleDateString('fr-FR')} · ${r.claimed_at ? '<span class="text-green-400">réclamé</span>' : '<span class="text-yellow-400">en attente</span>'}</span>
+                            <span class="text-light-gold/60">Code <code class="bg-black/20 px-1 rounded">${r.code}</code> utilisé</span>
+                            <span class="text-light-gold/40">${new Date(r.converted_at).toLocaleDateString('fr-FR')} · ${r.claimed_at ? '<span class="text-green-400">bonus réclamé</span>' : '<span class="text-yellow-400">bonus non réclamé</span>'}</span>
                         </div>`).join('')}
                     </div>`;
             } catch (e) {
