@@ -1194,8 +1194,17 @@ async function handleData(req, res) {
       return res.status(403).json({ error: 'Action non autorisée' });
     }
 
+    // Les actions "support-*" (utilisées par le dashboard Support technique) sont
+    // gérées plus bas via le dispatch par ?section=. Sans cette exclusion, toute
+    // requête POST tombait d'abord dans le gros bloc "actions sur abonnements"
+    // ci-dessous, qui ne connaît que body.action — comme support-update/delete/
+    // publish/reply n'envoient jamais ce champ, elles finissaient systématiquement
+    // sur son "Action invalide" et n'atteignaient jamais leur vrai handler.
+    const SUPPORT_POST_SECTIONS = ['support-update', 'support-publish', 'support-reply', 'support-delete'];
+    const isSupportSectionPost = req.method === 'POST' && SUPPORT_POST_SECTIONS.includes(req.query?.section);
+
     // ── POST : actions sur abonnements ──
-    if (req.method === 'POST') {
+    if (req.method === 'POST' && !isSupportSectionPost) {
       const body = await new Promise((resolve, reject) => {
         let d = '';
         req.on('data', c => d += c);
