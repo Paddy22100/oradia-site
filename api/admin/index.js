@@ -216,7 +216,7 @@ async function sendRenewalReminderEmail(email, expiresAt) {
     <p style="margin:0 0 6px;color:#c8c0a8;font-size:13px;font-style:italic;opacity:0.7;font-family:Georgia,serif;">Avec gratitude,</p>
     <p style="margin:0;color:#d4af37;font-size:40px;font-family:'Dancing Script','Brush Script MT',cursive;line-height:1.1;">Rudy</p>
     <p style="margin:12px 0 14px;"><a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-size:12px;">oradia.fr</a></p>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td></tr></table>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.png" alt="YouTube" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td></tr></table>
   </td></tr>
 </table></td></tr></table></body></html>`;
   try {
@@ -3324,7 +3324,7 @@ function buildFreeSubscriptionWelcomeHtml({ email, fullName, accessCode, expires
     <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
     <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
     <p style="margin:0 0 14px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.png" alt="YouTube" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
     <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car un accès à l'espace Tore a été créé pour toi sur oradia.fr.</p>
   </td></tr>
 </table>
@@ -3696,6 +3696,11 @@ function buildCommunicationEmailHtml(draft) {
         <td style="padding:0 8px;">
           <a href="https://instagram.com/oradia_oracle_officiel" target="_blank" style="text-decoration:none;">
             <img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram Oradia" width="40" height="40" style="display:block; width:40px; height:40px; border:0;">
+          </a>
+        </td>
+        <td style="padding:0 8px;">
+          <a href="https://www.youtube.com/@oradiafr" target="_blank" style="text-decoration:none;">
+            <img src="https://oradia.fr/images/medias/icon-youtube.png" alt="YouTube Oradia" width="40" height="40" style="display:block; width:40px; height:40px; border:0;">
           </a>
         </td>
       </tr>
