@@ -426,7 +426,7 @@ class FreemiumTracker {
                                         <p style="margin:0;color:rgba(212,175,55,0.6);font-size:0.68rem;">64 cartes · Livret · Coffret</p>
                                     </div>
                                     <span style="flex-shrink:0;display:inline-block;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#050f23;font-size:0.7rem;font-weight:700;letter-spacing:0.5px;padding:7px 12px;border-radius:50px;white-space:nowrap;">
-                                        38€
+                                        Précommander
                                     </span>
                                 </div>
                             </a>
