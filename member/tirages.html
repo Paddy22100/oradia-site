@@ -306,6 +306,17 @@
 
             <!-- Onglet : tirage programmé -->
             <div id="tabProgramme" class="hidden">
+                <!-- En-tête décoratif -->
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px;">
+                    <div style="width:46px;height:46px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.22),rgba(212,175,55,0.05));border:1px solid rgba(212,175,55,0.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="fas fa-hourglass-half" style="color:#d4af37;font-size:18px;"></i>
+                    </div>
+                    <div>
+                        <p style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;background:linear-gradient(135deg,#d4af37,#f4e4c1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:0;">Un tirage, sans y penser</p>
+                        <p class="text-light-gold/50 text-sm" style="margin:2px 0 0;">Reçu par email, à l'heure et la fréquence que vous choisissez</p>
+                    </div>
+                </div>
+
                 <!-- État non-abonné -->
                 <div id="notSubscribedPanel" class="hidden bg-[rgba(26,54,93,0.4)] border border-gold/20 rounded-2xl p-10 text-center">
                     <i class="fas fa-lock text-3xl text-gold/40 mb-4"></i>
@@ -321,22 +332,37 @@
                 </div>
 
                 <!-- Formulaire (abonnés) -->
-                <div id="scheduleForm" class="hidden max-w-2xl bg-[rgba(26,54,93,0.4)] border border-gold/20 rounded-2xl p-6 sm:p-8 space-y-6">
-                    <p class="text-light-gold/60 text-sm leading-relaxed -mt-1">Recevez un tirage par email, sans y penser — avec une intention fixe, à l'heure et la fréquence de votre choix.</p>
+                <div id="scheduleForm" class="hidden max-w-2xl" style="
+                    background:linear-gradient(145deg,rgba(26,54,93,0.65),rgba(5,20,40,0.85));
+                    border:1px solid rgba(212,175,55,0.28);
+                    border-radius:18px;
+                    overflow:hidden;
+                ">
+                    <div style="background:rgba(5,20,40,0.5);padding:18px 24px;border-bottom:1px solid rgba(212,175,55,0.2);">
+                        <p class="text-light-gold/70 text-sm leading-relaxed" style="margin:0;"><i class="fas fa-envelope-open-text" style="color:rgba(212,175,55,0.6);margin-right:8px;"></i>Recevez un tirage par email, sans y penser — avec une intention fixe, à l'heure et la fréquence de votre choix.</p>
+                    </div>
+
+                    <div style="padding:24px;display:flex;flex-direction:column;gap:22px;">
                     <div id="statusBanner" class="hidden rounded-xl px-4 py-3 text-sm flex items-center gap-2"></div>
 
                     <!-- Fréquence -->
                     <div>
-                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2">Fréquence</label>
+                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2"><i class="fas fa-repeat mr-1.5" style="opacity:.6;"></i>Fréquence</label>
                         <div class="grid grid-cols-3 gap-2">
-                            <button type="button" data-freq="daily" onclick="setScheduleFrequency('daily')" class="freq-btn py-3 rounded-lg border border-gold/25 text-sm text-light-gold/80">Quotidien</button>
-                            <button type="button" data-freq="weekly" onclick="setScheduleFrequency('weekly')" class="freq-btn py-3 rounded-lg border border-gold/25 text-sm text-light-gold/80">Hebdo</button>
-                            <button type="button" data-freq="monthly" onclick="setScheduleFrequency('monthly')" class="freq-btn py-3 rounded-lg border border-gold/25 text-sm text-light-gold/80">Mensuel</button>
+                            <button type="button" data-freq="daily" onclick="setScheduleFrequency('daily')" class="freq-btn py-3 rounded-lg border border-gold/25 text-sm text-light-gold/80" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                <i class="fas fa-sun" style="font-size:14px;opacity:.7;"></i>Quotidien
+                            </button>
+                            <button type="button" data-freq="weekly" onclick="setScheduleFrequency('weekly')" class="freq-btn py-3 rounded-lg border border-gold/25 text-sm text-light-gold/80" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                <i class="fas fa-calendar-week" style="font-size:14px;opacity:.7;"></i>Hebdo
+                            </button>
+                            <button type="button" data-freq="monthly" onclick="setScheduleFrequency('monthly')" class="freq-btn py-3 rounded-lg border border-gold/25 text-sm text-light-gold/80" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                <i class="fas fa-moon" style="font-size:14px;opacity:.7;"></i>Mensuel
+                            </button>
                         </div>
                     </div>
 
                     <div id="scheduleDayOfWeekWrap" class="hidden">
-                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2">Jour de la semaine</label>
+                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2"><i class="fas fa-calendar-day mr-1.5" style="opacity:.6;"></i>Jour de la semaine</label>
                         <select id="scheduleDayOfWeek" class="w-full bg-[rgba(10,25,47,0.7)] border border-gold/30 rounded-lg py-3 px-3 text-light-gold text-sm">
                             <option value="1">Lundi</option>
                             <option value="2">Mardi</option>
@@ -349,17 +375,17 @@
                     </div>
 
                     <div id="scheduleDayOfMonthWrap" class="hidden">
-                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2">Jour du mois</label>
+                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2"><i class="fas fa-calendar-alt mr-1.5" style="opacity:.6;"></i>Jour du mois</label>
                         <select id="scheduleDayOfMonth" class="w-full bg-[rgba(10,25,47,0.7)] border border-gold/30 rounded-lg py-3 px-3 text-light-gold text-sm"></select>
                     </div>
 
                     <div>
-                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2">Heure d'envoi</label>
+                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2"><i class="fas fa-clock mr-1.5" style="opacity:.6;"></i>Heure d'envoi</label>
                         <select id="scheduleHour" class="w-full bg-[rgba(10,25,47,0.7)] border border-gold/30 rounded-lg py-3 px-3 text-light-gold text-sm"></select>
                     </div>
 
                     <div>
-                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2">Intention fixe</label>
+                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2"><i class="fas fa-feather mr-1.5" style="opacity:.6;"></i>Intention fixe</label>
                         <textarea id="scheduleIntention" rows="2" maxlength="500" placeholder="Comment appréhender au mieux cette journée ?" class="w-full bg-[rgba(10,25,47,0.7)] border border-gold/30 rounded-lg py-3 px-3 text-light-gold text-sm resize-none"></textarea>
                         <div class="flex flex-wrap gap-2 mt-2">
                             <button type="button" onclick="fillScheduleIntention(this)" class="text-xs border border-gold/25 text-light-gold/70 rounded-full px-3 py-1.5 hover:border-gold/50">Comment appréhender au mieux cette journée&nbsp;?</button>
@@ -368,7 +394,7 @@
                     </div>
 
                     <div>
-                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2">Vous êtes</label>
+                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2"><i class="fas fa-user mr-1.5" style="opacity:.6;"></i>Vous êtes</label>
                         <div class="flex gap-3">
                             <button type="button" data-gender="homme" onclick="setScheduleGender('homme')" class="gender-btn flex-1 py-3 rounded-lg border border-gold/25 text-sm text-light-gold/80">Homme</button>
                             <button type="button" data-gender="femme" onclick="setScheduleGender('femme')" class="gender-btn flex-1 py-3 rounded-lg border border-gold/25 text-sm text-light-gold/80">Femme</button>
@@ -378,8 +404,9 @@
                     <p id="scheduleError" class="hidden text-red-300 text-xs bg-red-900/20 border border-red-400/25 rounded-lg px-3 py-2"></p>
 
                     <div class="flex flex-col gap-2 pt-1">
-                        <button onclick="saveSchedule()" id="scheduleSaveBtn" class="w-full bg-gold hover:bg-light-gold text-night-blue font-bold py-3 rounded-lg transition-colors">Activer le tirage automatique</button>
+                        <button onclick="saveSchedule()" id="scheduleSaveBtn" class="w-full bg-gold hover:bg-light-gold text-night-blue font-bold py-3 rounded-lg transition-colors"><i class="fas fa-magic-wand-sparkles mr-2"></i>Activer le tirage automatique</button>
                         <button onclick="deleteSchedule()" id="scheduleDeleteBtn" class="hidden w-full border border-red-400/30 text-red-300 hover:bg-red-900/20 font-semibold py-2.5 rounded-lg transition-colors text-sm">Désactiver</button>
+                    </div>
                     </div>
                 </div>
             </div>

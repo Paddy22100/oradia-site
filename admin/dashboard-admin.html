@@ -10292,28 +10292,52 @@
             const d = _retroData || {};
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ unit: 'mm', format: 'a4' });
-            const M = 18, W = 210, maxW = W - 2 * M;
+            const M = 18, W = 210, PH = 297, maxW = W - 2 * M;
+            const GOLD = [180, 140, 40], GOLD_LIGHT = [246, 240, 222], INK = [40, 40, 55], MUTE = [120, 120, 130];
             let y = M;
-            const bottom = 297 - M;
-            const need = (h) => { if (y + h > bottom) { doc.addPage(); y = M; } };
+            const bottom = PH - M - 6; // réserve la place du pied de page
+            const need = (h) => { if (y + h > bottom) { doc.addPage(); drawFooter(); y = M; } };
             const P = (text, o = {}) => {
-                const size = o.size || 10.5, lh = o.lh || 5, color = o.color || [40, 40, 55];
+                const size = o.size || 10.5, lh = o.lh || 5, color = o.color || INK;
                 doc.setFont('helvetica', o.style || 'normal'); doc.setFontSize(size); doc.setTextColor(...color);
                 const lines = doc.splitTextToSize(text, maxW);
                 for (const ln of lines) { need(lh); doc.text(ln, M, y); y += lh; }
                 y += (o.after == null ? 2 : o.after);
             };
-            const H = (text, o = {}) => { need(12); y += 3; P(text, { size: o.size || 14, style: 'bold', color: [150, 110, 20], lh: 6.5, after: 2.5 }); };
-            const rule = () => { need(4); doc.setDrawColor(210, 190, 120); doc.line(M, y, W - M, y); y += 4; };
+            // Titre de section : petite puce circulaire dorée + libellé — un seul
+            // trait fin d'appui, pas d'aplat de couleur (économie d'encre à l'impression).
+            const H = (text, o = {}) => {
+                need(13); y += 3;
+                doc.setFillColor(...GOLD); doc.circle(M + 1, y - 1.4, 1, 'F');
+                doc.setFont('helvetica', 'bold'); doc.setFontSize(o.size || 13.5); doc.setTextColor(...GOLD);
+                doc.text(text, M + 5, y);
+                y += 6.5;
+                doc.setDrawColor(...GOLD); doc.setLineWidth(0.15);
+                doc.line(M + 5, y - 4.5, W - M, y - 4.5);
+                y += 1.5;
+            };
+            const drawFooter = () => {
+                const n = doc.internal.getNumberOfPages();
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(7.5); doc.setTextColor(...MUTE);
+                doc.text('oradia.fr — Étude ouverte de rétrocausalité', M, PH - M + 4);
+                doc.text(String(n), W - M, PH - M + 4, { align: 'right' });
+            };
 
-            // En-tête
-            doc.setFont('helvetica', 'bold'); doc.setFontSize(20); doc.setTextColor(150, 110, 20);
-            doc.text('ORADIA — Protocole d\'étude', M, y); y += 8;
-            doc.setFontSize(13); doc.setTextColor(80, 80, 100);
-            doc.text('Le passé et le futur influencent-ils le présent ?', M, y); y += 7;
-            doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(120, 120, 130);
-            doc.text(`Document généré le ${new Date().toLocaleDateString('fr-FR')} · données en direct du tableau de bord Oradia`, M, y); y += 4;
-            rule();
+            // En-tête — petit emblème (cercles concentriques, écho du logo Oradia)
+            // + bandeau très clair (quasi blanc) : identité visuelle sans gaspiller d'encre.
+            doc.setFillColor(...GOLD_LIGHT); doc.rect(0, 0, W, 34, 'F');
+            doc.setDrawColor(...GOLD); doc.setLineWidth(0.4);
+            doc.circle(M + 4, 15, 5.5, 'S'); doc.circle(M + 4, 15, 2, 'S');
+            doc.setFillColor(...GOLD); doc.circle(M + 4, 15, 0.6, 'F');
+            doc.setFont('helvetica', 'bold'); doc.setFontSize(19); doc.setTextColor(...GOLD);
+            doc.text('ORADIA', M + 15, 14);
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(10); doc.setTextColor(90, 90, 100);
+            doc.text('Protocole d\'étude — Le passé et le futur influencent-ils le présent ?', M + 15, 20.5);
+            doc.setFontSize(8); doc.setTextColor(...MUTE);
+            doc.text(`Document généré le ${new Date().toLocaleDateString('fr-FR')} · données en direct du tableau de bord Oradia`, M + 15, 26);
+            doc.setDrawColor(...GOLD); doc.setLineWidth(0.5);
+            doc.line(0, 34, W, 34);
+            y = 44;
 
             // PARTIE 1 — POUR TOUS
             H('1. En clair (pour tous)');
@@ -10352,6 +10376,7 @@
 
             P(`© Oradia — Rudy Boucheron, ${new Date().getFullYear()}. Protocole et méthodologie originaux.`, { size: 8, style: 'italic', color: [150, 150, 160], after: 0 });
 
+            drawFooter();
             doc.save(`oradia-protocole-retrocausalite-${new Date().toISOString().slice(0, 10)}.pdf`);
         }
 
