@@ -304,9 +304,8 @@ export default async function handler(req, res) {
   // Construction du prompt
   const cardsDescription = cards.map((c, i) => {
     const bridge = c.bridgeCard ? ` (passerelle: ${c.bridgeCard.name})` : '';
-    const polarity = c.polarity ? ` [${c.polarity}]` : '';
     const famLabel = FAMILY_LABELS[c.family] || c.family;
-    return `${i + 1}. Famille ${famLabel}: ${c.name}${polarity}${bridge}`;
+    return `${i + 1}. Famille ${famLabel}: ${c.name}${bridge}`;
   }).join('\n');
 
   const genderInstruction = gender === 'homme'

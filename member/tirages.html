@@ -331,8 +331,9 @@
                     <i class="fas fa-spinner fa-spin mr-2"></i>Chargement...
                 </div>
 
-                <!-- Formulaire (abonnés) -->
-                <div id="scheduleForm" class="hidden max-w-2xl" style="
+                <!-- Formulaire (abonnés) + colonne d'accompagnement, pour occuper toute la largeur sur desktop -->
+                <div id="scheduleFormWrap" class="hidden grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start">
+                <div id="scheduleForm" style="
                     background:linear-gradient(145deg,rgba(26,54,93,0.65),rgba(5,20,40,0.85));
                     border:1px solid rgba(212,175,55,0.28);
                     border-radius:18px;
@@ -408,6 +409,31 @@
                         <button onclick="deleteSchedule()" id="scheduleDeleteBtn" class="hidden w-full border border-red-400/30 text-red-300 hover:bg-red-900/20 font-semibold py-2.5 rounded-lg transition-colors text-sm">Désactiver</button>
                     </div>
                     </div>
+                </div>
+
+                <!-- Colonne d'accompagnement (desktop) -->
+                <div style="display:flex;flex-direction:column;gap:16px;">
+                    <div style="background:linear-gradient(145deg,rgba(26,54,93,0.5),rgba(5,20,40,0.7));border:1px solid rgba(212,175,55,0.2);border-radius:16px;padding:20px;">
+                        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#d4af37;margin:0 0 12px;font-weight:700;"><i class="fas fa-infinity mr-2" style="opacity:.7;"></i>Comment ça marche</p>
+                        <div style="display:flex;flex-direction:column;gap:12px;">
+                            <div style="display:flex;gap:10px;align-items:flex-start;">
+                                <div style="width:22px;height:22px;border-radius:50%;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.35);color:#d4af37;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</div>
+                                <p class="text-light-gold/60 text-xs leading-relaxed" style="margin:0;">Le tirage se fait au générateur quantique, exactement comme sur le plateau du Tore.</p>
+                            </div>
+                            <div style="display:flex;gap:10px;align-items:flex-start;">
+                                <div style="width:22px;height:22px;border-radius:50%;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.35);color:#d4af37;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</div>
+                                <p class="text-light-gold/60 text-xs leading-relaxed" style="margin:0;">L'Oracle génère votre analyse avec votre intention fixe.</p>
+                            </div>
+                            <div style="display:flex;gap:10px;align-items:flex-start;">
+                                <div style="width:22px;height:22px;border-radius:50%;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.35);color:#d4af37;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</div>
+                                <p class="text-light-gold/60 text-xs leading-relaxed" style="margin:0;">Vous recevez tout par email, et le tirage rejoint aussi votre historique.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.15);border-radius:16px;padding:18px 20px;">
+                        <p class="text-light-gold/50 text-xs leading-relaxed" style="margin:0;"><i class="fas fa-shield-alt mr-1.5" style="opacity:.6;"></i>Un tirage programmé reste un tirage privé : aucune fenêtre d'observation n'est activée automatiquement en votre nom.</p>
+                    </div>
+                </div>
                 </div>
             </div>
         </main>
@@ -932,15 +958,22 @@
                 // reproduit le téléchargement nous-mêmes avec un <a> réellement
                 // inséré dans le DOM et un vrai .click(), pattern le plus robuste
                 // cross-navigateur pour déclencher un téléchargement de fichier.
-                const pdfBlob = pdf.output('blob');
-                const pdfUrl = URL.createObjectURL(pdfBlob);
+                //
+                // Une URL blob: (au lieu d'une data URI) s'est révélée peu fiable sur
+                // certains navigateurs mobiles Android : au lieu de déclencher le
+                // téléchargement, ils ouvrent un nouvel onglet "about:blank" qui reste
+                // vide (le contexte blob: n'existe pas dans ce nouvel onglet). Une
+                // data URI (base64) est auto-suffisante et ne dépend d'aucun contexte
+                // mémoire propre à l'onglet d'origine — plus robuste cross-navigateur.
+                const pdfDataUri = pdf.output('datauristring');
                 const dlLink = document.createElement('a');
-                dlLink.href = pdfUrl;
+                dlLink.href = pdfDataUri;
                 dlLink.download = `oradia-tirage-${dateSlug}.pdf`;
+                dlLink.rel = 'noopener';
+                dlLink.target = '_self';
                 document.body.appendChild(dlLink);
                 dlLink.click();
                 document.body.removeChild(dlLink);
-                setTimeout(() => URL.revokeObjectURL(pdfUrl), 60000);
             } catch (e) {
                 console.error('Erreur génération PDF', e);
                 alert("Le PDF n'a pas pu être généré : " + (e && e.message ? e.message : 'erreur inconnue') + ". Réessaie dans un instant, et si ça persiste, signale ce message.");
@@ -1174,7 +1207,7 @@
             _scheduleState = (res && res.success) ? res.schedule : null;
 
             document.getElementById('loadingSchedulePanel').classList.add('hidden');
-            document.getElementById('scheduleForm').classList.remove('hidden');
+            document.getElementById('scheduleFormWrap').classList.remove('hidden');
             renderStatusBanner();
             fillFormFromState(_scheduleState);
         }

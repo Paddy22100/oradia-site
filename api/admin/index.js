@@ -971,10 +971,20 @@ async function handleData(req, res) {
 
           // (1) Remplissage — uniquement du vrai quantique (ANU ou Outshift/Cisco),
           //     jamais de pseudo-hasard local (sinon l'étude serait polluée).
+          //
+          // IMPORTANT : ce remplissage doit avoir lieu CHAQUE JOUR, même quand le stock
+          // est encore suffisant — sinon aucun nombre "futur" (scellé APRÈS l'intention)
+          // n'est jamais commité au-delà du lot initial, et la résolution des futurs
+          // (qui exige committed_at > intention_at) ne trouve plus jamais de candidat dès
+          // que le stock reste au-dessus du seuil bas. C'était la cause du bras "futur"
+          // quasi vide malgré de nombreux tirages : seul un petit lot quotidien frais
+          // (même quand le stock est déjà large) garantit un "futur" disponible en continu.
           const { count: available } = await sb.from('retro_pool').select('*', { count: 'exact', head: true }).is('consumed_at', null);
-          const LOW = 200, BATCH = 1024;
-          const OUTSHIFT_BATCH = 1000; // limite documentée par Outshift : 1000 blocs max par appel
-          if ((available || 0) < LOW) {
+          const LOW = 200, BATCH = 1024, TOPUP = 80;
+          const isLow = (available || 0) < LOW;
+          const targetCount = isLow ? BATCH : TOPUP;
+          const OUTSHIFT_BATCH = Math.min(targetCount, 1000); // limite documentée par Outshift : 1000 blocs max par appel
+          {
             let numbers = null;
             let poolSource = null;
 
@@ -1003,7 +1013,7 @@ async function handleData(req, res) {
             if (!numbers) {
               try {
                 if (process.env.ANU_QRNG_API_KEY) {
-                  const r = await fetch(`https://api.quantumnumbers.anu.edu.au?length=${BATCH}&type=uint8`, {
+                  const r = await fetch(`https://api.quantumnumbers.anu.edu.au?length=${targetCount}&type=uint8`, {
                     headers: { 'x-api-key': process.env.ANU_QRNG_API_KEY, 'Content-Type': 'application/json' },
                     signal: AbortSignal.timeout(8000)
                   });
@@ -1023,8 +1033,7 @@ async function handleData(req, res) {
             }
           }
 
-          const wasLow = (available || 0) < LOW;
-          const fillFailed = wasLow && out.filled === 0;
+          const fillFailed = out.filled === 0;
 
           // (2) Résolution des "futurs" : chaque session sans future_bit reçoit le plus
           //     ancien octet du pool scellé APRÈS son intention (donc un vrai "futur").

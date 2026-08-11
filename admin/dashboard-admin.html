@@ -10361,13 +10361,47 @@
             // PARTIE 3 — RÉSULTATS EN DIRECT
             H('3. Résultats en direct');
             const pastA = d.past || {}, futA = d.future || {};
-            const line = (label, a) => {
-                if (!a || !a.n) { P(`${label} : en attente de données.`, { lh: 5, after: 1 }); return; }
-                P(`${label} : ${a.n} tirages · correspondance ${(a.rate*100).toFixed(1)} % (hasard attendu ${(a.baseline*100).toFixed(1)} %) · z = ${a.z.toFixed(2)} · p = ${a.p < 0.001 ? '<0.001' : a.p.toFixed(3)} · ${a.significant ? 'écart significatif (à répliquer)' : 'conforme au hasard'}.`, { lh: 5, after: 1.5 });
+
+            // Jauge d'avancement (tirages accumulés / objectif)
+            need(16);
+            doc.setFont('helvetica', 'normal'); doc.setFontSize(9); doc.setTextColor(...INK);
+            const targetN = d.target_n || 0;
+            const progressPct = targetN ? Math.max(0, Math.min(1, (d.n_total || 0) / targetN)) : 0;
+            doc.text(`Tirages valides accumulés : ${d.n_total ?? 0} / ${d.target_n ?? '—'} (objectif)`, M, y); y += 4;
+            doc.setFillColor(235, 230, 215); doc.roundedRect(M, y, maxW, 4, 1.5, 1.5, 'F');
+            doc.setFillColor(...GOLD); doc.roundedRect(M, y, Math.max(3, maxW * progressPct), 4, 1.5, 1.5, 'F');
+            y += 4 + 6;
+
+            // Un "bras" (passé ou futur) : barre de correspondance vs repère hasard/baseline.
+            const gauge = (label, a) => {
+                need(24);
+                doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(...INK);
+                doc.text(label, M, y); y += 5.5;
+                if (!a || !a.n) {
+                    doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(...MUTE);
+                    doc.text('En attente de données.', M, y); y += 8;
+                    return;
+                }
+                const barH = 5;
+                doc.setFillColor(235, 230, 215); doc.roundedRect(M, y, maxW, barH, 1.5, 1.5, 'F');
+                const rateW = Math.max(1, Math.min(1, a.rate) * maxW);
+                doc.setFillColor(...GOLD); doc.roundedRect(M, y, rateW, barH, 1.5, 1.5, 'F');
+                const baseX = M + Math.max(0, Math.min(1, a.baseline)) * maxW;
+                doc.setDrawColor(90, 90, 100); doc.setLineWidth(0.35);
+                doc.line(baseX, y - 1.2, baseX, y + barH + 1.2);
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(...MUTE);
+                doc.text('hasard', baseX, y - 2, { align: 'center' });
+                y += barH + 5;
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTE);
+                doc.text(`${a.n} tirages · correspondance ${(a.rate * 100).toFixed(1)} % (hasard attendu ${(a.baseline * 100).toFixed(1)} %) · z = ${a.z.toFixed(2)} · p = ${a.p < 0.001 ? '<0.001' : a.p.toFixed(3)}`, M, y);
+                y += 4.5;
+                doc.setFont('helvetica', a.significant ? 'bold' : 'normal'); doc.setFontSize(8.5);
+                doc.setTextColor(...(a.significant ? [190, 120, 20] : [60, 140, 100]));
+                doc.text(a.significant ? '! Écart significatif (à répliquer)' : 'Conforme au hasard pour l\'instant', M, y);
+                y += 7;
             };
-            P(`Tirages valides accumulés : ${d.n_total ?? 0} / ${d.target_n ?? '—'} (objectif).`, { after: 1.5 });
-            line('Passé → présent (pré-tiré vs direct)', pastA);
-            line('Futur → présent (post-tiré vs direct)', futA);
+            gauge('Passé → présent (pré-tiré vs direct)', pastA);
+            gauge('Futur → présent (post-tiré vs direct)', futA);
             if (d.registered_at) P(`Pré-enregistrement figé le ${new Date(d.registered_at).toLocaleDateString('fr-FR')}. Réserve de nombres scellés : ${d.pool_available ?? 0}.`, { after: 3 });
 
             // PARTIE 4 — HONNÊETÉ

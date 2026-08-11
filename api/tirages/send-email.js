@@ -1478,25 +1478,14 @@ async function handleRunScheduledDraws(req, res) {
       });
       if (insErr) console.error('[run-scheduled-draws] insert tirage error:', insErr.message);
 
-      // Alimente les études scientifiques (synchronicités) — uniquement si le tirage
-      // entier a utilisé une source quantique vérifiée (aucun octet en repli crypto),
-      // exactement la même règle que le tirage manuel (QUANTUM_SOURCES côté client
-      // et api/fenetre/index.js). Insertion directe : même forme que handleActivation.
+      // La fenêtre d'observation reste proposée dans l'email (voir observationDays/
+      // observationText/attentionPoints plus bas) mais n'est PAS activée automatiquement
+      // pour les tirages programmés : contrairement au tirage manuel, où l'utilisateur
+      // clique explicitement sur "Activer ma fenêtre d'observation", personne ne
+      // consent activement ici — l'auto-insertion précédente contournait ce consentement
+      // et polluait l'étude des synchronicités avec des fenêtres jamais choisies.
       const { parseObservationSection } = require('../../lib/tore-analysis-prompt.js');
       const obs = parseObservationSection(analysis.observation);
-      if (obs && (qrngSource === 'anu' || qrngSource === 'outshift')) {
-        const closesAt = new Date(Date.now() + obs.days * 24 * 60 * 60 * 1000);
-        const { error: obsErr } = await supabase.from('observation_windows').insert({
-          email: sched.email,
-          intention: sched.intention,
-          cards: cards.map(c => ({ family: c.family, name: c.name })),
-          attention_points: obs.points,
-          duration_days: obs.days,
-          closes_at: closesAt.toISOString(),
-          qrng_source: qrngSource
-        });
-        if (obsErr) console.error('[run-scheduled-draws] insert observation_windows error:', obsErr.message);
-      }
 
       // Envoi de l'email — réutilise le template existant (handleSendEmail) via un req/res
       // synthétique, comme handleCollectEmail le fait déjà pour l'email J0.
