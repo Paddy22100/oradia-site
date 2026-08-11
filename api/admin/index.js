@@ -972,19 +972,26 @@ async function handleData(req, res) {
           // (1) Remplissage — uniquement du vrai quantique (ANU ou Outshift/Cisco),
           //     jamais de pseudo-hasard local (sinon l'étude serait polluée).
           //
-          // IMPORTANT : ce remplissage doit avoir lieu CHAQUE JOUR, même quand le stock
-          // est encore suffisant — sinon aucun nombre "futur" (scellé APRÈS l'intention)
-          // n'est jamais commité au-delà du lot initial, et la résolution des futurs
-          // (qui exige committed_at > intention_at) ne trouve plus jamais de candidat dès
-          // que le stock reste au-dessus du seuil bas. C'était la cause du bras "futur"
-          // quasi vide malgré de nombreux tirages : seul un petit lot quotidien frais
-          // (même quand le stock est déjà large) garantit un "futur" disponible en continu.
+          // IMPORTANT : un nombre "futur" (scellé APRÈS l'intention) doit être commité
+          // au moins une fois par jour — sinon la résolution des futurs (qui exige
+          // committed_at > intention_at) ne trouve plus jamais de candidat dès que le
+          // stock reste au-dessus du seuil bas. C'était la cause du bras "futur" quasi
+          // vide malgré de nombreux tirages. Mais ajouter un lot chaque jour SANS
+          // condition ferait grossir le stock indéfiniment (la consommation est bien
+          // plus lente que l'apport) — inutile et pas souhaitable. On n'ajoute donc un
+          // petit lot "fraîcheur" que si le nombre le plus récent en stock date de plus
+          // de 20h (~pas de commit aujourd'hui) ET que le stock reste sous un plafond.
           const { count: available } = await sb.from('retro_pool').select('*', { count: 'exact', head: true }).is('consumed_at', null);
-          const LOW = 200, BATCH = 1024, TOPUP = 80;
+          const { data: newestRows } = await sb.from('retro_pool').select('committed_at').is('consumed_at', null).order('committed_at', { ascending: false }).limit(1);
+          const newestAgeHours = (newestRows && newestRows[0]) ? (Date.now() - new Date(newestRows[0].committed_at).getTime()) / 3600000 : Infinity;
+          const LOW = 200, BATCH = 1024, TOPUP = 80, HARD_CAP = 5000;
           const isLow = (available || 0) < LOW;
+          const needsFreshBatch = newestAgeHours > 20;
+          const overCap = (available || 0) >= HARD_CAP;
+          const shouldFill = isLow || (needsFreshBatch && !overCap);
           const targetCount = isLow ? BATCH : TOPUP;
           const OUTSHIFT_BATCH = Math.min(targetCount, 1000); // limite documentée par Outshift : 1000 blocs max par appel
-          {
+          if (shouldFill) {
             let numbers = null;
             let poolSource = null;
 
@@ -1033,7 +1040,7 @@ async function handleData(req, res) {
             }
           }
 
-          const fillFailed = out.filled === 0;
+          const fillFailed = shouldFill && out.filled === 0;
 
           // (2) Résolution des "futurs" : chaque session sans future_bit reçoit le plus
           //     ancien octet du pool scellé APRÈS son intention (donc un vrai "futur").

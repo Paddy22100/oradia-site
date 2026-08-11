@@ -1478,14 +1478,10 @@ async function handleRunScheduledDraws(req, res) {
       });
       if (insErr) console.error('[run-scheduled-draws] insert tirage error:', insErr.message);
 
-      // La fenêtre d'observation reste proposée dans l'email (voir observationDays/
-      // observationText/attentionPoints plus bas) mais n'est PAS activée automatiquement
-      // pour les tirages programmés : contrairement au tirage manuel, où l'utilisateur
-      // clique explicitement sur "Activer ma fenêtre d'observation", personne ne
-      // consent activement ici — l'auto-insertion précédente contournait ce consentement
-      // et polluait l'étude des synchronicités avec des fenêtres jamais choisies.
-      const { parseObservationSection } = require('../../lib/tore-analysis-prompt.js');
-      const obs = parseObservationSection(analysis.observation);
+      // Pas de fenêtre d'observation pour les tirages programmés, ni activée ni même
+      // proposée : contrairement au tirage manuel où l'utilisateur choisit explicitement
+      // de cliquer sur "Activer ma fenêtre d'observation", un tirage automatique reste un
+      // tirage privé — l'email ne mentionne donc pas cette section.
 
       // Envoi de l'email — réutilise le template existant (handleSendEmail) via un req/res
       // synthétique, comme handleCollectEmail le fait déjà pour l'email J0.
@@ -1499,9 +1495,9 @@ async function handleRunScheduledDraws(req, res) {
             analysis: analysis.cards,
             pistes: analysis.explore,
             synthesis: analysis.synthesis,
-            observationDays: obs ? obs.days : null,
-            observationText: obs ? obs.text : '',
-            attentionPoints: obs ? obs.points : []
+            observationDays: null,
+            observationText: '',
+            attentionPoints: []
           }
         };
         const fakeRes = {

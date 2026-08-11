@@ -2478,7 +2478,8 @@
                     <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-database text-gold/60"></i> Stock du pool rétrocausalité</h4>
                     <span id="pool-health-badge" class="text-xs font-semibold px-2.5 py-1 rounded-full">—</span>
                 </div>
-                <p class="text-gold/40 text-xs mb-4 italic">Nombres quantiques pré-scellés à l'avance, nécessaires pour garantir un "passé" à chaque nouveau tirage. Rempli automatiquement chaque jour (07h UTC).</p>
+                <p class="text-gold/40 text-xs mb-3 italic">Nombres quantiques pré-scellés à l'avance, nécessaires pour garantir un "passé" à chaque nouveau tirage. Rempli automatiquement chaque jour (07h UTC).</p>
+                <button onclick="forceRetroPoolRun(this)" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 mb-4 hover:bg-gold/20 transition"><i class="fas fa-bolt mr-1"></i>Forcer le remplissage / la résolution maintenant</button>
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
                     <div class="bg-[rgba(5,20,40,0.6)] border border-gold/10 rounded-lg p-3 text-center">
                         <div class="text-2xl font-bold text-teal-300" id="pool-available">—</div>
@@ -10190,6 +10191,28 @@
         // ── ÉTUDE RÉTROCAUSALITÉ ────────────────────────────────────────────────────
         let _retroData = null;
 
+        // Déclenche manuellement le remplissage/la résolution du pool (normalement
+        // quotidien via le cron Vercel 07h UTC) — utile pour vérifier tout de suite
+        // qu'un correctif a pris effet, sans attendre le lendemain.
+        async function forceRetroPoolRun(btn) {
+            const orig = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>En cours…';
+            try {
+                const res = await adminFetch('/api/admin/data?action=cron-retro-pool');
+                const data = await res.json();
+                if (data.success) {
+                    alert(`Fait : ${data.filled || 0} nombre(s) ajouté(s), ${data.resolved || 0} "futur(s)" résolu(s).`);
+                } else {
+                    alert('Erreur : ' + (data.error || 'échec inconnu.'));
+                }
+                await loadExperiment();
+            } catch (e) {
+                alert('Erreur réseau : ' + e.message);
+            } finally {
+                btn.disabled = false; btn.innerHTML = orig;
+            }
+        }
+
         async function loadExperiment() {
             const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
             const fmtPct = (r) => (r == null ? '—' : (r * 100).toFixed(1) + ' %');
@@ -10293,7 +10316,9 @@
             const { jsPDF } = window.jspdf;
             const doc = new jsPDF({ unit: 'mm', format: 'a4' });
             const M = 18, W = 210, PH = 297, maxW = W - 2 * M;
-            const GOLD = [180, 140, 40], GOLD_LIGHT = [246, 240, 222], INK = [40, 40, 55], MUTE = [120, 120, 130];
+            // Palette rapprochée de la charte du site (#d4af37 doré, #0a192f bleu nuit),
+            // assombrie juste assez pour rester lisible sur fond blanc à l'impression.
+            const GOLD = [176, 138, 38], GOLD_LIGHT = [250, 246, 233], INK = [22, 35, 58], MUTE = [110, 112, 128];
             let y = M;
             const bottom = PH - M - 6; // réserve la place du pied de page
             const need = (h) => { if (y + h > bottom) { doc.addPage(); drawFooter(); y = M; } };
@@ -10342,21 +10367,21 @@
             // PARTIE 1 — POUR TOUS
             H('1. En clair (pour tous)');
             P('Le hasard quantique (généré par le matériel quantique Outshift/Cisco, ou en secours par le laboratoire d\'optique quantique de l\'ANU) est un « dé cosmique » impossible à truquer : chaque nombre provient de fluctuations quantiques du vide ou d\'un phénomène quantique physique équivalent. Nous nous en servons pour poser une question simple mais vertigineuse : un nombre tiré à un autre moment que le tirage peut-il « coller » au tirage mieux que le pur hasard ?', {});
-            P('Le jeu du pari à l\'envers (tester le FUTUR → présent) : imaginez que vous choisissiez une carte entre 1 et 64 maintenant. Ce n\'est qu\'APRÈS votre choix que le dé cosmique tire la carte « gagnante ». Normalement, tomber pile dessus, c\'est 1 chance sur 64. Si, sur des milliers de tirages, les gens tombent bien plus souvent que 1 sur 64 sur une carte décidée APRÈS eux, cela voudrait dire que leur choix du présent était déjà accordé à un futur qui n\'existait pas encore.', {});
-            P('Tester le PASSÉ → présent : c\'est le même jeu, mais la carte « gagnante » est scellée AVANT le tirage (générée la veille, mise dans une enveloppe numérique datée et infalsifiable). Si le tirage du présent correspond à ce nombre du passé mieux que le hasard, c\'est que le passé « touche » le présent.', {});
+            P('Le jeu du pari à l\'envers (tester le FUTUR vers le présent) : imaginez que vous choisissiez une carte entre 1 et 64 maintenant. Ce n\'est qu\'APRÈS votre choix que le dé cosmique tire la carte « gagnante ». Normalement, tomber pile dessus, c\'est 1 chance sur 64. Si, sur des milliers de tirages, les gens tombent bien plus souvent que 1 sur 64 sur une carte décidée APRÈS eux, cela voudrait dire que leur choix du présent était déjà accordé à un futur qui n\'existait pas encore.', {});
+            P('Tester le PASSÉ vers le présent : c\'est le même jeu, mais la carte « gagnante » est scellée AVANT le tirage (générée la veille, mise dans une enveloppe numérique datée et infalsifiable). Si le tirage du présent correspond à ce nombre du passé mieux que le hasard, c\'est que le passé « touche » le présent.', {});
             P('Dans les deux cas, pour le consultant, rien ne change : il tire normalement. Toute la mesure se fait en coulisses.', { after: 3 });
 
             // PARTIE 2 — SCIENTIFIQUE
             H('2. Protocole scientifique');
-            P('Conception : pour chaque consultation valide, trois bits (0/1) sont dérivés de nombres quantiques vérifiés — Outshift/Cisco ou, en secours, ANU (octet ≥ 128 → 1, sinon 0) :', { after: 1 });
+            P('Conception : pour chaque consultation valide, trois bits (0/1) sont dérivés de nombres quantiques vérifiés, Outshift/Cisco ou, en secours, ANU (octet superieur ou egal a 128 = 1, sinon 0) :', { after: 1 });
             P('• PRÉ-TIRÉ (passé) : bit scellé AVANT l\'intention, engagé par un hash SHA-256 horodaté (preuve d\'antériorité et de non-altération).', { lh: 5, after: 0.5 });
-            P('• EN DIRECT (présent) : bit généré au moment du tirage — l\'acte « présent », horodaté (intention_at).', { lh: 5, after: 0.5 });
+            P('• EN DIRECT (présent) : bit généré au moment du tirage, l\'acte « présent », horodaté.', { lh: 5, after: 0.5 });
             P('• POST-TIRÉ (futur) : bit scellé APRÈS l\'intention, révélé plus tard, également engagé par hash horodaté.', { lh: 5, after: 2 });
             P('Hypothèses (pré-enregistrées AVANT toute donnée) :', { style: 'bold', after: 1 });
-            P(d.hypotheses || 'H1 (passé→présent) : taux de correspondance pré-tiré/présent ≠ 50 %. H2 (futur→présent) : taux post-tiré/présent ≠ 50 %. H0 : les deux = 50 % (aucun effet).', { after: 2 });
-            P('Métrique principale : taux de correspondance de bits, test binomial bilatéral comparé à la baseline marginale (le taux de correspondance attendu compte tenu de la proportion de 1 de chaque flux — neutralise tout biais d\'un flux).', {});
-            P('Contrôle : comparaison à la baseline marginale + ré-appariement (permutation) des tirages entre eux. Aucune fausse lecture n\'est jamais donnée à un consultant : le contrôle est purement statistique, a posteriori.', {});
-            P('Validité : seuls les tirages 100 % quantiques (ANU ou Outshift) sont retenus ; tout tirage reposant sur le repli cryptographique est exclu. Règle d\'arrêt : objectif de N fixé à l\'avance (pas d\'arrêt opportuniste). Analyse bilatérale, seuil α = ' + (d.alpha ?? 0.05) + '.', { after: 3 });
+            P(d.hypotheses || 'H1 (passé vers présent) : taux de correspondance pré-tiré/présent different de 50 %. H2 (futur vers présent) : taux post-tiré/présent different de 50 %. H0 : les deux = 50 % (aucun effet).', { after: 2 });
+            P('Métrique principale : taux de correspondance de bits, test binomial bilatéral comparé à la baseline marginale (le taux de correspondance attendu compte tenu de la proportion de 1 de chaque flux, neutralise tout biais d\'un flux).', {});
+            P('Contrôle : comparaison à la baseline marginale et ré-appariement (permutation) des tirages entre eux. Aucune fausse lecture n\'est jamais donnée à un consultant : le contrôle est purement statistique, a posteriori.', {});
+            P('Validité : seuls les tirages 100 % quantiques (ANU ou Outshift) sont retenus ; tout tirage reposant sur le repli cryptographique est exclu. Règle d\'arrêt : objectif de N fixé à l\'avance (pas d\'arrêt opportuniste). Analyse bilatérale, seuil alpha = ' + (d.alpha ?? 0.05) + '.', { after: 3 });
 
             // PARTIE 3 — RÉSULTATS EN DIRECT
             H('3. Résultats en direct');
@@ -10374,14 +10399,17 @@
 
             // Un "bras" (passé ou futur) : barre de correspondance vs repère hasard/baseline.
             const gauge = (label, a) => {
-                need(24);
+                need(28);
                 doc.setFont('helvetica', 'bold'); doc.setFontSize(10.5); doc.setTextColor(...INK);
-                doc.text(label, M, y); y += 5.5;
+                doc.text(label, M, y); y += 7;
                 if (!a || !a.n) {
                     doc.setFont('helvetica', 'italic'); doc.setFontSize(9); doc.setTextColor(...MUTE);
-                    doc.text('En attente de données.', M, y); y += 8;
+                    doc.text('En attente de données.', M, y); y += 9;
                     return;
                 }
+                doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(...MUTE);
+                doc.text('repère hasard', W - M, y, { align: 'right' });
+                y += 3.5;
                 const barH = 5;
                 doc.setFillColor(235, 230, 215); doc.roundedRect(M, y, maxW, barH, 1.5, 1.5, 'F');
                 const rateW = Math.max(1, Math.min(1, a.rate) * maxW);
@@ -10389,19 +10417,17 @@
                 const baseX = M + Math.max(0, Math.min(1, a.baseline)) * maxW;
                 doc.setDrawColor(90, 90, 100); doc.setLineWidth(0.35);
                 doc.line(baseX, y - 1.2, baseX, y + barH + 1.2);
-                doc.setFont('helvetica', 'normal'); doc.setFontSize(6.5); doc.setTextColor(...MUTE);
-                doc.text('hasard', baseX, y - 2, { align: 'center' });
                 y += barH + 5;
-                doc.setFont('helvetica', 'normal'); doc.setFontSize(8.5); doc.setTextColor(...MUTE);
-                doc.text(`${a.n} tirages · correspondance ${(a.rate * 100).toFixed(1)} % (hasard attendu ${(a.baseline * 100).toFixed(1)} %) · z = ${a.z.toFixed(2)} · p = ${a.p < 0.001 ? '<0.001' : a.p.toFixed(3)}`, M, y);
-                y += 4.5;
+                const statsLine = `${a.n} tirages, correspondance ${(a.rate * 100).toFixed(1)} % (hasard attendu ${(a.baseline * 100).toFixed(1)} %), z = ${a.z.toFixed(2)}, p = ${a.p < 0.001 ? '<0.001' : a.p.toFixed(3)}`;
+                P(statsLine, { size: 8.5, lh: 4, color: MUTE, after: 0.5 });
                 doc.setFont('helvetica', a.significant ? 'bold' : 'normal'); doc.setFontSize(8.5);
                 doc.setTextColor(...(a.significant ? [190, 120, 20] : [60, 140, 100]));
-                doc.text(a.significant ? '! Écart significatif (à répliquer)' : 'Conforme au hasard pour l\'instant', M, y);
+                need(5);
+                doc.text(a.significant ? 'Écart significatif (à répliquer)' : 'Conforme au hasard pour l\'instant', M, y);
                 y += 7;
             };
-            gauge('Passé → présent (pré-tiré vs direct)', pastA);
-            gauge('Futur → présent (post-tiré vs direct)', futA);
+            gauge('Passé vers présent (pré-tiré vs direct)', pastA);
+            gauge('Futur vers présent (post-tiré vs direct)', futA);
             if (d.registered_at) P(`Pré-enregistrement figé le ${new Date(d.registered_at).toLocaleDateString('fr-FR')}. Réserve de nombres scellés : ${d.pool_available ?? 0}.`, { after: 3 });
 
             // PARTIE 4 — HONNÊETÉ
