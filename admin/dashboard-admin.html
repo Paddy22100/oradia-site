@@ -6225,8 +6225,12 @@
                 <div class="flex items-start gap-2">
                     <span class="text-xs font-bold text-gold/50 mt-1.5 flex-shrink-0">1.</span>
                     <div class="flex gap-2 flex-wrap items-start flex-1">
+                        <button onclick="nlToggleImagePicker(true)"
+                            class="flex items-center gap-1.5 bg-gold/10 border border-gold/30 text-gold rounded-lg px-3 py-2 text-xs font-semibold hover:bg-gold/20 transition flex-shrink-0">
+                            <i class="fas fa-images"></i>Choisir les images à insérer
+                        </button>
                         ${imgsHtml}
-                        ${hasActive ? '<div class="text-xs text-gold font-medium self-center ml-1">← étape 2 : cliquez sur un emplacement ci-dessous</div>' : '<div class="text-xs text-gold/35 self-center ml-1">Cliquez sur une image pour choisir où la placer</div>'}
+                        ${hasActive ? '<div class="text-xs text-gold font-medium self-center ml-1">← étape 2 : cliquez sur un emplacement ci-dessous</div>' : (nlSelectedImages.length ? '<div class="text-xs text-gold/35 self-center ml-1">Cliquez sur une image pour choisir où la placer</div>' : '')}
                     </div>
                 </div>
                 <div class="border border-gold/10 rounded-xl p-3 bg-black/20">
@@ -6286,14 +6290,15 @@
             document.getElementById('nl-image-selected-label')?.classList.add('hidden');
         }
 
-        function nlToggleImagePicker() {
+        function nlToggleImagePicker(forceOpen) {
             const body = document.getElementById('nl-image-picker-body');
             const btn = document.getElementById('nl-image-picker-toggle');
             if (!body || !btn) return;
-            const collapsed = body.classList.toggle('hidden');
+            const collapsed = forceOpen ? (body.classList.remove('hidden'), false) : body.classList.toggle('hidden');
             btn.innerHTML = collapsed
-                ? '<i class="fas fa-expand-alt mr-1"></i>Agrandir'
+                ? '<i class="fas fa-images mr-1"></i>Choisir les images à insérer'
                 : '<i class="fas fa-compress-alt mr-1"></i>Réduire';
+            if (forceOpen) document.getElementById('nl-image-picker')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         function nlCopy() {
@@ -6735,6 +6740,7 @@
                 if (!res.ok) throw new Error(data.error || 'Erreur');
                 nlFillSocialPreview(data, imageUrl);
                 nlSocialStatus('info', 'Aperçu généré — pas encore publié.');
+                await nlSaveSocialFieldsSilently();
             } catch(e) {
                 nlSocialStatus('error', e.message);
             } finally {
@@ -6785,12 +6791,55 @@
                     ? `✓ Programmé pour le ${new Date(scheduleVal).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })} — Facebook et Instagram partiront ensemble à ce moment-là.`
                     : '✓ Publications envoyées à Make.com — Facebook et Instagram seront publiés maintenant.');
                 nlFillSocialPreview(data, imageUrl);
+                // Sauvegarde silencieuse : sans ça, le texte Facebook/Instagram généré
+                // ici ne survivait que le temps de la page — en rouvrant ce brouillon
+                // plus tard, la section réseaux sociaux réapparaissait vide.
+                await nlSaveSocialFieldsSilently();
             } catch(e) {
                 nlSocialStatus('error', e.message);
             } finally {
                 btn.disabled = false;
                 btn.innerHTML = '<i class="fab fa-instagram"></i><i class="fab fa-facebook ml-1"></i><span class="ml-1">Publier sur les réseaux</span>';
             }
+        }
+
+        // Sauvegarde le brouillon en tâche de fond (mêmes données que nlSave, sans les
+        // retours visuels sur le bouton "Sauvegarder") juste après une génération/publication
+        // réseaux sociaux, pour que le texte préparé ne se perde pas si l'admin quitte la page.
+        async function nlSaveSocialFieldsSilently() {
+            const content = document.getElementById('nl-content')?.value.trim();
+            if (!content) return;
+            try {
+                const extra = nlCurrentType === 'promo' ? {
+                    cta_text: document.getElementById('nl-cta-text').value.trim() || undefined,
+                    cta_url: document.getElementById('nl-cta-url').value.trim() || undefined,
+                    badge: document.getElementById('nl-cta-badge').value.trim() || undefined
+                } : {};
+                const banner = nlGetBanner();
+                if (banner) extra.promo_banner = banner;
+                const socialFb = document.getElementById('nl-social-fb-text')?.value.trim();
+                const socialIg = document.getElementById('nl-social-ig-text')?.value.trim();
+                const socialImg = document.getElementById('nl-social-image')?.value.trim();
+                if (socialFb) extra.social_facebook_text = socialFb;
+                if (socialIg) extra.social_instagram_text = socialIg;
+                if (socialImg) extra.social_image = socialImg;
+
+                const res = await adminFetch('/api/admin/newsletter?action=save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        id: nlCurrentDraftId,
+                        subject: document.getElementById('nl-subject')?.value.trim() || '(sans titre)',
+                        content,
+                        intention: document.getElementById('nl-intention')?.value.trim() || '',
+                        type: nlCurrentType,
+                        images: nlSelectedImages.map(s => ({ path: s.path, name: s.name, position: s.position ?? 0 })),
+                        extra
+                    })
+                });
+                const data = await res.json();
+                if (res.ok && data.id) nlCurrentDraftId = data.id;
+            } catch (e) { /* silencieux : ne bloque jamais le flux de publication */ }
         }
 
         function nlSocialStatus(type, msg) {
