@@ -1606,6 +1606,11 @@
                     <h2 class="cormorant text-3xl font-bold text-gold">Communication Oradia</h2>
                     <p class="text-light-gold/50 text-sm mt-1">Newsletter hebdomadaire et emails promotionnels (lancements, offres, événements...)</p>
                 </div>
+                <div class="flex items-center gap-3">
+                <button onclick="nlNewDraft()"
+                    class="flex items-center gap-1.5 bg-gold/10 border border-gold/30 text-gold px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-gold/20 transition">
+                    <i class="fas fa-plus"></i>Nouvelle newsletter
+                </button>
                 <div class="flex gap-1 bg-white/5 border border-gold/15 rounded-xl p-1">
                     <button onclick="nlShowTab('generate')" data-nltab="generate"
                         class="nl-tab-btn bg-gold text-night-blue px-4 py-1.5 rounded-lg font-semibold text-sm">
@@ -1627,6 +1632,7 @@
                         class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
                         <i class="fas fa-paper-plane mr-1.5"></i>Envoyées
                     </button>
+                </div>
                 </div>
             </div>
 
@@ -5387,6 +5393,51 @@
                 : 'Générer la newsletter';
         }
 
+        // Repart d'un outil vierge — sans ça, l'onglet "Générer" gardait en mémoire la
+        // dernière newsletter ouverte/modifiée (sujet, contenu, images, aperçu réseaux
+        // sociaux...), au risque de continuer à modifier l'ancienne par erreur, ou de
+        // devoir tout effacer champ par champ pour en démarrer une nouvelle.
+        function nlNewDraft() {
+            if (document.getElementById('nl-content')?.value.trim() &&
+                !confirm('Repartir d\'une newsletter vierge ? Les modifications non sauvegardées seront perdues.')) return;
+
+            nlCurrentDraftId = null;
+            nlSelectedImages = [];
+            nlActivePlacementIdx = null;
+
+            document.getElementById('nl-subject').value = '';
+            document.getElementById('nl-intention').value = '';
+            document.getElementById('nl-cta-text').value = '';
+            document.getElementById('nl-cta-url').value = '';
+            document.getElementById('nl-cta-badge').value = '';
+            nlSetBanner('');
+
+            nlSetSocialImageUrl('');
+            const fbEl = document.getElementById('nl-social-fb-text');
+            const igEl = document.getElementById('nl-social-ig-text');
+            if (fbEl) fbEl.value = '';
+            if (igEl) igEl.value = '';
+            document.getElementById('nl-social-preview')?.classList.add('hidden');
+
+            const schedInput = document.getElementById('nl-scheduled-at');
+            if (schedInput) schedInput.value = '';
+            nlShowUnscheduledState();
+            nlShowFailedEmails([]);
+
+            nlShowEditor('');
+            document.getElementById('nl-placeholder')?.classList.remove('hidden');
+            document.getElementById('nl-save-zone')?.classList.add('hidden');
+            nlShowPublishZone(false);
+            nlShowFloatingBar(false);
+            nlExpandContentCol(false);
+            nlSetType('newsletter');
+            nlSetStep(1);
+            nlUpdateSelectedPreviews();
+
+            nlShowTab('generate');
+            nlStatus('info', 'Nouvelle newsletter — tout est à renseigner.');
+        }
+
         function nlShowTab(name) {
             document.querySelectorAll('.nl-tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById('nl-tab-' + name).classList.remove('hidden');
@@ -6343,6 +6394,17 @@
                 } : {};
                 const banner = nlGetBanner();
                 if (banner) extra.promo_banner = banner;
+
+                // Persiste l'aperçu réseaux sociaux (texte généré + image choisie) avec le
+                // brouillon — sans ça, rouvrir une newsletter déjà programmée pour la modifier
+                // faisait disparaître tout ce qui avait été préparé pour Facebook/Instagram,
+                // qui n'existait jusque-là que dans la page, jamais sauvegardé côté serveur.
+                const socialFb = document.getElementById('nl-social-fb-text')?.value.trim();
+                const socialIg = document.getElementById('nl-social-ig-text')?.value.trim();
+                const socialImg = document.getElementById('nl-social-image')?.value.trim();
+                if (socialFb) extra.social_facebook_text = socialFb;
+                if (socialIg) extra.social_instagram_text = socialIg;
+                if (socialImg) extra.social_image = socialImg;
 
                 const subjectEl = document.getElementById('nl-subject');
                 const rawSubject = subjectEl.value.trim();
@@ -7399,6 +7461,18 @@
                         document.getElementById('nl-cta-badge').value = extra.badge || '';
                     }
                     if (extra.promo_banner) nlSetBanner(extra.promo_banner);
+
+                    // Restaure l'aperçu réseaux sociaux préparé lors d'une session précédente
+                    // (texte Facebook/Instagram + image choisie), sinon la section apparaissait
+                    // vide en rouvrant un brouillon déjà travaillé.
+                    if (extra.social_image) nlSetSocialImageUrl(extra.social_image);
+                    if (extra.social_facebook_text || extra.social_instagram_text) {
+                        nlFillSocialPreview({
+                            facebook_text: extra.social_facebook_text || '',
+                            instagram_text: extra.social_instagram_text || '',
+                            image_url: extra.social_image || ''
+                        }, extra.social_image || '');
+                    }
 
                     // Index négatifs pour ne pas entrer en collision avec les index de la grille
                     // d'images rechargée ci-dessous (0..N), tout en gardant un id unique pour le toggle.
