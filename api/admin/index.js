@@ -4087,6 +4087,43 @@ async function handleNewsletter(req, res) {
         return res.status(502).json({ error: 'Erreur lors de la génération IA', details: lastErr });
       }
 
+      // ── Suggère une description d'image COURTE et visuelle (pas un extrait du texte
+      // brut, qui déroute le générateur d'image) à partir du sujet/intention/contenu de
+      // la newsletter, pour que l'illustration générée par IA reste cohérente avec le
+      // propos plutôt que de dépendre de ce que l'admin a pensé à taper.
+      if (action === 'suggest-image-prompt') {
+        if (!process.env.ANTHROPIC_API_KEY) {
+          return res.status(500).json({ error: 'ANTHROPIC_API_KEY non configurée' });
+        }
+        const subject = (body.subject || '').slice(0, 200);
+        const content = (body.content || '').replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').slice(0, 1200);
+        if (!subject && !content) return res.status(400).json({ error: 'Sujet ou contenu requis' });
+
+        const prompt = `Voici le sujet et le contenu d'une newsletter Oradia (oracle de développement personnel basé sur le Tore) :
+
+Sujet : ${subject}
+Contenu : ${content}
+
+Décris en UNE SEULE phrase courte (15 mots maximum), en anglais, une scène ou un symbole visuel concret qui illustrerait bien le thème de cette newsletter — pas un résumé du texte, une vraie image (ex: "a hand releasing golden light into darkness", "two paths diverging under a starry sky").
+Réponds UNIQUEMENT avec cette phrase, sans guillemets, sans préambule.`;
+
+        try {
+          const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+            body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 100, messages: [{ role: 'user', content: prompt }] }),
+            signal: AbortSignal.timeout(15000)
+          });
+          if (!aiRes.ok) return res.status(502).json({ error: 'Échec de la suggestion' });
+          const data = await aiRes.json();
+          const suggestion = (data.content || []).map(b => b.text || '').join('').trim().replace(/^["']|["']$/g, '');
+          if (!suggestion) return res.status(502).json({ error: 'Réponse vide' });
+          return res.status(200).json({ success: true, suggestion });
+        } catch (e) {
+          return res.status(502).json({ error: e.message });
+        }
+      }
+
       // ── Liste brute des intentions (anonymisées, triées par date) ──
       if (action === 'list-intentions') {
         const nlSupa = createClient(
