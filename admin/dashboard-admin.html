@@ -5815,9 +5815,28 @@
                         <option value="">Toutes les catégories</option>
                     </select>
                 </div>
+                <!-- Prompt à copier/coller dans ChatGPT (aucun coût API : l'admin génère l'image dans son propre abonnement) -->
+                <div class="border border-[rgba(16,163,127,0.3)] rounded-xl p-4 mb-4 bg-[rgba(16,163,127,0.04)]">
+                    <p class="text-xs text-[#10a37f] uppercase tracking-widest mb-2"><i class="fas fa-robot mr-1"></i>Prompt idéal pour ChatGPT</p>
+                    <p class="text-xs text-gold/30 mb-3">Génère une description cohérente avec le contenu de la newsletter et le style visuel Oradia, prête à coller directement dans ChatGPT pour créer l'image.</p>
+                    <button onclick="nlGenerateChatGptPrompt()" id="nl-chatgpt-prompt-btn"
+                        class="w-full bg-[rgba(16,163,127,0.15)] border border-[rgba(16,163,127,0.4)] text-[#10a37f] rounded-lg px-4 py-2.5 text-sm font-semibold hover:bg-[rgba(16,163,127,0.25)] transition">
+                        <i class="fas fa-magic mr-1.5"></i>Générer le prompt pour ChatGPT
+                    </button>
+                    <div id="nl-chatgpt-prompt-wrap" class="hidden mt-3">
+                        <textarea id="nl-chatgpt-prompt-text" readonly rows="3"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-[rgba(16,163,127,0.3)] text-light-gold rounded-lg px-3 py-2 text-sm resize-none focus:outline-none"></textarea>
+                        <button onclick="nlCopyChatGptPrompt()" id="nl-chatgpt-copy-btn"
+                            class="mt-2 bg-[rgba(16,163,127,0.15)] border border-[rgba(16,163,127,0.4)] text-[#10a37f] rounded-lg px-3 py-1.5 text-xs hover:bg-[rgba(16,163,127,0.25)] transition">
+                            <i class="fas fa-copy mr-1"></i>Copier le prompt
+                        </button>
+                    </div>
+                    <p id="nl-chatgpt-status" class="text-xs text-gold/50 mt-2 hidden"></p>
+                </div>
+
                 <!-- Génération d'image par IA (gratuit, Pollinations) -->
                 <div class="border border-gold/25 rounded-xl p-4 mb-4 bg-[rgba(212,175,55,0.04)]">
-                    <p class="text-xs text-gold/60 uppercase tracking-widest mb-2"><i class="fas fa-wand-magic-sparkles mr-1"></i>Générer une image par IA (gratuit)</p>
+                    <p class="text-xs text-gold/60 uppercase tracking-widest mb-2"><i class="fas fa-wand-magic-sparkles mr-1"></i>Ou générer directement sur le site (gratuit)</p>
                     <p class="text-xs text-gold/30 mb-2">Décris une scène concrète (pas un extrait du texte de la newsletter — le générateur d'image ne comprend pas la prose, seulement des descriptions visuelles).</p>
                     <div class="flex flex-col sm:flex-row gap-2">
                         <input type="text" id="nl-ai-prompt"
@@ -5938,6 +5957,61 @@
 
         function nlAiStatus(msg, isError) {
             const el = document.getElementById('nl-ai-status');
+            if (!el) return;
+            el.textContent = msg || '';
+            el.className = `text-xs mt-2 ${isError ? 'text-red-400/80' : 'text-gold/50'} ${msg ? '' : 'hidden'}`;
+        }
+
+        // Description lisible du style visuel Oradia, en français, à coller dans ChatGPT —
+        // mêmes éléments que NL_AI_STYLE (utilisé pour le générateur gratuit du site),
+        // reformulés en phrase naturelle plutôt qu'en liste de mots-clés séparés par virgules.
+        const NL_CHATGPT_STYLE_FR = "Style visuel Oradia : illustration mystique et élégante, fond bleu nuit profond (#0a192f), reflets dorés lumineux (#d4af37), lueur douce et éthérée, géométrie sacrée évoquant l'énergie d'un tore, atmosphère céleste, qualité fine art, sans texte ni watermark.";
+
+        async function nlGenerateChatGptPrompt() {
+            const subject = document.getElementById('nl-subject')?.value.trim() || '';
+            const content = document.getElementById('nl-content')?.value.trim() || '';
+            if (!subject && !content) { nlChatGptStatus('Renseigne d\'abord le sujet ou le contenu de la newsletter.', true); return; }
+            const btn = document.getElementById('nl-chatgpt-prompt-btn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1.5"></i>Réflexion...';
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=suggest-image-prompt', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ subject, content })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                const fullPrompt = `${data.suggestion}\n\n${NL_CHATGPT_STYLE_FR}`;
+                const textarea = document.getElementById('nl-chatgpt-prompt-text');
+                if (textarea) textarea.value = fullPrompt;
+                document.getElementById('nl-chatgpt-prompt-wrap')?.classList.remove('hidden');
+                nlChatGptStatus('Prompt prêt — copie-le et colle-le dans ChatGPT.');
+            } catch (e) {
+                nlChatGptStatus('Erreur : ' + e.message, true);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-magic mr-1.5"></i>Générer le prompt pour ChatGPT';
+            }
+        }
+
+        function nlCopyChatGptPrompt() {
+            const textarea = document.getElementById('nl-chatgpt-prompt-text');
+            if (!textarea?.value) return;
+            navigator.clipboard.writeText(textarea.value).then(() => {
+                const btn = document.getElementById('nl-chatgpt-copy-btn');
+                if (!btn) return;
+                const orig = btn.innerHTML;
+                btn.innerHTML = '<i class="fas fa-check mr-1"></i>Copié !';
+                setTimeout(() => { btn.innerHTML = orig; }, 2000);
+            }).catch(() => {
+                textarea.select();
+                document.execCommand('copy');
+            });
+        }
+
+        function nlChatGptStatus(msg, isError) {
+            const el = document.getElementById('nl-chatgpt-status');
             if (!el) return;
             el.textContent = msg || '';
             el.className = `text-xs mt-2 ${isError ? 'text-red-400/80' : 'text-gold/50'} ${msg ? '' : 'hidden'}`;
