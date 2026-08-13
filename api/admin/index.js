@@ -3970,6 +3970,11 @@ async function brevoErrorMessage(r, context) {
   return `${context} : ${diagnostic}${brevoMsg ? ` (Brevo : ${brevoMsg})` : ''}`;
 }
 
+// Style visuel imposé sur toute image générée par IA pour une newsletter, quel que
+// soit le générateur utilisé — identique au NL_AI_STYLE côté dashboard (Pollinations),
+// dupliqué ici pour la génération OpenAI côté serveur.
+const NL_AI_STYLE_SERVER = 'mystical elegant illustration, deep midnight blue background (#0a192f), luminous gold accents (#d4af37), soft ethereal glow, sacred geometry torus energy, celestial atmosphere, fine art quality, no text, no watermark';
+
 async function handleNewsletter(req, res) {
   try {
     verifyAdminAuth(req);
@@ -4125,6 +4130,38 @@ Réponds UNIQUEMENT avec cette phrase, sans guillemets, sans préambule.`;
           return res.status(200).json({ success: true, suggestion });
         } catch (e) {
           return res.status(502).json({ error: e.message });
+        }
+      }
+
+      // ── Génération d'image via l'API OpenAI (gpt-image-1) — option payante à la
+      // demande, en complément du générateur gratuit Pollinations. Le style Oradia
+      // (bleu nuit, doré, géométrie sacrée) est imposé automatiquement, comme pour
+      // Pollinations, pour rester cohérent avec le reste des newsletters.
+      if (action === 'generate-image-openai') {
+        if (!process.env.OPENAI_API_KEY) {
+          return res.status(500).json({ error: "OPENAI_API_KEY non configurée — ajoute cette variable d'environnement sur Vercel pour activer la génération via ChatGPT." });
+        }
+        const desc = (body.prompt || '').trim().slice(0, 800);
+        if (!desc) return res.status(400).json({ error: 'Description requise' });
+        const fullPrompt = `${desc}, ${NL_AI_STYLE_SERVER}`;
+
+        try {
+          const oaRes = await fetch('https://api.openai.com/v1/images/generations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${process.env.OPENAI_API_KEY}` },
+            body: JSON.stringify({ model: 'gpt-image-1', prompt: fullPrompt, size: '1536x1024', quality: 'medium', n: 1 }),
+            signal: AbortSignal.timeout(60000)
+          });
+          if (!oaRes.ok) {
+            const errBody = await oaRes.text();
+            return res.status(502).json({ error: 'Échec de la génération OpenAI', details: errBody.slice(0, 300) });
+          }
+          const oaData = await oaRes.json();
+          const b64 = oaData.data?.[0]?.b64_json;
+          if (!b64) return res.status(502).json({ error: 'Réponse OpenAI sans image' });
+          return res.status(200).json({ success: true, image_base64: b64 });
+        } catch (e) {
+          return res.status(502).json({ error: e.name === 'TimeoutError' ? 'Délai dépassé (60s)' : e.message });
         }
       }
 
