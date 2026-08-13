@@ -5829,17 +5829,13 @@
                         </button>
                         <button onclick="nlGenerateAiImage()" id="nl-ai-generate-btn"
                             class="shrink-0 bg-gold/20 border border-gold/40 text-gold rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition">
-                            <i class="fas fa-sparkles mr-1"></i>Générer (gratuit)
-                        </button>
-                        <button onclick="nlGenerateAiImageOpenAI()" id="nl-ai-generate-openai-btn" title="Génération via l'API OpenAI (gpt-image-1) — qualité supérieure, facturée à l'usage"
-                            class="shrink-0 bg-[rgba(16,163,127,0.15)] border border-[rgba(16,163,127,0.4)] text-[#10a37f] rounded-lg px-4 py-2 text-sm hover:bg-[rgba(16,163,127,0.25)] transition">
-                            <i class="fas fa-robot mr-1"></i>Générer avec ChatGPT (payant)
+                            <i class="fas fa-sparkles mr-1"></i>Générer
                         </button>
                     </div>
                     <div id="nl-ai-preview" class="hidden mt-3 flex flex-col sm:flex-row gap-3 items-start">
                         <img id="nl-ai-preview-img" class="rounded-lg border border-gold/30 max-w-[280px] w-full" alt="Image générée">
                         <div class="flex flex-col gap-2">
-                            <button onclick="nlRegenerateAiImage()" class="bg-[rgba(26,54,93,0.8)] border border-gold/30 text-gold/80 rounded-lg px-3 py-1.5 text-xs hover:bg-[rgba(26,54,93,1)] transition"><i class="fas fa-dice mr-1"></i>Autre variante</button>
+                            <button onclick="nlGenerateAiImage(true)" class="bg-[rgba(26,54,93,0.8)] border border-gold/30 text-gold/80 rounded-lg px-3 py-1.5 text-xs hover:bg-[rgba(26,54,93,1)] transition"><i class="fas fa-dice mr-1"></i>Autre variante</button>
                             <button onclick="nlUseAiImage()" class="bg-gold/25 border border-gold/50 text-gold rounded-lg px-3 py-1.5 text-xs hover:bg-gold/35 transition"><i class="fas fa-plus mr-1"></i>Ajouter à la bibliothèque</button>
                         </div>
                     </div>
@@ -5973,14 +5969,11 @@
             }
         }
 
-        let _nlAiLastSource = 'pollinations';
-
         function nlGenerateAiImage(newSeed) {
             const promptInput = document.getElementById('nl-ai-prompt');
             const desc = (promptInput?.value || '').trim();
             if (!desc) { nlAiStatus('Décris d\'abord l\'image souhaitée.', true); return; }
             if (newSeed) _nlAiSeed = Math.floor(Math.random() * 100000);
-            _nlAiLastSource = 'pollinations';
             const fullPrompt = `${desc}, ${NL_AI_STYLE}`;
             const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(fullPrompt)}?width=1200&height=675&nologo=true&seed=${_nlAiSeed}`;
             const img = document.getElementById('nl-ai-preview-img');
@@ -5992,45 +5985,6 @@
             img.onload = () => { img.style.opacity = '1'; nlAiStatus('Image générée. « Autre variante » pour régénérer, ou ajoute-la à ta bibliothèque.'); };
             img.onerror = () => { nlAiStatus('Échec de la génération. Réessaie dans quelques secondes.', true); };
             img.src = url;
-        }
-
-        async function nlGenerateAiImageOpenAI() {
-            const promptInput = document.getElementById('nl-ai-prompt');
-            const desc = (promptInput?.value || '').trim();
-            if (!desc) { nlAiStatus('Décris d\'abord l\'image souhaitée (ou clique « Suggérer depuis le contenu »).', true); return; }
-            _nlAiLastSource = 'openai';
-            const btn = document.getElementById('nl-ai-generate-openai-btn');
-            const img = document.getElementById('nl-ai-preview-img');
-            const preview = document.getElementById('nl-ai-preview');
-            if (!img || !preview || !btn) return;
-            const origBtn = btn.innerHTML;
-            btn.disabled = true;
-            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Génération...';
-            nlAiStatus('Génération via ChatGPT en cours (peut prendre jusqu\'à 30 secondes)…');
-            preview.classList.remove('hidden');
-            img.style.opacity = '0.3';
-            try {
-                const res = await adminFetch('/api/admin/newsletter?action=generate-image-openai', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ prompt: desc })
-                });
-                const data = await res.json();
-                if (!res.ok) throw new Error(data.error || 'Erreur');
-                img.src = `data:image/png;base64,${data.image_base64}`;
-                img.style.opacity = '1';
-                nlAiStatus('Image générée par ChatGPT. « Autre variante » pour régénérer, ou ajoute-la à ta bibliothèque.');
-            } catch (e) {
-                nlAiStatus('Erreur : ' + e.message, true);
-            } finally {
-                btn.disabled = false;
-                btn.innerHTML = origBtn;
-            }
-        }
-
-        function nlRegenerateAiImage() {
-            if (_nlAiLastSource === 'openai') nlGenerateAiImageOpenAI();
-            else nlGenerateAiImage(true);
         }
 
         async function nlUseAiImage() {
