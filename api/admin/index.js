@@ -4076,8 +4076,12 @@ async function handleNewsletter(req, res) {
 
             if (!aiRes.ok) { lastErr = await aiRes.text(); continue; }
             const data = await aiRes.json();
-            const content = (data.content || []).map(b => b.text || '').join('').trim();
+            let content = (data.content || []).map(b => b.text || '').join('').trim();
             if (!content) { lastErr = 'Réponse vide du modèle'; continue; }
+            // Le prompt demande déjà de ne jamais utiliser le tiret cadratin, mais un LLM
+            // n'obéit pas à 100 % à cette consigne — filet de sécurité mécanique identique à
+            // celui utilisé pour l'analyse de tirage, pour ne plus avoir à les retirer à la main.
+            content = content.replace(/\s*—\s*/g, ' ').replace(/—/g, '').replace(/–/g, '-');
             return res.status(200).json({ success: true, content });
           } catch (e) {
             lastErr = e.message;
