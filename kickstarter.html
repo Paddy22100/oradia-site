@@ -1,0 +1,509 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <!-- SEO Meta Tags -->
+    <title>Kickstarter Oracle Oradia - La campagne arrive bientôt</title>
+    <meta name="description" content="L'Oracle Oradia physique va être lancé en financement participatif sur Kickstarter. Inscrivez-vous pour être averti·e dès l'ouverture de la campagne et profiter des places early bird.">
+    <meta name="keywords" content="kickstarter oracle, financement participatif, Oradia, crowdfunding, oracle physique, cartes vibratoires, spiritualité, développement personnel">
+    <meta name="author" content="Rudy Boucheron — Oradia" />
+    <meta name="robots" content="index, follow" />
+    <meta name="language" content="fr" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://oradia.fr/kickstarter.html" />
+    <meta property="og:title" content="Kickstarter ORADIA – La campagne arrive bientôt" />
+    <meta property="og:description" content="L'Oracle Oradia physique va être lancé en financement participatif sur Kickstarter. Soyez averti·e dès l'ouverture." />
+    <meta property="og:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="Oradia" />
+    <meta property="og:locale" content="fr_FR" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://oradia.fr/kickstarter.html" />
+    <meta property="twitter:title" content="Kickstarter ORADIA – La campagne arrive bientôt" />
+    <meta property="twitter:description" content="L'Oracle Oradia physique va être lancé en financement participatif sur Kickstarter." />
+    <meta property="twitter:image" content="https://oradia.fr/images/medias/apercu_stripe.jpg" />
+
+    <!-- Canonical URL -->
+    <link rel="canonical" href="https://oradia.fr/kickstarter.html" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/jpeg" href="images/logo-hd-v2.webp" />
+    <link rel="apple-touch-icon" sizes="180x180" href="images/logo-hd-v2.webp" />
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="responsive.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'night-blue': '#0a192f',
+                        'gold': '#d4af37',
+                        'light-gold': '#f5e7a1',
+                        'dark-blue': '#051428',
+                        'celtic-blue': '#1a365d'
+                    },
+                    fontFamily: {
+                        'cormorant': ['Cormorant Garamond', 'serif'],
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+
+        html { scroll-behavior: smooth; }
+
+        .text-gold { color: #d4af37 !important; }
+        .text-light-gold { color: #f5e7a1 !important; }
+        .text-night-blue { color: #0a192f !important; }
+        .bg-night-blue { background-color: #0a192f !important; }
+        .bg-dark-blue { background-color: #051428 !important; }
+        .border-gold { border-color: #d4af37 !important; }
+        .border-gold\/20 { border-color: rgba(212, 175, 55, 0.2) !important; }
+        .border-gold\/30 { border-color: rgba(212, 175, 55, 0.3) !important; }
+        .border-gold\/40 { border-color: rgba(212, 175, 55, 0.4) !important; }
+        .border-gold\/50 { border-color: rgba(212, 175, 55, 0.5) !important; }
+        .bg-gold\/10 { background-color: rgba(212, 175, 55, 0.1) !important; }
+        .bg-gold\/20 { background-color: rgba(212, 175, 55, 0.2) !important; }
+        .text-gold\/60 { color: rgba(212, 175, 55, 0.6) !important; }
+        .text-light-gold\/70 { color: rgba(245, 231, 161, 0.7) !important; }
+        .text-light-gold\/80 { color: rgba(245, 231, 161, 0.8) !important; }
+        .text-light-gold\/90 { color: rgba(245, 231, 161, 0.9) !important; }
+
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-section {
+            background: linear-gradient(145deg, rgba(26,54,93,0.8), rgba(5,20,40,0.9));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-section::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: url("images/oradia-hero-4k.webp") center/cover;
+            opacity: 0.3;
+            z-index: 0;
+        }
+
+        .hero-content { position: relative; z-index: 1; }
+
+        .offer-card {
+            background: linear-gradient(145deg, rgba(26,54,93,0.6), rgba(5,20,40,0.8));
+            border: 1px solid rgba(212,175,55,0.3);
+            transition: all 0.3s ease;
+        }
+
+        .offer-card:hover {
+            border-color: rgba(212,175,55,0.6);
+            box-shadow: 0 4px 20px rgba(212,175,55,0.15);
+            transform: translateY(-2px);
+        }
+
+        .soon-badge {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            color: #0a192f;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.8; }
+        }
+
+        .faq-answer { transition: all 0.3s ease; }
+        .faq-question i.rotate-180 { transform: rotate(180deg); }
+        .faq-question { transition: background-color 0.2s ease; }
+        .faq-question:hover {
+            background-color: rgba(212, 175, 55, 0.1);
+            border-radius: 0.5rem;
+        }
+
+        #backToTop {
+            position: fixed !important;
+            right: 24px !important;
+            bottom: 24px !important;
+            z-index: 999 !important;
+            pointer-events: auto !important;
+        }
+
+        @media (max-width: 768px) {
+            #backToTop { right: 16px !important; bottom: 24px !important; }
+            .soon-badge { animation: none !important; }
+        }
+    </style>
+</head>
+<body class="bg-night-blue text-light-gold">
+    <button id="backToTop" class="fixed bottom-6 right-6 w-12 h-12 bg-[rgba(5,20,40,0.9)] border border-gold/50 text-gold rounded-full shadow-lg opacity-0 transition-all duration-300 hover:bg-[rgba(212,175,55,0.9)] hover:text-night-blue hover:scale-105 z-50 backdrop-blur-sm" aria-label="Remonter en haut">
+        <i class="fas fa-arrow-up text-sm"></i>
+    </button>
+
+    <!-- Header -->
+    <div id="header-placeholder"></div>
+
+    <!-- Hero Section -->
+    <section class="hero-section py-16 sm:py-20 md:py-24 lg:py-32">
+        <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="hero-content text-center max-w-4xl mx-auto">
+
+                <span class="soon-badge inline-block px-4 py-1.5 rounded-full text-xs sm:text-sm font-bold tracking-wide mb-6">
+                    <i class="fas fa-hourglass-half mr-2"></i>CAMPAGNE EN PRÉPARATION
+                </span>
+
+                <h1 class="cormorant text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold gold-gradient mb-4 sm:mb-6 text-center leading-tight">
+                    <span class="block tracking-wide">LE KICKSTARTER</span>
+                    <span class="block w-16 sm:w-20 md:w-24 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent mx-auto my-2 sm:my-3"></span>
+                    <span class="block text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light text-light-gold/90 tracking-wider">ORACLE ORADIA</span>
+                </h1>
+
+                <p class="text-lg sm:text-xl md:text-2xl text-light-gold mb-6 leading-relaxed max-w-3xl mx-auto">
+                    La campagne officielle de financement participatif arrive bientôt sur Kickstarter.
+                </p>
+
+                <div class="bg-[rgba(212,175,55,0.08)] border border-gold/20 rounded-2xl p-4 sm:p-5 mb-8 text-center max-w-3xl mx-auto">
+                    <p class="text-base sm:text-lg text-light-gold/90 leading-relaxed">
+                        Inscrivez-vous pour être averti·e à la seconde où la campagne ouvre : les premiers inscrits accèdent aux places <span class="text-gold font-semibold">early bird</span> avant tout le monde.
+                    </p>
+                </div>
+
+                <!-- Formulaire d'inscription -->
+                <div class="max-w-md mx-auto mb-6">
+                    <form id="waitlist-form" class="space-y-3">
+                        <input
+                            type="email"
+                            id="waitlist-email"
+                            name="email"
+                            aria-label="Votre adresse email"
+                            placeholder="Votre adresse email"
+                            class="w-full px-5 py-3.5 bg-[rgba(5,20,40,0.7)] border border-gold/30 rounded-xl text-light-gold placeholder-light-gold/40 focus:outline-none focus:border-gold/70 focus:ring-2 focus:ring-gold/15 transition-all duration-300 text-sm"
+                            required
+                        >
+                        <button
+                            type="submit"
+                            id="waitlist-submit"
+                            class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-3.5 px-6 rounded-xl hover:shadow-lg hover:shadow-gold/30 transition-all duration-300 transform hover:scale-[1.02] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none text-sm tracking-wide"
+                        >
+                            <span id="waitlist-button-text"><i class="fas fa-bell mr-2"></i>Me prévenir du lancement</span>
+                        </button>
+                    </form>
+
+                    <div id="waitlist-message" class="mt-4 text-center hidden">
+                        <p class="text-light-gold/80 text-sm"></p>
+                    </div>
+
+                    <p class="text-light-gold/35 text-xs mt-4 leading-relaxed">
+                        Pas de spam. Désinscription en un clic, à tout moment.
+                    </p>
+                </div>
+
+                <p class="text-light-gold/70 text-sm">
+                    Vous ne voulez pas attendre ? <a href="precommande-oracle.html" class="text-gold hover:text-light-gold underline">Précommandez dès maintenant</a> directement sur le site.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Pourquoi un Kickstarter -->
+    <section class="py-16 md:py-24 bg-[rgba(5,20,40,0.6)]">
+        <div class="container mx-auto px-6">
+            <div class="max-w-3xl mx-auto text-center">
+                <h2 class="cormorant text-3xl md:text-4xl font-bold gold-gradient mb-8">
+                    Pourquoi passer par Kickstarter ?
+                </h2>
+
+                <div class="space-y-6 text-lg md:text-xl text-light-gold/85 leading-relaxed">
+                    <p>
+                        La version numérique d'Oradia est déjà utilisée quotidiennement. Le Kickstarter finance le passage au physique : impression des 64 cartes, du livret d'accompagnement et fabrication du coffret de protection.
+                    </p>
+                    <p>
+                        Kickstarter fonctionne en <span class="text-gold font-medium">tout ou rien</span> : votre carte n'est débitée que si l'objectif de financement est atteint avant la clôture de la campagne. Si l'objectif n'est pas atteint, vous n'êtes prélevé·e de rien.
+                    </p>
+                    <p>
+                        C'est aussi l'occasion de faire connaître Oradia à une communauté plus large et de donner à ce projet, mûri pendant plusieurs années d'accompagnement en transformation personnelle, la visibilité qu'il mérite.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Contenu du Coffret -->
+    <section class="py-16 md:py-20">
+        <div class="container mx-auto px-6">
+            <div class="max-w-4xl mx-auto">
+                <h2 class="cormorant text-3xl md:text-4xl font-bold gold-gradient text-center mb-12">
+                    Ce que financera la campagne
+                </h2>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-2xl mx-auto">
+                    <div class="flex items-center space-x-4">
+                        <i class="fas fa-check-circle text-2xl text-gold flex-shrink-0"></i>
+                        <span class="text-lg text-light-gold">64 cartes oracle imprimées</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <i class="fas fa-check-circle text-2xl text-gold flex-shrink-0"></i>
+                        <span class="text-lg text-light-gold">Livret d'accompagnement</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <i class="fas fa-check-circle text-2xl text-gold flex-shrink-0"></i>
+                        <span class="text-lg text-light-gold">Conte initiatique de l'univers Oradia</span>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                        <i class="fas fa-check-circle text-2xl text-gold flex-shrink-0"></i>
+                        <span class="text-lg text-light-gold">Pièce de tirage</span>
+                    </div>
+                    <div class="flex items-center space-x-4 sm:col-span-2 sm:justify-center">
+                        <i class="fas fa-check-circle text-2xl text-gold flex-shrink-0"></i>
+                        <span class="text-lg text-light-gold">Coffret de protection, pochette incluse</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section Aperçu des contreparties -->
+    <section class="py-16 md:py-20 bg-[rgba(5,20,40,0.6)]">
+        <div class="container mx-auto px-6">
+            <div class="max-w-5xl mx-auto">
+                <h2 class="cormorant text-3xl md:text-4xl font-bold gold-gradient text-center mb-4">
+                    Aperçu des contreparties
+                </h2>
+                <p class="text-center text-light-gold/70 mb-12 max-w-2xl mx-auto text-sm">
+                    Les contreparties définitives seront confirmées à l'ouverture de la campagne. Voici un aperçu basé sur les offres déjà proposées en précommande.
+                </p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <div class="offer-card rounded-2xl p-6 text-center">
+                        <i class="fas fa-box text-3xl text-gold mb-4"></i>
+                        <h3 class="cormorant text-xl font-bold text-gold mb-2">STANDARD</h3>
+                        <p class="text-light-gold/80 text-sm mb-3">L'oracle complet : 64 cartes, livret, pièce de tirage et coffret.</p>
+                        <p class="text-gold font-semibold">à partir de 38€</p>
+                    </div>
+                    <div class="offer-card rounded-2xl p-6 text-center border-gold/60">
+                        <i class="fas fa-gift text-3xl text-gold mb-4"></i>
+                        <h3 class="cormorant text-xl font-bold text-gold mb-2">GUIDANCE OFFERTE</h3>
+                        <p class="text-light-gold/80 text-sm mb-3">L'oracle complet, dédicace personnalisée et 30 min de guidance en visio.</p>
+                        <p class="text-gold font-semibold">à partir de 48€</p>
+                    </div>
+                    <div class="offer-card rounded-2xl p-6 text-center">
+                        <i class="fas fa-feather text-3xl text-gold mb-4"></i>
+                        <h3 class="cormorant text-xl font-bold text-gold mb-2">ÉDITION SIGNATURE</h3>
+                        <p class="text-light-gold/80 text-sm mb-3">L'oracle complet avec dédicace personnalisée, édition limitée.</p>
+                        <p class="text-gold font-semibold">à partir de 42€</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Section FAQ -->
+    <section id="faq" class="py-16 md:py-20">
+        <div class="container mx-auto px-6">
+            <div class="max-w-3xl mx-auto">
+                <h2 class="cormorant text-3xl md:text-4xl font-bold gold-gradient text-center mb-12">
+                    Questions Fréquentes
+                </h2>
+
+                <div class="space-y-6">
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
+                            <span class="flex-1 pr-3">Quelle différence avec la précommande déjà disponible sur le site ?</span>
+                            <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-4 text-light-gold">
+                            <p>La précommande actuelle vous permet de réserver votre exemplaire dès maintenant, en direct. Le Kickstarter sera la campagne publique officielle, ouverte à une communauté plus large, avec les mêmes contreparties.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
+                            <span class="flex-1 pr-3">Quand la campagne va-t-elle ouvrir ?</span>
+                            <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-4 text-light-gold">
+                            <p>La date de lancement sera annoncée en priorité aux personnes inscrites sur cette page, avant toute communication publique.</p>
+                        </div>
+                    </div>
+
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
+                            <span class="flex-1 pr-3">Suis-je engagé·e en m'inscrivant ici ?</span>
+                            <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-4 text-light-gold">
+                            <p>Non. Cette inscription ne réserve rien et ne débite aucune somme — elle sert uniquement à vous prévenir par email dès l'ouverture de la campagne.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="py-12 px-6 bg-night-blue border-t border-gold/20">
+        <div class="container mx-auto max-w-6xl">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-8 mb-8 text-center md:text-left">
+                <div>
+                    <div class="flex items-center mb-4">
+                        <img src="images/logo-hd-v2.webp" alt="Oradia Logo" class="w-16 h-16 mr-4" />
+                        <span class="cormorant text-3xl font-bold gold-gradient">ORADIA</span>
+                    </div>
+                    <p class="text-light-gold text-sm">L'oracle qui vous accompagne sur votre chemin personnel et révèle votre essence.</p>
+                </div>
+                <div>
+                    <h4 class="cormorant text-xl text-gold mb-4">Navigation</h4>
+                    <ul class="space-y-2">
+                        <li><a href="/" class="text-light-gold/70 hover:text-gold transition">Accueil</a></li>
+                        <li><a href="oracle.html" class="text-light-gold/70 hover:text-gold transition">Oracle</a></li>
+                        <li><a href="precommande-oracle.html" class="text-light-gold/70 hover:text-gold transition">Précommande</a></li>
+                        <li><a href="a-propos.html" class="text-light-gold/70 hover:text-gold transition">À propos</a></li>
+                        <li><a href="contact.html" class="text-light-gold/70 hover:text-gold transition">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="cormorant text-xl text-gold mb-4">Légal</h4>
+                    <ul class="space-y-2">
+                        <li><a href="cgu.html" class="text-light-gold hover:text-gold transition">Conditions Générales d'Utilisation</a></li>
+                        <li><a href="cgv.html" class="text-light-gold hover:text-gold transition">Conditions Générales de Vente</a></li>
+                        <li><a href="mentions-legales.html" class="text-light-gold hover:text-gold transition">Mentions Légales</a></li>
+                        <li><a href="politique-confidentialite.html" class="text-light-gold hover:text-gold transition">Politique de Confidentialité</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 class="cormorant text-xl text-gold mb-4">Contact</h4>
+                    <ul class="space-y-2">
+                        <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><a id="ks-contact-link" class="text-light-gold hover:text-gold transition" href="contact.html">Contact</a></li>
+                        <script>(function(){var u='contact',d='oradia.fr';var el=document.getElementById('ks-contact-link');if(el){el.href='mailto:'+u+'@'+d;el.textContent=u+'@'+d;}})();</script>
+                        <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><a href="https://instagram.com/oradia_oracle_officiel" target="_blank" rel="noopener" class="text-light-gold hover:text-gold transition">@oradia_oracle_officiel</a></li>
+                        <li class="flex items-start"><i class="fab fa-youtube text-gold mt-1 mr-3"></i><a href="https://www.youtube.com/@oradiafr" target="_blank" rel="noopener" class="text-light-gold hover:text-gold transition">@oradiafr</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="pt-8 border-t border-gold/10 text-center">
+                <p class="text-light-gold text-sm">&copy; 2026 Oradia. Tous droits réservés.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="components/header-manager.js" defer></script>
+
+    <script>
+        // Waitlist Form Handler (source: kickstarter)
+        const waitlistForm = document.getElementById('waitlist-form');
+        const waitlistEmail = document.getElementById('waitlist-email');
+        const waitlistSubmit = document.getElementById('waitlist-submit');
+        const waitlistButtonText = document.getElementById('waitlist-button-text');
+        const waitlistMessage = document.getElementById('waitlist-message');
+        const waitlistMessageText = waitlistMessage.querySelector('p');
+
+        if (waitlistForm) {
+            waitlistForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+
+                const email = waitlistEmail.value.trim();
+
+                if (!email || !email.includes('@')) {
+                    showWaitlistMessage('Veuillez entrer une adresse email valide.', 'error');
+                    return;
+                }
+
+                setWaitlistLoading(true);
+                hideWaitlistMessage();
+
+                try {
+                    const response = await fetch('/api/waitlist', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ email, source: 'kickstarter' })
+                    });
+
+                    const data = await response.json();
+
+                    if (response.ok && data.success) {
+                        if (data.emailSent === false) {
+                            showWaitlistMessage('Vous êtes inscrit·e ! L\'email de confirmation n\'a pas pu être envoyé pour le moment.', 'warning');
+                        } else {
+                            showWaitlistMessage('Vous êtes inscrit·e. Vous serez averti·e dès l\'ouverture de la campagne.', 'success');
+                        }
+                        waitlistEmail.value = '';
+                    } else {
+                        showWaitlistMessage(data.message || 'Une erreur est survenue. Veuillez réessayer.', 'error');
+                    }
+                } catch (error) {
+                    console.error('Waitlist error:', error);
+                    showWaitlistMessage('Une erreur technique est survenue. Veuillez réessayer plus tard.', 'error');
+                } finally {
+                    setWaitlistLoading(false);
+                }
+            });
+        }
+
+        function setWaitlistLoading(isLoading) {
+            if (isLoading) {
+                waitlistSubmit.disabled = true;
+                waitlistButtonText.textContent = 'Inscription en cours...';
+            } else {
+                waitlistSubmit.disabled = false;
+                waitlistButtonText.innerHTML = '<i class="fas fa-bell mr-2"></i>Me prévenir du lancement';
+            }
+        }
+
+        function showWaitlistMessage(message, type) {
+            waitlistMessageText.textContent = message;
+            waitlistMessageText.className = type === 'success'
+                ? 'text-green-400'
+                : type === 'warning'
+                    ? 'text-orange-300'
+                    : 'text-red-400';
+            waitlistMessage.classList.remove('hidden');
+        }
+
+        function hideWaitlistMessage() {
+            waitlistMessage.classList.add('hidden');
+        }
+
+        // FAQ toggle
+        document.querySelectorAll('.faq-question').forEach(question => {
+            question.addEventListener('click', () => {
+                const answer = question.nextElementSibling;
+                const icon = question.querySelector('i');
+                answer.classList.toggle('hidden');
+                icon.classList.toggle('rotate-180');
+            });
+        });
+
+        // Back to top
+        const backToTopBtn = document.getElementById('backToTop');
+        if (backToTopBtn) {
+            window.addEventListener('scroll', () => {
+                backToTopBtn.style.opacity = window.scrollY > 400 ? '1' : '0';
+            });
+            backToTopBtn.addEventListener('click', () => {
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            });
+        }
+    </script>
+    <script defer src="/_vercel/insights/script.js"></script>
+    <script src="js/page-tracker.js" defer></script>
+</body>
+</html>

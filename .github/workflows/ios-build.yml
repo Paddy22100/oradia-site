@@ -30,7 +30,7 @@ jobs:
         run: npm ci
 
       - name: Synchroniser le projet natif iOS
-        run: npx cap sync ios
+        run: npx --no-install cap sync ios
 
       # Toujours exécuté, sans signature requise : compile l'app pour le
       # simulateur iOS. Ne produit rien d'installable sur un vrai iPhone ni de
