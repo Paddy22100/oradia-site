@@ -32,7 +32,12 @@ jobs:
         run: npm ci
 
       - name: Synchroniser le projet natif Android
-        run: npx cap sync android
+        # --no-install force npx à utiliser le binaire déjà installé localement
+        # (node_modules/.bin/cap) plutôt que de risquer une résolution ambiguë
+        # (npx peut, dans un shell non interactif, essayer de récupérer un tout
+        # autre paquet npm nommé "cap" si la résolution locale ne se déclenche
+        # pas comme attendu — origine probable de l'échec instantané observé).
+        run: npx --no-install cap sync android
 
       - uses: actions/setup-java@v4
         with:
