@@ -42,7 +42,7 @@ jobs:
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
-          java-version: 17
+          java-version: 21
 
       # Toujours produit : un APK debug, installable directement sur un téléphone
       # (Android > Paramètres > autoriser les sources inconnues) pour tester
