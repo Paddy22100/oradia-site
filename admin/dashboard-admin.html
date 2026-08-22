@@ -8266,6 +8266,21 @@
             }
         }
 
+        // Le badge "Support technique" de la barre latérale n'était rafraîchi qu'au
+        // chargement initial du dashboard — répondre, marquer lu, archiver, supprimer ou
+        // publier un message le laissait affiché avec un compte obsolète (ex. encore "1"
+        // après avoir répondu au dernier message en attente) jusqu'au rechargement complet
+        // de la page. Chaque action support appelle désormais ce rafraîchissement ciblé.
+        async function refreshSupportBadge() {
+            try {
+                const res = await adminFetch('/api/admin/data?section=support&status=new&limit=1');
+                const data = await res.json();
+                const count = data?.pagination?.total || 0;
+                const badge = document.getElementById('nav-badge-support');
+                if (badge) { badge.textContent = count || ''; badge.classList.toggle('hidden', !count); }
+            } catch (e) { /* silencieux : le badge se remettra à jour au prochain chargement complet */ }
+        }
+
         async function updateSupportMsg(id, status) {
             try {
                 const res = await adminFetch('/api/admin/data?section=support-update', {
@@ -8274,7 +8289,7 @@
                     body: JSON.stringify({ id, status })
                 });
                 const data = await res.json();
-                if (data.success) loadSupportMessages(supPage);
+                if (data.success) { loadSupportMessages(supPage); refreshSupportBadge(); }
                 else alert('Erreur : ' + (data.error || 'échec de la mise à jour.'));
             } catch (e) {
                 console.error('[Admin] updateSupportMsg error:', e);
@@ -8291,7 +8306,7 @@
                     body: JSON.stringify({ id })
                 });
                 const data = await res.json();
-                if (data.success) loadSupportMessages(supPage);
+                if (data.success) { loadSupportMessages(supPage); refreshSupportBadge(); }
                 else alert('Erreur : ' + (data.error || 'échec de la suppression.'));
             } catch (e) {
                 console.error('[Admin] deleteSupportMsg error:', e);
@@ -8311,6 +8326,7 @@
                 const data = await res.json();
                 if (!data.success) throw new Error(data.error || 'Erreur');
                 loadSupportMessages(supPage);
+                refreshSupportBadge();
             } catch (e) {
                 if (btn) btn.disabled = false;
                 alert('Erreur : ' + e.message);
@@ -8342,7 +8358,7 @@
                 const data = await res.json();
                 if (data.success) {
                     if (status) status.textContent = 'Envoyé ✓';
-                    setTimeout(() => loadSupportMessages(supPage), 1200);
+                    setTimeout(() => { loadSupportMessages(supPage); refreshSupportBadge(); }, 1200);
                 } else {
                     if (status) status.textContent = 'Erreur : ' + (data.error || 'envoi échoué');
                 }

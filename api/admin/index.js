@@ -2420,18 +2420,7 @@ async function handleData(req, res) {
       const { id, email, subject, message } = body;
       if (!id || !email || !message) return res.status(400).json({ error: 'id, email et message requis' });
 
-      const safeMsg = String(message)
-        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-        .replace(/\n/g, '<br>');
-      const html = `
-        <div style="background:#050a14;padding:32px 16px;font-family:Georgia,serif;">
-          <div style="max-width:520px;margin:0 auto;background:linear-gradient(135deg,#0a1628,#051428);border:1px solid rgba(212,175,55,0.25);border-radius:16px;padding:40px 32px;">
-            <p style="color:#f0c75e;font-size:13px;letter-spacing:0.35em;text-transform:uppercase;text-align:center;margin:0 0 32px;opacity:0.7;">ORADIA</p>
-            <p style="color:#d1d5db;font-size:15px;line-height:1.7;margin:0 0 16px;">${safeMsg}</p>
-            <div style="width:60px;height:1px;background:linear-gradient(90deg,transparent,#d4af37,transparent);margin:24px auto;"></div>
-            <p style="color:rgba(212,175,55,0.6);font-size:13px;text-align:center;margin:0;">Rudy — Oradia<br><a href="https://oradia.fr" style="color:#f0c75e;">oradia.fr</a></p>
-          </div>
-        </div>`;
+      const html = buildSupportReplyEmailHtml({ message });
 
       const brevoResp = await fetch('https://api.brevo.com/v3/smtp/email', {
         method: 'POST',
@@ -3372,6 +3361,59 @@ function buildFreeSubscriptionWelcomeHtml({ email, fullName, accessCode, expires
     <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.png" alt="YouTube" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
     <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car un accès à l'espace Tore a été créé pour toi sur oradia.fr.</p>
   </td></tr>
+</table>
+</td></tr>
+</table>
+</body></html>`;
+}
+
+// Email de réponse aux messages support/témoignages/suggestions envoyé depuis le
+// dashboard (onglet Support technique). Reprend l'habillage visuel des autres emails
+// Oradia (bandeau image en tête, carte bleu nuit/doré) au lieu d'une carte nue sans
+// image ni pied de page, et se termine par un encart de découverte de l'Oracle
+// (précommande) comme un rappel discret, cohérent avec le reste des communications.
+function buildSupportReplyEmailHtml({ message }) {
+  const safeMsg = nlEscHtml(message).replace(/\n/g, '<br>');
+  const cardInner = nlForceOpaqueCells(`
+  <tr><td style="padding:0; line-height:0;">
+    <a href="https://oradia.fr" target="_blank" style="display:block; line-height:0;">
+      <img src="https://oradia.fr/images/medias/banniere-youtube.webp" alt="Oradia" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+    </a>
+  </td></tr>
+  <tr><td style="padding:30px 32px 4px;">
+    <div style="color:#c8c0a8; font-size:15px; line-height:1.8; font-family:Georgia,serif;">${safeMsg}</div>
+  </td></tr>
+  <tr><td style="padding:24px 32px 0; text-align:center;">
+    <span style="display:inline-block; width:48px; height:1px; background:linear-gradient(90deg,transparent,rgba(212,175,55,0.4)); vertical-align:middle;"></span>
+    <span style="display:inline-block; width:6px; height:6px; background:#d4af37; border-radius:50%; opacity:0.55; vertical-align:middle; margin:0 10px;"></span>
+    <span style="display:inline-block; width:48px; height:1px; background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent); vertical-align:middle;"></span>
+  </td></tr>
+  <tr><td style="padding:20px 32px 4px; text-align:center;">
+    <p style="margin:0 0 4px; color:#c8c0a8; font-size:13px; font-style:italic; opacity:0.7; font-family:Georgia,serif;">À très vite,</p>
+    <p style="margin:0 0 2px; color:#d4af37; font-size:44px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1;">Rudy</p>
+    <p style="margin:0; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
+  </td></tr>
+  <tr><td style="padding:28px 24px 0;">
+    <table width="100%" cellpadding="0" cellspacing="0" style="border:1px solid rgba(212,175,55,0.3); border-radius:14px; overflow:hidden;">
+      <tr><td style="padding:24px 28px; text-align:center; background:linear-gradient(135deg,#0c1e3a,#07152b);">
+        <p style="margin:0 0 4px; color:#d4af37; font-size:11px; text-transform:uppercase; letter-spacing:0.15em; font-family:Georgia,serif;">Oracle ORADIA</p>
+        <p style="margin:0 0 16px; color:#c8c0a8; font-size:13px; font-family:Georgia,serif;">La Boussole Intérieure — précommandez votre exemplaire</p>
+        <a href="https://oradia.fr/precommande-oracle.html" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; text-decoration:none; padding:13px 36px; border-radius:50px; font-weight:700; font-size:14px; letter-spacing:0.05em;">Découvrir l'Oracle</a>
+      </td></tr>
+    </table>
+  </td></tr>
+  <tr><td style="padding:28px 32px 24px; text-align:center;">
+    <p style="margin:0 0 14px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.png" alt="YouTube" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td></tr></table>
+  </td></tr>`, '#0a192f');
+
+  return `<!DOCTYPE html>
+<html lang="fr"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"></head>
+<body style="margin:0; padding:0; background-color:#040d1c;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#040d1c" background="https://oradia.fr/images/oradia-hero-4k.webp" style="background-color:#040d1c; background-image:url('https://oradia.fr/images/oradia-hero-4k.webp'); background-size:cover; background-position:center; background-repeat:no-repeat;">
+<tr><td align="center" style="padding:32px 12px;">
+<table width="100%" cellpadding="0" cellspacing="0" bgcolor="#0a192f" style="background-color:#0a192f; max-width:700px; margin:0 auto; border-radius:16px; overflow:hidden; border:1px solid rgba(212,175,55,0.18); box-shadow:0 10px 40px rgba(0,0,0,0.4);">
+${cardInner}
 </table>
 </td></tr>
 </table>
