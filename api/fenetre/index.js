@@ -60,7 +60,7 @@ async function handleActivation(req, res) {
     return res.status(400).json({ success: false, message: 'Invalid JSON' });
   }
 
-  const { email, intention, cards, attentionPoints, durationDays, observationText, qrngSource } = body;
+  const { email, intention, cards, attentionPoints, durationDays, observationText, qrngSource, synthese } = body;
 
   if (!email || !durationDays) {
     return res.status(400).json({ success: false, message: 'email et durationDays requis' });
@@ -83,6 +83,7 @@ async function handleActivation(req, res) {
       duration_days: durationDays,
       closes_at: closesAt.toISOString(),
       qrng_source: normalizedQrngSource,
+      synthese: synthese || null,
       // response_token généré automatiquement par la DB (DEFAULT gen_random_uuid())
     })
     .select('id')
@@ -333,7 +334,14 @@ Vos ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} d'observation v
               ${win.intention ? `<p style="margin:0 0 16px 0;color:#f5e7a1;font-family:'Lora',Georgia,serif;font-style:italic;font-size:15px;line-height:1.7;text-align:center;">«&nbsp;${escapeHtml(win.intention)}&nbsp;»</p>` : ''}
 
               ${cardsHTML ? `<p style="margin:0 0 8px 0;color:#f0c75e;font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;text-align:center;">Rappel de votre tirage</p>
-              <p style="margin:0 0 28px 0;text-align:center;">${cardsHTML}</p>` : ''}
+              <p style="margin:0 0 20px 0;text-align:center;">${cardsHTML}</p>` : ''}
+
+              ${win.synthese ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;background:rgba(212,175,55,0.05);border-left:3px solid rgba(212,175,55,0.5);border-radius:0 10px 10px 0;">
+                <tr><td style="padding:16px 20px;">
+                  <p style="margin:0 0 6px;color:#f0c75e;font-family:'Lora',Georgia,serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;">Synthèse de votre tirage</p>
+                  <p style="margin:0;color:#e9e7df;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.75;">${escapeHtml(win.synthese)}</p>
+                </td></tr>
+              </table>` : ''}
 
               <p style="margin:0 0 20px 0;color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;text-align:center;">
                 Voici quelques questions pour clore cette fenêtre avec conscience :

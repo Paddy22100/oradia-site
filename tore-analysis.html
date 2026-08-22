@@ -1895,6 +1895,18 @@
             const intention = sessionStorage.getItem('tore_intention') || '';
             const cardsRaw = sessionStorage.getItem('tore_cards');
             const cards = cardsRaw ? JSON.parse(cardsRaw) : [];
+            // Synthèse (3e paragraphe de l'analyse) — reprise dans le mail de clôture pour
+            // rappeler le contenu du tirage plusieurs jours après, quand l'utilisateur ne
+            // s'en souvient souvent plus.
+            let synthese = '';
+            try {
+                const rawSynthese = JSON.parse(sessionStorage.getItem('tore_analysis_data') || '{}').synthesis || '';
+                // stocké en HTML (markdown déjà rendu) — le mail de clôture l'affiche en
+                // texte brut, donc on retire les balises avant l'envoi.
+                const tmpDiv = document.createElement('div');
+                tmpDiv.innerHTML = rawSynthese;
+                synthese = (tmpDiv.textContent || tmpDiv.innerText || '').trim();
+            } catch (e) {}
 
             try {
                 const resp = await fetch('/api/fenetre/activation', {
@@ -1907,6 +1919,7 @@
                         attentionPoints: window._obsAttentionPoints,
                         durationDays: window._obsSuggestedDays,
                         observationText: window._obsWindowText,
+                        synthese,
                         // Source du tirage : 'anu' | 'outshift' (quantique pur) ou 'fallback'.
                         // Seuls les tirages quantiques purs comptent pour l'étude scientifique.
                         qrngSource: sessionStorage.getItem('tore_qrng_source') || 'unknown',
