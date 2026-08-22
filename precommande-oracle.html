@@ -550,6 +550,13 @@
                         En participant à la précommande, vous soutenez directement la naissance de cet oracle.
                     </p>
                 </div>
+
+                <!-- Compte à rebours (dupliqué du calendrier, visible dès l'arrivée sur la page) -->
+                <div class="js-countdown-container bg-[rgba(212,175,55,0.15)] border border-gold/30 rounded-full px-4 sm:px-6 py-2 sm:py-3 mb-4 sm:mb-6 inline-block">
+                    <span class="text-gold font-bold cormorant text-base sm:text-lg">⏳ </span>
+                    <span class="js-days-left text-gold font-bold">--</span>
+                    <span class="text-light-gold/80 text-xs sm:text-sm"> jours pour précommander — clôture le 31 décembre 2026</span>
+                </div>
                 
                 <!-- Mini-bloc progression -->
                 <div id="heroProgress" class="bg-[rgba(212,175,55,0.12)] backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gold/40 mb-6 sm:mb-8 hidden">
@@ -1415,9 +1422,9 @@
                                 <h3 class="cormorant text-xl font-bold text-gold mb-2">Précommandes ouvertes</h3>
                                 <p class="text-light-gold mb-2">Jusqu'au 31 décembre 2026</p>
                                 <!-- Compteur temps restant -->
-                                <div id="countdown-timer" class="bg-[rgba(212,175,55,0.15)] border border-gold/30 rounded-lg px-4 py-2 inline-block">
+                                <div class="js-countdown-container bg-[rgba(212,175,55,0.15)] border border-gold/30 rounded-lg px-4 py-2 inline-block">
                                     <span class="text-gold font-bold cormorant text-lg">⏳ </span>
-                                    <span id="days-left" class="text-gold font-bold">--</span>
+                                    <span class="js-days-left text-gold font-bold">--</span>
                                     <span class="text-light-gold/80 text-sm"> jours restants</span>
                                 </div>
                                 <p class="text-light-gold/70 text-sm mt-2">Réservez votre exemplaire</p>
@@ -2607,18 +2614,14 @@ La production est lancée grâce aux premières commandes.</p>
             const endDate = new Date('2026-12-31T23:59:59');
             const now = new Date();
             const diff = endDate - now;
-            
+
             if (diff > 0) {
                 const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-                const daysElement = document.getElementById('days-left');
-                if (daysElement) {
-                    daysElement.textContent = days;
-                }
+                document.querySelectorAll('.js-days-left').forEach(el => { el.textContent = days; });
             } else {
-                const timerElement = document.getElementById('countdown-timer');
-                if (timerElement) {
-                    timerElement.innerHTML = '<span class="text-red-400 font-bold">Précommandes fermées</span>';
-                }
+                document.querySelectorAll('.js-countdown-container').forEach(el => {
+                    el.innerHTML = '<span class="text-red-400 font-bold">Précommandes fermées</span>';
+                });
             }
         }
         
