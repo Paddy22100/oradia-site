@@ -239,28 +239,17 @@
                 const percent = document.getElementById('preorderPercent');
                 const remaining = document.getElementById('preorderRemaining');
                 const rarityText = document.getElementById('rarityText');
-                
-                // Mettre à jour le mini-bloc dans le hero
-                const heroProgress = document.getElementById('heroProgress');
-                const heroSoldCount = document.getElementById('heroSoldCount');
-                const heroPercent = document.getElementById('heroPercent');
-                const heroProgressBar = document.getElementById('heroProgressBar');
 
                 // Animation douce de la barre de progression
                 setTimeout(() => {
                     if (progressBar) progressBar.style.width = data.percent + '%';
-                    if (heroProgressBar) heroProgressBar.style.width = data.percent + '%';
                 }, 100);
-                
+
                 // Animation des chiffres
                 if (soldCount) {
                     animateValue(soldCount, 0, data.sold, 1000);
                 }
-                if (heroSoldCount) {
-                    animateValue(heroSoldCount, 0, data.sold, 1000);
-                }
                 if (percent) percent.textContent = data.percent + '%';
-                if (heroPercent) heroPercent.textContent = data.percent + '%';
 
                 // Message de rareté dynamique — le chiffre exact n'apparaît
                 // qu'en fin d'édition, l'objectif total n'est jamais affiché
@@ -278,7 +267,6 @@
                 setTimeout(() => {
                     if (loadingEl) loadingEl.classList.add('hidden');
                     if (contentEl) contentEl.classList.remove('hidden');
-                    if (heroProgress) heroProgress.classList.remove('hidden');
                 }, 500);
                 
             } catch (error) {
@@ -556,27 +544,6 @@
                     <span class="text-gold font-bold cormorant text-base sm:text-lg">⏳ </span>
                     <span class="js-days-left text-gold font-bold">--</span>
                     <span class="text-light-gold/80 text-xs sm:text-sm"> jours pour précommander — clôture le 31 décembre 2026</span>
-                </div>
-                
-                <!-- Mini-bloc progression -->
-                <div id="heroProgress" class="bg-[rgba(212,175,55,0.12)] backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gold/40 mb-6 sm:mb-8 hidden">
-                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-                        <div class="text-center">
-                            <div class="text-2xl sm:text-3xl font-bold text-gold mb-1">
-                                <span id="heroSoldCount">0</span>
-                            </div>
-                            <p class="text-light-gold/70 text-xs sm:text-sm">précommandées</p>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-2xl sm:text-3xl font-bold text-gold mb-1">
-                                <span id="heroPercent">—</span>
-                            </div>
-                            <p class="text-light-gold/70 text-xs sm:text-sm">confirmées</p>
-                        </div>
-                    </div>
-                    <div class="w-full bg-[rgba(212,175,55,0.25)] rounded-full h-2 overflow-hidden mt-3 sm:mt-4">
-                        <div id="heroProgressBar" class="bg-gradient-to-r from-gold to-light-gold h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                    </div>
                 </div>
                 
                 <!-- BOUTON MOBILE VERS LES OFFRES -->
