@@ -11,7 +11,9 @@ on:
 jobs:
   build:
     name: Build iOS (vérification + archive si signature configurée)
-    runs-on: macos-14
+    # macos-14 ne fournit que Xcode 15.4 (mi-2024), trop ancien pour l'API Swift
+    # attendue par Capacitor 8.5 — macos-15 embarque une version plus récente.
+    runs-on: macos-15
     timeout-minutes: 40
     defaults:
       run:
