@@ -104,6 +104,31 @@ const QUANTUM_SOURCES = ['anu', 'outshift'];
 // Comptes à ne jamais compter dans la comptabilité (audit/test + compte personnel du fondateur)
 const ACCOUNTING_EXCLUDED_EMAILS = ['boucheron.r89@gmail.com', 'audit@oradia.fr', 'contact@oradia.fr'];
 
+// Estimation frais Kickstarter (commission plateforme 5% + frais de traitement des paiements
+// ~3-5% selon pays du contributeur) — approximation affichée au dashboard, pas un relevé réel
+// (Kickstarter ne fournit pas de détail des frais par pledge via export CSV).
+const KICKSTARTER_FEE_RATE = parseFloat(process.env.KICKSTARTER_FEE_RATE || '0.08');
+
+// Mapping tolérant des en-têtes d'export CSV Kickstarter (variantes FR/EN observées selon les
+// campagnes) vers les colonnes internes de kickstarter_backers. Comparaison insensible à la
+// casse/accents, sur le nom d'en-tête nettoyé (voir normalizeCsvHeader).
+const KICKSTARTER_CSV_HEADER_MAP = {
+  'backer number': 'backer_number', 'backer #': 'backer_number', 'numero de backer': 'backer_number',
+  'backer name': 'backer_name', 'name': 'backer_name', 'nom': 'backer_name',
+  'email': 'email', 'e-mail': 'email',
+  'reward title': 'reward_title', 'reward': 'reward_title', 'contrepartie': 'reward_title',
+  'pledge amount': 'pledge_amount', 'total pledge amount': 'pledge_amount', 'amount': 'pledge_amount', 'montant': 'pledge_amount',
+  'currency': 'currency', 'devise': 'currency',
+  'status': 'status', 'statut': 'status', 'backing status': 'status',
+  'shipping country': 'shipping_country', 'pays de livraison': 'shipping_country',
+  'shipping address': 'shipping_address', 'address': 'shipping_address', 'adresse': 'shipping_address',
+  'pledged at': 'pledged_at', 'backing date': 'pledged_at', 'date': 'pledged_at',
+};
+
+function normalizeCsvHeader(h) {
+  return String(h || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
 // Catégories de contacts newsletter (utilisées pour cibler les envois depuis le dashboard,
 // sans passer par les listes Brevo). Liste indicative — des tags libres restent possibles.
 const CONTACT_TAGS = [
@@ -1992,12 +2017,17 @@ async function handleData(req, res) {
         const { data: donors } = await sb.from('donors').select('created_at,amount,email,full_name,stripe_session_id');
         const { data: guidances } = await sb.from('guidances').select('created_at,amount,client_email,client_name,cal_booking_uid').in('status',['confirmed','completed']);
         const { data: subs } = await sb.from('tore_subscriptions').select('created_at,email,full_name,plan,status,is_free').neq('status','payment_failed');
+        // Kickstarter : uniquement les pledges en EUR (les autres devises ne peuvent pas être
+        // mêlées à la comptabilité EUR sans taux de change réel — elles restent visibles dans
+        // l'onglet Kickstarter mais hors comptabilité tant qu'elles ne sont pas converties à la main).
+        const { data: kickstarterBackers } = await sb.from('kickstarter_backers').select('pledged_at,imported_at,pledge_amount,currency,backer_name,email,reward_title,backer_number');
         const planPriceEur = p => p === 'decouverte' ? 5 : 8;
         const toInsert = [
             ...(preorders||[]).filter(p=>!isExcluded(p.email)).map(p => ({ date: p.created_at?.split('T')[0], type:'recette', category:'précommande', description:`Précommande ${p.offer||''} — ${p.full_name||p.email||''}`, amount: parseFloat(p.amount_total)||0, source:'precommande', source_ref: p.stripe_session_id })).filter(t=>t.amount>0),
             ...(donors||[]).filter(d=>!isExcluded(d.email)).map(d => ({ date: d.created_at?.split('T')[0], type:'recette', category:'don', description:`Don — ${d.full_name||d.email||''}`, amount: parseFloat(d.amount)||0, source:'don', source_ref: d.stripe_session_id })).filter(t=>t.amount>0),
             ...(guidances||[]).filter(g=>!isExcluded(g.client_email)).map(g => ({ date: g.created_at?.split('T')[0], type:'recette', category:'guidance', description:`Guidance — ${g.client_name||g.client_email||''}`, amount: (g.amount||0)/100, source:'guidance', source_ref: g.cal_booking_uid })).filter(t=>t.amount>0),
             ...(subs||[]).filter(s=>!isExcluded(s.email) && !s.is_free).map(s => ({ date: s.created_at?.split('T')[0], type:'recette', category:'abonnement', description:`Abonnement Tore ${s.plan||'complet'} — ${s.full_name||s.email||''}`, amount: planPriceEur(s.plan), source:'abonnement', source_ref: `sub_${s.email}_${s.created_at?.split('T')[0]}` })),
+            ...(kickstarterBackers||[]).filter(k=>!isExcluded(k.email) && (k.currency||'EUR').toUpperCase()==='EUR' && k.backer_number).map(k => ({ date: (k.pledged_at||k.imported_at)?.split('T')[0], type:'recette', category:'kickstarter', description:`Kickstarter ${k.reward_title||''} — ${k.backer_name||k.email||''}`, amount: parseFloat(k.pledge_amount)||0, source:'kickstarter', source_ref: `ks_${k.backer_number}` })).filter(t=>t.amount>0),
         ];
         // Purger les transactions des abonnements gratuits déjà importées avant que is_free soit posé
         const freeSubEmails = (subs||[]).filter(s=>s.is_free).map(s=>s.email);
@@ -2014,6 +2044,83 @@ async function handleData(req, res) {
         const { error } = await sb.from('transactions').upsert(toInsert, { onConflict: 'source_ref', ignoreDuplicates: true });
         if (error) throw error;
         return res.status(200).json({ success: true, imported: toInsert.length });
+      }
+
+      // ── Import d'un export CSV Kickstarter (rapport backers/rewards téléchargé
+      // depuis le dashboard créateur Kickstarter — pas d'API temps réel disponible).
+      // Le CSV est parsé côté client ; ce handler reçoit les lignes déjà découpées
+      // en objets {header: valeur} et se charge du mapping + de l'upsert.
+      if (action === 'kickstarter-import') {
+        const rows = Array.isArray(body.rows) ? body.rows : [];
+        if (rows.length === 0) return res.status(400).json({ error: 'Aucune ligne à importer' });
+        if (rows.length > 5000) return res.status(400).json({ error: 'Fichier trop volumineux (5000 lignes max)' });
+
+        const batchId = crypto.randomUUID();
+        const now = new Date().toISOString();
+
+        const mapped = rows.map(rawRow => {
+          const out = { raw: rawRow, import_batch_id: batchId, imported_at: now };
+          for (const [rawHeader, value] of Object.entries(rawRow)) {
+            const key = KICKSTARTER_CSV_HEADER_MAP[normalizeCsvHeader(rawHeader)];
+            if (!key || value === undefined || value === null || value === '') continue;
+            if (key === 'pledge_amount') {
+              const num = parseFloat(String(value).replace(/[^\d.,-]/g, '').replace(',', '.'));
+              out[key] = Number.isFinite(num) ? num : null;
+            } else if (key === 'pledged_at') {
+              const d = new Date(value);
+              out[key] = Number.isNaN(d.getTime()) ? null : d.toISOString();
+            } else if (key === 'currency') {
+              out[key] = String(value).trim().toUpperCase().slice(0, 3);
+            } else {
+              out[key] = String(value).trim();
+            }
+          }
+          if (!out.currency) out.currency = 'EUR';
+          return out;
+        }).filter(r => r.backer_name || r.email || r.backer_number);
+
+        if (mapped.length === 0) {
+          return res.status(400).json({ error: 'Impossible de reconnaître les colonnes de ce fichier (en-têtes non standard). Vérifiez qu\'il s\'agit bien d\'un export Kickstarter (backers/rewards).' });
+        }
+
+        // Deux groupes : lignes avec backer_number (dédupliquées via upsert), lignes sans
+        // (toujours insérées — pas de clé fiable pour détecter un doublon).
+        const withNumber = mapped.filter(r => r.backer_number);
+        const withoutNumber = mapped.filter(r => !r.backer_number);
+
+        let upserted = 0, inserted = 0;
+        if (withNumber.length > 0) {
+          const { error: upErr, count } = await supabase
+            .from('kickstarter_backers')
+            .upsert(withNumber, { onConflict: 'backer_number', ignoreDuplicates: false, count: 'exact' });
+          if (upErr) throw upErr;
+          upserted = count ?? withNumber.length;
+        }
+        if (withoutNumber.length > 0) {
+          const { error: insErr } = await supabase.from('kickstarter_backers').insert(withoutNumber);
+          if (insErr) throw insErr;
+          inserted = withoutNumber.length;
+        }
+
+        return res.status(200).json({
+          success: true,
+          batchId,
+          totalRows: rows.length,
+          recognized: mapped.length,
+          upserted,
+          inserted,
+          skipped: rows.length - mapped.length
+        });
+      }
+
+      // ── Annule le dernier import Kickstarter (supprime tous les backers de ce batch) ──
+      if (action === 'kickstarter-delete-batch' && body.batchId) {
+        const { error: delErr, count } = await supabase
+          .from('kickstarter_backers')
+          .delete({ count: 'exact' })
+          .eq('import_batch_id', body.batchId);
+        if (delErr) throw delErr;
+        return res.status(200).json({ success: true, deleted: count ?? 0 });
       }
 
       if (action === 'test-subscription-email') {
@@ -2413,6 +2520,71 @@ async function handleData(req, res) {
         success: true,
         data: data || [],
         pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) }
+      });
+    }
+
+    // ── Section kickstarter : liste paginée des backers importés ──
+    if (section === 'kickstarter') {
+      const page   = parseInt(req.query?.page  || '1', 10);
+      const limit  = parseInt(req.query?.limit || '50', 10);
+      const offset = (page - 1) * limit;
+      const q      = (req.query?.q || '').trim();
+
+      let query = supabase
+        .from('kickstarter_backers')
+        .select('*', { count: 'exact' })
+        .order('pledged_at', { ascending: false, nullsFirst: false });
+
+      if (q) query = query.or(`email.ilike.%${q}%,backer_name.ilike.%${q}%,reward_title.ilike.%${q}%`);
+
+      const { data, count, error } = await query.range(offset, offset + limit - 1);
+      if (error) throw error;
+      return res.status(200).json({
+        success: true,
+        data: data || [],
+        pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) }
+      });
+    }
+
+    // ── Section kickstarter-stats : agrégats pour les cartes du dashboard ──
+    if (section === 'kickstarter-stats') {
+      const { data: rows, error } = await supabase
+        .from('kickstarter_backers')
+        .select('pledge_amount,currency,reward_title,import_batch_id,imported_at');
+      if (error) throw error;
+
+      const byCurrency = {};
+      const byReward = {};
+      let lastImportAt = null;
+      const batches = new Set();
+
+      for (const r of rows || []) {
+        const cur = (r.currency || 'EUR').toUpperCase();
+        const amt = parseFloat(r.pledge_amount) || 0;
+        byCurrency[cur] = (byCurrency[cur] || 0) + amt;
+
+        const reward = r.reward_title || 'Sans contrepartie précisée';
+        if (!byReward[reward]) byReward[reward] = { count: 0, total: 0 };
+        byReward[reward].count += 1;
+        byReward[reward].total += amt;
+
+        if (r.import_batch_id) batches.add(r.import_batch_id);
+        if (r.imported_at && (!lastImportAt || r.imported_at > lastImportAt)) lastImportAt = r.imported_at;
+      }
+
+      const totalEUR = byCurrency['EUR'] || 0;
+      return res.status(200).json({
+        success: true,
+        data: {
+          count: (rows || []).length,
+          byCurrency,
+          byReward,
+          totalEUR,
+          netEUR: totalEUR * (1 - KICKSTARTER_FEE_RATE),
+          feeRate: KICKSTARTER_FEE_RATE,
+          lastImportAt,
+          batchCount: batches.size
+        }
       });
     }
 
@@ -3056,7 +3228,7 @@ async function handleData(req, res) {
     }
 
     // ── Section overview / all : agrégats KPI ──
-    const [waitlistRes, preordersRes, donorsRes, singleDrawsRes, supportRes, syncRes, guidancesRes, subscriptionsRes, auditRes] = await Promise.all([
+    const [waitlistRes, preordersRes, donorsRes, singleDrawsRes, supportRes, syncRes, guidancesRes, subscriptionsRes, auditRes, kickstarterRes] = await Promise.all([
       supabase.from('newsletter_contacts').select('*'),
       supabase.from('preorders').select('*'),
       supabase.from('donors').select('*'),
@@ -3065,7 +3237,9 @@ async function handleData(req, res) {
       supabase.from('synchronicity_responses').select('score_synchronicites', { count: 'exact', head: false }),
       supabase.from('guidances').select('id, amount, status, created_at').in('status', ['confirmed', 'completed']),
       supabase.from('tore_subscriptions').select('email, plan, status, is_free, created_at').neq('status', 'payment_failed').neq('status', 'single_draw').then(r => r.error ? supabase.from('tore_subscriptions').select('email, status, created_at').neq('status', 'payment_failed').neq('status', 'single_draw') : r),
-      supabase.from('audit_reports').select('summary').order('created_at', { ascending: false }).limit(1)
+      supabase.from('audit_reports').select('summary').order('created_at', { ascending: false }).limit(1),
+      // .catch : la table peut ne pas exister tant que la migration kickstarter_backers n'a pas été appliquée
+      supabase.from('kickstarter_backers').select('pledge_amount, currency, imported_at').then(r => r.error ? { data: [] } : r)
     ]);
 
     const waitlistRows    = waitlistRes.data    || [];
@@ -3074,6 +3248,7 @@ async function handleData(req, res) {
     const singleDrawRows  = singleDrawsRes.data || [];
     const recentMessages  = supportRes.data     || [];
     const syncRows        = syncRes.data        || [];
+    const kickstarterRows = kickstarterRes.data || [];
     const latestAudit     = (auditRes.data || [])[0];
     const monitoringCritical = latestAudit?.summary?.critical || 0;
     const syncAvg         = syncRows.length > 0
@@ -3125,7 +3300,11 @@ async function handleData(req, res) {
     // pas disponible pour financer la fabrication — on la retire pour obtenir la vraie cagnotte.
     const preordersShippingTotal = paidPreorderRows.reduce((s, r) => s + ((parseInt(r.shipping_price_cents, 10) || 0) / 100), 0);
     const donorsTotal     = sumDonors(donorRows);
-    const globalTotal     = preordersTotal + donorsTotal + singleDrawTotal + guidancesTotal + subscriptionsTotal;
+    // Kickstarter : seuls les pledges en EUR entrent dans le total (voir import-transactions
+    // pour la même règle côté comptabilité) — les autres devises restent visibles dans
+    // l'onglet Kickstarter mais ne sont pas mélangées ici sans taux de change réel.
+    const kickstarterTotal = kickstarterRows.filter(r => (r.currency || 'EUR').toUpperCase() === 'EUR').reduce((s, r) => s + (parseFloat(r.pledge_amount) || 0), 0);
+    const globalTotal     = preordersTotal + donorsTotal + singleDrawTotal + guidancesTotal + subscriptionsTotal + kickstarterTotal;
     const totalContacts   = paidPreorderRows.length + donorRows.length + waitlistRows.length;
     const averageBasket   = paidPreorderRows.length > 0 ? preordersTotal / paidPreorderRows.length : 0;
 
@@ -3142,7 +3321,10 @@ async function handleData(req, res) {
     const singleDrawNet      = singleDrawTotal      - stripeFee(singleDrawTotal,      singleDrawCount);
     const guidancesNet       = guidancesTotal       - stripeFee(guidancesTotal,       guidanceRows.length);
     const subscriptionsNet   = subscriptionsTotal   - stripeFee(subscriptionsTotal,   subscriptionRows.length);
-    const globalNet          = preordersNet + donorsNet + singleDrawNet + guidancesNet + subscriptionsNet;
+    // Frais Kickstarter (commission + traitement paiement) : estimation distincte des frais
+    // Stripe classiques, le taux effectif de Kickstarter étant différent (voir KICKSTARTER_FEE_RATE).
+    const kickstarterNet     = kickstarterTotal * (1 - KICKSTARTER_FEE_RATE);
+    const globalNet          = preordersNet + donorsNet + singleDrawNet + guidancesNet + subscriptionsNet + kickstarterNet;
 
     const donorsToday = donorRows.filter(r => now - new Date(r.created_at).getTime() < day1);
     const revToday    = sumPreorders(preordersToday) + sumDonors(donorsToday)  + sumGuidances(guidancesToday);
@@ -3198,6 +3380,11 @@ async function handleData(req, res) {
           total:     guidancesTotal,
           net:       guidancesNet
         },
+        kickstarter: {
+          count:   kickstarterRows.length,
+          total:   kickstarterTotal,
+          net:     kickstarterNet
+        },
         support: {
           recent:     recentMessages,
           newCount:   recentMessages.filter(m => m.status === 'new').length
@@ -3222,7 +3409,8 @@ async function handleData(req, res) {
             preorders:     preordersTotal,
             donors:        donorsTotal,
             guidances:     guidancesTotal,
-            subscriptions: subscriptionsTotal
+            subscriptions: subscriptionsTotal,
+            kickstarter:   kickstarterTotal
           }
         },
         performance: {

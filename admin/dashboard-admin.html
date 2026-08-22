@@ -373,6 +373,11 @@
                 <span>Dons</span>
                 <span class="ml-auto text-xs bg-red-500/20 text-red-400 rounded-full px-2 py-0.5" id="nav-badge-donors"></span>
             </div>
+            <div class="nav-item" onclick="showTab('kickstarter')" id="nav-kickstarter">
+                <i class="fab fa-kickstarter-k w-4 text-center"></i>
+                <span>Kickstarter</span>
+                <span class="ml-auto text-xs bg-green-500/20 text-green-400 rounded-full px-2 py-0.5" id="nav-badge-kickstarter"></span>
+            </div>
             <div class="nav-item" onclick="showTab('guidances')" id="nav-guidances">
                 <i class="fas fa-video w-4 text-center"></i>
                 <span>Guidances</span>
@@ -1075,6 +1080,82 @@
             </div>
         </section>
         </div><!-- /tab-donors -->
+
+        <!-- ══ ONGLET : KICKSTARTER ══ -->
+        <div id="tab-kickstarter" class="tab-panel">
+        <section class="mb-10">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+                <h3 class="cormorant text-2xl font-bold text-gold">Kickstarter</h3>
+                <div class="flex flex-wrap items-center gap-2">
+                    <input type="file" id="kickstarterCsvInput" accept=".csv" class="hidden" onchange="kickstarterHandleFile(this)">
+                    <button onclick="document.getElementById('kickstarterCsvInput').click()" class="bg-gold text-night-blue px-3 py-2 rounded-lg hover:bg-light-gold transition font-semibold text-sm">
+                        <i class="fas fa-file-import mr-1"></i>Importer un export CSV
+                    </button>
+                    <button id="kickstarterUndoBtn" onclick="kickstarterUndoLastImport()" class="hidden bg-red-500/20 text-red-300 border border-red-500/40 px-3 py-2 rounded-lg hover:bg-red-500/30 transition font-semibold text-sm">
+                        <i class="fas fa-undo mr-1"></i>Annuler le dernier import
+                    </button>
+                </div>
+            </div>
+            <p class="text-sm text-light-gold/70 mb-6">
+                Kickstarter ne propose pas d'API temps réel pour les créateurs : téléchargez le rapport
+                "Backers"/"Rewards" depuis votre dashboard créateur Kickstarter, puis importez-le ici.
+                Un ré-import du même rapport met à jour les backers déjà connus sans les dupliquer.
+            </p>
+            <div id="kickstarterImportStatus" class="hidden mb-6 px-4 py-3 rounded-lg text-sm border"></div>
+
+            <!-- Cartes stats -->
+            <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                <div class="bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl p-4">
+                    <p class="text-light-gold/60 text-xs uppercase tracking-wider mb-1">Backers</p>
+                    <p class="text-2xl font-bold text-gold" id="ksStatCount">—</p>
+                </div>
+                <div class="bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl p-4">
+                    <p class="text-light-gold/60 text-xs uppercase tracking-wider mb-1">Total collecté (EUR)</p>
+                    <p class="text-2xl font-bold text-gold" id="ksStatTotal">—</p>
+                </div>
+                <div class="bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl p-4">
+                    <p class="text-light-gold/60 text-xs uppercase tracking-wider mb-1">Net estimé après frais</p>
+                    <p class="text-2xl font-bold text-gold" id="ksStatNet">—</p>
+                </div>
+                <div class="bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl p-4">
+                    <p class="text-light-gold/60 text-xs uppercase tracking-wider mb-1">Dernier import</p>
+                    <p class="text-2xl font-bold text-gold" id="ksStatLastImport">—</p>
+                </div>
+            </div>
+
+            <!-- Répartition par contrepartie -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-4 mb-6">
+                <p class="text-gold font-semibold text-sm mb-3">Répartition par contrepartie</p>
+                <div id="ksRewardBreakdown" class="text-light-gold/70 text-sm">—</div>
+            </div>
+
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-4 mb-4">
+                <input id="kickstarterSearch" type="search" placeholder="Recherche email, nom ou contrepartie"
+                    oninput="kickstarterSearchDebounced()"
+                    class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold" />
+            </div>
+
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="kickstarterTable">
+                        <thead class="bg-[rgba(5,20,40,0.8)]">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Pledge</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Backer</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Email</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Contrepartie</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Montant</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Statut</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gold/20"></tbody>
+                    </table>
+                </div>
+                <div id="kickstarterPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)] flex items-center justify-between gap-3">
+                </div>
+            </div>
+        </section>
+        </div><!-- /tab-kickstarter -->
 
         <!-- ══ ONGLET : CONTACTS ══ -->
         <div id="tab-waitlist" class="tab-panel">
@@ -3363,6 +3444,7 @@
             overview:           'Tableau de bord',
             preorders:          'Précommandes',
             donors:             'Dons',
+            kickstarter:        'Kickstarter',
             waitlist:           'Contacts',
             'nl-subscribers':   'Newsletter — Abonnés',
             blog:               'Blog',
@@ -3401,6 +3483,7 @@
             if (name === 'nl-subscribers') { loadNlSubscribersLegacy(1); syncBrevoUnsubscribes(); }
             if (name === 'waitlist')       { triggerSyncAll(false); }
             if (name === 'subscriptions') loadSubscriptions();
+            if (name === 'kickstarter') { loadKickstarterStats(); loadKickstarter(1); }
             if (name === 'support')        loadSupportMessages();
             if (name === 'synchronicity') { loadObservationWindows(); loadSynchronicity(); }
             if (name === 'monitoring')     { loadMonitoring(); loadSurveillanceLogs(); }
@@ -3877,7 +3960,9 @@
                     loadOverview(),
                     loadPreorders(),
                     loadDonors(),
-                    loadWaitlist()
+                    loadWaitlist(),
+                    loadKickstarterStats(),
+                    loadKickstarter()
                 ]);
 
                 // Sync silencieuse Supabase ↔ Brevo au chargement du dashboard
@@ -3927,10 +4012,184 @@
         async function loadDonors(page = 1, limit = 10) {
             const response = await adminFetch(`/api/admin/data?section=donors&page=${page}&limit=${limit}`);
             const data = await response.json();
-            
+
             if (data.success) {
                 currentData.donors = data.data;
                 updateDonorsTable(data.data, data.pagination);
+            }
+        }
+
+        // ── Kickstarter ──────────────────────────────────────────────────────────
+
+        async function loadKickstarter(page = 1, limit = 50) {
+            const q = document.getElementById('kickstarterSearch')?.value.trim() || '';
+            const url = `/api/admin/data?section=kickstarter&page=${page}&limit=${limit}` + (q ? `&q=${encodeURIComponent(q)}` : '');
+            const response = await adminFetch(url);
+            const data = await response.json();
+            if (data.success) {
+                currentData.kickstarter = data.data;
+                updateKickstarterTable(data.data, data.pagination);
+                const badge = document.getElementById('nav-badge-kickstarter');
+                if (badge) badge.textContent = data.pagination.total || '';
+            }
+        }
+
+        let _ksSearchTimer = null;
+        function kickstarterSearchDebounced() {
+            clearTimeout(_ksSearchTimer);
+            _ksSearchTimer = setTimeout(() => loadKickstarter(1), 300);
+        }
+
+        function updateKickstarterTable(rows, pagination) {
+            const tbody = document.querySelector('#kickstarterTable tbody');
+            if (!tbody) return;
+            if (!rows || rows.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-light-gold/50">Aucun backer importé pour le moment.</td></tr>`;
+            } else {
+                tbody.innerHTML = rows.map(r => `
+                    <tr class="hover:bg-[rgba(5,20,40,0.8)] transition">
+                        <td class="px-6 py-4 text-light-gold">${r.pledged_at ? formatDate(r.pledged_at) : '-'}</td>
+                        <td class="px-6 py-4 text-light-gold">${escapeHtmlFront(r.backer_name || '-')}</td>
+                        <td class="px-6 py-4 text-light-gold">${escapeHtmlFront(r.email || '-')}</td>
+                        <td class="px-6 py-4 text-light-gold">${escapeHtmlFront(r.reward_title || '-')}</td>
+                        <td class="px-6 py-4 text-gold font-semibold">${formatCurrency(r.pledge_amount)} ${r.currency && r.currency !== 'EUR' ? `<span class="text-xs text-light-gold/50">(${escapeHtmlFront(r.currency)})</span>` : ''}</td>
+                        <td class="px-6 py-4"><span class="px-2 py-1 rounded text-sm bg-gold/10 text-gold/80">${escapeHtmlFront(r.status || '-')}</span></td>
+                    </tr>
+                `).join('');
+            }
+            updatePagination('kickstarter', pagination);
+        }
+
+        async function loadKickstarterStats() {
+            try {
+                const response = await adminFetch('/api/admin/data?section=kickstarter-stats');
+                const data = await response.json();
+                if (!data.success) return;
+                const s = data.data;
+                document.getElementById('ksStatCount').textContent = s.count ?? '—';
+                document.getElementById('ksStatTotal').textContent = formatCurrency(s.totalEUR || 0);
+                document.getElementById('ksStatNet').textContent = formatCurrency(s.netEUR || 0);
+                document.getElementById('ksStatLastImport').textContent = s.lastImportAt ? formatDate(s.lastImportAt) : '—';
+                const badge = document.getElementById('nav-badge-kickstarter');
+                if (badge && s.count) badge.textContent = s.count;
+
+                const breakdown = document.getElementById('ksRewardBreakdown');
+                const entries = Object.entries(s.byReward || {}).sort((a, b) => b[1].count - a[1].count);
+                breakdown.innerHTML = entries.length === 0 ? '—' : entries.map(([reward, v]) => `
+                    <div class="flex items-center justify-between py-1.5 border-b border-gold/10 last:border-0">
+                        <span>${escapeHtmlFront(reward)}</span>
+                        <span class="text-gold">${v.count} · ${formatCurrency(v.total)}</span>
+                    </div>
+                `).join('');
+
+                const undoBtn = document.getElementById('kickstarterUndoBtn');
+                if (undoBtn) {
+                    undoBtn.classList.toggle('hidden', !s.batchCount);
+                    undoBtn.dataset.lastBatchId = currentData.kickstarterLastBatchId || '';
+                }
+            } catch (e) {
+                console.error('[Admin] loadKickstarterStats failed:', e);
+            }
+        }
+
+        // Parseur CSV minimal (gère guillemets, virgules et retours à la ligne dans les champs)
+        function parseCsv(text) {
+            const rows = [];
+            let row = [], field = '', inQuotes = false;
+            for (let i = 0; i < text.length; i++) {
+                const c = text[i];
+                if (inQuotes) {
+                    if (c === '"') {
+                        if (text[i + 1] === '"') { field += '"'; i++; }
+                        else inQuotes = false;
+                    } else field += c;
+                } else if (c === '"') inQuotes = true;
+                else if (c === ',') { row.push(field); field = ''; }
+                else if (c === '\r') { /* ignoré, géré via \n */ }
+                else if (c === '\n') { row.push(field); rows.push(row); row = []; field = ''; }
+                else field += c;
+            }
+            if (field.length > 0 || row.length > 0) { row.push(field); rows.push(row); }
+            if (rows.length === 0) return [];
+            const headers = rows[0].map(h => h.trim());
+            return rows.slice(1)
+                .filter(r => r.some(cell => cell.trim() !== ''))
+                .map(r => Object.fromEntries(headers.map((h, i) => [h, r[i] !== undefined ? r[i] : ''])));
+        }
+
+        function kickstarterShowStatus(msg, cls) {
+            const el = document.getElementById('kickstarterImportStatus');
+            if (!el) return;
+            el.textContent = msg;
+            el.className = `mb-6 px-4 py-3 rounded-lg text-sm border ${cls}`;
+            el.classList.remove('hidden');
+        }
+
+        async function kickstarterHandleFile(input) {
+            const file = input.files?.[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                kickstarterShowStatus('Fichier trop volumineux (max 5 Mo).', 'border-red-500/40 text-red-300 bg-red-500/10');
+                input.value = '';
+                return;
+            }
+            try {
+                const text = await file.text();
+                const rows = parseCsv(text);
+                if (rows.length === 0) {
+                    kickstarterShowStatus('Fichier vide ou illisible.', 'border-red-500/40 text-red-300 bg-red-500/10');
+                    return;
+                }
+                const confirmed = confirm(`${rows.length} ligne(s) détectée(s) dans « ${file.name} ». Importer maintenant ?`);
+                if (!confirmed) return;
+
+                kickstarterShowStatus('Import en cours…', 'border-gold/30 text-gold/80 bg-gold/5');
+                const response = await adminFetch('/api/admin?action=kickstarter-import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rows })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    kickstarterShowStatus(data.error || 'Échec de l\'import.', 'border-red-500/40 text-red-300 bg-red-500/10');
+                    return;
+                }
+                currentData.kickstarterLastBatchId = data.batchId;
+                kickstarterShowStatus(
+                    `Import réussi : ${data.recognized}/${data.totalRows} ligne(s) reconnue(s) (${data.upserted} mise(s) à jour/ajoutée(s), ${data.inserted} insérée(s) sans numéro de backer)${data.skipped ? `, ${data.skipped} ignorée(s)` : ''}.`,
+                    'border-green-500/40 text-green-300 bg-green-500/10'
+                );
+                await Promise.all([loadKickstarterStats(), loadKickstarter(1)]);
+                const undoBtn = document.getElementById('kickstarterUndoBtn');
+                if (undoBtn) { undoBtn.classList.remove('hidden'); undoBtn.dataset.lastBatchId = data.batchId; }
+            } catch (e) {
+                console.error('[Admin] kickstarterHandleFile failed:', e);
+                kickstarterShowStatus('Erreur technique lors de l\'import : ' + e.message, 'border-red-500/40 text-red-300 bg-red-500/10');
+            } finally {
+                input.value = '';
+            }
+        }
+
+        async function kickstarterUndoLastImport() {
+            const batchId = document.getElementById('kickstarterUndoBtn')?.dataset.lastBatchId;
+            if (!batchId) return;
+            if (!confirm('Annuler le dernier import ? Les backers ajoutés/mis à jour lors de ce lot seront supprimés.')) return;
+            try {
+                const response = await adminFetch('/api/admin?action=kickstarter-delete-batch', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ batchId })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    kickstarterShowStatus(data.error || 'Échec de l\'annulation.', 'border-red-500/40 text-red-300 bg-red-500/10');
+                    return;
+                }
+                kickstarterShowStatus(`${data.deleted} ligne(s) supprimée(s).`, 'border-green-500/40 text-green-300 bg-green-500/10');
+                document.getElementById('kickstarterUndoBtn')?.classList.add('hidden');
+                await Promise.all([loadKickstarterStats(), loadKickstarter(1)]);
+            } catch (e) {
+                console.error('[Admin] kickstarterUndoLastImport failed:', e);
             }
         }
 
@@ -4876,8 +5135,9 @@
             // Mapper les noms de table aux fonctions de chargement
             const loadFunctions = {
                 'preorders': 'loadPreorders',
-                'donors': 'loadDonors', 
-                'waitlist': 'loadWaitlist'
+                'donors': 'loadDonors',
+                'waitlist': 'loadWaitlist',
+                'kickstarter': 'loadKickstarter'
             };
             
             const loadFunction = loadFunctions[table];
