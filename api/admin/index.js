@@ -10,7 +10,7 @@ const xml2js = require('xml2js');
 const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
-const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail } = require('../../lib/brevo-order-email.js');
+const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail, sendRefundEmail } = require('../../lib/brevo-order-email.js');
 const { sendToreSubscriptionEmail, sendSubscriptionEmail, sendToreCheckinReminderEmail } = require('../../lib/tore-subscription-email.js');
 const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
 const { sendGuidanceConfirmationEmail } = require('../../lib/guidance-email.js');
@@ -1580,6 +1580,112 @@ async function handleData(req, res) {
         if (updateError) throw updateError;
 
         return res.status(200).json({ success: true });
+      }
+
+      // Remboursement en masse via Stripe — utilisé le jour de l'échéance de précommande
+      // si l'objectif n'est pas atteint (garantie affichée sur la page précommande).
+      // Ne se déclenche jamais tout seul : c'est un outil que l'admin actionne à la main,
+      // sur une sélection explicite de commandes, avec confirmation obligatoire.
+      // Idempotent : une commande déjà remboursée (chez nous ou côté Stripe) est resignalée
+      // sans générer une seconde demande de remboursement.
+      if (action === 'bulk-refund-preorders') {
+        const orderIds = Array.isArray(body.orderIds) ? body.orderIds : [];
+        if (!body.confirm) {
+          return res.status(400).json({ error: 'Confirmation requise (confirm: true).' });
+        }
+        if (orderIds.length === 0) {
+          return res.status(400).json({ error: 'Aucune commande sélectionnée.' });
+        }
+        if (orderIds.length > 100) {
+          return res.status(400).json({ error: 'Maximum 100 commandes par lot — relance l\'opération en plusieurs fois.' });
+        }
+        if (!process.env.STRIPE_SECRET_KEY) {
+          return res.status(500).json({ error: 'STRIPE_SECRET_KEY manquant.' });
+        }
+        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+
+        const { data: orders, error: fetchError } = await supabase
+          .from('preorders')
+          .select('*')
+          .in('id', orderIds);
+        if (fetchError) throw fetchError;
+
+        const results = [];
+        for (const orderId of orderIds) {
+          const order = (orders || []).find(o => o.id === orderId);
+          if (!order) {
+            results.push({ orderId, ok: false, skipped: true, reason: 'Commande introuvable' });
+            continue;
+          }
+          if (order.refunded_at) {
+            results.push({ orderId, email: order.email, ok: true, skipped: true, reason: 'Déjà remboursée' });
+            continue;
+          }
+          if (order.paid_status !== 'completed') {
+            results.push({ orderId, email: order.email, ok: false, skipped: true, reason: 'Commande non payée' });
+            continue;
+          }
+          if (!order.payment_intent_id) {
+            results.push({ orderId, email: order.email, ok: false, skipped: true, reason: 'Aucun paiement Stripe associé (commande marquée payée manuellement ?)' });
+            continue;
+          }
+
+          try {
+            let refund;
+            try {
+              refund = await stripe.refunds.create({ payment_intent: order.payment_intent_id });
+            } catch (stripeError) {
+              // Déjà remboursé côté Stripe (ex: fait manuellement dans le dashboard Stripe) :
+              // on aligne quand même notre base plutôt que de le compter en échec.
+              if (stripeError.code === 'charge_already_refunded') {
+                // order.amount_total est stocké en euros (voir api/stripe-webhook.js) —
+                // reconverti en centimes pour rester cohérent avec refund.amount (Stripe = centimes).
+                refund = { id: null, amount: Math.round((order.amount_total || 0) * 100) };
+              } else {
+                throw stripeError;
+              }
+            }
+
+            const { error: updateError } = await supabase
+              .from('preorders')
+              .update({
+                paid_status: 'refunded',
+                refunded_at: new Date().toISOString(),
+                refund_id: refund.id,
+                refund_amount_cents: refund.amount,
+                updated_at: new Date().toISOString()
+              })
+              .eq('id', orderId);
+            if (updateError) throw updateError;
+
+            let emailSent = false;
+            if (order.email) {
+              emailSent = await sendRefundEmail({
+                toEmail: order.email,
+                toName: order.full_name || '',
+                offer: order.offer,
+                amountEur: Number((refund.amount ?? order.amount_total ?? 0) / 100).toFixed(2)
+              });
+              if (emailSent) {
+                await supabase.from('preorders')
+                  .update({ refund_email_sent_at: new Date().toISOString() })
+                  .eq('id', orderId);
+              }
+            }
+
+            results.push({ orderId, email: order.email, ok: true, refundId: refund.id, emailSent });
+          } catch (err) {
+            results.push({ orderId, email: order.email, ok: false, reason: err.message });
+          }
+        }
+
+        return res.status(200).json({
+          success: true,
+          refundedCount: results.filter(r => r.ok && !r.skipped).length,
+          alreadyRefundedCount: results.filter(r => r.ok && r.skipped).length,
+          failedCount: results.filter(r => !r.ok).length,
+          results
+        });
       }
 
       // ── Contacts newsletter : ajout manuel depuis le dashboard ──
