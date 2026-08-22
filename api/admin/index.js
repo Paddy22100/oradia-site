@@ -3609,6 +3609,15 @@ function buildCommunicationEmailHtml(draft) {
   const BLOCK_TAG = '(?:p|div|ul|ol|li|h[1-6]|blockquote|table|tbody|tr|td)';
   const normalizedContent = isHtml
     ? content
+        // U+2028 (line separator) et U+2029 (paragraph separator) : caractères invisibles
+        // que Google Docs (et d'autres traitements de texte) insèrent au lieu d'un \n
+        // classique lors d'un copier-coller. Les navigateurs les traitent comme un vrai
+        // saut de ligne forcé à l'affichage, mais aucune des règles ci-dessous (qui ne
+        // savent reconnaître que \r, \n ou <br>) ne les détectait : ils passaient intacts
+        // jusqu'au HTML final, provoquant des sauts de ligne et des collages de mots
+        // imprévisibles selon l'endroit exact du texte collé où ils se trouvaient.
+        .replace(/\u2029/g, '\n\n')
+        .replace(/\u2028/g, '\n')
         .replace(/\r\n?/g, '\n')
         .replace(new RegExp(`\\s*\\n\\s*(?=</?${BLOCK_TAG}\\b)`, 'gi'), '')
         .replace(new RegExp(`(</?${BLOCK_TAG}\\b[^>]*>)\\s*\\n\\s*`, 'gi'), '$1')
