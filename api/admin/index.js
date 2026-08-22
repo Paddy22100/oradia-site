@@ -3490,7 +3490,15 @@ function nlAddFinalPeriod(text, shielded) {
 function nlFixTypography(html, { addFinalPeriod = false } = {}) {
   const { text, shielded } = nlShieldMarkup(html);
   let out = text
+    // Un paragraphe d\u00e9j\u00e0 d\u00e9coup\u00e9 n'a plus de retour \u00e0 la ligne significatif : ceux qui
+    // restent viennent d'un copier-coller (Google Docs, ChatGPT/Gemini...) et doivent \u00eatre
+    // trait\u00e9s comme un simple espace. Sans cette normalisation, un saut de ligne coll\u00e9 juste
+    // avant une ponctuation double (\u00ab ? \u00bb, \u00ab ! \u00bb...) n'\u00e9tait pas reconnu par la r\u00e8gle
+    // d'espace ins\u00e9cable ci-dessous (qui ne savait reconna\u00eetre que l'espace normal et
+    // l'ins\u00e9cable) : l'ins\u00e9cable n'\u00e9tait alors jamais ins\u00e9r\u00e9, et la ponctuation pouvait se
+    // retrouver seule en d\u00e9but de ligne suivante \u00e0 l'affichage.
     .replace(/[ \t]{2,}/g, ' ')                                                  // espaces multiples
+    .replace(/[\r\n]+/g, ' ')                                                    // saut de ligne interne \u2192 espace simple
     .replace(/[ \u00a0\u202f]+([,.])/g, '$1')                                    // pas d'espace avant , et .
     .replace(/([^\s\u00a0\u202f])[ \u00a0\u202f]*([;:!?]+)/g, `$1${NL_NBSP}$2`)  // insécable avant ponctuation double
     .replace(/«[ \u00a0\u202f]*/g, `«${NL_NBSP}`)                                // « ouvrant collé par une insécable
