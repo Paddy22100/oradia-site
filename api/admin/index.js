@@ -3616,6 +3616,13 @@ function buildCommunicationEmailHtml(draft) {
         .replace(/\n/g, '<br>')
         .replace(/<div[^>]*>/gi, '<p>')
         .replace(/<\/div>/gi, '</p>')
+        // Un <br> isolé (retour à la ligne "souple", Maj+Entrée) collé juste avant une
+        // ponctuation seule (« ? », « ! »...) forçait un vrai saut de ligne HTML avant
+        // cette ponctuation, quelle que soit l'insécable posée par nlFixTypography plus
+        // bas (l'insécable empêche seulement un retour à la ligne dû au manque de place,
+        // pas un <br> explicite). On le retire ici et on le remplace par un simple espace,
+        // que nlFixTypography transformera ensuite en insécable comme n'importe quel autre.
+        .replace(/(?:<br\s*\/?>\s*)+(?=[;:!?.,]{1,3}(?:\s|<|$))/gi, ' ')
         .replace(/(?:<br\s*\/?>\s*){2,}/gi, '</p><p>')
         .replace(/\s*(<ul[\s\S]*?<\/ul>|<ol[\s\S]*?<\/ol>)\s*/gi, '</p><p>$1</p><p>')
     : content;

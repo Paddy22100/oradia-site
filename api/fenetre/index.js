@@ -261,10 +261,25 @@ async function handleResonance(req, res) {
 // ============ EMAIL TEMPLATES ============
 // Plus d'email d'activation - les données sont incluses dans l'email du tirage
 
+// Mêmes libellés que FAMILY_LABELS (lib/tore-deck.js), dupliqués ici pour éviter un
+// import CommonJS depuis ce fichier en ES modules.
+const FAMILY_LABELS_FENETRE = {
+  emotions: 'Émotions', besoins: 'Besoins', actions: 'Actions',
+  archetypes: 'Archétypes', revelations: 'Révélations', memoire_cosmos: 'Mémoire Cosmos',
+  transmutations: 'Transmutations', transmutation: 'Transmutation'
+};
+
 function buildClosingEmail(win, responseToken, isSubscribed = false) {
   const attentionHTML = (win.attention_points || [])
     .map(p => `<li style="margin-bottom:10px;color:#e9e7df;line-height:1.7;">${escapeHtml(p)}</li>`)
     .join('');
+
+  // Rappel des cartes tirées — sans ça, l'utilisateur qui reçoit ce mail plusieurs
+  // jours après son tirage ne se souvient souvent plus de son contenu, ce qui
+  // n'incite pas à répondre au questionnaire de clôture.
+  const cardsHTML = Array.isArray(win.cards) && win.cards.length
+    ? win.cards.map(c => `<span style="display:inline-block;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:20px;padding:6px 14px;margin:3px;font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;color:#f0c75e;">${escapeHtml(FAMILY_LABELS_FENETRE[c.family] || c.family || '')} — ${escapeHtml(c.name || '')}</span>`).join('')
+    : '';
 
   // Gabarit recalqué sur le design désormais commun aux emails ORADIA
   // (mail d'analyse / confirmations / bienvenue) — Palier 3 #17 :
@@ -315,7 +330,10 @@ Vos ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} d'observation v
           <tr>
             <td style="padding:0 40px 32px 40px;">
 
-              ${win.intention ? `<p style="margin:0 0 28px 0;color:#f5e7a1;font-family:'Lora',Georgia,serif;font-style:italic;font-size:15px;line-height:1.7;text-align:center;">«&nbsp;${escapeHtml(win.intention)}&nbsp;»</p>` : ''}
+              ${win.intention ? `<p style="margin:0 0 16px 0;color:#f5e7a1;font-family:'Lora',Georgia,serif;font-style:italic;font-size:15px;line-height:1.7;text-align:center;">«&nbsp;${escapeHtml(win.intention)}&nbsp;»</p>` : ''}
+
+              ${cardsHTML ? `<p style="margin:0 0 8px 0;color:#f0c75e;font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;text-align:center;">Rappel de votre tirage</p>
+              <p style="margin:0 0 28px 0;text-align:center;">${cardsHTML}</p>` : ''}
 
               <p style="margin:0 0 20px 0;color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;text-align:center;">
                 Voici quelques questions pour clore cette fenêtre avec conscience :
