@@ -2190,7 +2190,30 @@
                     <h3 class="cormorant text-2xl font-bold text-gold">Support · Témoignages · Suggestions</h3>
                     <p class="text-light-gold/50 text-sm mt-1">Messages reçus depuis l'espace membre</p>
                 </div>
-                <button onclick="loadSupportMessages()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
+                <div class="flex gap-2">
+                    <button onclick="toggleManualTestimonialForm()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-plus mr-1"></i>Ajouter un témoignage</button>
+                    <button onclick="loadSupportMessages()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
+                </div>
+            </div>
+
+            <!-- Saisie manuelle d'un témoignage reçu hors du site (Telegram, Facebook, oral...) -->
+            <div id="manualTestimonialForm" class="hidden bg-[rgba(5,20,40,0.5)] border border-gold/30 rounded-xl p-4 mb-4 space-y-3">
+                <p class="text-light-gold/60 text-xs">
+                    À utiliser seulement si la personne a confirmé être d'accord pour que son message soit repris sur le site — ce n'est pas parce qu'un message a été reçu ailleurs (Telegram, Facebook...) que la personne accepte qu'il devienne un témoignage public.
+                </p>
+                <input id="manualTestimonialName" type="text" placeholder="Prénom (facultatif)" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold" />
+                <textarea id="manualTestimonialMessage" rows="3" placeholder="Message du témoignage" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold"></textarea>
+                <div class="flex flex-wrap gap-3 items-center">
+                    <select id="manualTestimonialPublication" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold">
+                        <option value="prenom">Afficher le prénom</option>
+                        <option value="anonyme">Afficher anonymement</option>
+                        <option value="non">Ne pas publier (garder en interne)</option>
+                    </select>
+                    <input id="manualTestimonialSource" type="text" placeholder="Source (ex: Telegram)" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold w-40" />
+                    <button onclick="submitManualTestimonial()" class="bg-gold text-night-blue px-4 py-2 rounded-lg text-sm font-semibold hover:bg-light-gold transition">Enregistrer</button>
+                    <button onclick="toggleManualTestimonialForm()" class="text-light-gold/60 text-sm hover:text-light-gold transition">Annuler</button>
+                </div>
+                <p class="text-light-gold/40 text-xs">Le témoignage est enregistré non publié — utilise ensuite "Publier sur le site" dans la liste, comme pour les autres.</p>
             </div>
 
             <!-- Filtres -->
@@ -8394,6 +8417,41 @@
             } catch (e) {
                 console.error('[Admin] deleteSupportMsg error:', e);
                 alert('Erreur réseau : ' + e.message);
+            }
+        }
+
+        function toggleManualTestimonialForm() {
+            const form = document.getElementById('manualTestimonialForm');
+            form.classList.toggle('hidden');
+            if (!form.classList.contains('hidden')) {
+                document.getElementById('manualTestimonialMessage').focus();
+            }
+        }
+
+        async function submitManualTestimonial() {
+            const name = document.getElementById('manualTestimonialName').value.trim();
+            const message = document.getElementById('manualTestimonialMessage').value.trim();
+            const publication = document.getElementById('manualTestimonialPublication').value;
+            const source = document.getElementById('manualTestimonialSource').value.trim();
+            if (!message) { alert('Le message est requis.'); return; }
+            if (!confirm('Confirmes-tu que cette personne est d\'accord pour que ce message soit utilisé comme témoignage public ?')) return;
+
+            try {
+                const res = await adminFetch('/api/admin/data?section=support-add-manual', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, message, publication, source })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error || 'Erreur');
+                document.getElementById('manualTestimonialName').value = '';
+                document.getElementById('manualTestimonialMessage').value = '';
+                document.getElementById('manualTestimonialSource').value = '';
+                toggleManualTestimonialForm();
+                loadSupportMessages();
+                refreshSupportBadge();
+            } catch (e) {
+                alert('Erreur : ' + e.message);
             }
         }
 

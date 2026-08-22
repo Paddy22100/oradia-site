@@ -1235,7 +1235,7 @@ async function handleData(req, res) {
     // ci-dessous, qui ne connaît que body.action — comme support-update/delete/
     // publish/reply n'envoient jamais ce champ, elles finissaient systématiquement
     // sur son "Action invalide" et n'atteignaient jamais leur vrai handler.
-    const SUPPORT_POST_SECTIONS = ['support-update', 'support-publish', 'support-reply', 'support-delete'];
+    const SUPPORT_POST_SECTIONS = ['support-update', 'support-publish', 'support-reply', 'support-delete', 'support-add-manual'];
     const isSupportSectionPost = req.method === 'POST' && SUPPORT_POST_SECTIONS.includes(req.query?.section);
 
     // ── POST : actions sur abonnements ──
@@ -2515,6 +2515,32 @@ async function handleData(req, res) {
         .update({ published: !!published, published_at: published ? new Date().toISOString() : null })
         .eq('id', id)
         .eq('type', 'temoignage');
+      if (error) throw error;
+      return res.status(200).json({ success: true });
+    }
+
+    // ── Saisie manuelle d'un témoignage reçu hors formulaire de contact (Telegram,
+    // Facebook, oral...) — passe par le même circuit de modération que les
+    // témoignages soumis via le site : non publié par défaut, l'admin doit
+    // explicitement cliquer "Publier" (section support-publish) ensuite.
+    if (section === 'support-add-manual') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
+      const body = await parseBody(req);
+      const { name, message, publication, source } = body;
+      if (!message || !message.trim()) return res.status(400).json({ error: 'message requis' });
+      if (!['anonyme', 'prenom', 'non'].includes(publication)) {
+        return res.status(400).json({ error: 'publication doit être anonyme, prenom ou non' });
+      }
+
+      const { error } = await supabase.from('support_messages').insert({
+        type: 'temoignage',
+        email: null,
+        name: name || null,
+        publication,
+        message: message.trim(),
+        status: 'read',
+        admin_note: source ? `Recueilli manuellement — source : ${source}` : 'Recueilli manuellement'
+      });
       if (error) throw error;
       return res.status(200).json({ success: true });
     }
