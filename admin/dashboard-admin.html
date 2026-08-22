@@ -4323,6 +4323,10 @@
                                 class="px-3 py-1 bg-orange-500/20 text-orange-300 border border-orange-500/40 rounded-lg text-xs hover:bg-orange-500/30 transition">
                                 <i class="fas fa-paper-plane mr-1"></i>Relancer manuellement
                             </button>`) : ''}
+                            <button onclick="deletePreorder('${preorder.id}')"
+                                class="px-3 py-1 bg-red-500/10 text-red-300 border border-red-500/20 rounded-lg text-xs hover:bg-red-500/20 transition">
+                                <i class="fas fa-trash mr-1"></i>Supprimer
+                            </button>
                         </div>
                     </td>
                 </tr>
@@ -5058,6 +5062,22 @@
                 } else {
                     alert('✅ Commande marquée payée.\n⚠️ L\'email n\'a pas pu être envoyé (vérifier BREVO_SENDER_EMAIL dans Vercel).');
                 }
+                await loadPreorders();
+            } catch (error) {
+                alert('❌ Erreur : ' + error.message);
+            }
+        }
+
+        async function deletePreorder(orderId) {
+            if (!confirm('Supprimer définitivement cette commande ? Cette action est irréversible.')) return;
+            try {
+                const response = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete-preorder', orderId })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Erreur');
                 await loadPreorders();
             } catch (error) {
                 alert('❌ Erreur : ' + error.message);

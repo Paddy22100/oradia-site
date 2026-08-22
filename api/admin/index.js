@@ -842,8 +842,22 @@ async function handleData(req, res) {
             .lte('created_at', h24ago);
           if (error) return res.status(200).json({ success: false, error: error.message });
           if (!pending || pending.length === 0) return res.status(200).json({ success: true, sent: 0, message: 'Aucune commande à relancer' });
+
+          // Exclut les commandes dont le client a déjà une AUTRE commande payée (cas d'un
+          // paiement retenté après un premier essai resté en attente) : relancer quelqu'un
+          // qui a déjà payé est à la fois inutile et déroutant pour le client.
+          const emails = [...new Set(pending.map(o => o.email))];
+          const { data: alreadyPaid } = await supabase
+            .from('preorders')
+            .select('email')
+            .eq('paid_status', 'completed')
+            .in('email', emails);
+          const paidEmails = new Set((alreadyPaid || []).map(r => r.email));
+          const skipped = pending.filter(o => paidEmails.has(o.email));
+          const toRelance = pending.filter(o => !paidEmails.has(o.email));
+
           const results = [];
-          for (const order of pending) {
+          for (const order of toRelance) {
             try {
               const brevoRes = await fetch('https://api.brevo.com/v3/smtp/email', {
                 method: 'POST',
@@ -862,7 +876,12 @@ async function handleData(req, res) {
               results.push({ email: order.email, ok: false, error: e.message });
             }
           }
-          await logSystemEvent(supabase, { level: 'info', source: 'cron-relance', method: 'GET', path: '/api/admin/data', status_code: 200, message: `Relances envoyées : ${results.filter(r=>r.ok).length}/${results.length}`, details: results });
+          if (skipped.length) {
+            // Marque relance_sent_at (sans envoyer d'email) pour que ces commandes en
+            // double ne repassent pas sans fin dans la fenêtre 24h-48h à chaque exécution.
+            await supabase.from('preorders').update({ relance_sent_at: new Date().toISOString() }).in('id', skipped.map(o => o.id));
+          }
+          await logSystemEvent(supabase, { level: 'info', source: 'cron-relance', method: 'GET', path: '/api/admin/data', status_code: 200, message: `Relances envoyées : ${results.filter(r=>r.ok).length}/${results.length} (${skipped.length} ignorée(s), client déjà payé)`, details: { results, skipped: skipped.map(o => ({ id: o.id, email: o.email })) } });
 
           // Séquence post-tirage : check-in J+3 puis promo abonnement J+7 (fire-and-forget)
           try {
@@ -1478,6 +1497,16 @@ async function handleData(req, res) {
         }
 
         return res.status(200).json({ success: true, emailSent });
+      }
+
+      // Supprime une précommande — utilisé notamment pour les doublons restés "en attente"
+      // quand un client a retenté son paiement et qu'une seconde commande, elle, a bien
+      // abouti (auquel cas la commande en attente n'a plus lieu d'être et ne doit jamais
+      // déclencher de relance).
+      if (action === 'delete-preorder' && body.orderId) {
+        const { error: delError } = await supabase.from('preorders').delete().eq('id', body.orderId);
+        if (delError) throw delError;
+        return res.status(200).json({ success: true });
       }
 
       // Marquer une précommande comme payée manuellement + renvoyer l'email de confirmation.
