@@ -20,33 +20,69 @@
   `checkout.stripe.com`) pour que le paiement précommande/abonnement
   fonctionne dans la WebView de l'app.
 
-## Ce qu'il reste à faire — nécessite ton intervention
+## Build cloud (GitHub Actions) — pas besoin de Mac ni d'Android Studio
 
-Je n'ai pas pu aller plus loin depuis cette machine Windows : compiler et
-signer une app iOS demande un Mac avec Xcode, et compiler l'APK/AAB Android
-demande Android Studio (aucun des deux n'est installé ici).
+Deux workflows tournent automatiquement sur GitHub à chaque modification de
+`mobile-app/` (ou peuvent être lancés à la main depuis l'onglet **Actions**
+du dépôt GitHub) :
 
-### 1. Comptes développeur (à créer si pas déjà fait)
+- **`.github/workflows/android-build.yml`** — build un APK debug installable
+  directement sur un téléphone Android pour tester (aucun secret requis).
+  Ajoute les secrets ci-dessous pour qu'il produise en plus un `.aab` signé,
+  prêt à uploader sur Google Play Console.
+- **`.github/workflows/ios-build.yml`** — compile le projet pour le
+  simulateur iOS à chaque changement (aucun secret requis, confirme juste que
+  ça compile). Ajoute les secrets ci-dessous pour qu'il produise en plus un
+  `.ipa` signé, prêt pour TestFlight/App Store Connect.
+
+Le résultat de chaque build (APK/AAB/IPA) apparaît en bas de la page du
+run, dans l'onglet **Actions** du dépôt GitHub, sous « Artifacts » —
+téléchargeable directement, aucune install locale requise.
+
+⚠️ Les runners macOS de GitHub Actions coûtent 10x plus de minutes que les
+runners Linux. Sur un dépôt privé (quota limité), ça peut consommer le forfait
+gratuit assez vite si le workflow iOS tourne à chaque push — le déclencher
+manuellement (`workflow_dispatch`) plutôt que sur chaque push est une option
+si besoin.
+
+### Configurer la signature Android (optionnel, pour publier sur le Play Store)
+1. Générer un keystore une seule fois (à conserver précieusement, il sera
+   nécessaire pour **toute** mise à jour future de l'app) :
+   ```bash
+   keytool -genkey -v -keystore oradia-release.keystore -alias oradia -keyalg RSA -keysize 2048 -validity 10000
+   ```
+2. Dans GitHub → Settings → Secrets and variables → Actions, ajouter :
+   - Secret `ANDROID_KEYSTORE_BASE64` : `base64 -w0 oradia-release.keystore` (le contenu, encodé)
+   - Secret `ANDROID_KEYSTORE_PASSWORD`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`
+   - Variable (onglet "Variables", pas "Secrets") `HAS_ANDROID_SIGNING` = `true`
+
+### Configurer la signature iOS (optionnel, pour publier sur l'App Store)
+Nécessite un compte Apple Developer actif (99 $/an).
+1. Créer un certificat de distribution (.p12) et un profil de provisionnement
+   App Store depuis [developer.apple.com](https://developer.apple.com/account/resources/certificates/list)
+2. Dans GitHub → Settings → Secrets and variables → Actions, ajouter :
+   - Secret `IOS_CERTIFICATE_BASE64` : `base64 -w0 certificate.p12`
+   - Secret `IOS_CERTIFICATE_PASSWORD` (mot de passe choisi à l'export du .p12)
+   - Secret `IOS_PROVISIONING_PROFILE_BASE64` : `base64 -w0 profile.mobileprovision`
+   - Secret `IOS_KEYCHAIN_PASSWORD` (un mot de passe temporaire, choisi librement)
+   - Secret `IOS_TEAM_ID` (visible sur developer.apple.com, section Membership)
+   - Variable `HAS_IOS_SIGNING` = `true`
+
+Une fois l'`.ipa` récupéré depuis les Artifacts, l'envoyer vers App Store
+Connect avec [Transporter](https://apps.apple.com/app/transporter/id1450874784)
+(Mac App Store, gratuit) ou `xcrun altool --upload-app`.
+
+## Comptes développeur (à créer si pas déjà fait)
 - **Google Play Console** : 25 $ (paiement unique) — https://play.google.com/console
 - **Apple Developer Program** : 99 $/an — https://developer.apple.com/programs/
 
-### 2. Build Android
-- Installer [Android Studio](https://developer.android.com/studio)
-- Ouvrir le dossier `mobile-app/android/` dans Android Studio
-- `Build > Generate Signed Bundle / APK` → créer un keystore (à conserver
-  précieusement, indispensable pour toute mise à jour future de l'app)
-- Uploader le `.aab` généré sur Google Play Console
+## Alternative sans GitHub Actions
+Codemagic ou MacStadium proposent aussi des builds cloud iOS/Android avec une
+interface guidée (moins de configuration manuelle que ci-dessus, mais payant
+au-delà d'un quota gratuit limité) — je peux aider à configurer ça à la place
+si le fonctionnement par secrets GitHub est trop contraignant.
 
-### 3. Build iOS
-- Sur un Mac avec [Xcode](https://apps.apple.com/app/xcode/id497799835) :
-  `npx cap open ios` (depuis `mobile-app/`) pour ouvrir le projet
-- Renseigner ton compte Apple Developer dans Xcode (Signing & Capabilities)
-- `Product > Archive` puis envoyer vers App Store Connect
-- Pas de Mac disponible ? Des services cloud (Codemagic, GitHub Actions avec
-  runner macOS, MacStadium) permettent de builder à distance sans Mac
-  physique — je peux t'aider à configurer ça si besoin.
-
-### 4. Assets pour la fiche store (obligatoires)
+### Assets pour la fiche store (obligatoires)
 - Captures d'écran de l'app sur téléphone (au moins 2-3 par store)
 - Description courte/longue, mots-clés
 - Politique de confidentialité (déjà en ligne : `politique-confidentialite.html`)
