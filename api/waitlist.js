@@ -291,7 +291,7 @@ async function sendWaitlistConfirmationEmail(email) {
                       Édition limitée
                     </p>
                     <p style="margin:0 0 20px; color:#c8c0a8; font-family:Georgia,serif; font-size:14px; line-height:1.7;">
-                      L'Oracle physique ORADIA est en précommande.<br>Rejoins la première édition avant le 30 septembre 2026.
+                      L'Oracle physique ORADIA est en précommande.<br>Rejoins la première édition avant le 31 décembre 2026.
                     </p>
                     <a href="https://oradia.fr/precommande-oracle.html" class="btn-preorder" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; font-family:Georgia,serif; font-size:15px; font-weight:700; text-decoration:none; padding:15px 38px; border-radius:50px; letter-spacing:0.05em;">
                       Précommander l'Oracle physique

@@ -62,7 +62,7 @@
         "offerCount": "3",
         "url": "https://oradia.fr/precommande-oracle.html",
         "availability": "https://schema.org/PreOrder",
-        "priceValidUntil": "2026-09-30",
+        "priceValidUntil": "2026-12-31",
         "seller": {
           "@type": "Organization",
           "name": "Oradia",
@@ -245,8 +245,7 @@
                 const heroSoldCount = document.getElementById('heroSoldCount');
                 const heroPercent = document.getElementById('heroPercent');
                 const heroProgressBar = document.getElementById('heroProgressBar');
-                const heroSocialCount = document.getElementById('heroSocialCount');
-                
+
                 // Animation douce de la barre de progression
                 setTimeout(() => {
                     if (progressBar) progressBar.style.width = data.percent + '%';
@@ -259,9 +258,6 @@
                 }
                 if (heroSoldCount) {
                     animateValue(heroSoldCount, 0, data.sold, 1000);
-                }
-                if (heroSocialCount) {
-                    animateValue(heroSocialCount, 0, data.sold, 1000);
                 }
                 if (percent) percent.textContent = data.percent + '%';
                 if (heroPercent) heroPercent.textContent = data.percent + '%';
@@ -554,6 +550,13 @@
                         En participant à la précommande, vous soutenez directement la naissance de cet oracle.
                     </p>
                 </div>
+
+                <!-- Compte à rebours (dupliqué du calendrier, visible dès l'arrivée sur la page) -->
+                <div class="js-countdown-container bg-[rgba(212,175,55,0.15)] border border-gold/30 rounded-full px-4 sm:px-6 py-2 sm:py-3 mb-4 sm:mb-6 inline-block">
+                    <span class="text-gold font-bold cormorant text-base sm:text-lg">⏳ </span>
+                    <span class="js-days-left text-gold font-bold">--</span>
+                    <span class="text-light-gold/80 text-xs sm:text-sm"> jours pour précommander — clôture le 31 décembre 2026</span>
+                </div>
                 
                 <!-- Mini-bloc progression -->
                 <div id="heroProgress" class="bg-[rgba(212,175,55,0.12)] backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gold/40 mb-6 sm:mb-8 hidden">
@@ -586,9 +589,10 @@
                     <p class="text-light-gold/70 text-sm mt-3">À partir de 38€ · Édition limitée</p>
                 </div>
                 
-                <!-- Preuve sociale -->
+                <!-- Preuve d'activité (le produit existe déjà et est utilisé quotidiennement) -->
                 <p id="heroSocialProof" class="text-center text-light-gold/80 mb-6 max-w-2xl mx-auto">
-                    Déjà <span id="heroSocialCount" class="font-bold text-gold">0</span> personnes ont réservé leur exemplaire.
+                    <i class="fas fa-circle text-gold text-xs mr-2 align-middle"></i>
+                    Plus de 80 tirages réalisés en ligne ces trois dernières semaines : l'oracle existe déjà et vit au quotidien.
                 </p>
                 
                 <!-- CTA direct immédiat -->
@@ -970,11 +974,13 @@
                     Objectif de Précommande
                 </h2>
                 
-                <p class="text-xl mb-8">
-                    Oradia n'existe pas encore en version physique.  
-                    En participant à la précommande, vous soutenez directement la naissance de cet oracle et permettez le lancement de la production.
+                <p class="text-xl mb-4">
+                    La version numérique d'Oradia est déjà utilisée quotidiennement — plus de 80 tirages réalisés ces trois dernières semaines. La précommande finance la fabrication de la version physique : 64 cartes imprimées, un livret et un coffret.
                 </p>
-                
+                <p class="text-lg text-light-gold/80 mb-8">
+                    En participant, vous ne pariez pas sur une idée sur papier — vous soutenez le passage au physique d'un outil qui existe déjà.
+                </p>
+
                 <!-- Barre de progression premium -->
                 <div class="bg-[rgba(5,20,40,0.8)] rounded-2xl p-6 border border-gold/30">
                     <!-- État chargement -->
@@ -1018,15 +1024,16 @@
                             </p>
                         </div>
                         
-                        <!-- Message important -->
+                        <!-- Message important : garantie zéro-risque -->
                         <div class="p-4 bg-[rgba(212,175,55,0.1)] rounded-lg border border-gold/30">
-                            <p class="text-light-gold text-base text-center">
+                            <p class="text-light-gold text-base text-center font-semibold mb-1">
                                 <i class="fas fa-shield-alt mr-2"></i>
-                                Si l'objectif n'est pas atteint, votre commande sera intégralement remboursée.
+                                Garantie zéro-risque
+                            </p>
+                            <p class="text-light-gold/80 text-sm text-center">
+                                Le 31 décembre, deux issues possibles : l'objectif est atteint et la fabrication démarre aussitôt, ou il ne l'est pas et vous êtes intégralement remboursé, sans que vous ayez à en faire la demande.
                             </p>
                         </div>
-                        
-                        <!-- Seuil explicatif -->
                     </div>
                     
                     <!-- Erreur (caché par défaut) -->
@@ -1040,6 +1047,27 @@
             </div>
         </div>
     </section>
+
+    <!-- Section Témoignages (mêmes témoignages modérés que oracle.html — cachée si aucun) -->
+    <section id="temoignages-precommande" class="py-16 hidden">
+        <div class="container mx-auto px-6">
+            <div class="max-w-5xl mx-auto">
+                <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold mb-12 gold-gradient text-center">
+                    Ce que disent celles et ceux qui ont testé Oradia
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="precommande-testimonials-grid"></div>
+            </div>
+        </div>
+    </section>
+    <script src="components/testimonials-widget.js"></script>
+    <script>
+        OradiaTestimonials.render('precommande-testimonials-grid', {
+            onRendered: function () {
+                const s = document.getElementById('temoignages-precommande');
+                if (s) s.classList.remove('hidden');
+            }
+        });
+    </script>
 
     <!-- Section Offres de Précommande -->
     <section id="offres" class="py-20 bg-gradient-to-b from-[rgba(5,20,40,0.6)] to-[rgba(26,54,93,0.6)]">
@@ -1392,25 +1420,25 @@
                             </div>
                             <div class="flex-1">
                                 <h3 class="cormorant text-xl font-bold text-gold mb-2">Précommandes ouvertes</h3>
-                                <p class="text-light-gold mb-2">Jusqu'au 30 septembre 2026</p>
+                                <p class="text-light-gold mb-2">Jusqu'au 31 décembre 2026</p>
                                 <!-- Compteur temps restant -->
-                                <div id="countdown-timer" class="bg-[rgba(212,175,55,0.15)] border border-gold/30 rounded-lg px-4 py-2 inline-block">
+                                <div class="js-countdown-container bg-[rgba(212,175,55,0.15)] border border-gold/30 rounded-lg px-4 py-2 inline-block">
                                     <span class="text-gold font-bold cormorant text-lg">⏳ </span>
-                                    <span id="days-left" class="text-gold font-bold">--</span>
+                                    <span class="js-days-left text-gold font-bold">--</span>
                                     <span class="text-light-gold/80 text-sm"> jours restants</span>
                                 </div>
                                 <p class="text-light-gold/70 text-sm mt-2">Réservez votre exemplaire</p>
                             </div>
                         </div>
-                        
+
                         <div class="flex items-center space-x-4">
                             <div class="flex-shrink-0 w-12 h-12 bg-gold/50 rounded-full flex items-center justify-center">
                                 <i class="fas fa-cogs text-gold"></i>
                             </div>
                             <div class="flex-1">
                                 <h3 class="cormorant text-xl font-bold text-gold mb-2">Production</h3>
-                                <p class="text-light-gold mb-1">courant octobre 2026</p>
-                                <p class="text-light-gold/70 text-sm">Fabrication des cartes et des coffrets</p>
+                                <p class="text-light-gold mb-1">courant janvier 2027</p>
+                                <p class="text-light-gold/70 text-sm">Fabrication des cartes et des coffrets — démarre si l'objectif de précommandes est atteint (sinon remboursement intégral, voir ci-dessus)</p>
                             </div>
                         </div>
                         
@@ -1420,7 +1448,7 @@
                             </div>
                             <div class="flex-1">
                                 <h3 class="cormorant text-xl font-bold text-gold mb-2">Livraison estimée</h3>
-                                <p class="text-light-gold mb-1">mi-novembre 2026</p>
+                                <p class="text-light-gold mb-1">mi-février 2027</p>
                             </div>
                         </div>
                     </div>
@@ -1551,7 +1579,7 @@
                             <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
                         </button>
                         <div class="faq-answer hidden mt-4 text-light-gold">
-                            <p>Les précommandes ferment le 30 septembre 2026. La production a lieu courant octobre — la livraison est estimée à partir de mi-novembre 2026. Les commandes seront expédiées dans l'ordre de réception.</p>
+                            <p>Les précommandes ferment le 31 décembre 2026. La production a lieu courant octobre — la livraison est estimée à partir de mi-février 2027. Les commandes seront expédiées dans l'ordre de réception.</p>
                         </div>
                     </div>
                     
@@ -1566,6 +1594,16 @@ La production est lancée grâce aux premières commandes.</p>
                         </div>
                     </div>
                     
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
+                            <span class="flex-1 pr-3">Et si l'objectif de précommandes n'est pas atteint ?</span>
+                            <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-4 text-light-gold">
+                            <p>Vous êtes intégralement remboursé, sans avoir à en faire la demande. Aucun risque à précommander maintenant : soit l'oracle physique est fabriqué, soit vous récupérez votre argent. L'oracle existe déjà en version numérique et est utilisé chaque jour — la précommande ne finance pas une idée de départ, mais le passage au physique d'un projet déjà actif.</p>
+                        </div>
+                    </div>
+
                     <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
                         <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
                             <span class="flex-1 pr-3">Que se passe-t-il si la production est retardée ?</span>
@@ -2573,21 +2611,17 @@ La production est lancée grâce aux premières commandes.</p>
     <!-- Compteur temps restant précommande -->
     <script>
         function updateCountdown() {
-            const endDate = new Date('2026-09-30T23:59:59');
+            const endDate = new Date('2026-12-31T23:59:59');
             const now = new Date();
             const diff = endDate - now;
-            
+
             if (diff > 0) {
                 const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-                const daysElement = document.getElementById('days-left');
-                if (daysElement) {
-                    daysElement.textContent = days;
-                }
+                document.querySelectorAll('.js-days-left').forEach(el => { el.textContent = days; });
             } else {
-                const timerElement = document.getElementById('countdown-timer');
-                if (timerElement) {
-                    timerElement.innerHTML = '<span class="text-red-400 font-bold">Précommandes fermées</span>';
-                }
+                document.querySelectorAll('.js-countdown-container').forEach(el => {
+                    el.innerHTML = '<span class="text-red-400 font-bold">Précommandes fermées</span>';
+                });
             }
         }
         

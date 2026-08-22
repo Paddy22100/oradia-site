@@ -989,6 +989,7 @@
                         <option value="completed">Payé</option>
                         <option value="pending">En attente</option>
                         <option value="failed">Échoué</option>
+                        <option value="refunded">Remboursé</option>
                     </select>
                     <select id="preordersPeriodFilter" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold">
                         <option value="all">Toutes périodes</option>
@@ -1006,11 +1007,25 @@
                 </div>
             </div>
             
+            <div id="preordersBulkBar" class="hidden bg-[rgba(212,175,55,0.1)] border border-gold/40 rounded-xl p-4 mb-4 flex flex-wrap items-center justify-between gap-3">
+                <span class="text-light-gold text-sm">
+                    <span id="preordersSelectedCount" class="font-bold text-gold">0</span> commande(s) sélectionnée(s) ·
+                    <span id="preordersSelectedTotal" class="font-bold text-gold">0,00 €</span>
+                </span>
+                <button id="preordersBulkRefundBtn" onclick="bulkRefundSelectedPreorders()"
+                    class="bg-red-500/20 text-red-300 border border-red-500/40 px-4 py-2 rounded-lg text-sm font-semibold hover:bg-red-500/30 transition">
+                    <i class="fas fa-undo mr-2"></i>Rembourser la sélection via Stripe
+                </button>
+            </div>
+
             <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden shadow-2xl">
                 <div class="overflow-x-auto">
                     <table class="w-full" id="preordersTable">
                         <thead class="bg-gradient-to-r from-[rgba(5,20,40,0.9)] to-[rgba(5,20,40,0.7)] border-b border-gold/30">
                             <tr>
+                                <th class="px-4 py-4 text-left">
+                                    <input type="checkbox" id="preordersSelectAll" onchange="toggleSelectAllPreorders(this)" title="Sélectionner toutes les commandes payées de cette page" />
+                                </th>
                                 <th class="px-6 py-4 text-left text-gold font-semibold tracking-wider text-sm uppercase">Date</th>
                                 <th class="px-6 py-4 text-left text-gold font-semibold tracking-wider text-sm uppercase">Email</th>
                                 <th class="px-6 py-4 text-left text-gold font-semibold tracking-wider text-sm uppercase">Nom</th>
@@ -2175,7 +2190,30 @@
                     <h3 class="cormorant text-2xl font-bold text-gold">Support · Témoignages · Suggestions</h3>
                     <p class="text-light-gold/50 text-sm mt-1">Messages reçus depuis l'espace membre</p>
                 </div>
-                <button onclick="loadSupportMessages()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
+                <div class="flex gap-2">
+                    <button onclick="toggleManualTestimonialForm()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-plus mr-1"></i>Ajouter un témoignage</button>
+                    <button onclick="loadSupportMessages()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
+                </div>
+            </div>
+
+            <!-- Saisie manuelle d'un témoignage reçu hors du site (Telegram, Facebook, oral...) -->
+            <div id="manualTestimonialForm" class="hidden bg-[rgba(5,20,40,0.5)] border border-gold/30 rounded-xl p-4 mb-4 space-y-3">
+                <p class="text-light-gold/60 text-xs">
+                    À utiliser seulement si la personne a confirmé être d'accord pour que son message soit repris sur le site — ce n'est pas parce qu'un message a été reçu ailleurs (Telegram, Facebook...) que la personne accepte qu'il devienne un témoignage public.
+                </p>
+                <input id="manualTestimonialName" type="text" placeholder="Prénom (facultatif)" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold" />
+                <textarea id="manualTestimonialMessage" rows="3" placeholder="Message du témoignage" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold"></textarea>
+                <div class="flex flex-wrap gap-3 items-center">
+                    <select id="manualTestimonialPublication" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold">
+                        <option value="prenom">Afficher le prénom</option>
+                        <option value="anonyme">Afficher anonymement</option>
+                        <option value="non">Ne pas publier (garder en interne)</option>
+                    </select>
+                    <input id="manualTestimonialSource" type="text" placeholder="Source (ex: Telegram)" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold w-40" />
+                    <button onclick="submitManualTestimonial()" class="bg-gold text-night-blue px-4 py-2 rounded-lg text-sm font-semibold hover:bg-light-gold transition">Enregistrer</button>
+                    <button onclick="toggleManualTestimonialForm()" class="text-light-gold/60 text-sm hover:text-light-gold transition">Annuler</button>
+                </div>
+                <p class="text-light-gold/40 text-xs">Le témoignage est enregistré non publié — utilise ensuite "Publier sur le site" dans la liste, comme pour les autres.</p>
             </div>
 
             <!-- Filtres -->
@@ -3697,6 +3735,7 @@
             'mark-paid':          'Commande marquée payée',
             'mark-ready':         'Commande marquée disponible',
             'mark-delivered':     'Commande marquée livrée',
+            'bulk-refund-preorders': 'Remboursement en masse (Stripe)',
             'add-contact':        'Contact ajouté',
             'update-contact':     'Contact modifié',
             'delete-contact':     'Contact supprimé',
@@ -4243,6 +4282,11 @@
             
             tbody.innerHTML = preorders.map((preorder, index) => `
                 <tr class="hover:bg-[rgba(212,175,55,0.1)] transition-all duration-300 border-l-4 border-transparent hover:border-gold/50 animate-fadeIn" style="animation-delay: ${index * 50}ms">
+                    <td class="px-4 py-4">
+                        ${preorder.paid_status === 'completed' ? `
+                        <input type="checkbox" class="preorder-select-checkbox" value="${preorder.id}" data-amount="${preorder.amount_total || 0}" onchange="updatePreordersBulkBar()" />
+                        ` : ''}
+                    </td>
                     <td class="px-6 py-4 text-light-gold font-medium">${preorder.created_at_fr || formatDate(preorder.created_at)}</td>
                     <td class="px-6 py-4 text-light-gold">
                         <div class="flex items-center gap-2">
@@ -4333,6 +4377,67 @@
             `).join('');
             
             updatePagination('preorders', pagination);
+            updatePreordersBulkBar();
+        }
+
+        // Sélection multiple pour le remboursement en masse (précommandes payées uniquement)
+        function toggleSelectAllPreorders(headerCheckbox) {
+            document.querySelectorAll('.preorder-select-checkbox').forEach(cb => { cb.checked = headerCheckbox.checked; });
+            updatePreordersBulkBar();
+        }
+
+        function updatePreordersBulkBar() {
+            const checked = Array.from(document.querySelectorAll('.preorder-select-checkbox:checked'));
+            const bar = document.getElementById('preordersBulkBar');
+            if (!bar) return;
+            if (checked.length === 0) {
+                bar.classList.add('hidden');
+                return;
+            }
+            bar.classList.remove('hidden');
+            document.getElementById('preordersSelectedCount').textContent = checked.length;
+            // amount_total est stocké en euros (pas en centimes) dans la table preorders.
+            const totalEur = checked.reduce((sum, cb) => sum + Number(cb.dataset.amount || 0), 0);
+            document.getElementById('preordersSelectedTotal').textContent = formatCurrency(totalEur);
+        }
+
+        async function bulkRefundSelectedPreorders() {
+            const checked = Array.from(document.querySelectorAll('.preorder-select-checkbox:checked'));
+            if (checked.length === 0) return;
+            const orderIds = checked.map(cb => cb.value);
+            const totalEur = checked.reduce((sum, cb) => sum + Number(cb.dataset.amount || 0), 0);
+
+            const confirmText = `Rembourser ${orderIds.length} commande(s) pour un total de ${formatCurrency(totalEur)} via Stripe ?\n\nCette action débite réellement le compte Stripe et prévient chaque client par email. Elle ne peut pas être annulée depuis ce dashboard.\n\nTape OK pour confirmer.`;
+            if (!confirm(confirmText)) return;
+
+            const btn = document.getElementById('preordersBulkRefundBtn');
+            const originalHTML = btn.innerHTML;
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Remboursement en cours...';
+
+            try {
+                const response = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'bulk-refund-preorders', orderIds, confirm: true })
+                });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || 'Erreur');
+
+                const failed = data.results.filter(r => !r.ok);
+                let summary = `✅ ${data.refundedCount} commande(s) remboursée(s)`;
+                if (data.alreadyRefundedCount) summary += `\nℹ️ ${data.alreadyRefundedCount} déjà remboursée(s) (ignorée(s))`;
+                if (data.failedCount) {
+                    summary += `\n❌ ${data.failedCount} échec(s) :\n` + failed.map(r => `- ${r.email || r.orderId} : ${r.reason}`).join('\n');
+                }
+                alert(summary);
+                await loadPreorders();
+            } catch (error) {
+                alert('❌ Erreur : ' + error.message);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = originalHTML;
+            }
         }
 
         // Mettre à jour le tableau des dons
@@ -4758,6 +4863,7 @@
                 case 'completed': return 'bg-green-500/20 text-green-400';
                 case 'pending': return 'bg-yellow-500/20 text-yellow-400';
                 case 'failed': return 'bg-red-500/20 text-red-400';
+                case 'refunded': return 'bg-blue-500/20 text-blue-300';
                 default: return 'bg-gray-500/20 text-gray-400';
             }
         }
@@ -4928,7 +5034,7 @@
         }
 
         function getStatusLabelFr(status) {
-            const labels = { completed: 'Payée', pending: 'En attente', failed: 'Échouée' };
+            const labels = { completed: 'Payée', pending: 'En attente', failed: 'Échouée', refunded: 'Remboursée' };
             return labels[status] || status || '-';
         }
 
@@ -8311,6 +8417,41 @@
             } catch (e) {
                 console.error('[Admin] deleteSupportMsg error:', e);
                 alert('Erreur réseau : ' + e.message);
+            }
+        }
+
+        function toggleManualTestimonialForm() {
+            const form = document.getElementById('manualTestimonialForm');
+            form.classList.toggle('hidden');
+            if (!form.classList.contains('hidden')) {
+                document.getElementById('manualTestimonialMessage').focus();
+            }
+        }
+
+        async function submitManualTestimonial() {
+            const name = document.getElementById('manualTestimonialName').value.trim();
+            const message = document.getElementById('manualTestimonialMessage').value.trim();
+            const publication = document.getElementById('manualTestimonialPublication').value;
+            const source = document.getElementById('manualTestimonialSource').value.trim();
+            if (!message) { alert('Le message est requis.'); return; }
+            if (!confirm('Confirmes-tu que cette personne est d\'accord pour que ce message soit utilisé comme témoignage public ?')) return;
+
+            try {
+                const res = await adminFetch('/api/admin/data?section=support-add-manual', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, message, publication, source })
+                });
+                const data = await res.json();
+                if (!data.success) throw new Error(data.error || 'Erreur');
+                document.getElementById('manualTestimonialName').value = '';
+                document.getElementById('manualTestimonialMessage').value = '';
+                document.getElementById('manualTestimonialSource').value = '';
+                toggleManualTestimonialForm();
+                loadSupportMessages();
+                refreshSupportBadge();
+            } catch (e) {
+                alert('Erreur : ' + e.message);
             }
         }
 
