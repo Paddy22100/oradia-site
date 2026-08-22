@@ -16,10 +16,29 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    // Signature du build release : lue depuis des variables d'environnement (jamais
+    // en dur ni commitée), fournies par le workflow GitHub Actions une fois les
+    // secrets ANDROID_KEYSTORE_* configurés sur le dépôt — voir mobile-app/README.md.
+    // Tant qu'ils ne sont pas définis, cette config est ignorée et seul le build
+    // debug (non signé, pour test) fonctionne.
+    def keystorePath = file('release.keystore')
+    if (keystorePath.exists()) {
+        signingConfigs {
+            release {
+                storeFile keystorePath
+                storePassword System.getenv("ORADIA_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("ORADIA_KEY_ALIAS")
+                keyPassword System.getenv("ORADIA_KEY_PASSWORD")
+            }
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            if (keystorePath.exists()) {
+                signingConfig signingConfigs.release
+            }
         }
     }
 }
