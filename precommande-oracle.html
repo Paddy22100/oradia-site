@@ -233,23 +233,13 @@
                 
                 const data = await response.json();
                 
-                // Mettre à jour la barre de progression avec animation
-                const progressBar = document.getElementById('preorderProgressBar');
                 const soldCount = document.getElementById('preorderSoldCount');
-                const percent = document.getElementById('preorderPercent');
-                const remaining = document.getElementById('preorderRemaining');
                 const rarityText = document.getElementById('rarityText');
-
-                // Animation douce de la barre de progression
-                setTimeout(() => {
-                    if (progressBar) progressBar.style.width = data.percent + '%';
-                }, 100);
 
                 // Animation des chiffres
                 if (soldCount) {
                     animateValue(soldCount, 0, data.sold, 1000);
                 }
-                if (percent) percent.textContent = data.percent + '%';
 
                 // Message de rareté dynamique — le chiffre exact n'apparaît
                 // qu'en fin d'édition, l'objectif total n'est jamais affiché
@@ -960,22 +950,13 @@
                     
                     <!-- Contenu progression (caché au chargement) -->
                     <div id="progressContent" class="hidden">
-                        <!-- Progression principale -->
-                        <div class="mb-6">
-                            <div class="flex justify-between items-center mb-3">
-                                <span class="text-light-gold text-lg font-semibold">Progression</span>
-                                <span id="preorderPercent" class="text-gold text-lg font-bold">0%</span>
-                            </div>
-                            <div class="w-full bg-[rgba(212,175,55,0.2)] rounded-full h-4 overflow-hidden">
-                                <div id="preorderProgressBar" class="bg-gradient-to-r from-gold to-light-gold h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        
-                        <!-- Statistiques premium -->
+                        <!-- Statistiques premium : nombre brut cadré en "premiers soutiens" plutôt
+                        qu'en ratio vers un objectif — pas de comparaison implicite pendant que
+                        les chiffres sont encore petits. -->
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-center mb-6 max-w-xl mx-auto">
                             <div class="bg-[rgba(212,175,55,0.05)] rounded-lg p-4">
                                 <div id="preorderSoldCount" class="text-3xl font-bold text-gold mb-2 transition-all duration-500">0</div>
-                                <p class="text-light-gold text-base">exemplaires réservés</p>
+                                <p class="text-light-gold text-base">premiers soutiens ont déjà rejoint l'aventure</p>
                             </div>
                             <div class="bg-[rgba(212,175,55,0.05)] rounded-lg p-4">
                                 <div class="text-3xl font-bold text-gold mb-2"><i class="fas fa-gem"></i></div>
