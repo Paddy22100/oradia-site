@@ -585,7 +585,7 @@
                 <!-- Preuve d'activité (le produit existe déjà et est utilisé quotidiennement) -->
                 <p id="heroSocialProof" class="text-center text-light-gold/80 mb-6 max-w-2xl mx-auto">
                     <i class="fas fa-circle text-gold text-xs mr-2 align-middle"></i>
-                    L'oracle existe déjà en version numérique : plusieurs tirages y sont réalisés chaque jour.
+                    Plus de 80 tirages réalisés en ligne ces trois dernières semaines : l'oracle existe déjà et vit au quotidien.
                 </p>
                 
                 <!-- CTA direct immédiat -->
@@ -968,7 +968,7 @@
                 </h2>
                 
                 <p class="text-xl mb-4">
-                    La version numérique d'Oradia est déjà utilisée chaque jour pour de vrais tirages. La précommande finance la fabrication de la version physique : 64 cartes imprimées, un livret et un coffret.
+                    La version numérique d'Oradia est déjà utilisée quotidiennement — plus de 80 tirages réalisés ces trois dernières semaines. La précommande finance la fabrication de la version physique : 64 cartes imprimées, un livret et un coffret.
                 </p>
                 <p class="text-lg text-light-gold/80 mb-8">
                     En participant, vous ne pariez pas sur une idée sur papier — vous soutenez le passage au physique d'un outil qui existe déjà.
@@ -1040,6 +1040,27 @@
             </div>
         </div>
     </section>
+
+    <!-- Section Témoignages (mêmes témoignages modérés que oracle.html — cachée si aucun) -->
+    <section id="temoignages-precommande" class="py-16 hidden">
+        <div class="container mx-auto px-6">
+            <div class="max-w-5xl mx-auto">
+                <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold mb-12 gold-gradient text-center">
+                    Ce que disent celles et ceux qui ont testé Oradia
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="precommande-testimonials-grid"></div>
+            </div>
+        </div>
+    </section>
+    <script src="components/testimonials-widget.js"></script>
+    <script>
+        OradiaTestimonials.render('precommande-testimonials-grid', {
+            onRendered: function () {
+                const s = document.getElementById('temoignages-precommande');
+                if (s) s.classList.remove('hidden');
+            }
+        });
+    </script>
 
     <!-- Section Offres de Précommande -->
     <section id="offres" class="py-20 bg-gradient-to-b from-[rgba(5,20,40,0.6)] to-[rgba(26,54,93,0.6)]">
