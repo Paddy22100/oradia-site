@@ -245,8 +245,7 @@
                 const heroSoldCount = document.getElementById('heroSoldCount');
                 const heroPercent = document.getElementById('heroPercent');
                 const heroProgressBar = document.getElementById('heroProgressBar');
-                const heroSocialCount = document.getElementById('heroSocialCount');
-                
+
                 // Animation douce de la barre de progression
                 setTimeout(() => {
                     if (progressBar) progressBar.style.width = data.percent + '%';
@@ -259,9 +258,6 @@
                 }
                 if (heroSoldCount) {
                     animateValue(heroSoldCount, 0, data.sold, 1000);
-                }
-                if (heroSocialCount) {
-                    animateValue(heroSocialCount, 0, data.sold, 1000);
                 }
                 if (percent) percent.textContent = data.percent + '%';
                 if (heroPercent) heroPercent.textContent = data.percent + '%';
@@ -586,9 +582,10 @@
                     <p class="text-light-gold/70 text-sm mt-3">À partir de 38€ · Édition limitée</p>
                 </div>
                 
-                <!-- Preuve sociale -->
+                <!-- Preuve d'activité (le produit existe déjà et est utilisé quotidiennement) -->
                 <p id="heroSocialProof" class="text-center text-light-gold/80 mb-6 max-w-2xl mx-auto">
-                    Déjà <span id="heroSocialCount" class="font-bold text-gold">0</span> personnes ont réservé leur exemplaire.
+                    <i class="fas fa-circle text-gold text-xs mr-2 align-middle"></i>
+                    L'oracle existe déjà en version numérique : plusieurs tirages y sont réalisés chaque jour.
                 </p>
                 
                 <!-- CTA direct immédiat -->
@@ -970,11 +967,13 @@
                     Objectif de Précommande
                 </h2>
                 
-                <p class="text-xl mb-8">
-                    Oradia n'existe pas encore en version physique.  
-                    En participant à la précommande, vous soutenez directement la naissance de cet oracle et permettez le lancement de la production.
+                <p class="text-xl mb-4">
+                    La version numérique d'Oradia est déjà utilisée chaque jour pour de vrais tirages. La précommande finance la fabrication de la version physique : 64 cartes imprimées, un livret et un coffret.
                 </p>
-                
+                <p class="text-lg text-light-gold/80 mb-8">
+                    En participant, vous ne pariez pas sur une idée sur papier — vous soutenez le passage au physique d'un outil qui existe déjà.
+                </p>
+
                 <!-- Barre de progression premium -->
                 <div class="bg-[rgba(5,20,40,0.8)] rounded-2xl p-6 border border-gold/30">
                     <!-- État chargement -->
@@ -1018,15 +1017,16 @@
                             </p>
                         </div>
                         
-                        <!-- Message important -->
+                        <!-- Message important : garantie zéro-risque -->
                         <div class="p-4 bg-[rgba(212,175,55,0.1)] rounded-lg border border-gold/30">
-                            <p class="text-light-gold text-base text-center">
+                            <p class="text-light-gold text-base text-center font-semibold mb-1">
                                 <i class="fas fa-shield-alt mr-2"></i>
-                                Si l'objectif n'est pas atteint, votre commande sera intégralement remboursée.
+                                Garantie zéro-risque
+                            </p>
+                            <p class="text-light-gold/80 text-sm text-center">
+                                Le 30 septembre, deux issues possibles : l'objectif est atteint et la fabrication démarre aussitôt, ou il ne l'est pas et vous êtes intégralement remboursé, sans que vous ayez à en faire la demande.
                             </p>
                         </div>
-                        
-                        <!-- Seuil explicatif -->
                     </div>
                     
                     <!-- Erreur (caché par défaut) -->
@@ -1402,7 +1402,7 @@
                                 <p class="text-light-gold/70 text-sm mt-2">Réservez votre exemplaire</p>
                             </div>
                         </div>
-                        
+
                         <div class="flex items-center space-x-4">
                             <div class="flex-shrink-0 w-12 h-12 bg-gold/50 rounded-full flex items-center justify-center">
                                 <i class="fas fa-cogs text-gold"></i>
@@ -1410,7 +1410,7 @@
                             <div class="flex-1">
                                 <h3 class="cormorant text-xl font-bold text-gold mb-2">Production</h3>
                                 <p class="text-light-gold mb-1">courant octobre 2026</p>
-                                <p class="text-light-gold/70 text-sm">Fabrication des cartes et des coffrets</p>
+                                <p class="text-light-gold/70 text-sm">Fabrication des cartes et des coffrets — démarre si l'objectif de précommandes est atteint (sinon remboursement intégral, voir ci-dessus)</p>
                             </div>
                         </div>
                         
@@ -1566,6 +1566,16 @@ La production est lancée grâce aux premières commandes.</p>
                         </div>
                     </div>
                     
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
+                            <span class="flex-1 pr-3">Et si l'objectif de précommandes n'est pas atteint ?</span>
+                            <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-4 text-light-gold">
+                            <p>Vous êtes intégralement remboursé, sans avoir à en faire la demande. Aucun risque à précommander maintenant : soit l'oracle physique est fabriqué, soit vous récupérez votre argent. L'oracle existe déjà en version numérique et est utilisé chaque jour — la précommande ne finance pas une idée de départ, mais le passage au physique d'un projet déjà actif.</p>
+                        </div>
+                    </div>
+
                     <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
                         <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
                             <span class="flex-1 pr-3">Que se passe-t-il si la production est retardée ?</span>
