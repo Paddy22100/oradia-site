@@ -1348,12 +1348,44 @@ async function handleData(req, res) {
       }
 
       if (action === 'set-expiry' && subscriptionId) {
+        const newExpiresAt = body.expiresAt || null;
+        const { data: subRow, error: fetchErr } = await supabase
+          .from('tore_subscriptions')
+          .select('stripe_subscription_id')
+          .eq('id', subscriptionId)
+          .single();
+        if (fetchErr) throw fetchErr;
+
         const { error } = await supabase
           .from('tore_subscriptions')
-          .update({ expires_at: body.expiresAt || null, updated_at: new Date().toISOString() })
+          .update({ expires_at: newExpiresAt, updated_at: new Date().toISOString() })
           .eq('id', subscriptionId);
         if (error) throw error;
-        return res.status(200).json({ success: true });
+
+        // Repousse aussi la prochaine facturation Stripe pour que le prélèvement
+        // ne tombe pas avant la nouvelle échéance accordée (ex : mois offert en
+        // dédommagement). Sans ça, seule la date affichée dans Supabase change et
+        // Stripe continue de prélever sur son propre cycle.
+        let stripeSynced = false;
+        let stripeError = null;
+        if (newExpiresAt && subRow?.stripe_subscription_id && process.env.STRIPE_SECRET_KEY) {
+          const trialEndUnix = Math.floor(new Date(newExpiresAt).getTime() / 1000);
+          const nowUnix = Math.floor(Date.now() / 1000);
+          if (trialEndUnix > nowUnix) {
+            try {
+              const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+              await stripe.subscriptions.update(subRow.stripe_subscription_id, {
+                trial_end: trialEndUnix,
+                proration_behavior: 'none'
+              });
+              stripeSynced = true;
+            } catch (e) {
+              stripeError = e.message;
+              console.error('[set-expiry] stripe sync error:', e.message);
+            }
+          }
+        }
+        return res.status(200).json({ success: true, stripeSynced, stripeError });
       }
 
       if (action === 'upgrade_plan' && subscriptionId) {

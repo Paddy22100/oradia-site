@@ -8349,6 +8349,13 @@
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.error);
                 await loadSubscriptions(subPage);
+                if (expiresAt) {
+                    if (json.stripeSynced) {
+                        alert('Échéance mise à jour et prochaine facturation Stripe repoussée en conséquence.');
+                    } else if (json.stripeError) {
+                        alert('Échéance mise à jour dans Supabase, mais la synchro Stripe a échoué : ' + json.stripeError + '\nLe client risque d\'être prélevé avant la nouvelle échéance — vérifie manuellement dans Stripe.');
+                    }
+                }
             } catch(e) { alert('Erreur : ' + e.message); }
         }
 
