@@ -1260,7 +1260,7 @@ async function handleData(req, res) {
     // ci-dessous, qui ne connaît que body.action — comme support-update/delete/
     // publish/reply n'envoient jamais ce champ, elles finissaient systématiquement
     // sur son "Action invalide" et n'atteignaient jamais leur vrai handler.
-    const SUPPORT_POST_SECTIONS = ['support-update', 'support-publish', 'support-reply', 'support-delete', 'support-add-manual'];
+    const SUPPORT_POST_SECTIONS = ['support-update', 'support-publish', 'support-reply', 'support-delete', 'support-add-manual', 'compose-email'];
     const isSupportSectionPost = req.method === 'POST' && SUPPORT_POST_SECTIONS.includes(req.query?.section);
 
     // ── POST : actions sur abonnements ──
@@ -1336,6 +1336,38 @@ async function handleData(req, res) {
           } catch (e) { console.error('[subscriptions/create] welcome email error:', e.message); }
         }
         return res.status(200).json({ success: true, emailSent: welcomeEmailSent });
+      }
+
+      // ── Saisie manuelle d'un don reçu en espèces (hors circuit Stripe) ──
+      // La table donors exige stripe_session_id (UNIQUE NOT NULL) et un email valide
+      // (contrainte CHECK) : on génère donc des valeurs synthétiques identifiables
+      // plutôt que de modifier le schéma pour un cas d'usage marginal.
+      if (action === 'add-cash-donation') {
+        const { donorName, amount, donationDate, note } = body;
+        const cleanName = (donorName || '').trim();
+        if (!cleanName) return res.status(400).json({ error: 'Nom du donateur requis' });
+        const amountNum = parseFloat(amount);
+        if (!amountNum || amountNum <= 0) return res.status(400).json({ error: 'Montant invalide' });
+        const dateIso = donationDate ? new Date(donationDate).toISOString() : new Date().toISOString();
+        if (isNaN(new Date(dateIso).getTime())) return res.status(400).json({ error: 'Date invalide' });
+
+        const uid = crypto.randomUUID();
+        const { error } = await supabase.from('donors').insert({
+          stripe_session_id: `manual-cash-${uid}`,
+          email: `dons-especes+${uid}@oradia.fr`,
+          full_name: cleanName,
+          // amount_total est stocké en EUROS (pas en centimes) depuis la migration
+          // donors-amount-correction.sql — cf. formatCurrency() côté dashboard qui
+          // affiche amount_total tel quel sans le diviser par 100.
+          amount_total: amountNum,
+          currency: 'eur',
+          paid_status: 'completed',
+          source: 'don-especes',
+          metadata: { payment_method: 'especes', note: note || null, entered_manually: true },
+          created_at: dateIso
+        });
+        if (error) throw error;
+        return res.status(200).json({ success: true });
       }
 
       if (action === 'revoke' && subscriptionId) {
@@ -2485,6 +2517,54 @@ async function handleData(req, res) {
       return res.status(200).json({ success: true, data: tirages || [] });
     }
 
+    // ── Section subscription-payments (historique des paiements Stripe d'un abonné, pour modal admin) ──
+    if (section === 'subscription-payments') {
+      const subscriptionId = req.query?.subscriptionId;
+      if (!subscriptionId) return res.status(400).json({ error: 'subscriptionId requis' });
+
+      const { data: row, error: rowErr } = await supabase
+        .from('tore_subscriptions')
+        .select('stripe_subscription_id, stripe_customer_id')
+        .eq('id', subscriptionId)
+        .single();
+      if (rowErr) throw rowErr;
+
+      if (!row?.stripe_subscription_id && !row?.stripe_customer_id) {
+        return res.status(200).json({ success: true, payments: [], message: 'Aucun client Stripe associé (abonnement gratuit/manuel).' });
+      }
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(200).json({ success: false, error: 'STRIPE_SECRET_KEY manquant.' });
+      }
+
+      try {
+        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+        const listParams = row.stripe_subscription_id
+          ? { subscription: row.stripe_subscription_id, limit: 48, expand: ['data.charge'] }
+          : { customer: row.stripe_customer_id, limit: 48, expand: ['data.charge'] };
+        const invoices = await stripe.invoices.list(listParams);
+
+        const payments = invoices.data.map(inv => {
+          const charge = inv.charge && typeof inv.charge === 'object' ? inv.charge : null;
+          return {
+            id: inv.id,
+            date: new Date(inv.created * 1000).toISOString(),
+            amount: (inv.amount_paid || 0) / 100,
+            currency: inv.currency,
+            status: inv.status,
+            refunded: charge ? !!charge.refunded : false,
+            amountRefunded: charge ? (charge.amount_refunded || 0) / 100 : 0,
+            number: inv.number || null,
+            hostedUrl: inv.hosted_invoice_url || null,
+            pdfUrl: inv.invoice_pdf || null
+          };
+        });
+        return res.status(200).json({ success: true, payments });
+      } catch (e) {
+        console.error('[subscription-payments] Stripe error:', e.message);
+        return res.status(200).json({ success: false, error: e.message });
+      }
+    }
+
     // ── Section preorders ──
     if (section === 'preorders') {
       // Paramètre export=1 : retourne tous les enregistrements sans pagination (utilisé par le PDF)
@@ -2778,6 +2858,37 @@ async function handleData(req, res) {
         .update({ status: 'replied', read_at: new Date().toISOString() })
         .eq('id', id);
       if (error) throw error;
+      return res.status(200).json({ success: true });
+    }
+
+    // ── Email libre rédigé depuis le dashboard, envoyé via Brevo (expéditeur
+    // contact@oradia.fr) avec la même mise en page que les réponses support —
+    // réutilise buildSupportReplyEmailHtml pour ne jamais avoir de second
+    // template qui diverge (voir règle CLAUDE.md sur les templates email).
+    if (section === 'compose-email') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
+      const body = await parseBody(req);
+      const { to, subject, message } = body;
+      if (!to || !subject || !message) return res.status(400).json({ error: 'destinataire, sujet et message requis' });
+      const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRe.test(to)) return res.status(400).json({ error: 'Adresse email invalide' });
+
+      const html = buildSupportReplyEmailHtml({ message });
+      const brevoResp = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+        body: JSON.stringify({
+          sender: { name: "Rudy d'Oradia", email: process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr' },
+          to: [{ email: to }],
+          subject,
+          htmlContent: html
+        })
+      });
+      if (!brevoResp.ok) {
+        const err = await brevoResp.json().catch(() => ({}));
+        console.error('Brevo compose-email error:', err);
+        return res.status(502).json({ error: 'Envoi Brevo échoué' });
+      }
       return res.status(200).json({ success: true });
     }
 

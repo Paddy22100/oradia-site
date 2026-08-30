@@ -727,6 +727,19 @@
         </div>
     </div>
 
+    <!-- Modal globale : historique des paiements Stripe d'un abonné -->
+    <div id="modalPayments" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onclick="if(event.target===this)closePaymentsModal()">
+        <div class="bg-[#07112a] border border-gold/30 rounded-2xl p-6 w-full max-w-lg shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="cormorant text-xl font-bold text-gold" id="modalPaymentsTitle">Historique des paiements</h4>
+                <button onclick="closePaymentsModal()" class="text-gold/50 hover:text-gold text-xl"><i class="fas fa-times"></i></button>
+            </div>
+            <div id="modalPaymentsBody" class="space-y-2 max-h-80 overflow-y-auto text-sm text-light-gold/80">
+                <p class="text-gold/40 text-center py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</p>
+            </div>
+        </div>
+    </div>
+
     <main class="px-6 py-8">
         <!-- ══ ONGLET : TABLEAU DE BORD ══ -->
         <div id="tab-overview" class="tab-panel active">
@@ -1056,8 +1069,45 @@
         <!-- ══ ONGLET : DONS ══ -->
         <div id="tab-donors" class="tab-panel">
         <section class="mb-10">
-            <h3 class="cormorant text-2xl font-bold text-gold mb-8">Dons</h3>
-            
+            <div class="flex items-center justify-between mb-8 flex-wrap gap-3">
+                <h3 class="cormorant text-2xl font-bold text-gold">Dons</h3>
+                <button onclick="toggleCashDonationForm()" class="text-sm bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 hover:bg-gold/25 transition"><i class="fas fa-hand-holding-dollar mr-1"></i>Ajouter un don en espèces</button>
+            </div>
+
+            <div id="cashDonationForm" class="hidden bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-6 space-y-3">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Prénom</label>
+                        <input id="cashDonorFirstName" type="text" placeholder="Prénom"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                    </div>
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Nom</label>
+                        <input id="cashDonorLastName" type="text" placeholder="Nom"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                    </div>
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Montant (€)</label>
+                        <input id="cashDonorAmount" type="number" step="0.01" min="0.01" placeholder="20.00"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                    </div>
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Date du don</label>
+                        <input id="cashDonorDate" type="date"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="text-light-gold/60 text-xs block mb-1">Note (facultatif)</label>
+                        <input id="cashDonorNote" type="text" placeholder="Contexte, remis en main propre…"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="submitCashDonation()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-5 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-check mr-1"></i>Enregistrer</button>
+                    <span id="cashDonationStatus" class="text-xs text-light-gold/40"></span>
+                </div>
+            </div>
+
             <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full" id="donorsTable">
@@ -1074,7 +1124,7 @@
                         </tbody>
                     </table>
                 </div>
-                
+
                 <div id="donorsPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)]">
                 </div>
             </div>
@@ -3114,6 +3164,34 @@
         <div id="tab-mails" class="tab-panel">
         <section class="mb-10">
             <div class="mb-6">
+                <h3 class="cormorant text-2xl font-bold text-gold">Écrire un email</h3>
+                <p class="text-light-gold/50 text-sm mt-1">Rédige un email libre, envoyé depuis <span class="text-gold font-mono">contact@oradia.fr</span> avec la même mise en page que les réponses du Support technique.</p>
+            </div>
+            <div class="stat-card rounded-xl p-5 space-y-3">
+                <div>
+                    <label class="text-light-gold/60 text-xs block mb-1">Destinataire</label>
+                    <input id="composeEmailTo" type="email" placeholder="destinataire@exemple.fr"
+                        class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                </div>
+                <div>
+                    <label class="text-light-gold/60 text-xs block mb-1">Sujet</label>
+                    <input id="composeEmailSubject" type="text" placeholder="Sujet de l'email"
+                        class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                </div>
+                <div>
+                    <label class="text-light-gold/60 text-xs block mb-1">Message</label>
+                    <textarea id="composeEmailMessage" rows="8" placeholder="Votre message…"
+                        class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50"></textarea>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="composeEmail()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-5 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-paper-plane mr-1"></i>Envoyer</button>
+                    <span id="composeEmailStatus" class="text-xs text-light-gold/40"></span>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-10">
+            <div class="mb-6">
                 <h3 class="cormorant text-2xl font-bold text-gold">Mails du site</h3>
                 <p class="text-light-gold/50 text-sm mt-1">Envoie une version test de chaque email transactionnel à <span class="text-gold font-mono">contact@oradia.fr</span>. Aucun envoi aux vrais destinataires.</p>
             </div>
@@ -4009,6 +4087,51 @@
         }
 
         // Charger les dons
+        function toggleCashDonationForm() {
+            const form = document.getElementById('cashDonationForm');
+            form.classList.toggle('hidden');
+            if (!form.classList.contains('hidden')) {
+                document.getElementById('cashDonorDate').value = new Date().toISOString().slice(0, 10);
+                document.getElementById('cashDonorFirstName').focus();
+            }
+        }
+
+        async function submitCashDonation() {
+            const firstName = document.getElementById('cashDonorFirstName').value.trim();
+            const lastName  = document.getElementById('cashDonorLastName').value.trim();
+            const amount    = document.getElementById('cashDonorAmount').value;
+            const date      = document.getElementById('cashDonorDate').value;
+            const note      = document.getElementById('cashDonorNote').value.trim();
+            const status    = document.getElementById('cashDonationStatus');
+            const donorName = `${firstName} ${lastName}`.trim();
+
+            if (!donorName) { status.className = 'text-xs text-red-400'; status.textContent = 'Prénom ou nom requis.'; return; }
+            if (!amount || parseFloat(amount) <= 0) { status.className = 'text-xs text-red-400'; status.textContent = 'Montant invalide.'; return; }
+
+            status.className = 'text-xs text-light-gold/40';
+            status.textContent = 'Enregistrement…';
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'add-cash-donation', donorName, amount, donationDate: date || null, note: note || null })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Échec de l\'enregistrement');
+                status.className = 'text-xs text-green-400';
+                status.textContent = 'Enregistré ✓';
+                document.getElementById('cashDonorFirstName').value = '';
+                document.getElementById('cashDonorLastName').value = '';
+                document.getElementById('cashDonorAmount').value = '';
+                document.getElementById('cashDonorNote').value = '';
+                await loadDonors();
+                setTimeout(() => { toggleCashDonationForm(); status.textContent = ''; }, 1200);
+            } catch (e) {
+                status.className = 'text-xs text-red-400';
+                status.textContent = 'Erreur : ' + e.message;
+            }
+        }
+
         async function loadDonors(page = 1, limit = 10) {
             const response = await adminFetch(`/api/admin/data?section=donors&page=${page}&limit=${limit}`);
             const data = await response.json();
@@ -4704,15 +4827,21 @@
             const tbody = document.querySelector('#donorsTable tbody');
             if (!tbody) return;
             
-            tbody.innerHTML = donors.map(donor => `
+            tbody.innerHTML = donors.map(donor => {
+                const isCash = donor.source === 'don-especes';
+                return `
                 <tr class="hover:bg-[rgba(5,20,40,0.8)] transition">
                     <td class="px-6 py-4 text-light-gold">${donor.created_at_fr || formatDate(donor.created_at)}</td>
-                    <td class="px-6 py-4 text-light-gold">${donor.email || '-'}</td>
+                    <td class="px-6 py-4 text-light-gold">${isCash ? '<span class="text-light-gold/40 italic">—</span>' : (donor.email || '-')}</td>
                     <td class="px-6 py-4 text-light-gold">${donor.full_name || '-'}</td>
                     <td class="px-6 py-4 text-gold font-semibold">${formatCurrency(donor.amount_total)}</td>
-                    <td class="px-6 py-4"><span class="px-2 py-1 rounded text-sm ${getStatusClass(donor.paid_status)}">${donor.paid_status}</span></td>
+                    <td class="px-6 py-4">
+                        <span class="px-2 py-1 rounded text-sm ${getStatusClass(donor.paid_status)}">${donor.paid_status}</span>
+                        ${isCash ? '<span class="ml-1 px-2 py-1 rounded text-sm bg-gold/15 text-gold"><i class="fas fa-hand-holding-dollar mr-1"></i>Espèces</span>' : ''}
+                    </td>
                 </tr>
-            `).join('');
+            `;
+            }).join('');
             
             updatePagination('donors', pagination);
         }
@@ -7464,6 +7593,30 @@
             }
         }
 
+        async function composeEmail() {
+            const to      = document.getElementById('composeEmailTo').value.trim();
+            const subject = document.getElementById('composeEmailSubject').value.trim();
+            const message = document.getElementById('composeEmailMessage').value.trim();
+            const status  = document.getElementById('composeEmailStatus');
+            if (!to || !subject || !message) { if (status) { status.className = 'text-xs text-red-400'; status.textContent = 'Destinataire, sujet et message requis.'; } return; }
+            if (status) { status.className = 'text-xs text-light-gold/40'; status.textContent = 'Envoi…'; }
+            try {
+                const res = await adminFetch('/api/admin/data?section=compose-email', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ to, subject, message })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Envoi échoué');
+                if (status) { status.className = 'text-xs text-green-400'; status.textContent = 'Envoyé ✓'; }
+                document.getElementById('composeEmailTo').value = '';
+                document.getElementById('composeEmailSubject').value = '';
+                document.getElementById('composeEmailMessage').value = '';
+            } catch (e) {
+                if (status) { status.className = 'text-xs text-red-400'; status.textContent = 'Erreur : ' + e.message; }
+            }
+        }
+
         async function sendMailTest(type, mode) {
             const btn = event.currentTarget;
             const orig = btn.innerHTML;
@@ -8204,6 +8357,7 @@
                         <div class="flex gap-2">
                             <button onclick="viewTirages('${emailEsc}')" title="Voir les tirages" class="text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-layer-group"></i></button>
                             <button onclick="editExpiry('${s.id}','${s.expires_at ? s.expires_at.split('T')[0] : ''}')" title="Modifier l'échéance" class="text-blue-400/70 hover:text-blue-400 border border-blue-400/20 hover:border-blue-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-calendar-alt"></i></button>
+                            ${s.stripe_subscription_id ? `<button onclick="viewPayments('${s.id}','${emailEsc}')" title="Historique des paiements Stripe" class="text-green-400/70 hover:text-green-400 border border-green-400/20 hover:border-green-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-credit-card"></i></button>` : ''}
                             <button onclick="repairAccess('${s.id}','${emailEsc}')" title="Réparer l'accès (compte/mot de passe cassé)" class="text-purple-400/70 hover:text-purple-400 border border-purple-400/20 hover:border-purple-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-wrench"></i></button>
                             ${isActive ? `<button onclick="revokeSubscription('${s.id}')" title="Révoquer" class="text-red-400/60 hover:text-red-400 border border-red-400/20 hover:border-red-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-ban"></i></button>` : ''}
                         </div>
@@ -8316,6 +8470,7 @@
                                 <i class="fas fa-layer-group"></i>
                             </button>
                             <button onclick="editExpiry('${s.id}','${s.expires_at ? s.expires_at.split('T')[0] : ''}')" title="Modifier la date d'expiration" class="text-blue-400/70 hover:text-blue-400 border border-blue-400/20 hover:border-blue-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-calendar-alt"></i></button>
+                            ${stripeId ? `<button onclick="viewPayments('${s.id}','${emailEsc}')" title="Historique des paiements Stripe" class="text-green-400/70 hover:text-green-400 border border-green-400/20 hover:border-green-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-credit-card"></i></button>` : ''}
                             <button onclick="repairAccess('${s.id}','${emailEsc}')" title="Réparer l'accès (compte/mot de passe cassé)" class="text-purple-400/70 hover:text-purple-400 border border-purple-400/20 hover:border-purple-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-wrench"></i></button>
                             <button onclick="sendCheckinReminder('${s.id}','${emailEsc}')" title="Envoyer le rappel 'vous n'avez pas fait de tirage'" class="text-orange-400/70 hover:text-orange-400 border border-orange-400/20 hover:border-orange-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-paper-plane"></i></button>
                             <button onclick="loginAsSubscriber('${s.id}','${emailEsc}')" title="Se connecter en tant que cet abonné (tester son espace membre)" class="text-teal-400/70 hover:text-teal-400 border border-teal-400/20 hover:border-teal-400/50 rounded-lg px-2 py-1 text-xs transition"><i class="fas fa-user-secret"></i></button>
@@ -8412,6 +8567,51 @@
 
         function closeTiragesModal() {
             document.getElementById('modalTirages').classList.add('hidden');
+        }
+
+        async function viewPayments(subscriptionId, email) {
+            document.getElementById('modalPaymentsTitle').textContent = `Paiements — ${email}`;
+            document.getElementById('modalPayments').classList.remove('hidden');
+            const body = document.getElementById('modalPaymentsBody');
+            body.innerHTML = '<p class="text-gold/40 text-center py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</p>';
+            try {
+                const res  = await adminFetch(`/api/admin/data?section=subscription-payments&subscriptionId=${encodeURIComponent(subscriptionId)}`);
+                const json = await res.json();
+                if (!res.ok || json.success === false) throw new Error(json.error || 'Erreur');
+                const payments = json.payments || [];
+                if (!payments.length) {
+                    body.innerHTML = `<p class="text-gold/30 text-center py-6 cormorant text-lg">${escapeHtmlFront(json.message || 'Aucun paiement Stripe trouvé')}</p>`;
+                    return;
+                }
+                body.innerHTML = payments.map(p => {
+                    const d = p.date ? new Date(p.date).toLocaleDateString('fr-FR', { day:'2-digit', month:'short', year:'numeric' }) : '—';
+                    const amount = `${p.amount.toFixed(2).replace('.', ',')} €`;
+                    const statusBadge = p.status === 'paid'
+                        ? '<span class="bg-green-500/20 text-green-300 text-xs px-2 py-0.5 rounded-full">Payée</span>'
+                        : p.status === 'open'
+                            ? '<span class="bg-orange-500/20 text-orange-300 text-xs px-2 py-0.5 rounded-full">Ouverte</span>'
+                            : `<span class="bg-light-gold/10 text-light-gold/50 text-xs px-2 py-0.5 rounded-full">${escapeHtmlFront(p.status || '')}</span>`;
+                    const refundBadge = p.refunded
+                        ? `<span class="bg-red-500/15 text-red-300 text-xs px-2 py-0.5 rounded-full ml-1" title="Remboursé">Remboursé${p.amountRefunded ? ' (' + p.amountRefunded.toFixed(2).replace('.', ',') + ' €)' : ''}</span>`
+                        : '';
+                    return `<div class="bg-[rgba(5,20,40,0.6)] border border-gold/15 rounded-lg px-4 py-3">
+                        <div class="flex items-center justify-between mb-1 flex-wrap gap-1">
+                            <span class="text-gold/70 text-xs">${d}${p.number ? ' · ' + escapeHtmlFront(p.number) : ''}</span>
+                            <div>${statusBadge}${refundBadge}</div>
+                        </div>
+                        <div class="flex items-center justify-between">
+                            <span class="text-light-gold font-semibold text-sm">${amount}</span>
+                            ${p.hostedUrl ? `<a href="${p.hostedUrl}" target="_blank" rel="noopener" class="text-gold/60 hover:text-gold text-xs"><i class="fas fa-external-link-alt mr-1"></i>Voir la facture</a>` : ''}
+                        </div>
+                    </div>`;
+                }).join('');
+            } catch(e) {
+                body.innerHTML = `<p class="text-red-400/70 text-center py-4">${escapeHtmlFront(e.message)}</p>`;
+            }
+        }
+
+        function closePaymentsModal() {
+            document.getElementById('modalPayments').classList.add('hidden');
         }
 
         async function createSubscription() {
