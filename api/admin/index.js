@@ -4159,6 +4159,55 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
         return res.status(200).json({ success: true, message: 'Brouillon créé', id: data.id });
       }
 
+      // ── Parcours : place (ou déplace) un brouillon dans la séquence "parcours"
+      // à un ordre donné. Fusionné au niveau de la base (fetch + merge + update)
+      // plutôt que côté client, pour ne jamais écraser un extra déjà présent
+      // (cta_text, badge, promo_banner...) avec un objet extra reconstruit à
+      // partir des seuls champs visibles dans l'éditeur au moment du clic.
+      if (action === 'parcours-set') {
+        const { draft_id, ordre } = body;
+        const ordreNum = Number(ordre);
+        if (!draft_id || !Number.isFinite(ordreNum)) {
+          return res.status(400).json({ error: 'draft_id et ordre requis' });
+        }
+        const { data: current, error: fetchErr } = await supabase
+          .from('newsletter_drafts')
+          .select('extra')
+          .eq('id', draft_id)
+          .maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (!current) return res.status(404).json({ error: 'Brouillon introuvable' });
+        const extra = { ...(current.extra || {}), canal: 'parcours', ordre: ordreNum };
+        const { error } = await supabase
+          .from('newsletter_drafts')
+          .update({ extra, updated_at: new Date().toISOString() })
+          .eq('id', draft_id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      // ── Retire un brouillon du parcours sans le supprimer ──
+      if (action === 'parcours-remove') {
+        const { draft_id } = body;
+        if (!draft_id) return res.status(400).json({ error: 'draft_id requis' });
+        const { data: current, error: fetchErr } = await supabase
+          .from('newsletter_drafts')
+          .select('extra')
+          .eq('id', draft_id)
+          .maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (!current) return res.status(404).json({ error: 'Brouillon introuvable' });
+        const extra = { ...(current.extra || {}) };
+        delete extra.canal;
+        delete extra.ordre;
+        const { error } = await supabase
+          .from('newsletter_drafts')
+          .update({ extra, updated_at: new Date().toISOString() })
+          .eq('id', draft_id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
       // ── Ajout d'un fragment au carnet ──
       if (action === 'ideas') {
         const { content, source } = body;

@@ -12,6 +12,7 @@
     <!-- Import de sources .docx / .pdf pour la newsletter (extraction de texte côté navigateur) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
+    <script src="parcours-modeles-20.js" defer></script>
     <link rel="stylesheet" href="../style.css">
     
     <script>
@@ -392,10 +393,6 @@
             <div class="nav-item" onclick="showTab('newsletter')" id="nav-newsletter">
                 <i class="fas fa-bullhorn w-4 text-center"></i>
                 <span>Newsletter &amp; Réseaux</span>
-            </div>
-            <div class="nav-item" onclick="showTab('planning')" id="nav-planning">
-                <i class="fas fa-calendar-alt w-4 text-center"></i>
-                <span>Planning</span>
             </div>
             <div class="nav-item" onclick="showTab('mails')" id="nav-mails">
                 <i class="fas fa-envelope-open-text w-4 text-center"></i>
@@ -1627,6 +1624,14 @@
                         class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
                         <i class="fas fa-paper-plane mr-1.5"></i>Envoyées
                     </button>
+                    <button onclick="nlShowTab('parcours')" data-nltab="parcours"
+                        class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
+                        <i class="fas fa-route mr-1.5"></i>Parcours
+                    </button>
+                    <button onclick="nlShowTab('planning')" data-nltab="planning"
+                        class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
+                        <i class="fas fa-calendar-alt mr-1.5"></i>Planning
+                    </button>
                 </div>
             </div>
 
@@ -1913,6 +1918,22 @@
                         <h4 class="cormorant text-2xl text-gold mb-6 flex items-center gap-3">
                             <i class="fas fa-broadcast-tower text-gold/60 text-lg"></i> Publier
                         </h4>
+
+                        <!-- Parcours -->
+                        <div class="flex items-center justify-between gap-4 flex-wrap mb-8 bg-white/5 border border-gold/15 rounded-xl px-5 py-4">
+                            <div class="flex items-center gap-3">
+                                <i class="fas fa-route text-gold/60"></i>
+                                <div>
+                                    <p class="text-sm font-semibold text-gold">Ajouter ce brouillon au parcours</p>
+                                    <p class="text-xs text-gold/40">Le place à la suite de la séquence "parcours" (onglet Parcours), sans l'envoyer.</p>
+                                </div>
+                            </div>
+                            <button onclick="nlAddCurrentToParcours()" id="nl-btn-add-parcours"
+                                class="bg-gold/10 text-gold border border-gold/30 rounded-lg px-4 py-2 text-sm hover:bg-gold/20 transition whitespace-nowrap">
+                                <i class="fas fa-route mr-1"></i>Ajouter au parcours
+                            </button>
+                        </div>
+
                         <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
                             <!-- Email abonnés -->
@@ -2156,6 +2177,66 @@
                 <div class="grid grid-cols-1 gap-3" id="nl-ideas-list">
                     <div class="text-center py-12 text-gold/30 cormorant text-lg">Chargement...</div>
                 </div>
+            </div>
+
+            <!-- ── SOUS-ONGLET : PARCOURS ── -->
+            <div id="nl-tab-parcours" class="nl-tab-content hidden">
+                <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+                    <div>
+                        <h4 class="cormorant text-xl text-gold">Séquence d'emails "parcours"</h4>
+                        <p class="text-light-gold/50 text-sm mt-1">Brouillons marqués pour la séquence, dans l'ordre d'envoi. L'envoi lui-même reste manuel : ce n'est pas encore une automatisation programmée.</p>
+                    </div>
+                    <button onclick="parcoursImportModeles()" id="nl-parcours-import-btn"
+                        class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition whitespace-nowrap">
+                        <i class="fas fa-download mr-1"></i>Importer les 20 modèles
+                    </button>
+                </div>
+                <div id="nl-parcours-status" class="hidden mb-4 px-4 py-3 rounded-lg text-sm border"></div>
+                <div id="nl-parcours-list" class="space-y-2">
+                    <p class="text-light-gold/40 text-sm text-center py-8">Chargement…</p>
+                </div>
+            </div>
+
+            <!-- ── SOUS-ONGLET : PLANNING ── -->
+            <div id="nl-tab-planning" class="nl-tab-content hidden">
+                <section class="mb-10">
+                    <div class="flex items-center justify-between mb-6">
+                        <div>
+                            <h4 class="cormorant text-xl text-gold">Planning éditorial</h4>
+                            <p class="text-light-gold/50 text-sm mt-1">Newsletters programmées et brouillons en cours</p>
+                        </div>
+                        <button onclick="loadPlanning()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition">
+                            <i class="fas fa-sync-alt mr-1"></i>Actualiser
+                        </button>
+                    </div>
+                    <div id="planning-list" class="space-y-3">
+                        <p class="text-light-gold/40 text-sm text-center py-8">Chargement…</p>
+                    </div>
+                </section>
+
+                <!-- Prototype livret audio -->
+                <section class="mb-10">
+                    <div class="mb-4">
+                        <h4 class="cormorant text-xl text-gold">Livret audio <span class="text-xs text-gold/40 font-normal align-middle ml-2 px-2 py-0.5 border border-gold/20 rounded-full">Prototype</span></h4>
+                        <p class="text-light-gold/50 text-sm mt-1">Colle un texte, génère une voix off avec ElevenLabs, écoute le résultat pour juger la qualité avant d'aller plus loin.</p>
+                    </div>
+                    <div class="stat-card rounded-xl p-5">
+                        <textarea id="audio-text-input" rows="6"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-gold resize-y mb-3"
+                            placeholder="Colle ici le texte à transformer en audio (max 4500 caractères par génération)..."></textarea>
+                        <div class="flex flex-wrap items-center gap-3 mb-2">
+                            <button onclick="generateAudio()" id="audio-generate-btn" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition">
+                                <i class="fas fa-microphone mr-1"></i>Générer l'audio
+                            </button>
+                            <span id="audio-char-count" class="text-xs text-light-gold/30"></span>
+                        </div>
+                        <p id="audio-status" class="text-xs mt-2 hidden"></p>
+                        <div id="audio-result" class="hidden mt-4 flex flex-col sm:flex-row items-start gap-3 border-t border-gold/10 pt-4">
+                            <audio id="audio-player" controls class="w-full sm:w-auto"></audio>
+                            <a id="audio-download-link" href="#" target="_blank" class="shrink-0 text-xs bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-2 hover:bg-gold/25 transition"><i class="fas fa-download mr-1"></i>Télécharger le MP3</a>
+                        </div>
+                    </div>
+                </section>
             </div>
         </section>
         </div><!-- /tab-newsletter -->
@@ -2905,48 +2986,6 @@
             </div>
         </div><!-- /tab-insights -->
 
-        <!-- ══ ONGLET : PLANNING ══ -->
-        <div id="tab-planning" class="tab-panel">
-        <section class="mb-10">
-            <div class="flex items-center justify-between mb-6">
-                <div>
-                    <h3 class="cormorant text-2xl font-bold text-gold">Planning éditorial</h3>
-                    <p class="text-light-gold/50 text-sm mt-1">Newsletters programmées et brouillons en cours</p>
-                </div>
-                <button onclick="loadPlanning()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition">
-                    <i class="fas fa-sync-alt mr-1"></i>Actualiser
-                </button>
-            </div>
-            <div id="planning-list" class="space-y-3">
-                <p class="text-light-gold/40 text-sm text-center py-8">Chargement…</p>
-            </div>
-        </section>
-
-        <!-- Prototype livret audio -->
-        <section class="mb-10">
-            <div class="mb-4">
-                <h3 class="cormorant text-2xl font-bold text-gold">Livret audio <span class="text-xs text-gold/40 font-normal align-middle ml-2 px-2 py-0.5 border border-gold/20 rounded-full">Prototype</span></h3>
-                <p class="text-light-gold/50 text-sm mt-1">Colle un texte, génère une voix off avec ElevenLabs, écoute le résultat pour juger la qualité avant d'aller plus loin.</p>
-            </div>
-            <div class="stat-card rounded-xl p-5">
-                <textarea id="audio-text-input" rows="6"
-                    class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-gold resize-y mb-3"
-                    placeholder="Colle ici le texte à transformer en audio (max 4500 caractères par génération)..."></textarea>
-                <div class="flex flex-wrap items-center gap-3 mb-2">
-                    <button onclick="generateAudio()" id="audio-generate-btn" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition">
-                        <i class="fas fa-microphone mr-1"></i>Générer l'audio
-                    </button>
-                    <span id="audio-char-count" class="text-xs text-light-gold/30"></span>
-                </div>
-                <p id="audio-status" class="text-xs mt-2 hidden"></p>
-                <div id="audio-result" class="hidden mt-4 flex flex-col sm:flex-row items-start gap-3 border-t border-gold/10 pt-4">
-                    <audio id="audio-player" controls class="w-full sm:w-auto"></audio>
-                    <a id="audio-download-link" href="#" target="_blank" class="shrink-0 text-xs bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-2 hover:bg-gold/25 transition"><i class="fas fa-download mr-1"></i>Télécharger le MP3</a>
-                </div>
-            </div>
-        </section>
-        </div><!-- /tab-planning -->
-
         <!-- ══ ONGLET : MAILS ══ -->
         <div id="tab-mails" class="tab-panel">
         <section class="mb-10">
@@ -3285,7 +3324,6 @@
             'nl-subscribers':   'Newsletter — Abonnés',
             blog:               'Blog',
             newsletter:         'Newsletter & Réseaux',
-            planning:           'Planning éditorial',
             mails:              'Mails du site',
             insights:           'Insights — Intentions de tirages',
             temoignages:        'Témoignages',
@@ -3327,7 +3365,6 @@
             if (name === 'etude')          loadExperiment();
             if (name === 'comptabilite')   { loadComptabilite(); loadCosts(); }
             if (name === 'insights')       loadIntentionsList();
-            if (name === 'planning')       loadPlanning();
             if (name === 'exports')        renderExports();
             if (name === 'settings')       { loadSettings(); loadFeatureFlags(); }
             if (name === 'blog')           blogLoadList();
@@ -5361,6 +5398,8 @@
             if (name === 'scheduled') nlRenderScheduled();
             if (name === 'sent') { nlRenderSent(); nlLoadCampaignStats(); }
             if (name === 'testers') nlLoadTesters();
+            if (name === 'parcours') nlRenderParcours();
+            if (name === 'planning') loadPlanning();
         }
 
         function nlSetStep(step) {
@@ -6286,6 +6325,17 @@
                 const banner = nlGetBanner();
                 if (banner) extra.promo_banner = banner;
 
+                // extra est reconstruit ici depuis les seuls champs visibles dans
+                // l'éditeur : sans ça, ré-enregistrer un brouillon déjà dans le
+                // parcours (extra.canal/ordre) effacerait silencieusement sa place
+                // dans la séquence à chaque modification.
+                const existingDraft = nlDrafts.find(d => d.id === nlCurrentDraftId);
+                if (existingDraft?.extra?.canal === 'parcours') {
+                    extra.canal = 'parcours';
+                    extra.ordre = existingDraft.extra.ordre;
+                    if (existingDraft.extra.registre) extra.registre = existingDraft.extra.registre;
+                }
+
                 const subjectEl = document.getElementById('nl-subject');
                 const rawSubject = subjectEl.value.trim();
                 const prefix = "Rudy d'ORADIA - ";
@@ -6906,6 +6956,179 @@
                     </div>
                 </div>`;
             }).join('');
+        }
+
+        // ══════════ PARCOURS (séquence d'emails) ══════════
+        // Un brouillon "fait partie" du parcours quand son extra.canal === 'parcours',
+        // avec extra.ordre pour le tri. Pas de nouvelle table : on réutilise
+        // newsletter_drafts, comme les autres classifications (type promo/newsletter).
+        function parcoursStatus(type, msg) {
+            const el = document.getElementById('nl-parcours-status');
+            if (!el) return;
+            el.className = 'mb-4 px-4 py-3 rounded-lg text-sm border';
+            if (type === 'success') el.classList.add('bg-green-500/10', 'border-green-500/30', 'text-green-300');
+            if (type === 'error')   el.classList.add('bg-red-500/10', 'border-red-500/30', 'text-red-300');
+            if (type === 'info')    el.classList.add('bg-gold/10', 'border-gold/30', 'text-gold');
+            el.textContent = msg;
+            el.classList.remove('hidden');
+            if (type === 'success') setTimeout(() => el.classList.add('hidden'), 4000);
+        }
+
+        function parcoursItems() {
+            return nlDrafts
+                .filter(d => d.extra && d.extra.canal === 'parcours')
+                .sort((a, b) => (a.extra?.ordre ?? 0) - (b.extra?.ordre ?? 0));
+        }
+
+        function nlRenderParcours() {
+            const el = document.getElementById('nl-parcours-list');
+            if (!el) return;
+            const items = parcoursItems();
+
+            const importBtn = document.getElementById('nl-parcours-import-btn');
+            if (importBtn) importBtn.style.display = items.length > 0 ? 'none' : '';
+
+            if (items.length === 0) {
+                el.innerHTML = '<p class="text-gold/30 italic text-center py-12">Aucun email dans le parcours pour l\'instant. Importe les 20 modèles, ou ajoute un brouillon validé depuis l\'onglet Générer.</p>';
+                return;
+            }
+            const registreLabel = { inspiree: 'Inspirée', incarnee: 'Incarnée', lucide: 'Lucide' };
+            const registreColor = { inspiree: 'text-purple-300 border-purple-500/30 bg-purple-500/10', incarnee: 'text-blue-300 border-blue-500/30 bg-blue-500/10', lucide: 'text-amber-300 border-amber-500/30 bg-amber-500/10' };
+            el.innerHTML = items.map((d, i) => {
+                const registre = d.extra?.registre;
+                const badge = registre ? `<span class="text-xs px-2 py-0.5 rounded-full border ${registreColor[registre] || 'text-gold/60 border-gold/20 bg-white/5'}">${registreLabel[registre] || registre}</span>` : '';
+                const statutBadge = d.statut === 'envoyé'
+                    ? '<span class="text-xs px-2 py-0.5 rounded-full border border-green-500/30 bg-green-500/10 text-green-300">Envoyé</span>'
+                    : '<span class="text-xs px-2 py-0.5 rounded-full border border-gold/20 bg-white/5 text-gold/50">Brouillon</span>';
+                return `<div class="stat-card rounded-xl p-4 flex items-center gap-3">
+                    <div class="flex flex-col gap-1 flex-shrink-0">
+                        <button onclick="parcoursMove('${d.id}', -1)" ${i === 0 ? 'disabled' : ''} class="w-6 h-6 flex items-center justify-center rounded border border-gold/20 text-gold/60 hover:bg-gold/10 hover:text-gold transition text-xs disabled:opacity-20 disabled:cursor-default">
+                            <i class="fas fa-chevron-up"></i>
+                        </button>
+                        <button onclick="parcoursMove('${d.id}', 1)" ${i === items.length - 1 ? 'disabled' : ''} class="w-6 h-6 flex items-center justify-center rounded border border-gold/20 text-gold/60 hover:bg-gold/10 hover:text-gold transition text-xs disabled:opacity-20 disabled:cursor-default">
+                            <i class="fas fa-chevron-down"></i>
+                        </button>
+                    </div>
+                    <span class="cormorant text-2xl text-gold/40 w-8 text-center flex-shrink-0">${i + 1}</span>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-gold font-semibold truncate">${d.subject || 'Sans titre'}</p>
+                        <div class="flex gap-2 mt-1 flex-wrap">${badge}${statutBadge}</div>
+                    </div>
+                    <div class="flex gap-2 flex-shrink-0">
+                        <button onclick="nlPreviewDraft('${d.id}')" class="bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg px-3 py-1.5 text-xs hover:bg-blue-500/30 transition">
+                            <i class="fas fa-eye mr-1"></i>Aperçu
+                        </button>
+                        <button onclick="nlOpenDraft('${d.id}')" class="bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 text-xs hover:bg-gold/20 transition">
+                            <i class="fas fa-pen mr-1"></i>Modifier
+                        </button>
+                        <button onclick="parcoursRemove('${d.id}')" class="bg-red-500/10 text-red-400 border border-red-500/20 rounded-lg px-3 py-1.5 text-xs hover:bg-red-500/20 transition">
+                            <i class="fas fa-times mr-1"></i>Retirer
+                        </button>
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function parcoursSet(draftId, ordre) {
+            const res = await adminFetch('/api/admin/newsletter?action=parcours-set', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ draft_id: draftId, ordre })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data.error || 'Erreur');
+            return data;
+        }
+
+        async function parcoursMove(id, direction) {
+            const items = parcoursItems();
+            const idx = items.findIndex(d => d.id === id);
+            const swapIdx = idx + direction;
+            if (idx === -1 || swapIdx < 0 || swapIdx >= items.length) return;
+            const a = items[idx], b = items[swapIdx];
+            const ordreA = a.extra.ordre, ordreB = b.extra.ordre;
+            try {
+                await Promise.all([parcoursSet(a.id, ordreB), parcoursSet(b.id, ordreA)]);
+                a.extra.ordre = ordreB;
+                b.extra.ordre = ordreA;
+                nlRenderParcours();
+            } catch(e) {
+                parcoursStatus('error', e.message || 'Erreur lors du réordonnancement');
+            }
+        }
+
+        async function parcoursRemove(id) {
+            if (!confirm('Retirer cet email du parcours ? Le brouillon lui-même sera conservé.')) return;
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=parcours-remove', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ draft_id: id })
+                });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                const draft = nlDrafts.find(d => d.id === id);
+                if (draft && draft.extra) { delete draft.extra.canal; delete draft.extra.ordre; }
+                nlRenderParcours();
+                parcoursStatus('success', 'Retiré du parcours.');
+            } catch(e) {
+                parcoursStatus('error', e.message || 'Erreur');
+            }
+        }
+
+        // Ajoute (ou déplace) le brouillon en cours d'édition dans le parcours,
+        // à la suite du dernier élément existant.
+        async function nlAddCurrentToParcours() {
+            if (!nlCurrentDraftId) return parcoursStatus('error', 'Sauvegarde d\'abord le brouillon.');
+            const btn = document.getElementById('nl-btn-add-parcours');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Ajout…'; }
+            try {
+                const items = parcoursItems();
+                const nextOrdre = items.length ? Math.max(...items.map(d => d.extra?.ordre ?? 0)) + 1 : 1;
+                await parcoursSet(nlCurrentDraftId, nextOrdre);
+                const draft = nlDrafts.find(d => d.id === nlCurrentDraftId);
+                if (draft) draft.extra = { ...(draft.extra || {}), canal: 'parcours', ordre: nextOrdre };
+                nlStatus('success', `Ajouté au parcours (position ${nextOrdre}).`);
+                if (btn) btn.innerHTML = '<i class="fas fa-check mr-1"></i>Dans le parcours';
+            } catch(e) {
+                nlStatus('error', e.message || 'Erreur lors de l\'ajout au parcours');
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-route mr-1"></i>Ajouter au parcours'; }
+            }
+        }
+
+        // Importe les 20 modèles embarqués (admin/parcours-modeles-20.js) en brouillons
+        // "parcours", en sautant ceux déjà présents (comparaison sur le sujet) pour
+        // pouvoir cliquer sans risque même si l'import a déjà été fait.
+        async function parcoursImportModeles() {
+            if (!window.PARCOURS_MODELES_20) return parcoursStatus('error', 'Fichier des modèles introuvable (parcours-modeles-20.js).');
+            const existingSubjects = new Set(nlDrafts.filter(d => d.extra && d.extra.canal === 'parcours').map(d => d.subject));
+            const toImport = window.PARCOURS_MODELES_20.filter(m => !existingSubjects.has(m.subject));
+            if (toImport.length === 0) return parcoursStatus('info', 'Les 20 modèles sont déjà importés.');
+
+            const btn = document.getElementById('nl-parcours-import-btn');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Import…'; }
+            let ok = 0, failed = 0;
+            for (const item of toImport) {
+                try {
+                    const res = await adminFetch('/api/admin/newsletter?action=save', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            subject: item.subject,
+                            content: item.content,
+                            intention: item.intention,
+                            type: item.type,
+                            images: item.images,
+                            extra: item.extra
+                        })
+                    });
+                    if (res.ok) ok++; else failed++;
+                } catch(_) { failed++; }
+            }
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-download mr-1"></i>Importer les 20 modèles'; }
+            parcoursStatus(failed ? 'error' : 'success', `${ok} email(s) importé(s)${failed ? `, ${failed} échec(s)` : ''}.`);
+            await nlLoadDrafts();
+            nlRenderParcours();
         }
 
         async function nlPreviewDraft(id) {
@@ -8080,7 +8303,7 @@
         }
 
         // ── Raccourcis clavier ──
-        const KEY_TABS = { '1':'overview', '2':'waitlist', '3':'preorders', '4':'donors', '5':'newsletter', '6':'planning', '7':'analytics', '8':'comptabilite', '9':'monitoring' };
+        const KEY_TABS = { '1':'overview', '2':'waitlist', '3':'preorders', '4':'donors', '5':'newsletter', '7':'analytics', '8':'comptabilite', '9':'monitoring' };
         document.addEventListener('keydown', (e) => {
             const tag = (e.target.tagName || '').toLowerCase();
             if (tag === 'input' || tag === 'textarea' || tag === 'select' || e.target.isContentEditable) return;
