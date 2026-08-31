@@ -1202,8 +1202,11 @@ async function handleData(req, res) {
           const depenseRows = (txs||[]).filter(t => t.type === 'depense');
           const totalRecettes = recetteRows.reduce((s,t) => s + parseFloat(t.amount), 0);
           const totalDepenses = depenseRows.reduce((s,t) => s + parseFloat(t.amount), 0);
+          // Dons en espèces : comptés dans totalRecettes (argent réellement reçu) mais hors
+          // base URSSAF — ils ne transitent pas par le compte pro et ne sont pas déclarés.
+          const recDeclarables = totalRecettes - recetteRows.filter(t => t.source === 'don-especes').reduce((s,t) => s + parseFloat(t.amount), 0);
           const recBIC = recetteRows.filter(t => t.source === 'precommande' || t.source === 'abonnement').reduce((s,t) => s + parseFloat(t.amount), 0);
-          const recBNC = totalRecettes - recBIC;
+          const recBNC = recDeclarables - recBIC;
           const urssaf = recBIC * 0.123 + recBNC * 0.211;
           // Frais Stripe réels du mois (balance transactions), pas une estimation par taux :
           // le taux dépend de la carte du client et Stripe prélève aussi des frais hors
@@ -1352,8 +1355,9 @@ async function handleData(req, res) {
         if (isNaN(new Date(dateIso).getTime())) return res.status(400).json({ error: 'Date invalide' });
 
         const uid = crypto.randomUUID();
+        const sessionRef = `manual-cash-${uid}`;
         const { error } = await supabase.from('donors').insert({
-          stripe_session_id: `manual-cash-${uid}`,
+          stripe_session_id: sessionRef,
           email: `dons-especes+${uid}@oradia.fr`,
           full_name: cleanName,
           // amount_total est stocké en EUROS (pas en centimes) depuis la migration
@@ -1367,6 +1371,18 @@ async function handleData(req, res) {
           created_at: dateIso
         });
         if (error) throw error;
+        // Visible dans la comptabilité comme les autres recettes — source distincte
+        // 'don-especes' (et non 'don') pour que le calcul URSSAF sache l'exclure de
+        // sa base (cet argent n'est pas déclaré, cf. décision explicite du fondateur).
+        await supabase.from('transactions').insert({
+          date: dateIso.split('T')[0],
+          type: 'recette',
+          category: 'don',
+          description: `Don (espèces) — ${cleanName}`,
+          amount: amountNum,
+          source: 'don-especes',
+          source_ref: sessionRef
+        }).then(({ error: txError }) => { if (txError) console.error('[add-cash-donation] transactions insert:', txError.message); });
         return res.status(200).json({ success: true });
       }
 
@@ -2088,9 +2104,10 @@ async function handleData(req, res) {
         const planPriceEur = p => p === 'decouverte' ? 5 : 8;
         const toInsert = [
             ...(preorders||[]).filter(p=>!isExcluded(p.email)).map(p => ({ date: p.created_at?.split('T')[0], type:'recette', category:'précommande', description:`Précommande ${p.offer||''} — ${p.full_name||p.email||''}`, amount: parseFloat(p.amount_total)||0, source:'precommande', source_ref: p.stripe_session_id })).filter(t=>t.amount>0),
-            // Dons en espèces exclus : reçus hors Stripe/compte pro, ils ne sont pas
-            // à déclarer à l'URSSAF et ne doivent pas entrer dans la comptabilité.
-            ...(donors||[]).filter(d=>!isExcluded(d.email) && d.source !== 'don-especes').map(d => ({ date: d.created_at?.split('T')[0], type:'recette', category:'don', description:`Don — ${d.full_name||d.email||''}`, amount: parseFloat(d.amount_total)||0, source:'don', source_ref: d.stripe_session_id })).filter(t=>t.amount>0),
+            // Dons en espèces visibles en comptabilité (source distincte 'don-especes') mais
+            // exclus de la base de calcul URSSAF plus bas (voir GET /transactions) — reçus
+            // hors Stripe/compte pro, cet argent n'est pas déclaré.
+            ...(donors||[]).filter(d=>!isExcluded(d.email)).map(d => ({ date: d.created_at?.split('T')[0], type:'recette', category:'don', description: d.source === 'don-especes' ? `Don (espèces) — ${d.full_name||d.email||''}` : `Don — ${d.full_name||d.email||''}`, amount: parseFloat(d.amount_total)||0, source: d.source === 'don-especes' ? 'don-especes' : 'don', source_ref: d.stripe_session_id })).filter(t=>t.amount>0),
             ...(guidances||[]).filter(g=>!isExcluded(g.client_email)).map(g => ({ date: g.created_at?.split('T')[0], type:'recette', category:'guidance', description:`Guidance — ${g.client_name||g.client_email||''}`, amount: (g.amount||0)/100, source:'guidance', source_ref: g.cal_booking_uid })).filter(t=>t.amount>0),
             ...(subs||[]).filter(s=>!isExcluded(s.email) && !s.is_free).map(s => ({ date: s.created_at?.split('T')[0], type:'recette', category:'abonnement', description:`Abonnement Tore ${s.plan||'complet'} — ${s.full_name||s.email||''}`, amount: planPriceEur(s.plan), source:'abonnement', source_ref: `sub_${s.email}_${s.created_at?.split('T')[0]}` })),
             ...(kickstarterBackers||[]).filter(k=>!isExcluded(k.email) && (k.currency||'EUR').toUpperCase()==='EUR' && k.backer_number).map(k => ({ date: (k.pledged_at||k.imported_at)?.split('T')[0], type:'recette', category:'kickstarter', description:`Kickstarter ${k.reward_title||''} — ${k.backer_name||k.email||''}`, amount: parseFloat(k.pledge_amount)||0, source:'kickstarter', source_ref: `ks_${k.backer_number}` })).filter(t=>t.amount>0),
@@ -6952,11 +6969,16 @@ Réponds en français, sans tiret long, format markdown compact.`
         const depenses = (data || []).filter(t => t.type === 'depense').reduce((s, t) => s + parseFloat(t.amount), 0);
 
         // Distinction fiscale micro-entrepreneur : vente de marchandises (BIC, 12,3%)
-        // vs prestations de services (BNC, 21,1%) — taux 2026
+        // vs prestations de services (BNC, 21,1%) — taux 2026. Les dons en espèces sont
+        // visibles dans "recettes" (argent réellement reçu) mais sortent de cette base :
+        // ils ne transitent pas par le compte pro et ne sont pas déclarés à l'URSSAF.
+        const recettesDeclarables = recettes - recetteRows
+          .filter(t => t.source === 'don-especes')
+          .reduce((s, t) => s + parseFloat(t.amount), 0);
         const recettesVentesBIC = recetteRows
           .filter(t => t.source === 'precommande' || t.source === 'abonnement')
           .reduce((s, t) => s + parseFloat(t.amount), 0);
-        const recettesServicesBNC = recettes - recettesVentesBIC;
+        const recettesServicesBNC = recettesDeclarables - recettesVentesBIC;
         const URSSAF_RATE_BIC = 0.123;
         const URSSAF_RATE_BNC = 0.211;
         const urssafBIC = recettesVentesBIC * URSSAF_RATE_BIC;
