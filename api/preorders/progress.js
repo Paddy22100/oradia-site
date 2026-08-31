@@ -1,5 +1,30 @@
 const { createClient } = require('@supabase/supabase-js');
 
+// Paliers de financement — montants issus des devis fabricant réels (WJPC,
+// août 2026, 1000 exemplaires, conversion $→€ ~0,863). Constantes de config,
+// à mettre à jour manuellement si les devis changent — jamais recalculées
+// depuis un nombre de précommandes ou un objectif arbitraire.
+const PALIERS = [
+  {
+    id: 1,
+    seuil: 700,
+    titre: 'Prototype financé',
+    description: 'Le prototype physique complet peut être commandé et validé.'
+  },
+  {
+    id: 2,
+    seuil: 3500,
+    titre: 'Acompte de production',
+    description: "L'acompte est couvert : la fabrication démarre officiellement."
+  },
+  {
+    id: 3,
+    seuil: 14000,
+    titre: 'Financement complet',
+    description: 'La production et la livraison des 1000 premiers exemplaires sont intégralement financées.'
+  }
+];
+
 function getSupabaseClient() {
   // URL Supabase du projet oradia-prod (nxzetkdozynyutlbhxdx)
   const supabaseUrl = process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co';
@@ -47,13 +72,14 @@ module.exports = async (req, res) => {
                               (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL);
     
     let sold = 0;
-    
+    let cagnotte = 0;
+
     if (hasSupabaseConfig) {
       try {
         const supabase = getSupabaseClient();
         const { data, error } = await supabase
           .from('preorders')
-          .select('id, items, paid_status')
+          .select('id, items, paid_status, amount_total')
           .eq('paid_status', 'completed');
 
         if (error) {
@@ -69,19 +95,44 @@ module.exports = async (req, res) => {
             } else {
               sold += 1;
             }
+            // amount_total sur preorders est en euros (voir api/stripe-webhook.js)
+            cagnotte += Number(row.amount_total) || 0;
+          }
+        }
+
+        // amount_total sur donors est aussi en euros depuis la correction
+        // appliquée par donors-amount-correction.sql (ne pas diviser par 100).
+        const { data: donorRows, error: donorsError } = await supabase
+          .from('donors')
+          .select('amount_total, paid_status')
+          .eq('paid_status', 'completed');
+
+        if (donorsError) {
+          console.error('Donors query failed:', donorsError.message);
+        } else {
+          for (const row of donorRows || []) {
+            cagnotte += Number(row.amount_total) || 0;
           }
         }
 
         // Backers Kickstarter (import manuel CSV, voir dashboard admin) : comptés au même
         // titre que les précommandes directes, 1 backer ≈ 1 oracle (même niveau d'estimation
-        // que le reste de ce compteur). La table peut ne pas encore exister si la migration
-        // supabase-migration-kickstarter-backers.sql n'a pas été appliquée : on ignore
-        // l'erreur plutôt que de casser le compteur public de précommandes.
-        const { count: ksCount, error: ksError } = await supabase
+        // que le reste de ce compteur), et leur pledge entre dans la cagnotte au même titre
+        // qu'une précommande ou un don. Seuls les pledges en EUR sont sommés — même règle que
+        // côté dashboard admin (lib/stripe-fees.js, import-transactions) : pas de taux de
+        // change inventé pour les autres devises. La table peut ne pas encore exister si la
+        // migration supabase-migration-kickstarter-backers.sql n'a pas été appliquée : on
+        // ignore l'erreur plutôt que de casser le compteur public de précommandes.
+        const { data: ksRows, error: ksError } = await supabase
           .from('kickstarter_backers')
-          .select('id', { count: 'exact', head: true });
-        if (!ksError && typeof ksCount === 'number') {
-          sold += ksCount;
+          .select('id, pledge_amount, currency');
+        if (!ksError && Array.isArray(ksRows)) {
+          sold += ksRows.length;
+          for (const row of ksRows) {
+            if ((row.currency || 'EUR').toUpperCase() === 'EUR') {
+              cagnotte += Number(row.pledge_amount) || 0;
+            }
+          }
         }
       } catch (dbError) {
         console.error('Database error:', dbError.message);
@@ -96,12 +147,38 @@ module.exports = async (req, res) => {
     const remaining = Math.max(goal - sold, 0);
     const percent = goal > 0 ? Math.min(Math.round((sold / goal) * 100), 100) : 0;
 
+    // Statut de chaque palier de financement, calculé depuis la cagnotte réelle.
+    // Le premier palier non atteint est "en cours" ; les suivants "a-venir".
+    let nextPending = true;
+    const paliers = PALIERS.map((p) => {
+      const atteint = cagnotte >= p.seuil;
+      let status = 'a-venir';
+      if (atteint) {
+        status = 'atteint';
+      } else if (nextPending) {
+        status = 'en-cours';
+        nextPending = false;
+      }
+      return {
+        id: p.id,
+        seuil: p.seuil,
+        titre: p.titre,
+        description: p.description,
+        status,
+        percent: Math.min(100, Math.round((cagnotte / p.seuil) * 100))
+      };
+    });
+    const allPaliersReached = paliers.every((p) => p.status === 'atteint');
+
     return res.status(200).json({
       success: true,
       sold,
       goal,
       remaining,
-      percent
+      percent,
+      cagnotte,
+      paliers,
+      allPaliersReached
     });
   } catch (error) {
     console.error('Preorder progress failed:', error.message);

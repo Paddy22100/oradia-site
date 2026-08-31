@@ -233,13 +233,9 @@
                 
                 const data = await response.json();
                 
-                const soldCount = document.getElementById('preorderSoldCount');
                 const rarityText = document.getElementById('rarityText');
-
-                // Animation des chiffres
-                if (soldCount) {
-                    animateValue(soldCount, 0, data.sold, 1000);
-                }
+                const paliersList = document.getElementById('paliersList');
+                const palierBanner = document.getElementById('palierBanner');
 
                 // Message de rareté dynamique — le chiffre exact n'apparaît
                 // qu'en fin d'édition, l'objectif total n'est jamais affiché
@@ -252,7 +248,34 @@
                         rarityText.textContent = `Édition limitée — premières séries en cours de réservation`;
                     }
                 }
-                
+
+                // Paliers de financement — entièrement pilotés par la réponse API,
+                // aucun seuil ni statut n'est recalculé ou deviné côté client.
+                if (paliersList && Array.isArray(data.paliers)) {
+                    paliersList.innerHTML = data.paliers.map(p => {
+                        const isAtteint = p.status === 'atteint';
+                        const isEnCours = p.status === 'en-cours';
+                        const barColor = isAtteint || isEnCours ? 'bg-gradient-to-r from-gold to-light-gold' : 'bg-gold/20';
+                        const icon = isAtteint
+                            ? '<i class="fas fa-check-circle text-gold"></i>'
+                            : (isEnCours ? '<i class="fas fa-hourglass-half text-gold/80"></i>' : '<i class="fas fa-lock text-light-gold/30"></i>');
+                        const textClass = isAtteint || isEnCours ? 'text-light-gold' : 'text-light-gold/40';
+                        return `
+                            <div class="text-left">
+                                <div class="mb-1">
+                                    <span class="${textClass} text-sm font-semibold flex items-center gap-2">${icon} ${p.titre}</span>
+                                </div>
+                                <div class="w-full bg-[rgba(212,175,55,0.1)] rounded-full h-2 overflow-hidden mb-1">
+                                    <div class="${barColor} h-full rounded-full transition-all duration-1000 ease-out" style="width: ${p.percent}%"></div>
+                                </div>
+                                <p class="${textClass} text-xs">${p.description}</p>
+                            </div>`;
+                    }).join('');
+                }
+                if (palierBanner) {
+                    palierBanner.classList.toggle('hidden', !data.allPaliersReached);
+                }
+
                 // Afficher le contenu
                 setTimeout(() => {
                     if (loadingEl) loadingEl.classList.add('hidden');
@@ -942,15 +965,8 @@
                     
                     <!-- Contenu progression (caché au chargement) -->
                     <div id="progressContent" class="hidden">
-                        <!-- Statistiques premium : nombre brut cadré en "premiers soutiens" plutôt
-                        qu'en ratio vers un objectif — pas de comparaison implicite pendant que
-                        les chiffres sont encore petits. -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-center mb-6 max-w-xl mx-auto">
-                            <div class="bg-[rgba(212,175,55,0.05)] rounded-lg p-4">
-                                <div id="preorderSoldCount" class="text-3xl font-bold text-gold mb-2 transition-all duration-500">0</div>
-                                <p class="text-light-gold text-base">premiers soutiens ont déjà rejoint l'aventure</p>
-                            </div>
-                            <div class="bg-[rgba(212,175,55,0.05)] rounded-lg p-4">
+                        <div class="max-w-xs mx-auto mb-6">
+                            <div class="bg-[rgba(212,175,55,0.05)] rounded-lg p-4 text-center">
                                 <div class="text-3xl font-bold text-gold mb-2"><i class="fas fa-gem"></i></div>
                                 <p class="text-light-gold text-base">édition limitée</p>
                             </div>
@@ -963,7 +979,17 @@
                                 <span id="rarityText">Édition limitée — places disponibles</span>
                             </p>
                         </div>
-                        
+
+                        <!-- Paliers de financement (précommandes + dons + Kickstarter) —
+                        pas de montant affiché, seule la progression relative compte. -->
+                        <div class="mb-6">
+                            <div id="palierBanner" class="hidden mb-4 p-3 rounded-lg bg-[rgba(212,175,55,0.15)] border border-gold/40 text-center text-gold font-semibold">
+                                🎉 Objectif atteint ! La fabrication est officiellement lancée.
+                            </div>
+
+                            <div id="paliersList" class="space-y-4 max-w-xl mx-auto"></div>
+                        </div>
+
                         <!-- Message important : garantie zéro-risque -->
                         <div class="p-4 bg-[rgba(212,175,55,0.1)] rounded-lg border border-gold/30">
                             <p class="text-light-gold text-base text-center font-semibold mb-1">
