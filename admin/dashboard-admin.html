@@ -399,10 +399,6 @@
                 <i class="fas fa-bullhorn w-4 text-center"></i>
                 <span>Newsletter &amp; Réseaux</span>
             </div>
-            <div class="nav-item" onclick="showTab('parcours')" id="nav-parcours">
-                <i class="fas fa-route w-4 text-center"></i>
-                <span>Parcours</span>
-            </div>
             <div class="nav-item" onclick="showTab('mails')" id="nav-mails">
                 <i class="fas fa-envelope-open-text w-4 text-center"></i>
                 <span>Mails</span>
@@ -1779,6 +1775,10 @@
                         class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
                         <i class="fas fa-paper-plane mr-1.5"></i>Envoyées
                     </button>
+                    <button onclick="nlShowTab('parcours')" data-nltab="parcours"
+                        class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
+                        <i class="fas fa-route mr-1.5"></i>Parcours
+                    </button>
                     <button onclick="nlShowTab('planning')" data-nltab="planning"
                         class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
                         <i class="fas fa-calendar-alt mr-1.5"></i>Planning
@@ -2319,6 +2319,38 @@
                 </div>
             </div>
 
+            <!-- TAB PARCOURS (vue séparée, lecture seule) -->
+            <!-- Combine les newsletters déjà envoyées (ordre chronologique) et les étapes
+                 du parcours une fois validées (extra.canal='parcours' + extra.parcours_valide
+                 =true, ordre extra.ordre) — validées depuis l'onglet Brouillons ci-dessus. -->
+            <div id="nl-tab-parcours" class="nl-tab-content hidden">
+                <section class="mb-10">
+                    <div class="mb-6">
+                        <h4 class="cormorant text-xl font-bold text-gold">Parcours newsletters</h4>
+                        <p class="text-light-gold/50 text-sm mt-1">Les newsletters déjà envoyées, puis les étapes du parcours une fois validées (relues + illustrées) depuis l'onglet Brouillons.</p>
+                    </div>
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full" id="parcoursTable">
+                                <thead class="bg-[rgba(5,20,40,0.8)]">
+                                    <tr>
+                                        <th class="px-6 py-4 text-left text-gold font-semibold">#</th>
+                                        <th class="px-6 py-4 text-left text-gold font-semibold">Type</th>
+                                        <th class="px-6 py-4 text-left text-gold font-semibold">Sujet</th>
+                                        <th class="px-6 py-4 text-left text-gold font-semibold">Date</th>
+                                        <th class="px-6 py-4 text-left text-gold font-semibold">Registre</th>
+                                        <th class="px-6 py-4 text-left text-gold font-semibold">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="parcoursTbody">
+                                    <tr><td colspan="6" class="px-6 py-8 text-center text-gold/30 cormorant text-lg">Chargement…</td></tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </section>
+            </div>
+
             <!-- TAB PLANNING -->
             <div id="nl-tab-planning" class="nl-tab-content hidden">
                 <section class="mb-10">
@@ -2362,39 +2394,6 @@
             </div>
         </section>
         </div><!-- /tab-newsletter -->
-
-        <!-- ══ ONGLET : PARCOURS NEWSLETTERS (vue séparée, lecture seule) ══ -->
-        <!-- Combine les newsletters déjà envoyées (ordre chronologique) et les étapes
-             du parcours une fois validées depuis Newsletter & Réseaux (extra.canal=
-             'parcours' + extra.parcours_valide=true, ordre extra.ordre). N'affecte
-             pas l'onglet Newsletter & Réseaux ci-dessus. -->
-        <div id="tab-parcours" class="tab-panel">
-        <section class="mb-10">
-            <div class="mb-6">
-                <h3 class="cormorant text-2xl font-bold text-gold">Parcours newsletters</h3>
-                <p class="text-light-gold/50 text-sm mt-1">Les newsletters déjà envoyées, puis les étapes du parcours une fois validées (relues + illustrées) depuis Newsletter &amp; Réseaux.</p>
-            </div>
-            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
-                <div class="overflow-x-auto">
-                    <table class="w-full" id="parcoursTable">
-                        <thead class="bg-[rgba(5,20,40,0.8)]">
-                            <tr>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">#</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Type</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Sujet</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Date</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Registre</th>
-                                <th class="px-6 py-4 text-left text-gold font-semibold">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody id="parcoursTbody">
-                            <tr><td colspan="6" class="px-6 py-8 text-center text-gold/30 cormorant text-lg">Chargement…</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-        </div><!-- /tab-parcours -->
 
         <!-- ══ ONGLET : SUPPORT / TÉMOIGNAGES (#30) ══ -->
         <div id="tab-support" class="tab-panel">
@@ -3568,7 +3567,6 @@
             'nl-subscribers':   'Newsletter — Abonnés',
             blog:               'Blog',
             newsletter:         'Newsletter & Réseaux',
-            parcours:           'Parcours newsletters',
             mails:              'Mails du site',
             insights:           'Insights — Intentions de tirages',
             temoignages:        'Témoignages',
@@ -3614,7 +3612,6 @@
             if (name === 'exports')        renderExports();
             if (name === 'settings')       { loadSettings(); loadFeatureFlags(); }
             if (name === 'blog')           blogLoadList();
-            if (name === 'parcours')       nlLoadParcours();
         }
 
         // ══════════ GESTION DU BLOG ══════════
@@ -6009,6 +6006,7 @@
             if (name === 'sent') { nlRenderSent(); nlLoadCampaignStats(); }
             if (name === 'testers') nlLoadTesters();
             if (name === 'planning') loadPlanning();
+            if (name === 'parcours') nlLoadParcours();
         }
 
         function nlSetStep(step) {
@@ -7775,6 +7773,16 @@
             if (!draft) return nlStatus('error', 'Brouillon introuvable');
 
             const extra = draft.extra || {};
+            // Un brouillon sans texte produit un aperçu techniquement valide mais visuellement
+            // vide (juste l'en-tête, le titre, le bouton et la signature) — ce qui ressemble à
+            // un aperçu cassé alors que c'est simplement un brouillon jamais rédigé. On le
+            // signale explicitement pour éviter de le confondre avec un bug du dashboard.
+            const isEmptyContent = !draft.content || !String(draft.content).replace(/<[^>]+>/g, '').replace(/&nbsp;|&#160;/gi, ' ').trim();
+            const emptyWarning = isEmptyContent
+                ? `<div class="mb-3 px-4 py-2 bg-amber-500/10 border border-amber-500/30 rounded-lg text-amber-300 text-xs w-full" style="max-width:700px;">
+                    <i class="fas fa-triangle-exclamation mr-1"></i>Ce brouillon n'a pas encore de contenu rédigé — l'aperçu ci-dessous n'affichera que l'en-tête et le pied de page.
+                   </div>`
+                : '';
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 z-50 flex flex-col bg-black/95 backdrop-blur-sm';
             modal.innerHTML = `
@@ -7785,7 +7793,8 @@
                         <i class="fas fa-times mr-1"></i>Fermer
                     </button>
                 </div>
-                <div class="flex-1 overflow-hidden bg-[#1a1a2a] flex items-start justify-center py-6 px-4 overflow-y-auto">
+                <div class="flex-1 overflow-hidden bg-[#1a1a2a] flex flex-col items-center py-6 px-4 overflow-y-auto">
+                    ${emptyWarning}
                     <div id="nl-preview-loading-draft" class="text-gold/40 text-sm flex items-center gap-2 mt-20">
                         <i class="fas fa-spinner fa-spin"></i> Génération de l'aperçu...
                     </div>
