@@ -117,14 +117,22 @@ module.exports = async (req, res) => {
 
         // Backers Kickstarter (import manuel CSV, voir dashboard admin) : comptés au même
         // titre que les précommandes directes, 1 backer ≈ 1 oracle (même niveau d'estimation
-        // que le reste de ce compteur). La table peut ne pas encore exister si la migration
-        // supabase-migration-kickstarter-backers.sql n'a pas été appliquée : on ignore
-        // l'erreur plutôt que de casser le compteur public de précommandes.
-        const { count: ksCount, error: ksError } = await supabase
+        // que le reste de ce compteur), et leur pledge entre dans la cagnotte au même titre
+        // qu'une précommande ou un don. Seuls les pledges en EUR sont sommés — même règle que
+        // côté dashboard admin (lib/stripe-fees.js, import-transactions) : pas de taux de
+        // change inventé pour les autres devises. La table peut ne pas encore exister si la
+        // migration supabase-migration-kickstarter-backers.sql n'a pas été appliquée : on
+        // ignore l'erreur plutôt que de casser le compteur public de précommandes.
+        const { data: ksRows, error: ksError } = await supabase
           .from('kickstarter_backers')
-          .select('id', { count: 'exact', head: true });
-        if (!ksError && typeof ksCount === 'number') {
-          sold += ksCount;
+          .select('id, pledge_amount, currency');
+        if (!ksError && Array.isArray(ksRows)) {
+          sold += ksRows.length;
+          for (const row of ksRows) {
+            if ((row.currency || 'EUR').toUpperCase() === 'EUR') {
+              cagnotte += Number(row.pledge_amount) || 0;
+            }
+          }
         }
       } catch (dbError) {
         console.error('Database error:', dbError.message);

@@ -233,19 +233,9 @@
                 
                 const data = await response.json();
                 
-                const soldCount = document.getElementById('preorderSoldCount');
                 const rarityText = document.getElementById('rarityText');
-                const cagnotteAmount = document.getElementById('cagnotteAmount');
                 const paliersList = document.getElementById('paliersList');
                 const palierBanner = document.getElementById('palierBanner');
-
-                // Animation des chiffres
-                if (soldCount) {
-                    animateValue(soldCount, 0, data.sold, 1000);
-                }
-                if (cagnotteAmount) {
-                    animateValue(cagnotteAmount, 0, Math.round(data.cagnotte || 0), 1000);
-                }
 
                 // Message de rareté dynamique — le chiffre exact n'apparaît
                 // qu'en fin d'édition, l'objectif total n'est jamais affiché
@@ -272,9 +262,8 @@
                         const textClass = isAtteint || isEnCours ? 'text-light-gold' : 'text-light-gold/40';
                         return `
                             <div class="text-left">
-                                <div class="flex items-center justify-between mb-1">
+                                <div class="mb-1">
                                     <span class="${textClass} text-sm font-semibold flex items-center gap-2">${icon} ${p.titre}</span>
-                                    <span class="${textClass} text-xs">${p.seuil.toLocaleString('fr-FR')} €</span>
                                 </div>
                                 <div class="w-full bg-[rgba(212,175,55,0.1)] rounded-full h-2 overflow-hidden mb-1">
                                     <div class="${barColor} h-full rounded-full transition-all duration-1000 ease-out" style="width: ${p.percent}%"></div>
@@ -976,15 +965,8 @@
                     
                     <!-- Contenu progression (caché au chargement) -->
                     <div id="progressContent" class="hidden">
-                        <!-- Statistiques premium : nombre brut cadré en "premiers soutiens" plutôt
-                        qu'en ratio vers un objectif — pas de comparaison implicite pendant que
-                        les chiffres sont encore petits. -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-center mb-6 max-w-xl mx-auto">
-                            <div class="bg-[rgba(212,175,55,0.05)] rounded-lg p-4">
-                                <div id="preorderSoldCount" class="text-3xl font-bold text-gold mb-2 transition-all duration-500">0</div>
-                                <p class="text-light-gold text-base">premiers soutiens ont déjà rejoint l'aventure</p>
-                            </div>
-                            <div class="bg-[rgba(212,175,55,0.05)] rounded-lg p-4">
+                        <div class="max-w-xs mx-auto mb-6">
+                            <div class="bg-[rgba(212,175,55,0.05)] rounded-lg p-4 text-center">
                                 <div class="text-3xl font-bold text-gold mb-2"><i class="fas fa-gem"></i></div>
                                 <p class="text-light-gold text-base">édition limitée</p>
                             </div>
@@ -998,22 +980,14 @@
                             </p>
                         </div>
 
-                        <!-- Cagnotte réelle (précommandes + dons) et paliers de financement -->
+                        <!-- Paliers de financement (précommandes + dons + Kickstarter) —
+                        pas de montant affiché, seule la progression relative compte. -->
                         <div class="mb-6">
-                            <p class="text-center text-light-gold/70 text-sm mb-1">Cagnotte réunie grâce à vos précommandes et vos dons</p>
-                            <p class="text-center text-gold text-3xl sm:text-4xl font-bold mb-6">
-                                <span id="cagnotteAmount">0</span> €
-                            </p>
-
                             <div id="palierBanner" class="hidden mb-4 p-3 rounded-lg bg-[rgba(212,175,55,0.15)] border border-gold/40 text-center text-gold font-semibold">
                                 🎉 Objectif atteint ! La fabrication est officiellement lancée.
                             </div>
 
                             <div id="paliersList" class="space-y-4 max-w-xl mx-auto"></div>
-
-                            <p class="text-center text-light-gold/40 text-xs mt-3">
-                                * Montants indicatifs (devis fabricant, conversion et frais de livraison réestimés au moment de l'expédition)
-                            </p>
                         </div>
 
                         <!-- Message important : garantie zéro-risque -->
