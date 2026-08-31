@@ -3474,9 +3474,10 @@ async function handleData(req, res) {
     const stripeDonorsNet = stripeDonorsTotal - stripeFee(stripeDonorsTotal, stripeDonorRows.length);
     const donorsNet       = stripeDonorsNet + cashDonorsTotal;
     // Cagnotte réellement disponible pour lancer la fabrication : précommandes nettes de
-    // frais Stripe ET hors part livraison (qui doit repartir en frais de port), plus les
-    // dons Stripe nets (dons en espèces exclus de la cagnotte, cf. consigne explicite).
-    const preordersCagnotteFabrication = Math.max(0, preordersNet - preordersShippingTotal + stripeDonorsNet);
+    // frais Stripe ET hors part livraison (qui doit repartir en frais de port), plus tous
+    // les dons nets (Stripe ET espèces — cet argent est réellement disponible pour financer
+    // la fabrication, même s'il n'entre pas dans la comptabilité/URSSAF, cf. import-transactions).
+    const preordersCagnotteFabrication = Math.max(0, preordersNet - preordersShippingTotal + donorsNet);
     const singleDrawNet      = singleDrawTotal      - stripeFee(singleDrawTotal,      singleDrawCount);
     const guidancesNet       = guidancesTotal       - stripeFee(guidancesTotal,       guidanceRows.length);
     const subscriptionsNet   = subscriptionsTotal   - stripeFee(subscriptionsTotal,   subscriptionRows.length);
@@ -4563,6 +4564,24 @@ async function handleNewsletter(req, res) {
         return res.status(200).json({ success: true, total: total || 0, unsent: unsent || 0, already_sent: (total || 0) - (unsent || 0) });
       }
 
+      // ── Vue séparée « Parcours » : les 20 étapes du parcours newsletters vivent dans
+      // la même table newsletter_drafts (extra.canal = 'parcours'), mais cette action
+      // est distincte de 'drafts' ci-dessous — celle-ci n'est ni lue ni modifiée, son
+      // tri (created_at DESC) et son rendu restent strictement inchangés. Ici, on
+      // sélectionne uniquement les entrées du parcours, triées par extra.ordre croissant.
+      if (action === 'drafts-parcours') {
+        const { data: parcours, error } = await supabase
+          .from('newsletter_drafts')
+          .select('*')
+          .eq('extra->>canal', 'parcours');
+        if (error) {
+          console.error('Error fetching parcours drafts:', error);
+          return res.status(500).json({ error: 'Erreur lors de la récupération du parcours' });
+        }
+        const sorted = (parcours || []).sort((a, b) => (Number(a.extra?.ordre) || 0) - (Number(b.extra?.ordre) || 0));
+        return res.status(200).json(sorted);
+      }
+
       if (action === 'drafts') {
         const id = url.searchParams.get('id');
         if (id) {
@@ -4576,9 +4595,17 @@ async function handleNewsletter(req, res) {
           return res.status(200).json(data);
         }
 
+        // Les étapes du parcours (extra.canal='parcours') ont leur propre vue dédiée
+        // (action 'drafts-parcours' ci-dessus) et ne doivent pas se mélanger ici avec
+        // les newsletters ponctuelles — tri et rendu de cette liste restent inchangés.
+        // Attention SQL : la plupart des brouillons existants n'ont pas extra.canal
+        // (=> extra->>canal est NULL). Un simple .neq() exclurait NULL <> 'parcours'
+        // (NULL, pas TRUE) et ferait donc disparaître TOUTES les newsletters existantes.
+        // Le .or() ci-dessous couvre explicitement le cas NULL.
         const { data: drafts, error } = await supabase
           .from('newsletter_drafts')
           .select('*')
+          .or('extra->>canal.is.null,extra->>canal.neq.parcours')
           .order('created_at', { ascending: false });
 
         if (error) {
