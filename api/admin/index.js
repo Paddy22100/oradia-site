@@ -2078,7 +2078,7 @@ async function handleData(req, res) {
         const isExcluded = (email) => email && ACCOUNTING_EXCLUDED_EMAILS.includes(String(email).toLowerCase().trim());
         // Import depuis preorders
         const { data: preorders } = await sb.from('preorders').select('created_at,amount_total,email,full_name,offer,stripe_session_id').eq('paid_status','completed');
-        const { data: donors } = await sb.from('donors').select('created_at,amount,email,full_name,stripe_session_id');
+        const { data: donors } = await sb.from('donors').select('created_at,amount_total,email,full_name,stripe_session_id,source');
         const { data: guidances } = await sb.from('guidances').select('created_at,amount,client_email,client_name,cal_booking_uid').in('status',['confirmed','completed']);
         const { data: subs } = await sb.from('tore_subscriptions').select('created_at,email,full_name,plan,status,is_free').neq('status','payment_failed');
         // Kickstarter : uniquement les pledges en EUR (les autres devises ne peuvent pas être
@@ -2088,7 +2088,9 @@ async function handleData(req, res) {
         const planPriceEur = p => p === 'decouverte' ? 5 : 8;
         const toInsert = [
             ...(preorders||[]).filter(p=>!isExcluded(p.email)).map(p => ({ date: p.created_at?.split('T')[0], type:'recette', category:'précommande', description:`Précommande ${p.offer||''} — ${p.full_name||p.email||''}`, amount: parseFloat(p.amount_total)||0, source:'precommande', source_ref: p.stripe_session_id })).filter(t=>t.amount>0),
-            ...(donors||[]).filter(d=>!isExcluded(d.email)).map(d => ({ date: d.created_at?.split('T')[0], type:'recette', category:'don', description:`Don — ${d.full_name||d.email||''}`, amount: parseFloat(d.amount)||0, source:'don', source_ref: d.stripe_session_id })).filter(t=>t.amount>0),
+            // Dons en espèces exclus : reçus hors Stripe/compte pro, ils ne sont pas
+            // à déclarer à l'URSSAF et ne doivent pas entrer dans la comptabilité.
+            ...(donors||[]).filter(d=>!isExcluded(d.email) && d.source !== 'don-especes').map(d => ({ date: d.created_at?.split('T')[0], type:'recette', category:'don', description:`Don — ${d.full_name||d.email||''}`, amount: parseFloat(d.amount_total)||0, source:'don', source_ref: d.stripe_session_id })).filter(t=>t.amount>0),
             ...(guidances||[]).filter(g=>!isExcluded(g.client_email)).map(g => ({ date: g.created_at?.split('T')[0], type:'recette', category:'guidance', description:`Guidance — ${g.client_name||g.client_email||''}`, amount: (g.amount||0)/100, source:'guidance', source_ref: g.cal_booking_uid })).filter(t=>t.amount>0),
             ...(subs||[]).filter(s=>!isExcluded(s.email) && !s.is_free).map(s => ({ date: s.created_at?.split('T')[0], type:'recette', category:'abonnement', description:`Abonnement Tore ${s.plan||'complet'} — ${s.full_name||s.email||''}`, amount: planPriceEur(s.plan), source:'abonnement', source_ref: `sub_${s.email}_${s.created_at?.split('T')[0]}` })),
             ...(kickstarterBackers||[]).filter(k=>!isExcluded(k.email) && (k.currency||'EUR').toUpperCase()==='EUR' && k.backer_number).map(k => ({ date: (k.pledged_at||k.imported_at)?.split('T')[0], type:'recette', category:'kickstarter', description:`Kickstarter ${k.reward_title||''} — ${k.backer_name||k.email||''}`, amount: parseFloat(k.pledge_amount)||0, source:'kickstarter', source_ref: `ks_${k.backer_number}` })).filter(t=>t.amount>0),
@@ -3388,6 +3390,10 @@ async function handleData(req, res) {
     const waitlistRows    = waitlistRes.data    || [];
     const preorderRows    = preordersRes.data   || [];
     const donorRows       = donorsRes.data      || [];
+    // Les dons en espèces sont suivis dans l'onglet Dons mais exclus de tout chiffre
+    // d'affaires/comptabilité : cet argent ne transite pas par Stripe/le compte pro et
+    // n'est pas à déclarer à l'URSSAF (contrairement aux dons Stripe classiques).
+    const revenueDonorRows = donorRows.filter(r => r.source !== 'don-especes');
     const singleDrawRows  = singleDrawsRes.data || [];
     const recentMessages  = supportRes.data     || [];
     const syncRows        = syncRes.data        || [];
@@ -3423,7 +3429,10 @@ async function handleData(req, res) {
     const day30 = 30 * day1;
 
     const sumPreorders = (rows) => rows.reduce((s, r) => s + (parseFloat(r.amount_total) || parseFloat(r.amount) || 0), 0);
-    const sumDonors    = (rows) => rows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+    // amount_total est la vraie colonne de la table donors (en euros, cf. migration
+    // donors-amount-correction.sql) — "amount" n'existe pas et faisait toujours
+    // remonter 0, ce qui excluait silencieusement tous les dons de ces totaux.
+    const sumDonors    = (rows) => rows.reduce((s, r) => s + (parseFloat(r.amount_total) || 0), 0);
 
     // Séparer commandes payées et abandons (en attente / échouées)
     const paidPreorderRows      = preorderRows.filter(r => r.paid_status === 'completed');
@@ -3432,8 +3441,8 @@ async function handleData(req, res) {
     const preordersToday = paidPreorderRows.filter(r => now - new Date(r.created_at).getTime() < day1);
     const preorders7d    = paidPreorderRows.filter(r => now - new Date(r.created_at).getTime() < day7);
     const preorders30d   = paidPreorderRows.filter(r => now - new Date(r.created_at).getTime() < day30);
-    const donors7d       = donorRows.filter(r => now - new Date(r.created_at).getTime() < day7);
-    const donors30d      = donorRows.filter(r => now - new Date(r.created_at).getTime() < day30);
+    const donors7d       = revenueDonorRows.filter(r => now - new Date(r.created_at).getTime() < day7);
+    const donors30d      = revenueDonorRows.filter(r => now - new Date(r.created_at).getTime() < day30);
     const guidancesToday = guidanceRows.filter(r => now - new Date(r.created_at).getTime() < day1);
     const guidances7d    = guidanceRows.filter(r => now - new Date(r.created_at).getTime() < day7);
     const guidances30d   = guidanceRows.filter(r => now - new Date(r.created_at).getTime() < day30);
@@ -3442,7 +3451,7 @@ async function handleData(req, res) {
     // Part "livraison" des précommandes payées : cette somme est fléchée vers l'affranchissement,
     // pas disponible pour financer la fabrication — on la retire pour obtenir la vraie cagnotte.
     const preordersShippingTotal = paidPreorderRows.reduce((s, r) => s + ((parseInt(r.shipping_price_cents, 10) || 0) / 100), 0);
-    const donorsTotal     = sumDonors(donorRows);
+    const donorsTotal     = sumDonors(revenueDonorRows);
     // Kickstarter : seuls les pledges en EUR entrent dans le total (voir import-transactions
     // pour la même règle côté comptabilité) — les autres devises restent visibles dans
     // l'onglet Kickstarter mais ne sont pas mélangées ici sans taux de change réel.
@@ -3460,7 +3469,7 @@ async function handleData(req, res) {
     // Cagnotte réellement disponible pour lancer la fabrication : net de frais Stripe
     // ET hors part livraison (qui doit repartir en frais de port, pas financer la fabrication).
     const preordersCagnotteFabrication = Math.max(0, preordersNet - preordersShippingTotal);
-    const donorsNet     = donorsTotal     - stripeFee(donorsTotal,     donorRows.length);
+    const donorsNet     = donorsTotal     - stripeFee(donorsTotal,     revenueDonorRows.length);
     const singleDrawNet      = singleDrawTotal      - stripeFee(singleDrawTotal,      singleDrawCount);
     const guidancesNet       = guidancesTotal       - stripeFee(guidancesTotal,       guidanceRows.length);
     const subscriptionsNet   = subscriptionsTotal   - stripeFee(subscriptionsTotal,   subscriptionRows.length);
@@ -3469,7 +3478,7 @@ async function handleData(req, res) {
     const kickstarterNet     = kickstarterTotal * (1 - KICKSTARTER_FEE_RATE);
     const globalNet          = preordersNet + donorsNet + singleDrawNet + guidancesNet + subscriptionsNet + kickstarterNet;
 
-    const donorsToday = donorRows.filter(r => now - new Date(r.created_at).getTime() < day1);
+    const donorsToday = revenueDonorRows.filter(r => now - new Date(r.created_at).getTime() < day1);
     const revToday    = sumPreorders(preordersToday) + sumDonors(donorsToday)  + sumGuidances(guidancesToday);
     const rev7d       = sumPreorders(preorders7d)    + sumDonors(donors7d)     + sumGuidances(guidances7d);
     const rev30d      = sumPreorders(preorders30d)   + sumDonors(donors30d)    + sumGuidances(guidances30d);
@@ -3503,9 +3512,14 @@ async function handleData(req, res) {
         },
         donors: {
           count:   donorRows.length,
+          // total/net = dons Stripe uniquement (chiffre d'affaires réel, déclarable à l'URSSAF).
+          // Les dons en espèces sont comptés à part : reçus hors circuit bancaire de
+          // l'entreprise, ils ne sont pas déclarés et ne doivent pas gonfler ce total.
           total:   donorsTotal,
           net:     donorsNet,
-          noEmail: donorRows.filter(r => !r.email).length
+          noEmail: donorRows.filter(r => !r.email).length,
+          cashCount: donorRows.length - revenueDonorRows.length,
+          cashTotal: sumDonors(donorRows.filter(r => r.source === 'don-especes'))
         },
         waitlist: {
           count:      waitlistRows.length,

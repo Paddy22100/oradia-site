@@ -9016,7 +9016,7 @@
                     row(r.email || '—', `${r.offer || ''} · ${r.amount_total ? r.amount_total + ' €' : ''} · ${dateFr(r.created_at)}`,
                         `<span class="text-xs px-2 py-0.5 rounded-full bg-gold/10 text-gold/70 ml-auto">${escapeHtmlFront(r.status || '')}</span>`));
                 html += section('Dons', 'fa-heart', donors, r =>
-                    row(r.email || '—', `${r.amount ? r.amount + ' €' : ''} · ${dateFr(r.created_at)}`));
+                    row(r.email || '—', `${r.amount_total ? r.amount_total + ' €' : ''} · ${dateFr(r.created_at)}${r.source === 'don-especes' ? ' · Espèces' : ''}`));
                 html += section('Contacts', 'fa-address-book', contacts, r =>
                     row(r.email || '—', `${(r.tags || []).join(', ')} · ${dateFr(r.created_at)}`,
                         `<span class="text-xs px-2 py-0.5 rounded-full ${r.status === 'unsubscribed' ? 'bg-red-500/15 text-red-300' : 'bg-green-500/15 text-green-300'} ml-auto">${r.status === 'unsubscribed' ? 'Désinscrit' : 'Actif'}</span>`));
@@ -10006,8 +10006,8 @@
                     const res = await adminFetch('/api/admin/data?section=donors&page=1&limit=500');
                     const rows = (await res.json()).data || [];
                     title = 'Dons';
-                    head = [['Date', 'Email', 'Montant']];
-                    body = rows.map(r => [dateFr(r.created_at), r.email || '—', r.amount != null ? Number(r.amount).toFixed(2) + ' €' : '—']);
+                    head = [['Date', 'Nom', 'Email', 'Montant', 'Source']];
+                    body = rows.map(r => [dateFr(r.created_at), r.full_name || '—', r.source === 'don-especes' ? '—' : (r.email || '—'), r.amount_total != null ? Number(r.amount_total).toFixed(2) + ' €' : '—', r.source === 'don-especes' ? 'Espèces' : 'Stripe']);
                 } else {
                     const res = await adminFetch('/api/admin/data?section=waitlist&page=1&limit=5000');
                     const rows = (await res.json()).data || [];
