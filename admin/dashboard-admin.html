@@ -398,6 +398,10 @@
                 <i class="fas fa-bullhorn w-4 text-center"></i>
                 <span>Newsletter &amp; Réseaux</span>
             </div>
+            <div class="nav-item" onclick="showTab('parcours')" id="nav-parcours">
+                <i class="fas fa-route w-4 text-center"></i>
+                <span>Parcours</span>
+            </div>
             <div class="nav-item" onclick="showTab('planning')" id="nav-planning">
                 <i class="fas fa-calendar-alt w-4 text-center"></i>
                 <span>Planning</span>
@@ -2313,6 +2317,39 @@
         </section>
         </div><!-- /tab-newsletter -->
 
+        <!-- ══ ONGLET : PARCOURS NEWSLETTERS (vue séparée, lecture seule) ══ -->
+        <!-- Combine les newsletters déjà envoyées (ordre chronologique) et les étapes
+             du parcours une fois validées depuis Newsletter & Réseaux (extra.canal=
+             'parcours' + extra.parcours_valide=true, ordre extra.ordre). N'affecte
+             pas l'onglet Newsletter & Réseaux ci-dessus. -->
+        <div id="tab-parcours" class="tab-panel">
+        <section class="mb-10">
+            <div class="mb-6">
+                <h3 class="cormorant text-2xl font-bold text-gold">Parcours newsletters</h3>
+                <p class="text-light-gold/50 text-sm mt-1">Les newsletters déjà envoyées, puis les étapes du parcours une fois validées (relues + illustrées) depuis Newsletter &amp; Réseaux.</p>
+            </div>
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="parcoursTable">
+                        <thead class="bg-[rgba(5,20,40,0.8)]">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">#</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Type</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Sujet</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Date</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Registre</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="parcoursTbody">
+                            <tr><td colspan="6" class="px-6 py-8 text-center text-gold/30 cormorant text-lg">Chargement…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        </div><!-- /tab-parcours -->
+
         <!-- ══ ONGLET : SUPPORT / TÉMOIGNAGES (#30) ══ -->
         <div id="tab-support" class="tab-panel">
         <section class="mb-10">
@@ -3527,6 +3564,7 @@
             'nl-subscribers':   'Newsletter — Abonnés',
             blog:               'Blog',
             newsletter:         'Newsletter & Réseaux',
+            parcours:           'Parcours newsletters',
             planning:           'Planning éditorial',
             mails:              'Mails du site',
             insights:           'Insights — Intentions de tirages',
@@ -3574,6 +3612,7 @@
             if (name === 'exports')        renderExports();
             if (name === 'settings')       { loadSettings(); loadFeatureFlags(); }
             if (name === 'blog')           blogLoadList();
+            if (name === 'parcours')       nlLoadParcours();
         }
 
         // ══════════ GESTION DU BLOG ══════════
@@ -7793,6 +7832,54 @@
             } catch(e) { console.error(e); }
         }
 
+        // ── Parcours newsletters : vue séparée en lecture seule (extra.canal='parcours') ──
+        let nlParcours = [];
+        async function nlLoadParcours() {
+            const tbody = document.getElementById('parcoursTbody');
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=drafts-parcours');
+                nlParcours = await res.json();
+                if (!Array.isArray(nlParcours)) nlParcours = [];
+                nlRenderParcours();
+            } catch (e) {
+                console.error(e);
+                if (tbody) tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-red-400 text-sm">Erreur de chargement.</td></tr>';
+            }
+        }
+
+        function nlRenderParcours() {
+            const tbody = document.getElementById('parcoursTbody');
+            if (!tbody) return;
+            if (!nlParcours.length) {
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gold/30 cormorant text-lg">Aucune étape de parcours pour le moment.</td></tr>';
+                return;
+            }
+            const registreColors = {
+                inspiree: 'bg-purple-500/20 text-purple-300 border-purple-500/30',
+                incarnee: 'bg-teal-500/20 text-teal-300 border-teal-500/30',
+                lucide:   'bg-blue-500/20 text-blue-300 border-blue-500/30'
+            };
+            tbody.innerHTML = nlParcours.map((d, i) => {
+                const extra = d.extra || {};
+                const isStep = extra.canal === 'parcours';
+                const registreCls = registreColors[extra.registre] || 'bg-gold/10 text-gold/70 border-gold/20';
+                const typeBadge = isStep
+                    ? `<span class="text-xs px-2 py-0.5 rounded-full bg-gold/15 text-gold border border-gold/30">Étape n°${extra.ordre ?? '?'}</span>`
+                    : `<span class="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-300 border border-green-500/30">Envoyée</span>`;
+                const dateVal = d.sent_at || d.created_at;
+                return `<tr class="hover:bg-gold/5 transition">
+                    <td class="px-6 py-4 text-light-gold/40 text-sm">${i + 1}</td>
+                    <td class="px-6 py-4">${typeBadge}</td>
+                    <td class="px-6 py-4 text-light-gold text-sm">${escapeHtmlFront(d.subject || '—')}</td>
+                    <td class="px-6 py-4 text-light-gold/60 text-xs">${dateVal ? new Date(dateVal).toLocaleDateString('fr-FR') : '—'}</td>
+                    <td class="px-6 py-4">${isStep ? `<span class="text-xs px-2 py-0.5 rounded-full border ${registreCls}">${escapeHtmlFront(extra.registre || '—')}</span>` : '<span class="text-gold/20 text-xs">—</span>'}</td>
+                    <td class="px-6 py-4">
+                        <button onclick="nlPreviewDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition"><i class="fas fa-eye mr-1"></i>Prévisualiser</button>
+                    </td>
+                </tr>`;
+            }).join('');
+        }
+
         let nlShowArchived = false;
         function nlToggleArchived() {
             nlShowArchived = !nlShowArchived;
@@ -7810,6 +7897,23 @@
                 if (!res.ok) throw new Error(data.error || 'Erreur');
                 const d = nlDrafts.find(x => x.id === id); if (d) d.archived = archived;
                 nlRenderDrafts();
+            } catch (e) { alert('Erreur : ' + e.message); }
+        }
+
+        // Fait basculer une étape du parcours (relue, illustrée) de la liste des
+        // brouillons vers la vue Parcours — irréversible depuis cette liste (la
+        // désactivation se ferait depuis l'onglet Parcours si besoin un jour).
+        async function nlValidateParcours(id) {
+            if (!confirm('Valider cette étape pour le Parcours ? Elle quittera cette liste de brouillons et apparaîtra dans l\'onglet Parcours.')) return;
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=validate-parcours', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                await nlLoadDrafts();
             } catch (e) { alert('Erreur : ' + e.message); }
         }
 
@@ -7842,6 +7946,7 @@
                             : 'bg-gold/10 text-gold border border-gold/30'}">
                             ${d.statut === 'envoyé' ? '✓ Envoyée' : d.scheduled_at ? '⏰ ' + new Date(d.scheduled_at).toLocaleString('fr-FR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'}) : '◈ Brouillon'}
                         </span>
+                        ${d.extra?.canal === 'parcours' ? `<span class="text-xs px-2 py-1 rounded-full ml-1 bg-orange-500/15 text-orange-300 border border-orange-500/30" title="Étape ${d.extra.ordre ?? '?'} du parcours — pas encore validée">Parcours n°${d.extra.ordre ?? '?'} — à valider</span>` : ''}
                     </td>
                     <td class="px-6 py-4 text-xs text-gold/40">
                         ${new Date(d.sent_at || d.created_at).toLocaleDateString('fr-FR')}
@@ -7854,6 +7959,7 @@
                         ${d.statut === 'envoyé' ? (d.archived
                             ? `<button onclick="nlSetArchived('${d.id}',false)" class="text-xs text-light-gold/60 hover:text-light-gold border border-light-gold/20 hover:border-light-gold/40 rounded px-3 py-1 transition mr-1">Désarchiver</button>`
                             : `<button onclick="nlSetArchived('${d.id}',true)" class="text-xs text-light-gold/60 hover:text-light-gold border border-light-gold/20 hover:border-light-gold/40 rounded px-3 py-1 transition mr-1">Archiver</button>`) : ''}
+                        ${d.extra?.canal === 'parcours' ? `<button onclick="nlValidateParcours('${d.id}')" class="text-xs text-orange-300 hover:text-orange-200 border border-orange-500/30 hover:border-orange-500/50 rounded px-3 py-1 transition mr-1"><i class="fas fa-check mr-1"></i>Valider pour le Parcours</button>` : ''}
                         <button onclick="nlDeleteDraft('${d.id}')"
                             class="text-xs text-red-400/60 hover:text-red-300 border border-red-400/20 hover:border-red-400/40 rounded px-3 py-1 transition">
                             Supprimer

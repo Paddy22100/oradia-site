@@ -3474,9 +3474,10 @@ async function handleData(req, res) {
     const stripeDonorsNet = stripeDonorsTotal - stripeFee(stripeDonorsTotal, stripeDonorRows.length);
     const donorsNet       = stripeDonorsNet + cashDonorsTotal;
     // Cagnotte réellement disponible pour lancer la fabrication : précommandes nettes de
-    // frais Stripe ET hors part livraison (qui doit repartir en frais de port), plus les
-    // dons Stripe nets (dons en espèces exclus de la cagnotte, cf. consigne explicite).
-    const preordersCagnotteFabrication = Math.max(0, preordersNet - preordersShippingTotal + stripeDonorsNet);
+    // frais Stripe ET hors part livraison (qui doit repartir en frais de port), plus tous
+    // les dons nets (Stripe ET espèces — cet argent est réellement disponible pour financer
+    // la fabrication, même s'il n'entre pas dans la comptabilité/URSSAF, cf. import-transactions).
+    const preordersCagnotteFabrication = Math.max(0, preordersNet - preordersShippingTotal + donorsNet);
     const singleDrawNet      = singleDrawTotal      - stripeFee(singleDrawTotal,      singleDrawCount);
     const guidancesNet       = guidancesTotal       - stripeFee(guidancesTotal,       guidanceRows.length);
     const subscriptionsNet   = subscriptionsTotal   - stripeFee(subscriptionsTotal,   subscriptionRows.length);
@@ -4563,6 +4564,32 @@ async function handleNewsletter(req, res) {
         return res.status(200).json({ success: true, total: total || 0, unsent: unsent || 0, already_sent: (total || 0) - (unsent || 0) });
       }
 
+      // ── Vue séparée « Parcours » : combine les newsletters déjà envoyées (statut
+      // 'envoyé', triées par date d'envoi) et les étapes du parcours une fois
+      // validées (extra.canal='parcours' ET extra.parcours_valide=true, triées par
+      // extra.ordre) — les envoyées d'abord, puis les étapes validées dans l'ordre.
+      // Tant qu'une étape n'est pas validée, elle reste un brouillon normal (visible
+      // et modifiable dans Newsletter & Réseaux), pas encore dans cette vue.
+      // N'affecte pas l'action 'drafts' ci-dessous : requête de base identique,
+      // seul un filtre JS après coup distingue les deux vues.
+      if (action === 'drafts-parcours') {
+        const { data: allDrafts, error } = await supabase
+          .from('newsletter_drafts')
+          .select('*');
+        if (error) {
+          console.error('Error fetching parcours drafts:', error);
+          return res.status(500).json({ error: 'Erreur lors de la récupération du parcours' });
+        }
+        const rows = allDrafts || [];
+        const sent = rows
+          .filter(d => d.statut === 'envoyé')
+          .sort((a, b) => new Date(a.sent_at || a.created_at) - new Date(b.sent_at || b.created_at));
+        const validatedSteps = rows
+          .filter(d => d.extra?.canal === 'parcours' && d.extra?.parcours_valide === true)
+          .sort((a, b) => (Number(a.extra?.ordre) || 0) - (Number(b.extra?.ordre) || 0));
+        return res.status(200).json([...sent, ...validatedSteps]);
+      }
+
       if (action === 'drafts') {
         const id = url.searchParams.get('id');
         if (id) {
@@ -4576,10 +4603,18 @@ async function handleNewsletter(req, res) {
           return res.status(200).json(data);
         }
 
-        const { data: drafts, error } = await supabase
+        // Requête et tri identiques à l'origine (created_at DESC). Seules les étapes
+        // du parcours déjà VALIDÉES (extra.canal='parcours' ET parcours_valide=true)
+        // sont retirées de cette liste après coup, en JS — elles vivent désormais dans
+        // la vue Parcours (action 'drafts-parcours' ci-dessus). Un brouillon parcours
+        // pas encore validé reste ici, éditable normalement, le temps d'y ajouter les
+        // illustrations et de le relire.
+        const { data: allDrafts, error } = await supabase
           .from('newsletter_drafts')
           .select('*')
           .order('created_at', { ascending: false });
+
+        const drafts = (allDrafts || []).filter(d => !(d.extra?.canal === 'parcours' && d.extra?.parcours_valide === true));
 
         if (error) {
           console.error('Error fetching drafts:', error);
@@ -4837,6 +4872,21 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
 
       if (action === 'save') {
         const { id, subject, content, intention, type, images, extra } = body;
+        const incomingExtra = extra && typeof extra === 'object' ? extra : {};
+
+        // L'éditeur ne reconstruit que les champs qu'il connaît (cta, bannière, réseaux
+        // sociaux) — sans fusion, sauvegarder un brouillon depuis l'éditeur normal
+        // effacerait silencieusement toute autre clé extra déjà posée dessus (ex :
+        // canal/ordre/registre/parcours_valide du parcours). On fusionne donc avec
+        // l'extra existant plutôt que de l'écraser ; un champ explicitement renvoyé
+        // (même vide/undefined) continue de primer et donc de pouvoir être effacé.
+        let mergedExtra = incomingExtra;
+        if (id) {
+          const { data: existingDraft } = await supabase.from('newsletter_drafts').select('extra').eq('id', id).maybeSingle();
+          if (existingDraft?.extra && typeof existingDraft.extra === 'object') {
+            mergedExtra = { ...existingDraft.extra, ...incomingExtra };
+          }
+        }
 
         const payload = {
           subject: subject || '',
@@ -4844,7 +4894,7 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
           intention: intention || null,
           type: type === 'promo' ? 'promo' : 'newsletter',
           images: Array.isArray(images) ? images : [],
-          extra: extra && typeof extra === 'object' ? extra : {},
+          extra: mergedExtra,
           updated_at: new Date().toISOString()
         };
 
@@ -4870,6 +4920,28 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
           return res.status(500).json({ error: 'Erreur lors de la création du brouillon' });
         }
         return res.status(200).json({ success: true, message: 'Brouillon créé', id: data.id });
+      }
+
+      // ── Valide une étape du parcours (extra.canal='parcours') une fois relue et
+      // illustrée depuis l'éditeur normal : elle bascule de la liste des brouillons
+      // vers la vue Parcours (action 'drafts-parcours'). Fusionne avec l'extra
+      // existant pour ne toucher que le drapeau parcours_valide.
+      if (action === 'validate-parcours') {
+        const { id } = body;
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { data: existingDraft, error: fetchErr } = await supabase
+          .from('newsletter_drafts').select('extra').eq('id', id).maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (!existingDraft) return res.status(404).json({ error: 'Brouillon introuvable' });
+        if (existingDraft.extra?.canal !== 'parcours') {
+          return res.status(400).json({ error: "Ce brouillon n'appartient pas au parcours (extra.canal ≠ 'parcours')" });
+        }
+        const { error } = await supabase
+          .from('newsletter_drafts')
+          .update({ extra: { ...existingDraft.extra, parcours_valide: true }, updated_at: new Date().toISOString() })
+          .eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
       }
 
       // ── Ajout d'un fragment au carnet ──
