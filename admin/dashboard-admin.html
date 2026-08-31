@@ -7910,7 +7910,20 @@
         // sur le sujet) pour pouvoir cliquer sans risque même si l'import a déjà eu lieu.
         async function parcoursImportModeles() {
             if (!window.PARCOURS_MODELES_20) return alert('Fichier des modèles introuvable (parcours-modeles-20.js).');
+            // Le dédoublonnage doit couvrir aussi les étapes déjà validées : celles-ci
+            // ont disparu de nlDrafts (filtrées par action=drafts) et ne vivent plus que
+            // dans la vue Parcours (action=drafts-parcours) — sans ce fetch, ré-importer
+            // après validation recréerait des doublons.
             const existingSubjects = new Set(nlDrafts.filter(d => d.extra && d.extra.canal === 'parcours').map(d => d.subject));
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=drafts-parcours');
+                if (res.ok) {
+                    const validated = await res.json();
+                    (Array.isArray(validated) ? validated : []).forEach(d => {
+                        if (d.extra && d.extra.canal === 'parcours') existingSubjects.add(d.subject);
+                    });
+                }
+            } catch (_) {}
             const toImport = window.PARCOURS_MODELES_20.filter(m => !existingSubjects.has(m.subject));
             if (toImport.length === 0) { alert('Les 20 modèles sont déjà importés.'); return; }
 
