@@ -11,7 +11,9 @@ on:
 jobs:
   build:
     name: Build iOS (vérification + archive si signature configurée)
-    runs-on: macos-14
+    # macos-14 ne fournit que Xcode 15.4 (mi-2024), trop ancien pour l'API Swift
+    # attendue par Capacitor 8.5 — macos-15 embarque une version plus récente.
+    runs-on: macos-15
     timeout-minutes: 40
     defaults:
       run:
@@ -22,7 +24,7 @@ jobs:
 
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
           cache: npm
           cache-dependency-path: mobile-app/package-lock.json
 
@@ -42,10 +44,23 @@ jobs:
         run: |
           xcodebuild -workspace App.xcodeproj/project.xcworkspace \
             -scheme App \
-            -sdk iphonesimulator \
             -configuration Debug \
+            -destination 'generic/platform=iOS Simulator' \
+            -skipPackagePluginValidation \
             CODE_SIGNING_ALLOWED=NO \
-            build
+            CODE_SIGNING_REQUIRED=NO \
+            build 2>&1 | tee "$RUNNER_TEMP/xcodebuild.log"
+          # Cette étape échoue explicitement si xcodebuild a échoué (le tee ci-dessus
+          # masque sinon le vrai code de sortie derrière celui de tee) — sans ça, le
+          # message "exit code 65" générique de GitHub ne dit pas où chercher.
+          exit ${PIPESTATUS[0]}
+
+      - name: Afficher les erreurs de compilation (si échec)
+        if: failure()
+        working-directory: mobile-app/ios/App
+        run: |
+          echo "── Lignes contenant 'error' dans le journal xcodebuild ──"
+          grep -i "error" "$RUNNER_TEMP/xcodebuild.log" || echo "(aucune ligne 'error' trouvée — voir le journal complet ci-dessus)"
 
       # Archive signée + export .ipa, prêt pour TestFlight/App Store — ne se
       # déclenche que si le certificat de distribution et le profil de

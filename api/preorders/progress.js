@@ -114,6 +114,18 @@ module.exports = async (req, res) => {
             cagnotte += Number(row.amount_total) || 0;
           }
         }
+
+        // Backers Kickstarter (import manuel CSV, voir dashboard admin) : comptés au même
+        // titre que les précommandes directes, 1 backer ≈ 1 oracle (même niveau d'estimation
+        // que le reste de ce compteur). La table peut ne pas encore exister si la migration
+        // supabase-migration-kickstarter-backers.sql n'a pas été appliquée : on ignore
+        // l'erreur plutôt que de casser le compteur public de précommandes.
+        const { count: ksCount, error: ksError } = await supabase
+          .from('kickstarter_backers')
+          .select('id', { count: 'exact', head: true });
+        if (!ksError && typeof ksCount === 'number') {
+          sold += ksCount;
+        }
       } catch (dbError) {
         console.error('Database error:', dbError.message);
       }

@@ -104,6 +104,31 @@ const QUANTUM_SOURCES = ['anu', 'outshift'];
 // Comptes à ne jamais compter dans la comptabilité (audit/test + compte personnel du fondateur)
 const ACCOUNTING_EXCLUDED_EMAILS = ['boucheron.r89@gmail.com', 'audit@oradia.fr', 'contact@oradia.fr'];
 
+// Estimation frais Kickstarter (commission plateforme 5% + frais de traitement des paiements
+// ~3-5% selon pays du contributeur) — approximation affichée au dashboard, pas un relevé réel
+// (Kickstarter ne fournit pas de détail des frais par pledge via export CSV).
+const KICKSTARTER_FEE_RATE = parseFloat(process.env.KICKSTARTER_FEE_RATE || '0.08');
+
+// Mapping tolérant des en-têtes d'export CSV Kickstarter (variantes FR/EN observées selon les
+// campagnes) vers les colonnes internes de kickstarter_backers. Comparaison insensible à la
+// casse/accents, sur le nom d'en-tête nettoyé (voir normalizeCsvHeader).
+const KICKSTARTER_CSV_HEADER_MAP = {
+  'backer number': 'backer_number', 'backer #': 'backer_number', 'numero de backer': 'backer_number',
+  'backer name': 'backer_name', 'name': 'backer_name', 'nom': 'backer_name',
+  'email': 'email', 'e-mail': 'email',
+  'reward title': 'reward_title', 'reward': 'reward_title', 'contrepartie': 'reward_title',
+  'pledge amount': 'pledge_amount', 'total pledge amount': 'pledge_amount', 'amount': 'pledge_amount', 'montant': 'pledge_amount',
+  'currency': 'currency', 'devise': 'currency',
+  'status': 'status', 'statut': 'status', 'backing status': 'status',
+  'shipping country': 'shipping_country', 'pays de livraison': 'shipping_country',
+  'shipping address': 'shipping_address', 'address': 'shipping_address', 'adresse': 'shipping_address',
+  'pledged at': 'pledged_at', 'backing date': 'pledged_at', 'date': 'pledged_at',
+};
+
+function normalizeCsvHeader(h) {
+  return String(h || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
 // Catégories de contacts newsletter (utilisées pour cibler les envois depuis le dashboard,
 // sans passer par les listes Brevo). Liste indicative — des tags libres restent possibles.
 const CONTACT_TAGS = [
@@ -1235,7 +1260,7 @@ async function handleData(req, res) {
     // ci-dessous, qui ne connaît que body.action — comme support-update/delete/
     // publish/reply n'envoient jamais ce champ, elles finissaient systématiquement
     // sur son "Action invalide" et n'atteignaient jamais leur vrai handler.
-    const SUPPORT_POST_SECTIONS = ['support-update', 'support-publish', 'support-reply', 'support-delete', 'support-add-manual'];
+    const SUPPORT_POST_SECTIONS = ['support-update', 'support-publish', 'support-reply', 'support-delete', 'support-add-manual', 'compose-email'];
     const isSupportSectionPost = req.method === 'POST' && SUPPORT_POST_SECTIONS.includes(req.query?.section);
 
     // ── POST : actions sur abonnements ──
@@ -1313,6 +1338,38 @@ async function handleData(req, res) {
         return res.status(200).json({ success: true, emailSent: welcomeEmailSent });
       }
 
+      // ── Saisie manuelle d'un don reçu en espèces (hors circuit Stripe) ──
+      // La table donors exige stripe_session_id (UNIQUE NOT NULL) et un email valide
+      // (contrainte CHECK) : on génère donc des valeurs synthétiques identifiables
+      // plutôt que de modifier le schéma pour un cas d'usage marginal.
+      if (action === 'add-cash-donation') {
+        const { donorName, amount, donationDate, note } = body;
+        const cleanName = (donorName || '').trim();
+        if (!cleanName) return res.status(400).json({ error: 'Nom du donateur requis' });
+        const amountNum = parseFloat(amount);
+        if (!amountNum || amountNum <= 0) return res.status(400).json({ error: 'Montant invalide' });
+        const dateIso = donationDate ? new Date(donationDate).toISOString() : new Date().toISOString();
+        if (isNaN(new Date(dateIso).getTime())) return res.status(400).json({ error: 'Date invalide' });
+
+        const uid = crypto.randomUUID();
+        const { error } = await supabase.from('donors').insert({
+          stripe_session_id: `manual-cash-${uid}`,
+          email: `dons-especes+${uid}@oradia.fr`,
+          full_name: cleanName,
+          // amount_total est stocké en EUROS (pas en centimes) depuis la migration
+          // donors-amount-correction.sql — cf. formatCurrency() côté dashboard qui
+          // affiche amount_total tel quel sans le diviser par 100.
+          amount_total: amountNum,
+          currency: 'eur',
+          paid_status: 'completed',
+          source: 'don-especes',
+          metadata: { payment_method: 'especes', note: note || null, entered_manually: true },
+          created_at: dateIso
+        });
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
       if (action === 'revoke' && subscriptionId) {
         const { error } = await supabase
           .from('tore_subscriptions')
@@ -1323,12 +1380,44 @@ async function handleData(req, res) {
       }
 
       if (action === 'set-expiry' && subscriptionId) {
+        const newExpiresAt = body.expiresAt || null;
+        const { data: subRow, error: fetchErr } = await supabase
+          .from('tore_subscriptions')
+          .select('stripe_subscription_id')
+          .eq('id', subscriptionId)
+          .single();
+        if (fetchErr) throw fetchErr;
+
         const { error } = await supabase
           .from('tore_subscriptions')
-          .update({ expires_at: body.expiresAt || null, updated_at: new Date().toISOString() })
+          .update({ expires_at: newExpiresAt, updated_at: new Date().toISOString() })
           .eq('id', subscriptionId);
         if (error) throw error;
-        return res.status(200).json({ success: true });
+
+        // Repousse aussi la prochaine facturation Stripe pour que le prélèvement
+        // ne tombe pas avant la nouvelle échéance accordée (ex : mois offert en
+        // dédommagement). Sans ça, seule la date affichée dans Supabase change et
+        // Stripe continue de prélever sur son propre cycle.
+        let stripeSynced = false;
+        let stripeError = null;
+        if (newExpiresAt && subRow?.stripe_subscription_id && process.env.STRIPE_SECRET_KEY) {
+          const trialEndUnix = Math.floor(new Date(newExpiresAt).getTime() / 1000);
+          const nowUnix = Math.floor(Date.now() / 1000);
+          if (trialEndUnix > nowUnix) {
+            try {
+              const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+              await stripe.subscriptions.update(subRow.stripe_subscription_id, {
+                trial_end: trialEndUnix,
+                proration_behavior: 'none'
+              });
+              stripeSynced = true;
+            } catch (e) {
+              stripeError = e.message;
+              console.error('[set-expiry] stripe sync error:', e.message);
+            }
+          }
+        }
+        return res.status(200).json({ success: true, stripeSynced, stripeError });
       }
 
       if (action === 'upgrade_plan' && subscriptionId) {
@@ -1989,15 +2078,22 @@ async function handleData(req, res) {
         const isExcluded = (email) => email && ACCOUNTING_EXCLUDED_EMAILS.includes(String(email).toLowerCase().trim());
         // Import depuis preorders
         const { data: preorders } = await sb.from('preorders').select('created_at,amount_total,email,full_name,offer,stripe_session_id').eq('paid_status','completed');
-        const { data: donors } = await sb.from('donors').select('created_at,amount,email,full_name,stripe_session_id');
+        const { data: donors } = await sb.from('donors').select('created_at,amount_total,email,full_name,stripe_session_id,source');
         const { data: guidances } = await sb.from('guidances').select('created_at,amount,client_email,client_name,cal_booking_uid').in('status',['confirmed','completed']);
         const { data: subs } = await sb.from('tore_subscriptions').select('created_at,email,full_name,plan,status,is_free').neq('status','payment_failed');
+        // Kickstarter : uniquement les pledges en EUR (les autres devises ne peuvent pas être
+        // mêlées à la comptabilité EUR sans taux de change réel — elles restent visibles dans
+        // l'onglet Kickstarter mais hors comptabilité tant qu'elles ne sont pas converties à la main).
+        const { data: kickstarterBackers } = await sb.from('kickstarter_backers').select('pledged_at,imported_at,pledge_amount,currency,backer_name,email,reward_title,backer_number');
         const planPriceEur = p => p === 'decouverte' ? 5 : 8;
         const toInsert = [
             ...(preorders||[]).filter(p=>!isExcluded(p.email)).map(p => ({ date: p.created_at?.split('T')[0], type:'recette', category:'précommande', description:`Précommande ${p.offer||''} — ${p.full_name||p.email||''}`, amount: parseFloat(p.amount_total)||0, source:'precommande', source_ref: p.stripe_session_id })).filter(t=>t.amount>0),
-            ...(donors||[]).filter(d=>!isExcluded(d.email)).map(d => ({ date: d.created_at?.split('T')[0], type:'recette', category:'don', description:`Don — ${d.full_name||d.email||''}`, amount: parseFloat(d.amount)||0, source:'don', source_ref: d.stripe_session_id })).filter(t=>t.amount>0),
+            // Dons en espèces exclus : reçus hors Stripe/compte pro, ils ne sont pas
+            // à déclarer à l'URSSAF et ne doivent pas entrer dans la comptabilité.
+            ...(donors||[]).filter(d=>!isExcluded(d.email) && d.source !== 'don-especes').map(d => ({ date: d.created_at?.split('T')[0], type:'recette', category:'don', description:`Don — ${d.full_name||d.email||''}`, amount: parseFloat(d.amount_total)||0, source:'don', source_ref: d.stripe_session_id })).filter(t=>t.amount>0),
             ...(guidances||[]).filter(g=>!isExcluded(g.client_email)).map(g => ({ date: g.created_at?.split('T')[0], type:'recette', category:'guidance', description:`Guidance — ${g.client_name||g.client_email||''}`, amount: (g.amount||0)/100, source:'guidance', source_ref: g.cal_booking_uid })).filter(t=>t.amount>0),
             ...(subs||[]).filter(s=>!isExcluded(s.email) && !s.is_free).map(s => ({ date: s.created_at?.split('T')[0], type:'recette', category:'abonnement', description:`Abonnement Tore ${s.plan||'complet'} — ${s.full_name||s.email||''}`, amount: planPriceEur(s.plan), source:'abonnement', source_ref: `sub_${s.email}_${s.created_at?.split('T')[0]}` })),
+            ...(kickstarterBackers||[]).filter(k=>!isExcluded(k.email) && (k.currency||'EUR').toUpperCase()==='EUR' && k.backer_number).map(k => ({ date: (k.pledged_at||k.imported_at)?.split('T')[0], type:'recette', category:'kickstarter', description:`Kickstarter ${k.reward_title||''} — ${k.backer_name||k.email||''}`, amount: parseFloat(k.pledge_amount)||0, source:'kickstarter', source_ref: `ks_${k.backer_number}` })).filter(t=>t.amount>0),
         ];
         // Purger les transactions des abonnements gratuits déjà importées avant que is_free soit posé
         const freeSubEmails = (subs||[]).filter(s=>s.is_free).map(s=>s.email);
@@ -2014,6 +2110,83 @@ async function handleData(req, res) {
         const { error } = await sb.from('transactions').upsert(toInsert, { onConflict: 'source_ref', ignoreDuplicates: true });
         if (error) throw error;
         return res.status(200).json({ success: true, imported: toInsert.length });
+      }
+
+      // ── Import d'un export CSV Kickstarter (rapport backers/rewards téléchargé
+      // depuis le dashboard créateur Kickstarter — pas d'API temps réel disponible).
+      // Le CSV est parsé côté client ; ce handler reçoit les lignes déjà découpées
+      // en objets {header: valeur} et se charge du mapping + de l'upsert.
+      if (action === 'kickstarter-import') {
+        const rows = Array.isArray(body.rows) ? body.rows : [];
+        if (rows.length === 0) return res.status(400).json({ error: 'Aucune ligne à importer' });
+        if (rows.length > 5000) return res.status(400).json({ error: 'Fichier trop volumineux (5000 lignes max)' });
+
+        const batchId = crypto.randomUUID();
+        const now = new Date().toISOString();
+
+        const mapped = rows.map(rawRow => {
+          const out = { raw: rawRow, import_batch_id: batchId, imported_at: now };
+          for (const [rawHeader, value] of Object.entries(rawRow)) {
+            const key = KICKSTARTER_CSV_HEADER_MAP[normalizeCsvHeader(rawHeader)];
+            if (!key || value === undefined || value === null || value === '') continue;
+            if (key === 'pledge_amount') {
+              const num = parseFloat(String(value).replace(/[^\d.,-]/g, '').replace(',', '.'));
+              out[key] = Number.isFinite(num) ? num : null;
+            } else if (key === 'pledged_at') {
+              const d = new Date(value);
+              out[key] = Number.isNaN(d.getTime()) ? null : d.toISOString();
+            } else if (key === 'currency') {
+              out[key] = String(value).trim().toUpperCase().slice(0, 3);
+            } else {
+              out[key] = String(value).trim();
+            }
+          }
+          if (!out.currency) out.currency = 'EUR';
+          return out;
+        }).filter(r => r.backer_name || r.email || r.backer_number);
+
+        if (mapped.length === 0) {
+          return res.status(400).json({ error: 'Impossible de reconnaître les colonnes de ce fichier (en-têtes non standard). Vérifiez qu\'il s\'agit bien d\'un export Kickstarter (backers/rewards).' });
+        }
+
+        // Deux groupes : lignes avec backer_number (dédupliquées via upsert), lignes sans
+        // (toujours insérées — pas de clé fiable pour détecter un doublon).
+        const withNumber = mapped.filter(r => r.backer_number);
+        const withoutNumber = mapped.filter(r => !r.backer_number);
+
+        let upserted = 0, inserted = 0;
+        if (withNumber.length > 0) {
+          const { error: upErr, count } = await supabase
+            .from('kickstarter_backers')
+            .upsert(withNumber, { onConflict: 'backer_number', ignoreDuplicates: false, count: 'exact' });
+          if (upErr) throw upErr;
+          upserted = count ?? withNumber.length;
+        }
+        if (withoutNumber.length > 0) {
+          const { error: insErr } = await supabase.from('kickstarter_backers').insert(withoutNumber);
+          if (insErr) throw insErr;
+          inserted = withoutNumber.length;
+        }
+
+        return res.status(200).json({
+          success: true,
+          batchId,
+          totalRows: rows.length,
+          recognized: mapped.length,
+          upserted,
+          inserted,
+          skipped: rows.length - mapped.length
+        });
+      }
+
+      // ── Annule le dernier import Kickstarter (supprime tous les backers de ce batch) ──
+      if (action === 'kickstarter-delete-batch' && body.batchId) {
+        const { error: delErr, count } = await supabase
+          .from('kickstarter_backers')
+          .delete({ count: 'exact' })
+          .eq('import_batch_id', body.batchId);
+        if (delErr) throw delErr;
+        return res.status(200).json({ success: true, deleted: count ?? 0 });
       }
 
       if (action === 'test-subscription-email') {
@@ -2346,6 +2519,54 @@ async function handleData(req, res) {
       return res.status(200).json({ success: true, data: tirages || [] });
     }
 
+    // ── Section subscription-payments (historique des paiements Stripe d'un abonné, pour modal admin) ──
+    if (section === 'subscription-payments') {
+      const subscriptionId = req.query?.subscriptionId;
+      if (!subscriptionId) return res.status(400).json({ error: 'subscriptionId requis' });
+
+      const { data: row, error: rowErr } = await supabase
+        .from('tore_subscriptions')
+        .select('stripe_subscription_id, stripe_customer_id')
+        .eq('id', subscriptionId)
+        .single();
+      if (rowErr) throw rowErr;
+
+      if (!row?.stripe_subscription_id && !row?.stripe_customer_id) {
+        return res.status(200).json({ success: true, payments: [], message: 'Aucun client Stripe associé (abonnement gratuit/manuel).' });
+      }
+      if (!process.env.STRIPE_SECRET_KEY) {
+        return res.status(200).json({ success: false, error: 'STRIPE_SECRET_KEY manquant.' });
+      }
+
+      try {
+        const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+        const listParams = row.stripe_subscription_id
+          ? { subscription: row.stripe_subscription_id, limit: 48, expand: ['data.charge'] }
+          : { customer: row.stripe_customer_id, limit: 48, expand: ['data.charge'] };
+        const invoices = await stripe.invoices.list(listParams);
+
+        const payments = invoices.data.map(inv => {
+          const charge = inv.charge && typeof inv.charge === 'object' ? inv.charge : null;
+          return {
+            id: inv.id,
+            date: new Date(inv.created * 1000).toISOString(),
+            amount: (inv.amount_paid || 0) / 100,
+            currency: inv.currency,
+            status: inv.status,
+            refunded: charge ? !!charge.refunded : false,
+            amountRefunded: charge ? (charge.amount_refunded || 0) / 100 : 0,
+            number: inv.number || null,
+            hostedUrl: inv.hosted_invoice_url || null,
+            pdfUrl: inv.invoice_pdf || null
+          };
+        });
+        return res.status(200).json({ success: true, payments });
+      } catch (e) {
+        console.error('[subscription-payments] Stripe error:', e.message);
+        return res.status(200).json({ success: false, error: e.message });
+      }
+    }
+
     // ── Section preorders ──
     if (section === 'preorders') {
       // Paramètre export=1 : retourne tous les enregistrements sans pagination (utilisé par le PDF)
@@ -2413,6 +2634,71 @@ async function handleData(req, res) {
         success: true,
         data: data || [],
         pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) }
+      });
+    }
+
+    // ── Section kickstarter : liste paginée des backers importés ──
+    if (section === 'kickstarter') {
+      const page   = parseInt(req.query?.page  || '1', 10);
+      const limit  = parseInt(req.query?.limit || '50', 10);
+      const offset = (page - 1) * limit;
+      const q      = (req.query?.q || '').trim();
+
+      let query = supabase
+        .from('kickstarter_backers')
+        .select('*', { count: 'exact' })
+        .order('pledged_at', { ascending: false, nullsFirst: false });
+
+      if (q) query = query.or(`email.ilike.%${q}%,backer_name.ilike.%${q}%,reward_title.ilike.%${q}%`);
+
+      const { data, count, error } = await query.range(offset, offset + limit - 1);
+      if (error) throw error;
+      return res.status(200).json({
+        success: true,
+        data: data || [],
+        pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) }
+      });
+    }
+
+    // ── Section kickstarter-stats : agrégats pour les cartes du dashboard ──
+    if (section === 'kickstarter-stats') {
+      const { data: rows, error } = await supabase
+        .from('kickstarter_backers')
+        .select('pledge_amount,currency,reward_title,import_batch_id,imported_at');
+      if (error) throw error;
+
+      const byCurrency = {};
+      const byReward = {};
+      let lastImportAt = null;
+      const batches = new Set();
+
+      for (const r of rows || []) {
+        const cur = (r.currency || 'EUR').toUpperCase();
+        const amt = parseFloat(r.pledge_amount) || 0;
+        byCurrency[cur] = (byCurrency[cur] || 0) + amt;
+
+        const reward = r.reward_title || 'Sans contrepartie précisée';
+        if (!byReward[reward]) byReward[reward] = { count: 0, total: 0 };
+        byReward[reward].count += 1;
+        byReward[reward].total += amt;
+
+        if (r.import_batch_id) batches.add(r.import_batch_id);
+        if (r.imported_at && (!lastImportAt || r.imported_at > lastImportAt)) lastImportAt = r.imported_at;
+      }
+
+      const totalEUR = byCurrency['EUR'] || 0;
+      return res.status(200).json({
+        success: true,
+        data: {
+          count: (rows || []).length,
+          byCurrency,
+          byReward,
+          totalEUR,
+          netEUR: totalEUR * (1 - KICKSTARTER_FEE_RATE),
+          feeRate: KICKSTARTER_FEE_RATE,
+          lastImportAt,
+          batchCount: batches.size
+        }
       });
     }
 
@@ -2574,6 +2860,37 @@ async function handleData(req, res) {
         .update({ status: 'replied', read_at: new Date().toISOString() })
         .eq('id', id);
       if (error) throw error;
+      return res.status(200).json({ success: true });
+    }
+
+    // ── Email libre rédigé depuis le dashboard, envoyé via Brevo (expéditeur
+    // contact@oradia.fr) avec la même mise en page que les réponses support —
+    // réutilise buildSupportReplyEmailHtml pour ne jamais avoir de second
+    // template qui diverge (voir règle CLAUDE.md sur les templates email).
+    if (section === 'compose-email') {
+      if (req.method !== 'POST') return res.status(405).json({ error: 'POST required' });
+      const body = await parseBody(req);
+      const { to, subject, message } = body;
+      if (!to || !subject || !message) return res.status(400).json({ error: 'destinataire, sujet et message requis' });
+      const emailRe = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRe.test(to)) return res.status(400).json({ error: 'Adresse email invalide' });
+
+      const html = buildSupportReplyEmailHtml({ message });
+      const brevoResp = await fetch('https://api.brevo.com/v3/smtp/email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'api-key': process.env.BREVO_API_KEY },
+        body: JSON.stringify({
+          sender: { name: "Rudy d'Oradia", email: process.env.BREVO_SENDER_EMAIL || 'contact@oradia.fr' },
+          to: [{ email: to }],
+          subject,
+          htmlContent: html
+        })
+      });
+      if (!brevoResp.ok) {
+        const err = await brevoResp.json().catch(() => ({}));
+        console.error('Brevo compose-email error:', err);
+        return res.status(502).json({ error: 'Envoi Brevo échoué' });
+      }
       return res.status(200).json({ success: true });
     }
 
@@ -3056,7 +3373,7 @@ async function handleData(req, res) {
     }
 
     // ── Section overview / all : agrégats KPI ──
-    const [waitlistRes, preordersRes, donorsRes, singleDrawsRes, supportRes, syncRes, guidancesRes, subscriptionsRes, auditRes] = await Promise.all([
+    const [waitlistRes, preordersRes, donorsRes, singleDrawsRes, supportRes, syncRes, guidancesRes, subscriptionsRes, auditRes, kickstarterRes] = await Promise.all([
       supabase.from('newsletter_contacts').select('*'),
       supabase.from('preorders').select('*'),
       supabase.from('donors').select('*'),
@@ -3065,15 +3382,23 @@ async function handleData(req, res) {
       supabase.from('synchronicity_responses').select('score_synchronicites', { count: 'exact', head: false }),
       supabase.from('guidances').select('id, amount, status, created_at').in('status', ['confirmed', 'completed']),
       supabase.from('tore_subscriptions').select('email, plan, status, is_free, created_at').neq('status', 'payment_failed').neq('status', 'single_draw').then(r => r.error ? supabase.from('tore_subscriptions').select('email, status, created_at').neq('status', 'payment_failed').neq('status', 'single_draw') : r),
-      supabase.from('audit_reports').select('summary').order('created_at', { ascending: false }).limit(1)
+      supabase.from('audit_reports').select('summary').order('created_at', { ascending: false }).limit(1),
+      // .catch : la table peut ne pas exister tant que la migration kickstarter_backers n'a pas été appliquée
+      supabase.from('kickstarter_backers').select('pledge_amount, currency, imported_at').then(r => r.error ? { data: [] } : r)
     ]);
 
     const waitlistRows    = waitlistRes.data    || [];
     const preorderRows    = preordersRes.data   || [];
     const donorRows       = donorsRes.data      || [];
+    // Les dons en espèces comptent normalement dans les totaux "argent reçu" (Montant
+    // dons, cagnotte...) — seule la comptabilité/URSSAF les exclut (voir import-transactions),
+    // car cet argent ne transite pas par Stripe/le compte pro et n'est pas déclaré.
+    const stripeDonorRows = donorRows.filter(r => r.source !== 'don-especes');
+    const cashDonorRows   = donorRows.filter(r => r.source === 'don-especes');
     const singleDrawRows  = singleDrawsRes.data || [];
     const recentMessages  = supportRes.data     || [];
     const syncRows        = syncRes.data        || [];
+    const kickstarterRows = kickstarterRes.data || [];
     const latestAudit     = (auditRes.data || [])[0];
     const monitoringCritical = latestAudit?.summary?.critical || 0;
     const syncAvg         = syncRows.length > 0
@@ -3105,7 +3430,10 @@ async function handleData(req, res) {
     const day30 = 30 * day1;
 
     const sumPreorders = (rows) => rows.reduce((s, r) => s + (parseFloat(r.amount_total) || parseFloat(r.amount) || 0), 0);
-    const sumDonors    = (rows) => rows.reduce((s, r) => s + (parseFloat(r.amount) || 0), 0);
+    // amount_total est la vraie colonne de la table donors (en euros, cf. migration
+    // donors-amount-correction.sql) — "amount" n'existe pas et faisait toujours
+    // remonter 0, ce qui excluait silencieusement tous les dons de ces totaux.
+    const sumDonors    = (rows) => rows.reduce((s, r) => s + (parseFloat(r.amount_total) || 0), 0);
 
     // Séparer commandes payées et abandons (en attente / échouées)
     const paidPreorderRows      = preorderRows.filter(r => r.paid_status === 'completed');
@@ -3125,7 +3453,13 @@ async function handleData(req, res) {
     // pas disponible pour financer la fabrication — on la retire pour obtenir la vraie cagnotte.
     const preordersShippingTotal = paidPreorderRows.reduce((s, r) => s + ((parseInt(r.shipping_price_cents, 10) || 0) / 100), 0);
     const donorsTotal     = sumDonors(donorRows);
-    const globalTotal     = preordersTotal + donorsTotal + singleDrawTotal + guidancesTotal + subscriptionsTotal;
+    const stripeDonorsTotal = sumDonors(stripeDonorRows);
+    const cashDonorsTotal   = sumDonors(cashDonorRows);
+    // Kickstarter : seuls les pledges en EUR entrent dans le total (voir import-transactions
+    // pour la même règle côté comptabilité) — les autres devises restent visibles dans
+    // l'onglet Kickstarter mais ne sont pas mélangées ici sans taux de change réel.
+    const kickstarterTotal = kickstarterRows.filter(r => (r.currency || 'EUR').toUpperCase() === 'EUR').reduce((s, r) => s + (parseFloat(r.pledge_amount) || 0), 0);
+    const globalTotal     = preordersTotal + donorsTotal + singleDrawTotal + guidancesTotal + subscriptionsTotal + kickstarterTotal;
     const totalContacts   = paidPreorderRows.length + donorRows.length + waitlistRows.length;
     const averageBasket   = paidPreorderRows.length > 0 ? preordersTotal / paidPreorderRows.length : 0;
 
@@ -3135,14 +3469,21 @@ async function handleData(req, res) {
     // utilisent les frais réels lus dans les balance transactions.
     const stripeFee     = (total, count) => estimateStripeFees(total, count);
     const preordersNet  = preordersTotal  - stripeFee(preordersTotal,  paidPreorderRows.length);
-    // Cagnotte réellement disponible pour lancer la fabrication : net de frais Stripe
-    // ET hors part livraison (qui doit repartir en frais de port, pas financer la fabrication).
-    const preordersCagnotteFabrication = Math.max(0, preordersNet - preordersShippingTotal);
-    const donorsNet     = donorsTotal     - stripeFee(donorsTotal,     donorRows.length);
+    // Frais Stripe uniquement sur la part Stripe des dons — les dons en espèces n'ont
+    // aucun frais de traitement, tout le montant reçu est net.
+    const stripeDonorsNet = stripeDonorsTotal - stripeFee(stripeDonorsTotal, stripeDonorRows.length);
+    const donorsNet       = stripeDonorsNet + cashDonorsTotal;
+    // Cagnotte réellement disponible pour lancer la fabrication : précommandes nettes de
+    // frais Stripe ET hors part livraison (qui doit repartir en frais de port), plus les
+    // dons Stripe nets (dons en espèces exclus de la cagnotte, cf. consigne explicite).
+    const preordersCagnotteFabrication = Math.max(0, preordersNet - preordersShippingTotal + stripeDonorsNet);
     const singleDrawNet      = singleDrawTotal      - stripeFee(singleDrawTotal,      singleDrawCount);
     const guidancesNet       = guidancesTotal       - stripeFee(guidancesTotal,       guidanceRows.length);
     const subscriptionsNet   = subscriptionsTotal   - stripeFee(subscriptionsTotal,   subscriptionRows.length);
-    const globalNet          = preordersNet + donorsNet + singleDrawNet + guidancesNet + subscriptionsNet;
+    // Frais Kickstarter (commission + traitement paiement) : estimation distincte des frais
+    // Stripe classiques, le taux effectif de Kickstarter étant différent (voir KICKSTARTER_FEE_RATE).
+    const kickstarterNet     = kickstarterTotal * (1 - KICKSTARTER_FEE_RATE);
+    const globalNet          = preordersNet + donorsNet + singleDrawNet + guidancesNet + subscriptionsNet + kickstarterNet;
 
     const donorsToday = donorRows.filter(r => now - new Date(r.created_at).getTime() < day1);
     const revToday    = sumPreorders(preordersToday) + sumDonors(donorsToday)  + sumGuidances(guidancesToday);
@@ -3178,9 +3519,13 @@ async function handleData(req, res) {
         },
         donors: {
           count:   donorRows.length,
+          // total/net = tous les dons reçus (Stripe + espèces) — seule la comptabilité/URSSAF
+          // (onglet Comptabilité, import-transactions) exclut les dons en espèces.
           total:   donorsTotal,
           net:     donorsNet,
-          noEmail: donorRows.filter(r => !r.email).length
+          noEmail: donorRows.filter(r => !r.email).length,
+          cashCount: cashDonorRows.length,
+          cashTotal: cashDonorsTotal
         },
         waitlist: {
           count:      waitlistRows.length,
@@ -3197,6 +3542,11 @@ async function handleData(req, res) {
           completed: guidancesCompleted,
           total:     guidancesTotal,
           net:       guidancesNet
+        },
+        kickstarter: {
+          count:   kickstarterRows.length,
+          total:   kickstarterTotal,
+          net:     kickstarterNet
         },
         support: {
           recent:     recentMessages,
@@ -3222,7 +3572,8 @@ async function handleData(req, res) {
             preorders:     preordersTotal,
             donors:        donorsTotal,
             guidances:     guidancesTotal,
-            subscriptions: subscriptionsTotal
+            subscriptions: subscriptionsTotal,
+            kickstarter:   kickstarterTotal
           }
         },
         performance: {

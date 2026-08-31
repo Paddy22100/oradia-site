@@ -15,17 +15,5 @@
   "android": {
     "backgroundColor": "#050d1c",
     "allowMixedContent": false
-  },
-  "plugins": {
-    "SplashScreen": {
-      "launchShowDuration": 800,
-      "backgroundColor": "#050d1c",
-      "androidSplashResourceName": "splash",
-      "showSpinner": false
-    },
-    "StatusBar": {
-      "style": "DARK",
-      "backgroundColor": "#050d1c"
-    }
   }
 }
