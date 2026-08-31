@@ -3390,10 +3390,11 @@ async function handleData(req, res) {
     const waitlistRows    = waitlistRes.data    || [];
     const preorderRows    = preordersRes.data   || [];
     const donorRows       = donorsRes.data      || [];
-    // Les dons en espèces sont suivis dans l'onglet Dons mais exclus de tout chiffre
-    // d'affaires/comptabilité : cet argent ne transite pas par Stripe/le compte pro et
-    // n'est pas à déclarer à l'URSSAF (contrairement aux dons Stripe classiques).
-    const revenueDonorRows = donorRows.filter(r => r.source !== 'don-especes');
+    // Les dons en espèces comptent normalement dans les totaux "argent reçu" (Montant
+    // dons, cagnotte...) — seule la comptabilité/URSSAF les exclut (voir import-transactions),
+    // car cet argent ne transite pas par Stripe/le compte pro et n'est pas déclaré.
+    const stripeDonorRows = donorRows.filter(r => r.source !== 'don-especes');
+    const cashDonorRows   = donorRows.filter(r => r.source === 'don-especes');
     const singleDrawRows  = singleDrawsRes.data || [];
     const recentMessages  = supportRes.data     || [];
     const syncRows        = syncRes.data        || [];
@@ -3441,8 +3442,8 @@ async function handleData(req, res) {
     const preordersToday = paidPreorderRows.filter(r => now - new Date(r.created_at).getTime() < day1);
     const preorders7d    = paidPreorderRows.filter(r => now - new Date(r.created_at).getTime() < day7);
     const preorders30d   = paidPreorderRows.filter(r => now - new Date(r.created_at).getTime() < day30);
-    const donors7d       = revenueDonorRows.filter(r => now - new Date(r.created_at).getTime() < day7);
-    const donors30d      = revenueDonorRows.filter(r => now - new Date(r.created_at).getTime() < day30);
+    const donors7d       = donorRows.filter(r => now - new Date(r.created_at).getTime() < day7);
+    const donors30d      = donorRows.filter(r => now - new Date(r.created_at).getTime() < day30);
     const guidancesToday = guidanceRows.filter(r => now - new Date(r.created_at).getTime() < day1);
     const guidances7d    = guidanceRows.filter(r => now - new Date(r.created_at).getTime() < day7);
     const guidances30d   = guidanceRows.filter(r => now - new Date(r.created_at).getTime() < day30);
@@ -3451,7 +3452,9 @@ async function handleData(req, res) {
     // Part "livraison" des précommandes payées : cette somme est fléchée vers l'affranchissement,
     // pas disponible pour financer la fabrication — on la retire pour obtenir la vraie cagnotte.
     const preordersShippingTotal = paidPreorderRows.reduce((s, r) => s + ((parseInt(r.shipping_price_cents, 10) || 0) / 100), 0);
-    const donorsTotal     = sumDonors(revenueDonorRows);
+    const donorsTotal     = sumDonors(donorRows);
+    const stripeDonorsTotal = sumDonors(stripeDonorRows);
+    const cashDonorsTotal   = sumDonors(cashDonorRows);
     // Kickstarter : seuls les pledges en EUR entrent dans le total (voir import-transactions
     // pour la même règle côté comptabilité) — les autres devises restent visibles dans
     // l'onglet Kickstarter mais ne sont pas mélangées ici sans taux de change réel.
@@ -3466,11 +3469,14 @@ async function handleData(req, res) {
     // utilisent les frais réels lus dans les balance transactions.
     const stripeFee     = (total, count) => estimateStripeFees(total, count);
     const preordersNet  = preordersTotal  - stripeFee(preordersTotal,  paidPreorderRows.length);
-    const donorsNet     = donorsTotal     - stripeFee(donorsTotal,     revenueDonorRows.length);
+    // Frais Stripe uniquement sur la part Stripe des dons — les dons en espèces n'ont
+    // aucun frais de traitement, tout le montant reçu est net.
+    const stripeDonorsNet = stripeDonorsTotal - stripeFee(stripeDonorsTotal, stripeDonorRows.length);
+    const donorsNet       = stripeDonorsNet + cashDonorsTotal;
     // Cagnotte réellement disponible pour lancer la fabrication : précommandes nettes de
     // frais Stripe ET hors part livraison (qui doit repartir en frais de port), plus les
-    // dons Stripe nets (dons en espèces exclus — cet argent n'entre pas dans ce circuit).
-    const preordersCagnotteFabrication = Math.max(0, preordersNet - preordersShippingTotal + donorsNet);
+    // dons Stripe nets (dons en espèces exclus de la cagnotte, cf. consigne explicite).
+    const preordersCagnotteFabrication = Math.max(0, preordersNet - preordersShippingTotal + stripeDonorsNet);
     const singleDrawNet      = singleDrawTotal      - stripeFee(singleDrawTotal,      singleDrawCount);
     const guidancesNet       = guidancesTotal       - stripeFee(guidancesTotal,       guidanceRows.length);
     const subscriptionsNet   = subscriptionsTotal   - stripeFee(subscriptionsTotal,   subscriptionRows.length);
@@ -3479,7 +3485,7 @@ async function handleData(req, res) {
     const kickstarterNet     = kickstarterTotal * (1 - KICKSTARTER_FEE_RATE);
     const globalNet          = preordersNet + donorsNet + singleDrawNet + guidancesNet + subscriptionsNet + kickstarterNet;
 
-    const donorsToday = revenueDonorRows.filter(r => now - new Date(r.created_at).getTime() < day1);
+    const donorsToday = donorRows.filter(r => now - new Date(r.created_at).getTime() < day1);
     const revToday    = sumPreorders(preordersToday) + sumDonors(donorsToday)  + sumGuidances(guidancesToday);
     const rev7d       = sumPreorders(preorders7d)    + sumDonors(donors7d)     + sumGuidances(guidances7d);
     const rev30d      = sumPreorders(preorders30d)   + sumDonors(donors30d)    + sumGuidances(guidances30d);
@@ -3513,14 +3519,13 @@ async function handleData(req, res) {
         },
         donors: {
           count:   donorRows.length,
-          // total/net = dons Stripe uniquement (chiffre d'affaires réel, déclarable à l'URSSAF).
-          // Les dons en espèces sont comptés à part : reçus hors circuit bancaire de
-          // l'entreprise, ils ne sont pas déclarés et ne doivent pas gonfler ce total.
+          // total/net = tous les dons reçus (Stripe + espèces) — seule la comptabilité/URSSAF
+          // (onglet Comptabilité, import-transactions) exclut les dons en espèces.
           total:   donorsTotal,
           net:     donorsNet,
           noEmail: donorRows.filter(r => !r.email).length,
-          cashCount: donorRows.length - revenueDonorRows.length,
-          cashTotal: sumDonors(donorRows.filter(r => r.source === 'don-especes'))
+          cashCount: cashDonorRows.length,
+          cashTotal: cashDonorsTotal
         },
         waitlist: {
           count:      waitlistRows.length,
