@@ -1,4 +1,9 @@
 const { createClient } = require('@supabase/supabase-js');
+const { estimateStripeFees } = require('../../lib/stripe-fees.js');
+
+// Même taux que côté dashboard admin (api/admin/index.js) — commission +
+// traitement paiement Kickstarter, distincte des frais Stripe classiques.
+const KICKSTARTER_FEE_RATE = parseFloat(process.env.KICKSTARTER_FEE_RATE || '0.08');
 
 // Paliers de financement — montants issus des devis fabricant réels (WJPC,
 // août 2026, 1000 exemplaires, conversion $→€ ~0,863). Constantes de config,
@@ -15,13 +20,13 @@ const PALIERS = [
     id: 2,
     seuil: 3500,
     titre: 'Acompte de production',
-    description: "L'acompte est couvert : la fabrication démarre officiellement."
+    description: "L'acompte de production peut être versé au fabricant — la fabrication démarre une fois le financement complet atteint."
   },
   {
     id: 3,
     seuil: 14000,
     titre: 'Financement complet',
-    description: 'La production et la livraison des 1000 premiers exemplaires sont intégralement financées.'
+    description: 'La production et la livraison des 1000 premiers exemplaires sont intégralement financées : la fabrication peut démarrer.'
   }
 ];
 
@@ -72,14 +77,28 @@ module.exports = async (req, res) => {
                               (process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL);
     
     let sold = 0;
-    let cagnotte = 0;
+    // Cagnotte "fabrication" : même définition que le dashboard admin
+    // (api/admin/index.js, preordersCagnotteFabrication) — l'argent réellement
+    // disponible pour la fabrication, pas le brut encaissé. Concrètement :
+    // précommandes nettes des frais Stripe et hors part livraison (fléchée
+    // vers l'affranchissement, pas la fabrication), + tous les dons nets
+    // (Stripe ET espèces — cet argent finance réellement la fabrication même
+    // s'il n'entre pas dans la comptabilité/URSSAF, cf. import-transactions),
+    // + pledges Kickstarter nets de la commission Kickstarter.
+    let preordersTotal = 0;
+    let preordersShippingTotal = 0;
+    let preordersCount = 0;
+    let stripeDonorsTotal = 0;
+    let stripeDonorsCount = 0;
+    let cashDonorsTotal = 0;
+    let kickstarterTotal = 0;
 
     if (hasSupabaseConfig) {
       try {
         const supabase = getSupabaseClient();
         const { data, error } = await supabase
           .from('preorders')
-          .select('id, items, paid_status, amount_total')
+          .select('id, items, paid_status, amount_total, shipping_price_cents')
           .eq('paid_status', 'completed');
 
         if (error) {
@@ -96,22 +115,33 @@ module.exports = async (req, res) => {
               sold += 1;
             }
             // amount_total sur preorders est en euros (voir api/stripe-webhook.js)
-            cagnotte += Number(row.amount_total) || 0;
+            preordersTotal += Number(row.amount_total) || 0;
+            preordersShippingTotal += (parseInt(row.shipping_price_cents, 10) || 0) / 100;
+            preordersCount += 1;
           }
         }
 
         // amount_total sur donors est aussi en euros depuis la correction
         // appliquée par donors-amount-correction.sql (ne pas diviser par 100).
+        // Dons Stripe et espèces comptent tous les deux dans la cagnotte
+        // fabrication (même règle que le dashboard admin) — seuls les frais
+        // Stripe, qui ne s'appliquent qu'aux dons Stripe, les distinguent.
         const { data: donorRows, error: donorsError } = await supabase
           .from('donors')
-          .select('amount_total, paid_status')
+          .select('amount_total, paid_status, source')
           .eq('paid_status', 'completed');
 
         if (donorsError) {
           console.error('Donors query failed:', donorsError.message);
         } else {
           for (const row of donorRows || []) {
-            cagnotte += Number(row.amount_total) || 0;
+            const amount = Number(row.amount_total) || 0;
+            if (row.source === 'don-especes') {
+              cashDonorsTotal += amount;
+            } else {
+              stripeDonorsTotal += amount;
+              stripeDonorsCount += 1;
+            }
           }
         }
 
@@ -130,7 +160,7 @@ module.exports = async (req, res) => {
           sold += ksRows.length;
           for (const row of ksRows) {
             if ((row.currency || 'EUR').toUpperCase() === 'EUR') {
-              cagnotte += Number(row.pledge_amount) || 0;
+              kickstarterTotal += Number(row.pledge_amount) || 0;
             }
           }
         }
@@ -140,6 +170,12 @@ module.exports = async (req, res) => {
     } else {
       console.warn('Supabase not configured - returning default values');
     }
+
+    const preordersNet = preordersTotal - estimateStripeFees(preordersTotal, preordersCount);
+    const stripeDonorsNet = stripeDonorsTotal - estimateStripeFees(stripeDonorsTotal, stripeDonorsCount);
+    const donorsNet = stripeDonorsNet + cashDonorsTotal;
+    const kickstarterNet = kickstarterTotal * (1 - KICKSTARTER_FEE_RATE);
+    const cagnotte = Math.max(0, preordersNet - preordersShippingTotal + donorsNet + kickstarterNet);
 
     // Objectif de prévente (jamais affiché tel quel sur le site — seuls le
     // pourcentage et le nombre vendu sont montrés publiquement)
