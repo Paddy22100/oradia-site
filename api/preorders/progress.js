@@ -81,15 +81,16 @@ module.exports = async (req, res) => {
     // (api/admin/index.js, preordersCagnotteFabrication) — l'argent réellement
     // disponible pour la fabrication, pas le brut encaissé. Concrètement :
     // précommandes nettes des frais Stripe et hors part livraison (fléchée
-    // vers l'affranchissement, pas la fabrication), + dons Stripe nets (dons
-    // en espèces exclus par consigne explicite — pas de frais mais pas
-    // comptés dans cette cagnotte), + pledges Kickstarter nets de la
-    // commission Kickstarter.
+    // vers l'affranchissement, pas la fabrication), + tous les dons nets
+    // (Stripe ET espèces — cet argent finance réellement la fabrication même
+    // s'il n'entre pas dans la comptabilité/URSSAF, cf. import-transactions),
+    // + pledges Kickstarter nets de la commission Kickstarter.
     let preordersTotal = 0;
     let preordersShippingTotal = 0;
     let preordersCount = 0;
     let stripeDonorsTotal = 0;
     let stripeDonorsCount = 0;
+    let cashDonorsTotal = 0;
     let kickstarterTotal = 0;
 
     if (hasSupabaseConfig) {
@@ -122,8 +123,9 @@ module.exports = async (req, res) => {
 
         // amount_total sur donors est aussi en euros depuis la correction
         // appliquée par donors-amount-correction.sql (ne pas diviser par 100).
-        // Les dons en espèces (source='don-especes') sont exclus de la cagnotte
-        // fabrication — même règle que le dashboard admin.
+        // Dons Stripe et espèces comptent tous les deux dans la cagnotte
+        // fabrication (même règle que le dashboard admin) — seuls les frais
+        // Stripe, qui ne s'appliquent qu'aux dons Stripe, les distinguent.
         const { data: donorRows, error: donorsError } = await supabase
           .from('donors')
           .select('amount_total, paid_status, source')
@@ -133,9 +135,13 @@ module.exports = async (req, res) => {
           console.error('Donors query failed:', donorsError.message);
         } else {
           for (const row of donorRows || []) {
-            if (row.source === 'don-especes') continue;
-            stripeDonorsTotal += Number(row.amount_total) || 0;
-            stripeDonorsCount += 1;
+            const amount = Number(row.amount_total) || 0;
+            if (row.source === 'don-especes') {
+              cashDonorsTotal += amount;
+            } else {
+              stripeDonorsTotal += amount;
+              stripeDonorsCount += 1;
+            }
           }
         }
 
@@ -167,8 +173,9 @@ module.exports = async (req, res) => {
 
     const preordersNet = preordersTotal - estimateStripeFees(preordersTotal, preordersCount);
     const stripeDonorsNet = stripeDonorsTotal - estimateStripeFees(stripeDonorsTotal, stripeDonorsCount);
+    const donorsNet = stripeDonorsNet + cashDonorsTotal;
     const kickstarterNet = kickstarterTotal * (1 - KICKSTARTER_FEE_RATE);
-    const cagnotte = Math.max(0, preordersNet - preordersShippingTotal + stripeDonorsNet + kickstarterNet);
+    const cagnotte = Math.max(0, preordersNet - preordersShippingTotal + donorsNet + kickstarterNet);
 
     // Objectif de prévente (jamais affiché tel quel sur le site — seuls le
     // pourcentage et le nombre vendu sont montrés publiquement)
