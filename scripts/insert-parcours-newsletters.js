@@ -10,10 +10,10 @@
 // Idempotent : relancer ce script ne duplique jamais une étape déjà insérée
 // (vérifie par extra.ordre parmi les entrées extra.canal='parcours' existantes).
 //
-// Usage (depuis la racine du dépôt, avec .env local contenant SUPABASE_URL et
-// SUPABASE_SERVICE_ROLE_KEY) :
-//   node --env-file=.env scripts/insert-parcours-newsletters.js            (les 20)
-//   node --env-file=.env scripts/insert-parcours-newsletters.js --only=1   (une seule, pour test)
+// Usage (depuis la racine du dépôt — SUPABASE_URL et SUPABASE_SERVICE_ROLE_KEY
+// vivent dans .env.local, pas .env qui ne contient que la clé anon) :
+//   node --env-file=.env.local scripts/insert-parcours-newsletters.js            (les 20)
+//   node --env-file=.env.local scripts/insert-parcours-newsletters.js --only=1   (une seule, pour test)
 
 const fs = require('fs');
 const path = require('path');
