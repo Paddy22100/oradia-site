@@ -235,10 +235,16 @@
                 
                 const soldCount = document.getElementById('preorderSoldCount');
                 const rarityText = document.getElementById('rarityText');
+                const cagnotteAmount = document.getElementById('cagnotteAmount');
+                const paliersList = document.getElementById('paliersList');
+                const palierBanner = document.getElementById('palierBanner');
 
                 // Animation des chiffres
                 if (soldCount) {
                     animateValue(soldCount, 0, data.sold, 1000);
+                }
+                if (cagnotteAmount) {
+                    animateValue(cagnotteAmount, 0, Math.round(data.cagnotte || 0), 1000);
                 }
 
                 // Message de rareté dynamique — le chiffre exact n'apparaît
@@ -252,7 +258,35 @@
                         rarityText.textContent = `Édition limitée — premières séries en cours de réservation`;
                     }
                 }
-                
+
+                // Paliers de financement — entièrement pilotés par la réponse API,
+                // aucun seuil ni statut n'est recalculé ou deviné côté client.
+                if (paliersList && Array.isArray(data.paliers)) {
+                    paliersList.innerHTML = data.paliers.map(p => {
+                        const isAtteint = p.status === 'atteint';
+                        const isEnCours = p.status === 'en-cours';
+                        const barColor = isAtteint || isEnCours ? 'bg-gradient-to-r from-gold to-light-gold' : 'bg-gold/20';
+                        const icon = isAtteint
+                            ? '<i class="fas fa-check-circle text-gold"></i>'
+                            : (isEnCours ? '<i class="fas fa-hourglass-half text-gold/80"></i>' : '<i class="fas fa-lock text-light-gold/30"></i>');
+                        const textClass = isAtteint || isEnCours ? 'text-light-gold' : 'text-light-gold/40';
+                        return `
+                            <div class="text-left">
+                                <div class="flex items-center justify-between mb-1">
+                                    <span class="${textClass} text-sm font-semibold flex items-center gap-2">${icon} ${p.titre}</span>
+                                    <span class="${textClass} text-xs">${p.seuil.toLocaleString('fr-FR')} €</span>
+                                </div>
+                                <div class="w-full bg-[rgba(212,175,55,0.1)] rounded-full h-2 overflow-hidden mb-1">
+                                    <div class="${barColor} h-full rounded-full transition-all duration-1000 ease-out" style="width: ${p.percent}%"></div>
+                                </div>
+                                <p class="${textClass} text-xs">${p.description}</p>
+                            </div>`;
+                    }).join('');
+                }
+                if (palierBanner) {
+                    palierBanner.classList.toggle('hidden', !data.allPaliersReached);
+                }
+
                 // Afficher le contenu
                 setTimeout(() => {
                     if (loadingEl) loadingEl.classList.add('hidden');
@@ -963,7 +997,25 @@
                                 <span id="rarityText">Édition limitée — places disponibles</span>
                             </p>
                         </div>
-                        
+
+                        <!-- Cagnotte réelle (précommandes + dons) et paliers de financement -->
+                        <div class="mb-6">
+                            <p class="text-center text-light-gold/70 text-sm mb-1">Cagnotte réunie grâce à vos précommandes et vos dons</p>
+                            <p class="text-center text-gold text-3xl sm:text-4xl font-bold mb-6">
+                                <span id="cagnotteAmount">0</span> €
+                            </p>
+
+                            <div id="palierBanner" class="hidden mb-4 p-3 rounded-lg bg-[rgba(212,175,55,0.15)] border border-gold/40 text-center text-gold font-semibold">
+                                🎉 Objectif atteint ! La fabrication est officiellement lancée.
+                            </div>
+
+                            <div id="paliersList" class="space-y-4 max-w-xl mx-auto"></div>
+
+                            <p class="text-center text-light-gold/40 text-xs mt-3">
+                                * Montants indicatifs (devis fabricant, conversion et frais de livraison réestimés au moment de l'expédition)
+                            </p>
+                        </div>
+
                         <!-- Message important : garantie zéro-risque -->
                         <div class="p-4 bg-[rgba(212,175,55,0.1)] rounded-lg border border-gold/30">
                             <p class="text-light-gold text-base text-center font-semibold mb-1">
