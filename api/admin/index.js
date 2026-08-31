@@ -3466,10 +3466,11 @@ async function handleData(req, res) {
     // utilisent les frais réels lus dans les balance transactions.
     const stripeFee     = (total, count) => estimateStripeFees(total, count);
     const preordersNet  = preordersTotal  - stripeFee(preordersTotal,  paidPreorderRows.length);
-    // Cagnotte réellement disponible pour lancer la fabrication : net de frais Stripe
-    // ET hors part livraison (qui doit repartir en frais de port, pas financer la fabrication).
-    const preordersCagnotteFabrication = Math.max(0, preordersNet - preordersShippingTotal);
     const donorsNet     = donorsTotal     - stripeFee(donorsTotal,     revenueDonorRows.length);
+    // Cagnotte réellement disponible pour lancer la fabrication : précommandes nettes de
+    // frais Stripe ET hors part livraison (qui doit repartir en frais de port), plus les
+    // dons Stripe nets (dons en espèces exclus — cet argent n'entre pas dans ce circuit).
+    const preordersCagnotteFabrication = Math.max(0, preordersNet - preordersShippingTotal + donorsNet);
     const singleDrawNet      = singleDrawTotal      - stripeFee(singleDrawTotal,      singleDrawCount);
     const guidancesNet       = guidancesTotal       - stripeFee(guidancesTotal,       guidanceRows.length);
     const subscriptionsNet   = subscriptionsTotal   - stripeFee(subscriptionsTotal,   subscriptionRows.length);
