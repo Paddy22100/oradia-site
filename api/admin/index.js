@@ -14,7 +14,7 @@ const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail, send
 const { sendToreSubscriptionEmail, sendSubscriptionEmail, sendToreCheckinReminderEmail } = require('../../lib/tore-subscription-email.js');
 const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
 const { sendGuidanceConfirmationEmail } = require('../../lib/guidance-email.js');
-const { estimateStripeFees, getStripeFeesForPeriod, getMonthlyStripeFees, ESTIMATE_RATE, ESTIMATE_FIXED_EUR } = require('../../lib/stripe-fees.js');
+const { estimateStripeFees, getStripeFeesForPeriod, getMonthlyStripeFees, getStripeFeesDetail, ESTIMATE_RATE, ESTIMATE_FIXED_EUR } = require('../../lib/stripe-fees.js');
 const sharp = require('sharp');
 
 // Instagram/Facebook rejettent les images dont le ratio largeur/hauteur sort de [0.8, 1.91]
@@ -127,6 +127,41 @@ const KICKSTARTER_CSV_HEADER_MAP = {
 
 function normalizeCsvHeader(h) {
   return String(h || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
+}
+
+// Rattache une liste de {id: paymentIntentId, fee, amount} (venue d'un CSV Stripe ou de
+// l'API Stripe en direct — même forme dans les deux cas) à preorders/donors via
+// payment_intent_id, puis met à jour fee_amount/net_amount sur la transaction
+// correspondante (source_ref = stripe_session_id). Partagé entre l'import CSV
+// (stripe-payments-import) et la synchronisation live (stripe-fees-sync) pour ne
+// jamais avoir deux implémentations du même rattachement.
+async function matchAndApplyStripeFees(supabase, rows) {
+  const ids = [...new Set(rows.map(r => r.id))];
+  if (ids.length === 0) return { matched: 0, updated: 0, unmatched: 0 };
+
+  const [{ data: preRows }, { data: donRows }] = await Promise.all([
+    supabase.from('preorders').select('payment_intent_id, stripe_session_id').in('payment_intent_id', ids),
+    supabase.from('donors').select('payment_intent_id, stripe_session_id').in('payment_intent_id', ids)
+  ]);
+  const sessionIdByPI = new Map();
+  for (const r of preRows || []) if (r.payment_intent_id) sessionIdByPI.set(r.payment_intent_id, r.stripe_session_id);
+  for (const r of donRows || []) if (r.payment_intent_id) sessionIdByPI.set(r.payment_intent_id, r.stripe_session_id);
+
+  let updated = 0;
+  let unmatched = 0;
+  await Promise.all(rows.map(async (r) => {
+    const sessionId = sessionIdByPI.get(r.id);
+    if (!sessionId) { unmatched += 1; return; }
+    const fee = Number(r.fee) || 0;
+    const amount = Number(r.amount) || 0;
+    const { error, count } = await supabase
+      .from('transactions')
+      .update({ fee_amount: fee, net_amount: amount - fee, fee_imported_at: new Date().toISOString() }, { count: 'exact' })
+      .eq('source_ref', sessionId);
+    if (!error && count) updated += count;
+  }));
+
+  return { matched: rows.length - unmatched, updated, unmatched };
 }
 
 // Mapping tolérant des en-têtes de l'export Stripe « Paiements » (Dashboard Stripe →
@@ -2269,38 +2304,46 @@ async function handleData(req, res) {
           });
         }
 
-        const ids = [...new Set(paymentIntentRows.map(r => r.id))];
-        const [{ data: preRows }, { data: donRows }] = await Promise.all([
-          supabase.from('preorders').select('payment_intent_id, stripe_session_id').in('payment_intent_id', ids),
-          supabase.from('donors').select('payment_intent_id, stripe_session_id').in('payment_intent_id', ids)
-        ]);
-        const sessionIdByPI = new Map();
-        for (const r of preRows || []) if (r.payment_intent_id) sessionIdByPI.set(r.payment_intent_id, r.stripe_session_id);
-        for (const r of donRows || []) if (r.payment_intent_id) sessionIdByPI.set(r.payment_intent_id, r.stripe_session_id);
-
-        let updated = 0;
-        let unmatched = 0;
-        await Promise.all(paymentIntentRows.map(async (r) => {
-          const sessionId = sessionIdByPI.get(r.id);
-          if (!sessionId) { unmatched += 1; return; }
-          const fee = Number(r.fee) || 0;
-          const amount = Number(r.amount) || 0;
-          const { error, count } = await supabase
-            .from('transactions')
-            .update({ fee_amount: fee, net_amount: amount - fee, fee_imported_at: new Date().toISOString() }, { count: 'exact' })
-            .eq('source_ref', sessionId);
-          if (!error && count) updated += count;
-        }));
+        const { matched, updated, unmatched } = await matchAndApplyStripeFees(supabase, paymentIntentRows);
 
         return res.status(200).json({
           success: true,
           totalRows: rows.length,
           recognized: mapped.length,
-          matched: paymentIntentRows.length - unmatched,
+          matched,
           updated,
           unmatched,
           notEur,
           notPaymentIntent
+        });
+      }
+
+      // ── Synchronisation live des frais réels depuis l'API Stripe — même source que
+      // le total mensuel déjà réel (getMonthlyStripeFees), mais ligne par ligne. Pas de
+      // fichier à exporter/réimporter : toujours à jour au moment où on clique, contrairement
+      // au CSV (stripe-payments-import, conservé en secours si l'API Stripe est injoignable).
+      if (action === 'stripe-fees-sync') {
+        const year = parseInt(body.year, 10) || new Date().getFullYear();
+        const month = body.month ? parseInt(body.month, 10) : null;
+        const dateFrom = month ? `${year}-${String(month).padStart(2, '0')}-01` : `${year}-01-01`;
+        const dateTo = month
+          ? new Date(year, month, 1).toISOString()
+          : `${year + 1}-01-01T00:00:00.000Z`;
+
+        const result = await getStripeFeesDetail(`${dateFrom}T00:00:00.000Z`, dateTo);
+        if (!result.ok) {
+          return res.status(502).json({ error: `API Stripe injoignable : ${result.error}` });
+        }
+
+        const rows = result.details.map(d => ({ id: d.paymentIntentId, fee: d.feeEur, amount: d.amountEur }));
+        const { matched, updated, unmatched } = await matchAndApplyStripeFees(supabase, rows);
+
+        return res.status(200).json({
+          success: true,
+          fetched: result.details.length,
+          matched,
+          updated,
+          unmatched
         });
       }
 

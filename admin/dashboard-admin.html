@@ -2991,8 +2991,11 @@
                     <button onclick="importTransactions()" title="Les nouveaux paiements sont déjà enregistrés automatiquement. Ce bouton ne sert qu'à rattraper d'anciennes transactions manquantes." class="bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg px-4 py-2 text-sm hover:bg-blue-500/30 transition">
                         <i class="fas fa-history mr-1"></i>Resynchroniser l'historique
                     </button>
-                    <label title="Le total mensuel des frais Stripe ci-dessus est déjà réel — cet import ajoute le détail du frais exact ligne par ligne, à partir d'un export Stripe « Paiements » (Dashboard Stripe → Paiements → Exporter)." class="bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg px-4 py-2 text-sm hover:bg-purple-500/30 transition cursor-pointer">
-                        <i class="fas fa-file-invoice-dollar mr-1"></i>Importer CSV Stripe (frais réels)
+                    <button onclick="stripeFeesSyncNow()" title="Récupère directement depuis l'API Stripe le frais exact de chaque paiement de la période affichée — toujours à jour, aucun fichier à exporter/réimporter." class="bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg px-4 py-2 text-sm hover:bg-purple-500/30 transition">
+                        <i class="fas fa-plug mr-1"></i>Synchroniser les frais réels (Stripe)
+                    </button>
+                    <label title="À utiliser seulement si l'API Stripe est injoignable : import manuel d'un export « Paiements » (Dashboard Stripe → Paiements → Exporter)." class="bg-purple-500/10 text-purple-300/70 border border-purple-500/20 rounded-lg px-4 py-2 text-sm hover:bg-purple-500/20 transition cursor-pointer">
+                        <i class="fas fa-file-invoice-dollar mr-1"></i>Importer un CSV (secours)
                         <input type="file" accept=".csv" class="hidden" onchange="stripePaymentsHandleFile(this)">
                     </label>
                     <button onclick="showAddTransaction()" class="bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold rounded-lg px-4 py-2 text-sm transition">
@@ -4334,6 +4337,32 @@
                 kickstarterShowStatus('Erreur technique lors de l\'import : ' + e.message, 'border-red-500/40 text-red-300 bg-red-500/10');
             } finally {
                 input.value = '';
+            }
+        }
+
+        async function stripeFeesSyncNow() {
+            const year = document.getElementById('compta-year')?.value || new Date().getFullYear();
+            const month = document.getElementById('compta-month')?.value || '';
+            stripePaymentsShowStatus('Synchronisation avec Stripe en cours…', 'border-gold/30 text-gold/80 bg-gold/5');
+            try {
+                const response = await adminFetch('/api/admin?action=stripe-fees-sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ year, month: month || null })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    stripePaymentsShowStatus(data.error || 'Échec de la synchronisation.', 'border-red-500/40 text-red-300 bg-red-500/10');
+                    return;
+                }
+                stripePaymentsShowStatus(
+                    `${data.updated} transaction(s) mise(s) à jour avec le frais réel Stripe (${data.fetched} paiement(s) trouvé(s) sur la période${data.unmatched ? `, ${data.unmatched} sans précommande/don correspondant` : ''}).`,
+                    'border-green-500/40 text-green-300 bg-green-500/10'
+                );
+                await loadComptabilite();
+            } catch (e) {
+                console.error('[Admin] stripeFeesSyncNow failed:', e);
+                stripePaymentsShowStatus('Erreur technique lors de la synchronisation : ' + e.message, 'border-red-500/40 text-red-300 bg-red-500/10');
             }
         }
 
