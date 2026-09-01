@@ -7181,13 +7181,19 @@
                 }
                 const iframe = document.getElementById('nl-preview-iframe');
                 iframe.onload = () => {
-                    try {
-                        const h = iframe.contentDocument.documentElement.scrollHeight;
-                        // Ignore une mesure aberrante (ex. prise avant chargement complet des
-                        // images) plutôt que de rétrécir l'iframe à une hauteur inutilisable —
-                        // le min-height CSS sert alors de filet de sécurité.
-                        if (h > 200) iframe.style.height = (h + 32) + 'px';
-                    } catch(_) {}
+                    // Ignore une mesure aberrante (ex. prise avant chargement complet des
+                    // images) plutôt que de rétrécir l'iframe à une hauteur inutilisable —
+                    // le min-height CSS sert alors de filet de sécurité. On remesure une
+                    // deuxième fois après un court délai pour rattraper le cas où les
+                    // images finissent de charger juste après ce premier "load".
+                    const applyHeight = () => {
+                        try {
+                            const h = iframe.contentDocument.documentElement.scrollHeight;
+                            if (h > 200) iframe.style.height = (h + 32) + 'px';
+                        } catch(_) {}
+                    };
+                    applyHeight();
+                    setTimeout(applyHeight, 400);
                     document.getElementById('nl-preview-loading')?.remove();
                     iframe.classList.remove('hidden');
                 };
@@ -7949,7 +7955,7 @@
                     <div id="nl-preview-loading-draft" class="text-gold/40 text-sm flex items-center gap-2 mt-20">
                         <i class="fas fa-spinner fa-spin"></i> Génération de l'aperçu...
                     </div>
-                    <iframe id="nl-preview-iframe-draft" class="hidden w-full rounded-lg shadow-2xl" style="max-width:700px; border:none; background:#040d1c;"
+                    <iframe id="nl-preview-iframe-draft" class="hidden w-full rounded-lg shadow-2xl" style="max-width:700px; min-height:600px; border:none; background:#040d1c;"
                         sandbox="allow-same-origin"></iframe>
                 </div>`;
             document.body.appendChild(modal);
@@ -7971,7 +7977,20 @@
                 if (!res.ok) throw new Error(data.error || 'Erreur');
                 const iframe = document.getElementById('nl-preview-iframe-draft');
                 iframe.onload = () => {
-                    try { iframe.style.height = (iframe.contentDocument.documentElement.scrollHeight + 32) + 'px'; } catch(_) {}
+                    // scrollHeight mesuré au moment précis du "load" peut revenir à 0
+                    // (course avec la mise en page, surtout sur Firefox, surtout avec
+                    // les images encore en train de charger) — on le remesure une fois
+                    // après un court délai, et on ignore toute valeur qui reviendrait
+                    // plus petite que le min-height CSS pour ne jamais figer l'iframe
+                    // sur une hauteur ridiculement petite comme ça a été constaté.
+                    const applyHeight = () => {
+                        try {
+                            const h = iframe.contentDocument.documentElement.scrollHeight;
+                            if (h > 600) iframe.style.height = (h + 32) + 'px';
+                        } catch(_) {}
+                    };
+                    applyHeight();
+                    setTimeout(applyHeight, 400);
                     document.getElementById('nl-preview-loading-draft')?.remove();
                     iframe.classList.remove('hidden');
                 };
