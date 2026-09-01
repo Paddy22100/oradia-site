@@ -9,6 +9,21 @@
 
 const { createClient } = require('@supabase/supabase-js');
 
+// Traite `items` par lots de `limit` en parallèle plutôt qu'un par un. Les crons
+// horaires (cron-checkin, cron-promo-tirage, run-scheduled-draws) traitaient leurs
+// lots (jusqu'à 50 entrées) strictement séquentiellement — chaque appel Brevo/QRNG/
+// Claude ajoutant son propre aller-retour réseau, le total pouvait facilement dépasser
+// les 30s de maxDuration (et le timeout du cron externe cron-job.org), faisant échouer
+// tout le lot alors qu'une poignée d'appels lents en étaient responsables.
+async function runWithConcurrency(items, limit, fn) {
+  const results = [];
+  for (let i = 0; i < items.length; i += limit) {
+    const batch = items.slice(i, i + limit);
+    results.push(...await Promise.all(batch.map(fn)));
+  }
+  return results;
+}
+
 // Consulte le registre de fonctionnalités (dashboard admin). Fail-open si la
 // table n'existe pas encore ou si le flag n'est pas défini, pour ne jamais
 // casser une fonctionnalité existante par défaut.
@@ -904,18 +919,24 @@ async function handleCronCheckin(req, res) {
     return res.status(500).json({ error: error.message });
   }
 
-  let sent = 0, failed = 0;
-  for (const row of targets || []) {
-    try {
-      await sendCheckinEmail(row.email);
-      sent++;
-    } catch (e) {
-      console.error('[cron-checkin] Failed for', row.email, e.message);
-      failed++;
-    }
-  }
-  console.log(`[cron-checkin] sent=${sent} failed=${failed}`);
-  return res.status(200).json({ success: true, sent, failed });
+  // Répond tout de suite — cron-job.org (compte gratuit) coupe à 30s, non
+  // configurable — pendant que les envois Brevo continuent en arrière-plan via
+  // waitUntil, bornés par le maxDuration de la fonction plutôt que par ce timeout.
+  res.status(200).json({ success: true, queued: (targets || []).length });
+  const { waitUntil } = require('@vercel/functions');
+  waitUntil((async () => {
+    let sent = 0, failed = 0;
+    await runWithConcurrency(targets || [], 5, async (row) => {
+      try {
+        await sendCheckinEmail(row.email);
+        sent++;
+      } catch (e) {
+        console.error('[cron-checkin] Failed for', row.email, e.message);
+        failed++;
+      }
+    });
+    console.log(`[cron-checkin] sent=${sent} failed=${failed}`);
+  })());
 }
 
 async function sendPromoTirageEmail(email) {
@@ -1218,20 +1239,25 @@ async function handleCronPromoTirage(req, res) {
     return res.status(500).json({ error: error.message });
   }
 
-  let sent = 0, skipped = 0, failed = 0;
-  for (const row of targets || []) {
-    try {
-      const result = await sendPromoTirageEmail(row.email);
-      if (result.skipped) skipped++;
-      else sent++;
-    } catch (e) {
-      console.error('[cron-promo-tirage] Failed for', row.email, e.message);
-      failed++;
-    }
-  }
-
-  console.log(`[cron-promo-tirage] sent=${sent} skipped=${skipped} failed=${failed}`);
-  return res.status(200).json({ success: true, sent, skipped, failed });
+  // Répond tout de suite — cron-job.org (compte gratuit) coupe à 30s, non
+  // configurable — pendant que les envois Brevo continuent en arrière-plan via
+  // waitUntil, bornés par le maxDuration de la fonction plutôt que par ce timeout.
+  res.status(200).json({ success: true, queued: (targets || []).length });
+  const { waitUntil } = require('@vercel/functions');
+  waitUntil((async () => {
+    let sent = 0, skipped = 0, failed = 0;
+    await runWithConcurrency(targets || [], 5, async (row) => {
+      try {
+        const result = await sendPromoTirageEmail(row.email);
+        if (result.skipped) skipped++;
+        else sent++;
+      } catch (e) {
+        console.error('[cron-promo-tirage] Failed for', row.email, e.message);
+        failed++;
+      }
+    });
+    console.log(`[cron-promo-tirage] sent=${sent} skipped=${skipped} failed=${failed}`);
+  })());
 }
 
 // ============ TIRAGES PROGRAMMÉS (réservés aux abonnés) ============
@@ -1366,7 +1392,12 @@ async function generateScheduledAnalysis({ intention, cards, gender, userEmail }
   const { buildAnalysisPrompt, cleanAnalysisText, splitAnalysisSections } = require('../../lib/tore-analysis-prompt.js');
   const { logApiUsage } = require('../../lib/api-usage-tracker.js');
   const prompt = buildAnalysisPrompt({ intention, cards, gender });
-  const models = [process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5', 'claude-haiku-4-5'];
+  // Dédoublonné : sans ANTHROPIC_MODEL configuré (cas courant), les deux entrées
+  // valaient le même modèle — un timeout (25s, AbortSignal ci-dessous) sur la
+  // 1ère tentative relançait alors une 2e tentative identique, doublant l'attente
+  // pour rien (jusqu'à 50s ici, cumulé avec jusqu'à 16s de repli QRNG, dépassait
+  // le maxDuration de la fonction). Un vrai modèle alternatif reste retenté.
+  const models = [...new Set([process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5', 'claude-haiku-4-5'])];
 
   for (const model of models) {
     const startTime = Date.now();
@@ -1428,18 +1459,33 @@ async function handleRunScheduledDraws(req, res) {
     return res.status(500).json({ error: error.message });
   }
 
+  // Répond tout de suite à cron-job.org — dont le compte gratuit impose un timeout
+  // de 30s, non configurable — pendant que le vrai travail (QRNG + Claude AI + email
+  // par entrée) continue en arrière-plan via waitUntil, borné par le maxDuration de
+  // la fonction (60s) plutôt que par la patience du client HTTP qui a déclenché
+  // l'appel. Sans ça, même optimisé, ce traitement reste trop lent pour un timeout
+  // de 30s dès qu'un tirage programmé tombe sur cette fenêtre horaire.
+  res.status(200).json({ success: true, queued: (due || []).length });
+  const { waitUntil } = require('@vercel/functions');
+  waitUntil(runScheduledDrawsBackground(supabase, due || [], now));
+}
+
+async function runScheduledDrawsBackground(supabase, due, now) {
   const { drawSevenCards } = require('../../lib/tore-deck.js');
   const { resolveCardImageUrl } = require('../../lib/tore-card-images.js');
 
   let ran = 0, skipped = 0, failed = 0;
 
-  for (const sched of due || []) {
+  // Concurrence plus prudente qu'ailleurs (3 au lieu de 5) : chaque entrée fait un
+  // appel QRNG puis un appel Claude AI (generateScheduledAnalysis), plus coûteux et
+  // plus sensible aux limites de débit qu'un simple envoi Brevo.
+  await runWithConcurrency(due, 3, async (sched) => {
     try {
       // Anti-doublon (le cron externe peut tourner plusieurs fois dans la même heure)
-      if (sched.last_run_date === now.dateStr) { skipped++; continue; }
+      if (sched.last_run_date === now.dateStr) { skipped++; return; }
       // Correspondance fréquence / jour
-      if (sched.frequency === 'weekly' && sched.day_of_week !== now.weekday) { continue; }
-      if (sched.frequency === 'monthly' && sched.day_of_month !== now.dayOfMonth) { continue; }
+      if (sched.frequency === 'weekly' && sched.day_of_week !== now.weekday) { return; }
+      if (sched.frequency === 'monthly' && sched.day_of_month !== now.dayOfMonth) { return; }
 
       // Toujours réservé aux abonnés actifs — un abonnement peut avoir expiré depuis la
       // dernière modification de la planification.
@@ -1449,7 +1495,7 @@ async function handleRunScheduledDraws(req, res) {
         .ilike('email', sched.email)
         .maybeSingle();
       const isActiveSubscriber = sub && sub.status === 'active' && new Date(sub.expires_at) > new Date();
-      if (!isActiveSubscriber) { skipped++; continue; }
+      if (!isActiveSubscriber) { skipped++; return; }
 
       const { cards: rawCards, qrngSource } = await drawSevenCards();
       const cards = rawCards.map(c => {
@@ -1459,7 +1505,7 @@ async function handleRunScheduledDraws(req, res) {
       });
 
       const analysis = await generateScheduledAnalysis({ intention: sched.intention, cards, gender: sched.gender, userEmail: sched.email });
-      if (!analysis) { failed++; continue; }
+      if (!analysis) { failed++; return; }
 
       const passerelles = cards.filter(c => c.bridgeCard).map(c => ({ carte: c.name, passerelle: c.bridgeCard.name }));
 
@@ -1516,10 +1562,11 @@ async function handleRunScheduledDraws(req, res) {
       console.error('[run-scheduled-draws] Failed for', sched.email, e.message);
       failed++;
     }
-  }
+  });
 
+  // La réponse HTTP est déjà partie (voir handleRunScheduledDraws) — on ne fait
+  // plus que journaliser le résultat pour le suivi (logs Vercel).
   console.log(`[run-scheduled-draws] ran=${ran} skipped=${skipped} failed=${failed}`);
-  return res.status(200).json({ success: true, ran, skipped, failed });
 }
 
 // ============ DISPATCH PRINCIPAL ============

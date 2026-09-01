@@ -3976,7 +3976,7 @@ function buildSupportReplyEmailHtml({ message }) {
   const cardInner = nlForceOpaqueCells(`
   <tr><td style="padding:0; line-height:0;">
     <a href="https://oradia.fr" target="_blank" style="display:block; line-height:0;">
-      <img src="https://oradia.fr/images/medias/banniere-youtube.webp" alt="Oradia" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
+      <img src="https://oradia.fr/images/medias/banniere-youtube-v2.webp" alt="Oradia" width="700" style="display:block; width:100%; height:auto; max-width:700px;">
     </a>
   </td></tr>
   <tr><td style="padding:30px 32px 4px;">
