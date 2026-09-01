@@ -1381,7 +1381,12 @@ async function generateScheduledAnalysis({ intention, cards, gender, userEmail }
   const { buildAnalysisPrompt, cleanAnalysisText, splitAnalysisSections } = require('../../lib/tore-analysis-prompt.js');
   const { logApiUsage } = require('../../lib/api-usage-tracker.js');
   const prompt = buildAnalysisPrompt({ intention, cards, gender });
-  const models = [process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5', 'claude-haiku-4-5'];
+  // Dédoublonné : sans ANTHROPIC_MODEL configuré (cas courant), les deux entrées
+  // valaient le même modèle — un timeout (25s, AbortSignal ci-dessous) sur la
+  // 1ère tentative relançait alors une 2e tentative identique, doublant l'attente
+  // pour rien (jusqu'à 50s ici, cumulé avec jusqu'à 16s de repli QRNG, dépassait
+  // le maxDuration de la fonction). Un vrai modèle alternatif reste retenté.
+  const models = [...new Set([process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5', 'claude-haiku-4-5'])];
 
   for (const model of models) {
     const startTime = Date.now();
