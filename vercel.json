@@ -137,7 +137,7 @@
       "maxDuration": 30
     },
     "api/tirages/send-email.js": {
-      "maxDuration": 30
+      "maxDuration": 60
     },
     "api/preorders/progress.js": {
       "maxDuration": 15
