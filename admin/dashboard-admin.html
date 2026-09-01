@@ -2946,6 +2946,10 @@
                     <button onclick="importTransactions()" title="Les nouveaux paiements sont déjà enregistrés automatiquement. Ce bouton ne sert qu'à rattraper d'anciennes transactions manquantes." class="bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg px-4 py-2 text-sm hover:bg-blue-500/30 transition">
                         <i class="fas fa-history mr-1"></i>Resynchroniser l'historique
                     </button>
+                    <label title="Le total mensuel des frais Stripe ci-dessus est déjà réel — cet import ajoute le détail du frais exact ligne par ligne, à partir d'un export Stripe « Paiements » (Dashboard Stripe → Paiements → Exporter)." class="bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg px-4 py-2 text-sm hover:bg-purple-500/30 transition cursor-pointer">
+                        <i class="fas fa-file-invoice-dollar mr-1"></i>Importer CSV Stripe (frais réels)
+                        <input type="file" accept=".csv" class="hidden" onchange="stripePaymentsHandleFile(this)">
+                    </label>
                     <button onclick="showAddTransaction()" class="bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold rounded-lg px-4 py-2 text-sm transition">
                         <i class="fas fa-plus mr-1"></i>Ajouter
                     </button>
@@ -2954,6 +2958,8 @@
                     </button>
                 </div>
             </div>
+
+            <div id="stripePaymentsImportStatus" class="hidden mb-6 px-4 py-3 rounded-lg text-sm border"></div>
 
             <!-- KPIs -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -4327,6 +4333,63 @@
             } catch (e) {
                 console.error('[Admin] kickstarterHandleFile failed:', e);
                 kickstarterShowStatus('Erreur technique lors de l\'import : ' + e.message, 'border-red-500/40 text-red-300 bg-red-500/10');
+            } finally {
+                input.value = '';
+            }
+        }
+
+        function stripePaymentsShowStatus(msg, cls) {
+            const el = document.getElementById('stripePaymentsImportStatus');
+            if (!el) return;
+            el.textContent = msg;
+            el.className = `mb-6 px-4 py-3 rounded-lg text-sm border ${cls}`;
+            el.classList.remove('hidden');
+        }
+
+        async function stripePaymentsHandleFile(input) {
+            const file = input.files?.[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                stripePaymentsShowStatus('Fichier trop volumineux (max 5 Mo).', 'border-red-500/40 text-red-300 bg-red-500/10');
+                input.value = '';
+                return;
+            }
+            try {
+                const text = await file.text();
+                const rows = parseCsv(text);
+                if (rows.length === 0) {
+                    stripePaymentsShowStatus('Fichier vide ou illisible.', 'border-red-500/40 text-red-300 bg-red-500/10');
+                    return;
+                }
+                const confirmed = confirm(`${rows.length} ligne(s) détectée(s) dans « ${file.name} ». Importer le frais réel de ces paiements Stripe maintenant ?`);
+                if (!confirmed) return;
+
+                stripePaymentsShowStatus('Import en cours…', 'border-gold/30 text-gold/80 bg-gold/5');
+                const response = await adminFetch('/api/admin?action=stripe-payments-import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rows })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    stripePaymentsShowStatus(data.error || 'Échec de l\'import.', 'border-red-500/40 text-red-300 bg-red-500/10');
+                    return;
+                }
+                if (data.message) {
+                    stripePaymentsShowStatus(data.message, 'border-orange-500/40 text-orange-300 bg-orange-500/10');
+                    return;
+                }
+                stripePaymentsShowStatus(
+                    `${data.updated} transaction(s) mise(s) à jour avec le frais réel (${data.recognized}/${data.totalRows} ligne(s) reconnue(s)` +
+                    `${data.notEur ? `, ${data.notEur} hors EUR ignorée(s)` : ''}` +
+                    `${data.notPaymentIntent ? `, ${data.notPaymentIntent} sans PaymentIntent reconnu` : ''}` +
+                    `${data.unmatched ? `, ${data.unmatched} sans précommande/don correspondant` : ''}).`,
+                    'border-green-500/40 text-green-300 bg-green-500/10'
+                );
+                await loadComptabilite();
+            } catch (e) {
+                console.error('[Admin] stripePaymentsHandleFile failed:', e);
+                stripePaymentsShowStatus('Erreur technique lors de l\'import : ' + e.message, 'border-red-500/40 text-red-300 bg-red-500/10');
             } finally {
                 input.value = '';
             }
@@ -11862,12 +11925,14 @@
                 const isRecette = t.type === 'recette';
                 const fmt2 = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(v);
                 const d = new Date(t.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+                const hasRealFee = t.fee_amount !== null && t.fee_amount !== undefined;
                 return `<div class="flex items-center justify-between gap-3 bg-white/3 border border-gold/10 rounded-xl px-4 py-3">
                     <div class="flex items-center gap-3 min-w-0">
                         <span class="w-2 h-2 rounded-full flex-shrink-0 ${isRecette?'bg-green-400':'bg-red-400'}"></span>
                         <div class="min-w-0">
                             <p class="text-gold/80 text-sm font-medium truncate">${escapeHtmlFront(t.description)}</p>
                             <p class="text-gold/40 text-xs">${d}${t.category?' · '+escapeHtmlFront(t.category):''}${t.source&&t.source!=='manuel'?' · '+t.source:''}</p>
+                            ${hasRealFee ? `<p class="text-gold/30 text-xs">Frais Stripe réel : -${fmt2(t.fee_amount)} · net : ${fmt2(t.net_amount)}</p>` : ''}
                         </div>
                     </div>
                     <div class="flex items-center gap-3 flex-shrink-0">

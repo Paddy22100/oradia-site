@@ -129,6 +129,22 @@ function normalizeCsvHeader(h) {
   return String(h || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
 
+// Mapping tolérant des en-têtes de l'export Stripe « Paiements » (Dashboard Stripe →
+// Paiements → Exporter). Objectif : le frais réel par transaction (le total mensuel,
+// lui, est déjà réel via l'API Stripe — voir lib/stripe-fees.js). "id" doit être le
+// PaymentIntent (pi_...) : c'est la seule référence Stripe que preorders/donors
+// stockent (payment_intent_id) — un Charge ID (ch_...) ne peut pas être rattaché
+// sans appel API supplémentaire, volontairement hors scope de cet import CSV.
+const STRIPE_PAYMENTS_CSV_HEADER_MAP = {
+  'id': 'id', 'payment intent id': 'id', 'paymentintent id': 'id', 'charge id': 'id',
+  'fee': 'fee', 'fees': 'fee',
+  'amount': 'amount', 'converted amount': 'amount', 'montant': 'amount',
+  'currency': 'currency', 'converted amount currency': 'currency', 'devise': 'currency',
+  'customer email': 'email', 'email': 'email',
+  'description': 'description', 'statement descriptor': 'description',
+  'created (utc)': 'created', 'created date (utc)': 'created', 'created': 'created', 'date': 'created',
+};
+
 // Catégories de contacts newsletter (utilisées pour cibler les envois depuis le dashboard,
 // sans passer par les listes Brevo). Liste indicative — des tags libres restent possibles.
 const CONTACT_TAGS = [
@@ -2204,6 +2220,88 @@ async function handleData(req, res) {
           .eq('import_batch_id', body.batchId);
         if (delErr) throw delErr;
         return res.status(200).json({ success: true, deleted: count ?? 0 });
+      }
+
+      // ── Import CSV Stripe « Paiements » : frais réel par transaction (le total
+      // mensuel est déjà réel via l'API Stripe, ceci ajoute le détail ligne par ligne).
+      // Rattache chaque paiement à une précommande/don existant via payment_intent_id,
+      // puis met à jour fee_amount/net_amount sur la ligne transactions correspondante
+      // (source_ref = stripe_session_id). N'insère jamais de nouvelle transaction —
+      // ça reste le rôle de import-transactions/du webhook, pas de cet import.
+      if (action === 'stripe-payments-import') {
+        const rows = Array.isArray(body.rows) ? body.rows : [];
+        if (rows.length === 0) return res.status(400).json({ error: 'Aucune ligne à importer' });
+        if (rows.length > 5000) return res.status(400).json({ error: 'Fichier trop volumineux (5000 lignes max)' });
+
+        const mapped = rows.map(rawRow => {
+          const out = {};
+          for (const [rawHeader, value] of Object.entries(rawRow)) {
+            const key = STRIPE_PAYMENTS_CSV_HEADER_MAP[normalizeCsvHeader(rawHeader)];
+            if (!key || value === undefined || value === null || value === '') continue;
+            if (key === 'fee' || key === 'amount') {
+              const num = parseFloat(String(value).replace(/[^\d.,-]/g, '').replace(',', '.'));
+              out[key] = Number.isFinite(num) ? num : null;
+            } else if (key === 'currency') {
+              out[key] = String(value).trim().toUpperCase().slice(0, 3);
+            } else {
+              out[key] = String(value).trim();
+            }
+          }
+          return out;
+        }).filter(r => r.id);
+
+        if (mapped.length === 0) {
+          return res.status(400).json({ error: "Impossible de reconnaître les colonnes de ce fichier (en-têtes non standard). Vérifiez qu'il s'agit bien d'un export Stripe « Paiements »." });
+        }
+
+        const eurRows = mapped.filter(r => !r.currency || r.currency === 'EUR');
+        const notEur = mapped.length - eurRows.length;
+        const paymentIntentRows = eurRows.filter(r => r.id.startsWith('pi_'));
+        const notPaymentIntent = eurRows.length - paymentIntentRows.length;
+
+        if (paymentIntentRows.length === 0) {
+          return res.status(200).json({
+            success: true, totalRows: rows.length, recognized: mapped.length,
+            matched: 0, updated: 0, unmatched: 0, notEur, notPaymentIntent,
+            message: notPaymentIntent > 0
+              ? "Aucune ligne ne porte un identifiant PaymentIntent (pi_...) reconnu — vérifiez que la colonne « id » de l'export Stripe correspond au PaymentIntent, pas au Charge."
+              : undefined
+          });
+        }
+
+        const ids = [...new Set(paymentIntentRows.map(r => r.id))];
+        const [{ data: preRows }, { data: donRows }] = await Promise.all([
+          supabase.from('preorders').select('payment_intent_id, stripe_session_id').in('payment_intent_id', ids),
+          supabase.from('donors').select('payment_intent_id, stripe_session_id').in('payment_intent_id', ids)
+        ]);
+        const sessionIdByPI = new Map();
+        for (const r of preRows || []) if (r.payment_intent_id) sessionIdByPI.set(r.payment_intent_id, r.stripe_session_id);
+        for (const r of donRows || []) if (r.payment_intent_id) sessionIdByPI.set(r.payment_intent_id, r.stripe_session_id);
+
+        let updated = 0;
+        let unmatched = 0;
+        await Promise.all(paymentIntentRows.map(async (r) => {
+          const sessionId = sessionIdByPI.get(r.id);
+          if (!sessionId) { unmatched += 1; return; }
+          const fee = Number(r.fee) || 0;
+          const amount = Number(r.amount) || 0;
+          const { error, count } = await supabase
+            .from('transactions')
+            .update({ fee_amount: fee, net_amount: amount - fee, fee_imported_at: new Date().toISOString() }, { count: 'exact' })
+            .eq('source_ref', sessionId);
+          if (!error && count) updated += count;
+        }));
+
+        return res.status(200).json({
+          success: true,
+          totalRows: rows.length,
+          recognized: mapped.length,
+          matched: paymentIntentRows.length - unmatched,
+          updated,
+          unmatched,
+          notEur,
+          notPaymentIntent
+        });
       }
 
       if (action === 'test-subscription-email') {
