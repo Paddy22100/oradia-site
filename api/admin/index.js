@@ -129,19 +129,24 @@ function normalizeCsvHeader(h) {
   return String(h || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
 
-// Rattache une liste de {id: paymentIntentId, fee, amount} (venue d'un CSV Stripe ou de
-// l'API Stripe en direct — même forme dans les deux cas) à preorders/donors via
-// payment_intent_id, puis met à jour fee_amount/net_amount sur la transaction
-// correspondante (source_ref = stripe_session_id). Partagé entre l'import CSV
-// (stripe-payments-import) et la synchronisation live (stripe-fees-sync) pour ne
-// jamais avoir deux implémentations du même rattachement.
+// Rattache une liste de {id: paymentIntentId, directRef, fee, amount} (venue d'un CSV
+// Stripe ou de l'API Stripe en direct — même forme dans les deux cas) à la bonne ligne
+// transactions, puis met à jour fee_amount/net_amount. Deux chemins de rattachement,
+// essayés dans l'ordre :
+// 1. directRef (ex: l'Invoice Stripe d'un renouvellement d'abonnement) contre
+//    transactions.source_ref directement — c'est déjà la même valeur, pas de table
+//    intermédiaire à consulter.
+// 2. à défaut, id (PaymentIntent) → preorders/donors.payment_intent_id → leur
+//    stripe_session_id, qui EST transactions.source_ref pour précommande/don.
+// Partagé entre l'import CSV (stripe-payments-import) et la synchronisation live
+// (stripe-fees-sync) pour ne jamais avoir deux implémentations du même rattachement.
 async function matchAndApplyStripeFees(supabase, rows) {
-  const ids = [...new Set(rows.map(r => r.id))];
-  if (ids.length === 0) return { matched: 0, updated: 0, unmatched: 0, unmatchedDetails: [], noTransactionRow: 0, noTransactionRowDetails: [] };
+  const ids = [...new Set(rows.map(r => r.id).filter(Boolean))];
+  if (rows.length === 0) return { matched: 0, updated: 0, unmatched: 0, unmatchedDetails: [], noTransactionRow: 0, noTransactionRowDetails: [] };
 
   const [{ data: preRows }, { data: donRows }] = await Promise.all([
-    supabase.from('preorders').select('payment_intent_id, stripe_session_id').in('payment_intent_id', ids),
-    supabase.from('donors').select('payment_intent_id, stripe_session_id').in('payment_intent_id', ids)
+    ids.length ? supabase.from('preorders').select('payment_intent_id, stripe_session_id').in('payment_intent_id', ids) : { data: [] },
+    ids.length ? supabase.from('donors').select('payment_intent_id, stripe_session_id').in('payment_intent_id', ids) : { data: [] }
   ]);
   const sessionIdByPI = new Map();
   for (const r of preRows || []) if (r.payment_intent_id) sessionIdByPI.set(r.payment_intent_id, r.stripe_session_id);
@@ -149,32 +154,37 @@ async function matchAndApplyStripeFees(supabase, rows) {
 
   let updated = 0;
   // Deux façons différentes de ne rien mettre à jour, à ne pas confondre pour pouvoir
-  // diagnostiquer : payment_intent_id introuvable dans preorders/donors (le paiement
-  // Stripe n'est tout simplement pas chez nous), vs trouvé mais sans ligne transactions
-  // correspondante (source_ref) — dans ce cas il faut d'abord "Resynchroniser
-  // l'historique" pour créer la ligne, avant que le frais puisse s'y accrocher.
+  // diagnostiquer : aucune référence exploitable trouvée (ni directRef en base, ni
+  // payment_intent_id connu de preorders/donors) — le paiement Stripe n'est tout
+  // simplement pas chez nous (ou pas un type couvert, ex. 1er paiement d'un
+  // abonnement) —, vs référence trouvée mais sans ligne transactions correspondante,
+  // auquel cas il faut d'abord "Resynchroniser l'historique" pour créer la ligne.
   let unmatched = 0;
   const unmatchedDetails = [];
   let noTransactionRow = 0;
   const noTransactionRowDetails = [];
   await Promise.all(rows.map(async (r) => {
-    const sessionId = sessionIdByPI.get(r.id);
-    if (!sessionId) {
+    const candidateRefs = [r.directRef, sessionIdByPI.get(r.id)].filter(Boolean);
+    if (candidateRefs.length === 0) {
       unmatched += 1;
       if (unmatchedDetails.length < 20) unmatchedDetails.push({ paymentIntentId: r.id, amount: Number(r.amount) || 0 });
       return;
     }
     const fee = Number(r.fee) || 0;
     const amount = Number(r.amount) || 0;
-    const { error, count } = await supabase
-      .from('transactions')
-      .update({ fee_amount: fee, net_amount: amount - fee, fee_imported_at: new Date().toISOString() }, { count: 'exact' })
-      .eq('source_ref', sessionId);
-    if (!error && count) {
+    let count = 0;
+    for (const ref of candidateRefs) {
+      const { error, count: c } = await supabase
+        .from('transactions')
+        .update({ fee_amount: fee, net_amount: amount - fee, fee_imported_at: new Date().toISOString() }, { count: 'exact' })
+        .eq('source_ref', ref);
+      if (!error && c) { count += c; break; }
+    }
+    if (count) {
       updated += count;
     } else {
       noTransactionRow += 1;
-      if (noTransactionRowDetails.length < 20) noTransactionRowDetails.push({ paymentIntentId: r.id, sessionId, amount });
+      if (noTransactionRowDetails.length < 20) noTransactionRowDetails.push({ paymentIntentId: r.id, ref: candidateRefs[0], amount });
     }
   }));
 
@@ -2406,7 +2416,7 @@ async function handleData(req, res) {
           return res.status(502).json({ error: `API Stripe injoignable : ${result.error}` });
         }
 
-        const rows = result.details.map(d => ({ id: d.paymentIntentId, fee: d.feeEur, amount: d.amountEur }));
+        const rows = result.details.map(d => ({ id: d.paymentIntentId, directRef: d.invoiceId, fee: d.feeEur, amount: d.amountEur }));
         const { matched, updated, unmatched, unmatchedDetails, noTransactionRow, noTransactionRowDetails } = await matchAndApplyStripeFees(supabase, rows);
 
         return res.status(200).json({
