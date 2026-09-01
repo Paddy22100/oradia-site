@@ -2175,6 +2175,52 @@ async function handleData(req, res) {
         // l'onglet Kickstarter mais hors comptabilité tant qu'elles ne sont pas converties à la main).
         const { data: kickstarterBackers } = await sb.from('kickstarter_backers').select('pledged_at,imported_at,pledge_amount,currency,backer_name,email,reward_title,backer_number');
         const planPriceEur = p => p === 'decouverte' ? 5 : 8;
+
+        // Le webhook Stripe (api/stripe-webhook.js) crée déjà une ligne "abonnement" réelle
+        // au moment du paiement, avec le vrai montant facturé (source_ref = session Stripe
+        // ou invoice.id). Cet import ne doit "rattraper" QUE les abonnés qui n'ont jamais eu
+        // cette ligne réelle (ex: abonnement créé avant l'ajout de ce code) — sinon on
+        // duplique avec un montant deviné depuis le plan ACTUEL (faux si le plan a changé
+        // depuis), sous une clé différente (sub_email_date) que le upsert onConflict ne peut
+        // pas rapprocher de la vraie ligne. Repéré en prod : un abonné avec deux lignes
+        // "abonnement" au même jour, montants différents (2026-09).
+        //
+        // La description est construite comme `... — ${full_name || email}` : on ne peut
+        // donc pas fiablement en extraire l'email si full_name est renseigné (il y a le nom,
+        // pas l'email). On compare plutôt chaque abonné de tore_subscriptions (email connu,
+        // authoritatif) au même suffixe `full_name || email` que celui utilisé à l'écriture,
+        // pour retomber sur son email réel plutôt que de parser un texte ambigu.
+        const { data: existingAbonnementTx } = await sb.from('transactions').select('source_ref, description').eq('source', 'abonnement');
+        const isSyntheticRef = (ref) => typeof ref === 'string' && /^sub_.+_\d{4}-\d{2}-\d{2}$/.test(ref);
+        const realAbonnementLabels = new Set(
+          (existingAbonnementTx || [])
+            .filter(t => !isSyntheticRef(t.source_ref))
+            .map(t => t.description?.split('—').pop()?.trim().toLowerCase())
+            .filter(Boolean)
+        );
+        const syntheticAbonnementLabels = new Set(
+          (existingAbonnementTx || [])
+            .filter(t => isSyntheticRef(t.source_ref))
+            .map(t => t.description?.split('—').pop()?.trim().toLowerCase())
+            .filter(Boolean)
+        );
+        const emailsAlreadyTracked = new Set();
+        for (const s of (subs || [])) {
+          const label = String(s.full_name || s.email || '').trim().toLowerCase();
+          if (!label || !s.email) continue;
+          if (realAbonnementLabels.has(label)) {
+            // Vraie ligne trouvée pour cet abonné : purge la synthétique si elle existe
+            // (montant deviné, forcément la moins fiable des deux), n'en recrée pas une.
+            await sb.from('transactions').delete().eq('source', 'abonnement').ilike('source_ref', `sub_${s.email}_%`);
+            emailsAlreadyTracked.add(s.email.toLowerCase());
+          } else if (syntheticAbonnementLabels.has(label)) {
+            // Seulement une synthétique existe (aucune vraie ligne jamais enregistrée pour
+            // cet abonné) : rien de plus fiable à mettre à sa place, mais pas de raison d'en
+            // recréer une (upsert idempotent de toute façon sur la même clé).
+            emailsAlreadyTracked.add(s.email.toLowerCase());
+          }
+        }
+
         const toInsert = [
             ...(preorders||[]).filter(p=>!isExcluded(p.email)).map(p => ({ date: p.created_at?.split('T')[0], type:'recette', category:'précommande', description:`Précommande ${p.offer||''} — ${p.full_name||p.email||''}`, amount: parseFloat(p.amount_total)||0, source:'precommande', source_ref: p.stripe_session_id })).filter(t=>t.amount>0),
             // Dons en espèces visibles en comptabilité (source distincte 'don-especes') mais
@@ -2182,7 +2228,9 @@ async function handleData(req, res) {
             // hors Stripe/compte pro, cet argent n'est pas déclaré.
             ...(donors||[]).filter(d=>!isExcluded(d.email)).map(d => ({ date: d.created_at?.split('T')[0], type:'recette', category:'don', description: d.source === 'don-especes' ? `Don (espèces) — ${d.full_name||d.email||''}` : `Don — ${d.full_name||d.email||''}`, amount: parseFloat(d.amount_total)||0, source: d.source === 'don-especes' ? 'don-especes' : 'don', source_ref: d.stripe_session_id })).filter(t=>t.amount>0),
             ...(guidances||[]).filter(g=>!isExcluded(g.client_email)).map(g => ({ date: g.created_at?.split('T')[0], type:'recette', category:'guidance', description:`Guidance — ${g.client_name||g.client_email||''}`, amount: (g.amount||0)/100, source:'guidance', source_ref: g.cal_booking_uid })).filter(t=>t.amount>0),
-            ...(subs||[]).filter(s=>!isExcluded(s.email) && !s.is_free).map(s => ({ date: s.created_at?.split('T')[0], type:'recette', category:'abonnement', description:`Abonnement Tore ${s.plan||'complet'} — ${s.full_name||s.email||''}`, amount: planPriceEur(s.plan), source:'abonnement', source_ref: `sub_${s.email}_${s.created_at?.split('T')[0]}` })),
+            // Seulement les abonnés sans AUCUNE ligne "abonnement" existante (vraie rattrapage,
+            // pas un doublon de ce que le webhook a déjà enregistré).
+            ...(subs||[]).filter(s=>!isExcluded(s.email) && !s.is_free && !emailsAlreadyTracked.has(String(s.email||'').toLowerCase())).map(s => ({ date: s.created_at?.split('T')[0], type:'recette', category:'abonnement', description:`Abonnement Tore ${s.plan||'complet'} — ${s.full_name||s.email||''}`, amount: planPriceEur(s.plan), source:'abonnement', source_ref: `sub_${s.email}_${s.created_at?.split('T')[0]}` })),
             ...(kickstarterBackers||[]).filter(k=>!isExcluded(k.email) && (k.currency||'EUR').toUpperCase()==='EUR' && k.backer_number).map(k => ({ date: (k.pledged_at||k.imported_at)?.split('T')[0], type:'recette', category:'kickstarter', description:`Kickstarter ${k.reward_title||''} — ${k.backer_name||k.email||''}`, amount: parseFloat(k.pledge_amount)||0, source:'kickstarter', source_ref: `ks_${k.backer_number}` })).filter(t=>t.amount>0),
         ];
         // Purger les transactions des abonnements gratuits déjà importées avant que is_free soit posé
