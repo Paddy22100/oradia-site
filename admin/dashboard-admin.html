@@ -4384,9 +4384,11 @@
                     stripePaymentsShowStatus(data.error || 'Échec de la synchronisation.', 'border-red-500/40 text-red-300 bg-red-500/10');
                     return;
                 }
-                stripePaymentsShowStatus(
-                    `${data.updated} transaction(s) mise(s) à jour avec le frais réel Stripe (${data.fetched} paiement(s) trouvé(s) sur la période${data.unmatched ? `, ${data.unmatched} sans précommande/don correspondant` : ''}).`,
-                    'border-green-500/40 text-green-300 bg-green-500/10'
+                const hasIssues = data.unmatched || data.noTransactionRow;
+                stripePaymentsShowResult(
+                    `${data.updated} transaction(s) mise(s) à jour avec le frais réel Stripe (${data.fetched} paiement(s) trouvé(s) sur la période).`,
+                    data,
+                    hasIssues ? 'border-orange-500/40 text-orange-300 bg-orange-500/10' : 'border-green-500/40 text-green-300 bg-green-500/10'
                 );
                 await loadComptabilite();
             } catch (e) {
@@ -4399,6 +4401,33 @@
             const el = document.getElementById('stripePaymentsImportStatus');
             if (!el) return;
             el.textContent = msg;
+            el.className = `mb-6 px-4 py-3 rounded-lg text-sm border ${cls}`;
+            el.classList.remove('hidden');
+        }
+
+        // Détail ligne par ligne des paiements Stripe qui n'ont pas pu être rattachés,
+        // pour diagnostiquer sans avoir à recouper manuellement avec le dashboard Stripe.
+        function stripeFeesSyncDetailsHtml(data) {
+            const parts = [];
+            if (data.unmatched) {
+                const lines = (data.unmatchedDetails || []).map(d =>
+                    `<li>${escapeHtmlFront(d.paymentIntentId)} — ${new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(d.amount)} : aucune précommande/don avec ce PaymentIntent</li>`
+                ).join('');
+                parts.push(`<p class="mt-2 font-semibold">${data.unmatched} paiement(s) Stripe sans précommande/don correspondant :</p><ul class="list-disc list-inside text-xs opacity-80">${lines}</ul>`);
+            }
+            if (data.noTransactionRow) {
+                const lines = (data.noTransactionRowDetails || []).map(d =>
+                    `<li>${escapeHtmlFront(d.paymentIntentId)} — ${new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(d.amount)} : précommande/don trouvé, mais aucune ligne dans "Transactions" (source_ref ${escapeHtmlFront(d.sessionId)}) — clique "Resynchroniser l'historique" puis relance</li>`
+                ).join('');
+                parts.push(`<p class="mt-2 font-semibold">${data.noTransactionRow} paiement(s) trouvé(s) mais sans ligne dans le journal des transactions :</p><ul class="list-disc list-inside text-xs opacity-80">${lines}</ul>`);
+            }
+            return parts.join('');
+        }
+
+        function stripePaymentsShowResult(baseMsg, data, cls) {
+            const el = document.getElementById('stripePaymentsImportStatus');
+            if (!el) return;
+            el.innerHTML = `<p>${baseMsg}</p>${stripeFeesSyncDetailsHtml(data)}`;
             el.className = `mb-6 px-4 py-3 rounded-lg text-sm border ${cls}`;
             el.classList.remove('hidden');
         }
@@ -4436,12 +4465,13 @@
                     stripePaymentsShowStatus(data.message, 'border-orange-500/40 text-orange-300 bg-orange-500/10');
                     return;
                 }
-                stripePaymentsShowStatus(
+                const hasIssues = data.unmatched || data.noTransactionRow;
+                stripePaymentsShowResult(
                     `${data.updated} transaction(s) mise(s) à jour avec le frais réel (${data.recognized}/${data.totalRows} ligne(s) reconnue(s)` +
                     `${data.notEur ? `, ${data.notEur} hors EUR ignorée(s)` : ''}` +
-                    `${data.notPaymentIntent ? `, ${data.notPaymentIntent} sans PaymentIntent reconnu` : ''}` +
-                    `${data.unmatched ? `, ${data.unmatched} sans précommande/don correspondant` : ''}).`,
-                    'border-green-500/40 text-green-300 bg-green-500/10'
+                    `${data.notPaymentIntent ? `, ${data.notPaymentIntent} sans PaymentIntent reconnu` : ''}).`,
+                    data,
+                    hasIssues ? 'border-orange-500/40 text-orange-300 bg-orange-500/10' : 'border-green-500/40 text-green-300 bg-green-500/10'
                 );
                 await loadComptabilite();
             } catch (e) {

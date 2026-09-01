@@ -137,7 +137,7 @@ function normalizeCsvHeader(h) {
 // jamais avoir deux implémentations du même rattachement.
 async function matchAndApplyStripeFees(supabase, rows) {
   const ids = [...new Set(rows.map(r => r.id))];
-  if (ids.length === 0) return { matched: 0, updated: 0, unmatched: 0 };
+  if (ids.length === 0) return { matched: 0, updated: 0, unmatched: 0, unmatchedDetails: [], noTransactionRow: 0, noTransactionRowDetails: [] };
 
   const [{ data: preRows }, { data: donRows }] = await Promise.all([
     supabase.from('preorders').select('payment_intent_id, stripe_session_id').in('payment_intent_id', ids),
@@ -148,20 +148,42 @@ async function matchAndApplyStripeFees(supabase, rows) {
   for (const r of donRows || []) if (r.payment_intent_id) sessionIdByPI.set(r.payment_intent_id, r.stripe_session_id);
 
   let updated = 0;
+  // Deux façons différentes de ne rien mettre à jour, à ne pas confondre pour pouvoir
+  // diagnostiquer : payment_intent_id introuvable dans preorders/donors (le paiement
+  // Stripe n'est tout simplement pas chez nous), vs trouvé mais sans ligne transactions
+  // correspondante (source_ref) — dans ce cas il faut d'abord "Resynchroniser
+  // l'historique" pour créer la ligne, avant que le frais puisse s'y accrocher.
   let unmatched = 0;
+  const unmatchedDetails = [];
+  let noTransactionRow = 0;
+  const noTransactionRowDetails = [];
   await Promise.all(rows.map(async (r) => {
     const sessionId = sessionIdByPI.get(r.id);
-    if (!sessionId) { unmatched += 1; return; }
+    if (!sessionId) {
+      unmatched += 1;
+      if (unmatchedDetails.length < 20) unmatchedDetails.push({ paymentIntentId: r.id, amount: Number(r.amount) || 0 });
+      return;
+    }
     const fee = Number(r.fee) || 0;
     const amount = Number(r.amount) || 0;
     const { error, count } = await supabase
       .from('transactions')
       .update({ fee_amount: fee, net_amount: amount - fee, fee_imported_at: new Date().toISOString() }, { count: 'exact' })
       .eq('source_ref', sessionId);
-    if (!error && count) updated += count;
+    if (!error && count) {
+      updated += count;
+    } else {
+      noTransactionRow += 1;
+      if (noTransactionRowDetails.length < 20) noTransactionRowDetails.push({ paymentIntentId: r.id, sessionId, amount });
+    }
   }));
 
-  return { matched: rows.length - unmatched, updated, unmatched };
+  return {
+    matched: rows.length - unmatched,
+    updated,
+    unmatched, unmatchedDetails,
+    noTransactionRow, noTransactionRowDetails
+  };
 }
 
 // Mapping tolérant des en-têtes de l'export Stripe « Paiements » (Dashboard Stripe →
@@ -2304,7 +2326,7 @@ async function handleData(req, res) {
           });
         }
 
-        const { matched, updated, unmatched } = await matchAndApplyStripeFees(supabase, paymentIntentRows);
+        const { matched, updated, unmatched, unmatchedDetails, noTransactionRow, noTransactionRowDetails } = await matchAndApplyStripeFees(supabase, paymentIntentRows);
 
         return res.status(200).json({
           success: true,
@@ -2312,7 +2334,8 @@ async function handleData(req, res) {
           recognized: mapped.length,
           matched,
           updated,
-          unmatched,
+          unmatched, unmatchedDetails,
+          noTransactionRow, noTransactionRowDetails,
           notEur,
           notPaymentIntent
         });
@@ -2336,14 +2359,15 @@ async function handleData(req, res) {
         }
 
         const rows = result.details.map(d => ({ id: d.paymentIntentId, fee: d.feeEur, amount: d.amountEur }));
-        const { matched, updated, unmatched } = await matchAndApplyStripeFees(supabase, rows);
+        const { matched, updated, unmatched, unmatchedDetails, noTransactionRow, noTransactionRowDetails } = await matchAndApplyStripeFees(supabase, rows);
 
         return res.status(200).json({
           success: true,
           fetched: result.details.length,
           matched,
           updated,
-          unmatched
+          unmatched, unmatchedDetails,
+          noTransactionRow, noTransactionRowDetails
         });
       }
 
