@@ -7109,17 +7109,20 @@ Réponds en français, sans tiret long, format markdown compact.`
         const recettes = recetteRows.reduce((s, t) => s + parseFloat(t.amount), 0);
         const depenses = (data || []).filter(t => t.type === 'depense').reduce((s, t) => s + parseFloat(t.amount), 0);
 
-        // Distinction fiscale micro-entrepreneur : vente de marchandises (BIC, 12,3%)
-        // vs prestations de services (BNC, 21,1%) — taux 2026. Les dons en espèces sont
-        // visibles dans "recettes" (argent réellement reçu) mais sortent de cette base :
-        // ils ne transitent pas par le compte pro et ne sont pas déclarés à l'URSSAF.
-        const recettesDeclarables = recettes - recetteRows
-          .filter(t => t.source === 'don-especes')
+        // Déclaration URSSAF : uniquement les abonnements (revenu récurrent, acquis
+        // sans condition). Précommandes ET dons exclus de cette base tant que l'argent
+        // reste conditionnel — la garantie "zéro-risque" de la page précommande promet
+        // un remboursement intégral si l'objectif de financement n'est pas atteint, donc
+        // rien n'est déclaré dessus avant que ce ne soit acquis. Décision explicite de
+        // Rudy (2026-09) — le régime micro-entrepreneur se déclare en principe sur
+        // l'encaissé, pas sur le "définitivement acquis" ; à confirmer avec un
+        // expert-comptable si besoin. Les abonnements sont classés BIC (déjà le cas
+        // avant ce changement) ; rien ne tombe en BNC pour l'instant avec ce périmètre.
+        const recettesDeclarables = recetteRows
+          .filter(t => t.source === 'abonnement')
           .reduce((s, t) => s + parseFloat(t.amount), 0);
-        const recettesVentesBIC = recetteRows
-          .filter(t => t.source === 'precommande' || t.source === 'abonnement')
-          .reduce((s, t) => s + parseFloat(t.amount), 0);
-        const recettesServicesBNC = recettesDeclarables - recettesVentesBIC;
+        const recettesVentesBIC = recettesDeclarables;
+        const recettesServicesBNC = 0;
         const URSSAF_RATE_BIC = 0.123;
         const URSSAF_RATE_BNC = 0.211;
         const urssafBIC = recettesVentesBIC * URSSAF_RATE_BIC;
@@ -7141,6 +7144,16 @@ Réponds en français, sans tiret long, format markdown compact.`
         // Ce qui reste vraiment : l'URSSAF est un décaissement au même titre que Stripe.
         const tresorerieReelleEstimee = recettes - stripeFees - depenses - urssaf;
 
+        // Détail de ce qui est volontairement exclu de la base déclarable, pour que le
+        // dashboard puisse l'afficher clairement plutôt que de laisser deviner pourquoi
+        // la base est plus petite que les recettes brutes.
+        const recettesPrecommandeExclues = recetteRows
+          .filter(t => t.source === 'precommande')
+          .reduce((s, t) => s + parseFloat(t.amount), 0);
+        const recettesDonsExclus = recetteRows
+          .filter(t => t.source === 'don' || t.source === 'don-especes')
+          .reduce((s, t) => s + parseFloat(t.amount), 0);
+
         return res.status(200).json({
           success: true,
           data: data || [],
@@ -7155,9 +7168,11 @@ Réponds en français, sans tiret long, format markdown compact.`
             stripeFeesEstimate: stripeFees,
             tresorerieReelleEstimee,
             breakdown: {
+              recettesDeclarables,
               recettesVentesBIC, recettesServicesBNC,
               urssafBIC, urssafBNC,
-              tauxBIC: URSSAF_RATE_BIC, tauxBNC: URSSAF_RATE_BNC
+              tauxBIC: URSSAF_RATE_BIC, tauxBNC: URSSAF_RATE_BNC,
+              recettesPrecommandeExclues, recettesDonsExclus
             }
           }
         });

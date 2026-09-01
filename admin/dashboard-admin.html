@@ -3032,17 +3032,46 @@
                 </div>
             </div>
 
-            <!-- Détail des frais Stripe — lus dans les balance transactions, pas estimés.
-                 Purement informatif : l'URSSAF se calcule sur le brut encaissé. -->
+            <!-- Détail des frais Stripe — lus dans les balance transactions, pas estimés. -->
             <div class="bg-white/3 border border-gold/10 rounded-xl p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
                 <div>
                     <p class="text-gold/60 text-xs uppercase tracking-widest mb-1">Frais Stripe <span class="text-gold/30 normal-case" id="compta-stripe-source">—</span></p>
-                    <p class="text-light-gold/40 text-xs italic">Déjà déduits du résultat net ci-dessus. L'URSSAF, elle, se calcule sur le montant brut encaissé.</p>
+                    <p class="text-light-gold/40 text-xs italic">Déjà déduits du résultat net ci-dessus.</p>
                 </div>
                 <div class="text-right">
                     <p class="text-lg font-bold text-red-400/90" id="compta-stripe-fees">—</p>
                     <p class="text-xs text-gold/40" id="compta-stripe-detail"></p>
                 </div>
+            </div>
+
+            <!-- Déclaration URSSAF — ce qui doit réellement être déclaré, pas juste un
+                 chiffre estimé noyé dans les KPIs. Base = abonnements uniquement :
+                 précommandes et dons exclus tant qu'ils restent conditionnels
+                 (garantie zéro-risque de la page précommande). -->
+            <div class="bg-orange-500/5 border border-orange-500/20 rounded-xl p-5 mb-6">
+                <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
+                    <div>
+                        <h4 class="text-orange-300 font-semibold">Déclaration URSSAF</h4>
+                        <p class="text-light-gold/40 text-xs italic mt-1">Base = abonnements uniquement. Précommandes et dons exclus tant qu'ils restent conditionnels (remboursables si l'objectif de financement n'est pas atteint).</p>
+                    </div>
+                    <div class="text-right">
+                        <p class="text-2xl font-bold text-orange-400" id="urssaf-total">—</p>
+                        <p class="text-gold/40 text-xs">total à déclarer/payer</p>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white/3 rounded-lg p-3">
+                        <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">BIC ventes <span id="urssaf-taux-bic"></span></p>
+                        <p class="text-gold/80 text-sm">Base déclarable : <span class="font-semibold" id="urssaf-base-bic">—</span></p>
+                        <p class="text-orange-300 text-sm font-semibold">Cotisation : <span id="urssaf-cotis-bic">—</span></p>
+                    </div>
+                    <div class="bg-white/3 rounded-lg p-3">
+                        <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">BNC services <span id="urssaf-taux-bnc"></span></p>
+                        <p class="text-gold/80 text-sm">Base déclarable : <span class="font-semibold" id="urssaf-base-bnc">—</span></p>
+                        <p class="text-orange-300 text-sm font-semibold">Cotisation : <span id="urssaf-cotis-bnc">—</span></p>
+                    </div>
+                </div>
+                <p class="text-gold/30 text-xs mt-4" id="urssaf-exclusions"></p>
             </div>
 
             <!-- Formulaire ajout -->
@@ -12006,6 +12035,22 @@
             const urssafDetailEl = document.getElementById('compta-urssaf-detail');
             if (urssafDetailEl && b) {
                 urssafDetailEl.innerHTML = `BIC ventes ${(b.tauxBIC*100).toFixed(1)}% : ${fmt(b.urssafBIC)}<br>BNC services ${(b.tauxBNC*100).toFixed(1)}% : ${fmt(b.urssafBNC)}`;
+            }
+            if (b) {
+                setEl('urssaf-total', fmt(s.urssaf));
+                setEl('urssaf-taux-bic', `(${(b.tauxBIC*100).toFixed(1)}%)`);
+                setEl('urssaf-taux-bnc', `(${(b.tauxBNC*100).toFixed(1)}%)`);
+                setEl('urssaf-base-bic', fmt(b.recettesVentesBIC));
+                setEl('urssaf-cotis-bic', fmt(b.urssafBIC));
+                setEl('urssaf-base-bnc', fmt(b.recettesServicesBNC));
+                setEl('urssaf-cotis-bnc', fmt(b.urssafBNC));
+                const exclEl = document.getElementById('urssaf-exclusions');
+                if (exclEl) {
+                    const parts = [];
+                    if (b.recettesPrecommandeExclues > 0) parts.push(`${fmt(b.recettesPrecommandeExclues)} de précommandes`);
+                    if (b.recettesDonsExclus > 0) parts.push(`${fmt(b.recettesDonsExclus)} de dons`);
+                    exclEl.textContent = parts.length ? `Non comptés dans cette base : ${parts.join(' + ')}.` : '';
+                }
             }
             const transactions = data.data || [];
             _comptaCache = { year, month, transactions, summary: s, costsMonthlyEur, depensesTotal, netTotal, stripeFeesTotal };
