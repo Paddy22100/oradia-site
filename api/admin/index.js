@@ -131,13 +131,18 @@ function normalizeCsvHeader(h) {
 
 // Rattache une liste de {id: paymentIntentId, directRef, fee, amount} (venue d'un CSV
 // Stripe ou de l'API Stripe en direct — même forme dans les deux cas) à la bonne ligne
-// transactions, puis met à jour fee_amount/net_amount. Deux chemins de rattachement,
+// transactions, puis met à jour fee_amount/net_amount. Trois chemins de rattachement,
 // essayés dans l'ordre :
 // 1. directRef (ex: l'Invoice Stripe d'un renouvellement d'abonnement) contre
 //    transactions.source_ref directement — c'est déjà la même valeur, pas de table
 //    intermédiaire à consulter.
-// 2. à défaut, id (PaymentIntent) → preorders/donors.payment_intent_id → leur
-//    stripe_session_id, qui EST transactions.source_ref pour précommande/don.
+// 2. id (PaymentIntent) → preorders/donors.payment_intent_id → leur stripe_session_id,
+//    qui EST transactions.source_ref pour précommande/don.
+// 3. à défaut, id contre transactions.payment_intent_id directement — cas du tout
+//    premier paiement d'un abonnement (Checkout Session, sans Invoice ni ligne
+//    preorders/donors) : aucune table ne garde le lien session↔PaymentIntent pour
+//    les abonnements, donc api/stripe-webhook.js (activateToreSubscription) enregistre
+//    ce PaymentIntent directement sur la ligne transactions au moment de l'inscription.
 // Partagé entre l'import CSV (stripe-payments-import) et la synchronisation live
 // (stripe-fees-sync) pour ne jamais avoir deux implémentations du même rattachement.
 async function matchAndApplyStripeFees(supabase, rows) {
@@ -154,37 +159,44 @@ async function matchAndApplyStripeFees(supabase, rows) {
 
   let updated = 0;
   // Deux façons différentes de ne rien mettre à jour, à ne pas confondre pour pouvoir
-  // diagnostiquer : aucune référence exploitable trouvée (ni directRef en base, ni
-  // payment_intent_id connu de preorders/donors) — le paiement Stripe n'est tout
-  // simplement pas chez nous (ou pas un type couvert, ex. 1er paiement d'un
-  // abonnement) —, vs référence trouvée mais sans ligne transactions correspondante,
-  // auquel cas il faut d'abord "Resynchroniser l'historique" pour créer la ligne.
+  // diagnostiquer : aucune référence exploitable trouvée du tout (ni directRef, ni
+  // payment_intent_id) — le paiement Stripe n'est tout simplement pas chez nous —,
+  // vs référence(s) trouvée(s) mais sans ligne transactions correspondante, auquel cas
+  // il faut d'abord "Resynchroniser l'historique" pour créer la ligne.
   let unmatched = 0;
   const unmatchedDetails = [];
   let noTransactionRow = 0;
   const noTransactionRowDetails = [];
   await Promise.all(rows.map(async (r) => {
     const candidateRefs = [r.directRef, sessionIdByPI.get(r.id)].filter(Boolean);
-    if (candidateRefs.length === 0) {
+    if (candidateRefs.length === 0 && !r.id) {
       unmatched += 1;
       if (unmatchedDetails.length < 20) unmatchedDetails.push({ paymentIntentId: r.id, amount: Number(r.amount) || 0 });
       return;
     }
     const fee = Number(r.fee) || 0;
     const amount = Number(r.amount) || 0;
+    const payload = { fee_amount: fee, net_amount: amount - fee, fee_imported_at: new Date().toISOString() };
     let count = 0;
     for (const ref of candidateRefs) {
       const { error, count: c } = await supabase
         .from('transactions')
-        .update({ fee_amount: fee, net_amount: amount - fee, fee_imported_at: new Date().toISOString() }, { count: 'exact' })
+        .update(payload, { count: 'exact' })
         .eq('source_ref', ref);
       if (!error && c) { count += c; break; }
+    }
+    if (!count && r.id) {
+      const { error, count: c } = await supabase
+        .from('transactions')
+        .update(payload, { count: 'exact' })
+        .eq('payment_intent_id', r.id);
+      if (!error && c) count += c;
     }
     if (count) {
       updated += count;
     } else {
       noTransactionRow += 1;
-      if (noTransactionRowDetails.length < 20) noTransactionRowDetails.push({ paymentIntentId: r.id, ref: candidateRefs[0], amount });
+      if (noTransactionRowDetails.length < 20) noTransactionRowDetails.push({ paymentIntentId: r.id, ref: candidateRefs[0] || null, amount });
     }
   }));
 

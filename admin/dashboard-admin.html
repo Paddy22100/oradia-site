@@ -3049,15 +3049,9 @@
                  précommandes et dons exclus tant qu'ils restent conditionnels
                  (garantie zéro-risque de la page précommande). -->
             <div class="bg-orange-500/5 border border-orange-500/20 rounded-xl p-5 mb-6">
-                <div class="flex items-center justify-between flex-wrap gap-3 mb-4">
-                    <div>
-                        <h4 class="text-orange-300 font-semibold">Déclaration URSSAF</h4>
-                        <p class="text-light-gold/40 text-xs italic mt-1">Base = abonnements uniquement. Précommandes et dons exclus tant qu'ils restent conditionnels (remboursables si l'objectif de financement n'est pas atteint).</p>
-                    </div>
-                    <div class="text-right">
-                        <p class="text-2xl font-bold text-orange-400" id="urssaf-total">—</p>
-                        <p class="text-gold/40 text-xs">total à déclarer/payer</p>
-                    </div>
+                <div class="mb-4">
+                    <h4 class="text-orange-300 font-semibold">Déclaration URSSAF</h4>
+                    <p class="text-light-gold/40 text-xs italic mt-1">Base = abonnements uniquement. Précommandes et dons exclus tant qu'ils restent conditionnels (remboursables si l'objectif de financement n'est pas atteint).</p>
                 </div>
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div class="bg-white/3 rounded-lg p-3">
@@ -12086,7 +12080,6 @@
                 urssafDetailEl.innerHTML = `BIC ventes ${(b.tauxBIC*100).toFixed(1)}% : ${fmt(b.urssafBIC)}<br>BNC services ${(b.tauxBNC*100).toFixed(1)}% : ${fmt(b.urssafBNC)}`;
             }
             if (b) {
-                setEl('urssaf-total', fmt(s.urssaf));
                 setEl('urssaf-taux-bic', `(${(b.tauxBIC*100).toFixed(1)}%)`);
                 setEl('urssaf-taux-bnc', `(${(b.tauxBNC*100).toFixed(1)}%)`);
                 setEl('urssaf-base-bic', fmt(b.recettesVentesBIC));
