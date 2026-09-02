@@ -1373,6 +1373,7 @@
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Date inscription</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Statut</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Dernière newsletter</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Avancement parcours</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gold/20" id="nlTableBody"></tbody>
@@ -5330,7 +5331,7 @@
         }
 
         // ── Fiche contact détaillée (clic sur une ligne du Répertoire) ──
-        function openContactSheet(item) {
+        async function openContactSheet(item) {
             const modal = document.getElementById('contactSheetModal');
             const body  = document.getElementById('contactSheetBody');
             const row = (label, value, mono=false) => value
@@ -5341,6 +5342,13 @@
                 : '';
             const statusLabel = item.status === 'unsubscribed' ? 'Désabonné'
                 : item.brevo_synced ? 'Inscrit newsletter' : 'Hors newsletter';
+            if (_parcoursOrdreBySubject.size === 0) await loadParcoursStepsForProgress();
+            const lastNlRow = item.last_newsletter_sent_at
+                ? `<div class="flex justify-between gap-3 py-1.5 border-b border-white/5">
+                       <span class="text-light-gold/40 shrink-0">Dernière newsletter</span>
+                       <span class="text-light-gold text-right text-sm">${escapeHtmlFront(item.last_newsletter_subject || '—')}<span class="block text-light-gold/40 text-xs">${formatDate(item.last_newsletter_sent_at)}</span></span>
+                   </div>`
+                : '';
             body.innerHTML = [
                 row('Email', item.email, true),
                 row('Nom', item.full_name),
@@ -5351,6 +5359,8 @@
                 row('Statut', statusLabel),
                 row('Source', item.source),
                 row('Ajouté le', item.created_at_fr || formatDate(item.created_at)),
+                lastNlRow,
+                `<div class="flex justify-between items-center gap-3 py-1.5"><span class="text-light-gold/40 shrink-0">Avancement parcours</span>${renderParcoursProgress(item)}</div>`,
                 item.notes ? `<div class="pt-2"><span class="text-light-gold/40 block mb-1">Notes</span><p class="text-light-gold/80 text-sm whitespace-pre-wrap">${escapeHtmlFront(item.notes)}</p></div>` : ''
             ].join('');
 
@@ -5875,7 +5885,7 @@
             return `/api/admin/data?${params.toString()}`;
         }
 
-        function updateAlertsPanel(data) {
+        async function updateAlertsPanel(data) {
             const container = document.getElementById('adminAlerts');
             if (!container) return;
 
@@ -5897,6 +5907,19 @@
                 });
             }
 
+            // Alerte parcours newsletter — voir api/admin/index.js (action=parcours-status) :
+            // se déclenche si, à moins de 7 jours de l'envoi de la dernière newsletter du
+            // parcours déjà programmée, aucune étape suivante n'est écrite d'avance.
+            try {
+                const nsRes = await adminFetch('/api/admin/newsletter?action=parcours-status');
+                const ns = await nsRes.json();
+                if (ns.success && ns.alert?.needed) {
+                    const text = ns.alert.reason === 'none-scheduled'
+                        ? "Aucune newsletter du parcours n'est programmée à venir. Rédige et programme la prochaine étape."
+                        : `Il ne reste que ${ns.alert.daysUntilLastScheduled} jour${ns.alert.daysUntilLastScheduled > 1 ? 's' : ''} avant l'envoi de la dernière newsletter programmée, et rien n'est prêt derrière. Rédige la prochaine étape du parcours.`;
+                    alerts.push({ level: 'warn', icon: 'fa-pen-nib', text });
+                }
+            } catch (_) { /* silencieux — ne doit pas bloquer les autres alertes */ }
 
             if (alerts.length === 0) {
                 container.innerHTML = `<div class="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-green-300 text-sm"><i class="fas fa-check-circle mr-2"></i>Aucune alerte critique actuellement.</div>`;
@@ -8344,9 +8367,36 @@
 
         // ── Inscrits Newsletter ────────────────────────────────────────────────────
         let _nlData = [];
+        // Étapes du parcours (subject → ordre), pour situer chaque contact dans le
+        // parcours à partir de last_newsletter_subject — pas de table de liaison
+        // contact↔newsletter dédiée, on retrouve donc l'étape par le sujet du dernier
+        // email reçu, seule trace conservée aujourd'hui (newsletter_contacts.last_newsletter_subject).
+        let _parcoursOrdreBySubject = new Map();
+        let _parcoursMaxSentOrdre = null;
+        async function loadParcoursStepsForProgress() {
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=drafts-parcours');
+                const rows = await res.json();
+                if (!Array.isArray(rows)) return;
+                _parcoursOrdreBySubject = new Map();
+                let maxOrdre = null;
+                for (const d of rows) {
+                    if (d.extra?.canal !== 'parcours') continue;
+                    const ordre = Number(d.extra?.ordre) || null;
+                    if (!ordre || !d.subject) continue;
+                    _parcoursOrdreBySubject.set(d.subject, ordre);
+                    if (d.statut === 'envoyé' && (maxOrdre === null || ordre > maxOrdre)) maxOrdre = ordre;
+                }
+                _parcoursMaxSentOrdre = maxOrdre;
+            } catch (_) { /* silencieux — l'avancement s'affiche juste en "—" */ }
+        }
+
         async function loadNlSubscribers() {
             try {
-                const res = await adminFetch('/api/admin/data?section=waitlist&page=1&limit=500&newsletter=newsletter');
+                const [res] = await Promise.all([
+                    adminFetch('/api/admin/data?section=waitlist&page=1&limit=500&newsletter=newsletter'),
+                    loadParcoursStepsForProgress()
+                ]);
                 const json = await res.json();
                 if (!json.success) return;
                 _nlData = json.data || [];
@@ -8356,11 +8406,36 @@
             } catch(e) { /* silencieux */ }
         }
 
+        // Rend l'avancement dans le parcours d'un contact à partir du sujet de la
+        // dernière newsletter qu'il a reçue. Estimation, pas une trace exacte : si ce
+        // sujet ne correspond à aucune étape connue du parcours (email hors parcours,
+        // ou jamais rien reçu), on l'affiche comme tel plutôt que de deviner une étape.
+        function renderParcoursProgress(contact) {
+            if (!contact.last_newsletter_subject) {
+                return '<span class="text-light-gold/25 text-xs italic">Aucun envoi</span>';
+            }
+            const ordre = _parcoursOrdreBySubject.get(contact.last_newsletter_subject);
+            if (!ordre) {
+                return '<span class="text-light-gold/25 text-xs italic">Hors parcours</span>';
+            }
+            const total = _parcoursMaxSentOrdre || ordre;
+            const pct = total > 0 ? Math.min(100, Math.round((ordre / total) * 100)) : 0;
+            const isCaughtUp = ordre >= total;
+            const badgeClass = isCaughtUp ? 'text-teal-300' : 'text-gold/70';
+            return `
+                <div class="min-w-[110px]">
+                    <span class="text-xs ${badgeClass}">Étape ${ordre}/${total}</span>
+                    <div class="mt-1 h-1.5 bg-gold/10 rounded-full overflow-hidden">
+                        <div class="h-full ${isCaughtUp ? 'bg-teal-400/70' : 'bg-gold/50'} rounded-full" style="width:${pct}%"></div>
+                    </div>
+                </div>`;
+        }
+
         function renderNlTable(rows) {
             const tbody = document.getElementById('nlTableBody');
             if (!tbody) return;
             if (!rows.length) {
-                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gold/40 italic">Aucun inscrit newsletter</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gold/40 italic">Aucun inscrit newsletter</td></tr>';
                 return;
             }
             tbody.innerHTML = rows.map(c => {
@@ -8379,6 +8454,7 @@
                     <td class="px-6 py-3 text-light-gold/50 text-sm">${c.created_at ? new Date(c.created_at).toLocaleDateString('fr-FR') : '—'}</td>
                     <td class="px-6 py-3"><span class="px-2 py-0.5 rounded-full text-xs ${c.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}">${c.status === 'active' ? 'Actif' : c.status || '—'}</span></td>
                     <td class="px-6 py-3">${lastNl}</td>
+                    <td class="px-6 py-3">${renderParcoursProgress(c)}</td>
                 </tr>`;
             }).join('');
         }

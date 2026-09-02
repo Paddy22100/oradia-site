@@ -4842,6 +4842,64 @@ async function handleNewsletter(req, res) {
         return res.status(200).json([...sent, ...validatedSteps]);
       }
 
+      // ── État d'avance du parcours : sert à la fois l'alerte tableau de bord
+      // ("rédige la prochaine newsletter") et le badge de l'onglet Parcours.
+      // Principe : les étapes validées (extra.parcours_valide=true) forment une
+      // file ordonnée par extra.ordre. sentSteps = déjà envoyées. queue = validées
+      // mais pas encore envoyées, c'est l'avance dont dispose Rudy. lastScheduled =
+      // parmi la queue, celle programmée le plus loin dans le futur (normalement une
+      // seule à la fois dans ce flux). nextReady = la prochaine étape de la queue au
+      // delà de ce qui est déjà programmé (ou du dernier envoi si rien n'est
+      // programmé) : si elle existe, il y a déjà du contenu écrit d'avance, donc pas
+      // besoin de rédiger — seulement, éventuellement, de le programmer.
+      if (action === 'parcours-status') {
+        const { data: allDrafts, error } = await supabase
+          .from('newsletter_drafts')
+          .select('*');
+        if (error) {
+          console.error('Error fetching parcours status:', error);
+          return res.status(500).json({ error: "Erreur lors du calcul de l'état du parcours" });
+        }
+        const rows = allDrafts || [];
+        const validated = rows.filter(d => d.extra?.canal === 'parcours' && d.extra?.parcours_valide === true);
+        const ordreOf = d => Number(d.extra?.ordre) || 0;
+        const sent = validated.filter(d => d.statut === 'envoyé').sort((a, b) => ordreOf(a) - ordreOf(b));
+        const queue = validated.filter(d => d.statut !== 'envoyé').sort((a, b) => ordreOf(a) - ordreOf(b));
+        const maxSentOrdre = sent.length ? ordreOf(sent[sent.length - 1]) : null;
+
+        const now = Date.now();
+        const scheduledQueue = queue.filter(d => d.scheduled_at && new Date(d.scheduled_at).getTime() > now);
+        const lastScheduled = scheduledQueue.reduce((latest, d) =>
+          (!latest || new Date(d.scheduled_at) > new Date(latest.scheduled_at)) ? d : latest, null);
+
+        const baselineOrdre = lastScheduled ? ordreOf(lastScheduled) : (maxSentOrdre || 0);
+        const nextReady = queue.find(d => ordreOf(d) > baselineOrdre) || null;
+
+        let daysUntilLastScheduled = null;
+        let alertNeeded = false;
+        let reason = null;
+        if (lastScheduled) {
+          daysUntilLastScheduled = Math.ceil((new Date(lastScheduled.scheduled_at).getTime() - now) / 86400000);
+          if (daysUntilLastScheduled <= 7 && !nextReady) { alertNeeded = true; reason = 'queue-empty-soon'; }
+        } else if (!nextReady) {
+          alertNeeded = true; reason = 'none-scheduled';
+        }
+
+        const pick = d => d ? { id: d.id, subject: d.subject, ordre: ordreOf(d) || null, scheduled_at: d.scheduled_at || null, statut: d.statut } : null;
+
+        return res.status(200).json({
+          success: true,
+          totalWrittenSteps: validated.length,
+          sentCount: sent.length,
+          maxSentOrdre,
+          queue: queue.map(pick),
+          lastScheduled: pick(lastScheduled),
+          nextReady: pick(nextReady),
+          readyToSchedule: !!(nextReady && !nextReady.scheduled_at),
+          alert: { needed: alertNeeded, reason, daysUntilLastScheduled }
+        });
+      }
+
       if (action === 'drafts') {
         const id = url.searchParams.get('id');
         if (id) {
