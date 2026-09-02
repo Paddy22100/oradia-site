@@ -224,6 +224,17 @@ const STRIPE_PAYMENTS_CSV_HEADER_MAP = {
   'created (utc)': 'created', 'created date (utc)': 'created', 'created': 'created', 'date': 'created',
 };
 
+// Newsletters "Newsletter" par étiquette (type !== 'promo') mais promotionnelles par
+// contenu (annonce d'abonnement, lancement d'un oracle) : le champ `type` seul ne les
+// distingue donc pas d'une vraie étape du parcours. Utilisé à la fois par
+// drafts-parcours (pour ne jamais les afficher dans la vue Parcours) et
+// backfill-parcours-history (pour ne jamais leur attribuer un numéro d'étape) — une
+// seule liste, jamais deux à tenir synchronisées.
+const PARCOURS_EXCLUDED_SUBJECTS = [
+  "Rudy d'ORADIA - Abonnement à l'oracle, une expérience inédite",
+  "Rudy d'ORADIA - La Boussole Intérieure — Un Oracle Pas Comme Les Autres"
+];
+
 // Catégories de contacts newsletter (utilisées pour cibler les envois depuis le dashboard,
 // sans passer par les listes Brevo). Liste indicative — des tags libres restent possibles.
 const CONTACT_TAGS = [
@@ -4881,7 +4892,7 @@ async function handleNewsletter(req, res) {
         }
         const rows = allDrafts || [];
         const sent = rows
-          .filter(d => d.statut === 'envoyé' && d.type !== 'promo')
+          .filter(d => d.statut === 'envoyé' && d.type !== 'promo' && !PARCOURS_EXCLUDED_SUBJECTS.includes(d.subject))
           .sort((a, b) => new Date(a.sent_at || a.created_at) - new Date(b.sent_at || b.created_at));
         const queue = rows
           .filter(d => d.extra?.canal === 'parcours' && d.statut !== 'envoyé')
@@ -5336,10 +5347,6 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
       // Idempotent : si aucun envoi non numéroté n'est trouvé, ne touche à rien — évite
       // de décaler la file une seconde fois si le bouton est cliqué par erreur.
       if (action === 'backfill-parcours-history') {
-        const EXCLUDED_SUBJECTS = [
-          "Rudy d'ORADIA - Abonnement à l'oracle, une expérience inédite",
-          "Rudy d'ORADIA - La Boussole Intérieure — Un Oracle Pas Comme Les Autres"
-        ];
         const { data: allDrafts, error } = await supabase.from('newsletter_drafts').select('*');
         if (error) throw error;
         const rows = allDrafts || [];
@@ -5348,7 +5355,7 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
           .filter(d => d.statut === 'envoyé'
             && d.type !== 'promo'
             && d.extra?.canal !== 'parcours'
-            && !EXCLUDED_SUBJECTS.includes(d.subject))
+            && !PARCOURS_EXCLUDED_SUBJECTS.includes(d.subject))
           .sort((a, b) => new Date(a.sent_at || a.created_at) - new Date(b.sent_at || b.created_at));
 
         if (historicalSent.length === 0) {
