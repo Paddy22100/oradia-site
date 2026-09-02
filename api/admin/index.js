@@ -15,6 +15,10 @@ const { sendToreSubscriptionEmail, sendSubscriptionEmail, sendToreCheckinReminde
 const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
 const { sendGuidanceConfirmationEmail } = require('../../lib/guidance-email.js');
 const { estimateStripeFees, getStripeFeesForPeriod, getMonthlyStripeFees, getStripeFeesDetail, ESTIMATE_RATE, ESTIMATE_FIXED_EUR } = require('../../lib/stripe-fees.js');
+const { drawSevenCards, FAMILY_LABELS } = require('../../lib/tore-deck.js');
+const { resolveCardImageUrl } = require('../../lib/tore-card-images.js');
+const { generateAnalysisViaClaude } = require('../../lib/tore-analysis-prompt.js');
+const { getWeeklyAstroTheme } = require('../../lib/astro-calendar.js');
 const sharp = require('sharp');
 
 // Instagram/Facebook rejettent les images dont le ratio largeur/hauteur sort de [0.8, 1.91]
@@ -1327,7 +1331,25 @@ async function handleData(req, res) {
           return res.status(200).json({ success: r.ok, status: r.status });
         } catch(e) { return res.status(200).json({ success: false, error: e.message }); }
       }
+      // ── Tirage de la semaine (dimanche) : génère UNIQUEMENT un brouillon,
+      // n'envoie jamais automatiquement — l'envoi se fait comme n'importe quel
+      // autre brouillon, en posant scheduled_at (cron-send-scheduled ci-dessus
+      // s'en charge) une fois le format validé manuellement depuis le dashboard.
+      // Thématisé par le calendrier astro (pleine lune, éclipse — lib/astro-calendar.js)
+      // quand la semaine tombe près d'un de ces événements, sinon thème générique.
+      if (getAction === 'cron-tirage-hebdo') {
+        return await runWeeklyTirageCron(supabase, res);
+      }
       return res.status(403).json({ error: 'Action non autorisée' });
+    }
+
+    // Test manuel du tirage hebdomadaire depuis le dashboard (session admin, sans
+    // secret cron) : sert à vérifier tout de suite le format généré (brouillon +
+    // aperçu) sans attendre le dimanche suivant. Distinct du bloc cron ci-dessus,
+    // qui exige isCronRequest — une requête de session admin normale (verifyAdminAuth
+    // déjà passé plus haut si on arrive jusqu'ici) ne peut jamais le satisfaire.
+    if (!isCronRequest && req.method === 'GET' && req.query?.action === 'cron-tirage-hebdo') {
+      return await runWeeklyTirageCron(supabase, res);
     }
 
     // Les actions "support-*" (utilisées par le dashboard Support technique) sont
@@ -4279,6 +4301,125 @@ async function isFeatureEnabled(supabase, key) {
     if (error || !data) return true;
     return data.enabled !== false;
   } catch { return true; }
+}
+
+// Numéro de semaine ISO 8601 (ex: "2026-W39") — sert de clé d'idempotence pour
+// le tirage hebdomadaire (cron-tirage-hebdo) : évite de générer deux brouillons
+// pour la même semaine si le cron est relancé (retry Vercel, test manuel...).
+function getIsoWeekKey(date) {
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNum = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+}
+
+// Construit le contenu (sujet, corps, images positionnées) du brouillon de
+// newsletter du tirage hebdomadaire — voir cron-tirage-hebdo. Le corps suit le
+// même format que celui attendu par buildCommunicationEmailHtml : des paragraphes
+// <p> avec seulement b/strong/i/em/u/br/ul/ol/li/a (le reste est filtré), les
+// images des cartes placées via le tableau `images` (positions alignées sur les
+// paragraphes) plutôt que par des <img> bruts dans le texte.
+function buildWeeklyTirageContent({ theme, cards, analysis, date }) {
+  const dateLabel = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const subject = theme.event
+    ? `Le tirage de la semaine — ${theme.event.name}`
+    : `Le tirage de la semaine du ${dateLabel}`;
+
+  const paragraphs = [];
+  const images = [];
+
+  paragraphs.push(`<p>Chaque dimanche, un tirage est fait pour toute la communauté, en lien avec ${theme.accroche}. Voici ce que les cartes ont à nous dire.</p>`);
+
+  cards.forEach((card, i) => {
+    const label = FAMILY_LABELS[card.family] || card.family;
+    const bridge = card.bridgeCard ? ` <em>(carte passerelle : ${card.bridgeCard.name})</em>` : '';
+    paragraphs.push(`<p><strong>${label} — ${card.name}.</strong> ${card.quote || ''}${bridge}</p>`);
+    const imageUrl = resolveCardImageUrl(card.name);
+    if (imageUrl) images.push({ path: imageUrl.replace('https://oradia.fr', ''), name: card.name, position: paragraphs.length - 1 });
+    if (card.bridgeCard) {
+      const bridgeUrl = resolveCardImageUrl(card.bridgeCard.name);
+      if (bridgeUrl) images.push({ path: bridgeUrl.replace('https://oradia.fr', ''), name: card.bridgeCard.name, position: paragraphs.length - 1 });
+    }
+  });
+
+  if (analysis?.explore) paragraphs.push(`<p><strong>Ce que cela invite à explorer.</strong> ${nlEscHtml(analysis.explore)}</p>`);
+  if (analysis?.synthesis) paragraphs.push(`<p><strong>Synthèse de la semaine.</strong> ${nlEscHtml(analysis.synthesis)}</p>`);
+
+  paragraphs.push(`<p>À vous de recevoir ce que ces cartes ont fait résonner, et de le vivre à votre façon cette semaine.</p>`);
+
+  return { subject, content: paragraphs.join(''), images };
+}
+
+// Génère le brouillon du tirage hebdomadaire (dimanche) : tirage QRNG + analyse
+// IA + thème astro (pleine lune, éclipse) -> brouillon newsletter_drafts, JAMAIS
+// envoyé automatiquement. Appelée depuis le cron réel (action=cron-tirage-hebdo,
+// secret cron) et depuis le bouton de test du dashboard (même action, session
+// admin) — un seul endroit produit le brouillon, pour que le test corresponde
+// exactement à ce que le vrai cron du dimanche produirait.
+async function runWeeklyTirageCron(supabase, res) {
+  try {
+    const now = new Date();
+    const isoWeekKey = getIsoWeekKey(now);
+
+    // Idempotence : un ré-essai du cron (retry Vercel, clic répété du bouton de
+    // test) ne doit jamais créer un second brouillon pour la même semaine.
+    const { data: existing } = await supabase
+      .from('newsletter_drafts')
+      .select('id')
+      .eq('extra->>canal', 'tirage_hebdo')
+      .eq('extra->>semaine', isoWeekKey)
+      .maybeSingle();
+    if (existing) {
+      return res.status(200).json({ success: true, skipped: true, reason: 'already_generated', draft_id: existing.id });
+    }
+
+    const theme = getWeeklyAstroTheme(now);
+    const { cards, qrngSource } = await drawSevenCards();
+    const analysis = await generateAnalysisViaClaude({
+      intention: theme.intention,
+      cards,
+      userEmail: 'cron-tirage-hebdo@oradia.fr'
+    });
+
+    const { subject, content, images } = buildWeeklyTirageContent({ theme, cards, analysis, date: now });
+
+    const { data, error } = await supabase
+      .from('newsletter_drafts')
+      .insert({
+        subject,
+        content,
+        intention: theme.intention,
+        type: 'newsletter',
+        images,
+        extra: {
+          canal: 'tirage_hebdo',
+          semaine: isoWeekKey,
+          astro_event: theme.event?.type || null,
+          astro_label: theme.label,
+          qrng_source: qrngSource
+        },
+        statut: 'brouillon',
+        created_at: now.toISOString(),
+        updated_at: now.toISOString()
+      })
+      .select()
+      .single();
+    if (error) throw error;
+
+    await logSystemEvent(supabase, {
+      level: 'info', source: 'cron-tirage-hebdo',
+      message: `Brouillon du tirage hebdomadaire généré : ${subject}`,
+      details: { draft_id: data.id, theme: theme.label, qrng_source: qrngSource }
+    }).catch(() => {});
+
+    return res.status(200).json({ success: true, draft_id: data.id, subject, theme: theme.label, qrng_source: qrngSource });
+  } catch(e) {
+    console.error('[cron-tirage-hebdo]', e.message);
+    await logSystemEvent(supabase, { level: 'error', source: 'cron-tirage-hebdo', message: e.message }).catch(() => {});
+    return res.status(200).json({ success: false, error: e.message });
+  }
 }
 
 // Construit le HTML complet de l'email (newsletter ou promo) à partir d'un brouillon
