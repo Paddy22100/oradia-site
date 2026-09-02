@@ -2387,10 +2387,17 @@
                  =true, ordre extra.ordre) — validées depuis l'onglet Brouillons ci-dessus. -->
             <div id="nl-tab-parcours" class="nl-tab-content hidden">
                 <section class="mb-10">
-                    <div class="mb-6">
-                        <h4 class="cormorant text-xl font-bold text-gold">Parcours newsletters</h4>
-                        <p class="text-light-gold/50 text-sm mt-1">Les newsletters déjà envoyées, puis les étapes du parcours une fois validées (relues + illustrées) depuis l'onglet Brouillons.</p>
+                    <div class="mb-6 flex items-start justify-between gap-4 flex-wrap">
+                        <div>
+                            <h4 class="cormorant text-xl font-bold text-gold">Parcours newsletters</h4>
+                            <p class="text-light-gold/50 text-sm mt-1">Les newsletters déjà envoyées, puis les étapes du parcours une fois validées (relues + illustrées) depuis l'onglet Brouillons.</p>
+                        </div>
+                        <button onclick="backfillParcoursHistory()" title="Numérote les newsletters déjà envoyées avant la mise en place du parcours (ordre chronologique réel, hors promotionnelles), et décale la file existante d'autant. À ne lancer qu'une fois."
+                            class="flex-shrink-0 text-sm bg-orange-500/15 text-orange-300 border border-orange-500/30 rounded-lg px-4 py-2 hover:bg-orange-500/25 transition">
+                            <i class="fas fa-arrows-left-right mr-1.5"></i>Numéroter l'historique du parcours
+                        </button>
                     </div>
+                    <p id="backfillParcoursStatus" class="hidden text-sm mb-4 px-1"></p>
                     <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="w-full" id="parcoursTable">
@@ -8100,6 +8107,30 @@
             } catch(e) { console.error(e); }
         }
 
+        // Numérote rétroactivement les newsletters déjà envoyées avant la mise en place
+        // du parcours (voir api/admin/index.js, action=backfill-parcours-history) — à
+        // lancer une seule fois. Idempotent côté serveur (ne fait rien si déjà fait),
+        // mais reste un bouton à usage ponctuel, pas une action de routine.
+        async function backfillParcoursHistory() {
+            const status = document.getElementById('backfillParcoursStatus');
+            const show = (msg, cls) => { if (status) { status.textContent = msg; status.className = `text-sm mb-4 px-1 ${cls}`; status.classList.remove('hidden'); } };
+            if (!confirm("Numéroter l'historique du parcours à partir des newsletters déjà envoyées (ordre chronologique, hors promotionnelles) et décaler la file existante en conséquence ?\n\nÀ ne lancer qu'une seule fois.")) return;
+            show('<i class="fas fa-spinner fa-spin mr-2"></i>Numérotation en cours…', 'text-light-gold/60');
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=backfill-parcours-history', { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.error || 'Erreur');
+                if (data.historicalCount === 0) {
+                    show(data.message || 'Rien à décaler.', 'text-light-gold/60');
+                } else {
+                    show(`✓ ${data.historicalCount} newsletter(s) historique(s) numérotée(s) (étapes 1 à ${data.historicalCount}), file existante décalée de ${data.shift} (${data.shiftedQueueCount} étape(s)).`, 'text-green-400/80');
+                }
+                nlLoadParcours();
+            } catch (e) {
+                show('✗ ' + e.message, 'text-red-400/80');
+            }
+        }
+
         // ── Parcours newsletters : vue séparée en lecture seule (extra.canal='parcours') ──
         let nlParcours = [];
         async function nlLoadParcours() {
@@ -8414,17 +8445,25 @@
             if (!contact.last_newsletter_subject) {
                 return '<span class="text-light-gold/25 text-xs italic">Aucun envoi</span>';
             }
-            const ordre = _parcoursOrdreBySubject.get(contact.last_newsletter_subject);
-            if (!ordre) {
-                return '<span class="text-light-gold/25 text-xs italic">Hors parcours</span>';
+            const total = _parcoursMaxSentOrdre;
+            if (!total) {
+                // Aucune étape du parcours n'a encore été envoyée à qui que ce soit :
+                // rien à rattraper, tout le monde est par définition à jour.
+                return '<span class="text-teal-300 text-xs">À jour</span>';
             }
-            const total = _parcoursMaxSentOrdre || ordre;
-            const pct = total > 0 ? Math.min(100, Math.round((ordre / total) * 100)) : 0;
+            const matchedOrdre = _parcoursOrdreBySubject.get(contact.last_newsletter_subject);
+            // Sujet non reconnu (email hors séquence, ou envoyé avant la mise en place du
+            // parcours) : on ne peut pas savoir précisément où il en est, mais il a bien
+            // reçu quelque chose de récent — on le traite comme à jour plutôt que de
+            // donner l'impression trompeuse qu'il en serait exclu.
+            const ordre = matchedOrdre || total;
+            const pct = Math.min(100, Math.round((ordre / total) * 100));
             const isCaughtUp = ordre >= total;
             const badgeClass = isCaughtUp ? 'text-teal-300' : 'text-gold/70';
+            const label = isCaughtUp ? `Étape ${ordre}/${total} · à jour` : `Étape ${ordre}/${total}`;
             return `
                 <div class="min-w-[110px]">
-                    <span class="text-xs ${badgeClass}">Étape ${ordre}/${total}</span>
+                    <span class="text-xs ${badgeClass}">${label}</span>
                     <div class="mt-1 h-1.5 bg-gold/10 rounded-full overflow-hidden">
                         <div class="h-full ${isCaughtUp ? 'bg-teal-400/70' : 'bg-gold/50'} rounded-full" style="width:${pct}%"></div>
                     </div>

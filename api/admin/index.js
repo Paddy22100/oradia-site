@@ -924,11 +924,20 @@ async function handleData(req, res) {
               await supabase.from('newsletter_drafts')
                 .update({ statut: 'envoyé', sent_at: new Date().toISOString(), scheduled_at: null })
                 .eq('id', draft.id);
-              // Tracer la dernière newsletter par contact (colonne optionnelle)
-              await supabase.from('newsletter_contacts')
+              // Tracer la dernière newsletter par contact (colonne optionnelle) — .select('email')
+              // récupère les destinataires réellement mis à jour, pour le journal détaillé ci-dessous.
+              const { data: notified } = await supabase.from('newsletter_contacts')
                 .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
                 .eq('status', 'active')
-                .eq('brevo_synced', true);
+                .eq('brevo_synced', true)
+                .select('email');
+              await logNewsletterSends(supabase, {
+                emails: (notified || []).map(c => c.email),
+                subject: finalSubject,
+                draftId: draft.id,
+                ordre: Number(draft.extra?.ordre) || null,
+                canal: draft.extra?.canal || null
+              });
               results.push({ id: draft.id, ok: true });
             } catch(e) { results.push({ id: draft.id, ok: false, error: e.message }); }
           }
@@ -4736,9 +4745,35 @@ async function nlSendTargetedCampaign({ BREVO_API_KEY, emails, subject, html, ty
   }
 }
 
+// Journalise un envoi de newsletter pour chaque contact concerné (table newsletter_sends,
+// voir supabase-migration-newsletter-sends.sql). Contrairement à
+// newsletter_contacts.last_newsletter_sent_at/subject, qui n'en garde qu'un instantané (le
+// dernier envoi seulement, écrasé à chaque fois), cette table conserve l'historique complet
+// et permet de situer précisément un contact dans le parcours via l'ordre réel du brouillon
+// plutôt que de le déduire par rapprochement de sujet. Colonne/table optionnelle tant que la
+// migration n'est pas passée — échoue silencieusement plutôt que de casser l'envoi réel.
+async function logNewsletterSends(supabase, { emails, subject, draftId, ordre, canal, sentAt }) {
+  const list = (emails || []).filter(Boolean);
+  if (list.length === 0) return;
+  const rows = list.map(email => ({
+    contact_email: email,
+    draft_id: draftId || null,
+    subject: subject || null,
+    ordre: ordre != null ? ordre : null,
+    canal: canal || null,
+    sent_at: sentAt || new Date().toISOString()
+  }));
+  try {
+    const { error } = await supabase.from('newsletter_sends').insert(rows);
+    if (error) console.error('[newsletter] logNewsletterSends:', error.message);
+  } catch (e) {
+    console.error('[newsletter] logNewsletterSends exception:', e.message);
+  }
+}
+
 // Traçage post-envoi, commun aux deux canaux (campagne ou transactionnel) : quels contacts
 // ont reçu quoi, et passage du brouillon à l'état « envoyé ».
-async function nlMarkSent(supabase, { emails, subject, draftId, excludeAlreadySent, sent, failedEmails = [] }) {
+async function nlMarkSent(supabase, { emails, subject, draftId, excludeAlreadySent, sent, failedEmails = [], ordre = null, canal = null }) {
   if (emails.length > 0) {
     if (excludeAlreadySent) {
       await supabase
@@ -4754,6 +4789,7 @@ async function nlMarkSent(supabase, { emails, subject, draftId, excludeAlreadySe
         .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: subject })
         .in('email', emails);
     } catch (_) {}
+    await logNewsletterSends(supabase, { emails, subject, draftId, ordre, canal });
   }
   await supabase
     .from('newsletter_drafts')
@@ -5254,6 +5290,67 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
         return res.status(200).json({ success: true });
       }
 
+      // ── Numérote rétroactivement les newsletters déjà envoyées avant la mise en
+      // place du parcours (extra.ordre), pour que l'avancement par contact et l'alerte
+      // "rédige la prochaine" comptent depuis le tout premier envoi réel plutôt que de
+      // les ignorer comme "hors parcours". Exclut les envois structurellement
+      // promotionnels (type='promo') et ceux listés dans EXCLUDED_SUBJECTS ci-dessous
+      // (newsletters "Newsletter" par étiquette mais promotionnelles par contenu —
+      // annonce de lancement, campagne d'abonnement — donc hors séquence éditoriale).
+      // Décale ensuite la file déjà en place (extra.canal='parcours', ordre existant)
+      // pour qu'elle continue juste après ce compte historique, sans collision.
+      // Idempotent : si aucun envoi non numéroté n'est trouvé, ne touche à rien — évite
+      // de décaler la file une seconde fois si le bouton est cliqué par erreur.
+      if (action === 'backfill-parcours-history') {
+        const EXCLUDED_SUBJECTS = [
+          "Rudy d'ORADIA - Abonnement à l'oracle, une expérience inédite",
+          "Rudy d'ORADIA - La Boussole Intérieure — Un Oracle Pas Comme Les Autres"
+        ];
+        const { data: allDrafts, error } = await supabase.from('newsletter_drafts').select('*');
+        if (error) throw error;
+        const rows = allDrafts || [];
+
+        const historicalSent = rows
+          .filter(d => d.statut === 'envoyé'
+            && d.type !== 'promo'
+            && d.extra?.canal !== 'parcours'
+            && !EXCLUDED_SUBJECTS.includes(d.subject))
+          .sort((a, b) => new Date(a.sent_at || a.created_at) - new Date(b.sent_at || b.created_at));
+
+        if (historicalSent.length === 0) {
+          return res.status(200).json({ success: true, historicalCount: 0, message: "Rien à décaler : aucun envoi non numéroté trouvé." });
+        }
+
+        const existingQueue = rows.filter(d => d.extra?.canal === 'parcours');
+        const existingOrdres = existingQueue.map(d => Number(d.extra?.ordre) || 0).filter(n => n > 0);
+        const currentMinOrdre = existingOrdres.length ? Math.min(...existingOrdres) : null;
+        const shift = currentMinOrdre !== null ? (historicalSent.length + 1 - currentMinOrdre) : 0;
+
+        // 1. Décale d'abord la file existante, pour libérer les numéros 1..N avant d'y
+        // placer l'historique — chaque ligne est ciblée par son id, pas de collision
+        // possible même si l'ordre des updates n'est pas garanti.
+        if (shift !== 0) {
+          await Promise.all(existingQueue.map(d => supabase
+            .from('newsletter_drafts')
+            .update({ extra: { ...d.extra, ordre: (Number(d.extra?.ordre) || 0) + shift } })
+            .eq('id', d.id)));
+        }
+
+        // 2. Numérote l'historique par ordre chronologique réel d'envoi.
+        await Promise.all(historicalSent.map((d, index) => supabase
+          .from('newsletter_drafts')
+          .update({ extra: { ...(d.extra || {}), canal: 'parcours', ordre: index + 1, parcours_valide: true } })
+          .eq('id', d.id)));
+
+        return res.status(200).json({
+          success: true,
+          historicalCount: historicalSent.length,
+          shiftedQueueCount: existingQueue.length,
+          shift,
+          historicalSubjects: historicalSent.map((d, index) => ({ ordre: index + 1, subject: d.subject, sent_at: d.sent_at }))
+        });
+      }
+
       // ── Ajout d'un fragment au carnet ──
       if (action === 'ideas') {
         const { content, source } = body;
@@ -5364,6 +5461,10 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
               .from('newsletter_contacts')
               .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
               .in('email', targets);
+            await logNewsletterSends(supabase, {
+              emails: targets, subject: finalSubject, draftId: lastDraft.id,
+              ordre: Number(lastDraft.extra?.ordre) || null, canal: lastDraft.extra?.canal || null
+            });
             return res.status(200).json({
               success: true, channel: 'campagne', campaignId: campaign.campaignId,
               subject: finalSubject, sent: targets.length, failed: 0, failedEmails: [],
@@ -5411,6 +5512,10 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
             .from('newsletter_contacts')
             .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
             .in('email', sentEmails);
+          await logNewsletterSends(supabase, {
+            emails: sentEmails, subject: finalSubject, draftId: lastDraft.id,
+            ordre: Number(lastDraft.extra?.ordre) || null, canal: lastDraft.extra?.canal || null
+          });
         }
 
         return res.status(200).json({ success: true, channel: 'transactionnel', fallbackReason: resendFallbackReason, subject: finalSubject, sent, failed: failedEmails.length, failedEmails });
@@ -5486,7 +5591,8 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
             if (campaign.ok) {
               await nlMarkSent(supabase, {
                 emails, subject: finalSubject, draftId: draft_id,
-                excludeAlreadySent: exclude_already_sent, sent: emails.length
+                excludeAlreadySent: exclude_already_sent, sent: emails.length,
+                ordre: Number(draft.extra?.ordre) || null, canal: draft.extra?.canal || null
               });
               return res.status(200).json({
                 success: true,
@@ -5562,7 +5668,8 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
 
           await nlMarkSent(supabase, {
             emails: sentEmails, subject: finalSubject, draftId: draft_id,
-            excludeAlreadySent: exclude_already_sent, sent, failedEmails
+            excludeAlreadySent: exclude_already_sent, sent, failedEmails,
+            ordre: Number(draft.extra?.ordre) || null, canal: draft.extra?.canal || null
           });
 
           return res.status(200).json({
@@ -5609,11 +5716,17 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
         // donc tous les contacts actifs synchronisés sont réputés destinataires.
         // (Colonne optionnelle — ignoré si la migration last-newsletter n'est pas exécutée.)
         try {
-          await supabase
+          const { data: notified } = await supabase
             .from('newsletter_contacts')
             .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
             .eq('status', 'active')
-            .eq('brevo_synced', true);
+            .eq('brevo_synced', true)
+            .select('email');
+          await logNewsletterSends(supabase, {
+            emails: (notified || []).map(c => c.email),
+            subject: finalSubject, draftId: draft_id,
+            ordre: Number(draft.extra?.ordre) || null, canal: draft.extra?.canal || null
+          });
         } catch (_) {}
 
         await supabase
