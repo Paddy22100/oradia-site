@@ -5385,6 +5385,124 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
         });
       }
 
+      // ── Intègre 5 nouvelles étapes du parcours nées de l'analyse des intentions
+      // (onglet Insights > analyse des tirages, thèmes dominants réels : incertitude/
+      // seuil, relations/attachements, blocages/répétitions, vocation/sens, sérénité/
+      // présence), et repositionne l'ensemble de la file d'attente pour que ces
+      // thèmes très concrets et fréquents arrivent tôt (juste après l'introduction du
+      // parcours), avant les chapitres plus abstraits (Chronos/Kairos, dissolution du
+      // soi, conscience) — un chemin qui va du plus incarné vers le plus subtil,
+      // plutôt que l'inverse. N'affecte jamais les étapes déjà envoyées (historique
+      // figé) : seules les étapes extra.canal='parcours' non envoyées sont retrouvées
+      // par sujet exact et replacées. Idempotent : rejouer cette action ne recrée pas
+      // les 5 nouvelles étapes si elles existent déjà (comparaison par sujet), et le
+      // repositionnement se contente de réappliquer la même cible.
+      if (action === 'apply-parcours-insights-plan') {
+        const NEW_STEPS = [
+          {
+            subject: "Quand l'attente devient le chemin",
+            registre: 'incarnee',
+            content: "<p>Il y a une scène que presque tout le monde connaît. On a semé, ou décidé, ou envoyé le message qui compte, et il ne reste plus qu'à attendre. Les journées s'étirent, rien ne bouge en surface, et l'impatience s'installe comme si le temps lui-même avait cessé de travailler pour nous.</p>\n<p>Sous la terre pourtant, une graine ne reste jamais immobile. Elle absorbe l'humidité, gonfle, déploie une radicelle avant même qu'aucune pousse ne perce le sol. Le jardinier qui gratterait la terre chaque matin pour vérifier ne ferait qu'interrompre ce travail. Rien de ce qui compte, dans une germination, ne se voit depuis l'extérieur avant l'heure.</p>\n<p>L'impatience naît d'une confusion précise : elle prend l'absence de signe visible pour une absence de mouvement. Or le corps, lui, sait la différence. Une tension au ventre, un sommeil agité, une pensée qui revient sans cesse au même endroit ne sont pas des signes que rien ne se passe. Ce sont les signes que quelque chose, précisément, est en train de se réorganiser.</p>\n<p>Le seuil n'est donc pas la ligne qu'on franchit à l'arrivée. C'est tout ce temps souterrain, invisible et pourtant actif, qui prépare le moment où quelque chose pourra enfin affleurer. Vouloir l'accélérer ne change rien à la maturation. Cela ne fait qu'ajouter de la tension à un processus qui suit déjà son propre rythme.</p>\n<p>La Boussole ne raccourcit pas cette attente. Elle aide à la traverser autrement, à reconnaître, dans ce qui semble immobile, le travail réel qui s'y accomplit déjà.</p>\n<p><em>La Boussole Intérieure. Comprendre, choisir, avancer. Précommandes ouvertes sur oradia.fr.</em></p>"
+          },
+          {
+            subject: "Les non-dits du cœur, ces chaînes douces",
+            registre: 'incarnee',
+            content: "<p>Deux personnes se taisent l'une devant l'autre, et pourtant tout circule. Une déception non dite, un besoin jamais nommé, une blessure ancienne qu'on préfère ne pas rouvrir. Le silence n'est pas vide. Il est plein de ce qu'on a choisi de ne pas dire, et ce non-dit continue de tenir la relation, aussi sûrement qu'un fil tendu entre deux mains qui n'osent plus se lâcher ni se serrer.</p>\n<p>Le psychologue Marshall Rosenberg, en observant des milliers de conflits, a fait un constat simple : la plupart des tensions ne viennent pas d'un désaccord sur les faits, mais d'une confusion entre l'observation, le jugement, l'émotion et le besoin. On dit tu ne m'écoutes jamais quand on voudrait dire je me sens seul et j'ai besoin d'être entendu. Le premier accuse. Le second ouvre. Le lien se referme sur l'un, il se rouvre sur l'autre.</p>\n<p>Ce que nous appelons attachement est souvent, en réalité, un empilement de ces besoins jamais formulés. Chacun attend que l'autre devine, et personne ne devine tout à fait juste. La chaîne n'est pas faite d'amour en trop. Elle est faite de mots qu'on a eu peur de prononcer, par crainte de déranger, de paraître exigeant, ou simplement de ne pas être compris.</p>\n<p>Nommer un besoin ne fragilise pas un lien. Cela lui donne enfin une forme sur laquelle l'autre peut s'appuyer. Ce n'est pas un aveu de faiblesse, c'est un acte de clarté, et la clarté est souvent ce qui manque le plus dans les relations qui durent depuis longtemps.</p>\n<p>La Boussole aide à retrouver, sous la plainte ou le silence, le besoin réel qui attend d'être dit. Une fois nommé, il peut enfin circuler autrement qu'en tension.</p>\n<p><em>La Boussole Intérieure. Comprendre, choisir, avancer. Précommandes ouvertes sur oradia.fr.</em></p>"
+          },
+          {
+            subject: "La répétition n'est pas une malédiction, c'est une signature",
+            registre: 'incarnee',
+            content: "<p>Le même obstacle revient. La même dispute, sous une autre forme. Le même mur financier, professionnel, créatif, qui semblait pourtant compris, dépassé, résolu, et qui se redresse un peu plus loin sur le chemin. On y voit facilement une malédiction, comme si quelque chose, en nous, refusait obstinément d'apprendre.</p>\n<p>Le cerveau ne fonctionne pourtant pas par malédiction. Il fonctionne par motifs. Une situation ancienne, vécue comme menaçante ou insatisfaite, laisse une empreinte, et cette empreinte devient un filtre à travers lequel des situations nouvelles sont reconnues, classées, traitées, souvent avant même que la conscience n'ait eu le temps d'intervenir. Ce n'est pas une faiblesse de caractère. C'est un système de reconnaissance qui a été efficace un jour, et qui continue de tourner.</p>\n<p>Ce qui revient n'est donc pas un hasard malheureux. C'est une signature, au sens le plus littéral : une marque reconnaissable, qui indique où se trouve encore un motif non intégré. La répétition n'est pas la preuve d'un échec, elle est l'index de ce qui demande précisément votre attention, et nulle part ailleurs.</p>\n<p>Combattre le motif de front ne le fait pas taire. On ne raye pas une signature en appuyant plus fort dessus. Ce qui la transforme, c'est de la reconnaître au moment où elle apparaît, de la nommer pour ce qu'elle est, une réponse ancienne rejouée sur un présent différent, et de laisser, une seule fois, une réponse neuve prendre sa place.</p>\n<p>La Boussole ne vous promet pas de faire disparaître ce qui revient. Elle vous aide à le reconnaître assez tôt pour, cette fois, choisir autrement.</p>\n<p><em>La Boussole Intérieure. Comprendre, choisir, avancer. Précommandes ouvertes sur oradia.fr.</em></p>"
+          },
+          {
+            subject: "Vocation et sens : la sève qui vous traverse",
+            registre: 'inspiree',
+            content: "<p>Une question revient souvent, sous des formes différentes : à quoi est-ce que je sers vraiment ? Elle se pose rarement dans le confort. Elle surgit dans les carrefours, quand un métier, une vie, une routine ne suffisent plus à répondre à ce qu'on cherche.</p>\n<p>Aucun organisme vivant ne se pose cette question seul. Une racine ne pousse pas pour elle-même, elle nourrit l'arbre, qui abrite un oiseau, qui disperse une graine, qui deviendra une autre racine ailleurs. Le vivant n'a jamais fonctionné par unités séparées, mais par circulation. Ce que l'on appelle vocation n'est peut-être rien d'autre que le moment où l'on ressent, avec netteté, sa propre place dans cette circulation plus large.</p>\n<p>Certaines civilisations anciennes, notamment en Égypte, ont bâti des sociétés d'une remarquable longévité en organisant leur vie collective autour de ce principe : chaque geste, chaque saison, chaque fonction sociale était pensé en lien avec un ordre plus vaste, celui du fleuve, des cycles, du vivant qui les portait. Nous ne savons pas tout de ce que cela leur a réellement apporté, et il serait malhonnête de transformer cette observation historique en preuve définitive. Mais l'intuition qu'elle porte mérite d'être prise au sérieux : une vie déconnectée du tout se fatigue plus vite qu'une vie qui se sait reliée.</p>\n<p>Chercher sa vocation, ce n'est donc pas chercher un rôle unique et parfait, à trouver une fois pour toutes. C'est sentir, encore et encore, la direction dans laquelle votre élan nourrit quelque chose de plus grand que vous, et accepter que cette direction puisse bouger avec le temps, comme la sève change de trajet selon les saisons sans jamais cesser de circuler.</p>\n<p>La Boussole ne vous donne pas de réponse toute faite sur votre vocation. Elle vous aide à sentir, dans le présent retrouvé, où votre sève a envie d'aller aujourd'hui.</p>\n<p><em>La Boussole Intérieure. Comprendre, choisir, avancer. Précommandes ouvertes sur oradia.fr.</em></p>"
+          },
+          {
+            subject: "Accueillir ce qui monte",
+            registre: 'incarnee',
+            content: "<p>Une émotion monte, et le premier réflexe est souvent de la repousser. La colère paraît inconvenante, la tristesse encombrante, la peur honteuse. On apprend, parfois dès l'enfance, à ranger ce qui déborde plutôt qu'à le regarder. Le calme qu'on obtient ainsi n'est pourtant pas de la sérénité. C'est une émotion mise sous pression, qui attend son heure.</p>\n<p>Les neurosciences décrivent l'émotion comme un signal, pas comme un défaut. Elle informe sur un besoin satisfait ou menacé, elle mobilise le corps pour agir en conséquence, puis elle est censée se dissiper une fois le message reçu. Ce cycle dure rarement plus de quelques minutes lorsqu'il va à son terme. Ce qui s'éternise, ce n'est presque jamais l'émotion elle-même. C'est la résistance qu'on lui oppose.</p>\n<p>Accueillir une émotion ne veut pas dire lui obéir. Cela veut dire lui laisser le temps d'être sentie, nommée, traversée, sans la juger et sans agir immédiatement sous son emprise. Entre sentir la colère et la déverser sur quelqu'un, il y a tout un espace où elle peut simplement être reconnue pour ce qu'elle transporte comme information.</p>\n<p>La sérénité, ainsi comprise, n'est pas l'absence d'émotion. C'est la capacité à laisser circuler ce qui monte sans en être submergé ni le nier. Un corps qui accueille ainsi ses mouvements intérieurs gagne, avec le temps, une stabilité que la seule maîtrise ne donne jamais.</p>\n<p>La Boussole ouvre cet espace d'accueil, quelques minutes, le temps d'un tirage. Ce que vous y sentez n'a pas besoin d'être combattu. Il a seulement besoin d'être reconnu.</p>\n<p><em>La Boussole Intérieure. Comprendre, choisir, avancer. Précommandes ouvertes sur oradia.fr.</em></p>"
+          }
+        ];
+
+        // Ordre cible final de toute la file (étapes déjà en place + 5 nouvelles),
+        // conçu pour que les thèmes les plus concrets et les plus fréquents dans
+        // l'analyse des intentions (seuil, relations, répétitions) arrivent tôt,
+        // et que vocation/sérénité s'intercalent avant les chapitres les plus
+        // abstraits de la fin du parcours.
+        const TARGET_ORDER = [
+          "Le temps n'est pas dans l'horloge",
+          "Le veilleur intérieur",
+          "Ce que votre corps sait avant vous",
+          "Guillemant, Garnier Malet et la tentation du raccourci",
+          "La brume n'est pas un vide",
+          "Quand l'attente devient le chemin",
+          "Le barrage",
+          "Les non-dits du cœur, ces chaînes douces",
+          "Chronos, Kairos, Aiôn",
+          "La synchronicité vous parle de vous",
+          "La liberté est un intervalle",
+          "L'arbre porte son passé",
+          "La répétition n'est pas une malédiction, c'est une signature",
+          "D'où viennent les idées",
+          "Le souffle, cette aiguille",
+          "Vocation et sens : la sève qui vous traverse",
+          "Romuald Leterrier et le pari du sens",
+          "Quand le soi et le temps se dissolvent",
+          "Accueillir ce qui monte",
+          "Le passé déguisé en avenir",
+          "Ce que la conscience sait faire",
+          "Le geste qui décide",
+          "Un oracle ne prédit pas",
+          "Revenir au centre"
+        ];
+
+        const { data: allDrafts, error } = await supabase.from('newsletter_drafts').select('*');
+        if (error) throw error;
+        const rows = allDrafts || [];
+        const existingSubjects = new Set(rows.filter(d => d.extra?.canal === 'parcours').map(d => d.subject));
+
+        let created = 0;
+        for (const step of NEW_STEPS) {
+          if (existingSubjects.has(step.subject)) continue;
+          const { error: insertErr } = await supabase.from('newsletter_drafts').insert({
+            subject: step.subject,
+            content: step.content,
+            intention: null,
+            type: 'newsletter',
+            images: [],
+            extra: { canal: 'parcours', registre: step.registre, cta_text: "Découvrir l'Oracle Oradia", cta_url: 'https://oradia.fr' }
+          });
+          if (!insertErr) created++;
+          else console.error('[parcours-insights-plan] insert:', step.subject, insertErr.message);
+        }
+
+        // Reposition — recharge après insertion pour disposer des id des 5 nouvelles étapes.
+        const { data: refreshed, error: refreshErr } = await supabase.from('newsletter_drafts').select('*');
+        if (refreshErr) throw refreshErr;
+        const queueBySubject = new Map(
+          (refreshed || [])
+            .filter(d => d.extra?.canal === 'parcours' && d.statut !== 'envoyé')
+            .map(d => [d.subject, d])
+        );
+
+        let repositioned = 0;
+        const notFound = [];
+        await Promise.all(TARGET_ORDER.map((subject, index) => {
+          const draft = queueBySubject.get(subject);
+          if (!draft) { notFound.push(subject); return null; }
+          const targetOrdre = 7 + index; // 1..6 réservés à l'historique déjà envoyé
+          if (Number(draft.extra?.ordre) === targetOrdre) return null;
+          repositioned++;
+          return supabase.from('newsletter_drafts')
+            .update({ extra: { ...draft.extra, ordre: targetOrdre } })
+            .eq('id', draft.id);
+        }));
+
+        return res.status(200).json({ success: true, created, repositioned, notFound });
+      }
+
       // ── Ajout d'un fragment au carnet ──
       if (action === 'ideas') {
         const { content, source } = body;
