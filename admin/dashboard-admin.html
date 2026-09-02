@@ -996,16 +996,29 @@
             </div>
             <p class="text-sm text-light-gold/70 mb-4">L'export Mondial Relay génère un CSV prêt à l'import transporteur pour édition d'étiquettes.</p>
 
-            <div class="stat-card rounded-2xl p-6 mb-4 inline-block">
-                <div class="flex items-center gap-3 mb-2">
-                    <div class="w-10 h-10 bg-gradient-to-br from-green-500/20 to-green-500/10 rounded-lg flex items-center justify-center">
-                        <i class="fas fa-euro-sign text-green-400"></i>
+            <div class="flex flex-wrap gap-4 mb-4">
+                <div class="stat-card rounded-2xl p-6 inline-block">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 bg-gradient-to-br from-green-500/20 to-green-500/10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-euro-sign text-green-400"></i>
+                        </div>
+                        <p class="text-light-gold text-sm">Montant précommandes (frais Stripe déduits)</p>
                     </div>
-                    <p class="text-light-gold text-sm">Montant précommandes (frais Stripe déduits)</p>
+                    <div class="text-3xl font-bold text-gold" id="preordersTabNet">-</div>
+                    <p class="text-light-gold/40 text-xs mt-1" id="preordersTabGross">-</p>
+                    <p class="text-light-gold/30 text-xs mt-0.5">Livraison incluse, non déduite ici</p>
                 </div>
-                <div class="text-3xl font-bold text-gold" id="preordersTabNet">-</div>
-                <p class="text-light-gold/40 text-xs mt-1" id="preordersTabGross">-</p>
-                <p class="text-light-gold/30 text-xs mt-0.5">Livraison incluse, non déduite ici — voir la Cagnotte fabrication (Vue d'ensemble) pour le montant net de livraison</p>
+
+                <div class="stat-card rounded-2xl p-6 inline-block border-orange-500/40" title="À réserver pour l'affranchissement — ne fait pas partie de la Cagnotte fabrication">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 bg-gradient-to-br from-orange-500/20 to-orange-500/10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-truck text-orange-400"></i>
+                        </div>
+                        <p class="text-light-gold text-sm">Frais de port à prévoir</p>
+                    </div>
+                    <div class="text-3xl font-bold text-orange-400" id="preordersTabShipping">-</div>
+                    <p class="text-light-gold/30 text-xs mt-0.5">À mettre de côté pour l'affranchissement, hors Cagnotte fabrication</p>
+                </div>
             </div>
 
             <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-4 mb-4">
@@ -4742,6 +4755,7 @@
             updateElement('preordersTotalNet', `~${formatCurrency(data.preorders?.net || 0)} net`);
             updateElement('preordersTabNet', `~${formatCurrency(data.preorders?.net || 0)}`);
             updateElement('preordersTabGross', `${formatCurrency(data.preorders?.total || 0)} brut, frais Stripe estimés déduits`);
+            updateElement('preordersTabShipping', formatCurrency(data.preorders?.shippingTotal || 0));
             updateElement('globalTotalNet',    `~${formatCurrency(data.global?.net   || 0)} net Stripe`);
             updateElement('donorsTotalNet',    `~${formatCurrency(data.donors?.net   || 0)} net`);
             updateElement('donorsTabTotal', formatCurrency(data.donors?.total || 0));
