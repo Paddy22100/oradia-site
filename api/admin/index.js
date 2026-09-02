@@ -1408,7 +1408,7 @@ async function handleData(req, res) {
     // qui exige isCronRequest — une requête de session admin normale (verifyAdminAuth
     // déjà passé plus haut si on arrive jusqu'ici) ne peut jamais le satisfaire.
     if (!isCronRequest && req.method === 'GET' && req.query?.action === 'cron-tirage-hebdo') {
-      return await runWeeklyTirageCron(supabase, res);
+      return await runWeeklyTirageCron(supabase, res, { force: true });
     }
 
     // Les actions "support-*" (utilisées par le dashboard Support technique) sont
@@ -4436,13 +4436,18 @@ function buildWeeklyTirageContent({ theme, cards, analysis, date }) {
 // secret cron) et depuis le bouton de test du dashboard (même action, session
 // admin) — un seul endroit produit le brouillon, pour que le test corresponde
 // exactement à ce que le vrai cron du dimanche produirait.
-async function runWeeklyTirageCron(supabase, res) {
+async function runWeeklyTirageCron(supabase, res, { force = false } = {}) {
   try {
     const now = new Date();
     const isoWeekKey = getIsoWeekKey(now);
 
-    // Idempotence : un ré-essai du cron (retry Vercel, clic répété du bouton de
-    // test) ne doit jamais créer un second brouillon pour la même semaine.
+    // Idempotence : le cron réel (Vercel, retry compris) ne doit jamais créer
+    // un second brouillon pour la même semaine. Le bouton de test du dashboard
+    // passe force=true : pendant qu'on ajuste le format, cliquer "tester" doit
+    // vraiment régénérer (remplacer l'ancien brouillon) plutôt que de renvoyer
+    // indéfiniment le même brouillon obsolète tant qu'on est dans la même
+    // semaine ISO — sans ça, aucune correction n'était jamais visible sans
+    // supprimer le brouillon à la main entre chaque essai.
     const { data: existing } = await supabase
       .from('newsletter_drafts')
       .select('id')
@@ -4450,7 +4455,10 @@ async function runWeeklyTirageCron(supabase, res) {
       .eq('extra->>semaine', isoWeekKey)
       .maybeSingle();
     if (existing) {
-      return res.status(200).json({ success: true, skipped: true, reason: 'already_generated', draft_id: existing.id });
+      if (!force) {
+        return res.status(200).json({ success: true, skipped: true, reason: 'already_generated', draft_id: existing.id });
+      }
+      await supabase.from('newsletter_drafts').delete().eq('id', existing.id);
     }
 
     const theme = getWeeklyAstroTheme(now);
