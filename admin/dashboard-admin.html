@@ -8033,15 +8033,28 @@
                     <i class="fas fa-triangle-exclamation mr-1"></i>Ce brouillon n'a pas encore de contenu rédigé — l'aperçu ci-dessous n'affichera que l'en-tête et le pied de page.
                    </div>`
                 : '';
+            // Valider directement depuis l'aperçu : la lecture complète du contenu est
+            // justement le moment naturel pour décider de valider — pas besoin de fermer
+            // l'aperçu et retourner à la liste pour cliquer sur "Valider pour le Parcours".
+            const canValidateHere = extra.canal === 'parcours' && extra.parcours_valide !== true;
+            const validateFromPreviewBtn = canValidateHere
+                ? `<button onclick="nlValidateFromPreview('${draft.id}', this)"
+                        class="text-xs bg-orange-500/15 text-orange-300 border border-orange-500/30 hover:bg-orange-500/25 rounded px-3 py-1.5 transition mr-2">
+                        <i class="fas fa-check mr-1"></i>Valider pour le Parcours
+                    </button>`
+                : '';
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 z-50 flex flex-col bg-black/95 backdrop-blur-sm';
             modal.innerHTML = `
                 <div class="flex items-center justify-between px-5 py-3 bg-[rgba(5,15,35,0.98)] border-b border-gold/20 shrink-0">
                     <span class="cormorant text-lg text-gold"><i class="fas fa-envelope mr-2"></i>Aperçu — ${draft.subject || 'Sans titre'}</span>
-                    <button onclick="this.closest('.fixed').remove()"
-                        class="text-xs text-gold/50 hover:text-gold border border-gold/20 hover:border-gold/40 rounded px-3 py-1.5 transition">
-                        <i class="fas fa-times mr-1"></i>Fermer
-                    </button>
+                    <div class="flex items-center">
+                        ${validateFromPreviewBtn}
+                        <button onclick="this.closest('.fixed').remove()"
+                            class="text-xs text-gold/50 hover:text-gold border border-gold/20 hover:border-gold/40 rounded px-3 py-1.5 transition">
+                            <i class="fas fa-times mr-1"></i>Fermer
+                        </button>
+                    </div>
                 </div>
                 <div class="flex-1 overflow-hidden bg-[#1a1a2a] flex flex-col items-center py-6 px-4 overflow-y-auto">
                     ${emptyWarning}
@@ -8161,19 +8174,40 @@
             tbody.innerHTML = nlParcours.map((d, i) => {
                 const extra = d.extra || {};
                 const isStep = extra.canal === 'parcours';
+                const isQueued = d.statut !== 'envoyé';
                 const registreCls = registreColors[extra.registre] || 'bg-gold/10 text-gold/70 border-gold/20';
-                const typeBadge = isStep
-                    ? `<span class="text-xs px-2 py-0.5 rounded-full bg-gold/15 text-gold border border-gold/30">Étape n°${extra.ordre ?? '?'}</span>`
-                    : `<span class="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-300 border border-green-500/30">Envoyée</span>`;
+                let typeBadge;
+                if (!isQueued) {
+                    typeBadge = `<span class="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-300 border border-green-500/30">Envoyée</span>`;
+                } else if (isStep) {
+                    // Ordre modifiable : la file se re-trie automatiquement (nlLoadParcours)
+                    // dès qu'on change cette valeur, pas besoin de rafraîchir la page.
+                    const validBadge = extra.parcours_valide === true
+                        ? `<span class="text-xs px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-300 border border-teal-500/30">Validée</span>`
+                        : `<span class="text-xs px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/30">À valider</span>`;
+                    typeBadge = `
+                        <div class="flex items-center gap-1.5">
+                            <span class="text-light-gold/40 text-xs">n°</span>
+                            <input type="number" min="1" value="${extra.ordre ?? ''}"
+                                onchange="nlUpdateParcoursOrdre('${d.id}', this)"
+                                class="w-14 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-gold rounded px-1.5 py-0.5 text-xs text-center focus:outline-none focus:border-gold">
+                            ${validBadge}
+                        </div>`;
+                } else {
+                    typeBadge = `<span class="text-xs px-2 py-0.5 rounded-full bg-gold/10 text-gold/60 border border-gold/20">Brouillon</span>`;
+                }
                 const dateVal = d.sent_at || d.created_at;
+                const validateBtn = (isQueued && isStep && extra.parcours_valide !== true)
+                    ? `<button onclick="nlValidateParcours('${d.id}')" class="text-xs bg-orange-500/15 text-orange-300 border border-orange-500/30 rounded-lg px-3 py-1.5 hover:bg-orange-500/25 transition mr-1"><i class="fas fa-check mr-1"></i>Valider</button>`
+                    : '';
                 return `<tr class="hover:bg-gold/5 transition">
                     <td class="px-6 py-4 text-light-gold/40 text-sm">${i + 1}</td>
                     <td class="px-6 py-4">${typeBadge}</td>
                     <td class="px-6 py-4 text-light-gold text-sm">${escapeHtmlFront(d.subject || '—')}</td>
                     <td class="px-6 py-4 text-light-gold/60 text-xs">${dateVal ? new Date(dateVal).toLocaleDateString('fr-FR') : '—'}</td>
                     <td class="px-6 py-4">${isStep ? `<span class="text-xs px-2 py-0.5 rounded-full border ${registreCls}">${escapeHtmlFront(extra.registre || '—')}</span>` : '<span class="text-gold/20 text-xs">—</span>'}</td>
-                    <td class="px-6 py-4">
-                        <button onclick="nlPreviewDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition"><i class="fas fa-eye mr-1"></i>Prévisualiser</button>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${validateBtn}<button onclick="nlPreviewDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition"><i class="fas fa-eye mr-1"></i>Prévisualiser</button>
                     </td>
                 </tr>`;
             }).join('');
@@ -8251,8 +8285,8 @@
         // Fait basculer une étape du parcours (relue, illustrée) de la liste des
         // brouillons vers la vue Parcours — irréversible depuis cette liste (la
         // désactivation se ferait depuis l'onglet Parcours si besoin un jour).
-        async function nlValidateParcours(id) {
-            if (!confirm('Valider cette étape pour le Parcours ? Elle quittera cette liste de brouillons et apparaîtra dans l\'onglet Parcours.')) return;
+        async function nlValidateParcours(id, skipConfirm) {
+            if (!skipConfirm && !confirm("Valider cette étape pour le Parcours ? Elle passera de « à valider » à validée, prête à être programmée.")) return;
             try {
                 const res = await adminFetch('/api/admin/newsletter?action=validate-parcours', {
                     method: 'POST',
@@ -8261,8 +8295,41 @@
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(data.error || 'Erreur');
-                await nlLoadDrafts();
-            } catch (e) { alert('Erreur : ' + e.message); }
+                await Promise.all([nlLoadDrafts(), nlLoadParcours()]);
+                return true;
+            } catch (e) { alert('Erreur : ' + e.message); return false; }
+        }
+
+        // Bouton "Valider" de l'aperçu (nlPreviewDraft) : confirme puis ferme l'aperçu
+        // en cas de succès, pour retrouver directement la liste à jour.
+        async function nlValidateFromPreview(id, btn) {
+            if (!confirm("Valider cette étape pour le Parcours ? Elle passera de « à valider » à validée, prête à être programmée.")) return;
+            btn.disabled = true;
+            const ok = await nlValidateParcours(id, true);
+            if (ok) { const modal = btn.closest('.fixed'); if (modal) modal.remove(); }
+            else btn.disabled = false;
+        }
+
+        // Modifie l'ordre d'une étape en file d'attente (pas encore envoyée) — recharge
+        // ensuite la vue Parcours pour re-trier automatiquement selon le nouvel ordre.
+        async function nlUpdateParcoursOrdre(id, input) {
+            const ordre = parseInt(input.value, 10);
+            if (!Number.isFinite(ordre) || ordre <= 0) { input.value = input.defaultValue; return; }
+            input.disabled = true;
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=update-parcours-ordre', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, ordre })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                await nlLoadParcours();
+            } catch (e) {
+                alert('Erreur : ' + e.message);
+                input.disabled = false;
+                input.value = input.defaultValue;
+            }
         }
 
         function nlRenderDrafts() {

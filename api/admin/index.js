@@ -4853,19 +4853,22 @@ async function handleNewsletter(req, res) {
       }
 
       // ── Vue séparée « Parcours » : combine les newsletters déjà envoyées (statut
-      // 'envoyé', triées par date d'envoi) et les étapes du parcours une fois
-      // validées (extra.canal='parcours' ET extra.parcours_valide=true, triées par
-      // extra.ordre) — les envoyées d'abord, puis les étapes validées dans l'ordre.
-      // Tant qu'une étape n'est pas validée, elle reste un brouillon normal (visible
-      // et modifiable dans Newsletter & Réseaux), pas encore dans cette vue.
+      // 'envoyé', triées par date d'envoi réelle) et les étapes du parcours pas
+      // encore envoyées (extra.canal='parcours', validées ou non, triées par
+      // extra.ordre) — les envoyées d'abord (ordre chronologique réel, qui prime
+      // toujours sur extra.ordre une fois l'envoi effectué), puis la file dans
+      // l'ordre où elle partira. Les étapes pas encore validées restent aussi
+      // visibles et modifiables dans Newsletter & Réseaux (validate-parcours) ;
+      // les inclure ici aussi permet de tout gérer (ordre, prévisualisation,
+      // validation) depuis un seul endroit.
       // type='promo' exclu des deux listes : une annonce (lancement, ouverture de
       // précommandes...) n'appartient pas à la séquence éditoriale du parcours, même
       // une fois envoyée — voir aussi backfill-parcours-history, qui applique la même
       // exclusion pour la numérotation rétroactive.
-      // `d.statut !== 'envoyé'` sur validatedSteps évite un doublon : une étape
-      // historique numérotée par backfill-parcours-history est à la fois « envoyée »
-      // ET « validée » (parcours_valide=true) — sans ce filtre elle apparaîtrait deux
-      // fois, une fois dans `sent` et une fois dans `validatedSteps`.
+      // `d.statut !== 'envoyé'` sur queue évite un doublon : une étape historique
+      // numérotée par backfill-parcours-history est à la fois « envoyée » ET
+      // « validée » (parcours_valide=true) — sans ce filtre elle apparaîtrait deux
+      // fois, une fois dans `sent` et une fois dans `queue`.
       // N'affecte pas l'action 'drafts' ci-dessous : requête de base identique,
       // seul un filtre JS après coup distingue les deux vues.
       if (action === 'drafts-parcours') {
@@ -4880,10 +4883,33 @@ async function handleNewsletter(req, res) {
         const sent = rows
           .filter(d => d.statut === 'envoyé' && d.type !== 'promo')
           .sort((a, b) => new Date(a.sent_at || a.created_at) - new Date(b.sent_at || b.created_at));
-        const validatedSteps = rows
-          .filter(d => d.extra?.canal === 'parcours' && d.extra?.parcours_valide === true && d.statut !== 'envoyé')
+        const queue = rows
+          .filter(d => d.extra?.canal === 'parcours' && d.statut !== 'envoyé')
           .sort((a, b) => (Number(a.extra?.ordre) || 0) - (Number(b.extra?.ordre) || 0));
-        return res.status(200).json([...sent, ...validatedSteps]);
+        return res.status(200).json([...sent, ...queue]);
+      }
+
+      // ── Modifie uniquement extra.ordre d'un brouillon (réordonnancement manuel de
+      // la file du parcours, onglet Parcours) — fusionne avec l'extra existant pour
+      // ne toucher que ce champ, comme validate-parcours.
+      if (action === 'update-parcours-ordre') {
+        const { id, ordre } = body;
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const ordreNum = Number(ordre);
+        if (!Number.isFinite(ordreNum) || ordreNum <= 0) return res.status(400).json({ error: 'ordre invalide' });
+        const { data: existingDraft, error: fetchErr } = await supabase
+          .from('newsletter_drafts').select('extra').eq('id', id).maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (!existingDraft) return res.status(404).json({ error: 'Brouillon introuvable' });
+        if (existingDraft.extra?.canal !== 'parcours') {
+          return res.status(400).json({ error: "Ce brouillon n'appartient pas au parcours (extra.canal ≠ 'parcours')" });
+        }
+        const { error } = await supabase
+          .from('newsletter_drafts')
+          .update({ extra: { ...existingDraft.extra, ordre: ordreNum }, updated_at: new Date().toISOString() })
+          .eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
       }
 
       // ── État d'avance du parcours : sert à la fois l'alerte tableau de bord
