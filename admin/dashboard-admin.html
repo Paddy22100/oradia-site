@@ -2412,7 +2412,7 @@
                                 class="flex-shrink-0 text-sm bg-blue-500/15 text-blue-300 border border-blue-500/30 rounded-lg px-4 py-2 hover:bg-blue-500/25 transition">
                                 <i class="fas fa-file-pen mr-1.5"></i>Corriger les textes
                             </button>
-                            <button onclick="sendParcoursIndividualNow()" title="Envoie dès maintenant, à chaque contact individuellement selon sa propre date d'inscription/dernier envoi (cadence 7 jours), la prochaine étape du parcours (ordre > 6) qui lui est due. Tourne aussi automatiquement chaque jour à 10h (cron)."
+                            <button onclick="sendParcoursIndividualNow()" title="Envoie dès maintenant, à chaque contact individuellement selon sa propre date d'inscription/dernier envoi (cadence 7 jours), la prochaine étape du parcours qui lui est due (à partir de l'étape 1 pour un nouvel inscrit, de l'étape 7 pour un abonné antérieur à l'historique groupé). Tourne aussi automatiquement chaque mercredi à 19h (heure de Paris, cron)."
                                 class="flex-shrink-0 text-sm bg-purple-500/15 text-purple-300 border border-purple-500/30 rounded-lg px-4 py-2 hover:bg-purple-500/25 transition">
                                 <i class="fas fa-route mr-1.5"></i>Lancer l'envoi individualisé
                             </button>
@@ -8249,8 +8249,8 @@
         }
 
         // Déclenche manuellement l'envoi individualisé du parcours (même fonction que
-        // le cron quotidien, action=cron-send-parcours-individual) — pour tester sans
-        // attendre le passage du cron (10h chaque jour).
+        // le cron hebdomadaire, action=cron-send-parcours-individual) — pour tester sans
+        // attendre le passage du cron (chaque mercredi 19h heure de Paris).
         async function sendParcoursIndividualNow() {
             const status = document.getElementById('sendParcoursIndividualStatus');
             const show = (msg, cls) => { if (status) { status.textContent = msg; status.className = `text-sm mb-4 px-1 ${cls}`; status.classList.remove('hidden'); } };
