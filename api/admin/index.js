@@ -4398,7 +4398,11 @@ function buildWeeklyTirageContent({ theme, cards, analysis, date }) {
     if (url) images.push({ path: url.replace('https://oradia.fr', ''), name, position: paragraphs.length - 1, width: WEEKLY_TIRAGE_CARD_IMG_WIDTH });
   };
 
-  paragraphs.push(`<p>Cette semaine est placée sous le signe de <strong>${theme.label}</strong>. ${theme.intention} C'est l'intention posée pour ce tirage collectif du dimanche — voici ce que les cartes en disent.</p>`);
+  // theme.intention porte déjà le contexte astro complet (Soleil, Lune, planètes
+  // notables — voir lib/astro-calendar.js) suivi d'une invitation à l'interpréter :
+  // pas besoin de le reconstruire ici, ni de répéter theme.label qui redirait la
+  // même chose en plus court.
+  paragraphs.push(`<p>${theme.intention} C'est cette énergie qui inspire le tirage collectif de ce dimanche — voici ce que les cartes en disent.</p>`);
 
   // Chaque carte (et sa carte passerelle éventuelle) a son propre paragraphe et
   // sa propre position d'image : aucune des deux ne partage sa position avec
