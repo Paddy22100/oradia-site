@@ -4858,6 +4858,14 @@ async function handleNewsletter(req, res) {
       // extra.ordre) — les envoyées d'abord, puis les étapes validées dans l'ordre.
       // Tant qu'une étape n'est pas validée, elle reste un brouillon normal (visible
       // et modifiable dans Newsletter & Réseaux), pas encore dans cette vue.
+      // type='promo' exclu des deux listes : une annonce (lancement, ouverture de
+      // précommandes...) n'appartient pas à la séquence éditoriale du parcours, même
+      // une fois envoyée — voir aussi backfill-parcours-history, qui applique la même
+      // exclusion pour la numérotation rétroactive.
+      // `d.statut !== 'envoyé'` sur validatedSteps évite un doublon : une étape
+      // historique numérotée par backfill-parcours-history est à la fois « envoyée »
+      // ET « validée » (parcours_valide=true) — sans ce filtre elle apparaîtrait deux
+      // fois, une fois dans `sent` et une fois dans `validatedSteps`.
       // N'affecte pas l'action 'drafts' ci-dessous : requête de base identique,
       // seul un filtre JS après coup distingue les deux vues.
       if (action === 'drafts-parcours') {
@@ -4870,10 +4878,10 @@ async function handleNewsletter(req, res) {
         }
         const rows = allDrafts || [];
         const sent = rows
-          .filter(d => d.statut === 'envoyé')
+          .filter(d => d.statut === 'envoyé' && d.type !== 'promo')
           .sort((a, b) => new Date(a.sent_at || a.created_at) - new Date(b.sent_at || b.created_at));
         const validatedSteps = rows
-          .filter(d => d.extra?.canal === 'parcours' && d.extra?.parcours_valide === true)
+          .filter(d => d.extra?.canal === 'parcours' && d.extra?.parcours_valide === true && d.statut !== 'envoyé')
           .sort((a, b) => (Number(a.extra?.ordre) || 0) - (Number(b.extra?.ordre) || 0));
         return res.status(200).json([...sent, ...validatedSteps]);
       }
