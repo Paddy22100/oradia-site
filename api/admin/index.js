@@ -4380,10 +4380,12 @@ function getIsoWeekKey(date) {
 // <p> avec seulement b/strong/i/em/u/br/ul/ol/li/a (le reste est filtré), les
 // images des cartes placées via le tableau `images` (positions alignées sur les
 // paragraphes) plutôt que par des <img> bruts dans le texte.
-// Largeur des vignettes de cartes dans l'email — volontairement petite (une
-// pleine largeur de 600/700px par carte, sur un tirage de 7 cartes ou plus
-// avec passerelles, rendait l'email interminable et disproportionné).
-const WEEKLY_TIRAGE_CARD_IMG_WIDTH = 130;
+// Largeur des vignettes de cartes dans l'email — volontairement petite et en
+// mode "compact" (voir imageRow) : une pleine largeur de 600/700px par carte,
+// avec en plus son cadre décoratif (bordure, ombre, séparateurs dorés), sur un
+// tirage de 7 cartes ou plus avec passerelles, rendait l'email interminable
+// et chaque image paraissait énorme même une fois réduite en pixels.
+const WEEKLY_TIRAGE_CARD_IMG_WIDTH = 100;
 
 function buildWeeklyTirageContent({ theme, cards, analysis, date }) {
   const dateLabel = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
@@ -4395,7 +4397,7 @@ function buildWeeklyTirageContent({ theme, cards, analysis, date }) {
   const images = [];
   const pushCardImage = (name) => {
     const url = resolveCardImageUrl(name);
-    if (url) images.push({ path: url.replace('https://oradia.fr', ''), name, position: paragraphs.length - 1, width: WEEKLY_TIRAGE_CARD_IMG_WIDTH });
+    if (url) images.push({ path: url.replace('https://oradia.fr', ''), name, position: paragraphs.length - 1, width: WEEKLY_TIRAGE_CARD_IMG_WIDTH, compact: true });
   };
 
   // theme.intention porte déjà le contexte astro complet (Soleil, Lune, planètes
@@ -4598,8 +4600,28 @@ function buildCommunicationEmailHtml(draft) {
   // largeur par défaut inchangée (600, pleine largeur de la carte) — un champ
   // optionnel img.width permet une vignette plus petite (ex: cartes du tirage
   // hebdomadaire, où 7+ images pleine largeur rendraient l'email interminable).
+  //
+  // Piège corrigé : même avec width réduit, l'image restait affichée en
+  // pleine largeur, car le style inline width:100% (nécessaire pour le
+  // comportement responsive normal) l'emporte toujours sur l'attribut HTML
+  // width="…" — width:100% s'applique alors à la largeur du conteneur, pas
+  // à la valeur réduite voulue. Avec img.compact, on fixe une largeur en
+  // pixels DIRECTEMENT sur l'image (jamais 100%), ce qui est aussi plus
+  // fiable dans les clients mail qui ignorent max-width sur les tableaux
+  // (Outlook desktop notamment) ; on retire aussi le cadre décoratif (bordure,
+  // ombre, séparateurs dorés) qui donnait une impression de grande taille
+  // même à une image techniquement petite — pas adapté à une vignette parmi
+  // 10-14 dans le même email.
   const imageRow = (img) => {
     const w = img.width && img.width > 0 ? img.width : 600;
+    if (img.compact) {
+      return `
+      <tr><td style="padding:4px 20px; text-align:center;">
+        <a href="${nlAbsUrl(img.path)}" target="_blank" style="display:inline-block; line-height:0;">
+          <img src="${nlAbsUrl(img.path)}" alt="${nlEscHtml(img.name || '')}" width="${w}" style="display:inline-block; width:${w}px; max-width:${w}px; height:auto; border-radius:8px; border:1px solid rgba(212,175,55,0.22);">
+        </a>
+      </td></tr>`;
+    }
     return `
     ${separator}
     <tr><td style="padding:8px 20px 8px; text-align:center;">
