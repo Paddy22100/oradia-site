@@ -5213,6 +5213,22 @@ async function handleNewsletter(req, res) {
           return res.status(500).json({ error: 'Erreur lors de la récupération du parcours' });
         }
         const rows = allDrafts || [];
+
+        // « Le veilleur intérieur » a été envoyée par l'ancien circuit de diffusion
+        // manuelle (pas le pipeline valider → programmer → cron), et a donc échappé
+        // aux deux passes de numérotation du parcours : backfill-parcours-history
+        // l'excluait déjà (canal='parcours' présent depuis son import), et apply-
+        // parcours-insights-plan ne repositionne que les étapes encore en file
+        // d'attente. Son extra.ordre est resté vide (case 7 libre entre l'historique
+        // 1-6 et la suite numérotée à partir de 8) — auto-corrigé ici, sans bouton
+        // dédié, à chaque chargement de l'onglet, idempotent.
+        const veilleur = rows.find(d => d.subject === "Rudy d'ORADIA - Le veilleur intérieur" && d.statut === 'envoyé');
+        if (veilleur && Number(veilleur.extra?.ordre) !== 7) {
+          veilleur.extra = { ...(veilleur.extra || {}), canal: 'parcours', ordre: 7 };
+          supabase.from('newsletter_drafts').update({ extra: veilleur.extra }).eq('id', veilleur.id)
+            .then(({ error: fixErr }) => { if (fixErr) console.error('[drafts-parcours] auto-fix ordre veilleur:', fixErr.message); });
+        }
+
         const sent = rows
           .filter(d => d.statut === 'envoyé' && d.type !== 'promo' && !PARCOURS_EXCLUDED_SUBJECTS.includes(d.subject))
           .sort((a, b) => new Date(a.sent_at || a.created_at) - new Date(b.sent_at || b.created_at));
@@ -5902,27 +5918,6 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
       if (action === 'send-parcours-individual-now') {
         const result = await runParcoursIndividualCron(supabase);
         return res.status(200).json(result);
-      }
-
-      // ── Corrige le numéro d'étape manquant de « Le veilleur intérieur » : envoyée
-      // via l'ancien circuit de diffusion manuelle (pas le pipeline valider →
-      // programmer → cron), elle a échappé aux deux passes de numérotation
-      // (backfill-parcours-history l'excluait déjà car canal='parcours' ; apply-
-      // parcours-insights-plan ne repositionne que les étapes encore en file, et
-      // elle était déjà envoyée) — son extra.ordre est donc resté vide. Réassigne
-      // l'ordre 7 (la place chronologique libre entre l'historique 1-6 et la
-      // suite numérotée à partir de 8). Idempotent et sans effet si déjà à 7.
-      if (action === 'fix-parcours-veilleur-ordre') {
-        const { data: rows, error } = await supabase.from('newsletter_drafts').select('*');
-        if (error) throw error;
-        const draft = (rows || []).find(d => d.subject === "Rudy d'ORADIA - Le veilleur intérieur" && d.statut === 'envoyé');
-        if (!draft) return res.status(200).json({ success: true, updated: false, message: 'Introuvable (déjà corrigée, ou sujet différent).' });
-        if (Number(draft.extra?.ordre) === 7) return res.status(200).json({ success: true, updated: false, message: 'Déjà à l\'ordre 7.' });
-        const { error: updateErr } = await supabase.from('newsletter_drafts')
-          .update({ extra: { ...(draft.extra || {}), canal: 'parcours', ordre: 7 } })
-          .eq('id', draft.id);
-        if (updateErr) throw updateErr;
-        return res.status(200).json({ success: true, updated: true });
       }
 
       // ── Détecte (et, hors dry_run, supprime) les étapes du parcours encore en file
