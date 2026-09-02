@@ -8509,7 +8509,13 @@
                     const ordre = Number(d.extra?.ordre) || null;
                     if (!ordre || !d.subject) continue;
                     _parcoursOrdreBySubject.set(d.subject, ordre);
-                    if (d.statut === 'envoyé' && (maxOrdre === null || ordre > maxOrdre)) maxOrdre = ordre;
+                    // Dénominateur = étape la plus avancée du parcours tel qu'il existe
+                    // aujourd'hui (déjà envoyée à quelqu'un OU validée et prête à
+                    // partir) — pas seulement déjà envoyée. Avec l'envoi individualisé,
+                    // une étape validée mais pas encore partie (ex. n°8 "Validée") est
+                    // due sous peu ; l'ignorer ferait afficher "à jour" à des contacts
+                    // qui vont en fait recevoir la suite dans les prochains jours.
+                    if ((d.statut === 'envoyé' || d.extra?.parcours_valide === true) && (maxOrdre === null || ordre > maxOrdre)) maxOrdre = ordre;
                 }
                 _parcoursMaxSentOrdre = maxOrdre;
             } catch (_) { /* silencieux — l'avancement s'affiche juste en "—" */ }
