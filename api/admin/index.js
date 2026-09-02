@@ -4363,6 +4363,11 @@ function getIsoWeekKey(date) {
 // <p> avec seulement b/strong/i/em/u/br/ul/ol/li/a (le reste est filtré), les
 // images des cartes placées via le tableau `images` (positions alignées sur les
 // paragraphes) plutôt que par des <img> bruts dans le texte.
+// Largeur des vignettes de cartes dans l'email — volontairement petite (une
+// pleine largeur de 600/700px par carte, sur un tirage de 7 cartes ou plus
+// avec passerelles, rendait l'email interminable et disproportionné).
+const WEEKLY_TIRAGE_CARD_IMG_WIDTH = 260;
+
 function buildWeeklyTirageContent({ theme, cards, analysis, date }) {
   const dateLabel = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   const subject = theme.event
@@ -4371,18 +4376,26 @@ function buildWeeklyTirageContent({ theme, cards, analysis, date }) {
 
   const paragraphs = [];
   const images = [];
+  const pushCardImage = (name) => {
+    const url = resolveCardImageUrl(name);
+    if (url) images.push({ path: url.replace('https://oradia.fr', ''), name, position: paragraphs.length - 1, width: WEEKLY_TIRAGE_CARD_IMG_WIDTH });
+  };
 
-  paragraphs.push(`<p>Chaque dimanche, un tirage est fait pour toute la communauté, en lien avec ${theme.accroche}. Voici ce que les cartes ont à nous dire.</p>`);
+  paragraphs.push(`<p>Cette semaine est placée sous le signe de <strong>${theme.label}</strong>. ${theme.intention} C'est l'intention posée pour ce tirage collectif du dimanche — voici ce que les cartes en disent.</p>`);
 
-  cards.forEach((card, i) => {
+  // Chaque carte (et sa carte passerelle éventuelle) a son propre paragraphe et
+  // sa propre position d'image : aucune des deux ne partage sa position avec
+  // une autre, pour que l'association texte/image ne puisse jamais se mélanger
+  // et pour que la carte passerelle ait sa place à elle, pas une simple
+  // parenthèse discrète dans le paragraphe de la carte principale.
+  cards.forEach((card) => {
     const label = FAMILY_LABELS[card.family] || card.family;
-    const bridge = card.bridgeCard ? ` <em>(carte passerelle : ${card.bridgeCard.name})</em>` : '';
-    paragraphs.push(`<p><strong>${label} — ${card.name}.</strong> ${card.quote || ''}${bridge}</p>`);
-    const imageUrl = resolveCardImageUrl(card.name);
-    if (imageUrl) images.push({ path: imageUrl.replace('https://oradia.fr', ''), name: card.name, position: paragraphs.length - 1 });
+    paragraphs.push(`<p><strong>${label} — ${card.name}.</strong> ${card.quote || ''}</p>`);
+    pushCardImage(card.name);
+
     if (card.bridgeCard) {
-      const bridgeUrl = resolveCardImageUrl(card.bridgeCard.name);
-      if (bridgeUrl) images.push({ path: bridgeUrl.replace('https://oradia.fr', ''), name: card.bridgeCard.name, position: paragraphs.length - 1 });
+      paragraphs.push(`<p><em>Une carte passerelle est apparue : ${card.bridgeCard.name}.</em> ${card.bridgeCard.quote || ''}</p>`);
+      pushCardImage(card.bridgeCard.name);
     }
   });
 
@@ -4561,18 +4574,24 @@ function buildCommunicationEmailHtml(draft) {
       <span style="display:inline-block; width:48px; height:1px; background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent); vertical-align:middle;"></span>
     </td></tr>`;
 
-  const imageRow = (img) => `
+  // largeur par défaut inchangée (600, pleine largeur de la carte) — un champ
+  // optionnel img.width permet une vignette plus petite (ex: cartes du tirage
+  // hebdomadaire, où 7+ images pleine largeur rendraient l'email interminable).
+  const imageRow = (img) => {
+    const w = img.width && img.width > 0 ? img.width : 600;
+    return `
     ${separator}
     <tr><td style="padding:8px 20px 8px; text-align:center;">
-      <table cellpadding="0" cellspacing="0" style="margin:0 auto; max-width:600px; width:100%; border-radius:14px; overflow:hidden; border:1px solid rgba(212,175,55,0.22); box-shadow:0 6px 28px rgba(0,0,0,0.45);">
+      <table cellpadding="0" cellspacing="0" style="margin:0 auto; max-width:${w}px; width:100%; border-radius:14px; overflow:hidden; border:1px solid rgba(212,175,55,0.22); box-shadow:0 6px 28px rgba(0,0,0,0.45);">
         <tr><td style="padding:0; line-height:0;">
           <a href="${nlAbsUrl(img.path)}" target="_blank" style="display:block; line-height:0;">
-            <img src="${nlAbsUrl(img.path)}" alt="${nlEscHtml(img.name || '')}" width="600" style="display:block; width:100%; height:auto;">
+            <img src="${nlAbsUrl(img.path)}" alt="${nlEscHtml(img.name || '')}" width="${w}" style="display:block; width:100%; height:auto;">
           </a>
         </td></tr>
       </table>
     </td></tr>
     ${separator}`;
+  };
 
   const paraRow = (para) => {
     const isList = /^<(ul|ol)[\s>]/i.test(para.trim());
