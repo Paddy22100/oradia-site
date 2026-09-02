@@ -8246,13 +8246,18 @@
                 const isQueued = d.statut !== 'envoyé';
                 const registreCls = registreColors[extra.registre] || 'bg-gold/10 text-gold/70 border-gold/20';
                 // Colonne "N° étape" : le vrai numéro (extra.ordre), qui détermine l'ordre
-                // réel d'envoi — figé une fois envoyée, modifiable tant que l'étape attend
-                // dans la file (la liste se re-trie automatiquement dès qu'on le change,
-                // voir nlUpdateParcoursOrdre).
+                // réel d'envoi — figé une fois envoyée. Pour une étape en attente, les
+                // flèches ▲▼ échangent sa place avec la voisine immédiate dans la file
+                // (voir nlMoveParcoursStep) plutôt que de faire saisir un numéro à la main,
+                // qui obligeait à connaître et retaper tous les numéros environnants.
                 const ordreCell = (isQueued && isStep)
-                    ? `<input type="number" min="1" value="${extra.ordre ?? ''}"
-                        onchange="nlUpdateParcoursOrdre('${d.id}', this)"
-                        class="w-14 bg-[rgba(5,20,40,0.8)] border border-gold/30 text-gold rounded px-1.5 py-0.5 text-xs text-center focus:outline-none focus:border-gold">`
+                    ? `<div class="flex items-center gap-1.5">
+                        <span class="text-gold text-sm w-5 text-center">${extra.ordre ?? '?'}</span>
+                        <div class="flex flex-col">
+                            <button onclick="nlMoveParcoursStep('${d.id}','up')" title="Monter d'un cran" class="text-gold/50 hover:text-gold leading-none px-1"><i class="fas fa-caret-up"></i></button>
+                            <button onclick="nlMoveParcoursStep('${d.id}','down')" title="Descendre d'un cran" class="text-gold/50 hover:text-gold leading-none px-1"><i class="fas fa-caret-down"></i></button>
+                        </div>
+                       </div>`
                     : `<span class="text-light-gold/50 text-sm">${extra.ordre ?? '—'}</span>`;
                 // Colonne "Statut" : où en est cette étape, indépendamment de son numéro.
                 let statutBadge;
@@ -8276,7 +8281,7 @@
                     <td class="px-6 py-4 text-light-gold/60 text-xs">${dateVal ? new Date(dateVal).toLocaleDateString('fr-FR') : '—'}</td>
                     <td class="px-6 py-4">${isStep ? `<span class="text-xs px-2 py-0.5 rounded-full border ${registreCls}">${escapeHtmlFront(extra.registre || '—')}</span>` : '<span class="text-gold/20 text-xs">—</span>'}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        ${validateBtn}<button onclick="nlPreviewDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition"><i class="fas fa-eye mr-1"></i>Prévisualiser</button>
+                        ${validateBtn}<button onclick="nlOpenDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition mr-1"><i class="fas fa-pen mr-1"></i>Modifier</button><button onclick="nlPreviewDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition"><i class="fas fa-eye mr-1"></i>Prévisualiser</button>
                     </td>
                 </tr>`;
             }).join('');
@@ -8381,23 +8386,18 @@
 
         // Modifie l'ordre d'une étape en file d'attente (pas encore envoyée) — recharge
         // ensuite la vue Parcours pour re-trier automatiquement selon le nouvel ordre.
-        async function nlUpdateParcoursOrdre(id, input) {
-            const ordre = parseInt(input.value, 10);
-            if (!Number.isFinite(ordre) || ordre <= 0) { input.value = input.defaultValue; return; }
-            input.disabled = true;
+        async function nlMoveParcoursStep(id, direction) {
             try {
-                const res = await adminFetch('/api/admin/newsletter?action=update-parcours-ordre', {
+                const res = await adminFetch('/api/admin/newsletter?action=move-parcours-step', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ id, ordre })
+                    body: JSON.stringify({ id, direction })
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(data.error || 'Erreur');
                 await nlLoadParcours();
             } catch (e) {
                 alert('Erreur : ' + e.message);
-                input.disabled = false;
-                input.value = input.defaultValue;
             }
         }
 

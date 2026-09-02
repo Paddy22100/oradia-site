@@ -4900,29 +4900,6 @@ async function handleNewsletter(req, res) {
         return res.status(200).json([...sent, ...queue]);
       }
 
-      // ── Modifie uniquement extra.ordre d'un brouillon (réordonnancement manuel de
-      // la file du parcours, onglet Parcours) — fusionne avec l'extra existant pour
-      // ne toucher que ce champ, comme validate-parcours.
-      if (action === 'update-parcours-ordre') {
-        const { id, ordre } = body;
-        if (!id) return res.status(400).json({ error: 'id requis' });
-        const ordreNum = Number(ordre);
-        if (!Number.isFinite(ordreNum) || ordreNum <= 0) return res.status(400).json({ error: 'ordre invalide' });
-        const { data: existingDraft, error: fetchErr } = await supabase
-          .from('newsletter_drafts').select('extra').eq('id', id).maybeSingle();
-        if (fetchErr) throw fetchErr;
-        if (!existingDraft) return res.status(404).json({ error: 'Brouillon introuvable' });
-        if (existingDraft.extra?.canal !== 'parcours') {
-          return res.status(400).json({ error: "Ce brouillon n'appartient pas au parcours (extra.canal ≠ 'parcours')" });
-        }
-        const { error } = await supabase
-          .from('newsletter_drafts')
-          .update({ extra: { ...existingDraft.extra, ordre: ordreNum }, updated_at: new Date().toISOString() })
-          .eq('id', id);
-        if (error) throw error;
-        return res.status(200).json({ success: true });
-      }
-
       // ── État d'avance du parcours : sert à la fois l'alerte tableau de bord
       // ("rédige la prochaine newsletter") et le badge de l'onglet Parcours.
       // Principe : les étapes validées (extra.parcours_valide=true) forment une
@@ -5333,6 +5310,39 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
           .eq('id', id);
         if (error) throw error;
         return res.status(200).json({ success: true });
+      }
+
+      // ── Déplace une étape en attente d'un cran dans la file (flèches ▲▼ de l'onglet
+      // Parcours) : échange son extra.ordre avec celui de la voisine immédiate parmi
+      // les étapes du parcours pas encore envoyées, calculée ici plutôt que fournie
+      // par le client pour ne jamais dépendre d'un ordre déjà obsolète côté navigateur.
+      if (action === 'move-parcours-step') {
+        const { id, direction } = body;
+        if (!id || (direction !== 'up' && direction !== 'down')) {
+          return res.status(400).json({ error: "id et direction ('up'|'down') requis" });
+        }
+        const { data: allRows, error: fetchErr } = await supabase
+          .from('newsletter_drafts')
+          .select('id, extra, statut');
+        if (fetchErr) throw fetchErr;
+        const queue = (allRows || [])
+          .filter(d => d.extra?.canal === 'parcours' && d.statut !== 'envoyé')
+          .sort((a, b) => (Number(a.extra?.ordre) || 0) - (Number(b.extra?.ordre) || 0));
+        const index = queue.findIndex(d => d.id === id);
+        if (index === -1) return res.status(404).json({ error: "Étape introuvable dans la file d'attente" });
+        const neighborIndex = direction === 'up' ? index - 1 : index + 1;
+        if (neighborIndex < 0 || neighborIndex >= queue.length) {
+          return res.status(200).json({ success: true, moved: false, message: 'Déjà en bout de file.' });
+        }
+        const current = queue[index];
+        const neighbor = queue[neighborIndex];
+        const currentOrdre = Number(current.extra?.ordre) || 0;
+        const neighborOrdre = Number(neighbor.extra?.ordre) || 0;
+        await Promise.all([
+          supabase.from('newsletter_drafts').update({ extra: { ...current.extra, ordre: neighborOrdre } }).eq('id', current.id),
+          supabase.from('newsletter_drafts').update({ extra: { ...neighbor.extra, ordre: currentOrdre } }).eq('id', neighbor.id)
+        ]);
+        return res.status(200).json({ success: true, moved: true });
       }
 
       // ── Numérote rétroactivement les newsletters déjà envoyées avant la mise en
