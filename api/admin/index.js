@@ -4366,12 +4366,12 @@ function getIsoWeekKey(date) {
 // Largeur des vignettes de cartes dans l'email — volontairement petite (une
 // pleine largeur de 600/700px par carte, sur un tirage de 7 cartes ou plus
 // avec passerelles, rendait l'email interminable et disproportionné).
-const WEEKLY_TIRAGE_CARD_IMG_WIDTH = 260;
+const WEEKLY_TIRAGE_CARD_IMG_WIDTH = 130;
 
 function buildWeeklyTirageContent({ theme, cards, analysis, date }) {
   const dateLabel = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   const subject = theme.event
-    ? `Le tirage de la semaine — ${theme.event.name}`
+    ? `Le tirage de la semaine : ${theme.event.name}`
     : `Le tirage de la semaine du ${dateLabel}`;
 
   const paragraphs = [];
@@ -4385,7 +4385,7 @@ function buildWeeklyTirageContent({ theme, cards, analysis, date }) {
   // notables — voir lib/astro-calendar.js) suivi d'une invitation à l'interpréter :
   // pas besoin de le reconstruire ici, ni de répéter theme.label qui redirait la
   // même chose en plus court.
-  paragraphs.push(`<p>${theme.intention} C'est cette énergie qui inspire le tirage collectif de ce dimanche — voici ce que les cartes en disent.</p>`);
+  paragraphs.push(`<p>${theme.intention} C'est cette énergie qui inspire le tirage collectif de ce dimanche. Voici ce que les cartes en disent.</p>`);
 
   // Chaque carte (et sa carte passerelle éventuelle) a son propre paragraphe et
   // sa propre position d'image : aucune des deux ne partage sa position avec
@@ -4394,7 +4394,7 @@ function buildWeeklyTirageContent({ theme, cards, analysis, date }) {
   // parenthèse discrète dans le paragraphe de la carte principale.
   cards.forEach((card) => {
     const label = FAMILY_LABELS[card.family] || card.family;
-    paragraphs.push(`<p><strong>${label} — ${card.name}.</strong> ${card.quote || ''}</p>`);
+    paragraphs.push(`<p><strong>${label} : ${card.name}.</strong> ${card.quote || ''}</p>`);
     pushCardImage(card.name);
 
     if (card.bridgeCard) {
