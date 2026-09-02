@@ -2396,28 +2396,13 @@
                             <p class="text-light-gold/50 text-sm mt-1">Les newsletters déjà envoyées, puis les étapes du parcours une fois validées (relues + illustrées) depuis l'onglet Brouillons.</p>
                         </div>
                         <div class="flex items-center gap-2 flex-wrap">
-                            <button onclick="applyParcoursInsightsPlan()" title="Ajoute les 5 nouvelles étapes nées de l'analyse des intentions (seuil, relations, répétitions, vocation, sérénité) et replace toute la file pour un chemin progressif — du plus concret vers le plus abstrait. À ne lancer qu'une fois."
-                                class="flex-shrink-0 text-sm bg-teal-500/15 text-teal-300 border border-teal-500/30 rounded-lg px-4 py-2 hover:bg-teal-500/25 transition">
-                                <i class="fas fa-seedling mr-1.5"></i>Intégrer les nouvelles étapes (insights)
-                            </button>
-                            <button onclick="backfillParcoursHistory()" title="Numérote les newsletters déjà envoyées avant la mise en place du parcours (ordre chronologique réel, hors promotionnelles), et décale la file existante d'autant. À ne lancer qu'une fois."
-                                class="flex-shrink-0 text-sm bg-orange-500/15 text-orange-300 border border-orange-500/30 rounded-lg px-4 py-2 hover:bg-orange-500/25 transition">
-                                <i class="fas fa-arrows-left-right mr-1.5"></i>Numéroter l'historique du parcours
-                            </button>
-                            <button onclick="dedupeParcoursQueue()" title="Cherche, dans la file d'attente, les étapes dont le sujet est identique à une newsletter déjà envoyée (reliquat d'import) — pour ne jamais renvoyer deux fois la même newsletter à un contact déjà à jour."
-                                class="flex-shrink-0 text-sm bg-red-500/15 text-red-300 border border-red-500/30 rounded-lg px-4 py-2 hover:bg-red-500/25 transition">
-                                <i class="fas fa-broom mr-1.5"></i>Détecter les doublons
-                            </button>
-                            <button onclick="fixParcoursContent()" title="Remplace le contenu de « Le veilleur intérieur » (version courte périmée) par le vrai texte envoyé, et corrige la formulation dans les 5 nouvelles étapes (insights). À ne lancer qu'une fois."
-                                class="flex-shrink-0 text-sm bg-blue-500/15 text-blue-300 border border-blue-500/30 rounded-lg px-4 py-2 hover:bg-blue-500/25 transition">
-                                <i class="fas fa-file-pen mr-1.5"></i>Corriger les textes
+                            <button onclick="sendParcoursIndividualNow()" title="Envoie dès maintenant, à chaque contact individuellement selon sa propre date d'inscription/dernier envoi (cadence 7 jours), la prochaine étape du parcours qui lui est due (à partir de l'étape 1 pour un nouvel inscrit, de l'étape 7 pour un abonné antérieur à l'historique groupé). Tourne aussi automatiquement chaque mercredi à 19h (heure de Paris, cron)."
+                                class="flex-shrink-0 text-sm bg-purple-500/15 text-purple-300 border border-purple-500/30 rounded-lg px-4 py-2 hover:bg-purple-500/25 transition">
+                                <i class="fas fa-route mr-1.5"></i>Lancer l'envoi individualisé
                             </button>
                         </div>
                     </div>
-                    <p id="applyParcoursInsightsStatus" class="hidden text-sm mb-2 px-1"></p>
-                    <p id="backfillParcoursStatus" class="hidden text-sm mb-2 px-1"></p>
-                    <p id="dedupeParcoursStatus" class="hidden text-sm mb-2 px-1"></p>
-                    <p id="fixParcoursContentStatus" class="hidden text-sm mb-4 px-1"></p>
+                    <p id="sendParcoursIndividualStatus" class="hidden text-sm mb-4 px-1"></p>
                     <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="w-full" id="parcoursTable">
@@ -8140,104 +8125,22 @@
             } catch(e) { console.error(e); }
         }
 
-        // Numérote rétroactivement les newsletters déjà envoyées avant la mise en place
-        // du parcours (voir api/admin/index.js, action=backfill-parcours-history) — à
-        // lancer une seule fois. Idempotent côté serveur (ne fait rien si déjà fait),
-        // mais reste un bouton à usage ponctuel, pas une action de routine.
-        async function backfillParcoursHistory() {
-            const status = document.getElementById('backfillParcoursStatus');
+        // Déclenche manuellement l'envoi individualisé du parcours (même fonction que
+        // le cron hebdomadaire, action=cron-send-parcours-individual) — pour tester sans
+        // attendre le passage du cron (chaque mercredi 19h heure de Paris).
+        async function sendParcoursIndividualNow() {
+            const status = document.getElementById('sendParcoursIndividualStatus');
             const show = (msg, cls) => { if (status) { status.textContent = msg; status.className = `text-sm mb-4 px-1 ${cls}`; status.classList.remove('hidden'); } };
-            if (!confirm("Numéroter l'historique du parcours à partir des newsletters déjà envoyées (ordre chronologique, hors promotionnelles) et décaler la file existante en conséquence ?\n\nÀ ne lancer qu'une seule fois.")) return;
-            show('<i class="fas fa-spinner fa-spin mr-2"></i>Numérotation en cours…', 'text-light-gold/60');
+            if (!confirm("Lancer maintenant l'envoi individualisé du parcours ? Chaque contact actif recevra, s'il est dû (7 jours depuis son inscription ou son dernier envoi), sa prochaine étape (ordre > 6).")) return;
+            show('<i class="fas fa-spinner fa-spin mr-2"></i>Envoi en cours…', 'text-light-gold/60');
             try {
-                const res = await adminFetch('/api/admin/newsletter?action=backfill-parcours-history', { method: 'POST' });
+                const res = await adminFetch('/api/admin/newsletter?action=send-parcours-individual-now', { method: 'POST' });
                 const data = await res.json();
                 if (!res.ok || !data.success) throw new Error(data.error || 'Erreur');
-                if (data.historicalCount === 0) {
-                    show(data.message || 'Rien à décaler.', 'text-light-gold/60');
-                } else {
-                    show(`✓ ${data.historicalCount} newsletter(s) historique(s) numérotée(s) (étapes 1 à ${data.historicalCount}), file existante décalée de ${data.shift} (${data.shiftedQueueCount} étape(s)).`, 'text-green-400/80');
-                }
-                nlLoadParcours();
-            } catch (e) {
-                show('✗ ' + e.message, 'text-red-400/80');
-            }
-        }
-
-        // Ajoute les 5 étapes nées de l'analyse des intentions et replace toute la file
-        // du parcours (voir api/admin/index.js, action=apply-parcours-insights-plan) —
-        // à lancer une seule fois. Idempotent côté serveur pour les 5 nouvelles étapes
-        // (pas de doublon si déjà créées), le repositionnement peut être rejoué sans
-        // risque (il réapplique la même cible).
-        async function applyParcoursInsightsPlan() {
-            const status = document.getElementById('applyParcoursInsightsStatus');
-            const show = (msg, cls) => { if (status) { status.textContent = msg; status.className = `text-sm mb-2 px-1 ${cls}`; status.classList.remove('hidden'); } };
-            if (!confirm("Ajouter les 5 nouvelles étapes du parcours (seuil, relations, répétitions, vocation, sérénité) et replacer toute la file dans l'ordre progressif proposé ?\n\nLes nouvelles étapes arrivent en brouillon « à valider » — relis-les avant de les laisser partir.")) return;
-            show('<i class="fas fa-spinner fa-spin mr-2"></i>Intégration en cours…', 'text-light-gold/60');
-            try {
-                const res = await adminFetch('/api/admin/newsletter?action=apply-parcours-insights-plan', { method: 'POST' });
-                const data = await res.json();
-                if (!res.ok || !data.success) throw new Error(data.error || 'Erreur');
-                const notFoundMsg = data.notFound && data.notFound.length
-                    ? ` — introuvables (à vérifier) : ${data.notFound.join(', ')}`
-                    : '';
-                show(`✓ ${data.created} nouvelle(s) étape(s) créée(s), ${data.repositioned} repositionnée(s) dans la file.${notFoundMsg}`,
-                    notFoundMsg ? 'text-orange-400/80' : 'text-green-400/80');
-                nlLoadParcours();
-            } catch (e) {
-                show('✗ ' + e.message, 'text-red-400/80');
-            }
-        }
-
-        // Cherche puis, après confirmation, supprime les étapes en file d'attente dont
-        // le sujet est identique à une newsletter déjà envoyée (voir api/admin/index.js,
-        // action=dedupe-parcours-queue) — d'abord en dry_run pour lister ce qui serait
-        // supprimé, la suppression réelle n'a lieu qu'après confirmation explicite avec
-        // la liste sous les yeux.
-        async function dedupeParcoursQueue() {
-            const status = document.getElementById('dedupeParcoursStatus');
-            const show = (msg, cls) => { if (status) { status.textContent = msg; status.className = `text-sm mb-4 px-1 ${cls}`; status.classList.remove('hidden'); } };
-            show('<i class="fas fa-spinner fa-spin mr-2"></i>Recherche des doublons…', 'text-light-gold/60');
-            try {
-                const dryRes = await adminFetch('/api/admin/newsletter?action=dedupe-parcours-queue', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dry_run: true })
-                });
-                const dry = await dryRes.json();
-                if (!dryRes.ok || !dry.success) throw new Error(dry.error || 'Erreur');
-                if (dry.count === 0) { show('✓ Aucun doublon trouvé dans la file d\'attente.', 'text-green-400/80'); return; }
-                const list = dry.duplicates.map(d => `n°${d.ordre ?? '?'} — ${d.subject}`).join('\n');
-                const ok = confirm(`${dry.count} étape(s) en attente ont le même sujet qu'une newsletter déjà envoyée :\n\n${list}\n\nLes supprimer ? Cette action est irréversible.`);
-                if (!ok) { show('Suppression annulée.', 'text-light-gold/60'); return; }
-                show('<i class="fas fa-spinner fa-spin mr-2"></i>Suppression en cours…', 'text-light-gold/60');
-                const res = await adminFetch('/api/admin/newsletter?action=dedupe-parcours-queue', {
-                    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ dry_run: false })
-                });
-                const data = await res.json();
-                if (!res.ok || !data.success) throw new Error(data.error || 'Erreur');
-                show(`✓ ${data.deleted} doublon(s) supprimé(s).`, 'text-green-400/80');
-                nlLoadParcours();
-            } catch (e) {
-                show('✗ ' + e.message, 'text-red-400/80');
-            }
-        }
-
-        // Remplace le contenu de brouillons du parcours déjà créés par une version
-        // corrigée (voir api/admin/index.js, action=fix-parcours-content) — à lancer
-        // une seule fois après une correction de texte.
-        async function fixParcoursContent() {
-            const status = document.getElementById('fixParcoursContentStatus');
-            const show = (msg, cls) => { if (status) { status.textContent = msg; status.className = `text-sm mb-4 px-1 ${cls}`; status.classList.remove('hidden'); } };
-            if (!confirm("Remplacer le contenu de « Le veilleur intérieur » (version courte périmée) par le vrai texte envoyé, et corriger la formulation « L'oracle de La Boussole Intérieure » dans les 5 nouvelles étapes ?")) return;
-            show('<i class="fas fa-spinner fa-spin mr-2"></i>Correction en cours…', 'text-light-gold/60');
-            try {
-                const res = await adminFetch('/api/admin/newsletter?action=fix-parcours-content', { method: 'POST' });
-                const data = await res.json();
-                if (!res.ok || !data.success) throw new Error(data.error || 'Erreur');
-                const notFoundMsg = data.notFound && data.notFound.length
-                    ? ` — introuvables (déjà envoyées, ou sujet différent) : ${data.notFound.join(', ')}`
-                    : '';
-                show(`✓ ${data.updated} texte(s) corrigé(s).${notFoundMsg}`, notFoundMsg ? 'text-orange-400/80' : 'text-green-400/80');
-                nlLoadParcours();
+                if (data.skipped_reason === 'feature_disabled') { show('⚠ Désactivé via le feature flag « newsletter_parcours_individuel ».', 'text-orange-400/80'); return; }
+                if (!data.sent) { show(data.message || '✓ Aucun contact dû pour le moment.', 'text-light-gold/60'); return; }
+                const detailMsg = (data.details || []).map(d => `n°${d.ordre} « ${d.subject} » : ${d.sent}/${d.targeted}`).join(' · ');
+                show(`✓ ${data.sent} email(s) envoyé(s). ${detailMsg}`, 'text-green-400/80');
             } catch (e) {
                 show('✗ ' + e.message, 'text-red-400/80');
             }
