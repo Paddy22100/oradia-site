@@ -5503,6 +5503,35 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
         return res.status(200).json({ success: true, created, repositioned, notFound });
       }
 
+      // ── Détecte (et, hors dry_run, supprime) les étapes du parcours encore en file
+      // d'attente dont le sujet est identique à une newsletter déjà envoyée — reliquat
+      // typique d'un import de modèles (admin/parcours-modeles-20.js) dont une étape a
+      // fini par partir sous un autre flux (ex. avant la mise en place formelle du
+      // parcours), laissant derrière elle une copie jamais envoyée du même contenu.
+      // Si cette copie partait un jour, les contacts déjà à jour recevraient deux fois
+      // la même newsletter. dry_run=true (par défaut) ne fait que lister, pour toujours
+      // pouvoir vérifier avant de supprimer quoi que ce soit.
+      if (action === 'dedupe-parcours-queue') {
+        const dryRun = body.dry_run !== false;
+        const { data: allDrafts, error } = await supabase.from('newsletter_drafts').select('*');
+        if (error) throw error;
+        const rows = allDrafts || [];
+        const sentSubjects = new Set(rows.filter(d => d.statut === 'envoyé').map(d => d.subject));
+        const duplicates = rows.filter(d => d.extra?.canal === 'parcours' && d.statut !== 'envoyé' && sentSubjects.has(d.subject));
+
+        if (!dryRun && duplicates.length > 0) {
+          await Promise.all(duplicates.map(d => supabase.from('newsletter_drafts').delete().eq('id', d.id)));
+        }
+
+        return res.status(200).json({
+          success: true,
+          dryRun,
+          count: duplicates.length,
+          deleted: dryRun ? 0 : duplicates.length,
+          duplicates: duplicates.map(d => ({ id: d.id, subject: d.subject, ordre: Number(d.extra?.ordre) || null }))
+        });
+      }
+
       // ── Ajout d'un fragment au carnet ──
       if (action === 'ideas') {
         const { content, source } = body;
