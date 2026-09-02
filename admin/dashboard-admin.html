@@ -2303,6 +2303,9 @@
                     <button id="nl-parcours-import-btn" onclick="parcoursImportModeles()" class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/40 rounded-lg px-3 py-1.5 transition flex items-center gap-2">
                         <i class="fas fa-download"></i> Importer les 20 modèles du parcours
                     </button>
+                    <button id="nl-tirage-hebdo-btn" onclick="nlGenerateTirageHebdo()" class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/40 rounded-lg px-3 py-1.5 transition flex items-center gap-2" title="Génère le brouillon du tirage de la semaine tout de suite, sans attendre dimanche — n'envoie jamais automatiquement.">
+                        <i class="fas fa-moon"></i> Générer le tirage de la semaine
+                    </button>
                     <button id="nl-toggle-archived" onclick="nlToggleArchived()" class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/40 rounded-lg px-3 py-1.5 transition flex items-center gap-2">
                         <i class="fas fa-box-archive"></i> <span id="nl-toggle-archived-label">Voir les archivées</span>
                     </button>
@@ -8354,6 +8357,30 @@
             if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-download"></i> Importer les 20 modèles du parcours'; }
             alert(`${ok} email(s) importé(s)${failed ? `, ${failed} échec(s)` : ''}.`);
             await nlLoadDrafts();
+        }
+
+        // Génère (sans jamais envoyer) le brouillon du tirage de la semaine — même
+        // code que le cron automatique du dimanche (action=cron-tirage-hebdo), pour
+        // pouvoir vérifier le format tout de suite. Idempotent : un second clic la
+        // même semaine ne crée pas de doublon, il indique juste que c'est déjà fait.
+        async function nlGenerateTirageHebdo() {
+            const btn = document.getElementById('nl-tirage-hebdo-btn');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Génération…'; }
+            try {
+                const res = await adminFetch('/api/admin/data?action=cron-tirage-hebdo');
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.success) throw new Error(data.error || 'Erreur inconnue');
+                if (data.skipped) {
+                    alert('Le tirage de cette semaine a déjà été généré — ouvre-le dans la liste des brouillons ci-dessous.');
+                } else {
+                    alert(`Brouillon généré : "${data.subject}" (thème : ${data.theme}). Ouvre-le dans la liste pour le relire et le prévisualiser.`);
+                }
+                await nlLoadDrafts();
+            } catch (e) {
+                alert('Erreur : ' + e.message);
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-moon"></i> Générer le tirage de la semaine'; }
+            }
         }
 
         // Fait basculer une étape du parcours (relue, illustrée) de la liste des
