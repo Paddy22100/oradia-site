@@ -2416,13 +2416,18 @@
                                 class="flex-shrink-0 text-sm bg-purple-500/15 text-purple-300 border border-purple-500/30 rounded-lg px-4 py-2 hover:bg-purple-500/25 transition">
                                 <i class="fas fa-route mr-1.5"></i>Lancer l'envoi individualisé
                             </button>
+                            <button onclick="fixParcoursVeilleurOrdre()" title="Corrige le numéro d'étape manquant de « Le veilleur intérieur » : envoyée par l'ancien circuit manuel, elle a échappé à la numérotation automatique. Lui assigne l'ordre 7 (place libre entre l'historique et la suite numérotée à partir de 8). À ne lancer qu'une fois."
+                                class="flex-shrink-0 text-sm bg-yellow-500/15 text-yellow-300 border border-yellow-500/30 rounded-lg px-4 py-2 hover:bg-yellow-500/25 transition">
+                                <i class="fas fa-wrench mr-1.5"></i>Corriger l'étape 7 manquante
+                            </button>
                         </div>
                     </div>
                     <p id="applyParcoursInsightsStatus" class="hidden text-sm mb-2 px-1"></p>
                     <p id="backfillParcoursStatus" class="hidden text-sm mb-2 px-1"></p>
                     <p id="dedupeParcoursStatus" class="hidden text-sm mb-2 px-1"></p>
                     <p id="fixParcoursContentStatus" class="hidden text-sm mb-2 px-1"></p>
-                    <p id="sendParcoursIndividualStatus" class="hidden text-sm mb-4 px-1"></p>
+                    <p id="sendParcoursIndividualStatus" class="hidden text-sm mb-2 px-1"></p>
+                    <p id="fixParcoursVeilleurOrdreStatus" class="hidden text-sm mb-4 px-1"></p>
                     <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="w-full" id="parcoursTable">
@@ -8264,6 +8269,25 @@
                 if (!data.sent) { show(data.message || '✓ Aucun contact dû pour le moment.', 'text-light-gold/60'); return; }
                 const detailMsg = (data.details || []).map(d => `n°${d.ordre} « ${d.subject} » : ${d.sent}/${d.targeted}`).join(' · ');
                 show(`✓ ${data.sent} email(s) envoyé(s). ${detailMsg}`, 'text-green-400/80');
+            } catch (e) {
+                show('✗ ' + e.message, 'text-red-400/80');
+            }
+        }
+
+        // Corrige le numéro d'étape manquant de « Le veilleur intérieur » (voir
+        // api/admin/index.js, action=fix-parcours-veilleur-ordre) — à lancer une
+        // seule fois.
+        async function fixParcoursVeilleurOrdre() {
+            const status = document.getElementById('fixParcoursVeilleurOrdreStatus');
+            const show = (msg, cls) => { if (status) { status.textContent = msg; status.className = `text-sm mb-4 px-1 ${cls}`; status.classList.remove('hidden'); } };
+            if (!confirm("Assigner l'étape n°7 à « Le veilleur intérieur » (envoyée par l'ancien circuit manuel, jamais numérotée) ?")) return;
+            show('<i class="fas fa-spinner fa-spin mr-2"></i>Correction en cours…', 'text-light-gold/60');
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=fix-parcours-veilleur-ordre', { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.error || 'Erreur');
+                show(data.updated ? '✓ Étape n°7 assignée.' : `✓ ${data.message}`, 'text-green-400/80');
+                nlLoadParcours();
             } catch (e) {
                 show('✗ ' + e.message, 'text-red-400/80');
             }
