@@ -966,6 +966,23 @@ async function handleData(req, res) {
           return res.status(200).json({ success: false, error: e.message });
         }
       }
+      // ── Parcours individualisé : chaque contact avance à son propre rythme depuis
+      // sa date d'inscription (ou son dernier envoi), plutôt qu'une diffusion groupée
+      // qui fait recevoir "le dernier envoi du jour" à un nouvel inscrit au lieu de la
+      // toute première étape. Ne concerne que les étapes 7+ (au delà de l'historique
+      // ordre 1-6, envoyé en diffusion groupée avant la mise en place du parcours et
+      // jamais rejoué individuellement). Cadence hebdomadaire, calculée à partir du
+      // dernier envoi RÉEL de ce contact (newsletter_sends), ou de sa date
+      // d'inscription pour un tout nouveau contact n'ayant jamais rien reçu du
+      // parcours. Les étapes utilisées ici restent des gabarits réutilisables : jamais
+      // marquées statut='envoyé' (ce champ resterait un non-sens pour un envoi étalé
+      // dans le temps, contact par contact) — seule newsletter_sends trace qui a reçu
+      // quoi et quand.
+      if (getAction === 'cron-send-parcours-individual') {
+        const result = await runParcoursIndividualCron(supabase);
+        return res.status(200).json(result);
+      }
+
       if (getAction === 'cron-relance') {
         try {
           const BREVO_API_KEY = process.env.BREVO_API_KEY;
@@ -4923,6 +4940,120 @@ async function logNewsletterSends(supabase, { emails, subject, draftId, ordre, c
   }
 }
 
+// ── Parcours individualisé : chaque contact avance à son propre rythme depuis sa date
+// d'inscription (ou son dernier envoi), plutôt qu'une diffusion groupée qui fait
+// recevoir "le dernier envoi du jour" à un nouvel inscrit au lieu de la toute première
+// étape. Ne concerne que les étapes 7+ (au delà de l'historique ordre 1-6, envoyé en
+// diffusion groupée avant la mise en place du parcours et jamais rejoué
+// individuellement). Cadence hebdomadaire, calculée à partir du dernier envoi RÉEL de
+// ce contact (newsletter_sends), ou de sa date d'inscription pour un tout nouveau
+// contact n'ayant jamais rien reçu du parcours. Les étapes utilisées ici restent des
+// gabarits réutilisables : jamais marquées statut='envoyé' (ce champ resterait un
+// non-sens pour un envoi étalé dans le temps, contact par contact) — seule
+// newsletter_sends trace qui a reçu quoi et quand.
+// Partagée entre le cron quotidien (action=cron-send-parcours-individual, GET) et le
+// bouton de test manuel (action=send-parcours-individual-now, POST admin) — un seul
+// endroit fait réellement l'envoi.
+async function runParcoursIndividualCron(supabase) {
+  // Coupe-circuit sans redéploiement : insérer {key:'newsletter_parcours_individuel',
+  // enabled:false} dans feature_flags pour revenir temporairement à la diffusion
+  // groupée manuelle si besoin (absent de la table = activé par défaut).
+  if (!(await isFeatureEnabled(supabase, 'newsletter_parcours_individuel'))) {
+    return { success: true, sent: 0, skipped_reason: 'feature_disabled' };
+  }
+  try {
+    const CADENCE_DAYS = 7;
+    const BREVO_API_KEY = process.env.BREVO_API_KEY;
+    if (!BREVO_API_KEY) return { success: false, error: 'BREVO_API_KEY manquante' };
+
+    const { data: allDrafts, error: draftsErr } = await supabase.from('newsletter_drafts').select('*');
+    if (draftsErr) throw draftsErr;
+    const steps = (allDrafts || [])
+      .filter(d => d.extra?.canal === 'parcours' && d.extra?.parcours_valide === true && (Number(d.extra?.ordre) || 0) > 6)
+      .sort((a, b) => (Number(a.extra?.ordre) || 0) - (Number(b.extra?.ordre) || 0));
+    if (steps.length === 0) return { success: true, sent: 0, message: "Aucune étape validée au delà de l'historique (ordre > 6)." };
+
+    const { data: contacts, error: contactsErr } = await supabase
+      .from('newsletter_contacts')
+      .select('email, created_at')
+      .eq('status', 'active')
+      .eq('brevo_synced', true);
+    if (contactsErr) throw contactsErr;
+
+    // Dernier envoi de parcours par contact (le plus récent en premier) — sert à la
+    // fois à connaître la prochaine étape due et l'ancienneté de ce dernier envoi.
+    const { data: sends, error: sendsErr } = await supabase
+      .from('newsletter_sends')
+      .select('contact_email, ordre, sent_at')
+      .not('ordre', 'is', null)
+      .order('sent_at', { ascending: false });
+    if (sendsErr) throw sendsErr;
+    const lastSendByEmail = new Map();
+    for (const s of sends || []) {
+      if (!lastSendByEmail.has(s.contact_email)) lastSendByEmail.set(s.contact_email, s);
+    }
+
+    const now = Date.now();
+    const dueByStepId = new Map(); // draft.id -> { step, emails: [] }
+    for (const c of contacts || []) {
+      const last = lastSendByEmail.get(c.email);
+      const nextOrdre = last ? Number(last.ordre) + 1 : 7; // 7 = première étape individualisée
+      if (nextOrdre <= 6) continue; // ne rejoue jamais l'historique groupé
+      const referenceDate = last ? new Date(last.sent_at) : new Date(c.created_at);
+      const daysSince = (now - referenceDate.getTime()) / 86400000;
+      if (daysSince < CADENCE_DAYS) continue;
+      const step = steps.find(s => Number(s.extra?.ordre) === nextOrdre);
+      if (!step) continue; // à jour (dernière étape disponible déjà reçue) ou étape suivante pas encore validée
+      if (!dueByStepId.has(step.id)) dueByStepId.set(step.id, { step, emails: [] });
+      dueByStepId.get(step.id).emails.push(c.email);
+    }
+
+    let totalSent = 0;
+    const details = [];
+    for (const { step, emails } of dueByStepId.values()) {
+      const finalSubject = step.subject || 'Oradia';
+      const html = buildCommunicationEmailHtml({ ...step, subject: finalSubject });
+      const text = nlEmailPlainText(html);
+      let sentCount = 0;
+      const BATCH = 10;
+      for (let i = 0; i < emails.length; i += BATCH) {
+        const batch = emails.slice(i, i + BATCH);
+        const results = await Promise.all(batch.map(email => fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+          body: JSON.stringify({
+            sender: { name: 'Oradia', email: 'contact@oradia.fr' },
+            to: [{ email }],
+            replyTo: { name: "Rudy d'Oradia", email: 'contact@oradia.fr' },
+            subject: finalSubject,
+            htmlContent: html.replace('{unsubscribe}', buildUnsubUrl(email)),
+            textContent: text.replace('{unsubscribe}', buildUnsubUrl(email)),
+            headers: nlBulkHeaders(email)
+          })
+        })));
+        const sentEmails = [];
+        results.forEach((r, idx) => { if (r.ok) sentEmails.push(batch[idx]); });
+        sentCount += sentEmails.length;
+        if (sentEmails.length > 0) {
+          await supabase.from('newsletter_contacts')
+            .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
+            .in('email', sentEmails);
+          await logNewsletterSends(supabase, {
+            emails: sentEmails, subject: finalSubject, draftId: step.id,
+            ordre: Number(step.extra?.ordre) || null, canal: 'parcours'
+          });
+        }
+      }
+      totalSent += sentCount;
+      details.push({ ordre: Number(step.extra?.ordre) || null, subject: finalSubject, sent: sentCount, targeted: emails.length });
+    }
+
+    return { success: true, sent: totalSent, details };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
 // Traçage post-envoi, commun aux deux canaux (campagne ou transactionnel) : quels contacts
 // ont reçu quoi, et passage du brouillon à l'état « envoyé ».
 async function nlMarkSent(supabase, { emails, subject, draftId, excludeAlreadySent, sent, failedEmails = [], ordre = null, canal = null }) {
@@ -5712,6 +5843,14 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
         }));
 
         return res.status(200).json({ success: true, updated, notFound });
+      }
+
+      // ── Déclenchement manuel (bouton admin) de l'envoi individualisé du parcours
+      // (étapes ordre > 6, cadence 7 jours par contact) — même fonction que le cron
+      // quotidien (action=cron-send-parcours-individual), pour tester sans attendre.
+      if (action === 'send-parcours-individual-now') {
+        const result = await runParcoursIndividualCron(supabase);
+        return res.status(200).json(result);
       }
 
       // ── Détecte (et, hors dry_run, supprime) les étapes du parcours encore en file
