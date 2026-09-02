@@ -2405,11 +2405,16 @@
                                 class="flex-shrink-0 text-sm bg-red-500/15 text-red-300 border border-red-500/30 rounded-lg px-4 py-2 hover:bg-red-500/25 transition">
                                 <i class="fas fa-broom mr-1.5"></i>Détecter les doublons
                             </button>
+                            <button onclick="fixParcoursContent()" title="Remplace le contenu de « Le veilleur intérieur » (version courte périmée) par le vrai texte envoyé, et corrige la formulation dans les 5 nouvelles étapes (insights). À ne lancer qu'une fois."
+                                class="flex-shrink-0 text-sm bg-blue-500/15 text-blue-300 border border-blue-500/30 rounded-lg px-4 py-2 hover:bg-blue-500/25 transition">
+                                <i class="fas fa-file-pen mr-1.5"></i>Corriger les textes
+                            </button>
                         </div>
                     </div>
                     <p id="applyParcoursInsightsStatus" class="hidden text-sm mb-2 px-1"></p>
                     <p id="backfillParcoursStatus" class="hidden text-sm mb-2 px-1"></p>
-                    <p id="dedupeParcoursStatus" class="hidden text-sm mb-4 px-1"></p>
+                    <p id="dedupeParcoursStatus" class="hidden text-sm mb-2 px-1"></p>
+                    <p id="fixParcoursContentStatus" class="hidden text-sm mb-4 px-1"></p>
                     <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="w-full" id="parcoursTable">
@@ -8207,6 +8212,28 @@
                 const data = await res.json();
                 if (!res.ok || !data.success) throw new Error(data.error || 'Erreur');
                 show(`✓ ${data.deleted} doublon(s) supprimé(s).`, 'text-green-400/80');
+                nlLoadParcours();
+            } catch (e) {
+                show('✗ ' + e.message, 'text-red-400/80');
+            }
+        }
+
+        // Remplace le contenu de brouillons du parcours déjà créés par une version
+        // corrigée (voir api/admin/index.js, action=fix-parcours-content) — à lancer
+        // une seule fois après une correction de texte.
+        async function fixParcoursContent() {
+            const status = document.getElementById('fixParcoursContentStatus');
+            const show = (msg, cls) => { if (status) { status.textContent = msg; status.className = `text-sm mb-4 px-1 ${cls}`; status.classList.remove('hidden'); } };
+            if (!confirm("Remplacer le contenu de « Le veilleur intérieur » (version courte périmée) par le vrai texte envoyé, et corriger la formulation « L'oracle de La Boussole Intérieure » dans les 5 nouvelles étapes ?")) return;
+            show('<i class="fas fa-spinner fa-spin mr-2"></i>Correction en cours…', 'text-light-gold/60');
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=fix-parcours-content', { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.error || 'Erreur');
+                const notFoundMsg = data.notFound && data.notFound.length
+                    ? ` — introuvables (déjà envoyées, ou sujet différent) : ${data.notFound.join(', ')}`
+                    : '';
+                show(`✓ ${data.updated} texte(s) corrigé(s).${notFoundMsg}`, notFoundMsg ? 'text-orange-400/80' : 'text-green-400/80');
                 nlLoadParcours();
             } catch (e) {
                 show('✗ ' + e.message, 'text-red-400/80');
