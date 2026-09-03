@@ -4389,9 +4389,47 @@ const TIRAGE_FAMILY_COLORS = {
 };
 const TIRAGE_BRIDGE_COLOR = '#9a8a6a';
 
-function tirageTextRow(html) {
-  return `<tr><td style="padding:0 32px 20px;">
-    <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:justify; text-justify:inter-word;">${nlFixTypography(html, { addFinalPeriod: true })}</div>
+// Découpe grossière en phrases (le texte vient d'une analyse narrative générée
+// par l'IA, pas d'un document technique — pas besoin de gérer les abréviations).
+// Le lookbehind garde le point final que ce soit ou non suivi d'un espace, et
+// conserve la dernière phrase même si elle n'est pas ponctuée.
+function splitSentences(text) {
+  return String(text).split(/(?<=[.!?])\s+/).map(s => s.trim()).filter(Boolean);
+}
+
+// Bloc "carte" pour les textes d'analyse (explorer / synthèse). Le texte généré
+// par l'IA arrive en un seul paragraphe assez long : rendu tel quel en pleine
+// largeur et justifié comme le reste de l'email, il formait un pavé de texte
+// dense et peu engageant à l'écran. On le scinde en paragraphes de 2 phrases,
+// alignés à gauche (le justifié aggrave l'effet de bloc), et on l'encadre dans
+// un bloc distinct avec son propre libellé — une carte de contenu plutôt qu'un
+// paragraphe perdu au milieu de l'email.
+function tirageCardBox(label, text, accentColor) {
+  const sentences = splitSentences(text);
+  const paragraphs = [];
+  for (let i = 0; i < sentences.length; i += 2) paragraphs.push(sentences.slice(i, i + 2).join(' '));
+  if (!paragraphs.length) paragraphs.push(text);
+
+  const paragraphsHtml = paragraphs
+    .map(p => nlFixTypography(nlEscHtml(p), { addFinalPeriod: true }))
+    .map(p => `<p style="margin:0 0 10px; color:#c8c0a8; font-size:14px; line-height:1.75; font-family:Georgia,serif; text-align:left;">${p}</p>`)
+    .join('');
+
+  return `<tr><td style="padding:0 24px 18px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:rgba(212,175,55,0.05); border-left:3px solid ${accentColor};">
+      <tr><td style="padding:16px 20px 4px;">
+        <p style="margin:0 0 8px; color:${accentColor}; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:0.08em; font-family:Georgia,serif;">${nlEscHtml(label)}</p>
+        ${paragraphsHtml}
+      </td></tr>
+    </table>
+  </td></tr>`;
+}
+
+// Ligne de clôture, légère et centrée (pas une carte d'analyse) — signe qu'on
+// quitte la partie "lecture dense" de l'email avant le bouton d'action.
+function tirageClosingRow(text) {
+  return `<tr><td style="padding:4px 32px 4px; text-align:center;">
+    <p style="margin:0; color:#9a8a6a; font-size:14px; font-style:italic; line-height:1.7; font-family:Georgia,serif;">${nlFixTypography(nlEscHtml(text), { addFinalPeriod: true })}</p>
   </td></tr>`;
 }
 
@@ -4410,20 +4448,31 @@ function buildTirageCardsGridHtml(cards) {
     }
   });
 
-  const cellHtml = (c) => {
-    if (!c) return '<td width="33%" style="padding:8px;"></td>';
+  const cardHtml = (c) => {
     const url = resolveCardImageUrl(c.name);
     const img = url ? `<img src="${url}" alt="${nlEscHtml(c.name)}" width="${WEEKLY_TIRAGE_CARD_IMG_WIDTH}" style="display:block; width:${WEEKLY_TIRAGE_CARD_IMG_WIDTH}px; max-width:100%; height:auto; margin:0 auto; border-radius:8px; border:2px solid ${c.color};">` : '';
-    return `<td width="33%" valign="top" style="padding:8px; text-align:center;">
-      ${img}
+    return `${img}
       <p style="margin:6px 0 0; color:${c.color}; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; font-family:Georgia,serif;">${nlEscHtml(c.label)}</p>
-      <p style="margin:2px 0 0; color:#e8d9a8; font-size:12px; font-weight:700; font-family:Georgia,serif;">${nlEscHtml(c.name)}</p>
-    </td>`;
+      <p style="margin:2px 0 0; color:#e8d9a8; font-size:12px; font-weight:700; font-family:Georgia,serif;">${nlEscHtml(c.name)}</p>`;
   };
 
   let rows = '';
   for (let i = 0; i < cells.length; i += 3) {
-    rows += `<tr>${[cells[i], cells[i + 1], cells[i + 2]].map(cellHtml).join('')}</tr>`;
+    const rowCells = [cells[i], cells[i + 1], cells[i + 2]].filter(Boolean);
+    if (rowCells.length === 3) {
+      rows += `<tr>${rowCells.map(c => `<td width="33%" valign="top" style="padding:8px; text-align:center;">${cardHtml(c)}</td>`).join('')}</tr>`;
+    } else {
+      // Dernière ligne incomplète (1 ou 2 cartes, le nombre de cartes+passerelles
+      // n'étant pas toujours un multiple de 3) : centrée dans une table interne
+      // de largeur automatique, plutôt que collée à gauche avec des cellules
+      // vides à 33% — une carte seule à gauche d'une ligne autrement vide
+      // attirait l'œil au mauvais endroit.
+      rows += `<tr><td align="center" style="padding:8px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr>
+          ${rowCells.map(c => `<td valign="top" style="padding:0 16px; text-align:center;">${cardHtml(c)}</td>`).join('')}
+        </tr></table>
+      </td></tr>`;
+    }
   }
 
   return `<tr><td style="padding:8px 20px 12px;">
@@ -4451,9 +4500,9 @@ function buildWeeklyTirageContent({ theme, cards, analysis, date }) {
   const content = `<p>${theme.intention} C'est cette énergie qui inspire le tirage collectif de ce dimanche. Voici ce que les cartes en disent.</p>`;
 
   let rawContentAppend = buildTirageCardsGridHtml(cards);
-  if (analysis?.explore) rawContentAppend += tirageTextRow(`<strong>Ce que cela invite à explorer.</strong> ${nlEscHtml(analysis.explore)}`);
-  if (analysis?.synthesis) rawContentAppend += tirageTextRow(`<strong>Synthèse de la semaine.</strong> ${nlEscHtml(analysis.synthesis)}`);
-  rawContentAppend += tirageTextRow(`À vous de recevoir ce que ces cartes ont fait résonner, et de le vivre à votre façon cette semaine.`);
+  if (analysis?.explore) rawContentAppend += tirageCardBox('Ce que cela invite à explorer', analysis.explore, '#8b6fc0');
+  if (analysis?.synthesis) rawContentAppend += tirageCardBox('Synthèse de la semaine', analysis.synthesis, '#d4af37');
+  rawContentAppend += tirageClosingRow('À vous de recevoir ce que ces cartes ont fait résonner, et de le vivre à votre façon cette semaine.');
 
   return { subject, content, rawContentAppend };
 }
