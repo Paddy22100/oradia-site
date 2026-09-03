@@ -4545,9 +4545,22 @@ function buildTirageCardsGridHtml(cards) {
     }
   });
 
+  // Largeur fixe de la cellule (image + son padding horizontal) — donnée en
+  // pixels sur le <td>, pas seulement sur l'image : sans ça, la ligne complète
+  // (3 colonnes à width="33%") et la dernière ligne incomplète (cellules sans
+  // largeur déclarée, dimensionnées "au contenu") pouvaient être calculées
+  // différemment par certains moteurs de rendu mail (table-layout automatique),
+  // et une carte de la dernière ligne s'affichait alors plus petite que ses
+  // voisines des lignes précédentes, malgré un <img width="90"> identique.
+  const CARD_CELL_WIDTH = WEEKLY_TIRAGE_CARD_IMG_WIDTH + 32;
+
   const cardHtml = (c) => {
     const url = resolveCardImageUrl(c.name);
-    const img = url ? `<img src="${url}" alt="${nlEscHtml(c.name)}" width="${WEEKLY_TIRAGE_CARD_IMG_WIDTH}" style="display:block; width:${WEEKLY_TIRAGE_CARD_IMG_WIDTH}px; max-width:100%; height:auto; margin:0 auto; border-radius:8px; border:2px solid ${c.color};">` : '';
+    const img = url
+      ? `<a href="${url}" target="_blank" style="display:inline-block; line-height:0;">
+      <img src="${url}" alt="${nlEscHtml(c.name)}" width="${WEEKLY_TIRAGE_CARD_IMG_WIDTH}" style="display:block; width:${WEEKLY_TIRAGE_CARD_IMG_WIDTH}px; max-width:100%; height:auto; margin:0 auto; border-radius:8px; border:2px solid ${c.color};">
+    </a>`
+      : '';
     return `${img}
       <p style="margin:6px 0 0; color:${c.color}; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; font-family:Georgia,serif;">${nlEscHtml(c.label)}</p>
       <p style="margin:2px 0 0; color:#e8d9a8; font-size:12px; font-weight:700; font-family:Georgia,serif;">${nlEscHtml(c.name)}</p>`;
@@ -4560,13 +4573,14 @@ function buildTirageCardsGridHtml(cards) {
       rows += `<tr>${rowCells.map(c => `<td width="33%" valign="top" style="padding:8px; text-align:center;">${cardHtml(c)}</td>`).join('')}</tr>`;
     } else {
       // Dernière ligne incomplète (1 ou 2 cartes, le nombre de cartes+passerelles
-      // n'étant pas toujours un multiple de 3) : centrée dans une table interne
-      // de largeur automatique, plutôt que collée à gauche avec des cellules
-      // vides à 33% — une carte seule à gauche d'une ligne autrement vide
-      // attirait l'œil au mauvais endroit.
+      // n'étant pas toujours un multiple de 3) : centrée dans une table interne,
+      // plutôt que collée à gauche avec des cellules vides à 33% — une carte
+      // seule à gauche d'une ligne autrement vide attirait l'œil au mauvais
+      // endroit. Chaque cellule garde une largeur fixe en pixels (voir
+      // CARD_CELL_WIDTH ci-dessus), pour un rendu identique aux lignes complètes.
       rows += `<tr><td align="center" style="padding:8px;">
         <table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr>
-          ${rowCells.map(c => `<td valign="top" style="padding:0 16px; text-align:center;">${cardHtml(c)}</td>`).join('')}
+          ${rowCells.map(c => `<td width="${CARD_CELL_WIDTH}" valign="top" style="padding:0 16px; text-align:center;">${cardHtml(c)}</td>`).join('')}
         </tr></table>
       </td></tr>`;
     }
