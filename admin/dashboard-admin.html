@@ -759,6 +759,31 @@
         </div>
     </div>
 
+    <!-- Modal globale : historique de notes/RDV d'un partenaire -->
+    <div id="modalPartnerNotes" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onclick="if(event.target===this)closePartnerNotesModal()">
+        <div class="bg-[#07112a] border border-gold/30 rounded-2xl p-6 w-full max-w-lg shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="cormorant text-xl font-bold text-gold" id="modalPartnerNotesTitle">Notes & RDV</h4>
+                <button onclick="closePartnerNotesModal()" class="text-gold/50 hover:text-gold text-xl"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="mb-4 bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg p-3 space-y-2">
+                <div class="flex gap-2">
+                    <input type="date" id="partnerNoteDate" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
+                    <span class="text-light-gold/40 text-xs self-center">Date de l'échange</span>
+                </div>
+                <textarea id="partnerNoteContent" rows="3" placeholder="Ce qui a été dit, ce qu'il faut faire…"
+                    class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50"></textarea>
+                <div class="flex items-center gap-3">
+                    <button onclick="addPartnerNote()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-1.5 text-sm hover:bg-gold/30 transition"><i class="fas fa-plus mr-1"></i>Ajouter</button>
+                    <span id="partnerNoteStatus" class="text-xs text-light-gold/40"></span>
+                </div>
+            </div>
+            <div id="modalPartnerNotesBody" class="space-y-2 max-h-72 overflow-y-auto text-sm text-light-gold/80">
+                <p class="text-gold/40 text-center py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Conteneur des notifications stylées (remplace window.alert natif) — voir adminAlert() -->
     <div id="adminToastContainer" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
@@ -1495,6 +1520,11 @@
                             <input id="partnerLastContactDate" type="date"
                                 class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
                         </div>
+                        <div>
+                            <label class="text-light-gold/60 text-xs block mb-1">Prochaine relance</label>
+                            <input id="partnerNextContactDate" type="date"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
+                        </div>
                         <div class="md:col-span-3">
                             <label class="text-light-gold/60 text-xs block mb-1">Notes</label>
                             <textarea id="partnerNotes" rows="3" placeholder="Historique des échanges, conditions envisagées…"
@@ -1518,11 +1548,12 @@
                                     <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Contact</th>
                                     <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Statut</th>
                                     <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Dernier contact</th>
+                                    <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Prochaine relance</th>
                                     <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="partnersTbody">
-                                <tr><td colspan="6" class="px-6 py-8 text-center text-gold/30 cormorant text-lg">Chargement…</td></tr>
+                                <tr><td colspan="7" class="px-6 py-8 text-center text-gold/30 cormorant text-lg">Chargement…</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -4784,6 +4815,7 @@
             document.getElementById('partnerAddress').value = isEditing ? (partner.address || '') : '';
             document.getElementById('partnerStatus').value = isEditing ? (partner.status || 'a_contacter') : 'a_contacter';
             document.getElementById('partnerLastContactDate').value = isEditing ? (partner.last_contact_date || '') : '';
+            document.getElementById('partnerNextContactDate').value = isEditing ? (partner.next_contact_date || '') : '';
             document.getElementById('partnerNotes').value = isEditing ? (partner.notes || '') : '';
             document.getElementById('partnerFormStatus').textContent = '';
             form.classList.remove('hidden');
@@ -4807,6 +4839,7 @@
                 city: document.getElementById('partnerCity').value.trim(),
                 status: document.getElementById('partnerStatus').value,
                 lastContactDate: document.getElementById('partnerLastContactDate').value,
+                nextContactDate: document.getElementById('partnerNextContactDate').value,
                 notes: document.getElementById('partnerNotes').value.trim()
             };
             status.className = 'text-xs text-light-gold/40';
@@ -4841,6 +4874,88 @@
             } catch (e) { adminAlert('Erreur : ' + e.message); }
         }
 
+        // ── Notes & RDV d'un partenaire (historique horodaté, pas un champ écrasé) ──
+        let currentPartnerNotesId = null;
+        async function viewPartnerNotes(partnerId, storeName) {
+            currentPartnerNotesId = partnerId;
+            document.getElementById('modalPartnerNotesTitle').textContent = `Notes & RDV — ${storeName}`;
+            document.getElementById('partnerNoteDate').value = new Date().toISOString().slice(0, 10);
+            document.getElementById('partnerNoteContent').value = '';
+            document.getElementById('partnerNoteStatus').textContent = '';
+            document.getElementById('modalPartnerNotes').classList.remove('hidden');
+            document.getElementById('modalPartnerNotes').classList.add('flex');
+            await loadPartnerNotes();
+        }
+
+        function closePartnerNotesModal() {
+            document.getElementById('modalPartnerNotes').classList.add('hidden');
+            document.getElementById('modalPartnerNotes').classList.remove('flex');
+            currentPartnerNotesId = null;
+        }
+
+        async function loadPartnerNotes() {
+            const body = document.getElementById('modalPartnerNotesBody');
+            body.innerHTML = '<p class="text-gold/40 text-center py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</p>';
+            try {
+                const res = await adminFetch(`/api/admin/data?section=partner-notes&partnerId=${encodeURIComponent(currentPartnerNotesId)}`);
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                const notes = json.data || [];
+                if (!notes.length) {
+                    body.innerHTML = '<p class="text-gold/30 text-center py-6 cormorant text-lg">Aucune note pour l\'instant</p>';
+                    return;
+                }
+                body.innerHTML = notes.map(n => `
+                    <div class="bg-[rgba(5,20,40,0.6)] border border-gold/15 rounded-lg px-4 py-3">
+                        <div class="flex items-center justify-between mb-1">
+                            <span class="text-gold/70 text-xs">${n.note_date ? new Date(n.note_date).toLocaleDateString('fr-FR') : '—'}</span>
+                            <button onclick="deletePartnerNote('${n.id}')" class="text-red-400/50 hover:text-red-400 text-xs"><i class="fas fa-trash"></i></button>
+                        </div>
+                        <p class="text-light-gold/80 text-sm whitespace-pre-wrap">${escapeHtmlFront(n.content)}</p>
+                    </div>`).join('');
+            } catch (e) {
+                body.innerHTML = `<p class="text-red-400/70 text-center py-4">${escapeHtmlFront(e.message)}</p>`;
+            }
+        }
+
+        async function addPartnerNote() {
+            const noteDate = document.getElementById('partnerNoteDate').value;
+            const content = document.getElementById('partnerNoteContent').value.trim();
+            const status = document.getElementById('partnerNoteStatus');
+            if (!content) { status.className = 'text-xs text-red-400'; status.textContent = 'Contenu requis.'; return; }
+            status.className = 'text-xs text-light-gold/40';
+            status.textContent = 'Enregistrement…';
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'add-partner-note', partnerId: currentPartnerNotesId, noteDate, content })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                document.getElementById('partnerNoteContent').value = '';
+                status.textContent = '';
+                await loadPartnerNotes();
+            } catch (e) {
+                status.className = 'text-xs text-red-400';
+                status.textContent = 'Erreur : ' + e.message;
+            }
+        }
+
+        async function deletePartnerNote(id) {
+            if (!(await adminConfirm('Supprimer cette note ?', { danger: true }))) return;
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete-partner-note', id })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                await loadPartnerNotes();
+            } catch (e) { adminAlert('Erreur : ' + e.message); }
+        }
+
         let currentPartners = [];
         async function loadPartners() {
             const tbody = document.getElementById('partnersTbody');
@@ -4850,27 +4965,38 @@
                 if (!res.ok) throw new Error(json.error || 'Erreur');
                 currentPartners = json.data || [];
                 if (!currentPartners.length) {
-                    tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun partenaire enregistré</td></tr>';
+                    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun partenaire enregistré</td></tr>';
                     return;
                 }
                 const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
-                tbody.innerHTML = currentPartners.map(p => `
+                const todayStr = new Date().toISOString().slice(0, 10);
+                tbody.innerHTML = currentPartners.map(p => {
+                    const overdue = p.next_contact_date && p.next_contact_date <= todayStr;
+                    return `
                     <tr class="hover:bg-gold/5 transition">
-                        <td class="px-5 py-4 text-light-gold text-sm">${escapeHtmlFront(p.store_name || '—')}</td>
+                        <td class="px-5 py-4 text-light-gold text-sm">
+                            ${escapeHtmlFront(p.store_name || '—')}
+                            ${p.address ? `<br><span class="text-light-gold/40 text-xs">${escapeHtmlFront(p.address)}</span>` : ''}
+                        </td>
                         <td class="px-5 py-4 text-light-gold/70 text-sm">${escapeHtmlFront(p.city || '—')}</td>
                         <td class="px-5 py-4 text-light-gold/60 text-xs">
-                            ${escapeHtmlFront(p.contact_name || '—')}
-                            ${p.email ? `<br><a href="mailto:${escapeHtmlFront(p.email)}" class="text-gold/60 hover:text-gold">${escapeHtmlFront(p.email)}</a>` : ''}
+                            ${p.contact_name ? escapeHtmlFront(p.contact_name) + '<br>' : ''}
+                            ${p.phone ? `<a href="tel:${escapeHtmlFront(p.phone.replace(/\s+/g,''))}" class="text-gold/60 hover:text-gold">${escapeHtmlFront(p.phone)}</a><br>` : ''}
+                            ${p.email ? `<a href="mailto:${escapeHtmlFront(p.email)}" class="text-gold/60 hover:text-gold">${escapeHtmlFront(p.email)}</a>` : ''}
+                            ${!p.contact_name && !p.phone && !p.email ? '—' : ''}
                         </td>
                         <td class="px-5 py-4"><span class="text-xs px-2 py-0.5 rounded-full ${partnerStatusColors[p.status] || ''}">${partnerStatusLabels[p.status] || p.status}</span></td>
                         <td class="px-5 py-4 text-light-gold/60 text-xs">${fmtDate(p.last_contact_date)}</td>
+                        <td class="px-5 py-4 text-xs ${overdue ? 'text-orange-400 font-semibold' : 'text-light-gold/60'}">${fmtDate(p.next_contact_date)}</td>
                         <td class="px-5 py-4">
                             <div class="flex gap-2">
+                                <button onclick="viewPartnerNotes('${p.id}','${(p.store_name || '').replace(/'/g, "\\'")}')" title="Notes &amp; RDV" class="text-xs text-teal-400/70 hover:text-teal-400 border border-teal-400/20 hover:border-teal-400/50 rounded-lg px-2 py-1 transition"><i class="fas fa-note-sticky"></i></button>
                                 <button onclick='togglePartnerForm(${JSON.stringify(p).replace(/'/g, "&#39;")})' class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 transition"><i class="fas fa-pen"></i></button>
                                 <button onclick="deletePartner('${p.id}')" class="text-xs text-red-400/60 hover:text-red-400 border border-red-400/20 hover:border-red-400/50 rounded-lg px-2 py-1 transition"><i class="fas fa-trash"></i></button>
                             </div>
                         </td>
-                    </tr>`).join('');
+                    </tr>`;
+                }).join('');
             } catch (e) {
                 tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-red-400 text-sm">${escapeHtmlFront(e.message)}</td></tr>`;
             }

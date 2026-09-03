@@ -55,6 +55,36 @@ ALTER TABLE manufacturing_quotes
 CREATE INDEX IF NOT EXISTS idx_manufacturing_quotes_category ON manufacturing_quotes(category);
 
 
+-- ============================================================
+-- AJOUT : suivi des rendez-vous partenaires (date de prochaine relance +
+-- historique de notes horodatées, au lieu d'un simple champ texte écrasé
+-- à chaque modification). Idempotent, à exécuter même si les tables
+-- existent déjà.
+-- ============================================================
+ALTER TABLE retail_partners
+    ADD COLUMN IF NOT EXISTS next_contact_date DATE;
+
+CREATE INDEX IF NOT EXISTS idx_retail_partners_next_contact ON retail_partners(next_contact_date);
+
+CREATE TABLE IF NOT EXISTS partner_notes (
+    id          UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    partner_id  UUID NOT NULL REFERENCES retail_partners(id) ON DELETE CASCADE,
+    note_date   DATE DEFAULT CURRENT_DATE,
+    content     TEXT NOT NULL,
+    created_at  TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_partner_notes_partner ON partner_notes(partner_id, note_date DESC);
+
+ALTER TABLE partner_notes ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "partner_notes_service_role" ON partner_notes;
+CREATE POLICY "partner_notes_service_role" ON partner_notes
+    FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+COMMENT ON TABLE partner_notes IS
+    'Historique horodaté des échanges/RDV avec un partenaire (retail_partners) — ce qui a été dit, ce qu''il faut faire, avant la prochaine relance.';
+
+
 CREATE TABLE IF NOT EXISTS retail_partners (
     id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
 

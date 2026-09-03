@@ -1583,7 +1583,7 @@ async function handleData(req, res) {
 
       // ── Partenaires / magasins potentiels (onglet Partenaires) ──
       if (action === 'create-partner' || action === 'update-partner') {
-        const { id, storeName, contactName, email, phone, address, city, status, lastContactDate, notes } = body;
+        const { id, storeName, contactName, email, phone, address, city, status, lastContactDate, nextContactDate, notes } = body;
         const cleanStore = (storeName || '').trim();
         if (action === 'create-partner' && !cleanStore) return res.status(400).json({ error: 'Nom du magasin requis' });
         const payload = {
@@ -1594,6 +1594,7 @@ async function handleData(req, res) {
           city: city || null,
           status: status || 'a_contacter',
           last_contact_date: lastContactDate || null,
+          next_contact_date: nextContactDate || null,
           notes: notes || null,
           updated_at: new Date().toISOString()
         };
@@ -1614,6 +1615,29 @@ async function handleData(req, res) {
         const { id } = body;
         if (!id) return res.status(400).json({ error: 'id requis' });
         const { error } = await supabase.from('retail_partners').delete().eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      // ── Historique de notes horodatées pour un partenaire (RDV, relances) ──
+      if (action === 'add-partner-note') {
+        const { partnerId, noteDate, content } = body;
+        const cleanContent = (content || '').trim();
+        if (!partnerId) return res.status(400).json({ error: 'partnerId requis' });
+        if (!cleanContent) return res.status(400).json({ error: 'Contenu requis' });
+        const { error } = await supabase.from('partner_notes').insert({
+          partner_id: partnerId,
+          note_date: noteDate || new Date().toISOString().slice(0, 10),
+          content: cleanContent
+        });
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      if (action === 'delete-partner-note') {
+        const { id } = body;
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { error } = await supabase.from('partner_notes').delete().eq('id', id);
         if (error) throw error;
         return res.status(200).json({ success: true });
       }
@@ -3041,6 +3065,20 @@ async function handleData(req, res) {
       const { data, error } = await supabase
         .from('retail_partners')
         .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return res.status(200).json({ success: true, data: data || [] });
+    }
+
+    // ── Section partner-notes : historique des RDV/échanges pour un partenaire ──
+    if (section === 'partner-notes') {
+      const partnerId = req.query?.partnerId;
+      if (!partnerId) return res.status(400).json({ error: 'partnerId requis' });
+      const { data, error } = await supabase
+        .from('partner_notes')
+        .select('*')
+        .eq('partner_id', partnerId)
+        .order('note_date', { ascending: false })
         .order('created_at', { ascending: false });
       if (error) throw error;
       return res.status(200).json({ success: true, data: data || [] });
