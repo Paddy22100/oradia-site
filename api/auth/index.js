@@ -59,13 +59,20 @@ async function handleLogin(req, res) {
     req.on('error', reject);
   });
 
-  const { email, password } = body;
+  const { password } = body;
+  // tore_subscriptions est une table Postgres classique (comparaison .eq sensible à la
+  // casse) alors que Supabase Auth normalise déjà les emails en minuscules pour
+  // l'authentification elle-même. Sans cette normalisation ici, un abonné dont l'email
+  // est stocké avec une majuscule (ex: capturé tel quel depuis Stripe) se connecte
+  // normalement mais la vérification d'abonnement actif échoue silencieusement — il se
+  // voit alors affiché comme non-abonné alors qu'il a bien payé.
+  const email = (body.email || '').trim().toLowerCase();
 
   if (!email || !password) {
     res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
-    return res.end(JSON.stringify({ 
-      success: false, 
-      error: 'Email et mot de passe requis' 
+    return res.end(JSON.stringify({
+      success: false,
+      error: 'Email et mot de passe requis'
     }));
   }
 
@@ -150,7 +157,7 @@ async function handleLogin(req, res) {
         const { data: subData2 } = await supabase
           .from('tore_subscriptions')
           .select('status, expires_at')
-          .eq('email', email)
+          .ilike('email', email)
           .eq('status', 'active')
           .single();
         if (subData2) {
@@ -167,7 +174,8 @@ async function handleLogin(req, res) {
           email: authData2.user.email,
           name: authData2.user.user_metadata?.full_name || email.split('@')[0],
           id: authData2.user.id,
-          subscribed: subscribed2
+          subscribed: subscribed2,
+          must_change_password: authData2.user.user_metadata?.must_change_password === true
         },
         session: {
           access_token: authData2.session.access_token,
@@ -193,7 +201,7 @@ async function handleLogin(req, res) {
     const { data: subData } = await supabase
       .from('tore_subscriptions')
       .select('status, expires_at')
-      .eq('email', email)
+      .ilike('email', email)
       .eq('status', 'active')
       .single();
     if (subData) {
@@ -224,7 +232,8 @@ async function handleLogin(req, res) {
       email: authData.user.email,
       name: authData.user.user_metadata?.full_name || email.split('@')[0],
       id: authData.user.id,
-      subscribed
+      subscribed,
+      must_change_password: authData.user.user_metadata?.must_change_password === true
     },
     session: {
       access_token: authData.session.access_token,
@@ -256,7 +265,7 @@ async function handleCheckSubscription(req, res) {
     const { data: subData } = await supabase
       .from('tore_subscriptions')
       .select('status, expires_at, created_at, birth_date, birth_place')
-      .eq('email', email)
+      .ilike('email', email)
       .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(1)
@@ -402,7 +411,7 @@ async function handleConsumeToreDraw(req, res) {
     req.on('error', reject);
   });
 
-  const { email } = body;
+  const email = (body.email || '').trim().toLowerCase();
   if (!email) {
     res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ error: 'Email required' }));
@@ -422,7 +431,7 @@ async function handleConsumeToreDraw(req, res) {
     const { data: sub } = await supabase
       .from('tore_subscriptions')
       .select('id, status, expires_at')
-      .eq('email', email)
+      .ilike('email', email)
       .single();
 
     if (!sub) {
@@ -454,7 +463,7 @@ async function handleCheckToreDraw(req, res) {
     req.on('error', reject);
   });
 
-  const { email } = body;
+  const email = (body.email || '').trim().toLowerCase();
   if (!email) {
     res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ allowed: false, error: 'Email requis' }));
@@ -466,7 +475,7 @@ async function handleCheckToreDraw(req, res) {
   const { data: sub } = await supabase
     .from('tore_subscriptions')
     .select('id, status, expires_at, plan, daily_draw_count, last_draw_date')
-    .eq('email', email)
+    .ilike('email', email)
     .eq('status', 'active')
     .maybeSingle();
 
@@ -559,10 +568,44 @@ async function handleSaveBirthInfo(req, res) {
   const { error } = await supabase
     .from('tore_subscriptions')
     .update({ birth_date: birthDate || null, birth_place: birthPlace || null, updated_at: new Date().toISOString() })
-    .eq('email', email);
+    .ilike('email', email);
   if (error) {
     res.writeHead(500, { ...corsHeaders, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({ success: false, error: error.message }));
+  }
+  res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
+  return res.end(JSON.stringify({ success: true }));
+}
+
+// ============ MARQUER LE MOT DE PASSE PROVISOIRE COMME CHANGÉ ============
+// Appelé depuis member/login.html juste après que l'abonné a défini son mot de passe
+// définitif (sb.auth.updateUser). Synchronise l'indicateur côté tore_subscriptions,
+// utilisé par le dashboard admin (badge + alerte) sans avoir à interroger l'API Admin
+// Auth à chaque affichage.
+async function handleMarkPasswordChanged(req, res) {
+  const body = await new Promise((resolve, reject) => {
+    let data = '';
+    req.on('data', c => data += c);
+    req.on('end', () => { try { resolve(data ? JSON.parse(data) : {}); } catch { resolve({}); } });
+    req.on('error', reject);
+  });
+  const email = (body.email || '').trim().toLowerCase();
+  if (!email || !email.includes('@')) {
+    res.writeHead(400, { ...corsHeaders, 'Content-Type': 'application/json' });
+    return res.end(JSON.stringify({ success: false, error: 'Email invalide' }));
+  }
+  const supabase = createClient(
+    process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+  const { error } = await supabase
+    .from('tore_subscriptions')
+    .update({ must_change_password: false, updated_at: new Date().toISOString() })
+    .ilike('email', email);
+  if (error) {
+    // Ne bloque jamais le flux de connexion pour un souci d'indicateur dashboard —
+    // journalise et répond quand même succès côté client.
+    console.error('[mark-password-changed] update error:', error.message);
   }
   res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
   return res.end(JSON.stringify({ success: true }));
@@ -717,6 +760,11 @@ module.exports = async (req, res) => {
     // POST /save-birth-info — enregistre date/lieu de naissance (profil membre)
     if (path.includes('save-birth-info') || fullUrl.includes('save-birth-info')) {
       return await handleSaveBirthInfo(req, res);
+    }
+
+    // POST /mark-password-changed — synchronise l'indicateur dashboard après changement de mdp
+    if (path.includes('mark-password-changed') || fullUrl.includes('mark-password-changed')) {
+      return await handleMarkPasswordChanged(req, res);
     }
 
     // Route non reconnue

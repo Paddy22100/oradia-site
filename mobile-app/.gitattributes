@@ -1,0 +1,17 @@
+# Le dépôt est édité depuis Windows (CRLF auto), mais les workflows GitHub
+# Actions tournent sur Linux/macOS : les scripts shell (gradlew) exigent des
+# fins de ligne LF pour s'exécuter, et certains fichiers Gradle/XML sont plus
+# fiables en LF partout. Force LF pour tout le texte de ce dossier, quel que
+# soit l'OS qui commite, pour que le build cloud reste reproductible.
+* text=auto eol=lf
+
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.webp binary
+*.jar binary
+*.keystore binary
+*.p12 binary
+*.mobileprovision binary
+
+gradlew text eol=lf

@@ -82,7 +82,8 @@
 
 
 
-    html, body { overflow: auto !important; }
+    html, body { overflow: auto !important; scrollbar-width: none; -ms-overflow-style: none; }
+    html::-webkit-scrollbar, body::-webkit-scrollbar { display: none; width: 0; height: 0; }
 
     body {
 
@@ -94,14 +95,19 @@
 
       color:#f5e7a1;
 
-      /* Empêche le pull-to-refresh natif (mobile) de recharger la page
-         sans passer par le modal d'abandon de tirage */
-      overscroll-behavior-y: contain;
+    }
 
-      /* Empêche la sélection de texte bleue lors des clics rapides */
+    /* Pull-to-refresh (overscroll-behavior-y) et sélection de texte bleue
+       (user-select) : bloqués uniquement pendant le tirage actif (cartes,
+       plateau). Les deux ont des bugs connus sur certains navigateurs mobiles
+       (WebView Messenger/Facebook/Instagram, certains Android) qui cassent le
+       scroll tactile normal quand ils sont posés sans condition sur tout le
+       <body> : on ne les applique donc plus pendant la saisie de l'intention,
+       où le scroll doit rester utilisable. */
+    body.tore-playing {
+      overscroll-behavior-y: contain;
       -webkit-user-select: none;
       user-select: none;
-
     }
 
     /* Réactiver la sélection dans les champs de saisie et le guide carte */
@@ -282,7 +288,7 @@
     });
   </script>
   <script src="js/tirages-storage.js"></script>
-  <!-- Client QRNG — tirage quantique via ANU (Outshift en secours) -->
+  <!-- Client QRNG — tirage quantique via Outshift (ANU en secours) -->
   <script src="js/qrng-client.js" defer></script>
 
 </head>
@@ -342,7 +348,8 @@
     gap: 7px;
     font-family: 'Cormorant Garamond', Georgia, serif;
     font-size: clamp(12px, 1.2vw, 14px);
-    color: rgba(212,175,55,0.42);
+    color: rgba(245,231,161,0.8);
+    text-shadow: 0 1px 3px rgba(0,0,0,0.6);
     transition: color 0.2s;
   }
   .tore-check .chk-ico { font-size: 14px; transition: color 0.2s; }
@@ -2938,12 +2945,12 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
   </div>
 
 <section id="tore-immersif" class="relative"
-  style="background-image: url('images/oradia-hero-4k.webp'); background-size: cover; background-repeat: no-repeat; isolation: isolate; min-height:100vh; min-height:100dvh;">
+  style="background-image: url('images/oradia-hero-4k.webp'); background-size: cover; background-repeat: no-repeat; isolation: isolate; min-height:100vh; min-height:100svh;">
 
   <!-- Voile comme l'index -->
   <div class="absolute inset-0" style="background: radial-gradient(circle at 20% 80%, rgba(212,175,55,0.08) 0%, transparent 50%), radial-gradient(circle at 80% 20%, rgba(212,175,55,0.04) 0%, transparent 50%), linear-gradient(135deg, rgba(10,25,47,0.65) 0%, rgba(5,20,40,0.75) 100%);"></div>
 
-  <div class="relative z-10 container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8" style="min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;">
+  <div class="relative z-10 container mx-auto max-w-6xl px-4 sm:px-6 lg:px-8" style="min-height:100vh;min-height:100svh;display:flex;flex-direction:column;">
 
     <!-- FORMULAIRE D'INTENTION -->
     <form id="tore-form" class="flex flex-col items-center justify-center" style="flex:1;padding:clamp(12px,2vh,28px) 0 clamp(8px,1.5vh,24px);gap:clamp(10px,2vh,24px);">
@@ -2981,7 +2988,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
                            focus:outline-none transition-all duration-300
                            placeholder:text-light-gold/30 placeholder:italic
                            resize-none"
-                    style="background: rgba(10,25,47,0.7); border: 1px solid rgba(212,175,55,0.35); backdrop-filter: blur(12px); min-height: clamp(64px,10vh,120px); padding: clamp(8px,1.2vh,18px); font-size: clamp(13px,1.4vw,17px);"
+                    style="background: rgba(10,25,47,0.7); border: 1px solid rgba(212,175,55,0.35); backdrop-filter: blur(12px); min-height: clamp(92px,16vh,140px); padding: clamp(8px,1.2vh,18px); font-size: clamp(13px,1.4vw,17px);"
                     placeholder="Comment puis-je avancer sur mon chemin ? Quelle est la prochaine étape pour moi ?"
                     required></textarea>
         </div>
@@ -2992,17 +2999,16 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
           <span class="tore-check" id="chk-open"><i class="chk-ico fas fa-circle"></i>Une question ouverte (Comment, Pourquoi, Quelle…)</span>
           <span class="tore-check" id="chk-q"><i class="chk-ico fas fa-circle"></i>Se termine par «&nbsp;?&nbsp;»</span>
           <span class="tore-check" id="chk-single"><i class="chk-ico fas fa-circle"></i>Une seule question</span>
-          <span class="tore-check" id="chk-gender"><i class="chk-ico fas fa-circle"></i>Vous avez indiqué qui vous êtes</span>
         </div>
 
         <!-- Exemples d'intention cliquables : réduisent l'effet « page blanche »,
              garantissent une formulation valide et augmentent le taux de saisie. -->
         <div class="text-center" style="margin:0;">
-          <p style="font-size:clamp(11px,1.2vw,13px);color:rgba(212,175,55,0.55);font-style:italic;margin:0 0 8px;">Pas d'idée&nbsp;? Inspirez-vous d'un exemple&nbsp;:</p>
+          <p style="font-size:clamp(11px,1.2vw,13px);color:rgba(245,231,161,0.75);text-shadow:0 1px 3px rgba(0,0,0,0.6);font-style:italic;margin:0 0 8px;">Pas d'idée&nbsp;? Inspirez-vous d'un exemple&nbsp;:</p>
           <div class="flex flex-wrap justify-center gap-2" id="tore-intention-examples">
             <button type="button" onclick="fillIntention(this)" class="tore-intention-chip">Comment avancer sereinement en ce moment&nbsp;?</button>
             <button type="button" onclick="fillIntention(this)" class="tore-intention-chip">Quelle est la prochaine étape sur mon chemin&nbsp;?</button>
-            <button type="button" onclick="fillIntention(this)" class="tore-intention-chip">Pourquoi cette situation se répète-t-elle&nbsp;?</button>
+            <button type="button" onclick="fillIntention(this)" class="tore-intention-chip hidden sm:inline-flex">Pourquoi cette situation se répète-t-elle&nbsp;?</button>
             <button type="button" onclick="fillIntention(this)" class="tore-intention-chip">Quel choix me correspond vraiment&nbsp;?</button>
           </div>
         </div>
@@ -3104,7 +3110,7 @@ body:has(#tore-extra-overlay) #tore-beam-svg {
                 <div class="quantum-source-logo">🔬</div>
                 <div>
                   <strong>Source : générateurs de nombres quantiques vérifiés</strong><br>
-                  <span>Laboratoire d'optique quantique de l'ANU (Australian National University, Canberra), avec Outshift QRNG (matériel quantique Cisco) comme source de secours</span>
+                  <span>Outshift QRNG (matériel quantique développé par Cisco), avec le laboratoire d'optique quantique de l'ANU (Australian National University, Canberra) comme source de secours</span>
                   <p>
                     Chaque tirage utilise des nombres générés en temps réel par l'un de ces laboratoires,
                     à partir de la mesure des <em>fluctuations du vide quantique</em> ou d'un phénomène
@@ -6624,7 +6630,6 @@ function showArrowForStep(stepIndex, isMatch) {
     setChk('chk-open',   !has ? 'pending' : (openForm ? 'ok' : 'ko'));
     setChk('chk-q',      !has ? 'pending' : (endsQ ? 'ok' : 'ko'));
     setChk('chk-single', !has ? 'pending' : (single ? 'ok' : 'ko'));
-    setChk('chk-gender', isGenderSelected() ? 'ok' : 'pending');
   }
 
   function updateSubmitBtn() {
@@ -7319,6 +7324,8 @@ document.addEventListener("DOMContentLoaded", () => {
             <script>(function(){var u='contact',d='oradia.fr';var el=document.getElementById('tore-contact-link');if(el){el.href='mailto:'+u+'@'+d;el.textContent=u+'@'+d;}})();</script>
 
             <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><a href="https://instagram.com/oradia_oracle_officiel" target="_blank" rel="noopener" class="text-light-gold hover:text-gold transition">@oradia_oracle_officiel</a></li>
+
+            <li class="flex items-start"><i class="fab fa-youtube text-gold mt-1 mr-3"></i><a href="https://www.youtube.com/@oradiafr" target="_blank" rel="noopener" class="text-light-gold hover:text-gold transition">@oradiafr</a></li>
 
           </ul>
 

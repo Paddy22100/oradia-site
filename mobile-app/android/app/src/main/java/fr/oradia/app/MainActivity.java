@@ -1,0 +1,5 @@
+package fr.oradia.app;
+
+import com.getcapacitor.BridgeActivity;
+
+public class MainActivity extends BridgeActivity {}

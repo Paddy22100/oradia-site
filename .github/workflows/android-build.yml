@@ -1,0 +1,89 @@
+name: Build app Android (Oradia)
+
+on:
+  # Automatique : à chaque modification du dossier de l'app mobile
+  push:
+    branches: [main]
+    paths:
+      - 'mobile-app/**'
+      - '.github/workflows/android-build.yml'
+  # Manuel : depuis l'onglet Actions sur GitHub
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build APK / AAB Android
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    defaults:
+      run:
+        working-directory: mobile-app
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: mobile-app/package-lock.json
+
+      - name: Installer les dépendances
+        run: npm ci
+
+      - name: Synchroniser le projet natif Android
+        # --no-install force npx à utiliser le binaire déjà installé localement
+        # (node_modules/.bin/cap) plutôt que de risquer une résolution ambiguë
+        # (npx peut, dans un shell non interactif, essayer de récupérer un tout
+        # autre paquet npm nommé "cap" si la résolution locale ne se déclenche
+        # pas comme attendu — origine probable de l'échec instantané observé).
+        run: npx --no-install cap sync android
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 21
+
+      # Toujours produit : un APK debug, installable directement sur un téléphone
+      # (Android > Paramètres > autoriser les sources inconnues) pour tester
+      # l'app sans passer par le Play Store — pratique pour vérifier chaque
+      # changement avant de préparer une vraie publication.
+      - name: Build APK debug
+        working-directory: mobile-app/android
+        run: ./gradlew assembleDebug --no-daemon
+
+      - name: Publier l'APK debug
+        uses: actions/upload-artifact@v4
+        with:
+          name: oradia-debug.apk
+          path: mobile-app/android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
+
+      # Build signé (.aab), prêt à être envoyé sur Google Play Console — ne se
+      # déclenche que si le keystore de signature a été ajouté dans les secrets
+      # du dépôt (voir mobile-app/README.md, section "Signer l'app Android").
+      # Tant que ces secrets ne sont pas configurés, cette étape est simplement
+      # ignorée : le build debug ci-dessus continue de fonctionner normalement.
+      - name: Décoder le keystore de signature
+        if: ${{ vars.HAS_ANDROID_SIGNING == 'true' }}
+        working-directory: mobile-app/android/app
+        env:
+          KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: echo "$KEYSTORE_BASE64" | base64 -d > release.keystore
+
+      - name: Build AAB signé (release)
+        if: ${{ vars.HAS_ANDROID_SIGNING == 'true' }}
+        working-directory: mobile-app/android
+        env:
+          ORADIA_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ORADIA_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ORADIA_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: ./gradlew bundleRelease --no-daemon
+
+      - name: Publier l'AAB signé
+        if: ${{ vars.HAS_ANDROID_SIGNING == 'true' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: oradia-release.aab
+          path: mobile-app/android/app/build/outputs/bundle/release/app-release.aab
+          retention-days: 90

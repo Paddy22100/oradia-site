@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>ORADIA</title>
+<meta name="robots" content="noindex">
+<!--
+  Écran d'accueil dédié à l'application mobile (Capacitor charge cette page
+  comme contenu principal — voir mobile-app/capacitor.config.json). Reste sur
+  le domaine oradia.fr : la connexion à l'espace membre fonctionne exactement
+  comme sur le site (mêmes cookies/sessionStorage), pas de contexte isolé.
+-->
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root { --night: #0a192f; --night-deep: #050d1c; --gold: #d4af37; --light-gold: #f5e7a1; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body {
+    margin: 0; padding: 0; min-height: 100%;
+    background: radial-gradient(ellipse at 50% -10%, #0f2540 0%, var(--night-deep) 55%, #030811 100%);
+    font-family: 'Lora', Georgia, serif; color: #e8e4d4;
+    overscroll-behavior: none;
+  }
+  .wrap {
+    min-height: 100vh; min-height: 100dvh;
+    display: flex; flex-direction: column; align-items: center;
+    padding: max(28px, env(safe-area-inset-top)) 22px max(28px, env(safe-area-inset-bottom));
+  }
+  .brand { text-align: center; margin: 18px 0 34px; }
+  .brand img { width: 76px; height: 76px; filter: drop-shadow(0 0 18px rgba(212,175,55,0.35)); }
+  .brand h1 {
+    font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 700;
+    font-size: 30px; letter-spacing: 0.12em; margin: 12px 0 4px;
+    background: linear-gradient(135deg, var(--gold), var(--light-gold));
+    -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
+  }
+  .brand p { margin: 0; font-size: 13px; letter-spacing: 0.06em; color: rgba(232,228,212,0.5); font-style: italic; }
+
+  .cards { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+  a.card {
+    display: flex; align-items: center; gap: 16px;
+    background: linear-gradient(145deg, rgba(26,54,93,0.55), rgba(5,20,40,0.75));
+    border: 1px solid rgba(212,175,55,0.25);
+    border-radius: 18px; padding: 18px 20px;
+    text-decoration: none; color: inherit;
+    transition: transform .15s ease, border-color .15s ease, background .15s ease;
+  }
+  a.card:active { transform: scale(0.97); border-color: rgba(212,175,55,0.55); background: linear-gradient(145deg, rgba(26,54,93,0.7), rgba(5,20,40,0.85)); }
+  .card .icon {
+    flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(212,175,55,0.18), rgba(212,175,55,0.04));
+    border: 1px solid rgba(212,175,55,0.35);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .card .icon svg { width: 24px; height: 24px; stroke: var(--gold); fill: none; stroke-width: 1.5; }
+  .card .text { flex: 1; min-width: 0; }
+  .card .text .title { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 700; font-size: 19px; color: var(--light-gold); margin: 0 0 2px; }
+  .card .text .sub { font-size: 12.5px; color: rgba(232,228,212,0.55); margin: 0; line-height: 1.4; }
+  .card .chevron { flex-shrink: 0; opacity: 0.4; }
+  .card.primary { border-color: rgba(212,175,55,0.55); background: linear-gradient(145deg, rgba(212,175,55,0.14), rgba(26,54,93,0.55)); }
+  .card.primary .icon { background: linear-gradient(135deg, var(--gold), var(--light-gold)); border-color: transparent; }
+  .card.primary .icon svg { stroke: var(--night-deep); }
+
+  footer { margin-top: 24px; text-align: center; }
+  footer a { color: rgba(212,175,55,0.5); font-size: 11.5px; text-decoration: none; letter-spacing: 0.08em; }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand">
+      <img src="images/logo-hd-v2.webp" alt="Oradia">
+      <h1>ORADIA</h1>
+      <p>La Boussole Intérieure</p>
+    </div>
+
+    <div class="cards">
+      <a class="card primary" href="tore.html">
+        <span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/></svg></span>
+        <span class="text">
+          <p class="title">Tirer le Tore</p>
+          <p class="sub">Consultez l'oracle et laissez le hasard quantique vous guider</p>
+        </span>
+        <span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
+      </a>
+
+      <a class="card" href="member/dashboard.html">
+        <span class="icon"><svg viewBox="0 0 24 24"><path d="M4 20c0-4.4 3.6-7 8-7s8 2.6 8 7"/><circle cx="12" cy="7" r="4"/></svg></span>
+        <span class="text">
+          <p class="title">Mon espace</p>
+          <p class="sub">Historique de tirages, tirage programmé, profil</p>
+        </span>
+        <span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
+      </a>
+
+      <a class="card" href="precommande-oracle.html">
+        <span class="icon"><svg viewBox="0 0 24 24"><rect x="4" y="7" width="16" height="13" rx="1.5"/><path d="M8 7V5.5A2.5 2.5 0 0 1 10.5 3h3A2.5 2.5 0 0 1 16 5.5V7"/></svg></span>
+        <span class="text">
+          <p class="title">Précommander</p>
+          <p class="sub">Réservez votre exemplaire physique de l'Oracle</p>
+        </span>
+        <span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
+      </a>
+
+      <a class="card" href="abonnements.html">
+        <span class="icon"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.6 6.9L22 10.6l-5.5 4.4 1.8 7-6.3-3.9-6.3 3.9 1.8-7L2 10.6l7.4-1.2z"/></svg></span>
+        <span class="text">
+          <p class="title">Devenir abonné</p>
+          <p class="sub">Tirages illimités en ligne, sans limite</p>
+        </span>
+        <span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
+      </a>
+    </div>
+
+    <footer><a href="index.html">Voir le site complet →</a></footer>
+  </div>
+</body>
+</html>

@@ -1,0 +1,15 @@
+<!DOCTYPE html>
+<!--
+  Ce fichier n'est jamais réellement chargé sur les vrais appareils : Capacitor
+  utilise directement server.url (capacitor.config.json) pour ouvrir le site
+  distant oradia.fr comme contenu principal de la WebView, plutôt que ces
+  fichiers embarqués. On évite ainsi une iframe cross-origin imbriquée, qui
+  aurait cassé la persistance de session (cookies/sessionStorage) de l'espace
+  membre — la connexion se fait exactement comme dans un vrai navigateur.
+  Ce fichier n'existe que pour satisfaire les outils Capacitor, qui exigent un
+  dossier "web" même en mode server.url (utilisé uniquement par `cap serve`
+  en local, jamais dans le build final).
+-->
+<html lang="fr"><head><meta charset="UTF-8"><title>ORADIA</title></head>
+<body style="margin:0;background:#050d1c;"></body>
+</html>

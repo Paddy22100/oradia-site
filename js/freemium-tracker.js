@@ -317,28 +317,37 @@ class FreemiumTracker {
             style.textContent = `
                 @keyframes toreModalFadeIn { from{opacity:0} to{opacity:1} }
                 @keyframes toreModalCardIn { from{opacity:0;transform:translateY(24px) scale(0.96)} to{opacity:1;transform:translateY(0) scale(1)} }
+                @keyframes toreModalGlow { 0%,100%{opacity:0.55} 50%{opacity:0.9} }
                 #tore-limit-modal .tlm-card { animation:toreModalCardIn 0.55s cubic-bezier(0.22,1,0.36,1); }
-                #tore-limit-modal .tlm-cta:hover { opacity:0.88; transform:translateY(-2px); box-shadow:0 12px 40px rgba(212,175,55,0.55) !important; }
+                #tore-limit-modal .tlm-cta:hover { opacity:0.92; transform:translateY(-2px); box-shadow:0 14px 44px rgba(212,175,55,0.6) !important; }
                 #tore-limit-modal .tlm-secondary:hover { background:rgba(212,175,55,0.1) !important; border-color:rgba(212,175,55,0.6) !important; transform:translateY(-1px); }
                 #tore-limit-modal .tlm-cta, #tore-limit-modal .tlm-secondary { transition:all 0.22s ease; }
-                #tore-limit-modal .tlm-email { width:100%;box-sizing:border-box;background:rgba(7,20,42,0.8);border:1px solid rgba(212,175,55,0.35);border-radius:8px;padding:11px 16px;color:#f5e7a1;font-size:0.9rem;outline:none;font-family:Georgia,serif; }
-                #tore-limit-modal .tlm-email::placeholder { color:rgba(212,175,55,0.3); }
-                #tore-limit-modal .tlm-email:focus { border-color:rgba(212,175,55,0.65);box-shadow:0 0 0 3px rgba(212,175,55,0.1); }
                 #tore-limit-modal .tlm-close:hover { color:rgba(233,231,223,0.6) !important; }
-                #tore-limit-modal .tlm-offers-row { display:flex;gap:8px;margin-bottom:14px;align-items:stretch; }
-                #tore-limit-modal .tlm-offers-left { flex:1;display:flex;flex-direction:row;gap:8px;min-width:0; }
-                #tore-limit-modal .tlm-offers-left > div { flex:1;display:flex;flex-direction:column; }
-                #tore-limit-modal .tlm-preorder { width:190px;flex-shrink:0;border-radius:10px;overflow:hidden;text-decoration:none;position:relative;display:block;transition:transform 0.2s ease,box-shadow 0.2s ease;box-shadow:0 4px 20px rgba(0,0,0,0.4);min-height:200px; }
-                #tore-limit-modal .tlm-preorder:hover { transform:scale(1.02);box-shadow:0 8px 32px rgba(212,175,55,0.25); }
-                @media(max-width:440px){ #tore-limit-modal .tlm-preorder { width:130px; } }
-                @media(max-width:360px){ #tore-limit-modal .tlm-preorder { width:100px; } }
+                #tore-limit-modal .tlm-grid { display:flex;flex-wrap:wrap;gap:18px;margin-bottom:18px;align-items:stretch; }
+                #tore-limit-modal .tlm-col-left { flex:1.35 1 280px;min-width:260px;display:flex;flex-direction:column;position:relative; }
+                #tore-limit-modal .tlm-col-right { flex:1 1 220px;min-width:220px;display:flex;flex-direction:column;gap:14px; }
+                #tore-limit-modal .tlm-hero { flex:1;position:relative;background:linear-gradient(155deg,rgba(240,199,94,0.18) 0%,rgba(212,175,55,0.06) 55%,rgba(240,199,94,0.12) 100%);border:1.5px solid rgba(240,199,94,0.65);border-radius:16px;padding:26px 22px 20px;text-align:center;box-shadow:0 0 0 1px rgba(212,175,55,0.08),0 0 50px rgba(240,199,94,0.2);display:flex;flex-direction:column;overflow:hidden; }
+                #tore-limit-modal .tlm-hero::before { content:"";position:absolute;top:-60%;left:-20%;width:140%;height:140%;background:radial-gradient(circle,rgba(240,199,94,0.18),transparent 60%);animation:toreModalGlow 4s ease-in-out infinite;pointer-events:none; }
+                #tore-limit-modal .tlm-ribbon { display:inline-flex;align-items:center;gap:6px;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#050f23;font-size:0.62rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;padding:5px 14px;border-radius:50px;margin:0 auto 14px;box-shadow:0 4px 14px rgba(212,175,55,0.4); }
+                #tore-limit-modal .tlm-reassure { position:relative;color:rgba(240,199,94,0.6);font-size:0.68rem;letter-spacing:0.3px;margin:10px 0 0; }
+                #tore-limit-modal .tlm-side-card { border-radius:12px;overflow:hidden;transition:transform 0.2s ease,box-shadow 0.2s ease; }
+                #tore-limit-modal .tlm-preorder { width:100%;flex-shrink:0;text-decoration:none;position:relative;display:block;box-shadow:0 4px 18px rgba(0,0,0,0.35); }
+                #tore-limit-modal .tlm-preorder:hover { transform:translateY(-2px);box-shadow:0 8px 26px rgba(212,175,55,0.22); }
+                #tore-limit-modal .tlm-referral { background:linear-gradient(155deg,rgba(240,199,94,0.1),rgba(212,175,55,0.03)); border:1px solid rgba(212,175,55,0.32);padding:16px; }
+                #tore-limit-modal .tlm-icon-badge { display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:rgba(240,199,94,0.15);color:#f0c75e;font-size:0.7rem;flex-shrink:0; }
             `;
             document.head.appendChild(style);
         }
 
         const modal = document.createElement('div');
         modal.id = 'tore-limit-modal';
-        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;padding:12px;background:url(\'/images/oradia-hero-4k.webp\') center/cover no-repeat;animation:toreModalFadeIn 0.35s ease;overflow-y:auto;';
+        // display:flex + align-items/justify-content:center clippe le haut d'un
+        // contenu qui dépasse la hauteur du viewport dans plusieurs navigateurs
+        // (le centrage flexbox calcule un décalage négatif hors de la zone
+        // scrollable). On centre via margin:auto sur la carte à la place —
+        // ça centre normalement quand il y a la place, et devient un simple
+        // défilement top-to-bottom sinon, sans jamais couper le contenu.
+        modal.style.cssText = 'position:fixed;inset:0;z-index:99999;display:flex;padding:24px 12px;background:url(\'/images/oradia-hero-4k.webp\') center/cover no-repeat;animation:toreModalFadeIn 0.35s ease;overflow-y:auto;';
         modal.style.setProperty('--tlm-bg', 'rgba(2,6,20,0.82)');
         // Overlay sombre sur l'image hero
         const bgOverlay = document.createElement('div');
@@ -346,93 +355,111 @@ class FreemiumTracker {
         modal.appendChild(bgOverlay);
         modal.innerHTML = `
             <div class="tlm-card" role="dialog" aria-modal="true" aria-label="Tirages offerts utilisés"
-                 style="position:relative;width:calc(100vw - 24px);max-width:560px;border-radius:0;overflow:hidden;
-                        border:1px solid rgba(212,175,55,0.25);
-                        box-shadow:0 32px 90px rgba(0,0,0,0.8),0 0 60px rgba(212,175,55,0.06);
+                 style="position:relative;margin:auto;width:100%;max-width:min(900px, calc(100vw - 24px));border-radius:18px;overflow:hidden;
+                        border:1px solid rgba(212,175,55,0.3);
+                        box-shadow:0 32px 90px rgba(0,0,0,0.8),0 0 70px rgba(212,175,55,0.1);
                         font-family:Georgia,'Times New Roman',serif;">
 
                 <!-- ── HEADER style email ── -->
-                <div style="background:linear-gradient(160deg,#0d1e3a 0%,#0f2545 100%);padding:26px 24px 20px;text-align:center;border-bottom:1px solid rgba(212,175,55,0.18);position:relative;">
+                <div style="background:radial-gradient(120% 160% at 50% -20%, rgba(240,199,94,0.28) 0%, rgba(15,37,69,0.6) 45%, #0a1930 100%);padding:26px 28px 22px;text-align:center;border-bottom:1px solid rgba(212,175,55,0.22);position:relative;">
                     <button data-close-limit-modal aria-label="Fermer"
-                            style="position:absolute;top:12px;right:14px;background:none;border:none;color:rgba(233,231,223,0.35);font-size:1.4rem;line-height:1;cursor:pointer;padding:4px 8px;">×</button>
+                            style="position:absolute;top:12px;right:14px;background:rgba(255,255,255,0.06);border:none;border-radius:50%;width:30px;height:30px;color:rgba(233,231,223,0.55);font-size:1.2rem;line-height:1;cursor:pointer;">×</button>
                     <div style="display:inline-flex;align-items:center;gap:8px;margin-bottom:12px;">
-                        <img src="/images/logo-hd-v2.webp" alt="O" style="width:32px;height:32px;border-radius:50%;border:1px solid rgba(212,175,55,0.4);">
-                        <span style="color:#d4af37;font-family:Georgia,serif;font-size:22px;font-weight:700;letter-spacing:6px;text-transform:uppercase;line-height:1;">RADIA</span>
+                        <img src="/images/logo-hd-v2.webp" alt="O" style="width:34px;height:34px;border-radius:50%;border:1px solid rgba(212,175,55,0.45);">
+                        <span style="color:#d4af37;font-family:Georgia,serif;font-size:22px;font-weight:700;letter-spacing:5px;text-transform:uppercase;line-height:1;">RADIA</span>
                     </div>
-                    <h3 style="margin:0 0 6px;color:#f0c75e;font-family:Georgia,serif;font-size:1.2rem;font-weight:700;letter-spacing:2px;text-transform:uppercase;line-height:1.3;">
-                        Vos deux tirages offerts<br>ont été explorés
+                    <h3 style="margin:0 0 6px;color:#f8dfa0;font-family:'Cormorant Garamond',Georgia,serif;font-size:1.7rem;font-weight:700;letter-spacing:0.3px;line-height:1.25;">
+                        Vos deux tirages offerts ont été explorés
                     </h3>
-                    <p style="margin:0;color:rgba(212,175,55,0.4);font-size:0.65rem;letter-spacing:3px;text-transform:uppercase;">La Boussole Intérieure</p>
+                    <p style="margin:0;color:rgba(212,175,55,0.5);font-size:0.72rem;letter-spacing:3px;text-transform:uppercase;">La Boussole Intérieure</p>
                 </div>
 
                 <!-- ── CORPS ── -->
-                <div style="background:rgba(6,14,32,0.96);padding:20px 18px;">
+                <div style="background:linear-gradient(180deg,#0a1930 0%,#081326 100%);padding:22px;">
                 <div style="position:relative;">
 
-                    <p style="color:rgba(233,231,223,0.68);font-size:0.88rem;line-height:1.75;margin:0 auto 18px;text-align:center;font-style:italic;max-width:340px;">
-                        Pour continuer à recevoir une guidance approfondie, choisissez la formule qui vous correspond.
+                    <p style="color:rgba(233,231,223,0.72);font-size:0.95rem;line-height:1.6;margin:0 auto 18px;text-align:center;font-style:italic;max-width:440px;">
+                        Votre chemin de guidance ne s'arrête pas là — voici comment continuer.
                     </p>
 
-                    <!-- Séparateur -->
-                    <div style="height:1px;background:linear-gradient(90deg,transparent,rgba(212,175,55,0.15),transparent);margin:0 auto 18px;"></div>
+                    <!-- Offre en vedette à gauche / précommande + parrainage à droite -->
+                    <div class="tlm-grid">
 
-                    <!-- Offres + pub côte à côte -->
-                    <div class="tlm-offers-row">
-
-                        <!-- Colonne gauche : 2 offres empilées -->
-                        <div class="tlm-offers-left">
-
-                            <!-- Complète — offre unique -->
-                            <div style="flex:1;background:rgba(212,175,55,0.06);border:1.5px solid rgba(212,175,55,0.5);border-radius:12px;padding:18px 14px 14px;text-align:center;box-shadow:0 0 28px rgba(212,175,55,0.1);display:flex;flex-direction:column;">
-                                <p style="color:rgba(212,175,55,0.65);font-size:0.6rem;letter-spacing:3px;text-transform:uppercase;margin:0 0 6px;">Accès complet · Offre de lancement</p>
-                                <p style="margin:0 0 4px;line-height:1;">
-                                    <span style="color:rgba(212,175,55,0.35);font-size:1rem;font-weight:700;text-decoration:line-through;margin-right:6px;">8€</span>
-                                    <span style="color:#f0c75e;font-size:1.6rem;font-weight:700;">5€ <span style="font-size:0.65rem;color:rgba(212,175,55,0.45);font-weight:400;">/1er mois</span></span>
+                        <!-- Colonne gauche : offre complète, mise en avant -->
+                        <div class="tlm-col-left">
+                            <div class="tlm-hero">
+                                <span class="tlm-ribbon"><i class="fas fa-star"></i> Recommandé</span>
+                                <p style="position:relative;color:#f0c75e;font-size:0.8rem;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;margin:0 0 10px;">Accès complet · Offre de lancement</p>
+                                <p style="position:relative;margin:0 0 4px;line-height:1;font-family:'Cormorant Garamond',Georgia,serif;">
+                                    <span style="color:rgba(240,199,94,0.4);font-size:1.3rem;font-weight:700;text-decoration:line-through;margin-right:8px;">8€</span>
+                                    <span style="color:#fff3d6;font-size:2.9rem;font-weight:700;">5€</span>
+                                    <span style="font-size:0.85rem;color:rgba(240,199,94,0.6);font-weight:400;font-family:Georgia,serif;"> /1er mois</span>
                                 </p>
-                                <p style="color:rgba(212,175,55,0.45);font-size:0.6rem;letter-spacing:1px;margin:0 0 8px;">puis 8€/mois · sans engagement</p>
-                                <div style="height:1px;background:rgba(212,175,55,0.18);margin:0 0 8px;"></div>
-                                <ul style="list-style:none;padding:0;margin:0 0 10px;text-align:left;color:rgba(233,231,223,0.75);font-size:0.75rem;line-height:1.9;">
-                                    <li>✦ Tirages illimités</li>
-                                    <li>✦ Historique complet</li>
-                                    <li>✦ Espace membres</li>
+                                <p style="position:relative;color:rgba(240,199,94,0.55);font-size:0.75rem;letter-spacing:0.5px;margin:0 0 16px;">puis 8€/mois · sans engagement</p>
+                                <div style="position:relative;height:1px;background:rgba(212,175,55,0.25);margin:0 0 16px;"></div>
+                                <ul style="position:relative;list-style:none;padding:0;margin:0 0 20px;text-align:left;color:rgba(255,251,240,0.9);font-size:0.9rem;line-height:2.1;max-width:220px;margin-left:auto;margin-right:auto;">
+                                    <li><i class="fas fa-check" style="color:#f0c75e;margin-right:8px;width:14px;"></i>Tirages illimités</li>
+                                    <li><i class="fas fa-check" style="color:#f0c75e;margin-right:8px;width:14px;"></i>Historique complet</li>
+                                    <li><i class="fas fa-check" style="color:#f0c75e;margin-right:8px;width:14px;"></i>Espace membres</li>
                                 </ul>
                                 <button id="tlm-btn-complet" class="tlm-cta"
-                                        style="width:100%;padding:9px;border-radius:50px;
+                                        style="position:relative;width:100%;padding:14px;border-radius:50px;
                                                background:linear-gradient(135deg,#d4af37,#f0c75e);
-                                               color:#050f23;font-size:0.72rem;font-weight:700;
+                                               color:#050f23;font-size:0.9rem;font-weight:700;
                                                border:none;cursor:pointer;letter-spacing:1px;text-transform:uppercase;
-                                               box-shadow:0 4px 18px rgba(212,175,55,0.38);margin-top:auto;">
-                                    Choisir
+                                               box-shadow:0 6px 22px rgba(212,175,55,0.45);margin-top:auto;">
+                                    Commencer maintenant
                                 </button>
+                                <p class="tlm-reassure"><i class="fas fa-lock" style="margin-right:5px;font-size:0.6rem;"></i>Paiement sécurisé · Résiliable en un clic</p>
                             </div>
                         </div>
 
-                        <!-- Colonne droite : pub précommande -->
-                        <a href="/precommande-oracle.html" class="tlm-preorder">
-                            <img src="/images/medias/apercu_stripe.webp" alt="Oracle Oradia coffret physique"
-                                 style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;object-position:center;display:block;">
-                            <div style="position:absolute;inset:0;background:linear-gradient(to top,rgba(3,8,20,0.96) 0%,rgba(3,8,20,0.5) 50%,rgba(3,8,20,0.15) 100%);"></div>
-                            <!-- Badge haut -->
-                            <div style="position:absolute;top:8px;left:0;right:0;text-align:center;">
-                                <span style="display:inline-block;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:0.5rem;letter-spacing:2px;text-transform:uppercase;padding:3px 8px;border-radius:50px;">Édition limitée</span>
+                        <!-- Colonne droite : pub précommande + parrainage, secondaires -->
+                        <div class="tlm-col-right">
+                            <a href="/precommande-oracle.html" class="tlm-preorder tlm-side-card" style="border:1px solid rgba(212,175,55,0.22);">
+                                <img src="/images/medias/banniere-facebook.webp" alt="Oracle Oradia — précommandes ouvertes"
+                                     style="width:100%;height:auto;display:block;">
+                                <div style="padding:12px 14px;background:rgba(212,175,55,0.06);display:flex;align-items:center;gap:10px;">
+                                    <span class="tlm-icon-badge"><i class="fas fa-box-open"></i></span>
+                                    <div style="flex:1;min-width:0;">
+                                        <p style="margin:0;color:#f5e7a1;font-size:0.8rem;font-weight:700;font-family:'Cormorant Garamond',Georgia,serif;">L'oracle en version physique</p>
+                                        <p style="margin:0;color:rgba(212,175,55,0.6);font-size:0.68rem;">64 cartes · Livret · Coffret</p>
+                                    </div>
+                                    <span style="flex-shrink:0;display:inline-block;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#050f23;font-size:0.7rem;font-weight:700;letter-spacing:0.5px;padding:7px 12px;border-radius:50px;white-space:nowrap;">
+                                        Précommander
+                                    </span>
+                                </div>
+                            </a>
+
+                            <!-- Parrainage : alternative gratuite au paiement -->
+                            <div class="tlm-referral tlm-side-card" style="text-align:center;">
+                                <p style="color:#f0c75e;font-family:'Cormorant Garamond',Georgia,serif;font-size:1rem;font-weight:700;margin:0 0 6px;display:flex;align-items:center;justify-content:center;gap:8px;">
+                                    <span class="tlm-icon-badge"><i class="fas fa-gift"></i></span>Offrez un tirage
+                                </p>
+                                <p style="color:rgba(233,231,223,0.6);font-size:0.75rem;line-height:1.5;margin:0 0 12px;">
+                                    Votre lien : un tirage gratuit pour vous deux.
+                                </p>
+                                <div style="display:flex;flex-direction:column;gap:8px;">
+                                    <input id="tlm-referral-link-input" type="text" readonly
+                                        style="width:100%;background:rgba(5,20,40,0.85);border:1px solid rgba(212,175,55,0.3);border-radius:10px;color:#e8d9b0;font-family:Georgia,serif;font-size:12px;padding:10px;outline:none;box-sizing:border-box;text-align:center;">
+                                    <button id="tlm-referral-copy-btn" class="tlm-secondary"
+                                        style="width:100%;background:transparent;color:#f0c75e;border:1px solid rgba(212,175,55,0.5);border-radius:10px;padding:10px;font-family:Georgia,serif;font-size:0.8rem;font-weight:700;cursor:pointer;">
+                                        <i class="fas fa-copy" style="margin-right:6px;font-size:11px;"></i>Copier
+                                    </button>
+                                    <button id="tlm-referral-share-btn" class="tlm-secondary" style="display:none;width:100%;background:transparent;color:#f0c75e;border:1px solid rgba(212,175,55,0.5);border-radius:10px;padding:10px;font-family:Georgia,serif;font-size:0.8rem;font-weight:700;cursor:pointer;">
+                                        <i class="fas fa-share-nodes" style="margin-right:6px;font-size:11px;"></i>Partager
+                                    </button>
+                                </div>
                             </div>
-                            <!-- Contenu bas -->
-                            <div style="position:absolute;bottom:0;left:0;right:0;padding:10px 8px;text-align:center;">
-                                <p style="margin:0 0 2px;color:#f5e7a1;font-size:0.78rem;font-weight:700;line-height:1.25;text-shadow:0 1px 4px rgba(0,0,0,0.8);">Tenez-le<br>entre vos mains</p>
-                                <p style="margin:0 0 7px;color:rgba(212,175,55,0.65);font-size:0.55rem;line-height:1.4;">64 cartes · Livret · Coffret</p>
-                                <span style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f0c75e);color:#050f23;font-size:0.65rem;font-weight:700;letter-spacing:0.5px;padding:5px 10px;border-radius:50px;box-shadow:0 2px 8px rgba(212,175,55,0.4);">
-                                    Je réserve · 38€
-                                </span>
-                            </div>
-                        </a>
+                        </div>
                     </div>
 
-                    <p style="color:rgba(233,231,223,0.28);font-size:0.65rem;text-align:center;margin:10px 0 6px;font-style:italic;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">
+                    <p style="color:rgba(233,231,223,0.32);font-size:0.7rem;text-align:center;margin:14px 0 6px;font-style:italic;">
                         En vous abonnant, vous serez ajouté(e) à notre newsletter. Désabonnement possible à tout moment.
                     </p>
                     <button data-close-limit-modal class="tlm-close"
-                            style="display:block;width:100%;padding:4px;background:none;border:none;
-                                   color:rgba(233,231,223,0.22);font-size:0.75rem;cursor:pointer;
+                            style="display:block;width:100%;padding:6px;background:none;border:none;
+                                   color:rgba(233,231,223,0.3);font-size:0.85rem;cursor:pointer;
                                    font-style:italic;text-align:center;letter-spacing:0.05em;">
                         Peut-être plus tard
                     </button>
@@ -440,6 +467,14 @@ class FreemiumTracker {
             </div>
         `;
         document.body.appendChild(modal);
+
+        if (window.oradiaReferral) {
+            window.oradiaReferral.wireShareUI(
+                document.getElementById('tlm-referral-link-input'),
+                document.getElementById('tlm-referral-copy-btn'),
+                document.getElementById('tlm-referral-share-btn')
+            );
+        }
 
         // Email connu depuis la session membre (pré-rempli dans Stripe si disponible)
         let knownEmail = '';

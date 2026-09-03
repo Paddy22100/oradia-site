@@ -60,7 +60,7 @@ async function handleActivation(req, res) {
     return res.status(400).json({ success: false, message: 'Invalid JSON' });
   }
 
-  const { email, intention, cards, attentionPoints, durationDays, observationText, qrngSource } = body;
+  const { email, intention, cards, attentionPoints, durationDays, observationText, qrngSource, synthese } = body;
 
   if (!email || !durationDays) {
     return res.status(400).json({ success: false, message: 'email et durationDays requis' });
@@ -83,6 +83,7 @@ async function handleActivation(req, res) {
       duration_days: durationDays,
       closes_at: closesAt.toISOString(),
       qrng_source: normalizedQrngSource,
+      synthese: synthese || null,
       // response_token généré automatiquement par la DB (DEFAULT gen_random_uuid())
     })
     .select('id')
@@ -261,10 +262,25 @@ async function handleResonance(req, res) {
 // ============ EMAIL TEMPLATES ============
 // Plus d'email d'activation - les données sont incluses dans l'email du tirage
 
+// Mêmes libellés que FAMILY_LABELS (lib/tore-deck.js), dupliqués ici pour éviter un
+// import CommonJS depuis ce fichier en ES modules.
+const FAMILY_LABELS_FENETRE = {
+  emotions: 'Émotions', besoins: 'Besoins', actions: 'Actions',
+  archetypes: 'Archétypes', revelations: 'Révélations', memoire_cosmos: 'Mémoire Cosmos',
+  transmutations: 'Transmutations', transmutation: 'Transmutation'
+};
+
 function buildClosingEmail(win, responseToken, isSubscribed = false) {
   const attentionHTML = (win.attention_points || [])
     .map(p => `<li style="margin-bottom:10px;color:#e9e7df;line-height:1.7;">${escapeHtml(p)}</li>`)
     .join('');
+
+  // Rappel des cartes tirées — sans ça, l'utilisateur qui reçoit ce mail plusieurs
+  // jours après son tirage ne se souvient souvent plus de son contenu, ce qui
+  // n'incite pas à répondre au questionnaire de clôture.
+  const cardsHTML = Array.isArray(win.cards) && win.cards.length
+    ? win.cards.map(c => `<span style="display:inline-block;background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.3);border-radius:20px;padding:6px 14px;margin:3px;font-family:'Cormorant Garamond',Georgia,serif;font-size:14px;color:#f0c75e;">${escapeHtml(FAMILY_LABELS_FENETRE[c.family] || c.family || '')} — ${escapeHtml(c.name || '')}</span>`).join('')
+    : '';
 
   // Gabarit recalqué sur le design désormais commun aux emails ORADIA
   // (mail d'analyse / confirmations / bienvenue) — Palier 3 #17 :
@@ -315,7 +331,17 @@ Vos ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} d'observation v
           <tr>
             <td style="padding:0 40px 32px 40px;">
 
-              ${win.intention ? `<p style="margin:0 0 28px 0;color:#f5e7a1;font-family:'Lora',Georgia,serif;font-style:italic;font-size:15px;line-height:1.7;text-align:center;">«&nbsp;${escapeHtml(win.intention)}&nbsp;»</p>` : ''}
+              ${win.intention ? `<p style="margin:0 0 16px 0;color:#f5e7a1;font-family:'Lora',Georgia,serif;font-style:italic;font-size:15px;line-height:1.7;text-align:center;">«&nbsp;${escapeHtml(win.intention)}&nbsp;»</p>` : ''}
+
+              ${cardsHTML ? `<p style="margin:0 0 8px 0;color:#f0c75e;font-family:'Lora',Georgia,serif;font-size:11px;letter-spacing:0.15em;text-transform:uppercase;text-align:center;">Rappel de votre tirage</p>
+              <p style="margin:0 0 20px 0;text-align:center;">${cardsHTML}</p>` : ''}
+
+              ${win.synthese ? `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:0 0 28px;background:rgba(212,175,55,0.05);border-left:3px solid rgba(212,175,55,0.5);border-radius:0 10px 10px 0;">
+                <tr><td style="padding:16px 20px;">
+                  <p style="margin:0 0 6px;color:#f0c75e;font-family:'Lora',Georgia,serif;font-size:10px;letter-spacing:0.15em;text-transform:uppercase;">Synthèse de votre tirage</p>
+                  <p style="margin:0;color:#e9e7df;font-family:'Lora',Georgia,serif;font-size:14px;line-height:1.75;">${escapeHtml(win.synthese)}</p>
+                </td></tr>
+              </table>` : ''}
 
               <p style="margin:0 0 20px 0;color:#d1d5db;font-family:'Lora',Georgia,serif;font-size:15px;line-height:1.9;text-align:center;">
                 Voici quelques questions pour clore cette fenêtre avec conscience :
@@ -413,7 +439,7 @@ Vos ${win.duration_days} jour${win.duration_days > 1 ? 's' : ''} d'observation v
                 <span style="display:inline-block;width:32px;height:1px;background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent);vertical-align:middle;"></span>
               </p>
               <p style="margin:0 0 14px;"><a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;font-size:13px;letter-spacing:0.08em;font-family:Georgia,serif;">oradia.fr</a></p>
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td></tr></table>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.png" alt="YouTube" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td></tr></table>
             </td>
           </tr>
 

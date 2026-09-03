@@ -80,7 +80,11 @@ module.exports = async (req, res) => {
         
         // ── Abonnement Complet (8€/mois) ─────────────────────────────────────────
         if (req.body.type === 'tore-complet' || req.body.type === 'tore-decouverte') {
-            const email    = (req.body.email || '').trim();
+            // Normalisé dès la création de la session : cet email finit dans les metadata
+            // Stripe, relues telles quelles par le webhook pour créer/retrouver la ligne
+            // tore_subscriptions (comparaisons Postgres sensibles à la casse) — le normaliser
+            // ici évite d'introduire une casse incohérente dès le départ.
+            const email    = (req.body.email || '').trim().toLowerCase();
             const fullName = (req.body.fullName || '').trim();
             const plan    = 'complet';
             const priceId = process.env.STRIPE_PRICE_COMPLET;

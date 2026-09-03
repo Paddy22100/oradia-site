@@ -8,7 +8,10 @@
     <script src="../js/tirages-storage.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="../style.css">
-    
+    <script src="../js/member-header-fix.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" defer></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" defer></script>
+
     <script>
         tailwind.config = {
             theme: {
@@ -78,6 +81,19 @@
         
         .detail-modal {
             backdrop-filter: blur(8px);
+        }
+
+        .tirages-tab-btn {
+            transition: all 0.2s ease;
+        }
+
+        .tirages-tab-btn.active {
+            color: #d4af37;
+            border-bottom-color: #d4af37;
+        }
+
+        .freq-btn, .gender-btn {
+            transition: all 0.2s ease;
         }
         
         .passerelle-badge {
@@ -187,14 +203,14 @@
 <body class="bg-night-blue text-light-gold">
 <div id="carte-hover-preview"><img alt=""><div class="fallback"><i class="fas fa-infinity"></i><span></span></div></div>
     <!-- Header -->
-    <header class="w-full py-4 px-4 lg:px-6 border-b border-gold/20 sticky top-0 z-50 bg-gradient-to-r from-[#051428] via-[#0a192f] to-[#051428] backdrop-blur-md">
+    <header class="member-app-header w-full py-4 px-4 lg:px-6 border-b border-gold/20 fixed top-0 left-0 right-0 z-50 bg-gradient-to-r from-[#051428] via-[#0a192f] to-[#051428] backdrop-blur-md">
         <div class="flex items-center justify-between w-full">
             <!-- Logo -->
             <a href="../index.html" class="flex items-center gap-3 flex-shrink-0 group">
                 <img src="../images/logo-hd-v2.webp" alt="ORADIA" class="w-11 h-11 rounded-full object-contain border-2 border-gold/30 group-hover:border-gold/50 transition-colors">
                 <div>
                     <h1 class="font-cormorant text-2xl font-bold gold-gradient tracking-wide">ORADIA</h1>
-                    <p class="text-gold/60 text-xs font-light tracking-wider">Historique des tirages</p>
+                    <p class="text-gold/60 text-xs font-light tracking-wider">Mes tirages</p>
                 </div>
             </a>
 
@@ -224,7 +240,7 @@
                 </a>
                 <a href="tirages.html" class="sidebar-link flex items-center gap-3 text-gold p-3 rounded-lg bg-gold/10 border-l-3 border-gold">
                     <i class="fas fa-infinity w-5"></i>
-                    <span>Historique des tirages</span>
+                    <span>Mes tirages</span>
                 </a>
                 <a href="profile.html" class="sidebar-link flex items-center gap-3 text-light-gold hover:text-gold p-3 rounded-lg">
                     <i class="fas fa-user-circle w-5"></i>
@@ -256,9 +272,9 @@
 
         <!-- Main Content -->
         <main class="flex-1 p-6 pb-24 lg:pb-6">
-            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4 mb-6">
                 <div>
-                    <h2 class="cormorant text-3xl text-gold mb-1">Historique des tirages</h2>
+                    <h2 class="cormorant text-3xl text-gold mb-1">Mes tirages</h2>
                     <p class="text-light-gold/60 text-sm" id="totalInfo">0 tirage enregistré</p>
                 </div>
                 <a href="../tore.html" class="bg-gold hover:bg-light-gold text-night-blue font-bold py-2 px-5 rounded-lg transition-colors">
@@ -266,7 +282,160 @@
                 </a>
             </div>
 
-            <section id="tiragesList"></section>
+            <!-- Catégories -->
+            <div class="flex gap-1 mb-6 border-b border-gold/15">
+                <button data-tab="historique" onclick="setMesTiragesTab('historique')" class="tirages-tab-btn px-4 sm:px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-light-gold/60">
+                    <i class="fas fa-infinity mr-1.5"></i>Mon historique de tirages
+                </button>
+                <button data-tab="programme" onclick="setMesTiragesTab('programme')" class="tirages-tab-btn px-4 sm:px-5 py-3 text-sm font-semibold border-b-2 border-transparent text-light-gold/60">
+                    <i class="fas fa-clock mr-1.5"></i>Tirage programmé
+                </button>
+            </div>
+
+            <!-- Onglet : historique -->
+            <div id="tabHistorique">
+                <!-- Filtres ponctuel / programmé -->
+                <div id="sourceFilters" class="hidden flex items-center gap-2 mb-5 text-sm">
+                    <button data-filter="all" onclick="setSourceFilter('all')" class="filter-btn active px-4 py-1.5 rounded-full border border-gold/20 text-light-gold/80">Tous</button>
+                    <button data-filter="ponctuel" onclick="setSourceFilter('ponctuel')" class="filter-btn px-4 py-1.5 rounded-full border border-gold/20 text-light-gold/80">Ponctuels</button>
+                    <button data-filter="programme" onclick="setSourceFilter('programme')" class="filter-btn px-4 py-1.5 rounded-full border border-gold/20 text-light-gold/80">Programmés</button>
+                </div>
+
+                <section id="tiragesList"></section>
+            </div>
+
+            <!-- Onglet : tirage programmé -->
+            <div id="tabProgramme" class="hidden">
+                <!-- En-tête décoratif -->
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:22px;">
+                    <div style="width:46px;height:46px;border-radius:50%;background:radial-gradient(circle,rgba(212,175,55,0.22),rgba(212,175,55,0.05));border:1px solid rgba(212,175,55,0.35);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                        <i class="fas fa-hourglass-half" style="color:#d4af37;font-size:18px;"></i>
+                    </div>
+                    <div>
+                        <p style="font-family:'Cormorant Garamond',serif;font-size:22px;font-weight:700;background:linear-gradient(135deg,#d4af37,#f4e4c1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:0;">Un tirage, sans y penser</p>
+                        <p class="text-light-gold/50 text-sm" style="margin:2px 0 0;">Reçu par email, à l'heure et la fréquence que vous choisissez</p>
+                    </div>
+                </div>
+
+                <!-- État non-abonné -->
+                <div id="notSubscribedPanel" class="hidden bg-[rgba(26,54,93,0.4)] border border-gold/20 rounded-2xl p-10 text-center">
+                    <i class="fas fa-lock text-3xl text-gold/40 mb-4"></i>
+                    <p class="text-light-gold/70 mb-5">Le tirage automatique est réservé aux abonnés Tore.</p>
+                    <a href="abonnements.html" class="inline-block bg-gold hover:bg-light-gold text-night-blue font-bold py-2.5 px-6 rounded-lg transition-colors">
+                        <i class="fas fa-crown mr-2"></i>Découvrir l'abonnement
+                    </a>
+                </div>
+
+                <!-- Chargement -->
+                <div id="loadingSchedulePanel" class="hidden bg-[rgba(26,54,93,0.4)] border border-gold/20 rounded-2xl p-10 text-center text-light-gold/50">
+                    <i class="fas fa-spinner fa-spin mr-2"></i>Chargement...
+                </div>
+
+                <!-- Formulaire (abonnés) + colonne d'accompagnement, pour occuper toute la largeur sur desktop -->
+                <div id="scheduleFormWrap" class="hidden grid grid-cols-1 lg:grid-cols-[minmax(0,1fr)_320px] gap-6 items-start">
+                <div id="scheduleForm" style="
+                    background:linear-gradient(145deg,rgba(26,54,93,0.65),rgba(5,20,40,0.85));
+                    border:1px solid rgba(212,175,55,0.28);
+                    border-radius:18px;
+                    overflow:hidden;
+                ">
+                    <div style="background:rgba(5,20,40,0.5);padding:18px 24px;border-bottom:1px solid rgba(212,175,55,0.2);">
+                        <p class="text-light-gold/70 text-sm leading-relaxed" style="margin:0;"><i class="fas fa-envelope-open-text" style="color:rgba(212,175,55,0.6);margin-right:8px;"></i>Recevez un tirage par email, sans y penser — avec une intention fixe, à l'heure et la fréquence de votre choix.</p>
+                    </div>
+
+                    <div style="padding:24px;display:flex;flex-direction:column;gap:22px;">
+                    <div id="statusBanner" class="hidden rounded-xl px-4 py-3 text-sm flex items-center gap-2"></div>
+
+                    <!-- Fréquence -->
+                    <div>
+                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2"><i class="fas fa-repeat mr-1.5" style="opacity:.6;"></i>Fréquence</label>
+                        <div class="grid grid-cols-3 gap-2">
+                            <button type="button" data-freq="daily" onclick="setScheduleFrequency('daily')" class="freq-btn py-3 rounded-lg border border-gold/25 text-sm text-light-gold/80" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                <i class="fas fa-sun" style="font-size:14px;opacity:.7;"></i>Quotidien
+                            </button>
+                            <button type="button" data-freq="weekly" onclick="setScheduleFrequency('weekly')" class="freq-btn py-3 rounded-lg border border-gold/25 text-sm text-light-gold/80" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                <i class="fas fa-calendar-week" style="font-size:14px;opacity:.7;"></i>Hebdo
+                            </button>
+                            <button type="button" data-freq="monthly" onclick="setScheduleFrequency('monthly')" class="freq-btn py-3 rounded-lg border border-gold/25 text-sm text-light-gold/80" style="display:flex;flex-direction:column;align-items:center;gap:4px;">
+                                <i class="fas fa-moon" style="font-size:14px;opacity:.7;"></i>Mensuel
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="scheduleDayOfWeekWrap" class="hidden">
+                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2"><i class="fas fa-calendar-day mr-1.5" style="opacity:.6;"></i>Jour de la semaine</label>
+                        <select id="scheduleDayOfWeek" class="w-full bg-[rgba(10,25,47,0.7)] border border-gold/30 rounded-lg py-3 px-3 text-light-gold text-sm">
+                            <option value="1">Lundi</option>
+                            <option value="2">Mardi</option>
+                            <option value="3">Mercredi</option>
+                            <option value="4">Jeudi</option>
+                            <option value="5">Vendredi</option>
+                            <option value="6">Samedi</option>
+                            <option value="0">Dimanche</option>
+                        </select>
+                    </div>
+
+                    <div id="scheduleDayOfMonthWrap" class="hidden">
+                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2"><i class="fas fa-calendar-alt mr-1.5" style="opacity:.6;"></i>Jour du mois</label>
+                        <select id="scheduleDayOfMonth" class="w-full bg-[rgba(10,25,47,0.7)] border border-gold/30 rounded-lg py-3 px-3 text-light-gold text-sm"></select>
+                    </div>
+
+                    <div>
+                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2"><i class="fas fa-clock mr-1.5" style="opacity:.6;"></i>Heure d'envoi</label>
+                        <select id="scheduleHour" class="w-full bg-[rgba(10,25,47,0.7)] border border-gold/30 rounded-lg py-3 px-3 text-light-gold text-sm"></select>
+                    </div>
+
+                    <div>
+                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2"><i class="fas fa-feather mr-1.5" style="opacity:.6;"></i>Intention fixe</label>
+                        <textarea id="scheduleIntention" rows="2" maxlength="500" placeholder="Comment appréhender au mieux cette journée ?" class="w-full bg-[rgba(10,25,47,0.7)] border border-gold/30 rounded-lg py-3 px-3 text-light-gold text-sm resize-none"></textarea>
+                        <div class="flex flex-wrap gap-2 mt-2">
+                            <button type="button" onclick="fillScheduleIntention(this)" class="text-xs border border-gold/25 text-light-gold/70 rounded-full px-3 py-1.5 hover:border-gold/50">Comment appréhender au mieux cette journée&nbsp;?</button>
+                            <button type="button" onclick="fillScheduleIntention(this)" class="text-xs border border-gold/25 text-light-gold/70 rounded-full px-3 py-1.5 hover:border-gold/50">Que dois-je traverser aujourd'hui&nbsp;?</button>
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="block text-gold/70 text-xs uppercase tracking-wider mb-2"><i class="fas fa-user mr-1.5" style="opacity:.6;"></i>Vous êtes</label>
+                        <div class="flex gap-3">
+                            <button type="button" data-gender="homme" onclick="setScheduleGender('homme')" class="gender-btn flex-1 py-3 rounded-lg border border-gold/25 text-sm text-light-gold/80">Homme</button>
+                            <button type="button" data-gender="femme" onclick="setScheduleGender('femme')" class="gender-btn flex-1 py-3 rounded-lg border border-gold/25 text-sm text-light-gold/80">Femme</button>
+                        </div>
+                    </div>
+
+                    <p id="scheduleError" class="hidden text-red-300 text-xs bg-red-900/20 border border-red-400/25 rounded-lg px-3 py-2"></p>
+
+                    <div class="flex flex-col gap-2 pt-1">
+                        <button onclick="saveSchedule()" id="scheduleSaveBtn" class="w-full bg-gold hover:bg-light-gold text-night-blue font-bold py-3 rounded-lg transition-colors"><i class="fas fa-magic-wand-sparkles mr-2"></i>Activer le tirage automatique</button>
+                        <button onclick="deleteSchedule()" id="scheduleDeleteBtn" class="hidden w-full border border-red-400/30 text-red-300 hover:bg-red-900/20 font-semibold py-2.5 rounded-lg transition-colors text-sm">Désactiver</button>
+                    </div>
+                    </div>
+                </div>
+
+                <!-- Colonne d'accompagnement (desktop) -->
+                <div style="display:flex;flex-direction:column;gap:16px;">
+                    <div style="background:linear-gradient(145deg,rgba(26,54,93,0.5),rgba(5,20,40,0.7));border:1px solid rgba(212,175,55,0.2);border-radius:16px;padding:20px;">
+                        <p style="font-family:'Cormorant Garamond',serif;font-size:16px;color:#d4af37;margin:0 0 12px;font-weight:700;"><i class="fas fa-infinity mr-2" style="opacity:.7;"></i>Comment ça marche</p>
+                        <div style="display:flex;flex-direction:column;gap:12px;">
+                            <div style="display:flex;gap:10px;align-items:flex-start;">
+                                <div style="width:22px;height:22px;border-radius:50%;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.35);color:#d4af37;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">1</div>
+                                <p class="text-light-gold/60 text-xs leading-relaxed" style="margin:0;">Le tirage se fait au générateur quantique, exactement comme sur le plateau du Tore.</p>
+                            </div>
+                            <div style="display:flex;gap:10px;align-items:flex-start;">
+                                <div style="width:22px;height:22px;border-radius:50%;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.35);color:#d4af37;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">2</div>
+                                <p class="text-light-gold/60 text-xs leading-relaxed" style="margin:0;">L'Oracle génère votre analyse avec votre intention fixe.</p>
+                            </div>
+                            <div style="display:flex;gap:10px;align-items:flex-start;">
+                                <div style="width:22px;height:22px;border-radius:50%;background:rgba(212,175,55,0.12);border:1px solid rgba(212,175,55,0.35);color:#d4af37;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:1px;">3</div>
+                                <p class="text-light-gold/60 text-xs leading-relaxed" style="margin:0;">Vous recevez tout par email, et le tirage rejoint aussi votre historique.</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div style="background:rgba(212,175,55,0.05);border:1px solid rgba(212,175,55,0.15);border-radius:16px;padding:18px 20px;">
+                        <p class="text-light-gold/50 text-xs leading-relaxed" style="margin:0;"><i class="fas fa-shield-alt mr-1.5" style="opacity:.6;"></i>Un tirage programmé reste un tirage privé : aucune fenêtre d'observation n'est activée automatiquement en votre nom.</p>
+                    </div>
+                </div>
+                </div>
+            </div>
         </main>
     </div>
 
@@ -284,6 +453,10 @@
             <a href="profile.html" class="flex flex-col items-center p-2 text-light-gold">
                 <i class="fas fa-user text-xl"></i>
                 <span class="text-xs">Profil</span>
+            </a>
+            <a href="parametres.html" class="flex flex-col items-center p-2 text-light-gold">
+                <i class="fas fa-cog text-xl"></i>
+                <span class="text-xs">Params</span>
             </a>
         </div>
     </div>
@@ -384,8 +557,12 @@
                 }
 
                 const tirageId = 'tirage-' + idx;
+                const source = t.source || 'ponctuel';
+                const sourceBadge = source === 'programme'
+                    ? `<span style="display:inline-flex;align-items:center;gap:5px;background:rgba(88,190,255,0.1);border:1px solid rgba(88,190,255,0.35);color:#8fd0ff;border-radius:20px;padding:3px 10px;font-size:10px;text-transform:uppercase;letter-spacing:.06em;margin-top:4px;"><i class="fas fa-clock"></i>Programmé</span>`
+                    : '';
                 return `
-                    <div class="tirage-card" id="${tirageId}" style="
+                    <div class="tirage-card" id="${tirageId}" data-source="${source}" style="
                         background:linear-gradient(145deg,rgba(26,54,93,0.65),rgba(5,20,40,0.85));
                         border:1px solid rgba(212,175,55,0.28);
                         border-radius:16px;
@@ -396,8 +573,9 @@
                             <div>
                                 <p style="font-family:'Cormorant Garamond',serif;font-size:20px;font-weight:700;background:linear-gradient(135deg,#d4af37,#f4e4c1);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;margin:0 0 2px;">${t.type || 'Tirage Tore'}</p>
                                 <p style="color:rgba(245,231,161,0.45);font-size:12px;margin:0;text-transform:capitalize;">${date}</p>
+                                ${sourceBadge}
                             </div>
-                            <button onclick="downloadPDF(${idx})" title="Télécharger ce tirage en PDF"
+                            <button onclick="downloadPDF(${idx}, this)" title="Télécharger ce tirage en PDF"
                                 style="background:rgba(212,175,55,0.1);border:1px solid rgba(212,175,55,0.4);color:#d4af37;border-radius:8px;padding:7px 14px;font-size:12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px;"
                                 onmouseover="this.style.background='rgba(212,175,55,0.22)'" onmouseout="this.style.background='rgba(212,175,55,0.1)'">
                                 <i class="fas fa-file-pdf"></i> Télécharger PDF
@@ -419,6 +597,11 @@
                             <div style="margin-top:16px;padding:16px 20px;background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.18);border-radius:12px;">
                                 <p style="color:rgba(212,175,55,0.6);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;"><i class="fas fa-scroll" style="margin-right:6px;"></i>Analyse de l'Oracle</p>
                                 <p style="color:rgba(245,231,161,0.88);font-family:'Cormorant Garamond',Georgia,serif;font-size:16px;line-height:1.85;white-space:pre-line;">${t.analyseIa.trim()}</p>
+                            </div>` : ''}
+                            ${t.pistes ? `
+                            <div style="margin-top:16px;padding:16px 20px;background:rgba(212,175,55,0.04);border:1px solid rgba(212,175,55,0.18);border-radius:12px;">
+                                <p style="color:rgba(212,175,55,0.6);font-size:10px;text-transform:uppercase;letter-spacing:.1em;margin-bottom:10px;"><i class="fas fa-compass" style="margin-right:6px;"></i>Pistes à explorer</p>
+                                <p style="color:rgba(245,231,161,0.8);font-family:'Cormorant Garamond',Georgia,serif;font-size:15px;font-style:italic;line-height:1.85;white-space:pre-line;">${t.pistes.trim()}</p>
                             </div>` : ''}
                             ${interpretationsHtml}
                             ${t.synthese ? `
@@ -486,7 +669,7 @@
 
         // Téléchargement PDF élégant — Palier 3 #22 : design aligné sur le mail d'analyse,
         // ajout de la fenêtre d'observation et amélioration visuelle globale.
-        function downloadPDF(tirageIdx) {
+        async function downloadPDF(tirageIdx, btnEl) {
             // Réutilise les données déjà chargées (et sécurisées via RLS) au rendu de la liste —
             // évite un aller-retour réseau et reste cohérent avec ce qui est affiché à l'écran.
             const all = _tiragesCache.slice().reverse();
@@ -565,6 +748,13 @@
                         <p class="sl">Analyse de l'Oracle</p>
                         <p style="color:#6b6350;font-size:13.5px;line-height:1.8;font-style:italic;">Aucune analyse enregistrée pour ce tirage. Cela arrive quand le tirage a été effectué sans être connecté à ton espace membre, ou si l'analyse n'a pas été consultée jusqu'au bout au moment du tirage.</p>
                     </div>`;
+
+            const pistesSection = t.pistes ? `
+                <div class="hr"></div>
+                <div style="padding:18px 20px;background:#fffdf6;border:1px solid rgba(212,175,55,0.25);border-radius:12px;">
+                    <p class="sl">Pistes à explorer</p>
+                    <p style="color:#2d2a1e;font-size:14px;line-height:1.85;font-style:italic;white-space:pre-line;">${t.pistes.trim()}</p>
+                </div>` : '';
 
             const syntheseSection = t.synthese ? `
                 <div class="hr"></div>
@@ -685,6 +875,7 @@
       ${passerellesSection}
 
       ${analyseIaSection}
+      ${pistesSection}
       ${interpretationsSection}
       ${syntheseSection}
       ${observationSection}
@@ -705,12 +896,105 @@
 
   </div>
 </div>
-<script>window.onload = function(){ window.print(); }<\/script>
 </body></html>`;
 
-            const w = window.open('', '_blank', 'width=780,height=960');
-            w.document.write(html);
-            w.document.close();
+            // window.open('', '_blank') + document.write() (Chrome mobile) et
+            // window.print() sur une page blob: (Firefox mobile) se sont révélés
+            // tous les deux peu fiables sur mobile — onglet about:blank dans un
+            // cas, aperçu d'impression vide dans l'autre. On génère donc un
+            // vrai fichier PDF côté client (html2canvas + jsPDF, déjà utilisés
+            // dans le dashboard admin) et on déclenche un téléchargement direct,
+            // sans passer par la boîte de dialogue d'impression du navigateur.
+            if (!window.html2canvas || !window.jspdf?.jsPDF) {
+                alert("Le générateur de PDF n'a pas fini de charger, réessaie dans un instant.");
+                return;
+            }
+
+            const btnOrigHtml = btnEl ? btnEl.innerHTML : null;
+            if (btnEl) { btnEl.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Génération…'; btnEl.disabled = true; }
+
+            // Rendu hors-écran dans un iframe isolé (mêmes styles que le mail,
+            // sans risque de collision avec les classes de la page tirages.html).
+            const iframe = document.createElement('iframe');
+            iframe.style.cssText = 'position:fixed;left:-9999px;top:0;width:680px;height:1px;border:0;opacity:0;pointer-events:none;';
+            document.body.appendChild(iframe);
+
+            try {
+                iframe.srcdoc = html;
+                await new Promise((resolve, reject) => {
+                    iframe.onload = resolve;
+                    setTimeout(() => reject(new Error('Le rendu du PDF a pris trop de temps.')), 10000);
+                });
+                // Laisse le temps aux polices web de se charger avant la capture.
+                await new Promise(resolve => setTimeout(resolve, 400));
+
+                const target = iframe.contentDocument.querySelector('.page') || iframe.contentDocument.body;
+                const canvas = await html2canvas(target, { scale: 2, useCORS: true, backgroundColor: '#f4f0e8' });
+
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({ unit: 'mm', format: 'a4' });
+                const pageWidth = pdf.internal.pageSize.getWidth();
+                const pageHeight = pdf.internal.pageSize.getHeight();
+                const imgWidth = pageWidth;
+                const imgHeight = (canvas.height * imgWidth) / canvas.width;
+                const imgData = canvas.toDataURL('image/jpeg', 0.92);
+
+                let heightLeft = imgHeight;
+                let position = 0;
+                pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                heightLeft -= pageHeight;
+                while (heightLeft > 0) {
+                    position = heightLeft - imgHeight;
+                    pdf.addPage();
+                    pdf.addImage(imgData, 'JPEG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+                }
+
+                const dateSlug = t.date ? new Date(t.date).toISOString().slice(0, 10) : 'tirage';
+                const filename = `oradia-tirage-${dateSlug}.pdf`;
+                const pdfBlob = pdf.output('blob');
+
+                // Sur mobile, aucune des deux méthodes classiques n'est fiable partout :
+                // - une data URI (base64) est refusée par Firefox Android, qui ignore
+                //   volontairement l'attribut download sur les data: URLs (choix de
+                //   sécurité de Firefox) et se contente d'afficher une page vide ;
+                // - une URL blob: fonctionne sur Firefox mais certains Chrome/WebView
+                //   Android l'ouvrent parfois dans un nouvel onglet "about:blank" au
+                //   lieu de déclencher le téléchargement.
+                // Le partage natif (Web Share API, avec fichier) évite ces deux pièges :
+                // le système affiche sa propre feuille de partage/enregistrement, ce
+                // qu'Android honore de façon fiable, y compris sur Firefox. On y bascule
+                // en priorité sur mobile, avec le lien <a download> blob: en repli.
+                const pdfFile = new File([pdfBlob], filename, { type: 'application/pdf' });
+                let sharedNatively = false;
+                if (navigator.canShare && navigator.canShare({ files: [pdfFile] })) {
+                    try {
+                        await navigator.share({ files: [pdfFile], title: filename });
+                        sharedNatively = true;
+                    } catch (shareErr) {
+                        // Annulé par l'utilisateur ou API indisponible en pratique — on
+                        // retombe sur le téléchargement classique ci-dessous.
+                        sharedNatively = false;
+                    }
+                }
+                if (!sharedNatively) {
+                    const pdfUrl = URL.createObjectURL(pdfBlob);
+                    const dlLink = document.createElement('a');
+                    dlLink.href = pdfUrl;
+                    dlLink.download = filename;
+                    dlLink.rel = 'noopener';
+                    document.body.appendChild(dlLink);
+                    dlLink.click();
+                    document.body.removeChild(dlLink);
+                    setTimeout(() => URL.revokeObjectURL(pdfUrl), 60000);
+                }
+            } catch (e) {
+                console.error('Erreur génération PDF', e);
+                alert("Le PDF n'a pas pu être généré : " + (e && e.message ? e.message : 'erreur inconnue') + ". Réessaie dans un instant, et si ça persiste, signale ce message.");
+            } finally {
+                document.body.removeChild(iframe);
+                if (btnEl) { btnEl.innerHTML = btnOrigHtml; btnEl.disabled = false; }
+            }
         }
 
         // Déconnexion
@@ -723,6 +1007,226 @@
             localStorage.removeItem('rememberMe');
             window.location.href = '../index.html';
         });
+
+        // ============ Filtre ponctuel / programmé ============
+        function setSourceFilter(filter) {
+            document.querySelectorAll('#sourceFilters .filter-btn').forEach(b => {
+                b.classList.toggle('active', b.dataset.filter === filter);
+            });
+            document.querySelectorAll('#tiragesList .tirage-card').forEach(card => {
+                const show = filter === 'all' || card.dataset.source === filter;
+                card.style.display = show ? '' : 'none';
+            });
+        }
+
+        // Affiche les filtres Ponctuels/Programmés uniquement si au moins un tirage
+        // programmé existe dans l'historique (évite un contrôle inutile sinon).
+        (function revealSourceFiltersIfNeeded() {
+            const check = () => {
+                const hasProgramme = _tiragesCache.some(t => t.source === 'programme');
+                if (hasProgramme) document.getElementById('sourceFilters')?.classList.remove('hidden');
+            };
+            if (_tiragesCache.length) check();
+            else setTimeout(check, 600);
+        })();
+
+        // ============ Catégories : historique / tirage programmé ============
+        function setMesTiragesTab(tab) {
+            document.querySelectorAll('.tirages-tab-btn').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+            document.getElementById('tabHistorique').classList.toggle('hidden', tab !== 'historique');
+            document.getElementById('tabProgramme').classList.toggle('hidden', tab !== 'programme');
+            if (tab === 'programme' && !_scheduleTabInitialized) {
+                _scheduleTabInitialized = true;
+                initScheduleTab();
+            }
+        }
+
+        // ============ Tirage programmé (abonnés) ============
+        let _scheduleTabInitialized = false;
+        let _scheduleState = null;
+        let _scheduleFrequency = 'daily';
+        let _scheduleGender = null;
+
+        function getMemberEmail() {
+            try {
+                const sess = JSON.parse(sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY) || '{}');
+                return sess.email || localStorage.getItem('userEmail') || '';
+            } catch (e) { return localStorage.getItem('userEmail') || ''; }
+        }
+
+        function populateHourSelect() {
+            const sel = document.getElementById('scheduleHour');
+            if (!sel || sel.options.length) return;
+            for (let h = 0; h < 24; h++) {
+                const opt = document.createElement('option');
+                opt.value = h;
+                opt.textContent = `${String(h).padStart(2, '0')}h00`;
+                sel.appendChild(opt);
+            }
+        }
+
+        function populateDayOfMonthSelect() {
+            const sel = document.getElementById('scheduleDayOfMonth');
+            if (!sel || sel.options.length) return;
+            for (let d = 1; d <= 28; d++) {
+                const opt = document.createElement('option');
+                opt.value = d;
+                opt.textContent = d + (d === 1 ? 'er' : '');
+                sel.appendChild(opt);
+            }
+        }
+
+        function setScheduleFrequency(freq) {
+            _scheduleFrequency = freq;
+            document.querySelectorAll('.freq-btn').forEach(b => {
+                const active = b.dataset.freq === freq;
+                b.style.borderColor = active ? '#d4af37' : 'rgba(212,175,55,0.25)';
+                b.style.background = active ? 'rgba(212,175,55,0.14)' : 'transparent';
+                b.style.color = active ? '#f0c75e' : '';
+            });
+            document.getElementById('scheduleDayOfWeekWrap').classList.toggle('hidden', freq !== 'weekly');
+            document.getElementById('scheduleDayOfMonthWrap').classList.toggle('hidden', freq !== 'monthly');
+        }
+
+        function setScheduleGender(g) {
+            _scheduleGender = g;
+            document.querySelectorAll('.gender-btn').forEach(b => {
+                const active = b.dataset.gender === g;
+                b.style.borderColor = active ? '#d4af37' : 'rgba(212,175,55,0.25)';
+                b.style.background = active ? 'rgba(212,175,55,0.14)' : 'transparent';
+                b.style.color = active ? '#f0c75e' : '';
+            });
+        }
+
+        function fillScheduleIntention(btn) {
+            const input = document.getElementById('scheduleIntention');
+            if (input) input.value = (btn.textContent || '').replace(/ /g, ' ').trim();
+        }
+
+        function scheduleSummaryText(s) {
+            const hourText = `${String(s.hour).padStart(2, '0')}h00`;
+            if (s.frequency === 'daily') return `Actif — tous les jours à ${hourText}`;
+            if (s.frequency === 'weekly') {
+                const days = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+                return `Actif — chaque ${days[s.day_of_week]} à ${hourText}`;
+            }
+            if (s.frequency === 'monthly') return `Actif — le ${s.day_of_month} de chaque mois à ${hourText}`;
+            return 'Actif';
+        }
+
+        function renderStatusBanner() {
+            const banner = document.getElementById('statusBanner');
+            if (!banner) return;
+            if (_scheduleState && _scheduleState.active) {
+                banner.className = 'rounded-xl px-4 py-3 text-sm flex items-center gap-2 bg-green-900/20 text-green-300 border border-green-400/25';
+                banner.innerHTML = `<i class="fas fa-check-circle"></i>${scheduleSummaryText(_scheduleState)}`;
+            } else {
+                banner.className = 'rounded-xl px-4 py-3 text-sm flex items-center gap-2 bg-gold/5 text-light-gold/60 border border-gold/15';
+                banner.innerHTML = `<i class="fas fa-info-circle"></i>Aucun tirage automatique actif pour l'instant.`;
+            }
+            banner.classList.remove('hidden');
+        }
+
+        function fillFormFromState(s) {
+            setScheduleFrequency(s?.frequency || 'daily');
+            setScheduleGender(s?.gender || null);
+            document.getElementById('scheduleIntention').value = s?.intention || '';
+            document.getElementById('scheduleHour').value = s?.hour ?? 7;
+            document.getElementById('scheduleDayOfWeek').value = s?.day_of_week ?? 1;
+            document.getElementById('scheduleDayOfMonth').value = s?.day_of_month ?? 1;
+            document.getElementById('scheduleDeleteBtn')?.classList.toggle('hidden', !(s && s.active));
+            document.getElementById('scheduleSaveBtn').textContent = (s && s.active) ? 'Enregistrer les modifications' : 'Activer le tirage automatique';
+        }
+
+        async function saveSchedule() {
+            const errEl = document.getElementById('scheduleError');
+            errEl.classList.add('hidden');
+
+            const intention = document.getElementById('scheduleIntention').value.trim();
+            if (!intention) {
+                errEl.textContent = 'Merci de saisir une intention.';
+                errEl.classList.remove('hidden');
+                return;
+            }
+
+            const payload = {
+                frequency: _scheduleFrequency,
+                hour: parseInt(document.getElementById('scheduleHour').value, 10),
+                intention,
+                gender: _scheduleGender,
+                active: true
+            };
+            if (_scheduleFrequency === 'weekly') payload.dayOfWeek = parseInt(document.getElementById('scheduleDayOfWeek').value, 10);
+            if (_scheduleFrequency === 'monthly') payload.dayOfMonth = parseInt(document.getElementById('scheduleDayOfMonth').value, 10);
+
+            const btn = document.getElementById('scheduleSaveBtn');
+            btn.disabled = true;
+            btn.textContent = 'Enregistrement...';
+
+            const res = await window.OradiaTirageStorage.saveSchedule(payload);
+
+            btn.disabled = false;
+            if (res && res.success) {
+                _scheduleState = res.schedule;
+                renderStatusBanner();
+                fillFormFromState(_scheduleState);
+            } else {
+                errEl.textContent = (res && res.message) || 'Une erreur est survenue.';
+                errEl.classList.remove('hidden');
+                btn.textContent = 'Activer le tirage automatique';
+            }
+        }
+
+        async function deleteSchedule() {
+            const btn = document.getElementById('scheduleDeleteBtn');
+            btn.disabled = true;
+            btn.textContent = 'Désactivation...';
+            const res = await window.OradiaTirageStorage.deleteSchedule();
+            btn.disabled = false;
+            btn.textContent = 'Désactiver';
+            if (res && res.success) {
+                _scheduleState = null;
+                renderStatusBanner();
+                fillFormFromState(null);
+            }
+        }
+
+        async function initScheduleTab() {
+            const email = getMemberEmail();
+            populateHourSelect();
+            populateDayOfMonthSelect();
+
+            if (!email || !window.OradiaTirageStorage?.isAuthenticated?.()) {
+                document.getElementById('notSubscribedPanel').classList.remove('hidden');
+                return;
+            }
+
+            document.getElementById('loadingSchedulePanel').classList.remove('hidden');
+
+            try {
+                const r = await fetch('/api/auth/check-subscription?email=' + encodeURIComponent(email));
+                const d = await r.json();
+                if (!d.subscribed) {
+                    document.getElementById('loadingSchedulePanel').classList.add('hidden');
+                    document.getElementById('notSubscribedPanel').classList.remove('hidden');
+                    return;
+                }
+            } catch (e) {
+                document.getElementById('loadingSchedulePanel').classList.add('hidden');
+                document.getElementById('notSubscribedPanel').classList.remove('hidden');
+                return;
+            }
+
+            const res = await window.OradiaTirageStorage.getSchedule();
+            _scheduleState = (res && res.success) ? res.schedule : null;
+
+            document.getElementById('loadingSchedulePanel').classList.add('hidden');
+            document.getElementById('scheduleFormWrap').classList.remove('hidden');
+            renderStatusBanner();
+            fillFormFromState(_scheduleState);
+        }
+
+        setMesTiragesTab('historique');
     </script>
 <script src="../js/page-tracker.js" defer></script>
 </body>

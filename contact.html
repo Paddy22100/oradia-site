@@ -310,23 +310,25 @@
       
       // Récupérer les valeurs du formulaire
       const formData = {
+        type: 'support',
         name: document.getElementById('name').value,
         email: document.getElementById('email').value,
-        subject: document.getElementById('subject').value,
+        sujet: document.getElementById('subject').value,
         message: document.getElementById('message').value
       };
-      
+
       // État: Envoi en cours
       submitButton.disabled = true;
       buttonIcon.className = 'fas fa-spinner fa-spin mr-2';
       buttonText.textContent = 'Envoi en cours...';
-      
+
       // Masquer les anciens messages
       formMessage.classList.add('hidden');
-      
+
       try {
-        // Envoi vers l'API
-        const response = await fetch('/api/contact', {
+        // Envoi vers l'API (api/support.js — /api/contact n'a jamais existé, ce
+        // formulaire échouait donc systématiquement depuis sa création)
+        const response = await fetch('/api/support', {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'

@@ -9,6 +9,21 @@
 
 const { createClient } = require('@supabase/supabase-js');
 
+// Traite `items` par lots de `limit` en parallèle plutôt qu'un par un. Les crons
+// horaires (cron-checkin, cron-promo-tirage, run-scheduled-draws) traitaient leurs
+// lots (jusqu'à 50 entrées) strictement séquentiellement — chaque appel Brevo/QRNG/
+// Claude ajoutant son propre aller-retour réseau, le total pouvait facilement dépasser
+// les 30s de maxDuration (et le timeout du cron externe cron-job.org), faisant échouer
+// tout le lot alors qu'une poignée d'appels lents en étaient responsables.
+async function runWithConcurrency(items, limit, fn) {
+  const results = [];
+  for (let i = 0; i < items.length; i += limit) {
+    const batch = items.slice(i, i + limit);
+    results.push(...await Promise.all(batch.map(fn)));
+  }
+  return results;
+}
+
 // Consulte le registre de fonctionnalités (dashboard admin). Fail-open si la
 // table n'existe pas encore ou si le flag n'est pas défini, pour ne jamais
 // casser une fonctionnalité existante par défaut.
@@ -66,7 +81,7 @@ async function handleSaveTirage(req, res) {
   }
 
   const body = await parseJsonBody(req);
-  const { type, intention, cards, cartes, passerelles, synthesis, observationWindow, interpretations, analysis } = body;
+  const { type, intention, cards, cartes, passerelles, synthesis, observationWindow, interpretations, analysis, pistes } = body;
 
   // Accepte deux formats : cartes "brutes" (avec bridgeCard imbriqué, format tore.html)
   // ou déjà aplaties (cartes / passerelles, format historique pré-calculé)
@@ -92,7 +107,8 @@ async function handleSaveTirage(req, res) {
     interpretations: interpretations || [],
     synthese: synthesis || null,
     observation_window: observationWindow || null,
-    analyse_ia: analysis || null
+    analyse_ia: analysis || null,
+    pistes: pistes || null
   };
 
   const { data, error } = await supabase.from('tirages').insert(row).select().single();
@@ -119,7 +135,7 @@ async function handleUpdateTirage(req, res) {
   }
 
   const body = await parseJsonBody(req);
-  const { id, synthesis, observationWindow, interpretations, analysis } = body;
+  const { id, synthesis, observationWindow, interpretations, analysis, pistes } = body;
 
   if (!id) {
     return res.status(400).json({ success: false, message: 'Identifiant du tirage requis.' });
@@ -128,6 +144,7 @@ async function handleUpdateTirage(req, res) {
   const updates = {};
   if (synthesis !== undefined) updates.synthese = synthesis;
   if (analysis !== undefined) updates.analyse_ia = analysis;
+  if (pistes !== undefined) updates.pistes = pistes;
   if (interpretations !== undefined) updates.interpretations = interpretations;
   if (observationWindow !== undefined) updates.observation_window = observationWindow;
 
@@ -187,7 +204,9 @@ async function handleListTirages(req, res) {
     interpretations: t.interpretations || [],
     synthese: t.synthese,
     observationWindow: t.observation_window,
-    analyseIa: t.analyse_ia || null
+    analyseIa: t.analyse_ia || null,
+    pistes: t.pistes || null,
+    source: t.source || 'ponctuel'
   }));
 
   return res.status(200).json({ success: true, tirages });
@@ -200,7 +219,7 @@ async function handleSendEmail(req, res) {
   }
 
   try {
-    const { email, intention, cards, analysis, synthesis, subscribeNewsletter,
+    const { email, intention, cards, analysis, synthesis, pistes, subscribeNewsletter,
             observationWindow: obsWinRaw, observationDays, observationText, attentionPoints } = req.body;
 
     // Normaliser la fenêtre d'observation : accepte l'ancien format objet OU les champs séparés
@@ -434,6 +453,17 @@ async function handleSendEmail(req, res) {
           </td>
         </tr>` : ''}
 
+        <!-- PISTES À EXPLORER -->
+        ${pistes ? `
+        <tr>
+          <td class="pad-sm" style="padding:4px 32px 16px;" bgcolor="#050a19">
+            <p style="margin:0 0 16px;color:#8a6d20;font-size:9px;letter-spacing:4px;text-transform:uppercase;text-align:center;">&#10022; Pistes &#224; explorer &#10022;</p>
+            <table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="border-left:2px solid #8a6d20;">
+              <tr><td style="padding:4px 0 4px 20px;">${formatAnalysis(pistes)}</td></tr>
+            </table>
+          </td>
+        </tr>` : ''}
+
         <!-- SYNTHÈSE -->
         ${synthesis ? `
         <tr>
@@ -511,7 +541,7 @@ async function handleSendEmail(req, res) {
               <span style="display:inline-block; width:32px; height:1px; background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent); vertical-align:middle;"></span>
             </p>
             <p style="margin:0 0 14px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.png" alt="YouTube" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
             <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car tu as demandé à recevoir ton tirage.<br>Il ne constitue pas un abonnement à notre newsletter.</p>
           </td>
         </tr>
@@ -533,6 +563,7 @@ VOS CARTES:
 ${cards.map(c => `- ${c.name} (${c.family})`).join('\n')}
 
 ${analysis ? `\nMESSAGE DE L'ORACLE:\n${analysis}\n` : ''}
+${pistes ? `\nPISTES À EXPLORER:\n${pistes}\n` : ''}
 ${synthesis ? `\nSYNTHÈSE:\n${synthesis}\n` : ''}
 
 Faire un nouveau tirage : https://oradia.fr/tore.html
@@ -653,7 +684,7 @@ async function handleCollectEmail(req, res) {
     const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
     const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
     // Vérifier si email déjà connu pour ne pas renvoyer la promo
-    const { data: existing } = await supabase.from('tore_emails').select('email, promo_sent_at').eq('email', email).single();
+    const { data: existing } = await supabase.from('tore_emails').select('email, promo_sent_at').ilike('email', email).single();
     isNewEmail = !existing;
     const promoAlreadySent = existing?.promo_sent_at;
     await supabase.from('tore_emails').upsert({
@@ -755,7 +786,7 @@ function buildPromoTirageEmailHtml(isSubscribed = false, hidePreorder = false) {
       <span style="display:inline-block; width:32px; height:1px; background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent); vertical-align:middle;"></span>
     </p>
     <p style="margin:0 0 14px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.png" alt="YouTube" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
     <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car tu as fait un tirage du Tore sur oradia.fr.</p>
   </td></tr>
 </table>
@@ -823,7 +854,7 @@ function buildCheckinEmailHtml(isSubscribed = false, hidePreorder = false) {
     <p style="margin:0 0 4px; color:#d4af37; font-size:52px; font-family:'Dancing Script','Brush Script MT','Apple Chancery',cursive; font-weight:700; line-height:1.1; letter-spacing:0.01em;">Rudy</p>
     <p style="margin:0 0 16px; color:#c8c0a8; font-size:11px; letter-spacing:0.2em; text-transform:uppercase; opacity:0.55; font-family:Georgia,serif;">Fondateur d'Oradia</p>
     <p style="margin:0 0 14px;"><a href="https://oradia.fr" style="color:#d4af37; text-decoration:none; font-size:13px; letter-spacing:0.08em; font-family:Georgia,serif;">oradia.fr</a></p>
-    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
+    <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:0 auto 16px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.png" alt="YouTube" width="36" height="36" style="display:block;width:36px;height:36px;border:0;"></a></td></tr></table>
     <p style="margin:0; color:#c8c0a8; font-size:11px; opacity:0.4; font-family:Georgia,serif;">Tu reçois cet email car tu as fait un tirage du Tore sur oradia.fr.</p>
   </td></tr>
 </table>
@@ -854,7 +885,7 @@ async function sendCheckinEmail(email) {
     const err = await brevoRes.json().catch(() => ({}));
     throw new Error(`Brevo error: ${err.message || brevoRes.status}`);
   }
-  await supabase.from('tore_emails').update({ checkin_sent_at: new Date().toISOString() }).eq('email', email);
+  await supabase.from('tore_emails').update({ checkin_sent_at: new Date().toISOString() }).ilike('email', email);
   return { sent: true };
 }
 
@@ -888,18 +919,24 @@ async function handleCronCheckin(req, res) {
     return res.status(500).json({ error: error.message });
   }
 
-  let sent = 0, failed = 0;
-  for (const row of targets || []) {
-    try {
-      await sendCheckinEmail(row.email);
-      sent++;
-    } catch (e) {
-      console.error('[cron-checkin] Failed for', row.email, e.message);
-      failed++;
-    }
-  }
-  console.log(`[cron-checkin] sent=${sent} failed=${failed}`);
-  return res.status(200).json({ success: true, sent, failed });
+  // Répond tout de suite — cron-job.org (compte gratuit) coupe à 30s, non
+  // configurable — pendant que les envois Brevo continuent en arrière-plan via
+  // waitUntil, bornés par le maxDuration de la fonction plutôt que par ce timeout.
+  res.status(200).json({ success: true, queued: (targets || []).length });
+  const { waitUntil } = require('@vercel/functions');
+  waitUntil((async () => {
+    let sent = 0, failed = 0;
+    await runWithConcurrency(targets || [], 5, async (row) => {
+      try {
+        await sendCheckinEmail(row.email);
+        sent++;
+      } catch (e) {
+        console.error('[cron-checkin] Failed for', row.email, e.message);
+        failed++;
+      }
+    });
+    console.log(`[cron-checkin] sent=${sent} failed=${failed}`);
+  })());
 }
 
 async function sendPromoTirageEmail(email) {
@@ -910,7 +947,7 @@ async function sendPromoTirageEmail(email) {
   // Ne pas promouvoir l'abonnement à quelqu'un qui est déjà abonné au Tore.
   // On marque quand même promo_sent_at pour ne pas re-tenter à chaque cron.
   if (await hasActiveToreSubscription(supabase, email)) {
-    await supabase.from('tore_emails').update({ promo_sent_at: new Date().toISOString() }).eq('email', email);
+    await supabase.from('tore_emails').update({ promo_sent_at: new Date().toISOString() }).ilike('email', email);
     return { skipped: true, reason: 'abonne_tore_actif' };
   }
 
@@ -936,7 +973,7 @@ async function sendPromoTirageEmail(email) {
   // Marquer comme envoyé dans tore_emails
   await supabase.from('tore_emails')
     .update({ promo_sent_at: new Date().toISOString() })
-    .eq('email', email);
+    .ilike('email', email);
 
   return { sent: true };
 }
@@ -1045,7 +1082,7 @@ async function handleSendPromoManual(req, res) {
   const supabase = createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
   await supabase.from('tore_emails')
     .update({ promo_sent_at: new Date().toISOString(), promo_skipped: false })
-    .eq('email', email);
+    .ilike('email', email);
 
   return res.status(200).json({ success: true, sent_to: email });
 }
@@ -1149,7 +1186,7 @@ async function isBrevoSubscribed(email) {
 async function hasActiveToreSubscription(supabase, email) {
   try {
     const { data } = await supabase.from('tore_subscriptions')
-      .select('id').eq('email', email).eq('status', 'active').limit(1);
+      .select('id').ilike('email', email).eq('status', 'active').limit(1);
     return Array.isArray(data) && data.length > 0;
   } catch { return false; }
 }
@@ -1158,7 +1195,7 @@ async function hasActiveToreSubscription(supabase, email) {
 async function hasCompletedPreorder(supabase, email) {
   try {
     const { data } = await supabase.from('preorders')
-      .select('id').eq('email', email).in('paid_status', ['completed', 'paid']).limit(1);
+      .select('id').ilike('email', email).in('paid_status', ['completed', 'paid']).limit(1);
     return Array.isArray(data) && data.length > 0;
   } catch { return false; }
 }
@@ -1202,20 +1239,288 @@ async function handleCronPromoTirage(req, res) {
     return res.status(500).json({ error: error.message });
   }
 
-  let sent = 0, skipped = 0, failed = 0;
-  for (const row of targets || []) {
-    try {
-      const result = await sendPromoTirageEmail(row.email);
-      if (result.skipped) skipped++;
-      else sent++;
-    } catch (e) {
-      console.error('[cron-promo-tirage] Failed for', row.email, e.message);
-      failed++;
-    }
+  // Répond tout de suite — cron-job.org (compte gratuit) coupe à 30s, non
+  // configurable — pendant que les envois Brevo continuent en arrière-plan via
+  // waitUntil, bornés par le maxDuration de la fonction plutôt que par ce timeout.
+  res.status(200).json({ success: true, queued: (targets || []).length });
+  const { waitUntil } = require('@vercel/functions');
+  waitUntil((async () => {
+    let sent = 0, skipped = 0, failed = 0;
+    await runWithConcurrency(targets || [], 5, async (row) => {
+      try {
+        const result = await sendPromoTirageEmail(row.email);
+        if (result.skipped) skipped++;
+        else sent++;
+      } catch (e) {
+        console.error('[cron-promo-tirage] Failed for', row.email, e.message);
+        failed++;
+      }
+    });
+    console.log(`[cron-promo-tirage] sent=${sent} skipped=${skipped} failed=${failed}`);
+  })());
+}
+
+// ============ TIRAGES PROGRAMMÉS (réservés aux abonnés) ============
+// Configuration : GET/POST via session membre (Bearer token, comme handleUpdateTirage).
+// Exécution : GET/POST via cron externe (cron-job.org, toutes les heures), protégé par
+// CRON_SECRET — Vercel Hobby ne permet que des cron jobs quotidiens, insuffisant pour
+// une heure choisie par chaque abonné.
+
+async function handleGetSchedule(req, res) {
+  if (req.method !== 'GET') return res.status(405).json({ error: 'Method not allowed' });
+  const supabase = getUserSupabaseClient(req);
+  if (!supabase) return res.status(401).json({ success: false, message: 'Authentification requise.' });
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) return res.status(401).json({ success: false, message: 'Session invalide ou expirée.' });
+
+  const { data, error } = await supabase
+    .from('tore_scheduled_draws')
+    .select('*')
+    .eq('user_id', userData.user.id)
+    .maybeSingle();
+
+  if (error) return res.status(500).json({ success: false, message: 'Impossible de récupérer la planification.' });
+  return res.status(200).json({ success: true, schedule: data || null });
+}
+
+async function handleSaveSchedule(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const supabase = getUserSupabaseClient(req);
+  if (!supabase) return res.status(401).json({ success: false, message: 'Authentification requise.' });
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) return res.status(401).json({ success: false, message: 'Session invalide ou expirée.' });
+
+  const body = await parseJsonBody(req);
+  const { frequency, dayOfWeek, dayOfMonth, hour, intention, gender, active } = body;
+
+  if (!['daily', 'weekly', 'monthly'].includes(frequency)) {
+    return res.status(400).json({ success: false, message: 'Fréquence invalide.' });
+  }
+  if (frequency === 'weekly' && !(Number.isInteger(dayOfWeek) && dayOfWeek >= 0 && dayOfWeek <= 6)) {
+    return res.status(400).json({ success: false, message: 'Jour de la semaine invalide.' });
+  }
+  if (frequency === 'monthly' && !(Number.isInteger(dayOfMonth) && dayOfMonth >= 1 && dayOfMonth <= 28)) {
+    return res.status(400).json({ success: false, message: 'Jour du mois invalide (1 à 28).' });
+  }
+  if (!(Number.isInteger(hour) && hour >= 0 && hour <= 23)) {
+    return res.status(400).json({ success: false, message: 'Heure invalide.' });
+  }
+  const cleanIntention = String(intention || '').trim();
+  if (!cleanIntention || cleanIntention.length > 500) {
+    return res.status(400).json({ success: false, message: 'Intention requise (500 caractères maximum).' });
   }
 
-  console.log(`[cron-promo-tirage] sent=${sent} skipped=${skipped} failed=${failed}`);
-  return res.status(200).json({ success: true, sent, skipped, failed });
+  const email = (userData.user.email || '').toLowerCase().trim();
+
+  // Réservé aux abonnés Tore actifs — vérifié avec le service_role (la session membre
+  // n'a pas accès en lecture aux abonnements des autres, mais peut lire son propre statut
+  // via le service_role côté serveur, jamais exposé au client).
+  const svcSupabase = createClient(
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+  const { data: sub } = await svcSupabase
+    .from('tore_subscriptions')
+    .select('status, expires_at')
+    .ilike('email', email)
+    .maybeSingle();
+  const isActiveSubscriber = sub && sub.status === 'active' && new Date(sub.expires_at) > new Date();
+  if (!isActiveSubscriber) {
+    return res.status(403).json({ success: false, message: 'Fonctionnalité réservée aux abonnés Tore.' });
+  }
+
+  const row = {
+    user_id: userData.user.id,
+    email,
+    full_name: userData.user.user_metadata?.full_name || '',
+    frequency,
+    day_of_week: frequency === 'weekly' ? dayOfWeek : null,
+    day_of_month: frequency === 'monthly' ? dayOfMonth : null,
+    hour,
+    intention: cleanIntention,
+    gender: (gender === 'homme' || gender === 'femme') ? gender : null,
+    active: active !== false,
+    updated_at: new Date().toISOString()
+  };
+
+  const { data, error } = await svcSupabase
+    .from('tore_scheduled_draws')
+    .upsert(row, { onConflict: 'user_id' })
+    .select()
+    .single();
+
+  if (error) {
+    console.error('[save-schedule] error:', error.message);
+    return res.status(500).json({ success: false, message: 'Impossible d\'enregistrer la planification.' });
+  }
+  return res.status(200).json({ success: true, schedule: data });
+}
+
+async function handleDeleteSchedule(req, res) {
+  if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
+  const supabase = getUserSupabaseClient(req);
+  if (!supabase) return res.status(401).json({ success: false, message: 'Authentification requise.' });
+
+  const { data: userData, error: userError } = await supabase.auth.getUser();
+  if (userError || !userData?.user) return res.status(401).json({ success: false, message: 'Session invalide ou expirée.' });
+
+  const { error } = await supabase.from('tore_scheduled_draws').delete().eq('user_id', userData.user.id);
+  if (error) return res.status(500).json({ success: false, message: 'Impossible de supprimer la planification.' });
+  return res.status(200).json({ success: true });
+}
+
+// Composants horaires "Europe/Paris" — les crons Vercel/externes tournent en UTC.
+function getParisNow() {
+  const parts = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Paris', hour: 'numeric', hour12: false,
+    weekday: 'short', day: 'numeric', month: 'numeric', year: 'numeric'
+  }).formatToParts(new Date());
+  const map = {};
+  parts.forEach(p => { map[p.type] = p.value; });
+  const weekdayMap = { Sun: 0, Mon: 1, Tue: 2, Wed: 3, Thu: 4, Fri: 5, Sat: 6 };
+  return {
+    hour: parseInt(map.hour, 10) % 24,
+    weekday: weekdayMap[map.weekday],
+    dayOfMonth: parseInt(map.day, 10),
+    dateStr: `${map.year}-${String(map.month).padStart(2, '0')}-${String(map.day).padStart(2, '0')}`
+  };
+}
+
+// Partagé avec api/admin/index.js (action=cron-tirage-hebdo) — voir
+// lib/tore-analysis-prompt.js pour l'implémentation (modèle, retries, logging).
+const { generateAnalysisViaClaude: generateScheduledAnalysis } = require('../../lib/tore-analysis-prompt.js');
+
+async function handleRunScheduledDraws(req, res) {
+  const secret = req.query.cron_secret || '';
+  if (secret !== process.env.CRON_SECRET) return res.status(401).json({ error: 'Unauthorized' });
+
+  const supabase = createClient(
+    process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL,
+    process.env.SUPABASE_SERVICE_ROLE_KEY
+  );
+
+  const now = getParisNow();
+  const { data: due, error } = await supabase
+    .from('tore_scheduled_draws')
+    .select('*')
+    .eq('active', true)
+    .eq('hour', now.hour);
+
+  if (error) {
+    console.error('[run-scheduled-draws] fetch error:', error.message);
+    return res.status(500).json({ error: error.message });
+  }
+
+  // Répond tout de suite à cron-job.org — dont le compte gratuit impose un timeout
+  // de 30s, non configurable — pendant que le vrai travail (QRNG + Claude AI + email
+  // par entrée) continue en arrière-plan via waitUntil, borné par le maxDuration de
+  // la fonction (60s) plutôt que par la patience du client HTTP qui a déclenché
+  // l'appel. Sans ça, même optimisé, ce traitement reste trop lent pour un timeout
+  // de 30s dès qu'un tirage programmé tombe sur cette fenêtre horaire.
+  res.status(200).json({ success: true, queued: (due || []).length });
+  const { waitUntil } = require('@vercel/functions');
+  waitUntil(runScheduledDrawsBackground(supabase, due || [], now));
+}
+
+async function runScheduledDrawsBackground(supabase, due, now) {
+  const { drawSevenCards } = require('../../lib/tore-deck.js');
+  const { resolveCardImageUrl } = require('../../lib/tore-card-images.js');
+
+  let ran = 0, skipped = 0, failed = 0;
+
+  // Concurrence plus prudente qu'ailleurs (3 au lieu de 5) : chaque entrée fait un
+  // appel QRNG puis un appel Claude AI (generateScheduledAnalysis), plus coûteux et
+  // plus sensible aux limites de débit qu'un simple envoi Brevo.
+  await runWithConcurrency(due, 3, async (sched) => {
+    try {
+      // Anti-doublon (le cron externe peut tourner plusieurs fois dans la même heure)
+      if (sched.last_run_date === now.dateStr) { skipped++; return; }
+      // Correspondance fréquence / jour
+      if (sched.frequency === 'weekly' && sched.day_of_week !== now.weekday) { return; }
+      if (sched.frequency === 'monthly' && sched.day_of_month !== now.dayOfMonth) { return; }
+
+      // Toujours réservé aux abonnés actifs — un abonnement peut avoir expiré depuis la
+      // dernière modification de la planification.
+      const { data: sub } = await supabase
+        .from('tore_subscriptions')
+        .select('status, expires_at')
+        .ilike('email', sched.email)
+        .maybeSingle();
+      const isActiveSubscriber = sub && sub.status === 'active' && new Date(sub.expires_at) > new Date();
+      if (!isActiveSubscriber) { skipped++; return; }
+
+      const { cards: rawCards, qrngSource } = await drawSevenCards();
+      const cards = rawCards.map(c => {
+        const card = { ...c, imgSrc: resolveCardImageUrl(c.name) || '' };
+        if (card.bridgeCard) card.bridgeCard = { ...card.bridgeCard, imgSrc: resolveCardImageUrl(card.bridgeCard.name) || '' };
+        return card;
+      });
+
+      const analysis = await generateScheduledAnalysis({ intention: sched.intention, cards, gender: sched.gender, userEmail: sched.email });
+      if (!analysis) { failed++; return; }
+
+      const passerelles = cards.filter(c => c.bridgeCard).map(c => ({ carte: c.name, passerelle: c.bridgeCard.name }));
+
+      // Enregistrer dans l'historique (source = programme, rétention séparée des tirages ponctuels)
+      const { error: insErr } = await supabase.from('tirages').insert({
+        user_id: sched.user_id,
+        type: 'Tirage Tore (programmé)',
+        source: 'programme',
+        intention: sched.intention,
+        cartes: cards.map(c => c.name),
+        passerelles,
+        interpretations: [],
+        synthese: analysis.synthesis || null,
+        analyse_ia: analysis.cards || null,
+        pistes: analysis.explore || null
+      });
+      if (insErr) console.error('[run-scheduled-draws] insert tirage error:', insErr.message);
+
+      // Pas de fenêtre d'observation pour les tirages programmés, ni activée ni même
+      // proposée : contrairement au tirage manuel où l'utilisateur choisit explicitement
+      // de cliquer sur "Activer ma fenêtre d'observation", un tirage automatique reste un
+      // tirage privé — l'email ne mentionne donc pas cette section.
+
+      // Envoi de l'email — réutilise le template existant (handleSendEmail) via un req/res
+      // synthétique, comme handleCollectEmail le fait déjà pour l'email J0.
+      await new Promise((resolve) => {
+        const fakeReq = {
+          method: 'POST',
+          body: {
+            email: sched.email,
+            intention: sched.intention,
+            cards,
+            analysis: analysis.cards,
+            pistes: analysis.explore,
+            synthesis: analysis.synthesis,
+            observationDays: null,
+            observationText: '',
+            attentionPoints: []
+          }
+        };
+        const fakeRes = {
+          status() { return { json() { resolve(); } }; },
+          json() { resolve(); }
+        };
+        handleSendEmail(fakeReq, fakeRes).catch(() => resolve());
+      });
+
+      await supabase.from('tore_scheduled_draws')
+        .update({ last_run_at: new Date().toISOString(), last_run_date: now.dateStr })
+        .eq('id', sched.id);
+
+      ran++;
+    } catch (e) {
+      console.error('[run-scheduled-draws] Failed for', sched.email, e.message);
+      failed++;
+    }
+  });
+
+  // La réponse HTTP est déjà partie (voir handleRunScheduledDraws) — on ne fait
+  // plus que journaliser le résultat pour le suivi (logs Vercel).
+  console.log(`[run-scheduled-draws] ran=${ran} skipped=${skipped} failed=${failed}`);
 }
 
 // ============ DISPATCH PRINCIPAL ============
@@ -1235,6 +1540,10 @@ export default async function handler(req, res) {
     case 'import-tore-history': return handleImportToreHistory(req, res);
     case 'cron-promo-tirage':  return handleCronPromoTirage(req, res);
     case 'cron-checkin':       return handleCronCheckin(req, res);
+    case 'get-schedule':       return handleGetSchedule(req, res);
+    case 'save-schedule':      return handleSaveSchedule(req, res);
+    case 'delete-schedule':    return handleDeleteSchedule(req, res);
+    case 'run-scheduled-draws': return handleRunScheduledDraws(req, res);
     case 'send-email':
     default:                 return handleSendEmail(req, res);
   }

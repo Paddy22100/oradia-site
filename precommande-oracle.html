@@ -62,7 +62,7 @@
         "offerCount": "3",
         "url": "https://oradia.fr/precommande-oracle.html",
         "availability": "https://schema.org/PreOrder",
-        "priceValidUntil": "2026-09-30",
+        "priceValidUntil": "2026-12-31",
         "seller": {
           "@type": "Organization",
           "name": "Oradia",
@@ -233,38 +233,9 @@
                 
                 const data = await response.json();
                 
-                // Mettre à jour la barre de progression avec animation
-                const progressBar = document.getElementById('preorderProgressBar');
-                const soldCount = document.getElementById('preorderSoldCount');
-                const percent = document.getElementById('preorderPercent');
-                const remaining = document.getElementById('preorderRemaining');
                 const rarityText = document.getElementById('rarityText');
-                
-                // Mettre à jour le mini-bloc dans le hero
-                const heroProgress = document.getElementById('heroProgress');
-                const heroSoldCount = document.getElementById('heroSoldCount');
-                const heroPercent = document.getElementById('heroPercent');
-                const heroProgressBar = document.getElementById('heroProgressBar');
-                const heroSocialCount = document.getElementById('heroSocialCount');
-                
-                // Animation douce de la barre de progression
-                setTimeout(() => {
-                    if (progressBar) progressBar.style.width = data.percent + '%';
-                    if (heroProgressBar) heroProgressBar.style.width = data.percent + '%';
-                }, 100);
-                
-                // Animation des chiffres
-                if (soldCount) {
-                    animateValue(soldCount, 0, data.sold, 1000);
-                }
-                if (heroSoldCount) {
-                    animateValue(heroSoldCount, 0, data.sold, 1000);
-                }
-                if (heroSocialCount) {
-                    animateValue(heroSocialCount, 0, data.sold, 1000);
-                }
-                if (percent) percent.textContent = data.percent + '%';
-                if (heroPercent) heroPercent.textContent = data.percent + '%';
+                const paliersList = document.getElementById('paliersList');
+                const palierBanner = document.getElementById('palierBanner');
 
                 // Message de rareté dynamique — le chiffre exact n'apparaît
                 // qu'en fin d'édition, l'objectif total n'est jamais affiché
@@ -277,12 +248,38 @@
                         rarityText.textContent = `Édition limitée — premières séries en cours de réservation`;
                     }
                 }
-                
+
+                // Paliers de financement — entièrement pilotés par la réponse API,
+                // aucun seuil ni statut n'est recalculé ou deviné côté client.
+                if (paliersList && Array.isArray(data.paliers)) {
+                    paliersList.innerHTML = data.paliers.map(p => {
+                        const isAtteint = p.status === 'atteint';
+                        const isEnCours = p.status === 'en-cours';
+                        const barColor = isAtteint || isEnCours ? 'bg-gradient-to-r from-gold to-light-gold' : 'bg-gold/20';
+                        const icon = isAtteint
+                            ? '<i class="fas fa-check-circle text-gold"></i>'
+                            : (isEnCours ? '<i class="fas fa-hourglass-half text-gold/80"></i>' : '<i class="fas fa-lock text-light-gold/30"></i>');
+                        const textClass = isAtteint || isEnCours ? 'text-light-gold' : 'text-light-gold/40';
+                        return `
+                            <div class="text-left">
+                                <div class="mb-1">
+                                    <span class="${textClass} text-sm font-semibold flex items-center gap-2">${icon} ${p.titre}</span>
+                                </div>
+                                <div class="w-full bg-[rgba(212,175,55,0.1)] rounded-full h-2 overflow-hidden mb-1">
+                                    <div class="${barColor} h-full rounded-full transition-all duration-1000 ease-out" style="width: ${p.percent}%"></div>
+                                </div>
+                                <p class="${textClass} text-xs">${p.description}</p>
+                            </div>`;
+                    }).join('');
+                }
+                if (palierBanner) {
+                    palierBanner.classList.toggle('hidden', !data.allPaliersReached);
+                }
+
                 // Afficher le contenu
                 setTimeout(() => {
                     if (loadingEl) loadingEl.classList.add('hidden');
                     if (contentEl) contentEl.classList.remove('hidden');
-                    if (heroProgress) heroProgress.classList.remove('hidden');
                 }, 500);
                 
             } catch (error) {
@@ -544,38 +541,19 @@
                 <p class="text-lg sm:text-xl md:text-2xl text-light-gold mb-4 sm:mb-6 leading-relaxed max-w-3xl mx-auto">
                     Comprendre. Choisir. Avancer.
                 </p>
-                
-                <!-- Bloc urgence/rareté -->
-                <div class="bg-[rgba(212,175,55,0.08)] border border-gold/20 rounded-2xl p-3 sm:p-4 md:p-5 mb-4 sm:mb-6 text-center max-w-4xl mx-auto">
-                    <p class="text-base sm:text-lg md:text-xl text-light-gold font-medium mb-1 sm:mb-2">
-                        Première édition limitée
-                    </p>
-                    <p class="text-sm sm:text-base md:text-lg text-light-gold/80">
-                        En participant à la précommande, vous soutenez directement la naissance de cet oracle.
-                    </p>
-                </div>
-                
-                <!-- Mini-bloc progression -->
-                <div id="heroProgress" class="bg-[rgba(212,175,55,0.12)] backdrop-blur-sm rounded-2xl p-4 sm:p-6 border border-gold/40 mb-6 sm:mb-8 hidden">
-                    <div class="flex flex-col sm:flex-row items-center justify-between gap-3 sm:gap-4">
-                        <div class="text-center">
-                            <div class="text-2xl sm:text-3xl font-bold text-gold mb-1">
-                                <span id="heroSoldCount">0</span>
-                            </div>
-                            <p class="text-light-gold/70 text-xs sm:text-sm">précommandées</p>
-                        </div>
-                        <div class="text-center">
-                            <div class="text-2xl sm:text-3xl font-bold text-gold mb-1">
-                                <span id="heroPercent">—</span>
-                            </div>
-                            <p class="text-light-gold/70 text-xs sm:text-sm">confirmées</p>
-                        </div>
-                    </div>
-                    <div class="w-full bg-[rgba(212,175,55,0.25)] rounded-full h-2 overflow-hidden mt-3 sm:mt-4">
-                        <div id="heroProgressBar" class="bg-gradient-to-r from-gold to-light-gold h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                    </div>
-                </div>
-                
+
+                <!-- Bénéfice concret — ce que le client obtient, avant toute mécanique de campagne -->
+                <p class="text-xl sm:text-2xl md:text-3xl text-light-gold font-medium mb-4 sm:mb-6 leading-relaxed max-w-3xl mx-auto">
+                    64 cartes et un livret d'accompagnement pour retrouver de la clarté dans vos moments de doute.
+                </p>
+
+                <!-- Preuve d'activité (le produit existe déjà et est utilisé quotidiennement) —
+                juste après la promesse, avant l'appel à l'action, pour asseoir la crédibilité. -->
+                <p id="heroSocialProof" class="text-center text-light-gold/80 mb-6 max-w-2xl mx-auto">
+                    <i class="fas fa-circle text-gold text-xs mr-2 align-middle"></i>
+                    Plus de 200 tirages réalisés en ligne ces trois dernières semaines : l'oracle existe déjà et vit au quotidien.
+                </p>
+
                 <!-- BOUTON MOBILE VERS LES OFFRES -->
                 <div class="md:hidden mb-6">
                     <a href="#offres" class="inline-flex items-center justify-center gap-3 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full shadow-lg shadow-gold/40 border-2 border-gold/50 text-lg animate-pulse">
@@ -585,12 +563,7 @@
                     </a>
                     <p class="text-light-gold/70 text-sm mt-3">À partir de 38€ · Édition limitée</p>
                 </div>
-                
-                <!-- Preuve sociale -->
-                <p id="heroSocialProof" class="text-center text-light-gold/80 mb-6 max-w-2xl mx-auto">
-                    Déjà <span id="heroSocialCount" class="font-bold text-gold">0</span> personnes ont réservé leur exemplaire.
-                </p>
-                
+
                 <!-- CTA direct immédiat -->
                 <div class="text-center mb-8">
                     <a href="#offres" class="hidden md:inline-flex items-center gap-3 bg-gradient-to-r from-gold to-light-gold text-night-blue font-bold py-4 px-8 rounded-full hover:shadow-xl hover:shadow-gold/40 transition-all duration-300 text-lg min-h-[56px] relative overflow-hidden group">
@@ -598,6 +571,24 @@
                         <i class="fas fa-shopping-cart relative z-10"></i>
                         <span class="relative z-10">Je précommande maintenant</span>
                     </a>
+                </div>
+
+                <!-- Bloc urgence/rareté — en renfort après la promesse et l'appel à l'action,
+                pas avant : on donne d'abord envie, on justifie ensuite pourquoi agir maintenant. -->
+                <div class="bg-[rgba(212,175,55,0.08)] border border-gold/20 rounded-2xl p-3 sm:p-4 md:p-5 mb-4 sm:mb-6 text-center max-w-4xl mx-auto">
+                    <p class="text-base sm:text-lg md:text-xl text-light-gold font-medium mb-1 sm:mb-2">
+                        Première édition limitée
+                    </p>
+                    <p class="text-sm sm:text-base md:text-lg text-light-gold/80">
+                        En participant à la précommande, vous soutenez directement la naissance de cet oracle.
+                    </p>
+                </div>
+
+                <!-- Compte à rebours (dupliqué du calendrier, visible dès l'arrivée sur la page) -->
+                <div class="js-countdown-container bg-[rgba(212,175,55,0.15)] border border-gold/30 rounded-full px-4 sm:px-6 py-2 sm:py-3 mb-4 sm:mb-6 inline-block">
+                    <span class="text-gold font-bold cormorant text-base sm:text-lg">⏳ </span>
+                    <span class="js-days-left text-gold font-bold">--</span>
+                    <span class="text-light-gold/80 text-xs sm:text-sm"> jours pour précommander — clôture le 31 décembre 2026</span>
                 </div>
                 
                 <!-- Section Expérience Concrète -->
@@ -709,49 +700,40 @@
                 </section>
 
                 <!-- Section Crédibilité -->
-                <section class="py-16 md:py-24 bg-[rgba(5,20,40,0.58)] md:bg-[rgba(5,20,40,0.3)]">
-                    <div class="container mx-auto px-6">
-                        <div class="max-w-3xl mx-auto text-center">
+                <section class="py-16 md:py-20">
+                    <div class="w-full max-w-3xl mx-auto px-4 sm:px-6 text-center bg-[rgba(20,32,54,0.42)] sm:bg-[rgba(212,175,55,0.08)] border border-gold/25 sm:border-gold/30 rounded-3xl p-6 sm:p-10 md:p-12 box-border">
                             <h3 class="cormorant text-3xl md:text-4xl font-bold gold-gradient mb-8">
                                 Un outil construit sur l'expérience
                             </h3>
-                            
+
                             <div class="space-y-6 text-lg md:text-xl text-light-gold/85 leading-relaxed max-w-4xl mx-auto">
                                 <p>
                                     Créé à partir de plusieurs années d'accompagnement en transformation personnelle.
                                 </p>
-                                
+
                                 <p>
                                     Testé en conditions réelles, affiné au fil des usages.
                                 </p>
-                                
+
                                 <p>
                                     Pensé pour être simple à utiliser, tout en restant profondément pertinent.
                                 </p>
                             </div>
-                        </div>
                     </div>
                 </section>
 
                 <!-- Section Valeur / Prix -->
-                <section class="py-16 md:py-24 bg-[rgba(5,20,40,0.62)] md:bg-[rgba(26,54,93,0.4)] relative overflow-hidden">
-                    <!-- Pattern subtil -->
-                    <div class="hidden md:block absolute inset-0 opacity-5">
-                        <div class="absolute top-1/4 left-1/4 w-80 h-80 bg-gold rounded-full blur-3xl"></div>
-                        <div class="absolute bottom-1/4 right-1/4 w-64 h-64 bg-light-gold rounded-full blur-3xl"></div>
-                    </div>
-                    
-                    <div class="container mx-auto px-6 relative z-10">
-                        <div class="max-w-3xl mx-auto text-center">
+                <section class="py-16 md:py-20">
+                    <div class="w-full max-w-3xl mx-auto px-4 sm:px-6 text-center bg-[rgba(20,32,54,0.42)] sm:bg-[rgba(212,175,55,0.08)] border border-gold/25 sm:border-gold/30 rounded-3xl p-6 sm:p-10 md:p-12 box-border">
                             <h3 class="cormorant text-3xl md:text-4xl font-bold gold-gradient mb-8">
                                 Un outil que vous gardez toute votre vie
                             </h3>
-                            
+
                             <div class="space-y-6 text-lg md:text-xl text-light-gold/90 leading-relaxed max-w-4xl mx-auto">
                                 <p>
                                     Contrairement à un tirage ponctuel, cet oracle vous accompagne à chaque moment clé :
                                 </p>
-                                
+
                                 <div class="flex flex-col md:flex-row items-center justify-center gap-4 md:gap-6 my-8">
                                     <div class="flex items-center gap-3 p-3 rounded-lg bg-[rgba(212,175,55,0.1)] hover:bg-[rgba(212,175,55,0.2)] transition-colors duration-300">
                                         <i class="fas fa-crosshairs text-gold text-xl"></i>
@@ -766,18 +748,17 @@
                                         <span class="text-light-gold">besoin de clarté</span>
                                     </div>
                                 </div>
-                                
+
                                 <p class="text-xl font-medium text-gold/90">
                                     Vous pouvez l'utiliser encore et encore.
                                 </p>
-                                
+
                                 <div class="mt-12 pt-8 border-t border-gold/20">
                                     <p class="text-2xl md:text-3xl font-bold text-gold transform hover:scale-105 transition-transform duration-300">
                                         38€ pour un outil que vous pouvez utiliser toute votre vie.
                                     </p>
                                 </div>
                             </div>
-                        </div>
                     </div>
                 </section>
 
@@ -818,19 +799,21 @@
                 </section>
 
                 <!-- Description -->
-                <p class="text-2xl md:text-3xl text-light-gold mb-8 leading-relaxed max-w-3xl mx-auto">
-                    Un oracle de 64 cartes avec livret d'accompagnement et conte initiatique pour explorer les émotions, les besoins et les transformations intérieures.
-                </p>
+                <div class="w-full max-w-3xl mx-auto px-4 sm:px-6 text-center bg-[rgba(20,32,54,0.42)] sm:bg-[rgba(212,175,55,0.08)] border border-gold/25 sm:border-gold/30 rounded-3xl p-6 sm:p-10 md:p-12 box-border mb-12">
+                    <p class="text-2xl md:text-3xl text-light-gold mb-6 leading-relaxed">
+                        Un oracle de 64 cartes avec livret d'accompagnement et conte initiatique pour explorer les émotions, les besoins et les transformations intérieures.
+                    </p>
 
-                <p class="text-lg md:text-2xl text-light-gold/85 mb-8 leading-relaxed max-w-3xl mx-auto">
-                    Oradia prend vie en version physique grâce aux premières personnes qui le choisissent.
-                </p>
+                    <p class="text-lg md:text-2xl text-light-gold/85 leading-relaxed">
+                        Oradia prend vie en version physique grâce aux premières personnes qui le choisissent.
+                    </p>
+                </div>
 
                 <!-- Images du produit -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                   <div class="bg-[rgba(5,20,40,0.65)] rounded-2xl p-6 border border-gold/30 backdrop-blur-sm hover:border-gold/50 transition-all duration-300 hover:shadow-xl hover:shadow-gold/20 group">
                     <div class="aspect-square bg-gold/10 rounded-lg mb-4 flex items-center justify-center overflow-hidden group-hover:bg-gold/20 transition-colors duration-300">
-                      <img src="images/archetypes/le_sage.png" alt="Carte illustrée de l'oracle ORADIA" class="w-full h-full object-contain rounded-lg group-hover:scale-105 transition-transform duration-300">
+                      <img src="/images/archetypes/le_sage.webp" alt="Carte illustrée de l'oracle ORADIA" class="w-full h-full object-contain rounded-lg group-hover:scale-105 transition-transform duration-300">
                     </div>
                     <p class="text-gold font-semibold text-xl group-hover:text-light-gold transition-colors duration-300">Cartes oracle</p>
                     <p class="text-light-gold/80 text-base mt-2">Pour explorer vos ressenti, vos besoins et vos mouvements intérieurs.</p>
@@ -870,7 +853,7 @@
     <section id="contenu" class="py-20 bg-[rgba(5,20,40,0.6)]">
         <div class="container mx-auto px-6">
             <div class="max-w-6xl mx-auto">
-                <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient text-center mb-12">
+                <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold gold-gradient text-center mb-12">
                     Contenu du Coffret
                 </h2>
                 
@@ -918,7 +901,7 @@
                                     <div id="cartesCarousel" class="relative w-full h-full">
                                         <!-- Slide 1 - Carte Émotions -->
                                         <div class="carousel-slide absolute inset-0 flex flex-col items-center justify-center opacity-100 transition-opacity duration-500">
-                                            <img src="/images/emotions/joie.webp" alt="Carte Émotions — Joie" class="w-full h-full object-contain rounded-lg" onerror="this.src='/images/emotions/joie.png'">
+                                            <img src="/images/emotions/joie.webp" alt="Carte Émotions — Joie" class="w-full h-full object-contain rounded-lg">
                                             <span class="absolute bottom-2 left-0 right-0 text-center text-xs text-gold/70 bg-night-blue/60 py-1">Carte · Famille Émotions</span>
                                         </div>
                                         <!-- Slide 2 - Carte Mémoire Cosmos -->
@@ -966,15 +949,17 @@
     <section id="objectif" class="py-20 bg-[rgba(5,20,40,0.6)]">
         <div class="container mx-auto px-6">
             <div class="max-w-4xl mx-auto text-center">
-                <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient mb-8">
+                <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold gold-gradient text-center mb-12">
                     Objectif de Précommande
                 </h2>
                 
-                <p class="text-xl mb-8">
-                    Oradia n'existe pas encore en version physique.  
-                    En participant à la précommande, vous soutenez directement la naissance de cet oracle et permettez le lancement de la production.
+                <p class="text-xl mb-4">
+                    La version numérique d'Oradia est déjà utilisée quotidiennement — plus de 200 tirages réalisés ces trois dernières semaines. La précommande finance la fabrication de la version physique : 64 cartes imprimées, un livret et un coffret.
                 </p>
-                
+                <p class="text-lg text-light-gold/80 mb-8">
+                    En participant, vous ne pariez pas sur une idée sur papier — vous soutenez le passage au physique d'un outil qui existe déjà.
+                </p>
+
                 <!-- Barre de progression premium -->
                 <div class="bg-[rgba(5,20,40,0.8)] rounded-2xl p-6 border border-gold/30">
                     <!-- État chargement -->
@@ -987,24 +972,8 @@
                     
                     <!-- Contenu progression (caché au chargement) -->
                     <div id="progressContent" class="hidden">
-                        <!-- Progression principale -->
-                        <div class="mb-6">
-                            <div class="flex justify-between items-center mb-3">
-                                <span class="text-light-gold text-lg font-semibold">Progression</span>
-                                <span id="preorderPercent" class="text-gold text-lg font-bold">0%</span>
-                            </div>
-                            <div class="w-full bg-[rgba(212,175,55,0.2)] rounded-full h-4 overflow-hidden">
-                                <div id="preorderProgressBar" class="bg-gradient-to-r from-gold to-light-gold h-full rounded-full transition-all duration-1000 ease-out" style="width: 0%"></div>
-                            </div>
-                        </div>
-                        
-                        <!-- Statistiques premium -->
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 text-center mb-6 max-w-xl mx-auto">
-                            <div class="bg-[rgba(212,175,55,0.05)] rounded-lg p-4">
-                                <div id="preorderSoldCount" class="text-3xl font-bold text-gold mb-2 transition-all duration-500">0</div>
-                                <p class="text-light-gold text-base">exemplaires réservés</p>
-                            </div>
-                            <div class="bg-[rgba(212,175,55,0.05)] rounded-lg p-4">
+                        <div class="max-w-xs mx-auto mb-6">
+                            <div class="bg-[rgba(212,175,55,0.05)] rounded-lg p-4 text-center">
                                 <div class="text-3xl font-bold text-gold mb-2"><i class="fas fa-gem"></i></div>
                                 <p class="text-light-gold text-base">édition limitée</p>
                             </div>
@@ -1017,16 +986,27 @@
                                 <span id="rarityText">Édition limitée — places disponibles</span>
                             </p>
                         </div>
-                        
-                        <!-- Message important -->
+
+                        <!-- Paliers de financement (précommandes + dons + Kickstarter) —
+                        pas de montant affiché, seule la progression relative compte. -->
+                        <div class="mb-6">
+                            <div id="palierBanner" class="hidden mb-4 p-3 rounded-lg bg-[rgba(212,175,55,0.15)] border border-gold/40 text-center text-gold font-semibold">
+                                🎉 Objectif atteint ! La fabrication est officiellement lancée.
+                            </div>
+
+                            <div id="paliersList" class="space-y-4 max-w-xl mx-auto"></div>
+                        </div>
+
+                        <!-- Message important : garantie zéro-risque -->
                         <div class="p-4 bg-[rgba(212,175,55,0.1)] rounded-lg border border-gold/30">
-                            <p class="text-light-gold text-base text-center">
+                            <p class="text-light-gold text-base text-center font-semibold mb-1">
                                 <i class="fas fa-shield-alt mr-2"></i>
-                                Si l'objectif n'est pas atteint, votre commande sera intégralement remboursée.
+                                Garantie zéro-risque
+                            </p>
+                            <p class="text-light-gold/80 text-sm text-center">
+                                Le 31 décembre, deux issues possibles : l'objectif est atteint et la fabrication démarre aussitôt, ou il ne l'est pas et vous êtes intégralement remboursé, sans que vous ayez à en faire la demande.
                             </p>
                         </div>
-                        
-                        <!-- Seuil explicatif -->
                     </div>
                     
                     <!-- Erreur (caché par défaut) -->
@@ -1041,11 +1021,32 @@
         </div>
     </section>
 
+    <!-- Section Témoignages (mêmes témoignages modérés que oracle.html — cachée si aucun) -->
+    <section id="temoignages-precommande" class="py-16 hidden">
+        <div class="container mx-auto px-6">
+            <div class="max-w-5xl mx-auto">
+                <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold gold-gradient text-center mb-12">
+                    Ce que disent celles et ceux qui ont testé Oradia
+                </h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6" id="precommande-testimonials-grid"></div>
+            </div>
+        </div>
+    </section>
+    <script src="components/testimonials-widget.js"></script>
+    <script>
+        OradiaTestimonials.render('precommande-testimonials-grid', {
+            onRendered: function () {
+                const s = document.getElementById('temoignages-precommande');
+                if (s) s.classList.remove('hidden');
+            }
+        });
+    </script>
+
     <!-- Section Offres de Précommande -->
     <section id="offres" class="py-20 bg-gradient-to-b from-[rgba(5,20,40,0.6)] to-[rgba(26,54,93,0.6)]">
         <div class="container mx-auto px-6">
             <div class="max-w-6xl mx-auto">
-                <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient text-center mb-16">
+                <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold gold-gradient text-center mb-12">
                     Choisissez votre manière d'entrer dans l'univers Oradia
                 </h2>
                 
@@ -1379,7 +1380,7 @@
     <section id="calendrier" class="py-20 bg-[rgba(5,20,40,0.6)]">
         <div class="container mx-auto px-6">
             <div class="max-w-4xl mx-auto">
-                <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient text-center mb-12">
+                <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold gold-gradient text-center mb-12">
                     Calendrier de Production
                 </h2>
                 
@@ -1392,25 +1393,25 @@
                             </div>
                             <div class="flex-1">
                                 <h3 class="cormorant text-xl font-bold text-gold mb-2">Précommandes ouvertes</h3>
-                                <p class="text-light-gold mb-2">Jusqu'au 30 septembre 2026</p>
+                                <p class="text-light-gold mb-2">Jusqu'au 31 décembre 2026</p>
                                 <!-- Compteur temps restant -->
-                                <div id="countdown-timer" class="bg-[rgba(212,175,55,0.15)] border border-gold/30 rounded-lg px-4 py-2 inline-block">
+                                <div class="js-countdown-container bg-[rgba(212,175,55,0.15)] border border-gold/30 rounded-lg px-4 py-2 inline-block">
                                     <span class="text-gold font-bold cormorant text-lg">⏳ </span>
-                                    <span id="days-left" class="text-gold font-bold">--</span>
+                                    <span class="js-days-left text-gold font-bold">--</span>
                                     <span class="text-light-gold/80 text-sm"> jours restants</span>
                                 </div>
                                 <p class="text-light-gold/70 text-sm mt-2">Réservez votre exemplaire</p>
                             </div>
                         </div>
-                        
+
                         <div class="flex items-center space-x-4">
                             <div class="flex-shrink-0 w-12 h-12 bg-gold/50 rounded-full flex items-center justify-center">
                                 <i class="fas fa-cogs text-gold"></i>
                             </div>
                             <div class="flex-1">
                                 <h3 class="cormorant text-xl font-bold text-gold mb-2">Production</h3>
-                                <p class="text-light-gold mb-1">courant octobre 2026</p>
-                                <p class="text-light-gold/70 text-sm">Fabrication des cartes et des coffrets</p>
+                                <p class="text-light-gold mb-1">courant janvier 2027</p>
+                                <p class="text-light-gold/70 text-sm">Fabrication des cartes et des coffrets — démarre si l'objectif de précommandes est atteint (sinon remboursement intégral, voir ci-dessus)</p>
                             </div>
                         </div>
                         
@@ -1420,7 +1421,7 @@
                             </div>
                             <div class="flex-1">
                                 <h3 class="cormorant text-xl font-bold text-gold mb-2">Livraison estimée</h3>
-                                <p class="text-light-gold mb-1">mi-novembre 2026</p>
+                                <p class="text-light-gold mb-1">mi-février 2027</p>
                             </div>
                         </div>
                     </div>
@@ -1510,7 +1511,7 @@
     <!-- Section SEO Texte -->
     <section id="oracle-oradia-precommande" class="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-[rgba(5,20,40,0.6)] to-[rgba(26,54,93,0.6)] relative">
         <div class="container mx-auto max-w-4xl relative z-10">
-            <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold mb-8 gold-gradient text-center">
+            <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold gold-gradient text-center mb-12">
                 L'Oracle Oradia : précommandez votre boussole intérieure
             </h2>
 
@@ -1540,7 +1541,7 @@
     <section id="faq" class="py-20">
         <div class="container mx-auto px-6">
             <div class="max-w-4xl mx-auto">
-                <h2 class="cormorant text-4xl md:text-5xl font-bold gold-gradient text-center mb-16">
+                <h2 class="cormorant text-3xl sm:text-4xl md:text-5xl font-bold gold-gradient text-center mb-12">
                     Questions Fréquentes
                 </h2>
                 
@@ -1551,7 +1552,7 @@
                             <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
                         </button>
                         <div class="faq-answer hidden mt-4 text-light-gold">
-                            <p>Les précommandes ferment le 30 septembre 2026. La production a lieu courant octobre — la livraison est estimée à partir de mi-novembre 2026. Les commandes seront expédiées dans l'ordre de réception.</p>
+                            <p>Les précommandes ferment le 31 décembre 2026. La production a lieu courant octobre — la livraison est estimée à partir de mi-février 2027. Les commandes seront expédiées dans l'ordre de réception.</p>
                         </div>
                     </div>
                     
@@ -1566,6 +1567,16 @@ La production est lancée grâce aux premières commandes.</p>
                         </div>
                     </div>
                     
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
+                        <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
+                            <span class="flex-1 pr-3">Et si l'objectif de précommandes n'est pas atteint ?</span>
+                            <i class="fas fa-chevron-down transition-transform flex-shrink-0"></i>
+                        </button>
+                        <div class="faq-answer hidden mt-4 text-light-gold">
+                            <p>Vous êtes intégralement remboursé, sans avoir à en faire la demande. Aucun risque à précommander maintenant : soit l'oracle physique est fabriqué, soit vous récupérez votre argent. L'oracle existe déjà en version numérique et est utilisé chaque jour — la précommande ne finance pas une idée de départ, mais le passage au physique d'un projet déjà actif.</p>
+                        </div>
+                    </div>
+
                     <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl p-6 border border-gold/30">
                         <button class="faq-question w-full text-left flex items-center justify-between text-gold font-semibold text-lg">
                             <span class="flex-1 pr-3">Que se passe-t-il si la production est retardée ?</span>
@@ -1688,6 +1699,7 @@ La production est lancée grâce aux premières commandes.</p>
                         <li class="flex items-start"><i class="fas fa-envelope text-gold mt-1 mr-3"></i><a id="pc-contact-link" class="text-light-gold hover:text-gold transition" href="contact.html">Contact</a></li>
                         <script>(function(){var u='contact',d='oradia.fr';var el=document.getElementById('pc-contact-link');if(el){el.href='mailto:'+u+'@'+d;el.textContent=u+'@'+d;}})();</script>
                         <li class="flex items-start"><i class="fab fa-instagram text-gold mt-1 mr-3"></i><a href="https://instagram.com/oradia_oracle_officiel" target="_blank" rel="noopener" class="text-light-gold hover:text-gold transition">@oradia_oracle_officiel</a></li>
+            <li class="flex items-start"><i class="fab fa-youtube text-gold mt-1 mr-3"></i><a href="https://www.youtube.com/@oradiafr" target="_blank" rel="noopener" class="text-light-gold hover:text-gold transition">@oradiafr</a></li>
                     </ul>
                 </div>
             </div>
@@ -2572,21 +2584,17 @@ La production est lancée grâce aux premières commandes.</p>
     <!-- Compteur temps restant précommande -->
     <script>
         function updateCountdown() {
-            const endDate = new Date('2026-09-30T23:59:59');
+            const endDate = new Date('2026-12-31T23:59:59');
             const now = new Date();
             const diff = endDate - now;
-            
+
             if (diff > 0) {
                 const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-                const daysElement = document.getElementById('days-left');
-                if (daysElement) {
-                    daysElement.textContent = days;
-                }
+                document.querySelectorAll('.js-days-left').forEach(el => { el.textContent = days; });
             } else {
-                const timerElement = document.getElementById('countdown-timer');
-                if (timerElement) {
-                    timerElement.innerHTML = '<span class="text-red-400 font-bold">Précommandes fermées</span>';
-                }
+                document.querySelectorAll('.js-countdown-container').forEach(el => {
+                    el.innerHTML = '<span class="text-red-400 font-bold">Précommandes fermées</span>';
+                });
             }
         }
         

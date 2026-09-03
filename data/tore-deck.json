@@ -1,0 +1,606 @@
+{
+  "emotions": [
+    {
+      "name": "JOIE",
+      "quote": "L’onde éclate, la lumière danse dans ton cœur.",
+      "polarity": "yang"
+    },
+    {
+      "name": "TRISTESSE",
+      "quote": "La pluie descend, lavant la mémoire des pierres.",
+      "polarity": "yin"
+    },
+    {
+      "name": "AMOUR",
+      "quote": "Le souffle relie, un fil invisible circule.",
+      "polarity": "yang"
+    },
+    {
+      "name": "SOLITUDE",
+      "quote": "Le silence s’installe comme une montagne.",
+      "polarity": "yin"
+    },
+    {
+      "name": "ÉMERVEILLEMENT",
+      "quote": "L’enfant intérieur ouvre grand ses yeux.",
+      "polarity": "yang"
+    },
+    {
+      "name": "DÉGOÛT",
+      "quote": "Le corps rejette ce qui empoisonne.",
+      "polarity": "yin"
+    },
+    {
+      "name": "SÉRÉNITÉ",
+      "quote": "L'eau se pose, le monde se reflète sans bruit.",
+      "polarity": "yang"
+    },
+    {
+      "name": "CONFUSION",
+      "quote": "La brume monte, les repères se perdent.",
+      "polarity": "yin"
+    },
+    {
+      "name": "COLÈRE",
+      "quote": "Le feu jaillit, brisant les chaînes.",
+      "polarity": "yang"
+    },
+    {
+      "name": "IMPUISSANCE",
+      "quote": "Le geste se suspend, la force ne trouve plus son passage.",
+      "polarity": "yin"
+    },
+    {
+      "name": "COURAGE",
+      "quote": "Le pas tremblant franchit la ligne.",
+      "polarity": "yang"
+    },
+    {
+      "name": "PEUR",
+      "quote": "Le mouvement se fige à l’approche de l’inconnu.",
+      "polarity": "yin"
+    },
+    {
+      "name": "CONFIANCE",
+      "quote": "L’arbre se dresse, enraciné vers la lumière.",
+      "polarity": "yang"
+    },
+    {
+      "name": "HONTE",
+      "quote": "Le visage se cache sous le voile.",
+      "polarity": "yin"
+    },
+    {
+      "name": "FIERTÉ",
+      "quote": "Ce que vous avez traversé vous rend stable, solide et vrai.",
+      "polarity": "yang"
+    },
+    {
+      "name": "CULPABILITÉ",
+      "quote": "Une lourdeur s'installe, née d'un pas mal posé.",
+      "polarity": "yin"
+    },
+    {
+      "name": "IMPATIENCE",
+      "quote": "Le cheval piaffe avant l’aube.",
+      "polarity": "yang"
+    },
+    {
+      "name": "PATIENCE",
+      "quote": "Le fruit mûrit dans l’ombre.",
+      "polarity": "yin"
+    }
+  ],
+  "besoins": [
+    {
+      "name": "RECONNAISSANCE",
+      "quote": "Le bourgeon éclot quand il est vu.",
+      "polarity": "yang"
+    },
+    {
+      "name": "SÉCURITÉ",
+      "quote": "Le foyer veille, ton être appaisé se repose.",
+      "polarity": "yin"
+    },
+    {
+      "name": "LIBERTÉ",
+      "quote": "Le vent brise les clôtures invisibles.",
+      "polarity": "yang"
+    },
+    {
+      "name": "SOUTIEN",
+      "quote": "Deux troncs s’appuient et forment un arc.",
+      "polarity": "yin"
+    },
+    {
+      "name": "REPOS",
+      "quote": "Le corps se dépose, la rivière s’apaise.",
+      "polarity": "yin"
+    },
+    {
+      "name": "CLARTÉ",
+      "quote": "Le soleil perce la brume.",
+      "polarity": "yang"
+    },
+    {
+      "name": "APPARTENANCE",
+      "quote": "Le cercle s’ouvre pour accueillir.",
+      "polarity": "yin"
+    },
+    {
+      "name": "AUTONOMIE",
+      "quote": "Le pas n'attend plus d'autorisation pour avancer.",
+      "polarity": "yang"
+    },
+    {
+      "name": "STIMULATION",
+      "quote": "L’étincelle jaillit et anime la marche.",
+      "polarity": "yang"
+    },
+    {
+      "name": "HARMONIE",
+      "quote": "La lyre vibre cordes accordées.",
+      "polarity": "yin"
+    },
+    {
+      "name": "AMOUR REÇU",
+      "quote": "Lorsque la douceur entre, le monde s’apaise.",
+      "polarity": "yang"
+    },
+    {
+      "name": "LE SENS",
+      "quote": "La lanterne éclaire le chemin.",
+      "polarity": "yin"
+    },
+    {
+      "name": "PROTECTION",
+      "quote": "Le manteau couvre de chaleur.",
+      "polarity": "yin"
+    },
+    {
+      "name": "EXPANSION",
+      "quote": "L’horizon s’élargit et appelle.",
+      "polarity": "yang"
+    },
+    {
+      "name": "INTIMITÉ",
+      "quote": "L’alcôve garde le secret des âmes.",
+      "polarity": "yin"
+    },
+    {
+      "name": "CRÉATIVITÉ",
+      "quote": "L'étincelle façonne une forme neuve.",
+      "polarity": "yang"
+    },
+    {
+      "name": "AUTHENTICITÉ",
+      "quote": "Le masque tombe, le visage demeure.",
+      "polarity": "yin"
+    },
+    {
+      "name": "GUIDANCE",
+      "quote": "L'étoile brille au-dessus du chemin.",
+      "polarity": "yang"
+    }
+  ],
+  "transmutation": [
+    {
+      "name": "ACCEPTATION",
+      "quote": "La pierre immobile se laisse sculpter par la rivière.",
+      "polarity": "yin"
+    },
+    {
+      "name": "TRANSFORMATION",
+      "quote": "Le bois brûle et devient flamme.",
+      "polarity": "yang"
+    },
+    {
+      "name": "LÂCHER-PRISE",
+      "quote": "La feuille tombe et nourrit la terre.",
+      "polarity": "yin"
+    },
+    {
+      "name": "LIBÉRATION",
+      "quote": "La digue cède, la vie circule à nouveau.",
+      "polarity": "yang"
+    },
+    {
+      "name": "PARDON",
+      "quote": "Les chaînes brisées rouillent au sol.",
+      "polarity": "yin"
+    },
+    {
+      "name": "ALIGNEMENT",
+      "quote": "Les astres s’alignent sur un axe commun.",
+      "polarity": "yang"
+    },
+    {
+      "name": "DÉTACHEMENT",
+      "quote": "L’oiseau s’élève sans s’accrocher aux branches.",
+      "polarity": "yin"
+    },
+    {
+      "name": "PURIFICATION",
+      "quote": "L’eau claire traverse la roche.",
+      "polarity": "yang"
+    },
+    {
+      "name": "ANCRAGE",
+      "quote": "Les racines plongent dans le sol fertile.",
+      "polarity": "yin"
+    },
+    {
+      "name": "OUVERTURE",
+      "quote": "La porte s’entrouvre, la lumière jaillit.",
+      "polarity": "yang"
+    },
+    {
+      "name": "FLUIDITÉ",
+      "quote": "La rivière contourne l’obstacle sans effort.",
+      "polarity": "yin"
+    },
+    {
+      "name": "CLARIFICATION",
+      "quote": "L'essentiel apparait dans la lumière retrouvée.",
+      "polarity": "yang"
+    },
+    {
+      "name": "PRISON MENTALE",
+      "quote": "La pensée tourne et referme l'horizon.",
+      "polarity": "yin"
+    },
+    {
+      "name": "ESPRIT LIBRE",
+      "quote": "Le passage s'ouvre, la lumière intérieure circule librement.",
+      "polarity": "yang"
+    },
+    {
+      "name": "VIDE",
+      "quote": "La coupe vide attend d'être remplie.",
+      "polarity": "yin"
+    },
+    {
+      "name": "PLÉNITUDE",
+      "quote": "Le vase déborde de miel et d'offrandes.",
+      "polarity": "yang"
+    },
+    {
+      "name": "INCARNATION",
+      "quote": "Le pas touche la terre lourde.",
+      "polarity": "yin"
+    },
+    {
+      "name": "TRANSCENDANCE",
+      "quote": "En prenant de la hauteur, la route s’éclaire autrement.",
+      "polarity": "yang"
+    }
+  ],
+  "archetypes": [
+    {
+      "name": "L'ALCHIMISTE",
+      "quote": "Le plomb rêve de devenir or.",
+      "polarity": "yin"
+    },
+    {
+      "name": "LE BÂTISSEUR",
+      "quote": "La structure s'élève quand le geste est clair.",
+      "polarity": "yang"
+    },
+    {
+      "name": "LA PRÊTRESSE",
+      "quote": "Le voile se soulève dans l'espace intérieur.",
+      "polarity": "yin"
+    },
+    {
+      "name": "LE VOYAGEUR",
+      "quote": "Chaque pas transforme celui qui marche.",
+      "polarity": "yang"
+    },
+    {
+      "name": "LE NOMADE",
+      "quote": "Le pas demeure, même quand l'horizon recule.",
+      "polarity": "yang"
+    },
+    {
+      "name": "LE RÊVEUR",
+      "quote": "L'œil fermé voit ce que le monde tait.",
+      "polarity": "yin"
+    },
+    {
+      "name": "LE VISIONNAIRE",
+      "quote": "Le regard perce les âges à venir.",
+      "polarity": "yang"
+    },
+    {
+      "name": "LA TISSEUSE",
+      "quote": "Le fil relie ce que la vie a séparé.",
+      "polarity": "yin"
+    },
+    {
+      "name": "LE GUERRIER",
+      "quote": "Le cœur frappe avec droiture.",
+      "polarity": "yang"
+    },
+    {
+      "name": "LE SAGE",
+      "quote": "Le silence enseigne plus que mille mots.",
+      "polarity": "yin"
+    },
+    {
+      "name": "LE MAGE",
+      "quote": "L'invisible répond à celui qui sait écouter.",
+      "polarity": "yang"
+    },
+    {
+      "name": "L'ENFANT",
+      "quote": "Le premier pas s'avance sans mémoire du chemin.",
+      "polarity": "yin"
+    },
+    {
+      "name": "LE JUSTE",
+      "quote": "Il tranche en paix et rétablit l'équilibre.",
+      "polarity": "yang"
+    },
+    {
+      "name": "LE VEILLEUR",
+      "quote": "La conscience ne fuit pas ce qui dérange.",
+      "polarity": "yin"
+    },
+    {
+      "name": "LE PASSEUR",
+      "quote": "Il traverse et relie sans s'attarder.",
+      "polarity": "yang"
+    },
+    {
+      "name": "LE PORTEUR",
+      "quote": "Il soutient ce qui doit grandir et lui offre un appui solide.",
+      "polarity": "yin"
+    },
+    {
+      "name": "L'INITIATEUR",
+      "quote": "Le geste ouvre un seuil irréversible.",
+      "polarity": "yang"
+    },
+    {
+      "name": "L'OBSERVATEUR",
+      "quote": "Le retrait éclaire ce que l'agitation masque.",
+      "polarity": "yin"
+    }
+  ],
+  "revelations": [
+    {
+      "name": "CLÉ",
+      "quote": "L’objet caché ouvre la chambre secrète.",
+      "polarity": "yang"
+    },
+    {
+      "name": "PORTE",
+      "quote": "L’ouverture se dessine dans le mur.",
+      "polarity": "yin"
+    },
+    {
+      "name": "MESSAGE",
+      "quote": "Un murmure s'élève, porteur d'un sens à écouter.",
+      "polarity": "yang"
+    },
+    {
+      "name": "SYNCHRONICITÉ",
+      "quote": "Quand deux instants se touchent, le sens apparaît.",
+      "polarity": "yin"
+    },
+    {
+      "name": "SIGNE",
+      "quote": "Un indice modeste attire l'œil attentif.",
+      "polarity": "yin"
+    },
+    {
+      "name": "VISION",
+      "quote": "L’œil perce au-delà des voiles.",
+      "polarity": "yang"
+    },
+    {
+      "name": "PRÉSAGE",
+      "quote": "Un souffle d’avenir traverse le présent.",
+      "polarity": "yin"
+    },
+    {
+      "name": "ÉVEIL",
+      "quote": "La conscience s’ouvre et tout s’éclaire autrement.",
+      "polarity": "yang"
+    },
+    {
+      "name": "LUMIÈRE",
+      "quote": "Un rayon fend l’ombre.",
+      "polarity": "yang"
+    },
+    {
+      "name": "DÉVOILEMENT",
+      "quote": "Le rideau s’écarte, la scène surgit.",
+      "polarity": "yin"
+    },
+    {
+      "name": "VÉRITÉ",
+      "quote": "Le voile tombe, l’essence apparaît.",
+      "polarity": "yang"
+    },
+    {
+      "name": "ILLUSION",
+      "quote": "L’image trompe et captive.",
+      "polarity": "yin"
+    },
+    {
+      "name": "ÉTINCELLE",
+      "quote": "Le feu naît d’une poussière de pierre.",
+      "polarity": "yang"
+    },
+    {
+      "name": "SILENCE",
+      "quote": "L’absence de bruit révèle l’essentiel.",
+      "polarity": "yin"
+    },
+    {
+      "name": "CHIFFRE",
+      "quote": "Le nombre ordonne l’univers caché.",
+      "polarity": "yang"
+    },
+    {
+      "name": "SYMBOLE",
+      "quote": "L’image muette parle au cœur.",
+      "polarity": "yin"
+    },
+    {
+      "name": "ORIGINE",
+      "quote": "La source coule en amont de tout.",
+      "polarity": "yin"
+    },
+    {
+      "name": "DESTIN",
+      "quote": "La flèche vole vers son but.",
+      "polarity": "yang"
+    }
+  ],
+  "actions": [
+    {
+      "name": "AGIR",
+      "quote": "La graine pousse en sortant de terre.",
+      "polarity": "yang"
+    },
+    {
+      "name": "ÉCOUTER",
+      "quote": "L’oreille se penche sur le murmure.",
+      "polarity": "yin"
+    },
+    {
+      "name": "DIRE",
+      "quote": "La parole tranche comme un souffle clair.",
+      "polarity": "yang"
+    },
+    {
+      "name": "RECEVOIR",
+      "quote": "Le cœur ouvert accueille le don.",
+      "polarity": "yin"
+    },
+    {
+      "name": "CRÉER",
+      "quote": "Le geste façonne ce qui n’était pas.",
+      "polarity": "yang"
+    },
+    {
+      "name": "ACCUEILLIR",
+      "quote": "La porte s’ouvre à l’inattendu.",
+      "polarity": "yin"
+    },
+    {
+      "name": "PARTAGER",
+      "quote": "La coupe passe de main en main.",
+      "polarity": "yang"
+    },
+    {
+      "name": "PROTÉGER",
+      "quote": "L’abri se dresse autour du fragile.",
+      "polarity": "yin"
+    },
+    {
+      "name": "ALLER VERS",
+      "quote": "Le pas cherche la rencontre.",
+      "polarity": "yang"
+    },
+    {
+      "name": "SE RETIRER",
+      "quote": "Le sage quitte la foule.",
+      "polarity": "yin"
+    },
+    {
+      "name": "CHOISIR",
+      "quote": "Le carrefour appelle la décision.",
+      "polarity": "yang"
+    },
+    {
+      "name": "PATIENTER",
+      "quote": "Le fruit mûrit lentement.",
+      "polarity": "yin"
+    },
+    {
+      "name": "EXPRIMER",
+      "quote": "Ce que tu portes prend forme en parole claire.",
+      "polarity": "yang"
+    },
+    {
+      "name": "OBSERVER",
+      "quote": "L’œil contemple sans agir.",
+      "polarity": "yin"
+    },
+    {
+      "name": "ORDONNER",
+      "quote": "La main trace l’alignement des pierres.",
+      "polarity": "yang"
+    },
+    {
+      "name": "RÉCONCILIER",
+      "quote": "Les mains se rejoignent après la discorde.",
+      "polarity": "yin"
+    },
+    {
+      "name": "MANIFESTER",
+      "quote": "La parole devient chair.",
+      "polarity": "yang"
+    },
+    {
+      "name": "ARRÊTER",
+      "quote": "Le pas s'interrompt, la poussière retombe.",
+      "polarity": "yin"
+    }
+  ],
+  "memoire_cosmos": [
+    {
+      "name": "LE TORE",
+      "quote": "Le tore relie l'ombre et la lumière. De son centre pulse la danse éternelle des cycles.",
+      "polarity": "yang"
+    },
+    {
+      "name": "MÉMOIRE CELLULAIRE",
+      "quote": "Chaque cellule conserve la trace du vivant. Le corps est une bibliothèque où rien ne se perd.",
+      "polarity": "yin"
+    },
+    {
+      "name": "MÉMOIRE COLLECTIVE",
+      "quote": "Le groupe rêve à travers l'individu. Dans la conscience partagée se tisse un monde commun.",
+      "polarity": "yang"
+    },
+    {
+      "name": "ARCHIVE DU VIVANT",
+      "quote": "Les racines prolongent une histoire plus vaste que l'individu. Chaque être est à la fois héritage du Vivant et commencement nouveau.",
+      "polarity": "yin"
+    },
+    {
+      "name": "SOUVENIR D'ÂME",
+      "quote": "Les résonances anciennes émergent sans prévenir. Ce qui revient cherche moins à expliquer qu'à révéler.",
+      "polarity": "yang"
+    },
+    {
+      "name": "LE SOUFFLE DU VIVANT",
+      "quote": "Une respiration secrète traverse le monde. Dans son rythme silencieux naît l'impulsion du vivant.",
+      "polarity": "yin"
+    },
+    {
+      "name": "TEMPS INTÉRIEUR",
+      "quote": "Tout converge dans un instant silencieux. C'est là que s'ouvre la porte des rythmes profonds.",
+      "polarity": "yang"
+    },
+    {
+      "name": "LIGNES DE VIE",
+      "quote": "La graine porte en silence des chemins multiples. Chaque choix trace une direction qui attend d'être vécue.",
+      "polarity": "yin"
+    },
+    {
+      "name": "POINT ZÉRO",
+      "quote": "Au centre, tout se suspend dans un silence dense. C'est là que s'esquisse la naissance d'un monde nouveau.",
+      "polarity": "yang"
+    },
+    {
+      "name": "TISSAGE COSMIQUE",
+      "quote": "Des fils invisibles se cherchent dans l'ombre. Dans leur rencontre se révèle une cohérence secrète.",
+      "polarity": "yin"
+    }
+  ]
+}

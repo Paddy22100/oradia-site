@@ -17,6 +17,22 @@ h4, h5, h6 {
     background: rgba(5, 20, 40, 0.98);
 }
 
+/* ===== SCROLLBAR MASQUÉE SUR MOBILE ===== */
+/* Sur smartphone, la barre de défilement classique (non superposée) reste
+   visible en permanence sur le bord droit de l'écran — on la masque sans
+   empêcher le défilement. */
+@media (max-width: 1023px) {
+    html, body {
+        scrollbar-width: none; /* Firefox */
+        -ms-overflow-style: none; /* Edge/IE historique */
+    }
+    html::-webkit-scrollbar, body::-webkit-scrollbar {
+        display: none;
+        width: 0;
+        height: 0;
+    }
+}
+
 /* ===== RESET & FOND ===== */
 body {
     margin: 0; /* IMPORTANT pour que le fond soit plein écran */
@@ -103,4 +119,16 @@ p {
         rgba(2, 8, 23, 0.40),
         transparent
     );
+}
+
+/* ===== BOUTON "REMONTER EN HAUT" AU-DESSUS DE LA NAV MOBILE ===== */
+/* Sur les pages avec une barre de navigation fixe en bas (espace membre),
+   le bouton doit remonter pour ne pas recouvrir la dernière icône. */
+.back-to-top--above-mobile-nav {
+    bottom: 5.5rem;
+}
+@media (min-width: 1024px) {
+    .back-to-top--above-mobile-nav {
+        bottom: 1.5rem;
+    }
 }

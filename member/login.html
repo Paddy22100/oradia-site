@@ -179,6 +179,29 @@
                 <button type="button" style="background:none;border:none;cursor:pointer;font-size:11px;color:rgba(212,175,55,0.35);font-family:Lora,serif;margin-top:12px;display:block;width:100%;text-align:center;" id="mfaBack">← Retour à la connexion</button>
             </div>
 
+            <!-- Étape : définir le mot de passe définitif (1ère connexion avec mot de passe provisoire) -->
+            <div id="setPasswordStep" style="display:none;">
+                <p style="color:rgba(212,175,55,0.7);font-size:13px;text-align:center;margin-bottom:18px;line-height:1.6;">
+                    <i class="fas fa-key" style="margin-right:6px;"></i>Vous vous êtes connecté(e) avec un mot de passe provisoire. Choisissez votre mot de passe définitif pour continuer.
+                </p>
+                <div class="fg">
+                    <label class="fl" for="newPassword1">Nouveau mot de passe</label>
+                    <div class="fw">
+                        <i class="fas fa-lock fi"></i>
+                        <input class="fi-input" type="password" id="newPassword1" placeholder="••••••••" autocomplete="new-password">
+                    </div>
+                </div>
+                <div class="fg">
+                    <label class="fl" for="newPassword2">Confirmer le mot de passe</label>
+                    <div class="fw">
+                        <i class="fas fa-lock fi"></i>
+                        <input class="fi-input" type="password" id="newPassword2" placeholder="••••••••" autocomplete="new-password">
+                    </div>
+                </div>
+                <button type="button" class="btn-main" id="setPwSubmit">Définir mon mot de passe</button>
+                <p class="login-err" id="setPwErr"></p>
+            </div>
+
             <a href="../index.html" class="back-home" style="margin-top:24px;">← Retour à l'accueil</a>
         </div>
 
@@ -213,6 +236,11 @@
         let _mfaRememberMe = false;
         let _mfaLoginData = null;
 
+        // État changement de mot de passe obligatoire (1ère connexion, mot de passe provisoire)
+        let _pendingUser = null;
+        let _pendingTokens = null;
+        let _pendingRemember = false;
+
         function completLogin(user, sessionObj, rememberMe) {
             const sessionData = typeof sessionObj === 'string' ? sessionObj : JSON.stringify(sessionObj);
             sessionStorage.setItem('oradia_member_session', sessionData);
@@ -233,6 +261,46 @@
             sessionStorage.removeItem('oradia_login_return');
             setTimeout(() => { window.location.href = returnTo || '../index.html'; }, 1400);
         }
+
+        // Pont pour les liens de connexion Supabase (magiclink / recovery) — utilisé par le
+        // bouton admin "Se connecter en tant que" et par les liens de réparation d'accès.
+        // Ces liens redirigent ici avec une session Supabase native dans le hash de l'URL
+        // (#access_token=...). Le site n'utilise pas cette session native : chaque page membre
+        // vérifie sa propre clé sessionStorage `oradia_member_session`, écrite uniquement par
+        // completLogin() ci-dessus. Sans ce pont, l'utilisateur atterrit avec une session
+        // Supabase valide que le reste du site ignore totalement, et se fait renvoyer vers
+        // cette page de connexion comme s'il n'était pas connecté.
+        (async function bridgeSupabaseRedirectSession() {
+            if (!window.location.hash.includes('access_token')) return;
+            try {
+                const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                const { data: { session } } = await sb.auth.getSession();
+                if (!session?.user) return;
+
+                let subscribed = false;
+                try {
+                    const subRes = await fetch('/api/auth/check-subscription?email=' + encodeURIComponent(session.user.email));
+                    const subData = await subRes.json();
+                    subscribed = !!subData.subscribed;
+                } catch (_) {}
+
+                const user = {
+                    email: session.user.email,
+                    name: session.user.user_metadata?.full_name || session.user.email.split('@')[0],
+                    id: session.user.id,
+                    subscribed
+                };
+                const sessionObj = JSON.stringify({
+                    ...user,
+                    access_token: session.access_token,
+                    refresh_token: session.refresh_token
+                });
+                history.replaceState({}, document.title, window.location.pathname + window.location.search);
+                completLogin(user, sessionObj, false);
+            } catch (e) {
+                console.error('Bridge session Supabase:', e);
+            }
+        })();
 
         // Œil mot de passe
         document.getElementById('togglePw').addEventListener('click', function() {
@@ -276,6 +344,17 @@
                         document.getElementById('loginForm').style.display = 'none';
                         document.getElementById('mfaStep').style.display = 'block';
                         document.getElementById('mfaCode').focus();
+                    } else if (data.user?.must_change_password) {
+                        _pendingUser = data.user;
+                        _pendingTokens = {
+                            access_token: data.session?.access_token || null,
+                            refresh_token: data.session?.refresh_token || null
+                        };
+                        _pendingRemember = rememberMe;
+                        btn.disabled = false; btn.textContent = 'Se connecter';
+                        document.getElementById('loginForm').style.display = 'none';
+                        document.getElementById('setPasswordStep').style.display = 'block';
+                        document.getElementById('newPassword1').focus();
                     } else {
                         const sessionObj = JSON.stringify({
                             email, name: data.user?.name || email.split('@')[0],
@@ -312,6 +391,15 @@
                 const { error: vErr } = await sb.auth.mfa.verify({ factorId: _mfaFactorId, challengeId: challengeData.id, code });
                 if (vErr) throw new Error('Code incorrect ou expiré.');
                 const user = _mfaLoginData.user;
+                if (user.must_change_password) {
+                    _pendingUser = user;
+                    _pendingTokens = { access_token: _mfaSession.access_token, refresh_token: _mfaSession.refresh_token };
+                    _pendingRemember = _mfaRememberMe;
+                    document.getElementById('mfaStep').style.display = 'none';
+                    document.getElementById('setPasswordStep').style.display = 'block';
+                    document.getElementById('newPassword1').focus();
+                    return;
+                }
                 const sessionObj = JSON.stringify({
                     email: user.email, name: user.name || user.email.split('@')[0],
                     subscribed: user.subscribed || false, id: user.id || null,
@@ -334,6 +422,55 @@
             document.getElementById('mfaCode').value = '';
             document.getElementById('mfaErr').textContent = '';
             _mfaSession = _mfaFactorId = _mfaLoginData = null;
+        });
+
+        // Définir le mot de passe définitif (remplace le mot de passe provisoire reçu par email)
+        document.getElementById('setPwSubmit').addEventListener('click', async function() {
+            const pw1 = document.getElementById('newPassword1').value;
+            const pw2 = document.getElementById('newPassword2').value;
+            const err = document.getElementById('setPwErr');
+
+            if (!pw1 || pw1.length < 6) { err.textContent = 'Le mot de passe doit faire au moins 6 caractères.'; return; }
+            if (pw1 !== pw2) { err.textContent = 'Les mots de passe ne correspondent pas.'; return; }
+            err.textContent = '';
+
+            this.disabled = true; this.textContent = 'Enregistrement…';
+            try {
+                if (!_pendingTokens?.access_token) throw new Error('Session expirée, veuillez vous reconnecter.');
+                const sb = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                const { error: sessErr } = await sb.auth.setSession({
+                    access_token: _pendingTokens.access_token,
+                    refresh_token: _pendingTokens.refresh_token
+                });
+                if (sessErr) throw new Error(sessErr.message);
+
+                const { error: updErr } = await sb.auth.updateUser({
+                    password: pw1,
+                    data: { must_change_password: false }
+                });
+                if (updErr) throw new Error(updErr.message);
+
+                // Synchronise l'indicateur dashboard (tore_subscriptions.must_change_password).
+                // Best-effort : un échec ici ne doit jamais bloquer la connexion de l'abonné.
+                fetch('/api/auth/mark-password-changed', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email: _pendingUser.email })
+                }).catch(() => {});
+
+                const sessionObj = JSON.stringify({
+                    email: _pendingUser.email,
+                    name: _pendingUser.name || _pendingUser.email.split('@')[0],
+                    subscribed: _pendingUser.subscribed || false,
+                    id: _pendingUser.id || null,
+                    access_token: _pendingTokens.access_token,
+                    refresh_token: _pendingTokens.refresh_token
+                });
+                completLogin(_pendingUser, sessionObj, _pendingRemember);
+            } catch (e) {
+                this.disabled = false; this.textContent = 'Définir mon mot de passe';
+                err.textContent = e.message || 'Erreur lors de la mise à jour du mot de passe.';
+            }
         });
 
         // Modal mot de passe oublié

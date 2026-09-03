@@ -1,0 +1,19 @@
+{
+  "appId": "fr.oradia.app",
+  "appName": "Oradia",
+  "webDir": "www",
+  "backgroundColor": "#050d1c",
+  "server": {
+    "url": "https://oradia.fr/app-home.html",
+    "cleartext": false,
+    "allowNavigation": ["oradia.fr", "*.oradia.fr", "js.stripe.com", "checkout.stripe.com", "hooks.stripe.com"]
+  },
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#050d1c"
+  },
+  "android": {
+    "backgroundColor": "#050d1c",
+    "allowMixedContent": false
+  }
+}

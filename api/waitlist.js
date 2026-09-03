@@ -291,7 +291,7 @@ async function sendWaitlistConfirmationEmail(email) {
                       Édition limitée
                     </p>
                     <p style="margin:0 0 20px; color:#c8c0a8; font-family:Georgia,serif; font-size:14px; line-height:1.7;">
-                      L'Oracle physique ORADIA est en précommande.<br>Rejoins la première édition avant le 30 septembre 2026.
+                      L'Oracle physique ORADIA est en précommande.<br>Rejoins la première édition avant le 31 décembre 2026.
                     </p>
                     <a href="https://oradia.fr/precommande-oracle.html" class="btn-preorder" style="display:inline-block; background:linear-gradient(135deg,#d4af37,#f5e7a1); color:#0a192f; font-family:Georgia,serif; font-size:15px; font-weight:700; text-decoration:none; padding:15px 38px; border-radius:50px; letter-spacing:0.05em;">
                       Précommander l'Oracle physique
@@ -344,7 +344,7 @@ async function sendWaitlistConfirmationEmail(email) {
                 &nbsp;&middot;&nbsp;
                 <a href="mailto:contact@oradia.fr" style="color:#d4af37; text-decoration:none;">contact@oradia.fr</a>
               </p>
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:6px auto 14px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td></tr></table>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:6px auto 14px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.png" alt="YouTube" width="34" height="34" style="display:block;width:34px;height:34px;border:0;"></a></td></tr></table>
               <p style="margin:0; color:#c8c0a8; font-family:Georgia,serif; font-size:11px; line-height:1.5; opacity:0.45;">
                 ORADIA - La Boussole Intérieure<br>Révéler. Transmuter. Relier.
               </p>
@@ -446,7 +446,7 @@ async function sendSignupConfirmationEmail(email, name) {
               <p style="margin:0 0 6px;color:#9ca3af;font-family:Georgia,serif;font-size:11px;line-height:1.6;">
                 <a href="https://oradia.fr" style="color:#d4af37;text-decoration:none;">oradia.fr</a> &nbsp;&middot;&nbsp; <a href="mailto:contact@oradia.fr" style="color:#d4af37;text-decoration:none;">contact@oradia.fr</a>
               </p>
-              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:4px auto 12px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td></tr></table>
+              <table role="presentation" cellpadding="0" cellspacing="0" border="0" align="center" style="margin:4px auto 12px;"><tr><td style="padding:0 7px;"><a href="https://www.facebook.com/profile.php?id=61591590952794" target="_blank"><img src="https://oradia.fr/images/medias/icon-facebook.png" alt="Facebook" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://instagram.com/oradia_oracle_officiel" target="_blank"><img src="https://oradia.fr/images/medias/icon-instagram.png" alt="Instagram" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td><td style="padding:0 7px;"><a href="https://www.youtube.com/@oradiafr" target="_blank"><img src="https://oradia.fr/images/medias/icon-youtube.png" alt="YouTube" width="32" height="32" style="display:block;width:32px;height:32px;border:0;"></a></td></tr></table>
               <p style="margin:0;color:#6b7280;font-family:Georgia,serif;font-size:11px;line-height:1.5;">ORADIA - La Boussole Intérieure<br>Révéler. Transmuter. Relier.</p>
             </td>
           </tr>
@@ -472,6 +472,9 @@ async function sendSignupConfirmationEmail(email, name) {
   }
 }
 
+// Exposé pour réutilisation par le bouton "Envoyer test" du dashboard admin
+// (onglet Mails), afin que le test envoie exactement le même email que celui
+// réellement reçu lors d'une inscription newsletter.
 module.exports = async (req, res) => {
   try {
     setCORS(req, res);
@@ -482,7 +485,11 @@ module.exports = async (req, res) => {
     // ===== SIGNUP : création de compte Supabase =====
     if (body && body.action === 'signup') {
       try {
-        const { email, password, name, birthdate, _hp } = body;
+        const { password, name, birthdate, _hp } = body;
+        // Normalisé ici : cet email finit dans tore_subscriptions (table Postgres classique,
+        // comparaison .eq sensible à la casse) — non normalisé, un compte auto-inscrit avec
+        // une majuscule pourrait ensuite apparaître "non abonné" ou créer une ligne en double.
+        const email = String(body.email || '').trim().toLowerCase();
 
         // ── Honeypot : si le champ caché est rempli → bot silencieux ──
         if (_hp && String(_hp).trim().length > 0) {
@@ -549,24 +556,33 @@ module.exports = async (req, res) => {
           });
         }
 
-        // Créer l'entrée dans tore_subscriptions
+        // Créer l'entrée dans tore_subscriptions (sauf si une ligne existe déjà pour cet
+        // email, même avec une casse différente — évite un doublon silencieux, par
+        // exemple si un abonnement Stripe existait déjà pour cette adresse).
         try {
-          const { error: subError } = await supabase
-            .from('tore_subscriptions')
-            .insert({
-              email: email,
-              full_name: name,
-              birthdate: birthdate || null,
-              status: 'active', // Les comptes créés manuellement sont actifs par défaut
-              created_at: new Date().toISOString(),
-              updated_at: new Date().toISOString()
-            });
-          
-          if (subError) {
-            console.error('[Signup] tore_subscriptions insert error:', subError.message);
-            // Ne pas bloquer la création du compte pour cette erreur
+          const { data: existingSub } = await supabase
+            .from('tore_subscriptions').select('id').ilike('email', email).maybeSingle();
+
+          if (existingSub) {
+            console.log('[Signup] tore_subscriptions entry already exists for:', email);
           } else {
-            console.log('[Signup] tore_subscriptions entry created for:', email);
+            const { error: subError } = await supabase
+              .from('tore_subscriptions')
+              .insert({
+                email: email,
+                full_name: name,
+                birthdate: birthdate || null,
+                status: 'active', // Les comptes créés manuellement sont actifs par défaut
+                created_at: new Date().toISOString(),
+                updated_at: new Date().toISOString()
+              });
+
+            if (subError) {
+              console.error('[Signup] tore_subscriptions insert error:', subError.message);
+              // Ne pas bloquer la création du compte pour cette erreur
+            } else {
+              console.log('[Signup] tore_subscriptions entry created for:', email);
+            }
           }
         } catch (subError) {
           console.error('[Signup] tore_subscriptions exception:', subError.message);
@@ -670,7 +686,7 @@ module.exports = async (req, res) => {
         brevo_synced_at: contactAdded ? new Date().toISOString() : undefined,
         precommande_launch_sent_at: new Date().toISOString()
       })
-      .eq('email', email)
+      .ilike('email', email)
       .is('precommande_launch_sent_at', null)
       .then(({ error }) => { if (error) console.warn('[Waitlist] update brevo_synced failed:', error.message); });
 
@@ -689,3 +705,5 @@ module.exports = async (req, res) => {
     });
   }
 };
+
+module.exports.sendWaitlistConfirmationEmail = sendWaitlistConfirmationEmail;
