@@ -1542,7 +1542,7 @@ async function handleData(req, res) {
 
       // ── Devis de fabrication en gros (onglet Devis & Coûts) ──
       if (action === 'create-quote' || action === 'update-quote') {
-        const { id, supplierName, contactInfo, quantity, unitCostEur, shippingCostEur, totalCostEur, quoteDate, validUntil, status, fileUrl, notes } = body;
+        const { id, supplierName, contactInfo, quantity, unitCostEur, shippingCostEur, totalCostEur, quoteDate, validUntil, status, category, fileUrl, notes } = body;
         const cleanSupplier = (supplierName || '').trim();
         if (action === 'create-quote' && !cleanSupplier) return res.status(400).json({ error: 'Nom du fournisseur requis' });
         const payload = {
@@ -1555,6 +1555,7 @@ async function handleData(req, res) {
           quote_date: quoteDate || null,
           valid_until: validUntil || null,
           status: status || 'a_etudier',
+          category: category === 'expedition' ? 'expedition' : 'fabrication',
           file_url: fileUrl || null,
           notes: notes || null,
           updated_at: new Date().toISOString()

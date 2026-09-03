@@ -44,6 +44,17 @@ COMMENT ON TABLE manufacturing_quotes IS
     'Devis de fabrication en gros de l''Oracle (imprimeurs/fabricants), gérés depuis le dashboard admin, onglet Devis & Coûts.';
 
 
+-- ============================================================
+-- AJOUT : catégorie (fabrication vs expédition) — à exécuter même si
+-- la table manufacturing_quotes existe déjà (idempotent).
+-- ============================================================
+ALTER TABLE manufacturing_quotes
+    ADD COLUMN IF NOT EXISTS category TEXT DEFAULT 'fabrication'
+        CHECK (category IN ('fabrication', 'expedition'));
+
+CREATE INDEX IF NOT EXISTS idx_manufacturing_quotes_category ON manufacturing_quotes(category);
+
+
 CREATE TABLE IF NOT EXISTS retail_partners (
     id                UUID DEFAULT gen_random_uuid() PRIMARY KEY,
 

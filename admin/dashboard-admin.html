@@ -1885,6 +1885,13 @@
                             <option value="archive">Archivé</option>
                         </select>
                     </div>
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Catégorie</label>
+                        <select id="quoteCategory" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
+                            <option value="fabrication">Fabrication</option>
+                            <option value="expedition">Expédition (carton, scotch…)</option>
+                        </select>
+                    </div>
                     <div class="md:col-span-3">
                         <label class="text-light-gold/60 text-xs block mb-1">Lien vers le fichier du devis (facultatif)</label>
                         <input id="quoteFileUrl" type="url" placeholder="https://…"
@@ -1903,12 +1910,19 @@
                 </div>
             </div>
 
+            <div class="flex gap-2 mb-4" id="quotesCategoryFilter">
+                <button onclick="setQuotesCategoryFilter('all')" data-cat="all" class="quotes-cat-btn text-xs px-3 py-1.5 rounded-lg border transition bg-gold/20 text-gold border-gold/40">Tous</button>
+                <button onclick="setQuotesCategoryFilter('fabrication')" data-cat="fabrication" class="quotes-cat-btn text-xs px-3 py-1.5 rounded-lg border transition text-light-gold/50 border-gold/15">Fabrication</button>
+                <button onclick="setQuotesCategoryFilter('expedition')" data-cat="expedition" class="quotes-cat-btn text-xs px-3 py-1.5 rounded-lg border transition text-light-gold/50 border-gold/15">Expédition (carton, scotch…)</button>
+            </div>
+
             <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full" id="quotesTable">
                         <thead class="bg-[rgba(5,20,40,0.8)]">
                             <tr>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Fournisseur</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Catégorie</th>
                                 <th class="px-5 py-4 text-right text-gold font-semibold text-xs uppercase tracking-wider">Quantité</th>
                                 <th class="px-5 py-4 text-right text-gold font-semibold text-xs uppercase tracking-wider">Coût unit.</th>
                                 <th class="px-5 py-4 text-right text-gold font-semibold text-xs uppercase tracking-wider">Coût total</th>
@@ -1918,7 +1932,7 @@
                             </tr>
                         </thead>
                         <tbody id="quotesTbody">
-                            <tr><td colspan="7" class="px-6 py-8 text-center text-gold/30 cormorant text-lg">Chargement…</td></tr>
+                            <tr><td colspan="8" class="px-6 py-8 text-center text-gold/30 cormorant text-lg">Chargement…</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -4607,6 +4621,24 @@
             refuse:    'bg-red-500/20 text-red-300',
             archive:   'bg-light-gold/10 text-light-gold/40'
         };
+        const quoteCategoryLabels = { fabrication: 'Fabrication', expedition: 'Expédition' };
+        const quoteCategoryColors = {
+            fabrication: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
+            expedition:  'bg-purple-500/15 text-purple-300 border-purple-500/30'
+        };
+        let quotesCategoryFilter = 'all';
+        function setQuotesCategoryFilter(cat) {
+            quotesCategoryFilter = cat;
+            document.querySelectorAll('.quotes-cat-btn').forEach(b => {
+                const active = b.dataset.cat === cat;
+                b.classList.toggle('bg-gold/20', active);
+                b.classList.toggle('text-gold', active);
+                b.classList.toggle('border-gold/40', active);
+                b.classList.toggle('text-light-gold/50', !active);
+                b.classList.toggle('border-gold/15', !active);
+            });
+            renderQuotes();
+        }
 
         function toggleQuoteForm(quote) {
             const form = document.getElementById('quoteForm');
@@ -4622,6 +4654,7 @@
             document.getElementById('quoteDate').value = isEditing ? (quote.quote_date || '') : '';
             document.getElementById('quoteValidUntil').value = isEditing ? (quote.valid_until || '') : '';
             document.getElementById('quoteStatus').value = isEditing ? (quote.status || 'a_etudier') : 'a_etudier';
+            document.getElementById('quoteCategory').value = isEditing ? (quote.category || 'fabrication') : 'fabrication';
             document.getElementById('quoteFileUrl').value = isEditing ? (quote.file_url || '') : '';
             document.getElementById('quoteNotes').value = isEditing ? (quote.notes || '') : '';
             document.getElementById('quoteFormStatus').textContent = '';
@@ -4647,6 +4680,7 @@
                 quoteDate: document.getElementById('quoteDate').value,
                 validUntil: document.getElementById('quoteValidUntil').value,
                 status: document.getElementById('quoteStatus').value,
+                category: document.getElementById('quoteCategory').value,
                 fileUrl: document.getElementById('quoteFileUrl').value.trim(),
                 notes: document.getElementById('quoteNotes').value.trim()
             };
@@ -4690,15 +4724,27 @@
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.error || 'Erreur');
                 currentQuotes = json.data || [];
-                if (!currentQuotes.length) {
-                    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun devis enregistré</td></tr>';
-                    return;
-                }
-                const fmtEur = (v) => v == null ? '<span class="text-gold/20">—</span>' : `${Number(v).toFixed(2).replace('.', ',')} €`;
-                const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
-                tbody.innerHTML = currentQuotes.map(q => `
+                renderQuotes();
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="8" class="px-6 py-8 text-center text-red-400 text-sm">${escapeHtmlFront(e.message)}</td></tr>`;
+            }
+        }
+
+        function renderQuotes() {
+            const tbody = document.getElementById('quotesTbody');
+            const list = quotesCategoryFilter === 'all' ? currentQuotes : currentQuotes.filter(q => (q.category || 'fabrication') === quotesCategoryFilter);
+            if (!list.length) {
+                tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun devis enregistré</td></tr>';
+                return;
+            }
+            const fmtEur = (v) => v == null ? '<span class="text-gold/20">—</span>' : `${Number(v).toFixed(2).replace('.', ',')} €`;
+            const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
+            tbody.innerHTML = list.map(q => {
+                const cat = q.category || 'fabrication';
+                return `
                     <tr class="hover:bg-gold/5 transition">
                         <td class="px-5 py-4 text-light-gold text-sm">${escapeHtmlFront(q.supplier_name || '—')}</td>
+                        <td class="px-5 py-4"><span class="text-xs px-2 py-0.5 rounded-full border ${quoteCategoryColors[cat] || ''}">${quoteCategoryLabels[cat] || cat}</span></td>
                         <td class="px-5 py-4 text-right text-light-gold/80 text-sm">${q.quantity ?? '—'}</td>
                         <td class="px-5 py-4 text-right text-light-gold/80 text-sm">${fmtEur(q.unit_cost_eur)}</td>
                         <td class="px-5 py-4 text-right text-light-gold font-semibold text-sm">${fmtEur(q.total_cost_eur)}</td>
@@ -4710,10 +4756,8 @@
                                 <button onclick="deleteQuote('${q.id}')" class="text-xs text-red-400/60 hover:text-red-400 border border-red-400/20 hover:border-red-400/50 rounded-lg px-2 py-1 transition"><i class="fas fa-trash"></i></button>
                             </div>
                         </td>
-                    </tr>`).join('');
-            } catch (e) {
-                tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-red-400 text-sm">${escapeHtmlFront(e.message)}</td></tr>`;
-            }
+                    </tr>`;
+            }).join('');
         }
 
         // ── Partenaires / magasins ───────────────────────────────────────────────
