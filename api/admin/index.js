@@ -1390,14 +1390,16 @@ async function handleData(req, res) {
           return res.status(200).json({ success: r.ok, status: r.status });
         } catch(e) { return res.status(200).json({ success: false, error: e.message }); }
       }
-      // ── Tirage de la semaine (dimanche) : génère le brouillon ET le programme
-      // pour un envoi automatique le jour même à 19h heure de Paris (scheduled_at,
-      // voir runWeeklyTirageCron) — c'est le cron générique cron-send-scheduled
-      // ci-dessus qui déclenchera l'envoi Brevo réel une fois l'heure atteinte.
-      // Le brouillon reste visible et modifiable dans le dashboard entre 7h et
-      // 19h pour une relecture avant l'envoi. Thématisé par le calendrier astro
-      // (pleine lune, éclipse — lib/astro-calendar.js) quand la semaine tombe
-      // près d'un de ces événements, sinon thème générique.
+      // ── Tirage de la semaine (dimanche) : génère le brouillon newsletter ET
+      // programme un post Facebook/Instagram assorti, tous deux pour un envoi
+      // automatique le jour même à 19h heure de Paris (scheduled_at, voir
+      // runWeeklyTirageCron) — les crons génériques cron-send-scheduled
+      // (newsletter, ~15 min) et cron-social-due (réseaux sociaux, horaire)
+      // déclenchent l'envoi réel une fois l'heure atteinte. Le brouillon reste
+      // visible et modifiable dans le dashboard entre 7h et 19h pour une
+      // relecture avant l'envoi. Thématisé par le calendrier astro (pleine
+      // lune, éclipse — lib/astro-calendar.js) quand la semaine tombe près
+      // d'un de ces événements, sinon thème générique.
       if (getAction === 'cron-tirage-hebdo') {
         return await runWeeklyTirageCron(supabase, res);
       }
@@ -4731,7 +4733,48 @@ async function runWeeklyTirageCron(supabase, res, { force = false } = {}) {
       details: { draft_id: data.id, theme: theme.label, qrng_source: qrngSource, scheduled_at: scheduledAt ? scheduledAt.toISOString() : null }
     }).catch(() => {});
 
-    return res.status(200).json({ success: true, draft_id: data.id, subject, theme: theme.label, qrng_source: qrngSource, scheduled_at: scheduledAt ? scheduledAt.toISOString() : null });
+    // Publication Facebook/Instagram en même temps que la newsletter, sur le
+    // pipeline social_posts déjà en place (cron-social-due, actif toutes les
+    // heures) — voir generateSocialTexts. Uniquement sur le vrai cron (même
+    // garde que scheduledAt ci-dessus) : un clic de test ne doit jamais
+    // programmer une vraie publication publique. Une erreur ici (IA, image,
+    // Supabase) est journalisée mais ne fait pas échouer la génération du
+    // brouillon newsletter, déjà réussie à ce stade.
+    let socialScheduled = false;
+    if (scheduledAt) {
+      try {
+        const socialTextContent = [
+          theme.intention,
+          `Les cartes tirées cette semaine : ${cards.map(c => c.name).join(', ')}.`,
+          analysis?.explore,
+          analysis?.synthesis
+        ].filter(Boolean).join('\n\n');
+        const { facebook_text, instagram_text } = await generateSocialTexts({ subject, textContent: socialTextContent });
+        const rawImage = resolveCardImageUrl(cards[0]?.name) || 'https://oradia.fr/images/logo-hd-v2.webp';
+        const image_url = await ensureSafeSocialImageUrl(rawImage);
+
+        const { error: socialError } = await supabase.from('social_posts').insert({
+          subject, facebook_text, instagram_text, image_url,
+          scheduled_at: scheduledAt.toISOString()
+        });
+        if (socialError) throw socialError;
+        socialScheduled = true;
+
+        await logSystemEvent(supabase, {
+          level: 'info', source: 'cron-tirage-hebdo',
+          message: `Publication Facebook/Instagram programmée pour le tirage de la semaine (${scheduledAt.toISOString()})`,
+          details: { subject }
+        }).catch(() => {});
+      } catch (socialErr) {
+        console.error('[cron-tirage-hebdo] social post', socialErr.message);
+        await logSystemEvent(supabase, {
+          level: 'warn', source: 'cron-tirage-hebdo',
+          message: `Échec de la programmation du post social : ${socialErr.message}`
+        }).catch(() => {});
+      }
+    }
+
+    return res.status(200).json({ success: true, draft_id: data.id, subject, theme: theme.label, qrng_source: qrngSource, scheduled_at: scheduledAt ? scheduledAt.toISOString() : null, social_scheduled: socialScheduled });
   } catch(e) {
     console.error('[cron-tirage-hebdo]', e.message);
     await logSystemEvent(supabase, { level: 'error', source: 'cron-tirage-hebdo', message: e.message }).catch(() => {});
@@ -6693,6 +6736,62 @@ function nlTranslateForUnsplash(text) {
   return found.length ? found.slice(0, 4).join(' ') : 'nature calm minimal';
 }
 
+// Génère les textes Facebook + Instagram adaptés à partir d'un sujet et d'un
+// contenu source, via Claude. Fonction partagée entre le bouton "Publier sur
+// les réseaux" du dashboard (handlePublishSocial) et la génération automatique
+// du tirage hebdomadaire (runWeeklyTirageCron) — un seul prompt, jamais deux
+// versions qui pourraient diverger avec le temps (même principe que la règle
+// "un template email = une seule fonction", CLAUDE.md).
+async function generateSocialTexts({ subject, textContent }) {
+  const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
+  let facebook_text = '';
+  let instagram_text = '';
+
+  if (ANTHROPIC_API_KEY) {
+    const prompt = `Tu es expert en communication digitale pour Oradia, un oracle de développement personnel basé sur le Tore.
+
+Newsletter à adapter :
+Sujet : ${subject}
+Contenu : ${textContent.substring(0, 1500)}
+
+Génère deux publications séparées :
+
+1. FACEBOOK (300-400 mots, ton inspirant et profond, peut contenir des paragraphes, emoji discrets, appel à l'action vers le site)
+2. INSTAGRAM (150-200 mots max, percutant, 5-8 hashtags pertinents en fin de texte, emojis bienvenus)
+
+Contrainte impérative de format : chaque texte doit COMMENCER par le lien "oradia.fr" sur sa propre ligne (avant même la première phrase), pour que le site soit immédiatement visible sans avoir à lire tout le post.
+
+Réponds UNIQUEMENT en JSON valide avec cette structure :
+{"facebook":"texte facebook","instagram":"texte instagram"}
+
+Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jamais promettre de résultats garantis.`;
+
+    try {
+      const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+        body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 1024, messages: [{ role: 'user', content: prompt }] })
+      });
+      if (aiRes.ok) {
+        const aiData = await aiRes.json();
+        const raw = aiData.content?.[0]?.text || '';
+        const jsonMatch = raw.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          const parsed = JSON.parse(jsonMatch[0]);
+          facebook_text = parsed.facebook || '';
+          instagram_text = parsed.instagram || '';
+        }
+      }
+    } catch (_) {}
+  }
+
+  // Fallback si l'IA échoue ou n'est pas configurée
+  if (!facebook_text) facebook_text = `oradia.fr\n\n${subject}\n\n${textContent.substring(0, 400)}...`;
+  if (!instagram_text) instagram_text = `oradia.fr\n\n${subject}\n\n${textContent.substring(0, 150)}...\n\n#oradia #oracle #developpementpersonnel #tore #conscience`;
+
+  return { facebook_text, instagram_text };
+}
+
 async function handlePublishSocial(req, res) {
   try {
     verifyAdminAuth(req);
@@ -6712,54 +6811,11 @@ async function handlePublishSocial(req, res) {
     let facebook_text = body.facebook_text || '';
     let instagram_text = body.instagram_text || '';
 
-    if (facebook_text && instagram_text) {
-      // Textes fournis — pas de génération IA nécessaire
-    } else {
-    // Générer les textes adaptés par réseau via Claude
-    const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
-
-    if (ANTHROPIC_API_KEY) {
-      const prompt = `Tu es expert en communication digitale pour Oradia, un oracle de développement personnel basé sur le Tore.
-
-Newsletter à adapter :
-Sujet : ${subject}
-Contenu : ${textContent.substring(0, 1500)}
-
-Génère deux publications séparées :
-
-1. FACEBOOK (300-400 mots, ton inspirant et profond, peut contenir des paragraphes, emoji discrets, appel à l'action vers le site)
-2. INSTAGRAM (150-200 mots max, percutant, 5-8 hashtags pertinents en fin de texte, emojis bienvenus)
-
-Contrainte impérative de format : chaque texte doit COMMENCER par le lien "oradia.fr" sur sa propre ligne (avant même la première phrase), pour que le site soit immédiatement visible sans avoir à lire tout le post.
-
-Réponds UNIQUEMENT en JSON valide avec cette structure :
-{"facebook":"texte facebook","instagram":"texte instagram"}
-
-Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jamais promettre de résultats garantis.`;
-
-      const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 1024, messages: [{ role: 'user', content: prompt }] })
-      });
-      if (aiRes.ok) {
-        const aiData = await aiRes.json();
-        const raw = aiData.content?.[0]?.text || '';
-        try {
-          const jsonMatch = raw.match(/\{[\s\S]*\}/);
-          if (jsonMatch) {
-            const parsed = JSON.parse(jsonMatch[0]);
-            facebook_text = parsed.facebook || '';
-            instagram_text = parsed.instagram || '';
-          }
-        } catch (_) {}
-      }
+    if (!facebook_text || !instagram_text) {
+      const generated = await generateSocialTexts({ subject, textContent });
+      facebook_text = facebook_text || generated.facebook_text;
+      instagram_text = instagram_text || generated.instagram_text;
     }
-
-    // Fallback si l'IA échoue
-    if (!facebook_text) facebook_text = `oradia.fr\n\n${subject}\n\n${textContent.substring(0, 400)}...`;
-    if (!instagram_text) instagram_text = `oradia.fr\n\n${subject}\n\n${textContent.substring(0, 150)}...\n\n#oradia #oracle #developpementpersonnel #tore #conscience`;
-    } // fin du bloc else (génération IA)
 
     const DEFAULT_IMAGE = 'https://oradia.fr/images/logo-hd-v2.webp';
     let image_url = imageUrl || DEFAULT_IMAGE;
