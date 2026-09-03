@@ -483,7 +483,7 @@ async function handleSendEmail(req, res) {
         <!-- CTA TIRAGE -->
         <tr>
           <td style="padding:16px 32px 20px;text-align:center;" bgcolor="#050a19">
-            <a href="https://oradia.fr/tore.html" style="display:inline-block;background-color:#d4af37;color:#050f23;text-decoration:none;padding:13px 36px;font-family:Georgia,serif;font-weight:700;font-size:13px;letter-spacing:2px;text-transform:uppercase;">
+            <a href="https://oradia.fr/tore.html" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:13px 36px;border-radius:50px;font-weight:700;font-size:13px;letter-spacing:0.05em;font-family:Georgia,serif;">
               Nouveau tirage
             </a>
           </td>
@@ -503,7 +503,7 @@ async function handleSendEmail(req, res) {
                   <p style="margin:0;color:#c8c0a8;font-size:12px;line-height:1.6;">Symbolique du Tore, int&#233;riorit&#233; et pratiques d'observation.</p>
                 </td>
                 <td style="vertical-align:middle;padding-left:20px;white-space:nowrap;width:110px;">
-                  <a href="https://oradia.fr/#newsletter" style="display:inline-block;background-color:#d4af37;color:#050f23;text-decoration:none;padding:10px 20px;font-size:11px;font-weight:700;letter-spacing:1px;white-space:nowrap;">
+                  <a href="https://oradia.fr/#newsletter" style="display:inline-block;background:linear-gradient(135deg,#d4af37,#f5e7a1);color:#0a192f;text-decoration:none;padding:10px 20px;border-radius:50px;font-size:11px;font-weight:700;letter-spacing:0.05em;white-space:nowrap;font-family:Georgia,serif;">
                     S'inscrire
                   </a>
                 </td>
