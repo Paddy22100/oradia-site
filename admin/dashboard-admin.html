@@ -7263,7 +7263,10 @@
                         content,
                         intention: document.getElementById('nl-intention')?.value.trim() || '',
                         type: nlCurrentType,
-                        images: nlSelectedImages.map(s => ({ path: s.path, name: s.name, position: s.position ?? 0 })),
+                        // width/compact préservés : sinon rouvrir un brouillon aux vignettes
+                        // réduites (ex: tirage hebdomadaire) puis prévisualiser/sauvegarder
+                        // depuis cet éditeur effaçait silencieusement leur taille personnalisée.
+                        images: nlSelectedImages.map(s => ({ path: s.path, name: s.name, position: s.position ?? 0, width: s.width, compact: s.compact })),
                         extra
                     })
                 });
@@ -7341,7 +7344,10 @@
                         content,
                         intention: document.getElementById('nl-intention').value.trim(),
                         type: nlCurrentType,
-                        images: nlSelectedImages.map(s => ({ path: s.path, name: s.name, position: s.position ?? 0 })),
+                        // width/compact préservés : sinon rouvrir un brouillon aux vignettes
+                        // réduites (ex: tirage hebdomadaire) puis prévisualiser/sauvegarder
+                        // depuis cet éditeur effaçait silencieusement leur taille personnalisée.
+                        images: nlSelectedImages.map(s => ({ path: s.path, name: s.name, position: s.position ?? 0, width: s.width, compact: s.compact })),
                         extra
                     })
                 });
@@ -7748,7 +7754,10 @@
                         content,
                         intention: document.getElementById('nl-intention')?.value.trim() || '',
                         type: nlCurrentType,
-                        images: nlSelectedImages.map(s => ({ path: s.path, name: s.name, position: s.position ?? 0 })),
+                        // width/compact préservés : sinon rouvrir un brouillon aux vignettes
+                        // réduites (ex: tirage hebdomadaire) puis prévisualiser/sauvegarder
+                        // depuis cet éditeur effaçait silencieusement leur taille personnalisée.
+                        images: nlSelectedImages.map(s => ({ path: s.path, name: s.name, position: s.position ?? 0, width: s.width, compact: s.compact })),
                         extra
                     })
                 });
@@ -8783,7 +8792,12 @@
 
                     // Index négatifs pour ne pas entrer en collision avec les index de la grille
                     // d'images rechargée ci-dessous (0..N), tout en gardant un id unique pour le toggle.
-                    nlSelectedImages = (data.images || []).map((img, i) => ({ index: -(i + 1), path: img.path, name: img.name, position: img.position ?? -1 }));
+                    // width/compact préservés (pas seulement path/name/position) : sans ça,
+                    // ouvrir un brouillon avec des vignettes réduites (ex: cartes du tirage
+                    // hebdomadaire) puis le sauvegarder ou le prévisualiser depuis cet éditeur
+                    // effaçait silencieusement leur taille personnalisée au profit du 600px
+                    // par défaut.
+                    nlSelectedImages = (data.images || []).map((img, i) => ({ index: -(i + 1), path: img.path, name: img.name, position: img.position ?? -1, width: img.width, compact: img.compact }));
 
                     if (data.content) {
                         nlShowEditor(data.content);
