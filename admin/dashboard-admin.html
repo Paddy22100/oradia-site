@@ -1515,7 +1515,6 @@
                                 <th class="px-5 py-4 text-right text-gold font-semibold text-xs uppercase tracking-wider" title="Total encaissé sur cet abonnement">Total payé</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Statut</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Dernier tirage</th>
-                                <th class="px-5 py-4 text-center text-gold font-semibold text-xs uppercase tracking-wider">Tirages/j</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Abonné le</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Échéance</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Actions</th>
@@ -8449,7 +8448,7 @@
             const status = document.getElementById('subStatusFilter')?.value || 'all';
             const plan   = document.getElementById('subPlanFilter')?.value || 'all';
             const tbody  = document.getElementById('subscriptionsTbody');
-            tbody.innerHTML = '<tr><td colspan="12" class="px-6 py-8 text-center text-gold/40"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11" class="px-6 py-8 text-center text-gold/40"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</td></tr>';
             try {
                 const url = `/api/admin/data?section=subscriptions&page=${page}&limit=1000&status=${status}&plan=${plan}&q=${encodeURIComponent(q)}`;
                 const res = await adminFetch(url);
@@ -8580,7 +8579,7 @@
             const tbody = document.getElementById('subscriptionsTbody');
             renderPwAlertBanner(subs);
             if (!subs.length) {
-                tbody.innerHTML = '<tr><td colspan="12" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun abonnement</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="11" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun abonnement</td></tr>';
                 return;
             }
             tbody.innerHTML = subs.map(s => {
@@ -8616,7 +8615,6 @@
                 const firstPaymentCell = stripeId ? fmtEur(s.first_payment_eur) : '<span class="text-gold/20">—</span>';
                 const totalPaidCell = stripeId ? fmtEur(s.total_paid_eur) : '<span class="text-gold/20">—</span>';
                 const lastDraw  = s.real_last_draw ? new Date(s.real_last_draw).toLocaleDateString('fr-FR') : '—';
-                const drawCount = s.daily_draw_count != null ? s.daily_draw_count : '—';
                 const emailEsc  = (s.email || '').replace(/'/g, "\\'");
                 return `
                 <tr class="hover:bg-gold/5 transition">
@@ -8628,7 +8626,6 @@
                     <td class="px-5 py-4 text-right text-light-gold/80 text-sm font-semibold">${totalPaidCell}</td>
                     <td class="px-5 py-4">${statusBadge}</td>
                     <td class="px-5 py-4 text-light-gold/60 text-xs" title="${s.real_last_draw_debug || ''}">${lastDraw}</td>
-                    <td class="px-5 py-4 text-light-gold/60 text-xs text-center">${drawCount}</td>
                     <td class="px-5 py-4 text-light-gold/60 text-xs">${s.created_at_fr || '—'}</td>
                     <td class="px-5 py-4 text-xs ${isExpired ? 'text-orange-400 font-semibold' : 'text-light-gold/60'}">${s.expires_at ? new Date(s.expires_at).toLocaleDateString('fr-FR') : '<span class="text-light-gold/30">Illimité</span>'}</td>
                     <td class="px-5 py-4">
