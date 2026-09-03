@@ -115,3 +115,44 @@ CREATE POLICY "retail_partners_service_role" ON retail_partners
 
 COMMENT ON TABLE retail_partners IS
     'Magasins/partenaires potentiels pour la vente physique de l''Oracle, gérés depuis le dashboard admin, onglet Partenaires.';
+
+
+-- ============================================================
+-- AJOUT : catégorie "pièce de tirage" (jeton métallique, distincte de
+-- fabrication cartes/livret/boîte et de l'expédition) + table fournisseurs
+-- (Contacts > Fournisseurs) + lien devis <-> fournisseur, pour pouvoir
+-- rattacher un devis à une fiche contact et lui envoyer un mail directement.
+-- Idempotent, à exécuter même si les tables existent déjà.
+-- ============================================================
+ALTER TABLE manufacturing_quotes DROP CONSTRAINT IF EXISTS manufacturing_quotes_category_check;
+ALTER TABLE manufacturing_quotes ADD CONSTRAINT manufacturing_quotes_category_check
+    CHECK (category IN ('fabrication', 'expedition', 'piece_tirage'));
+
+CREATE TABLE IF NOT EXISTS suppliers (
+    id           UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+
+    name         TEXT NOT NULL,
+    specialty    TEXT,                  -- ex: "Imprimeur cartes", "Boîte", "Pièce de tirage"...
+    contact_name TEXT,
+    email        TEXT,
+    phone        TEXT,
+    address      TEXT,
+    city         TEXT,
+    notes        TEXT,
+
+    created_at   TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+    updated_at   TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_suppliers_name ON suppliers(name);
+
+ALTER TABLE suppliers ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "suppliers_service_role" ON suppliers;
+CREATE POLICY "suppliers_service_role" ON suppliers
+    FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+COMMENT ON TABLE suppliers IS
+    'Fournisseurs/imprimeurs (fiches contact), gérés depuis le dashboard admin, onglet Contacts > Fournisseurs. Un devis (manufacturing_quotes) peut être rattaché à un fournisseur via supplier_id.';
+
+ALTER TABLE manufacturing_quotes ADD COLUMN IF NOT EXISTS supplier_id UUID REFERENCES suppliers(id) ON DELETE SET NULL;
+CREATE INDEX IF NOT EXISTS idx_manufacturing_quotes_supplier ON manufacturing_quotes(supplier_id);

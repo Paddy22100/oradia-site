@@ -1544,11 +1544,13 @@ async function handleData(req, res) {
 
       // ── Devis de fabrication en gros (onglet Devis & Coûts) ──
       if (action === 'create-quote' || action === 'update-quote') {
-        const { id, supplierName, contactInfo, quantity, unitCostEur, shippingCostEur, totalCostEur, quoteDate, validUntil, status, category, fileUrl, notes } = body;
+        const { id, supplierName, supplierId, contactInfo, quantity, unitCostEur, shippingCostEur, totalCostEur, quoteDate, validUntil, status, category, fileUrl, notes } = body;
         const cleanSupplier = (supplierName || '').trim();
         if (action === 'create-quote' && !cleanSupplier) return res.status(400).json({ error: 'Nom du fournisseur requis' });
+        const validCategory = ['fabrication', 'expedition', 'piece_tirage'].includes(category) ? category : 'fabrication';
         const payload = {
           supplier_name: cleanSupplier || undefined,
+          supplier_id: supplierId || null,
           contact_info: contactInfo ?? null,
           quantity: quantity !== undefined && quantity !== '' ? parseInt(quantity, 10) : null,
           unit_cost_eur: unitCostEur !== undefined && unitCostEur !== '' ? parseFloat(unitCostEur) : null,
@@ -1557,7 +1559,7 @@ async function handleData(req, res) {
           quote_date: quoteDate || null,
           valid_until: validUntil || null,
           status: status || 'a_etudier',
-          category: category === 'expedition' ? 'expedition' : 'fabrication',
+          category: validCategory,
           file_url: fileUrl || null,
           notes: notes || null,
           updated_at: new Date().toISOString()
@@ -1579,6 +1581,42 @@ async function handleData(req, res) {
         const { id } = body;
         if (!id) return res.status(400).json({ error: 'id requis' });
         const { error } = await supabase.from('manufacturing_quotes').delete().eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      // ── Fournisseurs / imprimeurs (onglet Contacts > Fournisseurs) ──
+      if (action === 'create-supplier' || action === 'update-supplier') {
+        const { id, name, specialty, contactName, email, phone, address, city, notes } = body;
+        const cleanName = (name || '').trim();
+        if (action === 'create-supplier' && !cleanName) return res.status(400).json({ error: 'Nom du fournisseur requis' });
+        const payload = {
+          specialty: specialty || null,
+          contact_name: contactName ?? null,
+          email: email || null,
+          phone: phone || null,
+          address: address ?? null,
+          city: city || null,
+          notes: notes || null,
+          updated_at: new Date().toISOString()
+        };
+        if (action === 'update-supplier') {
+          if (!id) return res.status(400).json({ error: 'id requis' });
+          if (cleanName) payload.name = cleanName;
+          const { error } = await supabase.from('suppliers').update(payload).eq('id', id);
+          if (error) throw error;
+          return res.status(200).json({ success: true });
+        }
+        payload.name = cleanName;
+        const { error } = await supabase.from('suppliers').insert(payload);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      if (action === 'delete-supplier') {
+        const { id } = body;
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { error } = await supabase.from('suppliers').delete().eq('id', id);
         if (error) throw error;
         return res.status(200).json({ success: true });
       }
@@ -3058,6 +3096,16 @@ async function handleData(req, res) {
         .from('manufacturing_quotes')
         .select('*')
         .order('quote_date', { ascending: false, nullsFirst: false });
+      if (error) throw error;
+      return res.status(200).json({ success: true, data: data || [] });
+    }
+
+    // ── Section suppliers : fournisseurs/imprimeurs (fiches contact) ──
+    if (section === 'suppliers') {
+      const { data, error } = await supabase
+        .from('suppliers')
+        .select('*')
+        .order('name', { ascending: true });
       if (error) throw error;
       return res.status(200).json({ success: true, data: data || [] });
     }

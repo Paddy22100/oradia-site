@@ -1342,6 +1342,10 @@
                     class="contacts-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
                     <i class="fas fa-handshake mr-1.5"></i>Partenaires
                 </button>
+                <button onclick="showContactsSubTab('suppliers')" id="contacts-subtab-btn-suppliers"
+                    class="contacts-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                    <i class="fas fa-industry mr-1.5"></i>Fournisseurs
+                </button>
             </div>
 
             <!-- ── Sous-onglet Répertoire ── -->
@@ -1554,6 +1558,84 @@
                             </thead>
                             <tbody id="partnersTbody">
                                 <tr><td colspan="7" class="px-6 py-8 text-center text-gold/30 cormorant text-lg">Chargement…</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Sous-onglet Fournisseurs ── -->
+            <div id="contacts-subtab-suppliers" class="hidden">
+                <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
+                    <span class="text-gold/50 text-sm">Imprimeurs et fabricants — rattachables à un devis dans l'onglet Devis &amp; Coûts</span>
+                    <button onclick="toggleSupplierForm()" class="text-sm bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 hover:bg-gold/25 transition"><i class="fas fa-plus mr-1"></i>Ajouter un fournisseur</button>
+                </div>
+
+                <div id="supplierForm" class="hidden bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-6 space-y-3">
+                    <input type="hidden" id="supplierId">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="md:col-span-2">
+                            <label class="text-light-gold/60 text-xs block mb-1">Nom du fournisseur</label>
+                            <input id="supplierName" type="text" placeholder="Nom de l'entreprise"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                        </div>
+                        <div>
+                            <label class="text-light-gold/60 text-xs block mb-1">Spécialité</label>
+                            <input id="supplierSpecialty" type="text" placeholder="Ex : imprimeur cartes, boîte, pièce de tirage…"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                        </div>
+                        <div>
+                            <label class="text-light-gold/60 text-xs block mb-1">Nom du contact</label>
+                            <input id="supplierContactName" type="text" placeholder="Nom du commercial"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                        </div>
+                        <div>
+                            <label class="text-light-gold/60 text-xs block mb-1">Email</label>
+                            <input id="supplierEmail" type="email" placeholder="contact@fournisseur.fr"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                        </div>
+                        <div>
+                            <label class="text-light-gold/60 text-xs block mb-1">Téléphone</label>
+                            <input id="supplierPhone" type="text" placeholder="Téléphone"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                        </div>
+                        <div>
+                            <label class="text-light-gold/60 text-xs block mb-1">Ville</label>
+                            <input id="supplierCity" type="text" placeholder="Ville"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-light-gold/60 text-xs block mb-1">Adresse</label>
+                            <input id="supplierAddress" type="text" placeholder="Adresse complète"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                        </div>
+                        <div class="md:col-span-3">
+                            <label class="text-light-gold/60 text-xs block mb-1">Notes</label>
+                            <textarea id="supplierNotes" rows="3" placeholder="Conditions, historique des échanges…"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50"></textarea>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="submitSupplier()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-5 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-check mr-1"></i>Enregistrer</button>
+                        <button onclick="toggleSupplierForm()" class="text-light-gold/50 hover:text-light-gold text-sm px-3 py-2">Annuler</button>
+                        <span id="supplierFormStatus" class="text-xs text-light-gold/40"></span>
+                    </div>
+                </div>
+
+                <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full" id="suppliersTable">
+                            <thead class="bg-[rgba(5,20,40,0.8)]">
+                                <tr>
+                                    <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Fournisseur</th>
+                                    <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Spécialité</th>
+                                    <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Ville</th>
+                                    <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Contact</th>
+                                    <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="suppliersTbody">
+                                <tr><td colspan="5" class="px-6 py-8 text-center text-gold/30 cormorant text-lg">Chargement…</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -1873,9 +1955,15 @@
                             class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
                     </div>
                     <div>
-                        <label class="text-light-gold/60 text-xs block mb-1">Contact</label>
+                        <label class="text-light-gold/60 text-xs block mb-1">Contact (texte libre)</label>
                         <input id="quoteContactInfo" type="text" placeholder="Email / téléphone"
                             class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                    </div>
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Fournisseur (fiche contact)</label>
+                        <select id="quoteSupplierId" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
+                            <option value="">— Aucun / voir Contacts &gt; Fournisseurs —</option>
+                        </select>
                     </div>
                     <div>
                         <label class="text-light-gold/60 text-xs block mb-1">Quantité</label>
@@ -1921,6 +2009,7 @@
                         <select id="quoteCategory" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
                             <option value="fabrication">Fabrication</option>
                             <option value="expedition">Expédition (carton, scotch…)</option>
+                            <option value="piece_tirage">Pièce de tirage (jeton + moule)</option>
                         </select>
                     </div>
                     <div class="md:col-span-3">
@@ -1945,13 +2034,15 @@
                 <button onclick="setQuotesCategoryFilter('all')" data-cat="all" class="quotes-cat-btn text-xs px-3 py-1.5 rounded-lg border transition bg-gold/20 text-gold border-gold/40">Tous</button>
                 <button onclick="setQuotesCategoryFilter('fabrication')" data-cat="fabrication" class="quotes-cat-btn text-xs px-3 py-1.5 rounded-lg border transition text-light-gold/50 border-gold/15">Fabrication</button>
                 <button onclick="setQuotesCategoryFilter('expedition')" data-cat="expedition" class="quotes-cat-btn text-xs px-3 py-1.5 rounded-lg border transition text-light-gold/50 border-gold/15">Expédition (carton, scotch…)</button>
+                <button onclick="setQuotesCategoryFilter('piece_tirage')" data-cat="piece_tirage" class="quotes-cat-btn text-xs px-3 py-1.5 rounded-lg border transition text-light-gold/50 border-gold/15">Pièce de tirage</button>
             </div>
 
-            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden mb-6">
                 <div class="overflow-x-auto">
                     <table class="w-full" id="quotesTable">
                         <thead class="bg-[rgba(5,20,40,0.8)]">
                             <tr>
+                                <th class="px-4 py-4 text-left"><input type="checkbox" id="quotesSelectAll" onchange="toggleSelectAllQuotes(this.checked)" class="accent-gold"></th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Fournisseur</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Catégorie</th>
                                 <th class="px-5 py-4 text-right text-gold font-semibold text-xs uppercase tracking-wider">Quantité</th>
@@ -1959,13 +2050,53 @@
                                 <th class="px-5 py-4 text-right text-gold font-semibold text-xs uppercase tracking-wider">Coût total</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Statut</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Date devis</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Contact</th>
                                 <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Actions</th>
                             </tr>
                         </thead>
                         <tbody id="quotesTbody">
-                            <tr><td colspan="8" class="px-6 py-8 text-center text-gold/30 cormorant text-lg">Chargement…</td></tr>
+                            <tr><td colspan="10" class="px-6 py-8 text-center text-gold/30 cormorant text-lg">Chargement…</td></tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- ── Analyse de rentabilité (devis sélectionnés) ── -->
+            <div id="quotesProfitabilityPanel" class="hidden bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/40 p-6">
+                <h4 class="cormorant text-xl font-bold text-gold mb-4"><i class="fas fa-calculator mr-2"></i>Analyse de rentabilité — devis sélectionnés</h4>
+                <p id="profitQuantityWarning" class="hidden text-xs text-orange-400 mb-3"></p>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
+                    <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-xl p-4">
+                        <div class="text-light-gold/50 text-xs mb-1">Coût total de fabrication (sélection)</div>
+                        <div class="text-gold text-xl font-bold" id="profitTotalCost">—</div>
+                        <div class="text-light-gold/40 text-xs mt-1" id="profitQuantity">—</div>
+                    </div>
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Prix de vente moyen par exemplaire (€)</label>
+                        <input id="profitSellingPrice" type="number" step="0.01" min="0" oninput="renderProfitability()"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
+                        <div class="text-light-gold/30 text-xs mt-1">Pré-rempli avec le panier moyen des précommandes</div>
+                    </div>
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Cagnotte déjà disponible (€)</label>
+                        <input id="profitCagnotte" type="number" step="0.01" min="0" oninput="renderProfitability()"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
+                        <div class="text-light-gold/30 text-xs mt-1">Pré-rempli avec la cagnotte fabrication actuelle</div>
+                    </div>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-xl p-4">
+                        <div class="text-light-gold/50 text-xs mb-1">Marge par exemplaire</div>
+                        <div class="text-xl font-bold" id="profitMargin">—</div>
+                    </div>
+                    <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-xl p-4">
+                        <div class="text-light-gold/50 text-xs mb-1">Seuil de rentabilité</div>
+                        <div class="text-xl font-bold" id="profitBreakEven">—</div>
+                    </div>
+                    <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-xl p-4">
+                        <div class="text-light-gold/50 text-xs mb-1">Statut</div>
+                        <div class="text-xl font-bold" id="profitStatusLine">—</div>
+                    </div>
                 </div>
             </div>
         </section>
@@ -4653,11 +4784,24 @@
             refuse:    'bg-red-500/20 text-red-300',
             archive:   'bg-light-gold/10 text-light-gold/40'
         };
-        const quoteCategoryLabels = { fabrication: 'Fabrication', expedition: 'Expédition' };
+        const quoteCategoryLabels = { fabrication: 'Fabrication', expedition: 'Expédition', piece_tirage: 'Pièce de tirage' };
         const quoteCategoryColors = {
-            fabrication: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
-            expedition:  'bg-purple-500/15 text-purple-300 border-purple-500/30'
+            fabrication:  'bg-blue-500/15 text-blue-300 border-blue-500/30',
+            expedition:   'bg-purple-500/15 text-purple-300 border-purple-500/30',
+            piece_tirage: 'bg-teal-500/15 text-teal-300 border-teal-500/30'
         };
+
+        // Sélection multiple de devis (checkboxes) pour l'analyse de rentabilité
+        let selectedQuoteIds = new Set();
+
+        function populateQuoteSupplierOptions() {
+            const sel = document.getElementById('quoteSupplierId');
+            if (!sel) return;
+            const current = sel.value;
+            sel.innerHTML = '<option value="">— Aucun / voir Contacts &gt; Fournisseurs —</option>' +
+                currentSuppliers.map(s => `<option value="${s.id}">${escapeHtmlFront(s.name)}</option>`).join('');
+            sel.value = current;
+        }
         let quotesCategoryFilter = 'all';
         function setQuotesCategoryFilter(cat) {
             quotesCategoryFilter = cat;
@@ -4679,6 +4823,8 @@
             document.getElementById('quoteId').value = isEditing ? quote.id : '';
             document.getElementById('quoteSupplierName').value = isEditing ? (quote.supplier_name || '') : '';
             document.getElementById('quoteContactInfo').value = isEditing ? (quote.contact_info || '') : '';
+            populateQuoteSupplierOptions();
+            document.getElementById('quoteSupplierId').value = isEditing ? (quote.supplier_id || '') : '';
             document.getElementById('quoteQuantity').value = isEditing ? (quote.quantity ?? '') : '';
             document.getElementById('quoteUnitCost').value = isEditing ? (quote.unit_cost_eur ?? '') : '';
             document.getElementById('quoteShippingCost').value = isEditing ? (quote.shipping_cost_eur ?? '') : '';
@@ -4705,6 +4851,7 @@
                 id: id || undefined,
                 supplierName,
                 contactInfo: document.getElementById('quoteContactInfo').value.trim(),
+                supplierId: document.getElementById('quoteSupplierId').value || undefined,
                 quantity: document.getElementById('quoteQuantity').value,
                 unitCostEur: document.getElementById('quoteUnitCost').value,
                 shippingCostEur: document.getElementById('quoteShippingCost').value,
@@ -4752,29 +4899,49 @@
         async function loadQuotes() {
             const tbody = document.getElementById('quotesTbody');
             try {
+                if (!currentSuppliers.length) await loadSuppliers();
                 const res = await adminFetch('/api/admin/data?section=quotes');
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.error || 'Erreur');
                 currentQuotes = json.data || [];
+                const validIds = new Set(currentQuotes.map(q => q.id));
+                selectedQuoteIds.forEach(id => { if (!validIds.has(id)) selectedQuoteIds.delete(id); });
                 renderQuotes();
             } catch (e) {
-                tbody.innerHTML = `<tr><td colspan="8" class="px-6 py-8 text-center text-red-400 text-sm">${escapeHtmlFront(e.message)}</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="px-6 py-8 text-center text-red-400 text-sm">${escapeHtmlFront(e.message)}</td></tr>`;
             }
+        }
+
+        function toggleQuoteSelect(id, checked) {
+            if (checked) selectedQuoteIds.add(id); else selectedQuoteIds.delete(id);
+            renderProfitability();
+        }
+
+        function toggleSelectAllQuotes(checked) {
+            const list = quotesCategoryFilter === 'all' ? currentQuotes : currentQuotes.filter(q => (q.category || 'fabrication') === quotesCategoryFilter);
+            list.forEach(q => { if (checked) selectedQuoteIds.add(q.id); else selectedQuoteIds.delete(q.id); });
+            renderQuotes();
         }
 
         function renderQuotes() {
             const tbody = document.getElementById('quotesTbody');
             const list = quotesCategoryFilter === 'all' ? currentQuotes : currentQuotes.filter(q => (q.category || 'fabrication') === quotesCategoryFilter);
             if (!list.length) {
-                tbody.innerHTML = '<tr><td colspan="8" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun devis enregistré</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="10" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun devis enregistré</td></tr>';
+                renderProfitability();
                 return;
             }
             const fmtEur = (v) => v == null ? '<span class="text-gold/20">—</span>' : `${Number(v).toFixed(2).replace('.', ',')} €`;
             const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
+            const emailRe = /[\w.+-]+@[\w-]+\.[\w.-]+/;
             tbody.innerHTML = list.map(q => {
                 const cat = q.category || 'fabrication';
+                const supplier = q.supplier_id ? currentSuppliers.find(s => s.id === q.supplier_id) : null;
+                const contactEmail = supplier?.email || (emailRe.exec(q.contact_info || '')?.[0]) || '';
+                const contactLabel = supplier ? escapeHtmlFront(supplier.name) : (q.contact_info ? escapeHtmlFront(q.contact_info) : '<span class="text-gold/20">—</span>');
                 return `
                     <tr class="hover:bg-gold/5 transition">
+                        <td class="px-4 py-4"><input type="checkbox" class="accent-gold" ${selectedQuoteIds.has(q.id) ? 'checked' : ''} onchange="toggleQuoteSelect('${q.id}', this.checked)"></td>
                         <td class="px-5 py-4 text-light-gold text-sm">${escapeHtmlFront(q.supplier_name || '—')}</td>
                         <td class="px-5 py-4"><span class="text-xs px-2 py-0.5 rounded-full border ${quoteCategoryColors[cat] || ''}">${quoteCategoryLabels[cat] || cat}</span></td>
                         <td class="px-5 py-4 text-right text-light-gold/80 text-sm">${q.quantity ?? '—'}</td>
@@ -4782,14 +4949,90 @@
                         <td class="px-5 py-4 text-right text-light-gold font-semibold text-sm">${fmtEur(q.total_cost_eur)}</td>
                         <td class="px-5 py-4"><span class="text-xs px-2 py-0.5 rounded-full ${quoteStatusColors[q.status] || ''}">${quoteStatusLabels[q.status] || q.status}</span></td>
                         <td class="px-5 py-4 text-light-gold/60 text-xs">${fmtDate(q.quote_date)}</td>
+                        <td class="px-5 py-4 text-light-gold/60 text-xs">${contactLabel}</td>
                         <td class="px-5 py-4">
                             <div class="flex gap-2">
+                                ${contactEmail ? `<button onclick="goToComposeEmail('${contactEmail.replace(/'/g,"\\'")}','Oradia — ')" title="Écrire un email" class="text-xs text-teal-400/70 hover:text-teal-400 border border-teal-400/20 hover:border-teal-400/50 rounded-lg px-2 py-1 transition"><i class="fas fa-envelope"></i></button>` : ''}
+                                ${supplier ? `<button onclick="goToSupplierCard('${supplier.id}')" title="Voir la fiche fournisseur" class="text-xs text-blue-400/70 hover:text-blue-400 border border-blue-400/20 hover:border-blue-400/50 rounded-lg px-2 py-1 transition"><i class="fas fa-id-card"></i></button>` : ''}
                                 <button onclick='toggleQuoteForm(${JSON.stringify(q).replace(/'/g, "&#39;")})' class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 transition"><i class="fas fa-pen"></i></button>
                                 <button onclick="deleteQuote('${q.id}')" class="text-xs text-red-400/60 hover:text-red-400 border border-red-400/20 hover:border-red-400/50 rounded-lg px-2 py-1 transition"><i class="fas fa-trash"></i></button>
                             </div>
                         </td>
                     </tr>`;
             }).join('');
+            renderProfitability();
+        }
+
+        // ── Analyse de rentabilité des devis sélectionnés ──
+        function renderProfitability() {
+            const panel = document.getElementById('quotesProfitabilityPanel');
+            const selected = currentQuotes.filter(q => selectedQuoteIds.has(q.id));
+            if (!selected.length) { panel.classList.add('hidden'); return; }
+            panel.classList.remove('hidden');
+
+            const fmtEur = (v) => `${Number(v || 0).toFixed(2).replace('.', ',')} €`;
+            const totalCost = selected.reduce((s, q) => s + (Number(q.total_cost_eur) || 0), 0);
+            const quantities = selected.map(q => Number(q.quantity) || 0).filter(q => q > 0);
+            const refQuantity = quantities.length ? Math.max(...quantities) : 0;
+
+            const warningEl = document.getElementById('profitQuantityWarning');
+            const distinctQuantities = [...new Set(quantities)];
+            if (distinctQuantities.length > 1) {
+                warningEl.classList.remove('hidden');
+                warningEl.textContent = `⚠️ Les devis sélectionnés portent sur des quantités différentes (${distinctQuantities.join(', ')}) — la quantité de référence retenue ci-dessous est la plus grande.`;
+            } else {
+                warningEl.classList.add('hidden');
+            }
+
+            document.getElementById('profitTotalCost').textContent = fmtEur(totalCost);
+            document.getElementById('profitQuantity').textContent = refQuantity ? `pour ${refQuantity} exemplaire${refQuantity > 1 ? 's' : ''} (${selected.length} devis sélectionné${selected.length > 1 ? 's' : ''})` : `${selected.length} devis sélectionné${selected.length > 1 ? 's' : ''}, quantité non renseignée`;
+
+            // Pré-remplissage (une seule fois, tant que l'utilisateur n'a pas modifié le champ)
+            const sellingPriceEl = document.getElementById('profitSellingPrice');
+            const cagnotteEl = document.getElementById('profitCagnotte');
+            const overview = currentData.overview?.preorders;
+            if (sellingPriceEl.dataset.autofilled !== 'true' && !sellingPriceEl.value && overview?.averageBasket) {
+                sellingPriceEl.value = overview.averageBasket.toFixed(2);
+                sellingPriceEl.dataset.autofilled = 'true';
+            }
+            if (cagnotteEl.dataset.autofilled !== 'true' && !cagnotteEl.value && overview?.cagnotteFabrication) {
+                cagnotteEl.value = overview.cagnotteFabrication.toFixed(2);
+                cagnotteEl.dataset.autofilled = 'true';
+            }
+
+            const sellingPrice = parseFloat(sellingPriceEl.value) || 0;
+            const cagnotte = parseFloat(cagnotteEl.value) || 0;
+            const unitCost = refQuantity > 0 ? totalCost / refQuantity : 0;
+            const margin = sellingPrice - unitCost;
+
+            const marginEl = document.getElementById('profitMargin');
+            marginEl.textContent = refQuantity ? fmtEur(margin) + ' / exemplaire' : '—';
+            marginEl.className = 'text-xl font-bold ' + (margin >= 0 ? 'text-green-400' : 'text-red-400');
+
+            const breakEvenEl = document.getElementById('profitBreakEven');
+            if (refQuantity && margin > 0) {
+                const breakEvenUnits = Math.ceil(totalCost / margin);
+                breakEvenEl.textContent = `${breakEvenUnits} exemplaire${breakEvenUnits > 1 ? 's' : ''}`;
+            } else if (refQuantity && margin <= 0) {
+                breakEvenEl.textContent = 'Jamais (prix ≤ coût)';
+            } else {
+                breakEvenEl.textContent = '—';
+            }
+
+            const statusEl = document.getElementById('profitStatusLine');
+            const oraclesCount = overview?.oraclesCount || 0;
+            if (!refQuantity || sellingPrice <= 0) {
+                statusEl.textContent = 'Renseigne quantité et prix';
+                statusEl.className = 'text-xl font-bold text-light-gold/40';
+            } else if (cagnotte >= totalCost) {
+                statusEl.innerHTML = `✅ Prête<div class="text-xs font-normal text-light-gold/50 mt-1">Excédent de ${fmtEur(cagnotte - totalCost)}</div>`;
+                statusEl.className = 'text-xl font-bold text-green-400';
+            } else {
+                const missing = totalCost - cagnotte;
+                const missingUnits = margin > 0 ? Math.ceil(missing / margin) : null;
+                statusEl.innerHTML = `⏳ Pas encore<div class="text-xs font-normal text-light-gold/50 mt-1">Il manque ${fmtEur(missing)}${missingUnits ? ` (~${missingUnits} précommande${missingUnits > 1 ? 's' : ''})` : ''}</div>`;
+                statusEl.className = 'text-xl font-bold text-orange-400';
+            }
         }
 
         // ── Partenaires / magasins ───────────────────────────────────────────────
@@ -5001,6 +5244,143 @@
             } catch (e) {
                 tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-red-400 text-sm">${escapeHtmlFront(e.message)}</td></tr>`;
             }
+        }
+
+        // ── Fournisseurs / imprimeurs (Contacts > Fournisseurs) ─────────────────────
+
+        function toggleSupplierForm(supplier) {
+            const form = document.getElementById('supplierForm');
+            if (!supplier && !form.classList.contains('hidden')) { form.classList.add('hidden'); return; }
+            const isEditing = !!supplier;
+            document.getElementById('supplierId').value = isEditing ? supplier.id : '';
+            document.getElementById('supplierName').value = isEditing ? (supplier.name || '') : '';
+            document.getElementById('supplierSpecialty').value = isEditing ? (supplier.specialty || '') : '';
+            document.getElementById('supplierContactName').value = isEditing ? (supplier.contact_name || '') : '';
+            document.getElementById('supplierEmail').value = isEditing ? (supplier.email || '') : '';
+            document.getElementById('supplierPhone').value = isEditing ? (supplier.phone || '') : '';
+            document.getElementById('supplierCity').value = isEditing ? (supplier.city || '') : '';
+            document.getElementById('supplierAddress').value = isEditing ? (supplier.address || '') : '';
+            document.getElementById('supplierNotes').value = isEditing ? (supplier.notes || '') : '';
+            document.getElementById('supplierFormStatus').textContent = '';
+            form.classList.remove('hidden');
+            if (!isEditing) document.getElementById('supplierName').focus();
+            form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        async function submitSupplier() {
+            const id = document.getElementById('supplierId').value;
+            const name = document.getElementById('supplierName').value.trim();
+            const status = document.getElementById('supplierFormStatus');
+            if (!name) { status.className = 'text-xs text-red-400'; status.textContent = 'Nom du fournisseur requis.'; return; }
+
+            const payload = {
+                id: id || undefined,
+                name,
+                specialty: document.getElementById('supplierSpecialty').value.trim(),
+                contactName: document.getElementById('supplierContactName').value.trim(),
+                email: document.getElementById('supplierEmail').value.trim(),
+                phone: document.getElementById('supplierPhone').value.trim(),
+                city: document.getElementById('supplierCity').value.trim(),
+                address: document.getElementById('supplierAddress').value.trim(),
+                notes: document.getElementById('supplierNotes').value.trim()
+            };
+            status.className = 'text-xs text-light-gold/40';
+            status.textContent = 'Enregistrement…';
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: id ? 'update-supplier' : 'create-supplier', ...payload })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                document.getElementById('supplierForm').classList.add('hidden');
+                await loadSuppliers();
+                if (typeof currentQuotes !== 'undefined') renderQuotes();
+            } catch (e) {
+                status.className = 'text-xs text-red-400';
+                status.textContent = 'Erreur : ' + e.message;
+            }
+        }
+
+        async function deleteSupplier(id) {
+            if (!(await adminConfirm('Supprimer définitivement ce fournisseur ? Les devis existants seront conservés mais détachés de sa fiche.', { danger: true }))) return;
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete-supplier', id })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                await loadSuppliers();
+            } catch (e) { adminAlert('Erreur : ' + e.message); }
+        }
+
+        let currentSuppliers = [];
+        async function loadSuppliers() {
+            const tbody = document.getElementById('suppliersTbody');
+            try {
+                const res = await adminFetch('/api/admin/data?section=suppliers');
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                currentSuppliers = json.data || [];
+                populateQuoteSupplierOptions();
+                if (!currentSuppliers.length) {
+                    tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun fournisseur enregistré</td></tr>';
+                    return;
+                }
+                tbody.innerHTML = currentSuppliers.map(s => `
+                    <tr class="hover:bg-gold/5 transition" id="supplier-row-${s.id}">
+                        <td class="px-5 py-4 text-light-gold text-sm">
+                            ${escapeHtmlFront(s.name || '—')}
+                            ${s.address ? `<br><span class="text-light-gold/40 text-xs">${escapeHtmlFront(s.address)}</span>` : ''}
+                        </td>
+                        <td class="px-5 py-4 text-light-gold/70 text-sm">${escapeHtmlFront(s.specialty || '—')}</td>
+                        <td class="px-5 py-4 text-light-gold/70 text-sm">${escapeHtmlFront(s.city || '—')}</td>
+                        <td class="px-5 py-4 text-light-gold/60 text-xs">
+                            ${s.contact_name ? escapeHtmlFront(s.contact_name) + '<br>' : ''}
+                            ${s.phone ? `<a href="tel:${escapeHtmlFront(s.phone.replace(/\s+/g,''))}" class="text-gold/60 hover:text-gold">${escapeHtmlFront(s.phone)}</a><br>` : ''}
+                            ${s.email ? `<a href="mailto:${escapeHtmlFront(s.email)}" class="text-gold/60 hover:text-gold">${escapeHtmlFront(s.email)}</a>` : ''}
+                            ${!s.contact_name && !s.phone && !s.email ? '—' : ''}
+                        </td>
+                        <td class="px-5 py-4">
+                            <div class="flex gap-2">
+                                ${s.email ? `<button onclick="goToComposeEmail('${escapeHtmlFront(s.email).replace(/'/g,"\\'")}','Oradia — ')" title="Écrire un email" class="text-xs text-teal-400/70 hover:text-teal-400 border border-teal-400/20 hover:border-teal-400/50 rounded-lg px-2 py-1 transition"><i class="fas fa-envelope"></i></button>` : ''}
+                                <button onclick='toggleSupplierForm(${JSON.stringify(s).replace(/'/g, "&#39;")})' class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 transition"><i class="fas fa-pen"></i></button>
+                                <button onclick="deleteSupplier('${s.id}')" class="text-xs text-red-400/60 hover:text-red-400 border border-red-400/20 hover:border-red-400/50 rounded-lg px-2 py-1 transition"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>`).join('');
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-red-400 text-sm">${escapeHtmlFront(e.message)}</td></tr>`;
+            }
+        }
+
+        // Ouvre l'onglet Mails avec le destinataire/sujet pré-remplis
+        function goToComposeEmail(email, subject) {
+            showTab('mails');
+            const toEl = document.getElementById('composeEmailTo');
+            const subjEl = document.getElementById('composeEmailSubject');
+            if (toEl) toEl.value = email || '';
+            if (subjEl) subjEl.value = subject || '';
+            const status = document.getElementById('composeEmailStatus');
+            if (status) status.textContent = '';
+            setTimeout(() => { toEl?.closest('.stat-card')?.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 100);
+        }
+
+        // Ouvre Contacts > Fournisseurs et met en surbrillance la fiche du fournisseur
+        function goToSupplierCard(supplierId) {
+            if (!supplierId) return;
+            showTab('waitlist');
+            showContactsSubTab('suppliers');
+            setTimeout(() => {
+                const row = document.getElementById('supplier-row-' + supplierId);
+                if (!row) return;
+                row.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                row.classList.add('bg-gold/20');
+                setTimeout(() => row.classList.remove('bg-gold/20'), 2000);
+            }, 150);
         }
 
         // ── Kickstarter ──────────────────────────────────────────────────────────
@@ -9239,9 +9619,11 @@
             document.getElementById('contacts-subtab-newsletter').classList.toggle('hidden', name !== 'newsletter');
             document.getElementById('contacts-subtab-tore-emails').classList.toggle('hidden', name !== 'tore-emails');
             document.getElementById('contacts-subtab-partners').classList.toggle('hidden', name !== 'partners');
+            document.getElementById('contacts-subtab-suppliers').classList.toggle('hidden', name !== 'suppliers');
             if (name === 'newsletter') loadNlSubscribers();
             if (name === 'tore-emails') loadToreEmails();
             if (name === 'partners') loadPartners();
+            if (name === 'suppliers') loadSuppliers();
         }
 
         // ── Inscrits Newsletter ────────────────────────────────────────────────────
