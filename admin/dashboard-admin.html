@@ -9843,7 +9843,18 @@
                             ? `<span class="text-green-400 text-xs"><i class="fas fa-check mr-1"></i>Envoyée le ${new Date(r.promo_sent_at).toLocaleDateString('fr-FR')}</span>`
                             : r.promo_skipped
                                 ? `<span class="text-gold/40 text-xs italic" title="Email issu de l'import d'historique — pas d'envoi rétroactif">Import historique (non envoyée)</span>`
-                                : `<span class="text-gold/30 text-xs italic">En attente (24h après tirage)</span>`}
+                                // Le mail promo part J+7 après le tirage (anciennement 24h — le texte
+                                // fixe "24h" était resté affiché après ce changement, laissant croire
+                                // le cron bloqué dès qu'une ligne dépassait 24h sans être envoyée).
+                                // Passé J+7 sans promo_sent_at, ce n'est plus une attente normale :
+                                // c'est le signe que le cron externe (cron-job.org) n'a pas tourné.
+                                : (() => {
+                                    const dueAt = r.created_at ? new Date(new Date(r.created_at).getTime() + 7*86400000) : null;
+                                    if (!dueAt) return `<span class="text-gold/30 text-xs italic">En attente (envoi prévu à J+7)</span>`;
+                                    return dueAt > new Date()
+                                        ? `<span class="text-gold/30 text-xs italic">En attente (envoi prévu le ${dueAt.toLocaleDateString('fr-FR')})</span>`
+                                        : `<span class="text-red-400 text-xs" title="Le cron aurait dû l'envoyer le ${dueAt.toLocaleDateString('fr-FR')} — vérifie que cron-job.org appelle bien /api/tirages/send-email?action=cron-promo-tirage"><i class="fas fa-triangle-exclamation mr-1"></i>En retard (dû le ${dueAt.toLocaleDateString('fr-FR')})</span>`;
+                                })()}
                     </td>
                     <td class="px-6 py-3 text-sm">
                         <button onclick="sendPromoManually('${emailEsc}')" class="text-xs bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/25 transition">
