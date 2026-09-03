@@ -4836,8 +4836,11 @@ async function runWeeklyTirageCron(supabase, res, { force = false } = {}) {
           analysis?.synthesis
         ].filter(Boolean).join('\n\n');
         const { facebook_text, instagram_text } = await generateSocialTexts({ subject, textContent: socialTextContent });
-        const rawImage = resolveCardImageUrl(cards[0]?.name) || 'https://oradia.fr/images/logo-hd-v2.webp';
-        const image_url = await ensureSafeSocialImageUrl(rawImage);
+        // Vignette de marque fixe ("Le Tirage de la Semaine", images/newsletter/
+        // tirage_astro.webp) plutôt que l'image de la première carte tirée : un
+        // visuel reconnaissable d'une semaine à l'autre, cohérent avec l'identité
+        // de la newsletter plutôt qu'une carte isolée hors de son contexte.
+        const image_url = await ensureSafeSocialImageUrl('https://oradia.fr/images/newsletter/tirage_astro.webp');
 
         const { error: socialError } = await supabase.from('social_posts').insert({
           subject, facebook_text, instagram_text, image_url,
