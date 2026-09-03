@@ -737,6 +737,25 @@
         </div>
     </div>
 
+    <!-- Modal globale : confirmation stylée (remplace window.confirm natif) — voir adminConfirm() -->
+    <div id="modalConfirm" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm">
+        <div class="bg-[#07112a] border border-gold/30 rounded-2xl p-6 w-full max-w-md shadow-2xl">
+            <div class="flex items-start gap-3 mb-5">
+                <div id="modalConfirmIcon" class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-gold/15">
+                    <i class="fas fa-circle-question text-gold"></i>
+                </div>
+                <div class="min-w-0">
+                    <h4 class="cormorant text-lg font-bold text-gold mb-1" id="modalConfirmTitle">Confirmer</h4>
+                    <p class="text-light-gold/80 text-sm whitespace-pre-line" id="modalConfirmMessage"></p>
+                </div>
+            </div>
+            <div class="flex justify-end gap-2">
+                <button id="modalConfirmCancelBtn" class="text-sm text-light-gold/60 hover:text-light-gold border border-gold/20 hover:border-gold/40 rounded-lg px-4 py-2 transition">Annuler</button>
+                <button id="modalConfirmOkBtn" class="text-sm bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 hover:bg-gold/30 transition">Confirmer</button>
+            </div>
+        </div>
+    </div>
+
     <main class="px-6 py-8">
         <!-- ══ ONGLET : TABLEAU DE BORD ══ -->
         <div id="tab-overview" class="tab-panel active">
@@ -3885,7 +3904,7 @@
         }
 
         async function blogDelete(id, title) {
-            if (!confirm('Supprimer définitivement l\'article « ' + title + ' » ?')) return;
+            if (!(await adminConfirm('Supprimer définitivement l\'article « ' + title + ' » ?', { danger: true }))) return;
             try {
                 const res = await adminFetch('/api/admin/blog?id=' + encodeURIComponent(id), { method: 'DELETE' });
                 if (!res.ok) throw new Error((await res.json().catch(()=>({}))).error || 'Erreur');
@@ -3901,6 +3920,59 @@
             if (filterEl) { filterEl.value = filterType; loadSupportMessages(); }
             const title = document.getElementById('topbar-title');
             if (title) title.textContent = TAB_TITLES[navId.replace('nav-', '')] || TAB_TITLES[tabName] || '';
+        }
+
+        // ── Confirmation stylée (remplace window.confirm natif, hors charte visuelle) ──
+        // Retourne une Promise<boolean> : true si confirmé, false si annulé (bouton
+        // Annuler, clic hors de la modale, ou touche Échap).
+        function adminConfirm(message, opts = {}) {
+            const { danger = false, confirmText = 'Confirmer', cancelText = 'Annuler', title = null } = opts;
+            return new Promise((resolve) => {
+                const modal    = document.getElementById('modalConfirm');
+                const msgEl    = document.getElementById('modalConfirmMessage');
+                const titleEl  = document.getElementById('modalConfirmTitle');
+                const okBtn    = document.getElementById('modalConfirmOkBtn');
+                const cancelBtn = document.getElementById('modalConfirmCancelBtn');
+                const iconWrap = document.getElementById('modalConfirmIcon');
+                const iconEl   = iconWrap.querySelector('i');
+
+                msgEl.textContent   = message;
+                titleEl.textContent = title || (danger ? 'Action irréversible' : 'Confirmer');
+                okBtn.textContent   = confirmText;
+                cancelBtn.textContent = cancelText;
+
+                if (danger) {
+                    iconWrap.className = 'w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-red-500/15';
+                    iconEl.className   = 'fas fa-triangle-exclamation text-red-400';
+                    okBtn.className    = 'text-sm bg-red-500/20 text-red-300 border border-red-500/40 rounded-lg px-4 py-2 hover:bg-red-500/30 transition';
+                } else {
+                    iconWrap.className = 'w-10 h-10 rounded-full flex items-center justify-center shrink-0 bg-gold/15';
+                    iconEl.className   = 'fas fa-circle-question text-gold';
+                    okBtn.className    = 'text-sm bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 hover:bg-gold/30 transition';
+                }
+
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+                okBtn.focus();
+
+                function cleanup(result) {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                    okBtn.onclick = null;
+                    cancelBtn.onclick = null;
+                    modal.onclick = null;
+                    document.removeEventListener('keydown', onKey);
+                    resolve(result);
+                }
+                function onKey(e) {
+                    if (e.key === 'Escape') cleanup(false);
+                    if (e.key === 'Enter') cleanup(true);
+                }
+                okBtn.onclick = () => cleanup(true);
+                cancelBtn.onclick = () => cleanup(false);
+                modal.onclick = (e) => { if (e.target === modal) cleanup(false); };
+                document.addEventListener('keydown', onKey);
+            });
         }
 
         // ── État global
@@ -4406,7 +4478,7 @@
                     kickstarterShowStatus('Fichier vide ou illisible.', 'border-red-500/40 text-red-300 bg-red-500/10');
                     return;
                 }
-                const confirmed = confirm(`${rows.length} ligne(s) détectée(s) dans « ${file.name} ». Importer maintenant ?`);
+                const confirmed = await adminConfirm(`${rows.length} ligne(s) détectée(s) dans « ${file.name} ». Importer maintenant ?`);
                 if (!confirmed) return;
 
                 kickstarterShowStatus('Import en cours…', 'border-gold/30 text-gold/80 bg-gold/5');
@@ -4514,7 +4586,7 @@
                     stripePaymentsShowStatus('Fichier vide ou illisible.', 'border-red-500/40 text-red-300 bg-red-500/10');
                     return;
                 }
-                const confirmed = confirm(`${rows.length} ligne(s) détectée(s) dans « ${file.name} ». Importer le frais réel de ces paiements Stripe maintenant ?`);
+                const confirmed = await adminConfirm(`${rows.length} ligne(s) détectée(s) dans « ${file.name} ». Importer le frais réel de ces paiements Stripe maintenant ?`);
                 if (!confirmed) return;
 
                 stripePaymentsShowStatus('Import en cours…', 'border-gold/30 text-gold/80 bg-gold/5');
@@ -4552,7 +4624,7 @@
         async function kickstarterUndoLastImport() {
             const batchId = document.getElementById('kickstarterUndoBtn')?.dataset.lastBatchId;
             if (!batchId) return;
-            if (!confirm('Annuler le dernier import ? Les backers ajoutés/mis à jour lors de ce lot seront supprimés.')) return;
+            if (!(await adminConfirm('Annuler le dernier import ? Les backers ajoutés/mis à jour lors de ce lot seront supprimés.', { danger: true }))) return;
             try {
                 const response = await adminFetch('/api/admin?action=kickstarter-delete-batch', {
                     method: 'POST',
@@ -5054,7 +5126,7 @@
             const totalEur = checked.reduce((sum, cb) => sum + Number(cb.dataset.amount || 0), 0);
 
             const confirmText = `Rembourser ${orderIds.length} commande(s) pour un total de ${formatCurrency(totalEur)} via Stripe ?\n\nCette action débite réellement le compte Stripe et prévient chaque client par email. Elle ne peut pas être annulée depuis ce dashboard.\n\nTape OK pour confirmer.`;
-            if (!confirm(confirmText)) return;
+            if (!(await adminConfirm(confirmText, { danger: true }))) return;
 
             const btn = document.getElementById('preordersBulkRefundBtn');
             const originalHTML = btn.innerHTML;
@@ -5219,7 +5291,7 @@
         }
 
         async function deleteCategoryTag(tagValue) {
-            if (!confirm(`Supprimer la catégorie "${tagValue}" de tous les contacts ?\nCette action est irréversible.`)) return;
+            if (!(await adminConfirm(`Supprimer la catégorie "${tagValue}" de tous les contacts ?`, { danger: true }))) return;
             const msgEl = document.getElementById('categoryManagerMsg');
             try {
                 const res = await adminFetch('/api/admin/data', {
@@ -5448,7 +5520,7 @@
         };
 
         async function deleteContact(id) {
-            if (!confirm('Supprimer ce contact de la liste newsletter ?')) return;
+            if (!(await adminConfirm('Supprimer ce contact de la liste newsletter ?', { danger: true }))) return;
             try {
                 const res = await adminFetch('/api/admin/data', {
                     method: 'POST',
@@ -5467,7 +5539,7 @@
         }
 
         async function resubscribeContact(id, email) {
-            if (!confirm(`Réinscrire ${email || 'ce contact'} à la newsletter ?\n\nRetire le blacklist Brevo et le rajoute à la liste newsletter.`)) return;
+            if (!(await adminConfirm(`Réinscrire ${email || 'ce contact'} à la newsletter ?\n\nRetire le blacklist Brevo et le rajoute à la liste newsletter.`))) return;
             try {
                 const res = await adminFetch('/api/admin/data', {
                     method: 'POST',
@@ -5486,7 +5558,7 @@
         }
 
         async function unsubscribeContact(id, email) {
-            if (!confirm(`Désinscrire ${email || 'ce contact'} de la newsletter ?\n\nLe contact est conservé dans le dashboard mais ne recevra plus les newsletters (retiré de la liste Brevo).`)) return;
+            if (!(await adminConfirm(`Désinscrire ${email || 'ce contact'} de la newsletter ?\n\nLe contact est conservé dans le dashboard mais ne recevra plus les newsletters (retiré de la liste Brevo).`))) return;
             try {
                 const res = await adminFetch('/api/admin/data', {
                     method: 'POST',
@@ -5792,7 +5864,7 @@
 
         // Marquer une commande comme livrée (clôture la commande)
         async function markAsDelivered(orderId) {
-            if (!confirm('Marquer cette commande comme livrée ? La commande sera clôturée.')) return;
+            if (!(await adminConfirm('Marquer cette commande comme livrée ? La commande sera clôturée.'))) return;
 
             try {
                 const response = await adminFetch('/api/admin/data', {
@@ -5816,7 +5888,7 @@
         }
 
         async function markAsPaid(orderId) {
-            if (!confirm('Marquer cette commande comme payée et envoyer l\'email de confirmation au client ?')) return;
+            if (!(await adminConfirm('Marquer cette commande comme payée et envoyer l\'email de confirmation au client ?'))) return;
             try {
                 const response = await adminFetch('/api/admin/data', {
                     method: 'POST',
@@ -5837,7 +5909,7 @@
         }
 
         async function deletePreorder(orderId) {
-            if (!confirm('Supprimer définitivement cette commande ? Cette action est irréversible.')) return;
+            if (!(await adminConfirm('Supprimer définitivement cette commande ?', { danger: true }))) return;
             try {
                 const response = await adminFetch('/api/admin/data', {
                     method: 'POST',
@@ -6029,7 +6101,7 @@
         }
 
         window.markOrderReady = async function markOrderReady(orderId) {
-            if (!confirm('Envoyer un email au client pour lui dire que sa commande est prête à récupérer ?')) return;
+            if (!(await adminConfirm('Envoyer un email au client pour lui dire que sa commande est prête à récupérer ?'))) return;
             try {
                 const res = await adminFetch('/api/admin/data', {
                     method: 'POST',
@@ -6045,10 +6117,10 @@
             }
         };
 
-        window.unmarkOrderProcessed = function unmarkOrderProcessed(orderId) {
+        window.unmarkOrderProcessed = async function unmarkOrderProcessed(orderId) {
             const key = String(orderId || '');
             if (!key) return;
-            if (!confirm('Dé-marquer cette commande comme traitée ?')) return;
+            if (!(await adminConfirm('Dé-marquer cette commande comme traitée ?'))) return;
             const processed = getProcessedOrders();
             delete processed[key];
             localStorage.setItem('oradia-admin-processed-orders', JSON.stringify(processed));
@@ -6056,10 +6128,10 @@
             refreshPreordersTable();
         };
 
-        window.markOrderProcessed = function markOrderProcessed(orderId) {
+        window.markOrderProcessed = async function markOrderProcessed(orderId) {
             const key = String(orderId || '');
             if (!key) return;
-            if (!confirm('Marquer cette commande comme traitée ?')) return;
+            if (!(await adminConfirm('Marquer cette commande comme traitée ?'))) return;
             const processed = getProcessedOrders();
             processed[key] = new Date().toISOString();
             localStorage.setItem('oradia-admin-processed-orders', JSON.stringify(processed));
@@ -6198,9 +6270,9 @@
         // dernière newsletter ouverte/modifiée (sujet, contenu, images, aperçu réseaux
         // sociaux...), au risque de continuer à modifier l'ancienne par erreur, ou de
         // devoir tout effacer champ par champ pour en démarrer une nouvelle.
-        function nlNewDraft() {
+        async function nlNewDraft() {
             if (document.getElementById('nl-content')?.value.trim() &&
-                !confirm('Repartir d\'une newsletter vierge ? Les modifications non sauvegardées seront perdues.')) return;
+                !(await adminConfirm('Repartir d\'une newsletter vierge ? Les modifications non sauvegardées seront perdues.', { danger: true }))) return;
 
             nlCurrentDraftId = null;
             nlSelectedImages = [];
@@ -7543,7 +7615,7 @@
 
         async function nlUnschedule() {
             if (!nlCurrentDraftId) return;
-            if (!confirm('Annuler la programmation de cet envoi ?')) return;
+            if (!(await adminConfirm('Annuler la programmation de cet envoi ?'))) return;
             try {
                 const res = await adminFetch('/api/admin/newsletter?action=unschedule', {
                     method: 'POST',
@@ -7568,7 +7640,7 @@
                 : targetTags.length
                 ? `Envoyer à la/aux catégorie(s) sélectionnée(s) (${targetTags.map(contactTagLabel).join(', ')}) ?\n\nIrréversible.`
                 : 'Envoyer à tous tes abonnés Brevo ?\n\nIrréversible.';
-            if (!confirm(confirmMsg)) return;
+            if (!(await adminConfirm(confirmMsg, { danger: true }))) return;
             const btn = document.getElementById('nl-btn-send') || document.getElementById('nl-btn-send-now');
             if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-2"></i>Envoi...'; }
             try {
@@ -8139,7 +8211,7 @@
         async function sendParcoursIndividualNow() {
             const status = document.getElementById('sendParcoursIndividualStatus');
             const show = (msg, cls) => { if (status) { status.textContent = msg; status.className = `text-sm mb-4 px-1 ${cls}`; status.classList.remove('hidden'); } };
-            if (!confirm("Lancer maintenant l'envoi individualisé du parcours ? Chaque contact actif recevra, s'il est dû (7 jours depuis son inscription ou son dernier envoi), sa prochaine étape (ordre > 6).")) return;
+            if (!(await adminConfirm("Lancer maintenant l'envoi individualisé du parcours ? Chaque contact actif recevra, s'il est dû (7 jours depuis son inscription ou son dernier envoi), sa prochaine étape (ordre > 6)."))) return;
             show('<i class="fas fa-spinner fa-spin mr-2"></i>Envoi en cours…', 'text-light-gold/60');
             try {
                 const res = await adminFetch('/api/admin/newsletter?action=send-parcours-individual-now', { method: 'POST' });
@@ -8325,7 +8397,7 @@
         // brouillons vers la vue Parcours — irréversible depuis cette liste (la
         // désactivation se ferait depuis l'onglet Parcours si besoin un jour).
         async function nlValidateParcours(id, skipConfirm) {
-            if (!skipConfirm && !confirm("Valider cette étape pour le Parcours ? Elle passera de « à valider » à validée, prête à être programmée.")) return;
+            if (!skipConfirm && !(await adminConfirm("Valider cette étape pour le Parcours ? Elle passera de « à valider » à validée, prête à être programmée."))) return;
             try {
                 const res = await adminFetch('/api/admin/newsletter?action=validate-parcours', {
                     method: 'POST',
@@ -8342,7 +8414,7 @@
         // Bouton "Valider" de l'aperçu (nlPreviewDraft) : confirme puis ferme l'aperçu
         // en cas de succès, pour retrouver directement la liste à jour.
         async function nlValidateFromPreview(id, btn) {
-            if (!confirm("Valider cette étape pour le Parcours ? Elle passera de « à valider » à validée, prête à être programmée.")) return;
+            if (!(await adminConfirm("Valider cette étape pour le Parcours ? Elle passera de « à valider » à validée, prête à être programmée."))) return;
             btn.disabled = true;
             const ok = await nlValidateParcours(id, true);
             if (ok) { const modal = btn.closest('.fixed'); if (modal) modal.remove(); }
@@ -8419,7 +8491,7 @@
         }
 
         async function nlDeleteDraft(id) {
-            if (!confirm('Supprimer définitivement ce brouillon ?')) return;
+            if (!(await adminConfirm('Supprimer définitivement ce brouillon ?', { danger: true }))) return;
             try {
                 const res = await adminFetch(`/api/admin/newsletter?action=drafts&id=${id}`, { method: 'DELETE' });
                 const data = await res.json();
@@ -8626,7 +8698,7 @@
                     return;
                 }
                 // 2. Confirmation puis envoi réel
-                const ok = confirm(`Renvoyer « ${dry.subject} » à ${dry.targets} contact(s) qui ne l'ont pas reçue ?\n\n${(dry.emails || []).slice(0, 15).join('\n')}${dry.targets > 15 ? '\n…' : ''}`);
+                const ok = await adminConfirm(`Renvoyer « ${dry.subject} » à ${dry.targets} contact(s) qui ne l'ont pas reçue ?\n\n${(dry.emails || []).slice(0, 15).join('\n')}${dry.targets > 15 ? '\n…' : ''}`, { danger: true });
                 if (!ok) { show('Envoi annulé.'); return; }
                 show('<i class="fas fa-spinner fa-spin mr-2"></i>Envoi en cours vers ' + dry.targets + ' contact(s)…');
                 const res = await adminFetch('/api/admin/newsletter?action=resend-last', {
@@ -8728,7 +8800,7 @@
         async function sendPromoManually(email) {
             const cellId = 'tore-promo-status-' + email.replace(/[^a-z0-9]/gi,'_');
             const cell = document.getElementById(cellId);
-            if (!confirm(`Envoyer l'email de promo abonnement (5€ le 1er mois) à ${email} ?`)) return;
+            if (!(await adminConfirm(`Envoyer l'email de promo abonnement (5€ le 1er mois) à ${email} ?`))) return;
             if (cell) cell.innerHTML = '<span class="text-gold/40 text-xs"><i class="fas fa-spinner fa-spin mr-1"></i>Envoi…</span>';
             try {
                 const res = await adminFetch('/api/tirages/send-email?action=send-promo-manual', {
@@ -8882,7 +8954,7 @@
         }
 
         async function nlDeleteIdea(id) {
-            if (!confirm('Supprimer ce fragment ?')) return;
+            if (!(await adminConfirm('Supprimer ce fragment ?', { danger: true }))) return;
             await adminFetch('/api/admin/newsletter?action=ideas&id=' + id, { method: 'DELETE' });
             nlIdeas = nlIdeas.filter(i => i.id !== id);
             nlRenderIdeas();
@@ -9140,7 +9212,7 @@
         }
 
         async function upgradeToPlan(id) {
-            if (!confirm('Passer cet abonnement en formule Complète ?')) return;
+            if (!(await adminConfirm('Passer cet abonnement en formule Complète ?'))) return;
             try {
                 const res = await adminFetch('/api/admin/data', {
                     method: 'POST',
@@ -9270,7 +9342,7 @@
         }
 
         async function resendCode(id) {
-            if (!confirm('Renvoyer le code par email ?')) return;
+            if (!(await adminConfirm('Renvoyer le code par email ?'))) return;
             try {
                 const res = await adminFetch('/api/admin/data', {
                     method: 'POST',
@@ -9284,7 +9356,7 @@
         }
 
         async function repairAccess(id, email) {
-            if (!confirm(`Réparer l'accès de ${email} ?\n\nSi son compte n'existe pas, il sera créé avec un nouveau mot de passe provisoire (envoyé par email). S'il existe déjà, un lien de réinitialisation à usage unique lui sera envoyé.`)) return;
+            if (!(await adminConfirm(`Réparer l'accès de ${email} ?\n\nSi son compte n'existe pas, il sera créé avec un nouveau mot de passe provisoire (envoyé par email). S'il existe déjà, un lien de réinitialisation à usage unique lui sera envoyé.`))) return;
             try {
                 const res = await adminFetch('/api/admin/data', {
                     method: 'POST',
@@ -9304,7 +9376,7 @@
         }
 
         async function sendCheckinReminder(id, email) {
-            if (!confirm(`Envoyer le mail "vous n'avez pas fait de tirage" à ${email} ?\n\nEnvoyé même si un tirage a été fait depuis ou si le mail a déjà été envoyé — décision volontaire.`)) return;
+            if (!(await adminConfirm(`Envoyer le mail "vous n'avez pas fait de tirage" à ${email} ?\n\nEnvoyé même si un tirage a été fait depuis ou si le mail a déjà été envoyé — décision volontaire.`))) return;
             try {
                 const res = await adminFetch('/api/admin/data', {
                     method: 'POST',
@@ -9335,7 +9407,7 @@
         }
 
         async function revokeSubscription(id) {
-            if (!confirm('Révoquer cet abonnement ? L\'accès sera immédiatement coupé.')) return;
+            if (!(await adminConfirm('Révoquer cet abonnement ? L\'accès sera immédiatement coupé.', { danger: true }))) return;
             try {
                 const res = await adminFetch('/api/admin/data', {
                     method: 'POST',
@@ -9496,7 +9568,7 @@
         }
 
         async function deleteSupportMsg(id) {
-            if (!confirm('Supprimer définitivement ce message ? Cette action est irréversible.')) return;
+            if (!(await adminConfirm('Supprimer définitivement ce message ?', { danger: true }))) return;
             try {
                 const res = await adminFetch('/api/admin/data?section=support-delete', {
                     method: 'POST',
@@ -9526,7 +9598,7 @@
             const publication = document.getElementById('manualTestimonialPublication').value;
             const source = document.getElementById('manualTestimonialSource').value.trim();
             if (!message) { alert('Le message est requis.'); return; }
-            if (!confirm('Confirmes-tu que cette personne est d\'accord pour que ce message soit utilisé comme témoignage public ?')) return;
+            if (!(await adminConfirm('Confirmes-tu que cette personne est d\'accord pour que ce message soit utilisé comme témoignage public ?'))) return;
 
             try {
                 const res = await adminFetch('/api/admin/data?section=support-add-manual', {
@@ -9548,7 +9620,7 @@
         }
 
         async function toggleTestimonialPublish(id, publish, btn) {
-            if (publish && !confirm('Publier ce témoignage sur oracle.html ? Il sera visible par tous les visiteurs du site.')) return;
+            if (publish && !(await adminConfirm('Publier ce témoignage sur oracle.html ? Il sera visible par tous les visiteurs du site.'))) return;
             if (btn) { btn.disabled = true; }
             try {
                 const res = await adminFetch('/api/admin/data?section=support-publish', {
@@ -9855,7 +9927,7 @@
         }
 
         async function sendClosingEmailManually(id) {
-            if (!confirm('Envoyer (ou renvoyer) le mail avec le lien du questionnaire de fin de fenêtre d\'observation ?')) return;
+            if (!(await adminConfirm('Envoyer (ou renvoyer) le mail avec le lien du questionnaire de fin de fenêtre d\'observation ?'))) return;
             const btn = document.getElementById('obs-send-btn-' + id);
             const statusCell = document.getElementById('obs-mail-status-' + id);
             if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Envoi…'; }
@@ -10531,7 +10603,7 @@
         }
 
         async function cancelScheduledSocial(id) {
-            if (!confirm('Annuler cette publication programmée ?')) return;
+            if (!(await adminConfirm('Annuler cette publication programmée ?'))) return;
             try {
                 const res = await adminFetch('/api/admin/social-posts?id=' + encodeURIComponent(id), { method: 'DELETE' });
                 if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Erreur');
@@ -10542,11 +10614,11 @@
         }
 
         async function publishSocialNow(id) {
-            if (!confirm('Publier cette publication maintenant sur Facebook et Instagram ?')) return;
+            if (!(await adminConfirm('Publier cette publication maintenant sur Facebook et Instagram ?', { danger: true }))) return;
             await socialPostAction({ action: 'publish-now', id });
         }
         async function markSocialPublished(id) {
-            if (!confirm('Marquer comme déjà publié (sans renvoyer sur les réseaux) ?')) return;
+            if (!(await adminConfirm('Marquer comme déjà publié (sans renvoyer sur les réseaux) ?'))) return;
             await socialPostAction({ action: 'mark-published', id });
         }
         async function setSocialArchived(id, archived) {
@@ -12315,7 +12387,7 @@
         }
 
         async function clearOldLogs() {
-            if (!confirm('Supprimer les logs de plus de 24h ?')) return;
+            if (!(await adminConfirm('Supprimer les logs de plus de 24h ?', { danger: true }))) return;
             await adminFetch('/api/admin/system-logs', { method: 'DELETE' });
             loadSurveillanceLogs();
         }
@@ -12507,7 +12579,7 @@ ${depenses.length ? `<table><thead><tr><th>Date</th><th>Description</th><th>Cat�
         }
 
         async function deleteTransaction(id) {
-            if (!confirm('Supprimer cette transaction ?')) return;
+            if (!(await adminConfirm('Supprimer cette transaction ?', { danger: true }))) return;
             const res = await adminFetch(`/api/admin/transactions?id=${id}`, { method: 'DELETE' });
             const data = await res.json();
             if (!data.success) { alert('Erreur: ' + data.error); return; }
@@ -12590,7 +12662,7 @@ ${depenses.length ? `<table><thead><tr><th>Date</th><th>Description</th><th>Cat�
 
         // ── Relance panier abandonné ──
         async function sendAbandonRelance(orderId, email, name, offer) {
-            if (!confirm(`Envoyer un email de relance à ${email} pour la commande "${offer}" ?`)) return;
+            if (!(await adminConfirm(`Envoyer un email de relance à ${email} pour la commande "${offer}" ?`))) return;
             try {
                 const res = await adminFetch('/api/admin/data', {
                     method: 'POST',
