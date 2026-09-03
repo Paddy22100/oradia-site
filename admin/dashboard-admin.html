@@ -2524,11 +2524,12 @@
                         <option value="30d">30 derniers jours</option>
                         <option value="365d">1 an</option>
                     </select>
-                    <button onclick="loadAnalytics()" class="bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-lg px-4 py-2 text-sm hover:bg-teal-500/30 transition">
+                    <button id="btn-analytics-refresh" onclick="loadAnalytics()" class="bg-teal-500/20 text-teal-300 border border-teal-500/40 rounded-lg px-4 py-2 text-sm hover:bg-teal-500/30 transition">
                         <i class="fas fa-sync-alt mr-1"></i>Actualiser
                     </button>
                 </div>
             </div>
+            <p id="analytics-error" class="hidden text-xs text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 mb-4"></p>
 
             <!-- KPIs trafic -->
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6" id="analytics-kpis">
@@ -10140,12 +10141,22 @@
 
         async function loadAnalytics() {
             const range = document.getElementById('analytics-range')?.value || '7d';
+            const btn = document.getElementById('btn-analytics-refresh');
+            const errEl = document.getElementById('analytics-error');
+            if (errEl) errEl.classList.add('hidden');
+            // Le bouton ne montrait jamais qu'il se passait quelque chose : en cas
+            // d'échec (session expirée, erreur serveur), rien ne changeait à l'écran
+            // et il paraissait cassé alors qu'il tentait — et échouait — en silence.
+            const btnOriginal = btn ? btn.innerHTML : '';
+            if (btn) { btn.disabled = true; btn.classList.add('opacity-60'); btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Actualisation...'; }
             loadQrngQuota();
             loadNewsletterSummaryForAnalytics();
             try {
                 const res = await adminFetch(`/api/admin/analytics?range=${range}`);
-                const data = await res.json();
-                if (!data.success) throw new Error(data.error);
+                let data;
+                try { data = await res.json(); }
+                catch (_) { throw new Error(`Réponse invalide du serveur (HTTP ${res.status})`); }
+                if (!res.ok || !data.success) throw new Error(data.error || `Erreur serveur (HTTP ${res.status})`);
                 _analyticsData = data;
                 const t = data.traffic || {};
                 setEl('ana-views', t.total_views ?? 0);
@@ -10269,6 +10280,9 @@
                 }
             } catch(e) {
                 console.error('[analytics]', e);
+                if (errEl) { errEl.textContent = 'Actualisation impossible : ' + e.message; errEl.classList.remove('hidden'); }
+            } finally {
+                if (btn) { btn.disabled = false; btn.classList.remove('opacity-60'); btn.innerHTML = btnOriginal; }
             }
         }
 
