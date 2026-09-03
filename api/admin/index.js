@@ -4550,13 +4550,15 @@ function buildTirageCardsGridHtml(cards) {
     }
   });
 
-  // Largeur fixe de la cellule (image + son padding horizontal) — donnée en
-  // pixels sur le <td>, pas seulement sur l'image : sans ça, la ligne complète
-  // (3 colonnes à width="33%") et la dernière ligne incomplète (cellules sans
-  // largeur déclarée, dimensionnées "au contenu") pouvaient être calculées
-  // différemment par certains moteurs de rendu mail (table-layout automatique),
-  // et une carte de la dernière ligne s'affichait alors plus petite que ses
-  // voisines des lignes précédentes, malgré un <img width="90"> identique.
+  // Largeur fixe de la cellule (image + son padding horizontal), en pixels sur
+  // le <td> — pas en pourcentage. Auparavant les lignes complètes (3 cartes)
+  // utilisaient width="33%" pendant que la dernière ligne incomplète utilisait
+  // une largeur fixe : deux structures différentes que certains moteurs de
+  // rendu mail (table-layout automatique) ne dimensionnaient pas de la même
+  // façon, d'où des cartes visiblement plus petites ou plus grandes selon leur
+  // ligne, malgré un <img width="90"> strictement identique partout. Toutes
+  // les lignes utilisent donc désormais exactement la même structure (voir
+  // plus bas), sans distinction ligne complète / incomplète.
   const CARD_CELL_WIDTH = WEEKLY_TIRAGE_CARD_IMG_WIDTH + 32;
 
   const cardHtml = (c) => {
@@ -4571,24 +4573,19 @@ function buildTirageCardsGridHtml(cards) {
       <p style="margin:2px 0 0; color:#e8d9a8; font-size:12px; font-weight:700; font-family:Georgia,serif;">${nlEscHtml(c.name)}</p>`;
   };
 
+  // Chaque ligne (3 cartes ou moins, pour la dernière) est une table interne
+  // à largeur automatique, centrée, avec des cellules à largeur fixe — qu'elle
+  // soit complète ou non. Une ligne incomplète (nombre de cartes+passerelles
+  // pas toujours multiple de 3) se retrouve ainsi centrée plutôt que collée à
+  // gauche avec des cellules vides à droite.
   let rows = '';
   for (let i = 0; i < cells.length; i += 3) {
     const rowCells = [cells[i], cells[i + 1], cells[i + 2]].filter(Boolean);
-    if (rowCells.length === 3) {
-      rows += `<tr>${rowCells.map(c => `<td width="33%" valign="top" style="padding:8px; text-align:center;">${cardHtml(c)}</td>`).join('')}</tr>`;
-    } else {
-      // Dernière ligne incomplète (1 ou 2 cartes, le nombre de cartes+passerelles
-      // n'étant pas toujours un multiple de 3) : centrée dans une table interne,
-      // plutôt que collée à gauche avec des cellules vides à 33% — une carte
-      // seule à gauche d'une ligne autrement vide attirait l'œil au mauvais
-      // endroit. Chaque cellule garde une largeur fixe en pixels (voir
-      // CARD_CELL_WIDTH ci-dessus), pour un rendu identique aux lignes complètes.
-      rows += `<tr><td align="center" style="padding:8px;">
-        <table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr>
-          ${rowCells.map(c => `<td width="${CARD_CELL_WIDTH}" valign="top" style="padding:0 16px; text-align:center;">${cardHtml(c)}</td>`).join('')}
-        </tr></table>
-      </td></tr>`;
-    }
+    rows += `<tr><td align="center" style="padding:8px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr>
+        ${rowCells.map(c => `<td width="${CARD_CELL_WIDTH}" valign="top" style="padding:0 16px; text-align:center;">${cardHtml(c)}</td>`).join('')}
+      </tr></table>
+    </td></tr>`;
   }
 
   return `<tr><td style="padding:8px 20px 12px;">
