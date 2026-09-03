@@ -1208,10 +1208,27 @@ async function handleCheckBrevo(req, res) {
   return res.status(200).json({ subscribed });
 }
 
-// ============ CRON : envoyer promo 24h après le tirage ============
+// ============ CRON : envoyer la promo abonnement J+7 après le tirage ============
+// Deux entrées possibles, une seule logique : le cron externe (cron-job.org, secret
+// CRON_SECRET) ET le bouton "Déclencher maintenant" du dashboard (session admin) passent
+// par cette même fonction. Sans ce second accès, le seul moyen de vérifier que ce
+// pipeline fonctionne réellement était d'attendre le prochain passage du cron externe —
+// invisible et non déclenchable à la demande depuis ce code.
 async function handleCronPromoTirage(req, res) {
   const secret = req.query.cron_secret || '';
-  if (secret !== process.env.CRON_SECRET) {
+  const isCron = !!process.env.CRON_SECRET && secret === process.env.CRON_SECRET;
+  let isAdmin = false;
+  if (!isCron) {
+    const authHeader = req.headers.authorization || '';
+    const rawToken = authHeader.startsWith('Bearer ') ? authHeader.slice(7) : '';
+    if (rawToken) {
+      try {
+        const jwt = require('jsonwebtoken');
+        isAdmin = jwt.verify(rawToken, process.env.ADMIN_SESSION_SECRET).type === 'admin';
+      } catch (_) { /* token absent, expiré ou invalide : isAdmin reste false */ }
+    }
+  }
+  if (!isCron && !isAdmin) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 

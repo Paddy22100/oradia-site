@@ -1450,7 +1450,13 @@
                             class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-48">
                         <span class="text-gold/50 text-sm">Emails collectés lors des tirages freemium</span>
                     </div>
+                    <button onclick="triggerPromoTirageCron()" id="btn-trigger-promo-cron"
+                        class="text-xs bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 hover:bg-gold/25 transition"
+                        title="Lance tout de suite le même envoi que le cron automatique (cron-job.org), sans attendre son prochain passage — utile pour vérifier qu'il fonctionne.">
+                        <i class="fas fa-bolt mr-1"></i>Déclencher la promo maintenant
+                    </button>
                 </div>
+                <p id="promoTirageCronStatus" class="hidden text-xs mb-4 px-1"></p>
                 <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full">
@@ -9882,6 +9888,33 @@
                 setTimeout(() => loadToreEmails(), 1000);
             } catch (e) {
                 if (cell) cell.innerHTML = `<span class="text-red-400 text-xs">✗ ${e.message}</span>`;
+            }
+        }
+
+        // Déclenche à la demande le même envoi que le cron externe (cron-job.org), sans
+        // attendre son prochain passage. La réponse HTTP arrive avant la fin des envois
+        // (traitement en arrière-plan côté serveur, voir handleCronPromoTirage) : le
+        // nombre indiqué est celui des emails mis en file, pas encore celui des emails
+        // effectivement partis — d'où le rafraîchissement différé de la liste.
+        async function triggerPromoTirageCron() {
+            const btn = document.getElementById('btn-trigger-promo-cron');
+            const st = document.getElementById('promoTirageCronStatus');
+            const show = (msg, cls) => { if (st) { st.textContent = msg; st.className = `text-xs mb-4 px-1 ${cls}`; st.classList.remove('hidden'); } };
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Envoi en cours…'; }
+            try {
+                const res = await adminFetch('/api/tirages/send-email?action=cron-promo-tirage', { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                if (data.skipped_reason === 'feature_disabled') {
+                    show('La fonctionnalité "promo_email_j7" est désactivée dans Réglages > Fonctionnalités.', 'text-yellow-400/80');
+                } else {
+                    show(`✓ ${data.queued} email(s) mis en file d'attente. Actualise dans quelques secondes pour voir les statuts se mettre à jour.`, 'text-green-400/80');
+                    setTimeout(() => loadToreEmails(), 4000);
+                }
+            } catch (e) {
+                show('✗ ' + e.message, 'text-red-400/80');
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-bolt mr-1"></i>Déclencher la promo maintenant'; }
             }
         }
 
