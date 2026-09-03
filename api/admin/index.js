@@ -7187,6 +7187,25 @@ async function handleSubscriptions(req, res) {
   }
 }
 
+// Récupère toutes les lignes d'une requête Supabase/PostgREST, en paginant avec .range().
+// PostgREST plafonne les lignes renvoyées par requête (souvent 1000, réglable seulement
+// depuis le dashboard du projet) indépendamment de tout .limit() côté client — un
+// dépassement silencieux, invisible tant qu'on ne compare pas le total attendu au total
+// reçu. queryFactory doit reconstruire une requête fraîche à chaque appel (les builders
+// Supabase ne sont pas réutilisables) et INCLURE un .order() explicite : sans tri stable,
+// une pagination par pages successives peut sauter ou dupliquer des lignes.
+async function sbFetchAllRows(queryFactory, { pageSize = 1000, maxRows = 30000 } = {}) {
+  const all = [];
+  for (let from = 0; all.length < maxRows; from += pageSize) {
+    const { data, error } = await queryFactory().range(from, from + pageSize - 1);
+    if (error) throw error;
+    const rows = data || [];
+    all.push(...rows);
+    if (rows.length < pageSize) break; // dernière page atteinte
+  }
+  return all;
+}
+
 // ============ ROUTEUR PRINCIPAL ============
 module.exports = async (req, res) => {
   setCORS(res, req);
@@ -8476,8 +8495,24 @@ Réponds en français, sans tiret long, format markdown compact.`
       };
 
       // ── Trafic réel (pages vues du site, via js/page-tracker.js) ──
-      const { data: views } = await sb.from('page_views').select('created_at,path,referrer,session_id,is_new_visitor,user_agent').gte('created_at', since).not('path', 'like', '/admin%').order('created_at', { ascending: false }).limit(20000);
-      const { data: prevViews } = await sb.from('page_views').select('created_at,session_id').gte('created_at', prevSince).lt('created_at', since).not('path', 'like', '/admin%').limit(20000);
+      // Un .limit() côté client ne suffit pas : Supabase/PostgREST impose son propre
+      // plafond de lignes par requête (souvent 1000, réglable seulement depuis le
+      // dashboard du projet, pas depuis ce code) qui l'écrase silencieusement. Comme
+      // les lignes reviennent triées du plus récent au plus ancien, le dépassement
+      // coupait la période demandée à ses derniers jours au lieu de couvrir toute la
+      // fenêtre "since" — un graphique "1 an" ne remontait en réalité qu'à quelques
+      // jours, et le total de vues stagnait à ce plafond. On pagine donc nous-mêmes
+      // avec .range() jusqu'à épuisement des lignes, quel que soit le plafond réel.
+      const [views, prevViews] = await Promise.all([
+        sbFetchAllRows(() => sb.from('page_views')
+          .select('created_at,path,referrer,session_id,is_new_visitor,user_agent')
+          .gte('created_at', since).not('path', 'like', '/admin%')
+          .order('created_at', { ascending: false })),
+        sbFetchAllRows(() => sb.from('page_views')
+          .select('created_at,session_id')
+          .gte('created_at', prevSince).lt('created_at', since).not('path', 'like', '/admin%')
+          .order('created_at', { ascending: false }))
+      ]);
       const traffic = computeTraffic(views);
       const prevTraffic = computeTraffic(prevViews);
       const pctChange = (curr, prev) => (prev > 0 ? Math.round(((curr - prev) / prev) * 100) : (curr > 0 ? 100 : 0));
@@ -8500,9 +8535,14 @@ Réponds en français, sans tiret long, format markdown compact.`
       // si une table/migration manque.
       let funnel = null;
       try {
-        const [{ data: toreViews }, { data: events }, { count: newSubs }] = await Promise.all([
-          sb.from('page_views').select('session_id').gte('created_at', since).ilike('path', '%tore.html%'),
-          sb.from('funnel_events').select('session_id, event_name').gte('created_at', since),
+        // Même plafond de pagination que plus haut — non chaîné à la première requête
+        // uniquement par coïncidence de volumes actuels, mais silencieusement exposé au
+        // même risque de troncature dès que le trafic sur la page Tore grandira.
+        const [toreViews, events, { count: newSubs }] = await Promise.all([
+          sbFetchAllRows(() => sb.from('page_views').select('session_id')
+            .gte('created_at', since).ilike('path', '%tore.html%').order('created_at', { ascending: false })),
+          sbFetchAllRows(() => sb.from('funnel_events').select('session_id, event_name')
+            .gte('created_at', since).order('created_at', { ascending: false })),
           sb.from('tore_subscriptions').select('*', { count: 'exact', head: true }).gte('created_at', since).eq('status', 'active')
         ]);
         // Funnel CHAÎNÉ : chaque étape ne compte que les sessions ayant franchi
