@@ -360,7 +360,6 @@
             <div class="nav-item" onclick="showTab('waitlist')" id="nav-waitlist">
                 <i class="fas fa-address-book w-4 text-center"></i>
                 <span>Contacts</span>
-                <span class="ml-auto text-xs bg-blue-500/20 text-blue-400 rounded-full px-2 py-0.5" id="nav-badge-waitlist"></span>
             </div>
 
             <p class="text-gold/50 text-xs uppercase tracking-widest px-5 mt-5 mb-2">Commerce</p>
@@ -383,6 +382,10 @@
                 <i class="fas fa-video w-4 text-center"></i>
                 <span>Guidances</span>
                 <span class="ml-auto text-xs bg-teal-500/20 text-teal-300 rounded-full px-2 py-0.5 hidden" id="nav-badge-guidances"></span>
+            </div>
+            <div class="nav-item" onclick="showTab('quotes')" id="nav-quotes">
+                <i class="fas fa-file-invoice-dollar w-4 text-center"></i>
+                <span>Devis &amp; Coûts</span>
             </div>
             <div class="nav-item" onclick="showTab('subscriptions')" id="nav-subscriptions">
                 <i class="fas fa-crown w-4 text-center"></i>
@@ -1310,6 +1313,10 @@
                     <i class="fas fa-magic mr-1.5"></i>Emails Tirages
                     <span id="tore-emails-count-badge" class="ml-1.5 text-xs bg-gold/20 text-gold rounded-full px-2 py-0.5"></span>
                 </button>
+                <button onclick="showContactsSubTab('partners')" id="contacts-subtab-btn-partners"
+                    class="contacts-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                    <i class="fas fa-handshake mr-1.5"></i>Partenaires
+                </button>
             </div>
 
             <!-- ── Sous-onglet Répertoire ── -->
@@ -1428,6 +1435,95 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gold/20" id="toreEmailsTableBody"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ── Sous-onglet Partenaires ── -->
+            <div id="contacts-subtab-partners" class="hidden">
+                <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
+                    <span class="text-gold/50 text-sm">Magasins susceptibles de vendre l'Oracle physique</span>
+                    <button onclick="togglePartnerForm()" class="text-sm bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 hover:bg-gold/25 transition"><i class="fas fa-plus mr-1"></i>Ajouter un partenaire</button>
+                </div>
+
+                <div id="partnerForm" class="hidden bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-6 space-y-3">
+                    <input type="hidden" id="partnerId">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                        <div class="md:col-span-2">
+                            <label class="text-light-gold/60 text-xs block mb-1">Nom du magasin</label>
+                            <input id="partnerStoreName" type="text" placeholder="Nom de la boutique"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                        </div>
+                        <div>
+                            <label class="text-light-gold/60 text-xs block mb-1">Ville</label>
+                            <input id="partnerCity" type="text" placeholder="Ville"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                        </div>
+                        <div>
+                            <label class="text-light-gold/60 text-xs block mb-1">Contact</label>
+                            <input id="partnerContactName" type="text" placeholder="Nom du contact"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                        </div>
+                        <div>
+                            <label class="text-light-gold/60 text-xs block mb-1">Email</label>
+                            <input id="partnerEmail" type="email" placeholder="contact@magasin.fr"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                        </div>
+                        <div>
+                            <label class="text-light-gold/60 text-xs block mb-1">Téléphone</label>
+                            <input id="partnerPhone" type="text" placeholder="Téléphone"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                        </div>
+                        <div class="md:col-span-2">
+                            <label class="text-light-gold/60 text-xs block mb-1">Adresse</label>
+                            <input id="partnerAddress" type="text" placeholder="Adresse complète"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                        </div>
+                        <div>
+                            <label class="text-light-gold/60 text-xs block mb-1">Statut</label>
+                            <select id="partnerStatus" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
+                                <option value="a_contacter">À contacter</option>
+                                <option value="contacte">Contacté</option>
+                                <option value="interesse">Intéressé</option>
+                                <option value="vend">Vend l'Oracle</option>
+                                <option value="refuse">A refusé</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-light-gold/60 text-xs block mb-1">Dernier contact</label>
+                            <input id="partnerLastContactDate" type="date"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
+                        </div>
+                        <div class="md:col-span-3">
+                            <label class="text-light-gold/60 text-xs block mb-1">Notes</label>
+                            <textarea id="partnerNotes" rows="3" placeholder="Historique des échanges, conditions envisagées…"
+                                class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50"></textarea>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <button onclick="submitPartner()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-5 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-check mr-1"></i>Enregistrer</button>
+                        <button onclick="togglePartnerForm()" class="text-light-gold/50 hover:text-light-gold text-sm px-3 py-2">Annuler</button>
+                        <span id="partnerFormStatus" class="text-xs text-light-gold/40"></span>
+                    </div>
+                </div>
+
+                <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
+                    <div class="overflow-x-auto">
+                        <table class="w-full" id="partnersTable">
+                            <thead class="bg-[rgba(5,20,40,0.8)]">
+                                <tr>
+                                    <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Magasin</th>
+                                    <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Ville</th>
+                                    <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Contact</th>
+                                    <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Statut</th>
+                                    <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Dernier contact</th>
+                                    <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="partnersTbody">
+                                <tr><td colspan="6" class="px-6 py-8 text-center text-gold/30 cormorant text-lg">Chargement…</td></tr>
+                            </tbody>
                         </table>
                     </div>
                 </div>
@@ -1728,6 +1824,107 @@
             </div>
         </section>
         </div><!-- /tab-guidances -->
+
+        <!-- ══ ONGLET : DEVIS & COÛTS DE FABRICATION ══ -->
+        <div id="tab-quotes" class="tab-panel">
+        <section class="mb-10">
+            <div class="flex items-center justify-between mb-8 flex-wrap gap-3">
+                <h3 class="cormorant text-2xl font-bold text-gold">Devis &amp; Coûts de fabrication</h3>
+                <button onclick="toggleQuoteForm()" class="text-sm bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 hover:bg-gold/25 transition"><i class="fas fa-plus mr-1"></i>Ajouter un devis</button>
+            </div>
+
+            <div id="quoteForm" class="hidden bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-6 space-y-3">
+                <input type="hidden" id="quoteId">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="md:col-span-2">
+                        <label class="text-light-gold/60 text-xs block mb-1">Fournisseur / fabricant</label>
+                        <input id="quoteSupplierName" type="text" placeholder="Nom du fabricant ou imprimeur"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                    </div>
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Contact</label>
+                        <input id="quoteContactInfo" type="text" placeholder="Email / téléphone"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                    </div>
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Quantité</label>
+                        <input id="quoteQuantity" type="number" min="1" placeholder="500"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                    </div>
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Coût unitaire (€)</label>
+                        <input id="quoteUnitCost" type="number" step="0.01" min="0" placeholder="8.50"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                    </div>
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Transport / douane (€)</label>
+                        <input id="quoteShippingCost" type="number" step="0.01" min="0" placeholder="Facultatif"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                    </div>
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Coût total (€)</label>
+                        <input id="quoteTotalCost" type="number" step="0.01" min="0" placeholder="Facultatif — sinon calculé"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                    </div>
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Date du devis</label>
+                        <input id="quoteDate" type="date"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
+                    </div>
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Valide jusqu'au</label>
+                        <input id="quoteValidUntil" type="date"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
+                    </div>
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Statut</label>
+                        <select id="quoteStatus" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
+                            <option value="a_etudier">À étudier</option>
+                            <option value="accepte">Accepté</option>
+                            <option value="refuse">Refusé</option>
+                            <option value="archive">Archivé</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="text-light-gold/60 text-xs block mb-1">Lien vers le fichier du devis (facultatif)</label>
+                        <input id="quoteFileUrl" type="url" placeholder="https://…"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                    </div>
+                    <div class="md:col-span-3">
+                        <label class="text-light-gold/60 text-xs block mb-1">Notes</label>
+                        <textarea id="quoteNotes" rows="3" placeholder="Détails, conditions, remarques…"
+                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50"></textarea>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="submitQuote()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-5 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-check mr-1"></i>Enregistrer</button>
+                    <button onclick="toggleQuoteForm()" class="text-light-gold/50 hover:text-light-gold text-sm px-3 py-2">Annuler</button>
+                    <span id="quoteFormStatus" class="text-xs text-light-gold/40"></span>
+                </div>
+            </div>
+
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full" id="quotesTable">
+                        <thead class="bg-[rgba(5,20,40,0.8)]">
+                            <tr>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Fournisseur</th>
+                                <th class="px-5 py-4 text-right text-gold font-semibold text-xs uppercase tracking-wider">Quantité</th>
+                                <th class="px-5 py-4 text-right text-gold font-semibold text-xs uppercase tracking-wider">Coût unit.</th>
+                                <th class="px-5 py-4 text-right text-gold font-semibold text-xs uppercase tracking-wider">Coût total</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Statut</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Date devis</th>
+                                <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="quotesTbody">
+                            <tr><td colspan="7" class="px-6 py-8 text-center text-gold/30 cormorant text-lg">Chargement…</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+        </div><!-- /tab-quotes -->
 
         <!-- ══ ONGLET : JOURNAL ══ -->
         <div id="tab-journal" class="tab-panel">
@@ -3690,6 +3887,7 @@
             preorders:          'Précommandes',
             donors:             'Dons',
             kickstarter:        'Kickstarter',
+            quotes:             'Devis & Coûts',
             waitlist:           'Contacts',
             'nl-subscribers':   'Newsletter — Abonnés',
             blog:               'Blog',
@@ -3728,6 +3926,7 @@
             if (name === 'waitlist')       { triggerSyncAll(false); }
             if (name === 'subscriptions') loadSubscriptions();
             if (name === 'kickstarter') { loadKickstarterStats(); loadKickstarter(1); }
+            if (name === 'quotes')      loadQuotes();
             if (name === 'support')        loadSupportMessages();
             if (name === 'synchronicity') { loadObservationWindows(); loadSynchronicity(); }
             if (name === 'monitoring')     { loadMonitoring(); loadSurveillanceLogs(); }
@@ -4396,6 +4595,240 @@
             if (data.success) {
                 currentData.donors = data.data;
                 updateDonorsTable(data.data, data.pagination);
+            }
+        }
+
+        // ── Devis & Coûts de fabrication ────────────────────────────────────────
+
+        const quoteStatusLabels = { a_etudier: 'À étudier', accepte: 'Accepté', refuse: 'Refusé', archive: 'Archivé' };
+        const quoteStatusColors = {
+            a_etudier: 'bg-gold/15 text-gold/80',
+            accepte:   'bg-green-500/20 text-green-300',
+            refuse:    'bg-red-500/20 text-red-300',
+            archive:   'bg-light-gold/10 text-light-gold/40'
+        };
+
+        function toggleQuoteForm(quote) {
+            const form = document.getElementById('quoteForm');
+            if (!quote && !form.classList.contains('hidden')) { form.classList.add('hidden'); return; }
+            const isEditing = !!quote;
+            document.getElementById('quoteId').value = isEditing ? quote.id : '';
+            document.getElementById('quoteSupplierName').value = isEditing ? (quote.supplier_name || '') : '';
+            document.getElementById('quoteContactInfo').value = isEditing ? (quote.contact_info || '') : '';
+            document.getElementById('quoteQuantity').value = isEditing ? (quote.quantity ?? '') : '';
+            document.getElementById('quoteUnitCost').value = isEditing ? (quote.unit_cost_eur ?? '') : '';
+            document.getElementById('quoteShippingCost').value = isEditing ? (quote.shipping_cost_eur ?? '') : '';
+            document.getElementById('quoteTotalCost').value = isEditing ? (quote.total_cost_eur ?? '') : '';
+            document.getElementById('quoteDate').value = isEditing ? (quote.quote_date || '') : '';
+            document.getElementById('quoteValidUntil').value = isEditing ? (quote.valid_until || '') : '';
+            document.getElementById('quoteStatus').value = isEditing ? (quote.status || 'a_etudier') : 'a_etudier';
+            document.getElementById('quoteFileUrl').value = isEditing ? (quote.file_url || '') : '';
+            document.getElementById('quoteNotes').value = isEditing ? (quote.notes || '') : '';
+            document.getElementById('quoteFormStatus').textContent = '';
+            form.classList.remove('hidden');
+            if (!isEditing) document.getElementById('quoteSupplierName').focus();
+            form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        async function submitQuote() {
+            const id = document.getElementById('quoteId').value;
+            const supplierName = document.getElementById('quoteSupplierName').value.trim();
+            const status = document.getElementById('quoteFormStatus');
+            if (!supplierName) { status.className = 'text-xs text-red-400'; status.textContent = 'Nom du fournisseur requis.'; return; }
+
+            const payload = {
+                id: id || undefined,
+                supplierName,
+                contactInfo: document.getElementById('quoteContactInfo').value.trim(),
+                quantity: document.getElementById('quoteQuantity').value,
+                unitCostEur: document.getElementById('quoteUnitCost').value,
+                shippingCostEur: document.getElementById('quoteShippingCost').value,
+                totalCostEur: document.getElementById('quoteTotalCost').value,
+                quoteDate: document.getElementById('quoteDate').value,
+                validUntil: document.getElementById('quoteValidUntil').value,
+                status: document.getElementById('quoteStatus').value,
+                fileUrl: document.getElementById('quoteFileUrl').value.trim(),
+                notes: document.getElementById('quoteNotes').value.trim()
+            };
+            status.className = 'text-xs text-light-gold/40';
+            status.textContent = 'Enregistrement…';
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: id ? 'update-quote' : 'create-quote', ...payload })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                document.getElementById('quoteForm').classList.add('hidden');
+                await loadQuotes();
+            } catch (e) {
+                status.className = 'text-xs text-red-400';
+                status.textContent = 'Erreur : ' + e.message;
+            }
+        }
+
+        async function deleteQuote(id) {
+            if (!(await adminConfirm('Supprimer définitivement ce devis ?', { danger: true }))) return;
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete-quote', id })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                await loadQuotes();
+            } catch (e) { adminAlert('Erreur : ' + e.message); }
+        }
+
+        let currentQuotes = [];
+        async function loadQuotes() {
+            const tbody = document.getElementById('quotesTbody');
+            try {
+                const res = await adminFetch('/api/admin/data?section=quotes');
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                currentQuotes = json.data || [];
+                if (!currentQuotes.length) {
+                    tbody.innerHTML = '<tr><td colspan="7" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun devis enregistré</td></tr>';
+                    return;
+                }
+                const fmtEur = (v) => v == null ? '<span class="text-gold/20">—</span>' : `${Number(v).toFixed(2).replace('.', ',')} €`;
+                const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
+                tbody.innerHTML = currentQuotes.map(q => `
+                    <tr class="hover:bg-gold/5 transition">
+                        <td class="px-5 py-4 text-light-gold text-sm">${escapeHtmlFront(q.supplier_name || '—')}</td>
+                        <td class="px-5 py-4 text-right text-light-gold/80 text-sm">${q.quantity ?? '—'}</td>
+                        <td class="px-5 py-4 text-right text-light-gold/80 text-sm">${fmtEur(q.unit_cost_eur)}</td>
+                        <td class="px-5 py-4 text-right text-light-gold font-semibold text-sm">${fmtEur(q.total_cost_eur)}</td>
+                        <td class="px-5 py-4"><span class="text-xs px-2 py-0.5 rounded-full ${quoteStatusColors[q.status] || ''}">${quoteStatusLabels[q.status] || q.status}</span></td>
+                        <td class="px-5 py-4 text-light-gold/60 text-xs">${fmtDate(q.quote_date)}</td>
+                        <td class="px-5 py-4">
+                            <div class="flex gap-2">
+                                <button onclick='toggleQuoteForm(${JSON.stringify(q).replace(/'/g, "&#39;")})' class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 transition"><i class="fas fa-pen"></i></button>
+                                <button onclick="deleteQuote('${q.id}')" class="text-xs text-red-400/60 hover:text-red-400 border border-red-400/20 hover:border-red-400/50 rounded-lg px-2 py-1 transition"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>`).join('');
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="7" class="px-6 py-8 text-center text-red-400 text-sm">${escapeHtmlFront(e.message)}</td></tr>`;
+            }
+        }
+
+        // ── Partenaires / magasins ───────────────────────────────────────────────
+
+        const partnerStatusLabels = { a_contacter: 'À contacter', contacte: 'Contacté', interesse: 'Intéressé', vend: "Vend l'Oracle", refuse: 'A refusé' };
+        const partnerStatusColors = {
+            a_contacter: 'bg-light-gold/10 text-light-gold/50',
+            contacte:    'bg-blue-500/20 text-blue-300',
+            interesse:   'bg-gold/15 text-gold/80',
+            vend:        'bg-green-500/20 text-green-300',
+            refuse:      'bg-red-500/20 text-red-300'
+        };
+
+        function togglePartnerForm(partner) {
+            const form = document.getElementById('partnerForm');
+            if (!partner && !form.classList.contains('hidden')) { form.classList.add('hidden'); return; }
+            const isEditing = !!partner;
+            document.getElementById('partnerId').value = isEditing ? partner.id : '';
+            document.getElementById('partnerStoreName').value = isEditing ? (partner.store_name || '') : '';
+            document.getElementById('partnerCity').value = isEditing ? (partner.city || '') : '';
+            document.getElementById('partnerContactName').value = isEditing ? (partner.contact_name || '') : '';
+            document.getElementById('partnerEmail').value = isEditing ? (partner.email || '') : '';
+            document.getElementById('partnerPhone').value = isEditing ? (partner.phone || '') : '';
+            document.getElementById('partnerAddress').value = isEditing ? (partner.address || '') : '';
+            document.getElementById('partnerStatus').value = isEditing ? (partner.status || 'a_contacter') : 'a_contacter';
+            document.getElementById('partnerLastContactDate').value = isEditing ? (partner.last_contact_date || '') : '';
+            document.getElementById('partnerNotes').value = isEditing ? (partner.notes || '') : '';
+            document.getElementById('partnerFormStatus').textContent = '';
+            form.classList.remove('hidden');
+            if (!isEditing) document.getElementById('partnerStoreName').focus();
+            form.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+
+        async function submitPartner() {
+            const id = document.getElementById('partnerId').value;
+            const storeName = document.getElementById('partnerStoreName').value.trim();
+            const status = document.getElementById('partnerFormStatus');
+            if (!storeName) { status.className = 'text-xs text-red-400'; status.textContent = 'Nom du magasin requis.'; return; }
+
+            const payload = {
+                id: id || undefined,
+                storeName,
+                contactName: document.getElementById('partnerContactName').value.trim(),
+                email: document.getElementById('partnerEmail').value.trim(),
+                phone: document.getElementById('partnerPhone').value.trim(),
+                address: document.getElementById('partnerAddress').value.trim(),
+                city: document.getElementById('partnerCity').value.trim(),
+                status: document.getElementById('partnerStatus').value,
+                lastContactDate: document.getElementById('partnerLastContactDate').value,
+                notes: document.getElementById('partnerNotes').value.trim()
+            };
+            status.className = 'text-xs text-light-gold/40';
+            status.textContent = 'Enregistrement…';
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: id ? 'update-partner' : 'create-partner', ...payload })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                document.getElementById('partnerForm').classList.add('hidden');
+                await loadPartners();
+            } catch (e) {
+                status.className = 'text-xs text-red-400';
+                status.textContent = 'Erreur : ' + e.message;
+            }
+        }
+
+        async function deletePartner(id) {
+            if (!(await adminConfirm('Supprimer définitivement ce partenaire ?', { danger: true }))) return;
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete-partner', id })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                await loadPartners();
+            } catch (e) { adminAlert('Erreur : ' + e.message); }
+        }
+
+        let currentPartners = [];
+        async function loadPartners() {
+            const tbody = document.getElementById('partnersTbody');
+            try {
+                const res = await adminFetch('/api/admin/data?section=partners');
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                currentPartners = json.data || [];
+                if (!currentPartners.length) {
+                    tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun partenaire enregistré</td></tr>';
+                    return;
+                }
+                const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR') : '—';
+                tbody.innerHTML = currentPartners.map(p => `
+                    <tr class="hover:bg-gold/5 transition">
+                        <td class="px-5 py-4 text-light-gold text-sm">${escapeHtmlFront(p.store_name || '—')}</td>
+                        <td class="px-5 py-4 text-light-gold/70 text-sm">${escapeHtmlFront(p.city || '—')}</td>
+                        <td class="px-5 py-4 text-light-gold/60 text-xs">
+                            ${escapeHtmlFront(p.contact_name || '—')}
+                            ${p.email ? `<br><a href="mailto:${escapeHtmlFront(p.email)}" class="text-gold/60 hover:text-gold">${escapeHtmlFront(p.email)}</a>` : ''}
+                        </td>
+                        <td class="px-5 py-4"><span class="text-xs px-2 py-0.5 rounded-full ${partnerStatusColors[p.status] || ''}">${partnerStatusLabels[p.status] || p.status}</span></td>
+                        <td class="px-5 py-4 text-light-gold/60 text-xs">${fmtDate(p.last_contact_date)}</td>
+                        <td class="px-5 py-4">
+                            <div class="flex gap-2">
+                                <button onclick='togglePartnerForm(${JSON.stringify(p).replace(/'/g, "&#39;")})' class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 transition"><i class="fas fa-pen"></i></button>
+                                <button onclick="deletePartner('${p.id}')" class="text-xs text-red-400/60 hover:text-red-400 border border-red-400/20 hover:border-red-400/50 rounded-lg px-2 py-1 transition"><i class="fas fa-trash"></i></button>
+                            </div>
+                        </td>
+                    </tr>`).join('');
+            } catch (e) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-red-400 text-sm">${escapeHtmlFront(e.message)}</td></tr>`;
             }
         }
 
@@ -8634,8 +9067,10 @@
             document.getElementById('contacts-subtab-repertoire').classList.toggle('hidden', name !== 'repertoire');
             document.getElementById('contacts-subtab-newsletter').classList.toggle('hidden', name !== 'newsletter');
             document.getElementById('contacts-subtab-tore-emails').classList.toggle('hidden', name !== 'tore-emails');
+            document.getElementById('contacts-subtab-partners').classList.toggle('hidden', name !== 'partners');
             if (name === 'newsletter') loadNlSubscribers();
             if (name === 'tore-emails') loadToreEmails();
+            if (name === 'partners') loadPartners();
         }
 
         // ── Inscrits Newsletter ────────────────────────────────────────────────────

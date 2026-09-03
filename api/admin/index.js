@@ -1540,6 +1540,83 @@ async function handleData(req, res) {
         return res.status(200).json({ success: true });
       }
 
+      // ── Devis de fabrication en gros (onglet Devis & Coûts) ──
+      if (action === 'create-quote' || action === 'update-quote') {
+        const { id, supplierName, contactInfo, quantity, unitCostEur, shippingCostEur, totalCostEur, quoteDate, validUntil, status, fileUrl, notes } = body;
+        const cleanSupplier = (supplierName || '').trim();
+        if (action === 'create-quote' && !cleanSupplier) return res.status(400).json({ error: 'Nom du fournisseur requis' });
+        const payload = {
+          supplier_name: cleanSupplier || undefined,
+          contact_info: contactInfo ?? null,
+          quantity: quantity !== undefined && quantity !== '' ? parseInt(quantity, 10) : null,
+          unit_cost_eur: unitCostEur !== undefined && unitCostEur !== '' ? parseFloat(unitCostEur) : null,
+          shipping_cost_eur: shippingCostEur !== undefined && shippingCostEur !== '' ? parseFloat(shippingCostEur) : null,
+          total_cost_eur: totalCostEur !== undefined && totalCostEur !== '' ? parseFloat(totalCostEur) : null,
+          quote_date: quoteDate || null,
+          valid_until: validUntil || null,
+          status: status || 'a_etudier',
+          file_url: fileUrl || null,
+          notes: notes || null,
+          updated_at: new Date().toISOString()
+        };
+        if (action === 'update-quote') {
+          if (!id) return res.status(400).json({ error: 'id requis' });
+          delete payload.supplier_name; // ne remplace le nom que s'il est explicitement fourni non-vide
+          if (cleanSupplier) payload.supplier_name = cleanSupplier;
+          const { error } = await supabase.from('manufacturing_quotes').update(payload).eq('id', id);
+          if (error) throw error;
+          return res.status(200).json({ success: true });
+        }
+        const { error } = await supabase.from('manufacturing_quotes').insert(payload);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      if (action === 'delete-quote') {
+        const { id } = body;
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { error } = await supabase.from('manufacturing_quotes').delete().eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      // ── Partenaires / magasins potentiels (onglet Partenaires) ──
+      if (action === 'create-partner' || action === 'update-partner') {
+        const { id, storeName, contactName, email, phone, address, city, status, lastContactDate, notes } = body;
+        const cleanStore = (storeName || '').trim();
+        if (action === 'create-partner' && !cleanStore) return res.status(400).json({ error: 'Nom du magasin requis' });
+        const payload = {
+          contact_name: contactName ?? null,
+          email: email || null,
+          phone: phone || null,
+          address: address ?? null,
+          city: city || null,
+          status: status || 'a_contacter',
+          last_contact_date: lastContactDate || null,
+          notes: notes || null,
+          updated_at: new Date().toISOString()
+        };
+        if (action === 'update-partner') {
+          if (!id) return res.status(400).json({ error: 'id requis' });
+          if (cleanStore) payload.store_name = cleanStore;
+          const { error } = await supabase.from('retail_partners').update(payload).eq('id', id);
+          if (error) throw error;
+          return res.status(200).json({ success: true });
+        }
+        payload.store_name = cleanStore;
+        const { error } = await supabase.from('retail_partners').insert(payload);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
+      if (action === 'delete-partner') {
+        const { id } = body;
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { error } = await supabase.from('retail_partners').delete().eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
       if (action === 'revoke' && subscriptionId) {
         const { error } = await supabase
           .from('tore_subscriptions')
@@ -2946,6 +3023,26 @@ async function handleData(req, res) {
         data: data || [],
         pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) }
       });
+    }
+
+    // ── Section quotes : devis de fabrication en gros ──
+    if (section === 'quotes') {
+      const { data, error } = await supabase
+        .from('manufacturing_quotes')
+        .select('*')
+        .order('quote_date', { ascending: false, nullsFirst: false });
+      if (error) throw error;
+      return res.status(200).json({ success: true, data: data || [] });
+    }
+
+    // ── Section partners : magasins partenaires potentiels ──
+    if (section === 'partners') {
+      const { data, error } = await supabase
+        .from('retail_partners')
+        .select('*')
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+      return res.status(200).json({ success: true, data: data || [] });
     }
 
     // ── Section kickstarter : liste paginée des backers importés ──
