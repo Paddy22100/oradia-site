@@ -4484,8 +4484,6 @@ const TIRAGE_FAMILY_COLORS = {
   archetypes: '#8b6fc0', revelations: '#4caf7d', actions: '#c9a63d',
   memoire_cosmos: '#5b82d9'
 };
-const TIRAGE_BRIDGE_COLOR = '#9a8a6a';
-
 // Découpe grossière en phrases (le texte vient d'une analyse narrative générée
 // par l'IA, pas d'un document technique — pas besoin de gérer les abréviations).
 // Le lookbehind garde le point final que ce soit ou non suivi d'un espace, et
@@ -4539,9 +4537,16 @@ function tirageClosingRow(text) {
 function buildTirageCardsGridHtml(cards) {
   const cells = [];
   cards.forEach(card => {
-    cells.push({ name: card.name, label: FAMILY_LABELS[card.family] || card.family, color: TIRAGE_FAMILY_COLORS[card.family] || '#d4af37' });
+    const familyLabel = FAMILY_LABELS[card.family] || card.family;
+    const familyColor = TIRAGE_FAMILY_COLORS[card.family] || '#d4af37';
+    cells.push({ name: card.name, label: familyLabel, color: familyColor });
     if (card.bridgeCard) {
-      cells.push({ name: card.bridgeCard.name, label: 'Passerelle', color: TIRAGE_BRIDGE_COLOR });
+      // Reprend la couleur ET le nom de la famille d'origine (plutôt qu'une
+      // couleur neutre et le seul mot "Passerelle") : dans une grille de 3
+      // colonnes, la carte passerelle ne se retrouve pas forcément juste à
+      // côté de la carte dont elle découle — sans ce rattachement explicite,
+      // rien à l'écran n'indiquait à quelle carte elle appartenait.
+      cells.push({ name: card.bridgeCard.name, label: `Passerelle · ${familyLabel}`, color: familyColor });
     }
   });
 
