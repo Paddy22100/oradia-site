@@ -1390,12 +1390,14 @@ async function handleData(req, res) {
           return res.status(200).json({ success: r.ok, status: r.status });
         } catch(e) { return res.status(200).json({ success: false, error: e.message }); }
       }
-      // ── Tirage de la semaine (dimanche) : génère UNIQUEMENT un brouillon,
-      // n'envoie jamais automatiquement — l'envoi se fait comme n'importe quel
-      // autre brouillon, en posant scheduled_at (cron-send-scheduled ci-dessus
-      // s'en charge) une fois le format validé manuellement depuis le dashboard.
-      // Thématisé par le calendrier astro (pleine lune, éclipse — lib/astro-calendar.js)
-      // quand la semaine tombe près d'un de ces événements, sinon thème générique.
+      // ── Tirage de la semaine (dimanche) : génère le brouillon ET le programme
+      // pour un envoi automatique le jour même à 19h heure de Paris (scheduled_at,
+      // voir runWeeklyTirageCron) — c'est le cron générique cron-send-scheduled
+      // ci-dessus qui déclenchera l'envoi Brevo réel une fois l'heure atteinte.
+      // Le brouillon reste visible et modifiable dans le dashboard entre 7h et
+      // 19h pour une relecture avant l'envoi. Thématisé par le calendrier astro
+      // (pleine lune, éclipse — lib/astro-calendar.js) quand la semaine tombe
+      // près d'un de ces événements, sinon thème générique.
       if (getAction === 'cron-tirage-hebdo') {
         return await runWeeklyTirageCron(supabase, res);
       }
@@ -4510,6 +4512,26 @@ function getIsoWeekKey(date) {
   return `${d.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`;
 }
 
+// Convertit "le même jour calendaire que `date`, à hour:minute heure de Paris"
+// en instant UTC — nécessaire car le décalage Paris/UTC change avec l'heure
+// d'été (+2 l'été, +1 l'hiver) : un cron Vercel fige un horaire UTC fixe à
+// l'année, ce qui déplacerait l'envoi d'une heure pendant la moitié de
+// l'année si on se contentait de coder l'un des deux décalages en dur.
+// Intl.DateTimeFormat interroge la vraie base de données de fuseaux (ICU,
+// incluse dans Node) : pas de dépendance supplémentaire nécessaire.
+function frenchLocalTimeToUtc(date, hour, minute) {
+  const y = date.getUTCFullYear(), m = date.getUTCMonth(), d = date.getUTCDate();
+  const guess = new Date(Date.UTC(y, m, d, hour, minute, 0));
+  const fmt = new Intl.DateTimeFormat('en-US', {
+    timeZone: 'Europe/Paris', hour12: false,
+    hour: '2-digit', minute: '2-digit'
+  });
+  const parts = fmt.formatToParts(guess).reduce((acc, p) => { acc[p.type] = p.value; return acc; }, {});
+  const gotMinutes = (parseInt(parts.hour, 10) % 24) * 60 + parseInt(parts.minute, 10);
+  const wantedMinutes = hour * 60 + minute;
+  return new Date(guess.getTime() + (wantedMinutes - gotMinutes) * 60000);
+}
+
 // Largeur des vignettes dans la grille des cartes — un cinquième de la
 // carte du dashboard pour rester lisible sur 3 colonnes.
 const WEEKLY_TIRAGE_CARD_IMG_WIDTH = 90;
@@ -4589,13 +4611,15 @@ function buildTirageCardsGridHtml(cards) {
     }
   });
 
-  // Largeur fixe de la cellule (image + son padding horizontal) — donnée en
-  // pixels sur le <td>, pas seulement sur l'image : sans ça, la ligne complète
-  // (3 colonnes à width="33%") et la dernière ligne incomplète (cellules sans
-  // largeur déclarée, dimensionnées "au contenu") pouvaient être calculées
-  // différemment par certains moteurs de rendu mail (table-layout automatique),
-  // et une carte de la dernière ligne s'affichait alors plus petite que ses
-  // voisines des lignes précédentes, malgré un <img width="90"> identique.
+  // Largeur fixe de la cellule (image + son padding horizontal), en pixels sur
+  // le <td> — pas en pourcentage. Auparavant les lignes complètes (3 cartes)
+  // utilisaient width="33%" pendant que la dernière ligne incomplète utilisait
+  // une largeur fixe : deux structures différentes que certains moteurs de
+  // rendu mail (table-layout automatique) ne dimensionnaient pas de la même
+  // façon, d'où des cartes visiblement plus petites ou plus grandes selon leur
+  // ligne, malgré un <img width="90"> strictement identique partout. Toutes
+  // les lignes utilisent donc désormais exactement la même structure (voir
+  // plus bas), sans distinction ligne complète / incomplète.
   const CARD_CELL_WIDTH = WEEKLY_TIRAGE_CARD_IMG_WIDTH + 32;
 
   const cardHtml = (c) => {
@@ -4610,24 +4634,19 @@ function buildTirageCardsGridHtml(cards) {
       <p style="margin:2px 0 0; color:#e8d9a8; font-size:12px; font-weight:700; font-family:Georgia,serif;">${nlEscHtml(c.name)}</p>`;
   };
 
+  // Chaque ligne (3 cartes ou moins, pour la dernière) est une table interne
+  // à largeur automatique, centrée, avec des cellules à largeur fixe — qu'elle
+  // soit complète ou non. Une ligne incomplète (nombre de cartes+passerelles
+  // pas toujours multiple de 3) se retrouve ainsi centrée plutôt que collée à
+  // gauche avec des cellules vides à droite.
   let rows = '';
   for (let i = 0; i < cells.length; i += 3) {
     const rowCells = [cells[i], cells[i + 1], cells[i + 2]].filter(Boolean);
-    if (rowCells.length === 3) {
-      rows += `<tr>${rowCells.map(c => `<td width="33%" valign="top" style="padding:8px; text-align:center;">${cardHtml(c)}</td>`).join('')}</tr>`;
-    } else {
-      // Dernière ligne incomplète (1 ou 2 cartes, le nombre de cartes+passerelles
-      // n'étant pas toujours un multiple de 3) : centrée dans une table interne,
-      // plutôt que collée à gauche avec des cellules vides à 33% — une carte
-      // seule à gauche d'une ligne autrement vide attirait l'œil au mauvais
-      // endroit. Chaque cellule garde une largeur fixe en pixels (voir
-      // CARD_CELL_WIDTH ci-dessus), pour un rendu identique aux lignes complètes.
-      rows += `<tr><td align="center" style="padding:8px;">
-        <table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr>
-          ${rowCells.map(c => `<td width="${CARD_CELL_WIDTH}" valign="top" style="padding:0 16px; text-align:center;">${cardHtml(c)}</td>`).join('')}
-        </tr></table>
-      </td></tr>`;
-    }
+    rows += `<tr><td align="center" style="padding:8px;">
+      <table role="presentation" cellpadding="0" cellspacing="0" align="center"><tr>
+        ${rowCells.map(c => `<td width="${CARD_CELL_WIDTH}" valign="top" style="padding:0 16px; text-align:center;">${cardHtml(c)}</td>`).join('')}
+      </tr></table>
+    </td></tr>`;
   }
 
   return `<tr><td style="padding:8px 20px 12px;">
@@ -4703,6 +4722,21 @@ async function runWeeklyTirageCron(supabase, res, { force = false } = {}) {
 
     const { subject, content, rawContentAppend } = buildWeeklyTirageContent({ theme, cards, analysis, date: now });
 
+    // Envoi automatique le dimanche 19h heure de Paris — le brouillon est généré
+    // le matin même (cron à 7h UTC, voir vercel.json) pour laisser une fenêtre
+    // de relecture avant l'envoi réel. C'est le cron générique cron-send-scheduled
+    // (déclenché en externe toutes les 15 min, voir son propre commentaire) qui
+    // enverra effectivement la campagne Brevo dès que scheduled_at est atteint —
+    // aucune nouvelle logique d'envoi ici, on rejoint le mécanisme déjà utilisé
+    // par les autres newsletters programmées.
+    //
+    // Uniquement sur le vrai cron (force=false) : le bouton de test du dashboard
+    // (force=true) régénère le brouillon n'importe quel jour de la semaine pour
+    // vérifier le rendu — s'il posait aussi scheduled_at à "aujourd'hui 19h",
+    // un simple clic de test un mardi programmerait un envoi réel à tous les
+    // abonnés le mardi soir, dès le prochain passage du cron externe.
+    const scheduledAt = force ? null : frenchLocalTimeToUtc(now, 19, 0);
+
     const { data, error } = await supabase
       .from('newsletter_drafts')
       .insert({
@@ -4720,6 +4754,7 @@ async function runWeeklyTirageCron(supabase, res, { force = false } = {}) {
           raw_content_append: rawContentAppend
         },
         statut: 'brouillon',
+        scheduled_at: scheduledAt ? scheduledAt.toISOString() : null,
         created_at: now.toISOString(),
         updated_at: now.toISOString()
       })
@@ -4727,13 +4762,14 @@ async function runWeeklyTirageCron(supabase, res, { force = false } = {}) {
       .single();
     if (error) throw error;
 
+    const scheduleNote = scheduledAt ? ` (envoi prévu ${scheduledAt.toISOString()})` : ' (test — envoi non programmé)';
     await logSystemEvent(supabase, {
       level: 'info', source: 'cron-tirage-hebdo',
-      message: `Brouillon du tirage hebdomadaire généré : ${subject}`,
-      details: { draft_id: data.id, theme: theme.label, qrng_source: qrngSource }
+      message: `Brouillon du tirage hebdomadaire généré : ${subject}${scheduleNote}`,
+      details: { draft_id: data.id, theme: theme.label, qrng_source: qrngSource, scheduled_at: scheduledAt ? scheduledAt.toISOString() : null }
     }).catch(() => {});
 
-    return res.status(200).json({ success: true, draft_id: data.id, subject, theme: theme.label, qrng_source: qrngSource });
+    return res.status(200).json({ success: true, draft_id: data.id, subject, theme: theme.label, qrng_source: qrngSource, scheduled_at: scheduledAt ? scheduledAt.toISOString() : null });
   } catch(e) {
     console.error('[cron-tirage-hebdo]', e.message);
     await logSystemEvent(supabase, { level: 'error', source: 'cron-tirage-hebdo', message: e.message }).catch(() => {});
