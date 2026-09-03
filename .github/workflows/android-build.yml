@@ -79,6 +79,18 @@ jobs:
         working-directory: mobile-app/android/app
         run: sha256sum release.keystore
 
+      # Diagnostic temporaire : affiche uniquement la LONGUEUR des mots de passe
+      # (jamais leur contenu) pour détecter un espace ou retour à la ligne collé
+      # en trop dans les secrets GitHub (23 caractères attendus pour les deux).
+      - name: Vérifier la longueur des mots de passe
+        if: ${{ vars.HAS_ANDROID_SIGNING == 'true' }}
+        env:
+          ORADIA_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ORADIA_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+        run: |
+          echo "Longueur ANDROID_KEYSTORE_PASSWORD: ${#ORADIA_KEYSTORE_PASSWORD}"
+          echo "Longueur ANDROID_KEY_PASSWORD: ${#ORADIA_KEY_PASSWORD}"
+
       - name: Build AAB signé (release)
         if: ${{ vars.HAS_ANDROID_SIGNING == 'true' }}
         working-directory: mobile-app/android
