@@ -778,6 +778,18 @@
                     </div>
                 </div>
                 
+                <!-- Total fonds sur le compte (précommandes + dons, net Stripe, livraison NON déduite — c'est bien ce qui est réellement sur le compte) -->
+                <div class="stat-card rounded-2xl p-6 hover:scale-105 transition-all duration-300 cursor-pointer group" onclick="showTab('preorders')" title="Précommandes + dons, net des frais Stripe — ce qui est réellement encaissé sur le compte, livraison comprise (pas encore dépensée)">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-blue-500/10 rounded-lg flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-blue-500/20 transition-all">
+                            <i class="fas fa-wallet text-blue-300 text-xl group-hover:scale-110 transition-transform"></i>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-blue-300 mb-1" id="totalFondsCompte">-</div>
+                    <p class="text-light-gold text-sm">Total fonds sur le compte</p>
+                    <p class="text-light-gold/40 text-xs mt-1">Précommandes + dons, frais Stripe déduits, livraison comprise</p>
+                </div>
+
                 <!-- Cagnotte fabrication (hors livraison) -->
                 <div class="stat-card rounded-2xl p-6 hover:scale-105 transition-all duration-300 cursor-pointer group" onclick="showTab('preorders')" title="Montant réellement disponible pour lancer la fabrication : précommandes payées, net des frais Stripe et de la part livraison">
                     <div class="flex items-center justify-between mb-4">
@@ -789,6 +801,18 @@
                     <p class="text-light-gold text-sm">Cagnotte fabrication</p>
                     <p class="text-light-gold/40 text-xs mt-1">Précommandes + dons Stripe, hors frais Stripe et livraison</p>
                     <p class="text-light-gold/30 text-xs mt-0.5" id="cagnotteShippingDetail">-</p>
+                </div>
+
+                <!-- Frais de port à prévoir -->
+                <div class="stat-card rounded-2xl p-6 hover:scale-105 transition-all duration-300 cursor-pointer group border-orange-500/40" onclick="showTab('preorders')" title="À réserver pour l'affranchissement — ne fait pas partie de la Cagnotte fabrication">
+                    <div class="flex items-center justify-between mb-4">
+                        <div class="w-12 h-12 bg-gradient-to-br from-orange-500/20 to-orange-500/10 rounded-lg flex items-center justify-center group-hover:from-orange-500/30 group-hover:to-orange-500/20 transition-all">
+                            <i class="fas fa-truck text-orange-400 text-xl group-hover:scale-110 transition-transform"></i>
+                        </div>
+                    </div>
+                    <div class="text-3xl font-bold text-orange-400 mb-1" id="overviewShippingTotal">-</div>
+                    <p class="text-light-gold text-sm">Frais de port à prévoir</p>
+                    <p class="text-light-gold/30 text-xs mt-1">À mettre de côté pour l'affranchissement, hors Cagnotte fabrication</p>
                 </div>
 
                 <!-- Dons -->
@@ -996,6 +1020,31 @@
             </div>
             <p class="text-sm text-light-gold/70 mb-4">L'export Mondial Relay génère un CSV prêt à l'import transporteur pour édition d'étiquettes.</p>
 
+            <div class="flex flex-wrap gap-4 mb-4">
+                <div class="stat-card rounded-2xl p-6 inline-block">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 bg-gradient-to-br from-green-500/20 to-green-500/10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-euro-sign text-green-400"></i>
+                        </div>
+                        <p class="text-light-gold text-sm">Montant précommandes (frais Stripe déduits)</p>
+                    </div>
+                    <div class="text-3xl font-bold text-gold" id="preordersTabNet">-</div>
+                    <p class="text-light-gold/40 text-xs mt-1" id="preordersTabGross">-</p>
+                    <p class="text-light-gold/30 text-xs mt-0.5">Livraison incluse, non déduite ici</p>
+                </div>
+
+                <div class="stat-card rounded-2xl p-6 inline-block border-orange-500/40" title="À réserver pour l'affranchissement — ne fait pas partie de la Cagnotte fabrication">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 bg-gradient-to-br from-orange-500/20 to-orange-500/10 rounded-lg flex items-center justify-center">
+                            <i class="fas fa-truck text-orange-400"></i>
+                        </div>
+                        <p class="text-light-gold text-sm">Frais de port à prévoir</p>
+                    </div>
+                    <div class="text-3xl font-bold text-orange-400" id="preordersTabShipping">-</div>
+                    <p class="text-light-gold/30 text-xs mt-0.5">À mettre de côté pour l'affranchissement, hors Cagnotte fabrication</p>
+                </div>
+            </div>
+
             <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-4 mb-4">
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-3">
                     <input id="preordersSearch" type="search" placeholder="Recherche email ou nom" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold" />
@@ -1069,6 +1118,18 @@
             <div class="flex items-center justify-between mb-8 flex-wrap gap-3">
                 <h3 class="cormorant text-2xl font-bold text-gold">Dons</h3>
                 <button onclick="toggleCashDonationForm()" class="text-sm bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 hover:bg-gold/25 transition"><i class="fas fa-hand-holding-dollar mr-1"></i>Ajouter un don en espèces</button>
+            </div>
+
+            <div class="stat-card rounded-2xl p-6 mb-6 inline-block" title="Dons Stripe et espèces confondus — le net déduit uniquement les frais Stripe estimés sur la part Stripe, les dons en espèces n'ont aucun frais">
+                <div class="flex items-center gap-3 mb-2">
+                    <div class="w-10 h-10 bg-gradient-to-br from-red-500/20 to-red-500/10 rounded-lg flex items-center justify-center">
+                        <i class="fas fa-heart text-red-400"></i>
+                    </div>
+                    <p class="text-light-gold text-sm">Total dons</p>
+                </div>
+                <div class="text-3xl font-bold text-gold" id="donorsTabTotal">-</div>
+                <p class="text-light-gold/40 text-xs mt-1" id="donorsTabNet">-</p>
+                <p class="text-light-gold/30 text-xs mt-0.5" id="donorsTabCash">-</p>
             </div>
 
             <div id="cashDonationForm" class="hidden bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-6 space-y-3">
@@ -1312,6 +1373,7 @@
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Date inscription</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Statut</th>
                                     <th class="px-6 py-4 text-left text-gold font-semibold">Dernière newsletter</th>
+                                    <th class="px-6 py-4 text-left text-gold font-semibold">Avancement parcours</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gold/20" id="nlTableBody"></tbody>
@@ -2240,6 +2302,9 @@
                     <button id="nl-parcours-import-btn" onclick="parcoursImportModeles()" class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/40 rounded-lg px-3 py-1.5 transition flex items-center gap-2">
                         <i class="fas fa-download"></i> Importer les 20 modèles du parcours
                     </button>
+                    <button id="nl-tirage-hebdo-btn" onclick="nlGenerateTirageHebdo()" class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/40 rounded-lg px-3 py-1.5 transition flex items-center gap-2" title="Génère le brouillon du tirage de la semaine tout de suite, sans attendre dimanche — n'envoie jamais automatiquement.">
+                        <i class="fas fa-moon"></i> Générer le tirage de la semaine
+                    </button>
                     <button id="nl-toggle-archived" onclick="nlToggleArchived()" class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/40 rounded-lg px-3 py-1.5 transition flex items-center gap-2">
                         <i class="fas fa-box-archive"></i> <span id="nl-toggle-archived-label">Voir les archivées</span>
                     </button>
@@ -2324,17 +2389,26 @@
                  =true, ordre extra.ordre) — validées depuis l'onglet Brouillons ci-dessus. -->
             <div id="nl-tab-parcours" class="nl-tab-content hidden">
                 <section class="mb-10">
-                    <div class="mb-6">
-                        <h4 class="cormorant text-xl font-bold text-gold">Parcours newsletters</h4>
-                        <p class="text-light-gold/50 text-sm mt-1">Les newsletters déjà envoyées, puis les étapes du parcours une fois validées (relues + illustrées) depuis l'onglet Brouillons.</p>
+                    <div class="mb-6 flex items-start justify-between gap-4 flex-wrap">
+                        <div>
+                            <h4 class="cormorant text-xl font-bold text-gold">Parcours newsletters</h4>
+                            <p class="text-light-gold/50 text-sm mt-1">Les newsletters déjà envoyées, puis les étapes du parcours une fois validées (relues + illustrées) depuis l'onglet Brouillons.</p>
+                        </div>
+                        <div class="flex items-center gap-2 flex-wrap">
+                            <button onclick="sendParcoursIndividualNow()" title="Envoie dès maintenant, à chaque contact individuellement selon sa propre date d'inscription/dernier envoi (cadence 7 jours), la prochaine étape du parcours qui lui est due (à partir de l'étape 1 pour un nouvel inscrit, de l'étape 7 pour un abonné antérieur à l'historique groupé). Tourne aussi automatiquement chaque mercredi à 19h (heure de Paris, cron)."
+                                class="flex-shrink-0 text-sm bg-purple-500/15 text-purple-300 border border-purple-500/30 rounded-lg px-4 py-2 hover:bg-purple-500/25 transition">
+                                <i class="fas fa-route mr-1.5"></i>Lancer l'envoi individualisé
+                            </button>
+                        </div>
                     </div>
+                    <p id="sendParcoursIndividualStatus" class="hidden text-sm mb-4 px-1"></p>
                     <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="w-full" id="parcoursTable">
                                 <thead class="bg-[rgba(5,20,40,0.8)]">
                                     <tr>
-                                        <th class="px-6 py-4 text-left text-gold font-semibold">#</th>
-                                        <th class="px-6 py-4 text-left text-gold font-semibold">Type</th>
+                                        <th class="px-6 py-4 text-left text-gold font-semibold" title="Numéro d'étape réel (extra.ordre) — modifiable pour les étapes pas encore envoyées">N° étape</th>
+                                        <th class="px-6 py-4 text-left text-gold font-semibold">Statut</th>
                                         <th class="px-6 py-4 text-left text-gold font-semibold">Sujet</th>
                                         <th class="px-6 py-4 text-left text-gold font-semibold">Date</th>
                                         <th class="px-6 py-4 text-left text-gold font-semibold">Registre</th>
@@ -2990,6 +3064,13 @@
                     <button onclick="importTransactions()" title="Les nouveaux paiements sont déjà enregistrés automatiquement. Ce bouton ne sert qu'à rattraper d'anciennes transactions manquantes." class="bg-blue-500/20 text-blue-300 border border-blue-500/30 rounded-lg px-4 py-2 text-sm hover:bg-blue-500/30 transition">
                         <i class="fas fa-history mr-1"></i>Resynchroniser l'historique
                     </button>
+                    <button onclick="stripeFeesSyncNow()" title="Récupère directement depuis l'API Stripe le frais exact de chaque paiement de la période affichée — toujours à jour, aucun fichier à exporter/réimporter." class="bg-purple-500/20 text-purple-300 border border-purple-500/30 rounded-lg px-4 py-2 text-sm hover:bg-purple-500/30 transition">
+                        <i class="fas fa-plug mr-1"></i>Synchroniser les frais réels (Stripe)
+                    </button>
+                    <label title="À utiliser seulement si l'API Stripe est injoignable : import manuel d'un export « Paiements » (Dashboard Stripe → Paiements → Exporter)." class="bg-purple-500/10 text-purple-300/70 border border-purple-500/20 rounded-lg px-4 py-2 text-sm hover:bg-purple-500/20 transition cursor-pointer">
+                        <i class="fas fa-file-invoice-dollar mr-1"></i>Importer un CSV (secours)
+                        <input type="file" accept=".csv" class="hidden" onchange="stripePaymentsHandleFile(this)">
+                    </label>
                     <button onclick="showAddTransaction()" class="bg-gold/10 hover:bg-gold/20 border border-gold/30 text-gold rounded-lg px-4 py-2 text-sm transition">
                         <i class="fas fa-plus mr-1"></i>Ajouter
                     </button>
@@ -2998,6 +3079,8 @@
                     </button>
                 </div>
             </div>
+
+            <div id="stripePaymentsImportStatus" class="hidden mb-6 px-4 py-3 rounded-lg text-sm border"></div>
 
             <!-- KPIs -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
@@ -3022,17 +3105,40 @@
                 </div>
             </div>
 
-            <!-- Détail des frais Stripe — lus dans les balance transactions, pas estimés.
-                 Purement informatif : l'URSSAF se calcule sur le brut encaissé. -->
+            <!-- Détail des frais Stripe — lus dans les balance transactions, pas estimés. -->
             <div class="bg-white/3 border border-gold/10 rounded-xl p-4 mb-6 flex items-center justify-between flex-wrap gap-3">
                 <div>
                     <p class="text-gold/60 text-xs uppercase tracking-widest mb-1">Frais Stripe <span class="text-gold/30 normal-case" id="compta-stripe-source">—</span></p>
-                    <p class="text-light-gold/40 text-xs italic">Déjà déduits du résultat net ci-dessus. L'URSSAF, elle, se calcule sur le montant brut encaissé.</p>
+                    <p class="text-light-gold/40 text-xs italic">Déjà déduits du résultat net ci-dessus.</p>
                 </div>
                 <div class="text-right">
                     <p class="text-lg font-bold text-red-400/90" id="compta-stripe-fees">—</p>
                     <p class="text-xs text-gold/40" id="compta-stripe-detail"></p>
                 </div>
+            </div>
+
+            <!-- Déclaration URSSAF — ce qui doit réellement être déclaré, pas juste un
+                 chiffre estimé noyé dans les KPIs. Base = abonnements uniquement :
+                 précommandes et dons exclus tant qu'ils restent conditionnels
+                 (garantie zéro-risque de la page précommande). -->
+            <div class="bg-orange-500/5 border border-orange-500/20 rounded-xl p-5 mb-6">
+                <div class="mb-4">
+                    <h4 class="text-orange-300 font-semibold">Déclaration URSSAF</h4>
+                    <p class="text-light-gold/40 text-xs italic mt-1">Base = abonnements uniquement. Précommandes et dons exclus tant qu'ils restent conditionnels (remboursables si l'objectif de financement n'est pas atteint).</p>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="bg-white/3 rounded-lg p-3">
+                        <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">BIC ventes <span id="urssaf-taux-bic"></span></p>
+                        <p class="text-gold/80 text-sm">Base déclarable : <span class="font-semibold" id="urssaf-base-bic">—</span></p>
+                        <p class="text-orange-300 text-sm font-semibold">Cotisation : <span id="urssaf-cotis-bic">—</span></p>
+                    </div>
+                    <div class="bg-white/3 rounded-lg p-3">
+                        <p class="text-gold/50 text-xs uppercase tracking-wider mb-1">BNC services <span id="urssaf-taux-bnc"></span></p>
+                        <p class="text-gold/80 text-sm">Base déclarable : <span class="font-semibold" id="urssaf-base-bnc">—</span></p>
+                        <p class="text-orange-300 text-sm font-semibold">Cotisation : <span id="urssaf-cotis-bnc">—</span></p>
+                    </div>
+                </div>
+                <p class="text-gold/30 text-xs mt-4" id="urssaf-exclusions"></p>
             </div>
 
             <!-- Formulaire ajout -->
@@ -4330,6 +4436,119 @@
             }
         }
 
+        async function stripeFeesSyncNow() {
+            const year = document.getElementById('compta-year')?.value || new Date().getFullYear();
+            const month = document.getElementById('compta-month')?.value || '';
+            stripePaymentsShowStatus('Synchronisation avec Stripe en cours…', 'border-gold/30 text-gold/80 bg-gold/5');
+            try {
+                const response = await adminFetch('/api/admin?action=stripe-fees-sync', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ year, month: month || null })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    stripePaymentsShowStatus(data.error || 'Échec de la synchronisation.', 'border-red-500/40 text-red-300 bg-red-500/10');
+                    return;
+                }
+                const hasIssues = data.unmatched || data.noTransactionRow;
+                stripePaymentsShowResult(
+                    `${data.updated} transaction(s) mise(s) à jour avec le frais réel Stripe (${data.fetched} paiement(s) trouvé(s) sur la période).`,
+                    data,
+                    hasIssues ? 'border-orange-500/40 text-orange-300 bg-orange-500/10' : 'border-green-500/40 text-green-300 bg-green-500/10'
+                );
+                await loadComptabilite();
+            } catch (e) {
+                console.error('[Admin] stripeFeesSyncNow failed:', e);
+                stripePaymentsShowStatus('Erreur technique lors de la synchronisation : ' + e.message, 'border-red-500/40 text-red-300 bg-red-500/10');
+            }
+        }
+
+        function stripePaymentsShowStatus(msg, cls) {
+            const el = document.getElementById('stripePaymentsImportStatus');
+            if (!el) return;
+            el.textContent = msg;
+            el.className = `mb-6 px-4 py-3 rounded-lg text-sm border ${cls}`;
+            el.classList.remove('hidden');
+        }
+
+        // Détail ligne par ligne des paiements Stripe qui n'ont pas pu être rattachés,
+        // pour diagnostiquer sans avoir à recouper manuellement avec le dashboard Stripe.
+        function stripeFeesSyncDetailsHtml(data) {
+            const parts = [];
+            if (data.unmatched) {
+                const lines = (data.unmatchedDetails || []).map(d =>
+                    `<li>${escapeHtmlFront(d.paymentIntentId)} — ${new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(d.amount)} : aucune précommande/don avec ce PaymentIntent</li>`
+                ).join('');
+                parts.push(`<p class="mt-2 font-semibold">${data.unmatched} paiement(s) Stripe sans précommande/don correspondant :</p><ul class="list-disc list-inside text-xs opacity-80">${lines}</ul>`);
+            }
+            if (data.noTransactionRow) {
+                const lines = (data.noTransactionRowDetails || []).map(d =>
+                    `<li>${escapeHtmlFront(d.paymentIntentId)} — ${new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(d.amount)} : précommande/don trouvé, mais aucune ligne dans "Transactions" (source_ref ${escapeHtmlFront(d.sessionId)}) — clique "Resynchroniser l'historique" puis relance</li>`
+                ).join('');
+                parts.push(`<p class="mt-2 font-semibold">${data.noTransactionRow} paiement(s) trouvé(s) mais sans ligne dans le journal des transactions :</p><ul class="list-disc list-inside text-xs opacity-80">${lines}</ul>`);
+            }
+            return parts.join('');
+        }
+
+        function stripePaymentsShowResult(baseMsg, data, cls) {
+            const el = document.getElementById('stripePaymentsImportStatus');
+            if (!el) return;
+            el.innerHTML = `<p>${baseMsg}</p>${stripeFeesSyncDetailsHtml(data)}`;
+            el.className = `mb-6 px-4 py-3 rounded-lg text-sm border ${cls}`;
+            el.classList.remove('hidden');
+        }
+
+        async function stripePaymentsHandleFile(input) {
+            const file = input.files?.[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                stripePaymentsShowStatus('Fichier trop volumineux (max 5 Mo).', 'border-red-500/40 text-red-300 bg-red-500/10');
+                input.value = '';
+                return;
+            }
+            try {
+                const text = await file.text();
+                const rows = parseCsv(text);
+                if (rows.length === 0) {
+                    stripePaymentsShowStatus('Fichier vide ou illisible.', 'border-red-500/40 text-red-300 bg-red-500/10');
+                    return;
+                }
+                const confirmed = confirm(`${rows.length} ligne(s) détectée(s) dans « ${file.name} ». Importer le frais réel de ces paiements Stripe maintenant ?`);
+                if (!confirmed) return;
+
+                stripePaymentsShowStatus('Import en cours…', 'border-gold/30 text-gold/80 bg-gold/5');
+                const response = await adminFetch('/api/admin?action=stripe-payments-import', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ rows })
+                });
+                const data = await response.json();
+                if (!response.ok || !data.success) {
+                    stripePaymentsShowStatus(data.error || 'Échec de l\'import.', 'border-red-500/40 text-red-300 bg-red-500/10');
+                    return;
+                }
+                if (data.message) {
+                    stripePaymentsShowStatus(data.message, 'border-orange-500/40 text-orange-300 bg-orange-500/10');
+                    return;
+                }
+                const hasIssues = data.unmatched || data.noTransactionRow;
+                stripePaymentsShowResult(
+                    `${data.updated} transaction(s) mise(s) à jour avec le frais réel (${data.recognized}/${data.totalRows} ligne(s) reconnue(s)` +
+                    `${data.notEur ? `, ${data.notEur} hors EUR ignorée(s)` : ''}` +
+                    `${data.notPaymentIntent ? `, ${data.notPaymentIntent} sans PaymentIntent reconnu` : ''}).`,
+                    data,
+                    hasIssues ? 'border-orange-500/40 text-orange-300 bg-orange-500/10' : 'border-green-500/40 text-green-300 bg-green-500/10'
+                );
+                await loadComptabilite();
+            } catch (e) {
+                console.error('[Admin] stripePaymentsHandleFile failed:', e);
+                stripePaymentsShowStatus('Erreur technique lors de l\'import : ' + e.message, 'border-red-500/40 text-red-300 bg-red-500/10');
+            } finally {
+                input.value = '';
+            }
+        }
+
         async function kickstarterUndoLastImport() {
             const batchId = document.getElementById('kickstarterUndoBtn')?.dataset.lastBatchId;
             if (!batchId) return;
@@ -4552,8 +4771,10 @@
             const abEl = document.getElementById('preordersAbandoned');
             if (abEl && abandoned > 0) { abEl.textContent = abandoned + ' panier' + (abandoned > 1 ? 's' : '') + ' abandonné' + (abandoned > 1 ? 's' : ''); abEl.style.display = ''; }
             updateElement('preordersTotal', formatCurrency(data.preorders.total));
+            updateElement('totalFondsCompte', formatCurrency((data.preorders?.net || 0) + (data.donors?.net || 0)));
             updateElement('cagnotteFabrication', formatCurrency(data.preorders.cagnotteFabrication || 0));
             updateElement('cagnotteShippingDetail', `− ${formatCurrency(data.preorders.shippingTotal || 0)} de livraison déduits`);
+            updateElement('overviewShippingTotal', formatCurrency(data.preorders?.shippingTotal || 0));
             updateElement('donorsCount', data.donors.count);
             updateElement('donorsTotal', formatCurrency(data.donors.total));
             updateElement('waitlistCount', data.waitlist.count);
@@ -4570,8 +4791,14 @@
             updateElement('revenue7d', formatCurrency(data.performance?.revenue7d || 0));
             updateElement('revenue30d', formatCurrency(data.performance?.revenue30d || 0));
             updateElement('preordersTotalNet', `~${formatCurrency(data.preorders?.net || 0)} net`);
+            updateElement('preordersTabNet', `~${formatCurrency(data.preorders?.net || 0)}`);
+            updateElement('preordersTabGross', `${formatCurrency(data.preorders?.total || 0)} brut, frais Stripe estimés déduits`);
+            updateElement('preordersTabShipping', formatCurrency(data.preorders?.shippingTotal || 0));
             updateElement('globalTotalNet',    `~${formatCurrency(data.global?.net   || 0)} net Stripe`);
             updateElement('donorsTotalNet',    `~${formatCurrency(data.donors?.net   || 0)} net`);
+            updateElement('donorsTabTotal', formatCurrency(data.donors?.total || 0));
+            updateElement('donorsTabNet', `~${formatCurrency(data.donors?.net || 0)} net (frais Stripe déduits sur la part Stripe)`);
+            updateElement('donorsTabCash', (data.donors?.cashCount || 0) > 0 ? `dont ${formatCurrency(data.donors.cashTotal || 0)} en espèces (${data.donors.cashCount} don${data.donors.cashCount > 1 ? 's' : ''})` : '');
             updateElement('guidancesNet',      `~${formatCurrency(data.guidances?.net || 0)} net`);
             updateElement('revenueNetToday',   `~${formatCurrency(data.performance?.netRevenueToday || 0)} net`);
             updateElement('revenueNet7d',      `~${formatCurrency(data.performance?.netRevenue7d    || 0)} net`);
@@ -5115,7 +5342,7 @@
         }
 
         // ── Fiche contact détaillée (clic sur une ligne du Répertoire) ──
-        function openContactSheet(item) {
+        async function openContactSheet(item) {
             const modal = document.getElementById('contactSheetModal');
             const body  = document.getElementById('contactSheetBody');
             const row = (label, value, mono=false) => value
@@ -5126,6 +5353,13 @@
                 : '';
             const statusLabel = item.status === 'unsubscribed' ? 'Désabonné'
                 : item.brevo_synced ? 'Inscrit newsletter' : 'Hors newsletter';
+            if (_parcoursOrdreBySubject.size === 0) await loadParcoursStepsForProgress();
+            const lastNlRow = item.last_newsletter_sent_at
+                ? `<div class="flex justify-between gap-3 py-1.5 border-b border-white/5">
+                       <span class="text-light-gold/40 shrink-0">Dernière newsletter</span>
+                       <span class="text-light-gold text-right text-sm">${escapeHtmlFront(item.last_newsletter_subject || '—')}<span class="block text-light-gold/40 text-xs">${formatDate(item.last_newsletter_sent_at)}</span></span>
+                   </div>`
+                : '';
             body.innerHTML = [
                 row('Email', item.email, true),
                 row('Nom', item.full_name),
@@ -5136,6 +5370,8 @@
                 row('Statut', statusLabel),
                 row('Source', item.source),
                 row('Ajouté le', item.created_at_fr || formatDate(item.created_at)),
+                lastNlRow,
+                `<div class="flex justify-between items-center gap-3 py-1.5"><span class="text-light-gold/40 shrink-0">Avancement parcours</span>${renderParcoursProgress(item)}</div>`,
                 item.notes ? `<div class="pt-2"><span class="text-light-gold/40 block mb-1">Notes</span><p class="text-light-gold/80 text-sm whitespace-pre-wrap">${escapeHtmlFront(item.notes)}</p></div>` : ''
             ].join('');
 
@@ -5660,7 +5896,7 @@
             return `/api/admin/data?${params.toString()}`;
         }
 
-        function updateAlertsPanel(data) {
+        async function updateAlertsPanel(data) {
             const container = document.getElementById('adminAlerts');
             if (!container) return;
 
@@ -5682,6 +5918,19 @@
                 });
             }
 
+            // Alerte parcours newsletter — voir api/admin/index.js (action=parcours-status) :
+            // se déclenche si, à moins de 7 jours de l'envoi de la dernière newsletter du
+            // parcours déjà programmée, aucune étape suivante n'est écrite d'avance.
+            try {
+                const nsRes = await adminFetch('/api/admin/newsletter?action=parcours-status');
+                const ns = await nsRes.json();
+                if (ns.success && ns.alert?.needed) {
+                    const text = ns.alert.reason === 'none-scheduled'
+                        ? "Aucune newsletter du parcours n'est programmée à venir. Rédige et programme la prochaine étape."
+                        : `Il ne reste que ${ns.alert.daysUntilLastScheduled} jour${ns.alert.daysUntilLastScheduled > 1 ? 's' : ''} avant l'envoi de la dernière newsletter programmée, et rien n'est prêt derrière. Rédige la prochaine étape du parcours.`;
+                    alerts.push({ level: 'warn', icon: 'fa-pen-nib', text });
+                }
+            } catch (_) { /* silencieux — ne doit pas bloquer les autres alertes */ }
 
             if (alerts.length === 0) {
                 container.innerHTML = `<div class="bg-green-500/10 border border-green-500/30 rounded-xl p-4 text-green-300 text-sm"><i class="fas fa-check-circle mr-2"></i>Aucune alerte critique actuellement.</div>`;
@@ -7013,7 +7262,10 @@
                         content,
                         intention: document.getElementById('nl-intention')?.value.trim() || '',
                         type: nlCurrentType,
-                        images: nlSelectedImages.map(s => ({ path: s.path, name: s.name, position: s.position ?? 0 })),
+                        // width/compact préservés : sinon rouvrir un brouillon aux vignettes
+                        // réduites (ex: tirage hebdomadaire) puis prévisualiser/sauvegarder
+                        // depuis cet éditeur effaçait silencieusement leur taille personnalisée.
+                        images: nlSelectedImages.map(s => ({ path: s.path, name: s.name, position: s.position ?? 0, width: s.width, compact: s.compact })),
                         extra
                     })
                 });
@@ -7029,13 +7281,19 @@
                 }
                 const iframe = document.getElementById('nl-preview-iframe');
                 iframe.onload = () => {
-                    try {
-                        const h = iframe.contentDocument.documentElement.scrollHeight;
-                        // Ignore une mesure aberrante (ex. prise avant chargement complet des
-                        // images) plutôt que de rétrécir l'iframe à une hauteur inutilisable —
-                        // le min-height CSS sert alors de filet de sécurité.
-                        if (h > 200) iframe.style.height = (h + 32) + 'px';
-                    } catch(_) {}
+                    // Ignore une mesure aberrante (ex. prise avant chargement complet des
+                    // images) plutôt que de rétrécir l'iframe à une hauteur inutilisable —
+                    // le min-height CSS sert alors de filet de sécurité. On remesure une
+                    // deuxième fois après un court délai pour rattraper le cas où les
+                    // images finissent de charger juste après ce premier "load".
+                    const applyHeight = () => {
+                        try {
+                            const h = iframe.contentDocument.documentElement.scrollHeight;
+                            if (h > 200) iframe.style.height = (h + 32) + 'px';
+                        } catch(_) {}
+                    };
+                    applyHeight();
+                    setTimeout(applyHeight, 400);
                     document.getElementById('nl-preview-loading')?.remove();
                     iframe.classList.remove('hidden');
                 };
@@ -7085,7 +7343,10 @@
                         content,
                         intention: document.getElementById('nl-intention').value.trim(),
                         type: nlCurrentType,
-                        images: nlSelectedImages.map(s => ({ path: s.path, name: s.name, position: s.position ?? 0 })),
+                        // width/compact préservés : sinon rouvrir un brouillon aux vignettes
+                        // réduites (ex: tirage hebdomadaire) puis prévisualiser/sauvegarder
+                        // depuis cet éditeur effaçait silencieusement leur taille personnalisée.
+                        images: nlSelectedImages.map(s => ({ path: s.path, name: s.name, position: s.position ?? 0, width: s.width, compact: s.compact })),
                         extra
                     })
                 });
@@ -7492,7 +7753,10 @@
                         content,
                         intention: document.getElementById('nl-intention')?.value.trim() || '',
                         type: nlCurrentType,
-                        images: nlSelectedImages.map(s => ({ path: s.path, name: s.name, position: s.position ?? 0 })),
+                        // width/compact préservés : sinon rouvrir un brouillon aux vignettes
+                        // réduites (ex: tirage hebdomadaire) puis prévisualiser/sauvegarder
+                        // depuis cet éditeur effaçait silencieusement leur taille personnalisée.
+                        images: nlSelectedImages.map(s => ({ path: s.path, name: s.name, position: s.position ?? 0, width: s.width, compact: s.compact })),
                         extra
                     })
                 });
@@ -7782,22 +8046,35 @@
                     <i class="fas fa-triangle-exclamation mr-1"></i>Ce brouillon n'a pas encore de contenu rédigé — l'aperçu ci-dessous n'affichera que l'en-tête et le pied de page.
                    </div>`
                 : '';
+            // Valider directement depuis l'aperçu : la lecture complète du contenu est
+            // justement le moment naturel pour décider de valider — pas besoin de fermer
+            // l'aperçu et retourner à la liste pour cliquer sur "Valider pour le Parcours".
+            const canValidateHere = extra.canal === 'parcours' && extra.parcours_valide !== true;
+            const validateFromPreviewBtn = canValidateHere
+                ? `<button onclick="nlValidateFromPreview('${draft.id}', this)"
+                        class="text-xs bg-orange-500/15 text-orange-300 border border-orange-500/30 hover:bg-orange-500/25 rounded px-3 py-1.5 transition mr-2">
+                        <i class="fas fa-check mr-1"></i>Valider pour le Parcours
+                    </button>`
+                : '';
             const modal = document.createElement('div');
             modal.className = 'fixed inset-0 z-50 flex flex-col bg-black/95 backdrop-blur-sm';
             modal.innerHTML = `
                 <div class="flex items-center justify-between px-5 py-3 bg-[rgba(5,15,35,0.98)] border-b border-gold/20 shrink-0">
                     <span class="cormorant text-lg text-gold"><i class="fas fa-envelope mr-2"></i>Aperçu — ${draft.subject || 'Sans titre'}</span>
-                    <button onclick="this.closest('.fixed').remove()"
-                        class="text-xs text-gold/50 hover:text-gold border border-gold/20 hover:border-gold/40 rounded px-3 py-1.5 transition">
-                        <i class="fas fa-times mr-1"></i>Fermer
-                    </button>
+                    <div class="flex items-center">
+                        ${validateFromPreviewBtn}
+                        <button onclick="this.closest('.fixed').remove()"
+                            class="text-xs text-gold/50 hover:text-gold border border-gold/20 hover:border-gold/40 rounded px-3 py-1.5 transition">
+                            <i class="fas fa-times mr-1"></i>Fermer
+                        </button>
+                    </div>
                 </div>
                 <div class="flex-1 overflow-hidden bg-[#1a1a2a] flex flex-col items-center py-6 px-4 overflow-y-auto">
                     ${emptyWarning}
                     <div id="nl-preview-loading-draft" class="text-gold/40 text-sm flex items-center gap-2 mt-20">
                         <i class="fas fa-spinner fa-spin"></i> Génération de l'aperçu...
                     </div>
-                    <iframe id="nl-preview-iframe-draft" class="hidden w-full rounded-lg shadow-2xl" style="max-width:700px; border:none; background:#040d1c;"
+                    <iframe id="nl-preview-iframe-draft" class="hidden w-full rounded-lg shadow-2xl" style="max-width:700px; min-height:600px; border:none; background:#040d1c;"
                         sandbox="allow-same-origin"></iframe>
                 </div>`;
             document.body.appendChild(modal);
@@ -7819,7 +8096,20 @@
                 if (!res.ok) throw new Error(data.error || 'Erreur');
                 const iframe = document.getElementById('nl-preview-iframe-draft');
                 iframe.onload = () => {
-                    try { iframe.style.height = (iframe.contentDocument.documentElement.scrollHeight + 32) + 'px'; } catch(_) {}
+                    // scrollHeight mesuré au moment précis du "load" peut revenir à 0
+                    // (course avec la mise en page, surtout sur Firefox, surtout avec
+                    // les images encore en train de charger) — on le remesure une fois
+                    // après un court délai, et on ignore toute valeur qui reviendrait
+                    // plus petite que le min-height CSS pour ne jamais figer l'iframe
+                    // sur une hauteur ridiculement petite comme ça a été constaté.
+                    const applyHeight = () => {
+                        try {
+                            const h = iframe.contentDocument.documentElement.scrollHeight;
+                            if (h > 600) iframe.style.height = (h + 32) + 'px';
+                        } catch(_) {}
+                    };
+                    applyHeight();
+                    setTimeout(applyHeight, 400);
                     document.getElementById('nl-preview-loading-draft')?.remove();
                     iframe.classList.remove('hidden');
                 };
@@ -7841,6 +8131,27 @@
                 document.getElementById('nl-kpi-brouillons').textContent = nlDrafts.length - envoyes;
                 document.getElementById('nl-kpi-envoyes').textContent = envoyes;
             } catch(e) { console.error(e); }
+        }
+
+        // Déclenche manuellement l'envoi individualisé du parcours (même fonction que
+        // le cron hebdomadaire, action=cron-send-parcours-individual) — pour tester sans
+        // attendre le passage du cron (chaque mercredi 19h heure de Paris).
+        async function sendParcoursIndividualNow() {
+            const status = document.getElementById('sendParcoursIndividualStatus');
+            const show = (msg, cls) => { if (status) { status.textContent = msg; status.className = `text-sm mb-4 px-1 ${cls}`; status.classList.remove('hidden'); } };
+            if (!confirm("Lancer maintenant l'envoi individualisé du parcours ? Chaque contact actif recevra, s'il est dû (7 jours depuis son inscription ou son dernier envoi), sa prochaine étape (ordre > 6).")) return;
+            show('<i class="fas fa-spinner fa-spin mr-2"></i>Envoi en cours…', 'text-light-gold/60');
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=send-parcours-individual-now', { method: 'POST' });
+                const data = await res.json();
+                if (!res.ok || !data.success) throw new Error(data.error || 'Erreur');
+                if (data.skipped_reason === 'feature_disabled') { show('⚠ Désactivé via le feature flag « newsletter_parcours_individuel ».', 'text-orange-400/80'); return; }
+                if (!data.sent) { show(data.message || '✓ Aucun contact dû pour le moment.', 'text-light-gold/60'); return; }
+                const detailMsg = (data.details || []).map(d => `n°${d.ordre} « ${d.subject} » : ${d.sent}/${d.targeted}`).join(' · ');
+                show(`✓ ${data.sent} email(s) envoyé(s). ${detailMsg}`, 'text-green-400/80');
+            } catch (e) {
+                show('✗ ' + e.message, 'text-red-400/80');
+            }
         }
 
         // ── Parcours newsletters : vue séparée en lecture seule (extra.canal='parcours') ──
@@ -7870,22 +8181,48 @@
                 incarnee: 'bg-teal-500/20 text-teal-300 border-teal-500/30',
                 lucide:   'bg-blue-500/20 text-blue-300 border-blue-500/30'
             };
-            tbody.innerHTML = nlParcours.map((d, i) => {
+            tbody.innerHTML = nlParcours.map((d) => {
                 const extra = d.extra || {};
                 const isStep = extra.canal === 'parcours';
+                const isQueued = d.statut !== 'envoyé';
                 const registreCls = registreColors[extra.registre] || 'bg-gold/10 text-gold/70 border-gold/20';
-                const typeBadge = isStep
-                    ? `<span class="text-xs px-2 py-0.5 rounded-full bg-gold/15 text-gold border border-gold/30">Étape n°${extra.ordre ?? '?'}</span>`
-                    : `<span class="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-300 border border-green-500/30">Envoyée</span>`;
+                // Colonne "N° étape" : le vrai numéro (extra.ordre), qui détermine l'ordre
+                // réel d'envoi — figé une fois envoyée. Pour une étape en attente, les
+                // flèches ▲▼ échangent sa place avec la voisine immédiate dans la file
+                // (voir nlMoveParcoursStep) plutôt que de faire saisir un numéro à la main,
+                // qui obligeait à connaître et retaper tous les numéros environnants.
+                const ordreCell = (isQueued && isStep)
+                    ? `<div class="flex items-center gap-1.5">
+                        <span class="text-gold text-sm w-5 text-center">${extra.ordre ?? '?'}</span>
+                        <div class="flex flex-col">
+                            <button onclick="nlMoveParcoursStep('${d.id}','up')" title="Monter d'un cran" class="text-gold/50 hover:text-gold leading-none px-1"><i class="fas fa-caret-up"></i></button>
+                            <button onclick="nlMoveParcoursStep('${d.id}','down')" title="Descendre d'un cran" class="text-gold/50 hover:text-gold leading-none px-1"><i class="fas fa-caret-down"></i></button>
+                        </div>
+                       </div>`
+                    : `<span class="text-light-gold/50 text-sm">${extra.ordre ?? '—'}</span>`;
+                // Colonne "Statut" : où en est cette étape, indépendamment de son numéro.
+                let statutBadge;
+                if (!isQueued) {
+                    statutBadge = `<span class="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-300 border border-green-500/30">Envoyée</span>`;
+                } else if (isStep) {
+                    statutBadge = extra.parcours_valide === true
+                        ? `<span class="text-xs px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-300 border border-teal-500/30">Validée</span>`
+                        : `<span class="text-xs px-2 py-0.5 rounded-full bg-orange-500/15 text-orange-300 border border-orange-500/30">À valider</span>`;
+                } else {
+                    statutBadge = `<span class="text-xs px-2 py-0.5 rounded-full bg-gold/10 text-gold/60 border border-gold/20">Brouillon</span>`;
+                }
                 const dateVal = d.sent_at || d.created_at;
+                const validateBtn = (isQueued && isStep && extra.parcours_valide !== true)
+                    ? `<button onclick="nlValidateParcours('${d.id}')" class="text-xs bg-orange-500/15 text-orange-300 border border-orange-500/30 rounded-lg px-3 py-1.5 hover:bg-orange-500/25 transition mr-1"><i class="fas fa-check mr-1"></i>Valider</button>`
+                    : '';
                 return `<tr class="hover:bg-gold/5 transition">
-                    <td class="px-6 py-4 text-light-gold/40 text-sm">${i + 1}</td>
-                    <td class="px-6 py-4">${typeBadge}</td>
+                    <td class="px-6 py-4">${ordreCell}</td>
+                    <td class="px-6 py-4">${statutBadge}</td>
                     <td class="px-6 py-4 text-light-gold text-sm">${escapeHtmlFront(d.subject || '—')}</td>
                     <td class="px-6 py-4 text-light-gold/60 text-xs">${dateVal ? new Date(dateVal).toLocaleDateString('fr-FR') : '—'}</td>
                     <td class="px-6 py-4">${isStep ? `<span class="text-xs px-2 py-0.5 rounded-full border ${registreCls}">${escapeHtmlFront(extra.registre || '—')}</span>` : '<span class="text-gold/20 text-xs">—</span>'}</td>
-                    <td class="px-6 py-4">
-                        <button onclick="nlPreviewDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition"><i class="fas fa-eye mr-1"></i>Prévisualiser</button>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        ${validateBtn}<button onclick="nlOpenDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition mr-1"><i class="fas fa-pen mr-1"></i>Modifier</button><button onclick="nlPreviewDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition"><i class="fas fa-eye mr-1"></i>Prévisualiser</button>
                     </td>
                 </tr>`;
             }).join('');
@@ -7960,11 +8297,35 @@
             await nlLoadDrafts();
         }
 
+        // Génère (sans jamais envoyer) le brouillon du tirage de la semaine — même
+        // code que le cron automatique du dimanche (action=cron-tirage-hebdo), pour
+        // pouvoir vérifier le format tout de suite. Idempotent : un second clic la
+        // même semaine ne crée pas de doublon, il indique juste que c'est déjà fait.
+        async function nlGenerateTirageHebdo() {
+            const btn = document.getElementById('nl-tirage-hebdo-btn');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Génération…'; }
+            try {
+                const res = await adminFetch('/api/admin/data?action=cron-tirage-hebdo');
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.success) throw new Error(data.error || 'Erreur inconnue');
+                if (data.skipped) {
+                    alert('Le tirage de cette semaine a déjà été généré — ouvre-le dans la liste des brouillons ci-dessous.');
+                } else {
+                    alert(`Brouillon généré : "${data.subject}" (thème : ${data.theme}). Ouvre-le dans la liste pour le relire et le prévisualiser.`);
+                }
+                await nlLoadDrafts();
+            } catch (e) {
+                alert('Erreur : ' + e.message);
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-moon"></i> Générer le tirage de la semaine'; }
+            }
+        }
+
         // Fait basculer une étape du parcours (relue, illustrée) de la liste des
         // brouillons vers la vue Parcours — irréversible depuis cette liste (la
         // désactivation se ferait depuis l'onglet Parcours si besoin un jour).
-        async function nlValidateParcours(id) {
-            if (!confirm('Valider cette étape pour le Parcours ? Elle quittera cette liste de brouillons et apparaîtra dans l\'onglet Parcours.')) return;
+        async function nlValidateParcours(id, skipConfirm) {
+            if (!skipConfirm && !confirm("Valider cette étape pour le Parcours ? Elle passera de « à valider » à validée, prête à être programmée.")) return;
             try {
                 const res = await adminFetch('/api/admin/newsletter?action=validate-parcours', {
                     method: 'POST',
@@ -7973,8 +8334,36 @@
                 });
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok) throw new Error(data.error || 'Erreur');
-                await nlLoadDrafts();
-            } catch (e) { alert('Erreur : ' + e.message); }
+                await Promise.all([nlLoadDrafts(), nlLoadParcours()]);
+                return true;
+            } catch (e) { alert('Erreur : ' + e.message); return false; }
+        }
+
+        // Bouton "Valider" de l'aperçu (nlPreviewDraft) : confirme puis ferme l'aperçu
+        // en cas de succès, pour retrouver directement la liste à jour.
+        async function nlValidateFromPreview(id, btn) {
+            if (!confirm("Valider cette étape pour le Parcours ? Elle passera de « à valider » à validée, prête à être programmée.")) return;
+            btn.disabled = true;
+            const ok = await nlValidateParcours(id, true);
+            if (ok) { const modal = btn.closest('.fixed'); if (modal) modal.remove(); }
+            else btn.disabled = false;
+        }
+
+        // Modifie l'ordre d'une étape en file d'attente (pas encore envoyée) — recharge
+        // ensuite la vue Parcours pour re-trier automatiquement selon le nouvel ordre.
+        async function nlMoveParcoursStep(id, direction) {
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=move-parcours-step', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ id, direction })
+                });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok) throw new Error(data.error || 'Erreur');
+                await nlLoadParcours();
+            } catch (e) {
+                alert('Erreur : ' + e.message);
+            }
         }
 
         function nlRenderDrafts() {
@@ -8110,9 +8499,42 @@
 
         // ── Inscrits Newsletter ────────────────────────────────────────────────────
         let _nlData = [];
+        // Étapes du parcours (subject → ordre), pour situer chaque contact dans le
+        // parcours à partir de last_newsletter_subject — pas de table de liaison
+        // contact↔newsletter dédiée, on retrouve donc l'étape par le sujet du dernier
+        // email reçu, seule trace conservée aujourd'hui (newsletter_contacts.last_newsletter_subject).
+        let _parcoursOrdreBySubject = new Map();
+        let _parcoursMaxSentOrdre = null;
+        async function loadParcoursStepsForProgress() {
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=drafts-parcours');
+                const rows = await res.json();
+                if (!Array.isArray(rows)) return;
+                _parcoursOrdreBySubject = new Map();
+                let maxOrdre = null;
+                for (const d of rows) {
+                    if (d.extra?.canal !== 'parcours') continue;
+                    const ordre = Number(d.extra?.ordre) || null;
+                    if (!ordre || !d.subject) continue;
+                    _parcoursOrdreBySubject.set(d.subject, ordre);
+                    // Dénominateur = étape la plus avancée du parcours tel qu'il existe
+                    // aujourd'hui (déjà envoyée à quelqu'un OU validée et prête à
+                    // partir) — pas seulement déjà envoyée. Avec l'envoi individualisé,
+                    // une étape validée mais pas encore partie (ex. n°8 "Validée") est
+                    // due sous peu ; l'ignorer ferait afficher "à jour" à des contacts
+                    // qui vont en fait recevoir la suite dans les prochains jours.
+                    if ((d.statut === 'envoyé' || d.extra?.parcours_valide === true) && (maxOrdre === null || ordre > maxOrdre)) maxOrdre = ordre;
+                }
+                _parcoursMaxSentOrdre = maxOrdre;
+            } catch (_) { /* silencieux — l'avancement s'affiche juste en "—" */ }
+        }
+
         async function loadNlSubscribers() {
             try {
-                const res = await adminFetch('/api/admin/data?section=waitlist&page=1&limit=500&newsletter=newsletter');
+                const [res] = await Promise.all([
+                    adminFetch('/api/admin/data?section=waitlist&page=1&limit=500&newsletter=newsletter'),
+                    loadParcoursStepsForProgress()
+                ]);
                 const json = await res.json();
                 if (!json.success) return;
                 _nlData = json.data || [];
@@ -8122,11 +8544,44 @@
             } catch(e) { /* silencieux */ }
         }
 
+        // Rend l'avancement dans le parcours d'un contact à partir du sujet de la
+        // dernière newsletter qu'il a reçue. Estimation, pas une trace exacte : si ce
+        // sujet ne correspond à aucune étape connue du parcours (email hors parcours,
+        // ou jamais rien reçu), on l'affiche comme tel plutôt que de deviner une étape.
+        function renderParcoursProgress(contact) {
+            if (!contact.last_newsletter_subject) {
+                return '<span class="text-light-gold/25 text-xs italic">Aucun envoi</span>';
+            }
+            const total = _parcoursMaxSentOrdre;
+            if (!total) {
+                // Aucune étape du parcours n'a encore été envoyée à qui que ce soit :
+                // rien à rattraper, tout le monde est par définition à jour.
+                return '<span class="text-teal-300 text-xs">À jour</span>';
+            }
+            const matchedOrdre = _parcoursOrdreBySubject.get(contact.last_newsletter_subject);
+            // Sujet non reconnu (email hors séquence, ou envoyé avant la mise en place du
+            // parcours) : on ne peut pas savoir précisément où il en est, mais il a bien
+            // reçu quelque chose de récent — on le traite comme à jour plutôt que de
+            // donner l'impression trompeuse qu'il en serait exclu.
+            const ordre = matchedOrdre || total;
+            const pct = Math.min(100, Math.round((ordre / total) * 100));
+            const isCaughtUp = ordre >= total;
+            const badgeClass = isCaughtUp ? 'text-teal-300' : 'text-gold/70';
+            const label = isCaughtUp ? `Étape ${ordre}/${total} · à jour` : `Étape ${ordre}/${total}`;
+            return `
+                <div class="min-w-[110px]">
+                    <span class="text-xs ${badgeClass}">${label}</span>
+                    <div class="mt-1 h-1.5 bg-gold/10 rounded-full overflow-hidden">
+                        <div class="h-full ${isCaughtUp ? 'bg-teal-400/70' : 'bg-gold/50'} rounded-full" style="width:${pct}%"></div>
+                    </div>
+                </div>`;
+        }
+
         function renderNlTable(rows) {
             const tbody = document.getElementById('nlTableBody');
             if (!tbody) return;
             if (!rows.length) {
-                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-8 text-center text-gold/40 italic">Aucun inscrit newsletter</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-8 text-center text-gold/40 italic">Aucun inscrit newsletter</td></tr>';
                 return;
             }
             tbody.innerHTML = rows.map(c => {
@@ -8145,6 +8600,7 @@
                     <td class="px-6 py-3 text-light-gold/50 text-sm">${c.created_at ? new Date(c.created_at).toLocaleDateString('fr-FR') : '—'}</td>
                     <td class="px-6 py-3"><span class="px-2 py-0.5 rounded-full text-xs ${c.status === 'active' ? 'bg-green-500/20 text-green-300' : 'bg-red-500/20 text-red-300'}">${c.status === 'active' ? 'Actif' : c.status || '—'}</span></td>
                     <td class="px-6 py-3">${lastNl}</td>
+                    <td class="px-6 py-3">${renderParcoursProgress(c)}</td>
                 </tr>`;
             }).join('');
         }
@@ -8335,7 +8791,12 @@
 
                     // Index négatifs pour ne pas entrer en collision avec les index de la grille
                     // d'images rechargée ci-dessous (0..N), tout en gardant un id unique pour le toggle.
-                    nlSelectedImages = (data.images || []).map((img, i) => ({ index: -(i + 1), path: img.path, name: img.name, position: img.position ?? -1 }));
+                    // width/compact préservés (pas seulement path/name/position) : sans ça,
+                    // ouvrir un brouillon avec des vignettes réduites (ex: cartes du tirage
+                    // hebdomadaire) puis le sauvegarder ou le prévisualiser depuis cet éditeur
+                    // effaçait silencieusement leur taille personnalisée au profit du 600px
+                    // par défaut.
+                    nlSelectedImages = (data.images || []).map((img, i) => ({ index: -(i + 1), path: img.path, name: img.name, position: img.position ?? -1, width: img.width, compact: img.compact }));
 
                     if (data.content) {
                         nlShowEditor(data.content);
@@ -11912,6 +12373,21 @@
             if (urssafDetailEl && b) {
                 urssafDetailEl.innerHTML = `BIC ventes ${(b.tauxBIC*100).toFixed(1)}% : ${fmt(b.urssafBIC)}<br>BNC services ${(b.tauxBNC*100).toFixed(1)}% : ${fmt(b.urssafBNC)}`;
             }
+            if (b) {
+                setEl('urssaf-taux-bic', `(${(b.tauxBIC*100).toFixed(1)}%)`);
+                setEl('urssaf-taux-bnc', `(${(b.tauxBNC*100).toFixed(1)}%)`);
+                setEl('urssaf-base-bic', fmt(b.recettesVentesBIC));
+                setEl('urssaf-cotis-bic', fmt(b.urssafBIC));
+                setEl('urssaf-base-bnc', fmt(b.recettesServicesBNC));
+                setEl('urssaf-cotis-bnc', fmt(b.urssafBNC));
+                const exclEl = document.getElementById('urssaf-exclusions');
+                if (exclEl) {
+                    const parts = [];
+                    if (b.recettesPrecommandeExclues > 0) parts.push(`${fmt(b.recettesPrecommandeExclues)} de précommandes`);
+                    if (b.recettesDonsExclus > 0) parts.push(`${fmt(b.recettesDonsExclus)} de dons`);
+                    exclEl.textContent = parts.length ? `Non comptés dans cette base : ${parts.join(' + ')}.` : '';
+                }
+            }
             const transactions = data.data || [];
             _comptaCache = { year, month, transactions, summary: s, costsMonthlyEur, depensesTotal, netTotal, stripeFeesTotal };
             if (!list) return;
@@ -11920,12 +12396,14 @@
                 const isRecette = t.type === 'recette';
                 const fmt2 = v => new Intl.NumberFormat('fr-FR',{style:'currency',currency:'EUR'}).format(v);
                 const d = new Date(t.date).toLocaleDateString('fr-FR',{day:'2-digit',month:'short',year:'numeric'});
+                const hasRealFee = t.fee_amount !== null && t.fee_amount !== undefined;
                 return `<div class="flex items-center justify-between gap-3 bg-white/3 border border-gold/10 rounded-xl px-4 py-3">
                     <div class="flex items-center gap-3 min-w-0">
                         <span class="w-2 h-2 rounded-full flex-shrink-0 ${isRecette?'bg-green-400':'bg-red-400'}"></span>
                         <div class="min-w-0">
                             <p class="text-gold/80 text-sm font-medium truncate">${escapeHtmlFront(t.description)}</p>
                             <p class="text-gold/40 text-xs">${d}${t.category?' · '+escapeHtmlFront(t.category):''}${t.source&&t.source!=='manuel'?' · '+t.source:''}</p>
+                            ${hasRealFee ? `<p class="text-gold/30 text-xs">Frais Stripe réel : -${fmt2(t.fee_amount)} · net : ${fmt2(t.net_amount)}</p>` : ''}
                         </div>
                     </div>
                     <div class="flex items-center gap-3 flex-shrink-0">

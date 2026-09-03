@@ -288,72 +288,13 @@ export default async function handler(req, res) {
     });
   }
 
-  // Noms d'affichage des familles — le prompt recevait les clés techniques
-  // (emotions, revelations, memoire_cosmos...) et l'IA les recopiait telles
-  // quelles dans l'analyse, sans accents ni majuscules.
-  const FAMILY_LABELS = {
-    emotions: 'Émotions',
-    besoins: 'Besoins',
-    transmutation: 'Transmutation',
-    actions: 'Actions',
-    archetypes: 'Archétypes',
-    revelations: 'Révélations',
-    memoire_cosmos: 'Mémoire Cosmos'
-  };
-
-  // Construction du prompt
-  const cardsDescription = cards.map((c, i) => {
-    const bridge = c.bridgeCard ? ` (passerelle: ${c.bridgeCard.name})` : '';
-    const famLabel = FAMILY_LABELS[c.family] || c.family;
-    return `${i + 1}. Famille ${famLabel}: ${c.name}${bridge}`;
-  }).join('\n');
-
-  const genderInstruction = gender === 'homme'
-    ? "L'utilisateur est un homme. Accorde les adjectifs et participes passés au masculin quand tu t'adresses à lui directement."
-    : gender === 'femme'
-    ? "L'utilisateur est une femme. Accorde les adjectifs et participes passés au féminin quand tu t'adresses à elle directement."
-    : "Ne fais pas d'accord genré — utilise des formulations neutres ou épicènes.";
-
-  const userPrompt = `Tu es l'Oracle Oradia, un guide introspectif bienveillant.
-
-${genderInstruction}
-
-INTENTION DE L'UTILISATEUR : "${intention || 'question personnelle'}"
-
-CARTES TIRÉES :
-${cardsDescription}
-
-Rédige une analyse en 3 sections, avec ce ton : chaleureux, précis, jamais générique.
-
-IMPORTANT : Style d'écriture
-- N'utilise JAMAIS de tirets (—) ou de points (•) dans ton texte
-- Écris en phrases complètes et fluides
-- Pas de listes à puces, pas de tirets narratifs
-- Style narratif continu et élégant
-- Écris exclusivement en français, sans aucun mot ni expression en anglais (même des mots courants comme "mindset", "flow", "insight" : utilise toujours leur équivalent français)
-
-## Ce que disent vos cartes
-En 4-5 phrases maximum, raconte ce que ces cartes révèlent ensemble pour cette intention spécifique. 
-Sois concret : nomme les cartes, évoque leurs énergies, montre la connexion entre elles.
-Pas de généralités. Un seul utilisateur, une seule situation.
-
-## Ce que cela vous invite à explorer
-En 3-4 phrases, quelles pistes concrètes ouvertes par ce tirage ? 
-Corps, relations, décisions, timing, ce qui demande attention — en lien direct avec les cartes.
-
-## Synthèse
-Un paragraphe court (3-4 phrases) qui noue le tout avec une phrase de fermeture porteuse.
-
-## Fenêtre d'observation
-En 3 à 5 lignes maximum :
-Propose une durée en jours (7, 14 ou 28) adaptée à l'intention et aux cartes.
-7 jours = question concrète ou relationnelle. 14 jours = question professionnelle ou de transition. 28 jours (cycle lunaire) = question de fond, transformation profonde.
-Donne 2 points d'attention spécifiques à CE tirage (pas des généralités) :
-des registres précis où porter l'attention (corps, relations, rêves, résistances, synchronicités, etc.)
-en lien direct avec les cartes tirées.
-Termine par une phrase courte qui dit comment savoir si la fenêtre a été fructueuse.
-Format : texte narratif court, pas de liste à puces, pas de tirets.
-IMPORTANT : Utilise une formulation comme "Une fenêtre de 3 jours est recommandée" plutôt que "accordée vous 3 jours".`
+  // Prompt et nettoyage post-API partagés avec le runner des tirages programmés
+  // (api/tirages/send-email.js) — une seule source de vérité, voir
+  // lib/tore-analysis-prompt.js. Cette copie locale a longtemps dérivé de l'original
+  // (elle annonçait "3 sections" pour 4 titres, entre autres) et ne portait pas les
+  // correctifs appliqués à l'autre copie, comme l'interdiction de dates inventées.
+  const { buildAnalysisPrompt, cleanAnalysisText } = require('../lib/tore-analysis-prompt.js');
+  const userPrompt = buildAnalysisPrompt({ intention, cards, gender });
 
   try {
     const anthropicResponse = await callAnthropicWithFallback({
@@ -369,20 +310,9 @@ IMPORTANT : Utilise une formulation comme "Une fenêtre de 3 jours est recommand
     }
 
     const data = await anthropicResponse.json();
-    let analysis = data.content?.[0]?.text || '';
+    const analysis = cleanAnalysisText(data.content?.[0]?.text || '');
 
-    // Nettoyage post-API pour supprimer les tirets narratifs indésirables
-    analysis = analysis
-      .replace(/—/g, '') // Supprimer tous les tirets demi-cadratin
-      .replace(/–/g, '-') // Convertir tirets cadratin en tirets normaux
-      .replace(/•/g, '')  // Supprimer les points
-      .replace(/\s*—\s*/g, ' ') // Remplacer les tirets avec espaces par des espaces
-      .replace(/\s*•\s*/g, ' ') // Remplacer les points avec espaces par des espaces
-      .replace(/\n\s*—\s*/g, '\n') // Supprimer les tirets en début de ligne
-      .replace(/\n\s*•\s*/g, '\n') // Supprimer les points en début de ligne
-      .trim();
-
-    return res.status(200).json({ 
+    return res.status(200).json({
       success: true, 
       analysis,
       // La section fenêtre d'observation sera extraite côté client

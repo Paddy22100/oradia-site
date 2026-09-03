@@ -14,7 +14,11 @@ const { sendBrevoEmail, sendShippingEmail, sendExportEmail, sendReadyEmail, send
 const { sendToreSubscriptionEmail, sendSubscriptionEmail, sendToreCheckinReminderEmail } = require('../../lib/tore-subscription-email.js');
 const { sendWaitlistConfirmationEmail } = require('../waitlist.js');
 const { sendGuidanceConfirmationEmail } = require('../../lib/guidance-email.js');
-const { estimateStripeFees, getStripeFeesForPeriod, getMonthlyStripeFees, ESTIMATE_RATE, ESTIMATE_FIXED_EUR } = require('../../lib/stripe-fees.js');
+const { estimateStripeFees, getStripeFeesForPeriod, getMonthlyStripeFees, getStripeFeesDetail, ESTIMATE_RATE, ESTIMATE_FIXED_EUR } = require('../../lib/stripe-fees.js');
+const { drawSevenCards, FAMILY_LABELS } = require('../../lib/tore-deck.js');
+const { resolveCardImageUrl } = require('../../lib/tore-card-images.js');
+const { generateAnalysisViaClaude } = require('../../lib/tore-analysis-prompt.js');
+const { getWeeklyAstroTheme } = require('../../lib/astro-calendar.js');
 const sharp = require('sharp');
 
 // Instagram/Facebook rejettent les images dont le ratio largeur/hauteur sort de [0.8, 1.91]
@@ -128,6 +132,112 @@ const KICKSTARTER_CSV_HEADER_MAP = {
 function normalizeCsvHeader(h) {
   return String(h || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
+
+// Rattache une liste de {id: paymentIntentId, directRef, fee, amount} (venue d'un CSV
+// Stripe ou de l'API Stripe en direct — même forme dans les deux cas) à la bonne ligne
+// transactions, puis met à jour fee_amount/net_amount. Trois chemins de rattachement,
+// essayés dans l'ordre :
+// 1. directRef (ex: l'Invoice Stripe d'un renouvellement d'abonnement) contre
+//    transactions.source_ref directement — c'est déjà la même valeur, pas de table
+//    intermédiaire à consulter.
+// 2. id (PaymentIntent) → preorders/donors.payment_intent_id → leur stripe_session_id,
+//    qui EST transactions.source_ref pour précommande/don.
+// 3. à défaut, id contre transactions.payment_intent_id directement — cas du tout
+//    premier paiement d'un abonnement (Checkout Session, sans Invoice ni ligne
+//    preorders/donors) : aucune table ne garde le lien session↔PaymentIntent pour
+//    les abonnements, donc api/stripe-webhook.js (activateToreSubscription) enregistre
+//    ce PaymentIntent directement sur la ligne transactions au moment de l'inscription.
+// Partagé entre l'import CSV (stripe-payments-import) et la synchronisation live
+// (stripe-fees-sync) pour ne jamais avoir deux implémentations du même rattachement.
+async function matchAndApplyStripeFees(supabase, rows) {
+  const ids = [...new Set(rows.map(r => r.id).filter(Boolean))];
+  if (rows.length === 0) return { matched: 0, updated: 0, unmatched: 0, unmatchedDetails: [], noTransactionRow: 0, noTransactionRowDetails: [] };
+
+  const [{ data: preRows }, { data: donRows }] = await Promise.all([
+    ids.length ? supabase.from('preorders').select('payment_intent_id, stripe_session_id').in('payment_intent_id', ids) : { data: [] },
+    ids.length ? supabase.from('donors').select('payment_intent_id, stripe_session_id').in('payment_intent_id', ids) : { data: [] }
+  ]);
+  const sessionIdByPI = new Map();
+  for (const r of preRows || []) if (r.payment_intent_id) sessionIdByPI.set(r.payment_intent_id, r.stripe_session_id);
+  for (const r of donRows || []) if (r.payment_intent_id) sessionIdByPI.set(r.payment_intent_id, r.stripe_session_id);
+
+  let updated = 0;
+  // Deux façons différentes de ne rien mettre à jour, à ne pas confondre pour pouvoir
+  // diagnostiquer : aucune référence exploitable trouvée du tout (ni directRef, ni
+  // payment_intent_id) — le paiement Stripe n'est tout simplement pas chez nous —,
+  // vs référence(s) trouvée(s) mais sans ligne transactions correspondante, auquel cas
+  // il faut d'abord "Resynchroniser l'historique" pour créer la ligne.
+  let unmatched = 0;
+  const unmatchedDetails = [];
+  let noTransactionRow = 0;
+  const noTransactionRowDetails = [];
+  await Promise.all(rows.map(async (r) => {
+    const candidateRefs = [r.directRef, sessionIdByPI.get(r.id)].filter(Boolean);
+    if (candidateRefs.length === 0 && !r.id) {
+      unmatched += 1;
+      if (unmatchedDetails.length < 20) unmatchedDetails.push({ paymentIntentId: r.id, amount: Number(r.amount) || 0 });
+      return;
+    }
+    const fee = Number(r.fee) || 0;
+    const amount = Number(r.amount) || 0;
+    const payload = { fee_amount: fee, net_amount: amount - fee, fee_imported_at: new Date().toISOString() };
+    let count = 0;
+    for (const ref of candidateRefs) {
+      const { error, count: c } = await supabase
+        .from('transactions')
+        .update(payload, { count: 'exact' })
+        .eq('source_ref', ref);
+      if (!error && c) { count += c; break; }
+    }
+    if (!count && r.id) {
+      const { error, count: c } = await supabase
+        .from('transactions')
+        .update(payload, { count: 'exact' })
+        .eq('payment_intent_id', r.id);
+      if (!error && c) count += c;
+    }
+    if (count) {
+      updated += count;
+    } else {
+      noTransactionRow += 1;
+      if (noTransactionRowDetails.length < 20) noTransactionRowDetails.push({ paymentIntentId: r.id, ref: candidateRefs[0] || null, amount });
+    }
+  }));
+
+  return {
+    matched: rows.length - unmatched,
+    updated,
+    unmatched, unmatchedDetails,
+    noTransactionRow, noTransactionRowDetails
+  };
+}
+
+// Mapping tolérant des en-têtes de l'export Stripe « Paiements » (Dashboard Stripe →
+// Paiements → Exporter). Objectif : le frais réel par transaction (le total mensuel,
+// lui, est déjà réel via l'API Stripe — voir lib/stripe-fees.js). "id" doit être le
+// PaymentIntent (pi_...) : c'est la seule référence Stripe que preorders/donors
+// stockent (payment_intent_id) — un Charge ID (ch_...) ne peut pas être rattaché
+// sans appel API supplémentaire, volontairement hors scope de cet import CSV.
+const STRIPE_PAYMENTS_CSV_HEADER_MAP = {
+  'id': 'id', 'payment intent id': 'id', 'paymentintent id': 'id', 'charge id': 'id',
+  'fee': 'fee', 'fees': 'fee',
+  'amount': 'amount', 'converted amount': 'amount', 'montant': 'amount',
+  'currency': 'currency', 'converted amount currency': 'currency', 'devise': 'currency',
+  'customer email': 'email', 'email': 'email',
+  'description': 'description', 'statement descriptor': 'description',
+  'created (utc)': 'created', 'created date (utc)': 'created', 'created': 'created', 'date': 'created',
+};
+
+// Newsletters "Newsletter" par étiquette (type !== 'promo') mais promotionnelles par
+// contenu (annonce d'abonnement, lancement d'un oracle) : le champ `type` seul ne les
+// distingue donc pas d'une vraie étape du parcours. Utilisé à la fois par
+// drafts-parcours (pour ne jamais les afficher dans la vue Parcours) et
+// backfill-parcours-history (pour ne jamais leur attribuer un numéro d'étape) — une
+// seule liste, jamais deux à tenir synchronisées.
+const PARCOURS_EXCLUDED_SUBJECTS = [
+  "Rudy d'ORADIA - Abonnement à l'oracle, une expérience inédite",
+  "Rudy d'ORADIA - La Boussole Intérieure — Un Oracle Pas Comme Les Autres"
+];
 
 // Catégories de contacts newsletter (utilisées pour cibler les envois depuis le dashboard,
 // sans passer par les listes Brevo). Liste indicative — des tags libres restent possibles.
@@ -829,11 +939,20 @@ async function handleData(req, res) {
               await supabase.from('newsletter_drafts')
                 .update({ statut: 'envoyé', sent_at: new Date().toISOString(), scheduled_at: null })
                 .eq('id', draft.id);
-              // Tracer la dernière newsletter par contact (colonne optionnelle)
-              await supabase.from('newsletter_contacts')
+              // Tracer la dernière newsletter par contact (colonne optionnelle) — .select('email')
+              // récupère les destinataires réellement mis à jour, pour le journal détaillé ci-dessous.
+              const { data: notified } = await supabase.from('newsletter_contacts')
                 .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
                 .eq('status', 'active')
-                .eq('brevo_synced', true);
+                .eq('brevo_synced', true)
+                .select('email');
+              await logNewsletterSends(supabase, {
+                emails: (notified || []).map(c => c.email),
+                subject: finalSubject,
+                draftId: draft.id,
+                ordre: Number(draft.extra?.ordre) || null,
+                canal: draft.extra?.canal || null
+              });
               results.push({ id: draft.id, ok: true });
             } catch(e) { results.push({ id: draft.id, ok: false, error: e.message }); }
           }
@@ -847,6 +966,23 @@ async function handleData(req, res) {
           return res.status(200).json({ success: false, error: e.message });
         }
       }
+      // ── Parcours individualisé : chaque contact avance à son propre rythme depuis
+      // sa date d'inscription (ou son dernier envoi), plutôt qu'une diffusion groupée
+      // qui fait recevoir "le dernier envoi du jour" à un nouvel inscrit au lieu de la
+      // toute première étape. Ne concerne que les étapes 7+ (au delà de l'historique
+      // ordre 1-6, envoyé en diffusion groupée avant la mise en place du parcours et
+      // jamais rejoué individuellement). Cadence hebdomadaire, calculée à partir du
+      // dernier envoi RÉEL de ce contact (newsletter_sends), ou de sa date
+      // d'inscription pour un tout nouveau contact n'ayant jamais rien reçu du
+      // parcours. Les étapes utilisées ici restent des gabarits réutilisables : jamais
+      // marquées statut='envoyé' (ce champ resterait un non-sens pour un envoi étalé
+      // dans le temps, contact par contact) — seule newsletter_sends trace qui a reçu
+      // quoi et quand.
+      if (getAction === 'cron-send-parcours-individual') {
+        const result = await runParcoursIndividualCron(supabase);
+        return res.status(200).json(result);
+      }
+
       if (getAction === 'cron-relance') {
         try {
           const BREVO_API_KEY = process.env.BREVO_API_KEY;
@@ -1254,7 +1390,25 @@ async function handleData(req, res) {
           return res.status(200).json({ success: r.ok, status: r.status });
         } catch(e) { return res.status(200).json({ success: false, error: e.message }); }
       }
+      // ── Tirage de la semaine (dimanche) : génère UNIQUEMENT un brouillon,
+      // n'envoie jamais automatiquement — l'envoi se fait comme n'importe quel
+      // autre brouillon, en posant scheduled_at (cron-send-scheduled ci-dessus
+      // s'en charge) une fois le format validé manuellement depuis le dashboard.
+      // Thématisé par le calendrier astro (pleine lune, éclipse — lib/astro-calendar.js)
+      // quand la semaine tombe près d'un de ces événements, sinon thème générique.
+      if (getAction === 'cron-tirage-hebdo') {
+        return await runWeeklyTirageCron(supabase, res);
+      }
       return res.status(403).json({ error: 'Action non autorisée' });
+    }
+
+    // Test manuel du tirage hebdomadaire depuis le dashboard (session admin, sans
+    // secret cron) : sert à vérifier tout de suite le format généré (brouillon +
+    // aperçu) sans attendre le dimanche suivant. Distinct du bloc cron ci-dessus,
+    // qui exige isCronRequest — une requête de session admin normale (verifyAdminAuth
+    // déjà passé plus haut si on arrive jusqu'ici) ne peut jamais le satisfaire.
+    if (!isCronRequest && req.method === 'GET' && req.query?.action === 'cron-tirage-hebdo') {
+      return await runWeeklyTirageCron(supabase, res, { force: true });
     }
 
     // Les actions "support-*" (utilisées par le dashboard Support technique) sont
@@ -2102,6 +2256,52 @@ async function handleData(req, res) {
         // l'onglet Kickstarter mais hors comptabilité tant qu'elles ne sont pas converties à la main).
         const { data: kickstarterBackers } = await sb.from('kickstarter_backers').select('pledged_at,imported_at,pledge_amount,currency,backer_name,email,reward_title,backer_number');
         const planPriceEur = p => p === 'decouverte' ? 5 : 8;
+
+        // Le webhook Stripe (api/stripe-webhook.js) crée déjà une ligne "abonnement" réelle
+        // au moment du paiement, avec le vrai montant facturé (source_ref = session Stripe
+        // ou invoice.id). Cet import ne doit "rattraper" QUE les abonnés qui n'ont jamais eu
+        // cette ligne réelle (ex: abonnement créé avant l'ajout de ce code) — sinon on
+        // duplique avec un montant deviné depuis le plan ACTUEL (faux si le plan a changé
+        // depuis), sous une clé différente (sub_email_date) que le upsert onConflict ne peut
+        // pas rapprocher de la vraie ligne. Repéré en prod : un abonné avec deux lignes
+        // "abonnement" au même jour, montants différents (2026-09).
+        //
+        // La description est construite comme `... — ${full_name || email}` : on ne peut
+        // donc pas fiablement en extraire l'email si full_name est renseigné (il y a le nom,
+        // pas l'email). On compare plutôt chaque abonné de tore_subscriptions (email connu,
+        // authoritatif) au même suffixe `full_name || email` que celui utilisé à l'écriture,
+        // pour retomber sur son email réel plutôt que de parser un texte ambigu.
+        const { data: existingAbonnementTx } = await sb.from('transactions').select('source_ref, description').eq('source', 'abonnement');
+        const isSyntheticRef = (ref) => typeof ref === 'string' && /^sub_.+_\d{4}-\d{2}-\d{2}$/.test(ref);
+        const realAbonnementLabels = new Set(
+          (existingAbonnementTx || [])
+            .filter(t => !isSyntheticRef(t.source_ref))
+            .map(t => t.description?.split('—').pop()?.trim().toLowerCase())
+            .filter(Boolean)
+        );
+        const syntheticAbonnementLabels = new Set(
+          (existingAbonnementTx || [])
+            .filter(t => isSyntheticRef(t.source_ref))
+            .map(t => t.description?.split('—').pop()?.trim().toLowerCase())
+            .filter(Boolean)
+        );
+        const emailsAlreadyTracked = new Set();
+        for (const s of (subs || [])) {
+          const label = String(s.full_name || s.email || '').trim().toLowerCase();
+          if (!label || !s.email) continue;
+          if (realAbonnementLabels.has(label)) {
+            // Vraie ligne trouvée pour cet abonné : purge la synthétique si elle existe
+            // (montant deviné, forcément la moins fiable des deux), n'en recrée pas une.
+            await sb.from('transactions').delete().eq('source', 'abonnement').ilike('source_ref', `sub_${s.email}_%`);
+            emailsAlreadyTracked.add(s.email.toLowerCase());
+          } else if (syntheticAbonnementLabels.has(label)) {
+            // Seulement une synthétique existe (aucune vraie ligne jamais enregistrée pour
+            // cet abonné) : rien de plus fiable à mettre à sa place, mais pas de raison d'en
+            // recréer une (upsert idempotent de toute façon sur la même clé).
+            emailsAlreadyTracked.add(s.email.toLowerCase());
+          }
+        }
+
         const toInsert = [
             ...(preorders||[]).filter(p=>!isExcluded(p.email)).map(p => ({ date: p.created_at?.split('T')[0], type:'recette', category:'précommande', description:`Précommande ${p.offer||''} — ${p.full_name||p.email||''}`, amount: parseFloat(p.amount_total)||0, source:'precommande', source_ref: p.stripe_session_id })).filter(t=>t.amount>0),
             // Dons en espèces visibles en comptabilité (source distincte 'don-especes') mais
@@ -2109,7 +2309,9 @@ async function handleData(req, res) {
             // hors Stripe/compte pro, cet argent n'est pas déclaré.
             ...(donors||[]).filter(d=>!isExcluded(d.email)).map(d => ({ date: d.created_at?.split('T')[0], type:'recette', category:'don', description: d.source === 'don-especes' ? `Don (espèces) — ${d.full_name||d.email||''}` : `Don — ${d.full_name||d.email||''}`, amount: parseFloat(d.amount_total)||0, source: d.source === 'don-especes' ? 'don-especes' : 'don', source_ref: d.stripe_session_id })).filter(t=>t.amount>0),
             ...(guidances||[]).filter(g=>!isExcluded(g.client_email)).map(g => ({ date: g.created_at?.split('T')[0], type:'recette', category:'guidance', description:`Guidance — ${g.client_name||g.client_email||''}`, amount: (g.amount||0)/100, source:'guidance', source_ref: g.cal_booking_uid })).filter(t=>t.amount>0),
-            ...(subs||[]).filter(s=>!isExcluded(s.email) && !s.is_free).map(s => ({ date: s.created_at?.split('T')[0], type:'recette', category:'abonnement', description:`Abonnement Tore ${s.plan||'complet'} — ${s.full_name||s.email||''}`, amount: planPriceEur(s.plan), source:'abonnement', source_ref: `sub_${s.email}_${s.created_at?.split('T')[0]}` })),
+            // Seulement les abonnés sans AUCUNE ligne "abonnement" existante (vraie rattrapage,
+            // pas un doublon de ce que le webhook a déjà enregistré).
+            ...(subs||[]).filter(s=>!isExcluded(s.email) && !s.is_free && !emailsAlreadyTracked.has(String(s.email||'').toLowerCase())).map(s => ({ date: s.created_at?.split('T')[0], type:'recette', category:'abonnement', description:`Abonnement Tore ${s.plan||'complet'} — ${s.full_name||s.email||''}`, amount: planPriceEur(s.plan), source:'abonnement', source_ref: `sub_${s.email}_${s.created_at?.split('T')[0]}` })),
             ...(kickstarterBackers||[]).filter(k=>!isExcluded(k.email) && (k.currency||'EUR').toUpperCase()==='EUR' && k.backer_number).map(k => ({ date: (k.pledged_at||k.imported_at)?.split('T')[0], type:'recette', category:'kickstarter', description:`Kickstarter ${k.reward_title||''} — ${k.backer_name||k.email||''}`, amount: parseFloat(k.pledge_amount)||0, source:'kickstarter', source_ref: `ks_${k.backer_number}` })).filter(t=>t.amount>0),
         ];
         // Purger les transactions des abonnements gratuits déjà importées avant que is_free soit posé
@@ -2204,6 +2406,98 @@ async function handleData(req, res) {
           .eq('import_batch_id', body.batchId);
         if (delErr) throw delErr;
         return res.status(200).json({ success: true, deleted: count ?? 0 });
+      }
+
+      // ── Import CSV Stripe « Paiements » : frais réel par transaction (le total
+      // mensuel est déjà réel via l'API Stripe, ceci ajoute le détail ligne par ligne).
+      // Rattache chaque paiement à une précommande/don existant via payment_intent_id,
+      // puis met à jour fee_amount/net_amount sur la ligne transactions correspondante
+      // (source_ref = stripe_session_id). N'insère jamais de nouvelle transaction —
+      // ça reste le rôle de import-transactions/du webhook, pas de cet import.
+      if (action === 'stripe-payments-import') {
+        const rows = Array.isArray(body.rows) ? body.rows : [];
+        if (rows.length === 0) return res.status(400).json({ error: 'Aucune ligne à importer' });
+        if (rows.length > 5000) return res.status(400).json({ error: 'Fichier trop volumineux (5000 lignes max)' });
+
+        const mapped = rows.map(rawRow => {
+          const out = {};
+          for (const [rawHeader, value] of Object.entries(rawRow)) {
+            const key = STRIPE_PAYMENTS_CSV_HEADER_MAP[normalizeCsvHeader(rawHeader)];
+            if (!key || value === undefined || value === null || value === '') continue;
+            if (key === 'fee' || key === 'amount') {
+              const num = parseFloat(String(value).replace(/[^\d.,-]/g, '').replace(',', '.'));
+              out[key] = Number.isFinite(num) ? num : null;
+            } else if (key === 'currency') {
+              out[key] = String(value).trim().toUpperCase().slice(0, 3);
+            } else {
+              out[key] = String(value).trim();
+            }
+          }
+          return out;
+        }).filter(r => r.id);
+
+        if (mapped.length === 0) {
+          return res.status(400).json({ error: "Impossible de reconnaître les colonnes de ce fichier (en-têtes non standard). Vérifiez qu'il s'agit bien d'un export Stripe « Paiements »." });
+        }
+
+        const eurRows = mapped.filter(r => !r.currency || r.currency === 'EUR');
+        const notEur = mapped.length - eurRows.length;
+        const paymentIntentRows = eurRows.filter(r => r.id.startsWith('pi_'));
+        const notPaymentIntent = eurRows.length - paymentIntentRows.length;
+
+        if (paymentIntentRows.length === 0) {
+          return res.status(200).json({
+            success: true, totalRows: rows.length, recognized: mapped.length,
+            matched: 0, updated: 0, unmatched: 0, notEur, notPaymentIntent,
+            message: notPaymentIntent > 0
+              ? "Aucune ligne ne porte un identifiant PaymentIntent (pi_...) reconnu — vérifiez que la colonne « id » de l'export Stripe correspond au PaymentIntent, pas au Charge."
+              : undefined
+          });
+        }
+
+        const { matched, updated, unmatched, unmatchedDetails, noTransactionRow, noTransactionRowDetails } = await matchAndApplyStripeFees(supabase, paymentIntentRows);
+
+        return res.status(200).json({
+          success: true,
+          totalRows: rows.length,
+          recognized: mapped.length,
+          matched,
+          updated,
+          unmatched, unmatchedDetails,
+          noTransactionRow, noTransactionRowDetails,
+          notEur,
+          notPaymentIntent
+        });
+      }
+
+      // ── Synchronisation live des frais réels depuis l'API Stripe — même source que
+      // le total mensuel déjà réel (getMonthlyStripeFees), mais ligne par ligne. Pas de
+      // fichier à exporter/réimporter : toujours à jour au moment où on clique, contrairement
+      // au CSV (stripe-payments-import, conservé en secours si l'API Stripe est injoignable).
+      if (action === 'stripe-fees-sync') {
+        const year = parseInt(body.year, 10) || new Date().getFullYear();
+        const month = body.month ? parseInt(body.month, 10) : null;
+        const dateFrom = month ? `${year}-${String(month).padStart(2, '0')}-01` : `${year}-01-01`;
+        const dateTo = month
+          ? new Date(year, month, 1).toISOString()
+          : `${year + 1}-01-01T00:00:00.000Z`;
+
+        const result = await getStripeFeesDetail(`${dateFrom}T00:00:00.000Z`, dateTo);
+        if (!result.ok) {
+          return res.status(502).json({ error: `API Stripe injoignable : ${result.error}` });
+        }
+
+        const rows = result.details.map(d => ({ id: d.paymentIntentId, directRef: d.invoiceId, fee: d.feeEur, amount: d.amountEur }));
+        const { matched, updated, unmatched, unmatchedDetails, noTransactionRow, noTransactionRowDetails } = await matchAndApplyStripeFees(supabase, rows);
+
+        return res.status(200).json({
+          success: true,
+          fetched: result.details.length,
+          matched,
+          updated,
+          unmatched, unmatchedDetails,
+          noTransactionRow, noTransactionRowDetails
+        });
       }
 
       if (action === 'test-subscription-email') {
@@ -4068,6 +4362,152 @@ async function isFeatureEnabled(supabase, key) {
   } catch { return true; }
 }
 
+// Numéro de semaine ISO 8601 (ex: "2026-W39") — sert de clé d'idempotence pour
+// le tirage hebdomadaire (cron-tirage-hebdo) : évite de générer deux brouillons
+// pour la même semaine si le cron est relancé (retry Vercel, test manuel...).
+function getIsoWeekKey(date) {
+  const d = new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  const weekNum = Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  return `${d.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`;
+}
+
+// Construit le contenu (sujet, corps, images positionnées) du brouillon de
+// newsletter du tirage hebdomadaire — voir cron-tirage-hebdo. Le corps suit le
+// même format que celui attendu par buildCommunicationEmailHtml : des paragraphes
+// <p> avec seulement b/strong/i/em/u/br/ul/ol/li/a (le reste est filtré), les
+// images des cartes placées via le tableau `images` (positions alignées sur les
+// paragraphes) plutôt que par des <img> bruts dans le texte.
+// Largeur des vignettes de cartes dans l'email — volontairement petite et en
+// mode "compact" (voir imageRow) : une pleine largeur de 600/700px par carte,
+// avec en plus son cadre décoratif (bordure, ombre, séparateurs dorés), sur un
+// tirage de 7 cartes ou plus avec passerelles, rendait l'email interminable
+// et chaque image paraissait énorme même une fois réduite en pixels.
+const WEEKLY_TIRAGE_CARD_IMG_WIDTH = 100;
+
+function buildWeeklyTirageContent({ theme, cards, analysis, date }) {
+  const dateLabel = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+  const subject = theme.event
+    ? `Le tirage de la semaine : ${theme.event.name}`
+    : `Le tirage de la semaine du ${dateLabel}`;
+
+  const paragraphs = [];
+  const images = [];
+  const pushCardImage = (name) => {
+    const url = resolveCardImageUrl(name);
+    if (url) images.push({ path: url.replace('https://oradia.fr', ''), name, position: paragraphs.length - 1, width: WEEKLY_TIRAGE_CARD_IMG_WIDTH, compact: true });
+  };
+
+  // theme.intention porte déjà le contexte astro complet (Soleil, Lune, planètes
+  // notables — voir lib/astro-calendar.js) suivi d'une invitation à l'interpréter :
+  // pas besoin de le reconstruire ici, ni de répéter theme.label qui redirait la
+  // même chose en plus court.
+  paragraphs.push(`<p>${theme.intention} C'est cette énergie qui inspire le tirage collectif de ce dimanche. Voici ce que les cartes en disent.</p>`);
+
+  // Chaque carte (et sa carte passerelle éventuelle) a son propre paragraphe et
+  // sa propre position d'image : aucune des deux ne partage sa position avec
+  // une autre, pour que l'association texte/image ne puisse jamais se mélanger
+  // et pour que la carte passerelle ait sa place à elle, pas une simple
+  // parenthèse discrète dans le paragraphe de la carte principale.
+  cards.forEach((card) => {
+    const label = FAMILY_LABELS[card.family] || card.family;
+    paragraphs.push(`<p><strong>${label} : ${card.name}.</strong> ${card.quote || ''}</p>`);
+    pushCardImage(card.name);
+
+    if (card.bridgeCard) {
+      paragraphs.push(`<p><em>Une carte passerelle est apparue : ${card.bridgeCard.name}.</em> ${card.bridgeCard.quote || ''}</p>`);
+      pushCardImage(card.bridgeCard.name);
+    }
+  });
+
+  if (analysis?.explore) paragraphs.push(`<p><strong>Ce que cela invite à explorer.</strong> ${nlEscHtml(analysis.explore)}</p>`);
+  if (analysis?.synthesis) paragraphs.push(`<p><strong>Synthèse de la semaine.</strong> ${nlEscHtml(analysis.synthesis)}</p>`);
+
+  paragraphs.push(`<p>À vous de recevoir ce que ces cartes ont fait résonner, et de le vivre à votre façon cette semaine.</p>`);
+
+  return { subject, content: paragraphs.join(''), images };
+}
+
+// Génère le brouillon du tirage hebdomadaire (dimanche) : tirage QRNG + analyse
+// IA + thème astro (pleine lune, éclipse) -> brouillon newsletter_drafts, JAMAIS
+// envoyé automatiquement. Appelée depuis le cron réel (action=cron-tirage-hebdo,
+// secret cron) et depuis le bouton de test du dashboard (même action, session
+// admin) — un seul endroit produit le brouillon, pour que le test corresponde
+// exactement à ce que le vrai cron du dimanche produirait.
+async function runWeeklyTirageCron(supabase, res, { force = false } = {}) {
+  try {
+    const now = new Date();
+    const isoWeekKey = getIsoWeekKey(now);
+
+    // Idempotence : le cron réel (Vercel, retry compris) ne doit jamais créer
+    // un second brouillon pour la même semaine. Le bouton de test du dashboard
+    // passe force=true : pendant qu'on ajuste le format, cliquer "tester" doit
+    // vraiment régénérer (remplacer l'ancien brouillon) plutôt que de renvoyer
+    // indéfiniment le même brouillon obsolète tant qu'on est dans la même
+    // semaine ISO — sans ça, aucune correction n'était jamais visible sans
+    // supprimer le brouillon à la main entre chaque essai.
+    const { data: existing } = await supabase
+      .from('newsletter_drafts')
+      .select('id')
+      .eq('extra->>canal', 'tirage_hebdo')
+      .eq('extra->>semaine', isoWeekKey)
+      .maybeSingle();
+    if (existing) {
+      if (!force) {
+        return res.status(200).json({ success: true, skipped: true, reason: 'already_generated', draft_id: existing.id });
+      }
+      await supabase.from('newsletter_drafts').delete().eq('id', existing.id);
+    }
+
+    const theme = getWeeklyAstroTheme(now);
+    const { cards, qrngSource } = await drawSevenCards();
+    const analysis = await generateAnalysisViaClaude({
+      intention: theme.intention,
+      cards,
+      userEmail: 'cron-tirage-hebdo@oradia.fr'
+    });
+
+    const { subject, content, images } = buildWeeklyTirageContent({ theme, cards, analysis, date: now });
+
+    const { data, error } = await supabase
+      .from('newsletter_drafts')
+      .insert({
+        subject,
+        content,
+        intention: theme.intention,
+        type: 'newsletter',
+        images,
+        extra: {
+          canal: 'tirage_hebdo',
+          semaine: isoWeekKey,
+          astro_event: theme.event?.type || null,
+          astro_label: theme.label,
+          qrng_source: qrngSource
+        },
+        statut: 'brouillon',
+        created_at: now.toISOString(),
+        updated_at: now.toISOString()
+      })
+      .select()
+      .single();
+    if (error) throw error;
+
+    await logSystemEvent(supabase, {
+      level: 'info', source: 'cron-tirage-hebdo',
+      message: `Brouillon du tirage hebdomadaire généré : ${subject}`,
+      details: { draft_id: data.id, theme: theme.label, qrng_source: qrngSource }
+    }).catch(() => {});
+
+    return res.status(200).json({ success: true, draft_id: data.id, subject, theme: theme.label, qrng_source: qrngSource });
+  } catch(e) {
+    console.error('[cron-tirage-hebdo]', e.message);
+    await logSystemEvent(supabase, { level: 'error', source: 'cron-tirage-hebdo', message: e.message }).catch(() => {});
+    return res.status(200).json({ success: false, error: e.message });
+  }
+}
+
 // Construit le HTML complet de l'email (newsletter ou promo) à partir d'un brouillon
 function buildCommunicationEmailHtml(draft) {
   const subject = draft.subject || '';
@@ -4165,18 +4605,44 @@ function buildCommunicationEmailHtml(draft) {
       <span style="display:inline-block; width:48px; height:1px; background:linear-gradient(90deg,rgba(212,175,55,0.4),transparent); vertical-align:middle;"></span>
     </td></tr>`;
 
-  const imageRow = (img) => `
+  // largeur par défaut inchangée (600, pleine largeur de la carte) — un champ
+  // optionnel img.width permet une vignette plus petite (ex: cartes du tirage
+  // hebdomadaire, où 7+ images pleine largeur rendraient l'email interminable).
+  //
+  // Piège corrigé : même avec width réduit, l'image restait affichée en
+  // pleine largeur, car le style inline width:100% (nécessaire pour le
+  // comportement responsive normal) l'emporte toujours sur l'attribut HTML
+  // width="…" — width:100% s'applique alors à la largeur du conteneur, pas
+  // à la valeur réduite voulue. Avec img.compact, on fixe une largeur en
+  // pixels DIRECTEMENT sur l'image (jamais 100%), ce qui est aussi plus
+  // fiable dans les clients mail qui ignorent max-width sur les tableaux
+  // (Outlook desktop notamment) ; on retire aussi le cadre décoratif (bordure,
+  // ombre, séparateurs dorés) qui donnait une impression de grande taille
+  // même à une image techniquement petite — pas adapté à une vignette parmi
+  // 10-14 dans le même email.
+  const imageRow = (img) => {
+    const w = img.width && img.width > 0 ? img.width : 600;
+    if (img.compact) {
+      return `
+      <tr><td style="padding:4px 20px; text-align:center;">
+        <a href="${nlAbsUrl(img.path)}" target="_blank" style="display:inline-block; line-height:0;">
+          <img src="${nlAbsUrl(img.path)}" alt="${nlEscHtml(img.name || '')}" width="${w}" style="display:inline-block; width:${w}px; max-width:${w}px; height:auto; border-radius:8px; border:1px solid rgba(212,175,55,0.22);">
+        </a>
+      </td></tr>`;
+    }
+    return `
     ${separator}
     <tr><td style="padding:8px 20px 8px; text-align:center;">
-      <table cellpadding="0" cellspacing="0" style="margin:0 auto; max-width:600px; width:100%; border-radius:14px; overflow:hidden; border:1px solid rgba(212,175,55,0.22); box-shadow:0 6px 28px rgba(0,0,0,0.45);">
+      <table cellpadding="0" cellspacing="0" style="margin:0 auto; max-width:${w}px; width:100%; border-radius:14px; overflow:hidden; border:1px solid rgba(212,175,55,0.22); box-shadow:0 6px 28px rgba(0,0,0,0.45);">
         <tr><td style="padding:0; line-height:0;">
           <a href="${nlAbsUrl(img.path)}" target="_blank" style="display:block; line-height:0;">
-            <img src="${nlAbsUrl(img.path)}" alt="${nlEscHtml(img.name || '')}" width="600" style="display:block; width:100%; height:auto;">
+            <img src="${nlAbsUrl(img.path)}" alt="${nlEscHtml(img.name || '')}" width="${w}" style="display:block; width:100%; height:auto;">
           </a>
         </td></tr>
       </table>
     </td></tr>
     ${separator}`;
+  };
 
   const paraRow = (para) => {
     const isList = /^<(ul|ol)[\s>]/i.test(para.trim());
@@ -4501,9 +4967,176 @@ async function nlSendTargetedCampaign({ BREVO_API_KEY, emails, subject, html, ty
   }
 }
 
+// Journalise un envoi de newsletter pour chaque contact concerné (table newsletter_sends,
+// voir supabase-migration-newsletter-sends.sql). Contrairement à
+// newsletter_contacts.last_newsletter_sent_at/subject, qui n'en garde qu'un instantané (le
+// dernier envoi seulement, écrasé à chaque fois), cette table conserve l'historique complet
+// et permet de situer précisément un contact dans le parcours via l'ordre réel du brouillon
+// plutôt que de le déduire par rapprochement de sujet. Colonne/table optionnelle tant que la
+// migration n'est pas passée — échoue silencieusement plutôt que de casser l'envoi réel.
+async function logNewsletterSends(supabase, { emails, subject, draftId, ordre, canal, sentAt }) {
+  const list = (emails || []).filter(Boolean);
+  if (list.length === 0) return;
+  const rows = list.map(email => ({
+    contact_email: email,
+    draft_id: draftId || null,
+    subject: subject || null,
+    ordre: ordre != null ? ordre : null,
+    canal: canal || null,
+    sent_at: sentAt || new Date().toISOString()
+  }));
+  try {
+    const { error } = await supabase.from('newsletter_sends').insert(rows);
+    if (error) console.error('[newsletter] logNewsletterSends:', error.message);
+  } catch (e) {
+    console.error('[newsletter] logNewsletterSends exception:', e.message);
+  }
+}
+
+// ── Parcours individualisé : chaque contact avance à son propre rythme depuis sa date
+// d'inscription (ou son dernier envoi), plutôt qu'une diffusion groupée qui fait
+// recevoir "le dernier envoi du jour" à un nouvel inscrit au lieu de la toute première
+// étape. Un contact inscrit après la fin des campagnes groupées historiques (étapes
+// 1-6) démarre le parcours complet à l'étape 1 ; un contact déjà inscrit à cette
+// époque les a reçues par campagne et continue directement à partir de l'étape 7,
+// pour ne jamais les recevoir deux fois. Cadence hebdomadaire, calculée à partir du
+// dernier envoi RÉEL de ce contact (newsletter_sends), ou de sa date d'inscription
+// pour un tout nouveau contact n'ayant jamais rien reçu du parcours. Les étapes
+// utilisées ici restent des gabarits réutilisables : jamais marquées statut='envoyé'
+// (ce champ resterait un non-sens pour un envoi étalé dans le temps, contact par
+// contact) — seule newsletter_sends trace qui a reçu quoi et quand.
+// Partagée entre le cron hebdomadaire (action=cron-send-parcours-individual, GET,
+// tous les mercredis 19h heure de Paris) et le bouton de test manuel
+// (action=send-parcours-individual-now, POST admin) — un seul endroit fait
+// réellement l'envoi.
+async function runParcoursIndividualCron(supabase) {
+  // Coupe-circuit sans redéploiement : insérer {key:'newsletter_parcours_individuel',
+  // enabled:false} dans feature_flags pour revenir temporairement à la diffusion
+  // groupée manuelle si besoin (absent de la table = activé par défaut).
+  if (!(await isFeatureEnabled(supabase, 'newsletter_parcours_individuel'))) {
+    return { success: true, sent: 0, skipped_reason: 'feature_disabled' };
+  }
+  try {
+    const CADENCE_DAYS = 7;
+    const BREVO_API_KEY = process.env.BREVO_API_KEY;
+    if (!BREVO_API_KEY) return { success: false, error: 'BREVO_API_KEY manquante' };
+
+    const { data: allDrafts, error: draftsErr } = await supabase.from('newsletter_drafts').select('*');
+    if (draftsErr) throw draftsErr;
+    // Les étapes 1-6 (historique envoyé par campagne groupée avant la mise en place
+    // du parcours) restent dans cette liste : elles servent de modèle pour démarrer
+    // la séquence complète des nouveaux inscrits (voir cutoff ci-dessous), sans
+    // jamais être renvoyées à ceux qui les ont déjà reçues via la campagne d'origine.
+    const steps = (allDrafts || [])
+      .filter(d => d.extra?.canal === 'parcours' && d.extra?.parcours_valide === true && (Number(d.extra?.ordre) || 0) > 0)
+      .sort((a, b) => (Number(a.extra?.ordre) || 0) - (Number(b.extra?.ordre) || 0));
+    if (steps.length === 0) return { success: true, sent: 0, message: "Aucune étape validée dans le parcours." };
+
+    // Date du dernier envoi groupé historique (étape 6) : tout contact inscrit après
+    // cette date n'a jamais reçu 1-6 par campagne et doit démarrer la séquence
+    // complète à l'étape 1 ; tout contact inscrit avant les a déjà reçues et
+    // continue directement à partir de l'étape 7.
+    const historicalCutoff = steps
+      .filter(s => (Number(s.extra?.ordre) || 0) > 0 && (Number(s.extra?.ordre) || 0) <= 6 && s.sent_at)
+      .reduce((max, s) => Math.max(max, new Date(s.sent_at).getTime()), 0);
+
+    const { data: contacts, error: contactsErr } = await supabase
+      .from('newsletter_contacts')
+      .select('email, created_at')
+      .eq('status', 'active')
+      .eq('brevo_synced', true);
+    if (contactsErr) throw contactsErr;
+
+    // Dernier envoi de parcours par contact (le plus récent en premier) — sert à la
+    // fois à connaître la prochaine étape due et l'ancienneté de ce dernier envoi.
+    const { data: sends, error: sendsErr } = await supabase
+      .from('newsletter_sends')
+      .select('contact_email, ordre, sent_at')
+      .not('ordre', 'is', null)
+      .order('sent_at', { ascending: false });
+    if (sendsErr) throw sendsErr;
+    const lastSendByEmail = new Map();
+    for (const s of sends || []) {
+      if (!lastSendByEmail.has(s.contact_email)) lastSendByEmail.set(s.contact_email, s);
+    }
+
+    const now = Date.now();
+    const dueByStepId = new Map(); // draft.id -> { step, emails: [] }
+    for (const c of contacts || []) {
+      const last = lastSendByEmail.get(c.email);
+      const createdAt = new Date(c.created_at).getTime();
+      let nextOrdre, referenceDate;
+      if (last) {
+        nextOrdre = Number(last.ordre) + 1;
+        referenceDate = new Date(last.sent_at);
+      } else if (historicalCutoff && createdAt > historicalCutoff) {
+        // Nouvel inscrit depuis l'arrêt des campagnes groupées 1-6 : démarre le
+        // parcours complet à l'étape 1, comme n'importe quel autre abonné.
+        nextOrdre = 1;
+        referenceDate = new Date(c.created_at);
+      } else {
+        // Inscrit avant la fin de l'historique groupé : a déjà reçu 1-6 par
+        // campagne, ne rejoue jamais cet historique.
+        nextOrdre = 7;
+        referenceDate = new Date(c.created_at);
+      }
+      const daysSince = (now - referenceDate.getTime()) / 86400000;
+      if (daysSince < CADENCE_DAYS) continue;
+      const step = steps.find(s => Number(s.extra?.ordre) === nextOrdre);
+      if (!step) continue; // à jour (dernière étape disponible déjà reçue) ou étape suivante pas encore validée
+      if (!dueByStepId.has(step.id)) dueByStepId.set(step.id, { step, emails: [] });
+      dueByStepId.get(step.id).emails.push(c.email);
+    }
+
+    let totalSent = 0;
+    const details = [];
+    for (const { step, emails } of dueByStepId.values()) {
+      const finalSubject = step.subject || 'Oradia';
+      const html = buildCommunicationEmailHtml({ ...step, subject: finalSubject });
+      const text = nlEmailPlainText(html);
+      let sentCount = 0;
+      const BATCH = 10;
+      for (let i = 0; i < emails.length; i += BATCH) {
+        const batch = emails.slice(i, i + BATCH);
+        const results = await Promise.all(batch.map(email => fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+          body: JSON.stringify({
+            sender: { name: 'Oradia', email: 'contact@oradia.fr' },
+            to: [{ email }],
+            replyTo: { name: "Rudy d'Oradia", email: 'contact@oradia.fr' },
+            subject: finalSubject,
+            htmlContent: html.replace('{unsubscribe}', buildUnsubUrl(email)),
+            textContent: text.replace('{unsubscribe}', buildUnsubUrl(email)),
+            headers: nlBulkHeaders(email)
+          })
+        })));
+        const sentEmails = [];
+        results.forEach((r, idx) => { if (r.ok) sentEmails.push(batch[idx]); });
+        sentCount += sentEmails.length;
+        if (sentEmails.length > 0) {
+          await supabase.from('newsletter_contacts')
+            .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
+            .in('email', sentEmails);
+          await logNewsletterSends(supabase, {
+            emails: sentEmails, subject: finalSubject, draftId: step.id,
+            ordre: Number(step.extra?.ordre) || null, canal: 'parcours'
+          });
+        }
+      }
+      totalSent += sentCount;
+      details.push({ ordre: Number(step.extra?.ordre) || null, subject: finalSubject, sent: sentCount, targeted: emails.length });
+    }
+
+    return { success: true, sent: totalSent, details };
+  } catch (e) {
+    return { success: false, error: e.message };
+  }
+}
+
 // Traçage post-envoi, commun aux deux canaux (campagne ou transactionnel) : quels contacts
 // ont reçu quoi, et passage du brouillon à l'état « envoyé ».
-async function nlMarkSent(supabase, { emails, subject, draftId, excludeAlreadySent, sent, failedEmails = [] }) {
+async function nlMarkSent(supabase, { emails, subject, draftId, excludeAlreadySent, sent, failedEmails = [], ordre = null, canal = null }) {
   if (emails.length > 0) {
     if (excludeAlreadySent) {
       await supabase
@@ -4519,6 +5152,7 @@ async function nlMarkSent(supabase, { emails, subject, draftId, excludeAlreadySe
         .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: subject })
         .in('email', emails);
     } catch (_) {}
+    await logNewsletterSends(supabase, { emails, subject, draftId, ordre, canal });
   }
   await supabase
     .from('newsletter_drafts')
@@ -4582,11 +5216,22 @@ async function handleNewsletter(req, res) {
       }
 
       // ── Vue séparée « Parcours » : combine les newsletters déjà envoyées (statut
-      // 'envoyé', triées par date d'envoi) et les étapes du parcours une fois
-      // validées (extra.canal='parcours' ET extra.parcours_valide=true, triées par
-      // extra.ordre) — les envoyées d'abord, puis les étapes validées dans l'ordre.
-      // Tant qu'une étape n'est pas validée, elle reste un brouillon normal (visible
-      // et modifiable dans Newsletter & Réseaux), pas encore dans cette vue.
+      // 'envoyé', triées par date d'envoi réelle) et les étapes du parcours pas
+      // encore envoyées (extra.canal='parcours', validées ou non, triées par
+      // extra.ordre) — les envoyées d'abord (ordre chronologique réel, qui prime
+      // toujours sur extra.ordre une fois l'envoi effectué), puis la file dans
+      // l'ordre où elle partira. Les étapes pas encore validées restent aussi
+      // visibles et modifiables dans Newsletter & Réseaux (validate-parcours) ;
+      // les inclure ici aussi permet de tout gérer (ordre, prévisualisation,
+      // validation) depuis un seul endroit.
+      // type='promo' exclu des deux listes : une annonce (lancement, ouverture de
+      // précommandes...) n'appartient pas à la séquence éditoriale du parcours, même
+      // une fois envoyée — voir aussi backfill-parcours-history, qui applique la même
+      // exclusion pour la numérotation rétroactive.
+      // `d.statut !== 'envoyé'` sur queue évite un doublon : une étape historique
+      // numérotée par backfill-parcours-history est à la fois « envoyée » ET
+      // « validée » (parcours_valide=true) — sans ce filtre elle apparaîtrait deux
+      // fois, une fois dans `sent` et une fois dans `queue`.
       // N'affecte pas l'action 'drafts' ci-dessous : requête de base identique,
       // seul un filtre JS après coup distingue les deux vues.
       if (action === 'drafts-parcours') {
@@ -4598,13 +5243,87 @@ async function handleNewsletter(req, res) {
           return res.status(500).json({ error: 'Erreur lors de la récupération du parcours' });
         }
         const rows = allDrafts || [];
+
+        // « Le veilleur intérieur » a été envoyée par l'ancien circuit de diffusion
+        // manuelle (pas le pipeline valider → programmer → cron), et a donc échappé
+        // aux deux passes de numérotation du parcours : backfill-parcours-history
+        // l'excluait déjà (canal='parcours' présent depuis son import), et apply-
+        // parcours-insights-plan ne repositionne que les étapes encore en file
+        // d'attente. Son extra.ordre est resté vide (case 7 libre entre l'historique
+        // 1-6 et la suite numérotée à partir de 8) — auto-corrigé ici, sans bouton
+        // dédié, à chaque chargement de l'onglet, idempotent.
+        const veilleur = rows.find(d => d.subject === "Rudy d'ORADIA - Le veilleur intérieur" && d.statut === 'envoyé');
+        if (veilleur && Number(veilleur.extra?.ordre) !== 7) {
+          veilleur.extra = { ...(veilleur.extra || {}), canal: 'parcours', ordre: 7 };
+          supabase.from('newsletter_drafts').update({ extra: veilleur.extra }).eq('id', veilleur.id)
+            .then(({ error: fixErr }) => { if (fixErr) console.error('[drafts-parcours] auto-fix ordre veilleur:', fixErr.message); });
+        }
+
         const sent = rows
-          .filter(d => d.statut === 'envoyé')
+          .filter(d => d.statut === 'envoyé' && d.type !== 'promo' && !PARCOURS_EXCLUDED_SUBJECTS.includes(d.subject))
           .sort((a, b) => new Date(a.sent_at || a.created_at) - new Date(b.sent_at || b.created_at));
-        const validatedSteps = rows
-          .filter(d => d.extra?.canal === 'parcours' && d.extra?.parcours_valide === true)
+        const queue = rows
+          .filter(d => d.extra?.canal === 'parcours' && d.statut !== 'envoyé')
           .sort((a, b) => (Number(a.extra?.ordre) || 0) - (Number(b.extra?.ordre) || 0));
-        return res.status(200).json([...sent, ...validatedSteps]);
+        return res.status(200).json([...sent, ...queue]);
+      }
+
+      // ── État d'avance du parcours : sert à la fois l'alerte tableau de bord
+      // ("rédige la prochaine newsletter") et le badge de l'onglet Parcours.
+      // Principe : les étapes validées (extra.parcours_valide=true) forment une
+      // file ordonnée par extra.ordre. sentSteps = déjà envoyées. queue = validées
+      // mais pas encore envoyées, c'est l'avance dont dispose Rudy. lastScheduled =
+      // parmi la queue, celle programmée le plus loin dans le futur (normalement une
+      // seule à la fois dans ce flux). nextReady = la prochaine étape de la queue au
+      // delà de ce qui est déjà programmé (ou du dernier envoi si rien n'est
+      // programmé) : si elle existe, il y a déjà du contenu écrit d'avance, donc pas
+      // besoin de rédiger — seulement, éventuellement, de le programmer.
+      if (action === 'parcours-status') {
+        const { data: allDrafts, error } = await supabase
+          .from('newsletter_drafts')
+          .select('*');
+        if (error) {
+          console.error('Error fetching parcours status:', error);
+          return res.status(500).json({ error: "Erreur lors du calcul de l'état du parcours" });
+        }
+        const rows = allDrafts || [];
+        const validated = rows.filter(d => d.extra?.canal === 'parcours' && d.extra?.parcours_valide === true);
+        const ordreOf = d => Number(d.extra?.ordre) || 0;
+        const sent = validated.filter(d => d.statut === 'envoyé').sort((a, b) => ordreOf(a) - ordreOf(b));
+        const queue = validated.filter(d => d.statut !== 'envoyé').sort((a, b) => ordreOf(a) - ordreOf(b));
+        const maxSentOrdre = sent.length ? ordreOf(sent[sent.length - 1]) : null;
+
+        const now = Date.now();
+        const scheduledQueue = queue.filter(d => d.scheduled_at && new Date(d.scheduled_at).getTime() > now);
+        const lastScheduled = scheduledQueue.reduce((latest, d) =>
+          (!latest || new Date(d.scheduled_at) > new Date(latest.scheduled_at)) ? d : latest, null);
+
+        const baselineOrdre = lastScheduled ? ordreOf(lastScheduled) : (maxSentOrdre || 0);
+        const nextReady = queue.find(d => ordreOf(d) > baselineOrdre) || null;
+
+        let daysUntilLastScheduled = null;
+        let alertNeeded = false;
+        let reason = null;
+        if (lastScheduled) {
+          daysUntilLastScheduled = Math.ceil((new Date(lastScheduled.scheduled_at).getTime() - now) / 86400000);
+          if (daysUntilLastScheduled <= 7 && !nextReady) { alertNeeded = true; reason = 'queue-empty-soon'; }
+        } else if (!nextReady) {
+          alertNeeded = true; reason = 'none-scheduled';
+        }
+
+        const pick = d => d ? { id: d.id, subject: d.subject, ordre: ordreOf(d) || null, scheduled_at: d.scheduled_at || null, statut: d.statut } : null;
+
+        return res.status(200).json({
+          success: true,
+          totalWrittenSteps: validated.length,
+          sentCount: sent.length,
+          maxSentOrdre,
+          queue: queue.map(pick),
+          lastScheduled: pick(lastScheduled),
+          nextReady: pick(nextReady),
+          readyToSchedule: !!(nextReady && !nextReady.scheduled_at),
+          alert: { needed: alertNeeded, reason, daysUntilLastScheduled }
+        });
       }
 
       if (action === 'drafts') {
@@ -4961,6 +5680,305 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
         return res.status(200).json({ success: true });
       }
 
+      // ── Déplace une étape en attente d'un cran dans la file (flèches ▲▼ de l'onglet
+      // Parcours) : échange son extra.ordre avec celui de la voisine immédiate parmi
+      // les étapes du parcours pas encore envoyées, calculée ici plutôt que fournie
+      // par le client pour ne jamais dépendre d'un ordre déjà obsolète côté navigateur.
+      if (action === 'move-parcours-step') {
+        const { id, direction } = body;
+        if (!id || (direction !== 'up' && direction !== 'down')) {
+          return res.status(400).json({ error: "id et direction ('up'|'down') requis" });
+        }
+        const { data: allRows, error: fetchErr } = await supabase
+          .from('newsletter_drafts')
+          .select('id, extra, statut');
+        if (fetchErr) throw fetchErr;
+        const queue = (allRows || [])
+          .filter(d => d.extra?.canal === 'parcours' && d.statut !== 'envoyé')
+          .sort((a, b) => (Number(a.extra?.ordre) || 0) - (Number(b.extra?.ordre) || 0));
+        const index = queue.findIndex(d => d.id === id);
+        if (index === -1) return res.status(404).json({ error: "Étape introuvable dans la file d'attente" });
+        const neighborIndex = direction === 'up' ? index - 1 : index + 1;
+        if (neighborIndex < 0 || neighborIndex >= queue.length) {
+          return res.status(200).json({ success: true, moved: false, message: 'Déjà en bout de file.' });
+        }
+        const current = queue[index];
+        const neighbor = queue[neighborIndex];
+        const currentOrdre = Number(current.extra?.ordre) || 0;
+        const neighborOrdre = Number(neighbor.extra?.ordre) || 0;
+        await Promise.all([
+          supabase.from('newsletter_drafts').update({ extra: { ...current.extra, ordre: neighborOrdre } }).eq('id', current.id),
+          supabase.from('newsletter_drafts').update({ extra: { ...neighbor.extra, ordre: currentOrdre } }).eq('id', neighbor.id)
+        ]);
+        return res.status(200).json({ success: true, moved: true });
+      }
+
+      // ── Numérote rétroactivement les newsletters déjà envoyées avant la mise en
+      // place du parcours (extra.ordre), pour que l'avancement par contact et l'alerte
+      // "rédige la prochaine" comptent depuis le tout premier envoi réel plutôt que de
+      // les ignorer comme "hors parcours". Exclut les envois structurellement
+      // promotionnels (type='promo') et ceux listés dans EXCLUDED_SUBJECTS ci-dessous
+      // (newsletters "Newsletter" par étiquette mais promotionnelles par contenu —
+      // annonce de lancement, campagne d'abonnement — donc hors séquence éditoriale).
+      // Décale ensuite la file déjà en place (extra.canal='parcours', ordre existant)
+      // pour qu'elle continue juste après ce compte historique, sans collision.
+      // Idempotent : si aucun envoi non numéroté n'est trouvé, ne touche à rien — évite
+      // de décaler la file une seconde fois si le bouton est cliqué par erreur.
+      if (action === 'backfill-parcours-history') {
+        const { data: allDrafts, error } = await supabase.from('newsletter_drafts').select('*');
+        if (error) throw error;
+        const rows = allDrafts || [];
+
+        const historicalSent = rows
+          .filter(d => d.statut === 'envoyé'
+            && d.type !== 'promo'
+            && d.extra?.canal !== 'parcours'
+            && !PARCOURS_EXCLUDED_SUBJECTS.includes(d.subject))
+          .sort((a, b) => new Date(a.sent_at || a.created_at) - new Date(b.sent_at || b.created_at));
+
+        if (historicalSent.length === 0) {
+          return res.status(200).json({ success: true, historicalCount: 0, message: "Rien à décaler : aucun envoi non numéroté trouvé." });
+        }
+
+        const existingQueue = rows.filter(d => d.extra?.canal === 'parcours');
+        const existingOrdres = existingQueue.map(d => Number(d.extra?.ordre) || 0).filter(n => n > 0);
+        const currentMinOrdre = existingOrdres.length ? Math.min(...existingOrdres) : null;
+        const shift = currentMinOrdre !== null ? (historicalSent.length + 1 - currentMinOrdre) : 0;
+
+        // 1. Décale d'abord la file existante, pour libérer les numéros 1..N avant d'y
+        // placer l'historique — chaque ligne est ciblée par son id, pas de collision
+        // possible même si l'ordre des updates n'est pas garanti.
+        if (shift !== 0) {
+          await Promise.all(existingQueue.map(d => supabase
+            .from('newsletter_drafts')
+            .update({ extra: { ...d.extra, ordre: (Number(d.extra?.ordre) || 0) + shift } })
+            .eq('id', d.id)));
+        }
+
+        // 2. Numérote l'historique par ordre chronologique réel d'envoi.
+        await Promise.all(historicalSent.map((d, index) => supabase
+          .from('newsletter_drafts')
+          .update({ extra: { ...(d.extra || {}), canal: 'parcours', ordre: index + 1, parcours_valide: true } })
+          .eq('id', d.id)));
+
+        return res.status(200).json({
+          success: true,
+          historicalCount: historicalSent.length,
+          shiftedQueueCount: existingQueue.length,
+          shift,
+          historicalSubjects: historicalSent.map((d, index) => ({ ordre: index + 1, subject: d.subject, sent_at: d.sent_at }))
+        });
+      }
+
+      // ── Intègre 5 nouvelles étapes du parcours nées de l'analyse des intentions
+      // (onglet Insights > analyse des tirages, thèmes dominants réels : incertitude/
+      // seuil, relations/attachements, blocages/répétitions, vocation/sens, sérénité/
+      // présence), et repositionne l'ensemble de la file d'attente pour que ces
+      // thèmes très concrets et fréquents arrivent tôt (juste après l'introduction du
+      // parcours), avant les chapitres plus abstraits (Chronos/Kairos, dissolution du
+      // soi, conscience) — un chemin qui va du plus incarné vers le plus subtil,
+      // plutôt que l'inverse. N'affecte jamais les étapes déjà envoyées (historique
+      // figé) : seules les étapes extra.canal='parcours' non envoyées sont retrouvées
+      // par sujet exact et replacées. Idempotent : rejouer cette action ne recrée pas
+      // les 5 nouvelles étapes si elles existent déjà (comparaison par sujet), et le
+      // repositionnement se contente de réappliquer la même cible.
+      if (action === 'apply-parcours-insights-plan') {
+        const NEW_STEPS = [
+          {
+            subject: "Quand l'attente devient le chemin",
+            registre: 'incarnee',
+            content: "<p>Il y a une scène que presque tout le monde connaît. On a semé, ou décidé, ou envoyé le message qui compte, et il ne reste plus qu'à attendre. Les journées s'étirent, rien ne bouge en surface, et l'impatience s'installe comme si le temps lui-même avait cessé de travailler pour nous.</p>\n<p>Sous la terre pourtant, une graine ne reste jamais immobile. Elle absorbe l'humidité, gonfle, déploie une radicelle avant même qu'aucune pousse ne perce le sol. Le jardinier qui gratterait la terre chaque matin pour vérifier ne ferait qu'interrompre ce travail. Rien de ce qui compte, dans une germination, ne se voit depuis l'extérieur avant l'heure.</p>\n<p>L'impatience naît d'une confusion précise : elle prend l'absence de signe visible pour une absence de mouvement. Or le corps, lui, sait la différence. Une tension au ventre, un sommeil agité, une pensée qui revient sans cesse au même endroit ne sont pas des signes que rien ne se passe. Ce sont les signes que quelque chose, précisément, est en train de se réorganiser.</p>\n<p>Le seuil n'est donc pas la ligne qu'on franchit à l'arrivée. C'est tout ce temps souterrain, invisible et pourtant actif, qui prépare le moment où quelque chose pourra enfin affleurer. Vouloir l'accélérer ne change rien à la maturation. Cela ne fait qu'ajouter de la tension à un processus qui suit déjà son propre rythme.</p>\n<p>L'oracle de La Boussole Intérieure ne raccourcit pas cette attente. Il aide à la traverser autrement, à reconnaître, dans ce qui semble immobile, le travail réel qui s'y accomplit déjà.</p>\n<p><em>La Boussole Intérieure. Comprendre, choisir, avancer. Précommandes ouvertes sur oradia.fr.</em></p>"
+          },
+          {
+            subject: "Les non-dits du cœur, ces chaînes douces",
+            registre: 'incarnee',
+            content: "<p>Deux personnes se taisent l'une devant l'autre, et pourtant tout circule. Une déception non dite, un besoin jamais nommé, une blessure ancienne qu'on préfère ne pas rouvrir. Le silence n'est pas vide. Il est plein de ce qu'on a choisi de ne pas dire, et ce non-dit continue de tenir la relation, aussi sûrement qu'un fil tendu entre deux mains qui n'osent plus se lâcher ni se serrer.</p>\n<p>Le psychologue Marshall Rosenberg, en observant des milliers de conflits, a fait un constat simple : la plupart des tensions ne viennent pas d'un désaccord sur les faits, mais d'une confusion entre l'observation, le jugement, l'émotion et le besoin. On dit tu ne m'écoutes jamais quand on voudrait dire je me sens seul et j'ai besoin d'être entendu. Le premier accuse. Le second ouvre. Le lien se referme sur l'un, il se rouvre sur l'autre.</p>\n<p>Ce que nous appelons attachement est souvent, en réalité, un empilement de ces besoins jamais formulés. Chacun attend que l'autre devine, et personne ne devine tout à fait juste. La chaîne n'est pas faite d'amour en trop. Elle est faite de mots qu'on a eu peur de prononcer, par crainte de déranger, de paraître exigeant, ou simplement de ne pas être compris.</p>\n<p>Nommer un besoin ne fragilise pas un lien. Cela lui donne enfin une forme sur laquelle l'autre peut s'appuyer. Ce n'est pas un aveu de faiblesse, c'est un acte de clarté, et la clarté est souvent ce qui manque le plus dans les relations qui durent depuis longtemps.</p>\n<p>L'oracle de La Boussole Intérieure aide à retrouver, sous la plainte ou le silence, le besoin réel qui attend d'être dit. Une fois nommé, il peut enfin circuler autrement qu'en tension.</p>\n<p><em>La Boussole Intérieure. Comprendre, choisir, avancer. Précommandes ouvertes sur oradia.fr.</em></p>"
+          },
+          {
+            subject: "La répétition n'est pas une malédiction, c'est une signature",
+            registre: 'incarnee',
+            content: "<p>Le même obstacle revient. La même dispute, sous une autre forme. Le même mur financier, professionnel, créatif, qui semblait pourtant compris, dépassé, résolu, et qui se redresse un peu plus loin sur le chemin. On y voit facilement une malédiction, comme si quelque chose, en nous, refusait obstinément d'apprendre.</p>\n<p>Le cerveau ne fonctionne pourtant pas par malédiction. Il fonctionne par motifs. Une situation ancienne, vécue comme menaçante ou insatisfaite, laisse une empreinte, et cette empreinte devient un filtre à travers lequel des situations nouvelles sont reconnues, classées, traitées, souvent avant même que la conscience n'ait eu le temps d'intervenir. Ce n'est pas une faiblesse de caractère. C'est un système de reconnaissance qui a été efficace un jour, et qui continue de tourner.</p>\n<p>Ce qui revient n'est donc pas un hasard malheureux. C'est une signature, au sens le plus littéral : une marque reconnaissable, qui indique où se trouve encore un motif non intégré. La répétition n'est pas la preuve d'un échec, elle est l'index de ce qui demande précisément votre attention, et nulle part ailleurs.</p>\n<p>Combattre le motif de front ne le fait pas taire. On ne raye pas une signature en appuyant plus fort dessus. Ce qui la transforme, c'est de la reconnaître au moment où elle apparaît, de la nommer pour ce qu'elle est, une réponse ancienne rejouée sur un présent différent, et de laisser, une seule fois, une réponse neuve prendre sa place.</p>\n<p>L'oracle de La Boussole Intérieure ne vous promet pas de faire disparaître ce qui revient. Il vous aide à le reconnaître assez tôt pour, cette fois, choisir autrement.</p>\n<p><em>La Boussole Intérieure. Comprendre, choisir, avancer. Précommandes ouvertes sur oradia.fr.</em></p>"
+          },
+          {
+            subject: "Vocation et sens : la sève qui vous traverse",
+            registre: 'inspiree',
+            content: "<p>Une question revient souvent, sous des formes différentes : à quoi est-ce que je sers vraiment ? Elle se pose rarement dans le confort. Elle surgit dans les carrefours, quand un métier, une vie, une routine ne suffisent plus à répondre à ce qu'on cherche.</p>\n<p>Aucun organisme vivant ne se pose cette question seul. Une racine ne pousse pas pour elle-même, elle nourrit l'arbre, qui abrite un oiseau, qui disperse une graine, qui deviendra une autre racine ailleurs. Le vivant n'a jamais fonctionné par unités séparées, mais par circulation. Ce que l'on appelle vocation n'est peut-être rien d'autre que le moment où l'on ressent, avec netteté, sa propre place dans cette circulation plus large.</p>\n<p>Certaines civilisations anciennes, notamment en Égypte, ont bâti des sociétés d'une remarquable longévité en organisant leur vie collective autour de ce principe : chaque geste, chaque saison, chaque fonction sociale était pensé en lien avec un ordre plus vaste, celui du fleuve, des cycles, du vivant qui les portait. Nous ne savons pas tout de ce que cela leur a réellement apporté, et il serait malhonnête de transformer cette observation historique en preuve définitive. Mais l'intuition qu'elle porte mérite d'être prise au sérieux : une vie déconnectée du tout se fatigue plus vite qu'une vie qui se sait reliée.</p>\n<p>Chercher sa vocation, ce n'est donc pas chercher un rôle unique et parfait, à trouver une fois pour toutes. C'est sentir, encore et encore, la direction dans laquelle votre élan nourrit quelque chose de plus grand que vous, et accepter que cette direction puisse bouger avec le temps, comme la sève change de trajet selon les saisons sans jamais cesser de circuler.</p>\n<p>L'oracle de La Boussole Intérieure ne vous donne pas de réponse toute faite sur votre vocation. Il vous aide à sentir, dans le présent retrouvé, où votre sève a envie d'aller aujourd'hui.</p>\n<p><em>La Boussole Intérieure. Comprendre, choisir, avancer. Précommandes ouvertes sur oradia.fr.</em></p>"
+          },
+          {
+            subject: "Accueillir ce qui monte",
+            registre: 'incarnee',
+            content: "<p>Une émotion monte, et le premier réflexe est souvent de la repousser. La colère paraît inconvenante, la tristesse encombrante, la peur honteuse. On apprend, parfois dès l'enfance, à ranger ce qui déborde plutôt qu'à le regarder. Le calme qu'on obtient ainsi n'est pourtant pas de la sérénité. C'est une émotion mise sous pression, qui attend son heure.</p>\n<p>Les neurosciences décrivent l'émotion comme un signal, pas comme un défaut. Elle informe sur un besoin satisfait ou menacé, elle mobilise le corps pour agir en conséquence, puis elle est censée se dissiper une fois le message reçu. Ce cycle dure rarement plus de quelques minutes lorsqu'il va à son terme. Ce qui s'éternise, ce n'est presque jamais l'émotion elle-même. C'est la résistance qu'on lui oppose.</p>\n<p>Accueillir une émotion ne veut pas dire lui obéir. Cela veut dire lui laisser le temps d'être sentie, nommée, traversée, sans la juger et sans agir immédiatement sous son emprise. Entre sentir la colère et la déverser sur quelqu'un, il y a tout un espace où elle peut simplement être reconnue pour ce qu'elle transporte comme information.</p>\n<p>La sérénité, ainsi comprise, n'est pas l'absence d'émotion. C'est la capacité à laisser circuler ce qui monte sans en être submergé ni le nier. Un corps qui accueille ainsi ses mouvements intérieurs gagne, avec le temps, une stabilité que la seule maîtrise ne donne jamais.</p>\n<p>L'oracle de La Boussole Intérieure ouvre cet espace d'accueil, quelques minutes, le temps d'un tirage. Ce que vous y sentez n'a pas besoin d'être combattu. Il a seulement besoin d'être reconnu.</p>\n<p><em>La Boussole Intérieure. Comprendre, choisir, avancer. Précommandes ouvertes sur oradia.fr.</em></p>"
+          }
+        ];
+
+        // Ordre cible final de toute la file (étapes déjà en place + 5 nouvelles),
+        // conçu pour que les thèmes les plus concrets et les plus fréquents dans
+        // l'analyse des intentions (seuil, relations, répétitions) arrivent tôt,
+        // et que vocation/sérénité s'intercalent avant les chapitres les plus
+        // abstraits de la fin du parcours.
+        const TARGET_ORDER = [
+          "Le temps n'est pas dans l'horloge",
+          "Le veilleur intérieur",
+          "Ce que votre corps sait avant vous",
+          "Guillemant, Garnier Malet et la tentation du raccourci",
+          "La brume n'est pas un vide",
+          "Quand l'attente devient le chemin",
+          "Le barrage",
+          "Les non-dits du cœur, ces chaînes douces",
+          "Chronos, Kairos, Aiôn",
+          "La synchronicité vous parle de vous",
+          "La liberté est un intervalle",
+          "L'arbre porte son passé",
+          "La répétition n'est pas une malédiction, c'est une signature",
+          "D'où viennent les idées",
+          "Le souffle, cette aiguille",
+          "Vocation et sens : la sève qui vous traverse",
+          "Romuald Leterrier et le pari du sens",
+          "Quand le soi et le temps se dissolvent",
+          "Accueillir ce qui monte",
+          "Le passé déguisé en avenir",
+          "Ce que la conscience sait faire",
+          "Le geste qui décide",
+          "Un oracle ne prédit pas",
+          "Revenir au centre"
+        ];
+
+        const { data: allDrafts, error } = await supabase.from('newsletter_drafts').select('*');
+        if (error) throw error;
+        const rows = allDrafts || [];
+        const existingSubjects = new Set(rows.filter(d => d.extra?.canal === 'parcours').map(d => d.subject));
+
+        let created = 0;
+        for (const step of NEW_STEPS) {
+          if (existingSubjects.has(step.subject)) continue;
+          const { error: insertErr } = await supabase.from('newsletter_drafts').insert({
+            subject: step.subject,
+            content: step.content,
+            intention: null,
+            type: 'newsletter',
+            images: [],
+            extra: { canal: 'parcours', registre: step.registre, cta_text: "Découvrir l'Oracle Oradia", cta_url: 'https://oradia.fr' }
+          });
+          if (!insertErr) created++;
+          else console.error('[parcours-insights-plan] insert:', step.subject, insertErr.message);
+        }
+
+        // Reposition — recharge après insertion pour disposer des id des 5 nouvelles étapes.
+        const { data: refreshed, error: refreshErr } = await supabase.from('newsletter_drafts').select('*');
+        if (refreshErr) throw refreshErr;
+        const queueBySubject = new Map(
+          (refreshed || [])
+            .filter(d => d.extra?.canal === 'parcours' && d.statut !== 'envoyé')
+            .map(d => [d.subject, d])
+        );
+
+        let repositioned = 0;
+        const notFound = [];
+        await Promise.all(TARGET_ORDER.map((subject, index) => {
+          const draft = queueBySubject.get(subject);
+          if (!draft) { notFound.push(subject); return null; }
+          const targetOrdre = 7 + index; // 1..6 réservés à l'historique déjà envoyé
+          if (Number(draft.extra?.ordre) === targetOrdre) return null;
+          repositioned++;
+          return supabase.from('newsletter_drafts')
+            .update({ extra: { ...draft.extra, ordre: targetOrdre } })
+            .eq('id', draft.id);
+        }));
+
+        return res.status(200).json({ success: true, created, repositioned, notFound });
+      }
+
+      // ── Corrige le contenu de brouillons du parcours déjà créés, retrouvés par sujet
+      // exact — utile quand un texte importé (admin/parcours-modeles-20.js, ou les
+      // étapes créées par apply-parcours-insights-plan) doit être remplacé après coup
+      // par une version relue/corrigée, sans recréer ni renuméroter l'étape. Ne touche
+      // jamais une étape déjà envoyée (historique figé).
+      if (action === 'fix-parcours-content') {
+        const FIXES = [
+          {
+            subject: 'Le veilleur intérieur',
+            content: "<p>Il y a des moments où quelque chose en nous sait. Avant la réflexion, avant les arguments, avant même que l'esprit ait pesé le pour et le contre, une certitude tranquille se pose. On l'appelle intuition, petite voix, pressentiment. Et parfois, contre toute logique apparente, elle voit juste.</p>\n<p>Les humains ont donné mille noms à cette présence, et cela depuis très longtemps.</p>\n<p>Socrate parlait de son daimôn : une voix intérieure qui ne lui dictait jamais quoi faire, mais qui, aux moments décisifs, lui soufflait quand s'arrêter. Les Romains l'appelaient le genius, l'esprit qui accompagne chaque être de sa naissance à son dernier souffle. Les traditions plus tardives y ont vu l'ange gardien, ce veilleur assigné à chacun, et le mot ange, en grec, signifie simplement le messager, celui qui transmet. À travers les siècles et les cultures, la même intuition revient, obstinée : nous ne sommes pas seuls à l'intérieur de nous-mêmes. Une part plus vaste veille, et parfois, elle parle.</p>\n<p>Cette part n'est pas enfermée dans l'instant comme l'est notre pensée quotidienne. Là où nous avançons pas à pas, aveugles au prochain virage, elle semble embrasser un paysage plus large. Elle sait vers quoi tend votre élan le plus profond, celui qui existait bien avant que le monde ne vous apprenne à en douter. Elle n'est pas un autre venu d'ailleurs pour vous surveiller. Elle est vous, vue depuis une hauteur que le quotidien vous cache. Elle est votre double, immatériel, hors temps et hors espace.</p>\n<p>Et elle transmet. Discrètement, sans jamais forcer. Par une image qui revient, une rencontre qui tombe au bon moment, un mot entendu qui résonne trop juste pour être fortuit. Ce sont ces instants où l'intérieur et l'extérieur semblent, l'espace d'un souffle, parler la même langue. Comme si le veilleur vous glissait, tout bas : regarde par là. Les fameuses synchronicités.</p>\n<p>Encore faut-il être assez tranquille pour l'entendre. Dans le bruit, dans la précipitation, dans la tête pleine, le message passe et se perd. Ce n'est pas qu'il n'a pas été offert. C'est que personne n'écoutait. Se relier à cette voix demande de ralentir, de faire silence, de revenir en soi, là où le murmure peut enfin devenir audible.</p>\n<p>Puis vient votre part à vous, et elle est décisive. Car le veilleur montre, mais il ne marche pas à votre place. C'est le sens même du daimôn de Socrate : il éclaire, il avertit, il oriente, mais le pas vous appartient. Là est votre pouvoir le plus précieux, votre libre arbitre : la capacité de dire oui à ce qui vous appelle, de vous engager, d'avancer dans le sens de votre vérité plutôt que de subir un chemin choisi par habitude ou par peur. Quand votre geste s'accorde à ce que cette part de vous savait déjà, quelque chose se met en place. Un alignement se fait. La vie répond.</p>\n<p>C'est tout le travail que l'oracle de La Boussole Intérieure accompagne. Elle ne vous impose rien et ne décide rien à votre place. Elle vous aide à faire silence, à revenir au centre, à percevoir ce que vous portez déjà en vous sans toujours l'entendre. Chaque tirage est une invitation à écouter cette voix plus ancienne, à retrouver l'axe, et à oser le geste qui vous rapproche de ce qui vous ressemble vraiment.</p>\n<p>Le veilleur intérieur connaît le chemin. La Boussole vous aide seulement à vous en souvenir.</p>\n<p><em>La Boussole Intérieure. Comprendre, choisir, avancer. Précommandes ouvertes sur oradia.fr.</em></p>"
+          },
+          {
+            subject: "Quand l'attente devient le chemin",
+            content: "<p>Il y a une scène que presque tout le monde connaît. On a semé, ou décidé, ou envoyé le message qui compte, et il ne reste plus qu'à attendre. Les journées s'étirent, rien ne bouge en surface, et l'impatience s'installe comme si le temps lui-même avait cessé de travailler pour nous.</p>\n<p>Sous la terre pourtant, une graine ne reste jamais immobile. Elle absorbe l'humidité, gonfle, déploie une radicelle avant même qu'aucune pousse ne perce le sol. Le jardinier qui gratterait la terre chaque matin pour vérifier ne ferait qu'interrompre ce travail. Rien de ce qui compte, dans une germination, ne se voit depuis l'extérieur avant l'heure.</p>\n<p>L'impatience naît d'une confusion précise : elle prend l'absence de signe visible pour une absence de mouvement. Or le corps, lui, sait la différence. Une tension au ventre, un sommeil agité, une pensée qui revient sans cesse au même endroit ne sont pas des signes que rien ne se passe. Ce sont les signes que quelque chose, précisément, est en train de se réorganiser.</p>\n<p>Le seuil n'est donc pas la ligne qu'on franchit à l'arrivée. C'est tout ce temps souterrain, invisible et pourtant actif, qui prépare le moment où quelque chose pourra enfin affleurer. Vouloir l'accélérer ne change rien à la maturation. Cela ne fait qu'ajouter de la tension à un processus qui suit déjà son propre rythme.</p>\n<p>L'oracle de La Boussole Intérieure ne raccourcit pas cette attente. Il aide à la traverser autrement, à reconnaître, dans ce qui semble immobile, le travail réel qui s'y accomplit déjà.</p>\n<p><em>La Boussole Intérieure. Comprendre, choisir, avancer. Précommandes ouvertes sur oradia.fr.</em></p>"
+          },
+          {
+            subject: "Les non-dits du cœur, ces chaînes douces",
+            content: "<p>Deux personnes se taisent l'une devant l'autre, et pourtant tout circule. Une déception non dite, un besoin jamais nommé, une blessure ancienne qu'on préfère ne pas rouvrir. Le silence n'est pas vide. Il est plein de ce qu'on a choisi de ne pas dire, et ce non-dit continue de tenir la relation, aussi sûrement qu'un fil tendu entre deux mains qui n'osent plus se lâcher ni se serrer.</p>\n<p>Le psychologue Marshall Rosenberg, en observant des milliers de conflits, a fait un constat simple : la plupart des tensions ne viennent pas d'un désaccord sur les faits, mais d'une confusion entre l'observation, le jugement, l'émotion et le besoin. On dit tu ne m'écoutes jamais quand on voudrait dire je me sens seul et j'ai besoin d'être entendu. Le premier accuse. Le second ouvre. Le lien se referme sur l'un, il se rouvre sur l'autre.</p>\n<p>Ce que nous appelons attachement est souvent, en réalité, un empilement de ces besoins jamais formulés. Chacun attend que l'autre devine, et personne ne devine tout à fait juste. La chaîne n'est pas faite d'amour en trop. Elle est faite de mots qu'on a eu peur de prononcer, par crainte de déranger, de paraître exigeant, ou simplement de ne pas être compris.</p>\n<p>Nommer un besoin ne fragilise pas un lien. Cela lui donne enfin une forme sur laquelle l'autre peut s'appuyer. Ce n'est pas un aveu de faiblesse, c'est un acte de clarté, et la clarté est souvent ce qui manque le plus dans les relations qui durent depuis longtemps.</p>\n<p>L'oracle de La Boussole Intérieure aide à retrouver, sous la plainte ou le silence, le besoin réel qui attend d'être dit. Une fois nommé, il peut enfin circuler autrement qu'en tension.</p>\n<p><em>La Boussole Intérieure. Comprendre, choisir, avancer. Précommandes ouvertes sur oradia.fr.</em></p>"
+          },
+          {
+            subject: "La répétition n'est pas une malédiction, c'est une signature",
+            content: "<p>Le même obstacle revient. La même dispute, sous une autre forme. Le même mur financier, professionnel, créatif, qui semblait pourtant compris, dépassé, résolu, et qui se redresse un peu plus loin sur le chemin. On y voit facilement une malédiction, comme si quelque chose, en nous, refusait obstinément d'apprendre.</p>\n<p>Le cerveau ne fonctionne pourtant pas par malédiction. Il fonctionne par motifs. Une situation ancienne, vécue comme menaçante ou insatisfaite, laisse une empreinte, et cette empreinte devient un filtre à travers lequel des situations nouvelles sont reconnues, classées, traitées, souvent avant même que la conscience n'ait eu le temps d'intervenir. Ce n'est pas une faiblesse de caractère. C'est un système de reconnaissance qui a été efficace un jour, et qui continue de tourner.</p>\n<p>Ce qui revient n'est donc pas un hasard malheureux. C'est une signature, au sens le plus littéral : une marque reconnaissable, qui indique où se trouve encore un motif non intégré. La répétition n'est pas la preuve d'un échec, elle est l'index de ce qui demande précisément votre attention, et nulle part ailleurs.</p>\n<p>Combattre le motif de front ne le fait pas taire. On ne raye pas une signature en appuyant plus fort dessus. Ce qui la transforme, c'est de la reconnaître au moment où elle apparaît, de la nommer pour ce qu'elle est, une réponse ancienne rejouée sur un présent différent, et de laisser, une seule fois, une réponse neuve prendre sa place.</p>\n<p>L'oracle de La Boussole Intérieure ne vous promet pas de faire disparaître ce qui revient. Il vous aide à le reconnaître assez tôt pour, cette fois, choisir autrement.</p>\n<p><em>La Boussole Intérieure. Comprendre, choisir, avancer. Précommandes ouvertes sur oradia.fr.</em></p>"
+          },
+          {
+            subject: "Vocation et sens : la sève qui vous traverse",
+            content: "<p>Une question revient souvent, sous des formes différentes : à quoi est-ce que je sers vraiment ? Elle se pose rarement dans le confort. Elle surgit dans les carrefours, quand un métier, une vie, une routine ne suffisent plus à répondre à ce qu'on cherche.</p>\n<p>Aucun organisme vivant ne se pose cette question seul. Une racine ne pousse pas pour elle-même, elle nourrit l'arbre, qui abrite un oiseau, qui disperse une graine, qui deviendra une autre racine ailleurs. Le vivant n'a jamais fonctionné par unités séparées, mais par circulation. Ce que l'on appelle vocation n'est peut-être rien d'autre que le moment où l'on ressent, avec netteté, sa propre place dans cette circulation plus large.</p>\n<p>Certaines civilisations anciennes, notamment en Égypte, ont bâti des sociétés d'une remarquable longévité en organisant leur vie collective autour de ce principe : chaque geste, chaque saison, chaque fonction sociale était pensé en lien avec un ordre plus vaste, celui du fleuve, des cycles, du vivant qui les portait. Nous ne savons pas tout de ce que cela leur a réellement apporté, et il serait malhonnête de transformer cette observation historique en preuve définitive. Mais l'intuition qu'elle porte mérite d'être prise au sérieux : une vie déconnectée du tout se fatigue plus vite qu'une vie qui se sait reliée.</p>\n<p>Chercher sa vocation, ce n'est donc pas chercher un rôle unique et parfait, à trouver une fois pour toutes. C'est sentir, encore et encore, la direction dans laquelle votre élan nourrit quelque chose de plus grand que vous, et accepter que cette direction puisse bouger avec le temps, comme la sève change de trajet selon les saisons sans jamais cesser de circuler.</p>\n<p>L'oracle de La Boussole Intérieure ne vous donne pas de réponse toute faite sur votre vocation. Il vous aide à sentir, dans le présent retrouvé, où votre sève a envie d'aller aujourd'hui.</p>\n<p><em>La Boussole Intérieure. Comprendre, choisir, avancer. Précommandes ouvertes sur oradia.fr.</em></p>"
+          },
+          {
+            subject: "Accueillir ce qui monte",
+            content: "<p>Une émotion monte, et le premier réflexe est souvent de la repousser. La colère paraît inconvenante, la tristesse encombrante, la peur honteuse. On apprend, parfois dès l'enfance, à ranger ce qui déborde plutôt qu'à le regarder. Le calme qu'on obtient ainsi n'est pourtant pas de la sérénité. C'est une émotion mise sous pression, qui attend son heure.</p>\n<p>Les neurosciences décrivent l'émotion comme un signal, pas comme un défaut. Elle informe sur un besoin satisfait ou menacé, elle mobilise le corps pour agir en conséquence, puis elle est censée se dissiper une fois le message reçu. Ce cycle dure rarement plus de quelques minutes lorsqu'il va à son terme. Ce qui s'éternise, ce n'est presque jamais l'émotion elle-même. C'est la résistance qu'on lui oppose.</p>\n<p>Accueillir une émotion ne veut pas dire lui obéir. Cela veut dire lui laisser le temps d'être sentie, nommée, traversée, sans la juger et sans agir immédiatement sous son emprise. Entre sentir la colère et la déverser sur quelqu'un, il y a tout un espace où elle peut simplement être reconnue pour ce qu'elle transporte comme information.</p>\n<p>La sérénité, ainsi comprise, n'est pas l'absence d'émotion. C'est la capacité à laisser circuler ce qui monte sans en être submergé ni le nier. Un corps qui accueille ainsi ses mouvements intérieurs gagne, avec le temps, une stabilité que la seule maîtrise ne donne jamais.</p>\n<p>L'oracle de La Boussole Intérieure ouvre cet espace d'accueil, quelques minutes, le temps d'un tirage. Ce que vous y sentez n'a pas besoin d'être combattu. Il a seulement besoin d'être reconnu.</p>\n<p><em>La Boussole Intérieure. Comprendre, choisir, avancer. Précommandes ouvertes sur oradia.fr.</em></p>"
+          }
+        ];
+
+        const { data: allDrafts, error } = await supabase.from('newsletter_drafts').select('id, subject, statut');
+        if (error) throw error;
+        const rows = allDrafts || [];
+
+        let updated = 0;
+        const notFound = [];
+        await Promise.all(FIXES.map(async (fix) => {
+          const draft = rows.find(d => d.subject === fix.subject && d.statut !== 'envoyé');
+          if (!draft) { notFound.push(fix.subject); return; }
+          const { error: updateErr } = await supabase
+            .from('newsletter_drafts')
+            .update({ content: fix.content, updated_at: new Date().toISOString() })
+            .eq('id', draft.id);
+          if (!updateErr) updated++;
+          else console.error('[fix-parcours-content] update:', fix.subject, updateErr.message);
+        }));
+
+        return res.status(200).json({ success: true, updated, notFound });
+      }
+
+      // ── Déclenchement manuel (bouton admin) de l'envoi individualisé du parcours
+      // (étapes ordre > 6, cadence 7 jours par contact) — même fonction que le cron
+      // hebdomadaire (action=cron-send-parcours-individual, tous les mercredis 19h
+      // heure de Paris), pour tester sans attendre.
+      if (action === 'send-parcours-individual-now') {
+        const result = await runParcoursIndividualCron(supabase);
+        return res.status(200).json(result);
+      }
+
+      // ── Détecte (et, hors dry_run, supprime) les étapes du parcours encore en file
+      // d'attente dont le sujet est identique à une newsletter déjà envoyée — reliquat
+      // typique d'un import de modèles (admin/parcours-modeles-20.js) dont une étape a
+      // fini par partir sous un autre flux (ex. avant la mise en place formelle du
+      // parcours), laissant derrière elle une copie jamais envoyée du même contenu.
+      // Si cette copie partait un jour, les contacts déjà à jour recevraient deux fois
+      // la même newsletter. dry_run=true (par défaut) ne fait que lister, pour toujours
+      // pouvoir vérifier avant de supprimer quoi que ce soit.
+      if (action === 'dedupe-parcours-queue') {
+        const dryRun = body.dry_run !== false;
+        const { data: allDrafts, error } = await supabase.from('newsletter_drafts').select('*');
+        if (error) throw error;
+        const rows = allDrafts || [];
+        const sentSubjects = new Set(rows.filter(d => d.statut === 'envoyé').map(d => d.subject));
+        const duplicates = rows.filter(d => d.extra?.canal === 'parcours' && d.statut !== 'envoyé' && sentSubjects.has(d.subject));
+
+        if (!dryRun && duplicates.length > 0) {
+          await Promise.all(duplicates.map(d => supabase.from('newsletter_drafts').delete().eq('id', d.id)));
+        }
+
+        return res.status(200).json({
+          success: true,
+          dryRun,
+          count: duplicates.length,
+          deleted: dryRun ? 0 : duplicates.length,
+          duplicates: duplicates.map(d => ({ id: d.id, subject: d.subject, ordre: Number(d.extra?.ordre) || null }))
+        });
+      }
+
       // ── Ajout d'un fragment au carnet ──
       if (action === 'ideas') {
         const { content, source } = body;
@@ -5071,6 +6089,10 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
               .from('newsletter_contacts')
               .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
               .in('email', targets);
+            await logNewsletterSends(supabase, {
+              emails: targets, subject: finalSubject, draftId: lastDraft.id,
+              ordre: Number(lastDraft.extra?.ordre) || null, canal: lastDraft.extra?.canal || null
+            });
             return res.status(200).json({
               success: true, channel: 'campagne', campaignId: campaign.campaignId,
               subject: finalSubject, sent: targets.length, failed: 0, failedEmails: [],
@@ -5118,6 +6140,10 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
             .from('newsletter_contacts')
             .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
             .in('email', sentEmails);
+          await logNewsletterSends(supabase, {
+            emails: sentEmails, subject: finalSubject, draftId: lastDraft.id,
+            ordre: Number(lastDraft.extra?.ordre) || null, canal: lastDraft.extra?.canal || null
+          });
         }
 
         return res.status(200).json({ success: true, channel: 'transactionnel', fallbackReason: resendFallbackReason, subject: finalSubject, sent, failed: failedEmails.length, failedEmails });
@@ -5193,7 +6219,8 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
             if (campaign.ok) {
               await nlMarkSent(supabase, {
                 emails, subject: finalSubject, draftId: draft_id,
-                excludeAlreadySent: exclude_already_sent, sent: emails.length
+                excludeAlreadySent: exclude_already_sent, sent: emails.length,
+                ordre: Number(draft.extra?.ordre) || null, canal: draft.extra?.canal || null
               });
               return res.status(200).json({
                 success: true,
@@ -5269,7 +6296,8 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
 
           await nlMarkSent(supabase, {
             emails: sentEmails, subject: finalSubject, draftId: draft_id,
-            excludeAlreadySent: exclude_already_sent, sent, failedEmails
+            excludeAlreadySent: exclude_already_sent, sent, failedEmails,
+            ordre: Number(draft.extra?.ordre) || null, canal: draft.extra?.canal || null
           });
 
           return res.status(200).json({
@@ -5316,11 +6344,17 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
         // donc tous les contacts actifs synchronisés sont réputés destinataires.
         // (Colonne optionnelle — ignoré si la migration last-newsletter n'est pas exécutée.)
         try {
-          await supabase
+          const { data: notified } = await supabase
             .from('newsletter_contacts')
             .update({ last_newsletter_sent_at: new Date().toISOString(), last_newsletter_subject: finalSubject })
             .eq('status', 'active')
-            .eq('brevo_synced', true);
+            .eq('brevo_synced', true)
+            .select('email');
+          await logNewsletterSends(supabase, {
+            emails: (notified || []).map(c => c.email),
+            subject: finalSubject, draftId: draft_id,
+            ordre: Number(draft.extra?.ordre) || null, canal: draft.extra?.canal || null
+          });
         } catch (_) {}
 
         await supabase
@@ -6968,17 +8002,20 @@ Réponds en français, sans tiret long, format markdown compact.`
         const recettes = recetteRows.reduce((s, t) => s + parseFloat(t.amount), 0);
         const depenses = (data || []).filter(t => t.type === 'depense').reduce((s, t) => s + parseFloat(t.amount), 0);
 
-        // Distinction fiscale micro-entrepreneur : vente de marchandises (BIC, 12,3%)
-        // vs prestations de services (BNC, 21,1%) — taux 2026. Les dons en espèces sont
-        // visibles dans "recettes" (argent réellement reçu) mais sortent de cette base :
-        // ils ne transitent pas par le compte pro et ne sont pas déclarés à l'URSSAF.
-        const recettesDeclarables = recettes - recetteRows
-          .filter(t => t.source === 'don-especes')
+        // Déclaration URSSAF : uniquement les abonnements (revenu récurrent, acquis
+        // sans condition). Précommandes ET dons exclus de cette base tant que l'argent
+        // reste conditionnel — la garantie "zéro-risque" de la page précommande promet
+        // un remboursement intégral si l'objectif de financement n'est pas atteint, donc
+        // rien n'est déclaré dessus avant que ce ne soit acquis. Décision explicite de
+        // Rudy (2026-09) — le régime micro-entrepreneur se déclare en principe sur
+        // l'encaissé, pas sur le "définitivement acquis" ; à confirmer avec un
+        // expert-comptable si besoin. Les abonnements sont classés BIC (déjà le cas
+        // avant ce changement) ; rien ne tombe en BNC pour l'instant avec ce périmètre.
+        const recettesDeclarables = recetteRows
+          .filter(t => t.source === 'abonnement')
           .reduce((s, t) => s + parseFloat(t.amount), 0);
-        const recettesVentesBIC = recetteRows
-          .filter(t => t.source === 'precommande' || t.source === 'abonnement')
-          .reduce((s, t) => s + parseFloat(t.amount), 0);
-        const recettesServicesBNC = recettesDeclarables - recettesVentesBIC;
+        const recettesVentesBIC = recettesDeclarables;
+        const recettesServicesBNC = 0;
         const URSSAF_RATE_BIC = 0.123;
         const URSSAF_RATE_BNC = 0.211;
         const urssafBIC = recettesVentesBIC * URSSAF_RATE_BIC;
@@ -7000,6 +8037,16 @@ Réponds en français, sans tiret long, format markdown compact.`
         // Ce qui reste vraiment : l'URSSAF est un décaissement au même titre que Stripe.
         const tresorerieReelleEstimee = recettes - stripeFees - depenses - urssaf;
 
+        // Détail de ce qui est volontairement exclu de la base déclarable, pour que le
+        // dashboard puisse l'afficher clairement plutôt que de laisser deviner pourquoi
+        // la base est plus petite que les recettes brutes.
+        const recettesPrecommandeExclues = recetteRows
+          .filter(t => t.source === 'precommande')
+          .reduce((s, t) => s + parseFloat(t.amount), 0);
+        const recettesDonsExclus = recetteRows
+          .filter(t => t.source === 'don' || t.source === 'don-especes')
+          .reduce((s, t) => s + parseFloat(t.amount), 0);
+
         return res.status(200).json({
           success: true,
           data: data || [],
@@ -7014,9 +8061,11 @@ Réponds en français, sans tiret long, format markdown compact.`
             stripeFeesEstimate: stripeFees,
             tresorerieReelleEstimee,
             breakdown: {
+              recettesDeclarables,
               recettesVentesBIC, recettesServicesBNC,
               urssafBIC, urssafBNC,
-              tauxBIC: URSSAF_RATE_BIC, tauxBNC: URSSAF_RATE_BNC
+              tauxBIC: URSSAF_RATE_BIC, tauxBNC: URSSAF_RATE_BNC,
+              recettesPrecommandeExclues, recettesDonsExclus
             }
           }
         });

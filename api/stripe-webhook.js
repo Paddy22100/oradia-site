@@ -290,7 +290,7 @@ async function findToreSubscriptionRow(stripe, supabase, object) {
 // filet de sécurité par invoice.payment_succeeded (cas d'un 1er prélèvement qui a
 // d'abord échoué puis réussi via une nouvelle tentative automatique de Stripe,
 // sans repasser par checkout.session.completed).
-async function activateToreSubscription(supabase, { email, fullName, plan, stripeCustomerId, stripeSubscriptionId, amountTotalCents, sourceRef }) {
+async function activateToreSubscription(supabase, { email, fullName, plan, stripeCustomerId, stripeSubscriptionId, amountTotalCents, sourceRef, paymentIntentId }) {
     if (!email) { console.error('[webhook] activateToreSubscription: email manquant'); return; }
 
     // .ilike() (insensible à la casse) : email arrive normalisé en minuscules, mais une
@@ -401,7 +401,10 @@ async function activateToreSubscription(supabase, { email, fullName, plan, strip
             description: `Abonnement Tore ${plan || 'complet'} — ${fullName || email}`,
             amount: (amountTotalCents || 0) / 100,
             source: 'abonnement',
-            source_ref: sourceRef
+            source_ref: sourceRef,
+            // Rattachement direct des frais Stripe réels pour ce tout premier paiement
+            // (Checkout Session) — voir supabase-migration-transactions-stripe-fees.sql.
+            payment_intent_id: paymentIntentId || null
         }).then(({ error }) => { if (error) console.error('[webhook] transactions insert (abonnement):', error.message); });
     }
 
@@ -710,7 +713,8 @@ async function processEvent(event) {
                         stripeCustomerId: session.customer || null,
                         stripeSubscriptionId: session.subscription || null,
                         amountTotalCents: extractedData.amount_total,
-                        sourceRef: sessionId
+                        sourceRef: sessionId,
+                        paymentIntentId: extractedData.payment_intent_id
                     });
 
                     console.log(`[webhook] Tore subscription traitée: ${sessionId}`);
