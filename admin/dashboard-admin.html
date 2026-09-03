@@ -6168,6 +6168,13 @@
         // NEWSLETTER
         // ═══════════════════════════════════════════════
         let nlCurrentDraftId = null, nlIdeas = [], nlDrafts = [];
+        // Copie de l'extra du brouillon ouvert (canal/ordre/registre du parcours,
+        // raw_content_append du tirage hebdomadaire, etc.) — nlPreview()/nlSave()
+        // ne connaissent que les champs pilotés par l'éditeur (cta, bannière...) ;
+        // sans cette copie, prévisualiser ou sauvegarder depuis l'éditeur reconstruit
+        // un extra qui ne garde que ces champs-là et efface silencieusement tout le
+        // reste. Voir nlOpenDraft() (la remplit) et nlNewDraft() (la vide).
+        let nlCurrentDraftExtra = {};
         let nlCurrentType = 'newsletter';
 
         function scrollToNewsletter() {
@@ -6204,6 +6211,7 @@
                 !confirm('Repartir d\'une newsletter vierge ? Les modifications non sauvegardées seront perdues.')) return;
 
             nlCurrentDraftId = null;
+            nlCurrentDraftExtra = {};
             nlSelectedImages = [];
             nlActivePlacementIdx = null;
 
@@ -6565,6 +6573,7 @@
                 nlSetStep(2);
                 nlExpandContentCol(true);
                 nlCurrentDraftId = null;
+                nlCurrentDraftExtra = {};
                 nlStatus('success', (nlCurrentType === 'promo' ? 'Email promotionnel généré.' : 'Newsletter générée.') + ' Choisis une image puis sauvegarde.');
                 nlFetchAndShowImages(intention);
                 nlGenerateSuccess = true;
@@ -7220,11 +7229,18 @@
             if (!content) { nlStatus('error', 'Aucun contenu à prévisualiser'); return; }
 
             const isPromo = nlCurrentType === 'promo';
-            const extra = isPromo ? {
-                cta_text: document.getElementById('nl-cta-text')?.value.trim() || undefined,
-                cta_url: document.getElementById('nl-cta-url')?.value.trim() || undefined,
-                badge: document.getElementById('nl-cta-badge')?.value.trim() || undefined
-            } : {};
+            // Part de l'extra du brouillon ouvert (voir nlCurrentDraftExtra) : sans ça,
+            // action=preview (contrairement à action=save) n'a aucun filet de sécurité
+            // côté serveur — elle utilise tel quel l'extra envoyé par le client, donc
+            // tout champ que cet éditeur ne reconstruit pas lui-même (raw_content_append
+            // du tirage hebdomadaire, canal/ordre du parcours...) disparaîtrait de
+            // l'aperçu.
+            const extra = { ...nlCurrentDraftExtra };
+            if (isPromo) {
+                extra.cta_text = document.getElementById('nl-cta-text')?.value.trim() || undefined;
+                extra.cta_url = document.getElementById('nl-cta-url')?.value.trim() || undefined;
+                extra.badge = document.getElementById('nl-cta-badge')?.value.trim() || undefined;
+            }
             const banner = nlGetBanner();
             if (banner) extra.promo_banner = banner;
 
@@ -7310,11 +7326,16 @@
             const saveBtns = document.querySelectorAll('[id^="nl-btn-save"]');
             saveBtns.forEach(b => { b.disabled = true; b.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Sauvegarde…'; });
             try {
-                const extra = nlCurrentType === 'promo' ? {
-                    cta_text: document.getElementById('nl-cta-text').value.trim() || undefined,
-                    cta_url: document.getElementById('nl-cta-url').value.trim() || undefined,
-                    badge: document.getElementById('nl-cta-badge').value.trim() || undefined
-                } : {};
+                // Part de l'extra du brouillon ouvert (voir nlCurrentDraftExtra) — le
+                // serveur fusionne déjà avec l'extra existant lors d'un save (id présent),
+                // mais partir d'ici aussi évite de dépendre uniquement de ce filet de
+                // sécurité côté serveur.
+                const extra = { ...nlCurrentDraftExtra };
+                if (nlCurrentType === 'promo') {
+                    extra.cta_text = document.getElementById('nl-cta-text').value.trim() || undefined;
+                    extra.cta_url = document.getElementById('nl-cta-url').value.trim() || undefined;
+                    extra.badge = document.getElementById('nl-cta-badge').value.trim() || undefined;
+                }
                 const banner = nlGetBanner();
                 if (banner) extra.promo_banner = banner;
 
@@ -7731,11 +7752,16 @@
             const content = document.getElementById('nl-content')?.value.trim();
             if (!content) return;
             try {
-                const extra = nlCurrentType === 'promo' ? {
-                    cta_text: document.getElementById('nl-cta-text').value.trim() || undefined,
-                    cta_url: document.getElementById('nl-cta-url').value.trim() || undefined,
-                    badge: document.getElementById('nl-cta-badge').value.trim() || undefined
-                } : {};
+                // Part de l'extra du brouillon ouvert (voir nlCurrentDraftExtra) — le
+                // serveur fusionne déjà avec l'extra existant lors d'un save (id présent),
+                // mais partir d'ici aussi évite de dépendre uniquement de ce filet de
+                // sécurité côté serveur.
+                const extra = { ...nlCurrentDraftExtra };
+                if (nlCurrentType === 'promo') {
+                    extra.cta_text = document.getElementById('nl-cta-text').value.trim() || undefined;
+                    extra.cta_url = document.getElementById('nl-cta-url').value.trim() || undefined;
+                    extra.badge = document.getElementById('nl-cta-badge').value.trim() || undefined;
+                }
                 const banner = nlGetBanner();
                 if (banner) extra.promo_banner = banner;
                 const socialFb = document.getElementById('nl-social-fb-text')?.value.trim();
@@ -8427,6 +8453,7 @@
                 if (!res.ok) throw new Error(data.error || 'Erreur serveur');
                 if (nlCurrentDraftId === id) {
                     nlCurrentDraftId = null;
+                    nlCurrentDraftExtra = {};
                     nlShowTab('drafts');
                 }
                 await nlLoadDrafts();
@@ -8771,6 +8798,11 @@
                     if (data.intention) document.getElementById('nl-intention').value = data.intention;
 
                     const extra = data.extra || {};
+                    // Copie complète, y compris les champs que cet éditeur ne connaît pas
+                    // (canal/ordre/registre du parcours, raw_content_append du tirage
+                    // hebdomadaire...) — nlPreview()/nlSave() la fusionnent avec l'extra
+                    // qu'ils reconstruisent eux-mêmes, pour ne jamais les effacer.
+                    nlCurrentDraftExtra = { ...extra };
                     if (data.type === 'promo') {
                         document.getElementById('nl-cta-text').value = extra.cta_text || '';
                         document.getElementById('nl-cta-url').value = extra.cta_url || '';

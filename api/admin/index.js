@@ -4374,60 +4374,88 @@ function getIsoWeekKey(date) {
   return `${d.getUTCFullYear()}-W${String(weekNum).padStart(2, '0')}`;
 }
 
-// Construit le contenu (sujet, corps, images positionnées) du brouillon de
-// newsletter du tirage hebdomadaire — voir cron-tirage-hebdo. Le corps suit le
-// même format que celui attendu par buildCommunicationEmailHtml : des paragraphes
-// <p> avec seulement b/strong/i/em/u/br/ul/ol/li/a (le reste est filtré), les
-// images des cartes placées via le tableau `images` (positions alignées sur les
-// paragraphes) plutôt que par des <img> bruts dans le texte.
-// Largeur des vignettes de cartes dans l'email — volontairement petite et en
-// mode "compact" (voir imageRow) : une pleine largeur de 600/700px par carte,
-// avec en plus son cadre décoratif (bordure, ombre, séparateurs dorés), sur un
-// tirage de 7 cartes ou plus avec passerelles, rendait l'email interminable
-// et chaque image paraissait énorme même une fois réduite en pixels.
-const WEEKLY_TIRAGE_CARD_IMG_WIDTH = 100;
+// Largeur des vignettes dans la grille des cartes — un cinquième de la
+// carte du dashboard pour rester lisible sur 3 colonnes.
+const WEEKLY_TIRAGE_CARD_IMG_WIDTH = 90;
 
+// Couleur d'accent par famille, reprise du plateau de tirage (tore.html) —
+// juste un repère visuel discret sur chaque vignette de la grille, pas une
+// reproduction exacte de la disposition en mandala (peu fiable en email,
+// les clients mail ne gèrent pas le positionnement absolu/rotation).
+const TIRAGE_FAMILY_COLORS = {
+  emotions: '#c9605c', besoins: '#d98a3d', transmutation: '#d4af37',
+  archetypes: '#8b6fc0', revelations: '#4caf7d', actions: '#c9a63d',
+  memoire_cosmos: '#5b82d9'
+};
+const TIRAGE_BRIDGE_COLOR = '#9a8a6a';
+
+function tirageTextRow(html) {
+  return `<tr><td style="padding:0 32px 20px;">
+    <div style="color:#c8c0a8; font-size:16px; line-height:1.8; font-family:Georgia,serif; text-align:justify; text-justify:inter-word;">${nlFixTypography(html, { addFinalPeriod: true })}</div>
+  </td></tr>`;
+}
+
+// Grille compacte des cartes (3 par ligne), en table HTML — nécessaire car le
+// pipeline normal des paragraphes ne garde que des balises en ligne
+// (b/strong/i/em/u/br/ul/ol/li/a) et filtre <table>/<tr>/<td>/<img> : une
+// vraie disposition en grille ne peut pas passer par ce chemin-là, une seule
+// image par paragraphe à la fois. Inséré tel quel via extra.raw_content_append
+// (voir buildCommunicationEmailHtml).
+function buildTirageCardsGridHtml(cards) {
+  const cells = [];
+  cards.forEach(card => {
+    cells.push({ name: card.name, label: FAMILY_LABELS[card.family] || card.family, color: TIRAGE_FAMILY_COLORS[card.family] || '#d4af37' });
+    if (card.bridgeCard) {
+      cells.push({ name: card.bridgeCard.name, label: 'Passerelle', color: TIRAGE_BRIDGE_COLOR });
+    }
+  });
+
+  const cellHtml = (c) => {
+    if (!c) return '<td width="33%" style="padding:8px;"></td>';
+    const url = resolveCardImageUrl(c.name);
+    const img = url ? `<img src="${url}" alt="${nlEscHtml(c.name)}" width="${WEEKLY_TIRAGE_CARD_IMG_WIDTH}" style="display:block; width:${WEEKLY_TIRAGE_CARD_IMG_WIDTH}px; max-width:100%; height:auto; margin:0 auto; border-radius:8px; border:2px solid ${c.color};">` : '';
+    return `<td width="33%" valign="top" style="padding:8px; text-align:center;">
+      ${img}
+      <p style="margin:6px 0 0; color:${c.color}; font-size:10px; text-transform:uppercase; letter-spacing:0.06em; font-family:Georgia,serif;">${nlEscHtml(c.label)}</p>
+      <p style="margin:2px 0 0; color:#e8d9a8; font-size:12px; font-weight:700; font-family:Georgia,serif;">${nlEscHtml(c.name)}</p>
+    </td>`;
+  };
+
+  let rows = '';
+  for (let i = 0; i < cells.length; i += 3) {
+    rows += `<tr>${[cells[i], cells[i + 1], cells[i + 2]].map(cellHtml).join('')}</tr>`;
+  }
+
+  return `<tr><td style="padding:8px 20px 12px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tbody>${rows}</tbody></table>
+  </td></tr>`;
+}
+
+// Construit le contenu (sujet, intro, grille des cartes + analyse) du
+// brouillon de newsletter du tirage hebdomadaire — voir cron-tirage-hebdo.
+// Seule l'intro passe par le pipeline normal de paragraphes (`content`) ;
+// la grille des cartes et le texte qui suit sont un bloc HTML unique
+// (extra.raw_content_append), pour permettre une vraie disposition en
+// grille plutôt qu'un empilement d'un paragraphe + une image par carte,
+// qui rendait l'email interminable même une fois les images réduites.
 function buildWeeklyTirageContent({ theme, cards, analysis, date }) {
   const dateLabel = date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
   const subject = theme.event
     ? `Le tirage de la semaine : ${theme.event.name}`
     : `Le tirage de la semaine du ${dateLabel}`;
 
-  const paragraphs = [];
-  const images = [];
-  const pushCardImage = (name) => {
-    const url = resolveCardImageUrl(name);
-    if (url) images.push({ path: url.replace('https://oradia.fr', ''), name, position: paragraphs.length - 1, width: WEEKLY_TIRAGE_CARD_IMG_WIDTH, compact: true });
-  };
-
   // theme.intention porte déjà le contexte astro complet (Soleil, Lune, planètes
   // notables — voir lib/astro-calendar.js) suivi d'une invitation à l'interpréter :
   // pas besoin de le reconstruire ici, ni de répéter theme.label qui redirait la
   // même chose en plus court.
-  paragraphs.push(`<p>${theme.intention} C'est cette énergie qui inspire le tirage collectif de ce dimanche. Voici ce que les cartes en disent.</p>`);
+  const content = `<p>${theme.intention} C'est cette énergie qui inspire le tirage collectif de ce dimanche. Voici ce que les cartes en disent.</p>`;
 
-  // Chaque carte (et sa carte passerelle éventuelle) a son propre paragraphe et
-  // sa propre position d'image : aucune des deux ne partage sa position avec
-  // une autre, pour que l'association texte/image ne puisse jamais se mélanger
-  // et pour que la carte passerelle ait sa place à elle, pas une simple
-  // parenthèse discrète dans le paragraphe de la carte principale.
-  cards.forEach((card) => {
-    const label = FAMILY_LABELS[card.family] || card.family;
-    paragraphs.push(`<p><strong>${label} : ${card.name}.</strong> ${card.quote || ''}</p>`);
-    pushCardImage(card.name);
+  let rawContentAppend = buildTirageCardsGridHtml(cards);
+  if (analysis?.explore) rawContentAppend += tirageTextRow(`<strong>Ce que cela invite à explorer.</strong> ${nlEscHtml(analysis.explore)}`);
+  if (analysis?.synthesis) rawContentAppend += tirageTextRow(`<strong>Synthèse de la semaine.</strong> ${nlEscHtml(analysis.synthesis)}`);
+  rawContentAppend += tirageTextRow(`À vous de recevoir ce que ces cartes ont fait résonner, et de le vivre à votre façon cette semaine.`);
 
-    if (card.bridgeCard) {
-      paragraphs.push(`<p><em>Une carte passerelle est apparue : ${card.bridgeCard.name}.</em> ${card.bridgeCard.quote || ''}</p>`);
-      pushCardImage(card.bridgeCard.name);
-    }
-  });
-
-  if (analysis?.explore) paragraphs.push(`<p><strong>Ce que cela invite à explorer.</strong> ${nlEscHtml(analysis.explore)}</p>`);
-  if (analysis?.synthesis) paragraphs.push(`<p><strong>Synthèse de la semaine.</strong> ${nlEscHtml(analysis.synthesis)}</p>`);
-
-  paragraphs.push(`<p>À vous de recevoir ce que ces cartes ont fait résonner, et de le vivre à votre façon cette semaine.</p>`);
-
-  return { subject, content: paragraphs.join(''), images };
+  return { subject, content, rawContentAppend };
 }
 
 // Génère le brouillon du tirage hebdomadaire (dimanche) : tirage QRNG + analyse
@@ -4469,7 +4497,7 @@ async function runWeeklyTirageCron(supabase, res, { force = false } = {}) {
       userEmail: 'cron-tirage-hebdo@oradia.fr'
     });
 
-    const { subject, content, images } = buildWeeklyTirageContent({ theme, cards, analysis, date: now });
+    const { subject, content, rawContentAppend } = buildWeeklyTirageContent({ theme, cards, analysis, date: now });
 
     const { data, error } = await supabase
       .from('newsletter_drafts')
@@ -4478,13 +4506,14 @@ async function runWeeklyTirageCron(supabase, res, { force = false } = {}) {
         content,
         intention: theme.intention,
         type: 'newsletter',
-        images,
+        images: [],
         extra: {
           canal: 'tirage_hebdo',
           semaine: isoWeekKey,
           astro_event: theme.event?.type || null,
           astro_label: theme.label,
-          qrng_source: qrngSource
+          qrng_source: qrngSource,
+          raw_content_append: rawContentAppend
         },
         statut: 'brouillon',
         created_at: now.toISOString(),
@@ -4686,6 +4715,14 @@ function buildCommunicationEmailHtml(draft) {
     });
     while (imgIdx < totalImagesAll) { bodyRows += imageRow(allImages[imgIdx++]); }
   }
+
+  // Bloc HTML pré-construit, inséré tel quel après le contenu normal — utilisé
+  // quand une disposition (ex: grille de cartes) ne peut pas passer par le
+  // pipeline de paragraphes ci-dessus, qui ne garde que des balises en ligne
+  // (b/strong/i/em/u/br/ul/ol/li/a) et filtre <table>/<tr>/<td>/<img>. Alimenté
+  // uniquement par du HTML généré côté serveur (voir buildWeeklyTirageContent),
+  // jamais par une saisie utilisateur — donc sûr de ne pas être filtré ici.
+  if (extra.raw_content_append) bodyRows += extra.raw_content_append;
 
   // L'image de fond reste sur la table extérieure — elle habille les marges de chaque côté
   // de la carte. C'est la carte elle-même qui devait changer : elle reposait sur un dégradé
