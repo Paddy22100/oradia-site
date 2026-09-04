@@ -1333,11 +1333,6 @@
                     <i class="fas fa-envelope mr-1.5"></i>Inscrits Newsletter
                     <span id="nl-count-badge" class="ml-1.5 text-xs bg-gold/20 text-gold rounded-full px-2 py-0.5"></span>
                 </button>
-                <button onclick="showContactsSubTab('tore-emails')" id="contacts-subtab-btn-tore-emails"
-                    class="contacts-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
-                    <i class="fas fa-magic mr-1.5"></i>Emails Tirages
-                    <span id="tore-emails-count-badge" class="ml-1.5 text-xs bg-gold/20 text-gold rounded-full px-2 py-0.5"></span>
-                </button>
                 <button onclick="showContactsSubTab('partners')" id="contacts-subtab-btn-partners"
                     class="contacts-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
                     <i class="fas fa-handshake mr-1.5"></i>Partenaires
@@ -1438,40 +1433,6 @@
                         </table>
                     </div>
                     <div id="nlPagination" class="px-6 py-4 bg-[rgba(5,20,40,0.8)]"></div>
-                </div>
-            </div>
-
-            <!-- ── Sous-onglet Emails Tirages ── -->
-            <div id="contacts-subtab-tore-emails" class="hidden">
-                <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
-                    <div class="flex items-center gap-3">
-                        <input id="toreEmailsSearch" type="text" placeholder="Rechercher…"
-                            oninput="filterToreEmailsLocal()"
-                            class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-48">
-                        <span class="text-gold/50 text-sm">Emails collectés lors des tirages freemium</span>
-                    </div>
-                    <button onclick="triggerPromoTirageCron()" id="btn-trigger-promo-cron"
-                        class="text-xs bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 hover:bg-gold/25 transition"
-                        title="Lance tout de suite le même envoi que le cron automatique (cron-job.org), sans attendre son prochain passage — utile pour vérifier qu'il fonctionne.">
-                        <i class="fas fa-bolt mr-1"></i>Déclencher la promo maintenant
-                    </button>
-                </div>
-                <p id="promoTirageCronStatus" class="hidden text-xs mb-4 px-1"></p>
-                <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
-                    <div class="overflow-x-auto">
-                        <table class="w-full">
-                            <thead class="bg-[rgba(5,20,40,0.8)]">
-                                <tr>
-                                    <th class="px-6 py-4 text-left text-gold font-semibold">Email</th>
-                                    <th class="px-6 py-4 text-left text-gold font-semibold">Date tirage</th>
-                                    <th class="px-6 py-4 text-left text-gold font-semibold">Consentement marketing</th>
-                                    <th class="px-6 py-4 text-left text-gold font-semibold">Promo 5€ envoyée</th>
-                                    <th class="px-6 py-4 text-left text-gold font-semibold">Actions</th>
-                                </tr>
-                            </thead>
-                            <tbody class="divide-y divide-gold/20" id="toreEmailsTableBody"></tbody>
-                        </table>
-                    </div>
                 </div>
             </div>
 
@@ -3896,6 +3857,42 @@
             </div>
             <p id="mail-test-feedback" class="text-center text-sm mt-5 hidden"></p>
         </section>
+
+        <section class="mb-10">
+            <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
+                <div>
+                    <h3 class="cormorant text-2xl font-bold text-gold">Emails Tirages</h3>
+                    <p class="text-light-gold/50 text-sm mt-1">Suivi de la 3ᵉ étape ci-dessus (promo abonnement J+7) : qui l'a reçue, qui l'attend encore.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <input id="toreEmailsSearch" type="text" placeholder="Rechercher…"
+                        oninput="filterToreEmailsLocal()"
+                        class="bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-gold w-48">
+                    <button onclick="triggerPromoTirageCron()" id="btn-trigger-promo-cron"
+                        class="text-xs bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 hover:bg-gold/25 transition"
+                        title="Lance tout de suite le même envoi que le cron automatique (cron-job.org), sans attendre son prochain passage — utile pour vérifier qu'il fonctionne.">
+                        <i class="fas fa-bolt mr-1"></i>Déclencher la promo maintenant
+                    </button>
+                </div>
+            </div>
+            <p id="promoTirageCronStatus" class="hidden text-xs mb-4 px-1"></p>
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead class="bg-[rgba(5,20,40,0.8)]">
+                            <tr>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Email</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Date tirage</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Consentement marketing</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Promo 5€ envoyée</th>
+                                <th class="px-6 py-4 text-left text-gold font-semibold">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gold/20" id="toreEmailsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
         </div><!-- /tab-mails -->
 
         <!-- ══ ONGLET : EXPORTS ══ -->
@@ -4114,6 +4111,7 @@
             if (name === 'synchronicity') { loadObservationWindows(); loadSynchronicity(); }
             if (name === 'monitoring')     { loadMonitoring(); loadSurveillanceLogs(); }
             if (name === 'guidances')      loadGuidances();
+            if (name === 'mails')          loadToreEmails();
             if (name === 'analytics')      loadAnalytics();
             if (name === 'etude')          loadExperiment();
             if (name === 'comptabilite')   { loadComptabilite(); loadCosts(); }
@@ -9623,11 +9621,9 @@
             }
             document.getElementById('contacts-subtab-repertoire').classList.toggle('hidden', name !== 'repertoire');
             document.getElementById('contacts-subtab-newsletter').classList.toggle('hidden', name !== 'newsletter');
-            document.getElementById('contacts-subtab-tore-emails').classList.toggle('hidden', name !== 'tore-emails');
             document.getElementById('contacts-subtab-partners').classList.toggle('hidden', name !== 'partners');
             document.getElementById('contacts-subtab-suppliers').classList.toggle('hidden', name !== 'suppliers');
             if (name === 'newsletter') loadNlSubscribers();
-            if (name === 'tore-emails') loadToreEmails();
             if (name === 'partners') loadPartners();
             if (name === 'suppliers') loadSuppliers();
         }
@@ -9796,8 +9792,6 @@
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Erreur');
                 _toreEmailsData = data.emails || [];
-                const badge = document.getElementById('tore-emails-count-badge');
-                if (badge) badge.textContent = _toreEmailsData.length || '';
                 renderToreEmailsTable(_toreEmailsData);
             } catch(e) {
                 tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-red-400/60 italic">✗ ${e.message}</td></tr>`;
