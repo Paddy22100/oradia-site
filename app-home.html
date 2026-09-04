@@ -5,11 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
 <title>ORADIA</title>
 <meta name="robots" content="noindex">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Oradia">
+<meta name="theme-color" content="#050d1c">
+<link rel="apple-touch-icon" href="images/logo-hd-v2.webp">
 <!--
   Écran d'accueil dédié à l'application mobile (Capacitor charge cette page
   comme contenu principal — voir mobile-app/capacitor.config.json). Reste sur
   le domaine oradia.fr : la connexion à l'espace membre fonctionne exactement
   comme sur le site (mêmes cookies/sessionStorage), pas de contexte isolé.
+
+  Bandeau PWA iOS : tant que l'app native iOS n'est pas publiée (signature
+  Apple Developer non configurée), ce bandeau propose aux visiteurs Safari/iOS
+  d'installer cette page sur leur écran d'accueil via le "Partager" natif —
+  alternative gratuite, sans passer par l'App Store, en attendant/à la place
+  d'une publication payante côté Apple.
 -->
 <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=Lora:wght@400;500&display=swap" rel="stylesheet">
 <style>
@@ -63,6 +74,28 @@
 
   footer { margin-top: 24px; text-align: center; }
   footer a { color: rgba(212,175,55,0.5); font-size: 11.5px; text-decoration: none; letter-spacing: 0.08em; }
+
+  .ios-install {
+    width: 100%; max-width: 420px; margin: 0 0 18px;
+    display: flex; align-items: center; gap: 12px;
+    background: linear-gradient(145deg, rgba(212,175,55,0.14), rgba(26,54,93,0.5));
+    border: 1px solid rgba(212,175,55,0.3);
+    border-radius: 16px; padding: 14px 16px;
+    animation: iosInstallIn .4s ease;
+  }
+  @keyframes iosInstallIn { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+  .ios-install .icon {
+    flex-shrink: 0; width: 34px; height: 34px; border-radius: 50%;
+    background: rgba(212,175,55,0.12); border: 1px solid rgba(212,175,55,0.35);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .ios-install .icon svg { width: 17px; height: 17px; stroke: var(--gold); fill: none; stroke-width: 1.6; }
+  .ios-install p { margin: 0; font-size: 12.5px; line-height: 1.45; color: rgba(232,228,212,0.85); flex: 1; }
+  .ios-install strong { color: var(--light-gold); font-weight: 600; }
+  .ios-install button {
+    flex-shrink: 0; background: none; border: none; color: rgba(232,228,212,0.4);
+    font-size: 18px; line-height: 1; padding: 4px; cursor: pointer;
+  }
 </style>
 </head>
 <body>
@@ -71,6 +104,12 @@
       <img src="images/logo-hd-v2.webp" alt="Oradia">
       <h1>ORADIA</h1>
       <p>La Boussole Intérieure</p>
+    </div>
+
+    <div id="iosInstallBanner" class="ios-install" style="display:none;">
+      <span class="icon"><svg viewBox="0 0 24 24"><path d="M12 3v12M8 7l4-4 4 4"/><path d="M5 14v4a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-4"/></svg></span>
+      <p>Installez Oradia comme une app&nbsp;: touchez <strong>Partager</strong> puis <strong>« Sur l'écran d'accueil »</strong>.</p>
+      <button type="button" onclick="dismissIosInstall()" aria-label="Fermer">&times;</button>
     </div>
 
     <div class="cards">
@@ -113,5 +152,25 @@
 
     <footer><a href="index.html">Voir le site complet →</a></footer>
   </div>
+
+  <script>
+    function dismissIosInstall() {
+      document.getElementById('iosInstallBanner').style.display = 'none';
+      try { localStorage.setItem('oradia_ios_install_dismissed', '1'); } catch (e) {}
+    }
+
+    (function () {
+      var isCapacitorApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+      var isIos = /iphone|ipad|ipod/i.test(navigator.userAgent);
+      var isSafari = /safari/i.test(navigator.userAgent) && !/crios|fxios|edgios|opios/i.test(navigator.userAgent);
+      var isStandalone = window.navigator.standalone === true || window.matchMedia('(display-mode: standalone)').matches;
+      var alreadyDismissed = false;
+      try { alreadyDismissed = localStorage.getItem('oradia_ios_install_dismissed') === '1'; } catch (e) {}
+
+      if (isIos && isSafari && !isStandalone && !isCapacitorApp && !alreadyDismissed) {
+        document.getElementById('iosInstallBanner').style.display = 'flex';
+      }
+    })();
+  </script>
 </body>
 </html>
