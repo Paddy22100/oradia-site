@@ -1952,6 +1952,49 @@
 
         <!-- ══ ONGLET : DEVIS & COÛTS DE FABRICATION ══ -->
         <div id="tab-quotes" class="tab-panel">
+
+        <!-- ══ PLAN DE FABRICATION — outil de décision (coûts + rentabilité + emballage) ══ -->
+        <section class="mb-10">
+            <div class="mb-5">
+                <h3 class="cormorant text-2xl font-bold text-gold">Plan de fabrication</h3>
+                <p class="text-light-gold/50 text-sm mt-1">Choisis un fournisseur et ses options, ajoute l'emballage/expédition, et vois tout de suite si tu peux lancer 1000 ou 2000 exemplaires.</p>
+            </div>
+
+            <div class="flex gap-2 mb-5" id="planScenarioTabs">
+                <button onclick="setPlanScenario('wjpc')" data-scenario="wjpc" class="plan-scenario-btn text-sm px-4 py-2 rounded-lg border transition">WJPC</button>
+                <button onclick="setPlanScenario('whatz')" data-scenario="whatz" class="plan-scenario-btn text-sm px-4 py-2 rounded-lg border transition">Whatz Games</button>
+                <button onclick="setPlanScenario('manual')" data-scenario="manual" class="plan-scenario-btn text-sm px-4 py-2 rounded-lg border transition">Devis manuels sélectionnés</button>
+            </div>
+
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-5">
+                <p id="planScenarioHint" class="text-light-gold/50 text-xs mb-4"></p>
+
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Emballage / expédition estimé (€/unité)</label>
+                        <input id="planPackagingCost" type="number" step="0.05" min="0" oninput="renderPlan()" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
+                        <div class="text-orange-400/70 text-xs mt-1">Estimation, pas un devis réel — voir la ligne "Estimation (RAJA/Cellpack)" dans le tableau Expédition ci-dessous</div>
+                    </div>
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Prix de vente moyen (€/exemplaire)</label>
+                        <input id="planSellingPrice" type="number" step="0.01" min="0" oninput="renderPlan()" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
+                        <div class="text-light-gold/30 text-xs mt-1">Pré-rempli avec le panier moyen des précommandes</div>
+                    </div>
+                    <div>
+                        <label class="text-light-gold/60 text-xs block mb-1">Cagnotte déjà disponible (€)</label>
+                        <input id="planCagnotte" type="number" step="0.01" min="0" oninput="renderPlan()" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
+                        <div class="text-light-gold/30 text-xs mt-1">Pré-rempli avec la cagnotte fabrication actuelle</div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="planManualNotice" class="hidden bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl p-4 mb-5 text-sm text-light-gold/60">
+                Coche un ou plusieurs devis dans le tableau "Devis &amp; Coûts de fabrication" ci-dessous (fabrication + pièce de tirage + expédition) pour composer ton scénario — le résultat s'affiche ici automatiquement.
+            </div>
+
+            <div id="planResults" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
+        </section>
+
         <section class="mb-10">
             <div class="flex items-center justify-between mb-8 flex-wrap gap-3">
                 <h3 class="cormorant text-2xl font-bold text-gold">Devis &amp; Coûts de fabrication</h3>
@@ -4245,7 +4288,7 @@
             if (name === 'waitlist')       { triggerSyncAll(false); }
             if (name === 'subscriptions') loadSubscriptions();
             if (name === 'kickstarter') { loadKickstarterStats(); loadKickstarter(1); }
-            if (name === 'quotes')      { loadQuotes(); initCostCalculator(); }
+            if (name === 'quotes')      { initCostCalculator(); loadQuotes().then(initPlan); }
             if (name === 'support')        loadSupportMessages();
             if (name === 'synchronicity') { loadObservationWindows(); loadSynchronicity(); }
             if (name === 'monitoring')     { loadMonitoring(); loadSurveillanceLogs(); }
@@ -5058,6 +5101,7 @@
         function toggleQuoteSelect(id, checked) {
             if (checked) selectedQuoteIds.add(id); else selectedQuoteIds.delete(id);
             renderProfitability();
+            if (typeof renderPlan === 'function') renderPlan();
         }
 
         function toggleSelectAllQuotes(checked) {
@@ -5072,6 +5116,7 @@
             if (!list.length) {
                 tbody.innerHTML = '<tr><td colspan="10" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun devis enregistré</td></tr>';
                 renderProfitability();
+                if (typeof renderPlan === 'function') renderPlan();
                 return;
             }
             const fmtEur = (v) => v == null ? '<span class="text-gold/20">—</span>' : `${Number(v).toFixed(2).replace('.', ',')} €`;
@@ -5104,6 +5149,7 @@
                     </tr>`;
             }).join('');
             renderProfitability();
+            if (typeof renderPlan === 'function') renderPlan();
         }
 
         // ── Analyse de rentabilité des devis sélectionnés ──
@@ -5340,6 +5386,156 @@
             const protoShipEur = round2(WHATZ_PROTO_SHIP_USD_APPROX * rate);
             document.getElementById('calcWhatzProtoTotal').textContent = `~${fmtEur(protoFabEur + protoShipEur)}`;
             document.getElementById('calcWhatzProtoDetail').textContent = `330$ (${fmtEur(protoFabEur)}) échantillon + ~100$ (${fmtEur(protoShipEur)}) port, variable selon poids du colis`;
+
+            renderPlan();
+        }
+
+        // ── Plan de fabrication : synthèse décisionnelle (fournisseur + emballage + rentabilité) ──
+        const PLAN_CONFIG_KEY = 'oradia_admin_plan_v1';
+        let planScenario = 'wjpc';
+
+        function savePlanConfig() {
+            try {
+                localStorage.setItem(PLAN_CONFIG_KEY, JSON.stringify({
+                    scenario: planScenario,
+                    packagingCost: document.getElementById('planPackagingCost').value,
+                    sellingPrice: document.getElementById('planSellingPrice').value,
+                    cagnotte: document.getElementById('planCagnotte').value
+                }));
+            } catch (e) { /* pas bloquant */ }
+        }
+
+        function loadPlanConfig() {
+            try { const raw = localStorage.getItem(PLAN_CONFIG_KEY); return raw ? JSON.parse(raw) : null; } catch (e) { return null; }
+        }
+
+        function setPlanScenario(scenario) {
+            planScenario = scenario;
+            savePlanConfig();
+            updatePlanScenarioButtons();
+            renderPlan();
+        }
+
+        function updatePlanScenarioButtons() {
+            document.querySelectorAll('.plan-scenario-btn').forEach(b => {
+                const active = b.dataset.scenario === planScenario;
+                b.classList.toggle('bg-gold/20', active);
+                b.classList.toggle('text-gold', active);
+                b.classList.toggle('border-gold/40', active);
+                b.classList.toggle('text-light-gold/50', !active);
+                b.classList.toggle('border-gold/15', !active);
+            });
+            const hints = {
+                wjpc: 'EXW Dongguan + transport DDP — configure le livret et le mode de transport dans le comparateur ci-dessous, le plan se met à jour automatiquement.',
+                whatz: 'FOB Shanghai + douane/TVA — configure l\'option (télescopique / livre standard / livre black edge) dans le comparateur ci-dessous, le plan se met à jour automatiquement.',
+                manual: 'Basé sur les devis cochés dans le tableau "Devis & Coûts de fabrication" ci-dessous (mélange librement fabrication, pièce de tirage, expédition).'
+            };
+            document.getElementById('planScenarioHint').textContent = hints[planScenario] || '';
+            document.getElementById('planManualNotice').classList.toggle('hidden', planScenario !== 'manual');
+        }
+
+        function initPlan() {
+            const saved = loadPlanConfig();
+            planScenario = saved?.scenario || 'wjpc';
+            const packagingEl = document.getElementById('planPackagingCost');
+            const sellingEl = document.getElementById('planSellingPrice');
+            const cagnotteEl = document.getElementById('planCagnotte');
+            if (saved?.packagingCost) packagingEl.value = saved.packagingCost;
+            else if (!packagingEl.value) {
+                const expeditionQuote = currentQuotes.find(q => (q.category === 'expedition') && q.unit_cost_eur != null);
+                packagingEl.value = expeditionQuote ? expeditionQuote.unit_cost_eur : 1.20;
+            }
+            if (saved?.sellingPrice) sellingEl.value = saved.sellingPrice;
+            else if (!sellingEl.value && currentData.overview?.preorders?.averageBasket) sellingEl.value = currentData.overview.preorders.averageBasket.toFixed(2);
+            if (saved?.cagnotte) cagnotteEl.value = saved.cagnotte;
+            else if (!cagnotteEl.value && currentData.overview?.preorders?.cagnotteFabrication) cagnotteEl.value = currentData.overview.preorders.cagnotteFabrication.toFixed(2);
+            updatePlanScenarioButtons();
+            renderPlan();
+        }
+
+        function renderPlan() {
+            savePlanConfig();
+            const fmtEur = v => `${Number(v || 0).toFixed(2).replace('.', ',')} €`;
+            const packagingPerUnit = parseFloat(document.getElementById('planPackagingCost')?.value) || 0;
+            const sellingPrice = parseFloat(document.getElementById('planSellingPrice')?.value) || 0;
+            const cagnotte = parseFloat(document.getElementById('planCagnotte')?.value) || 0;
+            const container = document.getElementById('planResults');
+            if (!container) return;
+
+            function outcomeCard(title, qty, fabCost, packagingTotal, packagingLabel, extraNote) {
+                if (fabCost == null) {
+                    return `<div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/20 p-5">
+                        <h5 class="cormorant text-lg font-bold text-gold mb-3">${title}</h5>
+                        <p class="text-light-gold/30 text-sm">Non coté pour cette quantité.</p>
+                    </div>`;
+                }
+                const totalCost = round2(fabCost + packagingTotal);
+                const unitCost = round2(totalCost / qty);
+                const margin = round2(sellingPrice - unitCost);
+                const ready = sellingPrice > 0 && cagnotte >= totalCost;
+                let statusHtml;
+                if (sellingPrice <= 0) {
+                    statusHtml = `<div class="text-light-gold/40 text-sm">Renseigne un prix de vente</div>`;
+                } else if (ready) {
+                    statusHtml = `<div class="text-green-400 font-bold">✅ Prêt à lancer</div><div class="text-light-gold/50 text-xs mt-0.5">Excédent de ${fmtEur(cagnotte - totalCost)}</div>`;
+                } else {
+                    const missing = totalCost - cagnotte;
+                    const missingUnits = margin > 0 ? Math.ceil(missing / margin) : null;
+                    statusHtml = `<div class="text-orange-400 font-bold">⏳ Pas encore</div><div class="text-light-gold/50 text-xs mt-0.5">Il manque ${fmtEur(missing)}${missingUnits ? ` (~${missingUnits} précommande${missingUnits > 1 ? 's' : ''} de plus)` : ''}</div>`;
+                }
+                return `<div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5">
+                    <h5 class="cormorant text-lg font-bold text-gold mb-3">${title}</h5>
+                    <div class="space-y-1.5 text-sm mb-3">
+                        <div class="flex justify-between"><span class="text-light-gold/50">Fabrication</span><span class="text-light-gold/80">${fmtEur(fabCost)}</span></div>
+                        <div class="flex justify-between"><span class="text-light-gold/50">${packagingLabel}</span><span class="text-light-gold/80">${fmtEur(packagingTotal)}</span></div>
+                        <div class="flex justify-between border-t border-gold/15 pt-1.5"><span class="text-gold font-semibold">Coût total tout compris</span><span class="text-gold font-bold">${fmtEur(totalCost)}</span></div>
+                        <div class="flex justify-between"><span class="text-light-gold/50">Coût unitaire</span><span class="text-light-gold font-semibold">${fmtEur(unitCost)}</span></div>
+                        <div class="flex justify-between"><span class="text-light-gold/50">Marge / exemplaire</span><span class="${margin >= 0 ? 'text-green-400' : 'text-red-400'} font-semibold">${fmtEur(margin)}</span></div>
+                    </div>
+                    ${extraNote ? `<p class="text-light-gold/30 text-xs mb-2">${extraNote}</p>` : ''}
+                    <div class="pt-2 border-t border-gold/15">${statusHtml}</div>
+                </div>`;
+            }
+
+            if (planScenario === 'manual') {
+                const selected = currentQuotes.filter(q => selectedQuoteIds.has(q.id));
+                if (!selected.length) {
+                    container.innerHTML = `<div class="md:col-span-2 bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/20 p-8 text-center text-light-gold/30 cormorant text-lg">Aucun devis coché pour l'instant</div>`;
+                    return;
+                }
+                // Le coût total additionne déjà tous les devis cochés (fabrication + pièce de tirage +
+                // expédition le cas échéant) : ne pas rajouter l'estimation d'emballage par-dessus,
+                // sinon double comptage si le devis Expédition est déjà coché.
+                const totalCost = selected.reduce((s, q) => s + (Number(q.total_cost_eur) || 0), 0);
+                const quantities = selected.map(q => Number(q.quantity) || 0).filter(q => q > 0);
+                const refQty = quantities.length ? Math.max(...quantities) : 0;
+                const hasExpedition = selected.some(q => q.category === 'expedition');
+                const note = (quantities.length && new Set(quantities).size > 1
+                    ? `⚠️ Quantités différentes parmi les devis cochés (${[...new Set(quantities)].join(', ')}) — quantité de référence : la plus grande. `
+                    : `${selected.length} devis sélectionné${selected.length > 1 ? 's' : ''} : ${selected.map(q => escapeHtmlFront(q.supplier_name)).join(', ')}. `)
+                    + (hasExpedition ? '' : "⚠️ Aucun devis d'expédition coché — le coût d'emballage n'est pas inclus ici.");
+                container.innerHTML = outcomeCard(`${refQty || '?'} exemplaires`, refQty || 1, totalCost, 0, 'Inclus dans les devis cochés', note);
+                return;
+            }
+
+            const targets = [1000, 2000];
+            container.innerHTML = targets.map(qty => {
+                let fabCost = null;
+                if (planScenario === 'wjpc') {
+                    const booklet = document.getElementById('calcWjpcColor')?.checked ? 'color' : 'bw';
+                    const shipping = document.getElementById('calcWjpcShipping')?.value || 'sea';
+                    const r = computeWjpcTotal(qty, booklet, shipping);
+                    fabCost = r ? r.total : null;
+                } else if (planScenario === 'whatz') {
+                    const config = document.getElementById('calcWhatzConfig')?.value || 'blackedge';
+                    const freightId = 'calcFreight' + qty;
+                    const overrideVal = document.getElementById(freightId)?.value ?? '';
+                    const r = computeWhatzTotal(qty, config, overrideVal);
+                    fabCost = r ? r.grandTotal : null;
+                }
+                const packagingTotal = round2(packagingPerUnit * qty);
+                return outcomeCard(`${qty} exemplaires`, qty, fabCost, packagingTotal, `Emballage/expédition (${qty} × ${fmtEur(packagingPerUnit)})`);
+            }).join('');
         }
 
         // ── Partenaires / magasins ───────────────────────────────────────────────
