@@ -1953,27 +1953,84 @@
         <!-- ══ ONGLET : DEVIS & COÛTS DE FABRICATION ══ -->
         <div id="tab-quotes" class="tab-panel">
 
-        <!-- ══ PLAN DE FABRICATION — outil de décision (coûts + rentabilité + emballage) ══ -->
+        <!-- Sous-onglets Plan / Devis / Comparateur -->
+        <div class="flex gap-1 mb-8 border-b border-gold/20 pb-0">
+            <button onclick="showQuotesSubTab('plan')" id="quotes-subtab-btn-plan"
+                class="quotes-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-gold text-gold bg-gold/10 transition">
+                <i class="fas fa-chart-line mr-1.5"></i>Plan de fabrication
+            </button>
+            <button onclick="showQuotesSubTab('devis')" id="quotes-subtab-btn-devis"
+                class="quotes-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                <i class="fas fa-file-invoice-dollar mr-1.5"></i>Devis fournisseurs
+            </button>
+            <button onclick="showQuotesSubTab('comparateur')" id="quotes-subtab-btn-comparateur"
+                class="quotes-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                <i class="fas fa-scale-balanced mr-1.5"></i>Comparateur détaillé
+            </button>
+        </div>
+
+        <!-- ══ SOUS-ONGLET : PLAN DE FABRICATION ══ -->
+        <div id="quotes-subtab-plan">
         <section class="mb-10">
-            <div class="mb-5">
+            <div class="mb-6">
                 <h3 class="cormorant text-2xl font-bold text-gold">Plan de fabrication</h3>
-                <p class="text-light-gold/50 text-sm mt-1">Choisis un fournisseur et ses options, ajoute l'emballage/expédition, et vois tout de suite si tu peux lancer 1000 ou 2000 exemplaires.</p>
+                <p class="text-light-gold/50 text-sm mt-1">Choisis un fournisseur, configure ses options, et vois tout de suite si tu peux lancer 1000 ou 2000 exemplaires.</p>
             </div>
 
-            <div class="flex gap-2 mb-5" id="planScenarioTabs">
-                <button onclick="setPlanScenario('wjpc')" data-scenario="wjpc" class="plan-scenario-btn text-sm px-4 py-2 rounded-lg border transition">WJPC</button>
-                <button onclick="setPlanScenario('whatz')" data-scenario="whatz" class="plan-scenario-btn text-sm px-4 py-2 rounded-lg border transition">Whatz Games</button>
-                <button onclick="setPlanScenario('manual')" data-scenario="manual" class="plan-scenario-btn text-sm px-4 py-2 rounded-lg border transition">Devis manuels sélectionnés</button>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5" id="planScenarioTabs">
+                <div onclick="setPlanScenario('wjpc')" data-scenario="wjpc" class="plan-scenario-card cursor-pointer rounded-2xl border border-gold/15 p-5 transition hover:border-gold/30">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0"><i class="fas fa-ship text-gold"></i></div>
+                        <h4 class="cormorant text-lg font-bold text-gold">WJPC</h4>
+                    </div>
+                    <p class="text-light-gold/50 text-xs">EXW Dongguan + transport DDP tout compris. Livret N&amp;B/couleur, bateau/rail/camion.</p>
+                </div>
+                <div onclick="setPlanScenario('whatz')" data-scenario="whatz" class="plan-scenario-card cursor-pointer rounded-2xl border border-gold/15 p-5 transition hover:border-gold/30">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0"><i class="fas fa-box-open text-gold"></i></div>
+                        <h4 class="cormorant text-lg font-bold text-gold">Whatz Games</h4>
+                    </div>
+                    <p class="text-light-gold/50 text-xs">FOB Shanghai, fret + douane/TVA à ajouter. 3 configurations de boîte au choix.</p>
+                </div>
+                <div onclick="setPlanScenario('manual')" data-scenario="manual" class="plan-scenario-card cursor-pointer rounded-2xl border border-gold/15 p-5 transition hover:border-gold/30">
+                    <div class="flex items-center gap-3 mb-2">
+                        <div class="w-10 h-10 rounded-lg bg-gold/10 flex items-center justify-center shrink-0"><i class="fas fa-layer-group text-gold"></i></div>
+                        <h4 class="cormorant text-lg font-bold text-gold">Devis manuels</h4>
+                    </div>
+                    <p class="text-light-gold/50 text-xs">Compose ton propre scénario en cochant des devis dans l'onglet "Devis fournisseurs".</p>
+                </div>
+            </div>
+
+            <div id="planWjpcOptions" class="hidden bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-5">
+                <div class="flex items-center gap-4 flex-wrap">
+                    <span class="text-gold/70 text-xs font-semibold uppercase tracking-wider">Options WJPC</span>
+                    <label class="flex items-center gap-2 text-sm text-light-gold/70 cursor-pointer">
+                        <input type="checkbox" id="calcWjpcColor" onchange="onCalcConfigChange()" class="accent-gold"> Livret couleur (CMYK)
+                    </label>
+                    <select id="calcWjpcShipping" onchange="onCalcConfigChange()" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-1.5 text-sm text-light-gold outline-none focus:border-gold/50">
+                        <option value="sea">Bateau (50-60j)</option>
+                        <option value="rail">Rail (30-40j)</option>
+                        <option value="truck">Camion (30j)</option>
+                    </select>
+                </div>
+            </div>
+            <div id="planWhatzOptions" class="hidden bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-5">
+                <div class="flex items-center gap-4 flex-wrap">
+                    <span class="text-gold/70 text-xs font-semibold uppercase tracking-wider">Options Whatz Games</span>
+                    <select id="calcWhatzConfig" onchange="onCalcConfigChange()" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-1.5 text-sm text-light-gold outline-none focus:border-gold/50">
+                        <option value="option1">Option 1 — Boîte télescopique</option>
+                        <option value="standard">Option 3 — Boîte "livre" (standard)</option>
+                        <option value="blackedge">Option 3 — Boîte "livre" (black edge)</option>
+                    </select>
+                </div>
             </div>
 
             <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-5">
-                <p id="planScenarioHint" class="text-light-gold/50 text-xs mb-4"></p>
-
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-2">
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="text-light-gold/60 text-xs block mb-1">Emballage / expédition estimé (€/unité)</label>
                         <input id="planPackagingCost" type="number" step="0.05" min="0" oninput="renderPlan()" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
-                        <div class="text-orange-400/70 text-xs mt-1">Estimation, pas un devis réel — voir la ligne "Estimation (RAJA/Cellpack)" dans le tableau Expédition ci-dessous</div>
+                        <div class="text-orange-400/70 text-xs mt-1">Estimation, pas un devis réel — voir "Estimation (RAJA/Cellpack)" dans Devis fournisseurs &gt; Expédition</div>
                     </div>
                     <div>
                         <label class="text-light-gold/60 text-xs block mb-1">Prix de vente moyen (€/exemplaire)</label>
@@ -1989,12 +2046,15 @@
             </div>
 
             <div id="planManualNotice" class="hidden bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl p-4 mb-5 text-sm text-light-gold/60">
-                Coche un ou plusieurs devis dans le tableau "Devis &amp; Coûts de fabrication" ci-dessous (fabrication + pièce de tirage + expédition) pour composer ton scénario — le résultat s'affiche ici automatiquement.
+                Coche un ou plusieurs devis dans l'onglet "Devis fournisseurs" (fabrication + pièce de tirage + expédition) pour composer ton scénario — le résultat s'affiche ici automatiquement.
             </div>
 
             <div id="planResults" class="grid grid-cols-1 md:grid-cols-2 gap-5"></div>
         </section>
+        </div><!-- /quotes-subtab-plan -->
 
+        <!-- ══ SOUS-ONGLET : DEVIS FOURNISSEURS ══ -->
+        <div id="quotes-subtab-devis" class="hidden">
         <section class="mb-10">
             <div class="flex items-center justify-between mb-8 flex-wrap gap-3">
                 <h3 class="cormorant text-2xl font-bold text-gold">Devis &amp; Coûts de fabrication</h3>
@@ -2115,52 +2175,15 @@
                     </table>
                 </div>
             </div>
-
-            <!-- ── Analyse de rentabilité (devis sélectionnés) ── -->
-            <div id="quotesProfitabilityPanel" class="hidden bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/40 p-6">
-                <h4 class="cormorant text-xl font-bold text-gold mb-4"><i class="fas fa-calculator mr-2"></i>Analyse de rentabilité — devis sélectionnés</h4>
-                <p id="profitQuantityWarning" class="hidden text-xs text-orange-400 mb-3"></p>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-5">
-                    <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-xl p-4">
-                        <div class="text-light-gold/50 text-xs mb-1">Coût total de fabrication (sélection)</div>
-                        <div class="text-gold text-xl font-bold" id="profitTotalCost">—</div>
-                        <div class="text-light-gold/40 text-xs mt-1" id="profitQuantity">—</div>
-                    </div>
-                    <div>
-                        <label class="text-light-gold/60 text-xs block mb-1">Prix de vente moyen par exemplaire (€)</label>
-                        <input id="profitSellingPrice" type="number" step="0.01" min="0" oninput="renderProfitability()"
-                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
-                        <div class="text-light-gold/30 text-xs mt-1">Pré-rempli avec le panier moyen des précommandes</div>
-                    </div>
-                    <div>
-                        <label class="text-light-gold/60 text-xs block mb-1">Cagnotte déjà disponible (€)</label>
-                        <input id="profitCagnotte" type="number" step="0.01" min="0" oninput="renderProfitability()"
-                            class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
-                        <div class="text-light-gold/30 text-xs mt-1">Pré-rempli avec la cagnotte fabrication actuelle</div>
-                    </div>
-                </div>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-xl p-4">
-                        <div class="text-light-gold/50 text-xs mb-1">Marge par exemplaire</div>
-                        <div class="text-xl font-bold" id="profitMargin">—</div>
-                    </div>
-                    <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-xl p-4">
-                        <div class="text-light-gold/50 text-xs mb-1">Seuil de rentabilité</div>
-                        <div class="text-xl font-bold" id="profitBreakEven">—</div>
-                    </div>
-                    <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-xl p-4">
-                        <div class="text-light-gold/50 text-xs mb-1">Statut</div>
-                        <div class="text-xl font-bold" id="profitStatusLine">—</div>
-                    </div>
-                </div>
-            </div>
         </section>
+        </div><!-- /quotes-subtab-devis -->
 
-        <!-- ══ Comparateur de coûts fabrication — WJPC vs Whatz Games (coffret complet) ══ -->
+        <!-- ══ SOUS-ONGLET : COMPARATEUR DÉTAILLÉ ══ -->
+        <div id="quotes-subtab-comparateur" class="hidden">
         <section class="mb-10">
             <div class="mb-6">
-                <h3 class="cormorant text-2xl font-bold text-gold">Comparateur de coûts fabrication — WJPC vs Whatz Games</h3>
-                <p class="text-light-gold/50 text-sm mt-1">Coffret ORADIA complet (64 cartes, boîte, livret A5, jeton métallique, pochette tissu). Calculé en direct à partir des devis sourcés — voir <a href="#" onclick="event.preventDefault(); goToSupplierCard(currentSuppliers.find(s=>s.name==='WJPC (Guangdong Wangjing Card Game Tech Co., Ltd)')?.id)" class="text-gold/70 underline">WJPC</a> et <a href="#" onclick="event.preventDefault(); goToSupplierCard(currentSuppliers.find(s=>s.name==='Whatz Games (Jiaxing Whatz Games Co., Ltd)')?.id)" class="text-gold/70 underline">Whatz Games</a> dans Contacts &gt; Fournisseurs.</p>
+                <h3 class="cormorant text-2xl font-bold text-gold">Comparateur détaillé — WJPC vs Whatz Games</h3>
+                <p class="text-light-gold/50 text-sm mt-1">Coffret ORADIA complet (64 cartes, boîte, livret A5, jeton métallique, pochette tissu). Le détail ligne par ligne pour les 4 paliers de quantité — configure les options dans l'onglet "Plan de fabrication". Voir <a href="#" onclick="event.preventDefault(); goToSupplierCard(currentSuppliers.find(s=>s.name==='WJPC (Guangdong Wangjing Card Game Tech Co., Ltd)')?.id)" class="text-gold/70 underline">WJPC</a> et <a href="#" onclick="event.preventDefault(); goToSupplierCard(currentSuppliers.find(s=>s.name==='Whatz Games (Jiaxing Whatz Games Co., Ltd)')?.id)" class="text-gold/70 underline">Whatz Games</a> dans Contacts &gt; Fournisseurs.</p>
             </div>
 
             <div class="flex items-center gap-3 mb-6 flex-wrap bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl px-4 py-3">
@@ -2172,14 +2195,7 @@
 
             <!-- ── Whatz Games ── -->
             <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-6">
-                <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-                    <h4 class="cormorant text-lg font-bold text-gold">Whatz Games — FOB Shanghai + fret + douane/TVA</h4>
-                    <select id="calcWhatzConfig" onchange="onCalcConfigChange()" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-1.5 text-sm text-light-gold outline-none focus:border-gold/50">
-                        <option value="option1">Option 1 — Boîte télescopique</option>
-                        <option value="standard">Option 3 — Boîte "livre" (standard)</option>
-                        <option value="blackedge">Option 3 — Boîte "livre" (black edge)</option>
-                    </select>
-                </div>
+                <h4 class="cormorant text-lg font-bold text-gold mb-2">Whatz Games — FOB Shanghai + fret + douane/TVA</h4>
                 <p class="text-light-gold/40 text-xs mb-3">Contrairement à WJPC, Whatz ne cote que le prix départ usine (FOB Shanghai) : le transport Shanghai → France n'est pas inclus. La ligne "Fret international" ci-dessous est une estimation modifiable (pas un devis transitaire confirmé) — remplace les valeurs par défaut dès que tu as un vrai devis de transport, elles se gardent automatiquement.</p>
                 <p id="calcWhatzConfigLabel" class="text-gold/60 text-xs mb-2 font-semibold">—</p>
                 <div class="overflow-x-auto">
@@ -2201,19 +2217,7 @@
 
             <!-- ── WJPC ── -->
             <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-6">
-                <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-                    <h4 class="cormorant text-lg font-bold text-gold">WJPC — EXW Dongguan + transport DDP (porte-à-porte)</h4>
-                    <div class="flex items-center gap-4 flex-wrap">
-                        <label class="flex items-center gap-2 text-sm text-light-gold/70 cursor-pointer">
-                            <input type="checkbox" id="calcWjpcColor" onchange="onCalcConfigChange()" class="accent-gold"> Livret couleur (CMYK)
-                        </label>
-                        <select id="calcWjpcShipping" onchange="onCalcConfigChange()" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-1.5 text-sm text-light-gold outline-none focus:border-gold/50">
-                            <option value="sea">Bateau (50-60j)</option>
-                            <option value="rail">Rail (30-40j)</option>
-                            <option value="truck">Camion (30j)</option>
-                        </select>
-                    </div>
-                </div>
+                <h4 class="cormorant text-lg font-bold text-gold mb-2">WJPC — EXW Dongguan + transport DDP (porte-à-porte)</h4>
                 <p id="calcWjpcConfigLabel" class="text-gold/60 text-xs mb-2 font-semibold">—</p>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm" id="calcWjpcTable">
@@ -2249,6 +2253,7 @@
                 </div>
             </div>
         </section>
+        </div><!-- /quotes-subtab-comparateur -->
         </div><!-- /tab-quotes -->
 
         <!-- ══ ONGLET : JOURNAL ══ -->
@@ -4977,7 +4982,25 @@
             piece_tirage: 'bg-teal-500/15 text-teal-300 border-teal-500/30'
         };
 
-        // Sélection multiple de devis (checkboxes) pour l'analyse de rentabilité
+        // ── Sous-onglets Plan / Devis / Comparateur ──────────────────────────────
+        let _currentQuotesSubTab = 'plan';
+        function showQuotesSubTab(name) {
+            _currentQuotesSubTab = name;
+            document.querySelectorAll('.quotes-subtab-btn').forEach(b => {
+                b.classList.remove('border-gold', 'text-gold', 'bg-gold/10');
+                b.classList.add('border-transparent', 'text-gold/50');
+            });
+            const activeBtn = document.getElementById('quotes-subtab-btn-' + name);
+            if (activeBtn) {
+                activeBtn.classList.add('border-gold', 'text-gold', 'bg-gold/10');
+                activeBtn.classList.remove('border-transparent', 'text-gold/50');
+            }
+            document.getElementById('quotes-subtab-plan').classList.toggle('hidden', name !== 'plan');
+            document.getElementById('quotes-subtab-devis').classList.toggle('hidden', name !== 'devis');
+            document.getElementById('quotes-subtab-comparateur').classList.toggle('hidden', name !== 'comparateur');
+        }
+
+        // Sélection multiple de devis (checkboxes) pour le Plan de fabrication (scénario "Devis manuels")
         let selectedQuoteIds = new Set();
 
         function populateQuoteSupplierOptions() {
@@ -5100,7 +5123,6 @@
 
         function toggleQuoteSelect(id, checked) {
             if (checked) selectedQuoteIds.add(id); else selectedQuoteIds.delete(id);
-            renderProfitability();
             if (typeof renderPlan === 'function') renderPlan();
         }
 
@@ -5115,7 +5137,6 @@
             const list = quotesCategoryFilter === 'all' ? currentQuotes : currentQuotes.filter(q => (q.category || 'fabrication') === quotesCategoryFilter);
             if (!list.length) {
                 tbody.innerHTML = '<tr><td colspan="10" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun devis enregistré</td></tr>';
-                renderProfitability();
                 if (typeof renderPlan === 'function') renderPlan();
                 return;
             }
@@ -5127,6 +5148,11 @@
                 const supplier = q.supplier_id ? currentSuppliers.find(s => s.id === q.supplier_id) : null;
                 const contactEmail = supplier?.email || (emailRe.exec(q.contact_info || '')?.[0]) || '';
                 const contactLabel = supplier ? escapeHtmlFront(supplier.name) : (q.contact_info ? escapeHtmlFront(q.contact_info) : '<span class="text-gold/20">—</span>');
+                const expectedTotal = (q.unit_cost_eur != null && q.quantity != null) ? q.unit_cost_eur * q.quantity : null;
+                const totalGap = expectedTotal != null && q.total_cost_eur != null ? q.total_cost_eur - expectedTotal : 0;
+                const gapNote = Math.abs(totalGap) > 1
+                    ? ` <i class="fas fa-circle-info text-gold/30 text-xs" title="Écart de ${totalGap > 0 ? '+' : ''}${totalGap.toFixed(2)} € vs coût unitaire × quantité — moule/outillage, port et/ou TVA inclus dans le total, voir les notes du devis"></i>`
+                    : '';
                 return `
                     <tr class="hover:bg-gold/5 transition">
                         <td class="px-4 py-4"><input type="checkbox" class="accent-gold" ${selectedQuoteIds.has(q.id) ? 'checked' : ''} onchange="toggleQuoteSelect('${q.id}', this.checked)"></td>
@@ -5134,7 +5160,7 @@
                         <td class="px-5 py-4"><span class="text-xs px-2 py-0.5 rounded-full border ${quoteCategoryColors[cat] || ''}">${quoteCategoryLabels[cat] || cat}</span></td>
                         <td class="px-5 py-4 text-right text-light-gold/80 text-sm">${q.quantity ?? '—'}</td>
                         <td class="px-5 py-4 text-right text-light-gold/80 text-sm">${fmtEur(q.unit_cost_eur)}</td>
-                        <td class="px-5 py-4 text-right text-light-gold font-semibold text-sm">${fmtEur(q.total_cost_eur)}</td>
+                        <td class="px-5 py-4 text-right text-light-gold font-semibold text-sm">${fmtEur(q.total_cost_eur)}${gapNote}</td>
                         <td class="px-5 py-4"><span class="text-xs px-2 py-0.5 rounded-full ${quoteStatusColors[q.status] || ''}">${quoteStatusLabels[q.status] || q.status}</span></td>
                         <td class="px-5 py-4 text-light-gold/60 text-xs">${fmtDate(q.quote_date)}</td>
                         <td class="px-5 py-4 text-light-gold/60 text-xs">${contactLabel}</td>
@@ -5148,80 +5174,7 @@
                         </td>
                     </tr>`;
             }).join('');
-            renderProfitability();
             if (typeof renderPlan === 'function') renderPlan();
-        }
-
-        // ── Analyse de rentabilité des devis sélectionnés ──
-        function renderProfitability() {
-            const panel = document.getElementById('quotesProfitabilityPanel');
-            const selected = currentQuotes.filter(q => selectedQuoteIds.has(q.id));
-            if (!selected.length) { panel.classList.add('hidden'); return; }
-            panel.classList.remove('hidden');
-
-            const fmtEur = (v) => `${Number(v || 0).toFixed(2).replace('.', ',')} €`;
-            const totalCost = selected.reduce((s, q) => s + (Number(q.total_cost_eur) || 0), 0);
-            const quantities = selected.map(q => Number(q.quantity) || 0).filter(q => q > 0);
-            const refQuantity = quantities.length ? Math.max(...quantities) : 0;
-
-            const warningEl = document.getElementById('profitQuantityWarning');
-            const distinctQuantities = [...new Set(quantities)];
-            if (distinctQuantities.length > 1) {
-                warningEl.classList.remove('hidden');
-                warningEl.textContent = `⚠️ Les devis sélectionnés portent sur des quantités différentes (${distinctQuantities.join(', ')}) — la quantité de référence retenue ci-dessous est la plus grande.`;
-            } else {
-                warningEl.classList.add('hidden');
-            }
-
-            document.getElementById('profitTotalCost').textContent = fmtEur(totalCost);
-            document.getElementById('profitQuantity').textContent = refQuantity ? `pour ${refQuantity} exemplaire${refQuantity > 1 ? 's' : ''} (${selected.length} devis sélectionné${selected.length > 1 ? 's' : ''})` : `${selected.length} devis sélectionné${selected.length > 1 ? 's' : ''}, quantité non renseignée`;
-
-            // Pré-remplissage (une seule fois, tant que l'utilisateur n'a pas modifié le champ)
-            const sellingPriceEl = document.getElementById('profitSellingPrice');
-            const cagnotteEl = document.getElementById('profitCagnotte');
-            const overview = currentData.overview?.preorders;
-            if (sellingPriceEl.dataset.autofilled !== 'true' && !sellingPriceEl.value && overview?.averageBasket) {
-                sellingPriceEl.value = overview.averageBasket.toFixed(2);
-                sellingPriceEl.dataset.autofilled = 'true';
-            }
-            if (cagnotteEl.dataset.autofilled !== 'true' && !cagnotteEl.value && overview?.cagnotteFabrication) {
-                cagnotteEl.value = overview.cagnotteFabrication.toFixed(2);
-                cagnotteEl.dataset.autofilled = 'true';
-            }
-
-            const sellingPrice = parseFloat(sellingPriceEl.value) || 0;
-            const cagnotte = parseFloat(cagnotteEl.value) || 0;
-            const unitCost = refQuantity > 0 ? totalCost / refQuantity : 0;
-            const margin = sellingPrice - unitCost;
-
-            const marginEl = document.getElementById('profitMargin');
-            marginEl.textContent = refQuantity ? fmtEur(margin) + ' / exemplaire' : '—';
-            marginEl.className = 'text-xl font-bold ' + (margin >= 0 ? 'text-green-400' : 'text-red-400');
-
-            const breakEvenEl = document.getElementById('profitBreakEven');
-            if (refQuantity && margin > 0) {
-                const breakEvenUnits = Math.ceil(totalCost / margin);
-                breakEvenEl.textContent = `${breakEvenUnits} exemplaire${breakEvenUnits > 1 ? 's' : ''}`;
-            } else if (refQuantity && margin <= 0) {
-                breakEvenEl.textContent = 'Jamais (prix ≤ coût)';
-            } else {
-                breakEvenEl.textContent = '—';
-            }
-
-            const statusEl = document.getElementById('profitStatusLine');
-            const oraclesCount = overview?.oraclesCount || 0;
-            if (!refQuantity || sellingPrice <= 0) {
-                statusEl.textContent = 'Renseigne quantité et prix';
-                statusEl.className = 'text-xl font-bold text-light-gold/40';
-            } else if (cagnotte >= totalCost) {
-                statusEl.innerHTML = `✅ Prête<div class="text-xs font-normal text-light-gold/50 mt-1">Excédent de ${fmtEur(cagnotte - totalCost)}</div>`;
-                statusEl.className = 'text-xl font-bold text-green-400';
-            } else {
-                const missing = totalCost - cagnotte;
-                const missingUnits = margin > 0 ? Math.ceil(missing / margin) : null;
-                statusEl.innerHTML = `⏳ Pas encore<div class="text-xs font-normal text-light-gold/50 mt-1">Il manque ${fmtEur(missing)}${missingUnits ? ` (~${missingUnits} précommande${missingUnits > 1 ? 's' : ''})` : ''}</div>`;
-                statusEl.className = 'text-xl font-bold text-orange-400';
-            }
         }
 
         // ── Comparateur de coûts fabrication WJPC vs Whatz Games ────────────────────
@@ -5417,20 +5370,14 @@
         }
 
         function updatePlanScenarioButtons() {
-            document.querySelectorAll('.plan-scenario-btn').forEach(b => {
-                const active = b.dataset.scenario === planScenario;
-                b.classList.toggle('bg-gold/20', active);
-                b.classList.toggle('text-gold', active);
-                b.classList.toggle('border-gold/40', active);
-                b.classList.toggle('text-light-gold/50', !active);
-                b.classList.toggle('border-gold/15', !active);
+            document.querySelectorAll('.plan-scenario-card').forEach(card => {
+                const active = card.dataset.scenario === planScenario;
+                card.classList.toggle('border-gold/60', active);
+                card.classList.toggle('bg-gold/10', active);
+                card.classList.toggle('border-gold/15', !active);
             });
-            const hints = {
-                wjpc: 'EXW Dongguan + transport DDP — configure le livret et le mode de transport dans le comparateur ci-dessous, le plan se met à jour automatiquement.',
-                whatz: 'FOB Shanghai + douane/TVA — configure l\'option (télescopique / livre standard / livre black edge) dans le comparateur ci-dessous, le plan se met à jour automatiquement.',
-                manual: 'Basé sur les devis cochés dans le tableau "Devis & Coûts de fabrication" ci-dessous (mélange librement fabrication, pièce de tirage, expédition).'
-            };
-            document.getElementById('planScenarioHint').textContent = hints[planScenario] || '';
+            document.getElementById('planWjpcOptions').classList.toggle('hidden', planScenario !== 'wjpc');
+            document.getElementById('planWhatzOptions').classList.toggle('hidden', planScenario !== 'whatz');
             document.getElementById('planManualNotice').classList.toggle('hidden', planScenario !== 'manual');
         }
 
@@ -5473,6 +5420,7 @@
                 const unitCost = round2(totalCost / qty);
                 const margin = round2(sellingPrice - unitCost);
                 const ready = sellingPrice > 0 && cagnotte >= totalCost;
+                const progressPct = totalCost > 0 ? Math.min(100, Math.round((cagnotte / totalCost) * 100)) : 0;
                 let statusHtml;
                 if (sellingPrice <= 0) {
                     statusHtml = `<div class="text-light-gold/40 text-sm">Renseigne un prix de vente</div>`;
@@ -5483,6 +5431,13 @@
                     const missingUnits = margin > 0 ? Math.ceil(missing / margin) : null;
                     statusHtml = `<div class="text-orange-400 font-bold">⏳ Pas encore</div><div class="text-light-gold/50 text-xs mt-0.5">Il manque ${fmtEur(missing)}${missingUnits ? ` (~${missingUnits} précommande${missingUnits > 1 ? 's' : ''} de plus)` : ''}</div>`;
                 }
+                const progressBar = sellingPrice > 0 ? `
+                    <div class="mb-3">
+                        <div class="flex justify-between text-xs text-light-gold/40 mb-1"><span>Cagnotte</span><span>${progressPct}%</span></div>
+                        <div class="h-2 bg-gold/10 rounded-full overflow-hidden">
+                            <div class="h-full rounded-full transition-all duration-500 ${ready ? 'bg-green-400' : 'bg-orange-400'}" style="width: ${progressPct}%"></div>
+                        </div>
+                    </div>` : '';
                 return `<div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5">
                     <h5 class="cormorant text-lg font-bold text-gold mb-3">${title}</h5>
                     <div class="space-y-1.5 text-sm mb-3">
@@ -5493,7 +5448,7 @@
                         <div class="flex justify-between"><span class="text-light-gold/50">Marge / exemplaire</span><span class="${margin >= 0 ? 'text-green-400' : 'text-red-400'} font-semibold">${fmtEur(margin)}</span></div>
                     </div>
                     ${extraNote ? `<p class="text-light-gold/30 text-xs mb-2">${extraNote}</p>` : ''}
-                    <div class="pt-2 border-t border-gold/15">${statusHtml}</div>
+                    <div class="pt-2 border-t border-gold/15">${progressBar}${statusHtml}</div>
                 </div>`;
             }
 
