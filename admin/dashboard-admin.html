@@ -1953,7 +1953,7 @@
         <!-- ══ ONGLET : DEVIS & COÛTS DE FABRICATION ══ -->
         <div id="tab-quotes" class="tab-panel">
 
-        <!-- Sous-onglets Plan / Devis / Comparateur -->
+        <!-- Sous-onglets Plan / Devis & comparateur -->
         <div class="flex gap-1 mb-8 border-b border-gold/20 pb-0">
             <button onclick="showQuotesSubTab('plan')" id="quotes-subtab-btn-plan"
                 class="quotes-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-gold text-gold bg-gold/10 transition">
@@ -1961,11 +1961,7 @@
             </button>
             <button onclick="showQuotesSubTab('devis')" id="quotes-subtab-btn-devis"
                 class="quotes-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
-                <i class="fas fa-file-invoice-dollar mr-1.5"></i>Devis fournisseurs
-            </button>
-            <button onclick="showQuotesSubTab('comparateur')" id="quotes-subtab-btn-comparateur"
-                class="quotes-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
-                <i class="fas fa-scale-balanced mr-1.5"></i>Comparateur détaillé
+                <i class="fas fa-file-invoice-dollar mr-1.5"></i>Devis &amp; comparateur
             </button>
         </div>
 
@@ -2001,28 +1997,13 @@
                 </div>
             </div>
 
-            <div id="planWjpcOptions" class="hidden bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-5">
-                <div class="flex items-center gap-4 flex-wrap">
-                    <span class="text-gold/70 text-xs font-semibold uppercase tracking-wider">Options WJPC</span>
-                    <label class="flex items-center gap-2 text-sm text-light-gold/70 cursor-pointer">
-                        <input type="checkbox" id="calcWjpcColor" onchange="onCalcConfigChange()" class="accent-gold"> Livret couleur (CMYK)
-                    </label>
-                    <select id="calcWjpcShipping" onchange="onCalcConfigChange()" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-1.5 text-sm text-light-gold outline-none focus:border-gold/50">
-                        <option value="sea">Bateau (50-60j)</option>
-                        <option value="rail">Rail (30-40j)</option>
-                        <option value="truck">Camion (30j)</option>
-                    </select>
-                </div>
+            <div id="planWjpcOptions" class="hidden bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-4 mb-5 flex items-center justify-between flex-wrap gap-3">
+                <div><span class="text-gold/70 text-xs font-semibold uppercase tracking-wider mr-2">Options WJPC actuelles</span><span id="planWjpcConfigSummary" class="text-light-gold/70 text-sm">—</span></div>
+                <button onclick="goToConfigureSupplier('wjpc')" class="text-xs text-gold/70 hover:text-gold border border-gold/30 hover:border-gold/50 rounded-lg px-3 py-1.5 transition"><i class="fas fa-sliders mr-1"></i>Configurer</button>
             </div>
-            <div id="planWhatzOptions" class="hidden bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-5">
-                <div class="flex items-center gap-4 flex-wrap">
-                    <span class="text-gold/70 text-xs font-semibold uppercase tracking-wider">Options Whatz Games</span>
-                    <select id="calcWhatzConfig" onchange="onCalcConfigChange()" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-1.5 text-sm text-light-gold outline-none focus:border-gold/50">
-                        <option value="option1">Option 1 — Boîte télescopique</option>
-                        <option value="standard">Option 3 — Boîte "livre" (standard)</option>
-                        <option value="blackedge">Option 3 — Boîte "livre" (black edge)</option>
-                    </select>
-                </div>
+            <div id="planWhatzOptions" class="hidden bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-4 mb-5 flex items-center justify-between flex-wrap gap-3">
+                <div><span class="text-gold/70 text-xs font-semibold uppercase tracking-wider mr-2">Option Whatz Games actuelle</span><span id="planWhatzConfigSummary" class="text-light-gold/70 text-sm">—</span></div>
+                <button onclick="goToConfigureSupplier('whatz')" class="text-xs text-gold/70 hover:text-gold border border-gold/30 hover:border-gold/50 rounded-lg px-3 py-1.5 transition"><i class="fas fa-sliders mr-1"></i>Configurer</button>
             </div>
 
             <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-5">
@@ -2056,8 +2037,101 @@
         <!-- ══ SOUS-ONGLET : DEVIS FOURNISSEURS ══ -->
         <div id="quotes-subtab-devis" class="hidden">
         <section class="mb-10">
+            <div class="mb-6">
+                <h3 class="cormorant text-2xl font-bold text-gold">Fournisseurs coffret complet — WJPC &amp; Whatz Games</h3>
+                <p class="text-light-gold/50 text-sm mt-1">Coffret ORADIA complet (64 cartes, boîte, livret A5, jeton métallique, pochette tissu). Pas de ligne dans le tableau de devis plus bas : leur prix change selon les options et la quantité, calculé en direct ici plutôt que figé en base. Voir <a href="#" onclick="event.preventDefault(); goToSupplierCard(currentSuppliers.find(s=>s.name==='WJPC (Guangdong Wangjing Card Game Tech Co., Ltd)')?.id)" class="text-gold/70 underline">WJPC</a> et <a href="#" onclick="event.preventDefault(); goToSupplierCard(currentSuppliers.find(s=>s.name==='Whatz Games (Jiaxing Whatz Games Co., Ltd)')?.id)" class="text-gold/70 underline">Whatz Games</a> dans Contacts &gt; Fournisseurs.</p>
+            </div>
+
+            <div class="flex items-center gap-3 mb-6 flex-wrap bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl px-4 py-3">
+                <label class="text-light-gold/60 text-xs">Taux de change USD → EUR</label>
+                <input id="calcExchangeRate" type="number" step="0.0001" min="0" oninput="onCalcConfigChange()" class="w-24 bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-2 py-1 text-sm text-light-gold outline-none focus:border-gold/50">
+                <input id="calcExchangeRateDate" type="text" placeholder="date du taux" oninput="onCalcConfigChange()" class="w-36 bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-2 py-1 text-xs text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                <button onclick="resetCalcExchangeRate()" class="text-xs text-gold/50 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 transition"><i class="fas fa-rotate-left mr-1"></i>Valeur sourcée</button>
+            </div>
+
+            <!-- ── Whatz Games ── -->
+            <div id="devisWhatzCard" class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-6">
+                <div class="flex items-center justify-between mb-2 flex-wrap gap-3">
+                    <h4 class="cormorant text-lg font-bold text-gold">Whatz Games — FOB Shanghai + fret + douane/TVA</h4>
+                    <select id="calcWhatzConfig" onchange="onCalcConfigChange()" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-1.5 text-sm text-light-gold outline-none focus:border-gold/50">
+                        <option value="option1">Option 1 — Boîte télescopique</option>
+                        <option value="standard">Option 3 — Boîte "livre" (standard)</option>
+                        <option value="blackedge">Option 3 — Boîte "livre" (black edge)</option>
+                    </select>
+                </div>
+                <p class="text-light-gold/40 text-xs mb-3">Contrairement à WJPC, Whatz ne cote que le prix départ usine (FOB Shanghai) : le transport Shanghai → France n'est pas inclus. La ligne "Fret international" ci-dessous est une estimation modifiable (pas un devis transitaire confirmé) — remplace les valeurs par défaut dès que tu as un vrai devis de transport, elles se gardent automatiquement.</p>
+                <p id="calcWhatzConfigLabel" class="text-gold/60 text-xs mb-2 font-semibold">—</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm" id="calcWhatzTable">
+                        <thead>
+                            <tr class="text-left text-gold/70 text-xs uppercase tracking-wider">
+                                <th class="py-2 pr-4">Quantité</th>
+                                <th class="py-2 pr-4 text-right">1000</th>
+                                <th class="py-2 pr-4 text-right">2000</th>
+                                <th class="py-2 pr-4 text-right">3000</th>
+                                <th class="py-2 pr-4 text-right">5000</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-light-gold/80" id="calcWhatzTbody"></tbody>
+                    </table>
+                </div>
+                <p class="text-light-gold/30 text-xs mt-3">⚠️ Le devis Whatz du 06/08/2026 indique un jeton "finition unie" (single color), pas encore le bicolore or/argent souhaité — surcoût probable à confirmer par écrit auprès de Helen avant de figer le budget.</p>
+            </div>
+
+            <!-- ── WJPC ── -->
+            <div id="devisWjpcCard" class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-6">
+                <div class="flex items-center justify-between mb-2 flex-wrap gap-3">
+                    <h4 class="cormorant text-lg font-bold text-gold">WJPC — EXW Dongguan + transport DDP (porte-à-porte)</h4>
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <label class="flex items-center gap-2 text-sm text-light-gold/70 cursor-pointer">
+                            <input type="checkbox" id="calcWjpcColor" onchange="onCalcConfigChange()" class="accent-gold"> Livret couleur (CMYK)
+                        </label>
+                        <select id="calcWjpcShipping" onchange="onCalcConfigChange()" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-1.5 text-sm text-light-gold outline-none focus:border-gold/50">
+                            <option value="sea">Bateau (50-60j)</option>
+                            <option value="rail">Rail (30-40j)</option>
+                            <option value="truck">Camion (30j)</option>
+                        </select>
+                    </div>
+                </div>
+                <p id="calcWjpcConfigLabel" class="text-gold/60 text-xs mb-2 font-semibold">—</p>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm" id="calcWjpcTable">
+                        <thead>
+                            <tr class="text-left text-gold/70 text-xs uppercase tracking-wider">
+                                <th class="py-2 pr-4">Quantité</th>
+                                <th class="py-2 pr-4 text-right">1000</th>
+                                <th class="py-2 pr-4 text-right">2000</th>
+                                <th class="py-2 pr-4 text-right">3000</th>
+                                <th class="py-2 pr-4 text-right">5000</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-light-gold/80" id="calcWjpcTbody"></tbody>
+                    </table>
+                </div>
+                <p class="text-light-gold/30 text-xs mt-3">⚠️ Point de vigilance : "gold foil on both sides of the box + embossing for outside" reste ambigu par rapport à la demande (embossage devant, dos en foil plat) — à faire reconfirmer par écrit par Becky avant commande ferme. 3000/5000 unités : jamais cotées par Becky à ce jour.</p>
+            </div>
+
+            <!-- ── Prototype ── -->
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5">
+                <h4 class="cormorant text-lg font-bold text-gold mb-3">Prototype complet (paiement unique, hors commande principale)</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-xl p-4">
+                        <div class="text-light-gold/50 text-xs mb-1">WJPC (Becky) — pochette imprimée + brodée</div>
+                        <div class="text-gold text-lg font-bold">681,53 €</div>
+                        <div class="text-light-gold/30 text-xs mt-1">647,02 € fabrication + 34,51 € port</div>
+                    </div>
+                    <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-xl p-4">
+                        <div class="text-light-gold/50 text-xs mb-1">Whatz Games (Helen) — échantillon imprimé numérique</div>
+                        <div class="text-gold text-lg font-bold" id="calcWhatzProtoTotal">—</div>
+                        <div class="text-light-gold/30 text-xs mt-1" id="calcWhatzProtoDetail">330$ échantillon + ~100$ port (variable selon poids du colis)</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="mb-10">
             <div class="flex items-center justify-between mb-8 flex-wrap gap-3">
-                <h3 class="cormorant text-2xl font-bold text-gold">Devis &amp; Coûts de fabrication</h3>
+                <h3 class="cormorant text-2xl font-bold text-gold">Devis manuels (fabrication carte, expédition, pièce de tirage)</h3>
                 <button onclick="toggleQuoteForm()" class="text-sm bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 hover:bg-gold/25 transition"><i class="fas fa-plus mr-1"></i>Ajouter un devis</button>
             </div>
 
@@ -2177,83 +2251,6 @@
             </div>
         </section>
         </div><!-- /quotes-subtab-devis -->
-
-        <!-- ══ SOUS-ONGLET : COMPARATEUR DÉTAILLÉ ══ -->
-        <div id="quotes-subtab-comparateur" class="hidden">
-        <section class="mb-10">
-            <div class="mb-6">
-                <h3 class="cormorant text-2xl font-bold text-gold">Comparateur détaillé — WJPC vs Whatz Games</h3>
-                <p class="text-light-gold/50 text-sm mt-1">Coffret ORADIA complet (64 cartes, boîte, livret A5, jeton métallique, pochette tissu). Le détail ligne par ligne pour les 4 paliers de quantité — configure les options dans l'onglet "Plan de fabrication". Voir <a href="#" onclick="event.preventDefault(); goToSupplierCard(currentSuppliers.find(s=>s.name==='WJPC (Guangdong Wangjing Card Game Tech Co., Ltd)')?.id)" class="text-gold/70 underline">WJPC</a> et <a href="#" onclick="event.preventDefault(); goToSupplierCard(currentSuppliers.find(s=>s.name==='Whatz Games (Jiaxing Whatz Games Co., Ltd)')?.id)" class="text-gold/70 underline">Whatz Games</a> dans Contacts &gt; Fournisseurs.</p>
-            </div>
-
-            <div class="flex items-center gap-3 mb-6 flex-wrap bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl px-4 py-3">
-                <label class="text-light-gold/60 text-xs">Taux de change USD → EUR</label>
-                <input id="calcExchangeRate" type="number" step="0.0001" min="0" oninput="onCalcConfigChange()" class="w-24 bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-2 py-1 text-sm text-light-gold outline-none focus:border-gold/50">
-                <input id="calcExchangeRateDate" type="text" placeholder="date du taux" oninput="onCalcConfigChange()" class="w-36 bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-2 py-1 text-xs text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
-                <button onclick="resetCalcExchangeRate()" class="text-xs text-gold/50 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 transition"><i class="fas fa-rotate-left mr-1"></i>Valeur sourcée</button>
-            </div>
-
-            <!-- ── Whatz Games ── -->
-            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-6">
-                <h4 class="cormorant text-lg font-bold text-gold mb-2">Whatz Games — FOB Shanghai + fret + douane/TVA</h4>
-                <p class="text-light-gold/40 text-xs mb-3">Contrairement à WJPC, Whatz ne cote que le prix départ usine (FOB Shanghai) : le transport Shanghai → France n'est pas inclus. La ligne "Fret international" ci-dessous est une estimation modifiable (pas un devis transitaire confirmé) — remplace les valeurs par défaut dès que tu as un vrai devis de transport, elles se gardent automatiquement.</p>
-                <p id="calcWhatzConfigLabel" class="text-gold/60 text-xs mb-2 font-semibold">—</p>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm" id="calcWhatzTable">
-                        <thead>
-                            <tr class="text-left text-gold/70 text-xs uppercase tracking-wider">
-                                <th class="py-2 pr-4">Quantité</th>
-                                <th class="py-2 pr-4 text-right">1000</th>
-                                <th class="py-2 pr-4 text-right">2000</th>
-                                <th class="py-2 pr-4 text-right">3000</th>
-                                <th class="py-2 pr-4 text-right">5000</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-light-gold/80" id="calcWhatzTbody"></tbody>
-                    </table>
-                </div>
-                <p class="text-light-gold/30 text-xs mt-3">⚠️ Le devis Whatz du 06/08/2026 indique un jeton "finition unie" (single color), pas encore le bicolore or/argent souhaité — surcoût probable à confirmer par écrit auprès de Helen avant de figer le budget.</p>
-            </div>
-
-            <!-- ── WJPC ── -->
-            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-6">
-                <h4 class="cormorant text-lg font-bold text-gold mb-2">WJPC — EXW Dongguan + transport DDP (porte-à-porte)</h4>
-                <p id="calcWjpcConfigLabel" class="text-gold/60 text-xs mb-2 font-semibold">—</p>
-                <div class="overflow-x-auto">
-                    <table class="w-full text-sm" id="calcWjpcTable">
-                        <thead>
-                            <tr class="text-left text-gold/70 text-xs uppercase tracking-wider">
-                                <th class="py-2 pr-4">Quantité</th>
-                                <th class="py-2 pr-4 text-right">1000</th>
-                                <th class="py-2 pr-4 text-right">2000</th>
-                                <th class="py-2 pr-4 text-right">3000</th>
-                                <th class="py-2 pr-4 text-right">5000</th>
-                            </tr>
-                        </thead>
-                        <tbody class="text-light-gold/80" id="calcWjpcTbody"></tbody>
-                    </table>
-                </div>
-                <p class="text-light-gold/30 text-xs mt-3">⚠️ Point de vigilance : "gold foil on both sides of the box + embossing for outside" reste ambigu par rapport à la demande (embossage devant, dos en foil plat) — à faire reconfirmer par écrit par Becky avant commande ferme. 3000/5000 unités : jamais cotées par Becky à ce jour.</p>
-            </div>
-
-            <!-- ── Prototype ── -->
-            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5">
-                <h4 class="cormorant text-lg font-bold text-gold mb-3">Prototype complet (paiement unique, hors commande principale)</h4>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-xl p-4">
-                        <div class="text-light-gold/50 text-xs mb-1">WJPC (Becky) — pochette imprimée + brodée</div>
-                        <div class="text-gold text-lg font-bold">681,53 €</div>
-                        <div class="text-light-gold/30 text-xs mt-1">647,02 € fabrication + 34,51 € port</div>
-                    </div>
-                    <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-xl p-4">
-                        <div class="text-light-gold/50 text-xs mb-1">Whatz Games (Helen) — échantillon imprimé numérique</div>
-                        <div class="text-gold text-lg font-bold" id="calcWhatzProtoTotal">—</div>
-                        <div class="text-light-gold/30 text-xs mt-1" id="calcWhatzProtoDetail">330$ échantillon + ~100$ port (variable selon poids du colis)</div>
-                    </div>
-                </div>
-            </div>
-        </section>
-        </div><!-- /quotes-subtab-comparateur -->
         </div><!-- /tab-quotes -->
 
         <!-- ══ ONGLET : JOURNAL ══ -->
@@ -4997,7 +4994,15 @@
             }
             document.getElementById('quotes-subtab-plan').classList.toggle('hidden', name !== 'plan');
             document.getElementById('quotes-subtab-devis').classList.toggle('hidden', name !== 'devis');
-            document.getElementById('quotes-subtab-comparateur').classList.toggle('hidden', name !== 'comparateur');
+        }
+
+        // Depuis le Plan de fabrication : bascule sur "Devis & comparateur" et centre la carte du fournisseur
+        function goToConfigureSupplier(scenario) {
+            showQuotesSubTab('devis');
+            const cardId = scenario === 'wjpc' ? 'devisWjpcCard' : 'devisWhatzCard';
+            setTimeout(() => {
+                document.getElementById(cardId)?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 50);
         }
 
         // Sélection multiple de devis (checkboxes) pour le Plan de fabrication (scénario "Devis manuels")
@@ -5408,6 +5413,18 @@
             const cagnotte = parseFloat(document.getElementById('planCagnotte')?.value) || 0;
             const container = document.getElementById('planResults');
             if (!container) return;
+
+            const wjpcSummaryEl = document.getElementById('planWjpcConfigSummary');
+            if (wjpcSummaryEl) {
+                const booklet = document.getElementById('calcWjpcColor')?.checked ? 'couleur (CMYK)' : 'noir & blanc';
+                const shippingLabels = { sea: 'bateau', rail: 'rail', truck: 'camion' };
+                const shipping = shippingLabels[document.getElementById('calcWjpcShipping')?.value] || 'bateau';
+                wjpcSummaryEl.textContent = `Livret ${booklet}, transport ${shipping}`;
+            }
+            const whatzSummaryEl = document.getElementById('planWhatzConfigSummary');
+            if (whatzSummaryEl) {
+                whatzSummaryEl.textContent = WHATZ_CONFIG_LABELS[document.getElementById('calcWhatzConfig')?.value] || WHATZ_CONFIG_LABELS.blackedge;
+            }
 
             function outcomeCard(title, qty, fabCost, packagingTotal, packagingLabel, extraNote) {
                 if (fabCost == null) {
