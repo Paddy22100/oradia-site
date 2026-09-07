@@ -3150,16 +3150,18 @@ async function handleData(req, res) {
     }
 
     // ── Section supplier-files : devis/fichiers joints à un fournisseur ──
+    // Sans ?supplierId, renvoie tous les fichiers de tous les fournisseurs (vue consolidée).
     if (section === 'supplier-files') {
       const supplierId = req.query?.supplierId;
-      if (!supplierId) return res.status(400).json({ error: 'supplierId requis' });
-      const { data, error } = await supabase
+      let query = supabase
         .from('supplier_files')
-        .select('*')
-        .eq('supplier_id', supplierId)
+        .select('*, suppliers(name)')
         .order('uploaded_at', { ascending: false });
+      if (supplierId) query = query.eq('supplier_id', supplierId);
+      const { data, error } = await query;
       if (error) throw error;
-      return res.status(200).json({ success: true, data: data || [] });
+      const rows = (data || []).map(f => ({ ...f, supplier_name: f.suppliers?.name || null, suppliers: undefined }));
+      return res.status(200).json({ success: true, data: rows });
     }
 
     // ── Section partners : magasins partenaires potentiels ──
