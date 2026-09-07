@@ -784,6 +784,26 @@
         </div>
     </div>
 
+    <div id="modalSupplierFiles" class="hidden fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm" onclick="if(event.target===this)closeSupplierFilesModal()">
+        <div class="bg-[#07112a] border border-gold/30 rounded-2xl p-6 w-full max-w-lg shadow-2xl">
+            <div class="flex items-center justify-between mb-4">
+                <h4 class="cormorant text-xl font-bold text-gold" id="modalSupplierFilesTitle">Devis joints</h4>
+                <button onclick="closeSupplierFilesModal()" class="text-gold/50 hover:text-gold text-xl"><i class="fas fa-times"></i></button>
+            </div>
+            <div class="mb-4 bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-lg p-3 space-y-2">
+                <input type="file" id="supplierFileInput" accept="application/pdf,image/*"
+                    class="w-full text-xs text-light-gold/70 file:mr-3 file:py-1.5 file:px-3 file:rounded-lg file:border file:border-gold/30 file:bg-gold/10 file:text-gold file:text-xs">
+                <div class="flex items-center gap-3">
+                    <button onclick="uploadSupplierFile()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-1.5 text-sm hover:bg-gold/30 transition"><i class="fas fa-upload mr-1"></i>Joindre</button>
+                    <span id="supplierFileStatus" class="text-xs text-light-gold/40"></span>
+                </div>
+            </div>
+            <div id="modalSupplierFilesBody" class="space-y-2 max-h-72 overflow-y-auto text-sm text-light-gold/80">
+                <p class="text-gold/40 text-center py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</p>
+            </div>
+        </div>
+    </div>
+
     <!-- Conteneur des notifications stylées (remplace window.alert natif) — voir adminAlert() -->
     <div id="adminToastContainer" class="fixed top-4 right-4 z-[9999] flex flex-col gap-2 max-w-sm pointer-events-none"></div>
 
@@ -2102,6 +2122,95 @@
                     <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-xl p-4">
                         <div class="text-light-gold/50 text-xs mb-1">Statut</div>
                         <div class="text-xl font-bold" id="profitStatusLine">—</div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ══ Comparateur de coûts fabrication — WJPC vs Whatz Games (coffret complet) ══ -->
+        <section class="mb-10">
+            <div class="mb-6">
+                <h3 class="cormorant text-2xl font-bold text-gold">Comparateur de coûts fabrication — WJPC vs Whatz Games</h3>
+                <p class="text-light-gold/50 text-sm mt-1">Coffret ORADIA complet (64 cartes, boîte, livret A5, jeton métallique, pochette tissu). Calculé en direct à partir des devis sourcés — voir <a href="#" onclick="event.preventDefault(); goToSupplierCard(currentSuppliers.find(s=>s.name==='WJPC (Guangdong Wangjing Card Game Tech Co., Ltd)')?.id)" class="text-gold/70 underline">WJPC</a> et <a href="#" onclick="event.preventDefault(); goToSupplierCard(currentSuppliers.find(s=>s.name==='Whatz Games (Jiaxing Whatz Games Co., Ltd)')?.id)" class="text-gold/70 underline">Whatz Games</a> dans Contacts &gt; Fournisseurs.</p>
+            </div>
+
+            <div class="flex items-center gap-3 mb-6 flex-wrap bg-[rgba(5,20,40,0.6)] border border-gold/20 rounded-xl px-4 py-3">
+                <label class="text-light-gold/60 text-xs">Taux de change USD → EUR</label>
+                <input id="calcExchangeRate" type="number" step="0.0001" min="0" oninput="onCalcConfigChange()" class="w-24 bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-2 py-1 text-sm text-light-gold outline-none focus:border-gold/50">
+                <input id="calcExchangeRateDate" type="text" placeholder="date du taux" oninput="onCalcConfigChange()" class="w-36 bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-2 py-1 text-xs text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
+                <button onclick="resetCalcExchangeRate()" class="text-xs text-gold/50 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 transition"><i class="fas fa-rotate-left mr-1"></i>Valeur sourcée</button>
+            </div>
+
+            <!-- ── Whatz Games ── -->
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-6">
+                <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                    <h4 class="cormorant text-lg font-bold text-gold">Whatz Games — Option 3 boîte "livre", FOB Shanghai + fret + douane/TVA</h4>
+                    <label class="flex items-center gap-2 text-sm text-light-gold/70 cursor-pointer">
+                        <input type="checkbox" id="calcWhatzBlackEdge" onchange="onCalcConfigChange()" class="accent-gold"> Cartes tranche noire (black edge)
+                    </label>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm" id="calcWhatzTable">
+                        <thead>
+                            <tr class="text-left text-gold/70 text-xs uppercase tracking-wider">
+                                <th class="py-2 pr-4">Quantité</th>
+                                <th class="py-2 pr-4 text-right">1000</th>
+                                <th class="py-2 pr-4 text-right">2000</th>
+                                <th class="py-2 pr-4 text-right">3000</th>
+                                <th class="py-2 pr-4 text-right">5000</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-light-gold/80" id="calcWhatzTbody"></tbody>
+                    </table>
+                </div>
+                <p class="text-light-gold/30 text-xs mt-3">⚠️ Le devis Whatz du 06/08/2026 indique un jeton "finition unie" (single color), pas encore le bicolore or/argent souhaité — surcoût probable à confirmer par écrit auprès de Helen avant de figer le budget.</p>
+            </div>
+
+            <!-- ── WJPC ── -->
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5 mb-6">
+                <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                    <h4 class="cormorant text-lg font-bold text-gold">WJPC — EXW Dongguan + transport DDP (porte-à-porte)</h4>
+                    <div class="flex items-center gap-4 flex-wrap">
+                        <label class="flex items-center gap-2 text-sm text-light-gold/70 cursor-pointer">
+                            <input type="checkbox" id="calcWjpcColor" onchange="onCalcConfigChange()" class="accent-gold"> Livret couleur (CMYK)
+                        </label>
+                        <select id="calcWjpcShipping" onchange="onCalcConfigChange()" class="bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-1.5 text-sm text-light-gold outline-none focus:border-gold/50">
+                            <option value="sea">Bateau (50-60j)</option>
+                            <option value="rail">Rail (30-40j)</option>
+                            <option value="truck">Camion (30j)</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm" id="calcWjpcTable">
+                        <thead>
+                            <tr class="text-left text-gold/70 text-xs uppercase tracking-wider">
+                                <th class="py-2 pr-4">Quantité</th>
+                                <th class="py-2 pr-4 text-right">1000</th>
+                                <th class="py-2 pr-4 text-right">2000</th>
+                                <th class="py-2 pr-4 text-right">3000</th>
+                                <th class="py-2 pr-4 text-right">5000</th>
+                            </tr>
+                        </thead>
+                        <tbody class="text-light-gold/80" id="calcWjpcTbody"></tbody>
+                    </table>
+                </div>
+                <p class="text-light-gold/30 text-xs mt-3">⚠️ Point de vigilance : "gold foil on both sides of the box + embossing for outside" reste ambigu par rapport à la demande (embossage devant, dos en foil plat) — à faire reconfirmer par écrit par Becky avant commande ferme. 3000/5000 unités : jamais cotées par Becky à ce jour.</p>
+            </div>
+
+            <!-- ── Prototype ── -->
+            <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5">
+                <h4 class="cormorant text-lg font-bold text-gold mb-3">Prototype complet (paiement unique, hors commande principale)</h4>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                    <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-xl p-4">
+                        <div class="text-light-gold/50 text-xs mb-1">WJPC (Becky) — pochette imprimée + brodée</div>
+                        <div class="text-gold text-lg font-bold">681,53 €</div>
+                        <div class="text-light-gold/30 text-xs mt-1">647,02 € fabrication + 34,51 € port</div>
+                    </div>
+                    <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-xl p-4">
+                        <div class="text-light-gold/50 text-xs mb-1">Whatz Games (Helen)</div>
+                        <div class="text-orange-400 text-lg font-bold">Jamais coté</div>
+                        <div class="text-light-gold/30 text-xs mt-1">À demander par écrit avant de figer le budget</div>
                     </div>
                 </div>
             </div>
@@ -4109,7 +4218,7 @@
             if (name === 'waitlist')       { triggerSyncAll(false); }
             if (name === 'subscriptions') loadSubscriptions();
             if (name === 'kickstarter') { loadKickstarterStats(); loadKickstarter(1); }
-            if (name === 'quotes')      loadQuotes();
+            if (name === 'quotes')      { loadQuotes(); initCostCalculator(); }
             if (name === 'support')        loadSupportMessages();
             if (name === 'synchronicity') { loadObservationWindows(); loadSynchronicity(); }
             if (name === 'monitoring')     { loadMonitoring(); loadSurveillanceLogs(); }
@@ -5041,6 +5150,143 @@
             }
         }
 
+        // ── Comparateur de coûts fabrication WJPC vs Whatz Games ────────────────────
+        // Constantes sourcées (ORADIA_Recap_Devis_Fabrication.pdf, compilé le 07/09/2026 à
+        // partir des devis WJPC/Becky du 17/07/2026 et Whatz Games/Aaron Lee du 06/08/2026).
+        // Aucun total n'est recopié en dur : tout est recalculé à partir de ces constantes.
+        const CALC_RATE_USD_EUR_SOURCE = 0.8627;
+        const CALC_RATE_DATE_SOURCE = 'fin août 2026';
+        const WHATZ_FAB_STANDARD_USD  = { 1000: 6.63, 2000: 5.15, 3000: 4.65, 5000: 4.32 };
+        const WHATZ_FAB_BLACKEDGE_USD = { 1000: 7.52, 2000: 6.04, 3000: 5.55, 5000: 5.20 };
+        const WHATZ_EXTRA_FOB_USD     = { 1000: 0.30, 2000: 0.18, 3000: 0.14, 5000: 0.11 };
+        const WHATZ_TOOLING_USD = 150.00;
+        const WJPC_EXW_BW_USD    = { 1000: 13.38, 2000: 11.15 };
+        const WJPC_EXW_COLOR_USD = { 1000: 14.66, 2000: 11.90 };
+        const WJPC_DDP_SEA_USD   = { 1000: 2100, 2000: 4050 };
+        const WJPC_DDP_RAIL_USD  = { 1000: 3000, 2000: 5850 };
+        const WJPC_DDP_TRUCK_USD = { 1000: 3250, 2000: 6350 };
+        const ISBN_EUR = 45.00;
+        const FREIGHT_INTL_EUR_DEFAULT = { 1000: 500, 2000: 1000, 3000: 1500, 5000: 2500 };
+        const DOUANE_RATE = 0.027;
+        const TVA_RATE = 0.20;
+        const CALC_QUANTITIES = [1000, 2000, 3000, 5000];
+        // toFixed (pas Math.round(v*100)/100) : ce dernier produit une erreur d'arrondi flottant
+        // sur certaines valeurs (ex. 4050*0.8627 → 3493,94 au lieu de 3493,93 attendu), vérifié
+        // contre les 4 cas de test du document source (section 7.D).
+        const round2 = v => Number(v.toFixed(2));
+
+        function getCalcRate() { return parseFloat(document.getElementById('calcExchangeRate').value) || CALC_RATE_USD_EUR_SOURCE; }
+
+        function computeWhatzTotal(qty, config, freightOverride) {
+            const rate = getCalcRate();
+            const fabUsd = config === 'blackedge' ? WHATZ_FAB_BLACKEDGE_USD[qty] : WHATZ_FAB_STANDARD_USD[qty];
+            const fabEurPc = round2(fabUsd * rate);
+            const extraEurPc = round2(WHATZ_EXTRA_FOB_USD[qty] * rate);
+            const fobPc = round2(fabEurPc + extraEurPc);
+            const variableTotal = round2(fobPc * qty);
+            const freight = freightOverride != null && freightOverride !== '' ? parseFloat(freightOverride) : FREIGHT_INTL_EUR_DEFAULT[qty];
+            const moule = round2(WHATZ_TOOLING_USD * rate);
+            const fixedTotal = round2(ISBN_EUR + moule);
+            const valeurDouane = round2(variableTotal + freight);
+            const droits = round2(valeurDouane * DOUANE_RATE);
+            const tva = round2((valeurDouane + droits) * TVA_RATE);
+            const douaneTva = round2(droits + tva);
+            const grandTotal = round2(variableTotal + fixedTotal + freight + douaneTva);
+            const unitCost = round2(grandTotal / qty);
+            return { fobPc, variableTotal, freight, fixedTotal, valeurDouane, droits, tva, douaneTva, grandTotal, unitCost };
+        }
+
+        function computeWjpcTotal(qty, booklet, shipping) {
+            if (qty !== 1000 && qty !== 2000) return null; // non coté par Becky
+            const rate = getCalcRate();
+            const exwUsd = booklet === 'color' ? WJPC_EXW_COLOR_USD[qty] : WJPC_EXW_BW_USD[qty];
+            const shipTable = { sea: WJPC_DDP_SEA_USD, rail: WJPC_DDP_RAIL_USD, truck: WJPC_DDP_TRUCK_USD }[shipping];
+            const exwEur = round2(exwUsd * qty * rate);
+            const shipEur = round2(shipTable[qty] * rate);
+            const total = round2(exwEur + shipEur);
+            return { exwEur, shipEur, total, unitCost: round2(total / qty) };
+        }
+
+        const CALC_CONFIG_KEY = 'oradia_admin_cost_calc_v1';
+        function saveCalcConfig() {
+            try {
+                localStorage.setItem(CALC_CONFIG_KEY, JSON.stringify({
+                    rate: document.getElementById('calcExchangeRate').value,
+                    rateDate: document.getElementById('calcExchangeRateDate').value,
+                    blackEdge: document.getElementById('calcWhatzBlackEdge').checked,
+                    wjpcColor: document.getElementById('calcWjpcColor').checked,
+                    wjpcShipping: document.getElementById('calcWjpcShipping').value,
+                    freight: CALC_QUANTITIES.reduce((acc, q) => { acc[q] = document.getElementById('calcFreight' + q)?.value ?? ''; return acc; }, {})
+                }));
+            } catch (e) { /* localStorage indisponible : pas bloquant */ }
+        }
+
+        function loadCalcConfig() {
+            try {
+                const raw = localStorage.getItem(CALC_CONFIG_KEY);
+                return raw ? JSON.parse(raw) : null;
+            } catch (e) { return null; }
+        }
+
+        function resetCalcExchangeRate() {
+            document.getElementById('calcExchangeRate').value = CALC_RATE_USD_EUR_SOURCE;
+            document.getElementById('calcExchangeRateDate').value = CALC_RATE_DATE_SOURCE;
+            onCalcConfigChange();
+        }
+
+        function onCalcConfigChange() {
+            saveCalcConfig();
+            renderCostCalculator();
+        }
+
+        function initCostCalculator() {
+            const saved = loadCalcConfig();
+            document.getElementById('calcExchangeRate').value = saved?.rate || CALC_RATE_USD_EUR_SOURCE;
+            document.getElementById('calcExchangeRateDate').value = saved?.rateDate || CALC_RATE_DATE_SOURCE;
+            document.getElementById('calcWhatzBlackEdge').checked = saved?.blackEdge || false;
+            document.getElementById('calcWjpcColor').checked = saved?.wjpcColor || false;
+            document.getElementById('calcWjpcShipping').value = saved?.wjpcShipping || 'sea';
+            renderCostCalculator();
+        }
+
+        function renderCostCalculator() {
+            const fmtEur = v => `${Number(v || 0).toFixed(2).replace('.', ',')} €`;
+            const saved = loadCalcConfig();
+            const config = document.getElementById('calcWhatzBlackEdge').checked ? 'blackedge' : 'standard';
+
+            const whatzRows = CALC_QUANTITIES.map(qty => {
+                const freightId = 'calcFreight' + qty;
+                const overrideVal = document.getElementById(freightId)?.value ?? saved?.freight?.[qty] ?? '';
+                const r = computeWhatzTotal(qty, config, overrideVal);
+                const isDefault = overrideVal === '' || overrideVal == null;
+                return { qty, r, freightId, overrideVal, isDefault };
+            });
+
+            document.getElementById('calcWhatzTbody').innerHTML = `
+                <tr><td class="py-2 pr-4 text-light-gold/50">Prix FOB Shanghai / pièce</td>${whatzRows.map(x => `<td class="py-2 pr-4 text-right">${fmtEur(x.r.fobPc)}</td>`).join('')}</tr>
+                <tr><td class="py-2 pr-4 text-light-gold/50">Fret international estimé ${whatzRows.some(x=>x.isDefault) ? '<span class="text-orange-400/70 text-xs">(estimation)</span>' : ''}</td>${whatzRows.map(x => `<td class="py-2 pr-4 text-right"><input id="${x.freightId}" type="number" step="10" value="${x.overrideVal !== '' ? x.overrideVal : FREIGHT_INTL_EUR_DEFAULT[x.qty]}" oninput="onCalcConfigChange()" class="w-24 text-right bg-[rgba(5,20,40,0.8)] border border-gold/20 rounded px-2 py-1 text-xs text-light-gold outline-none focus:border-gold/50"></td>`).join('')}</tr>
+                <tr><td class="py-2 pr-4 text-light-gold/50">Droits de douane (2,7%)</td>${whatzRows.map(x => `<td class="py-2 pr-4 text-right">${fmtEur(x.r.droits)}</td>`).join('')}</tr>
+                <tr><td class="py-2 pr-4 text-light-gold/50">TVA import (20%, non récup.)</td>${whatzRows.map(x => `<td class="py-2 pr-4 text-right">${fmtEur(x.r.tva)}</td>`).join('')}</tr>
+                <tr><td class="py-2 pr-4 text-light-gold/50">Coûts fixes (ISBN + moule)</td>${whatzRows.map(x => `<td class="py-2 pr-4 text-right">${fmtEur(x.r.fixedTotal)}</td>`).join('')}</tr>
+                <tr class="border-t border-gold/15"><td class="py-2 pr-4 text-gold font-semibold">TOTAL tout compris</td>${whatzRows.map(x => `<td class="py-2 pr-4 text-right text-gold font-semibold">${fmtEur(x.r.grandTotal)}</td>`).join('')}</tr>
+                <tr><td class="py-2 pr-4 text-light-gold font-semibold">Coût unitaire</td>${whatzRows.map(x => `<td class="py-2 pr-4 text-right text-light-gold font-semibold">${fmtEur(x.r.unitCost)}</td>`).join('')}</tr>
+            `;
+            // Ré-attacher la valeur sauvegardée après ré-écriture du DOM (les inputs sont recréés à chaque render)
+            whatzRows.forEach(x => { if (x.overrideVal !== '') document.getElementById(x.freightId).value = x.overrideVal; });
+
+            const booklet = document.getElementById('calcWjpcColor').checked ? 'color' : 'bw';
+            const shipping = document.getElementById('calcWjpcShipping').value;
+            const wjpcRows = CALC_QUANTITIES.map(qty => ({ qty, r: computeWjpcTotal(qty, booklet, shipping) }));
+            const cell = (x, fn) => x.r ? `<td class="py-2 pr-4 text-right">${fn(x.r)}</td>` : '<td class="py-2 pr-4 text-right text-light-gold/20">non coté</td>';
+
+            document.getElementById('calcWjpcTbody').innerHTML = `
+                <tr><td class="py-2 pr-4 text-light-gold/50">Prix EXW total</td>${wjpcRows.map(x => cell(x, r => fmtEur(r.exwEur))).join('')}</tr>
+                <tr><td class="py-2 pr-4 text-light-gold/50">Transport DDP</td>${wjpcRows.map(x => cell(x, r => fmtEur(r.shipEur))).join('')}</tr>
+                <tr class="border-t border-gold/15"><td class="py-2 pr-4 text-gold font-semibold">TOTAL tout compris (DDP)</td>${wjpcRows.map(x => cell(x, r => fmtEur(r.total))).join('')}</tr>
+                <tr><td class="py-2 pr-4 text-light-gold font-semibold">Coût unitaire</td>${wjpcRows.map(x => cell(x, r => fmtEur(r.unitCost))).join('')}</tr>
+            `;
+        }
+
         // ── Partenaires / magasins ───────────────────────────────────────────────
 
         const partnerStatusLabels = { a_contacter: 'À contacter', contacte: 'Contacté', interesse: 'Intéressé', vend: "Vend l'Oracle", refuse: 'A refusé' };
@@ -5353,6 +5599,7 @@
                         <td class="px-5 py-4">
                             <div class="flex gap-2">
                                 ${s.email ? `<button onclick="goToComposeEmail('${escapeHtmlFront(s.email).replace(/'/g,"\\'")}','Oradia — ')" title="Écrire un email" class="text-xs text-teal-400/70 hover:text-teal-400 border border-teal-400/20 hover:border-teal-400/50 rounded-lg px-2 py-1 transition"><i class="fas fa-envelope"></i></button>` : ''}
+                                <button onclick="viewSupplierFiles('${s.id}','${(s.name || '').replace(/'/g, "\\'")}')" title="Devis joints" class="text-xs text-purple-400/70 hover:text-purple-400 border border-purple-400/20 hover:border-purple-400/50 rounded-lg px-2 py-1 transition"><i class="fas fa-paperclip"></i></button>
                                 <button onclick='toggleSupplierForm(${JSON.stringify(s).replace(/'/g, "&#39;")})' class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/50 rounded-lg px-2 py-1 transition"><i class="fas fa-pen"></i></button>
                                 <button onclick="deleteSupplier('${s.id}')" class="text-xs text-red-400/60 hover:text-red-400 border border-red-400/20 hover:border-red-400/50 rounded-lg px-2 py-1 transition"><i class="fas fa-trash"></i></button>
                             </div>
@@ -5361,6 +5608,101 @@
             } catch (e) {
                 tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-red-400 text-sm">${escapeHtmlFront(e.message)}</td></tr>`;
             }
+        }
+
+        // ── Devis/fichiers joints à un fournisseur (historique horodaté) ──
+        let currentSupplierFilesId = null;
+        async function viewSupplierFiles(supplierId, supplierName) {
+            currentSupplierFilesId = supplierId;
+            document.getElementById('modalSupplierFilesTitle').textContent = `Devis joints — ${supplierName}`;
+            document.getElementById('supplierFileInput').value = '';
+            document.getElementById('supplierFileStatus').textContent = '';
+            document.getElementById('modalSupplierFiles').classList.remove('hidden');
+            document.getElementById('modalSupplierFiles').classList.add('flex');
+            await loadSupplierFiles();
+        }
+
+        function closeSupplierFilesModal() {
+            document.getElementById('modalSupplierFiles').classList.add('hidden');
+            document.getElementById('modalSupplierFiles').classList.remove('flex');
+            currentSupplierFilesId = null;
+        }
+
+        function fmtFileSize(bytes) {
+            if (!bytes) return '';
+            if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} Ko`;
+            return `${(bytes / (1024 * 1024)).toFixed(1)} Mo`;
+        }
+
+        async function loadSupplierFiles() {
+            const body = document.getElementById('modalSupplierFilesBody');
+            body.innerHTML = '<p class="text-gold/40 text-center py-6"><i class="fas fa-spinner fa-spin mr-2"></i>Chargement…</p>';
+            try {
+                const res = await adminFetch(`/api/admin/data?section=supplier-files&supplierId=${encodeURIComponent(currentSupplierFilesId)}`);
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                const files = json.data || [];
+                if (!files.length) {
+                    body.innerHTML = '<p class="text-gold/30 text-center py-6 cormorant text-lg">Aucun devis joint pour l\'instant</p>';
+                    return;
+                }
+                body.innerHTML = files.map(f => `
+                    <div class="bg-[rgba(5,20,40,0.6)] border border-gold/15 rounded-lg px-4 py-3 flex items-center justify-between gap-3">
+                        <a href="${escapeHtmlFront(f.file_url)}" target="_blank" rel="noopener" class="flex items-center gap-2 text-light-gold/80 hover:text-gold text-sm min-w-0">
+                            <i class="fas fa-file-pdf text-gold/50 shrink-0"></i>
+                            <span class="truncate">${escapeHtmlFront(f.file_name)}</span>
+                        </a>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <span class="text-gold/30 text-xs">${fmtFileSize(f.file_size)} · ${f.uploaded_at ? new Date(f.uploaded_at).toLocaleDateString('fr-FR') : ''}</span>
+                            <button onclick="deleteSupplierFile('${f.id}')" class="text-red-400/50 hover:text-red-400 text-xs"><i class="fas fa-trash"></i></button>
+                        </div>
+                    </div>`).join('');
+            } catch (e) {
+                body.innerHTML = `<p class="text-red-400/70 text-center py-4">${escapeHtmlFront(e.message)}</p>`;
+            }
+        }
+
+        function uploadSupplierFile() {
+            const input = document.getElementById('supplierFileInput');
+            const status = document.getElementById('supplierFileStatus');
+            const file = input.files?.[0];
+            if (!file) { status.className = 'text-xs text-red-400'; status.textContent = 'Choisis un fichier.'; return; }
+            if (file.size > 15 * 1024 * 1024) { status.className = 'text-xs text-red-400'; status.textContent = 'Fichier trop lourd (max 15 Mo).'; return; }
+            status.className = 'text-xs text-light-gold/40';
+            status.textContent = 'Envoi…';
+            const reader = new FileReader();
+            reader.onload = async () => {
+                try {
+                    const res = await adminFetch('/api/admin/data', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ action: 'upload-supplier-file', supplierId: currentSupplierFilesId, fileName: file.name, fileData: reader.result })
+                    });
+                    const json = await res.json();
+                    if (!res.ok) throw new Error(json.error || 'Erreur');
+                    input.value = '';
+                    status.textContent = '';
+                    await loadSupplierFiles();
+                } catch (e) {
+                    status.className = 'text-xs text-red-400';
+                    status.textContent = 'Erreur : ' + e.message;
+                }
+            };
+            reader.readAsDataURL(file);
+        }
+
+        async function deleteSupplierFile(id) {
+            if (!(await adminConfirm('Supprimer définitivement ce fichier ?', { danger: true }))) return;
+            try {
+                const res = await adminFetch('/api/admin/data', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'delete-supplier-file', id })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                await loadSupplierFiles();
+            } catch (e) { adminAlert('Erreur : ' + e.message); }
         }
 
         // Ouvre l'onglet Mails avec le destinataire/sujet pré-remplis

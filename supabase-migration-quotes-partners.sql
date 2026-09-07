@@ -156,3 +156,29 @@ COMMENT ON TABLE suppliers IS
 
 ALTER TABLE manufacturing_quotes ADD COLUMN IF NOT EXISTS supplier_id UUID REFERENCES suppliers(id) ON DELETE SET NULL;
 CREATE INDEX IF NOT EXISTS idx_manufacturing_quotes_supplier ON manufacturing_quotes(supplier_id);
+
+
+-- ============================================================
+-- AJOUT : historique horodaté des devis/fichiers joints à une fiche
+-- fournisseur (Contacts > Fournisseurs), au lieu d'un seul emplacement de
+-- fichier écrasé à chaque nouvel envoi. Idempotent.
+-- ============================================================
+CREATE TABLE IF NOT EXISTS supplier_files (
+    id            UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+    supplier_id   UUID NOT NULL REFERENCES suppliers(id) ON DELETE CASCADE,
+    file_name     TEXT NOT NULL,       -- nom d'origine, affiché à l'écran
+    storage_path  TEXT NOT NULL,       -- chemin dans le bucket Storage, pour suppression
+    file_url      TEXT NOT NULL,       -- URL publique
+    file_size     INTEGER,
+    uploaded_at   TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_supplier_files_supplier ON supplier_files(supplier_id, uploaded_at DESC);
+
+ALTER TABLE supplier_files ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "supplier_files_service_role" ON supplier_files;
+CREATE POLICY "supplier_files_service_role" ON supplier_files
+    FOR ALL TO service_role USING (true) WITH CHECK (true);
+
+COMMENT ON TABLE supplier_files IS
+    'Devis/fichiers joints à une fiche fournisseur (historique horodaté, plusieurs fichiers par fournisseur), gérés depuis le dashboard admin, onglet Contacts > Fournisseurs.';

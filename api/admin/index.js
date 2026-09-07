@@ -1623,6 +1623,43 @@ async function handleData(req, res) {
         return res.status(200).json({ success: true });
       }
 
+      // ── Devis/fichiers joints à une fiche fournisseur (historique horodaté) ──
+      if (action === 'upload-supplier-file') {
+        const { supplierId, fileName, fileData } = body;
+        if (!supplierId) return res.status(400).json({ error: 'supplierId requis' });
+        const m = String(fileData || '').match(/^data:([\w/.+-]+);base64,(.+)$/i);
+        if (!m) return res.status(400).json({ error: 'Fichier invalide (attendu data URL base64)' });
+        const mimeType = m[1];
+        const buffer = Buffer.from(m[2], 'base64');
+        if (buffer.length > 15 * 1024 * 1024) return res.status(400).json({ error: 'Fichier trop lourd (max 15 Mo)' });
+        const ext = (mimeType.split('/')[1] || 'pdf').replace('jpeg', 'jpg');
+        const safeName = (fileName || `devis.${ext}`).replace(/[^\w.\- ]/g, '_').slice(0, 120);
+        const storagePath = `${supplierId}/${Date.now()}_${safeName}`;
+        const { error: upErr } = await supabase.storage.from('supplier-files').upload(storagePath, buffer, { contentType: mimeType, upsert: false });
+        if (upErr) return res.status(500).json({ error: 'Échec upload : ' + upErr.message });
+        const { data: { publicUrl } } = supabase.storage.from('supplier-files').getPublicUrl(storagePath);
+        const { error: insErr } = await supabase.from('supplier_files').insert({
+          supplier_id: supplierId,
+          file_name: safeName,
+          storage_path: storagePath,
+          file_url: publicUrl,
+          file_size: buffer.length
+        });
+        if (insErr) throw insErr;
+        return res.status(200).json({ success: true, url: publicUrl });
+      }
+
+      if (action === 'delete-supplier-file') {
+        const { id } = body;
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { data: fileRow, error: fetchErr } = await supabase.from('supplier_files').select('storage_path').eq('id', id).maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (fileRow?.storage_path) await supabase.storage.from('supplier-files').remove([fileRow.storage_path]);
+        const { error } = await supabase.from('supplier_files').delete().eq('id', id);
+        if (error) throw error;
+        return res.status(200).json({ success: true });
+      }
+
       // ── Partenaires / magasins potentiels (onglet Partenaires) ──
       if (action === 'create-partner' || action === 'update-partner') {
         const { id, storeName, contactName, email, phone, address, city, status, lastContactDate, nextContactDate, notes } = body;
@@ -3108,6 +3145,19 @@ async function handleData(req, res) {
         .from('suppliers')
         .select('*')
         .order('name', { ascending: true });
+      if (error) throw error;
+      return res.status(200).json({ success: true, data: data || [] });
+    }
+
+    // ── Section supplier-files : devis/fichiers joints à un fournisseur ──
+    if (section === 'supplier-files') {
+      const supplierId = req.query?.supplierId;
+      if (!supplierId) return res.status(400).json({ error: 'supplierId requis' });
+      const { data, error } = await supabase
+        .from('supplier_files')
+        .select('*')
+        .eq('supplier_id', supplierId)
+        .order('uploaded_at', { ascending: false });
       if (error) throw error;
       return res.status(200).json({ success: true, data: data || [] });
     }
