@@ -9816,6 +9816,12 @@
             if (igEl) igEl.value = data.instagram_text || '';
             if (liEl) liEl.value = data.linkedin_text || '';
             const usedImage = data.image_url || imageUrl;
+            // Persiste l'image renvoyée par le serveur (générée automatiquement si aucune
+            // n'était fournie) : sans ça, un deuxième clic sur "Aperçu" sans URL manuelle
+            // en régénérerait une nouvelle à chaque fois (coût + image différente à chaque clic).
+            if (usedImage && document.getElementById('nl-social-image')?.value.trim() !== usedImage) {
+                nlSetSocialImageUrl(usedImage);
+            }
             ['fb', 'ig', 'li'].forEach(net => {
                 const wrap = document.getElementById(`nl-social-${net}-img`);
                 const img  = document.getElementById(`nl-social-${net}-img-el`);

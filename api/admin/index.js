@@ -88,6 +88,55 @@ async function ensureSafeSocialImageUrl(imageUrl) {
   }
 }
 
+// Génère automatiquement une image de publication via l'API Images d'OpenAI (gpt-image-1),
+// à partir du sujet/texte de la newsletter — remplace l'étape manuelle (génération via
+// ChatGPT puis copier-coller de l'URL dans le champ image). Style fixe (palette bleu nuit/or,
+// esthétique Oracle Oradia, jamais de texte incrusté — Facebook/Instagram le recadrent mal)
+// pour rester visuellement cohérent d'une publication à l'autre. Retourne null en cas d'échec
+// ou si OPENAI_API_KEY n'est pas configurée : le caller garde alors son image de repli
+// habituelle plutôt que de bloquer l'envoi.
+async function generateSocialImage({ subject, textContent }) {
+  const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+  if (!OPENAI_API_KEY) return null;
+  try {
+    const excerpt = String(textContent || '').replace(/\s+/g, ' ').trim().slice(0, 400);
+    const prompt = [
+      `Illustration symbolique et onirique pour une publication de réseau social sur l'oracle divinatoire "Oradia".`,
+      `Thème du message : "${subject || ''}". Contenu : ${excerpt}`,
+      `Style : peinture numérique douce et mystique, palette dominante bleu nuit profond et or,`,
+      `ambiance céleste et intemporelle (étoiles, constellations, lumière dorée, cartes d'oracle, éléments ésotériques discrets).`,
+      `Aucun texte, aucune lettre, aucun logo dans l'image. Composition centrée, format carré.`
+    ].join(' ');
+
+    const r = await fetch('https://api.openai.com/v1/images/generations', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_KEY}` },
+      body: JSON.stringify({ model: 'gpt-image-1', prompt, size: '1024x1024', quality: 'medium', n: 1 })
+    });
+    if (!r.ok) {
+      console.error('[generateSocialImage] OpenAI error', r.status, await r.text().catch(() => ''));
+      return null;
+    }
+    const data = await r.json();
+    const b64 = data?.data?.[0]?.b64_json;
+    if (!b64) return null;
+
+    const buf = Buffer.from(b64, 'base64');
+    const sb = createClient(
+      process.env.SUPABASE_URL || 'https://nxzetkdozynyutlbhxdx.supabase.co',
+      process.env.SUPABASE_SERVICE_ROLE_KEY
+    );
+    const filename = `social_ai_${Date.now()}.png`;
+    const { error: upErr } = await sb.storage.from('newsletter-uploads').upload(filename, buf, { contentType: 'image/png', upsert: false });
+    if (upErr) throw new Error(upErr.message);
+    const { data: { publicUrl } } = sb.storage.from('newsletter-uploads').getPublicUrl(filename);
+    return publicUrl;
+  } catch (e) {
+    console.error('[generateSocialImage] échec, image de repli conservée:', e.message);
+    return null;
+  }
+}
+
 // Manifest statique des illustrations du Tore (généré une fois, fichier unique et léger —
 // ne pas remplacer par un fs.readdir sur /images, ça ferait bundler tout le dossier (350+ Mo)
 // et dépasserait la limite de taille des fonctions Vercel.
@@ -7161,7 +7210,8 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
 async function scheduleAutoSocialPost(supabase, { subject, textContent, imageUrl }) {
   try {
     const { facebook_text, instagram_text, linkedin_text } = await generateSocialTexts({ subject, textContent });
-    const image_url = await ensureSafeSocialImageUrl(imageUrl || 'https://oradia.fr/images/logo-hd-v2.webp');
+    const resolvedImage = imageUrl || await generateSocialImage({ subject, textContent }) || 'https://oradia.fr/images/logo-hd-v2.webp';
+    const image_url = await ensureSafeSocialImageUrl(resolvedImage);
     await supabase.from('social_posts').insert({
       subject, facebook_text, instagram_text, linkedin_text, image_url,
       scheduled_at: new Date().toISOString()
@@ -7199,7 +7249,11 @@ async function handlePublishSocial(req, res) {
     }
 
     const DEFAULT_IMAGE = 'https://oradia.fr/images/logo-hd-v2.webp';
-    let image_url = imageUrl || DEFAULT_IMAGE;
+    // Aucune image fournie (ni collée manuellement, ni reprise de la newsletter) : on en
+    // génère une automatiquement (voir generateSocialImage) plutôt que de retomber
+    // systématiquement sur le logo — c'était l'étape manuelle (génération via ChatGPT,
+    // copier-coller de l'URL) que cette fonction remplace.
+    let image_url = imageUrl || await generateSocialImage({ subject, textContent }) || DEFAULT_IMAGE;
 
     // Mode aperçu : retourne le texte sans envoyer à Make.com
     if (previewOnly) {
