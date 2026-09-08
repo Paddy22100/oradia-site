@@ -2401,9 +2401,9 @@
                         class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
                         <i class="fas fa-route mr-1.5"></i>Parcours
                     </button>
-                    <button onclick="nlShowTab('planning')" data-nltab="planning"
+                    <button onclick="nlShowTab('planning')" data-nltab="planning" title="Prototypes et outils annexes (audio)"
                         class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
-                        <i class="fas fa-calendar-alt mr-1.5"></i>Planning
+                        <i class="fas fa-flask mr-1.5"></i>Outils
                     </button>
                     <button onclick="nlShowTab('social')" data-nltab="social"
                         class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
@@ -3008,21 +3008,6 @@
 
             <!-- TAB PLANNING -->
             <div id="nl-tab-planning" class="nl-tab-content hidden">
-                <section class="mb-10">
-                    <div class="flex items-center justify-between mb-6">
-                        <div>
-                            <h4 class="cormorant text-xl font-bold text-gold">Planning éditorial</h4>
-                            <p class="text-light-gold/50 text-sm mt-1">Newsletters programmées et brouillons en cours</p>
-                        </div>
-                        <button onclick="loadPlanning()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition">
-                            <i class="fas fa-sync-alt mr-1"></i>Actualiser
-                        </button>
-                    </div>
-                    <div id="planning-list" class="space-y-3">
-                        <p class="text-light-gold/40 text-sm text-center py-8">Chargement…</p>
-                    </div>
-                </section>
-
                 <!-- Prototype livret audio -->
                 <section class="mb-10">
                     <div class="mb-4">
@@ -8083,7 +8068,6 @@
             if (name === 'scheduled') nlRenderScheduled();
             if (name === 'sent') { nlRenderSent(); nlLoadCampaignStats(); }
             if (name === 'testers') nlLoadTesters();
-            if (name === 'planning') loadPlanning();
             if (name === 'parcours') { nlLoadParcours(); nlLoadParcoursStatus(); }
             if (name === 'social') nlLoadSocialPosts();
         }
@@ -12513,93 +12497,6 @@
                 show('Erreur : ' + e.message, 'text-red-400/80');
             } finally {
                 btn.disabled = false;
-            }
-        }
-
-        async function loadPlanning() {
-            const el = document.getElementById('planning-list');
-            if (!el) return;
-            el.innerHTML = '<p class="text-light-gold/40 text-sm text-center py-8">Chargement…</p>';
-            try {
-                const res = await adminFetch('/api/admin/newsletter?action=drafts');
-                const data = await res.json();
-                const drafts = data.drafts || data || [];
-                const scheduled = drafts.filter(d => d.scheduled_at && d.statut !== 'envoyé');
-                const pending   = drafts.filter(d => !d.scheduled_at && d.statut !== 'envoyé');
-
-                let html = `<p class="text-gold/70 text-xs uppercase tracking-widest mb-2"><i class="fas fa-clock mr-1"></i>Programmées (${scheduled.length})</p>`;
-                if (scheduled.length === 0) {
-                    html += `<div class="border border-dashed border-gold/20 rounded-xl p-5 text-center">
-                        <p class="text-light-gold/40 text-sm">Aucune newsletter programmée pour l'instant.</p>
-                        <p class="text-light-gold/25 text-xs mt-1">Ouvre un brouillon ci-dessous puis utilise « Programmer l'envoi » dans Newsletter &amp; Réseaux.</p>
-                    </div>`;
-                } else {
-                    html += scheduled.map(d => {
-                        const dt = new Date(d.scheduled_at);
-                        const dateStr = dt.toLocaleString('fr-FR', { weekday:'long', day:'2-digit', month:'long', hour:'2-digit', minute:'2-digit' });
-                        return `<div class="stat-card rounded-xl p-4 flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full bg-gold/15 flex items-center justify-center shrink-0"><i class="fas fa-clock text-gold"></i></div>
-                            <div class="flex-1 min-w-0">
-                                <p class="text-light-gold font-semibold truncate">${d.subject || '(sans objet)'}</p>
-                                <p class="text-gold/70 text-xs mt-0.5"><i class="fas fa-calendar mr-1"></i>${dateStr}</p>
-                            </div>
-                            <button onclick="nlOpenDraft('${d.id}')" class="text-xs bg-gold/20 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/30 transition shrink-0">Ouvrir</button>
-                        </div>`;
-                    }).join('');
-                }
-
-                html += `<p class="text-light-gold/50 text-xs uppercase tracking-widest mt-6 mb-2"><i class="fas fa-file-alt mr-1"></i>Brouillons non programmés (${pending.length})</p>`;
-                if (pending.length === 0) {
-                    html += `<div class="border border-dashed border-gold/10 rounded-xl p-5 text-center">
-                        <p class="text-light-gold/30 text-sm">Aucun brouillon en attente.</p>
-                    </div>`;
-                } else {
-                    html += pending.map(d => `<div class="bg-[rgba(5,20,40,0.4)] border border-gold/10 rounded-xl p-4 flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-white/5 flex items-center justify-center shrink-0"><i class="fas fa-file-alt text-light-gold/40"></i></div>
-                        <div class="flex-1 min-w-0">
-                            <p class="text-light-gold/70 truncate">${d.subject || '(sans objet)'}</p>
-                            <p class="text-light-gold/30 text-xs mt-0.5">Brouillon</p>
-                        </div>
-                        <button onclick="nlOpenDraft('${d.id}')" class="text-xs bg-white/5 text-light-gold/60 border border-white/10 rounded-lg px-3 py-1.5 hover:bg-white/10 transition shrink-0">Ouvrir</button>
-                    </div>`).join('');
-                }
-
-                // ── Publications sociales : résumé + lien vers l'onglet dédié "Réseaux
-                // sociaux" (gestion complète : programmés, historique, archivage) plutôt
-                // qu'une deuxième implémentation en parallèle ici.
-                try {
-                    const resSoc = await adminFetch('/api/admin/social-posts');
-                    const dataSoc = await resSoc.json();
-                    const socialScheduled = (dataSoc.posts || []).filter(p => p.statut === 'programmé');
-                    html += `<div class="flex items-center justify-between mt-6 mb-2">
-                        <p class="text-purple-300/70 text-xs uppercase tracking-widest"><i class="fas fa-share-alt mr-1"></i>Réseaux sociaux programmés (${socialScheduled.length})</p>
-                        <button onclick="showTab('newsletter'); nlShowTab('social');" class="text-xs text-gold/60 hover:text-gold underline underline-offset-2">Voir le détail →</button>
-                    </div>`;
-                    if (socialScheduled.length === 0) {
-                        html += `<div class="border border-dashed border-purple-400/20 rounded-xl p-5 text-center">
-                            <p class="text-light-gold/30 text-sm">Aucune publication Facebook/Instagram/LinkedIn programmée.</p>
-                            <p class="text-light-gold/20 text-xs mt-1">Le parcours et les newsletters promo publient automatiquement à l'envoi (pas de programmation à l'avance) — programme une publication manuelle depuis « Générer » &gt; « Publier sur les réseaux » pour en voir ici.</p>
-                        </div>`;
-                    } else {
-                        html += socialScheduled.map(p => {
-                            const dt = new Date(p.scheduled_at);
-                            const dateStr = dt.toLocaleString('fr-FR', { weekday:'long', day:'2-digit', month:'long', hour:'2-digit', minute:'2-digit' });
-                            const overdue = dt.getTime() < Date.now();
-                            return `<div class="stat-card rounded-xl p-4 flex items-center gap-4 ${overdue ? 'border border-red-500/40' : ''}">
-                                <div class="w-10 h-10 rounded-full ${overdue ? 'bg-red-500/15' : 'bg-purple-500/15'} flex items-center justify-center shrink-0"><i class="fas fa-share-alt ${overdue ? 'text-red-300' : 'text-purple-300'}"></i></div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-light-gold font-semibold truncate">${p.subject || '(sans sujet)'}</p>
-                                    <p class="text-purple-300/70 text-xs mt-0.5"><i class="fas fa-calendar mr-1"></i>${dateStr}</p>
-                                    ${overdue ? '<p class="text-red-300 text-xs mt-1 font-semibold"><i class="fas fa-triangle-exclamation mr-1"></i>En retard — non publié</p>' : ''}
-                                </div>
-                            </div>`;
-                        }).join('');
-                    }
-                } catch (_) { /* table pas encore créée, on ignore silencieusement */ }
-
-                el.innerHTML = `<div class="space-y-3">${html}</div>`;
-            } catch(e) {
-                el.innerHTML = '<p class="text-red-400/60 text-sm text-center py-8">Erreur de chargement</p>';
             }
         }
 
