@@ -3497,6 +3497,29 @@
             </div>
             <p id="analytics-error" class="hidden text-xs text-red-300 bg-red-500/10 border border-red-500/30 rounded-lg px-3 py-2 mb-4"></p>
 
+            <!-- Sous-onglets : tout se charge en un seul passage (loadAnalytics), ce ne sont
+                 que des groupes d'affichage pour ne pas tout avoir dans un seul long scroll. -->
+            <div class="flex gap-1 mb-6 border-b border-gold/20 pb-0">
+                <button onclick="showAnalyticsSubTab('traffic')" id="analytics-subtab-btn-traffic"
+                    class="analytics-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-gold text-gold bg-gold/10 transition">
+                    <i class="fas fa-chart-line mr-1.5"></i>Trafic
+                </button>
+                <button onclick="showAnalyticsSubTab('newsletter')" id="analytics-subtab-btn-newsletter"
+                    class="analytics-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                    <i class="fas fa-envelope-open-text mr-1.5"></i>Newsletter
+                </button>
+                <button onclick="showAnalyticsSubTab('conversion')" id="analytics-subtab-btn-conversion"
+                    class="analytics-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                    <i class="fas fa-filter mr-1.5"></i>Conversion
+                </button>
+                <button onclick="showAnalyticsSubTab('quantum')" id="analytics-subtab-btn-quantum"
+                    class="analytics-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                    <i class="fas fa-atom mr-1.5"></i>Quantique
+                </button>
+            </div>
+
+            <!-- ══ SOUS-ONGLET : TRAFIC ══ -->
+            <div id="analytics-subtab-traffic" class="analytics-subtab">
             <!-- KPIs trafic -->
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-6" id="analytics-kpis">
                 <div class="stat-card rounded-xl p-4 text-center">
@@ -3512,61 +3535,6 @@
                 <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-blue-300" id="ana-pages-per-visit">—</div><p class="text-gold/50 text-xs mt-1">Pages / visite</p></div>
                 <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-yellow-400" id="ana-bounce">—</div><p class="text-gold/50 text-xs mt-1">Taux de rebond</p></div>
                 <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-light-gold" id="ana-top-page">—</div><p class="text-gold/50 text-xs mt-1">Page la + visitée</p></div>
-            </div>
-
-            <!-- Impact des campagnes newsletter (Brevo) — déplacé depuis Newsletter & Réseaux >
-                 Envoyées : c'est une mesure de performance, elle vit avec les autres analytiques
-                 plutôt que dans l'onglet de gestion/rédaction des newsletters. -->
-            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6 mb-6">
-                <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-                    <div>
-                        <h4 class="cormorant text-xl text-gold">Impact des campagnes newsletter</h4>
-                        <p class="text-light-gold/40 text-xs mt-0.5">Ouvertures et clics mesurés par Brevo sur les dernières campagnes envoyées.</p>
-                    </div>
-                    <div class="flex gap-2">
-                        <button onclick="nlLoadCampaignStats()" class="text-xs bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-2 hover:bg-gold/25 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
-                        <button onclick="nlAnalyzeCampaignStats()" id="nl-stats-analyze-btn" class="text-xs bg-gradient-to-r from-purple-600/70 to-pink-600/70 text-white rounded-lg px-3 py-2 hover:from-purple-500/70 hover:to-pink-500/70 transition"><i class="fas fa-wand-magic-sparkles mr-1"></i>Analyse IA</button>
-                    </div>
-                </div>
-                <div id="nl-campaign-stats" class="space-y-2">
-                    <p class="text-gold/30 italic text-center py-4 text-sm">Clique sur Actualiser pour charger les statistiques.</p>
-                </div>
-                <div id="nl-stats-analysis" class="hidden mt-5 border-t border-gold/15 pt-5">
-                    <p class="text-gold/60 text-xs uppercase tracking-widest mb-3"><i class="fas fa-lightbulb mr-1"></i>Pistes d'amélioration (IA)</p>
-                    <div id="nl-stats-analysis-content" class="text-light-gold/80 text-sm leading-relaxed whitespace-pre-wrap"></div>
-                </div>
-            </div>
-
-            <!-- Usage quantique (Outshift principal, ANU en secours) -->
-            <div class="stat-card rounded-2xl p-4 mb-6">
-                <div class="flex items-center justify-between gap-3 mb-2 flex-wrap">
-                    <h4 class="text-gold font-semibold flex items-center gap-2 text-sm"><i class="fas fa-atom text-gold/60"></i> Usage quantique du mois</h4>
-                    <span class="text-gold/40 text-xs" id="qrng-month">—</span>
-                </div>
-                <div class="flex items-end gap-6 flex-wrap">
-                    <!-- Outshift : source principale, mis en avant -->
-                    <div>
-                        <div class="text-3xl font-bold text-teal-300" id="qrng-outshift">—</div>
-                        <div class="text-gold/40 text-xs uppercase">Outshift (principale)</div>
-                    </div>
-                    <!-- ANU : secours, quota réel mais discret -->
-                    <div class="border-l border-gold/10 pl-6">
-                        <div><span class="text-lg font-bold text-gold/70" id="qrng-anu">—</span><span class="text-gold/40 text-sm" id="qrng-quota-label"></span></div>
-                        <div class="text-gold/40 text-xs uppercase">ANU (secours)</div>
-                        <div class="w-20 h-1.5 rounded-full bg-white/10 overflow-hidden mt-1"><div id="qrng-bar" class="h-full rounded-full bg-gradient-to-r from-teal-400 to-teal-300 transition-all duration-500" style="width:0%"></div></div>
-                    </div>
-                    <div class="border-l border-gold/10 pl-6">
-                        <div class="text-lg font-bold text-red-400" id="qrng-fallback">—</div>
-                        <div class="text-gold/40 text-xs uppercase">Fallback</div>
-                    </div>
-                    <div class="border-l border-gold/10 pl-6 ml-auto text-right">
-                        <div class="text-gold/40 text-xs uppercase">Dernière interrogation</div>
-                        <div class="text-sm text-gold/80" id="qrng-last-call">—</div>
-                    </div>
-                </div>
-
-                <div id="qrng-warning" class="hidden text-amber-300/90 text-xs bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2 mt-3"></div>
-                <div id="qrng-fallback-reasons" class="text-gold/50 text-xs mt-2"></div>
             </div>
 
             <!-- Analyse IA -->
@@ -3625,7 +3593,36 @@
                     <div id="analytics-timing"></div>
                 </div>
             </div>
+            </div><!-- /analytics-subtab-traffic -->
 
+            <!-- ══ SOUS-ONGLET : NEWSLETTER ══ -->
+            <div id="analytics-subtab-newsletter" class="analytics-subtab hidden">
+            <!-- Impact des campagnes newsletter (Brevo) — déplacé depuis Newsletter & Réseaux >
+                 Envoyées : c'est une mesure de performance, elle vit avec les autres analytiques
+                 plutôt que dans l'onglet de gestion/rédaction des newsletters. -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6">
+                <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                    <div>
+                        <h4 class="cormorant text-xl text-gold">Impact des campagnes newsletter</h4>
+                        <p class="text-light-gold/40 text-xs mt-0.5">Ouvertures et clics mesurés par Brevo sur les dernières campagnes envoyées.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="nlLoadCampaignStats()" class="text-xs bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-2 hover:bg-gold/25 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
+                        <button onclick="nlAnalyzeCampaignStats()" id="nl-stats-analyze-btn" class="text-xs bg-gradient-to-r from-purple-600/70 to-pink-600/70 text-white rounded-lg px-3 py-2 hover:from-purple-500/70 hover:to-pink-500/70 transition"><i class="fas fa-wand-magic-sparkles mr-1"></i>Analyse IA</button>
+                    </div>
+                </div>
+                <div id="nl-campaign-stats" class="space-y-2">
+                    <p class="text-gold/30 italic text-center py-4 text-sm">Clique sur Actualiser pour charger les statistiques.</p>
+                </div>
+                <div id="nl-stats-analysis" class="hidden mt-5 border-t border-gold/15 pt-5">
+                    <p class="text-gold/60 text-xs uppercase tracking-widest mb-3"><i class="fas fa-lightbulb mr-1"></i>Pistes d'amélioration (IA)</p>
+                    <div id="nl-stats-analysis-content" class="text-light-gold/80 text-sm leading-relaxed whitespace-pre-wrap"></div>
+                </div>
+            </div>
+            </div><!-- /analytics-subtab-newsletter -->
+
+            <!-- ══ SOUS-ONGLET : CONVERSION ══ -->
+            <div id="analytics-subtab-conversion" class="analytics-subtab hidden">
             <!-- Funnel de conversion -->
             <div class="stat-card rounded-2xl p-6">
                 <h4 class="text-gold font-semibold mb-1 flex items-center gap-2"><i class="fas fa-filter text-gold/60"></i> Funnel de conversion — Tirage Tore</h4>
@@ -3634,6 +3631,42 @@
                     <p class="text-gold/30 italic text-sm text-center py-4">Chargement…</p>
                 </div>
             </div>
+            </div><!-- /analytics-subtab-conversion -->
+
+            <!-- ══ SOUS-ONGLET : QUANTIQUE ══ -->
+            <div id="analytics-subtab-quantum" class="analytics-subtab hidden">
+            <!-- Usage quantique (Outshift principal, ANU en secours) -->
+            <div class="stat-card rounded-2xl p-4">
+                <div class="flex items-center justify-between gap-3 mb-2 flex-wrap">
+                    <h4 class="text-gold font-semibold flex items-center gap-2 text-sm"><i class="fas fa-atom text-gold/60"></i> Usage quantique du mois</h4>
+                    <span class="text-gold/40 text-xs" id="qrng-month">—</span>
+                </div>
+                <div class="flex items-end gap-6 flex-wrap">
+                    <!-- Outshift : source principale, mis en avant -->
+                    <div>
+                        <div class="text-3xl font-bold text-teal-300" id="qrng-outshift">—</div>
+                        <div class="text-gold/40 text-xs uppercase">Outshift (principale)</div>
+                    </div>
+                    <!-- ANU : secours, quota réel mais discret -->
+                    <div class="border-l border-gold/10 pl-6">
+                        <div><span class="text-lg font-bold text-gold/70" id="qrng-anu">—</span><span class="text-gold/40 text-sm" id="qrng-quota-label"></span></div>
+                        <div class="text-gold/40 text-xs uppercase">ANU (secours)</div>
+                        <div class="w-20 h-1.5 rounded-full bg-white/10 overflow-hidden mt-1"><div id="qrng-bar" class="h-full rounded-full bg-gradient-to-r from-teal-400 to-teal-300 transition-all duration-500" style="width:0%"></div></div>
+                    </div>
+                    <div class="border-l border-gold/10 pl-6">
+                        <div class="text-lg font-bold text-red-400" id="qrng-fallback">—</div>
+                        <div class="text-gold/40 text-xs uppercase">Fallback</div>
+                    </div>
+                    <div class="border-l border-gold/10 pl-6 ml-auto text-right">
+                        <div class="text-gold/40 text-xs uppercase">Dernière interrogation</div>
+                        <div class="text-sm text-gold/80" id="qrng-last-call">—</div>
+                    </div>
+                </div>
+
+                <div id="qrng-warning" class="hidden text-amber-300/90 text-xs bg-amber-500/10 border border-amber-500/25 rounded-lg px-3 py-2 mt-3"></div>
+                <div id="qrng-fallback-reasons" class="text-gold/50 text-xs mt-2"></div>
+            </div>
+            </div><!-- /analytics-subtab-quantum -->
         </section>
         </div><!-- /tab-analytics -->
 
@@ -5042,6 +5075,24 @@
             }
             document.getElementById('quotes-subtab-plan').classList.toggle('hidden', name !== 'plan');
             document.getElementById('quotes-subtab-devis').classList.toggle('hidden', name !== 'devis');
+        }
+
+        // ── Sous-onglets Analytiques (Trafic / Newsletter / Conversion / Quantique) ──
+        // Purement de l'affichage : tout se charge en un seul passage (loadAnalytics),
+        // pas de rechargement par sous-onglet.
+        function showAnalyticsSubTab(name) {
+            document.querySelectorAll('.analytics-subtab-btn').forEach(b => {
+                b.classList.remove('border-gold', 'text-gold', 'bg-gold/10');
+                b.classList.add('border-transparent', 'text-gold/50');
+            });
+            const activeBtn = document.getElementById('analytics-subtab-btn-' + name);
+            if (activeBtn) {
+                activeBtn.classList.add('border-gold', 'text-gold', 'bg-gold/10');
+                activeBtn.classList.remove('border-transparent', 'text-gold/50');
+            }
+            document.querySelectorAll('.analytics-subtab').forEach(el => {
+                el.classList.toggle('hidden', el.id !== 'analytics-subtab-' + name);
+            });
         }
 
         // Depuis le Plan de fabrication : bascule sur "Devis & comparateur" et centre la carte du fournisseur
