@@ -3765,11 +3765,24 @@
         <!-- ══ ONGLET : COMPTABILITÉ ══ -->
         <div id="tab-comptabilite" class="tab-panel">
         <section class="mb-10">
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-6">
-                <div>
-                    <h3 class="cormorant text-2xl font-bold text-gold">Comptabilité</h3>
-                    <p class="text-light-gold/50 text-sm mt-1">Recettes, dépenses et déclarations URSSAF</p>
-                </div>
+            <div class="mb-6">
+                <h3 class="cormorant text-2xl font-bold text-gold">Comptabilité</h3>
+                <p class="text-light-gold/50 text-sm mt-1">Recettes, dépenses et déclarations URSSAF</p>
+            </div>
+
+            <div class="flex gap-1 mb-6 border-b border-gold/20 pb-0">
+                <button onclick="showComptaSubTab('transactions')" id="compta-subtab-btn-transactions"
+                    class="compta-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-gold text-gold bg-gold/10 transition">
+                    <i class="fas fa-euro-sign mr-1.5"></i>Recettes & dépenses
+                </button>
+                <button onclick="showComptaSubTab('costs')" id="compta-subtab-btn-costs"
+                    class="compta-subtab-btn px-5 py-2.5 text-sm font-semibold rounded-t-lg border-b-2 border-transparent text-gold/50 hover:text-gold/80 transition">
+                    <i class="fas fa-server mr-1.5"></i>Coûts du site
+                </button>
+            </div>
+
+            <div id="compta-subtab-transactions">
+            <div class="flex flex-wrap items-center justify-end gap-3 mb-6">
                 <div class="flex items-center gap-2 flex-wrap">
                     <select id="compta-year" onchange="loadComptabilite()" class="bg-white/5 border border-gold/20 text-gold/80 rounded-lg px-3 py-2 text-sm">
                         <option value="2026">2026</option><option value="2025">2025</option>
@@ -3903,9 +3916,10 @@
             <div id="compta-list" class="space-y-2 mb-10">
                 <p class="text-gold/30 text-sm italic text-center py-8">Chargement…</p>
             </div>
+            </div><!-- /compta-subtab-transactions -->
 
             <!-- ── Coûts du site (frais techniques + abonnements) ── -->
-            <div class="border-t border-gold/10 pt-8 mt-4">
+            <div id="compta-subtab-costs" class="hidden">
                 <div class="flex items-center justify-between mb-6">
                     <div>
                         <h3 class="cormorant text-xl font-bold text-gold">Coûts du site</h3>
@@ -3985,7 +3999,7 @@
                     <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider">Abonnements & frais fixes</h4>
                     <div id="costsSubscriptions" class="space-y-3 text-sm text-light-gold/70">—</div>
                 </div>
-            </div>
+            </div><!-- /compta-subtab-costs -->
         </section>
         </div><!-- /tab-comptabilite -->
 
@@ -4528,6 +4542,17 @@
             if (name === 'exports')        renderExports();
             if (name === 'settings')       { loadSettings(); loadFeatureFlags(); }
             if (name === 'blog')           blogLoadList();
+        }
+
+        // Sous-onglets de Comptabilité : "Recettes & dépenses" (transactions, URSSAF) vs
+        // "Coûts du site" (frais techniques API/abonnements) — deux univers différents
+        // mélangés dans la même page auparavant.
+        function showComptaSubTab(name) {
+            document.querySelectorAll('.compta-subtab-btn').forEach(b => { b.classList.remove('border-gold','text-gold','bg-gold/10'); b.classList.add('border-transparent','text-gold/50'); });
+            const activeBtn = document.getElementById('compta-subtab-btn-' + name);
+            if (activeBtn) { activeBtn.classList.add('border-gold','text-gold','bg-gold/10'); activeBtn.classList.remove('border-transparent','text-gold/50'); }
+            document.getElementById('compta-subtab-transactions')?.classList.toggle('hidden', name !== 'transactions');
+            document.getElementById('compta-subtab-costs')?.classList.toggle('hidden', name !== 'costs');
         }
 
         // Sous-onglets de Précommandes : "Précommandes directes" (Stripe/Mondial Relay) vs
