@@ -3043,6 +3043,16 @@
                         </div>
                         <button onclick="nlLoadSocialPosts()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
                     </div>
+                    <div class="flex gap-1 bg-white/5 border border-gold/15 rounded-xl p-1 mb-5 w-fit">
+                        <button onclick="setSocialSubTab('upcoming')" data-socialsubtab="upcoming"
+                            class="social-subtab-btn bg-gold text-night-blue px-4 py-1.5 rounded-lg font-semibold text-sm">
+                            <i class="fas fa-clock mr-1.5"></i>À venir
+                        </button>
+                        <button onclick="setSocialSubTab('history')" data-socialsubtab="history"
+                            class="social-subtab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
+                            <i class="fas fa-clock-rotate-left mr-1.5"></i>Historique
+                        </button>
+                    </div>
                     <div id="socialPostsList" class="space-y-4">
                         <p class="text-light-gold/40 text-sm text-center py-8">Chargement…</p>
                     </div>
@@ -10132,6 +10142,7 @@
         // ── Réseaux sociaux (Facebook/Instagram/LinkedIn) — table social_posts ─────
         let nlSocialPosts = [];
         let nlSocialShowArchived = false;
+        let socialSubTab = 'upcoming';
         async function nlLoadSocialPosts() {
             const container = document.getElementById('socialPostsList');
             try {
@@ -10145,6 +10156,17 @@
             }
         }
 
+        function setSocialSubTab(tab) {
+            socialSubTab = tab;
+            document.querySelectorAll('.social-subtab-btn').forEach(btn => {
+                const active = btn.dataset.socialsubtab === tab;
+                btn.className = active
+                    ? 'social-subtab-btn bg-gold text-night-blue px-4 py-1.5 rounded-lg font-semibold text-sm'
+                    : 'social-subtab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition';
+            });
+            nlRenderSocialPosts();
+        }
+
         function nlToggleSocialArchived() {
             nlSocialShowArchived = !nlSocialShowArchived;
             nlRenderSocialPosts();
@@ -10154,15 +10176,19 @@
             const container = document.getElementById('socialPostsList');
             if (!container) return;
             const list = nlSocialPosts
-                .filter(p => nlSocialShowArchived ? true : !p.archived)
+                .filter(p => socialSubTab === 'upcoming' ? p.statut === 'programmé' : (p.statut === 'envoyé' || p.statut === 'échec'))
+                .filter(p => socialSubTab === 'upcoming' ? true : (nlSocialShowArchived ? true : !p.archived))
                 .sort((a, b) => new Date(b.scheduled_at || b.sent_at || b.created_at) - new Date(a.scheduled_at || a.sent_at || a.created_at));
 
-            const toggleBtn = `<div class="flex justify-end mb-2">
+            const toggleBtn = socialSubTab === 'history' ? `<div class="flex justify-end mb-2">
                 <button onclick="nlToggleSocialArchived()" class="text-xs text-gold/50 hover:text-gold underline underline-offset-2">${nlSocialShowArchived ? 'Masquer les archivés' : 'Voir les archivés'}</button>
-            </div>`;
+            </div>` : '';
 
             if (!list.length) {
-                container.innerHTML = toggleBtn + `<p class="text-light-gold/30 text-center py-8 cormorant text-lg">Aucune publication ${nlSocialShowArchived ? 'archivée' : 'pour l\'instant'}</p>`;
+                const emptyMsg = socialSubTab === 'upcoming'
+                    ? "Aucune publication programmée à venir. Le parcours et les newsletters promo publient automatiquement à l'envoi (sans programmation à l'avance) — utilise « Réseaux » sur une étape du Parcours pour en avoir un aperçu."
+                    : `Aucune publication ${nlSocialShowArchived ? 'archivée' : "envoyée pour l'instant"}.`;
+                container.innerHTML = toggleBtn + `<p class="text-light-gold/30 text-center py-8 cormorant text-lg">${emptyMsg}</p>`;
                 return;
             }
 
@@ -10191,7 +10217,7 @@
                         <div class="flex gap-2 shrink-0">
                             ${p.statut === 'programmé' ? `<button onclick="nlSocialPublishNow('${p.id}')" class="text-xs bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/25 transition"><i class="fas fa-paper-plane mr-1"></i>Publier maintenant</button>` : ''}
                             ${p.statut === 'programmé' ? `<button onclick="nlSocialMarkPublished('${p.id}')" title="Déjà publié manuellement / via Make.com" class="text-xs bg-white/5 text-light-gold/60 border border-gold/20 rounded-lg px-3 py-1.5 hover:bg-white/10 transition"><i class="fas fa-check mr-1"></i>Marquer publié</button>` : ''}
-                            <button onclick="nlSocialSetArchived('${p.id}', ${!p.archived})" class="text-xs bg-white/5 text-light-gold/60 border border-gold/20 rounded-lg px-3 py-1.5 hover:bg-white/10 transition"><i class="fas fa-box-archive mr-1"></i>${p.archived ? 'Désarchiver' : 'Archiver'}</button>
+                            ${p.statut !== 'programmé' ? `<button onclick="nlSocialSetArchived('${p.id}', ${!p.archived})" class="text-xs bg-white/5 text-light-gold/60 border border-gold/20 rounded-lg px-3 py-1.5 hover:bg-white/10 transition"><i class="fas fa-box-archive mr-1"></i>${p.archived ? 'Désarchiver' : 'Archiver'}</button>` : ''}
                             ${p.statut === 'programmé' ? `<button onclick="nlSocialDelete('${p.id}')" class="text-xs bg-red-500/10 text-red-300 border border-red-500/30 rounded-lg px-3 py-1.5 hover:bg-red-500/20 transition"><i class="fas fa-trash mr-1"></i>Supprimer</button>` : ''}
                         </div>
                     </div>
