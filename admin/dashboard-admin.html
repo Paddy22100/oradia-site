@@ -10113,12 +10113,13 @@
                 incarnee: 'bg-teal-500/20 text-teal-300 border-teal-500/30',
                 lucide:   'bg-blue-500/20 text-blue-300 border-blue-500/30'
             };
-            // Estimation de la date d'envoi pour les étapes en file : le parcours individuel
-            // n'a pas de date d'envoi unique (chaque abonné reçoit la prochaine étape due selon
-            // sa propre cadence hebdomadaire), mais dans la pratique la quasi-totalité des
-            // abonnés avancent au même rythme — un envoi par mercredi. On estime donc la date de
-            // chaque étape en file en cascadant +7 jours depuis le dernier envoi réel (ou le
-            // prochain mercredi si rien n'a encore été envoyé), dans l'ordre réel d'envoi (ordre).
+            // Date d'envoi pour les étapes en file : le cron du parcours individuel tourne
+            // uniquement le mercredi à 19h (heure de Paris) — jamais un autre jour — donc le jour
+            // et l'heure sont fixes, pas une estimation. Ce qui reste incertain, c'est SI une
+            // étape sera bien celle envoyée ce mercredi-là : ça suppose qu'elle soit validée à
+            // temps. La toute prochaine étape (déjà validée, en tête de file) a donc une date
+            // ferme ; toutes celles d'après — et toute étape encore "à valider" — dépendent de la
+            // validation de ce qui les précède, cascadée +7 jours à partir du dernier envoi réel.
             const nextWednesday = (from) => {
                 const d = new Date(from);
                 d.setDate(d.getDate() + ((3 - d.getDay() + 7) % 7 || 7));
@@ -10127,13 +10128,15 @@
             const sentDates = nlParcours.filter(d => d.statut === 'envoyé' && d.sent_at).map(d => new Date(d.sent_at));
             const lastSent = sentDates.length ? new Date(Math.max(...sentDates)) : null;
             const estimatedDates = new Map();
+            let firmDateId = null;
             let cursor = lastSent ? nextWednesday(lastSent) : nextWednesday(new Date());
-            nlParcours.filter(d => d.statut !== 'envoyé' && (d.extra || {}).canal === 'parcours')
-                .sort((a, b) => (Number(a.extra?.ordre) || 0) - (Number(b.extra?.ordre) || 0))
-                .forEach(d => {
-                    estimatedDates.set(d.id, new Date(cursor));
-                    cursor = new Date(cursor.getTime() + 7 * 86400000);
-                });
+            const queuedSteps = nlParcours.filter(d => d.statut !== 'envoyé' && (d.extra || {}).canal === 'parcours')
+                .sort((a, b) => (Number(a.extra?.ordre) || 0) - (Number(b.extra?.ordre) || 0));
+            queuedSteps.forEach((d, i) => {
+                estimatedDates.set(d.id, new Date(cursor));
+                if (i === 0 && d.extra?.parcours_valide === true) firmDateId = d.id;
+                cursor = new Date(cursor.getTime() + 7 * 86400000);
+            });
             tbody.innerHTML = nlParcours.map((d) => {
                 const extra = d.extra || {};
                 const isStep = extra.canal === 'parcours';
@@ -10164,12 +10167,13 @@
                 } else {
                     statutBadge = `<span class="text-xs px-2 py-0.5 rounded-full bg-gold/10 text-gold/60 border border-gold/20">Brouillon</span>`;
                 }
-                // Envoyée : vraie date (sent_at). En file : date ESTIMÉE (voir estimatedDates
-                // ci-dessus, cascade +7j depuis le dernier envoi réel) — le parcours individuel
-                // n'a pas de date d'envoi unique garantie, donc toujours marquée "estimé".
+                // Envoyée : vraie date. En tête de file et déjà validée : date FERME (le cron ne
+                // tourne que le mercredi 19h, donc le jour/heure sont fixes une fois la validation
+                // faite). Plus loin dans la file, ou pas encore validée : dépend de la validation
+                // de ce qui précède, donc marqué comme projection ("~").
                 const estDate = estimatedDates.get(d.id);
                 const dateVal = d.sent_at || estDate;
-                const dateLabel = !isQueued ? 'Envoyée le' : '~ Estimé pour le';
+                const dateLabel = !isQueued ? 'Envoyée le' : (d.id === firmDateId ? 'Envoi prévu le' : '~ Si validée à temps, vers le');
                 const validateBtn = (isQueued && isStep && extra.parcours_valide !== true)
                     ? `<button onclick="nlValidateParcours('${d.id}')" class="text-xs bg-orange-500/15 text-orange-300 border border-orange-500/30 rounded-lg px-3 py-1.5 hover:bg-orange-500/25 transition mr-1"><i class="fas fa-check mr-1"></i>Valider</button>`
                     : '';
@@ -10177,7 +10181,7 @@
                     <td class="px-6 py-4">${ordreCell}</td>
                     <td class="px-6 py-4">${statutBadge}</td>
                     <td class="px-6 py-4 text-light-gold text-sm">${escapeHtmlFront(d.subject || '—')}</td>
-                    <td class="px-6 py-4 text-light-gold/60 text-xs">${dateVal ? `${dateLabel} ${new Date(dateVal).toLocaleDateString('fr-FR')}` : '—'}</td>
+                    <td class="px-6 py-4 text-light-gold/60 text-xs">${dateVal ? `${dateLabel} ${new Date(dateVal).toLocaleDateString('fr-FR')}${isQueued ? ' 19h' : ''}` : '—'}</td>
                     <td class="px-6 py-4">${isStep ? `<span class="text-xs px-2 py-0.5 rounded-full border ${registreCls}">${escapeHtmlFront(extra.registre || '—')}</span>` : '<span class="text-gold/20 text-xs">—</span>'}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         ${validateBtn}<button onclick="nlOpenDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition mr-1"><i class="fas fa-pen mr-1"></i>Modifier</button><button onclick="nlPreviewDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition mr-1"><i class="fas fa-eye mr-1"></i>Prévisualiser</button><button onclick="nlPreviewSocialFromParcours('${d.id}')" title="Générer et voir l'aperçu Facebook/Instagram/LinkedIn qui serait publié pour cette étape, sans rien publier" class="text-xs bg-purple-500/10 text-purple-300 border border-purple-500/30 rounded-lg px-3 py-1.5 hover:bg-purple-500/20 transition"><i class="fas fa-share-nodes mr-1"></i>Réseaux</button>
