@@ -95,9 +95,14 @@ async function ensureSafeSocialImageUrl(imageUrl) {
 // pour rester visuellement cohérent d'une publication à l'autre. Retourne null en cas d'échec
 // ou si OPENAI_API_KEY n'est pas configurée : le caller garde alors son image de repli
 // habituelle plutôt que de bloquer l'envoi.
+// Coût par image gpt-image-1, 1024x1024, quality "medium" — estimation, ajustable si le
+// tarif OpenAI change (voir env var), pas de coût réel exposé par l'API par appel.
+const OPENAI_IMAGE_COST_USD = parseFloat(process.env.OPENAI_IMAGE_COST_USD || '0.04');
+
 async function generateSocialImage({ subject, textContent }) {
   const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
   if (!OPENAI_API_KEY) return null;
+  const startedAt = Date.now();
   try {
     const excerpt = String(textContent || '').replace(/\s+/g, ' ').trim().slice(0, 400);
     const prompt = [
@@ -130,6 +135,18 @@ async function generateSocialImage({ subject, textContent }) {
     const { error: upErr } = await sb.storage.from('newsletter-uploads').upload(filename, buf, { contentType: 'image/png', upsert: false });
     if (upErr) throw new Error(upErr.message);
     const { data: { publicUrl } } = sb.storage.from('newsletter-uploads').getPublicUrl(filename);
+
+    try {
+      const { logApiUsage } = require('../../lib/api-usage-tracker.js');
+      await logApiUsage({
+        apiName: 'openai-images',
+        modelName: 'gpt-image-1',
+        costUsd: OPENAI_IMAGE_COST_USD,
+        status: 'success',
+        requestDurationMs: Date.now() - startedAt
+      });
+    } catch (_) {}
+
     return publicUrl;
   } catch (e) {
     console.error('[generateSocialImage] échec, image de repli conservée:', e.message);
@@ -3730,8 +3747,16 @@ async function handleData(req, res) {
         console.warn('[Admin Data] Erreur récupération stats API:', e.message);
       }
 
-      // Compter les tirages (utiliser les appels API réussis comme proxy, avec fallback)
-      let tiragesCount = apiStats.successfulCalls;
+      // Coûts OpenAI (images de publication + Livret audio), à part de Claude — mêmes appels
+      // que ceux loggés par generateSocialImage/generate-audio dans ce même fichier.
+      const openaiImagesStats = apiStats.byApi?.['openai-images'] || { calls: 0, successCalls: 0, costEur: 0 };
+      const openaiAudioStats  = apiStats.byApi?.['openai-audio']  || { calls: 0, successCalls: 0, costEur: 0 };
+      const openaiCostEur = (openaiImagesStats.costEur || 0) + (openaiAudioStats.costEur || 0);
+
+      // Compter les tirages (utiliser les appels Claude "tirage" réussis comme proxy, avec
+      // fallback) — scopé à l'api_name 'anthropic-claude' pour ne pas mélanger avec les autres
+      // usages de Claude (ex: analyze-intentions) ni avec les appels OpenAI ci-dessus.
+      let tiragesCount = (apiStats.byApi?.['anthropic-claude']?.successCalls) || 0;
       if (tiragesCount === 0) {
         // Fallback: compter depuis la table tirages
         const { count: fallbackCount, error: tiragesErr } = await supabase
@@ -3757,8 +3782,10 @@ async function handleData(req, res) {
         }
       }
 
-      // Utiliser le coût réel calculé depuis les tokens, avec fallback sur l'estimation
-      let claudeApiCostEstimate = apiStats.totalCostEur;
+      // Utiliser le coût réel calculé depuis les tokens, avec fallback sur l'estimation.
+      // totalCostEur - openaiCostEur : la table api_usage_logs est partagée entre Claude et
+      // OpenAI (images/audio), il faut retirer la part OpenAI pour ne pas la compter deux fois.
+      let claudeApiCostEstimate = (apiStats.totalCostEur || 0) - openaiCostEur;
       if (claudeApiCostEstimate === 0) {
         // Fallback: estimation basée sur le nombre de tirages si pas de données réelles
         const COST_PER_AI_CALL_USD = 0.0053;
@@ -3788,7 +3815,7 @@ async function handleData(req, res) {
         }
       ];
 
-      const totalMonthlyEstimate = claudeApiCostEstimate + CLAUDE_PRO_MONTHLY_EUR + gandiMonthlyEquivalent;
+      const totalMonthlyEstimate = claudeApiCostEstimate + openaiCostEur + CLAUDE_PRO_MONTHLY_EUR + gandiMonthlyEquivalent;
 
       return res.status(200).json({
         success: true,
@@ -3805,7 +3832,14 @@ async function handleData(req, res) {
             claudeApiErrors: apiStats.errorCalls || 0,
             claudeApiFallbacks: apiStats.fallbackCalls || 0,
             claudeModels: apiStats.byModel || {},
-            qrng: { anu: qrngAnu, fallback: qrngFallback, costEur: 0 } // l'API ANU QRNG est gratuite
+            qrng: { anu: qrngAnu, fallback: qrngFallback, costEur: 0 }, // l'API ANU QRNG est gratuite
+            openai: {
+              imagesCalls: openaiImagesStats.calls || 0,
+              imagesCostEur: Math.round((openaiImagesStats.costEur || 0) * 100) / 100,
+              audioCalls: openaiAudioStats.calls || 0,
+              audioCostEur: Math.round((openaiAudioStats.costEur || 0) * 100) / 100,
+              totalCostEur: Math.round(openaiCostEur * 100) / 100
+            }
           },
           subscriptions,
           totalMonthlyEstimateEur: Math.round(totalMonthlyEstimate * 100) / 100
@@ -6351,6 +6385,56 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
         return res.status(200).json({ success: true });
       }
 
+      // ── Illustre une étape du parcours pas encore validée : génère deux images via
+      // generateSocialImage (même API OpenAI gpt-image-1 que les publications réseaux
+      // sociaux, cf. commit 66688a4) et les place dans le corps de l'email — une avant
+      // le premier paragraphe (tout en début de mail) et une avant le paragraphe situé
+      // aux 3/4 du texte. N'écrase jamais des images déjà présentes sur le brouillon :
+      // rejoué sur une étape déjà illustrée, l'appel est un no-op (skipped:true) plutôt
+      // que d'empiler des doublons ou de regénérer inutilement (coût API).
+      if (action === 'add-parcours-image') {
+        const { id } = body;
+        if (!id) return res.status(400).json({ error: 'id requis' });
+        const { data: draft, error: fetchErr } = await supabase
+          .from('newsletter_drafts').select('*').eq('id', id).maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (!draft) return res.status(404).json({ error: 'Brouillon introuvable' });
+        if (draft.extra?.canal !== 'parcours') {
+          return res.status(400).json({ error: "Ce brouillon n'appartient pas au parcours (extra.canal ≠ 'parcours')" });
+        }
+        if (Array.isArray(draft.images) && draft.images.length > 0) {
+          return res.status(200).json({ success: true, skipped: true, reason: 'Ce brouillon a déjà des images' });
+        }
+
+        const subject = draft.subject || '';
+        const content = draft.content || '';
+        // Compte de paragraphes : draft.content est toujours du HTML en <p> ici (produit par
+        // l'éditeur du dashboard, voir nlShowEditor) — un compte de balises <p> suffit, pas
+        // besoin de répliquer toute la normalisation de buildCommunicationEmailHtml pour un
+        // positionnement approximatif ("environ aux 3/4").
+        const totalParas = Math.max((content.match(/<p[^>]*>/gi) || []).length, 1);
+        const latePosition = Math.min(totalParas - 1, Math.max(1, Math.round(totalParas * 0.75)));
+
+        const [openingUrl, lateUrl] = await Promise.all([
+          generateSocialImage({ subject, textContent: content }),
+          generateSocialImage({ subject, textContent: content })
+        ]);
+        if (!openingUrl && !lateUrl) {
+          return res.status(502).json({ error: "Échec de génération des images (clé OpenAI absente ou API indisponible)" });
+        }
+
+        const images = [];
+        if (openingUrl) images.push({ path: openingUrl, name: `${subject} — ouverture`, position: 0 });
+        if (lateUrl) images.push({ path: lateUrl, name: `${subject} — 3/4`, position: latePosition });
+
+        const { error: updErr } = await supabase
+          .from('newsletter_drafts')
+          .update({ images, updated_at: new Date().toISOString() })
+          .eq('id', id);
+        if (updErr) throw updErr;
+        return res.status(200).json({ success: true, images });
+      }
+
       // ── Déplace une étape en attente d'un cran dans la file (flèches ▲▼ de l'onglet
       // Parcours) : échange son extra.ordre avec celui de la voisine immédiate parmi
       // les étapes du parcours pas encore envoyées, calculée ici plutôt que fournie
@@ -8042,6 +8126,18 @@ Réponds en français, sans tiret long, format markdown compact.`
         .upload(filename, audioBuffer, { contentType: 'audio/mpeg', upsert: false });
       if (upErr) return res.status(500).json({ error: 'Génération réussie mais échec de l\'hébergement : ' + upErr.message });
       const { data: { publicUrl } } = sbAudio.storage.from('newsletter-uploads').getPublicUrl(filename);
+
+      // Tarif OpenAI TTS (tts-1) : par caractère, pas par token — estimation ajustable.
+      const OPENAI_TTS_COST_PER_1M_CHARS_USD = parseFloat(process.env.OPENAI_TTS_COST_PER_1M_CHARS_USD || '15');
+      try {
+        const { logApiUsage } = require('../../lib/api-usage-tracker.js');
+        await logApiUsage({
+          apiName: 'openai-audio',
+          modelName: 'tts-1',
+          costUsd: (text.length / 1000000) * OPENAI_TTS_COST_PER_1M_CHARS_USD,
+          status: 'success'
+        });
+      } catch (_) {}
 
       return res.status(200).json({ success: true, url: publicUrl, characters_used: text.length });
     }
