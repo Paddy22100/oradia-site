@@ -2372,10 +2372,6 @@
                     <p class="text-light-gold/50 text-sm mt-1">Newsletter hebdomadaire et emails promotionnels (lancements, offres, événements...)</p>
                 </div>
                 <div class="flex items-center gap-3">
-                <button onclick="nlNewDraft()"
-                    class="flex items-center gap-1.5 bg-gold/10 border border-gold/30 text-gold px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-gold/20 transition">
-                    <i class="fas fa-plus"></i>Nouvelle newsletter
-                </button>
                 <div class="flex items-center flex-wrap gap-1 bg-white/5 border border-gold/15 rounded-xl p-1">
                     <!-- Cycle de vie d'une newsletter : écrire → brouillon → programmé → envoyé -->
                     <button onclick="nlShowTab('generate')" data-nltab="generate"
@@ -2453,6 +2449,11 @@
 
             <!-- TAB GÉNÉRER -->
             <div id="nl-tab-generate" class="nl-tab-content">
+                <div class="flex justify-end mb-2">
+                    <button onclick="nlNewDraft()" class="text-xs text-gold/50 hover:text-gold underline underline-offset-2" title="Vide l'éditeur pour repartir de zéro (te demande confirmation si la newsletter en cours n'est pas enregistrée)">
+                        <i class="fas fa-eraser mr-1"></i>Effacer et repartir de zéro
+                    </button>
+                </div>
                 <!-- Indicateur d'étapes -->
                 <div id="nl-step-indicator" class="flex items-center gap-0 mb-6">
                     <div id="nl-step-1" class="nl-step flex items-center gap-2 px-4 py-2 rounded-lg transition-all">
@@ -8029,10 +8030,9 @@
         // dernière newsletter ouverte/modifiée (sujet, contenu, images, aperçu réseaux
         // sociaux...), au risque de continuer à modifier l'ancienne par erreur, ou de
         // devoir tout effacer champ par champ pour en démarrer une nouvelle.
-        async function nlNewDraft() {
-            if (document.getElementById('nl-content')?.value.trim() &&
-                !(await adminConfirm('Repartir d\'une newsletter vierge ? Les modifications non sauvegardées seront perdues.', { danger: true }))) return;
-
+        // Vide l'éditeur (sans confirmation ni changement d'onglet) — utilisé par nlNewDraft()
+        // et par le garde-fou de navigation de nlShowTab() après un choix "Ne pas enregistrer".
+        function nlResetEditorSilent() {
             nlCurrentDraftId = null;
             nlCurrentDraftExtra = {};
             nlSelectedImages = [];
@@ -8068,12 +8068,32 @@
             nlSetType('newsletter');
             nlSetStep(1);
             nlUpdateSelectedPreviews();
+        }
 
+        async function nlNewDraft() {
+            if (document.getElementById('nl-content')?.value.trim() &&
+                !(await adminConfirm('Repartir d\'une newsletter vierge ? Les modifications non sauvegardées seront perdues.', { danger: true }))) return;
+
+            nlResetEditorSilent();
             nlShowTab('generate');
             nlStatus('info', 'Nouvelle newsletter — tout est à renseigner.');
         }
 
-        function nlShowTab(name) {
+        let nlCurrentTab = 'generate';
+        async function nlShowTab(name) {
+            // Garde-fou : quitter l'éditeur (Générer) avec du contenu non enregistré propose
+            // de l'enregistrer en brouillon plutôt que de le perdre silencieusement — sans ça,
+            // il fallait cliquer explicitement "Nouvelle newsletter" pour comprendre que le
+            // contenu allait être perdu, ou pire, ne rien comprendre et le perdre sans prévenir.
+            if (nlCurrentTab === 'generate' && name !== 'generate') {
+                const hasContent = document.getElementById('nl-content')?.value.trim();
+                if (hasContent) {
+                    const save = await adminConfirm('Enregistrer cette newsletter dans les brouillons avant de quitter ?', { confirmText: 'Enregistrer', cancelText: 'Ne pas enregistrer' });
+                    if (save) await nlSave();
+                    else nlResetEditorSilent();
+                }
+            }
+            nlCurrentTab = name;
             document.querySelectorAll('.nl-tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById('nl-tab-' + name).classList.remove('hidden');
             document.querySelectorAll('.nl-tab-btn').forEach(btn => {
@@ -10093,6 +10113,27 @@
                 incarnee: 'bg-teal-500/20 text-teal-300 border-teal-500/30',
                 lucide:   'bg-blue-500/20 text-blue-300 border-blue-500/30'
             };
+            // Estimation de la date d'envoi pour les étapes en file : le parcours individuel
+            // n'a pas de date d'envoi unique (chaque abonné reçoit la prochaine étape due selon
+            // sa propre cadence hebdomadaire), mais dans la pratique la quasi-totalité des
+            // abonnés avancent au même rythme — un envoi par mercredi. On estime donc la date de
+            // chaque étape en file en cascadant +7 jours depuis le dernier envoi réel (ou le
+            // prochain mercredi si rien n'a encore été envoyé), dans l'ordre réel d'envoi (ordre).
+            const nextWednesday = (from) => {
+                const d = new Date(from);
+                d.setDate(d.getDate() + ((3 - d.getDay() + 7) % 7 || 7));
+                return d;
+            };
+            const sentDates = nlParcours.filter(d => d.statut === 'envoyé' && d.sent_at).map(d => new Date(d.sent_at));
+            const lastSent = sentDates.length ? new Date(Math.max(...sentDates)) : null;
+            const estimatedDates = new Map();
+            let cursor = lastSent ? nextWednesday(lastSent) : nextWednesday(new Date());
+            nlParcours.filter(d => d.statut !== 'envoyé' && (d.extra || {}).canal === 'parcours')
+                .sort((a, b) => (Number(a.extra?.ordre) || 0) - (Number(b.extra?.ordre) || 0))
+                .forEach(d => {
+                    estimatedDates.set(d.id, new Date(cursor));
+                    cursor = new Date(cursor.getTime() + 7 * 86400000);
+                });
             tbody.innerHTML = nlParcours.map((d) => {
                 const extra = d.extra || {};
                 const isStep = extra.canal === 'parcours';
@@ -10123,15 +10164,12 @@
                 } else {
                     statutBadge = `<span class="text-xs px-2 py-0.5 rounded-full bg-gold/10 text-gold/60 border border-gold/20">Brouillon</span>`;
                 }
-                // "Date" n'a pas le même sens selon le statut : une étape déjà envoyée a une
-                // vraie date d'envoi (sent_at), mais une étape encore en file (validée ou pas)
-                // n'a pas de date d'envoi prévue — le parcours individuel ne programme rien à
-                // l'avance, il envoie automatiquement chaque mercredi la prochaine étape due
-                // pour chaque abonné. Le seul repère disponible avant l'envoi est donc la date
-                // de rédaction (created_at), affichée avec un libellé explicite pour ne pas la
-                // confondre avec une date d'envoi programmée.
-                const dateVal = d.sent_at || d.created_at;
-                const dateLabel = !isQueued ? 'Envoyée le' : 'Écrite le';
+                // Envoyée : vraie date (sent_at). En file : date ESTIMÉE (voir estimatedDates
+                // ci-dessus, cascade +7j depuis le dernier envoi réel) — le parcours individuel
+                // n'a pas de date d'envoi unique garantie, donc toujours marquée "estimé".
+                const estDate = estimatedDates.get(d.id);
+                const dateVal = d.sent_at || estDate;
+                const dateLabel = !isQueued ? 'Envoyée le' : '~ Estimé pour le';
                 const validateBtn = (isQueued && isStep && extra.parcours_valide !== true)
                     ? `<button onclick="nlValidateParcours('${d.id}')" class="text-xs bg-orange-500/15 text-orange-300 border border-orange-500/30 rounded-lg px-3 py-1.5 hover:bg-orange-500/25 transition mr-1"><i class="fas fa-check mr-1"></i>Valider</button>`
                     : '';
