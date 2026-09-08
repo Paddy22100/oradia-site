@@ -10045,24 +10045,30 @@
                     : `<span class="text-orange-300"><i class="fas fa-triangle-exclamation mr-1.5"></i>Action requise</span>`;
                 const reasonText = !operational
                     ? (s.alert.reason === 'none-scheduled'
-                        ? "Aucune newsletter du parcours n'est programmée à venir, et rien d'écrit d'avance."
-                        : `Il ne reste que ${s.alert.daysUntilLastScheduled} jour${s.alert.daysUntilLastScheduled > 1 ? 's' : ''} avant le dernier envoi programmé, et rien n'est prêt derrière.`)
+                        ? "Aucune étape validée n'est prête à partir — écris et valide la prochaine étape avant mercredi."
+                        : `Il ne reste que ${s.alert.daysUntilLastScheduled} jour${s.alert.daysUntilLastScheduled > 1 ? 's' : ''} avant le dernier envoi programmé manuellement, et rien n'est prêt derrière.`)
                     : '';
+                // Le parcours individuel n'a pas de "programmation" au sens classique : chaque
+                // mercredi (cron automatique), la prochaine étape validée est envoyée à chaque
+                // abonné selon sa propre cadence — rien à choisir ni dater à l'avance. Le champ
+                // "lastScheduled" (scheduled_at explicite) reste possible mais rare ; on ne
+                // l'affiche que s'il existe, pour ne pas laisser croire que "Aucun" est un problème.
                 card.innerHTML = `
                     <div class="bg-[rgba(5,20,40,0.6)] rounded-xl border ${operational ? 'border-green-500/30' : 'border-orange-500/30'} p-4">
                         <div class="text-base font-semibold mb-3">${badge}</div>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                        <div class="grid grid-cols-1 md:grid-cols-${s.lastScheduled ? '3' : '2'} gap-4 text-sm">
                             <div>
-                                <div class="text-light-gold/40 text-xs mb-1">Prochain envoi programmé</div>
-                                <div class="text-light-gold">${s.lastScheduled ? `Étape ${s.lastScheduled.ordre} — ${fmtDate(s.lastScheduled.scheduled_at)}` : '<span class="text-light-gold/30">Aucun</span>'}</div>
+                                <div class="text-light-gold/40 text-xs mb-1">Prochaine étape (envoi auto. mercredi prochain)</div>
+                                <div class="text-light-gold">${s.nextReady ? `Étape ${s.nextReady.ordre} — "${escapeHtmlFront(s.nextReady.subject || '')}"` : '<span class="text-orange-300">Aucune — rien à envoyer</span>'}</div>
                             </div>
+                            ${s.lastScheduled ? `
                             <div>
-                                <div class="text-light-gold/40 text-xs mb-1">En réserve (écrit, pas encore programmé)</div>
-                                <div class="text-light-gold">${s.nextReady ? `Étape ${s.nextReady.ordre} — "${escapeHtmlFront(s.nextReady.subject || '')}"` : '<span class="text-light-gold/30">Aucune</span>'}</div>
-                            </div>
+                                <div class="text-light-gold/40 text-xs mb-1">Programmation manuelle en place</div>
+                                <div class="text-light-gold">Étape ${s.lastScheduled.ordre} — ${fmtDate(s.lastScheduled.scheduled_at)}</div>
+                            </div>` : ''}
                             <div>
                                 <div class="text-light-gold/40 text-xs mb-1">Étapes envoyées au total</div>
-                                <div class="text-light-gold">${s.sentCount} / ${s.totalWrittenSteps} rédigées</div>
+                                <div class="text-light-gold">${s.sentCount} envoyées / ${s.totalWrittenSteps} validées</div>
                             </div>
                         </div>
                         ${reasonText ? `<p class="text-orange-300/80 text-xs mt-3">${reasonText}</p>` : ''}
@@ -10114,7 +10120,15 @@
                 } else {
                     statutBadge = `<span class="text-xs px-2 py-0.5 rounded-full bg-gold/10 text-gold/60 border border-gold/20">Brouillon</span>`;
                 }
+                // "Date" n'a pas le même sens selon le statut : une étape déjà envoyée a une
+                // vraie date d'envoi (sent_at), mais une étape encore en file (validée ou pas)
+                // n'a pas de date d'envoi prévue — le parcours individuel ne programme rien à
+                // l'avance, il envoie automatiquement chaque mercredi la prochaine étape due
+                // pour chaque abonné. Le seul repère disponible avant l'envoi est donc la date
+                // de rédaction (created_at), affichée avec un libellé explicite pour ne pas la
+                // confondre avec une date d'envoi programmée.
                 const dateVal = d.sent_at || d.created_at;
+                const dateLabel = !isQueued ? 'Envoyée le' : 'Écrite le';
                 const validateBtn = (isQueued && isStep && extra.parcours_valide !== true)
                     ? `<button onclick="nlValidateParcours('${d.id}')" class="text-xs bg-orange-500/15 text-orange-300 border border-orange-500/30 rounded-lg px-3 py-1.5 hover:bg-orange-500/25 transition mr-1"><i class="fas fa-check mr-1"></i>Valider</button>`
                     : '';
@@ -10122,7 +10136,7 @@
                     <td class="px-6 py-4">${ordreCell}</td>
                     <td class="px-6 py-4">${statutBadge}</td>
                     <td class="px-6 py-4 text-light-gold text-sm">${escapeHtmlFront(d.subject || '—')}</td>
-                    <td class="px-6 py-4 text-light-gold/60 text-xs">${dateVal ? new Date(dateVal).toLocaleDateString('fr-FR') : '—'}</td>
+                    <td class="px-6 py-4 text-light-gold/60 text-xs">${dateVal ? `${dateLabel} ${new Date(dateVal).toLocaleDateString('fr-FR')}` : '—'}</td>
                     <td class="px-6 py-4">${isStep ? `<span class="text-xs px-2 py-0.5 rounded-full border ${registreCls}">${escapeHtmlFront(extra.registre || '—')}</span>` : '<span class="text-gold/20 text-xs">—</span>'}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
                         ${validateBtn}<button onclick="nlOpenDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition mr-1"><i class="fas fa-pen mr-1"></i>Modifier</button><button onclick="nlPreviewDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition mr-1"><i class="fas fa-eye mr-1"></i>Prévisualiser</button><button onclick="nlPreviewSocialFromParcours('${d.id}')" title="Générer et voir l'aperçu Facebook/Instagram/LinkedIn qui serait publié pour cette étape, sans rien publier" class="text-xs bg-purple-500/10 text-purple-300 border border-purple-500/30 rounded-lg px-3 py-1.5 hover:bg-purple-500/20 transition"><i class="fas fa-share-nodes mr-1"></i>Réseaux</button>
@@ -12550,16 +12564,21 @@
                     </div>`).join('');
                 }
 
-                // ── Publications sociales programmées ──
+                // ── Publications sociales : résumé + lien vers l'onglet dédié "Réseaux
+                // sociaux" (gestion complète : programmés, historique, archivage) plutôt
+                // qu'une deuxième implémentation en parallèle ici.
                 try {
                     const resSoc = await adminFetch('/api/admin/social-posts');
                     const dataSoc = await resSoc.json();
                     const socialScheduled = (dataSoc.posts || []).filter(p => p.statut === 'programmé');
-                    html += `<p class="text-purple-300/70 text-xs uppercase tracking-widest mt-6 mb-2"><i class="fas fa-share-alt mr-1"></i>Réseaux sociaux programmés (${socialScheduled.length})</p>`;
+                    html += `<div class="flex items-center justify-between mt-6 mb-2">
+                        <p class="text-purple-300/70 text-xs uppercase tracking-widest"><i class="fas fa-share-alt mr-1"></i>Réseaux sociaux programmés (${socialScheduled.length})</p>
+                        <button onclick="showTab('newsletter'); nlShowTab('social');" class="text-xs text-gold/60 hover:text-gold underline underline-offset-2">Voir le détail →</button>
+                    </div>`;
                     if (socialScheduled.length === 0) {
                         html += `<div class="border border-dashed border-purple-400/20 rounded-xl p-5 text-center">
                             <p class="text-light-gold/30 text-sm">Aucune publication Facebook/Instagram/LinkedIn programmée.</p>
-                            <p class="text-light-gold/20 text-xs mt-1">Depuis Newsletter &amp; Réseaux, choisis une date dans « Programmer » puis « Publier sur les réseaux ».</p>
+                            <p class="text-light-gold/20 text-xs mt-1">Le parcours et les newsletters promo publient automatiquement à l'envoi (pas de programmation à l'avance) — programme une publication manuelle depuis « Générer » &gt; « Publier sur les réseaux » pour en voir ici.</p>
                         </div>`;
                     } else {
                         html += socialScheduled.map(p => {
@@ -12571,36 +12590,8 @@
                                 <div class="flex-1 min-w-0">
                                     <p class="text-light-gold font-semibold truncate">${p.subject || '(sans sujet)'}</p>
                                     <p class="text-purple-300/70 text-xs mt-0.5"><i class="fas fa-calendar mr-1"></i>${dateStr}</p>
-                                    ${overdue ? '<p class="text-red-300 text-xs mt-1 font-semibold"><i class="fas fa-triangle-exclamation mr-1"></i>En retard — non publié (vérifie la fonctionnalité « social_scheduled_send »)</p>' : ''}
+                                    ${overdue ? '<p class="text-red-300 text-xs mt-1 font-semibold"><i class="fas fa-triangle-exclamation mr-1"></i>En retard — non publié</p>' : ''}
                                 </div>
-                                ${overdue ? `<button onclick="markSocialPublished('${p.id}')" class="text-xs bg-green-500/10 text-green-300/80 border border-green-500/25 rounded-lg px-3 py-1.5 hover:bg-green-500/20 transition shrink-0 mr-1" title="Déjà publié via Make.com : marque comme publié sans renvoyer">Déjà publié</button><button onclick="publishSocialNow('${p.id}')" class="text-xs bg-purple-500/15 text-purple-200 border border-purple-400/30 rounded-lg px-3 py-1.5 hover:bg-purple-500/25 transition shrink-0 mr-1">Publier maintenant</button>` : ''}
-                                <button onclick="cancelScheduledSocial('${p.id}')" class="text-xs bg-red-500/10 text-red-300/80 border border-red-500/25 rounded-lg px-3 py-1.5 hover:bg-red-500/20 transition shrink-0">Annuler</button>
-                            </div>`;
-                        }).join('');
-                    }
-
-                    // ── Historique : posts publiés / en échec ──
-                    const allPosts = dataSoc.posts || [];
-                    const history = allPosts.filter(p => (p.statut === 'envoyé' || p.statut === 'échec') && (socialShowArchived ? p.archived : !p.archived));
-                    const archivedCount = allPosts.filter(p => (p.statut === 'envoyé' || p.statut === 'échec') && p.archived).length;
-                    html += `<div class="flex items-center justify-between mt-6 mb-2">
-                        <p class="text-purple-300/70 text-xs uppercase tracking-widest"><i class="fas fa-clock-rotate-left mr-1"></i>${socialShowArchived ? 'Publications archivées' : 'Publiés récemment'} (${history.length})</p>
-                        <button onclick="toggleSocialArchived()" class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/40 rounded-lg px-3 py-1 transition"><i class="fas fa-box-archive mr-1"></i>${socialShowArchived ? 'Voir les récents' : 'Voir les archivés' + (archivedCount ? ' (' + archivedCount + ')' : '')}</button>
-                    </div>`;
-                    if (history.length === 0) {
-                        html += `<div class="border border-dashed border-purple-400/15 rounded-xl p-4 text-center"><p class="text-light-gold/25 text-sm">${socialShowArchived ? 'Aucune publication archivée.' : 'Aucune publication récente.'}</p></div>`;
-                    } else {
-                        html += history.sort((a,b)=>new Date(b.sent_at||b.scheduled_at)-new Date(a.sent_at||a.scheduled_at)).map(p => {
-                            const dt = new Date(p.sent_at || p.scheduled_at);
-                            const dateStr = dt.toLocaleString('fr-FR', { day:'2-digit', month:'long', hour:'2-digit', minute:'2-digit' });
-                            const failed = p.statut === 'échec';
-                            return `<div class="stat-card rounded-xl p-4 flex items-center gap-4 opacity-90">
-                                <div class="w-10 h-10 rounded-full ${failed ? 'bg-red-500/15' : 'bg-green-500/15'} flex items-center justify-center shrink-0"><i class="fas ${failed ? 'fa-triangle-exclamation text-red-300' : 'fa-check text-green-300'}"></i></div>
-                                <div class="flex-1 min-w-0">
-                                    <p class="text-light-gold font-semibold truncate">${p.subject || '(sans sujet)'}</p>
-                                    <p class="text-${failed ? 'red' : 'green'}-300/70 text-xs mt-0.5">${failed ? '✗ Échec' : '✓ Publié'} · ${dateStr}${failed && p.error_message ? ' — ' + p.error_message : ''}</p>
-                                </div>
-                                <button onclick="setSocialArchived('${p.id}',${p.archived ? 'false' : 'true'})" class="text-xs text-light-gold/60 hover:text-light-gold border border-light-gold/20 hover:border-light-gold/40 rounded-lg px-3 py-1.5 transition shrink-0">${p.archived ? 'Désarchiver' : 'Archiver'}</button>
                             </div>`;
                         }).join('');
                     }
@@ -12609,45 +12600,6 @@
                 el.innerHTML = `<div class="space-y-3">${html}</div>`;
             } catch(e) {
                 el.innerHTML = '<p class="text-red-400/60 text-sm text-center py-8">Erreur de chargement</p>';
-            }
-        }
-
-        async function cancelScheduledSocial(id) {
-            if (!(await adminConfirm('Annuler cette publication programmée ?'))) return;
-            try {
-                const res = await adminFetch('/api/admin/social-posts?id=' + encodeURIComponent(id), { method: 'DELETE' });
-                if (!res.ok) throw new Error((await res.json().catch(() => ({}))).error || 'Erreur');
-                loadPlanning();
-            } catch (e) {
-                adminAlert('Erreur : ' + e.message);
-            }
-        }
-
-        async function publishSocialNow(id) {
-            if (!(await adminConfirm('Publier cette publication maintenant sur Facebook et Instagram ?', { danger: true }))) return;
-            await socialPostAction({ action: 'publish-now', id });
-        }
-        async function markSocialPublished(id) {
-            if (!(await adminConfirm('Marquer comme déjà publié (sans renvoyer sur les réseaux) ?'))) return;
-            await socialPostAction({ action: 'mark-published', id });
-        }
-        async function setSocialArchived(id, archived) {
-            await socialPostAction({ action: 'set-archived', id, archived });
-        }
-        let socialShowArchived = false;
-        function toggleSocialArchived() { socialShowArchived = !socialShowArchived; loadPlanning(); }
-        async function socialPostAction(payload) {
-            try {
-                const res = await adminFetch('/api/admin/social-posts', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(payload)
-                });
-                const data = await res.json().catch(() => ({}));
-                if (!res.ok) throw new Error(data.error || 'Erreur');
-                loadPlanning();
-            } catch (e) {
-                adminAlert('Erreur : ' + e.message);
             }
         }
 
