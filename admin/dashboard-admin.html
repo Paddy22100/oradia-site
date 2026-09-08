@@ -2405,6 +2405,10 @@
                         class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
                         <i class="fas fa-calendar-alt mr-1.5"></i>Planning
                     </button>
+                    <button onclick="nlShowTab('social')" data-nltab="social"
+                        class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
+                        <i class="fas fa-share-nodes mr-1.5"></i>Réseaux sociaux
+                    </button>
                 </div>
                 </div>
             </div>
@@ -2810,7 +2814,7 @@
                                     </button>
                                     <button onclick="nlPublishSocial()" id="nl-btn-social"
                                         class="flex-1 bg-gradient-to-r from-purple-600/80 to-pink-600/80 text-white font-semibold rounded-lg py-2 hover:from-purple-500/80 hover:to-pink-500/80 transition text-sm flex items-center justify-center gap-2">
-                                        <i class="fab fa-instagram"></i><i class="fab fa-facebook ml-1"></i><span class="ml-1">Publier</span>
+                                        <i class="fab fa-instagram"></i><i class="fab fa-facebook ml-1"></i><i class="fab fa-linkedin ml-1"></i><span class="ml-1">Publier</span>
                                     </button>
                                 </div>
                                 <div id="nl-social-status" class="hidden text-xs rounded-lg px-3 py-2 mt-2"></div>
@@ -2846,6 +2850,22 @@
                                             </div>
                                             <div class="px-3 py-2">
                                                 <textarea id="nl-social-ig-text" rows="6" spellcheck="true" lang="fr" class="w-full text-xs text-white/80 leading-relaxed bg-transparent border border-pink-400/20 rounded-lg px-2 py-1.5 resize-none focus:outline-none focus:border-pink-400/50" placeholder="Le texte Instagram apparaîtra ici après l'aperçu..."></textarea>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="bg-[#1a2942] border border-sky-400/30 rounded-xl overflow-hidden">
+                                        <div class="flex items-center gap-2 px-3 py-2 border-b border-sky-400/20">
+                                            <i class="fab fa-linkedin text-sky-400 text-sm"></i>
+                                            <span class="text-xs text-sky-300 font-semibold">Aperçu LinkedIn</span>
+                                        </div>
+                                        <div class="p-3">
+                                            <div class="flex items-center gap-2 mb-2">
+                                                <img src="https://oradia.fr/images/logo-hd-v2.webp" class="w-7 h-7 rounded-full">
+                                                <div><p class="text-xs text-white font-semibold leading-none">Rudy BOUCHERON</p><p class="text-xs text-sky-300/60">Maintenant</p></div>
+                                            </div>
+                                            <textarea id="nl-social-li-text" rows="6" spellcheck="true" lang="fr" class="w-full text-xs text-white/80 leading-relaxed mb-2 bg-transparent border border-sky-400/20 rounded-lg px-2 py-1.5 resize-none focus:outline-none focus:border-sky-400/50" placeholder="Le texte LinkedIn apparaîtra ici après l'aperçu..."></textarea>
+                                            <div id="nl-social-li-img" class="hidden rounded-lg overflow-hidden mb-1">
+                                                <img id="nl-social-li-img-el" src="" alt="image" class="w-full max-h-48 object-cover">
                                             </div>
                                         </div>
                                     </div>
@@ -2963,6 +2983,7 @@
                         </div>
                     </div>
                     <p id="sendParcoursIndividualStatus" class="hidden text-sm mb-4 px-1"></p>
+                    <div id="parcoursStatusCard" class="mb-6"></div>
                     <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
                         <div class="overflow-x-auto">
                             <table class="w-full" id="parcoursTable">
@@ -3023,6 +3044,22 @@
                             <audio id="audio-player" controls class="w-full sm:w-auto"></audio>
                             <a id="audio-download-link" href="#" target="_blank" class="shrink-0 text-xs bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-2 hover:bg-gold/25 transition"><i class="fas fa-download mr-1"></i>Télécharger le MP3</a>
                         </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- TAB RÉSEAUX SOCIAUX -->
+            <div id="nl-tab-social" class="nl-tab-content hidden">
+                <section class="mb-10">
+                    <div class="flex items-center justify-between mb-6 flex-wrap gap-3">
+                        <div>
+                            <h4 class="cormorant text-xl font-bold text-gold">Publications réseaux sociaux</h4>
+                            <p class="text-light-gold/50 text-sm mt-1">Facebook, Instagram et LinkedIn — publiées automatiquement via Make.com (posts programmés relevés chaque heure) ou depuis le dashboard.</p>
+                        </div>
+                        <button onclick="nlLoadSocialPosts()" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
+                    </div>
+                    <div id="socialPostsList" class="space-y-4">
+                        <p class="text-light-gold/40 text-sm text-center py-8">Chargement…</p>
                     </div>
                 </section>
             </div>
@@ -8007,8 +8044,10 @@
             nlSetSocialImageUrl('');
             const fbEl = document.getElementById('nl-social-fb-text');
             const igEl = document.getElementById('nl-social-ig-text');
+            const liEl = document.getElementById('nl-social-li-text');
             if (fbEl) fbEl.value = '';
             if (igEl) igEl.value = '';
+            if (liEl) liEl.value = '';
             document.getElementById('nl-social-preview')?.classList.add('hidden');
 
             const schedInput = document.getElementById('nl-scheduled-at');
@@ -8045,7 +8084,8 @@
             if (name === 'sent') { nlRenderSent(); nlLoadCampaignStats(); }
             if (name === 'testers') nlLoadTesters();
             if (name === 'planning') loadPlanning();
-            if (name === 'parcours') nlLoadParcours();
+            if (name === 'parcours') { nlLoadParcours(); nlLoadParcoursStatus(); }
+            if (name === 'social') nlLoadSocialPosts();
         }
 
         function nlSetStep(step) {
@@ -9127,9 +9167,11 @@
                 // qui n'existait jusque-là que dans la page, jamais sauvegardé côté serveur.
                 const socialFb = document.getElementById('nl-social-fb-text')?.value.trim();
                 const socialIg = document.getElementById('nl-social-ig-text')?.value.trim();
+                const socialLi = document.getElementById('nl-social-li-text')?.value.trim();
                 const socialImg = document.getElementById('nl-social-image')?.value.trim();
                 if (socialFb) extra.social_facebook_text = socialFb;
                 if (socialIg) extra.social_instagram_text = socialIg;
+                if (socialLi) extra.social_linkedin_text = socialLi;
                 if (socialImg) extra.social_image = socialImg;
 
                 const subjectEl = document.getElementById('nl-subject');
@@ -9433,10 +9475,12 @@
             document.getElementById('nl-social-preview')?.classList.remove('hidden');
             const fbEl = document.getElementById('nl-social-fb-text');
             const igEl = document.getElementById('nl-social-ig-text');
+            const liEl = document.getElementById('nl-social-li-text');
             if (fbEl) fbEl.value = data.facebook_text || '';
             if (igEl) igEl.value = data.instagram_text || '';
+            if (liEl) liEl.value = data.linkedin_text || '';
             const usedImage = data.image_url || imageUrl;
-            ['fb', 'ig'].forEach(net => {
+            ['fb', 'ig', 'li'].forEach(net => {
                 const wrap = document.getElementById(`nl-social-${net}-img`);
                 const img  = document.getElementById(`nl-social-${net}-img-el`);
                 if (wrap && img && usedImage) { img.src = usedImage; wrap.classList.remove('hidden'); }
@@ -9486,6 +9530,7 @@
             // Si les textes ont déjà été générés (et éventuellement modifiés), les réutiliser
             const editedFb = document.getElementById('nl-social-fb-text')?.value.trim() || '';
             const editedIg = document.getElementById('nl-social-ig-text')?.value.trim() || '';
+            const editedLi = document.getElementById('nl-social-li-text')?.value.trim() || '';
             const btn = document.getElementById('nl-btn-social');
 
             if (imageUrl) {
@@ -9506,14 +9551,15 @@
                         scheduleAt: scheduleVal || null,
                         imageUrl: imageUrl || null,
                         facebook_text: editedFb || undefined,
-                        instagram_text: editedIg || undefined
+                        instagram_text: editedIg || undefined,
+                        linkedin_text: editedLi || undefined
                     })
                 });
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Erreur inconnue');
                 nlSocialStatus('success', data.scheduled
-                    ? `✓ Programmé pour le ${new Date(scheduleVal).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })} — Facebook et Instagram partiront ensemble à ce moment-là.`
-                    : '✓ Publications envoyées à Make.com — Facebook et Instagram seront publiés maintenant.');
+                    ? `✓ Programmé pour le ${new Date(scheduleVal).toLocaleString('fr-FR', { dateStyle: 'long', timeStyle: 'short' })} — Facebook, Instagram et LinkedIn partiront ensemble à ce moment-là.`
+                    : '✓ Publications envoyées à Make.com — Facebook, Instagram et LinkedIn seront publiés maintenant.');
                 nlFillSocialPreview(data, imageUrl);
                 // Sauvegarde silencieuse : sans ça, le texte Facebook/Instagram généré
                 // ici ne survivait que le temps de la page — en rouvrant ce brouillon
@@ -9548,9 +9594,11 @@
                 if (banner) extra.promo_banner = banner;
                 const socialFb = document.getElementById('nl-social-fb-text')?.value.trim();
                 const socialIg = document.getElementById('nl-social-ig-text')?.value.trim();
+                const socialLi = document.getElementById('nl-social-li-text')?.value.trim();
                 const socialImg = document.getElementById('nl-social-image')?.value.trim();
                 if (socialFb) extra.social_facebook_text = socialFb;
                 if (socialIg) extra.social_instagram_text = socialIg;
+                if (socialLi) extra.social_linkedin_text = socialLi;
                 if (socialImg) extra.social_image = socialImg;
 
                 const res = await adminFetch('/api/admin/newsletter?action=save', {
@@ -9978,6 +10026,52 @@
             }
         }
 
+        // Indicateur de fonctionnement du parcours (dernier envoi / prochain programmé /
+        // réserve d'étapes écrites d'avance) — même source que l'alerte du tableau de bord
+        // (action=parcours-status), mais affichée ici en confirmation positive, pas
+        // seulement quand quelque chose cloche.
+        async function nlLoadParcoursStatus() {
+            const card = document.getElementById('parcoursStatusCard');
+            if (!card) return;
+            card.innerHTML = `<div class="bg-[rgba(5,20,40,0.6)] rounded-xl border border-gold/20 p-4 text-light-gold/40 text-sm"><i class="fas fa-spinner fa-spin mr-2"></i>Vérification…</div>`;
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=parcours-status');
+                const s = await res.json();
+                if (!res.ok || !s.success) throw new Error(s.error || 'Erreur');
+                const fmtDate = (d) => d ? new Date(d).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }) : '—';
+                const operational = !s.alert?.needed;
+                const badge = operational
+                    ? `<span class="text-green-300"><i class="fas fa-circle-check mr-1.5"></i>Opérationnel</span>`
+                    : `<span class="text-orange-300"><i class="fas fa-triangle-exclamation mr-1.5"></i>Action requise</span>`;
+                const reasonText = !operational
+                    ? (s.alert.reason === 'none-scheduled'
+                        ? "Aucune newsletter du parcours n'est programmée à venir, et rien d'écrit d'avance."
+                        : `Il ne reste que ${s.alert.daysUntilLastScheduled} jour${s.alert.daysUntilLastScheduled > 1 ? 's' : ''} avant le dernier envoi programmé, et rien n'est prêt derrière.`)
+                    : '';
+                card.innerHTML = `
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-xl border ${operational ? 'border-green-500/30' : 'border-orange-500/30'} p-4">
+                        <div class="text-base font-semibold mb-3">${badge}</div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                            <div>
+                                <div class="text-light-gold/40 text-xs mb-1">Prochain envoi programmé</div>
+                                <div class="text-light-gold">${s.lastScheduled ? `Étape ${s.lastScheduled.ordre} — ${fmtDate(s.lastScheduled.scheduled_at)}` : '<span class="text-light-gold/30">Aucun</span>'}</div>
+                            </div>
+                            <div>
+                                <div class="text-light-gold/40 text-xs mb-1">En réserve (écrit, pas encore programmé)</div>
+                                <div class="text-light-gold">${s.nextReady ? `Étape ${s.nextReady.ordre} — "${escapeHtmlFront(s.nextReady.subject || '')}"` : '<span class="text-light-gold/30">Aucune</span>'}</div>
+                            </div>
+                            <div>
+                                <div class="text-light-gold/40 text-xs mb-1">Étapes envoyées au total</div>
+                                <div class="text-light-gold">${s.sentCount} / ${s.totalWrittenSteps} rédigées</div>
+                            </div>
+                        </div>
+                        ${reasonText ? `<p class="text-orange-300/80 text-xs mt-3">${reasonText}</p>` : ''}
+                    </div>`;
+            } catch (e) {
+                card.innerHTML = `<div class="bg-red-500/10 border border-red-500/30 rounded-xl p-4 text-red-300 text-sm">Erreur : ${escapeHtmlFront(e.message)}</div>`;
+            }
+        }
+
         function nlRenderParcours() {
             const tbody = document.getElementById('parcoursTbody');
             if (!tbody) return;
@@ -10035,6 +10129,130 @@
                     </td>
                 </tr>`;
             }).join('');
+        }
+
+        // ── Réseaux sociaux (Facebook/Instagram/LinkedIn) — table social_posts ─────
+        let nlSocialPosts = [];
+        let nlSocialShowArchived = false;
+        async function nlLoadSocialPosts() {
+            const container = document.getElementById('socialPostsList');
+            try {
+                const res = await adminFetch('/api/admin/social-posts');
+                const json = await res.json();
+                if (!res.ok || !json.success) throw new Error(json.error || 'Erreur');
+                nlSocialPosts = json.posts || [];
+                nlRenderSocialPosts();
+            } catch (e) {
+                if (container) container.innerHTML = `<p class="text-red-400 text-sm text-center py-8">${escapeHtmlFront(e.message)}</p>`;
+            }
+        }
+
+        function nlToggleSocialArchived() {
+            nlSocialShowArchived = !nlSocialShowArchived;
+            nlRenderSocialPosts();
+        }
+
+        function nlRenderSocialPosts() {
+            const container = document.getElementById('socialPostsList');
+            if (!container) return;
+            const list = nlSocialPosts
+                .filter(p => nlSocialShowArchived ? true : !p.archived)
+                .sort((a, b) => new Date(b.scheduled_at || b.sent_at || b.created_at) - new Date(a.scheduled_at || a.sent_at || a.created_at));
+
+            const toggleBtn = `<div class="flex justify-end mb-2">
+                <button onclick="nlToggleSocialArchived()" class="text-xs text-gold/50 hover:text-gold underline underline-offset-2">${nlSocialShowArchived ? 'Masquer les archivés' : 'Voir les archivés'}</button>
+            </div>`;
+
+            if (!list.length) {
+                container.innerHTML = toggleBtn + `<p class="text-light-gold/30 text-center py-8 cormorant text-lg">Aucune publication ${nlSocialShowArchived ? 'archivée' : 'pour l\'instant'}</p>`;
+                return;
+            }
+
+            const statutBadges = {
+                'programmé': '<span class="text-xs px-2 py-0.5 rounded-full bg-blue-500/15 text-blue-300 border border-blue-500/30">Programmé</span>',
+                'envoyé':    '<span class="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-300 border border-green-500/30">Publié</span>',
+                'échec':     '<span class="text-xs px-2 py-0.5 rounded-full bg-red-500/15 text-red-300 border border-red-500/30">Échec</span>'
+            };
+            const networkBlock = (label, icon, colorClass, text) => !text ? '' : `
+                <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-lg p-3">
+                    <div class="flex items-center gap-1.5 text-xs font-semibold mb-1.5 ${colorClass}"><i class="${icon}"></i>${label}</div>
+                    <p class="text-light-gold/70 text-xs whitespace-pre-wrap">${escapeHtmlFront(text)}</p>
+                </div>`;
+
+            container.innerHTML = toggleBtn + list.map(p => {
+                const dateVal = p.sent_at || p.scheduled_at;
+                const dateLabel = p.statut === 'envoyé' ? 'Publié le' : (p.statut === 'échec' ? 'Échec le' : 'Programmé pour le');
+                return `
+                <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 p-5">
+                    <div class="flex items-start justify-between gap-3 mb-3 flex-wrap">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1">${statutBadges[p.statut] || ''}<span class="text-light-gold font-semibold text-sm">${escapeHtmlFront(p.subject || 'Sans titre')}</span></div>
+                            <div class="text-light-gold/40 text-xs">${dateLabel} ${dateVal ? new Date(dateVal).toLocaleString('fr-FR', { dateStyle: 'medium', timeStyle: 'short' }) : '—'}</div>
+                            ${p.error_message ? `<div class="text-red-400/80 text-xs mt-1">${escapeHtmlFront(p.error_message)}</div>` : ''}
+                        </div>
+                        <div class="flex gap-2 shrink-0">
+                            ${p.statut === 'programmé' ? `<button onclick="nlSocialPublishNow('${p.id}')" class="text-xs bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/25 transition"><i class="fas fa-paper-plane mr-1"></i>Publier maintenant</button>` : ''}
+                            ${p.statut === 'programmé' ? `<button onclick="nlSocialMarkPublished('${p.id}')" title="Déjà publié manuellement / via Make.com" class="text-xs bg-white/5 text-light-gold/60 border border-gold/20 rounded-lg px-3 py-1.5 hover:bg-white/10 transition"><i class="fas fa-check mr-1"></i>Marquer publié</button>` : ''}
+                            <button onclick="nlSocialSetArchived('${p.id}', ${!p.archived})" class="text-xs bg-white/5 text-light-gold/60 border border-gold/20 rounded-lg px-3 py-1.5 hover:bg-white/10 transition"><i class="fas fa-box-archive mr-1"></i>${p.archived ? 'Désarchiver' : 'Archiver'}</button>
+                            ${p.statut === 'programmé' ? `<button onclick="nlSocialDelete('${p.id}')" class="text-xs bg-red-500/10 text-red-300 border border-red-500/30 rounded-lg px-3 py-1.5 hover:bg-red-500/20 transition"><i class="fas fa-trash mr-1"></i>Supprimer</button>` : ''}
+                        </div>
+                    </div>
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        ${p.image_url ? `<div class="rounded-lg overflow-hidden border border-gold/15"><img src="${escapeHtmlFront(p.image_url)}" alt="Visuel" class="w-full h-full object-cover"></div>` : ''}
+                        ${networkBlock('Facebook', 'fab fa-facebook', 'text-blue-400', p.facebook_text)}
+                        ${networkBlock('Instagram', 'fab fa-instagram', 'text-pink-400', p.instagram_text)}
+                        ${networkBlock('LinkedIn', 'fab fa-linkedin', 'text-sky-400', p.linkedin_text)}
+                    </div>
+                </div>`;
+            }).join('');
+        }
+
+        async function nlSocialPublishNow(id) {
+            if (!(await adminConfirm('Publier ce post maintenant sur les réseaux sociaux ?'))) return;
+            try {
+                const res = await adminFetch('/api/admin/social-posts', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'publish-now', id })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                await nlLoadSocialPosts();
+            } catch (e) { adminAlert('Erreur : ' + e.message); }
+        }
+
+        async function nlSocialMarkPublished(id) {
+            if (!(await adminConfirm('Marquer ce post comme déjà publié, sans le renvoyer via Make.com ?'))) return;
+            try {
+                const res = await adminFetch('/api/admin/social-posts', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'mark-published', id })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                await nlLoadSocialPosts();
+            } catch (e) { adminAlert('Erreur : ' + e.message); }
+        }
+
+        async function nlSocialSetArchived(id, archived) {
+            try {
+                const res = await adminFetch('/api/admin/social-posts', {
+                    method: 'POST', headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'set-archived', id, archived })
+                });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                await nlLoadSocialPosts();
+            } catch (e) { adminAlert('Erreur : ' + e.message); }
+        }
+
+        async function nlSocialDelete(id) {
+            if (!(await adminConfirm('Supprimer définitivement ce post programmé ?', { danger: true }))) return;
+            try {
+                const res = await adminFetch('/api/admin/social-posts?id=' + encodeURIComponent(id), { method: 'DELETE' });
+                const json = await res.json();
+                if (!res.ok) throw new Error(json.error || 'Erreur');
+                await nlLoadSocialPosts();
+            } catch (e) { adminAlert('Erreur : ' + e.message); }
         }
 
         let nlShowArchived = false;
@@ -10634,10 +10852,11 @@
                     // (texte Facebook/Instagram + image choisie), sinon la section apparaissait
                     // vide en rouvrant un brouillon déjà travaillé.
                     if (extra.social_image) nlSetSocialImageUrl(extra.social_image);
-                    if (extra.social_facebook_text || extra.social_instagram_text) {
+                    if (extra.social_facebook_text || extra.social_instagram_text || extra.social_linkedin_text) {
                         nlFillSocialPreview({
                             facebook_text: extra.social_facebook_text || '',
                             instagram_text: extra.social_instagram_text || '',
+                            linkedin_text: extra.social_linkedin_text || '',
                             image_url: extra.social_image || ''
                         }, extra.social_image || '');
                     }
@@ -12329,7 +12548,7 @@
                     html += `<p class="text-purple-300/70 text-xs uppercase tracking-widest mt-6 mb-2"><i class="fas fa-share-alt mr-1"></i>Réseaux sociaux programmés (${socialScheduled.length})</p>`;
                     if (socialScheduled.length === 0) {
                         html += `<div class="border border-dashed border-purple-400/20 rounded-xl p-5 text-center">
-                            <p class="text-light-gold/30 text-sm">Aucune publication Facebook/Instagram programmée.</p>
+                            <p class="text-light-gold/30 text-sm">Aucune publication Facebook/Instagram/LinkedIn programmée.</p>
                             <p class="text-light-gold/20 text-xs mt-1">Depuis Newsletter &amp; Réseaux, choisis une date dans « Programmer » puis « Publier sur les réseaux ».</p>
                         </div>`;
                     } else {
