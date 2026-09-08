@@ -386,7 +386,7 @@ async function sendDueSocialPosts(supabase) {
       if (!MAKE_WEBHOOK_URL) throw new Error('MAKE_SOCIAL_WEBHOOK_URL manquant');
       const makeRes = await fetch(MAKE_WEBHOOK_URL, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ subject: post.subject, facebook_text: post.facebook_text, instagram_text: post.instagram_text, image_url: post.image_url, schedule_at: null, sent_at: new Date().toISOString() })
+        body: JSON.stringify({ subject: post.subject, facebook_text: post.facebook_text, instagram_text: post.instagram_text, linkedin_text: post.linkedin_text, image_url: post.image_url, schedule_at: null, sent_at: new Date().toISOString() })
       });
       if (!makeRes.ok) throw new Error(`Make.com ${makeRes.status}`);
       await supabase.from('social_posts').update({ statut: 'envoyé', sent_at: new Date().toISOString() }).eq('id', post.id);
@@ -4888,6 +4888,11 @@ async function runWeeklyTirageCron(supabase, res, { force = false } = {}) {
           analysis?.explore,
           analysis?.synthesis
         ].filter(Boolean).join('\n\n');
+        // Volontairement pas de linkedin_text ici : le tirage hebdomadaire ne
+        // doit être publié que sur Facebook/Instagram, jamais sur LinkedIn (choix
+        // explicite — LinkedIn reste réservé aux publications manuelles depuis le
+        // dashboard). Le scénario Make.com doit filtrer son module LinkedIn sur
+        // "linkedin_text n'est pas vide" pour respecter cette distinction.
         const { facebook_text, instagram_text } = await generateSocialTexts({ subject, textContent: socialTextContent });
         // Vignette de marque fixe ("Le Tirage de la Semaine", images/newsletter/
         // tirage_astro.webp) plutôt que l'image de la première carte tirée : un
@@ -5514,6 +5519,11 @@ async function runParcoursIndividualCron(supabase) {
 
     let totalSent = 0;
     const details = [];
+    // Une seule publication LinkedIn par passage du cron, pour l'étape la plus avancée
+    // réellement envoyée (celle qui reflète le mieux où en sont les abonnés à jour du
+    // parcours) — pas une publication par étape, même si plusieurs étapes différentes
+    // sont dues le même mercredi pour des abonnés à des stades différents.
+    let latestSentStep = null; // { ordre, subject, text }
     for (const { step, emails } of dueByStepId.values()) {
       const finalSubject = step.subject || 'Oradia';
       const html = buildCommunicationEmailHtml({ ...step, subject: finalSubject });
@@ -5549,7 +5559,18 @@ async function runParcoursIndividualCron(supabase) {
         }
       }
       totalSent += sentCount;
-      details.push({ ordre: Number(step.extra?.ordre) || null, subject: finalSubject, sent: sentCount, targeted: emails.length });
+      const ordre = Number(step.extra?.ordre) || 0;
+      details.push({ ordre, subject: finalSubject, sent: sentCount, targeted: emails.length });
+
+      if (sentCount > 0 && (!latestSentStep || ordre > latestSentStep.ordre)) {
+        latestSentStep = { ordre, subject: finalSubject, text };
+      }
+    }
+
+    // Publication Facebook + Instagram + LinkedIn pour l'étape la plus avancée
+    // effectivement envoyée ce passage-ci — jamais si aucune étape n'avait de destinataire dû.
+    if (latestSentStep) {
+      await scheduleAutoSocialPost(supabase, { subject: latestSentStep.subject, textContent: latestSentStep.text });
     }
 
     return { success: true, sent: totalSent, details };
@@ -6646,6 +6667,9 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
                 excludeAlreadySent: exclude_already_sent, sent: emails.length,
                 ordre: Number(draft.extra?.ordre) || null, canal: draft.extra?.canal || null
               });
+              if (draft.type === 'promo') {
+                await scheduleAutoSocialPost(supabase, { subject: finalSubject, textContent: text });
+              }
               return res.status(200).json({
                 success: true,
                 channel: 'campagne',
@@ -6724,6 +6748,10 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
             ordre: Number(draft.extra?.ordre) || null, canal: draft.extra?.canal || null
           });
 
+          if (draft.type === 'promo' && sentEmails.length > 0) {
+            await scheduleAutoSocialPost(supabase, { subject: finalSubject, textContent: text });
+          }
+
           return res.status(200).json({
             success: true,
             channel: 'transactionnel',
@@ -6785,6 +6813,10 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
           .from('newsletter_drafts')
           .update({ statut: 'envoyé', sent_at: new Date().toISOString(), subject: finalSubject, recipients_count: sent })
           .eq('id', draft_id);
+
+        if (draft.type === 'promo') {
+          await scheduleAutoSocialPost(supabase, { subject: finalSubject, textContent: text });
+        }
 
         return res.status(200).json({ success: true });
       }
@@ -6888,6 +6920,7 @@ async function generateSocialTexts({ subject, textContent }) {
   const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
   let facebook_text = '';
   let instagram_text = '';
+  let linkedin_text = '';
 
   if (ANTHROPIC_API_KEY) {
     const prompt = `Tu es expert en communication digitale pour Oradia, un oracle de développement personnel basé sur le Tore.
@@ -6896,15 +6929,16 @@ Newsletter à adapter :
 Sujet : ${subject}
 Contenu : ${textContent.substring(0, 1500)}
 
-Génère deux publications séparées :
+Génère trois publications séparées :
 
 1. FACEBOOK (300-400 mots, ton inspirant et profond, peut contenir des paragraphes, emoji discrets, appel à l'action vers le site)
 2. INSTAGRAM (150-200 mots max, percutant, 5-8 hashtags pertinents en fin de texte, emojis bienvenus)
+3. LINKEDIN (200-300 mots, ton sobre et professionnel, à la première personne du créateur d'Oradia, sans emoji ou avec un usage très discret, centré sur l'introspection et la clarté plutôt que sur des affirmations ésotériques ou des promesses de résultats)
 
 Contrainte impérative de format : chaque texte doit COMMENCER par le lien "oradia.fr" sur sa propre ligne (avant même la première phrase), pour que le site soit immédiatement visible sans avoir à lire tout le post.
 
 Réponds UNIQUEMENT en JSON valide avec cette structure :
-{"facebook":"texte facebook","instagram":"texte instagram"}
+{"facebook":"texte facebook","instagram":"texte instagram","linkedin":"texte linkedin"}
 
 Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jamais promettre de résultats garantis.`;
 
@@ -6912,7 +6946,7 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
       const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 1024, messages: [{ role: 'user', content: prompt }] })
+        body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 1400, messages: [{ role: 'user', content: prompt }] })
       });
       if (aiRes.ok) {
         const aiData = await aiRes.json();
@@ -6922,6 +6956,7 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
           const parsed = JSON.parse(jsonMatch[0]);
           facebook_text = parsed.facebook || '';
           instagram_text = parsed.instagram || '';
+          linkedin_text = parsed.linkedin || '';
         }
       }
     } catch (_) {}
@@ -6930,8 +6965,27 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
   // Fallback si l'IA échoue ou n'est pas configurée
   if (!facebook_text) facebook_text = `oradia.fr\n\n${subject}\n\n${textContent.substring(0, 400)}...`;
   if (!instagram_text) instagram_text = `oradia.fr\n\n${subject}\n\n${textContent.substring(0, 150)}...\n\n#oradia #oracle #developpementpersonnel #tore #conscience`;
+  if (!linkedin_text) linkedin_text = `oradia.fr\n\n${subject}\n\n${textContent.substring(0, 400)}...`;
 
-  return { facebook_text, instagram_text };
+  return { facebook_text, instagram_text, linkedin_text };
+}
+
+// Programme une publication sur les 3 réseaux (Facebook + Instagram + LinkedIn) pour un
+// envoi qui n'a pas de bouton "Publier sur les réseaux" cliqué manuellement : le parcours
+// d'accueil (mercredi, une fois par semaine pour l'étape la plus avancée envoyée) et les
+// newsletters promotionnelles envoyées via action=send (jamais les envois de test).
+// Erreur avalée : ne doit jamais faire échouer un envoi d'email déjà réussi.
+async function scheduleAutoSocialPost(supabase, { subject, textContent, imageUrl }) {
+  try {
+    const { facebook_text, instagram_text, linkedin_text } = await generateSocialTexts({ subject, textContent });
+    const image_url = await ensureSafeSocialImageUrl(imageUrl || 'https://oradia.fr/images/logo-hd-v2.webp');
+    await supabase.from('social_posts').insert({
+      subject, facebook_text, instagram_text, linkedin_text, image_url,
+      scheduled_at: new Date().toISOString()
+    });
+  } catch (e) {
+    console.error('[scheduleAutoSocialPost]', e.message);
+  }
 }
 
 async function handlePublishSocial(req, res) {
@@ -6952,11 +7006,13 @@ async function handlePublishSocial(req, res) {
     // Si les textes ont déjà été édités côté client, les utiliser directement sans régénérer
     let facebook_text = body.facebook_text || '';
     let instagram_text = body.instagram_text || '';
+    let linkedin_text = body.linkedin_text || '';
 
-    if (!facebook_text || !instagram_text) {
+    if (!facebook_text || !instagram_text || !linkedin_text) {
       const generated = await generateSocialTexts({ subject, textContent });
       facebook_text = facebook_text || generated.facebook_text;
       instagram_text = instagram_text || generated.instagram_text;
+      linkedin_text = linkedin_text || generated.linkedin_text;
     }
 
     const DEFAULT_IMAGE = 'https://oradia.fr/images/logo-hd-v2.webp';
@@ -6964,7 +7020,7 @@ async function handlePublishSocial(req, res) {
 
     // Mode aperçu : retourne le texte sans envoyer à Make.com
     if (previewOnly) {
-      return res.status(200).json({ success: true, facebook_text, instagram_text, image_url, preview: true });
+      return res.status(200).json({ success: true, facebook_text, instagram_text, linkedin_text, image_url, preview: true });
     }
 
     // Recadrage automatique si le ratio est hors des bornes acceptées par Instagram/Facebook
@@ -6983,14 +7039,14 @@ async function handlePublishSocial(req, res) {
         process.env.SUPABASE_SERVICE_ROLE_KEY
       );
       const { error: insErr } = await sbSocial.from('social_posts').insert({
-        subject, facebook_text, instagram_text, image_url, scheduled_at: new Date(scheduleAt).toISOString()
+        subject, facebook_text, instagram_text, linkedin_text, image_url, scheduled_at: new Date(scheduleAt).toISOString()
       });
       if (insErr) return res.status(500).json({ error: 'Erreur enregistrement programmation : ' + insErr.message });
-      return res.status(200).json({ success: true, facebook_text, instagram_text, image_url, scheduled: true });
+      return res.status(200).json({ success: true, facebook_text, instagram_text, linkedin_text, image_url, scheduled: true });
     }
 
     // Pas de date : publication immédiate, comportement inchangé.
-    const payload = { subject, facebook_text, instagram_text, image_url, schedule_at: null, sent_at: new Date().toISOString() };
+    const payload = { subject, facebook_text, instagram_text, linkedin_text, image_url, schedule_at: null, sent_at: new Date().toISOString() };
     const makeRes = await fetch(MAKE_WEBHOOK_URL, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -7002,7 +7058,7 @@ async function handlePublishSocial(req, res) {
       return res.status(502).json({ error: 'Make.com webhook error', detail: errText });
     }
 
-    return res.status(200).json({ success: true, facebook_text, instagram_text, image_url });
+    return res.status(200).json({ success: true, facebook_text, instagram_text, linkedin_text, image_url });
   } catch (err) {
     if (err.message === 'Unauthorized') return res.status(401).json({ error: 'Non autorisé' });
     console.error('handlePublishSocial error:', err);
@@ -7443,7 +7499,7 @@ module.exports = async (req, res) => {
             const makeRes = await fetch(MAKE_WEBHOOK_URL, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ subject: post.subject, facebook_text: post.facebook_text, instagram_text: post.instagram_text, image_url: post.image_url, schedule_at: null, sent_at: new Date().toISOString() })
+              body: JSON.stringify({ subject: post.subject, facebook_text: post.facebook_text, instagram_text: post.instagram_text, linkedin_text: post.linkedin_text, image_url: post.image_url, schedule_at: null, sent_at: new Date().toISOString() })
             });
             if (!makeRes.ok) throw new Error(`Make.com ${makeRes.status}`);
             await sbSocialList.from('social_posts').update({ statut: 'envoyé', sent_at: new Date().toISOString() }).eq('id', post.id);
