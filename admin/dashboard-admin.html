@@ -10195,10 +10195,41 @@
         let nlSocialPosts = [];
         let nlSocialShowArchived = false;
         let socialSubTab = 'upcoming';
+        // Aperçu de la prochaine publication liée au parcours (étape validée, en tête de
+        // file) : aucune ligne social_posts n'existe encore (créée seulement à l'envoi
+        // réel du mercredi), donc reconstruite à partir de l'aperçu déjà généré et
+        // sauvegardé avec le brouillon (extra.social_*_text) — jamais une nouvelle
+        // génération IA ici, pour ne pas appeler Claude à chaque chargement de l'onglet.
+        let nlUpcomingParcoursPreview = null;
+        async function nlLoadUpcomingParcoursPreview() {
+            nlUpcomingParcoursPreview = null;
+            try {
+                const statusRes = await adminFetch('/api/admin/newsletter?action=parcours-status');
+                const status = await statusRes.json();
+                if (!status.success || !status.nextReady) return;
+                const draftRes = await adminFetch(`/api/admin/newsletter?action=drafts&id=${status.nextReady.id}`);
+                if (!draftRes.ok) return;
+                const draft = await draftRes.json();
+                const extra = draft?.extra || {};
+                nlUpcomingParcoursPreview = {
+                    id: status.nextReady.id,
+                    subject: status.nextReady.subject,
+                    facebook_text: extra.social_facebook_text || '',
+                    instagram_text: extra.social_instagram_text || '',
+                    linkedin_text: extra.social_linkedin_text || '',
+                    image_url: extra.social_image || '',
+                    hasPreview: !!(extra.social_facebook_text || extra.social_instagram_text || extra.social_linkedin_text)
+                };
+            } catch (_) { /* silencieux — ne doit pas bloquer l'affichage du reste */ }
+        }
+
         async function nlLoadSocialPosts() {
             const container = document.getElementById('socialPostsList');
             try {
-                const res = await adminFetch('/api/admin/social-posts');
+                const [res] = await Promise.all([
+                    adminFetch('/api/admin/social-posts'),
+                    nlLoadUpcomingParcoursPreview()
+                ]);
                 const json = await res.json();
                 if (!res.ok || !json.success) throw new Error(json.error || 'Erreur');
                 nlSocialPosts = json.posts || [];
@@ -10236,11 +10267,41 @@
                 <button onclick="nlToggleSocialArchived()" class="text-xs text-gold/50 hover:text-gold underline underline-offset-2">${nlSocialShowArchived ? 'Masquer les archivés' : 'Voir les archivés'}</button>
             </div>` : '';
 
+            const networkBlock = (label, icon, colorClass, text) => !text ? '' : `
+                <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-lg p-3">
+                    <div class="flex items-center gap-1.5 text-xs font-semibold mb-1.5 ${colorClass}"><i class="${icon}"></i>${label}</div>
+                    <p class="text-light-gold/70 text-xs whitespace-pre-wrap">${escapeHtmlFront(text)}</p>
+                </div>`;
+
+            // Carte du parcours (étape validée, en tête de file — mercredi prochain) : pas une
+            // vraie ligne social_posts (créée seulement à l'envoi), donc affichée à part avec un
+            // badge distinct et un lien vers l'onglet Parcours plutôt que les actions habituelles.
+            let upcomingParcoursCard = '';
+            if (socialSubTab === 'upcoming' && nlUpcomingParcoursPreview) {
+                const p = nlUpcomingParcoursPreview;
+                upcomingParcoursCard = `
+                <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-teal-500/30 p-5 mb-4">
+                    <div class="flex items-start justify-between gap-3 mb-3 flex-wrap">
+                        <div>
+                            <div class="flex items-center gap-2 mb-1"><span class="text-xs px-2 py-0.5 rounded-full bg-teal-500/15 text-teal-300 border border-teal-500/30">Parcours — mercredi prochain</span><span class="text-light-gold font-semibold text-sm">${escapeHtmlFront(p.subject || 'Sans titre')}</span></div>
+                            <div class="text-light-gold/40 text-xs">${p.hasPreview ? 'Aperçu déjà préparé' : "Pas encore d'aperçu généré"}</div>
+                        </div>
+                        <button onclick="showTab('newsletter'); nlShowTab('parcours'); nlPreviewSocialFromParcours('${p.id}');" class="text-xs bg-teal-500/15 text-teal-200 border border-teal-400/30 rounded-lg px-3 py-1.5 hover:bg-teal-500/25 transition shrink-0"><i class="fas fa-eye mr-1"></i>${p.hasPreview ? 'Revoir' : "Générer l'aperçu"}</button>
+                    </div>
+                    ${p.hasPreview ? `<div class="grid grid-cols-1 md:grid-cols-4 gap-3">
+                        ${p.image_url ? `<div class="rounded-lg overflow-hidden border border-gold/15"><img src="${escapeHtmlFront(p.image_url)}" alt="Visuel" class="w-full h-full object-cover"></div>` : ''}
+                        ${networkBlock('Facebook', 'fab fa-facebook', 'text-blue-400', p.facebook_text)}
+                        ${networkBlock('Instagram', 'fab fa-instagram', 'text-pink-400', p.instagram_text)}
+                        ${networkBlock('LinkedIn', 'fab fa-linkedin', 'text-sky-400', p.linkedin_text)}
+                    </div>` : ''}
+                </div>`;
+            }
+
             if (!list.length) {
                 const emptyMsg = socialSubTab === 'upcoming'
-                    ? "Aucune publication programmée à venir. Le parcours et les newsletters promo publient automatiquement à l'envoi (sans programmation à l'avance) — utilise « Réseaux » sur une étape du Parcours pour en avoir un aperçu."
+                    ? "Aucune publication manuelle programmée à venir. Le parcours et les newsletters promo publient automatiquement à l'envoi (sans programmation à l'avance)."
                     : `Aucune publication ${nlSocialShowArchived ? 'archivée' : "envoyée pour l'instant"}.`;
-                container.innerHTML = toggleBtn + `<p class="text-light-gold/30 text-center py-8 cormorant text-lg">${emptyMsg}</p>`;
+                container.innerHTML = upcomingParcoursCard + toggleBtn + `<p class="text-light-gold/30 text-center py-8 cormorant text-lg">${emptyMsg}</p>`;
                 return;
             }
 
@@ -10249,13 +10310,8 @@
                 'envoyé':    '<span class="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-300 border border-green-500/30">Publié</span>',
                 'échec':     '<span class="text-xs px-2 py-0.5 rounded-full bg-red-500/15 text-red-300 border border-red-500/30">Échec</span>'
             };
-            const networkBlock = (label, icon, colorClass, text) => !text ? '' : `
-                <div class="bg-[rgba(5,20,40,0.5)] border border-gold/15 rounded-lg p-3">
-                    <div class="flex items-center gap-1.5 text-xs font-semibold mb-1.5 ${colorClass}"><i class="${icon}"></i>${label}</div>
-                    <p class="text-light-gold/70 text-xs whitespace-pre-wrap">${escapeHtmlFront(text)}</p>
-                </div>`;
 
-            container.innerHTML = toggleBtn + list.map(p => {
+            container.innerHTML = upcomingParcoursCard + toggleBtn + list.map(p => {
                 const dateVal = p.sent_at || p.scheduled_at;
                 const dateLabel = p.statut === 'envoyé' ? 'Publié le' : (p.statut === 'échec' ? 'Échec le' : 'Programmé pour le');
                 return `
