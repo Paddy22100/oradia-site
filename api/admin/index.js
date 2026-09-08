@@ -7110,9 +7110,9 @@ Génère trois publications séparées :
 
 1. FACEBOOK (300-400 mots, ton inspirant et profond, peut contenir des paragraphes, emoji discrets, appel à l'action vers le site)
 2. INSTAGRAM (150-200 mots max, percutant, 5-8 hashtags pertinents en fin de texte, emojis bienvenus)
-3. LINKEDIN (200-300 mots, ton sobre et professionnel, à la première personne du créateur d'Oradia, sans emoji ou avec un usage très discret, centré sur l'introspection et la clarté plutôt que sur des affirmations ésotériques ou des promesses de résultats)
+3. LINKEDIN (200-300 mots, ton sobre et professionnel, à la première personne du créateur d'Oradia, sans emoji ou avec un usage très discret, centré sur l'introspection et la clarté plutôt que sur des affirmations ésotériques ou des promesses de résultats. Termine par la mention "oradia.fr" en texte simple, PAS en première ligne, puis par 3 à 5 hashtags professionnels pertinents dans le registre du post, par exemple #DéveloppementPersonnel #Neurosciences #GestionDuTemps — jamais les hashtags plus grand public utilisés pour Instagram)
 
-Contrainte impérative de format : chaque texte doit COMMENCER par le lien "oradia.fr" sur sa propre ligne (avant même la première phrase), pour que le site soit immédiatement visible sans avoir à lire tout le post.
+Contrainte impérative de format : les textes FACEBOOK et INSTAGRAM doivent COMMENCER par le lien "oradia.fr" sur sa propre ligne (avant même la première phrase), pour que le site soit immédiatement visible sans avoir à lire tout le post. Le texte LINKEDIN, lui, ne doit JAMAIS commencer par ce lien : ouvrir un post LinkedIn sur une URL brute casse l'accroche et n'est pas dans les codes de la plateforme — voir sa consigne spécifique ci-dessus.
 
 Réponds UNIQUEMENT en JSON valide avec cette structure :
 {"facebook":"texte facebook","instagram":"texte instagram","linkedin":"texte linkedin"}
@@ -7142,7 +7142,7 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
   // Fallback si l'IA échoue ou n'est pas configurée
   if (!facebook_text) facebook_text = `oradia.fr\n\n${subject}\n\n${textContent.substring(0, 400)}...`;
   if (!instagram_text) instagram_text = `oradia.fr\n\n${subject}\n\n${textContent.substring(0, 150)}...\n\n#oradia #oracle #developpementpersonnel #tore #conscience`;
-  if (!linkedin_text) linkedin_text = `oradia.fr\n\n${subject}\n\n${textContent.substring(0, 400)}...`;
+  if (!linkedin_text) linkedin_text = `${subject}\n\n${textContent.substring(0, 400)}...\n\noradia.fr`;
 
   return { facebook_text, instagram_text, linkedin_text };
 }
