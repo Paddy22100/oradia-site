@@ -8079,10 +8079,17 @@ Réponds en français, sans tiret long, format markdown compact.`
             toReblacklist.push(email);
             return { email, status: 'unsubscribed', brevo_synced: false, brevo_synced_at: now, source: 'brevo-sync' };
           }
+          // brevo_synced: true dans les deux cas — cette ligne reflète l'état RÉEL et déjà
+          // confirmé côté Brevo (contact actif dans la liste 5, ou blacklisté), il n'y a donc
+          // plus rien à pousser. Mettre `!c.emailBlacklisted` ici (comme avant) marquait tout
+          // contact blacklisté comme "non synchronisé" pour toujours : à chaque exécution
+          // silencieuse de /sync-all (à chaque chargement du dashboard), cet upsert écrasait
+          // le brevo_synced=true posé par ailleurs et faisait réapparaître le même contact
+          // dans le compteur "Contacts non sync Brevo", sans jamais pouvoir redescendre.
           return {
             email,
             status: c.emailBlacklisted ? 'unsubscribed' : 'active',
-            brevo_synced: !c.emailBlacklisted,
+            brevo_synced: true,
             brevo_synced_at: now,
             source: 'brevo-sync'
           };
