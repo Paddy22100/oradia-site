@@ -182,3 +182,17 @@ CREATE POLICY "supplier_files_service_role" ON supplier_files
 
 COMMENT ON TABLE supplier_files IS
     'Devis/fichiers joints à une fiche fournisseur (historique horodaté, plusieurs fichiers par fournisseur), gérés depuis le dashboard admin, onglet Contacts > Fournisseurs.';
+
+
+-- ============================================================
+-- AJOUT : distinction fabricant / transporteur sur la fiche fournisseur,
+-- pour pouvoir filtrer les transitaires/transporteurs à contacter pour un
+-- devis de fret (Shanghai → France) séparément des fabricants/imprimeurs.
+-- Idempotent.
+-- ============================================================
+ALTER TABLE suppliers DROP CONSTRAINT IF EXISTS suppliers_type_check;
+ALTER TABLE suppliers ADD COLUMN IF NOT EXISTS type TEXT DEFAULT 'fabricant';
+ALTER TABLE suppliers ADD CONSTRAINT suppliers_type_check
+    CHECK (type IN ('fabricant', 'transporteur'));
+
+CREATE INDEX IF NOT EXISTS idx_suppliers_type ON suppliers(type);

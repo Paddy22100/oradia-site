@@ -1554,7 +1554,7 @@
             <!-- ── Sous-onglet Fournisseurs ── -->
             <div id="contacts-subtab-suppliers" class="hidden">
                 <div class="flex items-center justify-between mb-5 gap-3 flex-wrap">
-                    <span class="text-gold/50 text-sm">Imprimeurs et fabricants — rattachables à un devis dans l'onglet Devis &amp; Coûts</span>
+                    <span class="text-gold/50 text-sm">Imprimeurs/fabricants (rattachables à un devis dans Devis &amp; Coûts) et transporteurs/transitaires (pour le fret Shanghai → France)</span>
                     <button onclick="toggleSupplierForm()" class="text-sm bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 hover:bg-gold/25 transition"><i class="fas fa-plus mr-1"></i>Ajouter un fournisseur</button>
                 </div>
 
@@ -1567,8 +1567,15 @@
                                 class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
                         </div>
                         <div>
+                            <label class="text-light-gold/60 text-xs block mb-1">Type</label>
+                            <select id="supplierType" class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold outline-none focus:border-gold/50">
+                                <option value="fabricant">Fabricant / imprimeur</option>
+                                <option value="transporteur">Transporteur / transitaire</option>
+                            </select>
+                        </div>
+                        <div>
                             <label class="text-light-gold/60 text-xs block mb-1">Spécialité</label>
-                            <input id="supplierSpecialty" type="text" placeholder="Ex : imprimeur cartes, boîte, pièce de tirage…"
+                            <input id="supplierSpecialty" type="text" placeholder="Ex : imprimeur cartes, boîte, pièce de tirage, fret maritime…"
                                 class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 rounded-lg px-3 py-2 text-sm text-light-gold placeholder:text-gold/25 outline-none focus:border-gold/50">
                         </div>
                         <div>
@@ -1609,12 +1616,19 @@
                     </div>
                 </div>
 
+                <div class="flex gap-2 mb-4" id="suppliersTypeFilter">
+                    <button onclick="setSuppliersTypeFilter('all')" data-type="all" class="suppliers-type-btn text-xs px-3 py-1.5 rounded-lg border transition bg-gold/20 text-gold border-gold/40">Tous</button>
+                    <button onclick="setSuppliersTypeFilter('fabricant')" data-type="fabricant" class="suppliers-type-btn text-xs px-3 py-1.5 rounded-lg border transition text-light-gold/50 border-gold/15">Fabricants</button>
+                    <button onclick="setSuppliersTypeFilter('transporteur')" data-type="transporteur" class="suppliers-type-btn text-xs px-3 py-1.5 rounded-lg border transition text-light-gold/50 border-gold/15">Transporteurs</button>
+                </div>
+
                 <div class="bg-[rgba(5,20,40,0.6)] rounded-2xl border border-gold/30 overflow-hidden">
                     <div class="overflow-x-auto">
                         <table class="w-full" id="suppliersTable">
                             <thead class="bg-[rgba(5,20,40,0.8)]">
                                 <tr>
                                     <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Fournisseur</th>
+                                    <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Type</th>
                                     <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Spécialité</th>
                                     <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Ville</th>
                                     <th class="px-5 py-4 text-left text-gold font-semibold text-xs uppercase tracking-wider">Contact</th>
@@ -1622,7 +1636,7 @@
                                 </tr>
                             </thead>
                             <tbody id="suppliersTbody">
-                                <tr><td colspan="5" class="px-6 py-8 text-center text-gold/30 cormorant text-lg">Chargement…</td></tr>
+                                <tr><td colspan="6" class="px-6 py-8 text-center text-gold/30 cormorant text-lg">Chargement…</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -2059,7 +2073,8 @@
                         <option value="blackedge">Option 3 — Boîte "livre" (black edge)</option>
                     </select>
                 </div>
-                <p class="text-light-gold/40 text-xs mb-3">Contrairement à WJPC, Whatz ne cote que le prix départ usine (FOB Shanghai) : le transport Shanghai → France n'est pas inclus. La ligne "Fret international" ci-dessous est une estimation modifiable (pas un devis transitaire confirmé) — remplace les valeurs par défaut dès que tu as un vrai devis de transport, elles se gardent automatiquement.</p>
+                <p class="text-light-gold/40 text-xs mb-1">Contrairement à WJPC, Whatz ne cote que le prix départ usine (FOB Shanghai) : le transport Shanghai → France n'est pas inclus. La ligne "Fret international" ci-dessous est une estimation modifiable (pas un devis transitaire confirmé) — remplace les valeurs par défaut dès que tu as un vrai devis de transport, elles se gardent automatiquement.</p>
+                <p class="text-light-gold/40 text-xs mb-3">Pour demander un devis à un transporteur (onglet Contacts &gt; Fournisseurs, filtre "Transporteurs") : poids de référence <strong class="text-light-gold/60">785 g/exemplaire</strong>, conditionné par <strong class="text-light-gold/60">cartons de 6</strong> (Whatz Games) — <span id="calcWhatzWeightInfo" class="text-light-gold/60">—</span></p>
                 <p id="calcWhatzConfigLabel" class="text-gold/60 text-xs mb-2 font-semibold">—</p>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm" id="calcWhatzTable">
@@ -5013,7 +5028,7 @@
             if (!sel) return;
             const current = sel.value;
             sel.innerHTML = '<option value="">— Aucun / voir Contacts &gt; Fournisseurs —</option>' +
-                currentSuppliers.map(s => `<option value="${s.id}">${escapeHtmlFront(s.name)}</option>`).join('');
+                currentSuppliers.filter(s => (s.type || 'fabricant') === 'fabricant').map(s => `<option value="${s.id}">${escapeHtmlFront(s.name)}</option>`).join('');
             sel.value = current;
         }
         let quotesCategoryFilter = 'all';
@@ -5202,6 +5217,9 @@
         // dépend du poids final du colis — pas un montant ferme.
         const WHATZ_PROTO_FAB_USD = 330.00;
         const WHATZ_PROTO_SHIP_USD_APPROX = 100.00;
+        // Poids/conditionnement de référence pour demander un devis transitaire (Whatz Games).
+        const ORACLE_WEIGHT_KG = 0.785;
+        const ORACLE_UNITS_PER_CARTON = 6;
         const WJPC_EXW_BW_USD    = { 1000: 13.38, 2000: 11.15 };
         const WJPC_EXW_COLOR_USD = { 1000: 14.66, 2000: 11.90 };
         const WJPC_DDP_SEA_USD   = { 1000: 2100, 2000: 4050 };
@@ -5323,6 +5341,15 @@
             `;
             // Ré-attacher la valeur sauvegardée après ré-écriture du DOM (les inputs sont recréés à chaque render)
             whatzRows.forEach(x => { if (x.overrideVal !== '') document.getElementById(x.freightId).value = x.overrideVal; });
+
+            const weightInfoEl = document.getElementById('calcWhatzWeightInfo');
+            if (weightInfoEl) {
+                weightInfoEl.textContent = CALC_QUANTITIES.map(qty => {
+                    const kg = round2(qty * ORACLE_WEIGHT_KG);
+                    const cartons = Math.ceil(qty / ORACLE_UNITS_PER_CARTON);
+                    return `${qty}u → ${kg} kg / ${cartons} cartons`;
+                }).join(' · ');
+            }
 
             const booklet = document.getElementById('calcWjpcColor').checked ? 'color' : 'bw';
             const shipping = document.getElementById('calcWjpcShipping').value;
@@ -5729,6 +5756,7 @@
             const isEditing = !!supplier;
             document.getElementById('supplierId').value = isEditing ? supplier.id : '';
             document.getElementById('supplierName').value = isEditing ? (supplier.name || '') : '';
+            document.getElementById('supplierType').value = isEditing ? (supplier.type || 'fabricant') : 'fabricant';
             document.getElementById('supplierSpecialty').value = isEditing ? (supplier.specialty || '') : '';
             document.getElementById('supplierContactName').value = isEditing ? (supplier.contact_name || '') : '';
             document.getElementById('supplierEmail').value = isEditing ? (supplier.email || '') : '';
@@ -5751,6 +5779,7 @@
             const payload = {
                 id: id || undefined,
                 name,
+                type: document.getElementById('supplierType').value,
                 specialty: document.getElementById('supplierSpecialty').value.trim(),
                 contactName: document.getElementById('supplierContactName').value.trim(),
                 email: document.getElementById('supplierEmail').value.trim(),
@@ -5793,24 +5822,52 @@
         }
 
         let currentSuppliers = [];
+        let suppliersTypeFilter = 'all';
+        function setSuppliersTypeFilter(type) {
+            suppliersTypeFilter = type;
+            document.querySelectorAll('.suppliers-type-btn').forEach(b => {
+                const active = b.dataset.type === type;
+                b.classList.toggle('bg-gold/20', active);
+                b.classList.toggle('text-gold', active);
+                b.classList.toggle('border-gold/40', active);
+                b.classList.toggle('text-light-gold/50', !active);
+                b.classList.toggle('border-gold/15', !active);
+            });
+            renderSuppliers();
+        }
+
+        const supplierTypeLabels = { fabricant: 'Fabricant', transporteur: 'Transporteur' };
+        const supplierTypeColors = { fabricant: 'bg-blue-500/15 text-blue-300 border-blue-500/30', transporteur: 'bg-teal-500/15 text-teal-300 border-teal-500/30' };
+
         async function loadSuppliers() {
-            const tbody = document.getElementById('suppliersTbody');
             try {
                 const res = await adminFetch('/api/admin/data?section=suppliers');
                 const json = await res.json();
                 if (!res.ok) throw new Error(json.error || 'Erreur');
                 currentSuppliers = json.data || [];
                 populateQuoteSupplierOptions();
-                if (!currentSuppliers.length) {
-                    tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">Aucun fournisseur enregistré</td></tr>';
-                    return;
-                }
-                tbody.innerHTML = currentSuppliers.map(s => `
+                renderSuppliers();
+            } catch (e) {
+                document.getElementById('suppliersTbody').innerHTML = `<tr><td colspan="6" class="px-6 py-8 text-center text-red-400 text-sm">${escapeHtmlFront(e.message)}</td></tr>`;
+            }
+        }
+
+        function renderSuppliers() {
+            const tbody = document.getElementById('suppliersTbody');
+            const list = suppliersTypeFilter === 'all' ? currentSuppliers : currentSuppliers.filter(s => (s.type || 'fabricant') === suppliersTypeFilter);
+            if (!list.length) {
+                tbody.innerHTML = `<tr><td colspan="6" class="px-6 py-12 text-center text-gold/30 cormorant text-lg">${currentSuppliers.length ? 'Aucun résultat' : 'Aucun fournisseur enregistré'}</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = list.map(s => {
+                const type = s.type || 'fabricant';
+                return `
                     <tr class="hover:bg-gold/5 transition" id="supplier-row-${s.id}">
                         <td class="px-5 py-4 text-light-gold text-sm">
                             ${escapeHtmlFront(s.name || '—')}
                             ${s.address ? `<br><span class="text-light-gold/40 text-xs">${escapeHtmlFront(s.address)}</span>` : ''}
                         </td>
+                        <td class="px-5 py-4"><span class="text-xs px-2 py-0.5 rounded-full border ${supplierTypeColors[type] || ''}">${supplierTypeLabels[type] || type}</span></td>
                         <td class="px-5 py-4 text-light-gold/70 text-sm">${escapeHtmlFront(s.specialty || '—')}</td>
                         <td class="px-5 py-4 text-light-gold/70 text-sm">${escapeHtmlFront(s.city || '—')}</td>
                         <td class="px-5 py-4 text-light-gold/60 text-xs">
@@ -5827,10 +5884,8 @@
                                 <button onclick="deleteSupplier('${s.id}')" class="text-xs text-red-400/60 hover:text-red-400 border border-red-400/20 hover:border-red-400/50 rounded-lg px-2 py-1 transition"><i class="fas fa-trash"></i></button>
                             </div>
                         </td>
-                    </tr>`).join('');
-            } catch (e) {
-                tbody.innerHTML = `<tr><td colspan="5" class="px-6 py-8 text-center text-red-400 text-sm">${escapeHtmlFront(e.message)}</td></tr>`;
-            }
+                    </tr>`;
+            }).join('');
         }
 
         // ── Devis/fichiers joints à un fournisseur (historique horodaté) ──

@@ -1589,10 +1589,11 @@ async function handleData(req, res) {
 
       // ── Fournisseurs / imprimeurs (onglet Contacts > Fournisseurs) ──
       if (action === 'create-supplier' || action === 'update-supplier') {
-        const { id, name, specialty, contactName, email, phone, address, city, notes } = body;
+        const { id, name, type, specialty, contactName, email, phone, address, city, notes } = body;
         const cleanName = (name || '').trim();
         if (action === 'create-supplier' && !cleanName) return res.status(400).json({ error: 'Nom du fournisseur requis' });
         const payload = {
+          type: type === 'transporteur' ? 'transporteur' : 'fabricant',
           specialty: specialty || null,
           contact_name: contactName ?? null,
           email: email || null,
