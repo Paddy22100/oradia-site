@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Suppression de compte - ORADIA</title>
+    <link rel="canonical" href="https://oradia.fr/suppression-compte.html" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="responsive.css">
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'night-blue': '#0a192f',
+                        'gold': '#d4af37',
+                        'light-gold': '#f5e7a1',
+                        'dark-blue': '#051428',
+                        'celtic-blue': '#1a365d'
+                    },
+                    fontFamily: {
+                        'cormorant': ['Cormorant Garamond', 'serif'],
+                        'poppins': ['Poppins', 'sans-serif']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;500;600;700&family=Poppins:wght@300;400;500;600&display=swap');
+
+        .gold-gradient {
+            background: linear-gradient(135deg, #d4af37, #f4e4c1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+    </style>
+</head>
+<body class="bg-night-blue text-light-gold">
+    <!-- Header -->
+    <header class="bg-[rgba(5,20,40,0.8)] backdrop-blur-md border-b border-gold/20">
+        <div class="container mx-auto px-6 py-4">
+            <div class="flex items-center gap-4">
+                <a href="index.html" class="flex items-center gap-3">
+                    <img src="images/logo-hd-v2.webp" alt="ORADIA" class="w-10 h-10 rounded-full">
+                    <div>
+                        <h1 class="cormorant text-2xl font-bold gold-gradient">ORADIA</h1>
+                        <p class="text-gold/70 text-sm">Suppression de compte</p>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="container mx-auto px-6 py-12 max-w-4xl">
+        <div class="bg-gradient-to-br from-[rgba(26,54,93,0.6)] to-[rgba(5,20,40,0.8)] rounded-2xl p-8 border border-gold/30">
+
+            <h1 class="cormorant text-4xl font-bold text-gold text-center mb-8">Demander la suppression de votre compte</h1>
+
+            <div class="space-y-8 text-light-gold">
+
+                <section>
+                    <h2 class="cormorant text-2xl font-semibold text-gold mb-4">
+                        <i class="fas fa-user-slash mr-2"></i>Comment demander la suppression
+                    </h2>
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-lg p-6 border border-gold/20 space-y-4">
+                        <p>
+                            Pour demander la suppression de votre compte Oradia (site web et application mobile)
+                            et des données associées, envoyez un email à
+                            <a href="mailto:contact@oradia.fr" class="text-gold underline">contact@oradia.fr</a>
+                            depuis l'adresse email associée à votre compte, avec pour objet
+                            « Suppression de compte ».
+                        </p>
+                        <p>
+                            Votre demande sera traitée sous <strong class="text-gold">30 jours maximum</strong>.
+                            Une confirmation vous sera envoyée une fois la suppression effectuée.
+                        </p>
+                    </div>
+                </section>
+
+                <section>
+                    <h2 class="cormorant text-2xl font-semibold text-gold mb-4">
+                        <i class="fas fa-database mr-2"></i>Données supprimées
+                    </h2>
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-lg p-6 border border-gold/20">
+                        <ul class="list-disc list-inside space-y-2">
+                            <li>Votre profil (email, nom, mot de passe)</li>
+                            <li>L'historique de vos tirages</li>
+                            <li>Vos préférences et paramètres de compte</li>
+                        </ul>
+                    </div>
+                </section>
+
+                <section>
+                    <h2 class="cormorant text-2xl font-semibold text-gold mb-4">
+                        <i class="fas fa-clock mr-2"></i>Données conservées
+                    </h2>
+                    <div class="bg-[rgba(5,20,40,0.6)] rounded-lg p-6 border border-gold/20">
+                        <p>
+                            Les données liées à une facturation ou à un paiement déjà effectué (via Stripe)
+                            peuvent être conservées au-delà de la suppression du compte, pour la durée
+                            imposée par nos obligations légales et comptables, conformément à notre
+                            <a href="politique-confidentialite.html" class="text-gold underline">politique de confidentialité</a>.
+                        </p>
+                    </div>
+                </section>
+
+            </div>
+        </div>
+    </main>
+</body>
+</html>
