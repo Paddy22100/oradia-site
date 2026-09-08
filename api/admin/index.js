@@ -129,6 +129,27 @@ const KICKSTARTER_CSV_HEADER_MAP = {
   'pledged at': 'pledged_at', 'backing date': 'pledged_at', 'date': 'pledged_at',
 };
 
+// Estimation frais Ulule (commission plateforme + frais de traitement des paiements),
+// même logique d'approximation que KICKSTARTER_FEE_RATE ci-dessus — Ulule ne fournit pas
+// non plus de détail des frais par contribution via export CSV.
+const ULULE_FEE_RATE = parseFloat(process.env.ULULE_FEE_RATE || '0.08');
+
+// Mapping tolérant des en-têtes d'export CSV Ulule (variantes FR/EN observées selon les
+// campagnes) vers les colonnes internes de ulule_backers — même structure que
+// KICKSTARTER_CSV_HEADER_MAP, adaptée au vocabulaire "contributeur" d'Ulule.
+const ULULE_CSV_HEADER_MAP = {
+  'numero de contributeur': 'backer_number', 'contributor number': 'backer_number', 'n°': 'backer_number', 'no': 'backer_number',
+  'contributor name': 'backer_name', 'contributeur': 'backer_name', 'name': 'backer_name', 'nom': 'backer_name',
+  'email': 'email', 'e-mail': 'email',
+  'reward title': 'reward_title', 'reward': 'reward_title', 'contrepartie': 'reward_title',
+  'contribution amount': 'pledge_amount', 'amount': 'pledge_amount', 'montant': 'pledge_amount', 'contribution': 'pledge_amount',
+  'currency': 'currency', 'devise': 'currency',
+  'status': 'status', 'statut': 'status',
+  'shipping country': 'shipping_country', 'pays de livraison': 'shipping_country', 'pays': 'shipping_country',
+  'shipping address': 'shipping_address', 'address': 'shipping_address', 'adresse': 'shipping_address',
+  'pledged at': 'pledged_at', 'contribution date': 'pledged_at', 'date de contribution': 'pledged_at', 'date': 'pledged_at',
+};
+
 function normalizeCsvHeader(h) {
   return String(h || '').trim().toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g, '');
 }
@@ -2437,6 +2458,8 @@ async function handleData(req, res) {
         // mêlées à la comptabilité EUR sans taux de change réel — elles restent visibles dans
         // l'onglet Kickstarter mais hors comptabilité tant qu'elles ne sont pas converties à la main).
         const { data: kickstarterBackers } = await sb.from('kickstarter_backers').select('pledged_at,imported_at,pledge_amount,currency,backer_name,email,reward_title,backer_number');
+        // Ulule : même règle que Kickstarter ci-dessus (uniquement les contributions en EUR).
+        const { data: ululeBackers } = await sb.from('ulule_backers').select('pledged_at,imported_at,pledge_amount,currency,backer_name,email,reward_title,backer_number');
         const planPriceEur = p => p === 'decouverte' ? 5 : 8;
 
         // Le webhook Stripe (api/stripe-webhook.js) crée déjà une ligne "abonnement" réelle
@@ -2495,6 +2518,7 @@ async function handleData(req, res) {
             // pas un doublon de ce que le webhook a déjà enregistré).
             ...(subs||[]).filter(s=>!isExcluded(s.email) && !s.is_free && !emailsAlreadyTracked.has(String(s.email||'').toLowerCase())).map(s => ({ date: s.created_at?.split('T')[0], type:'recette', category:'abonnement', description:`Abonnement Tore ${s.plan||'complet'} — ${s.full_name||s.email||''}`, amount: planPriceEur(s.plan), source:'abonnement', source_ref: `sub_${s.email}_${s.created_at?.split('T')[0]}` })),
             ...(kickstarterBackers||[]).filter(k=>!isExcluded(k.email) && (k.currency||'EUR').toUpperCase()==='EUR' && k.backer_number).map(k => ({ date: (k.pledged_at||k.imported_at)?.split('T')[0], type:'recette', category:'kickstarter', description:`Kickstarter ${k.reward_title||''} — ${k.backer_name||k.email||''}`, amount: parseFloat(k.pledge_amount)||0, source:'kickstarter', source_ref: `ks_${k.backer_number}` })).filter(t=>t.amount>0),
+            ...(ululeBackers||[]).filter(k=>!isExcluded(k.email) && (k.currency||'EUR').toUpperCase()==='EUR' && k.backer_number).map(k => ({ date: (k.pledged_at||k.imported_at)?.split('T')[0], type:'recette', category:'ulule', description:`Ulule ${k.reward_title||''} — ${k.backer_name||k.email||''}`, amount: parseFloat(k.pledge_amount)||0, source:'ulule', source_ref: `ul_${k.backer_number}` })).filter(t=>t.amount>0),
         ];
         // Purger les transactions des abonnements gratuits déjà importées avant que is_free soit posé
         const freeSubEmails = (subs||[]).filter(s=>s.is_free).map(s=>s.email);
@@ -2584,6 +2608,80 @@ async function handleData(req, res) {
       if (action === 'kickstarter-delete-batch' && body.batchId) {
         const { error: delErr, count } = await supabase
           .from('kickstarter_backers')
+          .delete({ count: 'exact' })
+          .eq('import_batch_id', body.batchId);
+        if (delErr) throw delErr;
+        return res.status(200).json({ success: true, deleted: count ?? 0 });
+      }
+
+      // ── Import d'un export CSV Ulule (rapport contributeurs téléchargé depuis le
+      // dashboard créateur Ulule — pas d'API temps réel disponible). Miroir exact de
+      // kickstarter-import, voir ses commentaires pour le détail du fonctionnement.
+      if (action === 'ulule-import') {
+        const rows = Array.isArray(body.rows) ? body.rows : [];
+        if (rows.length === 0) return res.status(400).json({ error: 'Aucune ligne à importer' });
+        if (rows.length > 5000) return res.status(400).json({ error: 'Fichier trop volumineux (5000 lignes max)' });
+
+        const batchId = crypto.randomUUID();
+        const now = new Date().toISOString();
+
+        const mapped = rows.map(rawRow => {
+          const out = { raw: rawRow, import_batch_id: batchId, imported_at: now };
+          for (const [rawHeader, value] of Object.entries(rawRow)) {
+            const key = ULULE_CSV_HEADER_MAP[normalizeCsvHeader(rawHeader)];
+            if (!key || value === undefined || value === null || value === '') continue;
+            if (key === 'pledge_amount') {
+              const num = parseFloat(String(value).replace(/[^\d.,-]/g, '').replace(',', '.'));
+              out[key] = Number.isFinite(num) ? num : null;
+            } else if (key === 'pledged_at') {
+              const d = new Date(value);
+              out[key] = Number.isNaN(d.getTime()) ? null : d.toISOString();
+            } else if (key === 'currency') {
+              out[key] = String(value).trim().toUpperCase().slice(0, 3);
+            } else {
+              out[key] = String(value).trim();
+            }
+          }
+          if (!out.currency) out.currency = 'EUR';
+          return out;
+        }).filter(r => r.backer_name || r.email || r.backer_number);
+
+        if (mapped.length === 0) {
+          return res.status(400).json({ error: 'Impossible de reconnaître les colonnes de ce fichier (en-têtes non standard). Vérifiez qu\'il s\'agit bien d\'un export Ulule (contributeurs).' });
+        }
+
+        const withNumber = mapped.filter(r => r.backer_number);
+        const withoutNumber = mapped.filter(r => !r.backer_number);
+
+        let upserted = 0, inserted = 0;
+        if (withNumber.length > 0) {
+          const { error: upErr, count } = await supabase
+            .from('ulule_backers')
+            .upsert(withNumber, { onConflict: 'backer_number', ignoreDuplicates: false, count: 'exact' });
+          if (upErr) throw upErr;
+          upserted = count ?? withNumber.length;
+        }
+        if (withoutNumber.length > 0) {
+          const { error: insErr } = await supabase.from('ulule_backers').insert(withoutNumber);
+          if (insErr) throw insErr;
+          inserted = withoutNumber.length;
+        }
+
+        return res.status(200).json({
+          success: true,
+          batchId,
+          totalRows: rows.length,
+          recognized: mapped.length,
+          upserted,
+          inserted,
+          skipped: rows.length - mapped.length
+        });
+      }
+
+      // ── Annule le dernier import Ulule (supprime tous les contributeurs de ce batch) ──
+      if (action === 'ulule-delete-batch' && body.batchId) {
+        const { error: delErr, count } = await supabase
+          .from('ulule_backers')
           .delete({ count: 'exact' })
           .eq('import_batch_id', body.batchId);
         if (delErr) throw delErr;
@@ -3248,6 +3346,71 @@ async function handleData(req, res) {
           totalEUR,
           netEUR: totalEUR * (1 - KICKSTARTER_FEE_RATE),
           feeRate: KICKSTARTER_FEE_RATE,
+          lastImportAt,
+          batchCount: batches.size
+        }
+      });
+    }
+
+    // ── Section ulule : liste paginée des contributeurs importés (miroir de kickstarter) ──
+    if (section === 'ulule') {
+      const page   = parseInt(req.query?.page  || '1', 10);
+      const limit  = parseInt(req.query?.limit || '50', 10);
+      const offset = (page - 1) * limit;
+      const q      = (req.query?.q || '').trim();
+
+      let query = supabase
+        .from('ulule_backers')
+        .select('*', { count: 'exact' })
+        .order('pledged_at', { ascending: false, nullsFirst: false });
+
+      if (q) query = query.or(`email.ilike.%${q}%,backer_name.ilike.%${q}%,reward_title.ilike.%${q}%`);
+
+      const { data, count, error } = await query.range(offset, offset + limit - 1);
+      if (error) throw error;
+      return res.status(200).json({
+        success: true,
+        data: data || [],
+        pagination: { page, limit, total: count || 0, pages: Math.ceil((count || 0) / limit) }
+      });
+    }
+
+    // ── Section ulule-stats : agrégats pour les cartes du dashboard (miroir de kickstarter-stats) ──
+    if (section === 'ulule-stats') {
+      const { data: rows, error } = await supabase
+        .from('ulule_backers')
+        .select('pledge_amount,currency,reward_title,import_batch_id,imported_at');
+      if (error) throw error;
+
+      const byCurrency = {};
+      const byReward = {};
+      let lastImportAt = null;
+      const batches = new Set();
+
+      for (const r of rows || []) {
+        const cur = (r.currency || 'EUR').toUpperCase();
+        const amt = parseFloat(r.pledge_amount) || 0;
+        byCurrency[cur] = (byCurrency[cur] || 0) + amt;
+
+        const reward = r.reward_title || 'Sans contrepartie précisée';
+        if (!byReward[reward]) byReward[reward] = { count: 0, total: 0 };
+        byReward[reward].count += 1;
+        byReward[reward].total += amt;
+
+        if (r.import_batch_id) batches.add(r.import_batch_id);
+        if (r.imported_at && (!lastImportAt || r.imported_at > lastImportAt)) lastImportAt = r.imported_at;
+      }
+
+      const totalEUR = byCurrency['EUR'] || 0;
+      return res.status(200).json({
+        success: true,
+        data: {
+          count: (rows || []).length,
+          byCurrency,
+          byReward,
+          totalEUR,
+          netEUR: totalEUR * (1 - ULULE_FEE_RATE),
+          feeRate: ULULE_FEE_RATE,
           lastImportAt,
           batchCount: batches.size
         }
@@ -3925,7 +4088,7 @@ async function handleData(req, res) {
     }
 
     // ── Section overview / all : agrégats KPI ──
-    const [waitlistRes, preordersRes, donorsRes, singleDrawsRes, supportRes, syncRes, guidancesRes, subscriptionsRes, auditRes, kickstarterRes] = await Promise.all([
+    const [waitlistRes, preordersRes, donorsRes, singleDrawsRes, supportRes, syncRes, guidancesRes, subscriptionsRes, auditRes, kickstarterRes, ululeRes] = await Promise.all([
       supabase.from('newsletter_contacts').select('*'),
       supabase.from('preorders').select('*'),
       supabase.from('donors').select('*'),
@@ -3936,7 +4099,9 @@ async function handleData(req, res) {
       supabase.from('tore_subscriptions').select('email, plan, status, is_free, created_at').neq('status', 'payment_failed').neq('status', 'single_draw').then(r => r.error ? supabase.from('tore_subscriptions').select('email, status, created_at').neq('status', 'payment_failed').neq('status', 'single_draw') : r),
       supabase.from('audit_reports').select('summary').order('created_at', { ascending: false }).limit(1),
       // .catch : la table peut ne pas exister tant que la migration kickstarter_backers n'a pas été appliquée
-      supabase.from('kickstarter_backers').select('pledge_amount, currency, imported_at').then(r => r.error ? { data: [] } : r)
+      supabase.from('kickstarter_backers').select('pledge_amount, currency, imported_at').then(r => r.error ? { data: [] } : r),
+      // .catch : la table peut ne pas exister tant que la migration ulule_backers n'a pas été appliquée
+      supabase.from('ulule_backers').select('pledge_amount, currency, imported_at').then(r => r.error ? { data: [] } : r)
     ]);
 
     const waitlistRows    = waitlistRes.data    || [];
@@ -3951,6 +4116,7 @@ async function handleData(req, res) {
     const recentMessages  = supportRes.data     || [];
     const syncRows        = syncRes.data        || [];
     const kickstarterRows = kickstarterRes.data || [];
+    const ululeRows       = ululeRes.data       || [];
     const latestAudit     = (auditRes.data || [])[0];
     const monitoringCritical = latestAudit?.summary?.critical || 0;
     const syncAvg         = syncRows.length > 0
@@ -4011,7 +4177,9 @@ async function handleData(req, res) {
     // pour la même règle côté comptabilité) — les autres devises restent visibles dans
     // l'onglet Kickstarter mais ne sont pas mélangées ici sans taux de change réel.
     const kickstarterTotal = kickstarterRows.filter(r => (r.currency || 'EUR').toUpperCase() === 'EUR').reduce((s, r) => s + (parseFloat(r.pledge_amount) || 0), 0);
-    const globalTotal     = preordersTotal + donorsTotal + singleDrawTotal + guidancesTotal + subscriptionsTotal + kickstarterTotal;
+    // Ulule : même règle que Kickstarter (voir import-transactions pour la même règle côté comptabilité).
+    const ululeTotal       = ululeRows.filter(r => (r.currency || 'EUR').toUpperCase() === 'EUR').reduce((s, r) => s + (parseFloat(r.pledge_amount) || 0), 0);
+    const globalTotal     = preordersTotal + donorsTotal + singleDrawTotal + guidancesTotal + subscriptionsTotal + kickstarterTotal + ululeTotal;
     const totalContacts   = paidPreorderRows.length + donorRows.length + waitlistRows.length;
     const averageBasket   = paidPreorderRows.length > 0 ? preordersTotal / paidPreorderRows.length : 0;
 
@@ -4036,7 +4204,9 @@ async function handleData(req, res) {
     // Frais Kickstarter (commission + traitement paiement) : estimation distincte des frais
     // Stripe classiques, le taux effectif de Kickstarter étant différent (voir KICKSTARTER_FEE_RATE).
     const kickstarterNet     = kickstarterTotal * (1 - KICKSTARTER_FEE_RATE);
-    const globalNet          = preordersNet + donorsNet + singleDrawNet + guidancesNet + subscriptionsNet + kickstarterNet;
+    // Frais Ulule : même logique d'approximation que Kickstarter (voir ULULE_FEE_RATE).
+    const ululeNet           = ululeTotal * (1 - ULULE_FEE_RATE);
+    const globalNet          = preordersNet + donorsNet + singleDrawNet + guidancesNet + subscriptionsNet + kickstarterNet + ululeNet;
 
     const donorsToday = donorRows.filter(r => now - new Date(r.created_at).getTime() < day1);
     const revToday    = sumPreorders(preordersToday) + sumDonors(donorsToday)  + sumGuidances(guidancesToday);
@@ -4101,6 +4271,11 @@ async function handleData(req, res) {
           total:   kickstarterTotal,
           net:     kickstarterNet
         },
+        ulule: {
+          count:   ululeRows.length,
+          total:   ululeTotal,
+          net:     ululeNet
+        },
         support: {
           recent:     recentMessages,
           newCount:   recentMessages.filter(m => m.status === 'new').length
@@ -4126,7 +4301,8 @@ async function handleData(req, res) {
             donors:        donorsTotal,
             guidances:     guidancesTotal,
             subscriptions: subscriptionsTotal,
-            kickstarter:   kickstarterTotal
+            kickstarter:   kickstarterTotal,
+            ulule:         ululeTotal
           }
         },
         performance: {
