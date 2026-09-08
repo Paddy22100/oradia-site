@@ -2926,25 +2926,8 @@
 
             <!-- TAB ENVOYÉES -->
             <div id="nl-tab-sent" class="nl-tab-content hidden">
-                <!-- Statistiques Brevo (ouvertures, clics) -->
-                <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6 mb-6">
-                    <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
-                        <div>
-                            <h4 class="cormorant text-xl text-gold">Impact des campagnes</h4>
-                            <p class="text-light-gold/40 text-xs mt-0.5">Ouvertures et clics mesurés par Brevo sur les dernières campagnes envoyées.</p>
-                        </div>
-                        <div class="flex gap-2">
-                            <button onclick="nlLoadCampaignStats()" class="text-xs bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-2 hover:bg-gold/25 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
-                            <button onclick="nlAnalyzeCampaignStats()" id="nl-stats-analyze-btn" class="text-xs bg-gradient-to-r from-purple-600/70 to-pink-600/70 text-white rounded-lg px-3 py-2 hover:from-purple-500/70 hover:to-pink-500/70 transition"><i class="fas fa-wand-magic-sparkles mr-1"></i>Analyse IA</button>
-                        </div>
-                    </div>
-                    <div id="nl-campaign-stats" class="space-y-2">
-                        <p class="text-gold/30 italic text-center py-4 text-sm">Clique sur Actualiser pour charger les statistiques.</p>
-                    </div>
-                    <div id="nl-stats-analysis" class="hidden mt-5 border-t border-gold/15 pt-5">
-                        <p class="text-gold/60 text-xs uppercase tracking-widest mb-3"><i class="fas fa-lightbulb mr-1"></i>Pistes d'amélioration (IA)</p>
-                        <div id="nl-stats-analysis-content" class="text-light-gold/80 text-sm leading-relaxed whitespace-pre-wrap"></div>
-                    </div>
+                <div class="flex justify-end mb-3">
+                    <button onclick="showTab('analytics')" class="text-xs text-gold/60 hover:text-gold transition underline underline-offset-2">Voir les statistiques d'impact (ouvertures, clics) →</button>
                 </div>
                 <div id="nl-sent-list" class="space-y-3">
                     <p class="text-gold/30 italic text-center py-8">Chargement…</p>
@@ -3531,18 +3514,26 @@
                 <div class="stat-card rounded-xl p-4 text-center"><div class="text-2xl font-bold text-light-gold" id="ana-top-page">—</div><p class="text-gold/50 text-xs mt-1">Page la + visitée</p></div>
             </div>
 
-            <!-- Résumé newsletter — le détail complet vit dans Newsletter & Réseaux -->
-            <div class="stat-card rounded-2xl p-6 mb-6">
-                <div class="flex items-center justify-between gap-3 mb-1 flex-wrap">
-                    <h4 class="text-gold font-semibold flex items-center gap-2"><i class="fas fa-envelope-open-text text-gold/60"></i> Newsletter — Impact</h4>
-                    <button onclick="showTab('newsletter'); if (typeof nlShowTab === 'function') nlShowTab('sent');" class="text-xs text-gold/60 hover:text-gold transition underline underline-offset-2">Voir le détail →</button>
+            <!-- Impact des campagnes newsletter (Brevo) — déplacé depuis Newsletter & Réseaux >
+                 Envoyées : c'est une mesure de performance, elle vit avec les autres analytiques
+                 plutôt que dans l'onglet de gestion/rédaction des newsletters. -->
+            <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-2xl p-6 mb-6">
+                <div class="flex items-center justify-between mb-4 flex-wrap gap-3">
+                    <div>
+                        <h4 class="cormorant text-xl text-gold">Impact des campagnes newsletter</h4>
+                        <p class="text-light-gold/40 text-xs mt-0.5">Ouvertures et clics mesurés par Brevo sur les dernières campagnes envoyées.</p>
+                    </div>
+                    <div class="flex gap-2">
+                        <button onclick="nlLoadCampaignStats()" class="text-xs bg-gold/15 text-gold border border-gold/30 rounded-lg px-3 py-2 hover:bg-gold/25 transition"><i class="fas fa-sync-alt mr-1"></i>Actualiser</button>
+                        <button onclick="nlAnalyzeCampaignStats()" id="nl-stats-analyze-btn" class="text-xs bg-gradient-to-r from-purple-600/70 to-pink-600/70 text-white rounded-lg px-3 py-2 hover:from-purple-500/70 hover:to-pink-500/70 transition"><i class="fas fa-wand-magic-sparkles mr-1"></i>Analyse IA</button>
+                    </div>
                 </div>
-                <p class="text-gold/40 text-xs mb-4 italic">Moyennes calculées sur les campagnes envoyées chargées (Brevo).</p>
-                <div id="ana-newsletter-summary" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div class="text-center"><div class="text-2xl font-bold text-teal-300" id="ana-nl-open">—</div><p class="text-gold/50 text-xs mt-1">Ouverture moy.</p></div>
-                    <div class="text-center"><div class="text-2xl font-bold text-blue-300" id="ana-nl-click">—</div><p class="text-gold/50 text-xs mt-1">Clic moy.</p></div>
-                    <div class="text-center"><div class="text-2xl font-bold text-gold" id="ana-nl-count">—</div><p class="text-gold/50 text-xs mt-1">Campagnes (période chargée)</p></div>
-                    <div class="text-center"><div class="text-sm font-semibold text-light-gold truncate" id="ana-nl-last" title="">—</div><p class="text-gold/50 text-xs mt-1">Dernière envoyée</p></div>
+                <div id="nl-campaign-stats" class="space-y-2">
+                    <p class="text-gold/30 italic text-center py-4 text-sm">Clique sur Actualiser pour charger les statistiques.</p>
+                </div>
+                <div id="nl-stats-analysis" class="hidden mt-5 border-t border-gold/15 pt-5">
+                    <p class="text-gold/60 text-xs uppercase tracking-widest mb-3"><i class="fas fa-lightbulb mr-1"></i>Pistes d'amélioration (IA)</p>
+                    <div id="nl-stats-analysis-content" class="text-light-gold/80 text-sm leading-relaxed whitespace-pre-wrap"></div>
                 </div>
             </div>
 
@@ -4353,7 +4344,7 @@
             if (name === 'monitoring')     { loadMonitoring(); loadSurveillanceLogs(); }
             if (name === 'guidances')      loadGuidances();
             if (name === 'mails')          loadToreEmails();
-            if (name === 'analytics')      loadAnalytics();
+            if (name === 'analytics')      { loadAnalytics(); nlLoadCampaignStats(); }
             if (name === 'etude')          loadExperiment();
             if (name === 'comptabilite')   { loadComptabilite(); loadCosts(); }
             if (name === 'insights')       loadIntentionsList();
@@ -8105,7 +8096,7 @@
             if (name === 'drafts') nlRenderDrafts();
             if (name === 'ideas') nlRenderIdeas();
             if (name === 'scheduled') nlRenderScheduled();
-            if (name === 'sent') { nlRenderSent(); nlLoadCampaignStats(); }
+            if (name === 'sent') nlRenderSent();
             if (name === 'testers') nlLoadTesters();
             if (name === 'parcours') { nlLoadParcours(); nlLoadParcoursStatus(); }
             if (name === 'social') nlLoadSocialPosts();
@@ -14046,35 +14037,6 @@
             doc.save(`oradia-protocole-retrocausalite-${new Date().toISOString().slice(0, 10)}.pdf`);
         }
 
-        // Résumé newsletter affiché dans Analytiques — même source que le détail
-        // complet de Newsletter & Réseaux (/api/admin/newsletter-stats), juste condensé.
-        async function loadNewsletterSummaryForAnalytics() {
-            const set = (id, v, title) => { const el = document.getElementById(id); if (el) { el.textContent = v; if (title !== undefined) el.title = title; } };
-            try {
-                const res = await adminFetch('/api/admin/newsletter-stats');
-                const data = await res.json();
-                if (!res.ok || !data.success) throw new Error(data.error || 'Erreur');
-                const campaigns = data.campaigns || [];
-                set('ana-nl-count', campaigns.length);
-                if (campaigns.length === 0) {
-                    set('ana-nl-open', '—'); set('ana-nl-click', '—'); set('ana-nl-last', 'Aucune campagne');
-                    return;
-                }
-                const avg = (arr) => Math.round((arr.reduce((s, v) => s + v, 0) / arr.length) * 10) / 10;
-                set('ana-nl-open', avg(campaigns.map(c => c.openRate || 0)) + '%');
-                set('ana-nl-click', avg(campaigns.map(c => c.clickRate || 0)) + '%');
-                const last = campaigns[0]; // déjà trié du plus récent au plus ancien par l'API
-                const lastLabel = last ? `${(last.sentDate || '').slice(0, 10)} · ${last.openRate}% ouv.` : '—';
-                set('ana-nl-last', lastLabel, last ? last.subject : '');
-            } catch (e) {
-                // Message d'erreur affiché directement (comme dans l'onglet Newsletter
-                // & Réseaux, même source), pas caché dans une infobulle qu'on ne pense
-                // pas forcément à survoler.
-                set('ana-nl-open', '—'); set('ana-nl-click', '—'); set('ana-nl-count', '—');
-                const msg = e.message || 'Erreur inconnue';
-                set('ana-nl-last', 'Erreur : ' + msg, msg);
-            }
-        }
 
         async function loadQrngQuota() {
             const set = (id, v) => { const el = document.getElementById(id); if (el) el.textContent = v; };
@@ -14144,7 +14106,6 @@
             const btnOriginal = btn ? btn.innerHTML : '';
             if (btn) { btn.disabled = true; btn.classList.add('opacity-60'); btn.innerHTML = '<i class="fas fa-spinner fa-spin mr-1"></i>Actualisation...'; }
             loadQrngQuota();
-            loadNewsletterSummaryForAnalytics();
             try {
                 const res = await adminFetch(`/api/admin/analytics?range=${range}`);
                 let data;
