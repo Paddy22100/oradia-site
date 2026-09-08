@@ -7114,6 +7114,8 @@ Génère trois publications séparées :
 
 Contrainte impérative de format : les textes FACEBOOK et INSTAGRAM doivent COMMENCER par le lien "oradia.fr" sur sa propre ligne (avant même la première phrase), pour que le site soit immédiatement visible sans avoir à lire tout le post. Le texte LINKEDIN, lui, ne doit JAMAIS commencer par ce lien : ouvrir un post LinkedIn sur une URL brute casse l'accroche et n'est pas dans les codes de la plateforme — voir sa consigne spécifique ci-dessus.
 
+Avant de répondre, relis chacun des trois textes : vérifie qu'aucun mot n'est tronqué ou mal orthographié (ex. "fabric" au lieu de "fabriqué"), et corrige silencieusement toute coquille avant de produire le JSON final.
+
 Réponds UNIQUEMENT en JSON valide avec cette structure :
 {"facebook":"texte facebook","instagram":"texte instagram","linkedin":"texte linkedin"}
 
@@ -7123,7 +7125,11 @@ Contraintes : pas de tiret long (—), langage bienveillant et spirituel, ne jam
       const aiRes = await fetch('https://api.anthropic.com/v1/messages', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', 'x-api-key': ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
-        body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 1400, messages: [{ role: 'user', content: prompt }] })
+        // max_tokens relevé de 1400 à 2200 : les 3 textes combinés (~900 mots en
+        // français, plus coûteux en tokens que l'anglais) approchaient l'ancienne
+        // limite, ce qui poussait le modèle à se précipiter en fin de génération
+        // et provoquait des mots tronqués (ex. "fabric" au lieu de "fabriqué").
+        body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 2200, messages: [{ role: 'user', content: prompt }] })
       });
       if (aiRes.ok) {
         const aiData = await aiRes.json();
