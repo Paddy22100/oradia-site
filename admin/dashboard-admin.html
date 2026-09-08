@@ -10125,7 +10125,7 @@
                     <td class="px-6 py-4 text-light-gold/60 text-xs">${dateVal ? new Date(dateVal).toLocaleDateString('fr-FR') : '—'}</td>
                     <td class="px-6 py-4">${isStep ? `<span class="text-xs px-2 py-0.5 rounded-full border ${registreCls}">${escapeHtmlFront(extra.registre || '—')}</span>` : '<span class="text-gold/20 text-xs">—</span>'}</td>
                     <td class="px-6 py-4 whitespace-nowrap">
-                        ${validateBtn}<button onclick="nlOpenDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition mr-1"><i class="fas fa-pen mr-1"></i>Modifier</button><button onclick="nlPreviewDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition"><i class="fas fa-eye mr-1"></i>Prévisualiser</button>
+                        ${validateBtn}<button onclick="nlOpenDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition mr-1"><i class="fas fa-pen mr-1"></i>Modifier</button><button onclick="nlPreviewDraft('${d.id}')" class="text-xs bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 hover:bg-gold/20 transition mr-1"><i class="fas fa-eye mr-1"></i>Prévisualiser</button><button onclick="nlPreviewSocialFromParcours('${d.id}')" title="Générer et voir l'aperçu Facebook/Instagram/LinkedIn qui serait publié pour cette étape, sans rien publier" class="text-xs bg-purple-500/10 text-purple-300 border border-purple-500/30 rounded-lg px-3 py-1.5 hover:bg-purple-500/20 transition"><i class="fas fa-share-nodes mr-1"></i>Réseaux</button>
                     </td>
                 </tr>`;
             }).join('');
@@ -10898,6 +10898,16 @@
                 }
                 nlStatus('info', 'Brouillon chargé.');
             } catch(e) { nlStatus('error', 'Impossible de charger le brouillon : ' + e.message); }
+        }
+
+        // Depuis la table Parcours : ouvre l'étape dans l'éditeur et affiche directement
+        // l'aperçu Facebook/Instagram/LinkedIn (le régénère si aucun n'a été préparé/restauré),
+        // sans rien publier — pour vérifier ce qui partirait avant l'envoi réel du mercredi.
+        async function nlPreviewSocialFromParcours(id) {
+            await nlOpenDraft(id);
+            const alreadyFilled = document.getElementById('nl-social-fb-text')?.value?.trim();
+            if (!alreadyFilled) await nlPreviewSocial();
+            document.getElementById('nl-social-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
         }
 
         async function nlLoadIdeas() {
