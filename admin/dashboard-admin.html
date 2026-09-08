@@ -8305,6 +8305,12 @@
         // NEWSLETTER
         // ═══════════════════════════════════════════════
         let nlCurrentDraftId = null, nlIdeas = [], nlDrafts = [];
+        // Dernier contenu effectivement enregistré (serveur ou brouillon ouvert), comparé
+        // au contenu courant dans nlShowTab() pour ne proposer "Enregistrer avant de
+        // quitter ?" que s'il y a vraiment des changements non sauvegardés — sans ça, la
+        // seule présence de texte (même déjà sauvegardé) redéclenchait le message à chaque
+        // changement d'onglet juste après avoir cliqué "Sauvegarder".
+        let nlLastSavedContent = null;
         // Copie de l'extra du brouillon ouvert (canal/ordre/registre du parcours,
         // raw_content_append du tirage hebdomadaire, etc.) — nlPreview()/nlSave()
         // ne connaissent que les champs pilotés par l'éditeur (cta, bannière...) ;
@@ -8348,6 +8354,7 @@
         function nlResetEditorSilent() {
             nlCurrentDraftId = null;
             nlCurrentDraftExtra = {};
+            nlLastSavedContent = null;
             nlSelectedImages = [];
             nlActivePlacementIdx = null;
 
@@ -8400,7 +8407,11 @@
             // contenu allait être perdu, ou pire, ne rien comprendre et le perdre sans prévenir.
             if (nlCurrentTab === 'generate' && name !== 'generate') {
                 const hasContent = document.getElementById('nl-content')?.value.trim();
-                if (hasContent) {
+                // Ne propose d'enregistrer que s'il y a vraiment des changements non
+                // sauvegardés — sinon, revenir sur cet onglet juste après avoir cliqué
+                // "Sauvegarder" redéclenchait ce message pour rien, le contenu du
+                // textarea n'étant jamais vidé après une sauvegarde réussie.
+                if (hasContent && hasContent !== nlLastSavedContent) {
                     const save = await adminConfirm('Enregistrer cette newsletter dans les brouillons avant de quitter ?', { confirmText: 'Enregistrer', cancelText: 'Ne pas enregistrer' });
                     if (save) await nlSave();
                     else nlResetEditorSilent();
@@ -9535,6 +9546,7 @@
                 const data = await res.json();
                 if (!res.ok) throw new Error(data.error);
                 nlCurrentDraftId = data.id;
+                nlLastSavedContent = content;
                 nlShowPublishZone(true);
                 nlShowFloatingBar(true);
                 await nlRenderTargetTags();
@@ -11323,6 +11335,10 @@
 
                     if (data.content) {
                         nlShowEditor(data.content);
+                        // Ce qui vient d'être chargé est déjà enregistré côté serveur : la valeur
+                        // finale du textarea (après transformation HTML éventuelle par nlShowEditor)
+                        // sert de référence pour le garde-fou de nlShowTab().
+                        nlLastSavedContent = contentEl.value.trim();
                         if (placeholder) placeholder.classList.add('hidden');
                     }
                     if (subjectEl && data.subject) subjectEl.value = data.subject;
