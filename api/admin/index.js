@@ -4252,7 +4252,8 @@ async function handleData(req, res) {
         },
         waitlist: {
           count:      waitlistRows.length,
-          notSynced:  waitlistRows.filter(r => !r.brevo_synced).length
+          notSynced:  waitlistRows.filter(r => !r.brevo_synced).length,
+          newThisWeek: waitlistRows.filter(r => now - new Date(r.created_at).getTime() < day7).length
         },
         singleDraws: {
           count:      singleDrawCount,
@@ -7368,7 +7369,7 @@ async function handleSyncBrevo(req, res) {
 
     const { data: contacts, error } = await supabase
       .from('newsletter_contacts')
-      .select('id, email, created_at, tags')
+      .select('id, email, created_at, tags, status')
       .eq('brevo_synced', false)
       .order('created_at', { ascending: false })
       .limit(100);
@@ -7381,6 +7382,19 @@ async function handleSyncBrevo(req, res) {
     let synced = 0;
     let errors = 0;
     for (const contact of contacts) {
+      // Un contact désinscrit ne doit JAMAIS être (ré)ajouté à la liste 5 — Brevo refuse
+      // d'ailleurs d'assigner une liste à un email blacklisté, ce qui faisait échouer le
+      // POST ci-dessous à chaque exécution : brevo_synced restait bloqué à false pour
+      // toujours (le compteur "Contacts non sync Brevo" ne redescendait jamais pour ces
+      // contacts). Rien à synchroniser ici : on marque juste la ligne à jour.
+      if (contact.status === 'unsubscribed') {
+        const { error: updateError } = await supabase
+          .from('newsletter_contacts')
+          .update({ brevo_synced: true, brevo_synced_at: new Date().toISOString() })
+          .eq('id', contact.id);
+        if (!updateError) synced++; else errors++;
+        continue;
+      }
       const isGeneral = !contact.tags || contact.tags.length === 0 || contact.tags.includes('general');
       try {
         if (isGeneral) {

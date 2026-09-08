@@ -901,7 +901,7 @@
                         <div class="w-12 h-12 bg-gradient-to-br from-blue-500/20 to-blue-500/10 rounded-lg flex items-center justify-center group-hover:from-blue-500/30 group-hover:to-blue-500/20 transition-all">
                             <i class="fas fa-users text-blue-400 text-xl group-hover:scale-110 transition-transform"></i>
                         </div>
-                        <div class="text-xs text-light-gold/50 uppercase tracking-wider">+25%</div>
+                        <div class="text-xs text-light-gold/50 uppercase tracking-wider" id="waitlistNewWeek">-</div>
                     </div>
                     <div class="text-3xl font-bold text-gold mb-1" id="waitlistCount">-</div>
                     <p class="text-light-gold text-sm">Contacts</p>
@@ -6875,6 +6875,7 @@
             updateElement('donorsCount', data.donors.count);
             updateElement('donorsTotal', formatCurrency(data.donors.total));
             updateElement('waitlistCount', data.waitlist.count);
+            updateElement('waitlistNewWeek', `+${data.waitlist.newThisWeek || 0} cette semaine`);
             updateElement('globalTotal', formatCurrency(data.global.total));
             updateElement('totalContacts', data.global.totalContacts);
             updateElement('preordersNoEmail', data.preorders.noEmail || 0);
