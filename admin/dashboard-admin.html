@@ -3957,6 +3957,30 @@
                     </div>
                 </div>
 
+                <!-- OpenAI : images de publication (génération auto) + Livret audio (TTS) —
+                     coût estimé (voir OPENAI_IMAGE_COST_USD / OPENAI_TTS_COST_PER_1M_CHARS_USD),
+                     l'API OpenAI n'expose pas le coût réel par appel. -->
+                <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5 mb-6">
+                    <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider">OpenAI (images publications + Livret audio)</h4>
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div>
+                            <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Images générées</div>
+                            <div class="text-xl font-bold text-teal-300" id="costsOpenaiImagesCalls">—</div>
+                            <div class="text-light-gold/40 text-xs" id="costsOpenaiImagesCost"></div>
+                        </div>
+                        <div>
+                            <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Audio généré (Livret)</div>
+                            <div class="text-xl font-bold text-teal-300" id="costsOpenaiAudioCalls">—</div>
+                            <div class="text-light-gold/40 text-xs" id="costsOpenaiAudioCost"></div>
+                        </div>
+                        <div>
+                            <div class="text-light-gold/50 text-xs uppercase tracking-wider mb-1">Coût OpenAI estimé (mois)</div>
+                            <div class="text-xl font-bold text-gold" id="costsOpenaiTotal">—</div>
+                            <p class="text-light-gold/25 text-xs mt-1">Estimation — solde réel : platform.openai.com</p>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="bg-[rgba(5,20,40,0.5)] border border-gold/20 rounded-xl p-5">
                     <h4 class="text-gold text-sm font-semibold mb-4 uppercase tracking-wider">Abonnements & frais fixes</h4>
                     <div id="costsSubscriptions" class="space-y-3 text-sm text-light-gold/70">—</div>
@@ -12621,6 +12645,7 @@
             setEl('costsClaudeCost',   '<span class="animate-pulse">…</span>');
             setEl('costsClaudeTokens', '<span class="animate-pulse">…</span>');
             setEl('costsQrngAnu',      '<span class="animate-pulse">…</span>');
+            setEl('costsOpenaiTotal',  '<span class="animate-pulse">…</span>');
 
             const eur = (n) => `${n.toLocaleString('fr-FR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })} €`;
 
@@ -12641,6 +12666,13 @@
                 setEl('costsClaudeTokens', (d.usage.claudeApiTokens || 0).toLocaleString('fr-FR'));
                 setEl('costsQrngAnu',      d.usage.qrng.anu);
                 setEl('costsQrngFallback', d.usage.qrng.fallback > 0 ? `+ ${d.usage.qrng.fallback} fallback` : 'Service gratuit');
+
+                const oa = d.usage.openai || {};
+                setEl('costsOpenaiImagesCalls', oa.imagesCalls || 0);
+                setEl('costsOpenaiImagesCost',  eur(oa.imagesCostEur || 0));
+                setEl('costsOpenaiAudioCalls',  oa.audioCalls || 0);
+                setEl('costsOpenaiAudioCost',   eur(oa.audioCostEur || 0));
+                setEl('costsOpenaiTotal',       eur(oa.totalCostEur || 0));
 
                 // Afficher les erreurs et fallbacks Claude
                 const errorsEl = document.getElementById('costsClaudeErrors');
@@ -12687,7 +12719,7 @@
 
             } catch (e) {
                 console.error('[Admin] loadCosts error:', e);
-                ['costsTotalMonthly','costsTirages','costsClaudeCalls','costsClaudeCost','costsClaudeTokens','costsQrngAnu'].forEach(id =>
+                ['costsTotalMonthly','costsTirages','costsClaudeCalls','costsClaudeCost','costsClaudeTokens','costsQrngAnu','costsOpenaiTotal'].forEach(id =>
                     setEl(id, '<span class="text-red-400 text-xs">Erreur</span>'));
             }
         }
