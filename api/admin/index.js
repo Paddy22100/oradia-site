@@ -7736,7 +7736,7 @@ Réponds en français, sans tiret long, format markdown compact.`
 
     if (path === '/env-status' || path === '/env-status/') {
       verifyAdminAuth(req);
-      const VARS = ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','STRIPE_SECRET_KEY','STRIPE_WEBHOOK_SECRET','BREVO_API_KEY','ANTHROPIC_API_KEY','ADMIN_SESSION_SECRET','ADMIN_EMAIL','ADMIN_PASSWORD_HASH','CRON_SECRET','VERCEL_TOKEN','GITHUB_TOKEN','ELEVENLABS_API_KEY'];
+      const VARS = ['SUPABASE_URL','SUPABASE_SERVICE_ROLE_KEY','STRIPE_SECRET_KEY','STRIPE_WEBHOOK_SECRET','BREVO_API_KEY','ANTHROPIC_API_KEY','ADMIN_SESSION_SECRET','ADMIN_EMAIL','ADMIN_PASSWORD_HASH','CRON_SECRET','VERCEL_TOKEN','GITHUB_TOKEN','OPENAI_API_KEY'];
       // VERCEL_GIT_COMMIT_MESSAGE = message du commit déployé (nos noms de version
       // sont toujours en 1ère ligne du message, ex: "tore-v3.6.8-mail-checkin-j3-harmonise").
       // Fournie automatiquement par Vercel, aucune configuration nécessaire.
@@ -7747,7 +7747,7 @@ Réponds en français, sans tiret long, format markdown compact.`
       });
     }
 
-    // ── Prototype livret audio : texte → synthèse vocale (ElevenLabs) ──
+    // ── Prototype livret audio : texte → synthèse vocale (OpenAI TTS) ──
     if (path === '/generate-audio' || path === '/generate-audio/') {
       verifyAdminAuth(req);
       if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
@@ -7758,25 +7758,27 @@ Réponds en français, sans tiret long, format markdown compact.`
       if (!(await isFeatureEnabled(sbAudioFlag, 'audio_livret_prototype'))) {
         return res.status(403).json({ error: 'Fonctionnalité désactivée depuis le registre de fonctionnalités' });
       }
-      const ELEVENLABS_API_KEY = process.env.ELEVENLABS_API_KEY;
-      if (!ELEVENLABS_API_KEY) return res.status(500).json({ error: 'ELEVENLABS_API_KEY non configurée' });
+      const OPENAI_API_KEY = process.env.OPENAI_API_KEY;
+      if (!OPENAI_API_KEY) return res.status(500).json({ error: 'OPENAI_API_KEY non configurée' });
 
       const body = await parseBody(req);
       const text = String(body.text || '').trim();
       if (!text) return res.status(400).json({ error: 'text requis' });
-      if (text.length > 4500) return res.status(400).json({ error: `Texte trop long (${text.length} caractères, max 4500 par génération pour rester dans le quota gratuit)` });
-      // "Rachel" — voix multilingue par défaut d'ElevenLabs, adaptée au français.
-      // Personnalisable : passer un autre voice_id depuis le dashboard.
-      const voiceId = String(body.voice_id || '21m00Tcm4TlvDq8ikWAM').trim();
+      // Limite dure de l'API OpenAI TTS sur le champ "input", pas un quota — un texte plus
+      // long est rejeté par OpenAI (400), pas seulement facturé plus cher.
+      if (text.length > 4096) return res.status(400).json({ error: `Texte trop long (${text.length} caractères, max 4096 par génération — limite de l'API OpenAI).` });
+      // "alloy" — voix neutre par défaut, correcte en français. Personnalisable : passer
+      // une autre voix (echo/fable/onyx/nova/shimmer) depuis le dashboard via voice_id.
+      const voice = String(body.voice_id || 'alloy').trim();
 
-      const ttsRes = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      const ttsRes = await fetch('https://api.openai.com/v1/audio/speech', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'xi-api-key': ELEVENLABS_API_KEY, 'Accept': 'audio/mpeg' },
-        body: JSON.stringify({ text, model_id: 'eleven_multilingual_v2', voice_settings: { stability: 0.5, similarity_boost: 0.75 } })
+        headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_API_KEY}` },
+        body: JSON.stringify({ model: 'tts-1', input: text, voice, response_format: 'mp3' })
       });
       if (!ttsRes.ok) {
         const errText = await ttsRes.text().catch(() => '');
-        return res.status(502).json({ error: `Erreur ElevenLabs (${ttsRes.status}) : ${errText.slice(0, 300)}` });
+        return res.status(502).json({ error: `Erreur OpenAI (${ttsRes.status}) : ${errText.slice(0, 300)}` });
       }
       const audioBuffer = Buffer.from(await ttsRes.arrayBuffer());
 
