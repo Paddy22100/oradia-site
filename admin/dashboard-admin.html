@@ -2376,7 +2376,8 @@
                     class="flex items-center gap-1.5 bg-gold/10 border border-gold/30 text-gold px-3 py-1.5 rounded-lg text-sm font-semibold hover:bg-gold/20 transition">
                     <i class="fas fa-plus"></i>Nouvelle newsletter
                 </button>
-                <div class="flex gap-1 bg-white/5 border border-gold/15 rounded-xl p-1">
+                <div class="flex items-center flex-wrap gap-1 bg-white/5 border border-gold/15 rounded-xl p-1">
+                    <!-- Cycle de vie d'une newsletter : écrire → brouillon → programmé → envoyé -->
                     <button onclick="nlShowTab('generate')" data-nltab="generate"
                         class="nl-tab-btn bg-gold text-night-blue px-4 py-1.5 rounded-lg font-semibold text-sm">
                         <i class="fas fa-magic mr-1.5"></i>Générer
@@ -2389,25 +2390,33 @@
                         class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
                         <i class="fas fa-clock mr-1.5"></i>Programmés
                     </button>
-                    <button onclick="nlShowTab('ideas')" data-nltab="ideas"
-                        class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
-                        <i class="fas fa-feather-alt mr-1.5"></i>Carnet
-                    </button>
                     <button onclick="nlShowTab('sent')" data-nltab="sent"
                         class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
                         <i class="fas fa-paper-plane mr-1.5"></i>Envoyées
                     </button>
+
+                    <div class="w-px self-stretch bg-gold/15 mx-1"></div>
+
+                    <!-- Pipelines à part : automatiques, pas des newsletters ponctuelles -->
                     <button onclick="nlShowTab('parcours')" data-nltab="parcours"
                         class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
                         <i class="fas fa-route mr-1.5"></i>Parcours
                     </button>
-                    <button onclick="nlShowTab('planning')" data-nltab="planning" title="Prototypes et outils annexes (audio)"
-                        class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
-                        <i class="fas fa-flask mr-1.5"></i>Outils
-                    </button>
                     <button onclick="nlShowTab('social')" data-nltab="social"
                         class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
                         <i class="fas fa-share-nodes mr-1.5"></i>Réseaux sociaux
+                    </button>
+
+                    <div class="w-px self-stretch bg-gold/15 mx-1"></div>
+
+                    <!-- Référence / annexes -->
+                    <button onclick="nlShowTab('ideas')" data-nltab="ideas"
+                        class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
+                        <i class="fas fa-feather-alt mr-1.5"></i>Carnet
+                    </button>
+                    <button onclick="nlShowTab('planning')" data-nltab="planning" title="Prototypes et outils annexes (audio)"
+                        class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
+                        <i class="fas fa-flask mr-1.5"></i>Outils
                     </button>
                 </div>
                 </div>
