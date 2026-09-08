@@ -3005,12 +3005,12 @@
                 <section class="mb-10">
                     <div class="mb-4">
                         <h4 class="cormorant text-xl font-bold text-gold">Livret audio <span class="text-xs text-gold/40 font-normal align-middle ml-2 px-2 py-0.5 border border-gold/20 rounded-full">Prototype</span></h4>
-                        <p class="text-light-gold/50 text-sm mt-1">Colle un texte, génère une voix off avec ElevenLabs, écoute le résultat pour juger la qualité avant d'aller plus loin.</p>
+                        <p class="text-light-gold/50 text-sm mt-1">Colle un texte, génère une voix off avec OpenAI, écoute le résultat pour juger la qualité avant d'aller plus loin.</p>
                     </div>
                     <div class="stat-card rounded-xl p-5">
                         <textarea id="audio-text-input" rows="6"
                             class="w-full bg-[rgba(5,20,40,0.8)] border border-gold/30 text-light-gold rounded-lg px-4 py-3 text-sm focus:outline-none focus:border-gold resize-y mb-3"
-                            placeholder="Colle ici le texte à transformer en audio (max 4500 caractères par génération)..."></textarea>
+                            placeholder="Colle ici le texte à transformer en audio (max 4096 caractères par génération)..."></textarea>
                         <div class="flex flex-wrap items-center gap-3 mb-2">
                             <button onclick="generateAudio()" id="audio-generate-btn" class="bg-gold/20 text-gold border border-gold/40 rounded-lg px-4 py-2 text-sm hover:bg-gold/30 transition">
                                 <i class="fas fa-microphone mr-1"></i>Générer l'audio
@@ -12584,13 +12584,13 @@
         }
 
         // ── Planning éditorial ──
-        // ── Prototype livret audio (texte → synthèse vocale ElevenLabs) ──
+        // ── Prototype livret audio (texte → synthèse vocale OpenAI) ──
         document.getElementById('audio-text-input')?.addEventListener('input', function () {
             const el = document.getElementById('audio-char-count');
             if (el) {
                 const n = this.value.length;
-                el.textContent = `${n.toLocaleString('fr-FR')} / 4500 caractères`;
-                el.className = 'text-xs ' + (n > 4500 ? 'text-red-400' : 'text-light-gold/30');
+                el.textContent = `${n.toLocaleString('fr-FR')} / 4096 caractères`;
+                el.className = 'text-xs ' + (n > 4096 ? 'text-red-400' : 'text-light-gold/30');
             }
         });
 
@@ -12601,7 +12601,7 @@
             const btn = document.getElementById('audio-generate-btn');
             const show = (msg, cls = 'text-light-gold/50') => { if (statusEl) { statusEl.textContent = msg; statusEl.className = `text-xs mt-2 ${cls}`; statusEl.classList.remove('hidden'); } };
             if (!text) { show('Colle d\'abord un texte.', 'text-red-400/80'); return; }
-            if (text.length > 4500) { show('Texte trop long — raccourcis-le à 4500 caractères maximum.', 'text-red-400/80'); return; }
+            if (text.length > 4096) { show('Texte trop long — raccourcis-le à 4096 caractères maximum.', 'text-red-400/80'); return; }
             btn.disabled = true;
             show('<i class="fas fa-spinner fa-spin mr-2"></i>Génération en cours (peut prendre 10 à 30 secondes)…');
             try {
@@ -12617,7 +12617,7 @@
                 player.src = data.url;
                 dlLink.href = data.url;
                 document.getElementById('audio-result').classList.remove('hidden');
-                show(`✓ Audio généré (${data.characters_used} caractères utilisés sur ton quota ElevenLabs).`, 'text-green-400/80');
+                show(`✓ Audio généré (${data.characters_used} caractères utilisés).`, 'text-green-400/80');
             } catch (e) {
                 show('Erreur : ' + e.message, 'text-red-400/80');
             } finally {
@@ -12919,7 +12919,7 @@
                     CRON_SECRET:               'Cron Secret',
                     VERCEL_TOKEN:              'Vercel Token (restauration code)',
                     GITHUB_TOKEN:              'GitHub Token (sauvegardes données)',
-                    ELEVENLABS_API_KEY:        'ElevenLabs (livret audio)',
+                    OPENAI_API_KEY:            'OpenAI (livret audio)',
                 };
                 envEl.innerHTML = Object.entries(vars).map(([k, ok]) =>
                     `<div class="flex items-center justify-between py-1.5 border-b border-white/5 last:border-0">
