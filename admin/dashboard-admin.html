@@ -8456,10 +8456,18 @@
             if (nlCurrentTab === 'generate' && name !== 'generate') {
                 const hasContent = document.getElementById('nl-content')?.value.trim();
                 // Ne propose d'enregistrer que s'il y a vraiment des changements non
-                // sauvegardés — sinon, revenir sur cet onglet juste après avoir cliqué
-                // "Sauvegarder" redéclenchait ce message pour rien, le contenu du
-                // textarea n'étant jamais vidé après une sauvegarde réussie.
-                if (hasContent && hasContent !== nlLastSavedContent) {
+                // sauvegardés — comparaison sur le texte visible uniquement (balises
+                // retirées), pas sur le HTML brut : le contenteditable peut re-sérialiser
+                // son innerHTML très légèrement différemment entre deux lectures (ordre
+                // d'attributs, etc.) sans aucune modification réelle du texte, ce qui
+                // faisait échouer une comparaison de chaînes exacte et redéclenchait le
+                // message pour rien juste après avoir cliqué "Sauvegarder".
+                const stripTags = (html) => (html || '')
+                    .replace(/<[^>]+>/g, ' ')
+                    .replace(/&nbsp;|&#160;/gi, ' ')
+                    .replace(/\s+/g, ' ')
+                    .trim();
+                if (hasContent && stripTags(hasContent) !== stripTags(nlLastSavedContent)) {
                     const save = await adminConfirm('Enregistrer cette newsletter dans les brouillons avant de quitter ?', { confirmText: 'Enregistrer', cancelText: 'Ne pas enregistrer' });
                     if (save) await nlSave();
                     else nlResetEditorSilent();
