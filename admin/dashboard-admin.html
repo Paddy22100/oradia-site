@@ -12,7 +12,6 @@
     <!-- Import de sources .docx / .pdf pour la newsletter (extraction de texte côté navigateur) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js" defer></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js" defer></script>
-    <script src="parcours-modeles-20.js" defer></script>
     <link rel="stylesheet" href="../style.css">
     
     <script>
@@ -2979,9 +2978,6 @@
             <!-- TAB BROUILLONS -->
             <div id="nl-tab-drafts" class="nl-tab-content hidden">
                 <div class="flex justify-end mb-3 gap-2">
-                    <button id="nl-parcours-import-btn" onclick="parcoursImportModeles()" class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/40 rounded-lg px-3 py-1.5 transition flex items-center gap-2">
-                        <i class="fas fa-download"></i> Importer les 20 modèles du parcours
-                    </button>
                     <button id="nl-tirage-hebdo-btn" onclick="nlGenerateTirageHebdo()" class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/40 rounded-lg px-3 py-1.5 transition flex items-center gap-2" title="Génère le brouillon du tirage de la semaine tout de suite, sans attendre dimanche — n'envoie jamais automatiquement.">
                         <i class="fas fa-moon"></i> Générer le tirage de la semaine
                     </button>
@@ -10788,55 +10784,6 @@
                 const d = nlDrafts.find(x => x.id === id); if (d) d.archived = archived;
                 nlRenderDrafts();
             } catch (e) { adminAlert('Erreur : ' + e.message); }
-        }
-
-        // Importe les 20 modèles embarqués (admin/parcours-modeles-20.js) comme
-        // brouillons taggés extra.canal='parcours' : ils apparaissent ensuite dans
-        // cette liste de Brouillons avec le badge "à valider", exactement comme un
-        // brouillon parcours créé à la main. On saute ceux déjà importés (comparaison
-        // sur le sujet) pour pouvoir cliquer sans risque même si l'import a déjà eu lieu.
-        async function parcoursImportModeles() {
-            if (!window.PARCOURS_MODELES_20) return adminAlert('Fichier des modèles introuvable (parcours-modeles-20.js).');
-            // Le dédoublonnage doit couvrir aussi les étapes déjà validées : celles-ci
-            // ont disparu de nlDrafts (filtrées par action=drafts) et ne vivent plus que
-            // dans la vue Parcours (action=drafts-parcours) — sans ce fetch, ré-importer
-            // après validation recréerait des doublons.
-            const existingSubjects = new Set(nlDrafts.filter(d => d.extra && d.extra.canal === 'parcours').map(d => d.subject));
-            try {
-                const res = await adminFetch('/api/admin/newsletter?action=drafts-parcours');
-                if (res.ok) {
-                    const validated = await res.json();
-                    (Array.isArray(validated) ? validated : []).forEach(d => {
-                        if (d.extra && d.extra.canal === 'parcours') existingSubjects.add(d.subject);
-                    });
-                }
-            } catch (_) {}
-            const toImport = window.PARCOURS_MODELES_20.filter(m => !existingSubjects.has(m.subject));
-            if (toImport.length === 0) { adminAlert('Les 20 modèles sont déjà importés.'); return; }
-
-            const btn = document.getElementById('nl-parcours-import-btn');
-            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Import…'; }
-            let ok = 0, failed = 0;
-            for (const item of toImport) {
-                try {
-                    const res = await adminFetch('/api/admin/newsletter?action=save', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            subject: item.subject,
-                            content: item.content,
-                            intention: item.intention,
-                            type: item.type,
-                            images: item.images,
-                            extra: item.extra
-                        })
-                    });
-                    if (res.ok) ok++; else failed++;
-                } catch (_) { failed++; }
-            }
-            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-download"></i> Importer les 20 modèles du parcours'; }
-            adminAlert(`${ok} email(s) importé(s)${failed ? `, ${failed} échec(s)` : ''}.`);
-            await nlLoadDrafts();
         }
 
         // Illustre en un clic toutes les étapes du parcours pas encore validées et sans
