@@ -8546,6 +8546,21 @@ Réponds en français, sans tiret long, format markdown compact.`
         const FUNNEL_EVENTS = ['intention_saisie', 'tirage_lance', 'analyse_affichee', 'email_laisse'];
         const event = FUNNEL_EVENTS.includes(String(body.event || '')) ? body.event : null;
         if (!sessionId || (!pagePath && !event)) return res.status(204).end();
+        // Rejette les requêtes qui ne proviennent pas réellement d'une page oradia.fr. Cet
+        // endpoint est public (le tracker JS du site l'appelle sans authentification), donc
+        // n'importe quel script peut lui poster un JSON avec un faux champ "referrer" — c'est
+        // exactement le "referrer spam" observé dans Analytiques (des sites sans aucun rapport
+        // qui apparaissaient comme provenance, alors qu'aucun lien vers oradia.fr n'existe chez
+        // eux). Origin/Referer sont fixés par le navigateur lui-même, jamais falsifiables
+        // depuis du JS de page : une vraie requête envoyée par js/page-tracker.js depuis
+        // oradia.fr en porte toujours au moins un des deux (sendBeacon/fetch same-origin).
+        const ALLOWED_TRACK_HOSTS = new Set(['oradia.fr', 'www.oradia.fr', 'oradia-site.vercel.app']);
+        const hostFromHeader = (h) => { try { return new URL(h).hostname; } catch (_) { return ''; } };
+        const originHost = hostFromHeader(req.headers.origin || '');
+        const refererHost = hostFromHeader(req.headers.referer || '');
+        if (!ALLOWED_TRACK_HOSTS.has(originHost) && !ALLOWED_TRACK_HOSTS.has(refererHost)) {
+          return res.status(204).end();
+        }
         // Filtrer les bots connus côté serveur (user-agent)
         const BOT_PATTERN = /bot|crawler|spider|crawling|scraper|headless|phantom|puppeteer|playwright|selenium|webdriver|googlebot|bingbot|slurp|duckduckbot|baiduspider|yandex|sogou|facebot|facebookexternalhit|ia_archiver|semrush|ahrefs|mj12bot|dotbot|petalbot|bytespider|gptbot|ccbot|claudebot|anthropic|amazonbot|applebot|archive\.org|python-requests|python-urllib|go-http|node-fetch|axios|okhttp|curl|wget|libwww|httpclient|scrapy|masscan|zgrab|censys|nuclei|uptimerobot|pingdom|statuscake|newrelic|datadog|site24x7|monitis|lighthouse|pagespeed|gtmetrix|headlesschrome/i;
         // Rejeter aussi les user-agents vides ou trop courts (typique des scripts sans navigateur)
