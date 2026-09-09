@@ -26,21 +26,19 @@
 <style>
   :root { --night: #0a192f; --night-deep: #050d1c; --gold: #d4af37; --light-gold: #f5e7a1; }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  /* Un seul calque de fond (image + voile), directement sur body, sans
+     position:fixed : deux pseudo-éléments fixed empilés provoquaient un bug
+     de rendu (transparence croissante vers le bas) sur certains mobiles. */
   html, body {
     margin: 0; padding: 0; min-height: 100%;
-    background: #030811;
+    background:
+      linear-gradient(rgba(5,13,28,0.55), rgba(3,8,17,0.94) 55%, #030811),
+      url('images/oradia-hero-4k.webp');
+    background-size: cover;
+    background-position: center 30%;
+    background-repeat: no-repeat;
     font-family: 'Lora', Georgia, serif; color: #e8e4d4;
     overscroll-behavior: none;
-  }
-  /* Photo hero en fond, assombrie pour garder le texte et les cartes lisibles */
-  body::before {
-    content: ''; position: fixed; inset: 0; pointer-events: none;
-    background: url('images/oradia-hero-4k.webp') center 30% / cover no-repeat;
-    opacity: 0.4;
-  }
-  body::after {
-    content: ''; position: fixed; inset: 0; pointer-events: none;
-    background: radial-gradient(ellipse at 50% 15%, rgba(15,37,64,0.4) 0%, rgba(5,13,28,0.9) 55%, #030811 100%);
   }
   .wrap {
     position: relative; min-height: 100vh; min-height: 100dvh;
