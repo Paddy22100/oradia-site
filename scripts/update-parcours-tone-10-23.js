@@ -16,7 +16,7 @@ const { createClient } = require('@supabase/supabase-js');
 const UPDATES = [
   {
     ordre: 10,
-    subject: "Rudy d'ORADIA - Guillemant, Garnier Malet et la physique de l'invisible",
+    subject: "Guillemant, Garnier Malet et la physique de l'invisible",
     content: `<p>Vous croiserez, dans cet univers, des auteurs qui explorent une physique de l'invisible. Le double quantique, la rétrocausalité, la conscience qui choisit sa ligne de temps. Jean-Pierre Garnier Malet, ingénieur et chercheur, publie sur le dédoublement quantique depuis plus de vingt ans. Philippe Guillemant, docteur en physique et ancien chercheur au CNRS, développe une physique de la conscience et du temps qui rejoint des intuitions vieilles comme l'humanité.</p>
 <p>Je prends le parti de les lire au sérieux, et de croire ce qu'ils avancent : que notre double quantique existe hors du temps linéaire, qu'il explore en permanence plusieurs futurs possibles, et qu'il nous envoie, sous forme d'intuitions, de synchronicités, de pressentiments, des informations sur celui qui nous convient le mieux.</p>
 <p>Ce n'est pas une croyance naïve. C'est un choix : celui de prendre au sérieux ce que la physique établie elle-même commence à rendre pensable — le temps qui ralentit avec la vitesse, le passé et le futur qui coexistent au sens géométrique, l'observateur qui influence ce qu'il observe. Garnier Malet et Guillemant vont plus loin, et proposent un mécanisme : le dédoublement. À chaque instant, votre conscience se divise, explore plusieurs futurs en parallèle, et ne réintègre qu'une version — celle vers laquelle votre intention, consciente ou non, vous a orienté.</p>
@@ -26,7 +26,7 @@ const UPDATES = [
   },
   {
     ordre: 23,
-    subject: "Rudy d'ORADIA - Romuald Leterrier et la rétrocausalité de l'intention",
+    subject: "Romuald Leterrier et la rétrocausalité de l'intention",
     content: `<p>Dans le sillage de ces réflexions, vous rencontrerez le travail de Romuald Leterrier, qui explore les synchronicités, les rêves, et ce qu'il nomme la rétrocausalité de l'intention. Un domaine passionnant, qui rejoint directement ce que Garnier Malet et Guillemant décrivent par ailleurs : un futur qui n'est pas simplement subi, mais qui participe, en retour, à façonner le présent.</p>
 <p>Ce que ces explorations révèlent est précieux : l'expérience humaine du signe, de la coïncidence signifiante, du sentiment qu'un événement répond à une question intérieure, n'est pas une illusion à corriger. C'est une capacité de perception, ancienne, universelle, que nous avons simplement désapprise à écouter.</p>
 <p>Je crois qu'un futur peut influencer le présent — non comme une fatalité écrite d'avance, mais comme une invitation. Poser une intention claire, c'est envoyer un signal vers cette part de vous qui, dans les modèles de Garnier Malet et Leterrier, explore déjà les chemins possibles. Ce qui vous revient ensuite, sous forme d'intuition ou de synchronicité, n'est pas le fruit du hasard : c'est une réponse.</p>
