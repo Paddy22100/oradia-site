@@ -2486,6 +2486,10 @@
                                 class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
                                 <i class="fas fa-share-nodes mr-1.5"></i>Réseaux sociaux
                             </button>
+                            <button onclick="nlShowTab('tirage')" data-nltab="tirage"
+                                class="nl-tab-btn text-gold/70 px-4 py-1.5 rounded-lg text-sm hover:text-gold hover:bg-white/5 transition">
+                                <i class="fas fa-moon mr-1.5"></i>Tirage hebdo
+                            </button>
                         </div>
                     </div>
 
@@ -2978,9 +2982,6 @@
             <!-- TAB BROUILLONS -->
             <div id="nl-tab-drafts" class="nl-tab-content hidden">
                 <div class="flex justify-end mb-3 gap-2">
-                    <button id="nl-tirage-hebdo-btn" onclick="nlGenerateTirageHebdo()" class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/40 rounded-lg px-3 py-1.5 transition flex items-center gap-2" title="Génère le brouillon du tirage de la semaine tout de suite, sans attendre dimanche — n'envoie jamais automatiquement.">
-                        <i class="fas fa-moon"></i> Générer le tirage de la semaine
-                    </button>
                     <button id="nl-parcours-images-btn" onclick="nlAddParcoursImages()" class="text-xs text-gold/60 hover:text-gold border border-gold/20 hover:border-gold/40 rounded-lg px-3 py-1.5 transition flex items-center gap-2" title="Génère et place une image en début de mail et une aux 3/4, pour chaque étape du parcours pas encore validée et sans image (via OpenAI gpt-image-1) — ignore celles qui en ont déjà.">
                         <i class="fas fa-image"></i> Illustrer les étapes à valider
                     </button>
@@ -3083,6 +3084,27 @@
                                 </tbody>
                             </table>
                         </div>
+                    </div>
+                </section>
+            </div>
+
+            <!-- TAB TIRAGE HEBDO -->
+            <div id="nl-tab-tirage" class="nl-tab-content hidden">
+                <section class="mb-10">
+                    <div class="mb-6 flex items-start justify-between gap-4 flex-wrap">
+                        <div>
+                            <h4 class="cormorant text-xl font-bold text-gold">Tirage hebdomadaire</h4>
+                            <p class="text-light-gold/50 text-sm mt-1">Généré automatiquement chaque dimanche matin (tirage QRNG + analyse + thème astro), envoyé à 19h heure de Paris sauf modification entre-temps. Le bouton ci-dessous ne fait qu'un aperçu de test hors dimanche — jamais envoyé automatiquement.</p>
+                        </div>
+                        <button id="nl-tirage-hebdo-btn" onclick="nlGenerateTirageHebdo()"
+                            class="flex-shrink-0 text-sm bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 hover:bg-gold/25 transition">
+                            <i class="fas fa-moon mr-1.5"></i>Générer un aperçu de test
+                        </button>
+                    </div>
+                    <div id="nl-tirage-status" class="mb-6"></div>
+                    <div>
+                        <h5 class="text-gold/70 text-sm font-semibold mb-3 uppercase tracking-wide">Historique</h5>
+                        <div id="nl-tirage-history" class="space-y-3"></div>
                     </div>
                 </section>
             </div>
@@ -8489,6 +8511,7 @@
             if (name === 'testers') nlLoadTesters();
             if (name === 'parcours') { nlLoadParcours(); nlLoadParcoursStatus(); }
             if (name === 'social') nlLoadSocialPosts();
+            if (name === 'tirage') nlRenderTirageStatus();
         }
 
         function nlSetStep(step) {
@@ -10838,16 +10861,80 @@
                 const data = await res.json().catch(() => ({}));
                 if (!res.ok || !data.success) throw new Error(data.error || 'Erreur inconnue');
                 if (data.skipped) {
-                    adminAlert('Le tirage de cette semaine a déjà été généré — ouvre-le dans la liste des brouillons ci-dessous.');
+                    adminAlert('Le tirage de cette semaine a déjà été généré — vois-le dans l\'onglet Tirage hebdo.');
                 } else {
-                    adminAlert(`Brouillon généré : "${data.subject}" (thème : ${data.theme}). Ouvre-le dans la liste pour le relire et le prévisualiser.`);
+                    adminAlert(`Brouillon généré : "${data.subject}" (thème : ${data.theme}). Retrouve-le dans l'onglet Tirage hebdo pour le relire et le prévisualiser.`);
                 }
                 await nlLoadDrafts();
+                nlRenderTirageStatus();
             } catch (e) {
                 adminAlert('Erreur : ' + e.message);
             } finally {
-                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-moon"></i> Générer le tirage de la semaine'; }
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-moon mr-1.5"></i>Générer un aperçu de test'; }
             }
+        }
+
+        // Vue "Tirage hebdo" : statut du dernier tirage généré (envoyé / programmé pour
+        // le dimanche 19h par le vrai cron / simple aperçu de test sans envoi prévu) et
+        // historique des précédents. Construite depuis nlDrafts déjà chargé (extra.canal
+        // ='tirage_hebdo'), sans appel serveur dédié.
+        function nlRenderTirageStatus() {
+            const statusEl = document.getElementById('nl-tirage-status');
+            const historyEl = document.getElementById('nl-tirage-history');
+            if (!statusEl || !historyEl) return;
+
+            const all = nlDrafts
+                .filter(d => d.extra?.canal === 'tirage_hebdo')
+                .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+            if (all.length === 0) {
+                statusEl.innerHTML = '<div class="stat-card rounded-2xl p-5 text-center text-gold/30 italic">Aucun tirage hebdomadaire généré pour l\'instant — le premier sera créé au prochain dimanche matin.</div>';
+                historyEl.innerHTML = '';
+                return;
+            }
+
+            const fmtDt = (iso) => iso ? new Date(iso).toLocaleString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
+            const [latest, ...history] = all;
+
+            let statusLine, statusColor;
+            if (latest.statut === 'envoyé') {
+                statusLine = `Envoyé le ${fmtDt(latest.updated_at || latest.scheduled_at || latest.created_at)}`;
+                statusColor = 'text-green-400';
+            } else if (latest.scheduled_at) {
+                statusLine = `Programmé pour ${fmtDt(latest.scheduled_at)} (envoi automatique, généré par le vrai cron du dimanche)`;
+                statusColor = 'text-blue-300';
+            } else {
+                statusLine = "Aperçu de test — jamais envoyé automatiquement (généré manuellement hors dimanche)";
+                statusColor = 'text-orange-300';
+            }
+
+            statusEl.innerHTML = `<div class="stat-card rounded-2xl p-5">
+                <p class="text-gold font-semibold mb-1">${escapeHtmlFront(latest.subject || latest.intention || 'Sans titre')}</p>
+                <p class="text-sm ${statusColor}"><i class="fas fa-clock mr-1"></i>${statusLine}</p>
+                <p class="text-gold/40 text-xs mt-1">Thème : ${escapeHtmlFront(latest.extra?.astro_label || '—')}${latest.extra?.semaine ? ' · semaine ' + escapeHtmlFront(latest.extra.semaine) : ''}</p>
+                <div class="flex gap-2 mt-3">
+                    <button onclick="nlPreviewDraft('${latest.id}')" class="bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg px-3 py-1.5 text-xs hover:bg-blue-500/30 transition"><i class="fas fa-eye mr-1"></i>Aperçu</button>
+                    ${latest.statut !== 'envoyé' ? `<button onclick="nlOpenDraft('${latest.id}')" class="bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 text-xs hover:bg-gold/20 transition"><i class="fas fa-edit mr-1"></i>Modifier / annuler l'envoi</button>` : ''}
+                </div>
+            </div>`;
+
+            historyEl.innerHTML = history.length === 0
+                ? '<p class="text-gold/30 italic text-sm">Pas d\'historique antérieur.</p>'
+                : history.slice(0, 10).map(d => {
+                    const badge = d.statut === 'envoyé'
+                        ? '<span class="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-300 border border-green-500/30">Envoyé</span>'
+                        : '<span class="text-xs px-2 py-0.5 rounded-full bg-gold/10 text-gold/60 border border-gold/20">Brouillon</span>';
+                    return `<div class="flex items-center justify-between gap-3 bg-white/3 border border-gold/10 rounded-xl px-4 py-3">
+                        <div class="min-w-0">
+                            <p class="text-light-gold text-sm truncate">${escapeHtmlFront(d.subject || '—')}</p>
+                            <p class="text-gold/40 text-xs">${fmtDt(d.created_at)}</p>
+                        </div>
+                        <div class="flex items-center gap-2 flex-shrink-0">
+                            ${badge}
+                            <button onclick="nlPreviewDraft('${d.id}')" class="text-xs text-blue-300 hover:text-blue-200 border border-blue-500/30 hover:border-blue-500/50 rounded px-2 py-1 transition"><i class="fas fa-eye"></i></button>
+                        </div>
+                    </div>`;
+                }).join('');
         }
 
         // Fait basculer une étape du parcours (relue, illustrée) de la liste des
