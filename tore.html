@@ -6878,6 +6878,10 @@ function maybePromptToreReconnect() {
               if (isSubscribed) subscriptionLapsed = true;
               isSubscribed = false;
               sess.subscribed = false;
+              // Mémorisé pour que member/abonnements.html sache proposer "corriger le
+              // paiement" (portail Stripe, même abonnement) plutôt que "se réabonner"
+              // (nouveau checkout) quand la cause est un paiement refusé.
+              if (data.status) localStorage.setItem('oradia_last_sub_status', data.status);
             }
             const updated = JSON.stringify(sess);
             sessionStorage.setItem('oradia_member_session', updated);

@@ -77,7 +77,33 @@ module.exports = async (req, res) => {
         
         // Configuration URLs unique
         const frontendUrl = process.env.FRONTEND_URL || 'https://oradia.fr';
-        
+
+        // ── Portail de facturation Stripe (mise à jour du moyen de paiement sur
+        // l'abonnement Tore existant, sans créer un second abonnement). Ajouté ici plutôt
+        // que dans une route dédiée : le projet est déjà à 12/12 fonctions Vercel (limite
+        // du plan Hobby, voir CLAUDE.md), et cette route gère déjà la création de sessions
+        // Stripe côté abonnement.
+        if (req.body.type === 'billing-portal') {
+            const email = (req.body.email || '').trim().toLowerCase();
+            if (!email) return res.status(400).json({ error: 'email requis' });
+            const { data: sub } = await supabase
+                .from('tore_subscriptions')
+                .select('stripe_customer_id')
+                .ilike('email', email)
+                .not('stripe_customer_id', 'is', null)
+                .order('created_at', { ascending: false })
+                .limit(1)
+                .maybeSingle();
+            if (!sub?.stripe_customer_id) {
+                return res.status(404).json({ error: 'Aucun abonnement Stripe trouvé pour cet email' });
+            }
+            const portalSession = await stripe.billingPortal.sessions.create({
+                customer: sub.stripe_customer_id,
+                return_url: `${frontendUrl}/member/abonnements.html`
+            });
+            return res.json({ success: true, url: portalSession.url });
+        }
+
         // ── Abonnement Complet (8€/mois) ─────────────────────────────────────────
         if (req.body.type === 'tore-complet' || req.body.type === 'tore-decouverte') {
             // Normalisé dès la création de la session : cet email finit dans les metadata

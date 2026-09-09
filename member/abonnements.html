@@ -243,8 +243,8 @@
             <div id="expiredBanner" class="hidden mb-6 bg-[rgba(212,120,55,0.1)] border border-orange-400/40 rounded-2xl p-5 flex items-start gap-3">
                 <i class="fas fa-triangle-exclamation text-orange-400 mt-1"></i>
                 <div>
-                    <p class="text-orange-300 font-semibold mb-1">Votre abonnement a expiré ou le paiement n'a pas abouti</p>
-                    <p class="text-light-gold/70 text-sm">Mettez à jour votre moyen de paiement ou réabonnez-vous ci-dessous pour retrouver l'accès complet aux tirages.</p>
+                    <p class="text-orange-300 font-semibold mb-1" id="expiredBannerTitle">Votre abonnement a expiré ou le paiement n'a pas abouti</p>
+                    <p class="text-light-gold/70 text-sm" id="expiredBannerText">Mettez à jour votre moyen de paiement ou réabonnez-vous ci-dessous pour retrouver l'accès complet aux tirages.</p>
                 </div>
             </div>
 
@@ -527,12 +527,19 @@
                     }
                     if (typeof updateToggleUI === 'function') updateToggleUI(autoRenew);
                 } else {
-                    // Pas d'abonnement
-                    if (statusEl) statusEl.textContent = 'Abonnement: Gratuit';
-                    if (planLabel) planLabel.innerHTML = 'Formule <span class="text-gold font-medium">Gratuite</span>';
-                    if (planDesc) planDesc.textContent = 'Accès limité aux fonctionnalités de base';
+                    // Pas d'abonnement actif — mémoriser le statut réel (payment_failed,
+                    // cancelled...) pour qu'initSubscriptionUI() propose le bon bouton, y
+                    // compris pour un visiteur arrivé ici sans passer par tore.html.
+                    if (data.status) localStorage.setItem('oradia_last_sub_status', data.status);
+                    const isPaymentIssue = data.status === 'payment_failed';
+                    if (statusEl) statusEl.textContent = isPaymentIssue ? 'Abonnement : paiement non abouti' : 'Abonnement: Gratuit';
+                    if (planLabel) planLabel.innerHTML = isPaymentIssue
+                        ? 'Formule <span class="text-orange-400 font-medium">Paiement à corriger</span>'
+                        : 'Formule <span class="text-gold font-medium">Gratuite</span>';
+                    if (planDesc) planDesc.textContent = isPaymentIssue ? 'Votre dernier prélèvement a échoué' : 'Accès limité aux fonctionnalités de base';
                     if (pricingSection) pricingSection.style.display = 'flex'; // Afficher la pub
                     if (autoRenewSection) autoRenewSection.style.display = 'none'; // Cacher gestion renouvellement
+                    if (typeof initSubscriptionUI === 'function') initSubscriptionUI();
                 }
             } catch (err) {
                 console.error('Erreur vérification abonnement:', err);
@@ -729,12 +736,20 @@
         }
 
         // ── Gestion renouvellement automatique ───────────────────────────────
-        (function initSubscriptionUI() {
+        // Fonction nommée (plutôt qu'IIFE anonyme) : rappelée depuis showMainContent()
+        // une fois le statut réel connu côté serveur, pour ne pas rester bloqué sur l'état
+        // lu au chargement de la page si l'utilisateur arrive ici sans passer par la
+        // redirection de tore.html (oradia_last_sub_status pas encore à jour).
+        function initSubscriptionUI() {
             const sess = JSON.parse(sessionStorage.getItem('oradia_member_session') || localStorage.getItem('oradia_member_session') || '{}');
             const subscribed = sess.subscribed || false;
             const wasSubscribed = sess.wasSubscribed || localStorage.getItem('oradia_was_subscribed') === 'true';
             const autoRenew = localStorage.getItem('oradia_auto_renew') !== 'false';
             const pricingSection = document.getElementById('pricingSection');
+            // Distingue "carte refusée" (même abonnement Stripe, à corriger via le portail)
+            // de "résilié" (nouveau checkout nécessaire) — voir handleCheckSubscription.
+            const lastStatus = localStorage.getItem('oradia_last_sub_status') || '';
+            const isPaymentIssue = lastStatus === 'payment_failed';
 
             if (subscribed) {
                 // Abonné actif : masquer la carte d'abonnement, afficher gestion renouvellement
@@ -765,8 +780,24 @@
                 }
                 document.getElementById('nextBillingDate').textContent = nextBilling;
                 updateToggleUI(autoRenew);
+            } else if (wasSubscribed && isPaymentIssue) {
+                // Abonnement toujours actif chez Stripe mais dernier prélèvement refusé :
+                // corriger le moyen de paiement sur CE MÊME abonnement (portail Stripe),
+                // pas un nouveau checkout qui créerait un second abonnement.
+                if (pricingSection) {
+                    pricingSection.innerHTML = `
+                        <div class="rounded-2xl p-8 border border-orange-400/40 text-center fade-in" style="max-width:480px;width:100%;background:linear-gradient(145deg,rgba(26,54,93,0.7),rgba(5,20,40,0.9));">
+                            <div class="text-5xl mb-4 text-orange-400"><i class="fas fa-triangle-exclamation"></i></div>
+                            <h3 class="cormorant text-2xl text-gold mb-3">Paiement non abouti</h3>
+                            <p class="text-light-gold/80 text-sm mb-6">Votre dernier prélèvement pour l'abonnement Tore n'a pas pu être effectué. Mettez à jour votre moyen de paiement pour reprendre l'accès — votre abonnement reste le même.</p>
+                            <button id="btn-fix-payment" class="w-full bg-gradient-to-r from-gold to-light-gold text-night-blue py-3 rounded-xl font-bold text-base hover:from-light-gold hover:to-gold transition-all transform hover:scale-105 shadow-lg mb-3">
+                                <i class="fas fa-credit-card mr-2"></i>Corriger mon moyen de paiement
+                            </button>
+                            <p class="text-light-gold/50 text-xs">Vous serez redirigé vers une page sécurisée Stripe</p>
+                        </div>`;
+                }
             } else if (wasSubscribed) {
-                // Ancien abonné : afficher une pub de réabonnement à la place de la carte standard
+                // Ancien abonné (résilié ou expiré) : afficher une pub de réabonnement
                 if (pricingSection) {
                     pricingSection.innerHTML = `
                         <div class="rounded-2xl p-8 border border-gold/40 text-center fade-in" style="max-width:480px;width:100%;background:linear-gradient(145deg,rgba(26,54,93,0.7),rgba(5,20,40,0.9));">
@@ -786,7 +817,35 @@
             // Brancher le listener sur le bouton (qu'il soit statique ou injecté)
             const btnTore = document.getElementById('btn-subscribe-tore');
             if (btnTore) btnTore.addEventListener('click', function() { startSubscription(this); });
-        })();
+
+            const btnFixPayment = document.getElementById('btn-fix-payment');
+            if (btnFixPayment) btnFixPayment.addEventListener('click', function() { openBillingPortal(this); });
+        }
+        initSubscriptionUI();
+
+        // Ouvre le portail de facturation Stripe pour l'abonnement existant (mise à jour
+        // du moyen de paiement) — voir le nouveau type 'billing-portal' dans
+        // api/create-checkout-session.js.
+        async function openBillingPortal(btn) {
+            const sess = JSON.parse(sessionStorage.getItem(SESSION_KEY) || localStorage.getItem(SESSION_KEY) || '{}');
+            const email = sess.email;
+            if (!email) { window.location.href = 'login.html'; return; }
+            const original = btn.innerHTML;
+            btn.disabled = true; btn.innerHTML = 'Redirection…';
+            try {
+                const res = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ type: 'billing-portal', email })
+                });
+                const data = await res.json();
+                if (data.url) { window.location.href = data.url; }
+                else { btn.disabled = false; btn.innerHTML = original; alert('Erreur : ' + (data.error || 'Réessayez.')); }
+            } catch (e) {
+                btn.disabled = false; btn.innerHTML = original;
+                alert('Erreur réseau. Veuillez réessayer.');
+            }
+        }
 
         function updateToggleUI(active) {
             const toggle = document.getElementById('autoRenewToggle');
@@ -835,7 +894,19 @@
             const params = new URLSearchParams(window.location.search);
             if (params.get('expired') === '1') {
                 const el = document.getElementById('expiredBanner');
-                if (el) el.classList.remove('hidden');
+                if (el) {
+                    // oradia_last_sub_status posé juste avant la redirection par tore.html
+                    // (ou par showMainContent() ci-dessus) — distingue paiement refusé
+                    // (abonnement toujours actif chez Stripe) de résiliation/expiration.
+                    if (localStorage.getItem('oradia_last_sub_status') === 'payment_failed') {
+                        document.getElementById('expiredBannerTitle').textContent = 'Votre dernier paiement n\'a pas abouti';
+                        document.getElementById('expiredBannerText').textContent = 'Mettez à jour votre moyen de paiement ci-dessous pour reprendre l\'accès complet aux tirages — votre abonnement reste le même.';
+                    } else {
+                        document.getElementById('expiredBannerTitle').textContent = 'Votre abonnement a expiré ou a été résilié';
+                        document.getElementById('expiredBannerText').textContent = 'Réabonnez-vous ci-dessous pour retrouver l\'accès complet aux tirages.';
+                    }
+                    el.classList.remove('hidden');
+                }
             }
         })();
 

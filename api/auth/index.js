@@ -262,23 +262,26 @@ async function handleCheckSubscription(req, res) {
   const supabase = createClient(supabaseUrl, supabaseKey);
 
   try {
+    // Ne filtre plus sur status='active' ici : on a besoin du statut réel (payment_failed,
+    // cancelled...) pour que le front distingue "paiement à corriger" (portail Stripe, même
+    // abonnement) de "abonnement résilié" (nouveau checkout) — voir member/abonnements.html.
     const { data: subData } = await supabase
       .from('tore_subscriptions')
       .select('status, expires_at, created_at, birth_date, birth_place')
       .ilike('email', email)
-      .eq('status', 'active')
       .order('created_at', { ascending: false })
       .limit(1)
       .single();
 
     let subscribed = false;
-    if (subData) {
+    if (subData && subData.status === 'active') {
       subscribed = !subData.expires_at || new Date(subData.expires_at) > new Date();
     }
 
     res.writeHead(200, { ...corsHeaders, 'Content-Type': 'application/json' });
     return res.end(JSON.stringify({
       subscribed,
+      status: subData?.status || null,
       expires_at: subData?.expires_at,
       subscription_start: subData?.created_at,
       birth_date: subData?.birth_date || null,
