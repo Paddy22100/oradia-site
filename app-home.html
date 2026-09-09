@@ -90,9 +90,25 @@
   .card .text .title { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 700; font-size: 19px; color: var(--light-gold); margin: 0 0 2px; }
   .card .text .sub { font-size: 12.5px; color: rgba(232,228,212,0.72); margin: 0; line-height: 1.4; }
   .card .chevron { flex-shrink: 0; opacity: 0.4; }
-  .card.primary { border-color: rgba(212,175,55,0.6); background: linear-gradient(145deg, rgba(80,66,24,0.96), rgba(38,72,120,0.97)); }
-  .card.primary .icon { background: linear-gradient(135deg, var(--gold), var(--light-gold)); border-color: transparent; }
-  .card.primary .icon svg { stroke: var(--night-deep); }
+  .card.primary {
+    position: relative; padding: 22px 20px;
+    border-color: rgba(212,175,55,0.65);
+    background: linear-gradient(145deg, rgba(90,74,26,0.97), rgba(38,72,120,0.98));
+    box-shadow: 0 8px 28px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.15);
+    animation: primaryGlow 3.2s ease-in-out infinite;
+  }
+  @keyframes primaryGlow {
+    0%, 100% { box-shadow: 0 8px 28px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.15), 0 0 18px rgba(212,175,55,0.05); }
+    50% { box-shadow: 0 8px 28px rgba(0,0,0,0.5), 0 0 0 1px rgba(212,175,55,0.35), 0 0 26px rgba(212,175,55,0.22); }
+  }
+  .card.primary .icon {
+    width: 56px; height: 56px;
+    background: linear-gradient(135deg, var(--gold), var(--light-gold));
+    border-color: transparent;
+    box-shadow: 0 0 16px rgba(212,175,55,0.4);
+  }
+  .card.primary .icon svg { width: 28px; height: 28px; stroke: var(--night-deep); }
+  .card.primary .text .title { font-size: 21px; }
 
   footer { position: absolute; bottom: max(24px, env(safe-area-inset-bottom)); left: 0; right: 0; text-align: center; }
   footer a { color: rgba(212,175,55,0.5); font-size: 11.5px; text-decoration: none; letter-spacing: 0.08em; }
@@ -136,7 +152,7 @@
 
     <div class="cards">
       <a class="card primary" href="tore.html">
-        <span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/></svg></span>
+        <span class="icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="4.5"/><path d="M12 2v2.3M12 19.7V22M22 12h-2.3M4.3 12H2M18.7 5.3l-1.6 1.6M6.9 17.1l-1.6 1.6M18.7 18.7l-1.6-1.6M6.9 6.9L5.3 5.3"/></svg></span>
         <span class="text">
           <p class="title">Faire un tirage</p>
           <p class="sub">Consultez l'oracle et laissez le hasard quantique vous guider</p>
@@ -162,11 +178,11 @@
         <span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
       </a>
 
-      <a class="card" href="tore-abonnement.html">
+      <a class="card" href="tore-abonnement.html?discount=email24h">
         <span class="icon"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.6 6.9L22 10.6l-5.5 4.4 1.8 7-6.3-3.9-6.3 3.9 1.8-7L2 10.6l7.4-1.2z"/></svg></span>
         <span class="text">
           <p class="title">Devenir abonné</p>
-          <p class="sub">Tirages illimités en ligne, sans limite</p>
+          <p class="sub">Tirages illimités · 5€ le premier mois</p>
         </span>
         <span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
       </a>
