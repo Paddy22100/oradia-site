@@ -36,11 +36,11 @@
   body::before {
     content: ''; position: fixed; inset: 0; pointer-events: none;
     background: url('images/oradia-hero-4k.webp') center 30% / cover no-repeat;
-    opacity: 0.62;
+    opacity: 0.45;
   }
   body::after {
     content: ''; position: fixed; inset: 0; pointer-events: none;
-    background: radial-gradient(ellipse at 50% 20%, rgba(15,37,64,0.35) 0%, rgba(5,13,28,0.82) 60%, #030811 100%);
+    background: radial-gradient(ellipse at 50% 20%, rgba(15,37,64,0.5) 0%, rgba(5,13,28,0.88) 55%, #030811 100%);
   }
   .wrap {
     position: relative; min-height: 100vh; min-height: 100dvh;
@@ -78,17 +78,19 @@
   .cards { position: relative; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 14px; }
   a.card {
     display: flex; align-items: center; gap: 16px;
-    background: linear-gradient(145deg, rgba(26,54,93,0.55), rgba(5,20,40,0.75));
-    border: 1px solid rgba(212,175,55,0.25);
+    background: linear-gradient(145deg, rgba(20,42,74,0.94), rgba(4,15,30,0.97));
+    backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);
+    border: 1px solid rgba(212,175,55,0.3);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
     border-radius: 18px; padding: 18px 20px;
     text-decoration: none; color: inherit;
     transition: transform .15s ease, border-color .15s ease, background .15s ease;
   }
-  a.card:active { transform: scale(0.97); border-color: rgba(212,175,55,0.55); background: linear-gradient(145deg, rgba(26,54,93,0.7), rgba(5,20,40,0.85)); }
+  a.card:active { transform: scale(0.97); border-color: rgba(212,175,55,0.55); background: linear-gradient(145deg, rgba(26,54,93,0.98), rgba(4,15,30,0.99)); }
   .card .icon {
     flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(212,175,55,0.18), rgba(212,175,55,0.04));
-    border: 1px solid rgba(212,175,55,0.35);
+    background: radial-gradient(circle, rgba(212,175,55,0.22), rgba(212,175,55,0.06));
+    border: 1px solid rgba(212,175,55,0.4);
     display: flex; align-items: center; justify-content: center;
   }
   .card .icon svg { width: 24px; height: 24px; stroke: var(--gold); fill: none; stroke-width: 1.5; }
