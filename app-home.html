@@ -35,12 +35,12 @@
   /* Photo hero en fond, assombrie pour garder le texte et les cartes lisibles */
   body::before {
     content: ''; position: fixed; inset: 0; pointer-events: none;
-    background: url('images/oradia-hero-4k.webp') center 25% / cover no-repeat;
-    opacity: 0.4;
+    background: url('images/oradia-hero-4k.webp') center 30% / cover no-repeat;
+    opacity: 0.62;
   }
   body::after {
     content: ''; position: fixed; inset: 0; pointer-events: none;
-    background: radial-gradient(ellipse at 50% -10%, rgba(15,37,64,0.55) 0%, rgba(5,13,28,0.88) 55%, #030811 100%);
+    background: radial-gradient(ellipse at 50% 20%, rgba(15,37,64,0.35) 0%, rgba(5,13,28,0.82) 60%, #030811 100%);
   }
   .wrap {
     position: relative; min-height: 100vh; min-height: 100dvh;
@@ -62,6 +62,7 @@
   }
   .brand img {
     position: relative; width: 108px; height: 108px;
+    clip-path: circle(46% at 50% 50%);
     mix-blend-mode: screen;
     filter: drop-shadow(0 0 22px rgba(212,175,55,0.45));
   }
