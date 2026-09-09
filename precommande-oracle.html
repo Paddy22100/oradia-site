@@ -529,29 +529,26 @@
     <!-- Hero Section -->
     <section id="oracle" class="hero-section py-16 sm:py-20 md:py-24 lg:py-32">
         <div class="container mx-auto px-4 sm:px-6 lg:px-8">
+            <!-- Aperçu visuel immédiat de l'oracle (coffret + cartes), tout en haut de page —
+                 hors du max-w-4xl du bloc texte ci-dessous pour pouvoir s'afficher plus grande. -->
+            <div class="relative max-w-5xl mx-auto mb-8 sm:mb-10">
+                <div class="absolute inset-0 bg-gradient-to-r from-gold/15 to-transparent rounded-2xl blur-2xl"></div>
+                <img src="images/medias/banniere-facebook.webp" alt="Oracle Oradia — coffret, cartes et livret de La Boussole Intérieure" class="relative w-full h-auto rounded-2xl shadow-2xl shadow-gold/20 border border-gold/30">
+            </div>
+
             <div class="hero-content text-center max-w-4xl mx-auto">
-                <!-- Aperçu visuel immédiat de l'oracle (coffret + cartes), tout en haut de page -->
-                <div class="relative max-w-3xl mx-auto mb-8 sm:mb-10">
-                    <div class="absolute inset-0 bg-gradient-to-r from-gold/15 to-transparent rounded-2xl blur-2xl"></div>
-                    <img src="images/medias/banniere-facebook.webp" alt="Oracle Oradia — coffret, cartes et livret de La Boussole Intérieure" class="relative w-full h-auto rounded-2xl shadow-2xl shadow-gold/20 border border-gold/30">
+                <!-- Titre + baseline + bénéfice : redondants avec la bannière ci-dessus (elle
+                     affiche déjà "ORADIA", "La Boussole Intérieure" et "64 cartes..."). Conservés
+                     pour le SEO/lecteurs d'écran (h1 de la page) mais masqués visuellement. -->
+                <div class="sr-only">
+                    <h1 class="cormorant text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold gold-gradient mb-4 sm:mb-6 text-center leading-tight">
+                        <span class="block tracking-wide">ORADIA</span>
+                        <span class="block w-16 sm:w-20 md:w-24 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent mx-auto my-2 sm:my-3"></span>
+                        <span class="block text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light text-light-gold/90 tracking-wider">LA BOUSSOLE INTÉRIEURE</span>
+                    </h1>
+                    <p>Comprendre. Choisir. Avancer.</p>
+                    <p>64 cartes et un livret d'accompagnement pour retrouver de la clarté dans vos moments de doute.</p>
                 </div>
-
-                <!-- Titre principal -->
-                <h1 class="cormorant text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold gold-gradient mb-4 sm:mb-6 text-center leading-tight">
-                    <span class="block tracking-wide">ORADIA</span>
-                    <span class="block w-16 sm:w-20 md:w-24 h-[2px] bg-gradient-to-r from-transparent via-gold to-transparent mx-auto my-2 sm:my-3"></span>
-                    <span class="block text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-light text-light-gold/90 tracking-wider">LA BOUSSOLE INTÉRIEURE</span>
-                </h1>
-                
-                <!-- Baseline -->
-                <p class="text-lg sm:text-xl md:text-2xl text-light-gold mb-4 sm:mb-6 leading-relaxed max-w-3xl mx-auto">
-                    Comprendre. Choisir. Avancer.
-                </p>
-
-                <!-- Bénéfice concret — ce que le client obtient, avant toute mécanique de campagne -->
-                <p class="text-xl sm:text-2xl md:text-3xl text-light-gold font-medium mb-4 sm:mb-6 leading-relaxed max-w-3xl mx-auto">
-                    64 cartes et un livret d'accompagnement pour retrouver de la clarté dans vos moments de doute.
-                </p>
 
                 <!-- Preuve d'activité (le produit existe déjà et est utilisé quotidiennement) —
                 juste après la promesse, avant l'appel à l'action, pour asseoir la crédibilité. -->
@@ -800,18 +797,10 @@
                     </div>
                 </section>
 
-                <!-- Description -->
-                <div class="w-full max-w-3xl mx-auto px-4 sm:px-6 text-center bg-[rgba(20,32,54,0.42)] sm:bg-[rgba(212,175,55,0.08)] border border-gold/25 sm:border-gold/30 rounded-3xl p-6 sm:p-10 md:p-12 box-border mb-12">
-                    <p class="text-2xl md:text-3xl text-light-gold mb-6 leading-relaxed">
-                        Un oracle de 64 cartes avec livret d'accompagnement et conte initiatique pour explorer les émotions, les besoins et les transformations intérieures.
-                    </p>
-
-                    <p class="text-lg md:text-2xl text-light-gold/85 leading-relaxed">
-                        Oradia prend vie en version physique grâce aux premières personnes qui le choisissent.
-                    </p>
-                </div>
-
                 <!-- Images du produit -->
+                <!-- (le bloc "Description" qui précédait a été retiré : il ne faisait que
+                     reformuler en prose ce que ces 3 cartes et "Contenu du Coffret" plus bas
+                     montrent déjà — redondance qui allongeait la page sans info nouvelle.) -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
                   <div class="bg-[rgba(5,20,40,0.65)] rounded-2xl p-6 border border-gold/30 backdrop-blur-sm hover:border-gold/50 transition-all duration-300 hover:shadow-xl hover:shadow-gold/20 group">
                     <div class="aspect-square bg-gold/10 rounded-lg mb-4 flex items-center justify-center overflow-hidden group-hover:bg-gold/20 transition-colors duration-300">
@@ -956,7 +945,7 @@
                 </h2>
                 
                 <p class="text-xl mb-4">
-                    La version numérique d'Oradia est déjà utilisée quotidiennement — plus de 200 tirages réalisés ces trois dernières semaines. La précommande finance la fabrication de la version physique : 64 cartes imprimées, un livret et un coffret.
+                    La version numérique d'Oradia est déjà utilisée quotidiennement. La précommande finance la fabrication de la version physique : 64 cartes imprimées, un livret et un coffret.
                 </p>
                 <p class="text-lg text-light-gold/80 mb-8">
                     En participant, vous ne pariez pas sur une idée sur papier — vous soutenez le passage au physique d'un outil qui existe déjà.
