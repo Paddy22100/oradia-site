@@ -192,7 +192,7 @@
           </svg>
         </span>
         <span class="text">
-          <p class="title">Faire un tirage <span class="free-badge">2 gratuits</span></p>
+          <p class="title">Faire un tirage <span id="freeDrawsBadge" class="free-badge">2 gratuits</span></p>
           <p class="sub">Consultez l'oracle et laissez le hasard quantique vous guider</p>
         </span>
         <span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
@@ -274,6 +274,8 @@
           if (subscribeCard) subscribeCard.style.display = 'none';
           var referralBanner = document.getElementById('referralBanner');
           if (referralBanner) referralBanner.style.display = 'block';
+          var freeDrawsBadge = document.getElementById('freeDrawsBadge');
+          if (freeDrawsBadge) freeDrawsBadge.style.display = 'none';
         }
       } catch (e) {}
     })();
