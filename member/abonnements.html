@@ -189,7 +189,7 @@
                     <i class="fas fa-user-circle text-gold/50"></i>
                     <span class="text-sm font-medium" id="memberName">Cher Membre</span>
                 </div>
-                <a href="../index.html" class="lg:hidden flex items-center gap-1.5 text-gold/70 hover:text-gold transition-all text-sm px-3 py-2 rounded-full border border-gold/20 hover:border-gold/40" title="Retour au site"><i class="fas fa-arrow-left"></i><span class="text-xs">Site</span></a>
+                <a href="../index.html" class="lg:hidden flex items-center gap-1.5 text-gold/70 hover:text-gold transition-all text-sm px-3 py-2 rounded-full border border-gold/20 hover:border-gold/40" title="Retour à l'accueil"><i class="fas fa-arrow-left"></i><span class="text-xs">Accueil</span></a>
                 <button id="logoutBtn" class="flex items-center gap-2 text-gold/70 hover:text-red-400 transition-all text-sm px-4 py-2 rounded-full border border-gold/20 hover:border-red-400/30 hover:bg-red-400/5">
                     <i class="fas fa-sign-out-alt"></i>
                     <span class="hidden sm:inline">Déconnexion</span>
@@ -237,6 +237,17 @@
 
         <!-- Main Content -->
         <main class="flex-1 p-6 pb-24 lg:pb-6">
+            <!-- Bannière abonnement expiré / paiement échoué (redirigé depuis tore.html
+                 quand check-subscription ne confirme plus un abonnement que le navigateur
+                 croyait actif) -->
+            <div id="expiredBanner" class="hidden mb-6 bg-[rgba(212,120,55,0.1)] border border-orange-400/40 rounded-2xl p-5 flex items-start gap-3">
+                <i class="fas fa-triangle-exclamation text-orange-400 mt-1"></i>
+                <div>
+                    <p class="text-orange-300 font-semibold mb-1">Votre abonnement a expiré ou le paiement n'a pas abouti</p>
+                    <p class="text-light-gold/70 text-sm">Mettez à jour votre moyen de paiement ou réabonnez-vous ci-dessous pour retrouver l'accès complet aux tirages.</p>
+                </div>
+            </div>
+
             <!-- Header Section -->
             <section class="mb-8 text-center">
                 <h2 class="cormorant text-4xl text-gold mb-4">L'Abonnement Tore</h2>
@@ -811,6 +822,16 @@
             document.body.appendChild(toast);
             setTimeout(() => { toast.style.opacity = '0'; setTimeout(() => toast.remove(), 300); }, 3000);
         }
+
+        // Redirigé depuis tore.html : l'abonnement que ce navigateur croyait actif n'est
+        // plus confirmé par le serveur (paiement échoué, abonnement expiré/annulé).
+        (function() {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('expired') === '1') {
+                const el = document.getElementById('expiredBanner');
+                if (el) el.classList.remove('hidden');
+            }
+        })();
 
         // Retour après paiement réussi
         (function() {
