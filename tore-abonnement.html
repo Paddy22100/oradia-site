@@ -315,7 +315,40 @@
                         <p style="font-family:'Poppins',sans-serif;font-size:13px;color:rgba(229,231,235,0.5);margin:0;line-height:1.6;">Gérez votre abonnement, votre profil.</p>
                     </div>
                 </div>
+                <div class="feature-row">
+                    <div class="feature-icon"><i class="fas fa-hourglass-half"></i></div>
+                    <div>
+                        <p style="font-family:'Poppins',sans-serif;font-size:15px;color:#e9e7df;font-weight:600;margin:0 0 4px;display:flex;align-items:center;gap:6px;">
+                            Tirage programmé
+                            <span class="info-tooltip" tabindex="0" role="button" aria-label="Qu'est-ce que le tirage programmé ?" style="position:relative;display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.4);color:#d4af37;font-size:10px;cursor:help;">
+                                <i class="fas fa-info" style="font-size:9px;"></i>
+                                <span class="info-tooltip-bubble" style="display:none;position:absolute;bottom:calc(100% + 8px);left:50%;transform:translateX(-50%);width:230px;background:#0f2540;border:1px solid rgba(212,175,55,0.4);border-radius:10px;padding:10px 12px;font-family:'Poppins',sans-serif;font-size:12px;font-weight:400;line-height:1.5;color:rgba(229,231,235,0.85);text-align:left;box-shadow:0 8px 24px rgba(0,0,0,0.4);z-index:20;">
+                                    Choisissez votre intention et la date à laquelle vous souhaitez recevoir votre tirage : l'oracle vous répond automatiquement le moment venu.
+                                </span>
+                            </span>
+                        </p>
+                        <p style="font-family:'Poppins',sans-serif;font-size:13px;color:rgba(229,231,235,0.5);margin:0;line-height:1.6;">Choisissez votre intention, recevez le résultat à la date de votre choix.</p>
+                    </div>
+                </div>
             </div>
+            <script>
+                document.querySelectorAll('.info-tooltip').forEach(function (el) {
+                    var bubble = el.querySelector('.info-tooltip-bubble');
+                    var show = function () { bubble.style.display = 'block'; };
+                    var hide = function () { bubble.style.display = 'none'; };
+                    el.addEventListener('mouseenter', show);
+                    el.addEventListener('mouseleave', hide);
+                    el.addEventListener('focus', show);
+                    el.addEventListener('blur', hide);
+                    el.addEventListener('click', function (e) {
+                        e.stopPropagation();
+                        bubble.style.display = bubble.style.display === 'block' ? 'none' : 'block';
+                    });
+                });
+                document.addEventListener('click', function () {
+                    document.querySelectorAll('.info-tooltip-bubble').forEach(function (b) { b.style.display = 'none'; });
+                });
+            </script>
 
             <div id="discount-badge" style="display:none;margin-bottom:12px;padding:10px 16px;background:linear-gradient(135deg,rgba(212,175,55,0.15),rgba(212,175,55,0.05));border:1px solid rgba(212,175,55,0.4);border-radius:10px;font-family:'Poppins',sans-serif;font-size:13px;color:#f0c75e;text-align:center;">
                 <i class="fas fa-tag" style="margin-right:6px;"></i>Code promo appliqué : <strong>3€ offerts sur le premier mois</strong>
