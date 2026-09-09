@@ -557,10 +557,16 @@ async function processEvent(event) {
             const stripe = getStripeClient();
             const supabase = getSupabaseClient();
             const invoice = event.data.object;
-            if (!getSubscriptionIdFromObject(invoice)) break;
+            if (!getSubscriptionIdFromObject(invoice)) {
+                console.error('[webhook] invoice.payment_failed: aucun subscription id resolu, evenement ignore', invoice.id);
+                break;
+            }
 
             const row = await findToreSubscriptionRow(stripe, supabase, invoice);
-            if (!row || !row.email) break;
+            if (!row || !row.email) {
+                console.error('[webhook] invoice.payment_failed: aucune ligne tore_subscriptions trouvee pour', invoice.id, invoice.customer);
+                break;
+            }
 
             const isFirstPayment = invoice.billing_reason === 'subscription_create';
 
