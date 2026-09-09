@@ -6385,6 +6385,52 @@ IMPORTANT — confidentialité absolue : le texte des newsletters NE DOIT JAMAIS
         return res.status(200).json({ success: true });
       }
 
+      // ── Teste le pipeline réel d'envoi du tirage hebdomadaire (rendu HTML +
+      // Brevo) SANS jamais toucher la liste 5 des abonnés : envoi transactionnel
+      // (smtp/email, un seul destinataire) à contact@oradia.fr uniquement, sur le
+      // dernier brouillon extra.canal='tirage_hebdo' existant (généré via le bouton
+      // "aperçu de test" ou par le vrai cron du dimanche). Ne modifie jamais le
+      // statut/scheduled_at du brouillon : c'est un test de rendu et d'envoi, pas
+      // un envoi réel comptant pour l'historique.
+      if (action === 'test-tirage-hebdo-send') {
+        const TEST_RECIPIENT = 'contact@oradia.fr';
+        const BREVO_API_KEY = process.env.BREVO_API_KEY;
+        if (!BREVO_API_KEY) return res.status(500).json({ error: 'BREVO_API_KEY non configurée' });
+
+        const { data: draft, error: fetchErr } = await supabase
+          .from('newsletter_drafts')
+          .select('*')
+          .eq('extra->>canal', 'tirage_hebdo')
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .maybeSingle();
+        if (fetchErr) throw fetchErr;
+        if (!draft) {
+          return res.status(404).json({ error: "Aucun tirage hebdomadaire à tester — génère d'abord un aperçu de test." });
+        }
+
+        const finalSubject = `[TEST] ${draft.subject || 'Oradia'}`;
+        const html = buildCommunicationEmailHtml({ ...draft, subject: finalSubject });
+        const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+
+        const r = await fetch('https://api.brevo.com/v3/smtp/email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'api-key': BREVO_API_KEY },
+          body: JSON.stringify({
+            sender: { name: 'Oradia', email: 'contact@oradia.fr' },
+            to: [{ email: TEST_RECIPIENT }],
+            subject: finalSubject,
+            htmlContent: html.replace('{unsubscribe}', buildUnsubUrl(TEST_RECIPIENT)),
+            textContent: text.replace('{unsubscribe}', buildUnsubUrl(TEST_RECIPIENT))
+          })
+        });
+        if (!r.ok) {
+          const errText = await r.text().catch(() => '');
+          return res.status(502).json({ error: 'Erreur envoi Brevo : ' + errText });
+        }
+        return res.status(200).json({ success: true, sent_to: TEST_RECIPIENT, subject: finalSubject, draft_id: draft.id });
+      }
+
       // ── Illustre une étape du parcours pas encore validée : génère deux images via
       // generateSocialImage (même API OpenAI gpt-image-1 que les publications réseaux
       // sociaux, cf. commit 66688a4) et les place dans le corps de l'email — une avant
