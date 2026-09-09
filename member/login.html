@@ -259,7 +259,11 @@
             flash('Connexion réussie ! Redirection…', 'success');
             const returnTo = new URLSearchParams(window.location.search).get('returnTo') || sessionStorage.getItem('oradia_login_return');
             sessionStorage.removeItem('oradia_login_return');
-            setTimeout(() => { window.location.href = returnTo || '../index.html'; }, 1400);
+            // Dans l'app mobile native, il n'y a pas de "site" à proprement parler : on revient
+            // sur l'écran d'accueil de l'app plutôt que sur index.html.
+            const isNativeApp = !!(window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform());
+            const defaultReturn = isNativeApp ? '../app-home.html' : '../index.html';
+            setTimeout(() => { window.location.href = returnTo || defaultReturn; }, 1400);
         }
 
         // Pont pour les liens de connexion Supabase (magiclink / recovery) — utilisé par le
