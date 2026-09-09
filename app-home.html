@@ -216,7 +216,7 @@
         <span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
       </a>
 
-      <a class="card" href="tore-abonnement.html?discount=email24h">
+      <a id="subscribeCard" class="card" href="tore-abonnement.html?discount=email24h">
         <span class="icon"><svg viewBox="0 0 24 24"><path d="M12 2.5l2.6 6.9L22 10.6l-5.5 4.4 1.8 7-6.3-3.9-6.3 3.9 1.8-7L2 10.6l7.4-1.2z"/></svg></span>
         <span class="text">
           <p class="title">Devenir abonné</p>
@@ -225,6 +225,19 @@
         <span class="chevron"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 6l6 6-6 6"/></svg></span>
       </a>
     </div>
+
+    <a id="referralBanner" href="member/dashboard.html#parrainage-section" style="display:none;width:100%;max-width:420px;margin-top:16px;text-decoration:none;">
+      <div style="display:flex;align-items:center;gap:14px;background:linear-gradient(145deg,rgba(212,175,55,0.16),rgba(26,54,93,0.7));border:1px solid rgba(212,175,55,0.35);border-radius:16px;padding:14px 18px;">
+        <span style="flex-shrink:0;width:38px;height:38px;border-radius:50%;background:rgba(212,175,55,0.15);border:1px solid rgba(212,175,55,0.4);display:flex;align-items:center;justify-content:center;">
+          <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="1.6"><path d="M12 2.5l2.6 6.9L22 10.6l-5.5 4.4 1.8 7-6.3-3.9-6.3 3.9 1.8-7L2 10.6l7.4-1.2z"/></svg>
+        </span>
+        <span style="flex:1;min-width:0;">
+          <p style="margin:0 0 2px;font-family:'Cormorant Garamond',Georgia,serif;font-weight:700;font-size:16px;color:var(--light-gold);">Offrez un tirage, recevez-en un</p>
+          <p style="margin:0;font-size:12px;color:rgba(232,228,212,0.6);">Partagez Oradia avec un proche</p>
+        </span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="flex-shrink:0;opacity:0.5;color:#e8e4d4;"><path d="M9 6l6 6-6 6"/></svg>
+      </div>
+    </a>
 
     <footer><a href="index.html">Voir le site complet →</a></footer>
   </div>
@@ -246,6 +259,23 @@
       if (isIos && isSafari && !isStandalone && !isCapacitorApp && !alreadyDismissed) {
         document.getElementById('iosInstallBanner').style.display = 'flex';
       }
+    })();
+
+    // Si l'utilisateur connecté est déjà abonné : masque la carte "Devenir abonné"
+    // (inutile pour lui) et affiche à la place le bandeau de parrainage.
+    (async function () {
+      var email = localStorage.getItem('userEmail') || sessionStorage.getItem('userEmail') || '';
+      if (!email) return;
+      try {
+        var res = await fetch('/api/auth/check-subscription?email=' + encodeURIComponent(email));
+        var data = await res.json();
+        if (data.subscribed) {
+          var subscribeCard = document.getElementById('subscribeCard');
+          if (subscribeCard) subscribeCard.style.display = 'none';
+          var referralBanner = document.getElementById('referralBanner');
+          if (referralBanner) referralBanner.style.display = 'block';
+        }
+      } catch (e) {}
     })();
   </script>
 </body>
