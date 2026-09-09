@@ -5785,7 +5785,11 @@ async function runParcoursIndividualCron(supabase) {
     // sont dues le même mercredi pour des abonnés à des stades différents.
     let latestSentStep = null; // { ordre, subject, text }
     for (const { step, emails } of dueByStepId.values()) {
-      const finalSubject = step.subject || 'Oradia';
+      // L'objet reçu doit toujours commencer par "Rudy d'ORADIA - ", quelle que soit
+      // l'étape (consigne explicite) — filet de sécurité pour les étapes ajoutées plus
+      // tard si le sujet est saisi sans le préfixe dans le dashboard.
+      const rawSubject = step.subject || 'Oradia';
+      const finalSubject = rawSubject.startsWith("Rudy d'ORADIA - ") ? rawSubject : `Rudy d'ORADIA - ${rawSubject}`;
       const html = buildCommunicationEmailHtml({ ...step, subject: finalSubject });
       const text = nlEmailPlainText(html);
       let sentCount = 0;
