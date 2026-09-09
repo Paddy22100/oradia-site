@@ -2510,7 +2510,7 @@
                 </div>
             </div>
 
-            <div class="flex gap-4 mb-6 bg-white/5 border border-gold/15 rounded-xl px-5 py-3">
+            <div id="nl-kpi-bar" class="flex gap-4 mb-6 bg-white/5 border border-gold/15 rounded-xl px-5 py-3">
                 <div class="flex items-center gap-3 flex-1">
                     <i class="fas fa-envelope text-purple-400 text-sm"></i>
                     <span class="text-2xl font-bold text-gold" id="nl-kpi-total">—</span>
@@ -2527,6 +2527,33 @@
                     <i class="fas fa-paper-plane text-green-400 text-sm"></i>
                     <span class="text-2xl font-bold text-gold" id="nl-kpi-envoyes">—</span>
                     <span class="text-light-gold/60 text-xs">envoyées</span>
+                </div>
+            </div>
+
+            <!-- Barre de statut propre à l'onglet Tirage hebdo : remplace la barre générique
+                 ci-dessus (créées/brouillons/envoyées, sans rapport avec ce canal précis)
+                 pendant que cet onglet est actif — voir le toggle dans nlShowTab(). -->
+            <div id="nl-tirage-kpi-bar" class="hidden flex gap-4 mb-6 bg-white/5 border border-gold/15 rounded-xl px-5 py-3">
+                <div class="flex items-center gap-3 flex-1">
+                    <i class="fas fa-calendar-check text-blue-300 text-sm"></i>
+                    <div>
+                        <p class="text-gold font-semibold text-sm" id="nl-tirage-next-send">—</p>
+                        <p class="text-light-gold/50 text-xs">Prochain envoi prévu</p>
+                    </div>
+                </div>
+                <div class="w-px bg-gold/15"></div>
+                <div class="flex items-center gap-3 flex-1">
+                    <i class="fas fa-shield-halved text-sm" id="nl-tirage-status-icon"></i>
+                    <div>
+                        <p class="font-semibold text-sm" id="nl-tirage-status-label">—</p>
+                        <p class="text-light-gold/50 text-xs">Fonctionnement automatique</p>
+                    </div>
+                </div>
+                <div class="w-px bg-gold/15"></div>
+                <div class="flex items-center gap-3 flex-1">
+                    <i class="fas fa-paper-plane text-green-400 text-sm"></i>
+                    <span class="text-2xl font-bold text-gold" id="nl-tirage-kpi-envoyes">—</span>
+                    <span class="text-light-gold/60 text-xs">envoyés au total</span>
                 </div>
             </div>
 
@@ -8502,6 +8529,11 @@
             nlCurrentTab = name;
             document.querySelectorAll('.nl-tab-content').forEach(el => el.classList.add('hidden'));
             document.getElementById('nl-tab-' + name).classList.remove('hidden');
+            // Barre de KPI générique (créées/brouillons/envoyées, tous canaux confondus)
+            // remplacée par la barre de statut spécifique pendant que l'onglet Tirage
+            // hebdo est actif, sans rapport avec ces chiffres globaux.
+            document.getElementById('nl-kpi-bar')?.classList.toggle('hidden', name === 'tirage');
+            document.getElementById('nl-tirage-kpi-bar')?.classList.toggle('hidden', name !== 'tirage');
             document.querySelectorAll('.nl-tab-btn').forEach(btn => {
                 const active = btn.getAttribute('data-nltab') === name;
                 btn.className = active
@@ -10949,18 +10981,54 @@
             }
         }
 
-        // Vue "Tirage hebdo" : statut du dernier tirage généré (envoyé / programmé pour
-        // le dimanche 19h par le vrai cron / simple aperçu de test sans envoi prévu) et
-        // historique des précédents. Construite depuis nlDrafts déjà chargé (extra.canal
-        // ='tirage_hebdo'), sans appel serveur dédié.
+        // Prochain dimanche à venir (approximatif — affichage seulement, l'heure exacte
+        // d'envoi réelle dépend du fuseau Europe/Paris géré côté serveur par
+        // frenchLocalTimeToUtc, pas reproduite ici).
+        function nlNextSunday() {
+            const d = new Date();
+            d.setDate(d.getDate() + ((7 - d.getDay()) % 7 || 7));
+            return d;
+        }
+
+        // Vue "Tirage hebdo" : barre de statut (prochain envoi, fonctionnement confirmé
+        // ou non par un envoi automatique réel déjà constaté, total envoyés), dernier
+        // tirage généré (envoyé / programmé par le vrai cron / simple aperçu de test) et
+        // historique des tirages effectivement ENVOYÉS. Construite depuis nlDrafts déjà
+        // chargé (extra.canal='tirage_hebdo'), sans appel serveur dédié.
         function nlRenderTirageStatus() {
             const statusEl = document.getElementById('nl-tirage-status');
             const historyEl = document.getElementById('nl-tirage-history');
             if (!statusEl || !historyEl) return;
 
+            const fmtDt = (iso) => iso ? new Date(iso).toLocaleString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
+            const fmtDate = (d) => d.toLocaleDateString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long' });
+
             const all = nlDrafts
                 .filter(d => d.extra?.canal === 'tirage_hebdo')
                 .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            const sent = all.filter(d => d.statut === 'envoyé');
+
+            // Barre de statut : le prochain envoi est toujours affiché (calendaire, ne
+            // dépend pas de l'historique), mais "fonctionnement confirmé" ne l'est que
+            // s'il existe au moins un envoi réel déjà constaté — pas d'affirmation en
+            // l'absence de preuve.
+            const nextSendEl = document.getElementById('nl-tirage-next-send');
+            const statusIconEl = document.getElementById('nl-tirage-status-icon');
+            const statusLabelEl = document.getElementById('nl-tirage-status-label');
+            const kpiEnvoyesEl = document.getElementById('nl-tirage-kpi-envoyes');
+            if (nextSendEl) nextSendEl.textContent = `${fmtDate(nlNextSunday())} vers 19h`;
+            if (kpiEnvoyesEl) kpiEnvoyesEl.textContent = sent.length;
+            if (statusIconEl && statusLabelEl) {
+                if (sent.length > 0) {
+                    statusIconEl.className = 'fas fa-shield-halved text-sm text-green-400';
+                    statusLabelEl.className = 'font-semibold text-sm text-green-400';
+                    statusLabelEl.textContent = `Confirmé (dernier envoi le ${fmtDt(sent[0].updated_at || sent[0].scheduled_at || sent[0].created_at)})`;
+                } else {
+                    statusIconEl.className = 'fas fa-triangle-exclamation text-sm text-orange-300';
+                    statusLabelEl.className = 'font-semibold text-sm text-orange-300';
+                    statusLabelEl.textContent = 'Aucun envoi automatique confirmé pour l\'instant';
+                }
+            }
 
             if (all.length === 0) {
                 statusEl.innerHTML = '<div class="stat-card rounded-2xl p-5 text-center text-gold/30 italic">Aucun tirage hebdomadaire généré pour l\'instant — le premier sera créé au prochain dimanche matin.</div>';
@@ -10968,9 +11036,7 @@
                 return;
             }
 
-            const fmtDt = (iso) => iso ? new Date(iso).toLocaleString('fr-FR', { weekday: 'long', day: '2-digit', month: 'long', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : null;
-            const [latest, ...history] = all;
-
+            const [latest, ...rest] = all;
             let statusLine, statusColor;
             if (latest.statut === 'envoyé') {
                 statusLine = `Envoyé le ${fmtDt(latest.updated_at || latest.scheduled_at || latest.created_at)}`;
@@ -10993,23 +11059,22 @@
                 </div>
             </div>`;
 
-            historyEl.innerHTML = history.length === 0
-                ? '<p class="text-gold/30 italic text-sm">Pas d\'historique antérieur.</p>'
-                : history.slice(0, 10).map(d => {
-                    const badge = d.statut === 'envoyé'
-                        ? '<span class="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-300 border border-green-500/30">Envoyé</span>'
-                        : '<span class="text-xs px-2 py-0.5 rounded-full bg-gold/10 text-gold/60 border border-gold/20">Brouillon</span>';
-                    return `<div class="flex items-center justify-between gap-3 bg-white/3 border border-gold/10 rounded-xl px-4 py-3">
+            // Historique : uniquement les tirages effectivement envoyés (pas les
+            // aperçus de test), le plus récent d'abord — exclut "latest" ci-dessus s'il
+            // y figure déjà pour ne pas le montrer deux fois.
+            const sentHistory = sent.filter(d => d.id !== latest.id);
+            historyEl.innerHTML = sentHistory.length === 0
+                ? '<p class="text-gold/30 italic text-sm">Aucun tirage envoyé pour l\'instant.</p>'
+                : sentHistory.slice(0, 20).map(d => `<div class="flex items-center justify-between gap-3 bg-white/3 border border-gold/10 rounded-xl px-4 py-3">
                         <div class="min-w-0">
                             <p class="text-light-gold text-sm truncate">${escapeHtmlFront(d.subject || '—')}</p>
-                            <p class="text-gold/40 text-xs">${fmtDt(d.created_at)}</p>
+                            <p class="text-gold/40 text-xs">${fmtDt(d.updated_at || d.scheduled_at || d.created_at)}</p>
                         </div>
                         <div class="flex items-center gap-2 flex-shrink-0">
-                            ${badge}
+                            <span class="text-xs px-2 py-0.5 rounded-full bg-green-500/15 text-green-300 border border-green-500/30">Envoyé</span>
                             <button onclick="nlPreviewDraft('${d.id}')" class="text-xs text-blue-300 hover:text-blue-200 border border-blue-500/30 hover:border-blue-500/50 rounded px-2 py-1 transition"><i class="fas fa-eye"></i></button>
                         </div>
-                    </div>`;
-                }).join('');
+                    </div>`).join('');
         }
 
         // Fait basculer une étape du parcours (relue, illustrée) de la liste des
