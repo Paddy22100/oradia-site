@@ -28,22 +28,19 @@
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body {
     margin: 0; padding: 0; min-height: 100%;
-    background: radial-gradient(ellipse at 50% -10%, #0f2540 0%, var(--night-deep) 55%, #030811 100%);
+    background: #030811;
     font-family: 'Lora', Georgia, serif; color: #e8e4d4;
     overscroll-behavior: none;
   }
-  /* Champ d'étoiles léger, cohérent avec le fond nocturne de tore.html */
+  /* Photo hero en fond, assombrie pour garder le texte et les cartes lisibles */
   body::before {
-    content: ''; position: fixed; inset: 0; pointer-events: none; opacity: 0.55;
-    background-image:
-      radial-gradient(1.5px 1.5px at 12% 18%, rgba(245,231,161,0.8), transparent),
-      radial-gradient(1px 1px at 78% 12%, rgba(245,231,161,0.6), transparent),
-      radial-gradient(1.5px 1.5px at 32% 78%, rgba(245,231,161,0.55), transparent),
-      radial-gradient(1px 1px at 88% 64%, rgba(245,231,161,0.6), transparent),
-      radial-gradient(1.5px 1.5px at 60% 32%, rgba(245,231,161,0.5), transparent),
-      radial-gradient(1px 1px at 20% 55%, rgba(245,231,161,0.45), transparent),
-      radial-gradient(1px 1px at 92% 88%, rgba(245,231,161,0.5), transparent);
-    background-size: 100% 100%;
+    content: ''; position: fixed; inset: 0; pointer-events: none;
+    background: url('images/oradia-hero-4k.webp') center 30% / cover no-repeat;
+    opacity: 0.4;
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at 50% 15%, rgba(15,37,64,0.4) 0%, rgba(5,13,28,0.9) 55%, #030811 100%);
   }
   .wrap {
     position: relative; min-height: 100vh; min-height: 100dvh;
@@ -76,14 +73,14 @@
   .cards { position: relative; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 14px; }
   a.card {
     display: flex; align-items: center; gap: 16px;
-    background: linear-gradient(145deg, rgba(20,42,74,0.98), rgba(4,15,30,0.99));
-    border: 1px solid rgba(212,175,55,0.3);
-    box-shadow: 0 8px 24px rgba(0,0,0,0.35);
+    background: linear-gradient(145deg, rgba(38,72,120,0.97), rgba(16,34,64,0.98));
+    border: 1px solid rgba(212,175,55,0.4);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.45);
     border-radius: 18px; padding: 18px 20px;
     text-decoration: none; color: inherit;
     transition: transform .15s ease, border-color .15s ease, background .15s ease;
   }
-  a.card:active { transform: scale(0.97); border-color: rgba(212,175,55,0.55); background: linear-gradient(145deg, rgba(26,54,93,0.98), rgba(4,15,30,0.99)); }
+  a.card:active { transform: scale(0.97); border-color: rgba(212,175,55,0.6); background: linear-gradient(145deg, rgba(46,84,138,0.97), rgba(16,34,64,0.98)); }
   .card .icon {
     flex-shrink: 0; width: 48px; height: 48px; border-radius: 50%;
     background: radial-gradient(circle, rgba(212,175,55,0.22), rgba(212,175,55,0.06));
@@ -95,7 +92,7 @@
   .card .text .title { font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 700; font-size: 19px; color: var(--light-gold); margin: 0 0 2px; }
   .card .text .sub { font-size: 12.5px; color: rgba(232,228,212,0.72); margin: 0; line-height: 1.4; }
   .card .chevron { flex-shrink: 0; opacity: 0.4; }
-  .card.primary { border-color: rgba(212,175,55,0.55); background: linear-gradient(145deg, rgba(58,48,18,0.96), rgba(20,42,74,0.97)); }
+  .card.primary { border-color: rgba(212,175,55,0.6); background: linear-gradient(145deg, rgba(80,66,24,0.96), rgba(38,72,120,0.97)); }
   .card.primary .icon { background: linear-gradient(135deg, var(--gold), var(--light-gold)); border-color: transparent; }
   .card.primary .icon svg { stroke: var(--night-deep); }
 

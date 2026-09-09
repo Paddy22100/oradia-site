@@ -3131,6 +3131,11 @@
                             class="flex-shrink-0 text-sm bg-gold/15 text-gold border border-gold/30 rounded-lg px-4 py-2 hover:bg-gold/25 transition">
                             <i class="fas fa-moon mr-1.5"></i>Générer un aperçu de test
                         </button>
+                        <button id="nl-tirage-test-send-btn" onclick="nlTestTirageHebdoSend()"
+                            title="Envoie le dernier tirage généré à contact@oradia.fr uniquement (email transactionnel), pour vérifier le rendu et la connexion Brevo sans jamais toucher la liste des abonnés."
+                            class="flex-shrink-0 text-sm bg-blue-500/15 text-blue-300 border border-blue-500/30 rounded-lg px-4 py-2 hover:bg-blue-500/25 transition">
+                            <i class="fas fa-paper-plane mr-1.5"></i>Tester l'envoi (à moi uniquement)
+                        </button>
                     </div>
                     <div id="nl-tirage-status" class="mb-6"></div>
                     <div>
@@ -11077,6 +11082,34 @@
             }
         }
 
+        // Teste le pipeline réel d'envoi (rendu HTML + Brevo) sur le dernier tirage
+        // généré, mais uniquement vers contact@oradia.fr (envoi transactionnel, jamais
+        // la liste des abonnés) — action=test-tirage-hebdo-send.
+        async function nlTestTirageHebdoSend() {
+            if (!(await adminConfirm("Envoyer le dernier tirage généré à contact@oradia.fr pour test ? Aucun abonné ne sera contacté."))) return;
+            const btn = document.getElementById('nl-tirage-test-send-btn');
+            if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Envoi…'; }
+            try {
+                const res = await adminFetch('/api/admin/newsletter?action=test-tirage-hebdo-send', { method: 'POST' });
+                const data = await res.json().catch(() => ({}));
+                if (!res.ok || !data.success) throw new Error(data.error || 'Erreur inconnue');
+                adminAlert(`Email de test envoyé à ${data.sent_to} : "${data.subject}". Vérifie ta boîte contact@oradia.fr.`);
+            } catch (e) {
+                adminAlert('Erreur : ' + e.message);
+            } finally {
+                if (btn) { btn.disabled = false; btn.innerHTML = '<i class="fas fa-paper-plane mr-1.5"></i>Tester l\'envoi (à moi uniquement)'; }
+            }
+        }
+
+        // Supprime un brouillon de tirage hebdo depuis sa carte de statut (aperçu de
+        // test ou envoi programmé pas encore parti) et rafraîchit tout de suite cet
+        // onglet — nlDeleteDraft() seul ne le fait pas, il ne connaît que l'onglet
+        // Brouillons.
+        async function nlDeleteTirageDraft(id) {
+            await nlDeleteDraft(id);
+            nlRenderTirageStatus();
+        }
+
         // Prochain dimanche à venir (approximatif — affichage seulement, l'heure exacte
         // d'envoi réelle dépend du fuseau Europe/Paris géré côté serveur par
         // frenchLocalTimeToUtc, pas reproduite ici).
@@ -11152,6 +11185,7 @@
                 <div class="flex gap-2 mt-3">
                     <button onclick="nlPreviewDraft('${latest.id}')" class="bg-blue-500/20 text-blue-300 border border-blue-500/40 rounded-lg px-3 py-1.5 text-xs hover:bg-blue-500/30 transition"><i class="fas fa-eye mr-1"></i>Aperçu</button>
                     ${latest.statut !== 'envoyé' ? `<button onclick="nlOpenDraft('${latest.id}')" class="bg-gold/10 text-gold border border-gold/30 rounded-lg px-3 py-1.5 text-xs hover:bg-gold/20 transition"><i class="fas fa-edit mr-1"></i>Modifier / annuler l'envoi</button>` : ''}
+                    ${latest.statut !== 'envoyé' ? `<button onclick="nlDeleteTirageDraft('${latest.id}')" class="bg-red-500/10 text-red-300 border border-red-500/30 rounded-lg px-3 py-1.5 text-xs hover:bg-red-500/20 transition"><i class="fas fa-trash mr-1"></i>Supprimer</button>` : ''}
                 </div>
             </div>`;
 
