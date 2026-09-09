@@ -50,17 +50,12 @@
     display: flex; flex-direction: column; align-items: center; justify-content: center;
     padding: max(28px, env(safe-area-inset-top)) 22px max(28px, env(safe-area-inset-bottom));
   }
-  .brand { position: relative; text-align: center; margin: 0 0 40px; }
-  .brand::before {
-    content: ''; position: absolute; left: 50%; top: 30px; transform: translateX(-50%);
-    width: 210px; height: 210px; border-radius: 50%;
-    background: radial-gradient(circle, rgba(212,175,55,0.16), transparent 70%);
-    pointer-events: none;
-  }
-  .brand::after {
-    content: ''; position: absolute; left: 50%; top: 30px; transform: translateX(-50%);
-    width: 130px; height: 130px; border-radius: 50%;
-    border: 1px solid rgba(212,175,55,0.18);
+  .brand { text-align: center; margin: 0 0 40px; }
+  .brand .logo-wrap { position: relative; width: 108px; height: 108px; margin: 0 auto; }
+  .brand .logo-wrap::before {
+    content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: 190px; height: 190px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(212,175,55,0.18), transparent 70%);
     pointer-events: none;
   }
   .brand img {
@@ -133,7 +128,7 @@
 <body>
   <div class="wrap">
     <div class="brand">
-      <img src="images/logo-hd-v2.webp" alt="Oradia">
+      <div class="logo-wrap"><img src="images/logo-hd-v2.webp" alt="Oradia"></div>
       <h1>ORADIA</h1>
       <p>La Boussole Intérieure</p>
     </div>
