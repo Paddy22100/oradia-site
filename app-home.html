@@ -32,22 +32,48 @@
     font-family: 'Lora', Georgia, serif; color: #e8e4d4;
     overscroll-behavior: none;
   }
+  /* Champ d'étoiles léger, cohérent avec le fond nocturne de tore.html */
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; opacity: 0.55;
+    background-image:
+      radial-gradient(1.5px 1.5px at 12% 18%, rgba(245,231,161,0.8), transparent),
+      radial-gradient(1px 1px at 78% 12%, rgba(245,231,161,0.6), transparent),
+      radial-gradient(1.5px 1.5px at 32% 78%, rgba(245,231,161,0.55), transparent),
+      radial-gradient(1px 1px at 88% 64%, rgba(245,231,161,0.6), transparent),
+      radial-gradient(1.5px 1.5px at 60% 32%, rgba(245,231,161,0.5), transparent),
+      radial-gradient(1px 1px at 20% 55%, rgba(245,231,161,0.45), transparent),
+      radial-gradient(1px 1px at 92% 88%, rgba(245,231,161,0.5), transparent);
+    background-size: 100% 100%;
+  }
   .wrap {
-    min-height: 100vh; min-height: 100dvh;
-    display: flex; flex-direction: column; align-items: center;
+    position: relative; min-height: 100vh; min-height: 100dvh;
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
     padding: max(28px, env(safe-area-inset-top)) 22px max(28px, env(safe-area-inset-bottom));
   }
-  .brand { text-align: center; margin: 18px 0 34px; }
-  .brand img { width: 76px; height: 76px; filter: drop-shadow(0 0 18px rgba(212,175,55,0.35)); }
+  .brand { position: relative; text-align: center; margin: 0 0 40px; }
+  .brand::before {
+    content: ''; position: absolute; left: 50%; top: 30px; transform: translateX(-50%);
+    width: 210px; height: 210px; border-radius: 50%;
+    background: radial-gradient(circle, rgba(212,175,55,0.16), transparent 70%);
+    pointer-events: none;
+  }
+  .brand::after {
+    content: ''; position: absolute; left: 50%; top: 30px; transform: translateX(-50%);
+    width: 130px; height: 130px; border-radius: 50%;
+    border: 1px solid rgba(212,175,55,0.18);
+    pointer-events: none;
+  }
+  .brand img { position: relative; width: 84px; height: 84px; filter: drop-shadow(0 0 22px rgba(212,175,55,0.4)); }
   .brand h1 {
+    position: relative;
     font-family: 'Cormorant Garamond', Georgia, serif; font-weight: 700;
-    font-size: 30px; letter-spacing: 0.12em; margin: 12px 0 4px;
+    font-size: 32px; letter-spacing: 0.14em; margin: 16px 0 6px;
     background: linear-gradient(135deg, var(--gold), var(--light-gold));
     -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent;
   }
-  .brand p { margin: 0; font-size: 13px; letter-spacing: 0.06em; color: rgba(232,228,212,0.5); font-style: italic; }
+  .brand p { position: relative; margin: 0; font-size: 13px; letter-spacing: 0.08em; color: rgba(232,228,212,0.55); font-style: italic; }
 
-  .cards { width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 14px; flex: 1; }
+  .cards { position: relative; width: 100%; max-width: 420px; display: flex; flex-direction: column; gap: 14px; }
   a.card {
     display: flex; align-items: center; gap: 16px;
     background: linear-gradient(145deg, rgba(26,54,93,0.55), rgba(5,20,40,0.75));
@@ -72,7 +98,7 @@
   .card.primary .icon { background: linear-gradient(135deg, var(--gold), var(--light-gold)); border-color: transparent; }
   .card.primary .icon svg { stroke: var(--night-deep); }
 
-  footer { margin-top: 24px; text-align: center; }
+  footer { position: absolute; bottom: max(24px, env(safe-area-inset-bottom)); left: 0; right: 0; text-align: center; }
   footer a { color: rgba(212,175,55,0.5); font-size: 11.5px; text-decoration: none; letter-spacing: 0.08em; }
 
   .ios-install {
